@@ -1,0 +1,37 @@
+#******************************************************************************
+#  Attila Lendvai                                             MOZART PROJECT
+#  MOZART: Makefile.config.beos
+#******************************************************************************
+#
+#  File Description:
+#
+#    This is the shared makefile configuration and shared targets for all
+#    Mozart directories
+#
+#    This version is for GCC / BeOS
+#
+#
+#
+#
+#******************************************************************************
+#This document is distributed under the Xroma public license.
+#See the accompanying license file for information.
+#******************************************************************************
+#* File       : $RCSFile$
+#* Revision   : $Revision$
+#* Date       : $Date$
+#******************************************************************************
+
+#------------------------------------------------------------------------------
+#  Tools
+#------------------------------------------------------------------------------
+
+ifndef BUILDENV
+BUILDENV=beos
+endif
+
+DEFINES_beos=-DCONFIG_BEOS
+
+include $(BROOT)Makefile.config.gnu
+include $(BROOT)Makefile.rules
+

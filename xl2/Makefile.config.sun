@@ -1,0 +1,38 @@
+#******************************************************************************
+#  Christophe de Dinechin                                      XROMA PROJECT  
+#  XROMA: Makefile.config.sun
+#******************************************************************************
+#
+#  File Description:
+#
+#    This is the shared makefile configuration and shared targets for all
+#    Xroma directories
+#
+#    This version is for GCC / Solaris
+#
+#
+#
+#
+#******************************************************************************
+#This document is distributed under the Xroma public license.
+#See the accompanying license file for information.
+#******************************************************************************
+#* File       : $RCSFile$
+#* Revision   : $Revision$
+#* Date       : $Date$
+#******************************************************************************
+
+#------------------------------------------------------------------------------
+#  Tools
+#------------------------------------------------------------------------------
+
+ifndef BUILDENV
+BUILDENV=sun
+endif
+
+SHELL=bash
+DEFINES_sun=-DCONFIG_SUN
+
+include $(BROOT)Makefile.config.gnu
+include $(BROOT)Makefile.rules
+

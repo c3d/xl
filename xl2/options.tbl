@@ -1,0 +1,88 @@
+/* ************************************************************************* */
+/*   Christophe de Dinechin                                     XL2 PROJECT  */
+/*   XL COMPILER: options.tbl                                                */
+/* ************************************************************************* */
+/*                                                                           */
+/*   File Description:                                                       */
+/*                                                                           */
+/*     This table defines the options known to the compiler                  */
+/*                                                                           */
+/*                                                                           */
+/*                                                                           */
+/*                                                                           */
+/*                                                                           */
+/*                                                                           */
+/*                                                                           */
+/*                                                                           */
+/*                                                                           */
+/* ************************************************************************* */
+/* This document is distributed under the GNU general public license.        */
+/* See the accompanying license file for information                         */
+/* ****************************************************************************
+   * File       : $RCSFile$
+   * Revision   : $Revision $
+   * Date       : $Date $
+   ************************************************************************* */
+// Keywords:
+// OPTVAR defines an option-controlling variable
+// OPTION defines an option and associated code
+// TRACE defines a trace
+//
+// Only the beginning of the option is checked for a match. The largest
+// matching option is considered good, so short options should be first
+
+
+// Getting help on options
+OPTION(help, "List usage information", Usage(argv))
+
+// Debug controlling options
+OPTVAR(debug, bool, false)
+OPTION(g, "Compile with debugging information", debug=true)
+
+// Warning-level option
+OPTVAR(warning_level, uint, 0)
+OPTION(w, "Set the warning level, from 0 to 5",
+       warning_level = INTEGER(0, 5))
+OPTION(pedantic, "Set the maximum warning level",
+       warning_level = 5)
+
+
+// Optimize level options
+OPTVAR(optimize_level, uint, 0)
+OPTION(O, "Set the optimization level, from 0 to 3",
+       optimize_level = INTEGER(0, 3))
+OPTVAR(verbose,bool,false)
+OPTION(verbose, "Select more verbose error messages.", verbose = true)
+OPTION(v, "Short form for -verbose.", verbose = true)
+
+
+// Traces. The first ones must match the MzTrace definition in base.h
+// We use lower-case names here to avoid duplicate definition and be able
+// to reuse the IFTRACE macro as is.
+
+TRACE(memory)                   // Mozart-defined traces
+TRACE(strings)
+TRACE(melody)
+TRACE(codegen_ops)
+
+TRACE(grammar)                  // XL Compiler traces
+TRACE(parse_tree)               // Input tree after parsing
+TRACE(semantics_tree)           // Tree after semantics
+TRACE(expand_tree)              // Tree after expansion
+TRACE(codegen_tree)             // Tree after code generation
+TRACE(opt_tree)                 // Tree after optimizations
+TRACE(output_tree)              // Tree at end of processing
+TRACE(overload)                 // Overload resolution
+TRACE(reduction)                // Expression reduction
+TRACE(instantiation)            // Generics instantiation
+TRACE(timing)                   // Measure the time for various operations
+TRACE(pragmas)                  // Pragma processing
+TRACE(modules)                  // Modules (import/export)
+TRACE(codegen)                  // Tracing code generation
+TRACE(code_comments)            // Showing comments in code
+
+
+// Undefine for next use...
+#undef OPTVAR
+#undef OPTION
+#undef TRACE

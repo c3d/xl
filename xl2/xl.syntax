@@ -1,0 +1,30 @@
+INFIX
+        10 NEWLINE
+        15 ;
+        20 then else loop
+        30 :
+        100 STATEMENT
+        105 is
+        200 BLOCK DEFAULT
+        210 return
+        215 ,
+        220 := += -= *= /= ^=
+        222 in of to
+        225 ..
+        230 and or xor
+        240 = < > <= >= <> !=
+        250 + -
+        260 * /
+        270 ^ **
+        300 FUNCTION "(" "{" "[" "]" "}" ")"
+        310 .
+
+PREFIX
+        120      exit
+        125      case if return while when
+        235     not in out
+        240     function procedure to module
+        250     !
+        280     - +
+
+                

@@ -1,0 +1,3 @@
+setenv CVS_RSH ssh
+setenv CVSROOT :ext:descubes@cvs.xlr.sourceforge.net:/cvsroot/xlr
+setenv BUILDENV macosx

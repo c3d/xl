@@ -1,0 +1,37 @@
+#******************************************************************************
+#  Makefile.config.hpux            (C) 1992-2000 Christophe de Dinechin (ddd)
+#                                                              Mozart Project
+#******************************************************************************
+#
+#  File Description:
+#
+#    Makefile configuration file for the Mozart project
+#
+#    This version is for GCC/HP-UX
+#
+#
+#
+#
+#
+#
+#******************************************************************************
+#This document is distributed under the GNU General Public License
+#See the enclosed COPYING file or http://www.gnu.org for information
+#******************************************************************************
+#* File       : $RCSFile$
+#* Revision   : $Revision$
+#* Date       : $Date$
+#******************************************************************************
+
+#------------------------------------------------------------------------------
+#  Tools
+#------------------------------------------------------------------------------
+
+ifndef BUILDENV
+BUILDENV=hpux
+endif
+
+DEFINES_hpux=-DCONFIG_HPUX
+
+include $(BROOT)Makefile.config.gnu
+include $(BROOT)Makefile.rules
