@@ -32,7 +32,7 @@ module XL.SCANNER.POSITION with
     procedure Reset
 
     // Start reading a new file, return first position
-    procedure OpenFile (name : text)
+    function OpenFile (name : text) return integer
     procedure CloseFile (pos : integer)
 
     // Return file, start and end for a global position

@@ -53,7 +53,7 @@ module XL.SCANNER.POSITION is
         current_position := 0
 
 
-    procedure OpenFile (name : text) is
+    function OpenFile (name : text) return integer is
     // ------------------------------------------------------------------------
     //    Return the new position for a file
     // ------------------------------------------------------------------------
@@ -61,6 +61,7 @@ module XL.SCANNER.POSITION is
         R.start := current_position
         R.file := name
         positions += R
+        return current_position
 
 
     procedure CloseFile (pos : integer) is

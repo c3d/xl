@@ -37,7 +37,7 @@ module XL.PARSER is
     // ------------------------------------------------------------------------
         result.scanner := SC.Open(name)
         ReadSyntaxFile result, "xl.syntax"
-        POS.OpenFile name
+        SC.SetPosition result.scanner, POS.OpenFile name
 
 
     procedure Close(P : parser) is
@@ -269,15 +269,13 @@ module XL.PARSER is
             else if tok = SC.tokPARCLOSE then
                 // Check for mismatched parentheses here
                 if S.token[0] <> closing_paren then
-                    ERR.Report ERR.E_ParseMismatchParen, S.position
-                    IO.WriteLn "Mismatched parenthese, got '", S.token, "', expected '", closing_paren, "'"
+                    ERR.Error ERR.ParseMismatchParen, S.position, S.token, text("") + closing_paren
                 done := true
 
             else if tok = SC.tokUNINDENT then
                 // Check for mismatched parentheses here
                 if not ASCII.is_line_break(closing_paren) then
-                    ERR.Report ERR.E_ParseMismatchParen, S.position
-                    IO.WriteLn "Mismatched parenthese, got unindent, expected '", closing_paren, "'"
+                    ERR.Error ERR.ParseMismatchParen, S.position, "unindent", text("") + closing_paren
                 done := true
 
             else if tok = SC.tokPAROPEN or tok = SC.tokINDENT then
@@ -425,7 +423,7 @@ module XL.PARSER is
             if result = nil then
                 last : pending := back(stack)
                 if last.opcode <> ASCII.CR then
-                    ERR.Report ERR.E_ParseTrailingOp, S.position
+                    ERR.Error ERR.ParseTrailingOp, S.position, last.opcode
                 result := last.argument
                 pop_back stack
 

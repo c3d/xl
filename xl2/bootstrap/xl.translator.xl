@@ -37,13 +37,18 @@ module XL.TRANSLATOR is
     // ========================================================================
 
     type args_map is map[text, integer]
+    type enum_info is record with
+        name  : text
+        value : text
+    type enum_list is string of enum_info
 
     procedure XL2C_Directive (input : PT.tree)
     procedure XL2C_Arg (input : PT.tree)
     procedure XL2C_Args (input : PT.tree)
     procedure XL2C_Stmt (input : PT.tree)
     procedure XL2C_Body (input : PT.tree; in_fn : boolean)
-    procedure XL2C_Enum (input : PT.tree)
+    procedure XL2C_Enum (input : PT.tree; out enums : enum_list)
+    procedure XL2C_EnumName (name : PT.tree; enums : enum_list)
     procedure XL2C_Import (input : PT.tree; alias : PT.tree)
     procedure XL2C_Module (name : PT.tree; body : PT.tree)
     procedure XL2C_Namespace (name : PT.tree)
@@ -177,24 +182,72 @@ module XL.TRANSLATOR is
         in_function := old_in_function
             
 
-    procedure XL2C_Enum (input : PT.tree) is
+    procedure XL2C_Enum (input : PT.tree; out enums : enum_list) is
     // ------------------------------------------------------------------------
     //    Translate an enumeration list
     // ------------------------------------------------------------------------
 
         if input.kind = PT.xlBLOCK then
             T : PT.block_tree := PT.block_tree(input)
-            XL2C_Enum T.child
+            XL2C_Enum T.child, enums
+        else if input.kind = PT.xlNAME then
+            T : PT.name_tree := PT.name_tree(input)
+            N : text := XLNormalize(T.value)
+            E : enum_info
+            IO.write N
+            E.name := N
+            E.value := T.value
+            enums += E
         else
             translate input
                 when
                     'A', 'B'
                 then
-                    XL2C_Enum A
+                    XL2C_Enum A, enums
                     IO.WriteLn ","
-                    XL2C_Enum B
+                    XL2C_Enum B, enums
+                when
+                    'A'
+                    'B'
+                then
+                    XL2C_Enum A, enums
+                    IO.WriteLn ","
+                    XL2C_Enum B, enums
+                when
+                    'A' = 'B'
+                then
+                    if A.kind = PT.xlNAME and B.kind = PT.xlTEXT then
+                        TA : PT.name_tree := PT.name_tree(A)
+                        TB : PT.text_tree := PT.text_tree(B)
+                        N : text := XLNormalize(TA.value)
+                        E : enum_info
+                        IO.write N
+                        E.name := N
+                        E.value := TB.value
+                        enums += E
+                    else
+                        IO.Writeln "Error: invalid named enum A=", A, " B=", B
                 else
-                    XL2C input
+                    IO.Writeln "Error : invalid enum"
+
+
+    procedure XL2C_EnumName(name : PT.tree; enums : enum_list)  is
+    // ------------------------------------------------------------------------
+    //    Translate an enumeration list
+    // ------------------------------------------------------------------------
+        I : integer
+        Max : integer := size(enums)
+        IO.write "inline const char *XLtext("
+        XL2C name
+        IO.writeln " x) {"
+        IO.writeln "switch(x) {"
+        for I in 0..Max-1 loop
+            E : enum_info := enums[I]
+            IO.writeln "case ", E.name, ": return """, E.value, """;"
+        IO.write "default: return ""<Unknown "
+        XL2C name
+        IO.writeln " value>"";"
+        IO.writeln "}}"
 
 
     procedure XL2C_Arg (input : PT.tree) is
@@ -501,11 +554,16 @@ module XL.TRANSLATOR is
             when
                 type 'T' is enumeration 'Values'
             then
+                // Emit the enum type itself
+                enums : enum_list
                 IO.write "enum "
                 XL2C T
                 IO.Writeln " {"
-                XL2C_Enum Values
-                IO.Writeln "}"
+                XL2C_Enum Values, enums
+                IO.Writeln "};"
+
+                // Emit the text conversion function
+                XL2C_EnumName T, enums
 
             when
                 type 'X' is 'Y'
@@ -627,6 +685,13 @@ module XL.TRANSLATOR is
                 IO.Write ", "
                 XL2C C
                 IO.write "))"
+
+            when // Temporary hack for enums...
+                nameof 'A'
+            then
+                IO.Write "XLtext("
+                XL2C A
+                IO.Write ")"                
 
             when
                 'A' in 'B'

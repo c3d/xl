@@ -27,24 +27,89 @@ import IO = XL.TEXT_IO
 import POS = XL.SCANNER.POSITION
 
 module XL.ERRORS is
+// ----------------------------------------------------------------------------
+//    Elementary module for error handling
+// ----------------------------------------------------------------------------
 
-    procedure Report(E : error; pos : integer) is
+    procedure Error (E : error_code; pos : integer; args : string of text) is
+    // ------------------------------------------------------------------------
+    //    Report the given error
+    // ------------------------------------------------------------------------
         file      : text
         line      : integer
         column    : integer
         linetext  : text
+        msg       : text
+        fmt       : text
+        I         : integer
+        Max       : integer
+        hadDollar : boolean := false
+
+        // Get message and perform substitution
+        msg := nameof E
+        Max := length msg
+        for I in 0..Max-1 loop
+            C : character := msg[I]
+            if C = '$' then
+                if hadDollar then
+                    fmt += "$"
+                    hadDollar := false
+                else
+                    hadDollar := true
+            else if hadDollar then
+                if C >= '1' and C <= '9' then fmt += args[integer(C) - integer('1')]
+                hadDollar := false
+            else
+                fmt += C
 
         // Convert positon to line and column
         POS.PositionToLine pos, file, line, column, linetext
 
         // Display message
-        IO.WriteLn file, ":", line, ": Error ", integer(E)
+        IO.WriteLn file, ":", line, ": Error ", integer(E), ": ", fmt
 
         // Display line contents and caret
-        IO.Writeln "|    ", linetext
-        IO.Write   "|    "
+        IO.Writeln "| ", linetext
+        IO.Write   "|_"
         while column > 0 loop
-            IO.Write " "
+            IO.Write "_"
             column -= 1
         IO.writeln "^"
 
+
+    procedure Error (E : error_code; pos : integer) is
+    // ------------------------------------------------------------------------
+    //   Convenience function
+    // ------------------------------------------------------------------------
+        args : string of text
+        Error E, pos, args
+
+
+    procedure Error (E : error_code; pos : integer; arg : text) is
+    // ------------------------------------------------------------------------
+    //   Convenience function
+    // ------------------------------------------------------------------------
+        args : string of text
+        args += arg
+        Error E, pos, args
+
+
+    procedure Error (E : error_code; pos : integer; arg : text; arg2 : text) is
+    // ------------------------------------------------------------------------
+    //   Convenience function
+    // ------------------------------------------------------------------------
+        args : string of text
+        args += arg
+        args += arg2
+        Error E, pos, args
+
+
+    procedure Error (E : error_code; pos : integer; arg : text; arg2 : text; arg3 : text) is
+    // ------------------------------------------------------------------------
+    //   Convenience function
+    // ------------------------------------------------------------------------
+        args : string of text
+        args += arg
+        args += arg2
+        args += arg3
+        Error E, pos, args

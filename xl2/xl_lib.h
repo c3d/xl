@@ -29,6 +29,7 @@
 #include <cctype>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <utility>
 #include <vector>
 #include <map>
@@ -168,7 +169,7 @@ namespace xl
                           const E& e, const F& f, const G& g, const H& h)
         { write(a); write(b, c, d, e, f, g, h); }
 
-        inline void writeln() { std::cout << '\n'; }
+        inline void writeln() { (*standardoutput) << '\n'; }
 
         template <class A>
         inline void writeln(const A& a)
@@ -243,6 +244,19 @@ namespace xl
         }
     }
 }
+
+
+template <class T>
+inline ::text XLtext(const T& x) {
+    std::string result;
+    std::ostream *old = xl::textio::standardoutput;
+    std::ostringstream out(result);
+    xl::textio::standardoutput = &out;
+    xl::textio::write(x);
+    xl::textio::standardoutput = old;
+    return result;
+}
+
 
 
 // ============================================================================

@@ -161,7 +161,7 @@ module XL.SCANNER is
                     if S.indent_char = 0 then
                         S.indent_char := C
                     else if S.indent_char <> C then
-                        ERR.Report ERR.E_ScanMixedIndent, S.position
+                        ERR.Error ERR.ScanMixedIndent, S.position
                     S.column += 1
             // Keep looking for more spaces
             IO.Read S.input, C
@@ -185,7 +185,7 @@ module XL.SCANNER is
                 // If we unindented, but did not go as far as the
                 // most recent indent, report inconsistency
                 if back S.indents < S.column then
-                    ERR.Report ERR.E_ScanInconsistent, S.position
+                    ERR.Error ERR.ScanInconsistent, S.position
                     return tokERROR
 
                 // Otherwise, report that we undindented
@@ -218,14 +218,14 @@ module XL.SCANNER is
                     if C = '_' then
                         IgnoreChar S, C
                         if DigitValue(C) >= S.base then
-                            ERR.Report ERR.E_ScanDoubleUnder, S.position
+                            ERR.Error ERR.ScanDoubleUnder, S.position
 
                     // Check if this is a based number
                     if C = '#' and not based_number then
                         S.base := S.integer_value
                         if S.base < 2 or S.base > 36 then
                             S.base := 36
-                            ERR.Report ERR.E_ScanInvalidBase, S.position
+                            ERR.Error ERR.ScanInvalidBase, S.position
                         NextChar S, C
                         S.integer_value := 0
                         based_number := true
@@ -259,7 +259,7 @@ module XL.SCANNER is
                         if C = '_' then
                             IgnoreChar S, C
                             if DigitValue(C) >= S.base then
-                                ERR.Report ERR.E_ScanDoubleUnder, S.position
+                                ERR.Error ERR.ScanDoubleUnder, S.position
 
             // Check if we have a second '#' at end of based number
             if C = '#' then
@@ -287,7 +287,7 @@ module XL.SCANNER is
                     if C = '_' then
                         IgnoreChar S, C
                         if DigitValue C >= 10 then
-                           ERR.Report ERR.E_ScanDoubleUnder, S.position
+                           ERR.Error ERR.ScanDoubleUnder, S.position
 
                 // Compute base ^ exponent
                 exponent_value : real := 1.0
@@ -321,7 +321,7 @@ module XL.SCANNER is
                 if C = '_' then
                     IgnoreChar S, C
                     if not ASCII.is_letter_or_digit C then
-                        ERR.Report ERR.E_ScanDoubleUnder, S.position
+                        ERR.Error ERR.ScanDoubleUnder, S.position
             IO.PutBack S.input, C
             S.position -= 1
             return tokNAME
@@ -347,7 +347,7 @@ module XL.SCANNER is
                             return tokQUOTE
 
                 if not IO.Valid S.input or ASCII.is_line_break(C) then
-                    ERR.Report ERR.E_ScanStringEOL, S.position
+                    ERR.Error ERR.ScanStringEOL, S.position-1
                     return tokERROR
                 NextChar S, C
 

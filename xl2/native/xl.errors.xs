@@ -25,14 +25,22 @@
 
 module XL.ERRORS with
 
-    type error is enumeration
-        E_FileNotFound,
-        E_ScanMixedIndent,
-        E_ScanInconsistent,
-        E_ScanDoubleUnder,
-        E_ScanInvalidBase,
-        E_ScanStringEOL,
-        E_ParseMismatchParen,
-        E_ParseTrailingOp
+    type error_code is enumeration
+        FileNotFound         = "File $1 not found"
+        ScanMixedIndent      = "Mixed indentation"
+        ScanInconsistent     = "Inconsistent indentation"
+        ScanDoubleUnder      = "Double underscore"
+        ScanInvalidBase      = "Invalid base (valid is 2..36)"
+        ScanStringEOL        = "End of line in string"
+        ParseMismatchParen   = "Mismatched parenthese: got $1, expected $2"
+        ParseTrailingOp      = "Trailing opcode $1 ignored"
+        InvalidEnum          = "Invalid enum"
+        InvalidNamedEnum     = "Invalid named enum"
+        NonexistentModule    = "Module '$1' was not found"
 
-    procedure Report(E : error; pos : integer)
+    // Signaling an error
+    procedure Error (E : error_code; pos : integer; args : string of text)
+    procedure Error (E : error_code; pos : integer)
+    procedure Error (E : error_code; pos : integer; arg : text)
+    procedure Error (E : error_code; pos : integer; arg : text; arg2 : text)
+    procedure Error (E : error_code; pos : integer; arg : text; arg2 : text; arg3 : text)

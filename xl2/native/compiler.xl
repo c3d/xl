@@ -51,6 +51,7 @@ procedure Main is
         else
             P := PR.Open(name)
             theProgram := PR.Parse(P)
+            PR.Close P
             if showParse then
                 Debug theProgram
             XT.Compile theProgram      
