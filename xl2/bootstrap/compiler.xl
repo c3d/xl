@@ -25,6 +25,7 @@
 
 import SC = XL.SCANNER
 import CS = XL.UI.CONSOLE
+import TR = XL.TREE
 
 procedure Main is
     I   : integer

@@ -30,10 +30,8 @@ module XL.SCANNER
 //   The module interface for scanning XL code
 // ----------------------------------------------------------------------------
 
+    // Token identification
     type token is enumeration
-    // ------------------------------------------------------------------------
-    //    Token identification
-    // ------------------------------------------------------------------------
         tokNONE,
 
         // Normal conditions

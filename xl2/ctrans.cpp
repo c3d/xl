@@ -508,6 +508,12 @@ INFIX(declaration)
         XL2C(tree->right);        // Type name
         out << ' ';
         XL2C(tree->left);         // Entity name
+        if (in_procedure && !in_parameter_declaration)
+        {
+            out << " = XLDefaultInit< ";
+            XL2C(tree->right);
+            out << " > :: value()";
+        }
     }
 }
 
@@ -639,11 +645,23 @@ PREFIX(type)
         XLName *name = dynamic_cast<XLName *> (right->left);
         if (name)
         {
-            TextSaver type_name(in_typedef, XLNormalize(name->value));
-            out << "typedef ";
-            XL2C(right->right);
-            out << " ";
-            XL2C(right->left);
+            XLInfix *with = dynamic_cast<XLInfix *> (right->right);
+            if (with && with->name == text("with"))
+            {
+                out << "struct ";
+                XL2C(right->left);
+                out << " : ";
+                XL2C(with->left);
+                XL2C(with->right);
+            }
+            else
+            {
+                TextSaver type_name(in_typedef, XLNormalize(name->value));
+                out << "typedef ";
+                XL2C(right->right);
+                out << " ";
+                XL2C(right->left);
+            }
         }
         else
         {

@@ -93,7 +93,7 @@ namespace xl
     namespace textio
     {
         typedef std::iostream *file;
-        file open(text name) { return new std::fstream(name.c_str()); }
+        file open(text name) { return new std::fstream(name.c_str(), std::ios_base::in); }
         void close(file f) { delete f; }
         void read(file f, char &c) { f->get(c); }
         void putback(file f, char c) { f->putback(c); }
@@ -197,8 +197,14 @@ inline std::pair<T,T> XLMakeRange(const T &first, const T&second)
 // 
 // ============================================================================
 
-template<class T>struct XLDefaultInit { static T value() { return T(); } };
-template<class T>struct XLDefaultInit<T*> { static T*value(){return new T();}};
+template<class T>struct XLDefaultInit
+{
+    static T value() { return T(); }
+};
+template<class T>struct XLDefaultInit<T*>
+{
+    static T*value(){ return 0; }
+};
 
 
 
@@ -208,8 +214,16 @@ template<class T>struct XLDefaultInit<T*> { static T*value(){return new T();}};
 // 
 // ============================================================================
 
-template <class T> inline T& XLDeref(T& x) { return x; }
-template <class T> inline T& XLDeref(T * &x) { return *x; }
+template <class T> inline T& XLDeref(T& x)
+{
+    return x;
+}
+template <class T> inline T& XLDeref(T * &x)
+{
+    if (!x)
+        x = new T();
+    return *x;
+}
 
 
 

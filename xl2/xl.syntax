@@ -6,7 +6,7 @@ INFIX
         100 STATEMENT
         105 is
         200 BLOCK DEFAULT
-        210 return
+        210 return with
         215 ,
         220 := += -= *= /= ^=
         222 in of to
