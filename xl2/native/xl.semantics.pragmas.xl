@@ -73,6 +73,15 @@ module XL.SEMANTICS.PRAGMAS is
                 result := XLT.XLDeclarations(result)
             else
                 result := XLT.XLDeclarations(Node)
+        when
+            { 'Pragma' }
+            'Node'
+        then
+            result := ProcessPragma("xldeclarations", Pragma, Node)
+            if result <> input then
+                result := XLT.XLDeclarations(result)
+            else
+                result := XLT.XLDeclarations(Node)
 
 
     translation XLSemantics
@@ -87,6 +96,15 @@ module XL.SEMANTICS.PRAGMAS is
                 result := XLT.XLSemantics(result)
             else
                 result := XLT.XLSemantics(Node)
+        when
+            { 'Pragma' }
+            'Node'
+        then
+            result := ProcessPragma("xlsemantics", Pragma, Node)
+            if result <> input then
+                result := XLT.XLSemantics(result)
+            else
+                result := XLT.XLSemantics(Node)
 
 
     translation XLOptimizations
@@ -95,6 +113,15 @@ module XL.SEMANTICS.PRAGMAS is
     // ------------------------------------------------------------------------
         when
             { 'Pragma' } 'Node'
+        then
+            result := ProcessPragma("xloptimizations", Pragma, Node)
+            if result <> input then
+                result := XLT.XLOptimizations(result)
+            else
+                result := XLT.XLOptimizations(Node)
+        when
+            { 'Pragma' }
+            'Node'
         then
             result := ProcessPragma("xloptimizations", Pragma, Node)
             if result <> input then
