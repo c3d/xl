@@ -1,0 +1,50 @@
+#define XLINIT 1
+#include "xl_lib.h"
+typedef char Int8;
+typedef short Int16;
+typedef int Int32;
+typedef unsigned char UInt8;
+typedef unsigned short UInt16;
+typedef unsigned int UInt32;
+typedef float Real32;
+typedef double Real64;
+typedef /*long - causes GCC warning*/ double Real80;
+typedef Int32 Int;
+typedef UInt32 UInt;
+typedef Real64 Real;
+typedef char Bool;
+typedef wchar_t Char;
+typedef ::text Text;
+typedef struct {} Rec, Mod;
+Int copy_3 ( Int src_2 ) ;
+Int x_4;
+Int y_5;
+#define XL_Term()
+void XL_Init() {
+x_4 = y_5;
+y_5 = x_4;
+}
+namespace xl { namespace ui { namespace console {
+std::vector< ::text > arguments;
+}}}
+void XLMain() {
+   XL_Init();
+   XL_Term();
+}
+namespace xl { namespace translator {
+void pluginsinit() {
+
+}
+}}
+void XLInit() {
+
+}
+void XLTerm() {
+
+}
+char XLTrace[1] = { 0 };
+void XLTraceInit(int Argc, char **Argv) {
+int Arg; for (Arg = 1; Arg < Argc; Arg++) {
+::text N = Argv[Arg];
+}}
+/*end*/
