@@ -115,6 +115,30 @@ text XLNormalize (text name)
 }
 
 
+text XLSanitize (text name, char quote)
+// ----------------------------------------------------------------------------
+//   Return the normalized version of the text
+// ----------------------------------------------------------------------------
+{
+    int i, max = name.length();
+    text result = "";
+    char esc = '\\';
+    for (i = 0; i < max; i++)
+    {
+        char c = name[i];
+        if (c == quote || c == esc)
+            result = result + esc + c;
+        else if (c == '\n')
+            result = result + esc + 'n';
+        else if (c == '\t')
+            result = result + esc + 't';
+        else
+            result += c;
+    }
+    return result;
+}
+
+
 text XLModuleName(XLTree *tree)
 // ----------------------------------------------------------------------------
 //   Change a tree into a module name
@@ -182,7 +206,9 @@ bool XL2CTranslation::String(XLString *input)
 //    Translation of a string
 // ----------------------------------------------------------------------------
 {
-    out << input->quote << input->value << input->quote;
+    out << input->quote
+        << XLSanitize(input->value, input->quote)
+        << input->quote;
 }
 
 
@@ -364,12 +390,12 @@ PREFIX(import)
 
         if (~XLImports[imported] & 1)
         {
+            XLImports[imported] |= 1;
             out << "\n/* " << interface << "*/\n";
             XLParser iface_parser (interface.c_str(), &gContext);
             XLTree *iface_tree = iface_parser.Parse();
             XL2C(iface_tree);
             out << ";\n";
-            XLImports[imported] |= 1;
         }
     }
 
@@ -379,12 +405,12 @@ PREFIX(import)
         fclose(body_file);
         if (~XLImports[imported] & 2)
         {
+            XLImports[imported] |= 2;
             out << "\n/* " << body << "*/\n";
             XLParser body_parser (body.c_str(), &gContext);
             XLTree *body_tree = body_parser.Parse();
             XL2C(body_tree);
             out << ";\n";
-            XLImports[imported] |= 2;
         }
     }
 
@@ -891,174 +917,6 @@ INFIX(to)
 }
 
 
-PREFIX(new)
-// ----------------------------------------------------------------------------
-//   The new operator is transformed into a reference
-// ----------------------------------------------------------------------------
-{
-    out << "(new ";
-    XL2C(tree->right);
-    out << ")";
-}
-
-
-
-// ============================================================================
-// 
-//   Built-in functions
-// 
-// ============================================================================
-
-text default_stream = "";
-
-void DoWrite(XLTree *arg)
-// ----------------------------------------------------------------------------
-//   Write an argument
-// ----------------------------------------------------------------------------
-{
-    if (XLInfix *infix = dynamic_cast<XLInfix *> (arg))
-    {
-        if (infix->name == text(","))
-        {
-            DoWrite(infix->left);
-            out << ";\n";
-            DoWrite(infix->right);
-            return;
-        }
-    }
-    if (XLName *name = dynamic_cast<XLName *> (arg))
-    {
-        if (!default_stream.length())
-        {
-            default_stream = XLNormalize(name->value);
-            return;
-        }
-    }
-
-    out << "write(";
-    if (!default_stream.length())
-        default_stream = "&std::cout";
-    out << default_stream << ", ";
-    XL2C(arg);
-    out << ")";
-}
-
-
-PREFIX(write)
-// ----------------------------------------------------------------------------
-//   Implement the built-in "write" function
-// ----------------------------------------------------------------------------
-{
-    default_stream = "";
-    if (in_procedure && !in_parameter_declaration)
-    {
-        DoWrite(tree->right);
-    }
-    else
-    {
-        XL2C(tree->left);
-        out << ' ';
-        XL2C(tree->right);
-    }
-}
-
-
-PREFIX(writeln)
-// ----------------------------------------------------------------------------
-//   Same thing with the built-in writeln function
-// ----------------------------------------------------------------------------
-{
-    default_stream = "";
-    if (in_procedure && !in_parameter_declaration)
-    {
-        DoWrite(tree->right);
-        out << ";\nwrite(";
-        if (default_stream.length())
-            out << default_stream << ", ";
-        else
-            out << "&std::cout, ";
-        out << "\"\\n\");";
-    }
-    else
-    {
-        XL2C(tree->left);
-        out << ' ';
-        XL2C(tree->right);
-    }
-}
-
-
-void DoRead(XLTree *arg)
-// ----------------------------------------------------------------------------
-//   Read an argument
-// ----------------------------------------------------------------------------
-{
-    if (XLInfix *infix = dynamic_cast<XLInfix *> (arg))
-    {
-        if (infix->name == text(","))
-        {
-            DoRead(infix->left);
-            out << ";\n";
-            DoRead(infix->right);
-            return;
-        }
-    }
-    if (XLName *name = dynamic_cast<XLName *> (arg))
-    {
-        if (!default_stream.length())
-        {
-            default_stream = XLNormalize(name->value);
-            return;
-        }
-    }
-
-    out << "read(";
-    if (!default_stream.length())
-        default_stream = "&std::cin, ";
-    out << default_stream << ", ";
-    XL2C(arg);
-    out << ")";
-}
-
-
-PREFIX(read)
-// ----------------------------------------------------------------------------
-//   Implement the built-in "read" function
-// ----------------------------------------------------------------------------
-{
-    default_stream = "";
-    if (in_procedure && !in_parameter_declaration)
-    {
-        DoRead(tree->right);
-    }
-    else
-    {
-        XL2C(tree->left);
-        out << ' ';
-        XL2C(tree->right);
-    }
-}
-
-
-PREFIX(readln)
-// ----------------------------------------------------------------------------
-//   Same thing with the built-in readln function
-// ----------------------------------------------------------------------------
-{
-    default_stream = "";
-    if (in_procedure && !in_parameter_declaration)
-    {
-        DoRead(tree->right);
-    }
-    else
-    {
-        XL2C(tree->left);
-        out << ' ';
-        XL2C(tree->right);
-    }
-}
-
-
 
 // ============================================================================
 // 
@@ -1093,7 +951,7 @@ void TranslateForm(XLTree *form, args_map &args, int nesting = 3)
         break;
     case xlSTRING:
         out << "xl::parser::tree::newwildcard(text(\""
-            << ((XLString *) form)->value << "\"))";
+            << XLSanitize(((XLString *) form)->value, '"') << "\"))";
         args[((XLString *) form)->value] = 1;
         break;
 

@@ -376,18 +376,26 @@ token_t XLScanner::NextToken()
         char eos = c;
         tokenText = c;
         c = fgetc(file);
-        while (c != eos && c != EOF && c != '\n')
+        for(;;)
+        {
+            // Check end of string
+            if (c == eos)
+            {
+                IGNORE_CHAR(c);
+                if (c != eos)
+                {
+                    ungetc(c, file);
+                    return eos == '"' ? tokSTRING : tokQUOTE;
+                }
+
+                // Double: put it in
+            }
+            if (c == EOF || c == '\n')
+            {
+                XLError(E_ScanStringEOL, fileName, fileLine);
+                return tokERROR;
+            }
             NEXT_CHAR(c);
-        if (c == '\n')
-        {
-            XLError(E_ScanStringEOL, fileName, fileLine);
-            return tokERROR;
-        }
-        
-        if (c == eos)
-        {
-            tokenText += c;
-            return c == '"' ? tokSTRING : tokQUOTE;
         }
     }
 

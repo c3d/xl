@@ -257,12 +257,14 @@ module XL.PARSER is
                 // Check for mismatched parentheses here
                 if S.token[0] <> closing_paren then
                     ERR.Report ERR.E_ParseMismatchParen, S.file, S.line
+                    IO.WriteLn "Mismatched parenthese, got '", S.token, "', expected '", closing_paren, "'"
                 done := true
 
             else if tok = SC.tokUNINDENT then
                 // Check for mismatched parentheses here
                 if not ASCII.is_line_break(closing_paren) then
                     ERR.Report ERR.E_ParseMismatchParen, S.file, S.line
+                    IO.WriteLn "Mismatched parenthese, got unindent, expected '", closing_paren, "'"
                 done := true
 
             else if tok = SC.tokPAROPEN or tok = SC.tokINDENT then
@@ -275,11 +277,12 @@ module XL.PARSER is
                     opening := ASCII.TAB[0]
                     closing := ASCII.CR[0]
 
+                name := text("") + opening
                 paren_priority := GetInfixPriority (P, name)
 
                 // Make sure 'foo.bar(x)' parses as '(foo.bar) (x)'
                 if result <> nil then
-                    while size stack loop
+                    while size(stack) loop
                         prev : pending := back(stack)
                         exit if prev.priority < paren_priority
                         result_priority := prev.priority
@@ -303,7 +306,7 @@ module XL.PARSER is
                     pending_token := SC.tokNEWLINE
 
             else
-                writeln "Invalid token: ", tok, " (", S.token, ")"
+                IO.writeln "Invalid token: ", tok, " (", S.token, ")"
                 assert not "Invalid token"
 
             // Check what is the current result
@@ -347,7 +350,9 @@ module XL.PARSER is
 
                         // Check priorities compared to stack
                         // A+B*C we got '*', keep 'A+..." on stack
-                        exit if not done and prev.priority <> default_priority and infix_priority > prev.priority
+                        if not done then
+                            exit if prev.priority <> default_priority and infix_priority > prev.priority
+                            exit if prev.priority < statement_priority and infix_priority = prev.priority
                         if prev.opcode = prefix then
                             left := PT.NewPrefix(prev.argument, left)
                         else
@@ -375,7 +380,9 @@ module XL.PARSER is
                 // Check priorities for "A.B x,y" -> "(A.B) (x,y)"
                 while size(stack) loop
                     prev : pending := back(stack)
-                    exit if not done and prev.priority <> default_priority and result_priority > prev.priority
+                    if not done then
+                        exit if prev.priority <> default_priority and result_priority > prev.priority
+                        exit if prev.priority < statement_priority and result_priority = prev.priority
                     if prev.opcode = prefix then
                         result := PT.NewPrefix(prev.argument, result)
                     else

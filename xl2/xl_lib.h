@@ -40,6 +40,7 @@
 // ============================================================================
 
 #define restart() continue
+#define call(x) (void) (x)
 
 
 // ============================================================================
@@ -95,16 +96,6 @@ void popback(std::vector<T> &v)
 // 
 // ============================================================================
 
-inline void write(std::ostream *o, char x) { *o << x; }
-inline void write(std::ostream *o, int x) { *o << x; }
-inline void write(std::ostream *o, double x) { *o << x; }
-inline void write(std::ostream *o, text x) { *o << x; }
-
-inline void read(std::istream *i, char &x) { i->get(x); }
-inline void read(std::istream *i, int &x) { *i >> x; }
-inline void read(std::istream *i, double &x) { *i >> x; }
-inline void read(std::istream *i, text &x) { *i >> x; }
-
 namespace xl
 {
     namespace textio
@@ -112,11 +103,103 @@ namespace xl
         typedef std::iostream *file;
         typedef std::ostream *outputfile;
         typedef std::istream *inputfile;
-        file open(text name) { return new std::fstream(name.c_str(), std::ios_base::in); }
-        void close(file f) { delete f; }
-        void read(file f, char &c) { f->get(c); }
-        void putback(file f, char c) { f->putback(c); }
-        bool valid(file f) { return f->good(); }
+
+        inline file open(text name)
+        { return new std::fstream(name.c_str(), std::ios_base::in); }
+        inline void close(file f) { delete f; }
+        inline void putback(file f, char c) { f->putback(c); }
+        inline bool valid(file f) { return f->good(); }
+
+        // Since at this point we don't have valid varags
+        // (unlike in the Mozart version), we just mimic them...
+        // exactly to the extent the bootstrap compiler needs it...
+        template <class A>
+        inline void write(const A& a)
+        { std::cout << a; }
+
+        template <class A, class B>
+        inline void write(const A& a, const B& b)
+        { write(a); write(b); }
+        
+        template <class A, class B, class C>
+        inline void write(const A& a, const B& b, const C& c)
+        { write(a); write(b, c); }
+
+        template <class A, class B, class C, class D>
+        inline void write(const A& a, const B& b, const C& c, const D& d)
+        { write(a); write(b, c, d); }
+
+        template <class A, class B, class C, class D,
+                  class E>
+        inline void write(const A& a, const B& b, const C& c, const D& d,
+                          const E& e)
+        { write(a); write(b, c, d, e); }
+
+        template <class A, class B, class C, class D,
+                  class E, class F>
+        inline void write(const A& a, const B& b, const C& c, const D& d,
+                          const E& e, const F& f)
+        { write(a); write(b, c, d, e, f); }
+
+        template <class A, class B, class C, class D,
+                  class E, class F, class G>
+        inline void write(const A& a, const B& b, const C& c, const D& d,
+                          const E& e, const F& f, const G& g)
+        { write(a); write(b, c, d, e, f, g); }
+
+        template <class A, class B, class C, class D,
+                  class E, class F, class G, class H>
+        inline void write(const A& a, const B& b, const C& c, const D& d,
+                          const E& e, const F& f, const G& g, const H& h)
+        { write(a); write(b, c, d, e, f, g, h); }
+
+        inline void writeln() { std::cout << '\n'; }
+
+        template <class A>
+        inline void writeln(const A& a)
+        { write(a); writeln(); }
+
+        template <class A, class B>
+        inline void writeln(const A& a, const B& b)
+        { write(a, b); writeln(); }
+        
+        template <class A, class B, class C>
+        inline void writeln(const A& a, const B& b, const C& c)
+        { write(a, b, c); writeln(); }
+
+        template <class A, class B, class C, class D>
+        inline void writeln(const A& a, const B& b, const C& c, const D& d)
+        { write(a, b, c, d); writeln(); }
+
+        template <class A, class B, class C, class D,
+                  class E>
+        inline void writeln(const A& a, const B& b, const C& c, const D& d,
+                          const E& e)
+        { write(a, b, c, d, e); writeln(); }
+
+        template <class A, class B, class C, class D,
+                  class E, class F>
+        inline void writeln(const A& a, const B& b, const C& c, const D& d,
+                          const E& e, const F& f)
+        { write(a, b, c, d, e, f); writeln(); }
+
+        template <class A, class B, class C, class D,
+                  class E, class F, class G>
+        inline void writeln(const A& a, const B& b, const C& c, const D& d,
+                          const E& e, const F& f, const G& g)
+        { write(a, b, c, d, e, f, g); writeln(); }
+
+        template <class A, class B, class C, class D,
+                  class E, class F, class G, class H>
+        inline void writeln(const A& a, const B& b, const C& c, const D& d,
+                          const E& e, const F& f, const G& g, const H& h)
+        { write(a, b, c, d, e, f, g, h); writeln(); }
+
+        inline void read(file f, char &c) { f->get(c); }
+        inline void read(std::istream *i, char &x) { i->get(x); }
+        inline void read(std::istream *i, int &x) { *i >> x; }
+        inline void read(std::istream *i, double &x) { *i >> x; }
+        inline void read(std::istream *i, text &x) { *i >> x; }
 
         namespace encoding
         {
@@ -198,6 +281,31 @@ struct XLTextIterator : XLIterator
 inline XLTextIterator *XLMakeIterator(char& what, const text &range)
 {
     return new XLTextIterator(what, range);
+}
+
+
+template <class Value, class Map>
+struct XLMapIterator : XLIterator
+{
+    XLMapIterator (Value &v, Map &m)
+        : value(v), range(m) {}
+    virtual void first() { it = range.begin(); }
+    virtual bool more() {
+        bool has_more = it != range.end();
+        if (has_more) value = it->first; 
+        return has_more;
+    }
+    virtual void next() { it++; }
+    Map &range;
+    Value &value;
+    typename Map::iterator it;
+};
+
+template <class Index, class Value>
+inline XLMapIterator<Index, std::map<Index, Value> > *
+XLMakeIterator(Index& w, std::map<Index, Value> &r)
+{
+    return new XLMapIterator<Index, std::map<Index, Value> > (w, r);
 }
 
 

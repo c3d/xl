@@ -23,7 +23,9 @@
 // * Date       : $Date$
 // ****************************************************************************
 
+import IO = XL.TEXT_IO
+
 module XL.ERRORS is
 
     procedure Report(E : error; file : text; line : integer) is
-        WriteLn "", file, ":", line, ": Error ", integer(E)
+        IO.WriteLn "", file, ":", line, ": Error ", integer(E)

@@ -32,85 +32,6 @@ import XT = XL.TRANSLATOR
 import ASCII = XL.TEXT_IO.ENCODING.ASCII
 
 
-
-
-// Pseudo type to control indentation
-type indent_pseudo
-type indent_control is access to indent_pseudo
-indent : indent_control := indent_control(3)
-unindent : indent_control := indent_control(-3)
-newline : indent_control := indent_control(0)
-current_tree_indent : integer := 0
-
-// Pseudo-type to control debug mode
-type debug_pseudo
-type debug_control is access to debug_pseudo
-debug : debug_control := debug_controL(true)
-nodebug : debug_control := debug_control(false)
-current_tree_debug : boolean := false
-
-
-procedure write(where: IO.output_file; direction : indent_control) is
-// ----------------------------------------------------------------------------
-//    Write the appropriate amount of indentation
-// ----------------------------------------------------------------------------
-    I : integer
-    delta : integer := integer(direction)
-
-    current_tree_indent += delta
-    writeln where, ""
-    for I in 1..current_tree_indent loop
-        write where, ' '
-
-
-procedure write(where: IO.output_file; do_debug : debug_control) is
-// ----------------------------------------------------------------------------
-//    Write the appropriate amount of indentation
-// ----------------------------------------------------------------------------
-    current_tree_debug := boolean(do_debug)
-
-
-procedure write(where : IO.output_file; what : TR.tree) is
-// ----------------------------------------------------------------------------
-//    For debugging purpose, write a tree
-// ----------------------------------------------------------------------------
-    if what.kind = PT.xlINTEGER then
-        T : PT.integer_tree := PT.integer_tree(what)
-        write where, T.value
-    else if what.kind = PT.xlREAL then
-        T : PT.real_tree := PT.real_tree(what)
-        write where, T.value
-    else if what.kind = PT.xlSTRING then
-        T : PT.string_tree := PT.string_tree(what)
-        write where, T.quote, T.value, T.quote
-    else if what.kind = PT.xlNAME then
-        T : PT.name_tree := PT.name_tree(what)
-        write where, T.value
-    else if what.kind = PT.xlBLOCK then
-        T : PT.block_tree := PT.block_tree(what)
-        if ASCII.is_line_break(T.closing) then
-            if current_tree_debug then
-                write where, "{BL ", indent, T.child, unindent, " BL}"
-            else
-                write where, indent, T.child, unindent
-        else
-            write where, T.opening, T.child, T.closing
-    else if what.kind = PT.xlPREFIX then
-        T : PT.prefix_tree := PT.prefix_tree(what)
-        if current_tree_debug then
-            write where, '[', T.left, ' ', T.right, ']'
-        else
-            write where, T.left, ' ', T.right
-    else if what.kind = PT.xlINFIX then
-        T : PT.infix_tree := PT.infix_tree(what)
-        if T.name = ASCII.CR then
-            write where, T.left, newline, T.right
-        else if current_tree_debug then
-            write where, '(', T.left, ' ', T.name, ' ', T.right, ')'
-        else
-            write where, T.left, ' ', T.name, ' ', T.right
-
-
 procedure Main is
 // ----------------------------------------------------------------------------
 //   The main entry point
@@ -121,10 +42,17 @@ procedure Main is
     T          : SC.token
     P          : PR.parser
     theProgram : PT.tree
+    showParse  : boolean := false
 
-    WriteLn "Number of args = ", Max
     for I in 1..Max-1 loop
         name : text := CS.arguments[i]
-        P := PR.NewParser(name)
-        theProgram := PR.Parse(P)
-        XT.Compile theProgram      
+        if name = "-tparse" then
+            showParse := true
+        else if name = "-tmatch" then
+            XT.verbose := true
+        else
+            P := PR.NewParser(name)
+            theProgram := PR.Parse(P)
+            if showParse then
+                Debug theProgram
+            XT.Compile theProgram      

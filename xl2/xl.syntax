@@ -1,8 +1,9 @@
 INFIX
         10 NEWLINE
         15 ;
-        20 then else loop
-        30 :
+        20 else loop
+        30 then
+        40 :
         100 STATEMENT
         105 is
         200 BLOCK DEFAULT

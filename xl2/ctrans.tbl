@@ -42,7 +42,6 @@ PREFIX(out)
 
 BINARY(".", scope)
 BINARY("in", iterator)
-PREFIX(new) // Temporary
 
 // Data types
 SYMBOL("string", "std::vector")
@@ -78,12 +77,6 @@ INFIX(loop)
 PREFIX(exit)
 PREFIX(for)
 PREFIX(translate)
-
-// Built-in functions
-PREFIX(write)
-PREFIX(writeln)
-PREFIX(read)
-PREFIX(readln)
 
 
 #undef NAME

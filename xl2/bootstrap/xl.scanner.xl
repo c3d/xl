@@ -84,6 +84,7 @@ module XL.SCANNER is
         result.indent_char := character(0)
         result.checking_indent := false
         result.column := 0
+        result.indent := 0
 
         result.input := IO.open(file_name)
         result.indents += 0
@@ -316,15 +317,22 @@ module XL.SCANNER is
             eos : character := C
             S.token := C
             IO.Read S.input, C
-            while C <> eos and IO.Valid S.input and not ASCII.is_line_break C loop
+            loop
+                // Check end of string, but keep double quotes in
+                if C = eos then
+                    S.token += C
+                    IO.Read S.input, C
+                    if C <> eos then
+                        IO.PutBack S.input, C
+                        if eos = '"' then
+                            return tokSTRING
+                        else
+                            return tokQUOTE
+
+                if not IO.Valid S.input or ASCII.is_line_break(C) then
+                    ERR.Report ERR.E_ScanStringEOL, S.file, S.line
+                    return tokERROR
                 NextChar S, C
-            if C <> eos then
-                ERR.Report ERR.E_ScanStringEOL, S.file, S.line
-                return tokERROR
-            S.token += C
-            if C = '"' then
-                return tokSTRING
-            return tokQUOTE
 
         // Look for parentheses
         if C='(' or C=')' or C='{' or C='}' or C='[' or C=']' then

@@ -39,12 +39,19 @@ module XL.TRANSLATOR is
     procedure XL2C_Arg (input : PT.tree)
     procedure XL2C_Args (input : PT.tree)
     procedure XL2C_Stmt (input : PT.tree)
+    procedure XL2C_Body (input : PT.tree; in_fn : boolean)
+    procedure XL2C_Enum (input : PT.tree)
     procedure XL2C_Import (input : PT.tree; alias : PT.tree)
     procedure XL2C_Module (name : PT.tree; body : PT.tree)
+    procedure XL2C_Namespace (name : PT.tree)
+    procedure XL2C_Translate (what : PT.tree; how : PT.tree)
     procedure XL2C(input : PT.tree)
     procedure Rename(from : text; to : text)
     function XLNormalize (name : text) return text
+    function XLSanitize (str : text; quote : character) return text
     function XLModuleName (name : PT.tree) return text
+    function XLModuleNameCPlus (name : text) return text
+    function XLNamespaceScope (dot : PT.tree) return boolean
 
 
     // ========================================================================
@@ -56,7 +63,9 @@ module XL.TRANSLATOR is
     name_changes        : map [text, text]
     module_name         : map [text, text] 
     module_imports      : map [text, integer]
-    loop_index          : integer    
+    loop_index          : integer
+    namespace_closing   : text := ""
+    in_function         : boolean := false
     
 
 
@@ -70,7 +79,7 @@ module XL.TRANSLATOR is
     // ------------------------------------------------------------------------
     //   Rewrite the whole tree
     // ------------------------------------------------------------------------
-        writeln "#include ", '"', "xl_lib.h", '"'
+        IO.writeln "#include ", '"', "xl_lib.h", '"'
 
         rename "character",  "char"
         rename "integer",    "int"
@@ -109,6 +118,10 @@ module XL.TRANSLATOR is
     //   Check if the test tree matches the reference tree, return score
     // ------------------------------------------------------------------------
 
+        if verbose then
+            IO.WriteLn "/* Matching: ", test, " */"
+            IO.WriteLn "/* With: ", ref, " */"
+
         // Check if the reference is a wildcard like 'A'
         // If so, check if we saw the same name, and then check compatibility
         // If not, check 
@@ -121,6 +134,7 @@ module XL.TRANSLATOR is
                 result := Matches(test, arg[R.name], empty_args)
                 if result > 0 then
                     return result + 1
+                if verbose then IO.Writeln "/* Failed wildcard */"
                 return 0
 
             // We did not see the name: assign it
@@ -129,6 +143,7 @@ module XL.TRANSLATOR is
 
         // If this is not a wildcard, then it must have the same kind
         if test.kind <> ref.kind then
+            if verbose then IO.Writeln "/* Failed kind */"
             return 0
 
         // For each kind of atom, check and return 0 or 1
@@ -137,6 +152,7 @@ module XL.TRANSLATOR is
             R : PT.integer_tree := PT.integer_tree(ref)
             if T.value = R.value then
                 return 1
+            if verbose then IO.Writeln "/* Failed intval */"
             return 0
 
         if test.kind = PT.xlREAL then
@@ -144,6 +160,7 @@ module XL.TRANSLATOR is
             R : PT.real_tree := PT.real_tree(ref)
             if T.value = R.value then
                 return 1
+            if verbose then IO.Writeln "/* Failed realval */"
             return 0
 
         if test.kind = PT.xlSTRING then
@@ -151,6 +168,7 @@ module XL.TRANSLATOR is
             R : PT.string_tree := PT.string_tree(ref)
             if T.value = R.value and T.quote = R.quote then
                 return 1
+            if verbose then IO.Writeln "/* Failed stringval */"
             return 0
 
         if test.kind = PT.xlNAME then
@@ -158,6 +176,7 @@ module XL.TRANSLATOR is
             R : PT.name_tree := PT.name_tree(ref)
             if T.value = R.value then
                 return 1
+            if verbose then IO.Writeln "/* Failed nameval */"
             return 0
 
         // For non-atoms, check recursively
@@ -168,6 +187,10 @@ module XL.TRANSLATOR is
                 result := Matches(T.child, R.child, arg)
                 if result >= 0 then
                     return result + 1
+            if verbose then
+                IO.Writeln "/* Failed block */"
+                IO.Writeln "/* o=", T.opening = R.opening, " c=", T.closing = R.closing, " */"
+                IO.Writeln "/* r=", result, " */"
             return 0
 
         if test.kind = PT.xlPREFIX then
@@ -178,6 +201,7 @@ module XL.TRANSLATOR is
                 r_result : integer := Matches(T.right, R.right, arg)
                 if r_result > 0 then
                     return l_result + r_result
+            if verbose then IO.Writeln "/* Failed prefix */"
             return 0
 
         if test.kind = PT.xlINFIX then
@@ -189,12 +213,13 @@ module XL.TRANSLATOR is
                     r_result : integer := Matches(T.right, R.right, arg)
                     if r_result > 0 then
                         return l_result + r_result
+            if verbose then IO.Writeln "/* Failed infix */"
             return 0
 
 
     function XLNormalize (name : text) return text is
     // ------------------------------------------------------------------------
-    //    Return the normalized for of the string
+    //    Return the normalized name (lower-case, no underscores)
     // ------------------------------------------------------------------------
         result := ""
         Max : integer := length(name)
@@ -205,6 +230,29 @@ module XL.TRANSLATOR is
                 result += ASCII.tolower C
 
 
+    function XLSanitize (name : text; quote : character) return text is
+    // ------------------------------------------------------------------------
+    //    Adds C escapes and such as necessary
+    // ------------------------------------------------------------------------
+        result := ""
+        Max : integer := length(name)
+        I   : integer
+        CR  : character := ASCII.CR[0]
+        TAB : character := ASCII.TAB[0]
+        esc : character := '\'
+
+        for I in 0..Max-1 loop
+            C : character := name[I]
+            if C = CR then
+                result += "\n"
+            else if C = TAB then
+                result += "\t"
+            else if C = esc or C = quote then
+                result := result + '\' + C
+            else
+                result += C
+
+
     procedure XL2C_Stmt (input : PT.tree) is
     // ------------------------------------------------------------------------
     //    Translate a statement
@@ -212,9 +260,40 @@ module XL.TRANSLATOR is
 
         XL2C input
         if input.kind = PT.xlNAME then
-            write "()"
-        writeln ";"
+            IO.write "()"
+        IO.writeln ";"
             
+
+    procedure XL2C_Body (input : PT.tree; in_fn : boolean) is
+    // ------------------------------------------------------------------------
+    //    Translate a statement
+    // ------------------------------------------------------------------------
+        old_in_function : boolean := in_function
+        in_function := in_fn
+        XL2C_Stmt input
+        in_function = old_in_function
+            
+
+    procedure XL2C_Enum (input : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Translate an enumeration list
+    // ------------------------------------------------------------------------
+
+        if input.kind = PT.xlBLOCK then
+            T : PT.block_tree := PT.block_tree(input)
+            XL2C_Enum T.child
+        else
+            translate input
+                when
+                    'A', 'B'
+                then
+                    XL2C_Enum A
+                    IO.WriteLn ","
+                    XL2C_Enum B
+
+                else
+                    XL2C input
+
 
     procedure XL2C_Arg (input : PT.tree) is
     // ------------------------------------------------------------------------
@@ -227,14 +306,14 @@ module XL.TRANSLATOR is
             when
                 in 'A'
             then
-                XL2C A
+                XL2C_Arg A
 
             // Input parameters stay as is
             when
                 out 'A'
             then
-                write "&"
-                XL2C A
+                IO.write "&"
+                XL2C_Arg A
 
             // By default, simply emit argument
             else
@@ -251,7 +330,7 @@ module XL.TRANSLATOR is
                 'A' ; 'B'
             then
                 XL2C_Args A
-                writeln ","
+                IO.writeln ","
                 XL2C_Args B
 
             when
@@ -259,23 +338,23 @@ module XL.TRANSLATOR is
                 'B'
             then
                 XL2C_Args A
-                writeln ","
+                IO.writeln ","
                 XL2C_Args B
 
             when
                 'A' : 'B'
             then
                 XL2C B
-                write " "
+                IO.write " "
                 XL2C_Arg A
 
             when
                 'A' : 'B' := 'DefaultValue'
             then
                 XL2C B
-                write " "
+                IO.write " "
                 XL2C_Arg A
-                write " = "
+                IO.write " = "
                 XL2C DefaultValue
 
 
@@ -291,28 +370,31 @@ module XL.TRANSLATOR is
 
         if input.kind = PT.xlINTEGER then
             T : PT.integer_tree := PT.integer_tree(input)
-            write T.value
+            IO.write T.value
 
         if input.kind = PT.xlREAL then
             T : PT.real_tree := PT.real_tree(input)
-            write T.value
+            IO.write T.value
 
         if input.kind = PT.xlSTRING then
             T : PT.string_tree := PT.string_tree(input)
-            write T.quote, T.value, T.quote
+            IO.write T.quote, XLSanitize(T.value, T.quote), T.quote
 
         if input.kind = PT.xlNAME then
             T : PT.name_tree := PT.name_tree(input)
             N : text := XLNormalize(T.value)
             if count(name_changes, N) > 0 then
-                write name_changes[N]
+                IO.write name_changes[N]
             else
-                write "", N
+                IO.write N
 
 
         // --------------------------------------------------------------------
         //   Special forms
         // --------------------------------------------------------------------
+
+        if verbose then
+            IO.Writeln "/* XL2C: ", input, " */"
 
         translate input
 
@@ -324,6 +406,7 @@ module XL.TRANSLATOR is
                 'A'
                 'B'
             then
+                if verbose then IO.Writeln "/* XL2C-Seq */"
                 XL2C_Stmt A
                 XL2C_Stmt B
 
@@ -337,7 +420,7 @@ module XL.TRANSLATOR is
                 'A' , 'B'
             then
                 XL2C A
-                write ", "
+                IO.write ", "
                 XL2C B
 
 
@@ -348,60 +431,68 @@ module XL.TRANSLATOR is
             when
                 if 'A' then 'B' else 'C'
             then
-                write "if ("
+                IO.write "if ("
                 XL2C A
-                writeln ") {"
+                IO.writeln ") {"
                 XL2C_Stmt B
-                writeln "} else {"
+                IO.writeln "} else {"
                 XL2C_Stmt C
-                writeln "}"
+                IO.writeln "}"
 
             when
                 if 'A' then 'B'
             then
-                write "if ("
+                IO.write "if ("
                 XL2C A
-                writeln ") {"
+                IO.writeln ") {"
                 XL2C_Stmt B
-                writeln "}"
+                IO.writeln "}"
 
             when
                 loop 'A'
             then
-                writeln "for(;;) {"
+                IO.writeln "for(;;) {"
                 XL2C_Stmt A
-                writeln "}"
+                IO.writeln "}"
 
             when
                 while 'C' loop 'A'
             then
-                write "while ("
+                IO.write "while ("
                 XL2C C
-                writeln ") {"
+                IO.writeln ") {"
                 XL2C_Stmt A
-                writeln "}"
+                IO.writeln "}"
 
             when
                 for 'I' loop 'Body'
             then
                 loop_index += 1
-                write "XLIterator *XLiter", loop_index, " = "
+                IO.write "XLIterator *XLiter", loop_index, " = "
                 XL2C I
-                writeln ";"
-                writeln "for (XLiter", loop_index, "->first();"
-                write   "     XLiter", loop_index, "->more() || "
-                writeln     " XLDeleteIterator(XLiter", loop_index, ");"
-                writeln "     XLiter", loop_index, "->next())"
-                writeln "{"
+                IO.writeln ";"
+                IO.writeln "for (XLiter", loop_index, "->first();"
+                IO.write   "     XLiter", loop_index, "->more() || "
+                IO.writeln     " XLDeleteIterator(XLiter", loop_index, ");"
+                IO.writeln "     XLiter", loop_index, "->next())"
+                IO.writeln "{"
                 XL2C_Stmt Body
-                writeln ";}"
+                IO.writeln "}"
 
             when
                 exit if 'C'
             then
-                write "if ("
+                IO.write "if ("
                 XL2C C
-                writeln ") break;"
+                IO.writeln ") break;"
+
+            when
+                translate 'What'
+                    'How'
+            then
+                IO.WriteLn "do {"
+                XL2C_Translate What, How                    
+                IO.WriteLn "} while (0);"
 
 
             // ----------------------------------------------------------------
@@ -412,17 +503,21 @@ module XL.TRANSLATOR is
                 'A' : 'B' := 'C'
             then
                 XL2C B
-                write " "
+                IO.write " "
                 XL2C A
-                write " = "
+                IO.write " = "
                 XL2C C
 
             when
                 'A' : 'B'
             then
                 XL2C B
-                write " "
+                IO.write " "
                 XL2C A
+                if in_function then
+                    IO.Write " = XLDefaultInit < "
+                    XL2C B
+                    IO.Write " > :: value()"
 
             when
                 import 'Shortcut' = 'ModName'
@@ -437,122 +532,152 @@ module XL.TRANSLATOR is
                 module 'Name' with
                     'Body'
             then
+                if verbose then IO.Writeln "/* XL2C-ModWith */"
                 XL2C_Module Name, Body
-
             when
                 module 'Name' is
                     'Body'
             then
+                if verbose then IO.Writeln "/* XL2C-ModBody */"
                 XL2C_Module Name, Body
+            when
+                module 'Name'
+            then
+                if verbose then IO.Writeln "/* XL2C-ModName */"
+                XL2C_Module Name, nil
 
             when
                 type 'T' is record with
                    'Fields'
             then
-                 write "struct "
+                 IO.write "struct "
                  XL2C T
-                 writeln " {"
-                 XL2C_Stmt Fields
-                 writeln "};"
+                 IO.writeln " {"
+                 XL2C_Body Fields, false
+                 IO.writeln "};"
             when
                 type 'T' is 'Base' with
                    'Fields'
             then
-                 write "struct "
+                 IO.write "struct "
                  XL2C T
-                 write " : "
+                 IO.write " : "
                  XL2C Base
-                 writeln " {"
-                 XL2C_Stmt Fields
-                 writeln "};"
+                 IO.writeln " {"
+                 XL2C_Body Fields, false
+                 IO.writeln "};"
+            when
+                type 'T' is enumeration 'Values'
+            then
+                IO.write "enum "
+                XL2C T
+                IO.Writeln " {"
+                XL2C_Enum Values
+                IO.Writeln "}"
 
             when
                 type 'X' is 'Y'
             then
-                write "typedef "
+                IO.write "typedef "
                 XL2C Y
-                write " "
+                IO.write " "
                 XL2C X
-                writeln ";"
+                IO.writeln ";"
+
+            when
+                type 'T'
+            then
+                IO.write "struct "
+                XL2C T
+                IO.writeln ";"
 
             // Functions and procedures
             when
                 procedure 'Name' ( 'Args' ) is
                     'Body'
             then
-                write "void "
+                IO.write "void "
                 XL2C Name
-                write "("
+                IO.write "("
                 XL2C_Args Args
-                writeln ") {"
-                XL2C_Stmt Body
-                writeln "}"
+                IO.writeln ") {"
+                XL2C_Body Body, true
+                IO.writeln "}"
             when
                 procedure 'Name' is
                     'Body'
             then
-                write "void "
+                IO.write "void "
                 XL2C Name
-                writeln "(void) {"
-                XL2C_Stmt Body
-                writeln "}"
+                IO.writeln "(void) {"
+                XL2C_Body Body, true
+                IO.writeln "}"
 
             when
                 function 'Name' ( 'Args' ) return 'T' is
                     'Body'
             then
                 XL2C T
-                write " "
+                IO.write " "
                 XL2C Name
-                write "("
+                IO.write "("
                 XL2C_Args Args
-                writeln ") {"
-                XL2C_Stmt Body
-                writeln "}"
+                IO.writeln ") {"
+
+                XL2C T
+                IO.Write " result = XLDefaultInit < "
+                XL2C T
+                IO.WriteLn " > ::value();"
+
+                IO.WriteLn "{"
+                XL2C_Body Body, true
+                IO.WriteLn "}"
+                IO.WriteLn "return result;"
+                IO.writeln "}"
             when
                 function 'Name' return 'T' is
                     'Body'
             then
                 XL2C T
-                write " "
+                IO.write " "
                 XL2C Name
-                writeln "(void) {"
-                XL2C_Stmt Body
-                writeln "}"
+                IO.writeln "(void) {"
+                XL2C_Body Body, true
+                IO.writeln "}"
 
 
             // Declaration-only for functions and procedures
             when
                 procedure 'Name' ( 'Args' )
             then
-                write "void "
+                IO.write "void "
                 XL2C Name
-                write "("
+                IO.write "("
                 XL2C_Args Args
-                writeln ");"
+                IO.writeln ");"
             when
                 procedure 'Name'
             then
-                write "void "
+                IO.write "void "
                 XL2C Name
-                writeln "(void);"
+                IO.writeln "(void);"
 
             when
                 function 'Name' ( 'Args' ) return 'T'
             then
                 XL2C T
-                write " "
+                IO.write " "
                 XL2C Name
-                write "("
+                IO.write "("
                 XL2C_Args Args
-                writeln ");"
+                IO.writeln ");"
             when
                 function 'Name' return 'T'
             then
                 XL2C T
-                write " "
+                IO.write " "
                 XL2C Name
-                writeln "(void);"
+                IO.writeln "(void);"
 
 
 
@@ -563,20 +688,29 @@ module XL.TRANSLATOR is
             when
                 'A' in 'B'
             then
-                write "XLMakeIterator("
+                IO.write "XLMakeIterator("
                 XL2C A
-                write ", "
+                IO.write ", "
                 XL2C B
-                write ")"
+                IO.write ")"
 
             when
                 'A' .. 'B'
             then
-                write "XLMakeRange("
+                IO.write "XLMakeRange("
                 XL2C A
-                write ", "
+                IO.write ", "
                 XL2C B
-                write ")"
+                IO.write ")"
+
+            when
+                'A' . 'B'
+            then
+                if XLNamespaceScope (A) then
+                    IO.Write "::"
+                else
+                    IO.Write "."
+                XL2C B
 
 
             // ----------------------------------------------------------------
@@ -586,24 +720,24 @@ module XL.TRANSLATOR is
             when
                 map['A','B']
             then
-                write "std::map < "
+                IO.write "std::map < "
                 XL2C A
-                write ", "
+                IO.write ", "
                 XL2C B
-                write " > "
+                IO.write " > "
 
             when
                 access to 'A'
             then
                 XL2C A
-                write "* "
+                IO.write "* "
 
             when
                 string of 'A'
             then
-                write "std::vector < "
+                IO.write "std::vector < "
                 XL2C A
-                write " > "
+                IO.write " > "
 
 
 
@@ -617,13 +751,13 @@ module XL.TRANSLATOR is
                 if input.kind = PT.xlBLOCK then
                     T : PT.block_tree := PT.block_tree(input)
                     if ASCII.is_line_break (T.closing) then
-                        writeln "{"
+                        IO.writeln "{"
                         XL2C_Stmt T.child
-                        writeln "}"
+                        IO.writeln "}"
                     else
-                        write T.opening
+                        IO.write T.opening
                         XL2C T.child
-                        write T.closing
+                        IO.write T.closing
 
 
                 if input.kind = PT.xlPREFIX then
@@ -632,11 +766,11 @@ module XL.TRANSLATOR is
 
                     XL2C T.left
                     if R.kind <> PT.xlBLOCK then
-                        write " ("
+                        IO.write " ("
                         XL2C R
-                        write ")"
+                        IO.write ")"
                     else
-                        write " "
+                        IO.write " "
                         XL2C R
 
                 if input.kind = PT.xlINFIX then
@@ -645,11 +779,11 @@ module XL.TRANSLATOR is
                     if count(name_changes, N) > 0 then
                         N := name_changes[N]
 
-                    write "("
+                    IO.write "("
                     XL2C T.left
-                    write " ", N, " "
+                    IO.write " ", N, " "
                     XL2C T.right
-                    write ")"
+                    IO.write ")"
 
 
 
@@ -675,45 +809,69 @@ module XL.TRANSLATOR is
                     result := modname
 
 
+    function XLModuleNameCPlus (name : text) return text is
+    // ------------------------------------------------------------------------
+    //   Return the C++ module name for A.B.C
+    // ------------------------------------------------------------------------
+        I          : integer
+        max        : integer := length name
+
+        result := ""
+        for I in 0..max-1 loop
+            C : character := name[I]
+            if C = '.' then
+                result += "::"
+            else
+                result += C
+
+
     procedure XL2C_Import (modname : PT.tree; alias : PT.tree) is
     // ------------------------------------------------------------------------
     //    Deal with import clauses
     // ------------------------------------------------------------------------
 
-        imported : text := XLModuleName(modname)
+        imported      : text := XLModuleName(modname)
+        cplusified    : text := XLModuleNameCPlus(imported)
+        done          : integer := 0
 
         if alias <> nil then
             alias_name : text := XLModuleName(alias)
-            cplusified : text := ""
-            I          : integer
-            max        : integer
-            for I in 0..max-1 loop
-                C : character := imported[I]
-                if C = '.' then
-                    cplusified += "::"
-                else
-                    cplusified += c
             module_name[alias_name] := cplusified
+        module_name[imported] := cplusified
 
         interface_name : text := imported + ".xs"
         body_name      : text := imported + ".xl"
 
-        if (module_imports[imported] & 1) = 0 then
+        done := module_imports[imported]
+        if (done & 1) = 0 then
             iface_parser : PR.parser := PR.NewParser(interface_name)
             iface_tree   : PT.tree := PR.Parse(iface_parser)
+            IO.WriteLn ""
+            IO.WriteLn "// Interface ", interface_name, " done=", done
             module_imports[imported] |= 1
-            XL2C iface_tree
-            writeln ";"
+            if iface_tree <> nil then
+                XL2C_Stmt iface_tree
+                done |= 1
+            IO.WriteLn ""
+            IO.WriteLn "// End of Interface ", interface_name, " done=", done
 
-        if (module_imports[imported] & 2) = 0 then
-            body_parser : PR.parser := PR.NewParser(interface_name)
+        if (done & 2) = 0 then
+            IO.WriteLn ""
+            IO.WriteLn "// Body ", body_name, " done=", done
+            body_parser : PR.parser := PR.NewParser(body_name)
             body_tree   : PT.tree := PR.Parse(body_parser)
             module_imports[imported] |= 2
-            XL2C body_tree
-            writeln ";"
+            if body_tree <> nil then
+                XL2C_Stmt body_tree
+                done |= 2
+            IO.WriteLn ""
+            IO.WriteLn "// End of Body ", body_name, " done=", done
+
+        if done = 0 then
+            IO.Writeln "*** Module ", imported, " not found"
 
 
-    procedure XL2C_Module (name : PT.tree; body : PT.tree) is
+    procedure XL2C_Namespace (name : PT.tree) is
     // ------------------------------------------------------------------------
     //   Translate a module
     // ------------------------------------------------------------------------
@@ -722,15 +880,186 @@ module XL.TRANSLATOR is
             when
                'A' . 'B'
             then
-               write "namespace "
-               XL2C A
-               writeln " {"
-               XL2C_Module B, body
-               writeln "}"
-
+               XL2C_Namespace A
+               IO.writeln " {"
+               XL2C_Namespace B
+               namespace_closing += "}"
             else
-               write "namespace "
+               IO.write "namespace "
                XL2C name
-               writeln " {"
-               XL2C body
-               writeln "}"
+
+
+    procedure XL2C_Module (name : PT.tree; body : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Display a module
+    // ------------------------------------------------------------------------
+
+         XL2C_Namespace name
+         if body <> nil then
+             IO.WriteLn " {"
+             XL2C_Stmt body
+             IO.WriteLn " } ", namespace_closing
+         else
+             IO.Writeln " {} ", namespace_closing
+         namespace_closing := ""
+
+
+    function XLNamespaceScope (name : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //    Return true if the name denotes a namespace scope
+    // ------------------------------------------------------------------------
+
+        if name.kind = PT.xlNAME then
+            T : PT.name_tree := PT.name_tree (name)
+            N : text := XLNormalize (T.value)
+            if count (module_name, N) > 0 then
+                IO.Write module_name[N]
+                return true
+            else
+                IO.Write "XLDeref(", N, ")"
+                return false
+
+        translate name
+            when
+                'X' . 'Y'
+            then
+                if XLNamespaceScope (Y) then
+                    IO.Write "::"
+                else
+                    IO.Write "."
+                return XLNamespaceScope(Y)
+
+        IO.Write "XLDeref("
+        XL2C name
+        IO.Write ")"
+        return false
+
+
+    // ========================================================================
+    // 
+    //    Translate translate
+    // 
+    // ========================================================================
+
+    type args_map is map[text, integer]
+
+
+    procedure TranslateForm (form : PT.tree; in out args : args_map; nesting : integer) is
+    // ------------------------------------------------------------------------
+    //    Emit the code for the translate form
+    // ------------------------------------------------------------------------
+
+        I : integer
+        for I in 1..nesting loop
+            IO.Write ' '
+
+        // For each kind of atom, check and return 0 or 1
+        if form.kind = PT.xlINTEGER then
+            T : PT.integer_tree := PT.integer_tree(form)
+            IO.Write "xl::parser::tree::newinteger(", T.value, ")"
+
+        if form.kind = PT.xlREAL then
+            T : PT.real_tree := PT.real_tree(form)
+            IO.Write "xl::parser::tree::newreal(", T.value, ")"
+
+        if form.kind = PT.xlSTRING then
+            T : PT.string_tree := PT.string_tree(form)
+            IO.Write "xl::parser::tree::newwildcard(text("""
+            IO.Write XLSanitize(T.value, '"'), """))"
+            args[T.value] = 1
+
+        if form.kind = PT.xlNAME then
+            T : PT.name_tree := PT.name_tree(form)
+            IO.Write "xl::parser::tree::newname(text(""", T.value, """))"
+
+        // For non-atoms, check recursively
+        if form.kind = PT.xlBLOCK then
+            T : PT.block_tree := PT.block_tree(form)
+            IO.Writeln "xl::parser::tree::newblock("
+            TranslateForm T.child, args, nesting+2
+            IO.Write ", "
+            if ASCII.is_line_break(T.closing) then
+               IO.Write "'\t', '\n'"
+            else
+               IO.Write "'", T.opening, "', '", T.closing, "'"
+            IO.Write ")"
+
+        if form.kind = PT.xlPREFIX then
+            T : PT.prefix_tree := PT.prefix_tree(form)
+            IO.WriteLn "xl::parser::tree::newprefix("
+            TranslateForm T.left, args, nesting+2
+            IO.WriteLn ","
+            TranslateForm T.right, args, nesting+2
+            IO.WriteLn ")"
+
+        if form.kind = PT.xlINFIX then
+            T : PT.infix_tree := PT.infix_tree(form)
+            IO.Write "xl::parser::tree::newinfix("
+            if T.name = ASCII.CR then
+                IO.WriteLn "xl::textio::encoding::ascii::cr,"
+            else
+                IO.WriteLn "text(", '"', T.name, '"', "),"
+            TranslateForm T.left, args, nesting+2
+            IO.WriteLn ","
+            TranslateForm T.right, args, nesting+2
+            IO.WriteLn ")"
+
+
+
+    procedure XL2C_Translate (to_translate : PT.tree; how : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Translate a translate statement
+    // ------------------------------------------------------------------------
+
+        translate how
+           when
+              when
+                  'ToMatch'
+              then
+                  'Body'
+           then
+               args : args_map
+               loop_index += 1
+
+               IO.WriteLn "{"
+               IO.WriteLn "static xl::parser::tree::tree ref", loop_index, "="
+               TranslateForm ToMatch, args, 2
+               IO.WriteLn ";"
+               IO.WriteLn "xl::translator::treemap args", loop_index, ";"
+               IO.Write "if (xl::translator::matches("
+               XL2C to_translate
+               IO.Writeln ", ref", loop_index, ", args", loop_index, ")) {"
+
+               N : text
+               for N in args loop
+                   IO.Write "xl::parser::tree::tree ", XLNormalize(N)
+                   IO.WriteLn " = args",loop_index,"[text(", '"', N, '"', ")];"
+
+               XL2C_Stmt Body
+               
+               IO.Write "("
+               XL2C to_translate
+               IO.Writeln ") = 0;"
+               IO.Writeln "break;"
+               IO.WriteLn "}}"
+
+           when
+               'A' else 'B'
+           then
+               XL2C_Translate to_translate, A
+               IO.Write "if ("
+               XL2C to_translate
+               IO.Write ") {"
+               XL2C_Stmt B
+               IO.WriteLn "}"
+
+           when
+              'A'
+              'B'
+           then
+              XL2C_Translate to_translate, A
+              XL2C_Translate to_translate, B
+
+           else
+              IO.Writeln "*** Ungrokable 'translate'"
+              IO.WriteLn IO.show_debug, "[[", how, "]]"

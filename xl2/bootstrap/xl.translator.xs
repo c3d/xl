@@ -32,3 +32,4 @@ module XL.TRANSLATOR with
     function Matches (test : PT.tree; ref : PT.tree; in out arg : tree_map) return integer
     procedure Compile(input : PT.tree)
 
+    verbose : boolean := false
