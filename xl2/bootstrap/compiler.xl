@@ -126,6 +126,5 @@ procedure Main is
     for I in 1..Max-1 loop
         name : text := CS.arguments[i]
         P := PR.NewParser(name)
-        PR.ReadSyntaxFile P, "xl.syntax"
         theProgram := PR.Parse(P)
         XT.Compile theProgram      

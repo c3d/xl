@@ -35,6 +35,7 @@ module XL.PARSER is
     //   Create a new parser
     // ------------------------------------------------------------------------
         result.scanner := SC.NewScanner(name)
+        ReadSyntaxFile result, "xl.syntax"
 
 
     type pending is record with

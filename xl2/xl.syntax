@@ -8,7 +8,7 @@ INFIX
         200 BLOCK DEFAULT
         210 return with
         215 ,
-        220 := += -= *= /= ^=
+        220 := += -= *= /= ^= |= &=
         222 in of to
         225 ..
         230 and or xor

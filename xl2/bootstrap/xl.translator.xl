@@ -24,6 +24,7 @@
 // ****************************************************************************
 
 import PT = XL.PARSER.TREE
+import PR = XL.PARSER
 import IO = XL.TEXT_IO
 
 module XL.TRANSLATOR is
@@ -38,8 +39,12 @@ module XL.TRANSLATOR is
     procedure XL2C_Arg (input : PT.tree)
     procedure XL2C_Args (input : PT.tree)
     procedure XL2C_Stmt (input : PT.tree)
+    procedure XL2C_Import (input : PT.tree; alias : PT.tree)
+    procedure XL2C_Module (name : PT.tree; body : PT.tree)
     procedure XL2C(input : PT.tree)
     procedure Rename(from : text; to : text)
+    function XLNormalize (name : text) return text
+    function XLModuleName (name : PT.tree) return text
 
 
     // ========================================================================
@@ -48,8 +53,10 @@ module XL.TRANSLATOR is
     // 
     // ========================================================================
     
-    name_changes : map [text, text]
-    loop_index   : integer    
+    name_changes        : map [text, text]
+    module_name         : map [text, text] 
+    module_imports      : map [text, integer]
+    loop_index          : integer    
     
 
 
@@ -417,6 +424,26 @@ module XL.TRANSLATOR is
                 write " "
                 XL2C A
 
+            when
+                import 'Shortcut' = 'ModName'
+            then
+                XL2C_Import ModName, Shortcut
+            when
+                import 'ModName'
+            then
+                XL2C_Import ModName, nil
+
+            when
+                module 'Name' with
+                    'Body'
+            then
+                XL2C_Module Name, Body
+
+            when
+                module 'Name' is
+                    'Body'
+            then
+                XL2C_Module Name, Body
 
             when
                 type 'T' is record with
@@ -614,9 +641,96 @@ module XL.TRANSLATOR is
 
                 if input.kind = PT.xlINFIX then
                     T : PT.infix_tree := PT.infix_tree(input)
+                    N : text := XLNormalize(T.name)
+                    if count(name_changes, N) > 0 then
+                        N := name_changes[N]
 
                     write "("
                     XL2C T.left
-                    write " ", T.name, " "
+                    write " ", N, " "
                     XL2C T.right
                     write ")"
+
+
+
+
+    function XLModuleName (name : PT.tree) return text is
+    // ------------------------------------------------------------------------
+    //   Return the XL module name for A.B.C
+    // ------------------------------------------------------------------------
+        translate name
+            when
+                'A' . 'B'
+            then
+                result := XLModuleName(A)
+                result += "."
+                result += XLModuleName(B)
+
+            else
+                if name.kind = PT.xlNAME then
+                    N : PT.name_tree := PT.name_tree(name)
+                    modname : text := XLNormalize(N.value)
+                    if count (module_name, modname) = 0 then
+                        module_name[modname] := modname
+                    result := modname
+
+
+    procedure XL2C_Import (modname : PT.tree; alias : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Deal with import clauses
+    // ------------------------------------------------------------------------
+
+        imported : text := XLModuleName(modname)
+
+        if alias <> nil then
+            alias_name : text := XLModuleName(alias)
+            cplusified : text := ""
+            I          : integer
+            max        : integer
+            for I in 0..max-1 loop
+                C : character := imported[I]
+                if C = '.' then
+                    cplusified += "::"
+                else
+                    cplusified += c
+            module_name[alias_name] := cplusified
+
+        interface_name : text := imported + ".xs"
+        body_name      : text := imported + ".xl"
+
+        if (module_imports[imported] & 1) = 0 then
+            iface_parser : PR.parser := PR.NewParser(interface_name)
+            iface_tree   : PT.tree := PR.Parse(iface_parser)
+            module_imports[imported] |= 1
+            XL2C iface_tree
+            writeln ";"
+
+        if (module_imports[imported] & 2) = 0 then
+            body_parser : PR.parser := PR.NewParser(interface_name)
+            body_tree   : PT.tree := PR.Parse(body_parser)
+            module_imports[imported] |= 2
+            XL2C body_tree
+            writeln ";"
+
+
+    procedure XL2C_Module (name : PT.tree; body : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Translate a module
+    // ------------------------------------------------------------------------
+
+        translate name
+            when
+               'A' . 'B'
+            then
+               write "namespace "
+               XL2C A
+               writeln " {"
+               XL2C_Module B, body
+               writeln "}"
+
+            else
+               write "namespace "
+               XL2C name
+               writeln " {"
+               XL2C body
+               writeln "}"
