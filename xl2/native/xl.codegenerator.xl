@@ -60,6 +60,8 @@ module XL.CODE_GENERATOR is
     procedure XL2C_Namespace (name : BC.bytecode)
     procedure XL2C_Translate (what : BC.bytecode; how : BC.bytecode)
     procedure XL2C_SemanticsTranslation (Name : PT.name_tree; what : PT.tree)
+    procedure XL2C_EarlyInit (What : PT.tree)
+    procedure XL2C_LateCleanup (What : PT.tree)
     procedure XL2C_Quote (form : BC.bytecode;
                           in out args : args_map;
                           nesting : integer;
@@ -167,6 +169,18 @@ module XL.CODE_GENERATOR is
         IO.WriteLn "}}"
 
 
+    procedure EmitXLInitAndTerm is
+    // ------------------------------------------------------------------------
+    //   Emit the code for the XLInit() function
+    // ------------------------------------------------------------------------
+        IO.WriteLn "void XLInit() {"
+        IO.WriteLn initializations
+        IO.WriteLn "}"
+        IO.WriteLn "void XLTerm() {"
+        IO.WriteLn terminations
+        IO.WriteLn "}"
+
+
     procedure Transcode (input : BC.bytecode; output : IO.output_file) is
     // ------------------------------------------------------------------------
     //   Rewrite the whole tree
@@ -175,6 +189,7 @@ module XL.CODE_GENERATOR is
         old_stdout : IO.output_file := IO.standard_output
         IO.standard_output := output
 
+        IO.writeln "#define XLINIT 1"
         IO.writeln "#include ", '"', "xl_lib.h", '"'
 
         InitializeRenames
@@ -183,6 +198,7 @@ module XL.CODE_GENERATOR is
         XL2C input
 
         EmitSemanticsPlugins
+        EmitXLInitAndTerm
 
         IO.standard_output := old_stdout
 
@@ -618,6 +634,18 @@ module XL.CODE_GENERATOR is
                 if Name.kind = PT.xlNAME then
                     N : PT.name_tree := PT.name_tree (Name)
                     XL2C_SemanticsTranslation N, What
+
+            when
+                initialization
+                    'What'
+            then
+                XL2C_EarlyInit What
+
+            when
+                termination
+                    'What'
+            then
+                XL2C_LateCleanup What
 
 
             // ----------------------------------------------------------------
@@ -1328,7 +1356,7 @@ module XL.CODE_GENERATOR is
                IO.WriteLn "rew->referenceform = ref;"
                IO.WriteLn "rew->scoreadjust = 0;"
                IO.WriteLn "rew->translator = "
-               IO.WriteLn current_module, "translator", loop_index, ";"
+               IO.WriteLn current_module, "translator_", loop_index, ";"
                IO.WriteLn "xl::symbols::enter("
                IO.WriteLn "  xl::translator::context,"
                IO.WriteLn "  ", '"', PT.XLNormalize(Name.value), '"', ","
@@ -1340,7 +1368,7 @@ module XL.CODE_GENERATOR is
 
 
                // Write the callback function
-               IO.WriteLn "xl::parser::tree::tree translator", loop_index
+               IO.WriteLn "xl::parser::tree::tree translator_", loop_index
                IO.WriteLn "  (xl::parser::tree::tree input,"
                IO.WriteLn "   xl::symbols::rewrite info,"
                IO.WriteLn "   xl::parser::tree::treemap &args) {"
@@ -1366,3 +1394,45 @@ module XL.CODE_GENERATOR is
            else
               IO.Writeln "*** Ungrokable 'semantics_translation'"
               IO.WriteLn IO.show_debug, "[[", how, "]]"
+
+
+    procedure XL2C_EarlyInit (What : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Emit the code for early initialization
+    // ------------------------------------------------------------------------
+
+        // Write the call to the initialization function
+        old_stdout : IO.output_file := IO.standard_output
+        new_stdout : IO.output_string_stream := IO.open_string_stream()
+        IO.standard_output := new_stdout
+        loop_index += 1
+        IO.WriteLn current_module, "init_", loop_index, "();"
+        initializations += IO.close_string_stream(new_stdout)
+        IO.standard_output := old_stdout        
+
+        // Write the initialization code that calls said function
+        IO.WriteLn "void init_", loop_index, "() {"
+        XL2C_Stmt What
+        IO.WriteLn "}"
+
+
+    procedure XL2C_LateCleanup (What : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Emit the code for late cleanup
+    // ------------------------------------------------------------------------
+
+        // Write the call to the initialization function
+        old_stdout : IO.output_file := IO.standard_output
+        new_stdout : IO.output_string_stream := IO.open_string_stream()
+        IO.standard_output := new_stdout
+        loop_index += 1
+        IO.WriteLn current_module, "term_", loop_index, "();"
+        terminations += IO.close_string_stream(new_stdout)
+        IO.standard_output := old_stdout        
+
+        // Write the initialization code that calls said function
+        IO.WriteLn "void term_", loop_index, "() {"
+        XL2C_Stmt What
+        IO.WriteLn "}"
+
+

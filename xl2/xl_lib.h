@@ -458,11 +458,19 @@ template <class T> inline T& XLDeref(T * &x)
 // ============================================================================
 
 extern void XLMain();
+extern void XLInit();
+extern void XLTerm();
 int main(int argc, char **argv)
 {
     for (int arg = 0; arg < argc; arg++)
         xl::ui::console::arguments.push_back(argv[arg]);
+#ifdef XLINIT
+    XLInit();
+#endif
     XLMain();
+#ifdef XLINIT
+    XLTerm();
+#endif
     return 0;
 }
 

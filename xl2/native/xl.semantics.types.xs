@@ -31,7 +31,7 @@ module XL.SEMANTICS.TYPES with
 //   Implements data type representation
 // ----------------------------------------------------------------------------
 
-    type any_type_data is record with
+    type any_type_data is PT.tree_info with
     // ------------------------------------------------------------------------
     //   All that the compiler knows about a type
     // ------------------------------------------------------------------------
@@ -53,3 +53,4 @@ module XL.SEMANTICS.TYPES with
         name                    : PT.tree // Not always there, may be nil
 
     type any_type is access to any_type_data
+

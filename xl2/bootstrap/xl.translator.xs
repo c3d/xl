@@ -32,3 +32,5 @@ module XL.TRANSLATOR with
     verbose : boolean := false
 
     semantics_translations_init : text
+    initializations             : text
+    terminations                : text

@@ -71,3 +71,15 @@ module XL.SEMANTICS.DECLARATIONS with
         body                    : declaration
         frame_depth             : integer
 
+
+    initialization
+    // ------------------------------------------------------------------------
+    //   Initialization code
+    // ------------------------------------------------------------------------
+        IO.WriteLn "// Early Decl"
+
+    termination
+    // ------------------------------------------------------------------------
+    //   Initialization code
+    // ------------------------------------------------------------------------
+        IO.WriteLn "// Late Decl"

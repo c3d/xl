@@ -81,3 +81,12 @@ module XL.SYMBOLS with
 
     // Return the name for a tree
     function TreeName (expr : PT.tree) return text
+
+    // A default translator that rewrites as the reference form
+    function RewriteAsTranslator (input       : PT.tree;
+                                  info        : rewrite;
+                                  in out args : PT.tree_map) return PT.tree
+    function RewriteAs (reference_form : PT.tree) return rewrite
+
+    // Creating a temporary compiler-generated name
+    function Temporary(base : text) return PT.name_tree

@@ -149,3 +149,33 @@ module XL.SYMBOLS is
                 ERR.Error "A second possible match is '$2'",
                           ambig.reference_form
             result := bestR.translator(test_tree, bestR, bestA)
+
+
+    function RewriteAsTranslator  (input       : PT.tree;
+                                   info        : rewrite;
+                                   in out args : PT.tree_map) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Replace a tree with the reference (used in name lookup)
+    // ------------------------------------------------------------------------
+        return info.reference_form
+
+
+
+    function RewriteAs (reference_form : PT.tree) return rewrite is
+    // ------------------------------------------------------------------------
+    //   Return a rewrite that rewrites as the reference form
+    // ------------------------------------------------------------------------
+        result.reference_form := reference_form
+        result.score_adjust   := nil
+        result.translator     := RewriteAsTranslator
+
+
+    unique_id : integer := 0
+    function Temporary(base : text) return PT.name_tree is
+    // ------------------------------------------------------------------------
+    //   Creating a temporary compiler-generated name
+    // ------------------------------------------------------------------------
+        unique_id += 1
+        base += "_"  // Invalid in XL names, but valid in most back-ends
+        base += text(unique_id)
+        return PT.NewName (base)
