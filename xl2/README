@@ -1,12 +1,16 @@
 To build the C++ version of the compiler, type "make" at the top level.
 
-If this is successful, to build the XL version of the compiler, go to the
-bootstrap directory and type "make".
+If this is successful, it should build
+1/ A bootstrap compiler written in C++ in the top directory
+2/ A bootstrap compiler written in XL in the 'bootstrap' directory
+3/ A development compiler written in XL in the 'native' directory
 
-If this is successful, in that same bootstrap directory, type "make test".
-This will build two compilers in a row and compare their output.
+It should also run a fairly small series of tests found under native/TESTS.
+You can run these tests manually by going there and typing ./alltests
 
-Please understand that this is very raw at that point.
-To get a better picture of where I want to go, see the XL compiler on
-the Mozart web site (http://mozart-dev.sf.net/xl.html). Note that there
-will be minor changes in syntax since then.
+The 'native' directory is where your own contributions should go.
+
+For documentation on the project, please refer to http://xlr.sf.net
+
+
+Thank you for helping.
