@@ -85,6 +85,13 @@ inline T & back(std::vector<T> &v)
 
 
 template<class T>
+inline void clear(std::vector<T> &v)
+{
+    v.clear();
+}
+
+
+template<class T>
 void popback(std::vector<T> &v)
 {
     v.pop_back();
@@ -110,6 +117,7 @@ namespace xl
         const openmode writemode = std::ios_base::out;
 
         std::ostream *standardoutput = &std::cout;
+        std::ostream *standarderror = &std::cerr;
         std::istream *standardinput = &std::cin;
 
         inline file open(text name, openmode mode = readmode)

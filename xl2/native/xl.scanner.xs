@@ -125,11 +125,15 @@ module XL.SCANNER with
     type scanner is access to scanner_data
 
     // Create a new scanner
-    function NewScanner(file_name : text) return scanner
+    function Open(file_name : text) return scanner
+    procedure Close(S : scanner)
 
     // Parse the file until we get a complete token
     function NextToken(S : scanner) return token
 
-
     // Scan a comment until the given end
     function Comment(S : scanner; EndOfComment : text) return text
+
+    // Position attributes of a scanner
+    function CurrentPosition(S : scanner) return integer
+    procedure SetPosition(in out S : scanner; P : integer)

@@ -193,7 +193,6 @@ module XL.TRANSLATOR is
                     XL2C_Enum A
                     IO.WriteLn ","
                     XL2C_Enum B
-
                 else
                     XL2C input
 
@@ -619,6 +618,17 @@ module XL.TRANSLATOR is
             // ----------------------------------------------------------------
 
             when
+                'A' ['B'..'C']
+            then
+                IO.write "range("
+                XL2C A
+                IO.write ", XLMakeRange("
+                XL2C B
+                IO.Write ", "
+                XL2C C
+                IO.write "))"
+
+            when
                 'A' in 'B'
             then
                 IO.write "XLMakeIterator("
@@ -682,7 +692,6 @@ module XL.TRANSLATOR is
                 IO.write "std::vector < "
                 XL2C A
                 IO.write " > "
-
 
 
             // ----------------------------------------------------------------

@@ -24,8 +24,27 @@
 // ****************************************************************************
 
 import IO = XL.TEXT_IO
+import POS = XL.SCANNER.POSITION
 
 module XL.ERRORS is
 
-    procedure Report(E : error; file : text; line : integer) is
-        IO.WriteLn "", file, ":", line, ": Error ", integer(E)
+    procedure Report(E : error; pos : integer) is
+        file      : text
+        line      : integer
+        column    : integer
+        linetext  : text
+
+        // Convert positon to line and column
+        POS.PositionToLine pos, file, line, column, linetext
+
+        // Display message
+        IO.WriteLn file, ":", line, ": Error ", integer(E)
+
+        // Display line contents and caret
+        IO.Writeln "|    ", linetext
+        IO.Write   "|    "
+        while column > 0 loop
+            IO.Write " "
+            column -= 1
+        IO.writeln "^"
+

@@ -1,0 +1,132 @@
+// ****************************************************************************
+//  xl.scanner.position.xl          (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Information about scanner positions
+// 
+//     Positions are recorded as number of characters since the beginning
+//     of a compilation. As new files are being read, this modules keep track
+//     of what file correspond to which character range
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU Genral Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import IO = XL.TEXT_IO
+import ASCII = XL.TEXT_IO.ENCODING.ASCII
+
+
+module XL.SCANNER.POSITION is
+// ----------------------------------------------------------------------------
+//   Implementation of scanner position information
+// ----------------------------------------------------------------------------
+
+    // A range of position corresponding to one file
+    type position_range is record with
+        start   : integer
+        file    : text
+
+    // A list of ranges
+    type position_list is string of position_range
+
+    // The global list of ranges
+    positions           : position_list
+    current_position    : integer
+
+
+    procedure Reset is
+    // ------------------------------------------------------------------------
+    // Reset the module (new compilation)
+    // ------------------------------------------------------------------------
+        clear positions
+        current_position := 0
+
+
+    procedure OpenFile (name : text) is
+    // ------------------------------------------------------------------------
+    //    Return the new position for a file
+    // ------------------------------------------------------------------------
+        R : position_range
+        R.start := current_position
+        R.file := name
+        positions += R
+
+
+    procedure CloseFile (pos : integer) is
+    // ------------------------------------------------------------------------
+    //   Remember the end position for a file
+    // ------------------------------------------------------------------------
+        current_position := pos
+
+
+    procedure PositionToFile (pos : integer; out file : text; out offset : integer) is
+    // ------------------------------------------------------------------------
+    //    Convert a position to a file and offset
+    // ------------------------------------------------------------------------
+        I   : integer
+        Max : integer := size (positions)
+        for I in 0..Max-1 loop
+            P : position_range := positions[I]
+            exit if pos < P.start
+        if I > 0 then
+            P : position_range := positions[I-1]
+            file := P.file
+            offset := pos - P.start
+        else
+            file := ""
+            offset := pos
+
+
+    procedure PositionToLine (pos : integer; out filename : text; out fileline : integer; out filecolumn : integer; out file_linetext : text) is
+    // ------------------------------------------------------------------------
+    //   Compute file, line and position
+    // ------------------------------------------------------------------------
+        offset  : integer := 0
+        line    : integer := 1
+        column  : integer := 0
+        linetext: text := ""
+        file    : IO.file
+        ch      : character
+
+        PositionToFile pos, filename, offset
+        if filename <> "" then
+            file := IO.open(filename)
+
+            // Count lines and characters
+            while IO.valid (file) loop
+                IO.Read file, ch
+                if ASCII.is_line_break(ch) then
+                    line += 1
+                    column := 0
+                    linetext := ""
+                else
+                    column += 1
+                    linetext += ch
+                offset -= 1
+                exit if offset <= 0
+
+            // Read rest of line
+            while IO.valid (file) loop
+                IO.Read file, ch
+                exit if ASCII.is_line_break(ch)
+                linetext += ch
+
+            IO.close file
+            fileline := line
+            filecolumn := column
+            file_linetext := linetext
+        else
+            fileline := 0
+            filecolumn := 0
+            file_linetext := ""

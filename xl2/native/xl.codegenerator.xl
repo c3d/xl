@@ -196,7 +196,6 @@ module XL.CODE_GENERATOR is
                     XL2C_Enum A
                     IO.WriteLn ","
                     XL2C_Enum B
-
                 else
                     XL2C input
 
@@ -623,6 +622,17 @@ module XL.CODE_GENERATOR is
             // ----------------------------------------------------------------
 
             when
+                'A' ['B'..'C']
+            then
+                IO.write "range("
+                XL2C A
+                IO.write ", XLMakeRange("
+                XL2C B
+                IO.Write ", "
+                XL2C C
+                IO.write "))"
+
+            when
                 'A' in 'B'
             then
                 IO.write "XLMakeIterator("
@@ -686,7 +696,6 @@ module XL.CODE_GENERATOR is
                 IO.write "std::vector < "
                 XL2C A
                 IO.write " > "
-
 
 
             // ----------------------------------------------------------------
@@ -792,7 +801,7 @@ module XL.CODE_GENERATOR is
 
         done := module_imports[imported]
         if (done & 1) = 0 then
-            iface_parser : PR.parser := PR.NewParser(interface_name)
+            iface_parser : PR.parser := PR.Open(interface_name)
             iface_tree   : BC.bytecode := PR.Parse(iface_parser)
             IO.WriteLn ""
             IO.WriteLn "// Interface ", interface_name, " done=", done
@@ -802,11 +811,12 @@ module XL.CODE_GENERATOR is
                 done |= 1
             IO.WriteLn ""
             IO.WriteLn "// End of Interface ", interface_name, " done=", done
+            PR.Close iface_parser
 
         if (done & 2) = 0 then
             IO.WriteLn ""
             IO.WriteLn "// Body ", body_name, " done=", done
-            body_parser : PR.parser := PR.NewParser(body_name)
+            body_parser : PR.parser := PR.Open(body_name)
             body_tree   : BC.bytecode := PR.Parse(body_parser)
             module_imports[imported] |= 2
             if body_tree <> nil then
@@ -814,6 +824,7 @@ module XL.CODE_GENERATOR is
                 done |= 2
             IO.WriteLn ""
             IO.WriteLn "// End of Body ", body_name, " done=", done
+            PR.Close body_parser
 
         if done = 0 then
             IO.Writeln "*** Module ", imported, " not found"
@@ -924,7 +935,7 @@ module XL.CODE_GENERATOR is
                 // The normal syntax would be T.value[1..length(T.value)-2]
                 // but our current Advanced Fuzzy Compilation Technology (TM)
                 // doesn't support that yet.
-                contents : text := range (T.value, 1..length(T.value)-2)
+                contents : text := T.value [1..length(T.value)-2]
                 IO.Write "xl::parser::tree::newtext(text("""
                 IO.Write XLSanitize(contents, '"')
                 IO.Write """), "
@@ -1029,3 +1040,5 @@ module XL.CODE_GENERATOR is
            else
               IO.Writeln "*** Ungrokable 'translate'"
               IO.WriteLn IO.show_debug, "[[", how, "]]"
+
+

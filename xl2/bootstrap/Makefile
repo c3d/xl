@@ -38,7 +38,8 @@ OTHER_SOURCES=					\
 	xl.translator.xs			\
 	xl.translator.xl			\
 	xl.textio.xl				\
-	../xl_lib.h
+	../xl_lib.h				\
+	../xl.syntax
 
 TOCLEAN=bxl bbxl bbbxl
 PRODUCT=bxl

@@ -35,4 +35,4 @@ module XL.ERRORS with
         E_ParseMismatchParen,
         E_ParseTrailingOp
 
-    procedure Report(E : error; file : text; line : integer)
+    procedure Report(E : error; pos : integer)

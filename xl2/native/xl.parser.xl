@@ -27,15 +27,26 @@ import PT = XL.PARSER.TREE
 import SC = XL.SCANNER
 import ASCII = XL.TEXT_IO.ENCODING.ASCII
 import ERR = XL.ERRORS
+import POS = XL.SCANNER.POSITION
 
 module XL.PARSER is
 
-    function NewParser(name : text) return parser is
+    function Open(name : text) return parser is
     // ------------------------------------------------------------------------
     //   Create a new parser
     // ------------------------------------------------------------------------
-        result.scanner := SC.NewScanner(name)
+        result.scanner := SC.Open(name)
         ReadSyntaxFile result, "xl.syntax"
+        POS.OpenFile name
+
+
+    procedure Close(P : parser) is
+    // ------------------------------------------------------------------------
+    //   Close a parser
+    // ------------------------------------------------------------------------
+        POS.CloseFile SC.CurrentPosition(P.scanner)
+        SC.Close P.scanner
+        delete P
 
 
     type pending is record with
@@ -129,10 +140,12 @@ module XL.PARSER is
         new_statement           : boolean       := true
         pending_token           : SC.token      := SC.tokNONE
         S                       : SC.scanner    := P.scanner
+        pos                     : integer       := 0
 
         while not done loop
             // If no token pending, scan one
             if pending_token = SC.tokNONE then
+                pos := SC.CurrentPosition(S)
                 right := nil
                 prefix_priority := default_priority
                 infix_priority := default_priority
@@ -187,13 +200,13 @@ module XL.PARSER is
             if tok = SC.tokEOF or tok = SC.tokERROR then
                 done := true
             else if tok = SC.tokINTEGER then
-                right := PT.NewInteger(S.integer_value)
+                right := PT.NewInteger(S.integer_value, pos)
             else if tok = SC.tokREAL then
-                right := PT.NewReal(S.real_value)
+                right := PT.NewReal(S.real_value, pos)
             else if tok = SC.tokSTRING then
-                right := PT.NewText(S.string_value, '"')
+                right := PT.NewText(S.string_value, '"', pos)
             else if tok = SC.tokQUOTE then
-                right := PT.NewText(S.string_value, '''')
+                right := PT.NewText(S.string_value, '''', pos)
             else if tok = SC.tokNAME or tok = SC.tokSYMBOL then
                 name := S.token
                 spelling := S.string_value
@@ -206,7 +219,7 @@ module XL.PARSER is
                 else if not result then
                     // If this is the very first thing we see
                     prefix_priority := GetPrefixPriority(P, name)
-                    right := PT.NewName(spelling)
+                    right := PT.NewName(spelling, pos)
                     if prefix_priority = default_priority then
                         prefix_priority := function_priority
                 else if left <> nil then
@@ -216,7 +229,7 @@ module XL.PARSER is
                     // parse tis as "A and (not B)" rather than as
                     // "(A and not) B"
                     prefix_priority := GetPrefixPriority (P, name)
-                    right := PT.NewName(spelling)
+                    right := PT.NewName(spelling, pos)
                     if prefix_priority = default_priority then
                         prefix_priority := function_priority
                 else
@@ -230,7 +243,7 @@ module XL.PARSER is
                     else
                         // No priority : take this as a prefix by default
                         prefix_priority := GetPrefixPriority(P, name)
-                        right := PT.NewName(spelling)
+                        right := PT.NewName(spelling, pos)
                         if prefix_priority = default_priority then
                             prefix_priority := function_priority
 
@@ -256,14 +269,14 @@ module XL.PARSER is
             else if tok = SC.tokPARCLOSE then
                 // Check for mismatched parentheses here
                 if S.token[0] <> closing_paren then
-                    ERR.Report ERR.E_ParseMismatchParen, S.file, S.line
+                    ERR.Report ERR.E_ParseMismatchParen, S.position
                     IO.WriteLn "Mismatched parenthese, got '", S.token, "', expected '", closing_paren, "'"
                 done := true
 
             else if tok = SC.tokUNINDENT then
                 // Check for mismatched parentheses here
                 if not ASCII.is_line_break(closing_paren) then
-                    ERR.Report ERR.E_ParseMismatchParen, S.file, S.line
+                    ERR.Report ERR.E_ParseMismatchParen, S.position
                     IO.WriteLn "Mismatched parenthese, got unindent, expected '", closing_paren, "'"
                 done := true
 
@@ -286,14 +299,14 @@ module XL.PARSER is
                         prev : pending := back(stack)
                         exit if prev.priority < paren_priority
                         result_priority := prev.priority
-                        result := PT.NewInfix(prev.opcode,prev.argument,result)
+                        result := PT.NewInfix(prev.opcode,prev.argument,result, pos)
                         pop_back stack
 
                 // Parse the contents of the parenthese
                 right := Parse(P, closing)
                 if right = nil then
-                    right := PT.NewName ""
-                right := PT.NewBlock(right, opening, closing)
+                    right := PT.NewName ("", pos)
+                right := PT.NewBlock(right, opening, closing, pos)
 
                 // Parse 'if (A+B) < C then...' as if ((A+B) < C) then ...'
                 // Parse 'A[B] := C' as '(A[B] := C)'
@@ -354,9 +367,9 @@ module XL.PARSER is
                             exit if prev.priority <> default_priority and infix_priority > prev.priority
                             exit if prev.priority < statement_priority and infix_priority = prev.priority
                         if prev.opcode = prefix then
-                            left := PT.NewPrefix(prev.argument, left)
+                            left := PT.NewPrefix(prev.argument, left, pos)
                         else
-                            left := PT.NewInfix(prev.opcode, prev.argument, left)
+                            left := PT.NewInfix(prev.opcode, prev.argument, left, pos)
                         pop_back stack
 
                     // Now we want to restart with the rightmost operand
@@ -384,9 +397,9 @@ module XL.PARSER is
                         exit if prev.priority <> default_priority and result_priority > prev.priority
                         exit if prev.priority < statement_priority and result_priority = prev.priority
                     if prev.opcode = prefix then
-                        result := PT.NewPrefix(prev.argument, result)
+                        result := PT.NewPrefix(prev.argument, result, pos)
                     else
-                        result := PT.NewInfix(prev.opcode, prev.argument, result)
+                        result := PT.NewInfix(prev.opcode, prev.argument, result, pos)
                     pop_back stack
 
                 // Check if new statement
@@ -412,7 +425,7 @@ module XL.PARSER is
             if result = nil then
                 last : pending := back(stack)
                 if last.opcode <> ASCII.CR then
-                    ERR.Report ERR.E_ParseTrailingOp, S.file, S.line
+                    ERR.Report ERR.E_ParseTrailingOp, S.position
                 result := last.argument
                 pop_back stack
 
@@ -420,9 +433,9 @@ module XL.PARSER is
             while size(stack) loop
                 prev : pending := back(stack)
                 if prev.opcode = prefix then
-                    result := PT.NewPrefix(prev.argument, result)
+                    result := PT.NewPrefix(prev.argument, result, pos)
                 else
-                    result := PT.NewInfix(prev.opcode, prev.argument, result)
+                    result := PT.NewInfix(prev.opcode, prev.argument, result, pos)
                 pop_back stack
 
 
@@ -434,7 +447,7 @@ module XL.PARSER is
         in_infix : boolean := false
         priority : integer := 0
         tok : SC.token
-        S : SC.scanner := SC.NewScanner(syntax)
+        S : SC.scanner := SC.Open(syntax)
 
         // Comments are hardcoded for now
         P.comments["//"] := ASCII.CR
@@ -480,3 +493,4 @@ module XL.PARSER is
             else if tok = SC.tokINTEGER then
                 priority := S.integer_value
 
+        SC.Close S

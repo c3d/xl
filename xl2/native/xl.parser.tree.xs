@@ -41,7 +41,8 @@ module XL.PARSER.TREE with
 
     // The base class for all trees
     type tree_node is record with
-        kind : tree_kind
+        kind     : tree_kind
+        position : integer                      // Context-dependent position
     type tree is access to tree_node
 
 
@@ -51,16 +52,18 @@ module XL.PARSER.TREE with
     type integer_node is tree_node with
         value : integer
     type integer_tree is access to integer_node
-    function NewInteger(value : integer) return integer_tree is
+    function NewInteger(value : integer; pos : integer := -1) return integer_tree is
         result.kind := xlINTEGER
+        result.position := pos
         result.value := value
 
     // Representation of a real
     type real_node is tree_node with
         value : real
     type real_tree is access to real_node
-    function NewReal(value : real) return real_tree is
+    function NewReal(value : real; pos : integer := -1) return real_tree is
         result.kind := xlREAL
+        result.position := pos
         result.value := value
 
     // Representation of a text
@@ -68,8 +71,9 @@ module XL.PARSER.TREE with
         value : text
         quote : character
     type text_tree is access to text_node
-    function NewText(value : text; quote : character) return text_tree is
+    function NewText(value : text; quote : character; pos : integer := -1) return text_tree is
         result.kind := xlTEXT
+        result.position := pos
         result.value := value
         result.quote := quote
 
@@ -77,8 +81,9 @@ module XL.PARSER.TREE with
     type name_node is tree_node with
         value : text
     type name_tree is access to name_node
-    function NewName(value : text) return name_tree is
+    function NewName(value : text; pos : integer := -1) return name_tree is
         result.kind := xlNAME
+        result.position := pos
         result.value := value
 
 
@@ -90,8 +95,9 @@ module XL.PARSER.TREE with
         opening : character
         closing : character
     type block_tree is access to block_node
-    function NewBlock(child : tree; opening : character; closing : character) return block_tree is
+    function NewBlock(child : tree; opening : character; closing : character; pos : integer := -1) return block_tree is
         result.kind := xlBLOCK
+        result.position := pos
         result.child := child
         result.opening := opening
         result.closing := closing
@@ -101,8 +107,9 @@ module XL.PARSER.TREE with
         left  : tree
         right : tree
     type prefix_tree is access to prefix_node
-    function NewPrefix(left : tree; right : tree) return prefix_tree is
+    function NewPrefix(left : tree; right : tree; pos : integer := -1) return prefix_tree is
         result.kind := xlPREFIX
+        result.position := pos
         result.left := left
         result.right := right
 
@@ -112,8 +119,9 @@ module XL.PARSER.TREE with
         left  : tree
         right : tree
     type infix_tree is access to infix_node
-    function NewInfix(name: text; left: tree; right: tree) return infix_tree is
+    function NewInfix(name: text; left: tree; right: tree; pos : integer := -1) return infix_tree is
         result.kind := xlINFIX
+        result.position := pos
         result.name := name
         result.left := left
         result.right := right
@@ -123,8 +131,9 @@ module XL.PARSER.TREE with
     type wildcard_node is tree_node with
         name : text
     type wildcard_tree is access to wildcard_node
-    function NewWildcard(name : text) return wildcard_tree is
+    function NewWildcard(name : text; pos : integer := -1) return wildcard_tree is
         result.kind := xlWILDCARD
+        result.position := pos
         result.name := name
 
 

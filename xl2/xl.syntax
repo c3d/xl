@@ -29,5 +29,6 @@ PREFIX
         240     function procedure to module quote
         250     !
         280     - + * /
+        290     @
 
                 

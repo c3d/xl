@@ -43,10 +43,9 @@ module XL.SCANNER is
         base            : integer   // Base for real/int tokens
 
         // Position attributes
-        file            : text      // File name
-        line            : integer   // Line in file
         column          : integer   // Column in file
         indent          : integer   // Current indent
+        position        : integer   // Current character count
 
         // Private fields
         input           : IO.file   // Text file we read from
@@ -70,12 +69,10 @@ module XL.SCANNER is
 
 
 
-    function NewScanner(file_name : text) return scanner is
+    function Open(file_name : text) return scanner is
     // ------------------------------------------------------------------------
     //   Create and initialize a new scanner
     // ------------------------------------------------------------------------
-        result.file := file_name
-        result.line := 1
         result.input := 0
         result.token := ""
         result.string_value := ""
@@ -85,9 +82,18 @@ module XL.SCANNER is
         result.checking_indent := false
         result.column := 0
         result.indent := 0
+        result.position := 0
 
         result.input := IO.open(file_name)
         result.indents += 0
+
+
+    procedure Close(S : scanner) is
+    // ------------------------------------------------------------------------
+    //   Close a scanner
+    // ------------------------------------------------------------------------
+        IO.Close S.input
+        delete S
 
 
     procedure NextChar (S : scanner; in out C : character) is
@@ -97,6 +103,7 @@ module XL.SCANNER is
         S.token += C
         S.string_value += C
         IO.read S.input, C
+        S.position += 1
 
 
     procedure NextLowerChar (S : scanner; in out C : character) is
@@ -106,6 +113,7 @@ module XL.SCANNER is
         S.token += ASCII.tolower(C)
         S.string_value += C
         IO.read S.input, C
+        S.position += 1
 
 
     procedure IgnoreChar (S : scanner; in out C : character) is
@@ -114,6 +122,7 @@ module XL.SCANNER is
     // ------------------------------------------------------------------------
         S.string_value += C
         IO.read S.input, C
+        S.position += 1
 
 
     function NextToken(S : scanner) return token is
@@ -138,12 +147,12 @@ module XL.SCANNER is
         // Read next character
         C : character
         IO.Read S.input, C
+        S.position += 1
 
         // Skip spaces and check indentation
         while ASCII.isspace C and IO.valid S.input loop
             if ASCII.is_line_break C then
                 // New line: start counting indentation
-                S.line += 1
                 S.checking_indent := true
                 S.column := 0
             else if S.checking_indent then
@@ -152,14 +161,16 @@ module XL.SCANNER is
                     if S.indent_char = 0 then
                         S.indent_char := C
                     else if S.indent_char <> C then
-                        ERR.Report ERR.E_ScanMixedIndent, S.file, S.line
+                        ERR.Report ERR.E_ScanMixedIndent, S.position
                     S.column += 1
             // Keep looking for more spaces
             IO.Read S.input, C
+            S.position += 1
 
         // Stop counting indentation
         if S.checking_indent then
             IO.PutBack S.input, C
+            S.position -= 1
             S.checking_indent := false
             if S.column > S.indent then
                 // Strictly deeper indent
@@ -174,7 +185,7 @@ module XL.SCANNER is
                 // If we unindented, but did not go as far as the
                 // most recent indent, report inconsistency
                 if back S.indents < S.column then
-                    ERR.Report ERR.E_ScanInconsistent, S.file, S.line
+                    ERR.Report ERR.E_ScanInconsistent, S.position
                     return tokERROR
 
                 // Otherwise, report that we undindented
@@ -207,14 +218,14 @@ module XL.SCANNER is
                     if C = '_' then
                         IgnoreChar S, C
                         if DigitValue(C) >= S.base then
-                            ERR.Report ERR.E_ScanDoubleUnder, S.file, S.line
+                            ERR.Report ERR.E_ScanDoubleUnder, S.position
 
                     // Check if this is a based number
                     if C = '#' and not based_number then
                         S.base := S.integer_value
                         if S.base < 2 or S.base > 36 then
                             S.base := 36
-                            ERR.Report ERR.E_ScanInvalidBase, S.file, S.line
+                            ERR.Report ERR.E_ScanInvalidBase, S.position
                         NextChar S, C
                         S.integer_value := 0
                         based_number := true
@@ -227,11 +238,13 @@ module XL.SCANNER is
             S.real_value := S.integer_value
             if C = '.' then
                 IO.Read S.input, C
+                S.position += 1
                 if DigitValue C >= S.base then
                     // This is something else following an integer
                     // For instance 1..3
                     IO.PutBack S.input, C
                     IO.PutBack S.input, '.'
+                    S.position -= 2
                     return tokINTEGER
                 else
                     S.token += '.'
@@ -246,7 +259,7 @@ module XL.SCANNER is
                         if C = '_' then
                             IgnoreChar S, C
                             if DigitValue(C) >= S.base then
-                                ERR.Report ERR.E_ScanDoubleUnder, S.file,S.line
+                                ERR.Report ERR.E_ScanDoubleUnder, S.position
 
             // Check if we have a second '#' at end of based number
             if C = '#' then
@@ -274,7 +287,7 @@ module XL.SCANNER is
                     if C = '_' then
                         IgnoreChar S, C
                         if DigitValue C >= 10 then
-                           ERR.Report ERR.E_ScanDoubleUnder, S.file, S.line
+                           ERR.Report ERR.E_ScanDoubleUnder, S.position
 
                 // Compute base ^ exponent
                 exponent_value : real := 1.0
@@ -295,6 +308,7 @@ module XL.SCANNER is
 
             // Return the last token
             IO.PutBack S.input, C
+            S.position -= 1
             if floating_point then
                 return tokREAL
             return tokINTEGER
@@ -307,8 +321,9 @@ module XL.SCANNER is
                 if C = '_' then
                     IgnoreChar S, C
                     if not ASCII.is_letter_or_digit C then
-                        ERR.Report ERR.E_ScanDoubleUnder, S.file, S.line
+                        ERR.Report ERR.E_ScanDoubleUnder, S.position
             IO.PutBack S.input, C
+            S.position -= 1
             return tokNAME
 
         // Look for strings
@@ -316,20 +331,23 @@ module XL.SCANNER is
             eos : character := C
             S.token := C
             IO.Read S.input, C
+            S.position += 1
             while IO.valid S.input loop
                 // Check end of string, but keep double quotes in
                 if C = eos then
                     S.token += C
                     IO.Read S.input, C
+                    S.position += 1
                     if C <> eos then
                         IO.PutBack S.input, C
+                        S.position -= 1
                         if eos = '"' then
                             return tokSTRING
                         else
                             return tokQUOTE
 
                 if not IO.Valid S.input or ASCII.is_line_break(C) then
-                    ERR.Report ERR.E_ScanStringEOL, S.file, S.line
+                    ERR.Report ERR.E_ScanStringEOL, S.position
                     return tokERROR
                 NextChar S, C
 
@@ -347,6 +365,7 @@ module XL.SCANNER is
             exit if C='(' or C=')' or C='{' or C='}' or C='[' or C=']'
             NextChar S, C
         IO.PutBack S.input, C
+        S.position -= 1
         return tokSYMBOL
 
 
@@ -361,10 +380,10 @@ module XL.SCANNER is
 
         while IO.valid S.input and index < max loop
             IO.Read S.input, C
+            S.position += 1
 
             if ASCII.is_line_break C then
                 // New-line: start counting indentation
-                S.line += 1
                 S.checking_indent := true
                 S.column := 0
             else if S.checking_indent then
@@ -382,3 +401,16 @@ module XL.SCANNER is
 
         return comment
 
+
+    function CurrentPosition(S : scanner) return integer is
+    // ------------------------------------------------------------------------
+    //   Return the current character count from start of file of a scanner
+    // ------------------------------------------------------------------------
+        return S.position
+
+
+    procedure SetPosition(in out S : scanner; P : integer) is
+    // ------------------------------------------------------------------------
+    //   Set the current character count from start of file of a scanner
+    // ------------------------------------------------------------------------
+        S.position := P

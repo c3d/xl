@@ -29,6 +29,8 @@ SOURCES=compiler.xl
 OTHER_SOURCES=					\
 	xl.scanner.xs				\
 	xl.scanner.xl				\
+	xl.scanner.position.xs			\
+	xl.scanner.position.xl			\
 	xl.errors.xs				\
 	xl.errors.xl				\
 	xl.parser.tree.xs			\
@@ -46,7 +48,8 @@ OTHER_SOURCES=					\
 	xl.optimizer.xs				\
 	xl.optimizer.xl				\
 	xl.textio.xl				\
-	../xl_lib.h
+	../xl_lib.h				\
+	../xl.syntax
 
 TOCLEAN=nxl
 PRODUCT=nxl

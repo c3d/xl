@@ -94,7 +94,8 @@ module XL.PARSER with
     type parser is access to parser_data
 
     // Creating a parser
-    function NewParser(name : text) return parser
+    function Open(name : text) return parser
+    procedure Close(P : parser)
     procedure ReadSyntaxFile (P : PR.parser; syntax : text)
 
     // Parsing

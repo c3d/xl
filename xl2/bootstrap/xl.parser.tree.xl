@@ -105,7 +105,7 @@ module XL.PARSER.TREE is
             R : PT.block_tree := PT.block_tree(ref)
             if T.opening = R.opening and T.closing = R.closing then
                 result := Matches(T.child, R.child, arg)
-                if result >= 0 then
+                if result > 0 then
                     return result + 1
             if verbose then
                 IO.Writeln "/* Failed block */"
