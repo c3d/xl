@@ -1,12 +1,12 @@
 #******************************************************************************
-#  Christophe de Dinechin                                      XROMA PROJECT  
-#  XROMA: Makefile.config.sun
+#  Christophe de Dinechin                                      XL PROJECT  
+#  XL: Makefile.config.sun
 #******************************************************************************
 #
 #  File Description:
 #
 #    This is the shared makefile configuration and shared targets for all
-#    Xroma directories
+#    XL directories
 #
 #    This version is for GCC / Solaris
 #
@@ -14,8 +14,8 @@
 #
 #
 #******************************************************************************
-#This document is distributed under the Xroma public license.
-#See the accompanying license file for information.
+# This program is released under the GNU General Public License.
+# See http://www.gnu.org/copyleft/gpl.html for details
 #******************************************************************************
 #* File       : $RCSFile$
 #* Revision   : $Revision$

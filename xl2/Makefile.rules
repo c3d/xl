@@ -1,6 +1,6 @@
 #******************************************************************************
-#  DDD & DVDVDVD                                                XROMA PROJECT  
-#  XROMA: Makefile.rules
+#  Christophe de Dinechin                                       XL PROJECT  
+#  XL: Makefile.rules          (C) 2003 Christophe de Dinechin
 #******************************************************************************
 #
 #  File Description:
@@ -15,8 +15,8 @@
 #
 #
 #******************************************************************************
-#This document is distributed under the Xroma public license.
-#See the accompanying license file for information.
+# This program is released under the GNU General Public License.
+# See http://www.gnu.org/copyleft/gpl.html for details
 #******************************************************************************
 #* File       : $RCSFile$
 #* Revision   : $Revision$
