@@ -41,6 +41,7 @@ OTHER_SOURCES=					\
 	xl.translator.xl			\
 	xl.symbols.xs				\
 	xl.symbols.xl				\
+	xl.constants.xl				\
 	xl.semantics.xs				\
 	xl.semantics.xl				\
 	xl.semantics.declarations.xs		\
@@ -51,6 +52,8 @@ OTHER_SOURCES=					\
 	xl.semantics.overload.xl		\
 	xl.semantics.instructions.xs		\
 	xl.semantics.instructions.xl		\
+	xl.semantics.modules.xs			\
+	xl.semantics.modules.xl			\
 	xl.semantics.types.xs			\
 	xl.semantics.types.xl			\
 	xl.semantics.types.functions.xs		\
@@ -76,6 +79,8 @@ OTHER_SOURCES=					\
 	../xl.syntax				\
 						\
 	xl.plugin.listing.xl			\
+	xl.plugin.include.xl			\
+	xl.plugin.junk.xl			\
 	xl.plugin.transforms.xl			\
 	xl.plugin.differentiation.xl		\
 	xl.plugin.constantfold.xl

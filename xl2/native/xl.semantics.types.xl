@@ -27,6 +27,7 @@ import PT = XL.PARSER.TREE
 import SYM = XL.SYMBOLS
 import ERR = XL.ERRORS
 import XLT = XL.TRANSLATOR
+import CST = XL.CONSTANTS
 
 
 module XL.SEMANTICS.TYPES is
@@ -137,6 +138,14 @@ module XL.SEMANTICS.TYPES is
             boolean_type   := EnterBuiltinType ("boolean", 1, "Bool")
             character_type := EnterBuiltinType ("character", 16, "Char")
             text_type      := EnterBuiltinType ("text", -1, "Text")
+            record_type    := EnterBuiltinType ("record", 0, "Rec")
+            module_type    := EnterBuiltinType ("module", 0, "Mod")
+
+            // Enter pre-defined constants true and false
+            true_tree : PT.name_tree := PT.NewName("true")
+            false_tree : PT.name_tree := PT.NewName("false")
+            CST.EnterNamedConstant true_tree, true_tree
+            CST.EnterNamedConstant false_tree, false_tree
 
 
     initialization
@@ -203,23 +212,7 @@ module XL.SEMANTICS.TYPES is
         if result = nil then
             if type_expr.kind = PT.xlNAME then
                 tname : type_expr as PT.name_tree
-                types : SYM.tree_list
-                SYM.Lookup XLT.context, "TYPE", tname.value, types
-                if size(types) > 0 then
-                    original : PT.tree := types[0]
-                    if size(types) > 1 then
-                        ERR.Error "Internal: Multiple types for '$1'", tname
-                        ERR.Error "One candidate is '$1'", types[0]
-                        ERR.Error "Another candidate is '$1'", types[1]
-                    info  := PT.FindInfo(original, "TYPE")
-                    if info <> nil then
-                        result := any_type (info)
-                    else
-                        ERR.Error "The type '$1' is undefined", type_expr
-                        return nil
-                else
-                    ERR.Error "The type '$1' is unknown", type_expr
-                    return nil
+                result := NamedType(tname)
             else
                 ERR.Error "'$1' used as a type, but doesn't look like one",
                           type_expr
@@ -242,6 +235,47 @@ module XL.SEMANTICS.TYPES is
         PT.SetInfo type_expr, "TYPE", result
         if type_expr <> original then
             PT.SetInfo original, "TYPE", result
+
+
+    function NamedType (tname : PT.name_tree) return any_type is
+    // ------------------------------------------------------------------------
+    //   Return the type for a name
+    // ------------------------------------------------------------------------
+        types : SYM.tree_list
+        SYM.Lookup XLT.context, "TYPE", tname.value, types
+        if size(types) > 0 then
+            original : PT.tree := types[0]
+            if size(types) > 1 then
+                ERR.Error "Internal: Multiple types for '$1'", tname
+                ERR.Error "One candidate is '$1'", types[0]
+                ERR.Error "Another candidate is '$1'", types[1]
+            info : PT.info := PT.FindInfo(original, "TYPE")
+            if info <> nil then
+                result := any_type (info)
+            else
+                ERR.Error "The type '$1' is undefined", tname
+                return nil
+        else
+            ERR.Error "The type '$1' is unknown", tname
+            return nil
+
+
+    function IsTypeName(type_expr : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if the expression is the name of a type
+    // ------------------------------------------------------------------------
+        if type_expr.kind <> PT.xlNAME then
+            return false
+        types : SYM.tree_list
+        tname : type_expr as PT.name_tree
+        SYM.Lookup XLT.context, "TYPE", tname.value, types
+        if size(types) < 1 then
+            return false
+        original : PT.tree := types[0]
+        info : PT.info := PT.FindInfo(original, "TYPE")
+        if info = nil then
+            return false
+        return true
 
 
     function TypeExpression(typeToken : any_type) return PT.tree is
