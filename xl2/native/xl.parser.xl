@@ -151,9 +151,12 @@ module XL.PARSER is
                 // If the next token has a substatement infix priority
                 // this takes over any pending newline. Example: else
                 if pending = SC.tokNEWLINE then
-                    if GetInfixPriority(P, name) < P.statement_priority then
-                        P.pending_token := SC.tokNONE
-                        pending := SC.tokNONE
+                    prefixp : integer := GetPrefixPriority(P, name)
+                    if prefixp = P.default_priority then
+                        infixp  : integer := GetInfixPriority(P, name)
+                        if infixp < P.statement_priority then
+                            P.pending_token := SC.tokNONE
+                            pending := SC.tokNONE
 
             else if result = SC.tokNEWLINE then
                 // Combined with any previous pending indent
@@ -162,6 +165,10 @@ module XL.PARSER is
             else if result = SC.tokUNINDENT then
                 // Add newline if no infix
                 P.pending_token := SC.tokNEWLINE
+                return result
+            else if result = SC.tokINDENT then
+                // Ignore pending newline in that case
+                P.pending_token := SC.tokNONE
                 return result
 
             // If we have another token here and a pending newline,

@@ -97,7 +97,7 @@ test: debug regression native native_test native_stability_test
 # For now, we rely on mere transcoding to get the next generation compiler
 # We disable semantics, which is incomplete enough to cause more harm than good
 native:
-	$(MAKE) PRODUCT=nnxl XL="./nxl" XLOPTS="-g -bootstrap" OBJROOT="$(OBJROOT)nnxl"
+	$(MAKE) PRODUCT=nnxl XL="./nxl" XLOPTS="-bootstrap" OBJROOT="$(OBJROOT)nnxl"
 native_test: 
 	$(MAKE) PRODUCT=nnnxl XL="./nnxl" XLOPTS="-bootstrap" OBJROOT="$(OBJROOT)nnxl_test"
 native_stability_test: 

@@ -22,7 +22,7 @@ INFIX
         410     .
 
 PREFIX
-        120     exit
+        120     exit loop
         125     case if return while when
         310     not in out constant variable const var
         320     function procedure to module quote
