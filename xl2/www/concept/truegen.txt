@@ -1,1 +1,50 @@
 <!--True Generic Types-->
+
+Frequently, when you declare a {@generic} type, you also declare a
+number of related generic declarations (other types, algorithms,
+etc). Before the {@stl}, we had little experience with large bodies
+of generic code.
+
+But the STL demonstrated how verbose code becomes
+when all generic parameters need to be repeated over and
+over. Consider for instance an array generic type, which depends on a
+value type (what you store in the array) and an index type (how you
+index the array). Consider now that you want to implement the
+minimum, maximum and a sort operation on this array. The C++
+declarations (ignoring the actual implementations) will look like:
+
+{pre}// Example C++ template code
+template &lt;typename Index, typename Value&gt;
+class Array;
+
+template &lt;typename Index, typename Value&gt;
+Value Max(const Array&lt;Index,Value&gt; &A);
+
+template &lt;typename Index, typename Value&gt;
+Value Min(const Array&lt;Index,Value&gt; &A);
+
+template &lt;typename Index, typename Value&gt;
+void Sort(Array&lt;Index,Value&gt; &A);
+{erp}
+
+Obviouly, there is a lot of {@synnoise} in this example, and the
+{@signoise} is a bit low. This is why XL allows generic types to be
+used as regular types, in which case the declaration they are
+contained in becomes generic implicitly. In such declarations, the
+arguments of the original generic type can be referred to using a
+dotted notation. The exact XL equivalent of the above code would
+therefore be:
+
+{pre}// Equivalent XL generic code
+generic [type index; type value] type array
+function Max(A : array) return array.value
+function Min(A : array) return array.value
+to Sort (in out A : array)
+{erp}
+
+True generic types are even more interesting when they are
+{concept "generic-validation" "validated"}
+
+Note: At this stage, only the C++ version of the compiler implements
+generics.
+

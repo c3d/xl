@@ -2,6 +2,6 @@
 
 The signal/noise ratio evaluates how much of the {@code} is actually
 used to {@represent} something from the {@pb}. The rest can be seen
-as {@synnoise}.
+as {@synnoise} or {@semnoise}.
 
 

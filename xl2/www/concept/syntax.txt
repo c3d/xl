@@ -1,9 +1,10 @@
 <!--Syntax-->
 
-The syntax is the set of rules governing the visible aspects of the
-{@cs}. English syntax is what makes "The eat cat fish" incorrect,
-because the (visible) order of words is incorrect (see
-{example "semantics"} to contrast that with semantic errors).
+The syntax defines the shape of programs, using set of rules governing
+the visible aspects of the {@code}. English syntax is what makes "The
+eat cat fish" incorrect, because the (visible) order of words is
+incorrect (see {example "semantics"} to contrast that with semantic
+errors).
 
 In most development environments, the code space is represented as
 text (known as "source code"), and the syntax essentially
@@ -28,5 +29,5 @@ to an ideal, because it fairly directly {@represents} the associated
 {@concepts} from the {@pb}. At this point, {@xl} mostly focuses on
 text-only source representations, though this is really more a
 simplifying assumption than a design limitation. Graphical
-representation of some particular {concept "tree" "XL0 trees"} is
+representation of some particular {inside "tree" "XL0 trees"} is
 desirable in the future.

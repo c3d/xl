@@ -28,5 +28,5 @@ associated runtime library.
 
 These web pages describe the language as I intend it to be
 implemented. The current status of the compiler(s) can be found
-{concept "status" "on the status page"}.
-
+{inside "status" "on the status page"}. XL is very much a work in
+progress. A lot of things may change by the time we reach 1.0...

@@ -1,7 +1,7 @@
 <!--Semantics-->
 
-Semantics includes rules governing those aspects of the
-{@cs}, which are not directly visible. English semantics make
+Semantics define the meaning of the program, in other words  those
+aspects of the {@code}, which are not directly visible. English semantics make
 "The small large rabbit compiled the cat" incorrect, even if its
 {@syntax} is correct, because there are contradictions in the meaning
 (the rabbit can't be both large and small) and a verb that doesn't make
@@ -23,4 +23,4 @@ the same.
 
 For {@cp}, one objective of well-designed semantics is to reduce
 {@semnoise}, to be easy to {concept "extension" "extend"}, and to be
-able to correctly identify and report {concept "errors"}.
+able to correctly identify and report {inside "errors"}.

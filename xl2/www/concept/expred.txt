@@ -13,7 +13,7 @@ Z := A + B * C         // Reduced to MulAdd(A,B,C)
 Z := A * B + C         // Reduced to Add(A*B,C)
 {erp}
 
-A {concept "tree" "parse tree"} representing the expression is
+A {inside "tree" "parse tree"} representing the expression is
 reduced to function calls by matching the form of the tree to forms
 specified by {example "written"} clauses in function declarations. The
 type system guides the process of tree selection, so multiple

@@ -1,1 +1,47 @@
 <!--Pragmas-->
+
+One concern with {concept "extension" "language extensions"} is the
+creationg of multiple dialects. Not only do people need to learn the
+dialects (in particular their {@semantics}), it is also difficult to
+identify in the {@code} where a particular dialect is being
+used. These problems are the reason that the development of
+<A href="http://mozart-dev.sf.net/moka.html">Moka</A> was suspended:
+Moka extended Java, but Java had no "hooks" that could be used to
+signal where extensions were being used.
+
+For totally new {@concepts}, the typical approach is to invent a new
+notation. For instance, the {example "tasking"} extension to {@XL}
+uses the {tt "task"} word as an anchor for the {inside "translation"}
+mechanism. Similarly, {inside "functions"} are implemented by
+recognizing {inside "tree" "parse trees"} containing the word
+{tt "function"} at just the right place. Such concepts do require
+{concept "dsl" "dialects"} of their own.
+
+But many concepts are really minor variations of a more important
+concept, or very specific to a particular domain, or specify minor
+implementation details. It is desirable to have a specific notation
+for those. For this case, {@XL} uses a dedicated notation, called a
+<em>pragma</em>. By convention, a pragma is any text enclosed between
+curly braces. For instance, {tt "\\{inline\\}"} is a pragma.
+
+Pragmas should be used for operations that slightly alter the
+{@semantics} of the code, but not enough to deserve a new
+notation. In particular, most low-level optimization or
+implementation details can be specified with pragmas. For instance,
+{tt "\\{inline\\}"} specifies that a function should be inlined;
+{tt "\\{byref\\}"} and {tt "\\{byval\\}"} can be used to force
+arguments to passed by reference or by value; {tt "\\{C&nbsp;name\\}"}
+indicates that a subroutine should use the C calling conventions and
+{tt "name"} as a linkage name.
+
+{pre}// Examples of pragmas
+\{inline\} \{C "__quick"\} function Quick(\{byref\} X : integer)
+{erp}
+
+Historic note: In the old C++ implementation, pragmas were the main
+mechanism to invoke {inside "plugins" "compiler plug-ins"}. In the XL
+compiler, the {inside "translation"} statements play that role. The
+pragmas form remains as a convention, the special rule being that
+there is a top-level translation rule that ignores unrecognized
+pragmas with a warning (whereas an unrecognized form would generate a
+compiler error).

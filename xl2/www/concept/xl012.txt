@@ -24,7 +24,7 @@ imperative programming language (in the lineage of
 or {@Ada}). However, being based on XL0, that language is
 {concept "extension" "extensible"}. That language is implemented
 using the same {inside "translation"} mechanism used by
-{concept "plugins" "compiler plug-ins"}. All XL1 features can be
+{inside "plugins" "compiler plug-ins"}. All XL1 features can be
 expected to be available in all XL implementations, though that is a
 rather small set (even basic arithmetic is actually in XL2). XL1 also
 defines basic language functionalities such as name look-up, modules,

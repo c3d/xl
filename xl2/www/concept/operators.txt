@@ -3,14 +3,14 @@
 {@xl} doesn't really have a notion of "built-in operator" as most
 programming languages do. Instead, a precedence table drives the
 parsing of operators found in {concept "xl012" "XL0"} text into the
-appropriate {concept "tree" "parse tree"} structure.
+appropriate {inside "tree" "parse tree"} structure.
 By default, this precedence table is specified by the
 {cvs "xl.syntax" "xl.syntax" "."} input file. It is considered bad
 taste to change the priority of any of the operators defined in this
 table, as this would introduce significant {@synnoise}. However, it
 is OK to add entries in this table, notably when
 {concept "extension" "extending"} the language. This can be done by
-{concept "plugins" "compiler plug-ins"}.
+{inside "plugins" "compiler plug-ins"}.
 
 From a {inside "parser" "parsing point of view"}, {@xl} only
 classifies operators using along two dimensions: name vs. symbol, and

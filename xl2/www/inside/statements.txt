@@ -1,1 +1,16 @@
-<!--Basic statements-->
+<!--Basic XL statements-->
+
+{@xl} (more precisely, {concept "xl012" "XL1"} features the basic
+statement expected for most imperative programming languages.
+
+<B>Declarations</B> in general behave like {@C++} declarations,
+including the ability to declare an initialization or default value,
+and the existence of {concept "ctors" "constructors and destructors"}.
+There are {@generic} entities. Declarations can always be declared
+using the {tt ":"} {concept "operators" "operator"}, but special
+forms exist for types, {example "function" "functions"} and a few
+other kinds of entities.
+
+{pre}
+
+<B>Procedure calls</B>

@@ -21,7 +21,7 @@ expressive power. A DTD is not a good way to describe a C-like
 syntax, and XSLT is not a good way to describe the semantics of a
 language like {@C++}.
 
-On the other hand, the {@xl} {concept "tree" "abstract syntax tree"}
+On the other hand, the {@xl} {inside "tree" "abstract syntax tree"}
 focuses specifically on representing highly structured data such as
 source code. It has a standard textual representation called
 {inside "xl0" "XL0"}, which makes the integration of arbitrary data in
@@ -34,3 +34,10 @@ which {example "gui" "integrate naturally in the XL source code"}.
 For those segments where textual content is predominant, XL also
 features a {example "text" "text syntax"} which supports long text
 segments.
+
+Another aspect of interest is that the XL {inside "translation"}
+process could be applied to data, not just code. This would allow for
+instance documentation to be emitted along with code. This requires a
+{concept "bytecode"} that is capable of representing the usual forms
+of data. This is under consideration, but not designed nor implemented
+yet.

@@ -11,6 +11,14 @@ the {concept "top" "concept"} that it implements.
 <A href="parser.html">The XL Parser</A><BR>
 <A href="symbols.html">Symbol table</A><BR>
 <A href="translation.html">The XL translation process</A><BR>
+<A href="plugins.html">Plug-in architecture</A><BR>
+<A href="scope_data.html">Per-scope information</A><BR>
+<A href="bytecode.html">XL bytecode</A><BR>
+<A href="errors.html">Error reporting</A><BR>
+<A href="status.html">Compiler Status</A><BR>
+<A href="tree.html">Abstract syntax tree</A><BR>
+
+<H3>XL Language</H3>
 <A href="types.html">Type system</A><BR>
 <A href="statements.html">Basic statements</A><BR>
 <A href="declarations.html">Declarations</A><BR>
@@ -21,9 +29,9 @@ the {concept "top" "concept"} that it implements.
 <A href="overload.html">Overload resolution</A><BR>
 <A href="generics.html">Generic declarations</A><BR>
 <A href="pragma.html">Pragmas</A><BR>
-<A href="plugins.html">Plug-in architecture</A><BR>
-<A href="scope_data.html">Per-scope information</A><BR>
-<A href="bytecode.html">XL bytecode</A><BR>
+<A href="lookup.html">XL Lookup Rules</A><BR>
+<A href="object_model.html">Object models</A><BR>
+<A href="xl0.html">XL0 syntax and tree equivalence</A><BR>
 
 <H3>Processes</H3>
 <A href="bootstrap.html">The "Dirty Bootstrap" implementation</A><BR>
@@ -39,3 +47,5 @@ the {concept "top" "concept"} that it implements.
 <A href="textio.html">Text I/O</A><BR>
 <A href="text.html">Text manipulations</A><BR>
 <A href="exceptions.html">XL Exceptions</A><BR>
+
+

@@ -1,1 +1,46 @@
 <!--Language extensions-->
+
+One of the key ideas of {@cp} is that the  set of useful {@concepts}
+isn't {concept "anything" "restricted"} in any ways. A good
+programming language needs to accomodate this diversity, and make
+sure that all concepts can easily be {@represented} in the {@cs}.
+
+Historically, programming languages have featured specific set of
+abstraction mechanisms to achieve some form of extensibility. A large
+number of programming languages such as {@C} or {@Pascal} make it
+easy to give names to procedures and functions. (As an aside, this may be
+taken as a given by all programmers today, but this wasn't always
+available. Most early versions of {@basic} available on early 8-bit
+microcomputer forced you to reference subroutines by line number, and
+had no mechanism for passing arguments, forcing programmers to use
+global variables as a communication mechanism. I still remember the
+thrill of discovering that the "Advanced {@Basic}" of the
+{wiki "Sinclair_QL" "Sinclair QL"} allowed named procedures and
+functions with local parameters: it was like adding new keywords
+yourself! End of all geezer's rant... but hold that thought, the
+example is not as gratuitous as it sounds)
+
+Subroutines, templates, operator {wiki "Overloading" "overloading"}
+and macros are all forms of language extension. But these mechanisms
+work within rather constrained {@semantics} limits, so they cannot
+represent arbitrary concepts. For instance, using {@C}-style functions
+alone, one cannot implement a representation of tasking that is
+remotely as convenient as {@Ada}'s {example "tasking"} features.
+Instead, C programmers need to resort to libraries like
+{tt"pthreads"}, which features a much poorer {@semantics}. As an
+example, passing parameters between tasks (threads) using
+{tt "pthreads"} brings you back to the old days of passing data using
+global variables (shared memory), whereas Ada's rendez-vous feature
+parameter passing semantics very similar to that of subroutines.
+
+The {@XL} extension model is more general, being based on
+general-purpose {inside "translation"} mechanisms in the
+compiler. The main validation of these mechanisms is that they are
+implemented to implement all basic features in XL, from functions to
+generics to objects. But the same mechanism can be used to implement
+not only {example "tasking"} but {example "prolog" "logic programming"}
+or {example "diff" "symbolic differentiation"}.
+
+One concern with language extensions is that they create
+dialects. {concept "pragma" "Pragmas"} are one possible approach to
+alleviate this problem.
