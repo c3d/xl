@@ -37,3 +37,5 @@ module XL.CONSTANTS with
     // Entering and looking up constant names
     function NamedConstant(name : PT.name_tree) return PT.tree
     procedure EnterNamedConstant(name : PT.name_tree; value : PT.tree)
+    
+    function ConstantTrue return PT.Tree

@@ -103,6 +103,12 @@ module XL.CONSTANTS is
     true_tree  : PT.tree := nil
     false_tree : PT.tree := nil
 
+    function ConstantTrue return PT.Tree is
+    // ------------------------------------------------------------------------
+    //    Return the boolean tree for True
+    // ------------------------------------------------------------------------
+        return true_tree
+
     function AsBoolean(B : boolean) return PT.tree is
     // ------------------------------------------------------------------------
     //    Return a boolean tree

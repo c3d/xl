@@ -40,7 +40,7 @@ module XL.PLUGIN.IFDEFINED is
 
     translation IfDefined
     // ------------------------------------------------------------------------
-    //    Translations below a 'Define' pragma
+    //    Translations below a 'IfDefined' pragma
     // ------------------------------------------------------------------------
 
         when
@@ -55,7 +55,7 @@ module XL.PLUGIN.IFDEFINED is
               where
                  Variable.kind = PT.xlName
               then
-                 VariableName : Variable as PT.text_tree
+                 VariableName : Variable as PT.name_tree
                  IfDefined : boolean := PC.GetDefineInfo(VariableName.value) <> nil
 
                  if IfDefined then
@@ -74,7 +74,7 @@ module XL.PLUGIN.IFDEFINED is
                     where
                        Variable.kind = PT.xlName
                     then
-                       VariableName : Variable as PT.text_tree
+                       VariableName : Variable as PT.name_tree
                        Pattern : PT.Tree := PC.GetDefineInfo(VariableName.value)
 
                        if Pattern = nil then

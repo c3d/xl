@@ -57,6 +57,7 @@ import XL.PLUGIN.TRANSFORMS
 import XL.PLUGIN.INCLUDE
 import XL.PLUGIN.DEFINE
 import XL.PLUGIN.IFDEFINED
+import XL.PLUGIN.IFP
 
 
 procedure Main is

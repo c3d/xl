@@ -58,7 +58,7 @@ module XL.PLUGIN.DEFINE is
               where
                  Variable.kind = PT.xlName
               then
-                 VariableName : Variable as PT.text_tree
+                 VariableName : Variable as PT.name_tree
                  PC.SetDefineInfo(VariableName.value, parse_tree(1))
 
                  return nil
@@ -74,7 +74,7 @@ module XL.PLUGIN.DEFINE is
                     where
                        Variable.kind = PT.xlName
                     then
-                       VariableName : Variable as PT.text_tree
+                       VariableName : Variable as PT.name_tree
                        PC.SetDefineInfo(VariableName.value, Value)
 
                     else
