@@ -214,8 +214,10 @@ module XL.PARSER is
                 done := true
             else if tok = SC.tokINTEGER then
                 right := PT.NewInteger(S.integer_value, pos)
+                prefix_priority := function_priority
             else if tok = SC.tokREAL then
                 right := PT.NewReal(S.real_value, pos)
+                prefix_priority := function_priority
             else if tok = SC.tokSTRING then
                 right := PT.NewText(S.string_value, '"', pos)
             else if tok = SC.tokQUOTE then
