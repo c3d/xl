@@ -32,6 +32,7 @@ module XL.PARSER.TREE with
         xlBLOCK,                                // Unary paren / block
         xlPREFIX,                               // Binary prefix-op
         xlINFIX,                                // Ternary infix-op
+        xlWILDCARD,                             // For pattern matching
         xlLAST
 
 
@@ -114,3 +115,11 @@ module XL.PARSER.TREE with
         result.left := left
         result.right := right
 
+    // -- Wildcards (for tree matching) ---------------------------------------
+
+    type wildcard_node is tree_node with
+        name : text
+    type wildcard_tree is access to wildcard_node
+    function NewWildcard(name : text) return wildcard_tree is
+        result.kind := xlWILDCARD
+        result.name := name

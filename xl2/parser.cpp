@@ -308,6 +308,13 @@ XLTree *XLParser::Parse(char closing_paren)
             if (!right)
                 right = new XLName("");
             right = new XLBlock(right, opening, closing);
+
+            // Parse 'if (A+B) < C then...' as if ((A+B) < C) then ...'
+            // Parse 'A[B] := C' as '(A[B] := C)'
+            if (result_priority == statement_priority &&
+                paren_priority > function_priority)
+                result_priority = paren_priority;
+
             if (tok == tokINDENT)
             {
                 // Unindent to be seen as unindent followed by new-line
@@ -325,7 +332,7 @@ XLTree *XLParser::Parse(char closing_paren)
         {
             // First thing we parse...
             result = right;
-            if (new_statement)
+            if (new_statement && prefix_priority == default_priority)
                 prefix_priority = statement_priority;
             result_priority = prefix_priority;
 

@@ -1,0 +1,125 @@
+// ****************************************************************************
+//  xl.translator.xl                (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     The basic XL translator
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is confidential.
+// Do not redistribute without written permission
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import IO = XL.TEXT_IO
+
+module XL.TRANSLATOR is
+
+    function Matches (test : PT.tree; ref : PT.tree; in out arg : tree_map) return integer is
+    // ------------------------------------------------------------------------
+    //   Check if the test tree matches the reference tree, return score
+    // ------------------------------------------------------------------------
+
+        // Check if the reference is a wildcard like 'A'
+        // If so, check if we saw the same name, and then check compatibility
+        // If not, check 
+        if ref.kind = PT.xlWILDCARD then
+            R : PT.wildcard_tree := PT.wildcard_tree(ref)
+
+            // Did we see this name already?
+            if count(arg, R.name) > 0 then
+                empty_args : tree_map
+                result := Matches(test, arg[R.name], empty_args)
+                if result > 0 then
+                    return result + 1
+                return 0
+
+            // We did not see the name: assign it
+            arg[R.name] := test
+            return 1
+
+        // If this is not a wildcard, then it must have the same kind
+        if test.kind <> ref.kind then
+            return 0
+
+        // For each kind of atom, check and return 0 or 1
+        if test.kind = PT.xlINTEGER then
+            T : PT.integer_tree := PT.integer_tree(test)
+            R : PT.integer_tree := PT.integer_tree(ref)
+            if T.value = R.value then
+                return 1
+            return 0
+
+        if test.kind = PT.xlREAL then
+            T : PT.real_tree := PT.real_tree(test)
+            R : PT.real_tree := PT.real_tree(ref)
+            if T.value = R.value then
+                return 1
+            return 0
+
+        if test.kind = PT.xlSTRING then
+            T : PT.string_tree := PT.string_tree(test)
+            R : PT.string_tree := PT.string_tree(ref)
+            if T.value = R.value and T.quote = R.quote then
+                return 1
+            return 0
+
+        if test.kind = PT.xlNAME then
+            T : PT.name_tree := PT.name_tree(test)
+            R : PT.name_tree := PT.name_tree(ref)
+            if T.value = R.value then
+                return 1
+            return 0
+
+        // For non-atoms, check recursively
+        if test.kind = PT.xlBLOCK then
+            T : PT.block_tree := PT.block_tree(test)
+            R : PT.block_tree := PT.block_tree(ref)
+            if T.opening = R.opening and T.closing = R.closing then
+                result := Matches(T.child, R.child, arg)
+                if result >= 0 then
+                    return result + 1
+            return 0
+
+        if test.kind = PT.xlPREFIX then
+            T : PT.prefix_tree := PT.prefix_tree(test)
+            R : PT.prefix_tree := PT.prefix_tree(ref)
+            l_result : integer := Matches(T.left, R.left, arg)
+            if l_result > 0 then
+                r_result : integer := Matches(T.right, R.right, arg)
+                if r_result > 0 then
+                    return l_result + r_result
+            return 0
+
+        if test.kind = PT.xlINFIX then
+            T : PT.infix_tree := PT.infix_tree(test)
+            R : PT.infix_tree := PT.infix_tree(ref)
+            if T.name = R.name then
+                l_result : integer := Matches(T.left, R.left, arg)
+                if l_result > 0 then
+                    r_result : integer := Matches(T.right, R.right, arg)
+                    if r_result > 0 then
+                        return l_result + r_result
+            return 0
+
+
+
+    procedure XL2C(input : PT.tree; output : IO.output_file) is
+    // ------------------------------------------------------------------------
+    //    The main XL to C translator
+    // ------------------------------------------------------------------------
+
+        writeln "XL2C called"

@@ -28,63 +28,8 @@ import CS = XL.UI.CONSOLE
 import TR = XL.PARSER.TREE
 import PR = XL.PARSER
 import IO = XL.TEXT_IO
+import XT = XL.TRANSLATOR
 import ASCII = XL.TEXT_IO.ENCODING.ASCII
-
-
-procedure InitializeParser (P : PR.parser; syntax : text) is
-// ----------------------------------------------------------------------------
-//   Read the xl.syntax file to get precedences
-// ----------------------------------------------------------------------------
-    in_prefix : boolean := false
-    in_infix : boolean := false
-    priority : integer := 0
-    tok : SC.token
-    S : SC.scanner := SC.NewScanner(syntax)
-
-    // Comments are hardcoded for now
-    P.comments["//"] := ASCII.CR
-
-    loop
-        tok := SC.NextToken(S)
-        exit if tok = SC.tokEOF
-
-        if tok = SC.tokNAME or tok = SC.tokSYMBOL then
-            if S.string_value = "INFIX" then
-                in_infix := true
-                in_prefix := false
-            else if S.string_value = "PREFIX" then
-                in_infix := false
-                in_prefix := true
-            else if S.string_value = "NEWLINE" then
-                if in_prefix then
-                    P.prefix_priority[ASCII.CR] := priority
-                if in_infix then
-                    P.infix_priority[ASCII.CR] := priority
-            else if S.string_value = "BLOCK" then
-                if in_prefix then
-                    P.prefix_priority[ASCII.TAB] := priority
-                if in_infix then
-                    P.infix_priority[ASCII.TAB] := priority
-            else if S.string_value = "STATEMENT" then
-                P.statement_priority := priority
-            else if S.string_value = "FUNCTION" then
-                P.function_priority := priority
-            else if S.string_value = "DEFAULT" then
-                P.default_priority := priority
-            else if in_infix then
-                P.infix_priority[S.string_value] := priority
-            else if in_prefix then
-                P.prefix_priority[S.string_value] := priority
-               
-        else if tok = SC.tokSTRING or tok = SC.tokQUOTE then
-            if in_prefix then
-                P.prefix_priority[S.string_value] := priority
-            if in_infix then
-                P.infix_priority[S.string_value] := priority
-
-        else if tok = SC.tokINTEGER then
-            priority := S.integer_value
-    
 
 
 
@@ -181,7 +126,7 @@ procedure Main is
     for I in 1..Max-1 loop
         name : text := CS.arguments[i]
         P := PR.NewParser(name)
-        InitializeParser P, "xl.syntax"
+        PR.ReadSyntaxFile P, "xl.syntax"
         D := PR.Parse(P)
         writeln "Tree=", nodebug, newline, D
         writeln "Debug=", debug, newline, D

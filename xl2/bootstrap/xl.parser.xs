@@ -95,6 +95,7 @@ module XL.PARSER with
 
     // Creating a parser
     function NewParser(name : text) return parser
+    procedure ReadSyntaxFile (P : PR.parser; syntax : text)
 
     // Parsing
     function Parse(P : parser) return PT.tree

@@ -290,6 +290,12 @@ module XL.PARSER is
                 if right = nil then
                     right := PT.NewName ""
                 right := PT.NewBlock(right, opening, closing)
+
+                // Parse 'if (A+B) < C then...' as if ((A+B) < C) then ...'
+                // Parse 'A[B] := C' as '(A[B] := C)'
+                if result_priority = statement_priority and paren_priority > function_priority then
+                    result_priority := paren_priority
+
                 if tok = SC.tokINDENT then
                     // Unindent to be seen as unindent followed by new-line
                     // so that new-line operator combines lines
@@ -304,7 +310,7 @@ module XL.PARSER is
 
                 // First thing we parse
                 result := right
-                if new_statement then
+                if new_statement and prefix_priority = default_priority then
                     prefix_priority := statement_priority
                 result_priority := prefix_priority
 
@@ -410,3 +416,59 @@ module XL.PARSER is
                 else
                     result := PT.NewInfix(prev.opcode, prev.argument, result)
                 pop_back stack
+
+
+    procedure ReadSyntaxFile (P : PR.parser; syntax : text) is
+    // ------------------------------------------------------------------------
+    //   Read the xl.syntax file to get precedences
+    // ------------------------------------------------------------------------
+        in_prefix : boolean := false
+        in_infix : boolean := false
+        priority : integer := 0
+        tok : SC.token
+        S : SC.scanner := SC.NewScanner(syntax)
+
+        // Comments are hardcoded for now
+        P.comments["//"] := ASCII.CR
+
+        loop
+            tok := SC.NextToken(S)
+            exit if tok = SC.tokEOF
+
+            if tok = SC.tokNAME or tok = SC.tokSYMBOL then
+                if S.string_value = "INFIX" then
+                    in_infix := true
+                    in_prefix := false
+                else if S.string_value = "PREFIX" then
+                    in_infix := false
+                    in_prefix := true
+                else if S.string_value = "NEWLINE" then
+                    if in_prefix then
+                        P.prefix_priority[ASCII.CR] := priority
+                    if in_infix then
+                        P.infix_priority[ASCII.CR] := priority
+                else if S.string_value = "BLOCK" then
+                    if in_prefix then
+                        P.prefix_priority[ASCII.TAB] := priority
+                    if in_infix then
+                        P.infix_priority[ASCII.TAB] := priority
+                else if S.string_value = "STATEMENT" then
+                    P.statement_priority := priority
+                else if S.string_value = "FUNCTION" then
+                    P.function_priority := priority
+                else if S.string_value = "DEFAULT" then
+                    P.default_priority := priority
+                else if in_infix then
+                    P.infix_priority[S.string_value] := priority
+                else if in_prefix then
+                    P.prefix_priority[S.string_value] := priority
+
+            else if tok = SC.tokSTRING or tok = SC.tokQUOTE then
+                if in_prefix then
+                    P.prefix_priority[S.string_value] := priority
+                if in_infix then
+                    P.infix_priority[S.string_value] := priority
+
+            else if tok = SC.tokINTEGER then
+                priority := S.integer_value
+

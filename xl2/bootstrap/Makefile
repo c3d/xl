@@ -34,6 +34,8 @@ OTHER_SOURCES=					\
 	xl.parser.tree.xs			\
 	xl.parser.xs				\
 	xl.parser.xl				\
+	xl.translator.xs			\
+	xl.translator.xl			\
 	xl.textio.xl
 PRODUCT=bxl
 

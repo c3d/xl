@@ -17,8 +17,8 @@ INFIX
         250 + -
         260 * /
         270 ^ **
-        300 FUNCTION
-        310 "(" "{" "[" "]" "}" ")"
+        300 FUNCTION "(" ")"
+        310 "{" "[" "]" "}"
         320 .
 
 PREFIX
@@ -27,6 +27,6 @@ PREFIX
         235     not in out
         240     function procedure to module
         250     !
-        280     - +
+        280     - + * /
 
                 
