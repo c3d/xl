@@ -240,8 +240,12 @@ bool XL2CTranslation::Block(XLBlock *input)
     case '\t':
         out << "{\n";
         XL2C(input->child);
-        if (input->child->Kind() == xlNAME)
-            out << "()";
+        if (input->child->Kind() == xlNAME) {
+            XLName *name = dynamic_cast<XLName *> (input->child);
+            if (name->value != text("return")) {
+                out << "()";
+            }
+        }
         if (in_enum.length())
             out << "}\n";
         else
@@ -585,15 +589,23 @@ INFIX(sequence)
 // ----------------------------------------------------------------------------
 {
     XL2C(tree->left);
-    if (tree->left->Kind() == xlNAME)
-        out << "()";
+    if (tree->left->Kind() == xlNAME) {
+        XLName *name = dynamic_cast<XLName *> (tree->left);
+        if (name->value != text("return")) {
+            out << "()";
+        }
+    }
     if (in_parameter_declaration)
         out << ", ";
     else
         out << ";\n";
     XL2C(tree->right);
-    if (tree->right->Kind() == xlNAME)
-        out << "()";
+    if (tree->right->Kind() == xlNAME) {
+        XLName *name = dynamic_cast<XLName *> (tree->right);
+        if (name->value != text("return")) {
+            out << "()";
+        }
+    }
 }
 
 
