@@ -387,7 +387,7 @@ module XL.SYMBOLS is
 
         old : PT.tree := table.properties[section]
         if old <> nil then
-            item := quote
+            item := parse_tree
                'old'
                'item'
         table.properties[section] := item
@@ -399,7 +399,7 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
         result := table.properties[section]
         if result = nil then
-            result := quote(@nop)
+            result := parse_tree(@nop)
 
 
 

@@ -92,7 +92,7 @@ module XL.SEMANTICS.DECLARATIONS is
                     // the same value?
                     X := ProcessDeclaration (X, Type, Value, HasIs)
                     Y := ProcessDeclaration (Y, Type, Value, HasIs)
-                    return quote
+                    return parse_tree
                         'X'
                         'Y'
 
@@ -153,7 +153,7 @@ module XL.SEMANTICS.DECLARATIONS is
         if original <> nil then
             ERR.Error "Redeclaration of '$1' ", Name
             ERR.Error "Previous declaration of '$1' here", original
-            return quote(@error)
+            return parse_tree(@error)
 
         // Attach a type info to the original name
         decl : declaration := MakeDecl(Name, Type, Value)
@@ -221,12 +221,12 @@ module XL.SEMANTICS.DECLARATIONS is
         mname : PT.name_tree := decl.machine_name
         kind  : PT.name_tree
 
-        if decl.is_local     then kind := quote(local_decl)
-        if decl.is_global    then kind := quote(global_decl)
-        if decl.is_field     then kind := quote(field_decl)
-        if decl.is_parameter then kind := quote(parm_decl)
+        if decl.is_local     then kind := parse_tree(local_decl)
+        if decl.is_global    then kind := parse_tree(global_decl)
+        if decl.is_field     then kind := parse_tree(field_decl)
+        if decl.is_parameter then kind := parse_tree(parm_decl)
 
-        XLT.AddScopeDecl XLT.context, quote(@ 'kind' 'mtype' 'mname')
+        XLT.AddScopeDecl XLT.context, parse_tree(@ 'kind' 'mtype' 'mname')
 
         // Evaluate the initialization value
         if Value <> nil then
@@ -235,13 +235,13 @@ module XL.SEMANTICS.DECLARATIONS is
 
             // Return initialization
             if decl.is_local then
-                result := quote ('Name' := 'Value')
+                result := parse_tree ('Name' := 'Value')
             else if decl.is_global then
-                XLT.AddGlobalInit quote('Name' := 'Value')
+                XLT.AddGlobalInit parse_tree('Name' := 'Value')
 
         // TODO: Check existence of constructor
         if result = nil then
-            result := quote(@nop)
+            result := parse_tree(@nop)
 
         PT.SetInfo result, "DECL", decl
         return result

@@ -34,4 +34,4 @@ module XL.OPTIMIZER is
         when
             'A' + 0
         then
-            return quote('A')
+            return parse_tree('A')

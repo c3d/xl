@@ -847,13 +847,13 @@ module XL.TRANSLATOR is
                 XL2C B
 
             when
-                quote
+                parse_tree
                     'A'
             then
                 args : args_map
                 XL2C_Quote A, args, 2, false
             when
-                quote ('A')
+                parse_tree ('A')
             then
                 args : args_map
                 XL2C_Quote A, args, 2, false

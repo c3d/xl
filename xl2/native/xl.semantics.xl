@@ -47,7 +47,7 @@ module XL.SEMANTICS is
         then
             A := XLT.XLDeclarations A
             B := XLT.XLDeclarations B
-            return quote
+            return parse_tree
                 'A'
                 'B'
         when
@@ -55,7 +55,7 @@ module XL.SEMANTICS is
         then
             A := XLT.XLDeclarations A
             B := XLT.XLDeclarations B
-            return quote
+            return parse_tree
                 'A' ; 'B'
 
         // When semantics have been done already, don't do it again
@@ -78,7 +78,7 @@ module XL.SEMANTICS is
         then
             A := XLT.XLSemantics A
             B := XLT.XLSemantics B
-            return quote
+            return parse_tree
                 'A'
                 'B'
         when
@@ -86,7 +86,7 @@ module XL.SEMANTICS is
         then
             A := XLT.XLSemantics A
             B := XLT.XLSemantics B
-            return quote
+            return parse_tree
                 'A' ; 'B'
 
         when

@@ -64,11 +64,11 @@ module XL.CODE_GENERATOR.MACHINE is
         Parm    : DCL.declaration
 
         if RetType = nil then
-            result := quote(@fn_proc)
+            result := parse_tree(@fn_proc)
         else
             MType := RetType.machine_type
-            result := quote(@fn_ret 'MType')
-        result := quote
+            result := parse_tree(@fn_ret 'MType')
+        result := parse_tree
             'result'
             'MName'
             @fn_begin_parms
@@ -76,11 +76,11 @@ module XL.CODE_GENERATOR.MACHINE is
         for Parm in Parms loop
             MName := Parm.machine_name
             MType := Parm.machine_type
-            result := quote
+            result := parse_tree
                 'result'
                 @fn_parm 'MType' 'MName'
 
-        result := quote
+        result := parse_tree
             'result'
             @fn_end_parms
 
@@ -91,7 +91,7 @@ module XL.CODE_GENERATOR.MACHINE is
     // ------------------------------------------------------------------------
     //    Entry for an actual function
     // ------------------------------------------------------------------------
-        return EntryInt(quote(@fn_name 'MName'), RetType, Parms)
+        return EntryInt(parse_tree(@fn_name 'MName'), RetType, Parms)
 
 
     function EntryPointer (RetType: TY.any_type;
@@ -100,9 +100,9 @@ module XL.CODE_GENERATOR.MACHINE is
     //   Return a pointer to an entry with given parameters
     // ------------------------------------------------------------------------
          result := SYM.Temporary("FnPtr");
-         T : BC.bytecode := EntryInt(quote(@fn_ptr_name 'result'),
+         T : BC.bytecode := EntryInt(parse_tree(@fn_ptr_name 'result'),
                                      RetType, Parms)
-         T := quote
+         T := parse_tree
              @fn_ptr_begin
              'T'
              @fn_ptr_end
@@ -116,16 +116,16 @@ module XL.CODE_GENERATOR.MACHINE is
     // ------------------------------------------------------------------------
 
         // Begin call block
-        result := quote
+        result := parse_tree
             @call_begin 'mname'
 
         A : machine_arg
         for A in margs loop
             mval : PT.tree := A.machine_value
-            result := quote
+            result := parse_tree
                 'result'
                 @call_arg 'mval'
 
-        result := quote
+        result := parse_tree
             'result'
             @call_end 'mname'

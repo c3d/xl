@@ -122,7 +122,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         PT.SetInfo Source, "FNTYPE", tp
 
         // Return the end type
-        result := quote (@type)
+        result := parse_tree (@type)
         PT.SetInfo result, "TYPE", tp
         PT.SetInfo result, "FNTYPE", tp
 

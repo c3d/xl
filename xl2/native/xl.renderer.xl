@@ -175,8 +175,8 @@ module XL.RENDERER is
         PR.Close P
 
         // A few default names
-        R.formats[PR.INDENT_MARKER] := quote(indent)
-        R.formats[PR.UNINDENT_MARKER] := quote(unindent)
+        R.formats[PR.INDENT_MARKER] := parse_tree(indent)
+        R.formats[PR.UNINDENT_MARKER] := parse_tree(unindent)
         if formats <> nil then
             EnterFormats formats, R
 

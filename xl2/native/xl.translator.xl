@@ -55,7 +55,7 @@ module XL.TRANSLATOR is
         if context = nil then
             context := SYM.NewSymbolTable(nil)
             PluginsInit
-            nop := quote(@nop)
+            nop := parse_tree(@nop)
 
 
     initialization
@@ -87,7 +87,7 @@ module XL.TRANSLATOR is
     // ------------------------------------------------------------------------
         inits : PT.tree := SYM.ScopeItems(main_context, "MAIN_INIT")
         terms : PT.tree := SYM.ScopeItems(main_context, "MAIN_TERM")
-        return quote
+        return parse_tree
             'input'
             @main_begin
             'inits'
@@ -144,11 +144,11 @@ module XL.TRANSLATOR is
             // Make sure global init and term invoked from 'main'
             SYM.AddScopeItem main_context, "MAIN_INIT", init
             SYM.AddScopeItem main_context, "MAIN_TERM", term
-            result := quote
+            result := parse_tree
                 'decl'
                 'result'
         else
-            result := quote
+            result := parse_tree
                 'decl'
                 'init'
                 'result'

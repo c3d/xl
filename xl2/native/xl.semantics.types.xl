@@ -87,7 +87,7 @@ module XL.SEMANTICS.TYPES is
         // Store the original name (with its type info) in symbol table
         SYM.Enter XLT.context, "TYPE", N.value, Name
 
-        result := quote(@type)
+        result := parse_tree(@type)
         PT.SetInfo result, "TYPE", tp
         return result
 

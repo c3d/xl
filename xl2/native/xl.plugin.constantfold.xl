@@ -52,44 +52,44 @@ module XL.PLUGIN.CONSTANTFOLD is
             return ConstantFold(X)
         when (-'X' + 'Y') then
             changed := true
-            return ConstantFold(quote('Y'-'X'))
+            return ConstantFold(parse_tree('Y'-'X'))
         when ('X' * 1) then
             changed := true
             return ConstantFold(X)
         when ('X' * -'Y') then
             changed := true
-            return ConstantFold(quote(-('X' * 'Y')))
+            return ConstantFold(parse_tree(-('X' * 'Y')))
         when (1 * 'X') where true then // Disambiguate
             changed := true
             return ConstantFold(X)
         when (-'X' * 'Y')  then
             changed := true
-            return ConstantFold(quote(-('X' * 'Y')))
+            return ConstantFold(parse_tree(-('X' * 'Y')))
         when ('X' * 0) then
             changed := true
-            return quote(0)
+            return parse_tree(0)
         when (0 * 'X') where true then // Disambiguate
             changed := true
-            return quote(0)
+            return parse_tree(0)
         when ('X' / 1) then
             changed := true
             return ConstantFold(X)
         when ('X' - 'X') then
             changed := true
-            return quote (0)
+            return parse_tree (0)
         when ('X' / 'X') then
             changed := true
-            return quote (1)
+            return parse_tree (1)
         when (('X')) then
             changed := true
             X := ConstantFold(X)
-            return quote ('X')
+            return parse_tree ('X')
         when (-0) then
             changed := true
-            return quote (0)
+            return parse_tree (0)
         when (-1 * 'X') then
             changed := true
-            return ConstantFold(quote(-'X'))
+            return ConstantFold(parse_tree(-'X'))
 
         // Catch-all clause
         when

@@ -107,11 +107,11 @@ module XL.SEMANTICS.FUNCTIONS is
         MachineIface  : PT.Tree := CGM.Entry (f.machine_name,
                                               f.return_type,
                                               f.parameters)
-        MachineDecl   : PT.Tree := quote
+        MachineDecl   : PT.Tree := parse_tree
             @fn_decl_begin
             'MachineIface'
             @fn_decl_end
-        SemanticsDecl : PT.Tree := quote(@@fn_decl 'MachineIface')        
+        SemanticsDecl : PT.Tree := parse_tree(@@fn_decl 'MachineIface')        
 
         PT.SetInfo MachineIface, "FN", f
         PT.SetInfo MachineDecl, "FN", f
@@ -148,7 +148,7 @@ module XL.SEMANTICS.FUNCTIONS is
                     ERR.Error "Extraneous initializer '$1'", Body
                 else
                     f.initializer := Body
-                    return quote(@@fn_body 'Interface' 'Body')
+                    return parse_tree(@@fn_body 'Interface' 'Body')
 
             // Translate written statements
             when
@@ -239,7 +239,7 @@ module XL.SEMANTICS.FUNCTIONS is
                 Interface := MachineIface
 
         Body := XLT.ScopeSemantics(Body, false)
-        return quote
+        return parse_tree
             @fn_body_begin
             'Interface'
             @fn_body

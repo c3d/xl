@@ -18,7 +18,10 @@ http://www.codegeneration.net/tiki-read_article.php?articleId=61
 Tuesday, 20 July: Decided to upload the site...
 <ul>
 </ul>
-<a href="040725.html">Sunday, 25 July</a>: Added pragma support
+Sunday, 25 July: Added pragma support
+<ul>
+</ul>
+<a href="040726.html">Monday, 26 July</a>: Is Linux still Free?
 <ul>
 </ul>
 

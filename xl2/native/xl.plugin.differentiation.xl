@@ -40,77 +40,77 @@ module XL.PLUGIN.DIFFERENTIATION is
         translate expr
 
             when ('K') where K.kind = PT.xlINTEGER or K.kind = PT.xlREAL then
-                return quote(0)
+                return parse_tree(0)
 
             when ('X') where X.kind = PT.xlNAME then
                 Xname : X as PT.name_tree
                 if Xname.value = dv then
-                    return quote(1)
+                    return parse_tree(1)
                 else
-                    return quote(0)
+                    return parse_tree(0)
 
             when (('X')) then
                 X := Differentiate (X, dv)
-                return quote(('X'))
+                return parse_tree(('X'))
 
             when (-'X') then
                 X := Differentiate (X, dv)
-                return quote(-'X')
+                return parse_tree(-'X')
 
             when (+'X') then
                 X := Differentiate (X, dv)
-                return quote(+'X')
+                return parse_tree(+'X')
 
             when ('X' + 'Y') then
                 X := Differentiate(X, dv)
                 Y := Differentiate(Y, dv)
-                return quote('X' + 'Y')
+                return parse_tree('X' + 'Y')
 
             when ('X' - 'Y') then
                 X := Differentiate(X, dv)
                 Y := Differentiate(Y, dv)
-                return quote('X' - 'Y')
+                return parse_tree('X' - 'Y')
 
             when ('X' * 'Y') then
                 dX : PT.tree := Differentiate(X, dv)
                 dY : PT.tree := Differentiate(Y, dv)
-                return quote('dX' * 'Y' + 'X' * 'dY')
+                return parse_tree('dX' * 'Y' + 'X' * 'dY')
 
             when ('X' / 'Y') then
                 dX : PT.tree := Differentiate(X, dv)
                 dY : PT.tree := Differentiate(Y, dv)
-                return quote(('dX' * 'Y' - 'X' * 'dY') / ('Y' ^ 2))
+                return parse_tree(('dX' * 'Y' - 'X' * 'dY') / ('Y' ^ 2))
 
             when ('X' ^ 'N') then
                 dX : PT.tree := Differentiate(X, dv)
-                return quote('N' * 'dX' * ('X' ^ ('N' - 1)))
+                return parse_tree('N' * 'dX' * ('X' ^ ('N' - 1)))
 
             when (exp('X')) then
                 dX : PT.tree := Differentiate(X, dv)
-                return quote('dX' * exp('X'))
+                return parse_tree('dX' * exp('X'))
             when (log('X')) then
                 dX : PT.tree := Differentiate(X, dv)
-                return quote('dX' / 'X')
+                return parse_tree('dX' / 'X')
             when (sqrt('X')) then
                 dX : PT.tree := Differentiate(X, dv)
-                return quote(-'dX' / (2.0 * sqrt('X')))
+                return parse_tree(-'dX' / (2.0 * sqrt('X')))
             when (sin('X')) then
                 dX : PT.tree := Differentiate(X, dv)
-                return quote('dX' * cos('X'))
+                return parse_tree('dX' * cos('X'))
             when (cos('X')) then
                 dX : PT.tree := Differentiate(X, dv)
-                return quote(-'dX' * sin('X'))
+                return parse_tree(-'dX' * sin('X'))
             when (tan('X')) then
                 dX : PT.tree := Differentiate(X, dv)
-                return quote('dX' / (cos('X') ^ 2))
+                return parse_tree('dX' / (cos('X') ^ 2))
 
             when (MATH.'F'('X')) then
                 // Consider math.sin same as sin
-                return Differentiate(quote('F'('X')), dv)
+                return Differentiate(parse_tree('F'('X')), dv)
 
             else
                 ERR.Error "Unknown form '$1' for differentiation", expr
-                return quote(@error)
+                return parse_tree(@error)
 
 
     function Differentiate (dFn : PT.tree;
@@ -127,14 +127,14 @@ module XL.PLUGIN.DIFFERENTIATION is
         dv : text := varName.value
         if (dv[0]) <> 'd' then
             ERR.Error "Invalid differential variable name '$1'", dVar
-            return quote(@error)
+            return parse_tree(@error)
         dv := dv[1..length(dv)-1]
 
         // Find function name without the initial 'd'
         fn : text := fnName.value
         if fn[0] <> 'd' then
             ERR.Error "Invalid differential function name '$1'", dFn
-            return quote(@error)
+            return parse_tree(@error)
         fn := fn[1..length(fn)-1]
 
         if fn = "" then
@@ -143,7 +143,7 @@ module XL.PLUGIN.DIFFERENTIATION is
         else
             // Other cases: extract function name
             fnName.value := fn
-            return Differentiate (quote('fnName'('dExpr')), dv)
+            return Differentiate (parse_tree('fnName'('dExpr')), dv)
 
 
     function IsDName(dX : PT.tree; minLen : integer := 2) return boolean is
@@ -182,8 +182,8 @@ module XL.PLUGIN.DIFFERENTIATION is
             top : dFn as PT.name_tree
             bottom : dVar as PT.name_tree
             if top.value = bottom.value then
-                return quote(1)
-            return quote(0)
+                return parse_tree(1)
+            return parse_tree(0)
 
         when
             'T'

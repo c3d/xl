@@ -34,6 +34,7 @@ the {concept "top" "concept"} that it implements.
 <A href="xl0.html">XL0 syntax and tree equivalence</A><BR>
 
 <H3>Processes</H3>
+<A href="build.html">Building the compiler</A>
 <A href="bootstrap.html">The "Dirty Bootstrap" implementation</A><BR>
 <A href="tests.html">Compiler Tests</A><BR>
 
