@@ -25,6 +25,8 @@
 
 module STD // The C++ std namespace
 
+import XL.UI.CONSOLE
+
 module XL.TEXT_IO is
 
     function nothing(x : integer) return integer
