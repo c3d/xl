@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  README.Win32                     (C) 1992-2004 Christophe de Dinechin (ddd) 
+//  README.Win32                    (C) 1992-2004 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
@@ -21,10 +21,11 @@
 // * File       : $RCSFile$
 // * Revision   : $Revision$
 // * Date       : $Date$
-// * Credits    : Sebastien <sebbrochet@users.sourceforge.net> (original version)
+// * Credits    : Sebastien <sebbrochet@users.sourceforge.net> (original text)
 // ****************************************************************************
 
-This file describes the differents requirements to compile XL programs under Windows.
+This file describes the differents requirements to compile XL programs
+under Windows.
 
 1/ First things first :
 
@@ -35,7 +36,8 @@ I assume you have then all the files under the 'xl2' directory
 Link : http://msdn.microsoft.com/visualc/vctoolkit2003/
 
 Install it and check that :
-The LIB environment variable is correctly set (mine is "C:\Program Files\Microsoft Visual C++ Toolkit 2003\lib")
+The LIB environment variable is correctly set (mine is "C:\Program
+Files\Microsoft Visual C++ Toolkit 2003\lib")
 
 2/ Some compilations
 
@@ -43,17 +45,22 @@ a - Compiling the C++ version of the compiler
 This version supplies the minimum services to bootstrap XL.
 The code base of this version is frozen.
 
-Open a 'DOS' command line shell, change dir to <WhereEverYouInstallXL>\xl2 and type : Compile_msvc_CmdLine.bat
+Open a 'DOS' command line shell, change dir to
+<WhereEverYouInstallXL>\xl2 and type : Compile_msvc_CmdLine.bat
 
-After a few moments, it should create a DEBUG directory containing a file called : xl2.exe
+After a few moments, it should create a DEBUG directory containing a
+file called xl2.exe
 
 b - Compiling the 'bootstrap' version of the compiler :
-This is the first version coded in XL, it is compiled unsing the C++ version created just before.
-The code base of this version is also frozen.
+This is the first version coded in XL, it is compiled unsing the C++
+version created just before.  The code base of this version is also
+frozen.
 
-Open a 'DOS' command line shell, change dir to <WhereEverYouInstallXL>\xl2\bootstrap and type : make.msvc71.bat
+Open a 'DOS' command line shell, change dir to
+<WhereEverYouInstallXL>\xl2\bootstrap and type : make.msvc71.bat
 
-After a few moments, it should create two files in the current directory : xl.exe and xl2.exe
+After a few moments, it should create two files in the current
+directory : xl.exe and xl2.exe
 
 Check that the size of these two files are identical, it should ;-)
 
@@ -62,9 +69,11 @@ c - Compiling the 'native' version of the compiler :
 This is the current version of the compiler, written in XL.
 It is compiled using the bootstrap version of the compiler.
 
-Open a 'DOS' command line shell, change dir to <WhereEverYouInstallXL>\xl2\native and type : make.msvc71.bat
+Open a 'DOS' command line shell, change dir to
+<WhereEverYouInstallXL>\xl2\native and type : make.msvc71.bat
 
-After a few moments, it should create two files in the current directory : xl2.exe, xl3.exe and xl4.exe
+After a few moments, it should create two files in the current
+directory : xl2.exe, xl3.exe and xl4.exe
 
 Check that the size of these three files are identical.
 
@@ -73,25 +82,32 @@ Congratulations, you are now ready to create your own XL programs !
 
 3/ Some samples to learn XL
 
-You could start with the native compiler source files but it is not so easy to grok at the first time :-)
-Let's begin with something less ambitious.
+You could start with the native compiler source files but it is not so
+easy to grok at the first time :-) Let's begin with something less
+ambitious.
 
-In order to compile the following samples, you'll need to set the XL_MODULE_PATH environment variable with the needed include directories.
-Currently,  you only need to specify the current directory and the one containing the sources of the native compiler.
+In order to compile the following samples, you'll need to set the
+XL_MODULE_PATH environment variable with the needed include
+directories.  Currently, you only need to specify the current
+directory and the one containing the sources of the native compiler.
 It should be something along : .;<WhereEverYouInstallXL>/xl2/native
 
 Mine is : .;C:/Dev/xl2/native
 
 a/ The well known Hello World
 
-Open a 'DOS' command line shell, change dir to <WhereEverYouInstallXL>\xl2\samples\HelloWorld and type : CompileAndRun.bat
+Open a 'DOS' command line shell, change dir to
+<WhereEverYouInstallXL>\xl2\samples\HelloWorld and type :
+CompileAndRun.bat
 
 You should get an HelloWorld_native.exe and the display of 'Hello World'.
 
 4/ Common pitfalls
 
-- Always add a carriage return at the end of your files otherwise the compiler will chocks.
-- Always import the XL.UI.CONSOLE module, while not being used directly, it supplies indispensable definitions.
+- Always add a carriage return at the end of your files otherwise the
+  compiler will choke
+- Always import the XL.UI.CONSOLE module, while not being used
+  directly, it supplies indispensable definitions.
 
 
                                  (to be continued...)
