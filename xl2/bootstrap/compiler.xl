@@ -144,7 +144,10 @@ procedure write(where : IO.output_file; what : TR.tree) is
     else if what.kind = PT.xlBLOCK then
         T : PT.block_tree := PT.block_tree(what)
         if ASCII.is_line_break(T.closing) then
-            write where, indent, T.child, unindent
+            if current_tree_debug then
+                write where, "{BL ", indent, T.child, unindent, " BL}"
+            else
+                write where, indent, T.child, unindent
         else
             write where, T.opening, T.child, T.closing
     else if what.kind = PT.xlPREFIX then

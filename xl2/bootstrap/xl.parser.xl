@@ -293,7 +293,7 @@ module XL.PARSER is
                 if tok = SC.tokINDENT then
                     // Unindent to be seen as unindent followed by new-line
                     // so that new-line operator combines lines
-                    pending_token = SC.tokNEWLINE
+                    pending_token := SC.tokNEWLINE
 
             else
                 writeln "Invalid token: ", tok, " (", S.token, ")"
