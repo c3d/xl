@@ -96,7 +96,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
             result := parse_tree
                 'prefix'
                 'result'
-        
+
 
 
     translation XLSemantics

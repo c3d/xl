@@ -76,7 +76,7 @@ module XL.SEMANTICS.DECLARATIONS is
     // ------------------------------------------------------------------------
     //    Process the declaration of the various entities
     // ------------------------------------------------------------------------
-    
+
         in_flag    : boolean := false
         out_flag   : boolean := false
         var_flag   : boolean := false
@@ -84,7 +84,7 @@ module XL.SEMANTICS.DECLARATIONS is
         prefixen   : boolean := Names.kind <> PT.xlNAME
 
         // Check all declaration prefixes, like 'in X : integer'
-        while prefixen loop        
+        while prefixen loop
             translate Names
                 when
                     'X', 'Y'
@@ -214,7 +214,7 @@ module XL.SEMANTICS.DECLARATIONS is
         // Store this declaration name in the symbol table
         // The original declaration name holds declaration information
         SYM.Enter XLT.context, "DECL", Name.value, Name
-        
+
         // Set the type of the name
         TY.SetType Name, tp
         TY.SetType decl.machine_name, tp
@@ -314,7 +314,7 @@ module XL.SEMANTICS.DECLARATIONS is
         // Store this declaration name in the symbol table
         // The original declaration name holds declaration information
         SYM.Enter XLT.context, "DECL", Name.value, Name
-        
+
         // Set the type of the name
         TY.SetType Name, Type
         TY.SetType result.machine_name, Type

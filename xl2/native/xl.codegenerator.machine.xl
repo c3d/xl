@@ -39,9 +39,9 @@ module XL.CODE_GENERATOR.MACHINE is
 
 
     // ========================================================================
-    // 
+    //
     //    Machine names
-    // 
+    //
     // ========================================================================
 
     function Name (Name : PT.name_tree;
@@ -62,9 +62,9 @@ module XL.CODE_GENERATOR.MACHINE is
 
 
     // ========================================================================
-    // 
+    //
     //   Function declarations
-    // 
+    //
     // ========================================================================
 
     function MakeEntry (DeclName : PT.tree;
@@ -248,9 +248,9 @@ module XL.CODE_GENERATOR.MACHINE is
 
 
     // ========================================================================
-    // 
+    //
     //    Function calls
-    // 
+    //
     // ========================================================================
 
     function MakeExpression(computation : BC.bytecode;
@@ -341,7 +341,7 @@ module XL.CODE_GENERATOR.MACHINE is
             // Check if there is a return value, if so it becomes first arg
             if retType <> nil then
                 result := parse_tree('result' 'retValueName')
- 
+
             // Add other arguments
             for arg in margs loop
                 result := parse_tree('result' 'arg')
@@ -441,9 +441,9 @@ module XL.CODE_GENERATOR.MACHINE is
 
 
     // ========================================================================
-    // 
+    //
     //    Record types
-    // 
+    //
     // ========================================================================
 
     function DeclareRecord(r : RT.record_type) return PT.name_tree is

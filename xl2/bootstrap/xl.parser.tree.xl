@@ -44,7 +44,7 @@ module XL.PARSER.TREE is
 
         // Check if the reference is a wildcard like 'A'
         // If so, check if we saw the same name, and then check compatibility
-        // If not, check 
+        // If not, check
         if ref.kind = PT.xlWILDCARD then
             R : PT.wildcard_tree := PT.wildcard_tree(ref)
 

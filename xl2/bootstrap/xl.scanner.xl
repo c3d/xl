@@ -203,7 +203,7 @@ module XL.SCANNER is
                         based_number := false
 
                 exit if not based_number or not IO.valid S.input
-            
+
             // Check for fractional part
             S.real_value := S.integer_value
             if C = '.' then

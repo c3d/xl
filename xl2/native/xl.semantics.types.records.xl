@@ -61,7 +61,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 if info then
                     decl : info as declaration
                     list += decl
-                else               
+                else
                     ERR.Error "'$1' isn't a field declaration", Fields
 
 
@@ -87,7 +87,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
             BaseName : PT.name_tree := PT.NewName("Base", Source.position)
             Decl : declaration := DCL.Declare(BaseName, BaseType)
             result.fields += Decl
-                
+
         if Fields <> nil then
             MakeFieldList Fields, result.fields
 
@@ -160,9 +160,9 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
 
     // ========================================================================
-    // 
+    //
     //   Indexing
-    // 
+    //
     // ========================================================================
 
     function Index(Record : PT.tree;
@@ -217,4 +217,4 @@ module XL.SEMANTICS.TYPES.RECORDS is
         when ('Record'.'Field') where Field.kind = PT.xlNAME then
             return Index(Record, PT.name_tree(Field))
 
-        
+

@@ -54,4 +54,4 @@ procedure Main is
             theProgram := PR.Parse(P)
             if showParse then
                 Debug theProgram
-            XT.Compile theProgram      
+            XT.Compile theProgram

@@ -167,7 +167,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
 
         // Enter that copy in the "XLSemantics" map
         SYM.EnterRewrite SYM.Enclosing(XLT.context), "xlsemantics", written
-        
+
         return fniface
 
 

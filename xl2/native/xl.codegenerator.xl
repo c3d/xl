@@ -34,9 +34,9 @@ import ERR = XL.ERRORS
 module XL.CODE_GENERATOR is
 
     // ========================================================================
-    // 
+    //
     //     Temporary : forward references
-    // 
+    //
     // ========================================================================
 
     type args_map is map[text, integer]
@@ -78,13 +78,13 @@ module XL.CODE_GENERATOR is
 
 
     // ========================================================================
-    // 
+    //
     //    Globals
-    // 
+    //
     // ========================================================================
-    
+
     name_changes        : map [text, text]
-    module_name         : map [text, text] 
+    module_name         : map [text, text]
     module_imports      : map [text, integer]
     bytecode_formats    : map [text, text]
     loop_index          : integer
@@ -94,13 +94,13 @@ module XL.CODE_GENERATOR is
     translations        : map[text, int]
     traces              : map[text, int]
     trace_count         : integer := 0
-    
+
 
 
     // ========================================================================
-    // 
+    //
     //    Top-level
-    // 
+    //
     // ========================================================================
 
     procedure InitializeRenames is
@@ -130,20 +130,20 @@ module XL.CODE_GENERATOR is
     // ------------------------------------------------------------------------
     //   Read the xl.bytecode file to get the map formats
     // ------------------------------------------------------------------------
-        S      : SC.scanner := SC.Open "xl.bytecode"        
-                
+        S      : SC.scanner := SC.Open "xl.bytecode"
+
         if not IO.valid S.input then
            ERR.Error "Unable to load xl.bytecode", -1
            ERR.Error "For now, it must be in the current directory.", -1
-        
+
         tok    : SC.token
         symbol : text
         had_nl : boolean := false
-                                 
-        loop                                  
-            tok := SC.NextToken S            
+
+        loop
+            tok := SC.NextToken S
             exit if tok = SC.tokEOF or tok = SC.tokERROR
-                        
+
             if tok = SC.tokNAME or tok = SC.tokSYMBOL then
                 name : text := XLNormalize(S.string_value)
                 if name = "//" then
@@ -163,7 +163,7 @@ module XL.CODE_GENERATOR is
                 had_nl := true
             else
                 ERR.Error "Invalid formats in xl.bytecode", -1
-                                      
+
         SC.Close S
 
 
@@ -204,7 +204,7 @@ module XL.CODE_GENERATOR is
         IO.WriteLn "char XLTrace[", trace_count + 1, "] = { 0 };"
         IO.WriteLn "void XLTraceInit(int Argc, char **Argv) {"
         IO.WriteLn "int Arg; for (Arg = 1; Arg < Argc; Arg++) {";
-        IO.WriteLn "::text N = Argv[Arg];"    
+        IO.WriteLn "::text N = Argv[Arg];"
         for T in traces loop
             IO.WriteLn "if (N == ""-t", T, """) XLTrace[", traces[T], "] = 1; "
         IO.WriteLn "}}"
@@ -223,7 +223,7 @@ module XL.CODE_GENERATOR is
         InitializeBytecodeMap
 
         IO.writeln bytecode_formats["init"]
-        
+
         XL2C input
         XL2C_PendingImports
 
@@ -237,9 +237,9 @@ module XL.CODE_GENERATOR is
 
 
     // ========================================================================
-    // 
+    //
     //    Implementation
-    // 
+    //
     // ========================================================================
 
     procedure Rename(from : text; to : text) is
@@ -247,8 +247,8 @@ module XL.CODE_GENERATOR is
     //   Indicate that we want to rename
     // ------------------------------------------------------------------------
          name_changes[from] := to
-                   
-    
+
+
     function XLNormalize (name : text) return text is
     // ------------------------------------------------------------------------
     //    Return the normalized name (lower-case, no underscores)
@@ -338,7 +338,7 @@ module XL.CODE_GENERATOR is
                 if C = ']' then
                     copyMode := false
                 else
-                    fmt += C 
+                    fmt += C
             else if C = '$' then
                 if hadDollar then
                     fmt += "$"
@@ -403,7 +403,7 @@ module XL.CODE_GENERATOR is
                 IO.write "()"
         if not disable_semicolon then
             IO.writeln ";"
-            
+
 
     procedure XL2C_Body (input : BC.bytecode; in_fn : boolean) is
     // ------------------------------------------------------------------------
@@ -413,7 +413,7 @@ module XL.CODE_GENERATOR is
         in_function := in_fn
         XL2C_Stmt input
         in_function := old_in_function
-            
+
 
     procedure XL2C_Enum (input : BC.bytecode; out enums : enum_list) is
     // ------------------------------------------------------------------------
@@ -607,7 +607,7 @@ module XL.CODE_GENERATOR is
                 @ 'name'
             then
                 XL2C_Asm name, nil, nil, nil, nil
-            
+
 
             when
                 'A'
@@ -700,7 +700,7 @@ module XL.CODE_GENERATOR is
                 IO.WriteLn "{"
                 IO.WriteLn "bool XLtranslateDone = false;"
                 IO.WriteLn "do {"
-                XL2C_Translate What, How                    
+                XL2C_Translate What, How
                 IO.WriteLn "} while (0);"
                 IO.WriteLn "}"
 
@@ -1195,15 +1195,15 @@ module XL.CODE_GENERATOR is
     // ------------------------------------------------------------------------
     //    Turn a separator-separated list of paths into a string of paths
     // ------------------------------------------------------------------------
-        I          : integer        
-        element    : text := ""        
+        I          : integer
+        element    : text := ""
         max        : integer := length Path
-                
+
         for I in 0..max-1 loop
             C : character := Path[I]
 
-            if C = Sep then                
-                result += element                
+            if C = Sep then
+                result += element
                 element := ""
             else
                 element += C
@@ -1220,7 +1220,7 @@ module XL.CODE_GENERATOR is
         if getenv("XL_MODULE_PATH") <> nil then
            XlModulePath := getenv("XL_MODULE_PATH")
            PathList := SplitPath(XlModulePath, ';')
-        else           
+        else
            PathList += text(".")
 
         I          : integer
@@ -1237,7 +1237,7 @@ module XL.CODE_GENERATOR is
 
             if I <> max-1 then
                PR.Close result
- 
+
         assert result <> nil
 
 
@@ -1369,9 +1369,9 @@ module XL.CODE_GENERATOR is
 
 
     // ========================================================================
-    // 
+    //
     //    Translate translate
-    // 
+    //
     // ========================================================================
 
     procedure XL2C_Quote (form : BC.bytecode;
@@ -1501,7 +1501,7 @@ module XL.CODE_GENERATOR is
         if Condition <> nil then
             IO.WriteLn "}"
 
-                                 
+
 
     procedure XL2C_Translate (to_translate : BC.bytecode; how : BC.bytecode) is
     // ------------------------------------------------------------------------
@@ -1616,7 +1616,7 @@ module XL.CODE_GENERATOR is
         IO.WriteLn "}"
 
         semantics_translations_init+=IO.close_string_stream(new_stdout)
-        IO.standard_output := old_stdout        
+        IO.standard_output := old_stdout
 
 
         // Write the callback function
@@ -1719,7 +1719,7 @@ module XL.CODE_GENERATOR is
         loop_index += 1
         IO.WriteLn current_module, "init_", loop_index, "();"
         initializations += IO.close_string_stream(new_stdout)
-        IO.standard_output := old_stdout        
+        IO.standard_output := old_stdout
 
         // Write the initialization code in said function
         IO.WriteLn "void init_", loop_index, "() {"
@@ -1739,7 +1739,7 @@ module XL.CODE_GENERATOR is
         loop_index += 1
         IO.WriteLn current_module, "term_", loop_index, "();"
         terminations += IO.close_string_stream(new_stdout)
-        IO.standard_output := old_stdout        
+        IO.standard_output := old_stdout
 
         // Write the initialization code that calls said function
         IO.WriteLn "void term_", loop_index, "() {"

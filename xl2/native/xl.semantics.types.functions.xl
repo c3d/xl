@@ -118,7 +118,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         result.source_tree            := Source
         result.name                   := nil
         result.machine_type           := nil
-            
+
 
     function EnterType (Source  : PT.tree;
                         Parms   : PT.tree;

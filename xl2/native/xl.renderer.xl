@@ -256,7 +256,7 @@ module XL.RENDERER is
             F : format as PT.name_tree
             N : text := F.value + " "
             if N = "cr " then
-                N := ASCII.CR            
+                N := ASCII.CR
             if N = "indent " then
                 output.indent += 1
             else if N = "unindent " then
@@ -381,7 +381,7 @@ module XL.RENDERER is
                     return true
         return false
 
- 
+
     function IsSubFunctionInfix (test_tree : PT.tree;
                                  output    : renderer) return boolean is
     // ------------------------------------------------------------------------
@@ -464,7 +464,7 @@ module XL.RENDERER is
             else if count (output.formats, Q0) > 0 then
                 output.self := T
                 RenderFormat output, output.formats[Q0]
-            else 
+            else
                 T := W.quote + T + W.quote
                 RenderText output, T
             output.current_quote := saveQuote
@@ -577,7 +577,7 @@ module XL.RENDERER is
         RenderOne output, what
         RenderFormat output, "", "end "
         IO.standard_output := old
-       
+
 
 
 
@@ -607,7 +607,7 @@ procedure Debug (tree : PT.tree) is
 // ----------------------------------------------------------------------------
 //    This function is here to be invoked from the debugoger
 // ----------------------------------------------------------------------------
-    old : IO.output_file := IO.standard_output 
+    old : IO.output_file := IO.standard_output
     IO.standard_output := IO.standard_error
     IO.writeln tree
     IO.standard_output := old

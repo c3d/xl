@@ -153,7 +153,7 @@ module XL.SEMANTICS.OVERLOAD is
                         if AType.name <> nil then
                           ERR.Error "the type '$3' of '$1' doesn't match '$2'",
                                     ArgList[A], D.type_source, AType.name
-                        else                                  
+                        else
                           ERR.Error "the type of '$1' doesn't match '$2'",
                                     ArgList[A], D.type_source
                         exit if not Matching
@@ -197,7 +197,7 @@ module XL.SEMANTICS.OVERLOAD is
             ERR.Error "No valid function found for '$1'", NameTree
             ERR.Display candidate_errors
             return parse_tree(@error)
-            
+
 
 
     function IsFunction(T : PT.tree) return boolean is

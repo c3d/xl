@@ -38,6 +38,6 @@ procedure Test is
     loop X := X+1
 
     X := 0
-    loop 
+    loop
         X := X + 1
 

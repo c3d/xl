@@ -212,7 +212,7 @@ module XL.SCANNER is
                         if digit <> 999 and digit >= S.base then
                             ERR.Error "Digit is invalid for the base",
                                       S.position
-                            S.base := digit + 1                        
+                            S.base := digit + 1
 
                     // Skip a single underscore
                     if C = '_' then

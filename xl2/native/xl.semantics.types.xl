@@ -83,7 +83,7 @@ module XL.SEMANTICS.TYPES is
         tp : any_type := Value
         if tp = nil then
             tp := MakeType(Name, Source)
-        PT.SetInfo Name, "TYPE", tp        
+        PT.SetInfo Name, "TYPE", tp
 
         // Store the original name (with its type info) in symbol table
         SYM.Enter XLT.context, "TYPE", N.value, Name
@@ -277,7 +277,7 @@ module XL.SEMANTICS.TYPES is
             ERR.Error "Cannot convert '$1' to null type", expr
             return expr
 
-        // If we already have the right type, return expression        
+        // If we already have the right type, return expression
         if SameType(exprType, toType) then
             return expr
 

@@ -62,7 +62,7 @@ module XL.SEMANTICS.PRAGMAS is
         if SYM.GetInteger(XLT.context, name + ".pragma", 0, true) <> 1 then
             ERR.Error "The pragma {$1} is not implemented", p_name
         return SYM.LookupRewrite(XLT.context, name, input)
-   
+
 
     translation XLDeclarations
     // ------------------------------------------------------------------------

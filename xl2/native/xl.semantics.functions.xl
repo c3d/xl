@@ -306,7 +306,7 @@ module XL.SEMANTICS.FUNCTIONS is
                 MType : PT.name_tree := decl.machine_type
                 f.result_mname := MName
                 Body := parse_tree
-                    @result_decl 'MType' 'MName' 
+                    @result_decl 'MType' 'MName'
                     'Body'
 
         Body := XLT.ScopeSemantics(Body, XLT.scopeFunction)

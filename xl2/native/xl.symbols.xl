@@ -48,7 +48,7 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
         result.enclosing := enclosing
 
-    
+
     procedure DeleteSymbolTable (table : symbol_table) is
     // ------------------------------------------------------------------------
     //    Delete a symbol table
@@ -68,9 +68,9 @@ module XL.SYMBOLS is
 
 
     // ========================================================================
-    // 
+    //
     //    Simple name lookup
-    // 
+    //
     // ========================================================================
 
     procedure Enter (table          : symbol_table;
@@ -130,9 +130,9 @@ module XL.SYMBOLS is
 
 
     // ========================================================================
-    // 
+    //
     //    Tree rewrites support
-    // 
+    //
     // ========================================================================
 
     function TreeName (to_name : PT.tree) return text is
@@ -280,7 +280,7 @@ module XL.SYMBOLS is
         count : integer := 0
         result := LookupRewrite (table, kind, tree, count, false, true)
 
-                      
+
     function  RewritesCount  (table     : symbol_table;
                               kind      : text;
                               tree      : PT.tree) return integer is
@@ -312,9 +312,9 @@ module XL.SYMBOLS is
 
 
     // ========================================================================
-    // 
+    //
     //    Symbol table properties
-    // 
+    //
     // ========================================================================
 
     procedure SetProperty (table : symbol_table;
@@ -407,9 +407,9 @@ module XL.SYMBOLS is
 
 
     // ========================================================================
-    // 
+    //
     //    Misc helpers
-    // 
+    //
     // ========================================================================
 
     unique_id : integer := 0

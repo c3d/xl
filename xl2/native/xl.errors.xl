@@ -71,8 +71,8 @@ module XL.ERRORS is
 
         IO.Write E
 
-        IO.standard_output := old_stdout        
-        
+        IO.standard_output := old_stdout
+
 
     procedure ErrorInt (E : text; pos : integer; args : string of text) is
     // ------------------------------------------------------------------------
@@ -141,7 +141,7 @@ module XL.ERRORS is
 
         ErrorInt E, pos, args
 
-        IO.standard_output := old_stdout        
+        IO.standard_output := old_stdout
 
 
     procedure Error (E : text; pos : integer) is
