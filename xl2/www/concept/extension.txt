@@ -17,7 +17,7 @@ global variables as a communication mechanism. I still remember the
 thrill of discovering that the "Advanced {@Basic}" of the
 {wiki "Sinclair_QL" "Sinclair QL"} allowed named procedures and
 functions with local parameters: it was like adding new keywords
-yourself! End of all geezer's rant... but hold that thought, the
+yourself! End of old geezer's rant... but hold that thought, the
 example is not as gratuitous as it sounds)
 
 Subroutines, templates, operator {wiki "Overloading" "overloading"}

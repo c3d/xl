@@ -12,4 +12,5 @@ bounds of the array, and overwriting random memory (a frequent source
 of bugs in C, known as buffer overrun). Another side effect is that
 it is legal in C to write {tt "1[A]"} to access the first element of
 the array, or even {tt "-1[A+2]"}. These notations, however, are
-somewhat surprising and hard to decode.
+somewhat surprising and hard to decode. They are not complicated
+per-se, but because they have no correspondance in the {@pb}.

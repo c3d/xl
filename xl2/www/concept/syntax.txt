@@ -3,7 +3,7 @@
 The syntax defines the shape of programs, using set of rules governing
 the visible aspects of the {@code}. English syntax is what makes "The
 eat cat fish" incorrect, because the (visible) order of words is
-incorrect (see {example "semantics"} to contrast that with semantic
+incorrect (see {concept "semantics"} to contrast that with semantic
 errors).
 
 In most development environments, the code space is represented as
@@ -13,8 +13,8 @@ such as the name of a variable or function must be a sequence of
 alpha-numeric or underscore characters beginning with a letter or
 underscore. So {tt "Blob"}, {tt "a29_"} or {tt "___000"} are all valid
 C identifiers, whereas {tt "short-sighted"} is not. Syntactic rules
-are dependent on the programming environment, and {tt "short-sighted"}
-would be a valid Lisp identifier, and {tt "___000"} would not be any
+are dependent on the programming environment: {tt "short-sighted"}
+would be a valid Lisp identifier, whereas {tt "___000"} would not be any
 kind of recognized identifier for an {@Ada} compiler.
 
 By extension, we can call "syntax" the visible aspects of

@@ -51,7 +51,7 @@ Here are a few examples of common forms of semantic noise:
 </UL>
 
 See the
-{concept "diverge" "concept programming analysis of existing languages"})
+{concept "diverge" "concept programming analysis of existing languages"}
 for examples combining {@synnoise} and {@semnoise}.
 
 Semantic noise complicates maintenance of programs, and makes the

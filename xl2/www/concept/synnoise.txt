@@ -50,8 +50,8 @@ Here are a few examples of common syntactic noise:
 </UL>
 
 See the
-{concept "diverge" "concept programming analysis of existing languages"})
-for examples combining {@semnoise} and {@symnoise}.
+{concept "diverge" "concept programming analysis of existing languages"}
+for examples combining {@semnoise} and {@synnoise}.
 
 Syntactic noise complicates maintenance of programs, and makes the
 learning curve steeper. However, it is important to note that

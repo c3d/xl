@@ -13,7 +13,7 @@ A classical example of this is the overuse of pointers in {@C} or
 <LI>Arrays
 <LI>Output parameters of functions
 <LI>Callback functions
-<LI>Abstract types
+<LI>Abstract types (using pointers to undeclared struct types)
 <LI>Objects
 </UL>
 
@@ -61,7 +61,7 @@ e-mail me if you need more help):
  {example "writeln" "end of line character"}, as C or C++ do (this is
  a good example of {@ccast}).
 <LI>Using lists to implement functions with a
-{example "variadics" "variable number of arguments"}, as {@C#} does
+{concept "variadics" "variable number of arguments"}, as {@C#} does
   (another {@ccast}).
 <LI>Making {example "complex" "operator overloading"} a class
   feature (as opposed to an expression feature), the way C++
