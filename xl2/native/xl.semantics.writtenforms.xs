@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  xl.optimizer.xl                 (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.semantics.writtenforms.xs    (C) 1992-2003 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//      An optimizer that works on XL bytecode
+//     Information stored about written forms
 // 
 // 
 // 
@@ -23,15 +23,20 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-import BC = XL.BYTECODE
+import PT = XL.PARSER.TREE
+import DCL = XL.SEMANTICS.DECLARATIONS
 
-module XL.OPTIMIZER is
+
+module XL.SEMANTICS.WRITTEN_FORMS with
 // ----------------------------------------------------------------------------
-//    Implementation of the XL optimizer
+//    Dealing with written forms
 // ----------------------------------------------------------------------------
- 
-    function Optimize(input : BC.bytecode) return BC.bytecode is
+
+    type written_form_data
+    type written_form is access to written_form_data
+    type written_form_data is record with
     // ------------------------------------------------------------------------
-    //   At this point... better safe than sorry ;-)
+    //    Information stored about a written form
     // ------------------------------------------------------------------------
-        return input
+        form                    : PT.tree
+        declaration             : DCL.declaration

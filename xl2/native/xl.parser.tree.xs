@@ -32,10 +32,10 @@ module XL.PARSER.TREE with
     type tree_kind is enumeration
         xlUNKNOWN,
         xlINTEGER, xlREAL, xlTEXT, xlNAME,    // Atoms
-        xlBLOCK,                                // Unary paren / block
-        xlPREFIX,                               // Binary prefix-op
-        xlINFIX,                                // Ternary infix-op
-        xlWILDCARD,                             // For pattern matching
+        xlBLOCK,                              // Unary paren / block
+        xlPREFIX,                             // Binary prefix-op
+        xlINFIX,                              // Ternary infix-op
+        xlWILDCARD,                           // For pattern matching
         xlLAST
 
 

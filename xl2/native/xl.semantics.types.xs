@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  xl.optimizer.xl                 (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.semantics.types.xs           (C) 1992-2003 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//      An optimizer that works on XL bytecode
+//     Type system for XL
 // 
 // 
 // 
@@ -23,15 +23,35 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-import BC = XL.BYTECODE
+import PT = XL.PARSER.TREE
 
-module XL.OPTIMIZER is
+
+module XL.SEMANTICS.TYPES with
 // ----------------------------------------------------------------------------
-//    Implementation of the XL optimizer
+//   Implements data type representation
 // ----------------------------------------------------------------------------
- 
-    function Optimize(input : BC.bytecode) return BC.bytecode is
+
+    type any_type_data is record with
     // ------------------------------------------------------------------------
-    //   At this point... better safe than sorry ;-)
+    //   All that the compiler knows about a type
     // ------------------------------------------------------------------------
-        return input
+
+        // Flags set during semantics
+        is_constant             : boolean
+        is_variable             : boolean
+        is_generic              : boolean
+        is_polymorphic          : boolean
+        is_subroutine           : boolean
+        is_reference            : boolean
+        is_instantiation        : boolean
+        is_compiler_generated   : boolean
+
+        // Other information recorded about a type
+        type_uid                : integer // Cache for accelerated comparisons
+        bit_size                : integer
+        source_tree             : PT.tree
+        name                    : PT.tree // Not always there, may be nil
+
+    type any_type is access to any_type_data
+
+

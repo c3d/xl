@@ -16,7 +16,7 @@
 // 
 // 
 // ****************************************************************************
-// This document is released under the GNU Genral Public License.
+// This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
@@ -26,11 +26,11 @@
 
 import PT = XL.PARSER.TREE
 import BC = XL.BYTECODE
+import SYM = XL.SEMANTICS.SYMBOLS
 
 module XL.SEMANTICS with
 
-    type symbol_table_data
-    type symbol_table is access to symbol_table_data
+    type symbol_table is SYM.symbol_table
 
     // Top-level semantics
     function Semantics (input : PT.tree) return BC.bytecode

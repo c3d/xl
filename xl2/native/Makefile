@@ -41,6 +41,11 @@ OTHER_SOURCES=					\
 	xl.translator.xl			\
 	xl.semantics.xs				\
 	xl.semantics.xl				\
+	xl.semantics.types.xs			\
+	xl.semantics.declarations.xs		\
+	xl.semantics.writtenforms.xs		\
+	xl.semantics.symbols.xs			\
+	xl.semantics.symbols.xl			\
 	xl.codegenerator.xs			\
 	xl.codegenerator.xl			\
 	xl.bytecode.xs				\
