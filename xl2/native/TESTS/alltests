@@ -72,8 +72,7 @@ do
     COMPILE=
 
     # Extract interesting variables
-    ./alltests.awk $TESTNAME > alltests.env
-    source alltests.env
+    eval $(./alltests.awk $TESTNAME)
     [ -z "$CMD" ] && { CMD="$XL $OPT $TESTNAME"; RUN=$DORUN; COMPILE=./a.out; }
 
     # Run the test
