@@ -195,6 +195,7 @@ module XL.RENDERER is
     //    Close a stream
     // ------------------------------------------------------------------------
         // Nothing to do?
+        delete toClose
         toClose := nil
 
 
@@ -560,7 +561,9 @@ module XL.RENDERER is
         output.had_punctuation := false
         output.need_separator := false
         output.priority := 0
+        RenderFormat output, "", "begin "
         RenderOne output, what
+        RenderFormat output, "", "end "
         IO.standard_output := old
        
 
@@ -581,11 +584,18 @@ module XL.TEXT_IO with
     // ------------------------------------------------------------------------
     //    For debugging purpose, write a tree using default renderer
     // ------------------------------------------------------------------------
-        XL.RENDERER.Render XL.RENDERER.DefaultRenderer, what
+        R : XL.RENDERER.renderer := XL.RENDERER.DefaultRenderer
+        old : IO.output_file := R.output
+        R.output := IO.standard_output
+        XL.RENDERER.Render R, what
+        R.output := old
 
 
 procedure Debug (tree : PT.tree) is
 // ----------------------------------------------------------------------------
 //    This function is here to be invoked from the debugoger
 // ----------------------------------------------------------------------------
+    old : IO.output_file := IO.standard_output 
+    IO.standard_output := IO.standard_error
     IO.writeln tree
+    IO.standard_output := old

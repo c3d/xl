@@ -95,6 +95,8 @@ top-%:
 
 v-%:
 	$(MAKE) $* V= R= H=
+timing-%:
+	$(MAKE) $* V=time R= H=
 s-%:
 	$(MAKE) -s --no-print-directory $* 2> build.err
 l-%:

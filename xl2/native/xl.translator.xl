@@ -103,7 +103,7 @@ module XL.TRANSLATOR is
 
         after_semantics : BC.bytecode := ScopeSemantics(input, true)
         if ERR.error_count = 0 then
-            after_opt : BC.bytecode := XLOptimization(after_semantics)
+            after_opt : BC.bytecode := XLOptimizations(after_semantics)
             if ERR.error_count = 0 then
                 CG.Transcode after_opt, output
         if ERR.error_count <> 0 then

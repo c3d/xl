@@ -31,13 +31,13 @@ import POS = XL.SCANNER.POSITION
 
 module XL.PARSER is
 
-    function Open(name : text) return parser is
+    function Open(name : text; syntax : text) return parser is
     // ------------------------------------------------------------------------
     //   Create a new parser
     // ------------------------------------------------------------------------
         S : SC.scanner := SC.Open(name)
         result.scanner := S
-        ReadSyntaxFile result, "xl.syntax"
+        ReadSyntaxFile result, syntax
         SC.SetPosition result.scanner, POS.OpenFile name
         S.blocks := result.blocks
 
@@ -182,6 +182,7 @@ module XL.PARSER is
         extra_indents           : integer       := 0
 
         while not done loop
+
             // If no token pending, scan one
             if pending_token = SC.tokNONE then
                 right := nil
@@ -304,6 +305,8 @@ module XL.PARSER is
                             right := PT.NewName(spelling, pos)
                             if prefix_priority = default_priority then
                                 prefix_priority := function_priority
+                                if new_statement and tok = SC.tokNAME then
+                                    is_expression := false
 
             else if tok = SC.tokNEWLINE then
                 if pending_token = SC.tokNONE then
@@ -378,13 +381,10 @@ module XL.PARSER is
 
                 // First thing we parse
                 result := right
-                if new_statement and not is_expression then
-                    if prefix_priority = default_priority then
-                        prefix_priority := statement_priority
                 result_priority := prefix_priority
 
                 // We are now in the middle of an expression
-                if result then
+                if result and result_priority >= statement_priority then
                     new_statement := false
 
             else if left <> nil then
@@ -398,8 +398,7 @@ module XL.PARSER is
                 // If we have 'A and not B', where 'not' has higher priority
                 // than 'and', we want to finish parsing 'not B' first, rather
                 // than seeing this as '(A and not) B'.
-                if (prefix_priority <> default_priority and
-                    prefix_priority > infix_priority) then
+                if prefix_priority <> default_priority then
                     // Push "A and" in the above example
                     T : pending
                     T.opcode := infix
@@ -430,8 +429,6 @@ module XL.PARSER is
                             exit if (prev.priority <> default_priority and
                                      infix_priority >
                                      (prev.priority & (bitwise_not 1)))
-                            // exit if (prev.priority < statement_priority and
-                            //         infix_priority = prev.priority)
                         if prev.opcode = prefix then
                             left := PT.NewPrefix(prev.argument, left,
                                                  prev.position)
@@ -464,40 +461,41 @@ module XL.PARSER is
 
             else if right <> nil then
 
+                // Check if we had a low-priority prefix (e.g. pragmas)
+                if prefix_priority < statement_priority then
+                    new_statement := true
+                    is_expression := true
+
                 // Check priorities for "A.B x,y" -> "(A.B) (x,y)"
                 // Make odd priorities right associative by
                 // clearing low-bit in previous priority
-                right_assoc : boolean := right.kind <> PT.xlBLOCK
-                while size(stack) loop
-                    prev : pending := back(stack)
-                    if not done then
-                        exit if (prev.priority <> default_priority and
-                                 result_priority >
-                                 (prev.priority & (bitwise_not 1)))
-                        // exit if (prev.priority < statement_priority and
-                        //         result_priority = prev.priority)
-                        exit if (right_assoc and
-                                 prev.opcode = prefix and
-                                 result_priority = prev.priority)
+                if prefix_priority <= result_priority then
+                    while size(stack) loop
+                        prev : pending := back(stack)
+                        if not done then
+                            exit if (prev.priority <> default_priority and
+                                     result_priority >
+                                     (prev.priority & (bitwise_not 1)))
 
-                    if prev.opcode = prefix then
-                        result := PT.NewPrefix(prev.argument, result,
-                                               prev.position)
-                    else
-                        result := PT.NewInfix(prev.opcode, prev.argument,
-                                              result, prev.position)
-                    pop_back stack
+                        if prev.opcode = prefix then
+                            result := PT.NewPrefix(prev.argument, result,
+                                                   prev.position)
+                        else
+                            result := PT.NewInfix(prev.opcode, prev.argument,
+                                                  result, prev.position)
+                        pop_back stack
 
                 // Check if new statement
                 T : pending
-                if right.kind <> PT.xlBLOCK then
-                    if size(stack) = 0 then
-                        if not is_expression then
-                            result_priority := statement_priority
-                    else
-                        T := back(stack)
-                        if T.priority < statement_priority then
-                            result_priority := statement_priority
+                if not is_expression then
+                    if right.kind <> PT.xlBLOCK then
+                        if result_priority > statement_priority then
+                            if size(stack) = 0 then
+                                result_priority := statement_priority
+                            else
+                                T := back(stack)
+                                if T.priority < statement_priority then
+                                    result_priority := statement_priority
 
                 // Push a recognized prefix op
                 T.opcode := prefix

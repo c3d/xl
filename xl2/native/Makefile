@@ -55,6 +55,7 @@ OTHER_SOURCES=					\
 	xl.semantics.types.functions.xl		\
 	xl.semantics.types.generics.xs		\
 	xl.semantics.writtenforms.xs		\
+	xl.semantics.pragmas.xl			\
 	xl.codegenerator.xs			\
 	xl.codegenerator.xl			\
 	xl.renderer.xs				\
@@ -71,6 +72,8 @@ OTHER_SOURCES=					\
 						\
 	xl.plugin.cranberry.xs			\
 	xl.plugin.cranberry.xl			\
+	xl.plugin.listing.xl			\
+	xl.plugin.florek.xl			\
 	xl.plugin.differentiation.xl		\
 	xl.plugin.constantfold.xl
 

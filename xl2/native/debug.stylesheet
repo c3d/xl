@@ -34,5 +34,7 @@ indent = indent nl
 unindent = unindent nl
 indents = " "
 "block I+ I-" = "(block indent" indent nl child unindent ")"
-"block  ( ) " = "(block implicit ()" indent nl child unindent ")"
+"block  ( ) " = "(implicit ()" indent nl child unindent ")"
 
+begin = newline
+end = newline newline

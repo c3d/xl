@@ -29,7 +29,7 @@ import ERR = XL.ERRORS
 import XLT = XL.TRANSLATOR
 import SYM = XL.SYMBOLS
 
-module XL.PLUGIN.DIFFERENTIATION is
+module XL.PLUGIN.CONSTANTFOLD is
 
     changed : boolean := false
 
@@ -84,9 +84,6 @@ module XL.PLUGIN.DIFFERENTIATION is
             changed := true
             X := ConstantFold(X)
             return quote ('X')
-        when ((0)) then
-            changed := true
-            return quote (0)
         when (-0) then
             changed := true
             return quote (0)

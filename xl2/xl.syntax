@@ -35,7 +35,8 @@ POSTFIX
         400     ! ?
 
 BLOCK
-        400     '(' ')' '{' '}' '[' ']' INDENT UNINDENT
+        21      '{' '}'
+        400     '(' ')' '[' ']' INDENT UNINDENT
 
 TEXT
         "``" "``"

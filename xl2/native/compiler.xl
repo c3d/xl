@@ -40,11 +40,14 @@ import XL.SEMANTICS.DECLARATIONS
 import XL.SEMANTICS.TYPES.FUNCTIONS
 import XL.SEMANTICS.FUNCTIONS
 import XL.SEMANTICS.OVERLOAD
+import XL.SEMANTICS.PRAGMAS
 
 // Plugins
 // import XL.PLUGIN.CRANBERRY
 import XL.PLUGIN.DIFFERENTIATION
 import XL.PLUGIN.CONSTANTFOLD
+import XL.PLUGIN.LISTING
+import XL.PLUGIN.FLOREK
 
 
 procedure Main is
@@ -66,6 +69,8 @@ procedure Main is
         else if name[0] = '+' then
             plugin : text := name[1..length(name)-1]
             compile := false
+            SYM.SetText XLT.context, "PHASE", "xlcommand"
+            SYM.SetProperty XLT.context, "PRAGMA", PT.NewText(plugin, '"')
             theProgram := SYM.LookupRewrite(XLT.context, plugin, theProgram)
         else if name = "-style" then
             if I + 1 <= Max - 1 then
@@ -79,7 +84,7 @@ procedure Main is
             theProgram := XLT.ScopeSemantics(theProgram, true)
         else if name = "-opt" then
             compile := false
-            theProgram := XLT.XLOptimization(theProgram)
+            theProgram := XLT.XLOptimizations(theProgram)
         else if name = "-ccode" then
             compile := false
             CG.Transcode theProgram, IO.standard_output

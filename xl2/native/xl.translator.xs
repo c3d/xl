@@ -74,4 +74,4 @@ module XL.TRANSLATOR with
     function XLEvaluateType(input: PT.tree) return BC.bytecode // Generated
     function XLDeclarations(input: PT.tree) return BC.bytecode // Generated
     function XLSemantics(input: PT.tree) return BC.bytecode    // Generated
-    function XLOptimization(input: PT.tree) return BC.bytecode // Generated
+    function XLOptimizations(input: PT.tree) return BC.bytecode// Generated

@@ -391,7 +391,6 @@ module XL.PARSER is
                         // clearing the low-bit in the test below
                         if not done then
                             exit if prev.priority <> default_priority and infix_priority > (prev.priority & (bitwise_not 1))
-                            //exit if prev.priority < statement_priority and infix_priority = prev.priority
                         if prev.opcode = prefix then
                             left := PT.NewPrefix(prev.argument, left)
                         else

@@ -1,0 +1,105 @@
+// ****************************************************************************
+//  xl.semantics.pragmas.xl         (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Handles the pragma notation: {pragma}
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import XLT = XL.TRANSLATOR
+import SYM = XL.SYMBOLS
+
+
+module XL.SEMANTICS.PRAGMAS is
+
+
+    function PragmaName (pragma : PT.tree) return text is
+    // ------------------------------------------------------------------------
+    //    Return the name of a pragma
+    // ------------------------------------------------------------------------
+        if pragma.kind = PT.xlNAME then
+            name : pragma as PT.name_tree
+            return name.value
+        else if pragma.kind = PT.xlINFIX then
+            infix : pragma as PT.infix_tree
+            return PragmaName(infix.left)
+        else if pragma.kind = PT.xlPREFIX then
+            prefix : pragma as PT.prefix_tree
+            return PragmaName(prefix.left)
+        else
+            ERR.Error "Invalid syntax for pragma", pragma
+            return "error"
+
+
+    function ProcessPragma(phase : text;
+                           pragma : PT.tree;
+                           input : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Process an individual pragma
+    // ------------------------------------------------------------------------
+        SYM.SetText XLT.context, "PHASE", phase
+        SYM.SetProperty XLT.context, "PRAGMA", pragma
+        name : text := PragmaName(pragma)
+        return SYM.LookupRewrite(XLT.context, name, input)
+   
+
+    translation XLDeclarations
+    // ------------------------------------------------------------------------
+    //    Processing pragmas at declaration time
+    // ------------------------------------------------------------------------
+        when
+            { 'Pragma' } 'Node'
+        then
+            result := ProcessPragma("xldeclarations", Pragma, Node)
+            if result <> input then
+                result := XLT.XLDeclarations(result)
+            else
+                result := XLT.XLDeclarations(Node)
+
+
+    translation XLSemantics
+    // ------------------------------------------------------------------------
+    //    Processing pragmas at semantics time
+    // ------------------------------------------------------------------------
+        when
+            { 'Pragma' } 'Node'
+        then
+            result := ProcessPragma("xlsemantics", Pragma, Node)
+            if result <> input then
+                result := XLT.XLSemantics(result)
+            else
+                result := XLT.XLSemantics(Node)
+
+
+    translation XLOptimizations
+    // ------------------------------------------------------------------------
+    //    Processing pragmas at declaration time
+    // ------------------------------------------------------------------------
+        when
+            { 'Pragma' } 'Node'
+        then
+            result := ProcessPragma("xloptimizations", Pragma, Node)
+            if result <> input then
+                result := XLT.XLOptimizations(result)
+            else
+                result := XLT.XLOptimizations(Node)
+
+

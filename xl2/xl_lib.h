@@ -308,7 +308,7 @@ namespace xl
 
 
 template <class T>
-inline ::text XLtext(const T& x) {
+::text XLtext(const T& x) {
     std::string result;
     std::ostream *old = xl::textio::standardoutput;
     std::ostringstream out;

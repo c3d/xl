@@ -1,19 +1,25 @@
 <!--July 2004-->
 June | <b>July 2004</b> | August
 <p>
-<a href="040708.html">Thursday, 8 July</a>: The true origin of Linux
+Thursday, 8 July: The true origin of Linux
 <ul>
 <li>
 There are <A href="http://searchenterpriselinux.techtarget.com/originalContent/0,289142,sid39_gci991557,00.html">lies</A>
 </ul>
-<a href="040714.html">Wednesday, 14 July</a>: New web site
+Wednesday, 14 July: New web site
 <ul>
 </ul>
-<a href="040716.html">Friday, 16 July</a>: Article on Intentional Programming
+Friday, 16 July: Article on Intentional Programming
 <ul>
 <li><A href="http://www.codegeneration.net/tiki-read_article.php?articleId=61">
 http://www.codegeneration.net/tiki-read_article.php?articleId=61
 </A>
+</ul>
+Tuesday, 20 July: Decided to upload the site...
+<ul>
+</ul>
+<a href="040725.html">Sunday, 25 July</a>: Added pragma support
+<ul>
 </ul>
 
 <p>
