@@ -21,7 +21,7 @@ xl compiler.xl > xl2.cpp
 cl /EHsc /I .. xl2.cpp
 @if errorlevel 1 goto error
 
-xl compiler.xl > xl3.cpp
+xl2 compiler.xl > xl3.cpp
 @if errorlevel 1 goto error
 
 @goto done
