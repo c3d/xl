@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  basic_declarations.xl           (C) 1992-2004 Christophe de Dinechin (ddd) 
+//  basic_records.xl                (C) 1992-2004 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     The simplest forms of declaration
+//     Check that we can do very basic record types
 // 
 // 
 // 
@@ -23,18 +23,19 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-// Temporary (to deal with declarations)
-procedure Copy(out Target : integer;
-               in  Source : integer) written Target := Source is XL.BYTECODE.copy_int
+procedure Copy(out Tgt : integer; in Src : integer) written Tgt := Src is XL.BYTECODE.COPY_INT
 
-// Global declarations
-X : integer
-Y, Z : integer
+type DataBlob is record with
+    X : integer
+    Y : integer
 
-// Initializations
-A : integer := 1
-B, C : integer := a
+Z : DataBlob
 
-// Name lookup XL style is not case / underscore sentitive
-JoeDalton : integer := 3
-AverellDalton : integer := JOE_DALTON
+function Foo return integer is 
+    I : integer := Z.X
+    I := 1
+    I := Z.X
+    return Z.X
+
+
+K : integer := Z.X

@@ -1,0 +1,17 @@
+procedure K is 
+    translate 
+        when 
+            A
+        then 
+            B
+        
+        when 
+            C
+        then 
+            D 
+            E 
+            F 
+            G
+        
+    
+

@@ -1,14 +1,14 @@
 // ****************************************************************************
-//  basic_declarations.xl           (C) 1992-2004 Christophe de Dinechin (ddd) 
+//  loop_instruction.xl             (C) 1992-2004 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     The simplest forms of declaration
+//     Check that the 'loop' instruction is parsed right
+//     'loop' is special because it is both prefix and infix
 // 
-// 
-// 
+//     Question: is this really what we want here?
 // 
 // 
 // 
@@ -23,18 +23,21 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-// Temporary (to deal with declarations)
-procedure Copy(out Target : integer;
-               in  Source : integer) written Target := Source is XL.BYTECODE.copy_int
+// CMD=%x -parse %f -show
 
-// Global declarations
-X : integer
-Y, Z : integer
+procedure Test is
 
-// Initializations
-A : integer := 1
-B, C : integer := a
+    // Check what happens with infix-only operators
+    if Condition
+    then X := 0
+    else Y := 0
 
-// Name lookup XL style is not case / underscore sentitive
-JoeDalton : integer := 3
-AverellDalton : integer := JOE_DALTON
+    // Check with infix loop
+    while X < 0 loop X := X + 1
+    while X < 0
+    loop X := X+1
+
+    X := 0
+    loop 
+        X := X + 1
+

@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  basic_declarations.xl           (C) 1992-2004 Christophe de Dinechin (ddd) 
+//  indentation_and_comments.xl     (C) 1992-2004 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     The simplest forms of declaration
+//      Check that indentation wroks well in the presence of comments
 // 
 // 
 // 
@@ -23,18 +23,22 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-// Temporary (to deal with declarations)
-procedure Copy(out Target : integer;
-               in  Source : integer) written Target := Source is XL.BYTECODE.copy_int
+// CMD=%x -parse %f -show
 
-// Global declarations
-X : integer
-Y, Z : integer
+procedure K is
+    translate
+        when
+            A
+        then
+            B
+        // Glop
+        when
+           C
+        then // Hello
+           D
 
-// Initializations
-A : integer := 1
-B, C : integer := a
+           E
 
-// Name lookup XL style is not case / underscore sentitive
-JoeDalton : integer := 3
-AverellDalton : integer := JOE_DALTON
+
+           F // Gag
+           G

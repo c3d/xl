@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  basic_declarations.xl           (C) 1992-2004 Christophe de Dinechin (ddd) 
+//  listing.xl                      (C) 1992-2004 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     The simplest forms of declaration
+//     This test checks the {listing} plug-in
 // 
 // 
 // 
@@ -23,18 +23,15 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-// Temporary (to deal with declarations)
-procedure Copy(out Target : integer;
-               in  Source : integer) written Target := Source is XL.BYTECODE.copy_int
+// Don't run anything but bare semantics
+// CMD=%x -parse %f -sem
 
-// Global declarations
-X : integer
-Y, Z : integer
+{listing} function Foo(X : integer) return real is
+    result := X + 1
 
-// Initializations
-A : integer := 1
-B, C : integer := a
+procedure Bar is
+    return Foo(0)
 
-// Name lookup XL style is not case / underscore sentitive
-JoeDalton : integer := 3
-AverellDalton : integer := JOE_DALTON
+{listing "html"} function Baz(A : real) return real is
+    return A + A
+

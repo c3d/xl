@@ -1,0 +1,37 @@
+// ****************************************************************************
+//  factorial.xl                    (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Check if we can compile a simple factorial definition
+//     This tests notably the handling of postfix operators
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+// Temporarily, we need these definitions (until we import XL.BUILTIN)
+function Equal(X : integer; Y : integer) return boolean written X = Y is xl.bytecode.equ_int
+function Sub(X : integer; Y : integer) return integer written X - Y is xl.bytecode.sub_int
+function Mul(X : integer; Y : integer) return integer written X * Y is xl.bytecode.mul_int
+to Copy(out Target : integer; in Source : integer) written Target := Source is xl.bytecode.copy_int
+
+function Factorial (N : integer) return integer written N! is
+    if N = 0 then
+        return 1
+    // Hellox
+    else
+        return N * (N-1)!

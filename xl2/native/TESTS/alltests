@@ -35,7 +35,9 @@ UPDATE=
 DORUN=
 COMPILE=
 if [ "$1" == '-c++' ]; then DORUN=./a.out; COMPILE=./a.out; shift; fi
-if [ "$1" == "-update" ]; then shift; UPDATE='*'$1'*'; PATTERN="$UPDATE"; shift; fi
+if [ "$1" == "-update" -o "$1" == "-u" ]; then
+   shift; UPDATE='*'$1'*'; PATTERN="$UPDATE"; shift;
+fi
 if [ ! -z "$1" ]; then PATTERN='*'"$1"'*'; shift; fi
 
 export TESTDIR XL SUCCESS FAILURE PASS UPDATE
@@ -76,7 +78,7 @@ do
 
     # Run the test
     THIS_FAILED=
-    $CMD > $LOG 2>&1
+    ( $CMD ) > $LOG 2>&1
     RC=$?
 
     # Try to compile the resulting C++
