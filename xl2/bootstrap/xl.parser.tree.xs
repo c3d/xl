@@ -46,31 +46,64 @@ module XL.PARSER.TREE with
     // Representation of an integer
     type integer_node is tree_node with
         value : integer
+    function NewInteger(value : integer) return access to integer_node is
+        result.kind := xlINTEGER
+        result.value := value
 
     // Representation of a real
     type real_node is tree_node with
         value : real
+    function NewReal(value : real) return access to real_node is
+        result.kind := xlREAL
+        result.value := value
 
     // Representation of a string
     type string_node is tree_node with
         value : text
         quote : character
+    function NewString(value : text; quote : character) return access to string_node is
+        result.kind := xlSTRING
+        result.value := value
+        result.quote := quote
 
     // Representation of a name
     type name_node is tree_node with
         value : text
+    function NewName(value : text) return access to name_node is
+        result.kind := xlNAME
+        result.value := value
 
 
     // -- Non-leafs -----------------------------------------------------------
 
+    // Block and parentheses
+    type block_node is tree_node with
+        child   : tree
+        opening : character
+        closing : character
+    function NewBlock(child : tree; opening : character; closing : character) return access to block_node is
+        result.kind := xlBLOCK
+        result.child := child
+        result.opening := opening
+        result.closing := closing
+
     // Unary prefix operator
-    type unary_node is tree_node with
+    type prefix_node is tree_node with
         left  : tree
         right : tree
+    function NewPrefix(left : tree; right : tree) return access to prefix_node is
+        result.kind := xlPREFIX
+        result.left := left
+        result.right := right
 
     // Binary infix operator
-    type binary_node is tree_node with
+    type infix_node is tree_node with
         name  : text
         left  : tree
         right : tree
+    function NewInfix(name: text; left: tree; right: tree) return access to infix_node is
+        result.kind := xlINFIX
+        result.name := name
+        result.left := left
+        result.right := right
 

@@ -209,6 +209,8 @@ bool XL2CTranslation::Block(XLBlock *input)
     case '\t':
         out << "{\n";
         XL2C(input->child);
+        if (input->child->Kind() == xlNAME)
+            out << "()";
         if (in_enum.length())
             out << "}\n";
         else
@@ -546,12 +548,6 @@ INFIX(sequence)
     XL2C(tree->right);
     if (tree->right->Kind() == xlNAME)
         out << "()";
-#if 0
-    if (in_parameter_declaration)
-        out << "";
-    else
-        out << ";\n"; // It doesn't hurt...
-#endif
 }
 
 

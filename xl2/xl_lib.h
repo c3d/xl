@@ -35,6 +35,15 @@
 
 // ============================================================================
 // 
+//    Instructions
+// 
+// ============================================================================
+
+#define restart() continue
+
+
+// ============================================================================
+// 
 //    Basic types
 // 
 // ============================================================================
@@ -55,6 +64,13 @@ template<class T>
 inline int size (std::vector<T> & what)
 {
     return what.size();
+}
+
+
+template <class T, class U>
+inline int count(const std::map<T,U> &m, const T &v)
+{
+    return m.count(v);
 }
 
 
@@ -113,6 +129,8 @@ namespace xl
                 inline bool isletterordigit(char c) { return std::isalnum(c); }
                 inline bool isquote(char c) { return c == '"' || c == '\''; }
                 inline bool isnul(char c) { return c == 0; }
+                const text cr = "\n";
+                const text tab = "\t";
             }
         }
     }

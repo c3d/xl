@@ -31,6 +31,7 @@ module XL.ERRORS with
         E_ScanInconsistent,
         E_ScanDoubleUnder,
         E_ScanInvalidBase,
-        E_ScanStringEOL
+        E_ScanStringEOL,
+        E_ParseMismatchParen
 
     procedure Report(E : error; file : text; line : integer)
