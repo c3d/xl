@@ -79,8 +79,8 @@ module XL.TEXT_IO with
         else if what.kind = PT.xlREAL then
             T : PT.real_tree := PT.real_tree(what)
             IO.write T.value
-        else if what.kind = PT.xlSTRING then
-            T : PT.string_tree := PT.string_tree(what)
+        else if what.kind = PT.xlTEXT then
+            T : PT.text_tree := PT.text_tree(what)
             IO.write T.quote, T.value, T.quote
         else if what.kind = PT.xlNAME then
             T : PT.name_tree := PT.name_tree(what)

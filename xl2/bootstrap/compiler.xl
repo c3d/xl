@@ -25,7 +25,7 @@
 
 import SC = XL.SCANNER
 import CS = XL.UI.CONSOLE
-import TR = XL.PARSER.TREE
+import PT = XL.PARSER.TREE
 import PR = XL.PARSER
 import IO = XL.TEXT_IO
 import XT = XL.TRANSLATOR

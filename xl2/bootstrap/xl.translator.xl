@@ -167,12 +167,12 @@ module XL.TRANSLATOR is
             if verbose then IO.Writeln "/* Failed realval */"
             return 0
 
-        if test.kind = PT.xlSTRING then
-            T : PT.string_tree := PT.string_tree(test)
-            R : PT.string_tree := PT.string_tree(ref)
+        if test.kind = PT.xlTEXT then
+            T : PT.text_tree := PT.text_tree(test)
+            R : PT.text_tree := PT.text_tree(ref)
             if T.value = R.value and T.quote = R.quote then
                 return 1
-            if verbose then IO.Writeln "/* Failed stringval */"
+            if verbose then IO.Writeln "/* Failed textval */"
             return 0
 
         if test.kind = PT.xlNAME then
@@ -380,8 +380,8 @@ module XL.TRANSLATOR is
             T : PT.real_tree := PT.real_tree(input)
             IO.write T.value
 
-        if input.kind = PT.xlSTRING then
-            T : PT.string_tree := PT.string_tree(input)
+        if input.kind = PT.xlTEXT then
+            T : PT.text_tree := PT.text_tree(input)
             IO.write T.quote, XLSanitize(T.value, T.quote), T.quote
 
         if input.kind = PT.xlNAME then
@@ -974,23 +974,34 @@ module XL.TRANSLATOR is
             T : PT.real_tree := PT.real_tree(form)
             IO.Write "xl::parser::tree::newreal(", T.value, ")"
 
-        if form.kind = PT.xlSTRING then
-            T : PT.string_tree := PT.string_tree(form)
-            if wildcard then
-                IO.Write "xl::parser::tree::newwildcard(text("""
-                IO.Write XLSanitize(T.value, '"'), """))"
+        if form.kind = PT.xlTEXT then
+            // 'A' or "A" is transformed into a name
+            // '"A"' or "'A'" is transformed into corresponding string
+            T : PT.text_tree := PT.text_tree(form)
+            quote : character := character(0)
+            is_quote : boolean := false
+            if length(T.value) > 2 then
+               quote := T.value[0]
+               if quote <> T.value[length(T.value)-1] then
+                   quote := character(0)
+               else
+                   is_quote := ASCII.is_quote(quote)
+
+            if is_quote then
+                // The normal syntax would be T.value[1..length(T.value)-2]
+                // but our current Advanced Fuzzy Compilation Technology (TM)
+                // doesn't support that yet.
+                contents : text := range (T.value, 1..length(T.value)-2)
+                IO.Write "xl::parser::tree::newtext(text("""
+                IO.Write XLSanitize(contents, '"')
+                IO.Write """), "
+                IO.Write "'", XLSanitize(text("") + quote, ''''), "')"
             else
-                quote : character := character(0)
-                if length(T.value) > 2 then
-                   quote := T.value[0]
-                   if quote <> T.value[length(T.value)-1] then
-                       quote := character(0)
-                if ASCII.is_quote(quote) then
-                    IO.Write "xl::parser::tree::newstring(text("""
-                    IO.Write XLSanitize(T.value, '"')
-                    IO.Write """), '", XLSanitize(text("") + quote, ''''), "')"
+                if wildcard then
+                    IO.Write "xl::parser::tree::newwildcard(text("""
+                    IO.Write XLSanitize(T.value, '"'), """))"
                 else
-                    // Should we check that it's a single name?
+                    // We should check that it's a single name
                     IO.Write XLNormalize(T.value)
             args[T.value] = 1
 

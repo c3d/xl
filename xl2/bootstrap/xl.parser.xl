@@ -191,9 +191,9 @@ module XL.PARSER is
             else if tok = SC.tokREAL then
                 right := PT.NewReal(S.real_value)
             else if tok = SC.tokSTRING then
-                right := PT.NewString(S.string_value, '"')
+                right := PT.NewText(S.string_value, '"')
             else if tok = SC.tokQUOTE then
-                right := PT.NewString(S.string_value, "'"[0])
+                right := PT.NewText(S.string_value, '''')
             else if tok = SC.tokNAME or tok = SC.tokSYMBOL then
                 name := S.token
                 spelling := S.string_value

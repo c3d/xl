@@ -34,7 +34,7 @@
 //  The four leaf types are:
 //  - Integer numbers such as 130 or 16#FE
 //  - Real numbers such as 0.1 or 10.4E-31
-//  - String/quotes such as "Hello" or 'ABC'
+//  - Text such as "Hello" or 'ABC'
 //  - Name/symbols such as ABC or --->
 //
 //  High-level program structure is also represented by these same nodes:

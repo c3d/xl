@@ -28,7 +28,7 @@ module XL.PARSER.TREE with
     // Identification of the type of tree
     type tree_kind is enumeration
         xlUNKNOWN,
-        xlINTEGER, xlREAL, xlSTRING, xlNAME,    // Atoms
+        xlINTEGER, xlREAL, xlTEXT, xlNAME,    // Atoms
         xlBLOCK,                                // Unary paren / block
         xlPREFIX,                               // Binary prefix-op
         xlINFIX,                                // Ternary infix-op
@@ -60,13 +60,13 @@ module XL.PARSER.TREE with
         result.kind := xlREAL
         result.value := value
 
-    // Representation of a string
-    type string_node is tree_node with
+    // Representation of a text
+    type text_node is tree_node with
         value : text
         quote : character
-    type string_tree is access to string_node
-    function NewString(value : text; quote : character) return string_tree is
-        result.kind := xlSTRING
+    type text_tree is access to text_node
+    function NewText(value : text; quote : character) return text_tree is
+        result.kind := xlTEXT
         result.value := value
         result.quote := quote
 
