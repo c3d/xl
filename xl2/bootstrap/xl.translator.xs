@@ -30,5 +30,5 @@ module XL.TRANSLATOR with
 
     type tree_map is map[text, PT.tree]
     function Matches (test : PT.tree; ref : PT.tree; in out arg : tree_map) return integer
-    procedure XL2C(input : PT.tree; output : IO.output_file)
+    procedure Compile(input : PT.tree)
 

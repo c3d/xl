@@ -115,19 +115,17 @@ procedure Main is
 // ----------------------------------------------------------------------------
 //   The main entry point
 // ----------------------------------------------------------------------------
-    I   : integer
-    Max : integer := size CS.arguments
-    S   : SC.scanner
-    T   : SC.token
-    P   : PR.parser
-    D   : PT.tree
+    I          : integer
+    Max        : integer := size CS.arguments
+    S          : SC.scanner
+    T          : SC.token
+    P          : PR.parser
+    theProgram : PT.tree
 
     WriteLn "Number of args = ", Max
     for I in 1..Max-1 loop
         name : text := CS.arguments[i]
         P := PR.NewParser(name)
         PR.ReadSyntaxFile P, "xl.syntax"
-        D := PR.Parse(P)
-        writeln "Tree=", nodebug, newline, D
-        writeln "Debug=", debug, newline, D
-       
+        theProgram := PR.Parse(P)
+        XT.Compile theProgram      

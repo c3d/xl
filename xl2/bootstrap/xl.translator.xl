@@ -28,6 +28,75 @@ import IO = XL.TEXT_IO
 
 module XL.TRANSLATOR is
 
+
+    // ========================================================================
+    // 
+    //     Temporary : forward references
+    // 
+    // ========================================================================
+
+    procedure XL2C_Arg (input : PT.tree)
+    procedure XL2C_Args (input : PT.tree)
+    procedure XL2C_Stmt (input : PT.tree)
+    procedure XL2C(input : PT.tree)
+    procedure Rename(from : text; to : text)
+
+
+    // ========================================================================
+    // 
+    //    Globals
+    // 
+    // ========================================================================
+    
+    name_changes : map [text, text]
+    loop_index   : integer    
+    
+
+
+    // ========================================================================
+    // 
+    //    Top-level
+    // 
+    // ========================================================================
+
+    procedure Compile (input : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Rewrite the whole tree
+    // ------------------------------------------------------------------------
+        writeln "#include ", '"', "xl_lib.h", '"'
+
+        rename "character",  "char"
+        rename "integer",    "int"
+        rename "real",       "double"
+        rename "boolean",    "bool"
+        rename "main",       "XLMain"
+
+        rename ":=",         "="
+        rename "=",          "=="
+        rename "<>",         "!="
+        rename "and",        "&&"
+        rename "or",         "||"
+        rename "xor",        "^"
+        rename "nil",        "0"
+
+        rename "text",       "::text"        
+
+        XL2C input
+
+
+    // ========================================================================
+    // 
+    //    Implementation
+    // 
+    // ========================================================================
+
+    procedure Rename(from : text; to : text) is
+    // ------------------------------------------------------------------------
+    //   Indicate that we want to rename
+    // ------------------------------------------------------------------------
+         name_changes[from] := to
+                   
+    
     function Matches (test : PT.tree; ref : PT.tree; in out arg : tree_map) return integer is
     // ------------------------------------------------------------------------
     //   Check if the test tree matches the reference tree, return score
@@ -116,10 +185,438 @@ module XL.TRANSLATOR is
             return 0
 
 
+    function XLNormalize (name : text) return text is
+    // ------------------------------------------------------------------------
+    //    Return the normalized for of the string
+    // ------------------------------------------------------------------------
+        result := ""
+        Max : integer := length(name)
+        I : integer
+        for I in 0..Max-1 loop
+            C : character := name[I]
+            if C <> '_' then
+                result += ASCII.tolower C
 
-    procedure XL2C(input : PT.tree; output : IO.output_file) is
+
+    procedure XL2C_Stmt (input : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Translate a statement
+    // ------------------------------------------------------------------------
+
+        XL2C input
+        if input.kind = PT.xlNAME then
+            write "()"
+        writeln ";"
+            
+
+    procedure XL2C_Arg (input : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Translate a single argument
+    // ------------------------------------------------------------------------
+
+        translate input
+
+            // Input parameters stay as is
+            when
+                in 'A'
+            then
+                XL2C A
+
+            // Input parameters stay as is
+            when
+                out 'A'
+            then
+                write "&"
+                XL2C A
+
+            // By default, simply emit argument
+            else
+                XL2C input
+
+
+    procedure XL2C_Args (input : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Translate the name portion of a procedure declaration
+    // ------------------------------------------------------------------------
+
+        translate input
+            when
+                'A' ; 'B'
+            then
+                XL2C_Args A
+                writeln ","
+                XL2C_Args B
+
+            when
+                'A'
+                'B'
+            then
+                XL2C_Args A
+                writeln ","
+                XL2C_Args B
+
+            when
+                'A' : 'B'
+            then
+                XL2C B
+                write " "
+                XL2C_Arg A
+
+            when
+                'A' : 'B' := 'DefaultValue'
+            then
+                XL2C B
+                write " "
+                XL2C_Arg A
+                write " = "
+                XL2C DefaultValue
+
+
+
+    procedure XL2C(input : PT.tree) is
     // ------------------------------------------------------------------------
     //    The main XL to C translator
     // ------------------------------------------------------------------------
 
-        writeln "XL2C called"
+        // --------------------------------------------------------------------
+        //    Leafs
+        // --------------------------------------------------------------------
+
+        if input.kind = PT.xlINTEGER then
+            T : PT.integer_tree := PT.integer_tree(input)
+            write T.value
+
+        if input.kind = PT.xlREAL then
+            T : PT.real_tree := PT.real_tree(input)
+            write T.value
+
+        if input.kind = PT.xlSTRING then
+            T : PT.string_tree := PT.string_tree(input)
+            write T.quote, T.value, T.quote
+
+        if input.kind = PT.xlNAME then
+            T : PT.name_tree := PT.name_tree(input)
+            N : text := XLNormalize(T.value)
+            if count(name_changes, N) > 0 then
+                write name_changes[N]
+            else
+                write "", N
+
+
+        // --------------------------------------------------------------------
+        //   Special forms
+        // --------------------------------------------------------------------
+
+        translate input
+
+            // ----------------------------------------------------------------
+            //    Sequences
+            // ----------------------------------------------------------------
+
+            when
+                'A'
+                'B'
+            then
+                XL2C_Stmt A
+                XL2C_Stmt B
+
+            when
+                'A' ; 'B'
+            then
+                XL2C_Stmt A
+                XL2C_Stmt B
+
+            when
+                'A' , 'B'
+            then
+                XL2C A
+                write ", "
+                XL2C B
+
+
+            // ----------------------------------------------------------------
+            //   Special statements
+            // ----------------------------------------------------------------
+
+            when
+                if 'A' then 'B' else 'C'
+            then
+                write "if ("
+                XL2C A
+                writeln ") {"
+                XL2C_Stmt B
+                writeln "} else {"
+                XL2C_Stmt C
+                writeln "}"
+
+            when
+                if 'A' then 'B'
+            then
+                write "if ("
+                XL2C A
+                writeln ") {"
+                XL2C_Stmt B
+                writeln "}"
+
+            when
+                loop 'A'
+            then
+                writeln "for(;;) {"
+                XL2C_Stmt A
+                writeln "}"
+
+            when
+                while 'C' loop 'A'
+            then
+                write "while ("
+                XL2C C
+                writeln ") {"
+                XL2C_Stmt A
+                writeln "}"
+
+            when
+                for 'I' loop 'Body'
+            then
+                loop_index += 1
+                write "XLIterator *XLiter", loop_index, " = "
+                XL2C I
+                writeln ";"
+                writeln "for (XLiter", loop_index, "->first();"
+                write   "     XLiter", loop_index, "->more() || "
+                writeln     " XLDeleteIterator(XLiter", loop_index, ");"
+                writeln "     XLiter", loop_index, "->next())"
+                writeln "{"
+                XL2C_Stmt Body
+                writeln ";}"
+
+            when
+                exit if 'C'
+            then
+                write "if ("
+                XL2C C
+                writeln ") break;"
+
+
+            // ----------------------------------------------------------------
+            //   Declarations
+            // ----------------------------------------------------------------
+
+            when
+                'A' : 'B' := 'C'
+            then
+                XL2C B
+                write " "
+                XL2C A
+                write " = "
+                XL2C C
+
+            when
+                'A' : 'B'
+            then
+                XL2C B
+                write " "
+                XL2C A
+
+
+            when
+                type 'T' is record with
+                   'Fields'
+            then
+                 write "struct "
+                 XL2C T
+                 writeln " {"
+                 XL2C_Stmt Fields
+                 writeln "};"
+            when
+                type 'T' is 'Base' with
+                   'Fields'
+            then
+                 write "struct "
+                 XL2C T
+                 write " : "
+                 XL2C Base
+                 writeln " {"
+                 XL2C_Stmt Fields
+                 writeln "};"
+
+            when
+                type 'X' is 'Y'
+            then
+                write "typedef "
+                XL2C Y
+                write " "
+                XL2C X
+                writeln ";"
+
+            // Functions and procedures
+            when
+                procedure 'Name' ( 'Args' ) is
+                    'Body'
+            then
+                write "void "
+                XL2C Name
+                write "("
+                XL2C_Args Args
+                writeln ") {"
+                XL2C_Stmt Body
+                writeln "}"
+            when
+                procedure 'Name' is
+                    'Body'
+            then
+                write "void "
+                XL2C Name
+                writeln "(void) {"
+                XL2C_Stmt Body
+                writeln "}"
+
+            when
+                function 'Name' ( 'Args' ) return 'T' is
+                    'Body'
+            then
+                XL2C T
+                write " "
+                XL2C Name
+                write "("
+                XL2C_Args Args
+                writeln ") {"
+                XL2C_Stmt Body
+                writeln "}"
+            when
+                function 'Name' return 'T' is
+                    'Body'
+            then
+                XL2C T
+                write " "
+                XL2C Name
+                writeln "(void) {"
+                XL2C_Stmt Body
+                writeln "}"
+
+
+            // Declaration-only for functions and procedures
+            when
+                procedure 'Name' ( 'Args' )
+            then
+                write "void "
+                XL2C Name
+                write "("
+                XL2C_Args Args
+                writeln ");"
+            when
+                procedure 'Name'
+            then
+                write "void "
+                XL2C Name
+                writeln "(void);"
+
+            when
+                function 'Name' ( 'Args' ) return 'T'
+            then
+                XL2C T
+                write " "
+                XL2C Name
+                write "("
+                XL2C_Args Args
+                writeln ");"
+            when
+                function 'Name' return 'T'
+            then
+                XL2C T
+                write " "
+                XL2C Name
+                writeln "(void);"
+
+
+
+            // ----------------------------------------------------------------
+            //   Expressions
+            // ----------------------------------------------------------------
+
+            when
+                'A' in 'B'
+            then
+                write "XLMakeIterator("
+                XL2C A
+                write ", "
+                XL2C B
+                write ")"
+
+            when
+                'A' .. 'B'
+            then
+                write "XLMakeRange("
+                XL2C A
+                write ", "
+                XL2C B
+                write ")"
+
+
+            // ----------------------------------------------------------------
+            //   Some special case...
+            // ----------------------------------------------------------------
+
+            when
+                map['A','B']
+            then
+                write "std::map < "
+                XL2C A
+                write ", "
+                XL2C B
+                write " > "
+
+            when
+                access to 'A'
+            then
+                XL2C A
+                write "* "
+
+            when
+                string of 'A'
+            then
+                write "std::vector < "
+                XL2C A
+                write " > "
+
+
+
+            // ----------------------------------------------------------------
+            //   Other cases...
+            // ----------------------------------------------------------------
+
+            else
+
+                // For non-atoms, check recursively
+                if input.kind = PT.xlBLOCK then
+                    T : PT.block_tree := PT.block_tree(input)
+                    if ASCII.is_line_break (T.closing) then
+                        writeln "{"
+                        XL2C_Stmt T.child
+                        writeln "}"
+                    else
+                        write T.opening
+                        XL2C T.child
+                        write T.closing
+
+
+                if input.kind = PT.xlPREFIX then
+                    T : PT.prefix_tree := PT.prefix_tree(input)
+                    R : PT.tree := T.right
+
+                    XL2C T.left
+                    if R.kind <> PT.xlBLOCK then
+                        write " ("
+                        XL2C R
+                        write ")"
+                    else
+                        write " "
+                        XL2C R
+
+                if input.kind = PT.xlINFIX then
+                    T : PT.infix_tree := PT.infix_tree(input)
+
+                    write "("
+                    XL2C T.left
+                    write " ", T.name, " "
+                    XL2C T.right
+                    write ")"

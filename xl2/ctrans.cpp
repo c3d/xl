@@ -518,6 +518,17 @@ INFIX(declaration)
         out << " = ";
         XL2C(init->right);      // Initializer
     }
+    else if (init && init->name == "?=")
+    {
+        XL2C(init->left);       // Type
+        out << ' ';
+        XL2C(tree->left);       // Entity name
+        out << " = dynamic_cast < ";
+        XL2C(init->left);
+        out << " > (";
+        XL2C(init->right);      // Initializer
+        out << ")";
+    }
     else
     {
         XL2C(tree->right);        // Type name
@@ -1045,4 +1056,176 @@ PREFIX(readln)
         out << ' ';
         XL2C(tree->right);
     }
+}
+
+
+
+// ============================================================================
+// 
+//   The 'translate' extension
+// 
+// ============================================================================
+
+typedef std::map< text, int > args_map;
+
+
+void TranslateForm(XLTree *form, args_map &args, int nesting = 3)
+// ----------------------------------------------------------------------------
+//   Emit the reference tree
+// ----------------------------------------------------------------------------
+{
+    for (int i = 0; i < nesting; i++)
+        out << ' ';
+
+    switch (form->Kind())
+    {
+    case xlINTEGER:
+        out << "xl::parser::tree::newinteger("
+            << ((XLInteger *) form)->value << ")";
+        break;
+    case xlREAL:
+        out << "xl::parser::tree::newreal("
+            << ((XLReal *) form)->value << ")";
+        break;
+    case xlNAME:
+        out << "xl::parser::tree::newname(text(\""
+            << ((XLName *) form)->value << "\"))";
+        break;
+    case xlSTRING:
+        out << "xl::parser::tree::newwildcard(text(\""
+            << ((XLString *) form)->value << "\"))";
+        args[((XLString *) form)->value] = 1;
+        break;
+
+    case xlBLOCK:
+        out << "xl::parser::tree::newblock(\n";
+        TranslateForm(((XLBlock *) form)->child, args, nesting+2);
+        out << ", ";
+        if (((XLBlock *) form)->opening == '\t')
+        {
+            out << "'\\t', '\\n'";
+        }
+        else
+        {
+            out << "'" << ((XLBlock *) form)->opening << "'";
+            out << ", ";
+            out << "'" << ((XLBlock *) form)->closing << "'";
+        }
+        out << ")";
+        break;
+    case xlPREFIX:
+        out << "xl::parser::tree::newprefix(\n";
+        TranslateForm(((XLPrefix *) form)->left, args, nesting+2);
+        out << ",\n";
+        TranslateForm(((XLPrefix *) form)->right, args, nesting+2);
+        out << ")";
+        break;
+    case xlINFIX:
+        out << "xl::parser::tree::newinfix(";
+        if (((XLInfix *) form)->name == text("\n"))
+            out << "text(\"\\n\"),\n";
+        else
+            out << "text(\"" << ((XLInfix *) form)->name << "\"),\n";
+        TranslateForm(((XLInfix *) form)->left, args, nesting+2);
+        out << ",\n";
+        TranslateForm(((XLInfix *) form)->right, args, nesting+2);
+        out << ")";
+        break;
+    }
+}
+
+
+void TranslateClauses(XLTree *clauses, XLTree *to_translate)
+// ----------------------------------------------------------------------------
+//   Translate clauses one after the other
+// ----------------------------------------------------------------------------
+{
+    XLInfix *infix = dynamic_cast<XLInfix *> (clauses);
+    if (infix)
+    {
+        if (infix->name == text("\n"))
+        {
+            TranslateClauses(infix->left, to_translate);
+            TranslateClauses(infix->right, to_translate);
+            return;
+        }
+
+        if (infix->name == text("then"))
+        {
+            XLPrefix *when = dynamic_cast<XLPrefix *> (infix->left);
+            if (when)
+            {
+                XLName *when_word = dynamic_cast<XLName *> (when->left);
+                if (when_word && when_word->value == text("when"))
+                {
+                    static int idx = 0;
+                    XLBlock *form = dynamic_cast<XLBlock *> (when->right);
+                    args_map args;
+
+                    idx++;
+                    out << "{\n";
+                    out << "static xl::parser::tree::tree ref" << idx
+                        << " =\n";
+                    TranslateForm(form->child, args);
+                    out << ";\n";
+                    out << "xl::translator::treemap args" << idx << ";\n";
+                    out << "if (xl::translator::matches(";
+                    XL2C(to_translate);
+                    out << ", ref" << idx << ", args" << idx << ")) {\n";
+
+                    args_map::iterator it;
+                    for (it = args.begin(); it != args.end(); it++)
+                    {
+                        out << "xl::parser::tree::tree "
+                            << XLNormalize(it->first)
+                            << " = args" << idx
+                            << "[text(\"" << it->first << "\")];\n";
+                    }
+                    XL2C(infix->right);
+                    out << ";\n(";
+                    XL2C(to_translate);
+                    out << " = 0);";
+                    out << "\nbreak;\n}\n}\n";
+
+                    return;
+                }
+            }
+            
+        }
+
+        if (infix->name == text("else"))
+        {
+            TranslateClauses(infix->left, to_translate);
+            out << "if (";
+            XL2C(to_translate);
+            out << ") {\n";
+            XL2C(infix->right);
+            out << "}\n";
+            return;                
+        }
+    }
+
+    out << "*** Ungrokable 'translate' clause\n";
+}
+
+
+PREFIX(translate)
+// ----------------------------------------------------------------------------
+//    Translate 'translate' statements
+// ----------------------------------------------------------------------------
+{
+    XLPrefix *right = dynamic_cast<XLPrefix *> (tree->right);
+    if (right)
+    {
+        XLTree *to_translate = right->left;
+        XLBlock *block = dynamic_cast<XLBlock *> (right->right);
+        if (block)
+        {
+            out << "do {";
+            TranslateClauses(block->child, to_translate);
+            out << "\n} while (0);\n";
+            return;
+        }
+    }
+    out << "*** Ungrokable 'translate' statement\n";
 }
