@@ -1,0 +1,29 @@
+// ****************************************************************************
+//  compiler.xl                     (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     The main body of the XL compiler
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is confidential.
+// Do not redistribute without written permission
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import XL.SCANNER
+
+procedure Main is
+    writeln "Hello"

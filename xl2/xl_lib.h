@@ -69,6 +69,7 @@ namespace xl { namespace textio {
     typedef std::iostream *file;
     file open(text name) { return new std::fstream(name.c_str()); }
     void close(file f) { delete f; }
+    void read(file f, char &c) { f->get(c); }
 } }
 
 

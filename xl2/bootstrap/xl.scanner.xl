@@ -1,0 +1,104 @@
+// ****************************************************************************
+//  scanner.xs                      (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     The scanner for the bootstrap compiler
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is confidential.
+// Do not redistribute without written permission
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import IO = XL.TEXT_IO
+import ERR = XL.ERRORS
+
+
+module XL.COMPILER.SCANNER is
+
+    type scanner_data is record
+    // ------------------------------------------------------------------------
+    //   Implementation of the scanner type
+    // ------------------------------------------------------------------------
+
+        // Attributes of last scanned token
+        token           : text      // Complete spelling of last token read
+        string_value    : text      // String value (inside quotes)
+        real_value      : real      // Numeric value for real / int tokens
+        integer_value   : integer
+        base            : integer   // Base for real/int tokens
+
+        // Position attributes
+        file            : text      // File name
+        line            : integer   // Line in file
+        column          : integer   // Column in file
+        indent          : integer   // Current indent
+
+        // Private fields
+        input           : IO.file   // Text file we read from
+        indents         : string of integer
+        indent_char     : character
+        checking_indent : boolean
+
+
+    function DigitValue(digit : character) return integer is
+    // ------------------------------------------------------------------------
+    //   Return the value of the given character
+    // ------------------------------------------------------------------------
+        if digit >= '0' and digit <= '9' then
+            return integer digit - integer '0'
+        if digit >= 'A' and digit <= 'Z' then
+            return integer digit - integer 'A' + 10
+        if digit >= 'a' and digit <= 'z' then
+            return integer digit - integer 'a' + 10
+        return 999
+
+
+
+    function NewScanner(file_name : text) return scanner is
+    // ------------------------------------------------------------------------
+    //   Create and initialize a new scanner
+    // ------------------------------------------------------------------------
+        result.file := file_name
+        result.file := 1
+        result.input := 0
+        result.token := ""
+        result.string_value := ""
+        result.real_value := 0.0
+        result.integer_value := 0
+        result.indent_char := character(0)
+        result.checking_indent := false
+        result.column := 0
+
+        result.input := IO.open(file_name)
+        result.indents += 0
+
+        
+    procedure NextChar (S : scanner; C : character) is
+    // ------------------------------------------------------------------------
+    //   Read the next character
+    // ------------------------------------------------------------------------
+        S.token += C
+        S.string_value += C
+        IO.read S.input, C
+
+    function NextToken(S : scanner) return token is
+    // ------------------------------------------------------------------------
+    //    Parse the file until we get a complete token
+    // ------------------------------------------------------------------------
+       return tokNONE
+
+
