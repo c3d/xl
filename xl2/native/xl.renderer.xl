@@ -210,9 +210,13 @@ module XL.RENDERER is
     // ------------------------------------------------------------------------
     //    Render a text, reformatting characters as needed
     // ------------------------------------------------------------------------
-        C : character
-        need_separator : boolean := output.need_separator
-        for C in format loop
+        C               : character
+        need_separator  : boolean := output.need_separator
+        quoted          : boolean := false
+        formatLength    : integer := length format
+        I               : integer
+        for I in 0..formatLength-1 loop
+            C := format[I]
             if need_separator then
                 if not output.had_space and not ASCII.is_space(C) then
                     if output.had_punctuation = ASCII.is_punctuation(C) then
@@ -224,10 +228,15 @@ module XL.RENDERER is
                 need_separator := false
             T : text := ""
             T += C
+            quoted := I > 0 and I < formatLength-1 and T = output.current_quote
+            if quoted then
+                T += " quoted"
             if count(output.formats, T) > 0 then
                 RenderFormat output, output.formats[T]
-            else
+            else if not quoted then
                 IO.Write C
+            else
+                IO.Write C, C
             output.had_space := ASCII.is_space(C)
             output.had_punctuation := ASCII.is_punctuation(C)
         output.need_separator := need_separator
@@ -447,6 +456,8 @@ module XL.RENDERER is
             T : text := text(W.value)
             Q0: text := "text "
             Q : text := Q0 + W.quote
+            saveQuote : text := output.current_quote
+            output.current_quote := W.quote
             if count(output.formats, Q) > 0 then
                 output.self := T
                 RenderFormat output, output.formats[Q]
@@ -456,6 +467,7 @@ module XL.RENDERER is
             else 
                 T := W.quote + T + W.quote
                 RenderText output, T
+            output.current_quote := saveQuote
         else if what.kind = PT.xlNAME then
             W : what as PT.name_tree
             RenderFormat output, W.value, W.value, "name "

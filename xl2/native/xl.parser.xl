@@ -40,6 +40,7 @@ module XL.PARSER is
         ReadSyntaxFile result, syntax
         SC.SetPosition result.scanner, POS.OpenFile name
         S.blocks := result.blocks
+        result.pending_token := SC.tokNONE
 
 
     procedure Close(P : parser) is
@@ -88,26 +89,6 @@ module XL.PARSER is
         return false
 
 
-    function NextToken(P : parser) return SC.token is
-    // ------------------------------------------------------------------------
-    //   Read next token, skipping comments and gathering long text
-    // ------------------------------------------------------------------------
-        loop
-            result := SC.NextToken(P.scanner)
-            if result = SC.tokNAME or result = SC.tokSYMBOL then
-                S    : SC.scanner := P.scanner
-                name : text := S.token
-                eot  : text
-                if IsComment(P, name, eot) then
-                    // Skip comments
-                    name := SC.Comment (S, eot)
-                    restart
-                else if IsText (P, name, eot) then
-                    S.string_value := SC.Comment (S, eot)
-                    return SC.tokSTRING
-            return result
-
-
     function GetPrefixPriority(P: parser; sym : text) return integer is
     // ------------------------------------------------------------------------
     //   Return the prefix priority or parser's default priority
@@ -133,6 +114,63 @@ module XL.PARSER is
         if count(P.infix_priority, sym) > 0 then
             return P.infix_priority[sym]
         return P.default_priority
+
+
+    function NextToken(P : parser) return SC.token is
+    // ------------------------------------------------------------------------
+    //   Read next token, skipping comments and gathering long text
+    // ------------------------------------------------------------------------
+        loop
+            pending : SC.token := P.pending_token
+            if pending <> SC.tokNONE then
+                if pending <> SC.tokNEWLINE then
+                    P.pending_token := SC.tokNONE
+                    return pending
+
+            // If we arrive here, there's nothing pending, or only a newline
+            result := SC.NextToken(P.scanner)
+            if result = SC.tokNAME or result = SC.tokSYMBOL then
+                S    : SC.scanner := P.scanner
+                name : text := S.token
+                eot  : text
+                if IsComment(P, name, eot) then
+                    // Skip comments, and keep looking to get right indent
+                    name := SC.Comment (S, eot)
+                    if eot = ASCII.CR and pending = SC.tokNONE then
+                        P.pending_token := SC.tokNEWLINE
+                    restart
+                else if IsText (P, name, eot) then
+                    S.string_value := SC.Comment (S, eot)
+                    if pending = SC.tokNEWLINE then
+                        P.pending_token := SC.tokSTRING
+                        return SC.tokNEWLINE
+                    if eot = ASCII.CR and pending = SC.tokNONE then
+                        P.pending_token := SC.tokNEWLINE
+                    return SC.tokSTRING
+
+                // If the next token has a substatement infix priority
+                // this takes over any pending newline. Example: else
+                if pending = SC.tokNEWLINE then
+                    if GetInfixPriority(P, name) < P.statement_priority then
+                        P.pending_token := SC.tokNONE
+                        pending := SC.tokNONE
+
+            else if result = SC.tokNEWLINE then
+                // Combined with any previous pending indent
+                P.pending_token := SC.tokNEWLINE
+                restart
+            else if result = SC.tokUNINDENT then
+                // Add newline if no infix
+                P.pending_token := SC.tokNEWLINE
+                return result
+
+            // If we have another token here and a pending newline,
+            // push other token back
+            if pending <> SC.tokNONE then
+                P.pending_token := result
+                return pending
+
+            return result
 
 
     function Parse(P : parser; closing : text) return PT.tree is
@@ -175,7 +213,6 @@ module XL.PARSER is
         stack                   : string of pending
         is_expression           : boolean       := true
         new_statement           : boolean       := true
-        pending_token           : SC.token      := SC.tokNONE
         S                       : SC.scanner    := P.scanner
         pos                     : integer       := 0
         line_continuation       : boolean       := false
@@ -183,58 +220,11 @@ module XL.PARSER is
 
         while not done loop
 
-            // If no token pending, scan one
-            if pending_token = SC.tokNONE then
-                right := nil
-                prefix_priority := default_priority
-                infix_priority := default_priority
-                tok := NextToken(P)
-            else if pending_token = SC.tokNEWLINE then
-                // We have a pending new-line:
-
-                // Skip actual token if it is also a new-line
-                tok := NextToken(P)
-                if tok = SC.tokNEWLINE then
-                    restart
-
-                // Check names and symbols, skip comments
-                else if tok = SC.tokSYMBOL or tok = SC.tokNAME then
-                    name := S.token
-                    if IsComment(P, name, comment_end) then
-                        // Got a comment with a pending new-line, skip it
-                        SC.Comment S, comment_end
-                        if comment_end = ASCII.CR then
-                            restart
-
-                    // Check if we got something like 'else'
-                    if GetInfixPriority(P, name) >= statement_priority then
-                        // Otherwise, delay current token and process
-                        // the 'fake' new-line
-                        pending_token := tok
-                        tok := SC.tokNEWLINE
-                    right := nil
-                    prefix_priority := default_priority
-                    infix_priority := default_priority
-
-                // Something that is itself a new-line parses directly
-                else if tok = SC.tokINDENT or tok = SC.tokEOF then
-                    pending_token := SC.tokNONE
-                    right := nil
-                    prefix_priority := default_priority
-                    infix_priority := default_priority
-
-                // Something else is delayed until after we deal with new-line
-                else
-                    pending_token := tok
-                    tok := SC.tokNEWLINE
-                    right := nil
-                    prefix_priority := default_priority
-                    infix_priority := default_priority
-
-            // Other pending tokens just fall through
-            else
-                tok := pending_token
-                pending_token := SC.tokNONE
+            // Scan next token
+            right := nil
+            prefix_priority := default_priority
+            infix_priority := default_priority
+            tok := NextToken(P)
 
             // Check if we are dealing with a trailing operator
             if line_continuation then
@@ -309,18 +299,6 @@ module XL.PARSER is
                                     is_expression := false
 
             else if tok = SC.tokNEWLINE then
-                if pending_token = SC.tokNONE then
-                    tok := NextToken S
-                    if tok = SC.tokSYMBOL or tok = SC.tokNAME then
-                        if IsComment(P, S.token, comment_end) then
-                            // Followed by a comment
-                            // Can't decide just yet what indent we have
-                            // Skip the comment
-                            SC.Comment S, comment_end
-                            restart
-                    // Otherwise, we'll deal with this other token next
-                    pending_token := tok
-
                 // Consider new-line as an infix operator
                 infix := ASCII.CR
                 name := infix
@@ -365,12 +343,6 @@ module XL.PARSER is
                 if right = nil then
                     right := PT.NewName ("", pos)
                 right := PT.NewBlock(right, block_opening, block_closing, pos)
-
-                if tok = SC.tokINDENT then
-                    // Unindent to be seen as unindent followed by new-line
-                    // so that new-line operator combines lines
-                    pending_token := SC.tokNEWLINE
-
             else
                 IO.writeln "Invalid token: ", tok, " (", S.token, ")"
                 assert not "Invalid token"

@@ -38,6 +38,8 @@ PRODUCT=xl
 
 include $(BROOT)Makefile.config
 
+qtest: all
+
 postbuild: bootstrap_compiler native_compiler
 
 bootstrap_compiler:

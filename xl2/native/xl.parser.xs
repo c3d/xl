@@ -97,6 +97,7 @@ module XL.PARSER with
          statement_priority : integer    
          function_priority  : integer
          default_priority   : integer
+         pending_token      : SC.token
     type parser is access to parser_data
 
     // Creating a parser

@@ -43,6 +43,7 @@ module XL.RENDERER with
          self               : text
          left               : PT.tree
          right              : PT.tree
+         current_quote      : text
          had_space          : boolean
          had_punctuation    : boolean
          need_separator     : boolean

@@ -62,7 +62,6 @@ module XL.SEMANTICS is
         when
             @ 'AsmStatement'
         then
-            AsmStatement := nil
             return input
 
 
@@ -108,5 +107,4 @@ module XL.SEMANTICS is
         when
             @ 'AsmStatement'
         then
-            AsmStatement := nil
             return input

@@ -32,6 +32,9 @@ PASS="pass"
 ONE_FAILED=
 PATTERN='[A-Za-z]*'
 UPDATE=
+DORUN=
+COMPILE=
+if [ "$1" == '-c++' ]; then DORUN=./a.out; COMPILE=./a.out; shift; fi
 if [ "$1" == "-update" ]; then shift; UPDATE='*'$1'*'; PATTERN="$UPDATE"; shift; fi
 if [ ! -z "$1" ]; then PATTERN='*'"$1"'*'; shift; fi
 
@@ -64,11 +67,12 @@ do
     CMD=
     EXIT=0
     RUN=
+    COMPILE=
 
     # Extract interesting variables
     ./alltests.awk $TESTNAME > alltests.env
     source alltests.env
-    [ -z "$CMD" ] && { CMD="$XL $OPT $TESTNAME"; RUN=./a.out; }
+    [ -z "$CMD" ] && { CMD="$XL $OPT $TESTNAME"; RUN=$DORUN; COMPILE=./a.out; }
 
     # Run the test
     THIS_FAILED=
@@ -78,6 +82,19 @@ do
     # Try to compile the resulting C++
     if [ $EXIT -eq 0 ]; then
         if [ $RC -eq 0 ]; then
+            if [ -z "$RUN" ]; then
+                if [ ! -z "$COMPILE" ]; then
+                    if [ -f "$BASE.cpp" ]; then
+                        if diff -q $LOG $BASE.cpp 2> /dev/null; then
+                            cp $REF $LOG
+                        else
+                            RUN=$COMPILE
+                        fi
+                    else
+                        RUN=$COMPILE
+                    fi
+                fi
+            fi
             if [ ! -z "$RUN" ]; then
                 rm -f ./a.out
                 cp $LOG $BASE.cpp
@@ -86,6 +103,9 @@ do
                 if [ -x ./a.out ] ; then
                     $RUN >> $LOG 2>&1
                     RC=$?
+                else
+                    # Make sure we don't optimize test away until it works
+                    cat $LOG >> $BASE.cpp
                 fi
             fi
         fi

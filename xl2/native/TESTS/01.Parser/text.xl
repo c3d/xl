@@ -33,6 +33,8 @@
 'Hello ''World'''
 'Hello "World"'
 
+Write << Hello World >>
+
 <<Hello World>>
 <<Hello World,
   This is a rather long piece

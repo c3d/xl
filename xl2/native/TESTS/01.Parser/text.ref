@@ -1,1 +1,24 @@
-?null?
+
+(infix <CR>
+ (infix <CR>
+  (infix <CR>
+   (infix <CR>
+    (infix <CR>
+     (infix <CR>
+      (infix <CR>
+       (infix <CR>
+        (infix <CR>
+         "Hello World"
+         "Hello ""World""")
+        "Hello 'World'")
+       'Hello World')
+      'Hello ''World''')
+     'Hello "World"')
+    (prefix
+     Write
+     " Hello World "))
+   "Hello World")
+  "Hello World,<CR>This is a rather long piece<CR>of text.")
+ " -Il etait une fois<CR> un morceau de texte<CR> qui n'en finissait pas.<CR>")
+
+
