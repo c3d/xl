@@ -36,6 +36,7 @@ SYMBOL("<>", "!=")
 SYMBOL("and", "&&")
 SYMBOL("or", "||")
 SYMBOL("xor", "^")
+SYMBOL("nil", "0")
 PREFIX(in)
 PREFIX(out)
 

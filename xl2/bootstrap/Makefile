@@ -32,6 +32,8 @@ OTHER_SOURCES=					\
 	xl.errors.xs				\
 	xl.errors.xl				\
 	xl.parser.tree.xs			\
+	xl.parser.xs				\
+	xl.parser.xl				\
 	xl.textio.xl
 PRODUCT=bxl
 

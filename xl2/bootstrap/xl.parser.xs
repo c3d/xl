@@ -74,20 +74,28 @@ import PT = XL.PARSER.TREE
 
 module XL.PARSER with
 
-   // Mapping of the types
-   type symbol_table is map[text, PT.tree]
-   type priority_table is map[text, integer]
-   type comment_table is map[text, text]
+    // Mapping of the types
+    type symbol_table is map[text, PT.tree]
+    type priority_table is map[text, integer]
+    type comment_table is map[text, text]
 
 
-   // The parser itself
-   type parser_data is record with
-       infix_priority     : priority_table
-       prefix_priority    : priority_table
-       comments           : comment_table
-       symbols            : symbol_table
-       priority           : integer
-       statement_priority : integer    
-       function_priority  : integer
-       default_priority   : integer
-   type parser is access to parser_data
+    // Data actualy used by the parser
+    type parser_data is record with
+         scanner            : SC.scanner
+         infix_priority     : priority_table
+         prefix_priority    : priority_table
+         comments           : comment_table
+         symbols            : symbol_table
+         priority           : integer
+         statement_priority : integer    
+         function_priority  : integer
+         default_priority   : integer
+    type parser is access to parser_data
+
+    // Creating a parser
+    function NewParser(name : text) return parser
+
+    // Parsing
+    function Parse(P : parser) return PT.tree
+    function Parse(P : parser; closing_paren : character) return PT.tree
