@@ -70,10 +70,7 @@ OTHER_SOURCES=					\
 	../xl_lib.h				\
 	../xl.syntax				\
 						\
-	xl.plugin.cranberry.xs			\
-	xl.plugin.cranberry.xl			\
 	xl.plugin.listing.xl			\
-	xl.plugin.florek.xl			\
 	xl.plugin.differentiation.xl		\
 	xl.plugin.constantfold.xl
 
