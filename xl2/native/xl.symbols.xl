@@ -187,19 +187,19 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
     //    Find the best rewrite and apply it
     // ------------------------------------------------------------------------
-        TName : text := Name
+        TName      : text := Name
         Name += "."
-        Wild  : text := Name
-        R     : rewrite
-        score : integer := 0
-        best  : integer := 0
-        bestR : rewrite := nil
-        bestA : PT.tree_map
-        ambig : rewrite := nil
-        depth : integer := 0
-        key   : text := "TRANSFORMS"
-        track : boolean := count(test_tree.info, key) > 0
-        info  : PT.info := nil
+        Wild       : text := Name
+        R          : rewrite
+        score      : integer := 0
+        best       : integer := 0
+        bestR      : rewrite := nil
+        bestA      : PT.tree_map
+        ambig      : rewrite := nil
+        depth      : integer := 0
+        key        : text := "TRANSFORMS"
+        track      : boolean := count(test_tree.info, key) > 0
+        info       : PT.info := nil
 
         if track then
             IO.WriteLn "Rewrite: ", TName, "[", test_tree, "]"
@@ -243,7 +243,10 @@ module XL.SYMBOLS is
 
         if bestR <> nil then
             if ambig = nil then
+                old_pos : integer := PT.NOPOS
+                PT.NOPOS := test_tree.position
                 result := bestR.translator(test_tree, bestR, bestA)
+                PT.NOPOS := old_pos
             else if report_ambig then
                 ERR.Error "The form '$1' is ambiguous", test_tree
                 ERR.Error "A first possible match is '$1'",
