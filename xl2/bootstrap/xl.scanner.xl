@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  scanner.xs                      (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.scanner.xl                   (C) 1992-2003 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
@@ -25,9 +25,10 @@
 
 import IO = XL.TEXT_IO
 import ERR = XL.ERRORS
+import ASCII = XL.TEXT_IO.ENCODING.ASCII
 
 
-module XL.COMPILER.SCANNER is
+module XL.SCANNER is
 
     type scanner_data is record
     // ------------------------------------------------------------------------
@@ -58,6 +59,7 @@ module XL.COMPILER.SCANNER is
     // ------------------------------------------------------------------------
     //   Return the value of the given character
     // ------------------------------------------------------------------------
+    // This implementation is actually specific to the ASCII encoding
         if digit >= '0' and digit <= '9' then
             return integer digit - integer '0'
         if digit >= 'A' and digit <= 'Z' then
@@ -86,8 +88,8 @@ module XL.COMPILER.SCANNER is
         result.input := IO.open(file_name)
         result.indents += 0
 
-        
-    procedure NextChar (S : scanner; C : character) is
+
+    procedure NextChar (S : scanner; in out C : character) is
     // ------------------------------------------------------------------------
     //   Read the next character
     // ------------------------------------------------------------------------
@@ -95,10 +97,278 @@ module XL.COMPILER.SCANNER is
         S.string_value += C
         IO.read S.input, C
 
+
+    procedure NextLowerChar (S : scanner; in out C : character) is
+    // ------------------------------------------------------------------------
+    //   Read the next character
+    // ------------------------------------------------------------------------
+        S.token += C
+        S.string_value += ASCII.tolower C
+        IO.read S.input, C
+
+
+    procedure IgnoreChar (S : scanner; in out C : character) is
+    // ------------------------------------------------------------------------
+    //   Read the next character
+    // ------------------------------------------------------------------------
+        S.token += C
+        IO.read S.input, C
+
+
     function NextToken(S : scanner) return token is
     // ------------------------------------------------------------------------
     //    Parse the file until we get a complete token
     // ------------------------------------------------------------------------
-       return tokNONE
+        S.token := ""
+        S.string_value := ""
+        S.integer_value := 0
+        S.real_value := 0.0
+        S.base := 0
 
+        // Check if file was opened correctly, or if we are at end of file
+        if not IO.valid S.input then
+            return tokEOF
+
+        // Check if we unindented far enough for multiple indents
+        if back S.indents > S.indent then
+            pop_back S.indents
+            return tokUNINDENT
+
+        // Read next character
+        C : character
+        IO.Read S.input, C
+
+        // Skip spaces and check indentation
+        while ASCII.isspace C and IO.valid S.input loop
+            if ASCII.is_line_break C then
+                // New line: start counting indentation
+                S.line += 1
+                S.checking_indent := true
+                S.column := 0
+            else if S.checking_indent then
+                // Can't mix tabs and spaces
+                if ASCII.is_space C then
+                    if S.indent_char <> 0 then
+                        S.indent_char := C
+                    else if S.indent_char <> C then
+                        ERR.Report ERR.E_ScanMixedIndent, S.file, S.line
+                    S.column += 1
+            // Keep looking for more spaces
+            IO.Read S.input, C
+
+        // Stop counting indentation
+        if S.checking_indent then
+            IO.PutBack S.input, C
+            S.checking_indent := false
+            if S.column > S.indent then
+                // Strictly deeper indent
+                S.indent := S.column
+                S.indents += S.indent
+                return tokINDENT
+            else if S.column < S.indent then
+                // Unindenting: remove rightmost indent level
+                pop_back S.indents
+                S.indent := S.column
+
+                // If we unindented, but did not go as far as the
+                // most recent indent, report inconsistency
+                if back S.indents < S.column then
+                    ERR.Report ERR.E_ScanInconsistent, S.file, S.line
+                    return tokERROR
+
+                // Otherwise, report that we undindented
+                // We may report multiple tokUNINDENT if we unindented deep
+                return tokUNINDENT
+
+            else
+                // Exactly the same indent level as before
+                return tokNEWLINE
+
+        // Report end of file if that's what we've got
+        if not IO.valid S.input then
+            return tokEOF
+
+        // Look for numbers
+        if ASCII.is_digit C then
+            floating_point : boolean := false
+            exponent : boolean := false
+            based_number : boolean := false
+
+            S.base := 10
+            S.integer_value := 0
+
+            // Take integral part or base
+            loop
+                while DigitValue C < S.base loop
+                    S.integer_value := S.base * S.integer_value + DigitValue C
+                    NextChar S, C
+
+                    // Skip a single underscore
+                    if C = '_' then
+                        IgnoreChar S, C
+                        if C = '_' then
+                            ERR.Report ERR.E_ScanDoubleUnder, S.file, S.line
+
+                    // Check if this is a based number
+                    if C = '#' and not based_number then
+                        S.base := S.integer_value
+                        if S.base < 2 or S.base > 36 then
+                            S.base := 36
+                            ERR.Report ERR.E_ScanInvalidBase, S.file, S.line
+                        NextChar S, C
+                        S.integer_value := 0
+                        based_number := true
+                    else
+                        based_number := false
+
+                exit if not based_number
+            
+            // Check for fractional part
+            S.real_value := S.integer_value
+            if C = '.' then
+                IO.Read S.input, C
+                if DigitValue C >= S.base then
+                    // This is something else following an integer
+                    // For instance 1..3
+                    IO.PutBack S.input, C
+                    IO.PutBack S.input, '.'
+                    return tokINTEGER
+                else
+                    S.token += '.'
+                    S.string_value += '.'
+                    floating_point := true
+
+                    comma_position : real := 1.0
+                    while DigitValue C < S.base loop
+                        comma_position /= S.base
+                        S.real_value += comma_position * DigitValue C
+                        NextChar S, C
+                        if C = '_' then
+                            IgnoreChar S, C
+                            if C = '_' then
+                                ERR.Report ERR.E_ScanDoubleUnder, S.file,S.line
+
+            // Check if we have a second '#' at end of based number
+            if C = '#' then
+                NextChar S, C
+
+            // Check for the exponent
+            if C = 'e' or C = 'E' then
+                NextChar S, C
+
+                exponent : integer := 0
+                negative_exponent : boolean := false
+
+                // Exponent sign
+                if C = '+' then
+                    NextChar S, C
+                else if C = '-' then
+                    NextChar S, C
+                    negative_exponent := true
+                    floating_point := true
+
+                // Exponent value
+                while DigitValue C < 10 loop
+                    exponent := 10 * exponent + DigitValue C
+                    NextChar S, C
+                    if C = '_' then
+                        IgnoreChar S, C
+
+                // Compute base ^ exponent
+                exponent_value : real := 1.0
+                multiplier : real := S.base
+
+                while exponent <> 0 loop
+                    if (exponent & 1) <> 0 then
+                        exponent_value *= multiplier
+                    exponent /= 2
+                    multiplier *= multiplier
+
+                // Compute actual value
+                if negative_exponent then
+                    S.real_value /= exponent_value
+                else
+                    S.real_value *= exponent_value
+                S.integer_value := integer S.real_value
+
+            // Return the last token
+            IO.PutBack S.input, C
+            if floating_point then
+                return tokREAL
+            return tokINTEGER
+        // End of numbers
+
+        // Look for names
+        if ASCII.is_letter C then
+            while ASCII.is_letter_or_digit C loop
+                if C = '_' then
+                    IgnoreChar S, C
+                else
+                    NextLowerChar S, C
+            IO.PutBack S.input, C
+            return tokNAME
+
+        // Look for strings
+        if ASCII.is_quote C then
+            eos : character := C
+            S.token := C
+            IO.Read S.input, C
+            while C <> eos and IO.Valid S.input and not ASCII.is_line_break C loop
+                NextChar S, C
+            if C <> eos then
+                ERR.Report ERR.E_ScanStringEOL, S.file, S.line
+                return tokERROR
+            S.token += C
+            if C = '"' then
+                return tokSTRING
+            return tokQUOTE
+
+        // Look for parentheses
+        if C='(' or C=')' or C='{' or C='}' or C='[' or C=']' then
+            S.string_value := C
+            S.token := C
+            if C='(' or C='{' or C='[' then
+                return tokPAROPEN
+            return tokPARCLOSE
+
+        // Other symbols
+        while ASCII.is_punctuation C loop
+            exit if ASCII.is_quote C
+            exit if C='(' or C=')' or C='{' or C='}' or C='[' or C=']'
+            NextChar S, C
+        IO.PutBack S.input, C
+        return tokSYMBOL
+
+
+    function Comment(S : scanner; EndOfComment : text) return text is
+    // ------------------------------------------------------------------------
+    //   Scan a comment until the given end
+    // ------------------------------------------------------------------------
+        max     : integer   := length EndOfComment
+        index   : integer   := 0
+        c       : character := 0
+        comment : text      := ""
+
+        while index < max loop
+            IO.Read S.input, C
+
+            if ASCII.is_line_break C then
+                // New-line: start counting indentation
+                S.line += 1
+                S.checking_indent := true
+                S.column := 0
+            else if S.checking_indent then
+                if ASCII.is_space C then
+                    S.column += 1
+                else
+                    S.checking_indent := 0
+
+            if C = EndOfComment[index] then
+                index += 1
+            else
+                index := 0
+
+            comment += C
+
+        return comment
 

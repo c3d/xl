@@ -23,7 +23,7 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-import XL.SCANNER
+import SCANNER = XL.SCANNER
 
 procedure Main is
     writeln "Hello"

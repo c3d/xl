@@ -29,6 +29,8 @@ SOURCES=compiler.xl
 OTHER_SOURCES=					\
 	xl.scanner.xs				\
 	xl.scanner.xl				\
+	xl.errors.xs				\
+	xl.errors.xl				\
 	xl.textio.xl
 PRODUCT=bxl
 
@@ -48,4 +50,4 @@ $(OBJDIR)/%.xl.o: $(OBJDIR)/%.xl.C
 
 $(OBJDIR)/%.xl.C: %.xl
 	$V ../xl $< > $@
-$(OBJDIR)/compiler.xl.C: $(OTHER_SOURCES)
+$(OBJDIR)/compiler.xl.C: $(OTHER_SOURCES) ../xl

@@ -235,8 +235,6 @@ XLTree *XLParser::Parse(char closing_paren)
                         // Followed by a comment:
                         // Can't decide just yet what indent we have,
                         // skip comment
-                        if (comment_end == "\n")
-                            pendingToken = tokNEWLINE;
                         scanner.Comment(comment_end);
                         continue;
                     }

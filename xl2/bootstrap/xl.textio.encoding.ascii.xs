@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  xl.errors.xs                    (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.text.encoding.ascii.xs       (C) 1992-2003 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Errors for the XL compiler
+//      Basic module describing the ASCII encoding
 // 
 // 
 // 
@@ -23,14 +23,11 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-module XL.ERRORS
+module XL.TEXT_IO.ENCODING.ASCII
 
-    type error is enumeration
-        E_FileNotFound,
-        E_ScanMixedIndent,
-        E_ScanInconsistent,
-        E_ScanDoubleUnder,
-        E_ScanInvalidBase,
-        E_ScanStringEOL
-
-    procedure Report(E : error; file : text; line : integer)
+    function to_lower(C : character) return character
+    function is_space(C : character) return boolean
+    function is_line_break(C : character) return boolean
+    function is_digit(C : character) return boolean
+    function is_letter(C : character) return boolean
+    function is_nul(C : character) return boolean

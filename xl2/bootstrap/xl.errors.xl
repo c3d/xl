@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  xl.errors.xs                    (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.errors.xl                    (C) 1992-2003 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
@@ -23,14 +23,7 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-module XL.ERRORS
+module XL.ERRORS is
 
-    type error is enumeration
-        E_FileNotFound,
-        E_ScanMixedIndent,
-        E_ScanInconsistent,
-        E_ScanDoubleUnder,
-        E_ScanInvalidBase,
-        E_ScanStringEOL
-
-    procedure Report(E : error; file : text; line : integer)
+    procedure Report(E : error; file : text; line : integer) is
+        WriteLn "", file, ":", line, ": Error ", integer(E)

@@ -40,11 +40,28 @@
 
 typedef std::string text;
 
+
+inline int length(text &t) { return t.length(); }
+
 template<class T>
 inline std::vector<T> &operator += (std::vector<T> & what, const T& last)
 {
     what.push_back(last);
     return what;
+}
+
+
+template<class T>
+inline T & back(std::vector<T> &v)
+{
+    return v.back();
+}
+
+
+template<class T>
+void popback(std::vector<T> &v)
+{
+    v.pop_back();
 }
 
 
@@ -65,12 +82,34 @@ inline void XLRead(std::istream *i, int &x) { *i >> x; }
 inline void XLRead(std::istream *i, double &x) { *i >> x; }
 inline void XLRead(std::istream *i, text &x) { *i >> x; }
 
-namespace xl { namespace textio {
-    typedef std::iostream *file;
-    file open(text name) { return new std::fstream(name.c_str()); }
-    void close(file f) { delete f; }
-    void read(file f, char &c) { f->get(c); }
-} }
+namespace xl
+{
+    namespace textio
+    {
+        typedef std::iostream *file;
+        file open(text name) { return new std::fstream(name.c_str()); }
+        void close(file f) { delete f; }
+        void read(file f, char &c) { f->get(c); }
+        void putback(file f, char c) { f->putback(c); }
+        bool valid(file f) { return f->good(); }
+
+        namespace encoding
+        {
+            namespace ascii
+            {
+                inline char tolower(char c) { return std::tolower(c); }
+                inline bool isspace(char c) { return std::isspace(c); }
+                inline bool islinebreak(char c) { return c == '\n'; }
+                inline bool isdigit(char c) { return std::isdigit(c); }
+                inline bool ispunctuation(char c) { return std::ispunct(c); }
+                inline bool isletter(char c) { return std::isalpha(c); }
+                inline bool isletterordigit(char c) { return std::isalnum(c); }
+                inline bool isquote(char c) { return c == '"' || c == '\''; }
+                inline bool isnul(char c) { return c == 0; }
+            }
+        }
+    }
+}
 
 
 // ============================================================================

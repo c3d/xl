@@ -122,7 +122,8 @@ text XLModuleName(XLTree *tree)
     if (name)
     {
         text modname = XLNormalize(name->value);
-        XLModules[modname] = modname;
+        if (!XLModules.count(modname))
+            XLModules[modname] = modname;
         return modname;
     }
     XLInfix *infix = dynamic_cast<XLInfix *> (tree);
@@ -389,7 +390,8 @@ void XLModule2Namespace(XLTree *tree)
     {
         text modname = XLNormalize(name->value);
         out << "namespace " << modname << "\n";
-        XLModules[modname] = modname;
+        if (!XLModules.count(modname))
+            XLModules[modname] = modname;
     }
     else
     {
@@ -776,6 +778,25 @@ INFIX(iterator)
 }
 
 
+PREFIX(in)
+// ----------------------------------------------------------------------------
+//   We turn in parameters into ... nothing
+// ----------------------------------------------------------------------------
+{
+    XL2C(tree->right);
+}
+
+
+PREFIX(out)
+// ----------------------------------------------------------------------------
+//   We turn out parameters into references
+// ----------------------------------------------------------------------------
+{
+    out << "&";
+    XL2C(tree->right);
+}
+
+
 INFIX(of)
 // ----------------------------------------------------------------------------
 //   We turn A of B into A<B>, expecting a template type
@@ -851,10 +872,9 @@ void DoWrite(XLTree *arg)
     }
 
     out << "XLWrite(";
-    if (default_stream.length())
-        out << default_stream << ", ";
-    else
-        out << "&std::cout, ";
+    if (!default_stream.length())
+        default_stream = "&std::cout";
+    out << default_stream << ", ";
     XL2C(arg);
     out << ")";
 }
@@ -911,10 +931,9 @@ void DoRead(XLTree *arg)
     }
 
     out << "XLRead(";
-    if (default_stream.length())
-        out << default_stream << ", ";
-    else
-        out << "&std::cin, ";
+    if (!default_stream.length())
+        default_stream = "&std::cin, ";
+    out << default_stream << ", ";
     XL2C(arg);
     out << ")";
 }
