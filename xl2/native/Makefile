@@ -78,7 +78,6 @@ OTHER_SOURCES=					\
 						\
 	xl.plugin.listing.xl			\
 	xl.plugin.include.xl			\
-	xl.plugin.junk.xl			\
 	xl.plugin.transforms.xl			\
 	xl.plugin.differentiation.xl		\
 	xl.plugin.constantfold.xl
@@ -120,5 +119,7 @@ xl.syntax:
 $(OBJDIR)/%.xl.o: $(OBJDIR)/%.xl.C
 	$V $(CXX) -I . $(CXXFLAGS) $(CPPFLAGS_$*) $(CXXFLAGS_$*) -o $@ -c $<
 
-$(OBJDIR)/%.xl.C: %.xl $(XL) $(OTHER_SOURCES)
+$(OBJDIR)/%.xl.C: %.xl $(XL)
 	$V $(XL) $(XLOPTS) $< > $@
+
+$(OBJDIR)/compiler.xl.C :  $(OTHER_SOURCES)
