@@ -39,10 +39,10 @@ OTHER_SOURCES=					\
 	xl.parser.xl				\
 	xl.translator.xs			\
 	xl.translator.xl			\
+	xl.symbols.xs				\
+	xl.symbols.xl				\
 	xl.semantics.xs				\
 	xl.semantics.xl				\
-	xl.semantics.symbols.xs			\
-	xl.semantics.symbols.xl			\
 	xl.semantics.types.xs			\
 	xl.semantics.types.functions.xs		\
 	xl.semantics.types.generics.xs		\

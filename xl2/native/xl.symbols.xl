@@ -1,0 +1,150 @@
+// ****************************************************************************
+//  xl.symbols.xl                   (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Implementation of XL symbol tables
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import ERR = XL.ERRORS
+
+
+module XL.SYMBOLS is
+// ----------------------------------------------------------------------------
+//    Implementation of XL symbol tables
+// ----------------------------------------------------------------------------
+
+    type symbol_table_data is record with
+    // ------------------------------------------------------------------------
+    //    Information stored in a symbol table
+    // ------------------------------------------------------------------------
+        enclosing       : symbol_table
+        entries         : map [text, rewrites_list]
+
+
+    function NewSymbolTable (enclosing : symbol_table) return symbol_table is
+    // ------------------------------------------------------------------------
+    //    Create a symbol table
+    // ------------------------------------------------------------------------
+        result.enclosing := enclosing
+
+    
+    procedure DeleteSymbolTable (table : symbol_table) is
+    // ------------------------------------------------------------------------
+    //    Delete a symbol table
+    // ------------------------------------------------------------------------
+        table.enclosing := nil
+        delete table
+
+
+    function Enclosing (table : symbol_table) return symbol_table is
+    // ------------------------------------------------------------------------
+    //    Return the immediately enclosing symbol table
+    // ------------------------------------------------------------------------
+        return table.enclosing
+
+
+    function TreeName (to_name : PT.tree) return text is
+    // ------------------------------------------------------------------------
+    //    Return the name used for symbol lookup for a tree
+    // ------------------------------------------------------------------------
+    // The name is used to accelerate lookup of written forms in symbol tables
+
+        if to_name = nil then
+            result := "Z"
+        else if to_name.kind = PT.xlINFIX then
+            infix : PT.infix_tree := PT.infix_tree (to_name)
+            result := "I";
+            result += PT.XLNormalize(infix.name)
+        else if to_name.kind = PT.xlPREFIX then
+            result := "P"
+        else if to_name.kind = PT.xlBLOCK then
+            block : PT.block_tree := PT.block_tree(to_name)
+            result := "B"
+            result += block.opening
+        else if to_name.kind = PT.xlNAME then
+            name : PT.name_tree := PT.name_tree(to_name)
+            result := "N"
+            result += PT.XLNormalize(name.value)
+        else if to_name.kind = PT.xlWILDCARD then
+            result := "*"
+        else
+            result := "T"               // Terminal
+
+
+    procedure Enter  (table : symbol_table; Name : text; info : rewrite) is
+    // ------------------------------------------------------------------------
+    //   Enter a tree rewrite into the symbol table
+    // ------------------------------------------------------------------------
+        Name += "."
+        Name += TreeName (info.reference_form)
+        table.entries[Name] += info
+
+
+    function  Lookup (table     : symbol_table;
+                      Name      : text;
+                      test_tree : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Find the best rewrite and apply it
+    // ------------------------------------------------------------------------
+        Name += "."
+        Wild  : text := Name
+        R     : rewrite
+        score : integer := 0
+        args  : PT.tree_map
+        best  : integer := 0
+        bestR : rewrite := nil
+        bestA : PT.tree_map
+        ambig : rewrite := nil
+        depth : integer := 0
+
+        Name += TreeName(test_tree)
+        Wild += "*"
+        result := test_tree
+
+        while table <> nil loop
+            List  : rewrites_list := table.entries[Name]
+            List += table.entries[Wild]
+            for R in List loop
+                score := PT.Matches(test_tree, R.reference_form, args)
+                if score > 0 then
+                    if R.score_adjust <> nil then
+                        score := R.score_adjust (test_tree, R, args,
+                                                 depth, score)
+                    if score > 0 then
+                        if score > best then
+                            bestR := R
+                            bestA := args
+                            best := score
+                            ambig := nil
+                        else if score = best then
+                            ambig := R
+
+            table := table.enclosing
+            depth += 1
+
+        if bestR <> nil then
+            if ambig <> nil then
+                ERR.Error ERR.AmbiguousTree, test_tree.position,
+                          text(bestR.reference_form),
+                          text(ambig.reference_form),
+                          text(test_tree)
+            result := bestR.translator(test_tree, bestR, bestA)

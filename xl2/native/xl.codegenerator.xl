@@ -59,7 +59,7 @@ module XL.CODE_GENERATOR is
     procedure XL2C_Module (name : BC.bytecode; body : BC.bytecode)
     procedure XL2C_Namespace (name : BC.bytecode)
     procedure XL2C_Translate (what : BC.bytecode; how : BC.bytecode)
-    procedure XL2C_SemanticsTranslation (what : PT.tree)
+    procedure XL2C_SemanticsTranslation (Name : PT.name_tree; what : PT.tree)
     procedure XL2C_Quote (form : BC.bytecode;
                           in out args : args_map;
                           nesting : integer;
@@ -87,6 +87,7 @@ module XL.CODE_GENERATOR is
     namespace_closing   : text := ""
     in_function         : boolean := false
     current_module      : text := ""
+    translations        : map[text, int]
     
 
 
@@ -149,10 +150,20 @@ module XL.CODE_GENERATOR is
     // ------------------------------------------------------------------------
     //    Emit the code for the SemanticsPlugins function
     // ------------------------------------------------------------------------
-        IO.WriteLn "namespace xl { namespace semantics {"
-        IO.WriteLn "void semanticspluginsinit() {"
+        IO.WriteLn "namespace xl { namespace translator {"
+
+        IO.WriteLn "void pluginsinit() {"
         IO.WriteLn semantics_translations_init
         IO.WriteLn "}"
+
+        T : text
+        for T in translations loop
+            T := PT.XLNormalize(T)
+            IO.WriteLn "xl::parser::tree::tree ", T, "("
+            IO.WriteLn "xl::parser::tree::tree input) {"
+            IO.WriteLn "return xl::symbols::lookup("
+            IO.WriteLn "xl::translator::context, ", '"', T, '"', ", input);"
+            IO.WriteLn "}"
         IO.WriteLn "}}"
 
 
@@ -601,10 +612,12 @@ module XL.CODE_GENERATOR is
                 IO.WriteLn "}"
 
             when
-                semantics_translation
+                translation 'Name'
                     'What'
             then
-                XL2C_SemanticsTranslation What
+                if Name.kind = PT.xlNAME then
+                    N : PT.name_tree := PT.name_tree (Name)
+                    XL2C_SemanticsTranslation N, What
 
 
             // ----------------------------------------------------------------
@@ -1282,11 +1295,12 @@ module XL.CODE_GENERATOR is
               IO.WriteLn IO.show_debug, "[[", how, "]]"
 
 
-    procedure XL2C_SemanticsTranslation (How: PT.tree) is
+    procedure XL2C_SemanticsTranslation (Name : PT.name_tree; How: PT.tree) is
     // ------------------------------------------------------------------------
     //    Translate a semantics_translation statement
     // ------------------------------------------------------------------------
 
+        // Translate the statement itself
         translate How
            when
               when
@@ -1297,6 +1311,9 @@ module XL.CODE_GENERATOR is
                args : args_map
                loop_index += 1
 
+               // Record that we had a translation for that name
+               translations [PT.XLNormalize(Name.value)] := 1
+
                // Write the initialization of the symbol table
                old_stdout : IO.output_file := IO.standard_output
                new_stdout : IO.output_string_stream := IO.open_string_stream()
@@ -1306,14 +1323,16 @@ module XL.CODE_GENERATOR is
                IO.WriteLn "static xl::parser::tree::tree ref ="
                XL2C_Quote ToMatch, args, 2, true
                IO.WriteLn ";"
-               IO.WriteLn "xl::semantics::symbols::rewrite rew ="
-               IO.WriteLn "new xl::semantics::symbols::rewritedata;"
+               IO.WriteLn "xl::symbols::rewrite rew ="
+               IO.WriteLn "new xl::symbols::rewritedata;"
                IO.WriteLn "rew->referenceform = ref;"
                IO.WriteLn "rew->scoreadjust = 0;"
                IO.WriteLn "rew->translator = "
                IO.WriteLn current_module, "translator", loop_index, ";"
-               IO.WriteLn "xl::semantics::symbols::enter("
-               IO.WriteLn "  xl::semantics::context, rew);"
+               IO.WriteLn "xl::symbols::enter("
+               IO.WriteLn "  xl::translator::context,"
+               IO.WriteLn "  ", '"', PT.XLNormalize(Name.value), '"', ","
+               IO.WriteLn "  rew);"
                IO.WriteLn "}"
 
                semantics_translations_init+=IO.close_string_stream(new_stdout)
@@ -1323,7 +1342,7 @@ module XL.CODE_GENERATOR is
                // Write the callback function
                IO.WriteLn "xl::parser::tree::tree translator", loop_index
                IO.WriteLn "  (xl::parser::tree::tree input,"
-               IO.WriteLn "   xl::semantics::symbols::rewrite info,"
+               IO.WriteLn "   xl::symbols::rewrite info,"
                IO.WriteLn "   xl::parser::tree::treemap &args) {"
                
                N : text
@@ -1341,8 +1360,8 @@ module XL.CODE_GENERATOR is
               'A'
               'B'
            then
-              XL2C_SemanticsTranslation A
-              XL2C_SemanticsTranslation B
+              XL2C_SemanticsTranslation Name, A
+              XL2C_SemanticsTranslation Name, B
 
            else
               IO.Writeln "*** Ungrokable 'semantics_translation'"

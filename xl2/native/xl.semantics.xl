@@ -25,8 +25,9 @@
 // ****************************************************************************
 
 import PT = XL.PARSER.TREE
-import SYM = XL.SEMANTICS.SYMBOLS
+import SYM = XL.SYMBOLS
 import ASCII = XL.TEXT_IO.ENCODING.ASCII
+import XLT = XL.TRANSLATOR
 
 
 module XL.SEMANTICS is
@@ -34,22 +35,7 @@ module XL.SEMANTICS is
 //    Implementation of XL semantics
 // ----------------------------------------------------------------------------
 
-    procedure InitSemantics is
-    // ------------------------------------------------------------------------
-    //    Initialization of the semantics module
-    // ------------------------------------------------------------------------
-        context := SYM.NewSymbolTable(nil)
-        SemanticsPluginsInit()
-
-
-    function Semantics (input : PT.tree) return PT.tree is
-    // ------------------------------------------------------------------------
-    //    Top-level semantics
-    // ------------------------------------------------------------------------
-        result := SYM.Lookup(context, input)
-
-
-    semantics_translation
+    translation Semantics
     // ------------------------------------------------------------------------
     //   Some basic semantics (goes into SemanticsPlugins)
     // ------------------------------------------------------------------------
@@ -59,16 +45,16 @@ module XL.SEMANTICS is
             'A'
             'B'
         then
-            A := Semantics A
-            B := Semantics B
+            A := XLT.Semantics A
+            B := XLT.Semantics B
             return quote
                 'A'
                 'B'
         when
             'A' ; 'B'
         then
-            A := Semantics A
-            B := Semantics B
+            A := XLT.Semantics A
+            B := XLT.Semantics B
             return quote
                 'A' ; 'B'
 

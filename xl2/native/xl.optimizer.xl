@@ -30,8 +30,8 @@ module XL.OPTIMIZER is
 //    Implementation of the XL optimizer
 // ----------------------------------------------------------------------------
  
-    function Optimize(input : BC.bytecode) return BC.bytecode is
-    // ------------------------------------------------------------------------
-    //   At this point... better safe than sorry ;-)
-    // ------------------------------------------------------------------------
-        return input
+    translation Optimization
+        when
+            'A' + 0
+        then
+            return quote('A')

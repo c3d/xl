@@ -26,16 +26,11 @@
 
 import PT = XL.PARSER.TREE
 import BC = XL.BYTECODE
-import SYM = XL.SEMANTICS.SYMBOLS
+import SYM = XL.SYMBOLS
 
 
 module XL.SEMANTICS with
 
-    type symbol_table is SYM.symbol_table
-    context : symbol_table := nil
+    // Nothing really there nowadays :-)
+    verbose : boolean := false
 
-    // Top-level semantics
-    function Semantics (input : PT.tree) return BC.bytecode
-
-    // Automatically generated for 'semantics' statements
-    procedure SemanticsPluginsInit

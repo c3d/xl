@@ -28,15 +28,23 @@ import PR = XL.PARSER
 import IO = XL.TEXT_IO
 import BC = XL.BYTECODE
 import SEM = XL.SEMANTICS
-import CG = XL.CODE_GENERATOR
 import OPT = XL.OPTIMIZER
-import SYM = XL.SEMANTICS.SYMBOLS
+import CG = XL.CODE_GENERATOR
+import SYM = XL.SYMBOLS
 
 
 module XL.TRANSLATOR is
 // ----------------------------------------------------------------------------
 //    The high-level XL translator
 // ----------------------------------------------------------------------------
+
+    procedure Initialize is
+    // ------------------------------------------------------------------------
+    //    Initialization of the semantics module
+    // ------------------------------------------------------------------------
+        context := SYM.NewSymbolTable(nil)
+        PluginsInit
+
 
     procedure Compile(input : PT.tree) is
     // ------------------------------------------------------------------------
@@ -58,7 +66,8 @@ module XL.TRANSLATOR is
     // ------------------------------------------------------------------------
     //    Compile the tree to a given file
     // ------------------------------------------------------------------------
-        SEM.InitSemantics()
-        after_semantics     : BC.bytecode := SEM.Semantics(input)
-        after_optimizations : BC.bytecode := OPT.Optimize(after_semantics)
+        Initialize
+        after_semantics     : BC.bytecode := Semantics(input)
+        after_optimizations : BC.bytecode := Optimization(after_semantics)
         CG.Transcode after_optimizations, output
+

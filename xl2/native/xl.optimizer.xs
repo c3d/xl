@@ -27,5 +27,5 @@ import BC = XL.BYTECODE
 
 module XL.OPTIMIZER with
 
-    // Perform various optimizations
-    function Optimize(input : BC.bytecode) return BC.bytecode
+    // Not much here...
+    verbose : boolean := false
