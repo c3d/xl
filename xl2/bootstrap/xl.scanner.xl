@@ -199,7 +199,7 @@ module XL.SCANNER is
 
             // Take integral part or base
             loop
-                while DigitValue C < S.base loop
+                while IO.valid S.input and DigitValue C < S.base loop
                     S.integer_value := S.base * S.integer_value + DigitValue C
                     NextChar S, C
 
@@ -221,7 +221,7 @@ module XL.SCANNER is
                     else
                         based_number := false
 
-                exit if not based_number
+                exit if not based_number or not IO.valid S.input
             
             // Check for fractional part
             S.real_value := S.integer_value
@@ -239,7 +239,7 @@ module XL.SCANNER is
                     floating_point := true
 
                     comma_position : real := 1.0
-                    while DigitValue C < S.base loop
+                    while IO.valid S.input and DigitValue C < S.base loop
                         comma_position /= S.base
                         S.real_value += comma_position * DigitValue C
                         NextChar S, C
@@ -268,7 +268,7 @@ module XL.SCANNER is
                     floating_point := true
 
                 // Exponent value
-                while DigitValue C < 10 loop
+                while IO.valid S.input and DigitValue C < 10 loop
                     exponent := 10 * exponent + DigitValue C
                     NextChar S, C
                     if C = '_' then
@@ -302,7 +302,7 @@ module XL.SCANNER is
 
         // Look for names
         if ASCII.is_letter C then
-            while ASCII.is_letter_or_digit C loop
+            while IO.valid S.input and ASCII.is_letter_or_digit C loop
                 NextLowerChar S, C
                 if C = '_' then
                     IgnoreChar S, C
@@ -316,7 +316,7 @@ module XL.SCANNER is
             eos : character := C
             S.token := C
             IO.Read S.input, C
-            loop
+            while IO.valid S.input loop
                 // Check end of string, but keep double quotes in
                 if C = eos then
                     S.token += C
@@ -342,7 +342,7 @@ module XL.SCANNER is
             return tokPARCLOSE
 
         // Other symbols
-        while ASCII.is_punctuation C loop
+        while IO.valid S.input and ASCII.is_punctuation C loop
             exit if ASCII.is_quote C
             exit if C='(' or C=')' or C='{' or C='}' or C='[' or C=']'
             NextChar S, C
@@ -359,7 +359,7 @@ module XL.SCANNER is
         c       : character := 0
         comment : text      := ""
 
-        while index < max loop
+        while IO.valid S.input and index < max loop
             IO.Read S.input, C
 
             if ASCII.is_line_break C then
