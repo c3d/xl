@@ -23,5 +23,21 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-// CMD=%x -parse %f -show
+// CMD=%x -parse %f -style debug -show
 
+"Hello World"
+"Hello ""World"""
+"Hello 'World'"
+
+'Hello World'
+'Hello ''World'''
+'Hello "World"'
+
+<<Hello World>>
+<<Hello World,
+  This is a rather long piece
+  of text.>>
+<< -Il etait une fois
+   un morceau de texte
+   qui n'en finissait pas.
+>>

@@ -310,7 +310,7 @@ module XL.PARSER is
 
             else if tok = SC.tokNEWLINE then
                 if pending_token = SC.tokNONE then
-                    tok := SC.NextToken S
+                    tok := NextToken S
                     if tok = SC.tokSYMBOL or tok = SC.tokNAME then
                         if IsComment(P, S.token, comment_end) then
                             // Followed by a comment
