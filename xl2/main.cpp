@@ -40,7 +40,7 @@ struct XLInitializeContext : XLAction
 //   For debugging: emit the things of interest
 // ----------------------------------------------------------------------------
 {
-    enum WhereAmI { inUnknown, inPrefix, inInfix,
+    enum WhereAmI { inUnknown, inPrefix, inInfix, inPostfix,
                     inComment, inCommentDef,
                     inText, inTextDef,
                     inBlock, inBlockDef };
@@ -81,6 +81,10 @@ struct XLInitializeContext : XLAction
         {
             whereami = inInfix;
         }
+        if (txt == text("POSTFIX"))
+        {
+            whereami = inPostfix;
+        }
         else if (txt == text("COMMENT"))
         {
             whereami = inComment;
@@ -112,6 +116,9 @@ struct XLInitializeContext : XLAction
             break;
         case inInfix:
             context.SetInfixPriority(txt, priority);
+            break;
+        case inPostfix:
+            // Ignored
             break;
         case inComment:
             entry = txt;

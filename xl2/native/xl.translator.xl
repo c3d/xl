@@ -100,17 +100,12 @@ module XL.TRANSLATOR is
     // ------------------------------------------------------------------------
     //    Compile the tree to a given file
     // ------------------------------------------------------------------------
-        if run_semantics then
-            after_semantics     : BC.bytecode := ScopeSemantics(input, true)
-            after_semantics := AddMainInitAndTerm(after_semantics)
-            if show_semantics then
-                Debug after_semantics
+
+        after_semantics : BC.bytecode := ScopeSemantics(input, true)
+        if ERR.error_count = 0 then
+            after_opt : BC.bytecode := XLOptimization(after_semantics)
             if ERR.error_count = 0 then
-                after_opt : BC.bytecode := Optimization(after_semantics)
-                if ERR.error_count = 0 then
-                    CG.Transcode after_opt, output
-        else
-            CG.Transcode input, output
+                CG.Transcode after_opt, output
         if ERR.error_count <> 0 then
             exit 2
 
@@ -141,7 +136,7 @@ module XL.TRANSLATOR is
         // DECL are local declarations
         // INIT are the initializations for the scope
         // TERM are the terminations for the scope
-        result := Declarations(input)
+        result := XLDeclarations(input)
         decl : PT.tree := SYM.ScopeItems(context, "DECL")
         init : PT.tree := SYM.ScopeItems(context, "INIT")
         term : PT.tree := SYM.ScopeItems(context, "TERM")
@@ -158,12 +153,14 @@ module XL.TRANSLATOR is
                 'init'
                 'result'
                 'term'
-        result := Semantics(result)
+        result := XLSemantics(result)
 
         // Get back to original context
         context := SYM.Enclosing (context)
         if global then
             global_context := old_global
+            result := AddMainInitAndTerm(result)
+
 
 
     procedure AddScopeDecl(table: SYM.symbol_table; decl : PT.tree) is
@@ -206,3 +203,22 @@ module XL.TRANSLATOR is
     //   Add a termination to the TERM section
     // ------------------------------------------------------------------------
         SYM.AddScopeItem global_context, "TERM", term
+
+
+    function Recurse(input : PT.tree;
+                     what  : recurse_fn) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Recurse on a given plugin function
+    // ------------------------------------------------------------------------
+         if input.kind = PT.xlBLOCK then
+             block     : input as PT.block_tree
+             block.child := what(block.child)
+         else if input.kind = PT.xlPREFIX then
+             prefix : input as PT.prefix_tree
+             prefix.left := what(prefix.left)
+             prefix.right := what(prefix.right)
+         else if input.kind = PT.xlINFIX then
+             infix : input as PT.infix_tree
+             infix.left := what(infix.left)
+             infix.right := what(infix.right)
+         return input

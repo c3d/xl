@@ -1,0 +1,107 @@
+// ****************************************************************************
+//  xl.plugin.constantfold.xl       (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Simple constant folding, to be used after "differentiation"
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import BC = XL.BYTECODE
+import ERR = XL.ERRORS
+import XLT = XL.TRANSLATOR
+import SYM = XL.SYMBOLS
+
+module XL.PLUGIN.DIFFERENTIATION is
+
+    changed : boolean := false
+
+    translation ConstantFold
+    // ------------------------------------------------------------------------
+    //    Translate differentiation statements
+    // ------------------------------------------------------------------------
+    //    Adding a 'where <condition>' clause adds one thing being tested,
+    //    so it adds one to the relative score of when clauses.
+    //    So we use 'where true' to disambiguate otherwise equivalent clauses
+
+        when ('X' + 0) then
+            changed := true
+            return ConstantFold(X)
+        when (0 + 'X') where true then // Disambiguate
+            changed := true
+            return ConstantFold(X)
+        when ('X' - 0) where true then // Disambiguate
+            changed := true
+            return ConstantFold(X)
+        when (-'X' + 'Y') then
+            changed := true
+            return ConstantFold(quote('Y'-'X'))
+        when ('X' * 1) then
+            changed := true
+            return ConstantFold(X)
+        when ('X' * -'Y') then
+            changed := true
+            return ConstantFold(quote(-('X' * 'Y')))
+        when (1 * 'X') where true then // Disambiguate
+            changed := true
+            return ConstantFold(X)
+        when (-'X' * 'Y')  then
+            changed := true
+            return ConstantFold(quote(-('X' * 'Y')))
+        when ('X' * 0) then
+            changed := true
+            return quote(0)
+        when (0 * 'X') where true then // Disambiguate
+            changed := true
+            return quote(0)
+        when ('X' / 1) then
+            changed := true
+            return ConstantFold(X)
+        when ('X' - 'X') then
+            changed := true
+            return quote (0)
+        when ('X' / 'X') then
+            changed := true
+            return quote (1)
+        when (('X')) then
+            changed := true
+            X := ConstantFold(X)
+            return quote ('X')
+        when ((0)) then
+            changed := true
+            return quote (1)
+        when (-0) then
+            changed := true
+            return quote (0)
+        when (-1 * 'X') then
+            changed := true
+            return ConstantFold(quote(-'X'))
+
+        // Catch-all clause
+        when
+            'Thing'
+        then
+            old_changed : boolean := changed
+            changed := false
+            result := XLT.Recurse(Thing, ConstantFold)
+            if changed then
+                result := ConstantFold(result)
+            else
+                changed := old_changed

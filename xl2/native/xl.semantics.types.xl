@@ -192,7 +192,7 @@ module XL.SEMANTICS.TYPES is
 
         // If non-name, try to find if there is an expression that matches
         if type_expr.kind <> PT.xlNAME then
-            type_expr := XLT.EvaluateType(type_expr)
+            type_expr := XLT.XLEvaluateType(type_expr)
             info := PT.FindInfo (type_expr, "TYPE")
             if info <> nil then
                 result := any_type(info)
@@ -270,7 +270,7 @@ module XL.SEMANTICS.TYPES is
 
 
 
-    translation Declarations
+    translation XLDeclarations
     // ------------------------------------------------------------------------
     //   Translation of type statements
     // ------------------------------------------------------------------------
@@ -286,7 +286,7 @@ module XL.SEMANTICS.TYPES is
             return EnterType (Name, EvaluateType(Value), input)
 
 
-    translation Semantics
+    translation XLSemantics
     // ------------------------------------------------------------------------
     //   Associating built-in types to basic terminals
     // ------------------------------------------------------------------------

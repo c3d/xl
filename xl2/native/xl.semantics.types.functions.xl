@@ -1,0 +1,141 @@
+// ****************************************************************************
+//  xl.semantics.types.functions.xl (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Translation of function types
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import TY = XL.SEMANTICS.TYPES
+import PT = XL.PARSER.TREE
+import DCL = XL.SEMANTICS.DECLARATIONS
+import CGM = XL.CODE_GENERATOR.MACHINE
+
+
+module XL.SEMANTICS.TYPES.FUNCTIONS is
+// ----------------------------------------------------------------------------
+//    Implementation of function types
+// ----------------------------------------------------------------------------
+//    A function type appears in a declaration like
+//    Z : function (X : integer) return integer
+
+
+    procedure MakeParameterList (Parms : PT.tree;
+                                 in out list : declaration_list) is
+    // ------------------------------------------------------------------------
+    //    Translate a parameter list
+    // ------------------------------------------------------------------------
+
+        Parms := XLT.XLDeclarations (Parms)
+        translate Parms
+            when
+                'X' ; 'Y'
+            then
+                MakeParameterList X, list
+                MakeParameterList Y, list
+
+            when
+                'X'
+                'Y'
+            then
+                MakeParameterList X, list
+                MakeParameterList Y, list
+
+            else
+                info : PT.info := PT.FindInfo(Parms, "DECL")
+                if info then
+                    list += declaration(info)
+                else
+                    ERR.Error "'$1' isn't a parameter declaration", Parms
+
+
+    function MakeFnType(Source     : PT.tree;
+                        Parms      : PT.tree;
+                        ReturnType : PT.tree) return function_type is
+    // ------------------------------------------------------------------------
+    //    Create a basic type, possibly named
+    // ------------------------------------------------------------------------
+
+        if ReturnType <> nil then
+            result.return_type := TY.EvaluateType (ReturnType)
+        else
+            result.return_type := nil
+
+        // Check if empty parameter list. () is a block with an empty name
+        if Parms <> nil and Parms.kind = PT.xlNAME then
+            N : Parms as PT.name_tree
+            if N.value = "" then
+                Parms := nil
+        if Parms <> nil then
+            MakeParameterList Parms, result.parameters
+
+        // Flags set during semantics are almost all clear initially
+        result.is_constant            := false
+        result.is_variable            := false
+        result.is_generic             := false
+        result.is_polymorphic         := false
+        result.is_subroutine          := true
+        result.is_reference           := false
+        result.is_instantiation       := false
+        result.is_compiler_generated  := false
+
+        result.type_uid               := -1 // Not set
+        result.bit_size               := -1 // Not set
+        result.source_tree            := Source
+        result.name                   := nil
+        result.machine_type           := nil
+            
+
+    function EnterType (Source  : PT.tree;
+                        Parms   : PT.tree;
+                        Ret     : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a type in the symbol table
+    // ------------------------------------------------------------------------
+    //   A type is entered in the symbol table as a simple replacement
+    //   with the name, and the type info is attached to the name
+
+        XLT.context := SYM.NewSymbolTable (XLT.context)
+        SYM.SetInteger XLT.context, "FNPARM", 1
+
+        // Attach a type info to the original name
+        tp : function_type := MakeFnType(Source, Parms, Ret)
+        tp.machine_type := CGM.EntryPointer(tp.return_type, tp.parameters)
+        PT.SetInfo Source, "TYPE", tp
+        PT.SetInfo Source, "FNTYPE", tp
+
+        // Return the end type
+        result := quote (@type)
+        PT.SetInfo result, "TYPE", tp
+        PT.SetInfo result, "FNTYPE", tp
+
+        XLT.context := SYM.Enclosing (XLT.context)
+
+
+    translation XLEvaluateType
+    // ------------------------------------------------------------------------
+    //    Translation of function types
+    // ------------------------------------------------------------------------
+        when (function ('Parms') return 'ReturnType') then
+            return EnterType (input, Parms, ReturnType)
+
+        when (procedure ('Parms')) then
+            return EnterType (input, Parms, nil)
+

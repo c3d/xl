@@ -77,7 +77,7 @@ module XL.SEMANTICS.OVERLOAD is
 
         // Perform semantics on all arguments
         for Arg in ArgList loop
-            SemArgs += XLT.Semantics(Arg)
+            SemArgs += XLT.XLSemantics(Arg)
             if verbose then
                 IO.WriteLn "Args->", back(SemArgs)
 
@@ -233,7 +233,7 @@ module XL.SEMANTICS.OVERLOAD is
         return OneFunction <> nil
 
 
-    translation Semantics
+    translation XLSemantics
     // ------------------------------------------------------------------------
     //    Overload resolution for function names
     // ------------------------------------------------------------------------

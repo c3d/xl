@@ -24,7 +24,10 @@
 // ****************************************************************************
 
 import PT = XL.PARSER.TREE
+import BC = XL.BYTECODE
 import ERR = XL.ERRORS
+import XLT = XL.TRANSLATOR
+import SYM = XL.SYMBOLS
 
 module XL.PLUGIN.DIFFERENTIATION is
 
@@ -155,13 +158,13 @@ module XL.PLUGIN.DIFFERENTIATION is
         return false
 
 
-    translation Semantics
+    translation Differentiation
     // ------------------------------------------------------------------------
     //    Translate differentiation statements
     // ------------------------------------------------------------------------
 
         when
-            diff('dFn' ('dExpr') / 'dVar')
+            'dFn' ('dExpr') / 'dVar'
         where
             (dFn.kind = PT.xlNAME and dVar.kind = PT.xlNAME and
              IsDName(dFn, 1) and IsDName(dVar))
@@ -170,7 +173,7 @@ module XL.PLUGIN.DIFFERENTIATION is
             return Differentiate (dFn, dExpr, dVar)
 
         when
-            diff('dFn' / 'dVar')
+            'dFn' / 'dVar'
         where
             (dFn.kind = PT.xlNAME and dVar.kind = PT.xlNAME and
              IsDName(dFn) and IsDName(dVar))
@@ -181,3 +184,8 @@ module XL.PLUGIN.DIFFERENTIATION is
             if top.value = bottom.value then
                 return quote(1)
             return quote(0)
+
+        when
+            'T'
+        then
+            return XLT.Recurse(T, Differentiation)

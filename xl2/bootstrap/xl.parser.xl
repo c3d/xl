@@ -146,6 +146,7 @@ module XL.PARSER is
         paren_priority          : integer
         stack                   : string of pending
         new_statement           : boolean       := true
+        is_expression           : boolean       := true
         pending_token           : SC.token      := SC.tokNONE
         S                       : SC.scanner    := P.scanner
         line_continuation       : boolean       := false
@@ -232,6 +233,8 @@ module XL.PARSER is
                 prefix_priority := function_priority
             else if tok = SC.tokNAME or tok = SC.tokSYMBOL then
                 name := S.token
+                if new_statement and tok = SC.tokNAME then
+                    is_expression := false
                 spelling := S.string_value
                 if IsComment(P, name, comment_end) then
                     SC.Comment S, comment_end
@@ -343,8 +346,9 @@ module XL.PARSER is
 
                 // First thing we parse
                 result := right
-                if new_statement and prefix_priority = default_priority then
-                    prefix_priority := statement_priority
+                if new_statement and not is_expression then
+                    if prefix_priority = default_priority then
+                        prefix_priority := statement_priority
                 result_priority := prefix_priority
 
                 // We are now in the middle of an expression
@@ -354,7 +358,9 @@ module XL.PARSER is
             else if left <> nil then
 
                 // Check if we had a statement separator
-                new_statement := infix_priority < statement_priority
+                if infix_priority < statement_priority then
+                    new_statement := true
+                    is_expression := true
 
                 // We got left and infix-op, we are now looking for right
                 // If we have 'A and not B', where 'not' has higher priority
@@ -428,7 +434,8 @@ module XL.PARSER is
                 T : pending
                 if right.kind <> PT.xlBLOCK then
                     if size(stack) = 0 then
-                        result_priority := statement_priority
+                        if not is_expression then
+                            result_priority := statement_priority
                     else
                         T := back(stack)
                         if T.priority < statement_priority then
@@ -466,7 +473,7 @@ module XL.PARSER is
     //   Read the xl.syntax file to get precedences
     // ------------------------------------------------------------------------
         type state is enumeration
-            inUnknown, inInfix, inPrefix,
+            inUnknown, inInfix, inPrefix, inPostfix,
             inComment, inCommentDef,
             inText, inTextDef,
             inBlock, inBlockDef
@@ -498,6 +505,8 @@ module XL.PARSER is
                     stxst := inInfix
                 else if txt = "PREFIX" then
                     stxst := inPrefix
+                else if txt = "POSTFIX" then
+                    stxst := inPostfix
                 else if txt = "BLOCK" then
                     stxst := inBlock
                 else if txt = "COMMENT" then
@@ -512,6 +521,9 @@ module XL.PARSER is
                     P.default_priority := priority
                 else if stxst = inPrefix then
                     P.prefix_priority[txt] := priority
+                else if stxst = inPostfix then
+                    // Ignored in bootstrap compiler
+                    priority := priority
                 else if stxst = inInfix then
                     P.infix_priority[txt] := priority
                 else if stxst = inComment then

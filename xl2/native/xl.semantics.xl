@@ -35,7 +35,7 @@ module XL.SEMANTICS is
 //    Implementation of XL semantics
 // ----------------------------------------------------------------------------
 
-    translation Declarations
+    translation XLDeclarations
     // ------------------------------------------------------------------------
     //   Processing declarations (goes into XL.TRANSLATOR.Declarations )
     // ------------------------------------------------------------------------
@@ -45,16 +45,16 @@ module XL.SEMANTICS is
             'A'
             'B'
         then
-            A := XLT.Declarations A
-            B := XLT.Declarations B
+            A := XLT.XLDeclarations A
+            B := XLT.XLDeclarations B
             return quote
                 'A'
                 'B'
         when
             'A' ; 'B'
         then
-            A := XLT.Declarations A
-            B := XLT.Declarations B
+            A := XLT.XLDeclarations A
+            B := XLT.XLDeclarations B
             return quote
                 'A' ; 'B'
 
@@ -66,7 +66,7 @@ module XL.SEMANTICS is
             return input
 
 
-    translation Semantics
+    translation XLSemantics
     // ------------------------------------------------------------------------
     //   Some basic semantics (goes into XL.TRANSLATOR.Semantics )
     // ------------------------------------------------------------------------
@@ -76,16 +76,16 @@ module XL.SEMANTICS is
             'A'
             'B'
         then
-            A := XLT.Semantics A
-            B := XLT.Semantics B
+            A := XLT.XLSemantics A
+            B := XLT.XLSemantics B
             return quote
                 'A'
                 'B'
         when
             'A' ; 'B'
         then
-            A := XLT.Semantics A
-            B := XLT.Semantics B
+            A := XLT.XLSemantics A
+            B := XLT.XLSemantics B
             return quote
                 'A' ; 'B'
 

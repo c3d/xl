@@ -47,5 +47,6 @@ the {concept "top" "concept"} that it implements.
 <A href="textio.html">Text I/O</A><BR>
 <A href="text.html">Text manipulations</A><BR>
 <A href="exceptions.html">XL Exceptions</A><BR>
+<A href="math.html">Numeric algorithms</A><BR>
 
 

@@ -31,11 +31,14 @@ PREFIX
         280     - + * /
         290     @
 
+POSTFIX
+        280     ! ?
+
 BLOCK
         300     '(' ')' '{' '}' '[' ']' INDENT UNINDENT
 
 TEXT
-        "<<" ">>"
+        "``" "``"
                 
 COMMENT
         "//" NEWLINE

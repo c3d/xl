@@ -324,9 +324,9 @@ XLTree *XLParser::Parse(text closing_paren)
 
             // Parse 'if (A+B) < C then...' as if ((A+B) < C) then ...'
             // Parse 'A[B] := C' as '(A[B] := C)'
-            if (result_priority == statement_priority &&
-                paren_priority > function_priority)
-                result_priority = paren_priority;
+            if (result_priority == statement_priority)
+                if (paren_priority > function_priority)
+                    result_priority = paren_priority;
 
             if (tok == tokINDENT)
             {

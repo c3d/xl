@@ -202,7 +202,7 @@ module XL.SEMANTICS.FUNCTIONS is
         XLT.context := SYM.Enclosing (XLT.context)
 
 
-    translation Declarations
+    translation XLDeclarations
     // ------------------------------------------------------------------------
     //    Translation of function declarations
     // ------------------------------------------------------------------------
@@ -247,7 +247,7 @@ module XL.SEMANTICS.FUNCTIONS is
             @fn_body_end
 
 
-    translation Semantics
+    translation XLSemantics
     // ------------------------------------------------------------------------
     //    Translation of function declarations
     // ------------------------------------------------------------------------

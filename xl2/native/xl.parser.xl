@@ -117,6 +117,15 @@ module XL.PARSER is
         return P.default_priority
 
 
+    function GetPostfixPriority(P: parser; sym : text) return integer is
+    // ------------------------------------------------------------------------
+    //   Return the postfix priority or parser's default priority
+    // ------------------------------------------------------------------------
+        if count(P.postfix_priority, sym) > 0 then
+            return P.postfix_priority[sym]
+        return P.default_priority
+
+
     function GetInfixPriority(P: parser; sym : text) return integer is
     // ------------------------------------------------------------------------
     //   Return the infix priority or parser's default priority
@@ -161,8 +170,10 @@ module XL.PARSER is
         result_priority         : integer       := default_priority
         prefix_priority         : integer
         infix_priority          : integer
+        postfix_priority        : integer
         paren_priority          : integer
         stack                   : string of pending
+        is_expression           : boolean       := true
         new_statement           : boolean       := true
         pending_token           : SC.token      := SC.tokNONE
         S                       : SC.scanner    := P.scanner
@@ -259,6 +270,8 @@ module XL.PARSER is
                     right := PT.NewName(spelling, pos)
                     if prefix_priority = default_priority then
                         prefix_priority := function_priority
+                    if new_statement and tok = SC.tokNAME then
+                        is_expression := false
                 else if left <> nil then
                     // This is the right of an infix operator
                     // If we have "A and not B", where "not" has
@@ -274,15 +287,32 @@ module XL.PARSER is
                     // infix and prefix
                     infix_priority := GetInfixPriority (P, name)
                     if infix_priority <> default_priority then
-                        // We got an infix
-                        left := result
-                        infix := spelling
+                        // We got an infix or a postfix, compare priorities
+                        postfix_priority := GetPostfixPriority (P, name)
+                        if (postfix_priority <> default_priority and
+                            postfix_priority >= infix_priority) then
+                            // We have a postfix operator
+                            right := PT.NewName(spelling, pos)
+                            right := PT.NewPrefix(result, right, pos)
+                            prefix_priority := postfix_priority
+                            result := nil
+                        else
+                            left := result
+                            infix := spelling
                     else
-                        // No priority : take this as a prefix by default
-                        prefix_priority := GetPrefixPriority(P, name)
-                        right := PT.NewName(spelling, pos)
-                        if prefix_priority = default_priority then
-                            prefix_priority := function_priority
+                        postfix_priority := GetPostfixPriority (P, name)
+                        if postfix_priority <> default_priority then
+                            // We have a postfix operator
+                            right := PT.NewName(spelling, pos)
+                            right := PT.NewPrefix(result, right, pos)
+                            prefix_priority := postfix_priority
+                            result := nil
+                        else
+                            // No priority : take this as a prefix by default
+                            prefix_priority := GetPrefixPriority(P, name)
+                            right := PT.NewName(spelling, pos)
+                            if prefix_priority = default_priority then
+                                prefix_priority := function_priority
 
             else if tok = SC.tokNEWLINE then
                 if pending_token = SC.tokNONE then
@@ -357,8 +387,9 @@ module XL.PARSER is
 
                 // First thing we parse
                 result := right
-                if new_statement and prefix_priority = default_priority then
-                    prefix_priority := statement_priority
+                if new_statement and not is_expression then
+                    if prefix_priority = default_priority then
+                        prefix_priority := statement_priority
                 result_priority := prefix_priority
 
                 // We are now in the middle of an expression
@@ -368,7 +399,9 @@ module XL.PARSER is
             else if left <> nil then
 
                 // Check if we had a statement separator
-                new_statement := infix_priority < statement_priority
+                if infix_priority < statement_priority then
+                    new_statement := true
+                    is_expression := true
 
                 // We got left and infix-op, we are now looking for right
                 // If we have 'A and not B', where 'not' has higher priority
@@ -462,7 +495,8 @@ module XL.PARSER is
                 T : pending
                 if right.kind <> PT.xlBLOCK then
                     if size(stack) = 0 then
-                        result_priority := statement_priority
+                        if not is_expression then
+                            result_priority := statement_priority
                     else
                         T := back(stack)
                         if T.priority < statement_priority then
@@ -504,7 +538,7 @@ module XL.PARSER is
     //   Read the xl.syntax file to get precedences
     // ------------------------------------------------------------------------
         type state is enumeration
-            inUnknown, inInfix, inPrefix,
+            inUnknown, inInfix, inPrefix, inPostfix,
             inComment, inCommentDef,
             inText, inTextDef,
             inBlock, inBlockDef
@@ -537,6 +571,8 @@ module XL.PARSER is
                     stxst := inInfix
                 else if txt = "PREFIX" then
                     stxst := inPrefix
+                else if txt = "POSTFIX" then
+                    stxst := inPostfix
                 else if txt = "BLOCK" then
                     stxst := inBlock
                 else if txt = "COMMENT" then
@@ -551,6 +587,8 @@ module XL.PARSER is
                     P.default_priority := priority
                 else if stxst = inPrefix then
                     P.prefix_priority[txt] := priority
+                else if stxst = inPostfix then
+                    P.postfix_priority[txt] := priority
                 else if stxst = inInfix then
                     P.infix_priority[txt] := priority
                 else if stxst = inComment then

@@ -120,7 +120,7 @@ module XL.PARSER.TREE is
             T : test as PT.integer_tree
             R : ref as PT.integer_tree
             if T.value = R.value then
-                return 1
+                return 2
             if verbose then IO.Writeln "/* Failed intval */"
             return 0
 
@@ -128,7 +128,7 @@ module XL.PARSER.TREE is
             T : test as PT.real_tree
             R : ref as PT.real_tree
             if T.value = R.value then
-                return 1
+                return 2
             if verbose then IO.Writeln "/* Failed realval */"
             return 0
 
@@ -136,7 +136,7 @@ module XL.PARSER.TREE is
             T : test as PT.text_tree
             R : ref as PT.text_tree
             if T.value = R.value and T.quote = R.quote then
-                return 1
+                return 2
             if verbose then IO.Writeln "/* Failed textval */"
             return 0
 
@@ -144,7 +144,7 @@ module XL.PARSER.TREE is
             T : test as PT.name_tree
             R : ref as PT.name_tree
             if XLNormalize(T.value) = XLNormalize(R.value) then
-                return 1
+                return 2
             if verbose then IO.Writeln "/* Failed nameval */"
             return 0
 
@@ -155,7 +155,7 @@ module XL.PARSER.TREE is
             if T.opening = R.opening and T.closing = R.closing then
                 result := Matches(T.child, R.child, arg)
                 if result > 0 then
-                    return result + 1
+                    return result + 3
             if verbose then
                 IO.Writeln "/* Failed block */"
                 IO.Writeln "/* o=", T.opening = R.opening,
@@ -170,7 +170,7 @@ module XL.PARSER.TREE is
             if l_result > 0 then
                 r_result : integer := Matches(T.right, R.right, arg)
                 if r_result > 0 then
-                    return l_result + r_result
+                    return l_result + r_result + 1
             if verbose then IO.Writeln "/* Failed prefix */"
             return 0
 
@@ -182,7 +182,7 @@ module XL.PARSER.TREE is
                 if l_result > 0 then
                     r_result : integer := Matches(T.right, R.right, arg)
                     if r_result > 0 then
-                        return l_result + r_result
+                        return l_result + r_result + 2
                     else if verbose then
                         IO.WriteLn "/* Failed left */"
                 else if verbose then
@@ -274,7 +274,7 @@ module XL.TEXT_IO with
             IO.write "[/", T.name, "/]"
         else if what.kind = PT.xlBLOCK then
             T : what as PT.block_tree
-            if ASCII.is_line_break(T.closing) then
+            if T.opening = "I+" and T.closing = "I-" then
                 if current_tree_debug then
                     IO.write "{BL ", indent, T.child, unindent, " BL}"
                 else
@@ -300,6 +300,6 @@ module XL.TEXT_IO with
 
 procedure Debug (tree : PT.tree) is
 // ----------------------------------------------------------------------------
-//    This function is here to be invoked from the debugger
+//    This function is here to be invoked from the debugoger
 // ----------------------------------------------------------------------------
     IO.writeln IO.show_debug, tree

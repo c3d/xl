@@ -30,7 +30,7 @@ module XL.OPTIMIZER is
 //    Implementation of the XL optimizer
 // ----------------------------------------------------------------------------
  
-    translation Optimization
+    translation XLOptimization
         when
             'A' + 0
         then

@@ -28,6 +28,7 @@
 //
 //  The three node types are:
 //  - Prefix operator as "not" in "not A" or "+" in "+7"
+//    This is also used for postfix operators, for instance "!" in "N!"
 //  - Infix operator as "-" in "A-B" or "and" in "3 and 5"
 //  - Parenthese grouping as in "(A+B)" or "[D + E]".
 //
@@ -87,6 +88,7 @@ module XL.PARSER with
          scanner            : SC.scanner
          infix_priority     : priority_table
          prefix_priority    : priority_table
+         postfix_priority   : priority_table
          comments           : comment_table
          text_delimiters    : text_delimiters_table
          blocks             : block_table

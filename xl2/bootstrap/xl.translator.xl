@@ -678,6 +678,40 @@ module XL.TRANSLATOR is
                 // XL2C_EnumName T, enums
 
             when
+                type 'Name' is procedure ( 'Args' )
+            then
+                IO.write "typedef void (*"
+                XL2C Name
+                IO.write ")("
+                XL2C_Args Args
+                IO.writeln ");"
+            when
+                type 'Name'  is procedure
+            then
+                IO.write "typedef void (*"
+                XL2C Name
+                IO.writeln ")(void);"
+
+            when
+                type 'Name' is function ( 'Args' ) return 'T'
+            then
+                IO.write "typedef "
+                XL2C T
+                IO.write " (*"
+                XL2C Name
+                IO.write ")("
+                XL2C_Args Args
+                IO.writeln ");"
+            when
+                type 'Name' is function return 'T'
+            then
+                IO.write "typedef "
+                XL2C T
+                IO.write " (*"
+                XL2C Name
+                IO.writeln ")(void);"
+
+            when
                 type 'X' is 'Y'
             then
                 IO.write "typedef "
@@ -1265,10 +1299,22 @@ module XL.TRANSLATOR is
     //   One 'when' clause in translations
     // ------------------------------------------------------------------------
         args : args_map
+        NmT : text := XLNormalize(Name.value)
+
         loop_index += 1
 
+        // Local declaration for recursion
+        if count(translations, NmT) = 0 then
+            IO.WriteLn "xl::parser::tree::tree ", NmT
+            IO.WriteLn " (xl::parser::tree::tree input) {"
+            IO.WriteLn "  return xl::symbols::lookuprewrite("
+            IO.WriteLn "      xl::translator::context,"
+            IO.WriteLn "      """, NmT, ""","
+            IO.WriteLn "      input);"
+            IO.WriteLn "}"
+
         // Record that we had a translation for that name
-        translations [XLNormalize(Name.value)] := 1
+        translations [NmT] := 1
 
         // Write the initialization of the symbol table
         old_stdout : IO.output_file := IO.standard_output
@@ -1290,13 +1336,12 @@ module XL.TRANSLATOR is
         IO.WriteLn current_module, "translator_", loop_index, ";"
         IO.WriteLn "xl::symbols::enterrewrite("
         IO.WriteLn "  xl::translator::context,"
-        IO.WriteLn "  ", '"', XLNormalize(Name.value), '"', ","
+        IO.WriteLn "  ", '"', NmT, '"', ","
         IO.WriteLn "  rew);"
         IO.WriteLn "}"
 
         semantics_translations_init+=IO.close_string_stream(new_stdout)
         IO.standard_output := old_stdout        
-
 
         // Write the callback function
         IO.WriteLn "xl::parser::tree::tree translator_", loop_index
@@ -1423,5 +1468,3 @@ module XL.TRANSLATOR is
         IO.WriteLn "void term_", loop_index, "() {"
         XL2C_Stmt What
         IO.WriteLn "}"
-
-

@@ -57,9 +57,9 @@ module XL.SCANNER is
         result.indent_char := character(0)
         result.checking_indent := false
         result.setting_indent := false
-        result.column := 0
         result.indent := 0
         result.position := 0
+        result.line_start := 0
 
         result.input := IO.open(file_name)
         result.indents += 0
@@ -131,7 +131,7 @@ module XL.SCANNER is
             if ASCII.is_line_break C then
                 // New line: start counting indentation
                 S.checking_indent := true
-                S.column := 0
+                S.line_start := S.position
             else if S.checking_indent then
                 // Can't mix tabs and spaces
                 if ASCII.is_space C then
@@ -140,7 +140,6 @@ module XL.SCANNER is
                     else if S.indent_char <> C then
                         ERR.Error "Mixed tabs and spaces in indentation",
                                   S.position
-                    S.column += 1
             // Keep looking for more spaces
             IO.Read S.input, C
             S.position += 1
@@ -150,25 +149,26 @@ module XL.SCANNER is
             IO.PutBack S.input, C
             S.position -= 1
             S.checking_indent := false
+            column : integer := S.position - S.line_start
             if S.setting_indent then
                 // We set a new indent, for instance after opening paren
                 S.indents += S.indent
-                S.indent := S.column
+                S.indent := column
                 S.setting_indent := false
                 return tokNEWLINE
-            else if S.column > S.indent then
+            else if column > S.indent then
                 // Strictly deeper indent
-                S.indent := S.column
+                S.indent := column
                 S.indents += S.indent
                 return tokINDENT
-            else if S.column < back S.indents then
+            else if column < back S.indents then
                 // Unindenting: remove rightmost indent level
                 pop_back S.indents
-                S.indent := S.column
+                S.indent := column
 
                 // If we unindented, but did not go as far as the
                 // most recent indent, report inconsistency
-                if back S.indents < S.column then
+                if back S.indents < column then
                     ERR.Error "Inconsistent indentation", S.position
                     return tokERROR
 
@@ -366,18 +366,21 @@ module XL.SCANNER is
         index   : integer   := 0
         c       : character := 0
         comment : text      := ""
+        skip    : boolean   := false
+        initcol : integer   := S.position - S.line_start
 
         while IO.valid S.input and index < max loop
             IO.Read S.input, C
             S.position += 1
+            skip := false
 
             if ASCII.is_line_break C then
                 // New-line: start counting indentation
                 S.checking_indent := true
-                S.column := 0
+                S.line_start := S.position
             else if S.checking_indent then
                 if ASCII.is_space C then
-                    S.column += 1
+                    skip := S.position - S.line_start <= initcol
                 else
                     S.checking_indent := false
 
@@ -386,7 +389,11 @@ module XL.SCANNER is
             else
                 index := 0
 
-            comment += C
+            if not skip then
+                comment += C
+
+        if index >= max then
+            comment := comment [0..length(comment) - max - 1]
 
         return comment
 

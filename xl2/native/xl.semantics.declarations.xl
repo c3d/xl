@@ -230,7 +230,7 @@ module XL.SEMANTICS.DECLARATIONS is
 
         // Evaluate the initialization value
         if Value <> nil then
-            Value := XLT.Semantics Value
+            Value := XLT.XLSemantics Value
             decl.initializer := Value
 
             // Return initialization
@@ -302,7 +302,7 @@ module XL.SEMANTICS.DECLARATIONS is
             ERR.Error "Name '$1' was not declared here", Name
             Original := Name
 
-        // Fin associated declaration
+        // Find associated declaration
         decl : PT.FindInfo(Original, "DECL") as declaration
         if decl = nil then
             ERR.Error "Internal: Declared name '$1' has no decl", Name
@@ -316,7 +316,7 @@ module XL.SEMANTICS.DECLARATIONS is
         return decl.machine_name
 
 
-    translation Declarations
+    translation XLDeclarations
     // ------------------------------------------------------------------------
     //    Semantics processing of declarations
     // ------------------------------------------------------------------------
@@ -358,7 +358,7 @@ module XL.SEMANTICS.DECLARATIONS is
             return ProcessDeclaration (Name, Type, Value, true)
 
 
-    translation Semantics
+    translation XLSemantics
     // ------------------------------------------------------------------------
     //    Basic name lookup
     // ------------------------------------------------------------------------

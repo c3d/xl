@@ -40,8 +40,10 @@ import XL.SEMANTICS.TYPES.FUNCTIONS
 import XL.SEMANTICS.FUNCTIONS
 import XL.SEMANTICS.OVERLOAD
 
-// Plugins for Cranberry
-import XL.PLUGIN.CRANBERRY
+// Plugins
+// import XL.PLUGIN.CRANBERRY
+import XL.PLUGIN.DIFFERENTIATION
+import XL.PLUGIN.CONSTANTFOLD
 
 
 procedure Main is
@@ -51,13 +53,33 @@ procedure Main is
     I          : integer
     Max        : integer := size CS.arguments
     P          : PR.parser
-    theProgram : PT.tree
-    showParse  : boolean := false
+    theProgram : PT.tree := nil
+    compile    : boolean := false // TEMP
 
     for I in 1..Max-1 loop
         name : text := CS.arguments[i]
-        if name = "-tparse" then
-            showParse := true
+        if name = "-show" then
+            IO.WriteLn theProgram
+        else if name = "-debug" then
+            IO.WriteLn IO.show_debug, theProgram, IO.hide_debug
+        else if name[0] = '+' then
+            plugin : text := name[1..length(name)-1]
+            compile := false
+            theProgram := SYM.LookupRewrite(XLT.context, plugin, theProgram)
+        else if name = "-parse" then
+            compile := false
+        else if name = "-sem" then
+            compile := false
+            theProgram := XLT.ScopeSemantics(theProgram, true)
+        else if name = "-opt" then
+            compile := false
+            theProgram := XLT.XLOptimization(theProgram)
+        else if name = "-ccode" then
+            compile := false
+            CG.Transcode theProgram, IO.standard_output
+        else if name = "-full" then
+            compile := true
+
         else if name = "-g" then
             CG.debug := true
         else if name = "-tmatch" then
@@ -66,16 +88,11 @@ procedure Main is
             PT.verbose := true
         else if name = "-tlookup" then
             SYM.verbose := true
-        else if name = "-nosem" then
-            XLT.run_semantics := false
-        else if name = "-tsem" then
-            XLT.show_semantics := true
         else if name = "-toverload" then
             XL.SEMANTICS.OVERLOAD.verbose := true
         else
             P := PR.Open(name)
             theProgram := PR.Parse(P)
             PR.Close P
-            if showParse then
-                Debug theProgram
-            XLT.Compile theProgram      
+            if compile then
+                XLT.Compile theProgram

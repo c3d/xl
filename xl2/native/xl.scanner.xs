@@ -134,9 +134,9 @@ module XL.SCANNER with
         base            : integer   // Base for real/int tokens
 
         // Position attributes
-        column          : integer   // Column in file
         indent          : integer   // Current indent
         position        : integer   // Current character count
+        line_start      : integer   // Position of first column in line
 
         // Configuration of block characters
         blocks          : map[text, text]
