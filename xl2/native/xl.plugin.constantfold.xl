@@ -86,7 +86,7 @@ module XL.PLUGIN.DIFFERENTIATION is
             return quote ('X')
         when ((0)) then
             changed := true
-            return quote (1)
+            return quote (0)
         when (-0) then
             changed := true
             return quote (0)
