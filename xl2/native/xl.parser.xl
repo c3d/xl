@@ -284,15 +284,15 @@ module XL.PARSER is
             else if tok = SC.tokPARCLOSE then
                 // Check for mismatched parentheses here
                 if S.token[0] <> closing_paren then
-                    ERR.Error ERR.ParseMismatchParen, S.position,
-                              S.token, text(closing_paren)
+                    ERR.Error "Mismatched parenthese: '$1', expected '$2'",
+                              S.position, S.token, text(closing_paren)
                 done := true
 
             else if tok = SC.tokUNINDENT then
                 // Check for mismatched parentheses here
                 if not ASCII.is_line_break(closing_paren) then
-                    ERR.Error ERR.ParseMismatchParen, S.position,
-                              "unindent", text(closing_paren)
+                    ERR.Error "Unexpected unindent, expected '$1'",
+                              S.position, text(closing_paren)
                 done := true
 
             else if tok = SC.tokPAROPEN or tok = SC.tokINDENT then
@@ -457,7 +457,8 @@ module XL.PARSER is
             if result = nil then
                 last : pending := back(stack)
                 if last.opcode <> ASCII.CR then
-                    ERR.Error ERR.ParseTrailingOp, S.position, last.opcode
+                    ERR.Error "Trailing opcode '$1' ignored",
+                              S.position, last.opcode
                 result := last.argument
                 pop_back stack
 

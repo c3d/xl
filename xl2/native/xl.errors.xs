@@ -23,30 +23,26 @@
 // * Date       : $Date$
 // ****************************************************************************
 
+import PT = XL.PARSER.TREE
+
 module XL.ERRORS with
 
-    type error_code is enumeration
-        FileNotFound         = "File $1 not found"
-        ScanMixedIndent      = "Mixed indentation"
-        ScanInconsistent     = "Inconsistent indentation"
-        ScanDoubleUnder      = "Double underscore"
-        ScanInvalidBase      = "Invalid base (valid is 2..36)"
-        ScanStringEOL        = "End of line in string"
-        ParseMismatchParen   = "Mismatched parenthese: got $1, expected $2"
-        ParseTrailingOp      = "Trailing opcode $1 ignored"
-        InvalidEnum          = "Invalid enum"
-        InvalidNamedEnum     = "Invalid named enum"
-        NonexistentModule    = "Module '$1' was not found"
-        InvalidAsmFormat     = "The bytecode opcode '$1' is invalid"
-        InvalidAsmType       = "Internal error: invalid bytecode opcode type"
-        UnexpectedTopLevel   = "'$1' literal is unexpected at program level"
-        AmbiguousTree        = "Both '$1' and '$2' match '$3'"
-        NoMatchForTree       = "No match for '$1'"
-
     // Signaling an error
-    procedure Error (E : error_code; pos : integer; args : string of text)
-    procedure Error (E : error_code; pos : integer)
-    procedure Error (E : error_code; pos : integer; arg : text)
-    procedure Error (E : error_code; pos : integer; arg : text; arg2 : text)
-    procedure Error (E : error_code; pos : integer;
+    procedure Error (E : text; pos : integer; args : string of text)
+
+    // With 'text' parameters
+    procedure Error (E : text; pos : integer)
+    procedure Error (E : text; pos : integer; arg : text)
+    procedure Error (E : text; pos : integer; arg : text; arg2 : text)
+    procedure Error (E : text; pos : integer;
                      arg : text; arg2 : text; arg3 : text)
+
+    // With 'tree' parameters (pos deduced from arg1)
+    procedure Error (E : text; arg : PT.tree)
+    procedure Error (E : text; arg : PT.tree; arg2 : text)
+    procedure Error (E : text; arg : PT.tree; arg2 : PT.tree)
+    procedure Error (E : text; arg : PT.tree; arg2 : text; arg3 : text)
+    procedure Error (E : text; arg : PT.tree; arg2 : text; arg3 : PT.tree)
+    procedure Error (E : text; arg : PT.tree; arg2 : PT.tree; arg3 : text)
+    procedure Error (E : text; arg : PT.tree; arg2 : PT.tree; arg3 : PT.tree)
+

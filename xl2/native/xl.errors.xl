@@ -31,7 +31,14 @@ module XL.ERRORS is
 //    Elementary module for error handling
 // ----------------------------------------------------------------------------
 
-    procedure Error (E : error_code; pos : integer; args : string of text) is
+    function Localize (E : text) return text is
+    // ------------------------------------------------------------------------
+    //   Temporary: localization is off at this point
+    // ------------------------------------------------------------------------
+        return E
+
+
+    procedure Error (E : text; pos : integer; args : string of text) is
     // ------------------------------------------------------------------------
     //    Report the given error
     // ------------------------------------------------------------------------
@@ -46,7 +53,7 @@ module XL.ERRORS is
         hadDollar : boolean := false
 
         // Get message and perform substitution
-        msg := text E
+        msg := Localize E
         Max := length msg
         for I in 0..Max-1 loop
             C : character := msg[I]
@@ -67,7 +74,7 @@ module XL.ERRORS is
         POS.PositionToLine pos, file, line, column, linetext
 
         // Display message
-        IO.WriteLn file, ":", line, ": Error ", integer(E), ": ", fmt
+        IO.WriteLn file, ":", line, ": ", fmt
 
         // Display line contents and caret
         IO.Writeln "| ", linetext
@@ -78,7 +85,7 @@ module XL.ERRORS is
         IO.writeln "^"
 
 
-    procedure Error (E : error_code; pos : integer) is
+    procedure Error (E : text; pos : integer) is
     // ------------------------------------------------------------------------
     //   Convenience function
     // ------------------------------------------------------------------------
@@ -86,7 +93,7 @@ module XL.ERRORS is
         Error E, pos, args
 
 
-    procedure Error (E : error_code; pos : integer; arg : text) is
+    procedure Error (E : text; pos : integer; arg : text) is
     // ------------------------------------------------------------------------
     //   Convenience function
     // ------------------------------------------------------------------------
@@ -95,7 +102,7 @@ module XL.ERRORS is
         Error E, pos, args
 
 
-    procedure Error (E : error_code; pos : integer; arg : text; arg2 : text) is
+    procedure Error (E : text; pos : integer; arg : text; arg2 : text) is
     // ------------------------------------------------------------------------
     //   Convenience function
     // ------------------------------------------------------------------------
@@ -105,7 +112,7 @@ module XL.ERRORS is
         Error E, pos, args
 
 
-    procedure Error (E : error_code;
+    procedure Error (E : text;
                      pos : integer;
                      arg : text; arg2 : text; arg3 : text) is
     // ------------------------------------------------------------------------
@@ -116,3 +123,77 @@ module XL.ERRORS is
         args += arg2
         args += arg3
         Error E, pos, args
+
+
+    procedure Error (E : text; arg : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Convenience function
+    // ------------------------------------------------------------------------
+        args : string of text
+        args += text arg
+        Error E, arg.position
+
+
+    procedure Error (E : text; arg : PT.tree; arg2 : text) is
+    // ------------------------------------------------------------------------
+    //   Convenience function
+    // ------------------------------------------------------------------------
+        args : string of text
+        args += text arg
+        args += arg2
+        Error E, arg.position, args
+
+
+    procedure Error (E : text; arg : PT.tree; arg2 : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Convenience function
+    // ------------------------------------------------------------------------
+        args : string of text
+        args += text arg
+        args += text arg2
+        Error E, arg.position, args
+
+
+    procedure Error (E : text; arg : PT.tree; arg2 : text; arg3 : text) is
+    // ------------------------------------------------------------------------
+    //   Convenience function
+    // ------------------------------------------------------------------------
+        args : string of text
+        args += text arg
+        args += arg2
+        args += arg3
+        Error E, arg.position, args
+
+
+    procedure Error (E : text; arg : PT.tree; arg2 : text; arg3 : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Convenience function
+    // ------------------------------------------------------------------------
+        args : string of text
+        args += text arg
+        args += arg2
+        args += text arg3
+        Error E, arg.position, args
+
+
+    procedure Error (E : text; arg : PT.tree; arg2 : PT.tree; arg3 : text) is
+    // ------------------------------------------------------------------------
+    //   Convenience function
+    // ------------------------------------------------------------------------
+        args : string of text
+        args += text arg
+        args += text arg2
+        args += arg3
+        Error E, arg.position, args
+
+
+    procedure Error (E : text; arg:PT.tree; arg2:PT.tree; arg3:PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Convenience function
+    // ------------------------------------------------------------------------
+        args : string of text
+        args += text arg
+        args += text arg2
+        args += text arg3
+        Error E, arg.position, args
+

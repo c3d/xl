@@ -239,13 +239,13 @@ module XL.CODE_GENERATOR is
     //   Translate the @ statements from a map
     // ------------------------------------------------------------------------
         if name.kind <> PT.xlNAME then
-            ERR.Error ERR.InvalidAsmType, name.position
+            ERR.Error "Invalid bytecode opcode type [$1]", name
             return
 
         Tname  : PT.name_tree := PT.name_tree (name)
         symbol : text := XLNormalize(Tname.value)
         if count (bytecode_formats, symbol) <= 0 then
-            ERR.Error ERR.InvalidAsmFormat, name.position, symbol
+            ERR.Error "The bytecode opcode '$1' is invalid", name
             return
 
         format : text := bytecode_formats[symbol]
@@ -349,9 +349,9 @@ module XL.CODE_GENERATOR is
                         E.value := TB.value
                         enums += E
                     else
-                        ERR.Error ERR.InvalidNamedEnum, input.position
+                        ERR.Error "Invalid named enumeration", input.position
                 else
-                    ERR.Error ERR.InvalidEnum, input.position
+                    ERR.Error "Invalid enumeration", input.position
 
 
     procedure XL2C_EnumName(name : BC.bytecode; enums : enum_list)  is
@@ -1070,7 +1070,7 @@ module XL.CODE_GENERATOR is
             PR.Close body_parser
 
         if done = 0 then
-            ERR.Error ERR.NonexistentModule, modname.position, imported
+            ERR.Error "The module '$1' was not found", modname
 
 
     procedure XL2C_Namespace (name : BC.bytecode) is

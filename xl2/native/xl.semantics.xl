@@ -37,7 +37,7 @@ module XL.SEMANTICS is
 
     translation Semantics
     // ------------------------------------------------------------------------
-    //   Some basic semantics (goes into SemanticsPlugins)
+    //   Some basic semantics (goes into XL.TRANSLATOR.Semantics )
     // ------------------------------------------------------------------------
 
         // Sequences

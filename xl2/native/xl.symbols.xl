@@ -143,8 +143,9 @@ module XL.SYMBOLS is
 
         if bestR <> nil then
             if ambig <> nil then
-                ERR.Error ERR.AmbiguousTree, test_tree.position,
-                          text(bestR.reference_form),
-                          text(ambig.reference_form),
-                          text(test_tree)
+                ERR.Error "The tree '$1' is ambiguous", test_tree
+                ERR.Error "A first possible match is '$1'",
+                          bestR.reference_form
+                ERR.Error "A second possible match is '$2'",
+                          ambig.reference_form
             result := bestR.translator(test_tree, bestR, bestA)
