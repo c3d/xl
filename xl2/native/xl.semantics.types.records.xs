@@ -63,3 +63,7 @@ module XL.SEMANTICS.TYPES.RECORDS with
                         Base     : PT.tree;
                         Fields   : PT.tree) return PT.tree
 
+    function GetRecordType(Record : PT.tree) return record_type
+    function IsRecord (Record : PT.tree) return boolean
+    function Index(Record : PT.tree;
+                   Field  : PT.name_tree) return BC.bytecode

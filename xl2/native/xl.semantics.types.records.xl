@@ -41,6 +41,15 @@ module XL.SEMANTICS.TYPES.RECORDS is
     //    Translate a field list from parse tree form into a list
     // ------------------------------------------------------------------------
 
+        if Fields.kind = PT.xlBLOCK then
+            block : Fields as PT.block_tree
+            if (block.opening = XL.PARSER.INDENT_MARKER and
+                block.closing = XL.PARSER.UNINDENT_MARKER) then
+                MakeFieldList block.child, list
+                return
+            else
+                ERR.Error "Block '$1' is not a valid field declaration", block
+
         translate Fields
             when
                 'X' ; 'Y'
@@ -139,22 +148,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
     // ------------------------------------------------------------------------
     //    Translation of function types
     // ------------------------------------------------------------------------
-        when (record with 'Fields') then
-            return EnterType (input, nil, Fields)
-
-        when ('Base' with 'Fields') then
-            return EnterType (input, Base, Fields)
-
-        when
-            record with
-                'Fields'
-        then
-            return EnterType (input, nil, Fields)
-
-        when
-            'Base' with
-                'Fields'
-        then
+        when ('Base' with 'Fields') where TY.IsTypeName(Base) then
             return EnterType (input, Base, Fields)
 
 
@@ -164,6 +158,30 @@ module XL.SEMANTICS.TYPES.RECORDS is
     //   Indexing
     //
     // ========================================================================
+
+    function GetRecordType(Record : PT.tree) return record_type is
+    // ------------------------------------------------------------------------
+    //    Return the record type, or nil if non
+    // ------------------------------------------------------------------------
+
+        // Evaluate record expression
+        Record := XLT.XLSemantics(Record)
+
+        // Evaluate expression type
+        tp : any_type := TY.GetType(Record)
+        if tp = nil then
+            return nil
+        if tp.is_record = false then
+            return nil
+        return record_type(tp)
+
+
+    function IsRecord (Record : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if something is a record
+    // ------------------------------------------------------------------------
+        return GetRecordType (Record) <> nil
+
 
     function Index(Record : PT.tree;
                    Field  : PT.name_tree) return BC.bytecode is
@@ -214,7 +232,8 @@ module XL.SEMANTICS.TYPES.RECORDS is
     // ------------------------------------------------------------------------
     //    Try to translate X.Y expressions
     // ------------------------------------------------------------------------
-        when ('Record'.'Field') where Field.kind = PT.xlNAME then
+        when ('Record'.'Field') where (IsRecord(Record) and
+                                       Field.kind = PT.xlNAME) then
             return Index(Record, PT.name_tree(Field))
 
 

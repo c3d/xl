@@ -59,6 +59,8 @@ module XL.SEMANTICS.TYPES with
 
     // Evaluate a type expression
     function EvaluateType (type_expr : PT.tree) return any_type
+    function NamedType (tname : PT.name_tree) return any_type
+    function IsTypeName(type_expr : PT.tree) return boolean
     function TypeExpression(typeToken : any_type) return PT.tree
 
     // Check if two types are identical
@@ -79,5 +81,7 @@ module XL.SEMANTICS.TYPES with
     boolean_type     : PT.tree := nil
     character_type   : PT.tree := nil
     text_type        : PT.tree := nil
+    record_type      : PT.tree := nil
+    module_type      : PT.tree := nil
 
     procedure InitializeTypes

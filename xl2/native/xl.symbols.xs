@@ -208,11 +208,3 @@ module XL.SYMBOLS with
 
     // Creating a temporary compiler-generated name
     function Temporary(base : text; pos : integer := -1) return PT.name_tree
-
-
-    // ========================================================================
-    // 
-    //    Control globals
-    // 
-    // ========================================================================
-    
