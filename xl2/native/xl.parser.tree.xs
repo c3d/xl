@@ -39,14 +39,14 @@ module XL.PARSER.TREE with
         xlLAST
 
 
-    type tree_info;
-    type tree_info_list is access to tree_info;
-    type tree_info is record with
+    type info_data;
+    type info is access to info_data
+    type infos is map [text, info]
+    type info_data is record with
     // ------------------------------------------------------------------------
     //    Attributes attached to a tree by semantics
     // ------------------------------------------------------------------------
-        next       : tree_info_list
-        kind       : integer
+        dummy     : integer
 
 
     type tree_node is record with
@@ -55,14 +55,12 @@ module XL.PARSER.TREE with
     // ------------------------------------------------------------------------
         kind       : tree_kind
         position   : integer                  // Context-dependent position
-        info       : tree_info_list
+        info       : infos
     type tree is access to tree_node
 
-
-    function FindInfo(from : tree; kind : integer) return tree_info_list
-    procedure SetInfo(from : tree; info: tree_info_list)
-    procedure PurgeInfo(from : tree; kind : integer)
-    function AllocateInfoKind() return integer
+    function FindInfo(from : tree; name : text) return info
+    procedure SetInfo(from : tree; name : text; data: info)
+    procedure PurgeInfo(from : tree; name : text)
 
 
     // -- Leafs ---------------------------------------------------------------
@@ -75,7 +73,6 @@ module XL.PARSER.TREE with
                         pos : integer := -1) return integer_tree is
         result.kind := xlINTEGER
         result.position := pos
-        result.info = nil
         result.value := value
 
     // Representation of a real
@@ -85,7 +82,6 @@ module XL.PARSER.TREE with
     function NewReal(value : real; pos : integer := -1) return real_tree is
         result.kind := xlREAL
         result.position := pos
-        result.info = nil
         result.value := value
 
     // Representation of a text
@@ -98,7 +94,6 @@ module XL.PARSER.TREE with
                      pos : integer := -1) return text_tree is
         result.kind := xlTEXT
         result.position := pos
-        result.info = nil
         result.value := value
         result.quote := quote
 
@@ -109,7 +104,6 @@ module XL.PARSER.TREE with
     function NewName(value : text; pos : integer := -1) return name_tree is
         result.kind := xlNAME
         result.position := pos
-        result.info = nil
         result.value := value
 
 
@@ -118,18 +112,19 @@ module XL.PARSER.TREE with
     // Block and parentheses
     type block_node is tree_node with
         child   : tree
-        opening : character
-        closing : character
+        opening : text
+        closing : text
     type block_tree is access to block_node
     function NewBlock(child : tree;
-                      opening : character; closing : character;
+                      opening : text; closing : text;
                       pos : integer := -1) return block_tree is
         result.kind := xlBLOCK
-        result.position := pos
-        result.info = nil
         result.child := child
         result.opening := opening
         result.closing := closing
+        if pos = -1 and child <> nil then
+            pos := child.position
+        result.position := pos
 
     // Unary prefix operator
     type prefix_node is tree_node with
@@ -140,10 +135,13 @@ module XL.PARSER.TREE with
                        right : tree;
                        pos : integer := -1) return prefix_tree is
         result.kind := xlPREFIX
-        result.position := pos
-        result.info = nil
         result.left := left
         result.right := right
+        if pos = -1 and left <> nil then
+            pos := left.position
+        if pos = -1 and right <> nil then
+            pos := right.position
+        result.position := pos
 
     // Binary infix operator
     type infix_node is tree_node with
@@ -156,11 +154,14 @@ module XL.PARSER.TREE with
                       right: tree;
                       pos : integer := -1) return infix_tree is
         result.kind := xlINFIX
-        result.position := pos
-        result.info = nil
         result.name := name
         result.left := left
         result.right := right
+        if pos = -1 and left <> nil then
+            pos := left.position
+        if pos = -1 and right <> nil then
+            pos := right.position
+        result.position := pos
 
     // -- Wildcards (for tree matching) ---------------------------------------
 
@@ -171,7 +172,6 @@ module XL.PARSER.TREE with
                          pos : integer := -1) return wildcard_tree is
         result.kind := xlWILDCARD
         result.position := pos
-        result.info = nil
         result.name := name
 
 
@@ -191,3 +191,26 @@ module XL.PARSER.TREE with
                            ref_list : tree_list;
                            in out arg : tree_map) return integer
     verbose : boolean := false
+
+module XL.TEXT_IO with
+// ----------------------------------------------------------------------------
+//    I/O customization
+// ----------------------------------------------------------------------------
+    // Pseudo-type to control debug mode
+    type debug_pseudo
+    type debug_control is access to debug_pseudo
+    show_debug : debug_control := debug_controL(true)
+    hide_debug : debug_control := debug_control(false)
+
+    // Pseudo type to control indentation
+    type indent_pseudo
+    type indent_control is access to indent_pseudo
+    indent : indent_control := indent_control(3)
+    unindent : indent_control := indent_control(-3)
+    newline : indent_control := indent_control(0)
+
+    procedure write(direction : indent_control)
+    procedure write(do_debug : debug_control)
+    procedure write(what : PT.tree)
+
+procedure Debug (tree : PT.tree)

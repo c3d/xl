@@ -34,8 +34,10 @@ module XL.PARSER is
     // ------------------------------------------------------------------------
     //   Create a new parser
     // ------------------------------------------------------------------------
-        result.scanner := SC.NewScanner(name)
+        S : SC.scanner := SC.NewScanner(name)
+        result.scanner := S
         ReadSyntaxFile result, "xl.syntax"
+        S.blocks := result.blocks
 
 
     type pending is record with
@@ -51,7 +53,7 @@ module XL.PARSER is
     // ------------------------------------------------------------------------
     //   The top-level parsing function
     // ------------------------------------------------------------------------
-        return Parse(P, character 0)
+        return Parse(P, "")
 
 
     function NextToken(P : parser) return SC.token is
@@ -69,6 +71,23 @@ module XL.PARSER is
             eoc := P.comments[sym]
             return true
         return false
+
+
+    function IsBlock(P: parser; sym: text; out eob: text) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if a symbol represents a comment, if so return end of comment
+    // ------------------------------------------------------------------------
+        if count (P.blocks, sym) > 0 then
+            eob := P.blocks[sym]
+            return true
+        return false
+
+
+    function IsBlock(P: parser; sym: character; out eob: text) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if a symbol represents a comment, if so return end of comment
+    // ------------------------------------------------------------------------
+        return IsBlock(P, text("") + sym, eob)
 
 
     function GetPrefixPriority(P: parser; sym : text) return integer is
@@ -89,7 +108,7 @@ module XL.PARSER is
         return P.default_priority
 
 
-    function Parse(P : parser; closing_paren : character) return PT.tree is
+    function Parse(P : parser; closing : text) return PT.tree is
     // ------------------------------------------------------------------------
     //   The actual parsing function
     // ------------------------------------------------------------------------
@@ -116,8 +135,8 @@ module XL.PARSER is
         prefix                  : text          := ""
         tok                     : SC.token
         done                    : boolean       := false
-        opening                 : character
-        closing                 : character
+        block_opening           : text
+        block_closing           : text
         default_priority        : integer       := P.default_priority
         function_priority       : integer       := P.function_priority
         statement_priority      : integer       := P.statement_priority
@@ -207,8 +226,10 @@ module XL.PARSER is
                 prefix_priority := function_priority
             else if tok = SC.tokSTRING then
                 right := PT.NewText(S.string_value, '"')
+                prefix_priority := function_priority
             else if tok = SC.tokQUOTE then
                 right := PT.NewText(S.string_value, '''')
+                prefix_priority := function_priority
             else if tok = SC.tokNAME or tok = SC.tokSYMBOL then
                 name := S.token
                 spelling := S.string_value
@@ -270,54 +291,42 @@ module XL.PARSER is
 
             else if tok = SC.tokPARCLOSE then
                 // Check for mismatched parentheses here
-                if S.token[0] <> closing_paren then
+                if S.token <> closing then
                     ERR.Report ERR.E_ParseMismatchParen, S.file, S.line
-                    IO.WriteLn "Mismatched parenthese, got '", S.token, "', expected '", closing_paren, "'"
+                    IO.WriteLn "Mismatched parenthese, got '", S.token, "', expected '", closing, "'"
                 done := true
 
             else if tok = SC.tokUNINDENT then
                 // Check for mismatched parentheses here
-                if not ASCII.is_line_break(closing_paren) then
+                if closing <> UNINDENT_MARKER then
                     ERR.Report ERR.E_ParseMismatchParen, S.file, S.line
-                    IO.WriteLn "Mismatched parenthese, got unindent, expected '", closing_paren, "'"
+                    IO.WriteLn "Mismatched parenthese, got unindent, expected '", closing, "'"
                 done := true
 
             else if tok = SC.tokPAROPEN or tok = SC.tokINDENT then
                 old_indent : integer
                 if tok = SC.tokPAROPEN then
-                    opening := S.token[0]
-                    if opening = '(' then closing := ')'
-                    if opening = '{' then closing := '}'
-                    if opening = '[' then closing := ']'
+                    block_opening := S.token
+                    block_closing := S.blocks[block_opening]
+                    if  block_closing = "" then
+                        ERR.Report ERR.E_ParseMismatchParen, S.file, S.line
+                        IO.WriteLn "Mismatched parenthese (internal)"
                     old_indent := SC.OpenParen(S)
                 else
-                    opening := ASCII.TAB[0]
-                    closing := ASCII.CR[0]
+                    block_opening := INDENT_MARKER
+                    block_closing := UNINDENT_MARKER
 
-                name := ""
-                name += opening
+                name := block_opening
                 paren_priority := GetInfixPriority (P, name)
 
-                // Make sure 'foo.bar(x)' parses as '(foo.bar) (x)'
-                if result <> nil then
-                    while size(stack) loop
-                        prev : pending := back(stack)
-                        exit if prev.priority < paren_priority
-                        result_priority := prev.priority
-                        result := PT.NewInfix(prev.opcode,prev.argument,result)
-                        pop_back stack
-
-                // Parse the contents of the parenthese
-                right := Parse(P, closing)
+                // Just like for names, parse the contents of the parentheses
+                prefix_priority := paren_priority
+                infix_priority := default_priority
+                right := Parse(P, block_closing)
                 if tok = SC.tokPAROPEN then SC.CloseParen S, old_indent
                 if right = nil then
-                    right := PT.NewName ""
-                right := PT.NewBlock(right, opening, closing)
-
-                // Parse 'if (A+B) < C then...' as if ((A+B) < C) then ...'
-                // Parse 'A[B] := C' as '(A[B] := C)'
-                if result_priority = statement_priority and paren_priority > function_priority then
-                    result_priority := paren_priority
+                    right := PT.NewName ("")
+                right := PT.NewBlock(right, block_opening, block_closing)
 
                 if tok = SC.tokINDENT then
                     // Unindent to be seen as unindent followed by new-line
@@ -402,11 +411,13 @@ module XL.PARSER is
             else if right <> nil then
 
                 // Check priorities for "A.B x,y" -> "(A.B) (x,y)"
+                right_assoc : boolean := right.kind <> PT.xlBLOCK
                 while size(stack) loop
                     prev : pending := back(stack)
                     if not done then
                         exit if prev.priority <> default_priority and result_priority > prev.priority
                         exit if prev.priority < statement_priority and result_priority = prev.priority
+                        exit if right_assoc and prev.opcode = prefix and result_priority = prev.priority
                     if prev.opcode = prefix then
                         result := PT.NewPrefix(prev.argument, result)
                     else
@@ -454,53 +465,72 @@ module XL.PARSER is
     // ------------------------------------------------------------------------
     //   Read the xl.syntax file to get precedences
     // ------------------------------------------------------------------------
-        in_prefix : boolean := false
-        in_infix : boolean := false
-        priority : integer := 0
-        tok : SC.token
-        S : SC.scanner := SC.NewScanner(syntax)
+        type state is enumeration
+            inUnknown, inInfix, inPrefix,
+            inComment, inCommentDef,
+            inText, inTextDef,
+            inBlock, inBlockDef
 
-        // Comments are hardcoded for now
-        P.comments["//"] := ASCII.CR
+        txt      : text
+        entry    : text
+        tok      : SC.token
+        priority : integer    := 0
+        S        : SC.scanner := SC.NewScanner(syntax)
+        stxst    : state      := inUnknown
 
         loop
             tok := SC.NextToken(S)
             exit if tok = SC.tokEOF
 
-            if tok = SC.tokNAME or tok = SC.tokSYMBOL then
-                if S.string_value = "INFIX" then
-                    in_infix := true
-                    in_prefix := false
-                else if S.string_value = "PREFIX" then
-                    in_infix := false
-                    in_prefix := true
-                else if S.string_value = "NEWLINE" then
-                    if in_prefix then
-                        P.prefix_priority[ASCII.CR] := priority
-                    if in_infix then
-                        P.infix_priority[ASCII.CR] := priority
-                else if S.string_value = "BLOCK" then
-                    if in_prefix then
-                        P.prefix_priority[ASCII.TAB] := priority
-                    if in_infix then
-                        P.infix_priority[ASCII.TAB] := priority
-                else if S.string_value = "STATEMENT" then
-                    P.statement_priority := priority
-                else if S.string_value = "FUNCTION" then
-                    P.function_priority := priority
-                else if S.string_value = "DEFAULT" then
-                    P.default_priority := priority
-                else if in_infix then
-                    P.infix_priority[S.string_value] := priority
-                else if in_prefix then
-                    P.prefix_priority[S.string_value] := priority
-
-            else if tok = SC.tokSTRING or tok = SC.tokQUOTE then
-                if in_prefix then
-                    P.prefix_priority[S.string_value] := priority
-                if in_infix then
-                    P.infix_priority[S.string_value] := priority
-
-            else if tok = SC.tokINTEGER then
+            if tok = SC.tokINTEGER then
                 priority := S.integer_value
 
+            else if tok = SC.tokNAME or tok = SC.tokSYMBOL or tok = SC.tokSTRING or tok = SC.tokQUOTE then
+                txt := S.string_value
+                if txt = "NEWLINE" then
+                    txt := ASCII.CR
+                else if txt = "INDENT" then
+                    txt := INDENT_MARKER
+                else if txt = "UNINDENT" then
+                    txt := UNINDENT_MARKER
+
+                if txt = "INFIX" then
+                    stxst := inInfix
+                else if txt = "PREFIX" then
+                    stxst := inPrefix
+                else if txt = "BLOCK" then
+                    stxst := inBlock
+                else if txt = "COMMENT" then
+                    stxst := inComment
+                else if txt = "TEXT" then
+                    stxst := inText
+                else if txt = "STATEMENT" then
+                    P.statement_priority := priority
+                else if txt = "FUNCTION" then
+                    P.function_priority := priority
+                else if txt = "DEFAULT" then
+                    P.default_priority := priority
+                else if stxst = inPrefix then
+                    P.prefix_priority[txt] := priority
+                else if stxst = inInfix then
+                    P.infix_priority[txt] := priority
+                else if stxst = inComment then
+                    entry := txt
+                    stxst := inCommentDef
+                else if stxst = inCommentDef then
+                    P.comments[entry] := txt
+                    stxst := inComment
+                else if stxst = inText then
+                    entry := txt
+                    stxst := inTextDef
+                else if stxst = inTextDef then
+                    P.text_delimiters[entry] := txt
+                    stxst := inText
+                else if stxst = inBlock then
+                    entry := txt
+                    stxst := inBlockDef
+                    P.infix_priority[entry] := priority
+                else if stxst = inBlockDef then
+                    P.blocks[entry] := txt
+                    P.blocks[txt] := ""
+                    stxst := inBlock

@@ -35,6 +35,37 @@ module XL.SEMANTICS is
 //    Implementation of XL semantics
 // ----------------------------------------------------------------------------
 
+    translation Declarations
+    // ------------------------------------------------------------------------
+    //   Processing declarations (goes into XL.TRANSLATOR.Declarations )
+    // ------------------------------------------------------------------------
+
+        // Sequences
+        when
+            'A'
+            'B'
+        then
+            A := XLT.Declarations A
+            B := XLT.Declarations B
+            return quote
+                'A'
+                'B'
+        when
+            'A' ; 'B'
+        then
+            A := XLT.Declarations A
+            B := XLT.Declarations B
+            return quote
+                'A' ; 'B'
+
+        // When semantics have been done already, don't do it again
+        when
+            @ 'AsmStatement'
+        then
+            AsmStatement := nil
+            return input
+
+
     translation Semantics
     // ------------------------------------------------------------------------
     //   Some basic semantics (goes into XL.TRANSLATOR.Semantics )
@@ -59,7 +90,18 @@ module XL.SEMANTICS is
                 'A' ; 'B'
 
         when
-            if 'Condition' then 'Expression'
+            'Thing'
+        where
+            Thing.kind = PT.xlBLOCK
         then
-            IO.WriteLn "/* This is an 'if' statement */"
+            block : Thing as PT.block_tree
+            block.child := XLT.ScopeSemantics (block.child, false)
+            return block
+
+
+        // When semantics have been done already, don't do it again
+        when
+            @ 'AsmStatement'
+        then
+            AsmStatement := nil
             return input

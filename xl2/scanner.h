@@ -167,6 +167,7 @@ private:
     int         indentChar;
     uint        column;
     bool        checkingIndent;
+    text        endMarker;
 };
 
 #endif // SCANNER_H

@@ -78,6 +78,8 @@ module XL.PARSER with
     type symbol_table is map[text, PT.tree]
     type priority_table is map[text, integer]
     type comment_table is map[text, text]
+    type text_delimiters_table is map[text, text]
+    type block_table is map[text, text]
 
 
     // Data actualy used by the parser
@@ -86,6 +88,8 @@ module XL.PARSER with
          infix_priority     : priority_table
          prefix_priority    : priority_table
          comments           : comment_table
+         text_delimiters    : text_delimiters_table
+         blocks             : block_table
          symbols            : symbol_table
          priority           : integer
          statement_priority : integer    
@@ -99,4 +103,8 @@ module XL.PARSER with
 
     // Parsing
     function Parse(P : parser) return PT.tree
-    function Parse(P : parser; closing_paren : character) return PT.tree
+    function Parse(P : parser; closing : text) return PT.tree
+
+    // Internal names for the indent blocks
+    INDENT_MARKER   : text := "I+"
+    UNINDENT_MARKER : text := "I-"

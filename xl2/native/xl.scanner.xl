@@ -30,31 +30,6 @@ import ASCII = XL.TEXT_IO.ENCODING.ASCII
 
 module XL.SCANNER is
 
-    type scanner_data is record with
-    // ------------------------------------------------------------------------
-    //   Implementation of the scanner type
-    // ------------------------------------------------------------------------
-
-        // Attributes of last scanned token
-        token           : text      // Complete spelling of last token read
-        string_value    : text      // String value (inside quotes)
-        real_value      : real      // Numeric value for real / int tokens
-        integer_value   : integer
-        base            : integer   // Base for real/int tokens
-
-        // Position attributes
-        column          : integer   // Column in file
-        indent          : integer   // Current indent
-        position        : integer   // Current character count
-
-        // Private fields
-        input           : IO.file   // Text file we read from
-        indents         : string of integer
-        indent_char     : character
-        checking_indent : boolean
-        setting_indent  : boolean
-
-
     function DigitValue(digit : character) return integer is
     // ------------------------------------------------------------------------
     //   Return the value of the given character
@@ -177,6 +152,7 @@ module XL.SCANNER is
             S.checking_indent := false
             if S.setting_indent then
                 // We set a new indent, for instance after opening paren
+                S.indents += S.indent
                 S.indent := S.column
                 S.setting_indent := false
                 return tokNEWLINE
@@ -185,7 +161,7 @@ module XL.SCANNER is
                 S.indent := S.column
                 S.indents += S.indent
                 return tokINDENT
-            else if S.column < S.indent then
+            else if S.column < back S.indents then
                 // Unindenting: remove rightmost indent level
                 pop_back S.indents
                 S.indent := S.column
@@ -364,17 +340,18 @@ module XL.SCANNER is
                 NextChar S, C
 
         // Look for parentheses
-        if C='(' or C=')' or C='{' or C='}' or C='[' or C=']' then
+        blk : text := text("") + C
+        if count(S.blocks, blk) > 0 then
             S.string_value := C
             S.token := C
-            if C='(' or C='{' or C='[' then
+            if S.blocks[blk] <> "" then
                 return tokPAROPEN
             return tokPARCLOSE
 
         // Other symbols
         while IO.valid S.input and ASCII.is_punctuation C loop
             exit if ASCII.is_quote C
-            exit if C='(' or C=')' or C='{' or C='}' or C='[' or C=']'
+            exit if count(S.blocks, text("") + C) > 0
             NextChar S, C
         IO.PutBack S.input, C
         S.position -= 1
@@ -444,8 +421,14 @@ module XL.SCANNER is
     //    Closing some parenthese: reset the setting_indent value
     // ------------------------------------------------------------------------
         if old_indent < 0 then
-            S.setting_indent := true
             S.indent := bitwise_not old_indent
+            if not S.setting_indent then
+                if S.indent = back S.indents then
+                    pop_back S.indents
+            S.setting_indent := true
         else
-            S.setting_indent := false
             S.indent := old_indent
+            if not S.setting_indent then
+                if S.indent = back S.indents then
+                    pop_back S.indents
+            S.setting_indent := false

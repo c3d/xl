@@ -23,3 +23,348 @@
 // * Date       : $Date$
 // ****************************************************************************
 
+import XLT = XL.TRANSLATOR
+import TYP = XL.SEMANTICS.TYPES
+import CGM = XL.CODE_GENERATOR.MACHINE
+import BC = XL.BYTECODE
+
+
+module XL.SEMANTICS.DECLARATIONS is
+// ----------------------------------------------------------------------------
+//   Processing the semantics of declarations
+// ----------------------------------------------------------------------------
+
+    function MakeDecl(Name : PT.name_tree;
+                      Type : PT.tree;
+                      Value : PT.tree) return declaration is
+    // ------------------------------------------------------------------------
+    //    Create a basic type, possibly named
+    // ------------------------------------------------------------------------
+
+        // Flags set during semantics are all clear initially
+        result.is_constant            := false
+        result.is_variable            := false
+        result.is_input               := false
+        result.is_output              := false
+        result.is_parameter           := false
+        result.is_local               := false
+        result.is_global              := false
+        result.is_field               := false
+
+        tp : TYP.any_type             := TYP.EvaluateType(Type)
+        result.name                   := Name
+        result.type_source            := Type
+        result.type                   := tp
+        result.machine_name           := CGM.Name(Name, tp)
+        result.machine_type           := nil
+        result.initializer            := Value
+        result.written_as             := nil
+        result.precondition           := nil
+        result.postcondition          := nil
+        result.interface              := nil
+        result.body                   := nil
+        result.frame_depth            := -1
+        if tp <> nil then
+            result.machine_type       := tp.machine_type
+
+
+    function ProcessDeclaration (Names : PT.tree;
+                                 Type  : PT.tree;
+                                 Value : PT.tree;
+                                 HasIs : boolean) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Process the declaration of the various entities
+    // ------------------------------------------------------------------------
+    
+        in_flag    : boolean := false
+        out_flag   : boolean := false
+        var_flag   : boolean := false
+        cst_flag   : boolean := false
+        prefixen   : boolean := Names.kind <> PT.xlNAME
+
+        // Check all declaration prefixes, like 'in X : integer'
+        while prefixen loop        
+            translate Names
+                when
+                    'X', 'Y'
+                then
+                    // TODO: Does it really make sense to initialize all with
+                    // the same value?
+                    X := ProcessDeclaration (X, Type, Value, HasIs)
+                    Y := ProcessDeclaration (Y, Type, Value, HasIs)
+                    return quote
+                        'X'
+                        'Y'
+
+                when
+                    in out 'Nm'
+                then
+                    in_flag := true
+                    out_flag := true
+                    Names := Nm
+                when
+                    inout 'Nm'
+                then
+                    in_flag := true
+                    out_flag := true
+                    Names := Nm
+                when
+                    in 'Nm'
+                then
+                    in_flag := true
+                    Names := Nm
+                when
+                    out 'Nm'
+                then
+                    out_flag := true
+                    Names := Nm
+                when
+                    variable 'Nm'
+                then
+                    var_flag := true
+                    Names := Nm
+                when
+                    constant 'Nm'
+                then
+                    cst_flag := true
+                    Names := Nm
+                when
+                    var 'Nm'
+                then
+                    var_flag := true
+                    Names := Nm
+                when
+                    const 'Nm'
+                then
+                    cst_flag := true
+                    Names := Nm
+
+                else
+                    prefixen := false
+
+
+        if Names.kind <> PT.xlNAME then
+            ERR.Error "A name was expected, got '$1'", Names
+            Names := SYM.Temporary ("invalid_declaration")
+        Name : Names as PT.name_tree
+
+        // Check if there is already an entity by that name
+        original : PT.tree := SYM.LookupOne(XLT.context, "DECL", Name.value)
+        if original <> nil then
+            ERR.Error "Redeclaration of '$1' ", Name
+            ERR.Error "Previous declaration of '$1' here", original
+            return quote(@error)
+
+        // Attach a type info to the original name
+        decl : declaration := MakeDecl(Name, Type, Value)
+        PT.SetInfo Name, "DECL", decl
+
+        // Check the type information, constant-ness and variable-ness
+        tp : TYP.any_type := decl.type
+        if Value = nil then
+            if cst_flag then
+                if var_flag then
+                    ERR.Error "'$1' cannot be both variable and constant",
+                              Name
+                decl.is_constant := true
+            else if var_flag then
+                decl.is_variable := true
+            else
+                decl.is_constant := tp.is_constant
+                decl.is_variable := tp.is_variable
+        else if HasIs then
+            decl.is_constant := true
+            if tp.is_variable then
+                ERR.Error "Declaring constant '$1' with variable type '$2'",
+                          Name, Type
+            if var_flag then
+                ERR.Error "Constant-style initialization for variable '$1'",
+                          Name
+        else
+            decl.is_variable := true
+            if tp.is_constant then
+                ERR.Error "Declaring variable '$1' with constant type '$2'",
+                          Name, Type
+            if cst_flag then
+                ERR.Error "Variable-style initialization for constant '$1'",
+                          Name
+
+        // Check flags of the decl
+        decl.is_parameter := SYM.GetInteger(XLT.context, "FNPARM") <> 0
+        decl.is_local     := SYM.GetInteger(XLT.context, "LOCAL") <> 0
+        decl.is_global    := SYM.GetInteger(XLT.context, "GLOBAL") <> 0
+        decl.is_field     := SYM.GetInteger(XLT.context, "FIELD") <> 0
+
+        if (integer(decl.is_parameter) + integer(decl.is_field) +
+            integer(decl.is_local) + integer(decl.is_global) <> 1) then
+            ERR.Error "(Internal) Bad declaration scope for '$1'", Name
+
+        if in_flag or out_flag then
+            if not decl.is_parameter then
+                if in_flag then
+                    ERR.Error "'in' prefixing non-parameter '$1'", Name
+                if out_flag then
+                    ERR.Error "'out' prefixing non-parameter '$1'", Name
+            decl.is_input := in_flag
+            decl.is_output := out_flag
+
+        // Store this declaration name in the symbol table
+        // The original declaration name holds declaration information
+        SYM.Enter XLT.context, "DECL", Name.value, Name
+        
+        // Set the type of the name
+        TY.SetType Name, tp
+        TY.SetType decl.machine_name, tp
+
+        // Insert a declaration for the machine type and machine name
+        mtype : PT.name_tree := decl.machine_type
+        mname : PT.name_tree := decl.machine_name
+        kind  : PT.name_tree
+
+        if decl.is_local     then kind := quote(local_decl)
+        if decl.is_global    then kind := quote(global_decl)
+        if decl.is_field     then kind := quote(field_decl)
+        if decl.is_parameter then kind := quote(parm_decl)
+
+        XLT.AddScopeDecl XLT.context, quote(@ 'kind' 'mtype' 'mname')
+
+        // Evaluate the initialization value
+        if Value <> nil then
+            Value := XLT.Semantics Value
+            decl.initializer := Value
+
+            // Return initialization
+            if decl.is_local then
+                result := quote ('Name' := 'Value')
+            else if decl.is_global then
+                XLT.AddGlobalInit quote('Name' := 'Value')
+
+        // TODO: Check existence of constructor
+        if result = nil then
+            result := quote(@nop)
+
+        PT.SetInfo result, "DECL", decl
+        return result
+
+
+    function IsDeclaration (type_expr : PT.tree;
+                            Names : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if the tree represents a type name, such as 'integer'
+    // ------------------------------------------------------------------------
+
+        translate Names
+            when
+                'X', 'Y'
+            then
+                return (IsDeclaration(type_expr, X) and
+                        IsDeclaration(type_expr, Y))
+
+        // Otherwise, we need a simple name for the declaration
+        if Names.kind <> PT.xlNAME then
+            return false
+
+        // For type names, lookup in the type table.
+        //   (Check algo consistency with TY.EvaluateTypes)
+        if type_expr.kind = PT.xlNAME then
+            tname : type_expr as PT.name_tree
+
+            if SYM.LookupOne(XLT.context, "FN", tname.value) <> nil then
+                return false
+
+            types : SYM.tree_list
+            SYM.Lookup XLT.context, "TYPE", tname.value, types, SYM.lookupAll
+            if size(types) > 0 then
+                original : PT.tree := types[0]
+                if size(types) > 1 then
+                    ERR.Error "Internal: Multiple types for '$1'", tname
+                    ERR.Error "One candidate is '$1'", types[0]
+                    ERR.Error "Another candidate is '$1'", types[1]
+                if PT.FindInfo(original, "TYPE") <> nil then
+                    return true
+
+        // Otherwise, not a type name
+        return false
+
+
+    function Lookup (NameTerminal : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Return the machine name for a name terminal
+    // ------------------------------------------------------------------------
+        if NameTerminal.kind <> PT.xlNAME then
+            ERR.Error "Internal: Invalid name '$1'", NameTerminal
+            NameTerminal := SYM.Temporary("name")
+
+        // Lookup name
+        Name : NameTerminal as PT.name_tree
+        Original : PT.tree := SYM.LookupOne(XLT.context,"DECL",Name.value)
+        if Original = nil then
+            ERR.Error "Name '$1' was not declared here", Name
+            Original := Name
+
+        // Fin associated declaration
+        decl : PT.FindInfo(Original, "DECL") as declaration
+        if decl = nil then
+            ERR.Error "Internal: Declared name '$1' has no decl", Name
+
+        // Check that it has a machine name
+        if decl.machine_name = nil then
+            ERR.Error "Internal: decl has no machine name", Name
+            decl.machine_name = SYM.Temporary("mname")
+
+        // Return machine name (which should have type info set)
+        return decl.machine_name
+
+
+    translation Declarations
+    // ------------------------------------------------------------------------
+    //    Semantics processing of declarations
+    // ------------------------------------------------------------------------
+        when
+            'Names' : 'Type'
+        then
+            return ProcessDeclaration (Names, Type, nil, false)
+
+        when
+            'Names' : 'Type' := 'Value'
+        then
+            return ProcessDeclaration (Names, Type, Value, false)
+
+        when
+            'Names' : 'Type' is 'Value'
+        then
+            return ProcessDeclaration (Names, Type, Value, true)
+
+
+        when
+            'Type' 'Names'
+        where
+            IsDeclaration (Type, Names)
+        then
+            return ProcessDeclaration (Names, Type, nil, false)
+
+        when
+            'Type' 'Name' := 'Value'
+        where
+            IsDeclaration (Type, Name)
+        then
+            return ProcessDeclaration (Name, Type, Value, false)
+
+        when
+            'Type' 'Name' is 'Value'
+        where
+            IsDeclaration (Type, Name)
+        then
+            return ProcessDeclaration (Name, Type, Value, true)
+
+
+    translation Semantics
+    // ------------------------------------------------------------------------
+    //    Basic name lookup
+    // ------------------------------------------------------------------------
+        when
+            'NameTerminal'
+        where
+            NameTerminal.kind = PT.xlNAME
+        then
+            return Lookup(NameTerminal)

@@ -84,10 +84,10 @@ module XL.PARSER.TREE with
     // Block and parentheses
     type block_node is tree_node with
         child   : tree
-        opening : character
-        closing : character
+        opening : text
+        closing : text
     type block_tree is access to block_node
-    function NewBlock(child : tree; opening : character; closing : character) return block_tree is
+    function NewBlock(child : tree; opening : text; closing : text) return block_tree is
         result.kind := xlBLOCK
         result.child := child
         result.opening := opening
@@ -134,3 +134,6 @@ module XL.PARSER.TREE with
     type tree_map is map[text, PT.tree]
     function Matches (test : PT.tree; ref : PT.tree; in out arg : tree_map) return integer
     verbose : boolean := false
+
+
+procedure Debug(tree: PT.tree)

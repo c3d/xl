@@ -28,6 +28,7 @@
 #include <errno.h>
 #include "scanner.h"
 #include "errors.h"
+#include "context.h"
 
 
 
@@ -366,6 +367,8 @@ token_t XLScanner::NextToken()
                 NEXT_LOWER_CHAR(c);
         }
         ungetc(c, file);
+        if (gContext.IsBlock(stringValue, endMarker))
+            return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
         return tokNAME;
     }
     
@@ -398,31 +401,23 @@ token_t XLScanner::NextToken()
         }
     }
 
-    // Look for parentheses
-    else if (c == '(' || c == ')' ||
-             c == '{' || c == '}' ||
-             c == '[' || c == ']')
+    // Look for single-char block delimiters (parentheses, etc)
+    if (gContext.IsBlock(c, endMarker))
     {
         stringValue = c;
         tokenText = c;
-        return (c == '(' || c == '{' || c == '[') ? tokPAROPEN : tokPARCLOSE;
+        return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
     }
 
     // Look for other symbols
-    else
-    {
-        while (ispunct(c) &&
-               c != '\'' && c != '"' &&
-               c != '(' && c != ')' &&
-               c != '{' && c != '}' &&
-               c != EOF)
-            NEXT_CHAR(c);
-        ungetc(c, file);
-        return tokSYMBOL;
-    }
-
-    MZ_ASSERT(!"What are we doing here?");
-    return tokERROR;
+    while (ispunct(c) &&
+           c != '\'' && c != '"' && c != EOF &&
+           !gContext.IsBlock(c, endMarker))
+        NEXT_CHAR(c);
+    ungetc(c, file);
+    if (gContext.IsBlock(stringValue, endMarker))
+        return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
+    return tokSYMBOL;
 }
 
 

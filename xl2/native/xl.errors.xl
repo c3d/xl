@@ -38,7 +38,43 @@ module XL.ERRORS is
         return E
 
 
-    procedure Error (E : text; pos : integer; args : string of text) is
+    error_out_stack     : string of IO.output_string_stream
+
+
+    procedure PushErrorContext() is
+    // ------------------------------------------------------------------------
+    //    Push a new output string stream to store errors
+    // ------------------------------------------------------------------------
+        error_out_stack += IO.open_string_stream()
+
+
+    function PopErrorContext() return text is
+    // ------------------------------------------------------------------------
+    //   Pop last string stream for errors
+    // ------------------------------------------------------------------------
+        out : IO.output_string_stream := back(error_out_stack)
+        pop_back error_out_stack
+        return IO.close_string_stream(out)
+
+
+    procedure Display(E : text) is
+    // ------------------------------------------------------------------------
+    //   Display an error from an error context
+    // ------------------------------------------------------------------------
+        old_stdout : IO.output_file := IO.standard_output
+        if size (error_out_stack) > 0 then
+            IO.standard_output := back(error_out_stack)
+        else
+            // Count all errors, to shame poor user
+            error_count += 1
+            IO.standard_output := IO.standard_error
+
+        IO.Write E
+
+        IO.standard_output := old_stdout        
+        
+
+    procedure ErrorInt (E : text; pos : integer; args : string of text) is
     // ------------------------------------------------------------------------
     //    Report the given error
     // ------------------------------------------------------------------------
@@ -71,18 +107,40 @@ module XL.ERRORS is
                 fmt += C
 
         // Convert positon to line and column
-        POS.PositionToLine pos, file, line, column, linetext
+        if pos = -1 then
+            IO.WriteLn "[Compiler generated]: ", fmt
+        else
+            POS.PositionToLine pos, file, line, column, linetext
 
-        // Display message
-        IO.WriteLn file, ":", line, ": ", fmt
+            // Display message
+            if file <> "" then
+                IO.WriteLn file, ":", line, ": ", fmt
 
-        // Display line contents and caret
-        IO.Writeln "| ", linetext
-        IO.Write   "|_"
-        while column > 0 loop
-            IO.Write "_"
-            column -= 1
-        IO.writeln "^"
+                // Display line contents and caret
+                IO.Writeln "| ", linetext
+                IO.Write   "|_"
+                while column > 0 loop
+                    IO.Write "_"
+                    column -= 1
+                IO.writeln "^"
+            else
+                IO.WriteLn "[Unknown position]: ", fmt
+
+
+    procedure Error (E : text; pos : integer; args : string of text) is
+    // ------------------------------------------------------------------------
+    //   Report the given error on the current stream
+    // ------------------------------------------------------------------------
+
+        old_stdout : IO.output_file := IO.standard_output
+        if size (error_out_stack) > 0 then
+            IO.standard_output := back(error_out_stack)
+        else
+            IO.standard_output := IO.standard_error
+
+        ErrorInt E, pos, args
+
+        IO.standard_output := old_stdout        
 
 
     procedure Error (E : text; pos : integer) is
@@ -131,7 +189,7 @@ module XL.ERRORS is
     // ------------------------------------------------------------------------
         args : string of text
         args += text arg
-        Error E, arg.position
+        Error E, arg.position, args
 
 
     procedure Error (E : text; arg : PT.tree; arg2 : text) is

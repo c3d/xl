@@ -26,6 +26,7 @@
 import PT = XL.PARSER.TREE
 import PR = XL.PARSER
 import SC = XL.SCANNER
+import POS = XL.SCANNER.POSITION
 import IO = XL.TEXT_IO
 import ASCII = XL.TEXT_IO.ENCODING.ASCII
 import ERR = XL.ERRORS
@@ -56,6 +57,7 @@ module XL.CODE_GENERATOR is
     procedure XL2C_Enum (input : BC.bytecode; out enums : enum_list)
     procedure XL2C_EnumName (name : BC.bytecode; enums : enum_list)
     procedure XL2C_Import (input : BC.bytecode; alias : BC.bytecode)
+    procedure XL2C_PendingImports
     procedure XL2C_Module (name : BC.bytecode; body : BC.bytecode)
     procedure XL2C_Namespace (name : BC.bytecode)
     procedure XL2C_Translate (what : BC.bytecode; how : BC.bytecode)
@@ -126,25 +128,34 @@ module XL.CODE_GENERATOR is
     // ------------------------------------------------------------------------
     //   Read the xl.bytecode file to get the map formats
     // ------------------------------------------------------------------------
-        S   : SC.scanner := SC.Open "xl.bytecode"
-        tok : SC.token
+        S      : SC.scanner := SC.Open "xl.bytecode"
+        tok    : SC.token
+        symbol : text
+        had_nl : boolean := false
 
         loop
             tok := SC.NextToken S
             exit if tok = SC.tokEOF or tok = SC.tokERROR
 
             if tok = SC.tokNAME or tok = SC.tokSYMBOL then
-                symbol : text := XLNormalize(S.string_value)
-                if symbol = "//" then
+                name : text := XLNormalize(S.string_value)
+                if name = "//" then
                     SC.Comment S, ASCII.CR
                 else
-                    tok := SC.NextToken S
-                    if tok = SC.tokSTRING then
-                        format : text := S.string_value
-                        IO.WriteLn "// ", symbol, "=", format
-                        bytecode_formats[symbol] := format
-                    else
-                        IO.WriteLn "#error reading formats from xl.bytecode"
+                    had_nl := false
+                    symbol := name
+            else if tok = SC.tokSTRING then
+                format : text := S.string_value
+                if had_nl then
+                    bytecode_formats[symbol] += ASCII.CR
+                    had_nl := false
+                bytecode_formats[symbol] += format
+            else if (tok = SC.tokNEWLINE or
+                     tok = SC.tokINDENT or
+                     tok = SC.tokUNINDENT) then
+                had_nl := true
+            else
+                ERR.Error "Invalid formats in xl.bytecode", -1
         SC.Close S
 
 
@@ -163,7 +174,7 @@ module XL.CODE_GENERATOR is
             T := PT.XLNormalize(T)
             IO.WriteLn "xl::parser::tree::tree ", T, "("
             IO.WriteLn "xl::parser::tree::tree input) {"
-            IO.WriteLn "return xl::symbols::lookup("
+            IO.WriteLn "return xl::symbols::lookuprewrite("
             IO.WriteLn "xl::translator::context, ", '"', T, '"', ", input);"
             IO.WriteLn "}"
         IO.WriteLn "}}"
@@ -189,16 +200,18 @@ module XL.CODE_GENERATOR is
         old_stdout : IO.output_file := IO.standard_output
         IO.standard_output := output
 
-        IO.writeln "#define XLINIT 1"
-        IO.writeln "#include ", '"', "xl_lib.h", '"'
-
         InitializeRenames
         InitializeBytecodeMap
 
+        IO.writeln bytecode_formats["init"]
+
         XL2C input
+        XL2C_PendingImports
 
         EmitSemanticsPlugins
         EmitXLInitAndTerm
+
+        IO.writeln bytecode_formats["term"]
 
         IO.standard_output := old_stdout
 
@@ -247,6 +260,8 @@ module XL.CODE_GENERATOR is
                 result += C
 
 
+    disable_semicolon : boolean := false
+    separator_stack : string of boolean
     procedure XL2C_Asm (name : BC.bytecode;
                         arg1 : BC.bytecode;
                         arg2 : BC.bytecode;
@@ -258,7 +273,7 @@ module XL.CODE_GENERATOR is
             ERR.Error "Invalid bytecode opcode type [$1]", name
             return
 
-        Tname  : PT.name_tree := PT.name_tree (name)
+        Tname  : name as PT.name_tree
         symbol : text := XLNormalize(Tname.value)
         if count (bytecode_formats, symbol) <= 0 then
             ERR.Error "The bytecode opcode '$1' is invalid", name
@@ -272,17 +287,28 @@ module XL.CODE_GENERATOR is
         if arg2 <> nil then args += text (arg2)
         if arg3 <> nil then args += text (arg3)
 
-        // Replace $1, $2, R3 strings
+        // Replace $1, $2, $3 strings
         fmt       : text
         I         : integer
         Max       : integer
         hadDollar : boolean := false
+        noNewLine : boolean := true
+        skipMode  : boolean := false
+        copyMode  : boolean := false
 
         // Get message and perform substitution
         Max := length format
         for I in 0..Max-1 loop
             C : character := format[I]
-            if C = '$' then
+            if skipMode then
+                if C = ']' then
+                    skipMode := false
+            else if copyMode then
+                if C = ']' then
+                    copyMode := false
+                else
+                    fmt += C 
+            else if C = '$' then
                 if hadDollar then
                     fmt += "$"
                     hadDollar := false
@@ -290,26 +316,62 @@ module XL.CODE_GENERATOR is
                     hadDollar := true
             else if hadDollar then
                 if C >= '1' and C <= '9' then
-                    fmt += args[integer(C) - integer('1')]
+                    idx : integer := integer(C) - integer('1')
+                    if idx >= size(args) then
+                        ERR.Error "Missing argument for bytecode '$1' ($2>$3)",
+                            name,PT.NewInteger(idx),PT.NewInteger(size(args))
+                    else
+                        fmt += args[integer(C) - integer('1')]
+                else if C = '{' then
+                    separator_stack += false
+                else if C = '}' then
+                    pop_back separator_stack
+                else if C = '[' then
+                    sep : boolean := back(separator_stack)
+                    if sep then
+                        copyMode := true
+                    else
+                        skipMode := true
+                        pop_back separator_stack
+                        separator_stack += true
+                else
+                    ERR.Error "Invalid format for '$1'", name
                 hadDollar := false
             else
                 fmt += C
+            noNewLine := C = ' '
 
         // Output result
-        IO.WriteLn fmt
+        if noNewLine then
+            IO.Write fmt
+        else
+            IO.WriteLn fmt
+        disable_semicolon := true
 
 
+    last_position : integer := -1
     procedure XL2C_Stmt (input : BC.bytecode) is
     // ------------------------------------------------------------------------
     //    Translate a statement
     // ------------------------------------------------------------------------
 
+        if debug and input.position > 0 then
+            if input.position <> last_position then
+                file     : text
+                line     : integer
+                column   : integer
+                linetext : text
+                POS.PositionToLine input.position, file, line, column, linetext
+                IO.WriteLn "# ", line, ' ', '"', file, '"'
+                last_position := input.position
+
         XL2C input
         if input.kind = PT.xlNAME then
-            name : PT.name_tree := PT.name_tree(input)
+            name : input as PT.name_tree
             if name.value <> "return" then
                 IO.write "()"
-        IO.writeln ";"
+        if not disable_semicolon then
+            IO.writeln ";"
             
 
     procedure XL2C_Body (input : BC.bytecode; in_fn : boolean) is
@@ -327,10 +389,10 @@ module XL.CODE_GENERATOR is
     //    Translate an enumeration list
     // ------------------------------------------------------------------------
         if input.kind = PT.xlBLOCK then
-            T : PT.block_tree := PT.block_tree(input)
+            T : input as PT.block_tree
             XL2C_Enum T.child, enums
         else if input.kind = PT.xlNAME then
-            T : PT.name_tree := PT.name_tree(input)
+            T : input as PT.name_tree
             N : text := XLNormalize(T.value)
             E : enum_info
             IO.write N
@@ -356,8 +418,8 @@ module XL.CODE_GENERATOR is
                     'A' = 'B'
                 then
                     if A.kind = PT.xlNAME and B.kind = PT.xlTEXT then
-                        TA : PT.name_tree := PT.name_tree(A)
-                        TB : PT.text_tree := PT.text_tree(B)
+                        TA : A as PT.name_tree
+                        TB : B as PT.text_tree
                         N : text := XLNormalize(TA.value)
                         E : enum_info
                         IO.write N
@@ -476,19 +538,19 @@ module XL.CODE_GENERATOR is
         // --------------------------------------------------------------------
 
         if input.kind = PT.xlINTEGER then
-            T : PT.integer_tree := PT.integer_tree(input)
+            T : input as PT.integer_tree
             IO.write T.value
 
         if input.kind = PT.xlREAL then
-            T : PT.real_tree := PT.real_tree(input)
+            T : input as PT.real_tree
             IO.write T.value
 
         if input.kind = PT.xlTEXT then
-            T : PT.text_tree := PT.text_tree(input)
+            T : input as PT.text_tree
             IO.write T.quote, XLSanitize(T.value, T.quote), T.quote
 
         if input.kind = PT.xlNAME then
-            T : PT.name_tree := PT.name_tree(input)
+            T : input as PT.name_tree
             N : text := XLNormalize(T.value)
             if count(name_changes, N) > 0 then
                 IO.write name_changes[N]
@@ -510,15 +572,15 @@ module XL.CODE_GENERATOR is
             // ----------------------------------------------------------------
 
             when
-                @ 'name', 'arg1', 'arg2', 'arg3'
+                @ 'name' 'arg1' 'arg2' 'arg3'
             then
                 XL2C_Asm name, arg1, arg2, arg3
             when
-                @ 'name', 'arg1', 'arg2'
+                @ 'name' 'arg1' 'arg2'
             then
                 XL2C_Asm name, arg1, arg2, nil
             when
-                @ 'name', 'arg1'
+                @ 'name' 'arg1'
             then
                 XL2C_Asm name, arg1, nil, nil
             when
@@ -632,7 +694,7 @@ module XL.CODE_GENERATOR is
                     'What'
             then
                 if Name.kind = PT.xlNAME then
-                    N : PT.name_tree := PT.name_tree (Name)
+                    N : Name as PT.name_tree
                     XL2C_SemanticsTranslation N, What
 
             when
@@ -705,6 +767,18 @@ module XL.CODE_GENERATOR is
                 XL2C C
 
             when
+                'A' : 'B' as 'C'
+            then
+                XL2C C
+                IO.write " "
+                XL2C A
+                IO.write " = static_cast< "
+                XL2C C
+                IO.Write " > ("
+                XL2C B
+                IO.Write ")"
+
+            when
                 'A' : 'B'
             then
                 XL2C B
@@ -773,7 +847,7 @@ module XL.CODE_GENERATOR is
                 IO.Writeln "};"
 
                 // Emit the text conversion function
-                XL2C_EnumName T, enums
+                // XL2C_EnumName T, enums
 
             when
                 type 'X' is 'Y'
@@ -977,8 +1051,8 @@ module XL.CODE_GENERATOR is
 
                 // For non-atoms, check recursively
                 if input.kind = PT.xlBLOCK then
-                    T : PT.block_tree := PT.block_tree(input)
-                    if ASCII.is_line_break (T.closing) then
+                    T : input as PT.block_tree
+                    if T.opening = PR.INDENT_MARKER then
                         IO.writeln "{"
                         XL2C_Stmt T.child
                         IO.writeln "}"
@@ -989,7 +1063,7 @@ module XL.CODE_GENERATOR is
 
 
                 if input.kind = PT.xlPREFIX then
-                    T : PT.prefix_tree := PT.prefix_tree(input)
+                    T : input as PT.prefix_tree
                     R : BC.bytecode := T.right
 
                     XL2C T.left
@@ -1002,7 +1076,7 @@ module XL.CODE_GENERATOR is
                         XL2C R
 
                 if input.kind = PT.xlINFIX then
-                    T : PT.infix_tree := PT.infix_tree(input)
+                    T : input as PT.infix_tree
                     N : text := XLNormalize(T.name)
                     if count(name_changes, N) > 0 then
                         N := name_changes[N]
@@ -1030,7 +1104,7 @@ module XL.CODE_GENERATOR is
 
             else
                 if name.kind = PT.xlNAME then
-                    N : PT.name_tree := PT.name_tree(name)
+                    N : name as PT.name_tree
                     modname : text := XLNormalize(N.value)
                     if count (module_name, modname) = 0 then
                         module_name[modname] := modname
@@ -1084,21 +1158,31 @@ module XL.CODE_GENERATOR is
             IO.WriteLn "// End of Interface ", interface_name, " done=", done
             PR.Close iface_parser
 
-        if (done & 2) = 0 then
-            IO.WriteLn ""
-            IO.WriteLn "// Body ", body_name, " done=", done
-            body_parser : PR.parser := PR.Open(body_name)
-            body_tree   : BC.bytecode := PR.Parse(body_parser)
-            module_imports[imported] |= 2
-            if body_tree <> nil then
-                XL2C_Stmt body_tree
-                done |= 2
-            IO.WriteLn ""
-            IO.WriteLn "// End of Body ", body_name, " done=", done
-            PR.Close body_parser
 
-        if done = 0 then
-            ERR.Error "The module '$1' was not found", modname
+    procedure XL2C_PendingImports() is
+    // ------------------------------------------------------------------------
+    //    Emit code for pending imports
+    // ------------------------------------------------------------------------
+
+        someChange : boolean := true
+        while someChange loop
+            imported   : text
+            someChange := false
+            for imported in module_imports loop
+                exit if someChange
+                if (module_imports[imported] & 2) = 0 then
+                    body_name      : text := imported + ".xl"
+                    IO.WriteLn ""
+                    IO.WriteLn "// Body ", body_name
+                    body_parser : PR.parser := PR.Open(body_name)
+                    body_tree   : PT.tree := PR.Parse(body_parser)
+                    module_imports[imported] |= 2
+                    if body_tree <> nil then
+                        XL2C_Stmt body_tree
+                        someChange := true
+                    IO.WriteLn ""
+                    IO.WriteLn "// End of Body ", body_name
+                    PR.Close body_parser
 
 
     procedure XL2C_Namespace (name : BC.bytecode) is
@@ -1118,7 +1202,7 @@ module XL.CODE_GENERATOR is
                IO.write "namespace "
                XL2C name
                if name.kind = PT.xlNAME then
-                   N : PT.name_tree := PT.name_tree(name)
+                   N : name as PT.name_tree
                    current_module += XLNormalize(N.value)
                    current_module += "::"
 
@@ -1145,7 +1229,7 @@ module XL.CODE_GENERATOR is
     // ------------------------------------------------------------------------
 
         if name.kind = PT.xlNAME then
-            T : PT.name_tree := PT.name_tree (name)
+            T : name as PT.name_tree
             N : text := XLNormalize (T.value)
             if count (module_name, N) > 0 then
                 IO.Write module_name[N]
@@ -1190,17 +1274,17 @@ module XL.CODE_GENERATOR is
 
         // For each kind of atom, check and return 0 or 1
         if form.kind = PT.xlINTEGER then
-            T : PT.integer_tree := PT.integer_tree(form)
+            T : form as PT.integer_tree
             IO.Write "xl::parser::tree::newinteger(", T.value, ")"
 
         if form.kind = PT.xlREAL then
-            T : PT.real_tree := PT.real_tree(form)
+            T : form as PT.real_tree
             IO.Write "xl::parser::tree::newreal(", T.value, ")"
 
         if form.kind = PT.xlTEXT then
             // 'A' or "A" is transformed into a name
             // '"A"' or "'A'" is transformed into corresponding string
-            T : PT.text_tree := PT.text_tree(form)
+            T : form as PT.text_tree
             quote : character := character(0)
             is_quote : boolean := false
             if length(T.value) > 2 then
@@ -1229,24 +1313,24 @@ module XL.CODE_GENERATOR is
             args[T.value] = 1
 
         if form.kind = PT.xlNAME then
-            T : PT.name_tree := PT.name_tree(form)
+            T : form as PT.name_tree
             N : text := XLNormalize(T.value)
             IO.Write "xl::parser::tree::newname(text(""", N, """))"
 
         // For non-atoms, check recursively
         if form.kind = PT.xlBLOCK then
-            T : PT.block_tree := PT.block_tree(form)
+            T : form as PT.block_tree
             IO.Writeln "xl::parser::tree::newblock("
             XL2C_Quote T.child, args, nesting+2, wildcard
             IO.Write ", "
-            if ASCII.is_line_break(T.closing) then
-               IO.Write "'\t', '\n'"
+            if T.opening = PR.INDENT_MARKER then
+               IO.Write """I+"", ""I-"""
             else
-               IO.Write "'", T.opening, "', '", T.closing, "'"
+               IO.Write '"', T.opening, """, """, T.closing, '"'
             IO.Write ")"
 
         if form.kind = PT.xlPREFIX then
-            T : PT.prefix_tree := PT.prefix_tree(form)
+            T : form as PT.prefix_tree
             IO.WriteLn "xl::parser::tree::newprefix("
             XL2C_Quote T.left, args, nesting+2, wildcard
             IO.WriteLn ","
@@ -1254,7 +1338,7 @@ module XL.CODE_GENERATOR is
             IO.WriteLn ")"
 
         if form.kind = PT.xlINFIX then
-            T : PT.infix_tree := PT.infix_tree(form)
+            T : form as PT.infix_tree
             IO.Write "xl::parser::tree::newinfix("
             if T.name = ASCII.CR then
                 IO.WriteLn "xl::textio::encoding::ascii::cr,"
@@ -1267,6 +1351,44 @@ module XL.CODE_GENERATOR is
 
 
 
+    procedure XL2C_TranslateOne (to_translate: BC.bytecode;
+                                 ToMatch : PT.tree; Body : PT.tree;
+                                 Condition : PT.tree := nil) is
+    // ------------------------------------------------------------------------
+    //   Translate a single 'when' clause
+    // ------------------------------------------------------------------------
+        args : args_map
+        loop_index += 1
+
+        IO.WriteLn "{"
+        IO.WriteLn "static xl::parser::tree::tree ref", loop_index, "="
+        XL2C_Quote ToMatch, args, 2, true
+        IO.WriteLn ";"
+        IO.WriteLn "xl::parser::tree::treemap args", loop_index, ";"
+        IO.Write "if (xl::parser::tree::matches("
+        XL2C to_translate
+        IO.Writeln ", ref", loop_index, ", args", loop_index, ")) {"
+
+        N : text
+        for N in args loop
+            Nm : text := XLNormalize(N)
+            IO.Write "xl::parser::tree::tree ", Nm
+            IO.WriteLn " = args",loop_index,"[text(", '"',Nm,'"', ")];"
+
+        if Condition <> nil then
+            IO.Write "if ("
+            XL2C Condition
+            IO.WriteLn ") {"
+        XL2C_Stmt Body
+
+        IO.WriteLn "XLtranslateDone = true;"
+        IO.Writeln "break;"
+        IO.WriteLn "}}"
+        if Condition <> nil then
+            IO.WriteLn "}"
+
+                                 
+
     procedure XL2C_Translate (to_translate : BC.bytecode; how : BC.bytecode) is
     // ------------------------------------------------------------------------
     //    Translate a translate statement
@@ -1276,32 +1398,32 @@ module XL.CODE_GENERATOR is
            when
               when
                   'ToMatch'
+              where
+                  'Condition'
               then
                   'Body'
            then
-               args : args_map
-               loop_index += 1
+              Xl2C_TranslateOne to_translate, ToMatch, Body, Condition
 
-               IO.WriteLn "{"
-               IO.WriteLn "static xl::parser::tree::tree ref", loop_index, "="
-               XL2C_Quote ToMatch, args, 2, true
-               IO.WriteLn ";"
-               IO.WriteLn "xl::parser::tree::treemap args", loop_index, ";"
-               IO.Write "if (xl::parser::tree::matches("
-               XL2C to_translate
-               IO.Writeln ", ref", loop_index, ", args", loop_index, ")) {"
+           when
+              when ('ToMatch') where 'Condition' then
+                  'Body'
+           then
+              Xl2C_TranslateOne to_translate, ToMatch, Body, Condition
 
-               N : text
-               for N in args loop
-                   Nm : text := XLNormalize(N)
-                   IO.Write "xl::parser::tree::tree ", Nm
-                   IO.WriteLn " = args",loop_index,"[text(", '"',Nm,'"', ")];"
+           when
+              when
+                  'ToMatch'
+              then
+                  'Body'
+           then
+               XL2C_TranslateOne to_translate, ToMatch, Body
 
-               XL2C_Stmt Body
-               
-               IO.WriteLn "XLtranslateDone = true;"
-               IO.Writeln "break;"
-               IO.WriteLn "}}"
+           when
+              when ('ToMatch') then
+                  'Body'
+           then
+               XL2C_TranslateOne to_translate, ToMatch, Body
 
            when
                'A' else 'B'
@@ -1323,6 +1445,88 @@ module XL.CODE_GENERATOR is
               IO.WriteLn IO.show_debug, "[[", how, "]]"
 
 
+    procedure XL2C_SemanticsTranslationOne (Name     : PT.name_tree;
+                                           ToMatch   : PT.tree;
+                                           Body      : PT.tree;
+                                           Condition : PT.tree := nil) is
+    // ------------------------------------------------------------------------
+    //   One 'when' clause in a translation
+    // ------------------------------------------------------------------------
+        args : args_map
+        loop_index += 1
+
+        // Record that we had a translation for that name
+        translations [PT.XLNormalize(Name.value)] := 1
+
+        // Write the initialization of the symbol table
+        old_stdout : IO.output_file := IO.standard_output
+        new_stdout : IO.output_string_stream := IO.open_string_stream()
+        IO.standard_output := new_stdout
+
+        IO.WriteLn "{"
+        IO.WriteLn "static xl::parser::tree::tree ref ="
+        XL2C_Quote ToMatch, args, 2, true
+        IO.WriteLn ";"
+        IO.WriteLn "xl::symbols::rewrite rew ="
+        IO.WriteLn "new xl::symbols::rewritedata;"
+        IO.WriteLn "rew->referenceform = ref;"
+        if Condition <> nil then
+            IO.WriteLn "rew->scoreadjust = ",
+                       current_module, "scoreadjust_", loop_index, ";"
+        else
+            IO.WriteLn "rew->scoreadjust = 0;"
+        IO.WriteLn "rew->translator = "
+        IO.WriteLn current_module, "translator_", loop_index, ";"
+        IO.WriteLn "xl::symbols::enterrewrite("
+        IO.WriteLn "  xl::translator::context,"
+        IO.WriteLn "  ", '"', PT.XLNormalize(Name.value), '"', ","
+        IO.WriteLn "  rew);"
+        IO.WriteLn "}"
+
+        semantics_translations_init+=IO.close_string_stream(new_stdout)
+        IO.standard_output := old_stdout        
+
+
+        // Write the callback function
+        IO.WriteLn "xl::parser::tree::tree translator_", loop_index
+        IO.WriteLn "  (xl::parser::tree::tree input,"
+        IO.WriteLn "   xl::symbols::rewrite info,"
+        IO.WriteLn "   xl::parser::tree::treemap &Args) {"
+
+        N : text
+        for N in args loop
+            Nm : text := XLNormalize(N)
+            IO.Write "xl::parser::tree::tree ", Nm
+            IO.WriteLn " = Args[text(", '"',Nm,'"', ")];"
+            IO.WriteLn Nm, "=", Nm, ";"
+        IO.WriteLn "xl::parser::tree::tree result = input;"
+
+        XL2C_Stmt Body
+        IO.WriteLn "return result;"
+        IO.WriteLn "}"
+
+        // Write the score adjust function if necessary
+        if Condition <> nil then
+            IO.WriteLn "int scoreadjust_", loop_index, "("
+            IO.WriteLn "xl::parser::tree::tree Test,"
+            IO.WriteLn "xl::symbols::rewrite Info,"
+            IO.WriteLn "xl::parser::tree::treemap &Args,"
+            IO.WriteLn "int Depth, int Score) {"
+
+            N : text
+            for N in args loop
+                Nm : text := XLNormalize(N)
+                IO.Write "xl::parser::tree::tree ", Nm
+                IO.WriteLn " = Args[text(", '"',Nm,'"', ")];"
+                IO.WriteLn Nm, "=", Nm, ";"
+            IO.WriteLn "int result = Score + 1;"
+            IO.Write "if (!("
+            XL2C Condition
+            IO.WriteLn ")) result = 0;"
+            IO.WriteLn "return result;"
+            IO.WriteLn "}"
+
+
     procedure XL2C_SemanticsTranslation (Name : PT.name_tree; How: PT.tree) is
     // ------------------------------------------------------------------------
     //    Translate a semantics_translation statement
@@ -1333,56 +1537,31 @@ module XL.CODE_GENERATOR is
            when
               when
                   'ToMatch'
+              where
+                  'Condition'
               then
                   'Body'
            then
-               args : args_map
-               loop_index += 1
+               XL2C_SemanticsTranslationOne Name, ToMatch, Body, Condition
+           when
+              when ('ToMatch') where 'Condition' then
+                  'Body'
+           then
+               XL2C_SemanticsTranslationOne Name, ToMatch, Body, Condition
 
-               // Record that we had a translation for that name
-               translations [PT.XLNormalize(Name.value)] := 1
+           when
+              when
+                  'ToMatch'
+              then
+                  'Body'
+           then
+               XL2C_SemanticsTranslationOne Name, ToMatch, Body
 
-               // Write the initialization of the symbol table
-               old_stdout : IO.output_file := IO.standard_output
-               new_stdout : IO.output_string_stream := IO.open_string_stream()
-               IO.standard_output := new_stdout
-
-               IO.WriteLn "{"
-               IO.WriteLn "static xl::parser::tree::tree ref ="
-               XL2C_Quote ToMatch, args, 2, true
-               IO.WriteLn ";"
-               IO.WriteLn "xl::symbols::rewrite rew ="
-               IO.WriteLn "new xl::symbols::rewritedata;"
-               IO.WriteLn "rew->referenceform = ref;"
-               IO.WriteLn "rew->scoreadjust = 0;"
-               IO.WriteLn "rew->translator = "
-               IO.WriteLn current_module, "translator_", loop_index, ";"
-               IO.WriteLn "xl::symbols::enter("
-               IO.WriteLn "  xl::translator::context,"
-               IO.WriteLn "  ", '"', PT.XLNormalize(Name.value), '"', ","
-               IO.WriteLn "  rew);"
-               IO.WriteLn "}"
-
-               semantics_translations_init+=IO.close_string_stream(new_stdout)
-               IO.standard_output := old_stdout        
-
-
-               // Write the callback function
-               IO.WriteLn "xl::parser::tree::tree translator_", loop_index
-               IO.WriteLn "  (xl::parser::tree::tree input,"
-               IO.WriteLn "   xl::symbols::rewrite info,"
-               IO.WriteLn "   xl::parser::tree::treemap &args) {"
-               
-               N : text
-               for N in args loop
-                   Nm : text := XLNormalize(N)
-                   IO.Write "xl::parser::tree::tree ", Nm
-                   IO.WriteLn " = args[text(", '"',Nm,'"', ")];"
-               IO.WriteLn "xl::parser::tree::tree result = input;"
-
-               XL2C_Stmt Body
-               IO.WriteLn "return result;"
-               IO.WriteLn "}"
+           when
+              when ('ToMatch') then
+                  'Body'
+           then
+               XL2C_SemanticsTranslationOne Name, ToMatch, Body
 
            when
               'A'
@@ -1410,7 +1589,7 @@ module XL.CODE_GENERATOR is
         initializations += IO.close_string_stream(new_stdout)
         IO.standard_output := old_stdout        
 
-        // Write the initialization code that calls said function
+        // Write the initialization code in said function
         IO.WriteLn "void init_", loop_index, "() {"
         XL2C_Stmt What
         IO.WriteLn "}"

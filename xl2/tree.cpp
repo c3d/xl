@@ -58,7 +58,7 @@ void XLBlock::Output(ostream &o)
 {
     if (outputDebug)
     {
-        if (opening == '\t')
+        if (opening == INDENT_MARKER)
             o << "(BLOCK "
               << indent << nl_indent
               << *child << unindent << nl_indent
@@ -68,7 +68,7 @@ void XLBlock::Output(ostream &o)
     }
     else
     {
-        if (opening == '\t')
+        if (opening == INDENT_MARKER)
             o << indent << nl_indent << *child << unindent << nl_indent;
         else
             o << opening << *child << closing;

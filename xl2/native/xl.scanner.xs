@@ -121,7 +121,32 @@ module XL.SCANNER with
 
 
     // Type representing the scanner
-    type scanner_data
+    type scanner_data is record with
+    // ------------------------------------------------------------------------
+    //   Implementation of the scanner type
+    // ------------------------------------------------------------------------
+
+        // Attributes of last scanned token
+        token           : text      // Complete spelling of last token read
+        string_value    : text      // String value (inside quotes)
+        real_value      : real      // Numeric value for real / int tokens
+        integer_value   : integer
+        base            : integer   // Base for real/int tokens
+
+        // Position attributes
+        column          : integer   // Column in file
+        indent          : integer   // Current indent
+        position        : integer   // Current character count
+
+        // Configuration of block characters
+        blocks          : map[text, text]
+
+        // Private fields
+        input           : IO.file   // Text file we read from
+        indents         : string of integer
+        indent_char     : character
+        checking_indent : boolean
+        setting_indent  : boolean
     type scanner is access to scanner_data
 
     // Create a new scanner

@@ -46,54 +46,36 @@ module XL.PARSER.TREE is
                 result += ASCII.tolower C
 
 
-    function FindInfo(from : tree; kind : integer) return tree_info_list is
+    function FindInfo(from : tree; name : text) return info is
     // ------------------------------------------------------------------------
     //   Find the associated info record, or return nil
     // ------------------------------------------------------------------------
-        previous : tree_info_list := nil
-
-        // Search info list for the appropriate kind
-        result := from.info
-        while result <> nil loop
-            exit if result.kind = kind
-            previous := result
-            result := result.next
-
-        // Place returned info at head of list
-        if result <> nil and previous <> nil then
-            previous.next := result.next
-            result.next := from.info
-            from.info := result
+        return from.info[name]
 
 
-    procedure SetInfo(from : tree; info: tree_info_list) is
+    procedure SetInfo(from : tree; name : text; data : info) is
     // ------------------------------------------------------------------------
     //   Add given info to the info list for the tree
     // ------------------------------------------------------------------------
-        assert info.next = nil
-        info.next := from.info
-        from.info := info
+        if data <> nil then
+            old : info := from.info[name];
+            if old = data then
+                // Already done
+                return
+            else if old <> nil then
+                delete old
+
+            from.info[name] := data
 
 
-    procedure PurgeInfo(from : tree; kind : integer) is
+    procedure PurgeInfo(from : tree; name : text) is
     // ------------------------------------------------------------------------
     //  Find if there is an entry, if so purge it
     // ------------------------------------------------------------------------
-        info : tree_info_list := FindInfo(from, kind)
-        if info <> nil then
-            // It was placed at beginning of list
-            from.info := info.next
-            delete info
-
-
-    current_tree_info_kind : integer := 0
-
-    function AllocateInfoKind() return integer is
-    // ------------------------------------------------------------------------
-    //   Allocate a kind for tree info
-    // ------------------------------------------------------------------------
-        current_tree_info_kind += 1
-        return current_tree_info_kind
+        data : info := FindInfo(from, name)
+        if data <> nil then
+            delete data
+            from.info[name] := nil
 
 
     function Matches (test : PT.tree;
@@ -111,11 +93,13 @@ module XL.PARSER.TREE is
         // If so, check if we saw the same name, and then check compatibility
         // If not, check 
         if ref.kind = PT.xlWILDCARD then
-            R : PT.wildcard_tree := PT.wildcard_tree(ref)
+            R : ref as PT.wildcard_tree
 
             // Did we see this name already?
             if count(arg, R.name) > 0 then
                 empty_args : tree_map
+                if verbose then
+                    IO.WriteLn "/* Already found ", R.name, ", checking */"
                 result := Matches(test, arg[R.name], empty_args)
                 if result > 0 then
                     return result + 1
@@ -133,32 +117,32 @@ module XL.PARSER.TREE is
 
         // For each kind of atom, check and return 0 or 1
         if test.kind = PT.xlINTEGER then
-            T : PT.integer_tree := PT.integer_tree(test)
-            R : PT.integer_tree := PT.integer_tree(ref)
+            T : test as PT.integer_tree
+            R : ref as PT.integer_tree
             if T.value = R.value then
                 return 1
             if verbose then IO.Writeln "/* Failed intval */"
             return 0
 
         if test.kind = PT.xlREAL then
-            T : PT.real_tree := PT.real_tree(test)
-            R : PT.real_tree := PT.real_tree(ref)
+            T : test as PT.real_tree
+            R : ref as PT.real_tree
             if T.value = R.value then
                 return 1
             if verbose then IO.Writeln "/* Failed realval */"
             return 0
 
         if test.kind = PT.xlTEXT then
-            T : PT.text_tree := PT.text_tree(test)
-            R : PT.text_tree := PT.text_tree(ref)
+            T : test as PT.text_tree
+            R : ref as PT.text_tree
             if T.value = R.value and T.quote = R.quote then
                 return 1
             if verbose then IO.Writeln "/* Failed textval */"
             return 0
 
         if test.kind = PT.xlNAME then
-            T : PT.name_tree := PT.name_tree(test)
-            R : PT.name_tree := PT.name_tree(ref)
+            T : test as PT.name_tree
+            R : ref as PT.name_tree
             if XLNormalize(T.value) = XLNormalize(R.value) then
                 return 1
             if verbose then IO.Writeln "/* Failed nameval */"
@@ -166,8 +150,8 @@ module XL.PARSER.TREE is
 
         // For non-atoms, check recursively
         if test.kind = PT.xlBLOCK then
-            T : PT.block_tree := PT.block_tree(test)
-            R : PT.block_tree := PT.block_tree(ref)
+            T : test as PT.block_tree
+            R : ref as PT.block_tree
             if T.opening = R.opening and T.closing = R.closing then
                 result := Matches(T.child, R.child, arg)
                 if result > 0 then
@@ -180,8 +164,8 @@ module XL.PARSER.TREE is
             return 0
 
         if test.kind = PT.xlPREFIX then
-            T : PT.prefix_tree := PT.prefix_tree(test)
-            R : PT.prefix_tree := PT.prefix_tree(ref)
+            T : test as PT.prefix_tree
+            R : ref as PT.prefix_tree
             l_result : integer := Matches(T.left, R.left, arg)
             if l_result > 0 then
                 r_result : integer := Matches(T.right, R.right, arg)
@@ -191,14 +175,18 @@ module XL.PARSER.TREE is
             return 0
 
         if test.kind = PT.xlINFIX then
-            T : PT.infix_tree := PT.infix_tree(test)
-            R : PT.infix_tree := PT.infix_tree(ref)
+            T : test as PT.infix_tree
+            R : ref as PT.infix_tree
             if T.name = R.name then
                 l_result : integer := Matches(T.left, R.left, arg)
                 if l_result > 0 then
                     r_result : integer := Matches(T.right, R.right, arg)
                     if r_result > 0 then
                         return l_result + r_result
+                    else if verbose then
+                        IO.WriteLn "/* Failed left */"
+                else if verbose then
+                    IO.WriteLn "/* Failed left */"
             if verbose then IO.Writeln "/* Failed infix */"
             return 0
 
@@ -241,19 +229,7 @@ module XL.TEXT_IO with
 //   Implements an extension of the TEXT_IO module for parse trees
 // ----------------------------------------------------------------------------
 
-    // Pseudo type to control indentation
-    type indent_pseudo
-    type indent_control is access to indent_pseudo
-    indent : indent_control := indent_control(3)
-    unindent : indent_control := indent_control(-3)
-    newline : indent_control := indent_control(0)
     current_tree_indent : integer := 0
-
-    // Pseudo-type to control debug mode
-    type debug_pseudo
-    type debug_control is access to debug_pseudo
-    show_debug : debug_control := debug_controL(true)
-    hide_debug : debug_control := debug_control(false)
     current_tree_debug : boolean := false
 
 
@@ -282,22 +258,22 @@ module XL.TEXT_IO with
     //    For debugging purpose, write a tree
     // ------------------------------------------------------------------------
         if what.kind = PT.xlINTEGER then
-            T : PT.integer_tree := PT.integer_tree(what)
+            T : what as PT.integer_tree
             IO.write T.value
         else if what.kind = PT.xlREAL then
-            T : PT.real_tree := PT.real_tree(what)
+            T : what as PT.real_tree
             IO.write T.value
         else if what.kind = PT.xlTEXT then
-            T : PT.text_tree := PT.text_tree(what)
+            T : what as PT.text_tree
             IO.write T.quote, T.value, T.quote
         else if what.kind = PT.xlNAME then
-            T : PT.name_tree := PT.name_tree(what)
+            T : what as PT.name_tree
             IO.write T.value
         else if what.kind = PT.xlWILDCARD then
-            T : PT.wildcard_tree := PT.wildcard_tree(what)
-            IO.write "WILDCARD(", T.name, ")"
+            T : what as PT.wildcard_tree
+            IO.write "[/", T.name, "/]"
         else if what.kind = PT.xlBLOCK then
-            T : PT.block_tree := PT.block_tree(what)
+            T : what as PT.block_tree
             if ASCII.is_line_break(T.closing) then
                 if current_tree_debug then
                     IO.write "{BL ", indent, T.child, unindent, " BL}"
@@ -306,17 +282,17 @@ module XL.TEXT_IO with
             else
                 IO.write T.opening, T.child, T.closing
         else if what.kind = PT.xlPREFIX then
-            T : PT.prefix_tree := PT.prefix_tree(what)
+            T : what as PT.prefix_tree  
             if current_tree_debug then
-                IO.write '[', T.left, ' ', T.right, ']'
+                IO.write "[PRE: ", T.left, ' ', T.right, ']'
             else
                 IO.write T.left, ' ', T.right
         else if what.kind = PT.xlINFIX then
-            T : PT.infix_tree := PT.infix_tree(what)
+            T : what as PT.infix_tree
             if T.name = ASCII.CR then
                 IO.write T.left, newline, T.right
             else if current_tree_debug then
-                IO.write '(', T.left, ' ', T.name, ' ', T.right, ')'
+                IO.write "(INF: ", T.name, ' ', T.left, ' ', T.right, ')'
             else
                 IO.write T.left, ' ', T.name, ' ', T.right
 

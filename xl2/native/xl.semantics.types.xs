@@ -31,7 +31,7 @@ module XL.SEMANTICS.TYPES with
 //   Implements data type representation
 // ----------------------------------------------------------------------------
 
-    type any_type_data is PT.tree_info with
+    type any_type_data is PT.info_data with
     // ------------------------------------------------------------------------
     //   All that the compiler knows about a type
     // ------------------------------------------------------------------------
@@ -51,16 +51,21 @@ module XL.SEMANTICS.TYPES with
         bit_size                : integer
         source_tree             : PT.tree
         name                    : PT.tree // Not always there, may be nil
+        machine_type            : PT.name_tree
 
     type any_type is access to any_type_data
 
 
-    // Evaluate a type
-        
+    // Evaluate a type expression
+    function EvaluateType (type_expr : PT.tree) return any_type
 
+    // Check if two types are identical
+    function SameType (t1 : any_type; t2: any_type) return boolean
 
-    // The kind used for type info
-    type_info_kind   : integer := PT.AllocateInfoKind()
+    // Record the type in a tree
+    procedure SetType(tree : PT.tree; type : any_type)
+    function Type(tree : PT.tree) return any_type
+
 
     // The types for literals
     integer_type     : PT.tree := nil
@@ -68,3 +73,5 @@ module XL.SEMANTICS.TYPES with
     boolean_type     : PT.tree := nil
     character_type   : PT.tree := nil
     text_type        : PT.tree := nil
+
+    procedure InitializeTypes

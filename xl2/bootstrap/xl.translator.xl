@@ -50,6 +50,7 @@ module XL.TRANSLATOR is
     procedure XL2C_Enum (input : PT.tree; out enums : enum_list)
     procedure XL2C_EnumName (name : PT.tree; enums : enum_list)
     procedure XL2C_Import (input : PT.tree; alias : PT.tree)
+    procedure XL2C_PendingImports()
     procedure XL2C_Module (name : PT.tree; body : PT.tree)
     procedure XL2C_Namespace (name : PT.tree)
     procedure XL2C_Translate (what : PT.tree; how : PT.tree)
@@ -106,7 +107,7 @@ module XL.TRANSLATOR is
             T := XLNormalize(T)
             IO.WriteLn "xl::parser::tree::tree ", T, "("
             IO.WriteLn "xl::parser::tree::tree input) {"
-            IO.WriteLn "return xl::symbols::lookup("
+            IO.WriteLn "return xl::symbols::lookuprewrite("
             IO.WriteLn "xl::translator::context, ", '"', T, '"', ", input);"
             IO.WriteLn "}"
         IO.WriteLn "}}"
@@ -149,6 +150,7 @@ module XL.TRANSLATOR is
         rename "text",       "::text"        
 
         XL2C input
+        XL2C_PendingImports
 
         EmitSemanticsPlugins
         EmitXLInitAndTerm
@@ -592,6 +594,18 @@ module XL.TRANSLATOR is
                 XL2C C
 
             when
+                'A' : 'B' as 'C'
+            then
+                XL2C C
+                IO.write " "
+                XL2C A
+                IO.write " = static_cast< "
+                XL2C C
+                IO.Write " > ("
+                XL2C B
+                IO.Write ")"
+
+            when
                 'A' : 'B'
             then
                 XL2C B
@@ -661,7 +675,7 @@ module XL.TRANSLATOR is
                 IO.Writeln "};"
 
                 // Emit the text conversion function
-                XL2C_EnumName T, enums
+                // XL2C_EnumName T, enums
 
             when
                 type 'X' is 'Y'
@@ -865,7 +879,7 @@ module XL.TRANSLATOR is
                 // For non-atoms, check recursively
                 if input.kind = PT.xlBLOCK then
                     T : PT.block_tree := PT.block_tree(input)
-                    if ASCII.is_line_break (T.closing) then
+                    if T.opening = PR.INDENT_MARKER then
                         IO.writeln "{"
                         XL2C_Stmt T.child
                         IO.writeln "}"
@@ -955,7 +969,6 @@ module XL.TRANSLATOR is
         module_name[imported] := cplusified
 
         interface_name : text := imported + ".xs"
-        body_name      : text := imported + ".xl"
 
         done := module_imports[imported]
         if (done & 1) = 0 then
@@ -970,20 +983,30 @@ module XL.TRANSLATOR is
             IO.WriteLn ""
             IO.WriteLn "// End of Interface ", interface_name, " done=", done
 
-        if (done & 2) = 0 then
-            IO.WriteLn ""
-            IO.WriteLn "// Body ", body_name, " done=", done
-            body_parser : PR.parser := PR.NewParser(body_name)
-            body_tree   : PT.tree := PR.Parse(body_parser)
-            module_imports[imported] |= 2
-            if body_tree <> nil then
-                XL2C_Stmt body_tree
-                done |= 2
-            IO.WriteLn ""
-            IO.WriteLn "// End of Body ", body_name, " done=", done
 
-        if done = 0 then
-            IO.Writeln "*** Module ", imported, " not found"
+    procedure XL2C_PendingImports() is
+    // ------------------------------------------------------------------------
+    //    Emit code for pending imports
+    // ------------------------------------------------------------------------
+
+        someChange : boolean := true
+        while someChange loop
+            imported   : text
+            someChange := false
+            for imported in module_imports loop
+                exit if someChange
+                if (module_imports[imported] & 2) = 0 then
+                    body_name      : text := imported + ".xl"
+                    IO.WriteLn ""
+                    IO.WriteLn "// Body ", body_name
+                    body_parser : PR.parser := PR.NewParser(body_name)
+                    body_tree   : PT.tree := PR.Parse(body_parser)
+                    module_imports[imported] |= 2
+                    if body_tree <> nil then
+                        XL2C_Stmt body_tree
+                        someChange := true
+                    IO.WriteLn ""
+                    IO.WriteLn "// End of Body ", body_name
 
 
     procedure XL2C_Namespace (name : PT.tree) is
@@ -1120,10 +1143,10 @@ module XL.TRANSLATOR is
             IO.Writeln "xl::parser::tree::newblock("
             XL2C_Quote T.child, args, nesting+2, wildcard
             IO.Write ", "
-            if ASCII.is_line_break(T.closing) then
-               IO.Write "'\t', '\n'"
+            if T.opening = PR.INDENT_MARKER then
+               IO.Write """I+"", ""I-"""
             else
-               IO.Write "'", T.opening, "', '", T.closing, "'"
+               IO.Write '"', T.opening, """, """, T.closing, '"'
             IO.Write ")"
 
         if form.kind = PT.xlPREFIX then
@@ -1147,6 +1170,41 @@ module XL.TRANSLATOR is
             IO.WriteLn ")"
 
 
+    procedure XL2C_TranslateOne (to_translate: PT.tree; ToMatch : PT.tree; Body : PT.tree; Condition : PT.tree := nil) is
+    // ------------------------------------------------------------------------
+    //    Translate one 'when' clause in translate statements
+    // ------------------------------------------------------------------------
+        args : args_map
+        loop_index += 1
+
+        IO.WriteLn "{"
+        IO.WriteLn "static xl::parser::tree::tree ref", loop_index, "="
+        XL2C_Quote ToMatch, args, 2, true
+        IO.WriteLn ";"
+        IO.WriteLn "xl::parser::tree::treemap args", loop_index, ";"
+        IO.Write "if (xl::parser::tree::matches("
+        XL2C to_translate
+        IO.Writeln ", ref", loop_index, ", args", loop_index, ")) {"
+
+        N : text
+        for N in args loop
+            Nm : text := XLNormalize(N)
+            IO.Write "xl::parser::tree::tree ", Nm
+            IO.WriteLn " = args",loop_index,"[text(", '"', Nm,'"', ")];"
+
+        if Condition <> nil then
+            IO.Write "if ("
+            XL2C Condition
+            IO.WriteLn ") {"
+        XL2C_Stmt Body
+
+        IO.WriteLn "XLtranslateDone = true;"
+        IO.Writeln "break;"
+        IO.WriteLn "}}"
+        if Condition <> nil then
+            IO.WriteLn "}"
+
+
 
     procedure XL2C_Translate (to_translate : PT.tree; how : PT.tree) is
     // ------------------------------------------------------------------------
@@ -1157,32 +1215,30 @@ module XL.TRANSLATOR is
            when
               when
                   'ToMatch'
+              where
+                  'Condition'
               then
                   'Body'
            then
-               args : args_map
-               loop_index += 1
+              Xl2C_TranslateOne to_translate, ToMatch, Body, Condition
+           when
+              when ('ToMatch') where 'Condition' then
+                  'Body'
+           then
+              Xl2C_TranslateOne to_translate, ToMatch, Body, Condition
 
-               IO.WriteLn "{"
-               IO.WriteLn "static xl::parser::tree::tree ref", loop_index, "="
-               XL2C_Quote ToMatch, args, 2, true
-               IO.WriteLn ";"
-               IO.WriteLn "xl::parser::tree::treemap args", loop_index, ";"
-               IO.Write "if (xl::parser::tree::matches("
-               XL2C to_translate
-               IO.Writeln ", ref", loop_index, ", args", loop_index, ")) {"
-
-               N : text
-               for N in args loop
-                   Nm : text := XLNormalize(N)
-                   IO.Write "xl::parser::tree::tree ", Nm
-                   IO.WriteLn " = args",loop_index,"[text(", '"', Nm,'"', ")];"
-
-               XL2C_Stmt Body
-               
-               IO.WriteLn "XLtranslateDone = true;"
-               IO.Writeln "break;"
-               IO.WriteLn "}}"
+           when
+              when
+                  'ToMatch'
+              then
+                  'Body'
+           then
+              Xl2C_TranslateOne to_translate, ToMatch, Body
+           when
+              when ('ToMatch') then
+                  'Body'
+           then
+              Xl2C_TranslateOne to_translate, ToMatch, Body
 
            when
                'A' else 'B'
@@ -1204,6 +1260,84 @@ module XL.TRANSLATOR is
               IO.WriteLn IO.show_debug, "[[", how, "]]"
 
 
+    procedure XL2C_SemanticsTranslationOne(Name : PT.name_tree; ToMatch : PT.tree; Body : PT.tree; Condition : PT.tree := nil) is
+    // ------------------------------------------------------------------------
+    //   One 'when' clause in translations
+    // ------------------------------------------------------------------------
+        args : args_map
+        loop_index += 1
+
+        // Record that we had a translation for that name
+        translations [XLNormalize(Name.value)] := 1
+
+        // Write the initialization of the symbol table
+        old_stdout : IO.output_file := IO.standard_output
+        new_stdout : IO.output_string_stream := IO.open_string_stream()
+        IO.standard_output := new_stdout
+
+        IO.WriteLn "{"
+        IO.WriteLn "static xl::parser::tree::tree ref ="
+        XL2C_Quote ToMatch, args, 2, true
+        IO.WriteLn ";"
+        IO.WriteLn "xl::symbols::rewrite rew ="
+        IO.WriteLn "new xl::symbols::rewritedata;"
+        IO.WriteLn "rew->referenceform = ref;"
+        if Condition <> nil then
+            IO.WriteLn "rew->scoreadjust = ", current_module, "scoreadjust_", loop_index, ";"
+        else
+            IO.WriteLn "rew->scoreadjust = 0;"
+        IO.WriteLn "rew->translator = "
+        IO.WriteLn current_module, "translator_", loop_index, ";"
+        IO.WriteLn "xl::symbols::enterrewrite("
+        IO.WriteLn "  xl::translator::context,"
+        IO.WriteLn "  ", '"', XLNormalize(Name.value), '"', ","
+        IO.WriteLn "  rew);"
+        IO.WriteLn "}"
+
+        semantics_translations_init+=IO.close_string_stream(new_stdout)
+        IO.standard_output := old_stdout        
+
+
+        // Write the callback function
+        IO.WriteLn "xl::parser::tree::tree translator_", loop_index
+        IO.WriteLn "  (xl::parser::tree::tree input,"
+        IO.WriteLn "   xl::symbols::rewrite info,"
+        IO.WriteLn "   xl::parser::tree::treemap &Args) {"
+
+        N : text
+        for N in args loop
+            Nm : text := XLNormalize(N)
+            IO.Write "xl::parser::tree::tree ", Nm
+            IO.WriteLn " = Args[text(", '"',Nm,'"', ")];"
+            IO.WriteLn Nm, "=", Nm, ";"
+        IO.WriteLn "xl::parser::tree::tree result = input;"
+
+        XL2C_Stmt Body
+        IO.WriteLn "return result;"
+        IO.WriteLn "}"
+
+        // Write the score adjust function if necessary
+        if Condition <> nil then
+            IO.WriteLn "int scoreadjust_", loop_index, "("
+            IO.WriteLn "xl::parser::tree::tree Test,"
+            IO.WriteLn "xl::symbols::rewrite Info,"
+            IO.WriteLn "xl::parser::tree::treemap &Args,"
+            IO.WriteLn "int Depth, int Score) {"
+
+            N : text
+            for N in args loop
+                Nm : text := XLNormalize(N)
+                IO.Write "xl::parser::tree::tree ", Nm
+                IO.WriteLn " = Args[text(", '"',Nm,'"', ")];"
+                IO.WriteLn Nm, "=", Nm, ";"
+            IO.WriteLn "int result = Score + 1;"
+            IO.Write "if (!("
+            XL2C Condition
+            IO.WriteLn ")) result = 0;"
+            IO.WriteLn "return result;"
+            IO.WriteLn "}"
+
+
     procedure XL2C_SemanticsTranslation (Name : PT.name_tree; How: PT.tree) is
     // ------------------------------------------------------------------------
     //    Translate a semantics_translation statement
@@ -1214,56 +1348,30 @@ module XL.TRANSLATOR is
            when
               when
                   'ToMatch'
+              where
+                  'Condition'
               then
                   'Body'
            then
-               args : args_map
-               loop_index += 1
+               XL2C_SemanticsTranslationOne Name, ToMatch, Body, Condition
+           when
+              when ('ToMatch') where 'Condition' then
+                  'Body'
+           then
+               XL2C_SemanticsTranslationOne Name, ToMatch, Body, Condition
 
-               // Record that we had a translation for that name
-               translations [XLNormalize(Name.value)] := 1
-
-               // Write the initialization of the symbol table
-               old_stdout : IO.output_file := IO.standard_output
-               new_stdout : IO.output_string_stream := IO.open_string_stream()
-               IO.standard_output := new_stdout
-
-               IO.WriteLn "{"
-               IO.WriteLn "static xl::parser::tree::tree ref ="
-               XL2C_Quote ToMatch, args, 2, true
-               IO.WriteLn ";"
-               IO.WriteLn "xl::symbols::rewrite rew ="
-               IO.WriteLn "new xl::symbols::rewritedata;"
-               IO.WriteLn "rew->referenceform = ref;"
-               IO.WriteLn "rew->scoreadjust = 0;"
-               IO.WriteLn "rew->translator = "
-               IO.WriteLn current_module, "translator_", loop_index, ";"
-               IO.WriteLn "xl::symbols::enter("
-               IO.WriteLn "  xl::translator::context,"
-               IO.WriteLn "  ", '"', XLNormalize(Name.value), '"', ","
-               IO.WriteLn "  rew);"
-               IO.WriteLn "}"
-
-               semantics_translations_init+=IO.close_string_stream(new_stdout)
-               IO.standard_output := old_stdout        
-
-
-               // Write the callback function
-               IO.WriteLn "xl::parser::tree::tree translator_", loop_index
-               IO.WriteLn "  (xl::parser::tree::tree input,"
-               IO.WriteLn "   xl::symbols::rewrite info,"
-               IO.WriteLn "   xl::parser::tree::treemap &args) {"
-               
-               N : text
-               for N in args loop
-                   Nm : text := XLNormalize(N)
-                   IO.Write "xl::parser::tree::tree ", Nm
-                   IO.WriteLn " = args[text(", '"',Nm,'"', ")];"
-               IO.WriteLn "xl::parser::tree::tree result = input;"
-
-               XL2C_Stmt Body
-               IO.WriteLn "return result;"
-               IO.WriteLn "}"
+           when
+              when
+                  'ToMatch'
+              then
+                  'Body'
+           then
+               XL2C_SemanticsTranslationOne Name, ToMatch, Body
+           when
+              when ('ToMatch') then
+                  'Body'
+           then
+               XL2C_SemanticsTranslationOne Name, ToMatch, Body
 
            when
               'A'
@@ -1291,7 +1399,7 @@ module XL.TRANSLATOR is
         initializations += IO.close_string_stream(new_stdout)
         IO.standard_output := old_stdout        
 
-        // Write the initialization code that calls said function
+        // Write the initialization code in said function
         IO.WriteLn "void init_", loop_index, "() {"
         XL2C_Stmt What
         IO.WriteLn "}"

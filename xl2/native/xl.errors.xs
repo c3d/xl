@@ -27,6 +27,11 @@ import PT = XL.PARSER.TREE
 
 module XL.ERRORS with
 
+    // Saving and restoring errors
+    procedure PushErrorContext()
+    function PopErrorContext() return text
+    procedure Display(E : text)
+
     // Signaling an error
     procedure Error (E : text; pos : integer; args : string of text)
 
@@ -46,3 +51,4 @@ module XL.ERRORS with
     procedure Error (E : text; arg : PT.tree; arg2 : PT.tree; arg3 : text)
     procedure Error (E : text; arg : PT.tree; arg2 : PT.tree; arg3 : PT.tree)
 
+    error_count : integer := 0

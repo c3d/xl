@@ -100,6 +100,18 @@ inline T & back(std::vector<T> &v)
 }
 
 
+inline bool back(std::vector<bool> &v)
+{
+    if (v.size() <= 0)
+    {
+        std::cerr << "Ouch, trying to get back of empty vector";
+        abort();
+    }
+    
+    return v.back();
+}
+
+
 template<class T>
 inline void clear(std::vector<T> &v)
 {
@@ -117,6 +129,22 @@ void popback(std::vector<T> &v)
     }
     
     v.pop_back();
+}
+
+
+template <class T>
+T *clone(T *input)
+{
+    if (input)
+        return new T(*input);
+    return 0;
+}
+
+
+template <class T>
+void copy(T *output, T *input)
+{
+    new(output) T(input);
 }
 
 
@@ -256,6 +284,7 @@ namespace xl
                 inline char tolower(char c) { return std::tolower(c); }
                 inline bool isspace(char c) { return std::isspace(c); }
                 inline bool islinebreak(char c) { return c == '\n'; }
+                inline bool islinebreak(::text c) { return c == "\n"; }
                 inline bool isdigit(char c) { return std::isdigit(c); }
                 inline bool ispunctuation(char c) { return std::ispunct(c); }
                 inline bool isletter(char c) { return std::isalpha(c); }

@@ -1,34 +1,43 @@
 INFIX
-        10 NEWLINE
-        15 ;
-        20 else loop
-        30 then
-        40 :
-        100 STATEMENT
-        105 is
-        190 return with
-        200 DEFAULT
-        215 ,
-        220 := += -= *= /= ^= |= &=
-        222 in of to
-        225 ..
-        230 and or xor
-        240 = < > <= >= <> !=
-        245 & |
-        250 + -
-        260 * /
-        270 ^ **
-        300 FUNCTION "(" ")" BLOCK
-        310 "{" "[" "]" "}"
-        320 .
+        10      NEWLINE
+        15      ;
+        20      else loop
+        30      then
+        35      where
+        40      :
+        100     STATEMENT
+        105     is as
+        190     return with written
+        200     DEFAULT
+        215     ,
+        220     := += -= *= /= ^= |= &=
+        222     in of to
+        225     ..
+        230     and or xor
+        240     = < > <= >= <> !=
+        245     & |
+        250     + -
+        260     * /
+        270     ^ **
+        300     FUNCTION
+        320     .
 
 PREFIX
-        120      exit
-        125      case if return while when
-        235     not in out
+        120     exit
+        125     case if return while when
+        235     not in out constant variable const var
         240     function procedure to module quote
         250     ! ~
         280     - + * /
         290     @
 
+BLOCK
+        300     '(' ')' '{' '}' '[' ']' INDENT UNINDENT
+
+TEXT
+        "<<" ">>"
                 
+COMMENT
+        "//" NEWLINE
+        "/*" "*/"
+

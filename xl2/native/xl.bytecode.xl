@@ -38,21 +38,20 @@ module XL.BYTECODE is
     // ------------------------------------------------------------------------
     //   By convention, we reserve the "@" prefix for bytecode instructions
         ins : bytecode
-        opcode_tree : PT.tree := PT.NewName(opcode)
+        op_tree : PT.tree := PT.NewName(opcode)
         if dst = "" then
-           ins := quote(@ 'opcode_tree')
+           ins := quote(@ 'op_tree')
         else
            dst_tree : bytecode := PT.NewName(dst)
            if src1 = "" then
-               ins := quote(@ 'opcode_tree', 'dst_tree')
+               ins := quote(@ 'op_tree' 'dst_tree')
            else
                src1_tree : bytecode := PT.NewName(src1)
                if src2 = "" then
-                   ins := quote(@ 'opcode_tree', 'dst_tree', 'src1_tree')
+                   ins := quote(@ 'op_tree' 'dst_tree' 'src1_tree')
                else
                    src2_tree : bytecode := PT.NewName(src2)
-                   ins:=quote(@ 'opcode_tree', 'dst_tree',
-                                'src1_tree', 'src2_tree')
+                   ins:=quote(@ 'op_tree' 'dst_tree' 'src1_tree' 'src2_tree')
 
         instructions := quote
             'instructions'
@@ -65,7 +64,7 @@ module XL.BYTECODE is
     //    Create the bytecode for a particular instruction
     // ------------------------------------------------------------------------
         name_tree : bytecode := PT.NewName(name)
-        result := quote (@ proc, 'name_tree')
+        result := quote (@proc 'name_tree')
 
 
     procedure CloseProcedure (in out parent : bytecode; proc : bytecode) is
@@ -73,7 +72,7 @@ module XL.BYTECODE is
     //   Close the bytecode for a particular procedure
     // ------------------------------------------------------------------------
         // Append 'end' marker to procedure
-        ins : bytecode := quote (@ end)
+        ins : bytecode := quote (@proc_end)
         proc := quote
             'proc'
             'ins'

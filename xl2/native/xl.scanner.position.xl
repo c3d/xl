@@ -121,7 +121,7 @@ module XL.SCANNER.POSITION is
                     column += 1
                     linetext += ch
                 offset -= 1
-                exit if offset <= 0
+                exit if offset <= 1
 
             // Read rest of line
             while IO.valid (file) loop

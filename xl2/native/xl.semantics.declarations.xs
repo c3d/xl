@@ -34,7 +34,7 @@ module XL.SEMANTICS.DECLARATIONS with
 
     type declaration_data
     type declaration is access to declaration_data
-    type declaration_data is PT.tree_info with
+    type declaration_data is PT.info_data with
     // ------------------------------------------------------------------------
     //   Information stored about declarations
     // ------------------------------------------------------------------------
@@ -48,25 +48,24 @@ module XL.SEMANTICS.DECLARATIONS with
         is_local                : boolean
         is_global               : boolean
         is_field                : boolean
-        is_generic              : boolean
-        is_generic_parameter    : boolean
-        is_polymorphic          : boolean
-        is_object               : boolean
-        is_type                 : boolean
-        is_subroutine           : boolean
-        is_reference            : boolean
-        is_instantiation        : boolean
-        is_compiler_generated   : boolean
 
         // Other information recorded about a declaration
-        source_tree             : PT.tree
-        initializer             : PT.tree
-        type_expression         : PT.tree
         name                    : PT.name_tree
+        machine_name            : PT.name_tree
+        type_source             : PT.tree
+        type                    : TY.any_type
+        machine_type            : PT.name_tree
+        initializer             : PT.tree
         written_as              : PT.tree
         precondition            : PT.tree
         postcondition           : PT.tree
-        declared_type           : TY.any_type
         interface               : declaration
         body                    : declaration
         frame_depth             : integer
+
+
+    function ProcessDeclaration (Names : PT.tree;
+                                 Type  : PT.tree;
+                                 Value : PT.tree;
+                                 HasIs : boolean) return PT.tree
+

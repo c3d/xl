@@ -235,9 +235,8 @@ bool XL2CTranslation::Block(XLBlock *input)
 //    Translate a block
 // ----------------------------------------------------------------------------
 {
-    switch(input->opening)
+    if (input->opening == INDENT_MARKER)
     {
-    case '\t':
         out << "{\n";
         XL2C(input->child);
         if (input->child->Kind() == xlNAME) {
@@ -250,12 +249,12 @@ bool XL2CTranslation::Block(XLBlock *input)
             out << "}\n";
         else
             out << ";\n}\n";
-        break;
-    default:
+    }
+    else
+    {
         out << input->opening;
         XL2C(input->child);
         out << input->closing;
-        break;
     }        
     return true;
 }
@@ -893,7 +892,7 @@ PREFIX(map)
 // ----------------------------------------------------------------------------
 {
     XLBlock *block = dynamic_cast<XLBlock *> (tree->right);
-    if (block && block->opening == '[' && block->closing == ']')
+    if (block && block->opening == text("[") && block->closing == text("]"))
     {
         out << "std::map < ";
         XL2C(block->child);
@@ -980,15 +979,15 @@ void TranslateForm(XLTree *form, args_map &args, int nesting = 3)
         out << "xl::parser::tree::newblock(\n";
         TranslateForm(((XLBlock *) form)->child, args, nesting+2);
         out << ", ";
-        if (((XLBlock *) form)->opening == '\t')
+        if (((XLBlock *) form)->opening == text(INDENT_MARKER))
         {
-            out << "'\\t', '\\n'";
+            out << "\"I+\", \"I-\"";
         }
         else
         {
-            out << "'" << ((XLBlock *) form)->opening << "'";
+            out << '"' << ((XLBlock *) form)->opening << '"';
             out << ", ";
-            out << "'" << ((XLBlock *) form)->closing << "'";
+            out << '"' << ((XLBlock *) form)->closing << '"';
         }
         out << ")";
         break;

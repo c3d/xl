@@ -133,6 +133,12 @@ module XL.PARSER.TREE is
                     r_result : integer := Matches(T.right, R.right, arg)
                     if r_result > 0 then
                         return l_result + r_result
+                    else if verbose then
+                        IO.WriteLn "/* Failed left */"
+                else if verbose then
+                    IO.WriteLn "/* Failed left */"
+            else if verbose then
+                IO.WriteLn "/* Failed name ", T.name, " <> ", R.name, " */"
             if verbose then IO.Writeln "/* Failed infix */"
             return 0
 

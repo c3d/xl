@@ -112,7 +112,7 @@ XLTree *XLContext::Find(text name)
 
 bool XLContext::IsComment(text Begin, text &End)
 // ----------------------------------------------------------------------------
-// 
+//   Check if something is in the comments table
 // ----------------------------------------------------------------------------
 {
     for (XLContext *c = this; c; c = c->parent)
@@ -128,5 +128,37 @@ bool XLContext::IsComment(text Begin, text &End)
 }
 
 
+bool XLContext::IsTextDelimiter(text Begin, text &End)
+// ----------------------------------------------------------------------------
+//    Check if something is in the text delimiters table
+// ----------------------------------------------------------------------------
+{
+    for (XLContext *c = this; c; c = c->parent)
+    {
+        comment_table::iterator found = c->text_delimiters.find(Begin);
+        if (found != c->text_delimiters.end())
+        {
+            End = found->second;
+            return true;
+        }
+    }
+    return false;
+}
 
 
+bool XLContext::IsBlock(text Begin, text &End)
+// ----------------------------------------------------------------------------
+// 
+// ----------------------------------------------------------------------------
+{
+    for (XLContext *c = this; c; c = c->parent)
+    {
+        block_table::iterator found = c->blocks.find(Begin);
+        if (found != c->blocks.end())
+        {
+            End = found->second;
+            return true;
+        }
+    }
+    return false;
+}

@@ -48,6 +48,7 @@ procedure Main is
             showParse := true
         else if name = "-tmatch" then
             XT.verbose := true
+            PT.verbose := true
         else
             P := PR.NewParser(name)
             theProgram := PR.Parse(P)

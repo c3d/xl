@@ -44,6 +44,10 @@ enum XLKind
 };
 
 
+#define INDENT_MARKER     "I+"
+#define UNINDENT_MARKER   "I-"
+
+
 struct XLTree
 // ----------------------------------------------------------------------------
 //   The base class for all XL trees
@@ -114,11 +118,11 @@ struct XLBlock : XLTree
 //   A parenthese operator
 // ----------------------------------------------------------------------------
 {
-    XLBlock(XLTree *c, char i, char o): child(c), opening(i), closing(o) {}
+    XLBlock(XLTree *c, text i, text o): child(c), opening(i), closing(o) {}
     virtual void        Output(ostream &o);
     virtual XLKind      Kind() { return xlBLOCK; }
     XLTree              *child;
-    char                opening, closing;
+    text                opening, closing;
 };
 
 

@@ -53,7 +53,24 @@ struct Pending
 };
 
 
-XLTree *XLParser::Parse(char closing_paren)
+static inline text ErrorNameOf(text what)
+// ----------------------------------------------------------------------------
+//   Return a visible name for special characters
+// ----------------------------------------------------------------------------
+{
+    if (what == "\n")
+        return "<newline>";
+    if (what == "\t")
+        return "<tab>";
+    if (what == "I+")
+        return "<indent>";
+    if (what == "I-")
+        return "<unindent>";
+    return what;
+}
+
+
+XLTree *XLParser::Parse(text closing_paren)
 // ----------------------------------------------------------------------------
 //   Parse input
 // ----------------------------------------------------------------------------
@@ -80,7 +97,7 @@ XLTree *XLParser::Parse(char closing_paren)
     text comment_end;
     token_t tok;
     bool done = false;
-    char opening, closing;
+    text opening, closing;
     int default_priority = context->default_priority;
     int function_priority = context->function_priority;
     int statement_priority = context->statement_priority;
@@ -250,43 +267,39 @@ XLTree *XLParser::Parse(char closing_paren)
             break;
         case tokPARCLOSE:
             // Check for mismatched parenthese here...
-            if (scanner.NameValue()[0] != closing_paren)
+            if (scanner.NameValue() != closing_paren)
                 XLError(E_ParseMismatchParen,
                         scanner.FileName(), scanner.FileLine(),
                         scanner.NameValue(),
-                        closing_paren == '\n'
-                        ? text("unindent")
-                        : text(&closing_paren, 1));
+                        ErrorNameOf(closing_paren));
             done = true;
             break;
         case tokUNINDENT:
             // Check for mismatched unindent here...
-            if (closing_paren != '\n')
+            if (closing_paren != UNINDENT_MARKER)
                 XLError(E_ParseMismatchParen,
                         scanner.FileName(), scanner.FileLine(),
                         text("unindent"),
-                        text(&closing_paren, 1));
+                        ErrorNameOf(closing_paren));
             done = true;
             break;
         case tokPAROPEN:
         case tokINDENT:
-            if (tok == tokPAROPEN)
+            if (tok == tokINDENT)
             {
-                opening = scanner.NameValue()[0];
-                switch (opening)
-                {
-                case '(': closing = ')'; name = "("; break;
-                case '[': closing = ']'; name = "["; break;
-                case '{': closing = '}'; name = "{" ; break;
-                default: MZ_ASSERT(!"Bad parenthese");
-                }
+                opening = INDENT_MARKER;
+                closing = UNINDENT_MARKER;
             }
             else
             {
-                opening = '\t';
-                closing = '\n';
-                name = "\t";
+                opening = scanner.NameValue()[0];
+                if (!gContext.IsBlock(opening, closing))
+                    XLError(E_ParseMismatchParen,
+                            scanner.FileName(), scanner.FileLine(),
+                            text("<internal error>"),
+                            ErrorNameOf(closing_paren));
             }
+            name = opening;
             paren_priority = context->InfixPriority(name);
 
             // Make sure 'foo.bar(x)' parses as '(foo.bar)(x)'

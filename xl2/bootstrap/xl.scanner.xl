@@ -30,32 +30,6 @@ import ASCII = XL.TEXT_IO.ENCODING.ASCII
 
 module XL.SCANNER is
 
-    type scanner_data is record with
-    // ------------------------------------------------------------------------
-    //   Implementation of the scanner type
-    // ------------------------------------------------------------------------
-
-        // Attributes of last scanned token
-        token           : text      // Complete spelling of last token read
-        string_value    : text      // String value (inside quotes)
-        real_value      : real      // Numeric value for real / int tokens
-        integer_value   : integer
-        base            : integer   // Base for real/int tokens
-
-        // Position attributes
-        file            : text      // File name
-        line            : integer   // Line in file
-        column          : integer   // Column in file
-        indent          : integer   // Current indent
-
-        // Private fields
-        input           : IO.file   // Text file we read from
-        indents         : string of integer
-        indent_char     : character
-        checking_indent : boolean
-        setting_indent  : boolean
-
-
     function DigitValue(digit : character) return integer is
     // ------------------------------------------------------------------------
     //   Return the value of the given character
@@ -341,17 +315,18 @@ module XL.SCANNER is
                 NextChar S, C
 
         // Look for parentheses
-        if C='(' or C=')' or C='{' or C='}' or C='[' or C=']' then
+        blk : text := text("") + C
+        if count(S.blocks, blk) > 0 then
             S.string_value := C
             S.token := C
-            if C='(' or C='{' or C='[' then
+            if S.blocks[blk] <> "" then
                 return tokPAROPEN
             return tokPARCLOSE
 
         // Other symbols
         while IO.valid S.input and ASCII.is_punctuation C loop
             exit if ASCII.is_quote C
-            exit if C='(' or C=')' or C='{' or C='}' or C='[' or C=']'
+            exit if count(S.blocks, text("") + C) > 0
             NextChar S, C
         IO.PutBack S.input, C
         return tokSYMBOL

@@ -34,6 +34,8 @@ class XLContext;
 typedef std::map<text, XLTree *>        symbol_table;
 typedef std::map<text, int>             priority_table;
 typedef std::map<text, text>            comment_table;
+typedef std::map<text, text>            text_delimiters_table;
+typedef std::map<text, text>            block_table;
 
 
 class XLContext
@@ -90,13 +92,31 @@ public:
         comments[Begin] = End;
         return *this;
     }
+    XLContext &         TextDelimiter(text Begin, text End)
+    {
+        text_delimiters[Begin] = End;
+        return *this;
+    }
     bool                IsComment(text Begin, text &end);
+    bool                IsTextDelimiter(text Begin, text &end);
+    XLContext &         Block(text Begin, text End)
+    {
+        blocks[Begin] = End;
+        return *this;
+    }
+    bool                IsBlock(text Begin, text &end);
+    bool                IsBlock(char Begin, text &end)
+    {
+        return IsBlock(text(&Begin, 1), end);
+    }
 
 private:
     XLContext *         parent;
     priority_table      infix_priority;
     priority_table      prefix_priority;
     comment_table       comments;
+    text_delimiters_table text_delimiters;
+    block_table         blocks;
     symbol_table        symbols;
     int                 priority;
 

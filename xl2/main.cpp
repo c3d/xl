@@ -1,6 +1,6 @@
 // ****************************************************************************
-//  main.cpp                        (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                            XL2 project 
+//  main.cpp                       (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                                XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
@@ -40,8 +40,13 @@ struct XLInitializeContext : XLAction
 //   For debugging: emit the things of interest
 // ----------------------------------------------------------------------------
 {
+    enum WhereAmI { inUnknown, inPrefix, inInfix,
+                    inComment, inCommentDef,
+                    inText, inTextDef,
+                    inBlock, inBlockDef };
+
     XLInitializeContext(XLContext &ctx):
-        context(ctx), priority(0), isPrefix(0) {}
+        context(ctx), priority(0), whereami(inUnknown) {}
     
     bool Name(XLName *input)
     {
@@ -61,13 +66,32 @@ struct XLInitializeContext : XLAction
 
     bool Enter(text txt)
     {
+        if (txt == text("NEWLINE"))
+            txt = "\n";
+        else if (txt == text("INDENT"))
+            txt = INDENT_MARKER;
+        else if (txt == text("UNINDENT"))
+            txt = UNINDENT_MARKER;
+
         if (txt == text("PREFIX"))
         {
-            isPrefix = 1;
+            whereami = inPrefix;
         }
         else if (txt == text("INFIX"))
         {
-            isPrefix = false;
+            whereami = inInfix;
+        }
+        else if (txt == text("COMMENT"))
+        {
+            whereami = inComment;
+        }
+        else if (txt == text("TEXT"))
+        {
+            whereami = inText;
+        }
+        else if (txt == text("BLOCK"))
+        {
+            whereami = inBlock;
         }
         else if (txt == text("STATEMENT"))
         {
@@ -81,27 +105,52 @@ struct XLInitializeContext : XLAction
         {
             context.default_priority = priority;
         }
-        else
+        else switch (whereami)
         {
-            if (txt == text("NEWLINE"))
-                txt = "\n";
-            else if (txt == text("BLOCK"))
-                txt = "\t";
-            if (isPrefix)
-            {
-                context.SetPrefixPriority(txt, priority);
-            }
-            else
-            {
-                context.SetInfixPriority(txt, priority);
-            }
+        case inPrefix:
+            context.SetPrefixPriority(txt, priority);
+            break;
+        case inInfix:
+            context.SetInfixPriority(txt, priority);
+            break;
+        case inComment:
+            entry = txt;
+            whereami = inCommentDef;
+            break;
+        case inCommentDef:
+            context.Comment(entry, txt);
+            whereami = inComment;
+            break;
+        case inText:
+            entry = txt;
+            whereami = inTextDef;
+            break;
+        case inTextDef:
+            context.TextDelimiter(entry, txt);
+            whereami = inComment;
+            break;
+        case inBlock:
+            entry = txt;
+            whereami = inBlockDef;
+            context.SetInfixPriority(entry, priority);
+            break;
+        case inBlockDef:
+            context.Block(entry, txt);
+            context.Block(txt, ""); // Mark to indentify single-char blocks
+            whereami = inBlock;
+            break;
+        case inUnknown:
+            std::cerr << "WARNING: Invalid syntax table format: "
+                      << txt << '\n';
+            break;
         }
         return false;
     }
 
     XLContext & context;
     int priority;
-    int isPrefix;
+    WhereAmI whereami;
+    text entry;
 };
 
 
@@ -125,6 +174,8 @@ void ReadContext(kstring file, XLContext &context)
     XLParser parser (file, &syntaxTable);
     XLTree *tree = parser.Parse();
 
+    // At first, I thought it was elegant.
+    // In reality, it is darn ugly. But hey, it's just throwaway code
     XLInitializeContext init(context);
     XLDo<XLInitializeContext> doInit(init);
     doInit(tree);
@@ -137,9 +188,9 @@ int main(int argc, char **argv)
 //   Parse the command line and run the compiler phases
 // ----------------------------------------------------------------------------
 {
-#   if CONFIG_USE_SBRK
-        char *low_water = (char *) sbrk(0);
-#   endif
+#if CONFIG_USE_SBRK
+    char *low_water = (char *) sbrk(0);
+#endif
 
     text cmd, end = "";
 
@@ -147,7 +198,6 @@ int main(int argc, char **argv)
     debug(NULL);
 
     // Initialize basic XL syntax from syntax description file
-    gContext.Comment("//", "\n");
     ReadContext("xl.syntax", gContext);
 
     // Initialize the C translator
@@ -173,11 +223,11 @@ int main(int argc, char **argv)
         XL2C(tree);
     }
 
-#   if CONFIG_USE_SBRK
+#if CONFIG_USE_SBRK
         IFTRACE(timing)
             fprintf(stderr, "Total memory usage: %ldK\n",
                     long ((char *) malloc(1) - low_water) / 1024);
-#   endif
+#endif
 
     return 0;
 }

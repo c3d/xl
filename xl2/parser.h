@@ -93,7 +93,7 @@ public:
         scanner(name), context(ctx) {}
 
 public:
-    XLTree *            Parse(char closing_paren = 0);
+    XLTree *            Parse(text closing_paren = "");
     XLScanner *         Scanner() { return &scanner; }
 
 private:

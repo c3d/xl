@@ -28,9 +28,20 @@ import CS = XL.UI.CONSOLE
 import PT = XL.PARSER.TREE
 import PR = XL.PARSER
 import IO = XL.TEXT_IO
-import XT = XL.TRANSLATOR
+import XLT = XL.TRANSLATOR
 import CG = XL.CODE_GENERATOR
+import SYM = XL.SYMBOLS
 import ASCII = XL.TEXT_IO.ENCODING.ASCII
+
+// Things that we import just so that they get compiled
+import XL.SEMANTICS.TYPES
+import XL.SEMANTICS.DECLARATIONS
+import XL.SEMANTICS.TYPES.FUNCTIONS
+import XL.SEMANTICS.FUNCTIONS
+import XL.SEMANTICS.OVERLOAD
+
+// Plugins for Cranberry
+import XL.PLUGIN.CRANBERRY
 
 
 procedure Main is
@@ -47,14 +58,24 @@ procedure Main is
         name : text := CS.arguments[i]
         if name = "-tparse" then
             showParse := true
+        else if name = "-g" then
+            CG.debug := true
         else if name = "-tmatch" then
-            XT.verbose := true
+            XLT.verbose := true
             CG.verbose := true
             PT.verbose := true
+        else if name = "-tlookup" then
+            SYM.verbose := true
+        else if name = "-nosem" then
+            XLT.run_semantics := false
+        else if name = "-tsem" then
+            XLT.show_semantics := true
+        else if name = "-toverload" then
+            XL.SEMANTICS.OVERLOAD.verbose := true
         else
             P := PR.Open(name)
             theProgram := PR.Parse(P)
             PR.Close P
             if showParse then
                 Debug theProgram
-            XT.Compile theProgram      
+            XLT.Compile theProgram      
