@@ -52,7 +52,8 @@ module XL.PARSER.TREE with
     type integer_node is tree_node with
         value : integer
     type integer_tree is access to integer_node
-    function NewInteger(value : integer; pos : integer := -1) return integer_tree is
+    function NewInteger(value : integer;
+                        pos : integer := -1) return integer_tree is
         result.kind := xlINTEGER
         result.position := pos
         result.value := value
@@ -71,7 +72,9 @@ module XL.PARSER.TREE with
         value : text
         quote : character
     type text_tree is access to text_node
-    function NewText(value : text; quote : character; pos : integer := -1) return text_tree is
+    function NewText(value : text;
+                     quote : character;
+                     pos : integer := -1) return text_tree is
         result.kind := xlTEXT
         result.position := pos
         result.value := value
@@ -95,7 +98,9 @@ module XL.PARSER.TREE with
         opening : character
         closing : character
     type block_tree is access to block_node
-    function NewBlock(child : tree; opening : character; closing : character; pos : integer := -1) return block_tree is
+    function NewBlock(child : tree;
+                      opening : character; closing : character;
+                      pos : integer := -1) return block_tree is
         result.kind := xlBLOCK
         result.position := pos
         result.child := child
@@ -107,7 +112,9 @@ module XL.PARSER.TREE with
         left  : tree
         right : tree
     type prefix_tree is access to prefix_node
-    function NewPrefix(left : tree; right : tree; pos : integer := -1) return prefix_tree is
+    function NewPrefix(left : tree;
+                       right : tree;
+                       pos : integer := -1) return prefix_tree is
         result.kind := xlPREFIX
         result.position := pos
         result.left := left
@@ -119,7 +126,10 @@ module XL.PARSER.TREE with
         left  : tree
         right : tree
     type infix_tree is access to infix_node
-    function NewInfix(name: text; left: tree; right: tree; pos : integer := -1) return infix_tree is
+    function NewInfix(name: text;
+                      left: tree;
+                      right: tree;
+                      pos : integer := -1) return infix_tree is
         result.kind := xlINFIX
         result.position := pos
         result.name := name
@@ -131,7 +141,8 @@ module XL.PARSER.TREE with
     type wildcard_node is tree_node with
         name : text
     type wildcard_tree is access to wildcard_node
-    function NewWildcard(name : text; pos : integer := -1) return wildcard_tree is
+    function NewWildcard(name : text;
+                         pos : integer := -1) return wildcard_tree is
         result.kind := xlWILDCARD
         result.position := pos
         result.name := name
@@ -144,5 +155,7 @@ module XL.PARSER.TREE with
     // ========================================================================
 
     type tree_map is map[text, PT.tree]
-    function Matches (test : PT.tree; ref : PT.tree; in out arg : tree_map) return integer
+    function Matches (test : PT.tree;
+                      ref : PT.tree;
+                      in out arg : tree_map) return integer
     verbose : boolean := false

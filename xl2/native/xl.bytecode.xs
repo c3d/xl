@@ -30,8 +30,13 @@ module XL.BYTECODE with
     type bytecode is PT.tree
 
     // Add an instruction to a bytecode sequence
-    procedure Instruction (in out instructions : bytecode; opcode : text; dst : text := ""; src1 : text := ""; src2 : text := "")
+    procedure Instruction (in out instructions : bytecode;
+                           opcode : text;
+                           dst : text := "";
+                           src1 : text := "";
+                           src2 : text := "")
 
     // Create the bytecode for a particular procedure
-    function OpenProcedure (in out parent : bytecode; name : text) return bytecode
+    function OpenProcedure (in out parent : bytecode;
+                            name : text) return bytecode
     procedure CloseProcedure (in out parent : bytecode; proc : bytecode)

@@ -33,7 +33,9 @@ module XL.PARSER.TREE is
 //    Implementation of parse tree functions
 // ----------------------------------------------------------------------------
 
-    function Matches (test : PT.tree; ref : PT.tree; in out arg : tree_map) return integer is
+    function Matches (test : PT.tree;
+                      ref : PT.tree;
+                      in out arg : tree_map) return integer is
     // ------------------------------------------------------------------------
     //   Check if the test tree matches the reference tree, return score
     // ------------------------------------------------------------------------

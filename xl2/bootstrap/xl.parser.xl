@@ -129,6 +129,8 @@ module XL.PARSER is
         new_statement           : boolean       := true
         pending_token           : SC.token      := SC.tokNONE
         S                       : SC.scanner    := P.scanner
+        line_continuation       : boolean       := false
+        extra_indents           : integer       := 0
 
         while not done loop
             // If no token pending, scan one
@@ -184,6 +186,17 @@ module XL.PARSER is
                 tok := pending_token
                 pending_token := SC.tokNONE
 
+            // Check if we are dealing with a trailing operator
+            if line_continuation then
+                if tok = SC.tokINDENT then
+                    tok := SC.tokNEWLINE
+                    extra_indents += 1
+            else if extra_indents > 0 then
+                if tok = SC.tokUNINDENT then
+                    extra_indents -= 1
+                    tok := SC.tokNEWLINE
+
+            // Check token result
             if tok = SC.tokEOF or tok = SC.tokERROR then
                 done := true
             else if tok = SC.tokINTEGER then
@@ -268,11 +281,13 @@ module XL.PARSER is
                 done := true
 
             else if tok = SC.tokPAROPEN or tok = SC.tokINDENT then
+                old_indent : integer
                 if tok = SC.tokPAROPEN then
                     opening := S.token[0]
                     if opening = '(' then closing := ')'
                     if opening = '{' then closing := '}'
                     if opening = '[' then closing := ']'
+                    old_indent := SC.OpenParen(S)
                 else
                     opening := ASCII.TAB[0]
                     closing := ASCII.CR[0]
@@ -291,6 +306,7 @@ module XL.PARSER is
 
                 // Parse the contents of the parenthese
                 right := Parse(P, closing)
+                if tok = SC.tokPAROPEN then SC.CloseParen S, old_indent
                 if right = nil then
                     right := PT.NewName ""
                 right := PT.NewBlock(right, opening, closing)
@@ -310,6 +326,7 @@ module XL.PARSER is
                 assert not "Invalid token"
 
             // Check what is the current result
+            line_continuation := false
             if result = nil then
 
                 // First thing we parse
@@ -338,6 +355,8 @@ module XL.PARSER is
                     T.argument := left
                     T.priority := infix_priority
                     stack += T
+                    if infix_priority > default_priority then
+                        line_continuation := true
                     left := nil
 
                     // Start over with "not"
@@ -371,6 +390,8 @@ module XL.PARSER is
                         T.argument := left
                         T.priority := infix_priority
                         stack += T
+                        if infix_priority > default_priority then
+                            line_continuation := true
                         result := nil
 
                     left := nil

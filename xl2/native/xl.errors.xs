@@ -43,4 +43,5 @@ module XL.ERRORS with
     procedure Error (E : error_code; pos : integer)
     procedure Error (E : error_code; pos : integer; arg : text)
     procedure Error (E : error_code; pos : integer; arg : text; arg2 : text)
-    procedure Error (E : error_code; pos : integer; arg : text; arg2 : text; arg3 : text)
+    procedure Error (E : error_code; pos : integer;
+                     arg : text; arg2 : text; arg3 : text)

@@ -103,6 +103,7 @@ module XL.TRANSLATOR is
         rename "and",        "&&"
         rename "or",         "||"
         rename "xor",        "^"
+        rename "bitwisenot", "~"
         rename "nil",        "0"
 
         rename "text",       "::text"        

@@ -36,10 +36,16 @@ module XL.SCANNER.POSITION with
     procedure CloseFile (pos : integer)
 
     // Return file, start and end for a global position
-    procedure PositionToFile (pos : integer; out file : text; out offset : integer)
+    procedure PositionToFile (pos : integer;
+                              out file : text;
+                              out offset : integer)
 
     // Return file, line and column for a global position
-    procedure PositionToLine (pos : integer; out file : text; out line : integer; out column : integer; out linetext : text)
+    procedure PositionToLine (pos : integer;
+                              out file : text;
+                              out line : integer;
+                              out column : integer;
+                              out linetext : text)
 
 
     

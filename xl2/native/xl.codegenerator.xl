@@ -52,8 +52,10 @@ module XL.CODE_GENERATOR is
     procedure XL2C_Module (name : BC.bytecode; body : BC.bytecode)
     procedure XL2C_Namespace (name : BC.bytecode)
     procedure XL2C_Translate (what : BC.bytecode; how : BC.bytecode)
-    procedure XL2C_Quote (form : BC.bytecode; in out args : args_map; nesting : integer; wildcard : boolean)
-
+    procedure XL2C_Quote (form : BC.bytecode;
+                          in out args : args_map;
+                          nesting : integer;
+                          wildcard : boolean)
     procedure XL2C(input : BC.bytecode)
     procedure Rename(from : text; to : text)
     function XLNormalize (name : text) return text
@@ -106,6 +108,7 @@ module XL.CODE_GENERATOR is
         rename "and",        "&&"
         rename "or",         "||"
         rename "xor",        "^"
+        rename "bitwisenot", "~"
         rename "nil",        "0"
 
         rename "text",       "::text"        
@@ -963,7 +966,10 @@ module XL.CODE_GENERATOR is
     // 
     // ========================================================================
 
-    procedure XL2C_Quote (form : BC.bytecode; in out args : args_map; nesting : integer; wildcard : boolean) is
+    procedure XL2C_Quote (form : BC.bytecode;
+                          in out args : args_map;
+                          nesting : integer;
+                          wildcard : boolean) is
     // ------------------------------------------------------------------------
     //    Emit the code for the translate form
     // ------------------------------------------------------------------------

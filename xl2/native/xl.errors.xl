@@ -57,7 +57,8 @@ module XL.ERRORS is
                 else
                     hadDollar := true
             else if hadDollar then
-                if C >= '1' and C <= '9' then fmt += args[integer(C) - integer('1')]
+                if C >= '1' and C <= '9' then
+                    fmt += args[integer(C) - integer('1')]
                 hadDollar := false
             else
                 fmt += C
@@ -104,7 +105,9 @@ module XL.ERRORS is
         Error E, pos, args
 
 
-    procedure Error (E : error_code; pos : integer; arg : text; arg2 : text; arg3 : text) is
+    procedure Error (E : error_code;
+                     pos : integer;
+                     arg : text; arg2 : text; arg3 : text) is
     // ------------------------------------------------------------------------
     //   Convenience function
     // ------------------------------------------------------------------------

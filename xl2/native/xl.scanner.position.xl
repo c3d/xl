@@ -71,7 +71,9 @@ module XL.SCANNER.POSITION is
         current_position := pos
 
 
-    procedure PositionToFile (pos : integer; out file : text; out offset : integer) is
+    procedure PositionToFile (pos : integer;
+                              out file : text;
+                              out offset : integer) is
     // ------------------------------------------------------------------------
     //    Convert a position to a file and offset
     // ------------------------------------------------------------------------
@@ -89,7 +91,11 @@ module XL.SCANNER.POSITION is
             offset := pos
 
 
-    procedure PositionToLine (pos : integer; out filename : text; out fileline : integer; out filecolumn : integer; out file_linetext : text) is
+    procedure PositionToLine (pos : integer;
+                              out filename : text;
+                              out fileline : integer;
+                              out filecolumn : integer;
+                              out file_linetext : text) is
     // ------------------------------------------------------------------------
     //   Compute file, line and position
     // ------------------------------------------------------------------------

@@ -81,6 +81,12 @@ inline int count(const std::map<T,U> &m, const T &v)
 template<class T>
 inline T & back(std::vector<T> &v)
 {
+    if (v.size() <= 0)
+    {
+        std::cerr << "Ouch, trying to get back of empty vector";
+        abort();
+    }
+    
     return v.back();
 }
 
@@ -95,6 +101,12 @@ inline void clear(std::vector<T> &v)
 template<class T>
 void popback(std::vector<T> &v)
 {
+    if (v.size() <= 0)
+    {
+        std::cerr << "Ouch, trying to pop last vector element";
+        abort();
+    }
+    
     v.pop_back();
 }
 

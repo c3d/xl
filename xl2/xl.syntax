@@ -6,8 +6,8 @@ INFIX
         40 :
         100 STATEMENT
         105 is
+        190 return with
         200 DEFAULT
-        210 return with
         215 ,
         220 := += -= *= /= ^= |= &=
         222 in of to
@@ -27,7 +27,7 @@ PREFIX
         125      case if return while when
         235     not in out
         240     function procedure to module quote
-        250     !
+        250     ! ~
         280     - + * /
         290     @
 

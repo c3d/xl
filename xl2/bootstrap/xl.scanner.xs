@@ -133,3 +133,7 @@ module XL.SCANNER with
 
     // Scan a comment until the given end
     function Comment(S : scanner; EndOfComment : text) return text
+
+    // Opening and closing parenthese
+    function OpenParen(S : scanner) return integer
+    procedure CloseParen (S : scanner; old_indent : integer)

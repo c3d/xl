@@ -42,7 +42,8 @@ module XL.SEMANTICS is
         objects   : name_map
 
 
-    function Semantics (input : PT.tree; context : symbol_table) return PT.tree is
+    function Semantics (input : PT.tree;
+                        context : symbol_table) return PT.tree is
     // ------------------------------------------------------------------------
     //    Right now, the semantics is somewhat limited ;-)
     // ------------------------------------------------------------------------

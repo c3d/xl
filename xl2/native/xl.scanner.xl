@@ -52,6 +52,7 @@ module XL.SCANNER is
         indents         : string of integer
         indent_char     : character
         checking_indent : boolean
+        setting_indent  : boolean
 
 
     function DigitValue(digit : character) return integer is
@@ -80,6 +81,7 @@ module XL.SCANNER is
         result.integer_value := 0
         result.indent_char := character(0)
         result.checking_indent := false
+        result.setting_indent := false
         result.column := 0
         result.indent := 0
         result.position := 0
@@ -172,7 +174,12 @@ module XL.SCANNER is
             IO.PutBack S.input, C
             S.position -= 1
             S.checking_indent := false
-            if S.column > S.indent then
+            if S.setting_indent then
+                // We set a new indent, for instance after opening paren
+                S.indent := S.column
+                S.setting_indent := false
+                return tokNEWLINE
+            else if S.column > S.indent then
                 // Strictly deeper indent
                 S.indent := S.column
                 S.indents += S.indent
@@ -414,3 +421,26 @@ module XL.SCANNER is
     //   Set the current character count from start of file of a scanner
     // ------------------------------------------------------------------------
         S.position := P
+
+
+    function OpenParen(S : scanner) return integer is
+    // ------------------------------------------------------------------------
+    //   Opening some parenthese: remember the setting_indent value
+    // ------------------------------------------------------------------------
+        if S.setting_indent then
+            result := bitwise_not S.indent
+        else
+            result := S.indent
+        S.setting_indent := true
+
+
+    procedure CloseParen (S : scanner; old_indent : integer) is
+    // ------------------------------------------------------------------------
+    //    Closing some parenthese: reset the setting_indent value
+    // ------------------------------------------------------------------------
+        if old_indent < 0 then
+            S.setting_indent := true
+            S.indent := bitwise_not old_indent
+        else
+            S.setting_indent := false
+            S.indent := old_indent

@@ -137,3 +137,8 @@ module XL.SCANNER with
     // Position attributes of a scanner
     function CurrentPosition(S : scanner) return integer
     procedure SetPosition(in out S : scanner; P : integer)
+
+    // Opening and closing parenthese
+    function OpenParen(S : scanner) return integer
+    procedure CloseParen (S : scanner; old_indent : integer)
+
