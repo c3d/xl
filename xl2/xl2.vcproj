@@ -115,6 +115,58 @@
 	<References>
 	</References>
 	<Files>
+		<Filter
+			Name="bootstrap"
+			Filter="">
+			<File
+				RelativePath=".\bootstrap\compiler.xl">
+			</File>
+			<File
+				RelativePath=".\bootstrap\make.msvc71.bat">
+			</File>
+			<File
+				RelativePath=".\bootstrap\xl.errors.xl">
+			</File>
+			<File
+				RelativePath=".\bootstrap\xl.errors.xs">
+			</File>
+			<File
+				RelativePath=".\bootstrap\xl.parser.tree.xl">
+			</File>
+			<File
+				RelativePath=".\bootstrap\xl.parser.tree.xs">
+			</File>
+			<File
+				RelativePath=".\bootstrap\xl.parser.xl">
+			</File>
+			<File
+				RelativePath=".\bootstrap\xl.parser.xs">
+			</File>
+			<File
+				RelativePath=".\bootstrap\xl.scanner.xl">
+			</File>
+			<File
+				RelativePath=".\bootstrap\xl.scanner.xs">
+			</File>
+			<File
+				RelativePath=".\bootstrap\xl.textio.encoding.ascii.xs">
+			</File>
+			<File
+				RelativePath=".\bootstrap\xl.textio.xl">
+			</File>
+			<File
+				RelativePath=".\bootstrap\xl.translator.xl">
+			</File>
+			<File
+				RelativePath=".\bootstrap\xl.translator.xs">
+			</File>
+			<File
+				RelativePath=".\bootstrap\xl.tree.xs">
+			</File>
+			<File
+				RelativePath=".\bootstrap\xl.ui.console.xs">
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\base.h">
 		</File>
