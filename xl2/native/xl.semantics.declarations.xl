@@ -50,6 +50,7 @@ module XL.SEMANTICS.DECLARATIONS is
         result.is_local               := false
         result.is_global              := false
         result.is_field               := false
+        result.is_builtin             := false
 
         tp : TYP.any_type             := TYP.EvaluateType(Type)
         result.name                   := Name
@@ -207,6 +208,8 @@ module XL.SEMANTICS.DECLARATIONS is
                     ERR.Error "'out' prefixing non-parameter '$1'", Name
             decl.is_input := in_flag
             decl.is_output := out_flag
+        else if decl.is_parameter then
+            decl.is_input := true
 
         // Store this declaration name in the symbol table
         // The original declaration name holds declaration information

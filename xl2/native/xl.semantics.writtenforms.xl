@@ -116,7 +116,6 @@ module XL.SEMANTICS.WRITTEN_FORMS is
     //    We directly return the machine-level function call (CGM)
 
         written : info as written_form
-        marg    : CGM.machine_arg
         margs   : CGM.machine_args
         fninfo  : FN.function := written.function
         arg     : FN.declaration
@@ -126,13 +125,9 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             name_tree : PT.name_tree := arg.name
             name_text : text := name_tree.value
             value     : PT.tree := args[name_text]
+            margs += value
 
-            marg.machine_value := value
-            marg.is_input := true
-            marg.is_output := false
-            margs += marg
-
-        return CGM.FunctionCall (fninfo.machine_name, margs)
+        return CGM.FunctionCall (fninfo, margs)
 
 
     function EnterWrittenForm(fniface : PT.tree;
@@ -167,7 +162,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
 
 
         // Enter that copy in the "XLSemantics" map
-        SYM.EnterRewrite XLT.context, "xlsemantics", written
+        SYM.EnterRewrite SYM.Enclosing(XLT.context), "xlsemantics", written
         
         return fniface
 

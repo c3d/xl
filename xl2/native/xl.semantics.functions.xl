@@ -61,11 +61,14 @@ module XL.SEMANTICS.FUNCTIONS is
         result.is_local               := false
         result.is_global              := false
         result.is_field               := false
+        result.is_builtin             := false
 
         fn_type : FT.function_type := FT.MakeFnType (Name, Parms, ReturnType)
 
         result.parameters             := fn_type.parameters
         result.return_type            := fn_type.return_type
+        result.outputs_count          := fn_type.outputs_count
+        result.inputs_count           := fn_type.inputs_count
 
         result.name                   := Name
         result.machine_name           := CGM.Name(Name, fn_type)
@@ -103,10 +106,7 @@ module XL.SEMANTICS.FUNCTIONS is
 
         f : function := MakeFn (Name, Parms, RetType)
         ActualName : PT.name_tree := F.Name
-
-        MachineIface  : PT.Tree := CGM.Entry (f.machine_name,
-                                              f.return_type,
-                                              f.parameters)
+        MachineIface  : PT.Tree := CGM.Entry (f)
         MachineDecl   : PT.Tree := parse_tree
             @fn_decl_begin
             'MachineIface'
@@ -147,7 +147,21 @@ module XL.SEMANTICS.FUNCTIONS is
     //   Entering a function and returning the corresponding form
     // ------------------------------------------------------------------------
 
-        // Translate body declarations
+        when
+            'Interface' is builtin 'BuiltinName'
+        then
+            Interface := EnterFunction(Interface)
+            f : function := FunctionInfo(Interface)
+            if f.initializer <> nil then
+                ERR.Error "Built-in '$1' was given initializer '$2'",
+                          BuiltinName, f.initializer
+            else if BuiltinName.kind <> PT.xlNAME then
+                ERR.Error "'$1' is not a valid built-in name", BuiltinName
+            else
+                f.is_builtin := true
+                f.machine_name := PT.name_tree(BuiltinName)
+                return Interface
+
         when
             'Interface' is 'Body'
         then
@@ -155,6 +169,8 @@ module XL.SEMANTICS.FUNCTIONS is
             f : function := FunctionInfo(Interface)
             if f.initializer <> nil then
                 ERR.Error "Extraneous initializer '$1'", Body
+            else if f.is_builtin then
+                ERR.Error "Initializer for builtin '$1'", Interface
             else
                 f.initializer := Body
                 return parse_tree(@@fn_body 'Interface' 'Body')
@@ -263,5 +279,6 @@ module XL.SEMANTICS.FUNCTIONS is
             @@fn_decl 'Interface'
         then
             // We put a coating around the interface during Declarations
-            // Remove the coating now so that code generator sees it
-            return Interface
+            // The interface itself is added to the scope decls, so
+            // we don't need it anymore.
+            return parse_tree(@nop)

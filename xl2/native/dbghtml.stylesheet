@@ -40,3 +40,4 @@ cr              = "[CR]"
 '>'             = "&gt;"
 '&'             = "&amper;"
 
+"?wildcard?"    = "<FONT color=""#800000"">" self "</FONT>"

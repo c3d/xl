@@ -45,6 +45,8 @@ module XL.SEMANTICS.TYPES.FUNCTIONS with
 
         parameters      : declaration_list
         return_type     : any_type
+        outputs_count   : integer
+        inputs_count    : integer
 
     type function_type is access to function_type_data
 

@@ -78,3 +78,5 @@ function        = "<FONT color=""#00C080""><B>" self "</B></FONT>"
 "cos"           = function
 "tan"           = function
 "log"           = function
+
+"?wildcard?"    = "<FONT color=""#808000"">" self "</FONT>"

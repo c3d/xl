@@ -38,7 +38,9 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
 
 
     procedure MakeParameterList (Parms : PT.tree;
-                                 in out list : declaration_list) is
+                                 in out list : declaration_list;
+                                 in out icnt : integer;
+                                 in out ocnt : integer) is
     // ------------------------------------------------------------------------
     //    Translate a parameter list
     // ------------------------------------------------------------------------
@@ -48,20 +50,30 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
             when
                 'X' ; 'Y'
             then
-                MakeParameterList X, list
-                MakeParameterList Y, list
+                MakeParameterList X, list, icnt, ocnt
+                MakeParameterList Y, list, icnt, ocnt
 
             when
                 'X'
                 'Y'
             then
-                MakeParameterList X, list
-                MakeParameterList Y, list
+                MakeParameterList X, list, icnt, ocnt
+                MakeParameterList Y, list, icnt, ocnt
 
             else
                 info : PT.info := PT.FindInfo(Parms, "DECL")
                 if info then
-                    list += declaration(info)
+                    decl : info as declaration
+                    list += decl
+                    if decl.is_output then
+                        ocnt += 1
+                    if decl.is_input then
+                        icnt += 1
+                    else if not(decl.is_output) then
+                        icnt += 1
+                        ERR.Error "Hmmm, '$1' is not input nor output",
+                                  decl.name
+                        decl.is_input := true
                 else
                     ERR.Error "'$1' isn't a parameter declaration", Parms
 
@@ -77,6 +89,8 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
             result.return_type := TY.EvaluateType (ReturnType)
         else
             result.return_type := nil
+        result.inputs_count := 0
+        result.outputs_count := 0
 
         // Check if empty parameter list. () is a block with an empty name
         if Parms <> nil and Parms.kind = PT.xlNAME then
@@ -84,7 +98,8 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
             if N.value = "" then
                 Parms := nil
         if Parms <> nil then
-            MakeParameterList Parms, result.parameters
+            MakeParameterList Parms, result.parameters,
+                              result.inputs_count, result.outputs_count
 
         // Flags set during semantics are almost all clear initially
         result.is_constant            := false
@@ -117,7 +132,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
 
         // Attach a type info to the original name
         tp : function_type := MakeFnType(Source, Parms, Ret)
-        tp.machine_type := CGM.EntryPointer(tp.return_type, tp.parameters)
+        tp.machine_type := CGM.EntryPointer(tp)
         PT.SetInfo Source, "TYPE", tp
         PT.SetInfo Source, "FNTYPE", tp
 

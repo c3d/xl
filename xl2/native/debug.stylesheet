@@ -38,3 +38,5 @@ indents = " "
 
 begin = newline
 end = newline newline
+
+"?wildcard?" = "(wildcard " self ")"

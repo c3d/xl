@@ -137,6 +137,7 @@ module XL.TRANSLATOR is
         // INIT are the initializations for the scope
         // TERM are the terminations for the scope
         result := XLDeclarations(input)
+        result := XLSemantics(result)
         decl : PT.tree := SYM.ScopeItems(context, "DECL")
         init : PT.tree := SYM.ScopeItems(context, "INIT")
         term : PT.tree := SYM.ScopeItems(context, "TERM")
@@ -153,7 +154,6 @@ module XL.TRANSLATOR is
                 'init'
                 'result'
                 'term'
-        result := XLSemantics(result)
 
         // Get back to original context
         context := SYM.Enclosing (context)

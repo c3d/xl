@@ -34,4 +34,4 @@ unindent = unindent cr
 indents = "    "
 "block I+ I-" = indent cr child unindent cr
 "block  ( ) " = "(" child ")"
-"?wildcard?" = "?*" self "*?"
+"?wildcard?" = self

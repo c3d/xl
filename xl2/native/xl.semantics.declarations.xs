@@ -48,6 +48,7 @@ module XL.SEMANTICS.DECLARATIONS with
         is_local                : boolean
         is_global               : boolean
         is_field                : boolean
+        is_builtin              : boolean
 
         // Other information recorded about a declaration
         name                    : PT.name_tree
@@ -69,3 +70,6 @@ module XL.SEMANTICS.DECLARATIONS with
                                  Value : PT.tree;
                                  HasIs : boolean) return PT.tree
 
+    function MakeDecl(Name : PT.name_tree;
+                      Type : PT.tree;
+                      Value : PT.tree) return declaration

@@ -74,6 +74,7 @@ module XL.SEMANTICS.OVERLOAD is
         A   : integer
         Arg : PT.tree
 
+
         // Perform semantics on all arguments
         for Arg in ArgList loop
             SemArgs += XLT.XLSemantics(Arg)
@@ -158,6 +159,7 @@ module XL.SEMANTICS.OVERLOAD is
                         exit if not Matching
                     A += 1
 
+
                 // If not matching, lookup next
                 if not Matching then
                     restart
@@ -185,19 +187,11 @@ module XL.SEMANTICS.OVERLOAD is
             if ambig <> nil then
                 ERR.Error "The call to '$1' is ambiguous", NameTree
                 ERR.Error "A first candidate is '$1'", best
-                ERR.Error "A second candidate is '$2'", ambig
+                ERR.Error "A second candidate is '$1'", ambig
 
-            // Map call arguments into machine space
-            marg  : CGM.machine_arg
-            margs : CGM.machine_args
-            for Arg in SemArgs loop
-                marg.machine_value := Arg
-                marg.is_input := true
-                marg.is_output := false
-                margs += marg
             trace [overload] "FOUND: Calling ", PT.tree(bestF.name),
                              "=", PT.tree(bestF.machine_name)
-            return CGM.FunctionCall (bestF.machine_name, margs)
+            return CGM.FunctionCall (bestF, SemArgs)
 
         else
             ERR.Error "No valid function found for '$1'", NameTree
