@@ -130,15 +130,20 @@ module XL.CODE_GENERATOR is
     // ------------------------------------------------------------------------
     //   Read the xl.bytecode file to get the map formats
     // ------------------------------------------------------------------------
-        S      : SC.scanner := SC.Open "xl.bytecode"
+        S      : SC.scanner := SC.Open "xl.bytecode"        
+                
+        if not IO.valid S.input then
+           ERR.Error "Unable to load xl.bytecode", -1
+           ERR.Error "For now, it must be in the current directory.", -1
+        
         tok    : SC.token
         symbol : text
         had_nl : boolean := false
-
-        loop
-            tok := SC.NextToken S
+                                 
+        loop                                  
+            tok := SC.NextToken S            
             exit if tok = SC.tokEOF or tok = SC.tokERROR
-
+                        
             if tok = SC.tokNAME or tok = SC.tokSYMBOL then
                 name : text := XLNormalize(S.string_value)
                 if name = "//" then
@@ -158,6 +163,7 @@ module XL.CODE_GENERATOR is
                 had_nl := true
             else
                 ERR.Error "Invalid formats in xl.bytecode", -1
+                                      
         SC.Close S
 
 
@@ -175,9 +181,9 @@ module XL.CODE_GENERATOR is
         for T in translations loop
             T := PT.XLNormalize(T)
             IO.WriteLn "xl::parser::tree::tree ", T, "("
-            IO.WriteLn "xl::parser::tree::tree input) {"
-            IO.WriteLn "return xl::symbols::lookuprewrite("
-            IO.WriteLn "xl::translator::context, ", '"', T, '"', ", input);"
+            IO.WriteLn "   xl::parser::tree::tree input) {"
+            IO.WriteLn "   return xl::symbols::lookuprewrite("
+            IO.WriteLn "   xl::translator::context, ", '"', T, '"', ", input);"
             IO.WriteLn "}"
         IO.WriteLn "}}"
 
@@ -217,7 +223,7 @@ module XL.CODE_GENERATOR is
         InitializeBytecodeMap
 
         IO.writeln bytecode_formats["init"]
-
+        
         XL2C input
         XL2C_PendingImports
 
@@ -1018,7 +1024,7 @@ module XL.CODE_GENERATOR is
             then
                 IO.Write "XLtext("
                 XL2C A
-                IO.Write ")"                
+                IO.Write ")"
 
             when
                 'A' in 'B'
@@ -1184,6 +1190,57 @@ module XL.CODE_GENERATOR is
                 result += C
 
 
+    function SplitPath(Path : text;
+                       Sep  : character) return string of text is
+    // ------------------------------------------------------------------------
+    //    Turn a separator-separated list of paths into a string of paths
+    // ------------------------------------------------------------------------
+        I          : integer        
+        element    : text := ""        
+        max        : integer := length Path
+                
+        for I in 0..max-1 loop
+            C : character := Path[I]
+
+            if C = Sep then                
+                result += element                
+                element := ""
+            else
+                element += C
+        result += element
+
+
+    function OpenParserInPath (filename : text) return PR.parser is
+    // ------------------------------------------------------------------------
+    //    Find the file to open in XL_MODULE_PATH and return a parser for it
+    // ------------------------------------------------------------------------
+        XlModulePath : text
+        PathList     : string of text
+
+        if getenv("XL_MODULE_PATH") <> nil then
+           XlModulePath := getenv("XL_MODULE_PATH")
+           PathList := SplitPath(XlModulePath, ';')
+        else           
+           PathList += text(".")
+
+        I          : integer
+        max        : integer := size(PathList)
+
+        for I in 0..max-1 loop
+            Path      : text := PathList[I]
+            Candidate : text := Path + "/" + filename
+
+            result := PR.Open(Candidate)
+
+            CurrentScanner : SC.scanner := result.scanner
+            exit if IO.valid CurrentScanner.input
+
+            if I <> max-1 then
+               PR.Close result
+ 
+        assert result <> nil
+
+
     procedure XL2C_Import (modname : BC.bytecode; alias : BC.bytecode) is
     // ------------------------------------------------------------------------
     //    Deal with import clauses
@@ -1203,7 +1260,7 @@ module XL.CODE_GENERATOR is
 
         done := module_imports[imported]
         if (done & 1) = 0 then
-            iface_parser : PR.parser := PR.Open(interface_name)
+            iface_parser : PR.parser := OpenParserInPath(interface_name)
             iface_tree   : BC.bytecode := PR.Parse(iface_parser)
             IO.WriteLn ""
             IO.WriteLn "// Interface ", interface_name, " done=", done
@@ -1231,7 +1288,7 @@ module XL.CODE_GENERATOR is
                     body_name      : text := imported + ".xl"
                     IO.WriteLn ""
                     IO.WriteLn "// Body ", body_name
-                    body_parser : PR.parser := PR.Open(body_name)
+                    body_parser : PR.parser := OpenParserInPath(body_name)
                     body_tree   : PT.tree := PR.Parse(body_parser)
                     module_imports[imported] |= 2
                     if body_tree <> nil then
