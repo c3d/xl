@@ -134,62 +134,59 @@ module XL.SEMANTICS.FUNCTIONS is
     // ------------------------------------------------------------------------
     //   Process function forms
     // ------------------------------------------------------------------------
-    // TODO: Do we want EnterFunction to be a 'translation'?
-
-        translate FnForm
-
-            // Translate body declarations
-            when
-                'Interface' is 'Body'
-            then
-                Interface := EnterFunction(Interface)
-                f : function := FunctionInfo(Interface)
-                if f.initializer <> nil then
-                    ERR.Error "Extraneous initializer '$1'", Body
-                else
-                    f.initializer := Body
-                    return parse_tree(@@fn_body 'Interface' 'Body')
-
-            // Translate written statements
-            when
-                'Interface' written 'WrForm'
-            then
-                result := EnterFunction(Interface)
-                ERR.Error "Written statement '$1': Not implemented yet", WrForm
-
-            // Translate function preconditions
-            when
-                'Interface' require 'Pre'
-            then
-                result := EnterFunction(Interface)
-                ERR.Error "Precondition '$1': Not implemented yet", Pre
-
-            // Translate function postconditions
-            when
-                'Interface' ensure 'Post'
-            then
-                result := EnterFunction(Interface)
-                ERR.Error "Postcondition '$1': Not implemented yet", Post
+        return XLT.XLEnterFunction(FnForm)
 
 
-            // Translate parameter lists
-            when ('Name' ('Parms') return 'RetType') then
-                return EnterFunction(Name, Parms, RetType, FnForm)
+    translation XLEnterFunction
+    // ------------------------------------------------------------------------
+    //   Entering a function and returning the corresponding form
+    // ------------------------------------------------------------------------
 
-            when ('Name' () return 'RetType') then
-                return EnterFunction(Name, nil, RetType, FnForm)
+        // Translate body declarations
+        when
+            'Interface' is 'Body'
+        then
+            Interface := EnterFunction(Interface)
+            f : function := FunctionInfo(Interface)
+            if f.initializer <> nil then
+                ERR.Error "Extraneous initializer '$1'", Body
+            else
+                f.initializer := Body
+                return parse_tree(@@fn_body 'Interface' 'Body')
 
-            when ('Name' return 'RetType') then
-                return EnterFunction(Name, nil, RetType, FnForm)
+        // Translate function preconditions
+        when
+            'Interface' require 'Pre'
+        then
+            result := EnterFunction(Interface)
+            ERR.Error "Precondition '$1': Not implemented yet", Pre
 
-            when ('Name' ('Parms')) then
-                return EnterFunction(Name, Parms, nil, FnForm)
+        // Translate function postconditions
+        when
+            'Interface' ensure 'Post'
+        then
+            result := EnterFunction(Interface)
+            ERR.Error "Postcondition '$1': Not implemented yet", Post
 
-            when ('Name' ()) then
-                return EnterFunction(Name, nil, nil, FnForm)
 
-            when ('Name') then
-                return EnterFunction(Name, nil, nil, FnForm)
+        // Translate parameter lists
+        when ('Name' ('Parms') return 'RetType') then
+            return EnterFunction(Name, Parms, RetType, Input)
+
+        when ('Name' () return 'RetType') then
+            return EnterFunction(Name, nil, RetType, Input)
+
+        when ('Name' return 'RetType') then
+            return EnterFunction(Name, nil, RetType, Input)
+
+        when ('Name' ('Parms')) then
+            return EnterFunction(Name, Parms, nil, Input)
+
+        when ('Name' ()) then
+            return EnterFunction(Name, nil, nil, Input)
+
+        when ('Name') then
+            return EnterFunction(Name, nil, nil, Input)
 
 
     function EnterFunctionScope (FnForm : PT.tree) return PT.tree is

@@ -55,6 +55,7 @@ OTHER_SOURCES=					\
 	xl.semantics.types.functions.xl		\
 	xl.semantics.types.generics.xs		\
 	xl.semantics.writtenforms.xs		\
+	xl.semantics.writtenforms.xl		\
 	xl.semantics.pragmas.xl			\
 	xl.codegenerator.xs			\
 	xl.codegenerator.xl			\

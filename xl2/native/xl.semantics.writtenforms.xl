@@ -1,0 +1,39 @@
+// ****************************************************************************
+//  xl.semantics.writtenforms.xl    (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import XLT = XL.TRANSLATOR
+import ERR = XL.ERRORS
+
+module XL.SEMANTICS.WRITTEN_FORMS is
+
+    translation XLEnterFunction
+
+        // Translate written statements
+        when
+            'Interface' written 'WrForm'
+        then
+            result := XLT.XLEnterFunction(Interface)
+            ERR.Error "Written Form '$1': Not implemented yet", WrForm
+

@@ -75,3 +75,5 @@ module XL.TRANSLATOR with
     function XLDeclarations(input: PT.tree) return BC.bytecode // Generated
     function XLSemantics(input: PT.tree) return BC.bytecode    // Generated
     function XLOptimizations(input: PT.tree) return BC.bytecode// Generated
+
+    function XLEnterFunction(input: PT.tree) return PT.tree    // Generated

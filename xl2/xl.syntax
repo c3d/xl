@@ -29,7 +29,7 @@ PREFIX
         400     ! ~
         400     - + * /
         400     FUNCTION
-        500     @
+        500     @ &
 
 POSTFIX
         400     ! ?
