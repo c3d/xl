@@ -45,6 +45,7 @@ module XL.SEMANTICS.TYPES is
         result.is_generic             := false
         result.is_polymorphic         := false
         result.is_subroutine          := false
+        result.is_record              := false
         result.is_reference           := false
         result.is_instantiation       := false
         result.is_compiler_generated  := false

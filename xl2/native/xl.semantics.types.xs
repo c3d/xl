@@ -42,6 +42,7 @@ module XL.SEMANTICS.TYPES with
         is_generic              : boolean
         is_polymorphic          : boolean
         is_subroutine           : boolean
+        is_record               : boolean
         is_reference            : boolean
         is_instantiation        : boolean
         is_compiler_generated   : boolean

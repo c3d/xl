@@ -126,7 +126,8 @@ module XL.TRANSLATOR is
     //   Deal with the semantics in a scope
     // ------------------------------------------------------------------------
 
-        old_global : SYM.symbol_table
+        old_global   : SYM.symbol_table
+        old_function : SYM.symbol_table
 
         // First create the symbol table for this scope
         context := SYM.NewSymbolTable(context)
@@ -138,9 +139,13 @@ module XL.TRANSLATOR is
                 // We are the outermost ('main') context
                 main_context := context
                 old_global := context
+                // Storage for XL_Init and XL_Term temps
+                function_context := SYM.NewSymbolTable(context)
+                IO.WriteLn "Main function context=", function_context
         else if scope = scopeFunction or scope = scopeLocal then
             SYM.SetInteger context, "LOCAL", 1
             if scope = scopeFunction then
+                old_function := function_context
                 function_context := context
 
         // 'Declarations' will populate sections in the
@@ -156,15 +161,65 @@ module XL.TRANSLATOR is
         if scope = scopeGlobal then
             // Make sure global init and term invoked from 'main'
             if init <> nil then
+                init := XLSemantics(init)
                 SYM.AddScopeItem main_context, "MAIN_INIT", init
             if term <> nil then
+                term := XLSemantics(term)
                 SYM.AddScopeItem main_context, "MAIN_TERM", term
             if decl <> nil then
                 result := parse_tree
                     'decl'
                     'result'
-        else
+        else if scope = scopeMain then
             if init <> nil then
+                IO.WriteLn "In main function context=", function_context
+                ldecl : PT.tree := SYM.ScopeItems(function_context, "DECL")
+                init := XLSemantics(init)
+                if ldecl <> nil then
+                    result := parse_tree
+                        @globinit_begin
+                        'ldecl'
+                        'init'
+                        @globinit_end
+                        'result'
+                else
+                    result := parse_tree
+                        @globinit_begin
+                        'init'
+                        @globinit_end
+                        'result'
+            else
+                result := parse_tree
+                    @globinit_none
+                    'result'
+            if decl <> nil then
+                result := parse_tree
+                    'decl'
+                    'result'
+            if term <> nil then
+                ldecl : PT.tree := SYM.ScopeItems(function_context, "DECL")
+                term := XLSemantics(term)
+                IO.WriteLn "term=", term, " decl=", ldecl
+                if ldecl <> nil then
+                    result := parse_tree
+                        @globinit_begin
+                        'ldecl'
+                        'term'
+                        @globinit_end
+                        'result'
+                else
+                    result := parse_tree
+                        @globinit_begin
+                        'term'
+                        @globinit_end
+                        'result'
+            else
+                result := parse_tree
+                    @globterm_none
+                    'result'
+        else // Some local scope
+            if init <> nil then
+                init := XLSemantics(init)
                 result := parse_tree
                     'init'
                     'result'
@@ -173,6 +228,7 @@ module XL.TRANSLATOR is
                     'decl'
                     'result'
             if term <> nil then
+                term := XLSemantics(term)
                 result := parse_tree
                     'result'
                     'term'
@@ -185,7 +241,7 @@ module XL.TRANSLATOR is
         else if scope = scopeGlobal then
             global_context := old_global
         else if scope = scopeFunction then
-            function_context := nil
+            function_context := old_function
 
 
     procedure AddScopeDecl(table: SYM.symbol_table; decl : PT.tree) is

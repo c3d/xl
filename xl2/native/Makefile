@@ -55,6 +55,8 @@ OTHER_SOURCES=					\
 	xl.semantics.types.xl			\
 	xl.semantics.types.functions.xs		\
 	xl.semantics.types.functions.xl		\
+	xl.semantics.types.records.xs		\
+	xl.semantics.types.records.xl		\
 	xl.semantics.types.generics.xs		\
 	xl.semantics.writtenforms.xs		\
 	xl.semantics.writtenforms.xl		\
@@ -74,6 +76,7 @@ OTHER_SOURCES=					\
 	../xl.syntax				\
 						\
 	xl.plugin.listing.xl			\
+	xl.plugin.transforms.xl			\
 	xl.plugin.differentiation.xl		\
 	xl.plugin.constantfold.xl
 

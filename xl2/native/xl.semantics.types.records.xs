@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  xl.semantics.types.functions.xs (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.semantics.types.records.xs   (C) 1992-2004 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//      Description of function types
+//     Implementation of record types
 // 
 // 
 // 
@@ -28,9 +28,9 @@ import DCL = XL.SEMANTICS.DECLARATIONS
 import SYM = XL.SYMBOLS
 
 
-module XL.SEMANTICS.TYPES.FUNCTIONS with
+module XL.SEMANTICS.TYPES.RECORDS with
 // ----------------------------------------------------------------------------
-//    Representation of function types
+//    Interface of the module
 // ----------------------------------------------------------------------------
 
     type any_type_data      is TY.any_type_data
@@ -39,25 +39,27 @@ module XL.SEMANTICS.TYPES.FUNCTIONS with
     type declaration_list   is string of declaration
 
 
-    type function_type_data is any_type_data with
+    type record_type_data is any_type_data with
     // ------------------------------------------------------------------------
     //    Information in a function signature
     // ------------------------------------------------------------------------
 
-        parameters      : declaration_list
-        return_type     : any_type
-        outputs_count   : integer
-        inputs_count    : integer
+        fields          : declaration_list
         symbols         : SYM.symbol_table
 
-    type function_type is access to function_type_data
+    type record_type is access to record_type_data
 
+
+    // Create a parameter list
+    procedure MakeFieldList (Fields      : PT.tree;
+                             in out List : declaration_list)
 
     // Create a function type
-    function MakeFnType(Source     : PT.tree;
-                        Parms      : PT.tree;
-                        ReturnType : PT.tree) return function_type
+    function MakeRecordType(Source     : PT.tree;
+                            Base       : PT.tree;
+                            Fields     : PT.tree) return record_type
 
-    function EnterType (Source  : PT.tree;
-                        Parms   : PT.tree;
-                        Ret     : PT.tree) return PT.tree
+    function EnterType (Source   : PT.tree;
+                        Base     : PT.tree;
+                        Fields   : PT.tree) return PT.tree
+

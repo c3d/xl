@@ -100,12 +100,18 @@ module XL.PARSER.TREE is
                 trace [matches] "/* Already found ", R.name, ", checking */"
                 result := Matches(test, arg[R.name], empty_args)
                 if result > 0 then
+                    trace [matched] "/* Matched: ", test, " */"
+                    trace [matched] "/* With: ", ref, " */"
+                    trace [matched] "/* Score: ", result + 1, " (wildcard) */"
                     return result + 1
                 trace [matches] "/* Failed wildcard */"
                 return 0
 
             // We did not see the name: assign it
             arg[R.name] := test
+            trace [matched] "/* Matched: ", test, " */"
+            trace [matched] "/* With: ", ref, " */"
+            trace [matched] "/* Score: 1 (wildcard, 1st time) */"
             return 1
 
         // If this is not a wildcard, then it must have the same kind
@@ -118,6 +124,9 @@ module XL.PARSER.TREE is
             T : test as PT.integer_tree
             R : ref as PT.integer_tree
             if T.value = R.value then
+                trace [matched] "/* Matched: ", test, " */"
+                trace [matched] "/* With: ", ref, " */"
+                trace [matched] "/* Score: 2 (integer) */"
                 return 2
             trace [matches] "/* Failed intval */"
             return 0
@@ -126,6 +135,9 @@ module XL.PARSER.TREE is
             T : test as PT.real_tree
             R : ref as PT.real_tree
             if T.value = R.value then
+                trace [matched] "/* Matched: ", test, " */"
+                trace [matched] "/* With: ", ref, " */"
+                trace [matched] "/* Score: 2 (real) */"
                 return 2
             trace [matches] "/* Failed realval */"
             return 0
@@ -134,6 +146,9 @@ module XL.PARSER.TREE is
             T : test as PT.text_tree
             R : ref as PT.text_tree
             if T.value = R.value and T.quote = R.quote then
+                trace [matched] "/* Matched: ", test, " */"
+                trace [matched] "/* With: ", ref, " */"
+                trace [matched] "/* Score: 2 (text) */"
                 return 2
             trace [matches] "/* Failed textval */"
             return 0
@@ -142,6 +157,9 @@ module XL.PARSER.TREE is
             T : test as PT.name_tree
             R : ref as PT.name_tree
             if XLNormalize(T.value) = XLNormalize(R.value) then
+                trace [matched] "/* Matched: ", test, " */"
+                trace [matched] "/* With: ", ref, " */"
+                trace [matched] "/* Score: 2 (name) */"
                 return 2
             trace [matches] "/* Failed nameval */"
             return 0
@@ -153,6 +171,9 @@ module XL.PARSER.TREE is
             if T.opening = R.opening and T.closing = R.closing then
                 result := Matches(T.child, R.child, arg)
                 if result > 0 then
+                    trace [matched] "/* Matched: ", test, " */"
+                    trace [matched] "/* With: ", ref, " */"
+                    trace [matched] "/* Score: ", result+3, " (block) */"
                     return result + 3
             trace [matches] "/* Failed block */"
             trace [matches] "/* o=", T.opening = R.opening,
@@ -167,6 +188,10 @@ module XL.PARSER.TREE is
             if l_result > 0 then
                 r_result : integer := Matches(T.right, R.right, arg)
                 if r_result > 0 then
+                    trace [matched] "/* Matched: ", test, " */"
+                    trace [matched] "/* With: ", ref, " */"
+                    trace [matched] "/* Score: ", l_result+r_result+1,
+                                    " (prefix) */"
                     return l_result + r_result + 1
             trace [matches] "/* Failed prefix */"
             return 0
@@ -179,6 +204,10 @@ module XL.PARSER.TREE is
                 if l_result > 0 then
                     r_result : integer := Matches(T.right, R.right, arg)
                     if r_result > 0 then
+                        trace [matched] "/* Matched: ", test, " */"
+                        trace [matched] "/* With: ", ref, " */"
+                        trace [matched] "/* Score: ", l_result+r_result+2,
+                                        " (infix) */"
                         return l_result + r_result + 2
                     else
                         trace [matches] "/* Failed left */"
@@ -186,6 +215,9 @@ module XL.PARSER.TREE is
                     trace [matches] "/* Failed left */"
             trace [matches] "/* Failed infix */"
             return 0
+
+        trace [matches] "/* Matching: ", test, " */"
+        trace [matches] "/* With: ", ref, " */"
 
 
     function LargestMatch (test : PT.tree;

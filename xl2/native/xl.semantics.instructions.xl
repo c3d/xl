@@ -70,7 +70,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
         // Convert to boolean and evaluate condition
         Test := XLT.XLSemantics(Test)
         Test := TY.Convert (Test, TY.boolean_type)
-        CGM.EvaluateArgument Test, prefix
+        CGM.SplitExpression Test, prefix
 
         // Perform semantics on cases
         result := parse_tree

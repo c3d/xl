@@ -211,6 +211,9 @@ module XL.SEMANTICS.OVERLOAD is
         OneFunction : PT.tree := SYM.LookupOne (XLT.context, "FN", Name.value)
         return OneFunction <> nil
 
+        // TODO: check if T is a name with a type value that has is_subroutine
+        // TODO: deal with name in the form X.Y
+
 
     translation XLSemantics
     // ------------------------------------------------------------------------

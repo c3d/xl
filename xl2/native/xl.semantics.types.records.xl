@@ -1,0 +1,220 @@
+// ****************************************************************************
+//  xl.semantics.types.records.xl   (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//    Implementation of record types
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import TY = XL.SEMANTICS.TYPES
+import PT = XL.PARSER.TREE
+import DCL = XL.SEMANTICS.DECLARATIONS
+import CGM = XL.CODE_GENERATOR.MACHINE
+import SYM = XL.SYMBOLS
+import XLT = XL.TRANSLATOR
+
+
+module XL.SEMANTICS.TYPES.RECORDS is
+// ----------------------------------------------------------------------------
+//    Implementation of the module
+// ---------------------------------------------------------------------------- 
+    procedure MakeFieldList (Fields      : PT.tree;
+                             in out list : declaration_list) is
+    // ------------------------------------------------------------------------
+    //    Translate a field list from parse tree form into a list
+    // ------------------------------------------------------------------------
+
+        translate Fields
+            when
+                'X' ; 'Y'
+            then
+                MakeFieldList X, list
+                MakeFieldList Y, list
+
+            when
+                'X'
+                'Y'
+            then
+                MakeFieldList X, list
+                MakeFieldList Y, list
+
+            else
+                Fields := XLT.XLDeclarations (Fields)
+                info : PT.info := PT.FindInfo(Fields, "DECL")
+                if info then
+                    decl : info as declaration
+                    list += decl
+                else               
+                    ERR.Error "'$1' isn't a field declaration", Fields
+
+
+
+    function MakeRecordType(Source     : PT.tree;
+                            Base       : PT.tree;
+                            Fields     : PT.tree) return record_type is
+    // ------------------------------------------------------------------------
+    //    Create a basic type, possibly named
+    // ------------------------------------------------------------------------
+
+        result.symbols := XLT.context
+
+        // Check if empty field list. () is a block with an empty name
+        if Fields <> nil and Fields.kind = PT.xlNAME then
+            N : Fields as PT.name_tree
+            if N.value = "" then
+                Fields := nil
+
+        // Add the base if there is one
+        if Base <> nil then
+            BaseType : any_type := TY.EvaluateType (Base)
+            BaseName : PT.name_tree := PT.NewName("Base", Source.position)
+            Decl : declaration := DCL.Declare(BaseName, BaseType)
+            result.fields += Decl
+                
+        if Fields <> nil then
+            MakeFieldList Fields, result.fields
+
+        // Flags set during semantics are almost all clear initially
+        result.is_constant            := false
+        result.is_variable            := false
+        result.is_generic             := false
+        result.is_polymorphic         := false
+        result.is_subroutine          := false
+        result.is_record              := true
+        result.is_reference           := false
+        result.is_instantiation       := false
+        result.is_compiler_generated  := false
+
+        result.type_uid               := -1 // Not set
+        result.bit_size               := -1 // Not set
+        result.source_tree            := Source
+        result.name                   := nil
+        result.machine_type           := nil
+
+
+    function EnterType (Source  : PT.tree;
+                        Base    : PT.tree;
+                        Fields  : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a type in the symbol table
+    // ------------------------------------------------------------------------
+    //   A type is entered in the symbol table as a simple replacement
+    //   with the name, and the type info is attached to the name
+
+        XLT.context := SYM.NewSymbolTable (XLT.context)
+        SYM.SetInteger XLT.context, "FIELD", 1
+
+        // Attach a type info to the original name
+        tp : record_type := MakeRecordType(Source, Base, Fields)
+        tp.machine_type := CGM.DeclareRecord(tp)
+        PT.SetInfo Source, "TYPE", tp
+        PT.SetInfo Source, "RECORD", tp
+
+        // Return the end type
+        result := parse_tree (@type)
+        PT.SetInfo result, "TYPE", tp
+        PT.SetInfo result, "RECORD", tp
+
+        XLT.context := SYM.Enclosing (XLT.context)
+
+
+    translation XLEvaluateType
+    // ------------------------------------------------------------------------
+    //    Translation of function types
+    // ------------------------------------------------------------------------
+        when (record with 'Fields') then
+            return EnterType (input, nil, Fields)
+
+        when ('Base' with 'Fields') then
+            return EnterType (input, Base, Fields)
+
+        when
+            record with
+                'Fields'
+        then
+            return EnterType (input, nil, Fields)
+
+        when
+            'Base' with
+                'Fields'
+        then
+            return EnterType (input, Base, Fields)
+
+
+
+    // ========================================================================
+    // 
+    //   Indexing
+    // 
+    // ========================================================================
+
+    function Index(Record : PT.tree;
+                   Field  : PT.name_tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Index a record element
+    // ------------------------------------------------------------------------
+
+        // Evaluate record expression
+        Record := XLT.XLSemantics(Record)
+
+        // Evaluate expression type
+        tp : record_type := record_type(TY.Type(Record))
+        if tp = nil then
+            ERR.Error "No type for record '$1'", Record
+            return parse_tree(@error)
+        if tp.is_record = false then
+            ERR.Error "Type of '$1' is not a record", Record
+            return parse_tree(@error)
+
+        symbols : SYM.symbol_table := tp.symbols
+        list : PT.tree_list
+
+        // Lookup field
+        SYM.Lookup symbols, "DECL", Field.value, list, SYM.lookupLocalOnly
+        if size(list) = 0 then
+            ERR.Error "Field '$1' doesn't exist", Field
+            return parse_tree(@error)
+        if size(list) > 1 then
+            ERR.Error "Field '$1' is ambiguous", Field
+            ERR.Error "A first candidate is '$1", list[0]
+            ERR.Error "A second candidate is '$1", list[1]
+
+        // Find corresponding declaration
+        decl : PT.FindInfo(list[0], "DECL") as declaration
+        if decl = nil then
+            ERR.Error "Internal: Record field '$1' has no decl", Field
+            return parse_tree(@error)
+
+        // Find machine name of field
+        mfield : PT.name_tree := decl.machine_name
+        mtype  : PT.name_tree := decl.machine_type
+
+        // Index the result
+        result := CGM.IndexRecord(Record, mfield, mtype, decl.type)
+
+
+    translation XLSemantics
+    // ------------------------------------------------------------------------
+    //    Try to translate X.Y expressions
+    // ------------------------------------------------------------------------
+        when ('Record'.'Field') where Field.kind = PT.xlNAME then
+            return Index(Record, PT.name_tree(Field))
+
+        

@@ -80,7 +80,7 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
     //   Add the value to the named entries
     // ------------------------------------------------------------------------
-        name := category + ":" + name
+        name := category + ":" + PT.XLNormalize(name)
         trace [symbols] "Enter ", name, "=", value, " into ", table
         table.names[name] += value
 
@@ -96,7 +96,7 @@ module XL.SYMBOLS is
 
         depth : integer := 0
 
-        name := category + ":" + name
+        name := category + ":" + PT.XLNormalize(name)
         trace [symbols] "Lookup: ", name, " from ", table
         while table <> nil loop
             if count(table.names, name) > 0 then
@@ -117,7 +117,7 @@ module XL.SYMBOLS is
     //   Fill the tree list with all the values found
     // ------------------------------------------------------------------------
 
-        name := category + ":" + name
+        name := category + ":" + PT.XLNormalize(name)
         trace [symbols] "LookupOne: ", name, " from ", table
         while table <> nil loop
             if count(table.names, name) > 0 then
@@ -181,12 +181,13 @@ module XL.SYMBOLS is
     function  LookupRewrite (table         : symbol_table;
                              Name          : text;
                              test_tree     : PT.tree;
-                             out count     : integer;
+                             out cnt       : integer;
                              report_misses : boolean;
                              report_ambig  : boolean) return PT.tree is
     // ------------------------------------------------------------------------
     //    Find the best rewrite and apply it
     // ------------------------------------------------------------------------
+        TName : text := Name
         Name += "."
         Wild  : text := Name
         R     : rewrite
@@ -196,6 +197,13 @@ module XL.SYMBOLS is
         bestA : PT.tree_map
         ambig : rewrite := nil
         depth : integer := 0
+        key   : text := "TRANSFORMS"
+        track : boolean := count(test_tree.info, key) > 0
+        info  : PT.info := nil
+
+        if track then
+            IO.WriteLn "Rewrite: ", TName, "[", test_tree, "]"
+            info := test_tree.info[key]
 
         Name += TreeName(test_tree)
         Wild += "*"
@@ -203,7 +211,7 @@ module XL.SYMBOLS is
 
         trace [symbols] "LookupRewrite (", test_tree, " as [", Name, "])"
 
-        count := 0
+        cnt := 0
         while table <> nil loop
             List  : rewrites_list := table.rewrites[Name]
             List += table.rewrites[Wild]
@@ -224,11 +232,11 @@ module XL.SYMBOLS is
                             bestA := args
                             best := score
                             ambig := nil
-                            count := 1
+                            cnt := 1
                         else if score = best then
                             trace [symbols] "Ambiguity"
                             ambig := R
-                            count += 1
+                            cnt += 1
 
             table := table.enclosing
             depth += 1
@@ -244,6 +252,10 @@ module XL.SYMBOLS is
                           ambig.reference_form
         else if report_misses then
             ERR.Error "No match for '$1'", test_tree
+
+        if track then
+            IO.WriteLn "Rewritten: ", TName, "[", test_tree, "]=", result
+            result.info[key] := info
 
 
     function  LookupRewrite (table     : symbol_table;

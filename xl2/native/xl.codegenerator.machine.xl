@@ -253,8 +253,18 @@ module XL.CODE_GENERATOR.MACHINE is
     // 
     // ========================================================================
 
-    procedure EvaluateArgument(in out arg  : PT.tree;
-                               in out code : PT.tree) is
+    function MakeExpression(computation : BC.bytecode;
+                            mname       : PT.name_tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Create an expression from consistutive parts
+    // ------------------------------------------------------------------------
+        return parse_tree
+            'computation'
+            @value 'mname'
+
+
+    procedure SplitExpression(in out arg  : PT.tree;
+                              in out code : PT.tree) is
     // ------------------------------------------------------------------------
     //   Split the evaluation of an argument if it is an @value
     // ------------------------------------------------------------------------
@@ -262,14 +272,13 @@ module XL.CODE_GENERATOR.MACHINE is
             when
                 ('Value')
             then
-                EvaluateArgument Value, code
+                SplitExpression Value, code
                 arg := Value
 
             when
                 'ValueGenerator'
-                @value 'ValueType' 'ValueName'
+                @value 'ValueName'
             then
-                ValueType := ValueType
                 if code = nil then
                     code := ValueGenerator
                 else
@@ -320,7 +329,7 @@ module XL.CODE_GENERATOR.MACHINE is
         // Evaluate all arguments, simplify them to single values
         for argIndex in 0..argCount-1 loop
            arg := margs[argIndex]
-           EvaluateArgument arg, prefixCode
+           SplitExpression arg, prefixCode
            margs[argIndex] := arg
 
         // If the callee is a built-in, then emit a bytecode directly
@@ -425,8 +434,69 @@ module XL.CODE_GENERATOR.MACHINE is
 
         // If the callee has a value, then we specify it here
         if retType <> nil then
-            result := parse_tree
-                'result'
-                @value 'retValueType' 'retValueName'
+            result := MakeExpression(result, retValueName)
             TY.SetType retValueName, retType
             TY.SetType result, retType
+
+
+
+    // ========================================================================
+    // 
+    //    Record types
+    // 
+    // ========================================================================
+
+    function DeclareRecord(r : RT.record_type) return PT.name_tree is
+    // ------------------------------------------------------------------------
+    //   Create the global declaration for a record type
+    // ------------------------------------------------------------------------
+        Field     : DCL.declaration
+        Fields    : RT.declaration_list := R.fields
+        FieldType : PT.tree
+        FieldName : PT.tree
+        MDecl     : BC.bytecode
+        MName     : PT.name_tree := SYM.Temporary("Record")
+
+        MDecl := parse_tree(@record_begin 'MName')
+        for Field in Fields loop
+            FieldName := Field.machine_name
+            FieldType := Field.machine_type
+            MDecl := parse_tree
+                'MDecl'
+                @record_field 'MName' 'FieldType' 'FieldName'
+        MDecl := parse_tree
+            'MDecl'
+            @record_end 'MName'
+
+        XLT.AddGlobalDecl MDecl
+        return MName
+
+
+    function IndexRecord(Record  : PT.tree;
+                         MField  : PT.tree;
+                         MType   : PT.tree;
+                         Type    : TY.any_type) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Index a field in a record type
+    // ------------------------------------------------------------------------
+        mname : PT.name_tree := SYM.Temporary ("fld")
+        fdecl : PT.tree :=
+                parse_tree(@temp_decl 'mtype' 'mname')
+        IO.WriteLn "Index function context=", XLT.function_context
+        XLT.AddScopeDecl XLT.function_context, fdecl
+
+        // Evaluate the argument so that it is a single value
+        SplitExpression Record, result
+
+        Idx : PT.tree := parse_tree(@field 'mname' 'Record' 'MField')
+        if result <> nil then
+            result := parse_tree
+                'result'
+                'Idx'
+        else
+            result := Idx
+
+        result := MakeExpression(result, mname)
+
+        TY.SetType result, Type
+        TY.SetType mname, Type

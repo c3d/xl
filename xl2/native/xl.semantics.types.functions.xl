@@ -45,7 +45,6 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
     //    Translate a parameter list
     // ------------------------------------------------------------------------
 
-        Parms := XLT.XLDeclarations (Parms)
         translate Parms
             when
                 'X' ; 'Y'
@@ -61,6 +60,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
                 MakeParameterList Y, list, icnt, ocnt
 
             else
+                Parms := XLT.XLDeclarations (Parms)
                 info : PT.info := PT.FindInfo(Parms, "DECL")
                 if info then
                     decl : info as declaration
@@ -108,6 +108,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         result.is_generic             := false
         result.is_polymorphic         := false
         result.is_subroutine          := true
+        result.is_record              := false
         result.is_reference           := false
         result.is_instantiation       := false
         result.is_compiler_generated  := false

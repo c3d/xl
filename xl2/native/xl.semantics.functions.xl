@@ -153,7 +153,7 @@ module XL.SEMANTICS.FUNCTIONS is
     // ------------------------------------------------------------------------
 
         when
-            'Interface' is builtin 'BuiltinName'
+            'Interface' is xl.bytecode.'BuiltinName'
         then
             Interface := EnterFunction(Interface)
             f : function := FunctionInfo(Interface)

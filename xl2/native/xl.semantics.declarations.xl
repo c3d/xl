@@ -240,7 +240,6 @@ module XL.SEMANTICS.DECLARATIONS is
 
         // Evaluate the initialization value
         if Value <> nil then
-            Value := XLT.XLSemantics Value
             decl.initializer := Value
 
             // Return initialization
@@ -262,6 +261,10 @@ module XL.SEMANTICS.DECLARATIONS is
     // ------------------------------------------------------------------------
     //    Create an internal declaration from an existing type
     // ------------------------------------------------------------------------
+
+        if Name.kind <> PT.xlNAME then
+            ERR.Error "A name was expected, got '$1'", Name
+            Name := SYM.Temporary ("invalid_declaration")
 
         // Flags set during semantics are all clear initially
         result.is_constant            := false
@@ -287,10 +290,6 @@ module XL.SEMANTICS.DECLARATIONS is
         result.body                   := nil
         result.frame_depth            := -1
         result.machine_type           := Type.machine_type
-
-        if Name.kind <> PT.xlNAME then
-            ERR.Error "A name was expected, got '$1'", Name
-            Name := SYM.Temporary ("invalid_declaration")
 
         // Check if there is already an entity by that name
         original : PT.tree := SYM.LookupOne(XLT.context, "DECL", Name.value)
