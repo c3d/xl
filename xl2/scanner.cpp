@@ -445,7 +445,7 @@ text XLScanner::Comment(text EOC)
             if (isspace(c))
                 column += 1;
             else
-                checkingIndent = 0;
+                checkingIndent = false;
         }
 
         if (c == *match)

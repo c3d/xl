@@ -27,17 +27,159 @@ import SC = XL.SCANNER
 import CS = XL.UI.CONSOLE
 import TR = XL.PARSER.TREE
 import PR = XL.PARSER
+import IO = XL.TEXT_IO
+import ASCII = XL.TEXT_IO.ENCODING.ASCII
+
+
+procedure InitializeParser (P : PR.parser; syntax : text) is
+// ----------------------------------------------------------------------------
+//   Read the xl.syntax file to get precedences
+// ----------------------------------------------------------------------------
+    in_prefix : boolean := false
+    in_infix : boolean := false
+    priority : integer := 0
+    tok : SC.token
+    S : SC.scanner := SC.NewScanner(syntax)
+
+    // Comments are hardcoded for now
+    P.comments["//"] := ASCII.CR
+
+    loop
+        tok := SC.NextToken(S)
+        exit if tok = SC.tokEOF
+
+        if tok = SC.tokNAME or tok = SC.tokSYMBOL then
+            if S.string_value = "INFIX" then
+                in_infix := true
+                in_prefix := false
+            else if S.string_value = "PREFIX" then
+                in_infix := false
+                in_prefix := true
+            else if S.string_value = "NEWLINE" then
+                if in_prefix then
+                    P.prefix_priority[ASCII.CR] := priority
+                if in_infix then
+                    P.infix_priority[ASCII.CR] := priority
+            else if S.string_value = "BLOCK" then
+                if in_prefix then
+                    P.prefix_priority[ASCII.TAB] := priority
+                if in_infix then
+                    P.infix_priority[ASCII.TAB] := priority
+            else if S.string_value = "STATEMENT" then
+                P.statement_priority := priority
+            else if S.string_value = "FUNCTION" then
+                P.function_priority := priority
+            else if S.string_value = "DEFAULT" then
+                P.default_priority := priority
+            else if in_infix then
+                P.infix_priority[S.string_value] := priority
+            else if in_prefix then
+                P.prefix_priority[S.string_value] := priority
+               
+        else if tok = SC.tokSTRING or tok = SC.tokQUOTE then
+            if in_prefix then
+                P.prefix_priority[S.string_value] := priority
+            if in_infix then
+                P.infix_priority[S.string_value] := priority
+
+        else if tok = SC.tokINTEGER then
+            priority := S.integer_value
+    
+
+
+
+
+// Pseudo type to control indentation
+type indent_pseudo
+type indent_control is access to indent_pseudo
+indent : indent_control := indent_control(3)
+unindent : indent_control := indent_control(-3)
+newline : indent_control := indent_control(0)
+current_tree_indent : integer := 0
+
+// Pseudo-type to control debug mode
+type debug_pseudo
+type debug_control is access to debug_pseudo
+debug : debug_control := debug_controL(true)
+nodebug : debug_control := debug_control(false)
+current_tree_debug : boolean := false
+
+
+procedure write(where: IO.output_file; direction : indent_control) is
+// ----------------------------------------------------------------------------
+//    Write the appropriate amount of indentation
+// ----------------------------------------------------------------------------
+    I : integer
+    delta : integer := integer(direction)
+
+    current_tree_indent += delta
+    writeln where, ""
+    for I in 1..current_tree_indent loop
+        write where, ' '
+
+
+procedure write(where: IO.output_file; do_debug : debug_control) is
+// ----------------------------------------------------------------------------
+//    Write the appropriate amount of indentation
+// ----------------------------------------------------------------------------
+    current_tree_debug := boolean(do_debug)
+
+
+procedure write(where : IO.output_file; what : TR.tree) is
+// ----------------------------------------------------------------------------
+//    For debugging purpose, write a tree
+// ----------------------------------------------------------------------------
+    if what.kind = PT.xlINTEGER then
+        T : PT.integer_tree := PT.integer_tree(what)
+        write where, T.value
+    else if what.kind = PT.xlREAL then
+        T : PT.real_tree := PT.real_tree(what)
+        write where, T.value
+    else if what.kind = PT.xlSTRING then
+        T : PT.string_tree := PT.string_tree(what)
+        write where, T.quote, T.value, T.quote
+    else if what.kind = PT.xlNAME then
+        T : PT.name_tree := PT.name_tree(what)
+        write where, T.value
+    else if what.kind = PT.xlBLOCK then
+        T : PT.block_tree := PT.block_tree(what)
+        if ASCII.is_line_break(T.closing) then
+            write where, indent, T.child, unindent
+        else
+            write where, T.opening, T.child, T.closing
+    else if what.kind = PT.xlPREFIX then
+        T : PT.prefix_tree := PT.prefix_tree(what)
+        if current_tree_debug then
+            write where, '[', T.left, ' ', T.right, ']'
+        else
+            write where, T.left, ' ', T.right
+    else if what.kind = PT.xlINFIX then
+        T : PT.infix_tree := PT.infix_tree(what)
+        if T.name = ASCII.CR then
+            write where, T.left, newline, T.right
+        else if current_tree_debug then
+            write where, '(', T.left, ' ', T.name, ' ', T.right, ')'
+        else
+            write where, T.left, ' ', T.name, ' ', T.right
+
 
 procedure Main is
+// ----------------------------------------------------------------------------
+//   The main entry point
+// ----------------------------------------------------------------------------
     I   : integer
     Max : integer := size CS.arguments
     S   : SC.scanner
     T   : SC.token
+    P   : PR.parser
+    D   : PT.tree
 
-    WriteLn "Size", Max
+    WriteLn "Number of args = ", Max
     for I in 1..Max-1 loop
-        S := SC.NewScanner CS.arguments[I]
-        loop
-            T := SC.NextToken(S)
-            WriteLn "T=", T, " text=", S.token
-            exit if T = SC.tokEOF
+        name : text := CS.arguments[i]
+        P := PR.NewParser(name)
+        InitializeParser P, "xl.syntax"
+        D := PR.Parse(P)
+        writeln "Tree=", nodebug, newline, D
+        writeln "Debug=", debug, newline, D
+       

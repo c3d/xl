@@ -155,11 +155,11 @@ int main(int argc, char **argv)
         XLParser parser (cmd.c_str(), &gContext);
         XLTree *tree = parser.Parse();
 
-        IFTRACE(parse_tree)
+        IFTRACE(source)
         {
             std::cout << *tree << "\n";
         }
-        IFTRACE(semantics_tree)
+        IFTRACE(parse)
         {
             XLTree::outputDebug = true;
             std::cout << *tree << "\n";

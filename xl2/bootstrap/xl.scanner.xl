@@ -102,8 +102,8 @@ module XL.SCANNER is
     // ------------------------------------------------------------------------
     //   Read the next character
     // ------------------------------------------------------------------------
-        S.token += C
-        S.string_value += ASCII.tolower C
+        S.token += ASCII.tolower(C)
+        S.string_value += C
         IO.read S.input, C
 
 
@@ -111,7 +111,7 @@ module XL.SCANNER is
     // ------------------------------------------------------------------------
     //   Read the next character
     // ------------------------------------------------------------------------
-        S.token += C
+        S.string_value += C
         IO.read S.input, C
 
 
@@ -206,7 +206,7 @@ module XL.SCANNER is
                     // Skip a single underscore
                     if C = '_' then
                         IgnoreChar S, C
-                        if C = '_' then
+                        if DigitValue(C) >= S.base then
                             ERR.Report ERR.E_ScanDoubleUnder, S.file, S.line
 
                     // Check if this is a based number
@@ -245,7 +245,7 @@ module XL.SCANNER is
                         NextChar S, C
                         if C = '_' then
                             IgnoreChar S, C
-                            if C = '_' then
+                            if DigitValue(C) >= S.base then
                                 ERR.Report ERR.E_ScanDoubleUnder, S.file,S.line
 
             // Check if we have a second '#' at end of based number
@@ -273,6 +273,8 @@ module XL.SCANNER is
                     NextChar S, C
                     if C = '_' then
                         IgnoreChar S, C
+                        if DigitValue C >= 10 then
+                           ERR.Report ERR.E_ScanDoubleUnder, S.file, S.line
 
                 // Compute base ^ exponent
                 exponent_value : real := 1.0
@@ -301,10 +303,11 @@ module XL.SCANNER is
         // Look for names
         if ASCII.is_letter C then
             while ASCII.is_letter_or_digit C loop
+                NextLowerChar S, C
                 if C = '_' then
                     IgnoreChar S, C
-                else
-                    NextLowerChar S, C
+                    if not ASCII.is_letter_or_digit C then
+                        ERR.Report ERR.E_ScanDoubleUnder, S.file, S.line
             IO.PutBack S.input, C
             return tokNAME
 
@@ -361,7 +364,7 @@ module XL.SCANNER is
                 if ASCII.is_space C then
                     S.column += 1
                 else
-                    S.checking_indent := 0
+                    S.checking_indent := false
 
             if C = EndOfComment[index] then
                 index += 1

@@ -46,14 +46,16 @@ module XL.PARSER.TREE with
     // Representation of an integer
     type integer_node is tree_node with
         value : integer
-    function NewInteger(value : integer) return access to integer_node is
+    type integer_tree is access to integer_node
+    function NewInteger(value : integer) return integer_tree is
         result.kind := xlINTEGER
         result.value := value
 
     // Representation of a real
     type real_node is tree_node with
         value : real
-    function NewReal(value : real) return access to real_node is
+    type real_tree is access to real_node
+    function NewReal(value : real) return real_tree is
         result.kind := xlREAL
         result.value := value
 
@@ -61,7 +63,8 @@ module XL.PARSER.TREE with
     type string_node is tree_node with
         value : text
         quote : character
-    function NewString(value : text; quote : character) return access to string_node is
+    type string_tree is access to string_node
+    function NewString(value : text; quote : character) return string_tree is
         result.kind := xlSTRING
         result.value := value
         result.quote := quote
@@ -69,7 +72,8 @@ module XL.PARSER.TREE with
     // Representation of a name
     type name_node is tree_node with
         value : text
-    function NewName(value : text) return access to name_node is
+    type name_tree is access to name_node
+    function NewName(value : text) return name_tree is
         result.kind := xlNAME
         result.value := value
 
@@ -81,7 +85,8 @@ module XL.PARSER.TREE with
         child   : tree
         opening : character
         closing : character
-    function NewBlock(child : tree; opening : character; closing : character) return access to block_node is
+    type block_tree is access to block_node
+    function NewBlock(child : tree; opening : character; closing : character) return block_tree is
         result.kind := xlBLOCK
         result.child := child
         result.opening := opening
@@ -91,7 +96,8 @@ module XL.PARSER.TREE with
     type prefix_node is tree_node with
         left  : tree
         right : tree
-    function NewPrefix(left : tree; right : tree) return access to prefix_node is
+    type prefix_tree is access to prefix_node
+    function NewPrefix(left : tree; right : tree) return prefix_tree is
         result.kind := xlPREFIX
         result.left := left
         result.right := right
@@ -101,7 +107,8 @@ module XL.PARSER.TREE with
         name  : text
         left  : tree
         right : tree
-    function NewInfix(name: text; left: tree; right: tree) return access to infix_node is
+    type infix_tree is access to infix_node
+    function NewInfix(name: text; left: tree; right: tree) return infix_tree is
         result.kind := xlINFIX
         result.name := name
         result.left := left

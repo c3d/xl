@@ -405,8 +405,9 @@ XLTree *XLParser::Parse(char closing_paren)
             }
 
             // Check if new statement
-            if (stack.size() == 0 || stack.back().priority<statement_priority)
-                result_priority = statement_priority;
+            if (right->Kind() != xlBLOCK)
+                if (stack.size() == 0 || stack.back().priority<statement_priority)
+                    result_priority = statement_priority;
 
             // Push a recognized prefix op
             stack.push_back(Pending(prefix, result, result_priority));

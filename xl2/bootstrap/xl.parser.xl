@@ -105,7 +105,6 @@ module XL.PARSER is
     //  I wish I could fix that one...
     //  The correct XL syntax is: Write (-A),B
     // We hope that semantic will catch such a case later and let us know...
-        return 0
 
         comment_end             : text
         left                    : PT.tree
@@ -147,7 +146,7 @@ module XL.PARSER is
 
                 // Check names and symbols, skip comments
                 else if tok = SC.tokSYMBOL or tok = SC.tokNAME then
-                    name := S.string_value
+                    name := S.token
                     if IsComment(P, name, comment_end) then
                         // Got a comment with a pending new-line, skip it
                         SC.Comment S, comment_end
@@ -155,7 +154,7 @@ module XL.PARSER is
                             restart
 
                     // Check if we got something like 'else'
-                    if P.infix_priority[name] >= statement_priority then
+                    if GetInfixPriority(P, name) >= statement_priority then
                         // Otherwise, delay current token and process
                         // the 'fake' new-line
                         pending_token := tok
@@ -171,223 +170,243 @@ module XL.PARSER is
                     prefix_priority := default_priority
                     infix_priority := default_priority
 
-                // Other pending tokens just fall through
+                // Something else is delayed until after we deal with new-line
                 else
-                    tok := pending_token
-                    pending_token := SC.tokNONE
+                    pending_token := tok
+                    tok := SC.tokNEWLINE
+                    right := nil
+                    prefix_priority := default_priority
+                    infix_priority := default_priority
 
-                if tok = SC.tokEOF or tok = SC.tokERROR then
-                    done := true
-                else if tok = SC.tokINTEGER then
-                    right := PT.NewInteger(S.integer_value)
-                else if tok = SC.tokREAL then
-                    right := PT.NewReal(S.real_value)
-                else if tok = SC.tokSTRING then
-                    right := PT.NewString(S.string_value, '"')
-                else if tok = SC.tokQUOTE then
-                    right := PT.NewString(S.string_value, "'"[0])
-                else if tok = SC.tokNAME or tok = SC.tokSYMBOL then
-                    name := S.string_value
-                    spelling := S.token
-                    if IsComment(P, name, comment_end) then
-                        SC.Comment S, comment_end
-                        if comment_end = ASCII.CR then
-                            pending_token := SC.tokNEWLINE
-                        restart
+            // Other pending tokens just fall through
+            else
+                tok := pending_token
+                pending_token := SC.tokNONE
 
-                    else if not result then
-                        // If this is the very first thing we see
+            if tok = SC.tokEOF or tok = SC.tokERROR then
+                done := true
+            else if tok = SC.tokINTEGER then
+                right := PT.NewInteger(S.integer_value)
+            else if tok = SC.tokREAL then
+                right := PT.NewReal(S.real_value)
+            else if tok = SC.tokSTRING then
+                right := PT.NewString(S.string_value, '"')
+            else if tok = SC.tokQUOTE then
+                right := PT.NewString(S.string_value, "'"[0])
+            else if tok = SC.tokNAME or tok = SC.tokSYMBOL then
+                name := S.token
+                spelling := S.string_value
+                if IsComment(P, name, comment_end) then
+                    SC.Comment S, comment_end
+                    if comment_end = ASCII.CR then
+                        pending_token := SC.tokNEWLINE
+                    restart
+
+                else if not result then
+                    // If this is the very first thing we see
+                    prefix_priority := GetPrefixPriority(P, name)
+                    right := PT.NewName(spelling)
+                    if prefix_priority = default_priority then
+                        prefix_priority := function_priority
+                else if left <> nil then
+                    // This is the right of an infix operator
+                    // If we have "A and not B", where "not" has
+                    // higher priority than "and", we want to
+                    // parse tis as "A and (not B)" rather than as
+                    // "(A and not) B"
+                    prefix_priority := GetPrefixPriority (P, name)
+                    right := PT.NewName(spelling)
+                    if prefix_priority = default_priority then
+                        prefix_priority := function_priority
+                else
+                    // Complicated case: need to discriminate
+                    // infix and prefix
+                    infix_priority := GetInfixPriority (P, name)
+                    if infix_priority <> default_priority then
+                        // We got an infix
+                        left := result
+                        infix := spelling
+                    else
+                        // No priority : take this as a prefix by default
                         prefix_priority := GetPrefixPriority(P, name)
                         right := PT.NewName(spelling)
                         if prefix_priority = default_priority then
                             prefix_priority := function_priority
-                    else if left <> nil then
-                        // This is the right of an infix operator
-                        // If we have "A and not B", where "not" has
-                        // higher priority than "and", we want to
-                        // parse tis as "A and (not B)" rather than as
-                        // "(A and not) B"
-                        prefix_priority := GetPrefixPriority (P, name)
-                        right := PT.NewName(spelling)
-                        if prefix_priority = default_priority then
-                            prefix_priority := function_priority
-                    else
-                        // Complicated case: need to discriminate
-                        // infix and prefix
-                        infix_priority := GetInfixPriority (P, name)
-                        if infix_priority <> default_priority then
-                            // We got an infix
-                            left := result
-                            infix := spelling
-                        else
-                            // No priority : take this as a prefix by default
-                            prefix_priority := GetPrefixPriority(P, name)
-                            right := PT.NewName(spelling)
-                            if prefix_priority = default_priority then
-                                prefix_priority := function_priority
 
-                else if tok = SC.tokNEWLINE then
-                    if pending_token = SC.tokNONE then
-                        tok := SC.NextToken S
-                        if tok = SC.tokSYMBOL or tok = SC.tokNAME then
-                            if IsComment(P, S.string_value, comment_end) then
-                                // Followed by a comment
-                                // Can't decide just yet what indent we have
-                                // Skip the comment
-                                SC.Comment S, comment_end
-                                restart
-                        // Otherwise, we'll deal with this other token next
-                        pending_token := tok
+            else if tok = SC.tokNEWLINE then
+                if pending_token = SC.tokNONE then
+                    tok := SC.NextToken S
+                    if tok = SC.tokSYMBOL or tok = SC.tokNAME then
+                        if IsComment(P, S.token, comment_end) then
+                            // Followed by a comment
+                            // Can't decide just yet what indent we have
+                            // Skip the comment
+                            SC.Comment S, comment_end
+                            restart
+                    // Otherwise, we'll deal with this other token next
+                    pending_token := tok
 
-                    // Consider new-line as an infix operator
-                    infix := ASCII.CR
-                    name := infix
-                    infix_priority := GetInfixPriority (P, infix)
-                    left := result
+                // Consider new-line as an infix operator
+                infix := ASCII.CR
+                name := infix
+                infix_priority := GetInfixPriority (P, infix)
+                left := result
 
-                else if tok = SC.tokPARCLOSE then
-                    // Check for mismatched parentheses here
-                    if S.string_value[0] <> closing_paren then
-                        ERR.Report ERR.E_ParseMismatchParen, S.file, S.line
-                    done := true
+            else if tok = SC.tokPARCLOSE then
+                // Check for mismatched parentheses here
+                if S.token[0] <> closing_paren then
+                    ERR.Report ERR.E_ParseMismatchParen, S.file, S.line
+                done := true
 
-                else if tok = SC.tokPAROPEN or tok = SC.tokINDENT then
-                    if tok = SC.tokPAROPEN then
-                        opening := S.string_value[0]
-                        if opening = '(' then closing := ')'
-                        if opening = '{' then closing := '}'
-                        if opening = '[' then closing := '}'
-                    else
-                        opening := ASCII.TAB[0]
-                        closing := ASCII.CR[0]
+            else if tok = SC.tokUNINDENT then
+                // Check for mismatched parentheses here
+                if not ASCII.is_line_break(closing_paren) then
+                    ERR.Report ERR.E_ParseMismatchParen, S.file, S.line
+                done := true
 
-                    paren_priority := GetInfixPriority (P, name)
-
-                    // Make sure 'foo.bar(x)' parses as '(foo.bar) (x)'
-                    if result <> nil then
-                        while size stack loop
-                            prev : pending := back(stack)
-                            exit if prev.priority < paren_priority
-                            result_priority := prev.priority
-                            result := PT.NewInfix(prev.opcode,prev.argument,result)
-                            pop_back stack
-
-                    // Parse the contents of the parenthese
-                    right := Parse(P, closing)
-                    if right = nil then
-                        right := PT.NewName ""
-                    right := PT.NewBlock(right, opening, closing)
-                    if tok = SC.tokINDENT then
-                        // Unindent to be seen as unindent followed by new-line
-                        // so that new-line operator combines lines
-                        pending_token = SC.tokNEWLINE
-
+            else if tok = SC.tokPAROPEN or tok = SC.tokINDENT then
+                if tok = SC.tokPAROPEN then
+                    opening := S.token[0]
+                    if opening = '(' then closing := ')'
+                    if opening = '{' then closing := '}'
+                    if opening = '[' then closing := ']'
                 else
-                    assert not "Invalid token"
+                    opening := ASCII.TAB[0]
+                    closing := ASCII.CR[0]
 
-                // Check what is the current result
-                if result = nil then
+                paren_priority := GetInfixPriority (P, name)
 
-                    // First thing we parse
+                // Make sure 'foo.bar(x)' parses as '(foo.bar) (x)'
+                if result <> nil then
+                    while size stack loop
+                        prev : pending := back(stack)
+                        exit if prev.priority < paren_priority
+                        result_priority := prev.priority
+                        result := PT.NewInfix(prev.opcode,prev.argument,result)
+                        pop_back stack
+
+                // Parse the contents of the parenthese
+                right := Parse(P, closing)
+                if right = nil then
+                    right := PT.NewName ""
+                right := PT.NewBlock(right, opening, closing)
+                if tok = SC.tokINDENT then
+                    // Unindent to be seen as unindent followed by new-line
+                    // so that new-line operator combines lines
+                    pending_token = SC.tokNEWLINE
+
+            else
+                writeln "Invalid token: ", tok, " (", S.token, ")"
+                assert not "Invalid token"
+
+            // Check what is the current result
+            if result = nil then
+
+                // First thing we parse
+                result := right
+                if new_statement then
+                    prefix_priority := statement_priority
+                result_priority := prefix_priority
+
+                // We are now in the middle of an expression
+                if result then
+                    new_statement := false
+
+            else if left <> nil then
+
+                // Check if we had a statement separator
+                new_statement := infix_priority < statement_priority
+
+                // We got left and infix-op, we are now looking for right
+                // If we have 'A and not B', where 'not' has higher priority
+                // than 'and', we want to finish parsing 'not B' first, rather
+                // than seeing this as '(A and not) B'.
+                if prefix_priority <> default_priority and prefix_priority > infix_priority then
+                    // Push "A and" in the above example
+                    T : pending
+                    T.opcode := infix
+                    T.argument := left
+                    T.priority := infix_priority
+                    stack += T
+                    left := nil
+
+                    // Start over with "not"
                     result := right
-                    if new_statement then
-                        prefix_priority := statement_priority
                     result_priority := prefix_priority
 
-                    // We are now in the middle of an expression
-                    if result then
-                        new_statement := false
+                else
+                    while size(stack) loop
+                        prev : pending := back(stack)
 
-                else if left <> nil then
+                        // Check priorities compared to stack
+                        // A+B*C we got '*', keep 'A+..." on stack
+                        exit if not done and prev.priority <> default_priority and infix_priority > prev.priority
+                        if prev.opcode = prefix then
+                            left := PT.NewPrefix(prev.argument, left)
+                        else
+                            left := PT.NewInfix(prev.opcode, prev.argument, left)
+                        pop_back stack
 
-                    // Check if we had a statement separator
-                    new_statement := infix_priority < statement_priority
+                    // Now we want to restart with the rightmost operand
+                    if done then
+                        // End of text: the result is what we just got
+                        result := left
 
-                    // We got left and infix-op, we are now looking for right
-                    // If we have 'A and not B', where 'not' has higher priority
-                    // than 'and', we want to finish parsing 'not B' first, rather
-                    // than seeing this as '(A and not) B'.
-                    if prefix_priority <> default_priority and prefix_priority > infix_priority then
-                        // Push "A and" in the above example
+                    else
+                        // Something like A+B+C, just got second +
                         T : pending
                         T.opcode := infix
                         T.argument := left
                         T.priority := infix_priority
                         stack += T
-                        left := nil
+                        result := nil
 
-                        // Start over with "not"
-                        result := right
-                        result_priority := prefix_priority
+                    left := nil
 
-                    else
-                        while size(stack) loop
-                            prev : pending := back(stack)
+            else if right <> nil then
 
-                            // Check priorities compared to stack
-                            // A+B*C we got '*', keep 'A+..." on stack
-                            exit if not done and prev.priority <> default_priority and infix_priority > prev.priority
-                            if prev.opcode = prefix then
-                                left := PT.NewPrefix(prev.argument, left)
-                            else
-                                left := PT.NewInfix(prev.opcode, prev.argument, left)
-                            pop_back stack
-
-                        // Now we want to restart with the rightmost operand
-                        if done then
-                            // End of text: the result is what we just got
-                            result := left
-
-                        else
-                            // Something like A+B+C, just got second +
-                            T : pending
-                            T.opcode := infix
-                            T.argument := left
-                            T.priority := infix_priority
-                            stack += T
-                            result := nil
-
-                        left := nil
-
-                else if right <> nil then
-
-                    // Check priorities for "A.B x,y" -> "(A.B) (x,y)"
-                    while size(stack) loop
-                        prev : pending := back(stack)
-                        exit if not done and prev.priority <> default_priority and result_priority > prev.priority
-                        if prev.opcode = prefix then
-                            result := PT.NewPrefix(prev.argument, result)
-                        else
-                            result := PT.NewInfix(prev.opcode, prev.argument, result)
-                        pop_back stack
-
-                    // Check if new statement
-                    T : pending := back(stack)
-                    if size(stack) = 0 or T.priority < statement_priority then
-                        result_priority := statement_priority
-                           
-                    // Push a recognized prefix op
-                    T.opcode := prefix
-                    T.argument := result
-                    T.priority := result_priority
-                    stack += T
-                    result := right
-                    result_priority := prefix_priority
-            // end "while not done"
-
-            if size(stack) then
-                if result = nil then
-                    last : pending := back(stack)
-                    if last.opcode <> ASCII.CR then
-                        ERR.Report ERR.E_ParseTrailingOp, S.file, S.line
-                    result := last.argument
-                    pop_back stack
-
-                // Check if some stuff remains on the stack
+                // Check priorities for "A.B x,y" -> "(A.B) (x,y)"
                 while size(stack) loop
                     prev : pending := back(stack)
+                    exit if not done and prev.priority <> default_priority and result_priority > prev.priority
                     if prev.opcode = prefix then
                         result := PT.NewPrefix(prev.argument, result)
                     else
                         result := PT.NewInfix(prev.opcode, prev.argument, result)
                     pop_back stack
+
+                // Check if new statement
+                T : pending
+                if right.kind <> PT.xlBLOCK then
+                    if size(stack) = 0 then
+                        result_priority := statement_priority
+                    else
+                        T := back(stack)
+                        if T.priority < statement_priority then
+                            result_priority := statement_priority
+
+                // Push a recognized prefix op
+                T.opcode := prefix
+                T.argument := result
+                T.priority := result_priority
+                stack += T
+                result := right
+                result_priority := prefix_priority
+        // end "while not done"
+
+        if size(stack) then
+            if result = nil then
+                last : pending := back(stack)
+                if last.opcode <> ASCII.CR then
+                    ERR.Report ERR.E_ParseTrailingOp, S.file, S.line
+                result := last.argument
+                pop_back stack
+
+            // Check if some stuff remains on the stack
+            while size(stack) loop
+                prev : pending := back(stack)
+                if prev.opcode = prefix then
+                    result := PT.NewPrefix(prev.argument, result)
+                else
+                    result := PT.NewInfix(prev.opcode, prev.argument, result)
+                pop_back stack

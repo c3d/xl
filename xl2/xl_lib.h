@@ -95,21 +95,23 @@ void popback(std::vector<T> &v)
 // 
 // ============================================================================
 
-inline void XLWrite(std::ostream *o, char x) { *o << x; }
-inline void XLWrite(std::ostream *o, int x) { *o << x; }
-inline void XLWrite(std::ostream *o, double x) { *o << x; }
-inline void XLWrite(std::ostream *o, text x) { *o << x; }
+inline void write(std::ostream *o, char x) { *o << x; }
+inline void write(std::ostream *o, int x) { *o << x; }
+inline void write(std::ostream *o, double x) { *o << x; }
+inline void write(std::ostream *o, text x) { *o << x; }
 
-inline void XLRead(std::istream *i, char &x) { i->get(x); }
-inline void XLRead(std::istream *i, int &x) { *i >> x; }
-inline void XLRead(std::istream *i, double &x) { *i >> x; }
-inline void XLRead(std::istream *i, text &x) { *i >> x; }
+inline void read(std::istream *i, char &x) { i->get(x); }
+inline void read(std::istream *i, int &x) { *i >> x; }
+inline void read(std::istream *i, double &x) { *i >> x; }
+inline void read(std::istream *i, text &x) { *i >> x; }
 
 namespace xl
 {
     namespace textio
     {
         typedef std::iostream *file;
+        typedef std::ostream *outputfile;
+        typedef std::istream *inputfile;
         file open(text name) { return new std::fstream(name.c_str(), std::ios_base::in); }
         void close(file f) { delete f; }
         void read(file f, char &c) { f->get(c); }

@@ -59,28 +59,9 @@ OPTION(v, "Short form for -verbose.", verbose = true)
 // Traces. The first ones must match the MzTrace definition in base.h
 // We use lower-case names here to avoid duplicate definition and be able
 // to reuse the IFTRACE macro as is.
-
-TRACE(memory)                   // Mozart-defined traces
-TRACE(strings)
-TRACE(melody)
-TRACE(codegen_ops)
-
-TRACE(grammar)                  // XL Compiler traces
-TRACE(parse_tree)               // Input tree after parsing
-TRACE(semantics_tree)           // Tree after semantics
-TRACE(expand_tree)              // Tree after expansion
-TRACE(codegen_tree)             // Tree after code generation
-TRACE(opt_tree)                 // Tree after optimizations
-TRACE(output_tree)              // Tree at end of processing
-TRACE(overload)                 // Overload resolution
-TRACE(reduction)                // Expression reduction
-TRACE(instantiation)            // Generics instantiation
-TRACE(timing)                   // Measure the time for various operations
-TRACE(pragmas)                  // Pragma processing
-TRACE(modules)                  // Modules (import/export)
-TRACE(codegen)                  // Tracing code generation
-TRACE(code_comments)            // Showing comments in code
-
+TRACE(source)
+TRACE(parse)
+TRACE(timing)
 
 // Undefine for next use...
 #undef OPTVAR

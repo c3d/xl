@@ -924,7 +924,7 @@ void DoWrite(XLTree *arg)
         }
     }
 
-    out << "XLWrite(";
+    out << "write(";
     if (!default_stream.length())
         default_stream = "&std::cout";
     out << default_stream << ", ";
@@ -939,7 +939,16 @@ PREFIX(write)
 // ----------------------------------------------------------------------------
 {
     default_stream = "";
-    DoWrite(tree->right);
+    if (in_procedure && !in_parameter_declaration)
+    {
+        DoWrite(tree->right);
+    }
+    else
+    {
+        XL2C(tree->left);
+        out << ' ';
+        XL2C(tree->right);
+    }
 }
 
 
@@ -949,13 +958,22 @@ PREFIX(writeln)
 // ----------------------------------------------------------------------------
 {
     default_stream = "";
-    DoWrite(tree->right);
-    out << ";\nXLWrite(";
-    if (default_stream.length())
-        out << default_stream << ", ";
+    if (in_procedure && !in_parameter_declaration)
+    {
+        DoWrite(tree->right);
+        out << ";\nwrite(";
+        if (default_stream.length())
+            out << default_stream << ", ";
+        else
+            out << "&std::cout, ";
+        out << "\"\\n\");";
+    }
     else
-        out << "&std::cout, ";
-    out << "\"\\n\");";
+    {
+        XL2C(tree->left);
+        out << ' ';
+        XL2C(tree->right);
+    }
 }
 
 
@@ -983,7 +1001,7 @@ void DoRead(XLTree *arg)
         }
     }
 
-    out << "XLRead(";
+    out << "read(";
     if (!default_stream.length())
         default_stream = "&std::cin, ";
     out << default_stream << ", ";
@@ -998,7 +1016,16 @@ PREFIX(read)
 // ----------------------------------------------------------------------------
 {
     default_stream = "";
-    DoRead(tree->right);
+    if (in_procedure && !in_parameter_declaration)
+    {
+        DoRead(tree->right);
+    }
+    else
+    {
+        XL2C(tree->left);
+        out << ' ';
+        XL2C(tree->right);
+    }
 }
 
 
@@ -1008,5 +1035,14 @@ PREFIX(readln)
 // ----------------------------------------------------------------------------
 {
     default_stream = "";
-    DoRead(tree->right);
+    if (in_procedure && !in_parameter_declaration)
+    {
+        DoRead(tree->right);
+    }
+    else
+    {
+        XL2C(tree->left);
+        out << ' ';
+        XL2C(tree->right);
+    }
 }
