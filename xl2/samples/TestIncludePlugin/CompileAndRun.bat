@@ -1,4 +1,5 @@
-copy ..\..\xl.syntax .
+@copy ..\..\xl.syntax .
+@copy ..\..\native\xl.bytecode .
 
 @rem ..\..\native\xl3 -bootstrap TestIncludePlugin.xl > TestIncludePlugin_native.cpp
 @rem cl /EHsc /I..\..  TestIncludePlugin_native.cpp
