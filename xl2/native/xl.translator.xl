@@ -141,7 +141,6 @@ module XL.TRANSLATOR is
                 old_global := context
                 // Storage for XL_Init and XL_Term temps
                 function_context := SYM.NewSymbolTable(context)
-                IO.WriteLn "Main function context=", function_context
         else if scope = scopeFunction or scope = scopeLocal then
             SYM.SetInteger context, "LOCAL", 1
             if scope = scopeFunction then
@@ -172,9 +171,8 @@ module XL.TRANSLATOR is
                     'result'
         else if scope = scopeMain then
             if init <> nil then
-                IO.WriteLn "In main function context=", function_context
-                ldecl : PT.tree := SYM.ScopeItems(function_context, "DECL")
                 init := XLSemantics(init)
+                ldecl : PT.tree := SYM.ScopeItems(function_context, "DECL")
                 if ldecl <> nil then
                     result := parse_tree
                         @globinit_begin
@@ -199,7 +197,6 @@ module XL.TRANSLATOR is
             if term <> nil then
                 ldecl : PT.tree := SYM.ScopeItems(function_context, "DECL")
                 term := XLSemantics(term)
-                IO.WriteLn "term=", term, " decl=", ldecl
                 if ldecl <> nil then
                     result := parse_tree
                         @globinit_begin
