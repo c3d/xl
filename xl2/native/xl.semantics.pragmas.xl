@@ -31,13 +31,13 @@ import SYM = XL.SYMBOLS
 module XL.SEMANTICS.PRAGMAS is
 
 
-    function PragmaName (pragma : PT.tree) return text is
+    function PragmaName (pragma : PT.tree) return PT.name_tree is
     // ------------------------------------------------------------------------
     //    Return the name of a pragma
     // ------------------------------------------------------------------------
         if pragma.kind = PT.xlNAME then
             name : pragma as PT.name_tree
-            return name.value
+            return name
         else if pragma.kind = PT.xlINFIX then
             infix : pragma as PT.infix_tree
             return PragmaName(infix.left)
@@ -46,7 +46,7 @@ module XL.SEMANTICS.PRAGMAS is
             return PragmaName(prefix.left)
         else
             ERR.Error "Invalid syntax for pragma", pragma
-            return "error"
+            return PT.NewName("error")
 
 
     function ProcessPragma(phase : text;
@@ -57,11 +57,10 @@ module XL.SEMANTICS.PRAGMAS is
     // ------------------------------------------------------------------------
         SYM.SetText XLT.context, "PHASE", phase
         SYM.SetProperty XLT.context, "PRAGMA", pragma
-        name : text := PragmaName(pragma)
-        name := PT.XLNormalize(name)
+        p_name : PT.name_tree := PragmaName(pragma)
+        name : text := PT.XLNormalize(p_name.value)
         if SYM.GetInteger(XLT.context, name + ".pragma", 0, true) <> 1 then
-            ERR.Error "The pragma {$1} is not implemented",
-                PT.NewName(name, pragma.position)
+            ERR.Error "The pragma {$1} is not implemented", p_name
         return SYM.LookupRewrite(XLT.context, name, input)
    
 
