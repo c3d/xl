@@ -24,10 +24,10 @@
 // ****************************************************************************
 
 #include <stdlib.h>
-#include <iostream.h>
 #include <string.h>
 #include <ctype.h>
 #include <string>
+#include <iostream>
 #include "options.h"
 #include "errors.h"
 
@@ -56,14 +56,14 @@ static void Usage(char **argv)
 //    Display usage information when an invalid name is given
 // ----------------------------------------------------------------------------
 {
-    cerr << "Usage:\n";
-    cerr << argv[0] << " <options> <source_file>\n";
+    std::cerr << "Usage:\n";
+    std::cerr << argv[0] << " <options> <source_file>\n";
 
 #define OPTVAR(name, type, value)
 #define OPTION(name, descr, code)                                       \
-    cerr << "\t-" << #name ": " descr "\n";
+    std::cerr << "\t-" << #name ": " descr "\n";
 #if DEBUG
-#define TRACE(name)                 cerr << "\t-t" #name ": Trace " #name "\n";
+#define TRACE(name)                 std::cerr << "\t-t" #name ": Trace " #name "\n";
 #else
 #define TRACE(name)
 #endif

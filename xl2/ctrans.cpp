@@ -189,6 +189,7 @@ bool XL2CTranslation::Integer(XLInteger *input)
 // ----------------------------------------------------------------------------
 {
     out << input->value;
+    return true;
 }
 
 
@@ -198,6 +199,7 @@ bool XL2CTranslation::Real(XLReal *input)
 // ----------------------------------------------------------------------------
 {
     out << input->value;
+    return true;
 }
 
 
@@ -209,6 +211,7 @@ bool XL2CTranslation::String(XLString *input)
     out << input->quote
         << XLSanitize(input->value, input->quote)
         << input->quote;
+    return true;
 }
 
 
@@ -222,6 +225,7 @@ bool XL2CTranslation::Name(XLName *input)
         out << XLNames[name];
     else
         out << name;
+    return true;
 }
 
 
@@ -248,6 +252,7 @@ bool XL2CTranslation::Block(XLBlock *input)
         out << input->closing;
         break;
     }        
+    return true;
 }
 
 
@@ -273,6 +278,7 @@ bool XL2CTranslation::Prefix(XLPrefix *input)
         if (!has_paren)
             out << ")";
     }
+    return true;
 }
 
 
@@ -298,6 +304,7 @@ bool XL2CTranslation::Infix(XLInfix *input)
         XL2C(input->right);
         out << ')';
     }
+    return true;
 }
 
 
@@ -307,6 +314,7 @@ bool XL2CTranslation::Builtin(XLBuiltin *input)
 // ----------------------------------------------------------------------------
 {
     out << "*** ERROR\n";
+    return true;
 }
 
 
