@@ -1,0 +1,70 @@
+// ****************************************************************************
+//  TestIncludePlugin.xl
+//                                                                 XL2 project
+// ****************************************************************************
+
+import CS = XL.UI.CONSOLE
+import IO = XL.TEXT_IO
+
+// {include "ForInclude.inc"} // Message : text := "Hello World From Include"
+
+// {include}
+
+// When the include file is not a text
+//{include 666} // => Error: bad form
+
+//{define IncludeFilename "ForInclude.inc"}
+
+//{define IncludeFilename "zzForInclude.inc"}
+
+//{define IncludeFilename 1}
+
+//{define DEBUG_ON}
+
+//{include IncludeFilename}
+
+//{junk DefineName DefineValue}
+
+{define DEBUG}
+
+{define PRINT_DEBUG on}
+
+//{define PRINT_DEBUG OFF}
+
+//{define PRINT_DEBUG}
+
+{define NUMBER_OF_THE_BEAST 666}
+
+{define ThisOne 1}
+{define ThisOther 1}
+
+procedure Main is
+
+   {IfDefined DEBUG}
+      IO.Writeln "DEBUG is Defined"
+
+   {IfDefined PRINT_DEBUG ON}
+      IO.Writeln "DEBUG is ON"
+      {IfDefined DEBUG}
+         IO.Writeln "DEBUG is Defined"
+
+   {ifp 1+1 = 2}
+     IO.Writeln "XL says 1+1=2 !"
+
+   {ifp 1+1 > 2}
+     IO.Writeln "XL says 1+1 > 2 !"
+
+   {ifp PRINT_DEBUG = on}
+     IO.Writeln "XL says PRINT_DEBUG = ON"
+
+   {ifp NUMBER_OF_THE_BEAST = 666}
+     IO.Writeln "XL does know its classics !"
+
+   {ifp 1 and 1 <= 1}
+     IO.Writeln "1 and 1 <= 1"
+
+   {ifp 1 and 1 <= 1}
+     IO.Writeln "1 and 1 >= 1"
+
+   IO.Writeln Message
+
