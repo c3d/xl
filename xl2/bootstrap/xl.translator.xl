@@ -265,7 +265,9 @@ module XL.TRANSLATOR is
 
         XL2C input
         if input.kind = PT.xlNAME then
-            IO.write "()"
+            name : PT.name_tree := PT.name_tree(input)
+            if name.value <> "return" then
+                IO.write "()"
         IO.writeln ";"
             
 
