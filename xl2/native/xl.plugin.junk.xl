@@ -1,0 +1,58 @@
+// ****************************************************************************
+//  xl.plugin.junk.xl               (C) 1992-2004 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Implementation of junk
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// * Credits    : Sebastien <sebbrochet@users.sourceforge.net> (initial version)
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import ERR = XL.ERRORS
+import SYM = XL.SYMBOLS
+
+module XL.PLUGIN.JUNK is
+
+    translation Junk
+    // ------------------------------------------------------------------------
+    //    Translations below an 'Junk' pragma
+    // ------------------------------------------------------------------------
+
+        when
+           'Anything'
+        then
+           pragma : PT.tree := SYM.GetProperty(XLT.context, "PRAGMA")
+
+           translate pragma
+              when
+                 'PragmaName' 'DefineName' 'Value'
+              then
+                 ERR.Error "'PragmaName' 'DefineName' 'Value' : '$1'", DefineName
+                 return parse_tree(@error)
+
+              when
+                 'PragmaName' 'DefineName'
+              then
+                 ERR.Error "'PragmaName' 'DefineName' : '$1'", DefineName
+                 return parse_tree(@error)
+
+              else
+                 ERR.Error "Default pattern matching: $1", pragma.position
+                 return parse_tree(@error)
