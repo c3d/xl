@@ -32,6 +32,7 @@ module XL.ERRORS with
         E_ScanDoubleUnder,
         E_ScanInvalidBase,
         E_ScanStringEOL,
-        E_ParseMismatchParen
+        E_ParseMismatchParen,
+        E_ParseTrailingOp
 
     procedure Report(E : error; file : text; line : integer)
