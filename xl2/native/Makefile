@@ -43,11 +43,12 @@ OTHER_SOURCES=					\
 	xl.symbols.xl				\
 	xl.semantics.xs				\
 	xl.semantics.xl				\
+	xl.semantics.declarations.xs		\
+	xl.semantics.declarations.xl		\
 	xl.semantics.types.xs			\
 	xl.semantics.types.xl			\
 	xl.semantics.types.functions.xs		\
 	xl.semantics.types.generics.xs		\
-	xl.semantics.declarations.xs		\
 	xl.semantics.writtenforms.xs		\
 	xl.codegenerator.xs			\
 	xl.codegenerator.xl			\

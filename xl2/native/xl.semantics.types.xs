@@ -54,3 +54,17 @@ module XL.SEMANTICS.TYPES with
 
     type any_type is access to any_type_data
 
+
+    // Evaluate a type
+        
+
+
+    // The kind used for type info
+    type_info_kind   : integer := PT.AllocateInfoKind()
+
+    // The types for literals
+    integer_type     : PT.tree := nil
+    real_type        : PT.tree := nil
+    boolean_type     : PT.tree := nil
+    character_type   : PT.tree := nil
+    text_type        : PT.tree := nil
