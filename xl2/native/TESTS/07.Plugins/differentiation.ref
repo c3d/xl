@@ -6,7 +6,7 @@
 @ fnendparms) 
 @ fndeclend 
 (@ fndeclbegin 
-(@ fnret1 Real 
+(@ fnret0 
 @ fnname copy_5 
 @ fnbeginparms 
 @ fnparm Real target_3 

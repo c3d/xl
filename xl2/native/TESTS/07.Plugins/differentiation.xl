@@ -28,7 +28,7 @@
 import IO = XL.TEXT_IO
 
 function sin(X : real) return real
-to Copy(Target : real; Source : real) return real written Target := Source
+to Copy(Target : real; Source : real) written Target := Source
 
 procedure Main is
     W, T0, T : real
