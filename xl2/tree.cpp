@@ -108,7 +108,7 @@ void XLInfix::Output(ostream &o)
     if (name == seq)
     {
         o << *left;
-        XLTree *tail = right, *c1, *c2;
+        XLTree *tail = right;
         text op;
         while (tail->Kind() == xlINFIX)
         {

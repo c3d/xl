@@ -23,14 +23,16 @@
 // * Date       : $Date$
 // ****************************************************************************
 
+#include <cassert>
 #include <cstdio>
 #include <string>
+#include <cctype>
 #include <iostream>
 #include <fstream>
 #include <utility>
 #include <vector>
 #include <map>
-
+#include <ciso646>
 
 
 // ============================================================================

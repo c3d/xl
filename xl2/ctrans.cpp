@@ -106,7 +106,7 @@ text XLNormalize (text name)
 //   Return the normalized version of the text
 // ----------------------------------------------------------------------------
 {
-    int i, max = name.length();
+    int i, max = int(name.length());
     text result = "";
     for (i = 0; i < max; i++)
         if (name[i] != '_')
@@ -120,7 +120,7 @@ text XLSanitize (text name, char quote)
 //   Return the normalized version of the text
 // ----------------------------------------------------------------------------
 {
-    int i, max = name.length();
+    int i, max = int(name.length());
     text result = "";
     char esc = '\\';
     for (i = 0; i < max; i++)
@@ -372,7 +372,7 @@ PREFIX(import)
         text alias_name = XLModuleName(infix->left);
         text cplusified = "";
         imported = XLModuleName(infix->right);
-        int i, max = imported.length();
+        int i, max = int(imported.length());
         for (i = 0; i < max; i++)
         {
             char c = imported[i];
@@ -451,6 +451,7 @@ void XLModule2Namespace(XLTree *tree)
             XLModule2Namespace(infix->right);
         }
     }
+    return true;
 }
 
 
@@ -486,6 +487,7 @@ PREFIX(module)
         out << "}\n";
         in_namespace--;
     }
+    return true;
 }
 
 

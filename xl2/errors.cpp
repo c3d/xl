@@ -58,7 +58,7 @@ void XLError(XLErrorNumber err, text file, uint line,
     {
         char buffer[10];
         sprintf(buffer, "$%d", i+1);
-        uint found = errMsg.find(buffer);
+        uint found = uint(errMsg.find(buffer));
         if (found)
             errMsg.replace(found, strlen(buffer), args[i]);
     }

@@ -25,7 +25,9 @@
 
 #include <map>
 #include <iostream>
-#include <unistd.h>
+#if CONFIG_USE_SBRK
+#   include <unistd.h>
+#endif
 #include "scanner.h"
 #include "parser.h"
 #include "tree.h"
@@ -53,7 +55,7 @@ struct XLInitializeContext : XLAction
 
     bool Integer(XLInteger *input)
     {
-        priority = input->value;
+        priority = int(input->value);
         return false;
     }
 
@@ -135,7 +137,9 @@ int main(int argc, char **argv)
 //   Parse the command line and run the compiler phases
 // ----------------------------------------------------------------------------
 {
-    char *low_water = (char *) sbrk(0);
+#   if CONFIG_USE_SBRK
+        char *low_water = (char *) sbrk(0);
+#   endif
 
     text cmd, end = "";
 
@@ -169,9 +173,11 @@ int main(int argc, char **argv)
         XL2C(tree);
     }
 
-    IFTRACE(timing)
-        fprintf(stderr, "Total memory usage: %ldK\n",
-                ((char *) malloc(1) - low_water) / 1024);
+#   if CONFIG_USE_SBRK
+        IFTRACE(timing)
+            fprintf(stderr, "Total memory usage: %ldK\n",
+                    ((char *) malloc(1) - low_water) / 1024);
+#   endif
 
     return 0;
 }

@@ -77,7 +77,7 @@ static bool OptionMatches(kstring &command_line, kstring optdescr)
 // ----------------------------------------------------------------------------
 // Single character options may accept argument as same or next parameter
 {
-    uint len = strlen(optdescr);
+    uint len = uint(strlen(optdescr));
     if (strncmp(command_line, optdescr, len) == 0)
     {
         command_line += len;
