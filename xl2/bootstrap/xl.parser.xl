@@ -233,8 +233,6 @@ module XL.PARSER is
                 prefix_priority := function_priority
             else if tok = SC.tokNAME or tok = SC.tokSYMBOL then
                 name := S.token
-                if new_statement and tok = SC.tokNAME then
-                    is_expression := false
                 spelling := S.string_value
                 if IsComment(P, name, comment_end) then
                     SC.Comment S, comment_end
@@ -248,6 +246,8 @@ module XL.PARSER is
                     right := PT.NewName(spelling)
                     if prefix_priority = default_priority then
                         prefix_priority := function_priority
+                    if new_statement and tok = SC.tokNAME then
+                        is_expression := false
                 else if left <> nil then
                     // This is the right of an infix operator
                     // If we have "A and not B", where "not" has
@@ -272,6 +272,8 @@ module XL.PARSER is
                         right := PT.NewName(spelling)
                         if prefix_priority = default_priority then
                             prefix_priority := function_priority
+                            if new_statement and tok = SC.tokNAME then
+                                is_expression := false
 
             else if tok = SC.tokNEWLINE then
                 if pending_token = SC.tokNONE then
@@ -346,13 +348,10 @@ module XL.PARSER is
 
                 // First thing we parse
                 result := right
-                if new_statement and not is_expression then
-                    if prefix_priority = default_priority then
-                        prefix_priority := statement_priority
                 result_priority := prefix_priority
 
                 // We are now in the middle of an expression
-                if result then
+                if result and result_priority >= statement_priority then
                     new_statement := false
 
             else if left <> nil then
@@ -417,30 +416,36 @@ module XL.PARSER is
 
             else if right <> nil then
 
+                // Check if we had a low-priority prefix (e.g. pragmas)
+                if prefix_priority < statement_priority then
+                    new_statement := true
+                    is_expression := true
+
                 // Check priorities for "A.B x,y" -> "(A.B) (x,y)"
-                right_assoc : boolean := right.kind <> PT.xlBLOCK
-                while size(stack) loop
-                    prev : pending := back(stack)
-                    if not done then
-                        exit if prev.priority <> default_priority and result_priority > (prev.priority & (bitwise_not 1))
-                        //exit if prev.priority < statement_priority and result_priority = prev.priority
-                        exit if right_assoc and prev.opcode = prefix and result_priority = prev.priority
-                    if prev.opcode = prefix then
-                        result := PT.NewPrefix(prev.argument, result)
-                    else
-                        result := PT.NewInfix(prev.opcode, prev.argument, result)
-                    pop_back stack
+                // Make odd priorities right-associative by clearing low bit
+                // in previous priority
+                if prefix_priority <= result_priority then
+                    while size(stack) loop
+                        prev : pending := back(stack)
+                        if not done then
+                            exit if prev.priority <> default_priority and result_priority > (prev.priority & (bitwise_not 1))
+
+                        if prev.opcode = prefix then
+                            result := PT.NewPrefix(prev.argument, result)
+                        else
+                            result := PT.NewInfix(prev.opcode, prev.argument, result)
+                        pop_back stack
 
                 // Check if new statement
                 T : pending
-                if right.kind <> PT.xlBLOCK then
-                    if size(stack) = 0 then
-                        if not is_expression then
+                if not is_expression then
+                    if right.kind <> PT.xlBLOCK then
+                        if size(stack) = 0 then
                             result_priority := statement_priority
-                    else
-                        T := back(stack)
-                        if T.priority < statement_priority then
-                            result_priority := statement_priority
+                        else
+                            T := back(stack)
+                            if T.priority < statement_priority then
+                                result_priority := statement_priority
 
                 // Push a recognized prefix op
                 T.opcode := prefix
