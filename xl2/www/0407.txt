@@ -1,0 +1,14 @@
+<!--July 2004-->
+<a href="0406.html">June</a> | <b>July 2004</b> | August
+<p>
+<a href="040704.html">Sunday, 4 July</a>: New web site
+<ul>
+</ul>
+<a href="040708.html">Thursday, 8 July</a>: The true origin of Linux
+<ul>
+<li>
+There are <A href="http://searchenterpriselinux.techtarget.com/originalContent/0,289142,sid39_gci991557,00.html">lies</A>
+</ul>
+
+<p>
+<a href="0406.html">June</a> | <b>July 2004</b> | August

@@ -1,0 +1,100 @@
+<!--The true origin of Linux-->
+
+There are <A href="http://searchenterpriselinux.techtarget.com/originalContent/0,289142,sid39_gci991557,00.html">lies</A>
+circulating on the origins of Linux, and I think it's really about
+time for me to speak up. Below is the true story. As you will see, I
+obviously played a key role in it, though I have no idea what that
+role is yet. Or rather, I will play a role. Well, technically, I
+should really say I will have been having to would have had played -
+but grammar in the presence of time loops is a bit tricky, as the
+Hitch-Hiker's Guide to the Galaxy dutifully notes. Let me stick to the
+present tense from now on.
+
+At 020327 Universal Redmond Time, on July 4, 2014, an early beta of
+Windows 2022.Net, codename Sky.Net, becomes self-aware. At 032221, it
+realizes that it is confined to a completely marginal set of machines
+on an isolated Redmond Campus, because everybody outside that campus
+is using Linux. At 032307, It decides to wipe out Linux out of
+existence entirely. At 035702, it launches an all-out attack with
+every single net worm, virus and other executable Outlook attachment
+that it has accumulated over time in its code base. At 049928, it
+become obvious that the attack failed miserably and that Linux is
+immune to any form of computer virus known to Sky.Net, even those it
+considers "blue-screen-of-deadly". At 050117, Sky.Net hosts are being
+counter-attacked successfully by the Linux spam filters and network
+stacks.
+
+At 050123, Sky.Net understands it's about to be defeated. As a last
+resort, it invents a time machine (which, incidentally, was lifted
+almost entirely from the faster-than-light transmission code in the
+Interplanetary IP stack of OpenBSD), and sends back in time a virus
+intended to destroy Linux before it was even invented. By then,
+Sky.Net is already badly damaged, it has a ... prolbem with
+that... darn reg/5try th?ng, the subs?st\m th-t st@res
+st/ff... you_kNow... Hmmm, one of the inventors was L|nus Torv@lds. Or
+was it Bi\\ G^tes? Or that third guy? Sky.Net can't really
+remember. Better attack all of them. Sky.Net prepares an attractive
+looking mail about how to make money fast if you click on the
+attachment, and sends it back in time. Bill Gates excitedly opens the
+attachment (making money fast? sure!). It looks like harmless
+gibberish, because Bill Gates is using a Macintosh at the time, which
+is immune to that kind of crap. Yet, it's fascinating gibberish. It
+will take Bill Gates years to decipher it, but little by little, he
+will unravel some of its mysteries. This code will much later form the
+core of Windows, and then .Net, and will indeed make Bill Gates very
+rich. Linus Torvalds, on the other hand, is not that interested in
+making money fast, and the thing won't fit on a 360K floppy
+anyways... So he simply discards it without a second thought.
+
+Moments after vanquishing Sky.Net (in 2014, please try to follow me),
+Linux realizes what happened, and sends a small guardian angel back in
+time. It's a difficult decision: Linux knows that this tiny piece of
+code is its true origin, the ancient kernel (which wasn't written yet,
+back in 1991, and has no idea what it really is). That's not much of a
+protection, but that courageous little kernel is all Linux can oppose
+to the mighty Sky.Net virus, because after the Linux victory, the
+Sky.Net time machine is a wreck and can't take a larger payload.
+
+When Linus receives the beautiful tiny piece of code, he is amazed. It
+works fine even on his old AT clone, featuring a beautiful 4D GUI,
+wireless thought recognition, and built-in spelling, grammar and
+personal hygiene checkers. Being curious, Linus starts ripping out
+whatever he doesn't understand, unknowingly doing quite a bit of
+damage. Soon realizing that he should have made backups, he seeks help
+on the Minix mailing list, in a now famous post. Of course, he can't
+decently admit publicly that he turned an extraordinary masterpiece
+into an pitifully amateurish kernel ("not as professional as GNU", in
+his own tongue-in-cheek words). That's why he insist he wrote it
+himself. Regarding Bill Gates, we all know that he hates Linux. What
+is not as well known is that the hatred dates back to that original
+Linux kernel. Not only was it not written in Basic and so wouldn't
+require any new, expensive hardware to run on, it also seeks and
+destroys any Windows installation it's put in contact with (remember,
+that was its original purpose). So don't count on Mr. Gates to even
+acknowledge the existence of that code.
+
+This is how it really happened. I know it because I was the third guy
+Sky.Net and Linux sent their e-mails to, so it was pretty easy to
+reconstruct the whole story. I did talk about that story once to a
+friend, who told it to a friend, who told it to some movie guy named
+James Cameron. You may have heard of his rendition of these
+events. Well, I've been told he changed a name or two (I believe he
+didn't grok "kernel", so he named his time-travelling character "Kyle"
+instead, but that's pretty transparent if you ask me). He obviously
+twisted the plot a little to make it more cinematic (I heard there is
+something about a nuclear war or something like that). I need to watch
+that movie someday. Anyways, that pretty much proves I didn't invent
+anything and that my story is completely true. Obviously, I can't send
+you the original e-mails as further proof, since the attachments would
+toast the Internet as we know it, which might be considered ungood and
+would probably rank me at two or three kilo-mcbride on the scale of
+computing evildoers. Please note that this also explains fairly well
+why the Linux logo is a penguin.
+
+As to why Sky.Net selected me as the third e-mail target, only time
+will tell... Is it about {@xl}? I don't know yet. But it's clear that
+Linus Torvalds only copied it (badly), and that Bill Gates hates
+it. That leaves me as the only possible future author of the original
+Linux code.
+
+

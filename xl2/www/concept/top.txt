@@ -1,0 +1,69 @@
+<!--Conceptual Overview-->
+
+<A name="top.html">
+<A name="toplevel.html">
+
+Here is a conceptual overview of {@xl} and {@cp}. Each key concept is
+illustrated by {example "top" "examples"}, and points back to the
+{inside "top" "implementation"} in the compiler.
+
+<H3>General Overview</H3>
+<A href="XL.html">XL</A><BR>
+<A href="cp.html">Concept Programming</A><BR>
+<A href="concept.html">What is a concept?</A><BR>
+<A href="process.html">The Concept Programming Process</A><BR>
+<A href="metrics.html">Concept Programming Metrics</A>:
+<A href="synnoise.html">syntactic noise</A>,
+<A href="semnoise.html">semantic noise</A>,
+<A href="bandwidth.html">bandwidth</A> and
+<A href="signoise.html">signal/noise ratio</A><BR>
+<A href="representations.html">Concept Representations</A> and
+<A href="concept-cast.html">Concept casts</A><BR>
+<A href="anything.html">An unlimited set of concepts</A><BR>
+
+<H3>Problem statement</H3>
+<A href="problem.html">Problem Space</A><BR>
+<A href="code.html">Code Space</A><BR>
+<A href="moore.html">Moore's Law and Software</A><BR>
+<A href="complexity.html">The Sources of Software Complexity</A><BR>
+
+<H3>Existing Practice</H3>
+<A href="language_limits.html">Limits of existing languages</A><BR>
+<A href="diverge.html">Evaluating existing languages</A><BR>
+<A href="objects.html">The Difference between Objects and Concepts</A><BR>
+<A href="syntax.html">Syntax</A> and <A href="synnoise.html">syntactic noise</A><BR>
+<A href="semantics.html">Semantics</A> and <A href="semnoise.html">semantic noise</A><BR>
+
+<H3>XL Usage Models</H3>
+<A href="data.html">XL as a data language</A><BR>
+<A href="dsl.html">XL as a domain-specific language</A><BR>
+<A href="perf.html">XL as a high-performance programming language</A><BR>
+<A href="script.html">XL as a scripting language</A><BR>
+
+<H3>XL Features</H3>
+<A href="xl012.html">XL0, XL1, XL2</A><BR>
+<A href="expred.html">Expression reduction</A><BR>
+<A href="operators.html">XL operators</A><BR>
+<A href="variadics.html">Compile-time variadics</A><BR>
+<A href="generics.html">Generic declarations</A><BR>
+<A href="truegen.html">True Generic Types</A><BR>
+<A href="pragma.html">Pragmas</A><BR>
+<A href="extension.html">Language extensions</A><BR>
+
+<H3>Design of the XL compiler</H3>
+<A href="tree.html">Abstract syntax tree</A><BR>
+<A href="bytecode.html">XL Bytecode</A><BR>
+<A href="plugins.html">Compiler plug-ins</A><BR>
+<A href="errors.html">Error reporting</A><BR>
+<A href="dirty_bootstrap.html">Dirty Bootstrap</A><BR>
+<A href="status.html">Status of the compiler</A><BR>
+
+<H3>XL Library</H3>
+<A href="library.html">The XL runtime library</A><BR>
+<A href="binaryio.html">Binary I/O</A><BR>
+<A href="algorithms.html">XL Generic Algorithms Library</A><BR>
+<A href="containers.html">XL Generic Containers</A><BR>
+<A href="exceptions.html">Exception handling and Error Management</A><BR>
+<A href="object_model.html">Object models</A><BR>
+<A href="text.html">Text manipulations</A><BR>
+

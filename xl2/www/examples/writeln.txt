@@ -1,0 +1,24 @@
+<!--Text I/Os in XL-->
+
+<LI>Actually, the above issue is minor and relatively harmless
+  harmless. A more serious issue with {tt "&lt;&lt;"} given the target
+  market of C++ is multithreading. Multiple {tt "&lt;&lt;"} operators
+  can be chained. Now, when a programmer writes something like
+  {tt "out&lt;&lt;\"A=\"&lt;&lt;A&lt;&lt;\",&nbsp;B=\"&lt;&lt;B&lt;&lt;'\\n'"},
+  she most likely understands that as a  single I/O
+  statement. However, in reality, it is made up of 5 function calls
+  to {tt "operator&lt;&lt;"}, with the interesting side effect that
+  there is no way for the compiler to make this I/O operation
+  atomic. In other words, if two threads are attempting to write
+  messages at the same time, their content might be mixed or
+  garbled.
+
+  Some C++ programmers will tell you that this is the way it
+  is supposed to be, since synchronization between threads should be
+  made at the higher level. But then, why does the low-level library
+  actually synchronize between threads to guarantee that individual
+  characters are written properly and that the file buffers don't get
+  thrashed in the case of concurrent I/O operations?
+
+
+Semantics noise of end-of-line vs. line

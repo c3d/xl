@@ -1,0 +1,37 @@
+<!--Compile-time variadics-->
+
+A frequent {concept "problem" "need"} in the {@representation} of a
+particular {@concept} is the notion that a same operation applies to
+a set of entities, the size of set not necessarily being known ahead
+of time. A very common case is {example "writeln" "text I/O"}, where
+writing multiple elements is as common, if not more, than writing a
+single one. Another example is the computation of a
+{example "maxmimum"}, minimum or {example "average"} of a set of values.
+
+Historically, there have been a number of ways to address this particular
+problem:
+<UL>
+<LI>Built-in constructs, as in the {@basic} {tt "PRINT"} statement,
+  or {@Pascal}'s {tt "writeln"} procedure. These are special cases,
+  and the programmers cannot define similar constructs for their own use.
+<LI>{@C}-style variable arguments lists (defined in
+{tt "&lt;stdarg.h&gt;"}), which are not type-safe. Essentially, the
+  program accesses a raw memory image of the arguments.
+<LI>Concatenating strings of characters before emitting a single
+  string, an approach taken by {@Java} or {@Ada}. This works only for
+  text I/O, but is not applicable for instance to computing a
+  maximum. Also, it introduces significant {@semnoise} and is
+  inefficient.
+<LI>Doing a {@ccast} from a variable set of arguments to a list of
+  arguments. This can be done implicitly as in {@C#} or explicitly
+  (as is done in many cases for {@Java}). The {@ccast} introduces
+  {@semnoise}, making the code less clear and potentially lowering
+  performance significantly.
+<LI>{wiki "Currying"}, which is the approach taken in {@Lisp} and
+  several related languages. This could be considered a special case of
+  the above, because that is how it is implemented in practice, but
+  it is much cleaner conceptually.
+</UL>
+
+The notation typically uses a form where the set is
+enumerated, as an "argument"

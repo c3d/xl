@@ -1,0 +1,24 @@
+<!--XL updated on SourceForge-->
+
+For a while, public updates to the XL projects had been suspended, as
+I was discussing with my employer the application of their new
+"open-source" policy to this particular project. The issue has now
+been resolved. The most recent changes to the code have been
+committed to the SourceForge CVS tree.
+
+Here is a non-exhaustive list of the changes:
+<UL>
+<LI>There is are now basic semantics for
+  {cvs "xl.semantics.declarations.xl" "declaration"},
+  {cvs "xl.semantics.functions.xl" "C-style functions"},
+  and {cvs "xl.semantics.overload.xl" "C++-style overloading"}.
+  It is still primitive. I am currently working mostly on
+  improving this basic semantics.
+<LI>Added a {cvs "TESTS/alltests" "test directory"} (which is not populated
+  yet).
+<LI>I started defining a {cvs "xl.bytecode" "bytecode interface"}.
+  This is not quite what I want, but it's sufficient for now. It
+  currently emits C, though I intend to be able to emit assembly
+  language or any textual form ultimately.
+</UL>
+  

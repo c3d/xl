@@ -1,0 +1,13 @@
+<!--XL and Concept Programming-->
+
+This web site is dedicated to the {@xl} extensible
+programming language. This language was designed specifically to
+implement the ideas of {@cp}.
+
+At your convenience, you can learn more about {@xl} using one of
+three angles:
+<UL>
+<LI>Using {example "top" "examples"}
+<LI>Using a {concept "top" "conceptual presentation"}
+<LI>By looking {inside "top" "inside"}
+</UL>

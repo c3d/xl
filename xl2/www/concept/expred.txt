@@ -1,0 +1,42 @@
+<!--Expression reduction-->
+
+Expression reduction is the method used to evaluate expressions in
+{@xl}. It can be thought of as operator overloading on steroids,
+generalized to expressions containing more than one operator, and is
+best illustrated with a simple example:
+{pre}// Example of expression reduction
+function Add (X, Y : integer) return integer written X+Y
+function MulAdd(X, Y, Z : integer) return integer written X+Y*Z
+A, B, C, D: integer
+D := A + B             // Reduced to Add(A,B)
+Z := A + B * C         // Reduced to MulAdd(A,B,C)
+Z := A * B + C         // Reduced to Add(A*B,C)
+{erp}
+
+A {concept "tree" "parse tree"} representing the expression is
+reduced to function calls by matching the form of the tree to forms
+specified by {example "written"} clauses in function declarations. The
+type system guides the process of tree selection, so multiple
+{example "written"} forms may exist for different types (overloading).
+
+The same technique can be used for generic data types as well. In
+that case, the tree is reduced to an instantitation of generic
+declaration.
+
+{pre}//Example of generic expression reduction
+generic [type item] type list written list of item
+L : list of integer     // Reduced to list[integer]
+{erp}
+
+In {mcvs "expr_rdn/constructor_reduction_generic.xl" "complicated cases"},
+ a single expression can be reduced through both generic reduction
+ and function call reduction in turn. This is useful in particular to
+ create objects of a generic type using a simple-to-use form. In that
+ example, the notation {tt "vector&nbsp;K[3]&nbsp;of&nbsp;integer"}
+causes both a generic reduction (instantiating the
+{tt "vector[integer]"} type) and a run-time reduction (calling the
+constructor of the {tt "vector"} type to set its size to {tt "3"}).
+
+The detailed mechanism is described {inside "expred" "here"}.
+Note that there are {concept "operators" "few limits"} on XL
+operators.

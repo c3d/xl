@@ -1,0 +1,15 @@
+<!--Concept cast-->
+
+A concept cast happens when a particular {@concept} cannot be
+{@represented}, and the programmer uses instead a closely related
+{@concept} as a workaround.
+
+For instance, {@C} doesn't have a real notion of array. Instead, it
+uses pointers. A concept cast like this introduces {@semnoise}.
+In that example, the notation {tt "A[B]"} in C is really a shortcut for
+{tt "*(A+B)"}. This makes it very easy to access elements outside the
+bounds of the array, and overwriting random memory (a frequent source
+of bugs in C, known as buffer overrun). Another side effect is that
+it is legal in C to write {tt "1[A]"} to access the first element of
+the array, or even {tt "-1[A+2]"}. These notations, however, are
+somewhat surprising and hard to decode.

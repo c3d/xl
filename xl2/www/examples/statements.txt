@@ -1,0 +1,5 @@
+<!--Basic statements-->
+
+{@xl} (more precisely, {concept "xl012" "XL1"} features the basic
+statement expected for most imperative programming languages.
+

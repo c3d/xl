@@ -1,0 +1,35 @@
+<!--Problem Space-->
+
+The problem space is the set of {@concepts} that are relevant for any
+particular program. It varies from program to program, depending on
+the application domain.
+
+The problem space may contain:
+<UL>
+<LI>Concepts from the "real world", for instance, the position of a
+  physical object such as a mouse or joystick, the temperature read by a
+  sensor, the amount of money in a bank account, the pictures
+  displayed by a screen or printed on paper or the passage of time.
+<LI>Mathematical or other abstract concepts, for instance a matrix
+  multiplication, simplified models for the movement or interaction of
+  physical objects, or sorting algorithms,
+<LI>Practical concerns that are relevant to the user of the program,
+  such as the appropriate response to an error (bad user input,
+  hardware error, missed timing constraint), the precise layout of
+  the user interface, or the quality of that user interface.
+<LI>Practical concerns that are not relevant to the user of the
+  program, except indirectly by allowing the program to behave as
+  expected, such as the management of memory, the layout of data in
+  persistent storage, or the network protocols being used.
+</UL>
+
+Note that there are parts of the domain space that are not
+{@concepts} from the {@cp} point of view, because they cannot be
+translated into code at all. In the present state of the technology,
+the quality of the user interface, or specific mathematical concepts
+(the next prime number after this one) are examples of elements of
+the problem space that are not considered as "{@concepts}".
+
+The problem space is the main source of
+{concept "complexity" "domain complexity"}. Its dual space from the
+programmers point of view is the {@cs}.

@@ -1,0 +1,3 @@
+<!--Operator redefinition in XL-->
+
+Performance gain for A+B*C

@@ -1,0 +1,26 @@
+<!--Semantics-->
+
+Semantics includes rules governing those aspects of the
+{@cs}, which are not directly visible. English semantics make
+"The small large rabbit compiled the cat" incorrect, even if its
+{@syntax} is correct, because there are contradictions in the meaning
+(the rabbit can't be both large and small) and a verb that doesn't make
+sense (what does it mean for a rabbit to compile something?).
+
+In most development environments, the code space is represented as
+text (known as "source code"), and the semantics essentially
+defines the meaning of syntactically valid text, if any. For instance,
+in C, an identifier such as {tt "Blob"} may denote a variable or a
+function, depending on previous declarations. You can use a variable
+in expressions, or assign values to it. You can call a function.
+
+By extension, we can also consider semantics rules for non-textual
+forms of code. For instance, the fact that
+{tt "&lt;FONT&nbsp;COLOR=\"#FF0000\"&gt;"} in HTML makes text display as
+red is a form of semantics. It doesn't matter if that code is
+being edited textually or using a WYSIWYG editor, its meaning remains
+the same.
+
+For {@cp}, one objective of well-designed semantics is to reduce
+{@semnoise}, to be easy to {concept "extension" "extend"}, and to be
+able to correctly identify and report {concept "errors"}.

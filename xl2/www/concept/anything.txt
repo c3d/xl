@@ -1,0 +1,18 @@
+<!--How many relevant concepts?-->
+
+An interesting observation is that the set of {@concepts} in the
+{@pb} is not limited in any predefined way. However, traditional programming
+languages have historically {concept "language_limits" "a small set"}
+of abstraction mechanisms. This limits the number of concepts that
+can conveniently be represented using most traditional programming languages.
+
+The {example "diff" "differentiation"} example illustrates a
+domain-specific concept that is not well supported by the majority of
+existing programming languages.
+
+One {@cp} benefit is that it doesn't limit you to any particular set
+of {@concepts}. On the contrary, by focusing on how to
+{concept "representations" "represent"} any concept, it makes it
+easy and natural to {concept "extension" "extend"} langages. Adding
+practical representations for something like symbolic differentiation
+is one of the core benefits of {@cp}.
