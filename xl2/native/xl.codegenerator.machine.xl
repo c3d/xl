@@ -482,7 +482,14 @@ module XL.CODE_GENERATOR.MACHINE is
         mname : PT.name_tree := SYM.Temporary ("fld")
         fdecl : PT.tree :=
                 parse_tree(@temp_decl 'mtype' 'mname')
-        IO.WriteLn "Index function context=", XLT.function_context
+
+        c : SYM.symbol_table := XLT.function_context
+        IO.Write "Index function context="
+        while c <> nil loop
+            IO.Write c, " "
+            c = SYM.Enclosing c
+        IO.WriteLn " end"
+
         XLT.AddScopeDecl XLT.function_context, fdecl
 
         // Evaluate the argument so that it is a single value

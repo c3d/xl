@@ -163,8 +163,10 @@ module XL.SEMANTICS.FUNCTIONS is
             else if BuiltinName.kind <> PT.xlNAME then
                 ERR.Error "'$1' is not a valid built-in name", BuiltinName
             else
+                BN : BuiltinName as PT.name_tree
                 f.is_builtin := true
-                f.machine_name := PT.name_tree(BuiltinName)
+                f.machine_name := PT.NewName(PT.XLNormalize(BN.Value),
+                                             BN.position)
                 return Interface
 
         when

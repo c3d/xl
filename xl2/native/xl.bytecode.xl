@@ -6,13 +6,15 @@
 //   File Description:
 // 
 //     This file defines the XL "bytecode", a particular form of XL tree
-//     where only low-level trees exist. The bytecode is designed to be
-//     directly transcodable to a low-level language like C or assembly
-// 
-//     Bytecode entries are defined by the "opcode" statement
+//     used as an intermediate language by the XL compiler. XL bytecode is
+//     relatively machine independent, and intended to be usable as an
+//     actual bytecode one day. The compiler performs most of its
+//     optimizations on this bytecode, and then hands the bytecode over
+//     to the machine-description layer, which turns it into real assembly.
 //
-// 
-// 
+//     Bytecode may sometimes coexist with a higher level description
+//     In that case, it appears in the high-level as @ [bytecode],
+//     where [bytecode] is an arbitrary tree.
 // 
 // 
 // ****************************************************************************
@@ -28,56 +30,4 @@ import PT = XL.PARSER.TREE
 
 module XL.BYTECODE is
 
-    // Add an instruction to a bytecode sequence
-    procedure Instruction (in out instructions : bytecode;
-                           opcode : text;
-                           dst : text ;
-                           src1 : text ; src2 : text ) is
-    // ------------------------------------------------------------------------
-    //   Generate a bytecode instruction with 3 arguments
-    // ------------------------------------------------------------------------
-    //   By convention, we reserve the "@" prefix for bytecode instructions
-        ins : bytecode
-        op_tree : PT.tree := PT.NewName(opcode)
-        if dst = "" then
-           ins := parse_tree(@ 'op_tree')
-        else
-           dst_tree : bytecode := PT.NewName(dst)
-           if src1 = "" then
-               ins := parse_tree(@ 'op_tree' 'dst_tree')
-           else
-               src1_tree : bytecode := PT.NewName(src1)
-               if src2 = "" then
-                   ins := parse_tree(@ 'op_tree' 'dst_tree' 'src1_tree')
-               else
-                   src2_tree : bytecode := PT.NewName(src2)
-                   ins:=parse_tree(@ 'op_tree' 'dst_tree' 'src1_tree' 'src2_tree')
-
-        instructions := parse_tree
-            'instructions'
-            'ins'
-
-
-    function OpenProcedure (in out parent : bytecode;
-                            name : text) return bytecode is
-    // ------------------------------------------------------------------------
-    //    Create the bytecode for a particular instruction
-    // ------------------------------------------------------------------------
-        name_tree : bytecode := PT.NewName(name)
-        result := parse_tree (@proc 'name_tree')
-
-
-    procedure CloseProcedure (in out parent : bytecode; proc : bytecode) is
-    // ------------------------------------------------------------------------
-    //   Close the bytecode for a particular procedure
-    // ------------------------------------------------------------------------
-        // Append 'end' marker to procedure
-        ins : bytecode := parse_tree (@proc_end)
-        proc := parse_tree
-            'proc'
-            'ins'
-
-        // Insert procedure in parent
-        parent := parse_tree
-            'parent'
-            'proc'
+    dummy : integer

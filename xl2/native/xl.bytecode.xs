@@ -6,10 +6,15 @@
 //   File Description:
 // 
 //     This file defines the XL "bytecode", a particular form of XL tree
-//     where only low-level trees exist. The bytecode is designed to be
-//     directly transcodable to a low-level language like C or assembly
-// 
-//     Bytecode entries are defined by the "opcode" statement
+//     used as an intermediate language by the XL compiler. XL bytecode is
+//     relatively machine independent, and intended to be usable as an
+//     actual bytecode one day. The compiler performs most of its
+//     optimizations on this bytecode, and then hands the bytecode over
+//     to the machine-description layer, which turns it into real assembly.
+//
+//     Bytecode may sometimes coexist with a higher level description
+//     In that case, it appears in the high-level as @ [bytecode],
+//     where [bytecode] is an arbitrary tree.
 // 
 // 
 // 
@@ -29,14 +34,3 @@ module XL.BYTECODE with
     // By convention, we give a special name for bytecode trees
     type bytecode is PT.tree
 
-    // Add an instruction to a bytecode sequence
-    procedure Instruction (in out instructions : bytecode;
-                           opcode : text;
-                           dst : text := "";
-                           src1 : text := "";
-                           src2 : text := "")
-
-    // Create the bytecode for a particular procedure
-    function OpenProcedure (in out parent : bytecode;
-                            name : text) return bytecode
-    procedure CloseProcedure (in out parent : bytecode; proc : bytecode)
