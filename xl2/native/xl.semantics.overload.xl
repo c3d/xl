@@ -1,0 +1,268 @@
+// ****************************************************************************
+//  xl.semantics.overload.xl        (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Implementation of overload resolution
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import TY = XL.SEMANTICS.TYPES
+import SYM = XL.SYMBOLS
+import XLT = XL.TRANSLATOR
+import ERR = XL.ERRORS
+import FN = XL.SEMANTICS.FUNCTIONS
+import CGM = XL.CODE_GENERATOR.MACHINE
+import DCL = XL.SEMANTICS.DECLARATIONS
+import IO = XL.TEXT_IO
+
+
+module XL.SEMANTICS.OVERLOAD is
+// ----------------------------------------------------------------------------
+//    Module implementing overload resolution
+// ----------------------------------------------------------------------------
+
+    procedure ArgsTreeToList(Args : PT.tree; in out List : PT.tree_list) is
+    // ------------------------------------------------------------------------
+    //   Convert the input argument tree into a list
+    // ------------------------------------------------------------------------
+        if Args <> nil then
+            translate Args
+                when
+                    'A', 'B'
+                then
+                    ArgsTreeToList A, List
+                    ArgsTreeToList B, List
+                else
+                    List += Args
+
+
+    function Resolve(NameTree : PT.tree; Args : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Resolve the function name from its args
+    // ------------------------------------------------------------------------
+
+        if verbose then
+            IO.WriteLn "Overload resolution: name=", NameTree, " args=", Args
+
+        if NameTree.kind <> PT.xlNAME then
+            ERR.Error "Internal: Overload resolution, non-name '$1'", NameTree
+            return quote(@error)
+        Name : NameTree as PT.name_tree
+
+        // Convert arguments to a list for easier checking
+        ArgList : PT.tree_list
+        SemArgs : PT.tree_list
+        ArgsTreeToList Args, ArgList
+        NA  : integer := size(ArgList)
+        A   : integer
+        Arg : PT.tree
+
+        // Perform semantics on all arguments
+        for Arg in ArgList loop
+            SemArgs += XLT.Semantics(Arg)
+            if verbose then
+                IO.WriteLn "Args->", back(SemArgs)
+
+        // Scoring
+        best      : PT.tree
+        bestScore : integer
+        bestF     : FN.function
+        ambig     : PT.tree
+        depth     : integer := 0
+        table     : SYM.symbol_table := XLT.context
+
+        // Save errors for later display
+        ERR.PushErrorContext()
+
+        // Loop on all levels
+        while table <> nil loop
+            depth += 1
+
+            // Find all candidates at this level
+            candidates : SYM.tree_list
+            SYM.Lookup table, "FN", Name.value, candidates, SYM.lookupLocalOnly
+            if verbose then
+                IO.WriteLn "In table ", table,
+                           " found ", size(candidates), "candidates"
+            table := SYM.Enclosing(table)
+
+            // Loop on candidates to check compatibility
+            C : PT.tree
+            for C in candidates loop
+
+                if verbose then
+                     IO.WriteLn "Testing ", C
+
+                // Retrieve function information, ignore non functions
+                F : PT.FindInfo(C, "FN") as FN.function
+                if F = nil then
+                    ERR.Error "Internal: No function info for '$1'", C
+                    if verbose then
+                        IO.WriteLn "FAIL: No function info"
+                    restart
+
+                // Check number of parameters.
+                NP : integer := size(F.parameters)
+                if NA > NP then
+                    ERR.Error "'$1' could not be selected because", C
+                    ERR.Error "there are too many arguments for '$1'", Name
+                    if verbose then
+                        IO.WriteLn "FAIL: Too many arguments ", NA, ">", NP
+                    restart
+
+                // Check type of parameters
+                D        : DCL.declaration
+                Matching : boolean := true
+                Score    : integer := depth
+                A := 0
+                for D in F.parameters loop
+                    if A < NA then
+                        Arg := SemArgs[A]
+                        if verbose then
+                            IO.WriteLn "Testing argument ", Arg
+                    else
+                        Arg := D.initializer
+                        if Arg = nil then
+                            ERR.Error "'$1' could not be selected because", C
+                            ERR.Error "there is no value for '$1'", D.name
+                            Matching := false
+                            if verbose then
+                                IO.WriteLn "No default argument "
+                        else
+                            SemArgs += Arg
+                            if verbose then
+                                 IO.WriteLn "Testing default argument ", Arg
+                        exit if not Matching
+                    AType : TY.any_type := TY.Type(Arg)
+                    Matching := TY.SameType(D.type, AType)
+                    if not Matching then
+                        if verbose then
+                            IO.WriteLn "FAIL: Type mismatch for ", D.name
+                            IO.WriteLn "      Expected ", D.type_source
+                            IO.WriteLn "      Got ", AType.name
+                        ERR.Error "'$1' could not be selected because", C
+                        if AType.name <> nil then
+                          ERR.Error "the type '$3' of '$1' doesn't match '$2'",
+                                    ArgList[A], D.type_source, AType.name
+                        else                                  
+                          ERR.Error "the type of '$1' doesn't match '$2'",
+                                    ArgList[A], D.type_source
+                        exit if not Matching
+                    A += 1
+
+                // If not matching, lookup next
+                if not Matching then
+                    restart
+                if verbose then
+                    IO.WriteLn "PASS: The candidate matches"
+
+                // Compare scores and results
+                if best = nil then
+                    if verbose then
+                        IO.WriteLn "BEST: Best score ", Score
+                    best := C
+                    bestScore := Score
+                    bestF := F
+                else if Score < bestScore then
+                    if verbose then
+                        IO.WriteLn "BEST: New best score ", Score
+                    best := C
+                    bestScore := Score
+                    bestF := F
+                else if Score = bestScore then
+                    ambig := C
+                    if verbose then
+                        IO.WriteLn "AMBIGUOUS: Score ", Score
+                        IO.WriteLn "           Other: ", best
+
+        // Report results
+        candidate_errors : text := ERR.PopErrorContext()
+        if best <> nil then
+            if ambig <> nil then
+                ERR.Error "The call to '$1' is ambiguous", NameTree
+                ERR.Error "A first candidate is '$1'", best
+                ERR.Error "A second candidate is '$2'", ambig
+
+            // Map call arguments into machine space
+            marg  : CGM.machine_arg
+            margs : CGM.machine_args
+            for Arg in SemArgs loop
+                marg.machine_value := Arg
+                marg.is_input := true
+                marg.is_output := false
+                margs += marg
+            if verbose then
+                IO.WriteLn "FOUND: Calling ", PT.tree(bestF.name),
+                           "=", PT.tree(bestF.machine_name)
+            return CGM.FunctionCall (bestF.machine_name, margs)
+
+        else
+            ERR.Error "No valid function found for '$1'", NameTree
+            ERR.Display candidate_errors
+            return quote(@error)
+            
+
+
+    function IsFunction(T : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if a name indicates a function
+    // ------------------------------------------------------------------------
+        if T.kind <> PT.xlNAME then
+            return false
+
+        Name : T as PT.name_tree
+        OneFunction : PT.tree := SYM.LookupOne (XLT.context, "FN", Name.value)
+        return OneFunction <> nil
+
+
+    translation Semantics
+    // ------------------------------------------------------------------------
+    //    Overload resolution for function names
+    // ------------------------------------------------------------------------
+
+        when
+            'FunctionName' ('FunctionArgs')
+        where
+            IsFunction (FunctionName)
+        then
+            return Resolve(FunctionName, FunctionArgs)
+
+        when
+            'FunctionName' ()
+        where
+            IsFunction (FunctionName)
+        then
+            return Resolve(FunctionName, nil)
+
+        when
+            'FunctionName' 'FunctionArgs'
+        where
+            IsFunction (FunctionName)
+        then
+            return Resolve(FunctionName, FunctionArgs)
+
+        when
+            'FunctionName'
+        where
+            IsFunction (FunctionName)
+        then
+            return Resolve(FunctionName, nil)
+

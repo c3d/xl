@@ -1,0 +1,131 @@
+// ****************************************************************************
+//  xl.codegenerator.machine.xl     (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//      Machine-dependent part of the code generator
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import BC = XL.BYTECODE
+import DCL = XL.SEMANTICS.DECLARATIONS
+import PT = XL.PARSER.TREE
+import SYM = XL.SYMBOLS
+import TY = XL.SEMANTICS.TYPES
+import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import XLT = XL.TRANSLATOR
+
+
+module XL.CODE_GENERATOR.MACHINE is
+// ----------------------------------------------------------------------------
+//    The machine-dependent code generator
+// ----------------------------------------------------------------------------
+
+    function Name (Name : PT.name_tree;
+                   Type : TY.any_type) return PT.name_tree is
+    // ------------------------------------------------------------------------
+    //    Return a 'mangled' function name
+    // ------------------------------------------------------------------------
+        prefix : text := ""
+        base : text := PT.XLNormalize(Name.value)
+
+        // To include type in the generated name
+        // mtype : PT.name_tree := Type.machine_type
+        // if mtype <> nil then
+        //   prefix := mtype.value + "_"
+
+        // Make name unique by postfixing it with an index
+        return SYM.Temporary(prefix + base, Name.position)
+
+
+    function EntryInt (MName   : PT.tree;
+                       RetType : TY.any_type;
+                       Parms   : FT.declaration_list) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Return a machine-level function declaration from a function or ptr
+    // ------------------------------------------------------------------------
+        MType   : PT.tree
+        Parm    : DCL.declaration
+
+        if RetType = nil then
+            result := quote(@fn_proc)
+        else
+            MType := RetType.machine_type
+            result := quote(@fn_ret 'MType')
+        result := quote
+            'result'
+            'MName'
+            @fn_begin_parms
+
+        for Parm in Parms loop
+            MName := Parm.machine_name
+            MType := Parm.machine_type
+            result := quote
+                'result'
+                @fn_parm 'MType' 'MName'
+
+        result := quote
+            'result'
+            @fn_end_parms
+
+
+    function Entry (MName   : PT.tree;
+                    RetType : TY.any_type;
+                    Parms   : FT.declaration_list) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Entry for an actual function
+    // ------------------------------------------------------------------------
+        return EntryInt(quote(@fn_name 'MName'), RetType, Parms)
+
+
+    function EntryPointer (RetType: TY.any_type;
+                           Parms  : FT.declaration_list) return PT.name_tree is
+    // ------------------------------------------------------------------------
+    //   Return a pointer to an entry with given parameters
+    // ------------------------------------------------------------------------
+         result := SYM.Temporary("FnPtr");
+         T : BC.bytecode := EntryInt(quote(@fn_ptr_name 'result'),
+                                     RetType, Parms)
+         T := quote
+             @fn_ptr_begin
+             'T'
+             @fn_ptr_end
+         XLT.AddGlobalDecl T
+
+
+    function FunctionCall (mname    : PT.name_tree;
+                           margs    : machine_args) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Generate a low-level function call
+    // ------------------------------------------------------------------------
+
+        // Begin call block
+        result := quote
+            @call_begin 'mname'
+
+        A : machine_arg
+        for A in margs loop
+            mval : PT.tree := A.machine_value
+            result := quote
+                'result'
+                @call_arg 'mval'
+
+        result := quote
+            'result'
+            @call_end 'mname'

@@ -1,0 +1,321 @@
+// ****************************************************************************
+//  xl.semantics.types.xl           (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Implementation of the basic type system
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import SYM = XL.SYMBOLS
+import ERR = XL.ERRORS
+import XLT = XL.TRANSLATOR
+
+
+module XL.SEMANTICS.TYPES is
+// ----------------------------------------------------------------------------
+//   Implements data type parsing and representation
+// ----------------------------------------------------------------------------
+
+    function MakeType(Name : PT.tree; Source : PT.tree) return any_type is
+    // ------------------------------------------------------------------------
+    //    Create a basic type, possibly named
+    // ------------------------------------------------------------------------
+
+        // Flags set during semantics are all clear initially
+        result.is_constant            := false
+        result.is_variable            := false
+        result.is_generic             := false
+        result.is_polymorphic         := false
+        result.is_subroutine          := false
+        result.is_reference           := false
+        result.is_instantiation       := false
+        result.is_compiler_generated  := false
+
+        result.type_uid               := -1 // Not set
+        result.bit_size               := -1 // Not set
+        result.source_tree            := Source
+        result.name                   := Name
+        result.machine_type           := nil
+
+
+    function EnterType (Name : PT.tree;
+                        Value : any_type;
+                        Source : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a type in the symbol table
+    // ------------------------------------------------------------------------
+    //   A type is entered in the symbol table as a simple replacement
+    //   with the name, and the type info is attached to the name
+
+        // When we enter a type, we expect a valid type name
+        if Name.kind <> PT.xlNAME then
+            ERR.Error "A type name was expected, got '$1'", Name
+            Name := SYM.Temporary ("invalid_type")
+
+        // Check if there is already a type by that name
+        N : Name as PT.name_tree
+        original : PT.tree := SYM.LookupOne(XLT.context, "TYPE", N.value)
+        if original <> nil then
+            ERR.Error "The name '$1' can't be used for a type", Name
+            ERR.Error "because it is already used by type '$1'", original
+            return nil
+
+        // Attach a type info to the original name
+        tp : any_type := Value
+        if tp = nil then
+            tp := MakeType(Name, Source)
+        PT.SetInfo Name, "TYPE", tp        
+
+        // Store the original name (with its type info) in symbol table
+        SYM.Enter XLT.context, "TYPE", N.value, Name
+
+        result := quote(@type)
+        PT.SetInfo result, "TYPE", tp
+        return result
+
+
+    builtin_type_uid : integer := 0
+
+    function EnterBuiltinType (Name  : text;
+                               Bits  : integer;
+                               MType : text) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a built-in type in the symbol table
+    // ------------------------------------------------------------------------
+        NameTree : PT.tree := PT.NewName (Name)
+        TypeTree : PT.tree := EnterType (NameTree, nil, nil) // No initial value
+        tp : any_type := any_type(PT.FindInfo(TypeTree, "TYPE"))
+        assert tp <> nil
+
+        // Defaults for built-in types
+        tp.is_variable := true
+        tp.type_uid := builtin_type_uid
+        builtin_type_uid += 1
+        tp.bit_size := Bits
+        tp.machine_type := PT.NewName(MType)
+
+        return TypeTree
+
+
+    procedure InitializeTypes is
+    // ------------------------------------------------------------------------
+    //    Initialize the type table
+    // ------------------------------------------------------------------------
+    //    This depends on context initialization, which is done earlier
+    //    since it is in imported module XL.SYMBOLS
+    //    TODO: Do this by importing XL.BUILTINS and getting special names
+    //    It's obvious that "text" cannot be entered that way,
+    //    since its definition is complex (string of character)
+    //    TODO: The fact that we go through a separate procedure
+    //    for initialization is a workaround until ordering of inits
+    //    based on module dependencies works correctly
+    //    This code rightfully belongs to initialization
+
+        if integer_type = nil then
+            XLT.InitializeTranslator()
+            integer_type   := EnterBuiltinType ("integer", 32, "Int")
+            real_type      := EnterBuiltinType ("real", 64, "Real")
+            boolean_type   := EnterBuiltinType ("boolean", 1, "Boolean")
+            character_type := EnterBuiltinType ("character", 16, "Character")
+            text_type      := EnterBuiltinType ("text", -1, "Text")
+
+
+    initialization
+    // ------------------------------------------------------------------------
+    //    Initialize the various built-in types
+    // ------------------------------------------------------------------------
+        InitializeTypes
+
+
+    function EvaluateType (type_expr : PT.tree) return any_type is
+    // ------------------------------------------------------------------------
+    //   Evaluate a type expression
+    // ------------------------------------------------------------------------
+    //   When a type expression is first evaluated, the type result is cached
+    //   For type names such as "integer", the original type name is looked up
+    //   which will contain the type info that was entered.
+
+        // Check if the node itself had a type computed for it
+        original : PT.tree := type_expr
+        info : PT.info := PT.FindInfo(type_expr, "TYPE")
+        if info <> nil then
+            result := any_type (info)
+            return result
+
+        // Check constant and variable prefixes
+        var_flag : boolean := false
+        cst_flag : boolean := false
+        prefixen : boolean := type_expr.kind <> PT.xlNAME
+        while prefixen loop
+            translate type_expr
+                when
+                    constant 'T'
+                then
+                    cst_flag := true
+                    type_expr := T
+                when
+                    const 'T'
+                then
+                    cst_flag := true
+                    type_expr := T
+                when
+                    variable 'T'
+                then
+                    var_flag := true
+                    type_expr := T
+                when
+                    var 'T'
+                then
+                    var_flag := true
+                    type_expr := T
+                else
+                    prefixen := false
+
+
+        // If non-name, try to find if there is an expression that matches
+        if type_expr.kind <> PT.xlNAME then
+            type_expr := XLT.EvaluateType(type_expr)
+            info := PT.FindInfo (type_expr, "TYPE")
+            if info <> nil then
+                result := any_type(info)
+
+        // For names, lookup in the type table.
+        // If found, return original type info and cache result
+        if result = nil then
+            if type_expr.kind = PT.xlNAME then
+                tname : type_expr as PT.name_tree
+                types : SYM.tree_list
+                SYM.Lookup XLT.context, "TYPE", tname.value, types
+                if size(types) > 0 then
+                    original : PT.tree := types[0]
+                    if size(types) > 1 then
+                        ERR.Error "Internal: Multiple types for '$1'", tname
+                        ERR.Error "One candidate is '$1'", types[0]
+                        ERR.Error "Another candidate is '$1'", types[1]
+                    info  := PT.FindInfo(original, "TYPE")
+                    if info <> nil then
+                        result := any_type (info)
+                    else
+                        ERR.Error "The type '$1' is undefined", type_expr
+                        return nil
+                else
+                    ERR.Error "The type '$1' is unknown", type_expr
+                    return nil
+            else
+                ERR.Error "'$1' used as a type, but doesn't look like one",
+                          type_expr
+                return nil
+
+        if cst_flag or var_flag then
+            if cst_flag and var_flag then
+                ERR.Error "Type '$1' can't be both variable and constant",
+                          original
+            else
+                result := Clone(result)
+                if cst_flag then
+                    result.is_constant := true
+                    result.is_variable := false
+                else
+                    result.is_variable := true
+                    result.is_constant := false
+
+        // Cache for next time
+        PT.SetInfo type_expr, "TYPE", result
+        if type_expr <> original then
+            PT.SetInfo original, "TYPE", result
+
+
+    function SameType (t1 : any_type; t2: any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if two types are identical
+    // ------------------------------------------------------------------------
+
+        // If same type uid, then they match
+        if t1.type_uid = t2.type_uid then
+            return true
+
+        return false
+
+
+    procedure SetType(tree : PT.tree; type : any_type) is
+    // ------------------------------------------------------------------------
+    //   Record the type associated with a tree, if any
+    // ------------------------------------------------------------------------
+        PT.SetInfo tree, "T", type
+
+
+    function Type(tree : PT.tree) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return the type associated to a tree
+    // ------------------------------------------------------------------------
+        return any_type(PT.FindInfo(tree, "T"))
+
+
+
+    translation Declarations
+    // ------------------------------------------------------------------------
+    //   Translation of type statements
+    // ------------------------------------------------------------------------
+        when
+            type 'Name'
+        then
+            // Initial 'source' is undefined
+            return EnterType (Name, nil, input)
+
+        when
+            type 'Name' is 'Value'
+        then
+            return EnterType (Name, EvaluateType(Value), input)
+
+
+    translation Semantics
+    // ------------------------------------------------------------------------
+    //   Associating built-in types to basic terminals
+    // ------------------------------------------------------------------------
+
+        when
+            'Thing'
+        where
+            Thing.kind = PT.xlINTEGER
+        then
+            SetType Thing, any_type(PT.FindInfo(integer_type, "TYPE"))
+            return Thing
+
+        when
+            'Thing'
+        where
+            Thing.kind = PT.xlREAL
+        then
+            SetType Thing, any_type(PT.FindInfo(real_type, "TYPE"))
+            return Thing
+
+        when
+            'Thing'
+        where
+            Thing.kind = PT.xlTEXT
+        then
+            TextTerminal : Thing as PT.text_tree
+            if TextTerminal.quote = '"' then
+                SetType Thing, any_type(PT.FindInfo(text_type, "TYPE"))
+            else
+                SetType Thing, any_type(PT.FindInfo(character_type, "TYPE"))
+            return Thing
+

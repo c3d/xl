@@ -1,0 +1,86 @@
+// ****************************************************************************
+//  xl.bytecode                     (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Bytecode format strings
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU Genral Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+init            "#define XLINIT 1"
+                "#include ""xl_lib.h"""
+
+                "typedef char Int8;"
+                "typedef short Int16;"
+                "typedef int Int32;"
+                "typedef unsigned char UInt8;"
+                "typedef unsigned short UInt16;"
+                "typedef unsigned int UInt32;"
+                "typedef float Real32;"
+                "typedef double Real64;"
+                "typedef /*long - causes GCC warning*/ double Real80;"
+                "typedef Int32 Int;"
+                "typedef UInt32 UInt;"
+                "typedef Real64 Real;"
+                "typedef char Boolean;"
+                "typedef wchar_t Character;"
+                "typedef ::text Text;"
+
+term            "/*end*/"
+
+nop             ""
+type            "/* Type */"
+error           "/* ERROR */"
+
+local_decl      "$1 $2;"
+parm_decl       "/* $1 $2 */ "
+global_decl     "$1 $2;"
+field_decl      "$1 $2;"
+
+fn_proc         "void "
+fn_ret          "$1 "
+fn_name         "$1 "
+fn_ptr_name     "(*$1) "
+fn_begin_parms  "(${ "
+fn_parm         "$[, ]$1 $2 "
+fn_end_parms    "$}) "
+
+fn_decl_begin   ""
+fn_decl_end     ";"
+fn_ptr_begin   "typedef "
+fn_ptr_end     ";"
+
+fn_body_begin   ""
+fn_body         "{"
+fn_body_end     "}"
+
+call_begin      "$1 (${ "
+call_arg        "$[, ]$1 "
+call_end        "$}) /* $1 */"
+
+main_begin      "int main(int argc, char *argv[]) {"
+main_invoke     "XLMain();"
+main_end        "return 0; }"
+
+
+add_int         "$1 = $2 + $3;"
+sub_int         "$1 = $2 - $3;"
+mul_int         "$1 = $2 * $3;"
+div_int         "$1 = $2 / $3;"
+

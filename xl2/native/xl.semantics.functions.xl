@@ -1,0 +1,265 @@
+// ****************************************************************************
+//  xl.semantics.functions.xl       (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Implementation of C++-style functions and overloading
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import DCL = XL.SEMANTICS.DECLARATIONS
+import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import PT = XL.PARSER.TREE
+import SYM = XL.SYMBOLS
+import XLT = XL.TRANSLATOR
+import ERR = XL.ERRORS
+import TY = XL.SEMANTICS.TYPES
+import BC = XL.BYTECODE
+import CGM = XL.CODE_GENERATOR.MACHINE
+
+
+module XL.SEMANTICS.FUNCTIONS is
+// ----------------------------------------------------------------------------
+//   Implementation of the semantics of basic C++-style functions
+// ----------------------------------------------------------------------------
+
+    function MakeFn(NameTree    : PT.tree;
+                    Parms       : PT.tree;
+                    ReturnType  : PT.tree) return function is
+    // ------------------------------------------------------------------------
+    //    Create a basic type, possibly named
+    // ------------------------------------------------------------------------
+
+        // Check if the name looks valid
+        if NameTree.kind <> PT.xlNAME then
+            ERR.Error "A function name was expected, got '$1'", NameTree
+            NameTree := SYM.Temporary ("invalid_function_name")
+        Name : NameTree as PT.name_tree
+
+        // Flags set during semantics are almost all clear initially
+        result.is_constant            := true
+        result.is_variable            := false
+        result.is_input               := false
+        result.is_output              := false
+        result.is_parameter           := false
+        result.is_local               := false
+        result.is_global              := false
+        result.is_field               := false
+
+        fn_type : FT.function_type := FT.MakeFnType (Name, Parms, ReturnType)
+
+        result.parameters             := fn_type.parameters
+        result.return_type            := fn_type.return_type
+
+        result.name                   := Name
+        result.machine_name           := CGM.Name(Name, fn_type)
+        result.type_source            := nil
+        result.type                   := fn_type
+        result.initializer            := nil
+        result.written_as             := nil
+        result.precondition           := nil
+        result.postcondition          := nil
+        result.interface              := nil
+        result.body                   := nil
+        result.frame_depth            := -1
+
+
+    function FunctionInfo (input : PT.tree) return function is
+    // ------------------------------------------------------------------------
+    //   Return the function info associated with a tree
+    // ------------------------------------------------------------------------
+        info : PT.info := PT.FindInfo(input, "FN")
+        if info <> nil then
+            fn : function := function (info)
+            return fn
+        else
+            ERR.Error "'$1' doesn't look like a function declaration", input
+        return nil
+
+
+    function EnterFunction (Name    : PT.tree;
+                            Parms   : PT.tree;
+                            RetType : PT.tree;
+                            Iface   : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a function in symbol table and return corresponding bytecode
+    // ------------------------------------------------------------------------
+
+        f : function := MakeFn (Name, Parms, RetType)
+        ActualName : PT.name_tree := F.Name
+
+        MachineIface  : PT.Tree := CGM.Entry (f.machine_name,
+                                              f.return_type,
+                                              f.parameters)
+        MachineDecl   : PT.Tree := quote
+            @fn_decl_begin
+            'MachineIface'
+            @fn_decl_end
+        SemanticsDecl : PT.Tree := quote(@@fn_decl 'MachineIface')        
+
+        PT.SetInfo MachineIface, "FN", f
+        PT.SetInfo MachineDecl, "FN", f
+        PT.SetInfo SemanticsDecl, "FN", f
+        PT.SetInfo Iface, "FN", f
+
+        // Add the interface declaration
+        XLT.AddScopeDecl SYM.Enclosing(XLT.context), MachineDecl
+
+        // Enter the machine interface into the symbol table
+        // We enter it in enclosing context because current context is
+        // for parameter declarations
+        SYM.Enter SYM.Enclosing(XLT.context), "FN", ActualName.value, Iface
+
+        // Return the interface for Semantics (@@fn_decl [machine])
+        return SemanticsDecl
+
+
+    function EnterFunction (FnForm : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Process function forms
+    // ------------------------------------------------------------------------
+    // TODO: Do we want EnterFunction to be a 'translation'?
+
+        translate FnForm
+
+            // Translate body declarations
+            when
+                'Interface' is 'Body'
+            then
+                Interface := EnterFunction(Interface)
+                f : function := FunctionInfo(Interface)
+                if f.initializer <> nil then
+                    ERR.Error "Extraneous initializer '$1'", Body
+                else
+                    f.initializer := Body
+                    return quote(@@fn_body 'Interface' 'Body')
+
+            // Translate written statements
+            when
+                'Interface' written 'WrForm'
+            then
+                result := EnterFunction(Interface)
+                ERR.Error "Written statement '$1': Not implemented yet", WrForm
+
+            // Translate function preconditions
+            when
+                'Interface' require 'Pre'
+            then
+                result := EnterFunction(Interface)
+                ERR.Error "Precondition '$1': Not implemented yet", Pre
+
+            // Translate function postconditions
+            when
+                'Interface' ensure 'Post'
+            then
+                result := EnterFunction(Interface)
+                ERR.Error "Postcondition '$1': Not implemented yet", Post
+
+
+            // Translate parameter lists
+            when ('Name' ('Parms') return 'RetType') then
+                return EnterFunction(Name, Parms, RetType, FnForm)
+
+            when ('Name' () return 'RetType') then
+                return EnterFunction(Name, nil, RetType, FnForm)
+
+            when ('Name' return 'RetType') then
+                return EnterFunction(Name, nil, RetType, FnForm)
+
+            when ('Name' ('Parms')) then
+                return EnterFunction(Name, Parms, nil, FnForm)
+
+            when ('Name' ()) then
+                return EnterFunction(Name, nil, nil, FnForm)
+
+            when ('Name') then
+                return EnterFunction(Name, nil, nil, FnForm)
+
+
+    function EnterFunctionScope (FnForm : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Create a new function scope and enter there
+    // ------------------------------------------------------------------------
+        XLT.context := SYM.NewSymbolTable (XLT.context)
+        SYM.SetInteger XLT.context, "FNPARM", 1
+        result := EnterFunction (FnForm)
+        XLT.context := SYM.Enclosing (XLT.context)
+
+
+    translation Declarations
+    // ------------------------------------------------------------------------
+    //    Translation of function declarations
+    // ------------------------------------------------------------------------
+    //  Because these are very short forms, they are the closest we have
+    //  to keywords
+
+        when
+            function 'FunctionStuff'
+        then
+            return EnterFunctionScope (FunctionStuff)
+
+        when
+            procedure 'FunctionStuff'
+        then
+            return EnterFunctionScope (FunctionStuff)
+
+        when
+            to 'FunctionStuff'
+        then
+            return EnterFunctionScope (FunctionStuff)
+
+
+    function ProcessFunction (Interface : PT.tree;
+                              Body      : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Process the body of a function
+    // ------------------------------------------------------------------------
+
+        // Remove the coating around the machine interface
+        translate Interface
+            when
+                @@fn_decl 'MachineIface'
+            then
+                Interface := MachineIface
+
+        Body := XLT.ScopeSemantics(Body, false)
+        return quote
+            @fn_body_begin
+            'Interface'
+            @fn_body
+            'Body'
+            @fn_body_end
+
+
+    translation Semantics
+    // ------------------------------------------------------------------------
+    //    Translation of function declarations
+    // ------------------------------------------------------------------------
+
+        when
+            @@fn_body 'Interface' 'Body'
+        then
+            return ProcessFunction (Interface, Body)
+
+        when
+            @@fn_decl 'Interface'
+        then
+            // We put a coating around the interface during Declarations
+            // Remove the coating now so that code generator sees it
+            return Interface

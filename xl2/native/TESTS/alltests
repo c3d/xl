@@ -1,0 +1,127 @@
+#******************************************************************************
+#  Christophe de Dinechin                                          XL PROJECT
+#  XL COMPILER TESTS: alltests
+#******************************************************************************
+#
+#  File Description:
+#
+#    Script for testing the compiler
+#
+#    This file runs through every possible test. It looks for all files
+#    ending in .test below the current directory, and executes them.
+#
+#
+#
+#
+#
+#******************************************************************************
+#This document is distributed under the GNU General Public License
+#See the enclosed COPYING file or http://www.gnu.org for information
+#******************************************************************************
+#* File       : $RCSFile$
+#* Revision   : $Revision$
+#* Date       : $Date$
+#******************************************************************************
+
+# Environment - Note that 'xl' is typically a symbolic link to real compiler
+TESTDIR=$(pwd)
+XL=$TESTDIR/../nxl
+SUCCESS=$TESTDIR/success.out
+FAILURE=$TESTDIR/failure.out
+PASS="pass"
+ONE_FAILED=
+PATTERN='[A-Za-z]*'
+UPDATE=
+if [ "$1" == "-update" ]; then shift; UPDATE=$1; PATTERN="$UPDATE"; shift; fi
+if [ "$1" == "-only" ]; then shift; PATTERN="$1"; shift; fi
+
+export TESTDIR XL SUCCESS FAILURE PASS UPDATE
+
+# Make sure the proper files are linked in place
+ln -sf $TESTDIR/../xl.bytecode .
+ln -sf $TESTDIR/../xl.syntax .
+
+
+# Cleanup the test results
+echo Tests successfully run on $(date) on $HOSTNAME > $SUCCESS
+echo Failed tests on $(date) on $HOSTNAME > $FAILURE
+rm -rf $TESTDIR/.xl
+
+# Look for all possible tests in the test directory
+for TEST in $(find $TESTDIR -name "$PATTERN".xl -print)
+do
+    TESTNAME=$(basename $TEST .xl)
+	echo -n Test: $TESTNAME...
+
+    # Setup useful variables
+    BASE=$(dirname $TEST)/$TESTNAME
+
+    OPT=$(grep 'OPT=' $TEST | sed 's|// OPT=||g')
+    POST=$(grep 'POST=' $TEST | sed 's|// POST=||g')
+    RUN=$(grep 'RUN=' $TEST | sed 's|// RUN||g')
+    [ -z "$RUN" ] && { RUN="./a.out"; }
+    INPUT=$(grep 'INPUT=' $TEST | sed 's|// INPUT=||g')
+    [ -z "$INPUT" ] && { INPUT=$BASE.xl; }
+
+    REF=$(grep 'REF=' $TEST | sed 's|// REF=||g')
+    [ "$REF" = ".ref" ] && { REF=$BASE.ref ; }
+    GREP=$(grep 'GREP=' $TEST | sed 's|// GREP=||g')
+    RETURN_CODE=$(grep 'RETURN_CODE=' $TEST | sed 's|// RETURN_CODE=||g')
+    [ -z "$RETURN_CODE" ] && { RETURN_CODE=0; }
+    # -v option not yet supported
+    # [ "$RETURN_CODE" -ne 0 ] && { OPT="-v $OPT"; }
+    CMD=$(grep 'CMD=' $TEST | sed 's|// CMD=||g')
+    [ -z "$CMD" ] && { CMD="$XL $OPT $INPUT $POST"; }
+    LOG=$BASE.log
+
+    # Get the command line to run
+    export TESTNAME BASE CMD OPT INPUT OUTPUT REF GREP RETURN_CODE LOG
+
+    # Run the test
+    THIS_FAILED=
+    $CMD > $LOG 2>&1
+    RC=$?
+    [ -x ./a.out ] && $RUN >> $LOG 2>&1
+    sed 's@'$TESTDIR'@TESTS@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
+
+    # Analyze the results
+    if [ $RC -ne $RETURN_CODE ]; then
+        THIS_FAILED="Exit code $RC, expected $RETURN_CODE"
+    elif [ ! -z "$REF" ]; then
+        if diff -q $REF $LOG 2> /dev/null; then
+            THIS=ok
+        elif [ ! -z "$UPDATE" ]; then
+            echo "Updating reference for " $BASE
+            mv -f $REF $REF.old
+            cp $LOG $REF
+        else
+            THIS_FAILED="Output mismatch"
+            diff $REF $LOG > $LOG.diff
+            mv $LOG.diff $LOG
+        fi
+    elif [ ! -z "$GREP" ]; then
+        if $GREP $LOG; then
+            THIS=ok
+        else
+            THIS_FAILED="No pattern match"
+        fi
+    fi
+
+    if [ -z "$THIS_FAILED" ]; then
+        echo $TEST >> $SUCCESS
+        if [ "$RC" -ne "0" ] ; then
+            echo Success - negative test;
+        else
+            echo Success;
+        fi
+        rm -f $LOG $OUTPUT
+    else
+        echo $TEST:  $THIS_FAILED >> $FAILURE
+        cat $LOG >> $FAILURE
+        echo '*** FAILURE ***'
+        ONE_FAILED=1
+    fi
+    rm -f ./a.out
+done
+
+if [ "$ONE_FAILED" ]; then echo; echo '*** FAILURES: ***' ; cat $FAILURE; fi
