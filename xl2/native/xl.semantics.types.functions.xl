@@ -91,6 +91,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
             result.return_type := nil
         result.inputs_count := 0
         result.outputs_count := 0
+        result.symbols := XLT.context
 
         // Check if empty parameter list. () is a block with an empty name
         if Parms <> nil and Parms.kind = PT.xlNAME then

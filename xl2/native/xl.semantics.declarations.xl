@@ -223,13 +223,20 @@ module XL.SEMANTICS.DECLARATIONS is
         mtype : PT.name_tree := decl.machine_type
         mname : PT.name_tree := decl.machine_name
         kind  : PT.name_tree
+        ctxt  : SYM.symbol_table := XLT.context
 
-        if decl.is_local     then kind := parse_tree(local_decl)
-        if decl.is_global    then kind := parse_tree(global_decl)
-        if decl.is_field     then kind := parse_tree(field_decl)
-        if decl.is_parameter then kind := parse_tree(parm_decl)
+        if decl.is_local then
+            kind := parse_tree(local_decl)
+            ctxt := XLT.function_context
+        else if decl.is_global then
+            kind := parse_tree(global_decl)
+            ctxt := XLT.global_context
+        else if decl.is_field then
+            kind := parse_tree(field_decl)
+        else if decl.is_parameter then
+            kind := parse_tree(parm_decl)
 
-        XLT.AddScopeDecl XLT.context, parse_tree(@ 'kind' 'mtype' 'mname')
+        XLT.AddScopeDecl ctxt, parse_tree(@ 'kind' 'mtype' 'mname')
 
         // Evaluate the initialization value
         if Value <> nil then
@@ -245,6 +252,96 @@ module XL.SEMANTICS.DECLARATIONS is
         // TODO: Check existence of constructor
         if result = nil then
             result := parse_tree(@nop)
+
+        PT.SetInfo result, "DECL", decl
+        return result
+
+
+    function Declare(Name : PT.name_tree;
+                     Type : TY.any_type) return declaration is
+    // ------------------------------------------------------------------------
+    //    Create an internal declaration from an existing type
+    // ------------------------------------------------------------------------
+
+        // Flags set during semantics are all clear initially
+        result.is_constant            := false
+        result.is_variable            := true
+        result.is_input               := false
+        result.is_output              := false
+        result.is_parameter           := false
+        result.is_local               := false
+        result.is_global              := false
+        result.is_field               := false
+        result.is_builtin             := false
+
+        result.name                   := Name
+        result.type_source            := Type.source_tree
+        result.type                   := Type
+        result.machine_name           := CGM.Name(Name, Type)
+        result.machine_type           := nil
+        result.initializer            := nil
+        result.written_as             := nil
+        result.precondition           := nil
+        result.postcondition          := nil
+        result.interface              := nil
+        result.body                   := nil
+        result.frame_depth            := -1
+        result.machine_type           := Type.machine_type
+
+        if Name.kind <> PT.xlNAME then
+            ERR.Error "A name was expected, got '$1'", Name
+            Name := SYM.Temporary ("invalid_declaration")
+
+        // Check if there is already an entity by that name
+        original : PT.tree := SYM.LookupOne(XLT.context, "DECL", Name.value)
+        if original <> nil then
+            ERR.Error "Redeclaration of '$1' ", Name
+            ERR.Error "Previous declaration of '$1' here", original
+            return nil
+
+        // Attach a type info to the original name
+        PT.SetInfo Name, "DECL", result
+
+        // Check flags of the decl
+        result.is_parameter := SYM.GetInteger(XLT.context, "FNPARM") <> 0
+        result.is_local     := SYM.GetInteger(XLT.context, "LOCAL") <> 0
+        result.is_global    := SYM.GetInteger(XLT.context, "GLOBAL") <> 0
+        result.is_field     := SYM.GetInteger(XLT.context, "FIELD") <> 0
+
+        if (integer(result.is_parameter) + integer(result.is_field) +
+            integer(result.is_local) + integer(result.is_global) <> 1) then
+            ERR.Error "(Internal) Bad declaration scope for '$1'", Name
+
+        // Store this declaration name in the symbol table
+        // The original declaration name holds declaration information
+        SYM.Enter XLT.context, "DECL", Name.value, Name
+        
+        // Set the type of the name
+        TY.SetType Name, Type
+        TY.SetType result.machine_name, Type
+
+
+    function DeclareTree(Name : PT.name_tree;
+                         Type : TY.any_type) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Return a tree for an internal declaration
+    // ------------------------------------------------------------------------
+
+        decl : declaration := Declare(Name, Type)
+        if decl = nil then
+            return parse_tree(@error)
+
+        // Insert a declaration for the machine type and machine name
+        mtype : PT.name_tree := decl.machine_type
+        mname : PT.name_tree := decl.machine_name
+        kind  : PT.name_tree
+
+        if decl.is_local     then kind := parse_tree(local_decl)
+        if decl.is_global    then kind := parse_tree(global_decl)
+        if decl.is_field     then kind := parse_tree(field_decl)
+        if decl.is_parameter then kind := parse_tree(parm_decl)
+
+        result := parse_tree(@ 'kind' 'mtype' 'mname')
 
         PT.SetInfo result, "DECL", decl
         return result

@@ -58,9 +58,14 @@ module XL.SEMANTICS.TYPES with
 
     // Evaluate a type expression
     function EvaluateType (type_expr : PT.tree) return any_type
+    function TypeExpression(typeToken : any_type) return PT.tree
 
     // Check if two types are identical
     function SameType (t1 : any_type; t2: any_type) return boolean
+
+    // Convert to a given type
+    function Convert(expr : PT.tree; toType : any_type) return PT.tree
+    function Convert(expr : PT.tree; toType : PT.tree) return PT.tree
 
     // Record the type in a tree
     procedure SetType(tree : PT.tree; type : any_type)

@@ -41,6 +41,7 @@ import XL.SEMANTICS.TYPES.FUNCTIONS
 import XL.SEMANTICS.FUNCTIONS
 import XL.SEMANTICS.OVERLOAD
 import XL.SEMANTICS.WRITTEN_FORMS
+import XL.SEMANTICS.INSTRUCTIONS
 import XL.SEMANTICS.PRAGMAS
 
 // Plugins
@@ -80,7 +81,7 @@ procedure Main is
             compile := false
         else if name = "-sem" then
             compile := false
-            theProgram := XLT.ScopeSemantics(theProgram, true)
+            theProgram := XLT.ScopeSemantics(theProgram, XLT.scopeMain)
         else if name = "-opt" then
             compile := false
             theProgram := XLT.XLOptimizations(theProgram)

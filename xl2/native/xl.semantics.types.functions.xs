@@ -25,6 +25,7 @@
 
 import TY = XL.SEMANTICS.TYPES
 import DCL = XL.SEMANTICS.DECLARATIONS
+import SYM = XL.SYMBOLS
 
 
 module XL.SEMANTICS.TYPES.FUNCTIONS with
@@ -47,6 +48,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS with
         return_type     : any_type
         outputs_count   : integer
         inputs_count    : integer
+        symbols         : SYM.symbol_table
 
     type function_type is access to function_type_data
 

@@ -90,12 +90,17 @@ module XL.SEMANTICS is
                 'A' ; 'B'
 
         when
+            ( 'Expr' )
+        then
+            return XLT.XLSemantics(Expr)
+
+        when
             'Thing'
         where
             Thing.kind = PT.xlBLOCK
         then
             block : Thing as PT.block_tree
-            block.child := XLT.ScopeSemantics (block.child, false)
+            block.child := XLT.ScopeSemantics (block.child, XLT.scopeLocal)
             return block
 
 

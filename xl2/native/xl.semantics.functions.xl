@@ -69,6 +69,8 @@ module XL.SEMANTICS.FUNCTIONS is
         result.return_type            := fn_type.return_type
         result.outputs_count          := fn_type.outputs_count
         result.inputs_count           := fn_type.inputs_count
+        result.result_mname           := nil
+        result.symbols                := XLT.context
 
         result.name                   := Name
         result.machine_name           := CGM.Name(Name, fn_type)
@@ -111,7 +113,10 @@ module XL.SEMANTICS.FUNCTIONS is
             @fn_decl_begin
             'MachineIface'
             @fn_decl_end
-        SemanticsDecl : PT.Tree := parse_tree(@@fn_decl 'MachineIface')        
+        SemanticsDecl : PT.Tree := parse_tree(@@fn_decl 'MachineIface')
+
+        // Indicate that we are in a function (for return instructions)
+        SYM.SetProperty XLT.context, "FN", f.machine_name
 
         PT.SetInfo MachineIface, "FN", f
         PT.SetInfo MachineDecl, "FN", f
@@ -256,13 +261,25 @@ module XL.SEMANTICS.FUNCTIONS is
             then
                 Interface := MachineIface
 
-        Body := XLT.ScopeSemantics(Body, false)
-        return parse_tree
-            @fn_body_begin
-            'Interface'
-            @fn_body
-            'Body'
-            @fn_body_end
+        // If there is a return type, create a 'result' variable
+        f : function := FunctionInfo(Interface)
+        context : SYM.symbol_table := XLT.context
+        XLT.context := f.symbols
+        retType : TY.any_type := f.return_type
+        if retType <> nil then
+            retName : PT.name_tree := PT.NewName("result", Interface.position)
+            decl    : DCL.declaration := DCL.Declare(retName, retType)
+            if decl <> nil then
+                MName : PT.name_tree := decl.machine_name
+                MType : PT.name_tree := decl.machine_type
+                f.result_mname := MName
+                Body := parse_tree
+                    @result_decl 'MType' 'MName' 
+                    'Body'
+
+        Body := XLT.ScopeSemantics(Body, XLT.scopeFunction)
+        result := CGM.FunctionBody(f, Interface, Body)
+        XLT.context := context
 
 
     translation XLSemantics

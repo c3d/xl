@@ -135,6 +135,8 @@ module XL.SEMANTICS.WRITTEN_FORMS is
     // ------------------------------------------------------------------------
     //    Enter the written form in the symbol table
     // ------------------------------------------------------------------------
+        trace[written] "Written form for ", fniface
+
         // Find which function we are talking about
         fninfo : FN.function := FN.FunctionInfo(fniface)
         if fninfo = nil then
@@ -149,10 +151,12 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         decl : FN.declaration
         for decl in fninfo.parameters loop
             nm : PT.name_tree := decl.name
+            trace[written] "Written parm ", nm.value
             written.args_map[nm.value] := decl
 
         // Create copy of written form where params are replaced with wildcards
         wildcards : PT.tree := CreateWildcards(wrform, written.args_map)
+        trace[written] "Wildcards=", wildcards
         written.reference_form := wildcards
         written.score_adjust := WrittenScoreAdjust
         written.translator := WrittenTranslator

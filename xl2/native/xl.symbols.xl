@@ -320,6 +320,7 @@ module XL.SYMBOLS is
         result := nil
         while result = nil and table loop
             result := table.properties[name]
+            table := table.enclosing
             exit if not enclosed
 
 
@@ -387,8 +388,6 @@ module XL.SYMBOLS is
     //   Return the current list of scope items, or @nop
     // ------------------------------------------------------------------------
         result := table.properties[section]
-        if result = nil then
-            result := parse_tree(@nop)
 
 
 

@@ -39,10 +39,16 @@ module XL.CODE_GENERATOR.MACHINE with
     function Name (Name : PT.name_tree;
                    Type : TY.any_type) return PT.name_tree
 
-    // Interface for function calls                   
+    // Interface for function declarations
     function Entry (f : FN.function) return BC.bytecode
     function EntryPointer (f : FT.function_type) return PT.name_tree
+    function FunctionBody(f     : FN.function;
+                          Iface : PT.tree;
+                          Body  : PT.tree) return PT.tree
 
+    // Interface for function calls                   
     type machine_args is string of PT.tree
+    procedure EvaluateArgument(in out arg  : PT.tree;
+                               in out code : PT.tree)
     function FunctionCall (toCall   : FN.function;
                            margs    : machine_args) return BC.bytecode

@@ -1,0 +1,124 @@
+// ****************************************************************************
+//  xl.semantics.instructions.xl    (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Implementation of basic instructions
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import SYM = XL.SYMBOLS
+import ASCII = XL.TEXT_IO.ENCODING.ASCII
+import XLT = XL.TRANSLATOR
+import BC = XL.BYTECODE
+import ERR = XL.ERRORS
+import TY = XL.SEMANTICS.TYPES
+
+
+module XL.SEMANTICS.INSTRUCTIONS is
+// ----------------------------------------------------------------------------
+//   Implement basic instructions
+// ----------------------------------------------------------------------------
+
+    function DoReturn(Ret : PT.tree; Value : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Translation of the 'return' statement
+    // ------------------------------------------------------------------------
+         mname : PT.tree := SYM.GetProperty(XLT.context, "FN", true)
+         if mname = nil then
+             ERR.Error "Return statement '$1' not in a function", Ret
+             return parse_tree(@error)
+         if Value <> nil then
+             result := parse_tree(result := 'Value')
+             result := XLT.XLSemantics(result)
+             result := parse_tree
+                 'result'
+                 @goto_exit 'mname'
+         else
+             result := parse_tree(@goto_exit 'mname')
+
+
+    function DoIf(Test      : PT.tree;
+                  TrueCase  : PT.tree;
+                  FalseCase : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Generate the code for an 'if'
+    // ------------------------------------------------------------------------
+    //   TODO : If expressions...
+
+        // Label base for that if
+        label  : PT.name_tree := SYM.Temporary("if")
+        prefix : PT.tree := nil
+
+        // Convert to boolean and evaluate condition
+        Test := XLT.XLSemantics(Test)
+        Test := TY.Convert (Test, TY.boolean_type)
+        CGM.EvaluateArgument Test, prefix
+
+        // Perform semantics on cases
+        result := parse_tree
+            @ifnot 'Test' 'label'
+        if TrueCase <> nil then
+            TrueCase := XLT.ScopeSemantics(TrueCase, XLT.scopeLocal)
+            result := parse_tree
+                'result'
+                'TrueCase'
+        result := parse_tree
+            'result'
+            @ifelse 'label'
+        if FalseCase <> nil then
+            FalseCase := XLT.ScopeSemantics(FalseCase, XLT.scopeLocal)
+            result := parse_tree
+                'result'
+                'FalseCase'
+        result := parse_tree
+            'result'
+            @ifend 'label'
+
+        if prefix <> nil then
+            result := parse_tree
+                'prefix'
+                'result'
+        
+
+
+    translation XLSemantics
+    // ------------------------------------------------------------------------
+    //   Translation forms
+    // ------------------------------------------------------------------------
+
+        when
+            return 'Value'
+        then
+            return DoReturn(input, Value)
+
+        when
+            return
+        then
+            return DoReturn(input, nil)
+
+        when
+            if 'Cond' then 'TrueCase'
+        then
+            return DoIf(Cond, TrueCase, nil)
+        when
+            if 'Cond' then 'TrueCase' else 'FalseCase'
+        then
+            return DoIf(Cond, TrueCase, FalseCase)

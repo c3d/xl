@@ -1,18 +1,17 @@
 // ****************************************************************************
-//  xl.semantics.xs                 (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.semantics.instructions.xs    (C) 1992-2004 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//      This is the semantics phase of the XL compiler
-//      It takes an XL tree as input, and returns an XL tree as output
-//      after checking that the semantics are correct.
+//     Processing simple instructions
 // 
-//      The phase also performs what other compilers might call "expansion",
-//      that is the generation of lower-level trees from high-level
-//      constructs. The low-level constructs are found in XL.BYTECODE
-//      and can be used to directly generate code.
+// 
+// 
+// 
+// 
+// 
 // 
 // 
 // ****************************************************************************
@@ -24,8 +23,6 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-module XL.SEMANTICS with
+module XL.SEMANTICS.INSTRUCTIONS with
 
-    // Nothing really there nowadays :-)
     verbose : boolean := false
-

@@ -70,6 +70,7 @@ module XL.SEMANTICS.DECLARATIONS with
                                  Value : PT.tree;
                                  HasIs : boolean) return PT.tree
 
-    function MakeDecl(Name : PT.name_tree;
-                      Type : PT.tree;
-                      Value : PT.tree) return declaration
+    function Declare (Name : PT.name_tree;
+                      Type : TY.any_type) return declaration
+    function DeclareTree (Name : PT.name_tree;
+                          Type : TY.any_type) return PT.tree

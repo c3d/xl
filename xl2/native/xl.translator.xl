@@ -87,12 +87,22 @@ module XL.TRANSLATOR is
     // ------------------------------------------------------------------------
         inits : PT.tree := SYM.ScopeItems(main_context, "MAIN_INIT")
         terms : PT.tree := SYM.ScopeItems(main_context, "MAIN_TERM")
-        return parse_tree
+        result := parse_tree
             'input'
             @main_begin
-            'inits'
+        if inits <> nil then
+            result := parse_tree
+                'result'
+                'inits'
+        result := parse_tree
+            'result'
             @main_invoke
-            'terms'
+        if terms <> nil then
+            result := parse_tree
+                'result'
+                'terms'
+        result := parse_tree
+            'result'
             @main_end
 
 
@@ -101,7 +111,7 @@ module XL.TRANSLATOR is
     //    Compile the tree to a given file
     // ------------------------------------------------------------------------
 
-        after_semantics : BC.bytecode := ScopeSemantics(input, true)
+        after_semantics : BC.bytecode := ScopeSemantics(input, scopeGlobal)
         if ERR.error_count = 0 then
             after_opt : BC.bytecode := XLOptimizations(after_semantics)
             if ERR.error_count = 0 then
@@ -111,7 +121,7 @@ module XL.TRANSLATOR is
 
 
     function ScopeSemantics (input  : PT.tree;
-                             global : boolean) return BC.bytecode is
+                             scope : scope_kind) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Deal with the semantics in a scope
     // ------------------------------------------------------------------------
@@ -120,16 +130,18 @@ module XL.TRANSLATOR is
 
         // First create the symbol table for this scope
         context := SYM.NewSymbolTable(context)
-        if global then
+        if scope = scopeMain or scope = scopeGlobal then
             old_global := global_context
             global_context := context
             SYM.SetInteger context, "GLOBAL", 1
-            if old_global = nil then
+            if scope = scopeMain then
                 // We are the outermost ('main') context
                 main_context := context
                 old_global := context
-        else
+        else if scope = scopeFunction or scope = scopeLocal then
             SYM.SetInteger context, "LOCAL", 1
+            if scope = scopeFunction then
+                function_context := context
 
         // 'Declarations' will populate sections in the
         // current context, called DECL, INIT, and TERM (see AddScopeXYZ)
@@ -141,26 +153,39 @@ module XL.TRANSLATOR is
         decl : PT.tree := SYM.ScopeItems(context, "DECL")
         init : PT.tree := SYM.ScopeItems(context, "INIT")
         term : PT.tree := SYM.ScopeItems(context, "TERM")
-        if global then
+        if scope = scopeGlobal then
             // Make sure global init and term invoked from 'main'
-            SYM.AddScopeItem main_context, "MAIN_INIT", init
-            SYM.AddScopeItem main_context, "MAIN_TERM", term
-            result := parse_tree
-                'decl'
-                'result'
+            if init <> nil then
+                SYM.AddScopeItem main_context, "MAIN_INIT", init
+            if term <> nil then
+                SYM.AddScopeItem main_context, "MAIN_TERM", term
+            if decl <> nil then
+                result := parse_tree
+                    'decl'
+                    'result'
         else
-            result := parse_tree
-                'decl'
-                'init'
-                'result'
-                'term'
+            if init <> nil then
+                result := parse_tree
+                    'init'
+                    'result'
+            if decl <> nil then
+                result := parse_tree
+                    'decl'
+                    'result'
+            if term <> nil then
+                result := parse_tree
+                    'result'
+                    'term'
 
         // Get back to original context
         context := SYM.Enclosing (context)
-        if global then
-            global_context := old_global
+        if scope = scopeMain then
             result := AddMainInitAndTerm(result)
-
+            global_context := old_global
+        else if scope = scopeGlobal then
+            global_context := old_global
+        else if scope = scopeFunction then
+            function_context := nil
 
 
     procedure AddScopeDecl(table: SYM.symbol_table; decl : PT.tree) is

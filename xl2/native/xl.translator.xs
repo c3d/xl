@@ -38,6 +38,7 @@ module XL.TRANSLATOR with
 
     context           : SYM.symbol_table := nil
     global_context    : SYM.symbol_table := nil
+    function_context  : SYM.symbol_table := nil
     main_context      : SYM.symbol_table := nil
 
     nop               : BC.bytecode
@@ -47,7 +48,12 @@ module XL.TRANSLATOR with
     // Invokation of Semantics on scopes
     // In XL, all symbols in a scope are visible within that scope
     // This function deals with the two-pass declaration process
-    function ScopeSemantics (input: PT.tree; global: boolean) return BC.bytecode
+    type scope_kind is enumeration
+        scopeMain, scopeGlobal,
+        scopeFunction, scopeLocal,
+        scopeField, scopeArgs
+    function ScopeSemantics (input: PT.tree;
+                             scope : scope_kind) return BC.bytecode
     // Recursive implementation of something
     type recurse_fn is function(input : PT.tree) return BC.bytecode
     function Recurse(input : PT.tree;

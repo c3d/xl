@@ -48,7 +48,8 @@ module XL.CODE_GENERATOR is
     procedure XL2C_Asm (name : BC.bytecode;
                         arg1 : BC.bytecode;
                         arg2 : BC.bytecode;
-                        arg3 : BC.bytecode)
+                        arg3 : BC.bytecode;
+                        arg4 : BC.bytecode)
     procedure XL2C_Arg (input : BC.bytecode)
     procedure XL2C_Args (input : BC.bytecode)
     procedure XL2C_Stmt (input : BC.bytecode)
@@ -287,7 +288,8 @@ module XL.CODE_GENERATOR is
     procedure XL2C_Asm (name : BC.bytecode;
                         arg1 : BC.bytecode;
                         arg2 : BC.bytecode;
-                        arg3 : BC.bytecode) is
+                        arg3 : BC.bytecode;
+                        arg4 : BC.bytecode) is
     // ------------------------------------------------------------------------
     //   Translate the @ statements from a map
     // ------------------------------------------------------------------------
@@ -308,6 +310,7 @@ module XL.CODE_GENERATOR is
         if arg1 <> nil then args += XL2C_AsmText (arg1)
         if arg2 <> nil then args += XL2C_AsmText (arg2)
         if arg3 <> nil then args += XL2C_AsmText (arg3)
+        if arg4 <> nil then args += XL2C_AsmText (arg4)
 
         // Replace $1, $2, $3 strings
         fmt       : text
@@ -579,21 +582,25 @@ module XL.CODE_GENERATOR is
             // ----------------------------------------------------------------
 
             when
+                @ 'name' 'arg1' 'arg2' 'arg3' 'arg4'
+            then
+                XL2C_Asm name, arg1, arg2, arg3, arg4
+            when
                 @ 'name' 'arg1' 'arg2' 'arg3'
             then
-                XL2C_Asm name, arg1, arg2, arg3
+                XL2C_Asm name, arg1, arg2, arg3, nil
             when
                 @ 'name' 'arg1' 'arg2'
             then
-                XL2C_Asm name, arg1, arg2, nil
+                XL2C_Asm name, arg1, arg2, nil, nil
             when
                 @ 'name' 'arg1'
             then
-                XL2C_Asm name, arg1, nil, nil
+                XL2C_Asm name, arg1, nil, nil, nil
             when
                 @ 'name'
             then
-                XL2C_Asm name, nil, nil, nil
+                XL2C_Asm name, nil, nil, nil, nil
             
 
             when

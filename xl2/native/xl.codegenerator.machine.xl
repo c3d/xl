@@ -37,6 +37,13 @@ module XL.CODE_GENERATOR.MACHINE is
 //    The machine-dependent code generator
 // ----------------------------------------------------------------------------
 
+
+    // ========================================================================
+    // 
+    //    Machine names
+    // 
+    // ========================================================================
+
     function Name (Name : PT.name_tree;
                    Type : TY.any_type) return PT.name_tree is
     // ------------------------------------------------------------------------
@@ -53,8 +60,15 @@ module XL.CODE_GENERATOR.MACHINE is
         return SYM.Temporary(base, Name.position)
 
 
+
+    // ========================================================================
+    // 
+    //   Function declarations
+    // 
+    // ========================================================================
+
     function MakeEntry (DeclName : PT.tree;
-                        BaseName : PT.tree;
+                        BaseName : PT.name_tree;
                         RetType  : TY.any_type;
                         Parms    : FT.declaration_list;
                         icnt     : integer;
@@ -83,23 +97,28 @@ module XL.CODE_GENERATOR.MACHINE is
                         ParmType := Parm.machine_type
                         result := parse_tree(@fn_ret1 'ParmType')
         else
-            result := parse_tree(@fn_retN_begin 'BaseName')
+            // Emit return type declaration early
+            retDecl : PT.tree := parse_tree(@fn_retN_begin 'BaseName')
             if RetType <> nil then
                 ParmType := RetType.machine_type
-                resName : PT.tree := PT.NewName("result", BaseName.position)
-                result := parse_tree
-                    'result'
+                resName : PT.tree := PT.NewName("result",BaseName.position)
+                retDecl := parse_tree
+                    'retDecl'
                     @fn_retN_decl 'ParmType' 'resName'
             for Parm in Parms loop
                 if Parm.is_output then
                     ParmName := Parm.machine_name
                     ParmType := Parm.machine_type
-                    result := parse_tree
-                        'result'
+                    retDecl := parse_tree
+                        'retDecl'
                         @fn_retN_decl 'ParmType' 'ParmName'
+            retDecl := parse_tree
+                'retDecl'
+                @fn_retN_end
+            XLT.AddGlobalDecl retDecl
             result := parse_tree
                 'result'
-                @fn_retN_end
+                @fn_retN 'BaseName'
 
         // Follow the return value declaration with name
         result := parse_tree
@@ -157,12 +176,95 @@ module XL.CODE_GENERATOR.MACHINE is
         return MName
 
 
+    function FunctionBody(f     : FN.function;
+                          Iface : PT.tree;
+                          Body  : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Create the bytecode for the complete function
+    // ------------------------------------------------------------------------
+    //    Copy all the output parameters to a big return struct if required
+
+        retType   : TY.any_type := f.return_type
+        retName   : PT.name_tree
+        mtype     : PT.name_tree
+        mname     : PT.name_tree := f.machine_name
+        ocnt      : integer := f.outputs_count
+        parms     : FN.declaration_list := f.parameters
+        parmCount : integer := size(parms)
+        parmIndex : integer
+
+        if retType <> nil then
+            ocnt += 1
+
+        Body := parse_tree
+            'Body'
+            @exit_label 'mname'
+
+        if ocnt = 1 then
+            // One output to declare. It will be the returned value
+            if retType <> nil then
+                mtype := retType.machine_type
+                retName := f.result_mname
+            else
+                for parmIndex in 0..parmCount-1 loop
+                    decl : FN.declaration := parms[parmIndex]
+                    if decl.is_output then
+                        mtype := decl.machine_type
+                        retName := decl.machine_name
+            Body := parse_tree
+                @entry_ret1_decl 'mtype' 'mname'
+                'Body'
+                @exit_ret1 'retName' 'mtype' 'mname'
+
+        else if ocnt > 1 then
+            Body := parse_tree
+                @entry_retN_decl 'mname'
+                'Body'
+            if retType <> nil then
+                retName := f.result_mname
+                mtype := retType.machine_type
+                Body := parse_tree
+                    'Body'
+                    @exit_retN_set 'mname' result 'retName'
+            for parmIndex in 0..parmCount-1 loop
+                decl : FN.declaration := parms[parmIndex]
+                if decl.is_output then
+                    mtype := decl.machine_type
+                    retName := decl.machine_name
+                    Body := parse_tree
+                        @entry_retN_loc 'mtype' 'retName'
+                        'Body'
+                        @exit_retN_set 'mname' 'retName' 'retName'
+            Body := parse_tree
+                'Body'
+                @exit_retN 'mname'
+
+        return parse_tree
+            @fn_body_begin 'mname'
+            'Iface'
+            @fn_body 'mname'
+            'Body'
+            @fn_body_end 'mname'
+
+
+    // ========================================================================
+    // 
+    //    Function calls
+    // 
+    // ========================================================================
+
     procedure EvaluateArgument(in out arg  : PT.tree;
                                in out code : PT.tree) is
     // ------------------------------------------------------------------------
     //   Split the evaluation of an argument if it is an @value
     // ------------------------------------------------------------------------
         translate arg
+            when
+                ('Value')
+            then
+                EvaluateArgument Value, code
+                arg := Value
+
             when
                 'ValueGenerator'
                 @value 'ValueType' 'ValueName'
@@ -213,7 +315,7 @@ module XL.CODE_GENERATOR.MACHINE is
             retValueType := retType.machine_type
             retDecl : PT.tree :=
                 parse_tree(@temp_decl 'retValueType' 'retValueName')
-            XLT.AddScopeDecl XLT.context, retDecl
+            XLT.AddScopeDecl XLT.function_context, retDecl
 
         // Evaluate all arguments, simplify them to single values
         for argIndex in 0..argCount-1 loop
@@ -259,7 +361,7 @@ module XL.CODE_GENERATOR.MACHINE is
                             declMName : PT.name_tree := decl.machine_name
                             outputsDecl : PT.tree := parse_tree
                                 @call_ret1_decl 'declMType' 'declMName'
-                            XLT.AddScopeDecl XLT.context, outputsDecl
+                            XLT.AddScopeDecl XLT.function_context, outputsDecl
                             result := parse_tree
                                'result'
                                @call_ret1 'declMType' 'declMName'
@@ -270,7 +372,7 @@ module XL.CODE_GENERATOR.MACHINE is
                     @call_retN 'mname' 'outputsName'
                 outputsDecl : PT.tree := parse_tree
                     @call_retN_decl 'mname' 'outputsName'
-                XLT.AddScopeDecl XLT.context, outputsDecl
+                XLT.AddScopeDecl XLT.function_context, outputsDecl
 
             // Insert the name of the called function
             result := parse_tree
@@ -294,10 +396,11 @@ module XL.CODE_GENERATOR.MACHINE is
 
             // Copy output parameters
             if retType <> nil and ocnt > 1 then
+                MType  : PT.tree := retValueType
+                MValue : PT.tree := retValueName
                 result := parse_tree
                     'result'
-                    @call_outtype 'retValueType' 'retValueName'
-                    @call_outargN 'retValueName' 'outputsName' result
+                    @call_outargN 'MValue' 'outputsName' result 'MType'
             if ocnt > 1 or (ocnt = 1 and retType = nil) then
                 Kind   : PT.tree
                 if ocnt = 1 and retType = nil then
@@ -312,8 +415,7 @@ module XL.CODE_GENERATOR.MACHINE is
                         MValue : PT.tree := margs[argIndex]
                         result := parse_tree
                             'result'
-                            @call_outtype 'MType' 'MValue'
-                            @'Kind' 'MValue' 'outputsName' 'MName'
+                            @'Kind' 'MValue' 'outputsName' 'MName' 'MType'
 
         // If there was prefix code generated by arg evaluation, prepend it
         if prefixCode <> nil then
@@ -327,3 +429,4 @@ module XL.CODE_GENERATOR.MACHINE is
                 'result'
                 @value 'retValueType' 'retValueName'
             TY.SetType retValueName, retType
+            TY.SetType result, retType

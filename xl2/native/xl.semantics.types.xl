@@ -243,6 +243,13 @@ module XL.SEMANTICS.TYPES is
             PT.SetInfo original, "TYPE", result
 
 
+    function TypeExpression(typeToken : any_type) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Return the expression corresponding to a type
+    // ------------------------------------------------------------------------
+        return typeToken.source_tree
+
+
     function SameType (t1 : any_type; t2: any_type) return boolean is
     // ------------------------------------------------------------------------
     //   Check if two types are identical
@@ -253,6 +260,36 @@ module XL.SEMANTICS.TYPES is
             return true
 
         return false
+
+
+    function Convert(expr : PT.tree; toType : any_type) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Convert the expression to given type
+    // ------------------------------------------------------------------------
+
+        // Check that we have types
+        exprType : any_type := Type(expr)
+        if exprType = nil then
+            ERR.Error "Expression '$1' has no type", expr
+            return expr
+        if toType = nil then
+            ERR.Error "Cannot convert '$1' to null type", expr
+            return expr
+
+        // If we already have the right type, return expression        
+        if SameType(exprType, toType) then
+            return expr
+
+        // Otherwise, barf for now
+        ERR.Error "Type conversion unimplemented for '$1'", expr
+        return expr
+
+
+    function Convert(expr : PT.tree; toType : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Convertion given a type expression
+    // ------------------------------------------------------------------------
+        return Convert(expr, EvaluateType(toType))
 
 
     procedure SetType(tree : PT.tree; type : any_type) is
