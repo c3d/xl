@@ -394,7 +394,6 @@ module XL.SCANNER is
     // ------------------------------------------------------------------------
     //   Opening some parenthese: remember the setting_indent value
     // ------------------------------------------------------------------------
-        IO.Writeln "// Open paren indent=", S.indent, " set=", integer(S.setting_indent)
         if S.setting_indent then
             result := bitwise_not S.indent
         else
@@ -412,4 +411,3 @@ module XL.SCANNER is
         else
             S.setting_indent := false
             S.indent := old_indent
-        IO.Writeln "// Close paren indent=", S.indent, " set=", integer(S.setting_indent)

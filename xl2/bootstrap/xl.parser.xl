@@ -292,7 +292,8 @@ module XL.PARSER is
                     opening := ASCII.TAB[0]
                     closing := ASCII.CR[0]
 
-                name := text("") + opening
+                name := ""
+                name += opening
                 paren_priority := GetInfixPriority (P, name)
 
                 // Make sure 'foo.bar(x)' parses as '(foo.bar) (x)'

@@ -25,6 +25,7 @@
 // ****************************************************************************
 
 import PT = XL.PARSER.TREE
+import ASCII = XL.TEXT_IO.ENCODING.ASCII
 
 module XL.SEMANTICS is
 // ----------------------------------------------------------------------------
@@ -39,15 +40,8 @@ module XL.SEMANTICS is
     // ------------------------------------------------------------------------
     //    Data stored in a symbol table
     // ------------------------------------------------------------------------
+        depth     : integer
         objects   : name_map
-
-
-    function Semantics (input : PT.tree;
-                        context : symbol_table) return PT.tree is
-    // ------------------------------------------------------------------------
-    //    Right now, the semantics is somewhat limited ;-)
-    // ------------------------------------------------------------------------
-        return input
 
 
     function Semantics (input : PT.tree) return PT.tree is
@@ -55,8 +49,61 @@ module XL.SEMANTICS is
     //    Top-level semantics
     // ------------------------------------------------------------------------
         top_level_context : symbol_table
-        return Semantics (input, top_level_context)
+        top_level_context.depth := 0
+        return ProgramSemantics (input, top_level_context)
 
+
+    function ProgramSemantics (input : PT.tree;
+                               context : symbol_table) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Program-level semantics
+    // ------------------------------------------------------------------------
+    //  Right now, the semantics are somewhat limited ;-)
+
+        if input.kind = PT.xlINFIX then
+            infix : PT.infix_tree := PT.infix_tree(input)
+            if infix.name = ASCII.CR or infix.name = ";" then
+                infix.left := ProgramSemantics (infix.left, context)
+                infix.right := ProgramSemantics (infix.right, context)
+                return infix
+            else
+                return InfixSemantics(infix, context)
+
+        else if input.kind = PT.xlPREFIX then
+            prefix : PT.prefix_tree := PT.prefix_tree(input)
+            return PrefixSemantics (prefix, context)
+
+        else if input.kind = PT.xlBLOCK then
+            block : PT.block_tree := PT.block_tree(input)
+            return BlockSemantics (block, context)
+
+        // Default
+        ERR.Error ERR.UnexpectedTopLevel, input.position, text(input)
+        return input
+
+
+    function InfixSemantics  (input : PT.infix_tree;
+                              context : symbol_table) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Process infix operators
+    // ------------------------------------------------------------------------
+         return input
+
+
+    function PrefixSemantics (input : PT.prefix_tree;
+                              context : symbol_table) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Process prefix operators
+    // ------------------------------------------------------------------------
+        return input
+
+
+    function BlockSemantics  (input : PT.block_tree;
+                              context : symbol_table) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Process blocks
+    // ------------------------------------------------------------------------
+        return input
 
 
     

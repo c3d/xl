@@ -688,7 +688,7 @@ module XL.TRANSLATOR is
                 IO.write "))"
 
             when // Temporary hack for enums...
-                nameof 'A'
+                text 'A'
             then
                 IO.Write "XLtext("
                 XL2C A

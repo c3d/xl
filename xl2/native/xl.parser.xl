@@ -283,14 +283,14 @@ module XL.PARSER is
                 // Check for mismatched parentheses here
                 if S.token[0] <> closing_paren then
                     ERR.Error ERR.ParseMismatchParen, S.position,
-                              S.token, text("") + closing_paren
+                              S.token, text(closing_paren)
                 done := true
 
             else if tok = SC.tokUNINDENT then
                 // Check for mismatched parentheses here
                 if not ASCII.is_line_break(closing_paren) then
                     ERR.Error ERR.ParseMismatchParen, S.position,
-                              "unindent", text("") + closing_paren
+                              "unindent", text(closing_paren)
                 done := true
 
             else if tok = SC.tokPAROPEN or tok = SC.tokINDENT then
@@ -305,7 +305,7 @@ module XL.PARSER is
                     opening := ASCII.TAB[0]
                     closing := ASCII.CR[0]
 
-                name := text("") + opening
+                name := text (opening)
                 paren_priority := GetInfixPriority (P, name)
 
                 // Make sure 'foo.bar(x)' parses as '(foo.bar) (x)'

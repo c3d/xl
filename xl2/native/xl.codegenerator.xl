@@ -25,7 +25,10 @@
 
 import PT = XL.PARSER.TREE
 import PR = XL.PARSER
+import SC = XL.SCANNER
 import IO = XL.TEXT_IO
+import ASCII = XL.TEXT_IO.ENCODING.ASCII
+import ERR = XL.ERRORS
 
 module XL.CODE_GENERATOR is
 
@@ -41,6 +44,10 @@ module XL.CODE_GENERATOR is
         value : text
     type enum_list is string of enum_info
 
+    procedure XL2C_Asm (name : BC.bytecode;
+                        arg1 : BC.bytecode;
+                        arg2 : BC.bytecode;
+                        arg3 : BC.bytecode)
     procedure XL2C_Directive (input : BC.bytecode)
     procedure XL2C_Arg (input : BC.bytecode)
     procedure XL2C_Args (input : BC.bytecode)
@@ -74,6 +81,7 @@ module XL.CODE_GENERATOR is
     name_changes        : map [text, text]
     module_name         : map [text, text] 
     module_imports      : map [text, integer]
+    bytecode_formats    : map [text, text]
     loop_index          : integer
     namespace_closing   : text := ""
     in_function         : boolean := false
@@ -86,15 +94,10 @@ module XL.CODE_GENERATOR is
     // 
     // ========================================================================
 
-    procedure Transcode (input : BC.bytecode; output : IO.output_file) is
+    procedure InitializeRenames is
     // ------------------------------------------------------------------------
-    //   Rewrite the whole tree
+    //   Initialize the XL-to-C renaming table
     // ------------------------------------------------------------------------
-
-        old_stdout : IO.output_file := IO.standard_output
-        IO.standard_output := output
-
-        IO.writeln "#include ", '"', "xl_lib.h", '"'
 
         rename "character",  "char"
         rename "integer",    "int"
@@ -111,11 +114,52 @@ module XL.CODE_GENERATOR is
         rename "bitwisenot", "~"
         rename "nil",        "0"
 
-        rename "text",       "::text"        
+        rename "text",       "::text"
+
+
+    procedure InitializeBytecodeMap is
+    // ------------------------------------------------------------------------
+    //   Read the xl.bytecode file to get the map formats
+    // ------------------------------------------------------------------------
+        S   : SC.scanner := SC.Open "xl.bytecode"
+        tok : SC.token
+
+        loop
+            tok := SC.NextToken S
+            exit if tok = SC.tokEOF or tok = SC.tokERROR
+
+            if tok = SC.tokNAME or tok = SC.tokSYMBOL then
+                symbol : text := XLNormalize(S.string_value)
+                if symbol = "//" then
+                    SC.Comment S, ASCII.CR
+                else
+                    tok := SC.NextToken S
+                    if tok = SC.tokSTRING then
+                        format : text := S.string_value
+                        IO.WriteLn "// ", symbol, "=", format
+                        bytecode_formats[symbol] := format
+                    else
+                        IO.WriteLn "#error reading formats from xl.bytecode"
+        SC.Close S
+
+
+    procedure Transcode (input : BC.bytecode; output : IO.output_file) is
+    // ------------------------------------------------------------------------
+    //   Rewrite the whole tree
+    // ------------------------------------------------------------------------
+
+        old_stdout : IO.output_file := IO.standard_output
+        IO.standard_output := output
+
+        IO.writeln "#include ", '"', "xl_lib.h", '"'
+
+        InitializeRenames
+        InitializeBytecodeMap
 
         XL2C input
 
         IO.standard_output := old_stdout
+
 
 
     // ========================================================================
@@ -167,6 +211,58 @@ module XL.CODE_GENERATOR is
                 result += C
 
 
+    procedure XL2C_Asm (name : BC.bytecode;
+                        arg1 : BC.bytecode;
+                        arg2 : BC.bytecode;
+                        arg3 : BC.bytecode) is
+    // ------------------------------------------------------------------------
+    //   Translate the @ statements from a map
+    // ------------------------------------------------------------------------
+        if name.kind <> PT.xlNAME then
+            ERR.Error ERR.InvalidAsmType, name.position
+            return
+
+        Tname  : PT.name_tree := PT.name_tree (name)
+        symbol : text := XLNormalize(Tname.value)
+        if count (bytecode_formats, symbol) <= 0 then
+            ERR.Error ERR.InvalidAsmFormat, name.position, symbol
+            return
+
+        format : text := bytecode_formats[symbol]
+
+        // Replace arguments
+        args : string of text
+        if arg1 <> nil then args += text (arg1)
+        if arg2 <> nil then args += text (arg2)
+        if arg3 <> nil then args += text (arg3)
+
+        // Replace $1, $2, R3 strings
+        fmt       : text
+        I         : integer
+        Max       : integer
+        hadDollar : boolean := false
+
+        // Get message and perform substitution
+        Max := length format
+        for I in 0..Max-1 loop
+            C : character := format[I]
+            if C = '$' then
+                if hadDollar then
+                    fmt += "$"
+                    hadDollar := false
+                else
+                    hadDollar := true
+            else if hadDollar then
+                if C >= '1' and C <= '9' then
+                    fmt += args[integer(C) - integer('1')]
+                hadDollar := false
+            else
+                fmt += C
+
+        // Output result
+        IO.WriteLn fmt
+
+
     procedure XL2C_Stmt (input : BC.bytecode) is
     // ------------------------------------------------------------------------
     //    Translate a statement
@@ -174,7 +270,9 @@ module XL.CODE_GENERATOR is
 
         XL2C input
         if input.kind = PT.xlNAME then
-            IO.write "()"
+            name : PT.name_tree := PT.name_tree(input)
+            if name.value <> "return" then
+                IO.write "()"
         IO.writeln ";"
             
 
@@ -374,6 +472,24 @@ module XL.CODE_GENERATOR is
             // ----------------------------------------------------------------
             //    Sequences
             // ----------------------------------------------------------------
+
+            when
+                @ 'name', 'arg1', 'arg2', 'arg3'
+            then
+                XL2C_Asm name, arg1, arg2, arg3
+            when
+                @ 'name', 'arg1', 'arg2'
+            then
+                XL2C_Asm name, arg1, arg2, nil
+            when
+                @ 'name', 'arg1'
+            then
+                XL2C_Asm name, arg1, nil, nil
+            when
+                @ 'name'
+            then
+                XL2C_Asm name, nil, nil, nil
+            
 
             when
                 {compiler} 'A'
@@ -692,7 +808,7 @@ module XL.CODE_GENERATOR is
                 IO.write "))"
 
             when // Temporary hack for enums...
-                nameof 'A'
+                text 'A'
             then
                 IO.Write "XLtext("
                 XL2C A

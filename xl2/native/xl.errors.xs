@@ -37,6 +37,9 @@ module XL.ERRORS with
         InvalidEnum          = "Invalid enum"
         InvalidNamedEnum     = "Invalid named enum"
         NonexistentModule    = "Module '$1' was not found"
+        InvalidAsmFormat     = "The bytecode opcode '$1' is invalid"
+        InvalidAsmType       = "Internal error: invalid bytecode opcode type"
+        UnexpectedTopLevel   = "'$1' literal is unexpected at program level"
 
     // Signaling an error
     procedure Error (E : error_code; pos : integer; args : string of text)

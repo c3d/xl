@@ -46,7 +46,7 @@ module XL.ERRORS is
         hadDollar : boolean := false
 
         // Get message and perform substitution
-        msg := nameof E
+        msg := text E
         Max := length msg
         for I in 0..Max-1 loop
             C : character := msg[I]

@@ -32,7 +32,13 @@ module XL.SEMANTICS with
     type symbol_table_data
     type symbol_table is access to symbol_table_data
 
+    // Top-level semantics
     function Semantics (input : PT.tree) return BC.bytecode
-    function Semantics (input : PT.tree;
-                        context : symbol_table) return BC.bytecode
-
+    function ProgramSemantics (input : PT.tree;
+                               context : symbol_table) return BC.bytecode
+    function InfixSemantics  (input : PT.infix_tree;
+                              context : symbol_table) return BC.bytecode
+    function PrefixSemantics (input : PT.prefix_tree;
+                              context : symbol_table) return BC.bytecode
+    function BlockSemantics  (input : PT.block_tree;
+                              context : symbol_table) return BC.bytecode

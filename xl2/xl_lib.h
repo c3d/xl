@@ -262,9 +262,10 @@ template <class T>
 inline ::text XLtext(const T& x) {
     std::string result;
     std::ostream *old = xl::textio::standardoutput;
-    std::ostringstream out(result);
+    std::ostringstream out;
     xl::textio::standardoutput = &out;
     xl::textio::write(x);
+    result = out.str();
     xl::textio::standardoutput = old;
     return result;
 }
