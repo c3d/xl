@@ -123,6 +123,12 @@ module XL.SEMANTICS.FUNCTIONS is
         PT.SetInfo SemanticsDecl, "FN", f
         PT.SetInfo Iface, "FN", f
 
+        // This is also a declaration
+        PT.SetInfo MachineIface, "DECL", f
+        PT.SetInfo MachineDecl, "DECL", f
+        PT.SetInfo SemanticsDecl, "DECL", f
+        PT.SetInfo Iface, "DECL", f
+
         pos : integer := Name.position
         MachineDecl.position := pos
         MachineIface.position := pos
