@@ -86,6 +86,8 @@ XL=../bootstrap/bxl
 
 include $(BROOT)Makefile.config
 
+qtest: debug regression
+
 test: debug regression native native_test native_stability_test
 	echo ------ Differences: -----------------------------------------
 	diff $(OBJROOT)nnxl_test/native/compiler.xl.C \
@@ -95,11 +97,11 @@ test: debug regression native native_test native_stability_test
 # For now, we rely on mere transcoding to get the next generation compiler
 # We disable semantics, which is incomplete enough to cause more harm than good
 native:
-	$(MAKE) PRODUCT=nnxl XL="./nxl" XLOPTS="-g -ccode" OBJROOT="$(OBJROOT)nnxl"
+	$(MAKE) PRODUCT=nnxl XL="./nxl" XLOPTS="-g -bootstrap" OBJROOT="$(OBJROOT)nnxl"
 native_test: 
-	$(MAKE) PRODUCT=nnnxl XL="./nnxl" XLOPTS="-ccode" OBJROOT="$(OBJROOT)nnxl_test"
+	$(MAKE) PRODUCT=nnnxl XL="./nnxl" XLOPTS="-bootstrap" OBJROOT="$(OBJROOT)nnxl_test"
 native_stability_test: 
-	$(MAKE) PRODUCT=nnnnxl XL="./nnnxl" XLOPTS="-ccode" OBJROOT="$(OBJROOT)nnxl_stability"
+	$(MAKE) PRODUCT=nnnnxl XL="./nnnxl" XLOPTS="-bootstrap" OBJROOT="$(OBJROOT)nnxl_stability"
 regression: ALWAYS
 	cd TESTS; ./alltests
 ALWAYS:
@@ -116,4 +118,4 @@ $(OBJDIR)/%.xl.o: $(OBJDIR)/%.xl.C
 	$V $(CXX) -I . $(CXXFLAGS) $(CPPFLAGS_$*) $(CXXFLAGS_$*) -o $@ -c $<
 
 $(OBJDIR)/%.xl.C: %.xl $(XL) $(OTHER_SOURCES)
-	$V $(XL) $< $(XLOPTS) > $@
+	$V $(XL) $(XLOPTS) $< > $@

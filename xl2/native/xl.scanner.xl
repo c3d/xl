@@ -187,26 +187,46 @@ module XL.SCANNER is
         // Look for numbers
         if ASCII.is_digit C then
             floating_point : boolean := false
-            based_number : boolean := false
+            based_number   : boolean := false
+            overflowed     : integer := 0
 
             S.base := 10
             S.integer_value := 0
+            S.real_value := 0.0
 
             // Take integral part or base
             loop
-                while IO.valid S.input and DigitValue C < S.base loop
-                    S.integer_value := S.base * S.integer_value + DigitValue C
+                digit      : integer := DigitValue C
+                while IO.valid S.input and digit < S.base loop
+                    S.integer_value := S.base * S.integer_value + digit
+                    S.real_value := S.base * S.real_value + digit
                     NextChar S, C
+                    digit := DigitValue C
+
+                    // Hmm, is this the best way to check for overflow?
+                    if S.integer_value < 0 and overflowed = 0 then
+                        overflowed := S.position
+
+                    // If this looks like a digit, but outside the base, error
+                    if C <> 'e' and C <> 'E' then
+                        if digit <> 999 and digit >= S.base then
+                            ERR.Error "Digit is invalid for the base",
+                                      S.position
+                            S.base := digit + 1                        
 
                     // Skip a single underscore
                     if C = '_' then
                         IgnoreChar S, C
-                        if DigitValue(C) >= S.base then
+                        digit := DigitValue C
+                        if digit >= S.base then
                             ERR.Error "Invalid use of '_' in number",
                                       S.position
 
                     // Check if this is a based number
-                    if C = '#' and not based_number then
+                    if based_number then
+                        if digit >= S.base then
+                            based_number := false
+                    else if C = '#' then
                         S.base := S.integer_value
                         if S.base < 2 or S.base > 36 then
                             S.base := 36
@@ -214,14 +234,13 @@ module XL.SCANNER is
                                       S.position
                         NextChar S, C
                         S.integer_value := 0
+                        S.real_value := 0.0
                         based_number := true
-                    else
-                        based_number := false
+                        digit := DigitValue C
 
                 exit if not based_number or not IO.valid S.input
-            
+
             // Check for fractional part
-            S.real_value := S.integer_value
             if C = '.' then
                 IO.Read S.input, C
                 S.position += 1
@@ -293,6 +312,14 @@ module XL.SCANNER is
                 else
                     S.real_value *= exponent_value
                 S.integer_value := integer S.real_value
+            if not floating_point then
+                if overflowed > 0 then
+                    ERR.Error "Integer overflow", S.position
+                else if (real(S.integer_value) < S.real_value - 1.0 or
+                    real(S.integer_value) > S.real_value + 1.0) then
+                    ERR.Error "Exponent overflow", S.position
+            else if not (S.real_value = S.real_value) then
+                ERR.Error "Numeric overflow", S.position
 
             // Return the last token
             IO.PutBack S.input, C

@@ -111,12 +111,12 @@ module XL.TRANSLATOR is
     //    Compile the tree to a given file
     // ------------------------------------------------------------------------
 
-        after_semantics : BC.bytecode := ScopeSemantics(input, scopeGlobal)
+        after_semantics : BC.bytecode := ScopeSemantics(input, scopeMain)
         if ERR.error_count = 0 then
             after_opt : BC.bytecode := XLOptimizations(after_semantics)
             if ERR.error_count = 0 then
                 CG.Transcode after_opt, output
-        if ERR.error_count <> 0 then
+        if ERR.error_count > 0 then
             exit 2
 
 
@@ -190,29 +190,29 @@ module XL.TRANSLATOR is
                 result := parse_tree
                     @globinit_none
                     'result'
-            if decl <> nil then
-                result := parse_tree
-                    'decl'
-                    'result'
             if term <> nil then
-                ldecl : PT.tree := SYM.ScopeItems(function_context, "DECL")
                 term := XLSemantics(term)
+                ldecl : PT.tree := SYM.ScopeItems(function_context, "DECL")
                 if ldecl <> nil then
                     result := parse_tree
-                        @globinit_begin
+                        @globterm_begin
                         'ldecl'
                         'term'
-                        @globinit_end
+                        @globterm_end
                         'result'
                 else
                     result := parse_tree
-                        @globinit_begin
+                        @globterm_begin
                         'term'
-                        @globinit_end
+                        @globterm_end
                         'result'
             else
                 result := parse_tree
                     @globterm_none
+                    'result'
+            if decl <> nil then
+                result := parse_tree
+                    'decl'
                     'result'
         else // Some local scope
             if init <> nil then

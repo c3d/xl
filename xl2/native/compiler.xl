@@ -33,6 +33,7 @@ import CG = XL.CODE_GENERATOR
 import SYM = XL.SYMBOLS
 import RD = XL.RENDERER
 import ASCII = XL.TEXT_IO.ENCODING.ASCII
+import ERR = XL.ERRORS
 
 // Things that we import just so that they get compiled
 import XL.SEMANTICS.TYPES
@@ -60,7 +61,8 @@ procedure Main is
     Max        : integer := size CS.arguments
     P          : PR.parser
     theProgram : PT.tree := nil
-    compile    : boolean := false // TEMP
+    compile    : boolean := true
+    transcode  : boolean := true
 
     RD.DefaultRenderer := RD.Open("xl.stylesheet")
 
@@ -81,12 +83,16 @@ procedure Main is
                RD.DefaultRenderer := RD.Open(CS.arguments[I] + ".stylesheet")
         else if name = "-parse" then
             compile := false
+            transcode := false
         else if name = "-sem" then
             compile := false
             theProgram := XLT.ScopeSemantics(theProgram, XLT.scopeMain)
         else if name = "-opt" then
             compile := false
             theProgram := XLT.XLOptimizations(theProgram)
+        else if name = "-bootstrap" then
+            compile := false
+            transcode := true
         else if name = "-ccode" then
             compile := false
             CG.Transcode theProgram, IO.standard_output
@@ -100,5 +106,10 @@ procedure Main is
             P := PR.Open(name)
             theProgram := PR.Parse(P)
             PR.Close P
-            if compile then
+            if compile and ERR.error_count = 0 then
                 XLT.Compile theProgram
+            else if transcode and ERR.error_count = 0 then
+                CG.Transcode theProgram, IO.standard_output
+
+    if ERR.error_count > 0 then
+        exit 2

@@ -136,6 +136,7 @@ module XL.ERRORS is
         if size (error_out_stack) > 0 then
             IO.standard_output := back(error_out_stack)
         else
+            error_count += 1
             IO.standard_output := IO.standard_error
 
         ErrorInt E, pos, args

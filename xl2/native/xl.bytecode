@@ -112,17 +112,22 @@ ifelse          "goto endif_$1;"
                 "else_$1: 0;"
 ifend           "endif_$1: 0;"
 
-main_begin      "// int main(int argc, char *argv[]) {"
-main_invoke     "// XL_Init();"
-                "// XL_Main();"
-                "// XL_Term();"
-main_end        "// return 0; }"
+// Temporary hack in main for something normally declared in XL.UI.CONSOLE
+main_begin      "namespace xl { namespace ui { namespace console {"
+                "std::vector< ::text > arguments;"
+                "}}}"
+                "void XLMain() {"
+main_invoke     "   XL_Init();"
+                "   XL_Term();"
+main_end        "}"
 globinit_begin  "void XL_Init() {"
 globinit_end    "}"
 globinit_none   "#define XL_Init()"
 globterm_begin  "void XL_Term() {"
 globterm_end    "}"
 globterm_none   "#define XL_Term()"
+
+xltest          "xl::textio::writeln($1);"
 
 
 add_int         "$1 = $2 + $3;"
