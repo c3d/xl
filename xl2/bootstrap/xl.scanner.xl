@@ -192,7 +192,6 @@ module XL.SCANNER is
         // Look for numbers
         if ASCII.is_digit C then
             floating_point : boolean := false
-            exponent : boolean := false
             based_number : boolean := false
 
             S.base := 10

@@ -164,8 +164,8 @@ private:
     uint        base;
     indent_list indents;
     uint        indent;
-    uint        column;
     int         indentChar;
+    uint        column;
     bool        checkingIndent;
 };
 

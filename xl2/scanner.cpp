@@ -83,7 +83,7 @@ XLScanner::XLScanner(kstring name)
     file(NULL),
     tokenText(""),
     stringValue(""), realValue(0.0), intValue(0),
-    indents(), indent(0), indentChar(0), checkingIndent(false), column(0)
+    indents(), indent(0), indentChar(0), column(0), checkingIndent(false)
 {
     file = fopen(name, "r");
     indents.push_back(0);       // We start with an indent of 0
@@ -225,7 +225,6 @@ token_t XLScanner::NextToken()
     if (isdigit(c))
     {
         bool floating_point = false;
-        bool exponent = false;
         bool basedNumber = false;
 
         base = 10;

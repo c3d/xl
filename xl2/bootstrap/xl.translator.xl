@@ -271,7 +271,7 @@ module XL.TRANSLATOR is
         old_in_function : boolean := in_function
         in_function := in_fn
         XL2C_Stmt input
-        in_function = old_in_function
+        in_function := old_in_function
             
 
     procedure XL2C_Enum (input : PT.tree) is
@@ -923,7 +923,7 @@ module XL.TRANSLATOR is
             when
                 'X' . 'Y'
             then
-                if XLNamespaceScope (Y) then
+                if XLNamespaceScope (X) then
                     IO.Write "::"
                 else
                     IO.Write "."

@@ -37,10 +37,10 @@ PRODUCT=xl
 
 include $(BROOT)Makefile.config
 
-test:
-	./xl test.xl > /tmp/glop.C &&		\
-	c++ -I. /tmp/glop.C -o /tmp/glop &&	\
-	/tmp/glop
+postbuild: bootstrap_compiler
+
+bootstrap_compiler:
+	cd $(BROOT)bootstrap && make test
 
 errors.tbl: errors.txt
 	@echo Generating errors messages table

@@ -38,8 +38,6 @@ procedure Main is
 // ----------------------------------------------------------------------------
     I          : integer
     Max        : integer := size CS.arguments
-    S          : SC.scanner
-    T          : SC.token
     P          : PR.parser
     theProgram : PT.tree
     showParse  : boolean := false

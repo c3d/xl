@@ -54,10 +54,6 @@ class XLOptions
     text                ParseNext();
 
   public:
-    int                 arg;
-    int                 argc;
-    char **             argv;
-
     // Read options from the options.tbl file
 #define OPTVAR(name, type, value)       type name;
 #define OPTION(name, descr, code)
@@ -66,6 +62,10 @@ class XLOptions
 #undef OPTVAR
 #undef OPTION
 #undef TRACE
+
+    int                 arg;
+    int                 argc;
+    char **             argv;
 };
 
 

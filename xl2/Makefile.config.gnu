@@ -42,9 +42,9 @@ AS_DEPEND=$(CC) $(CPPFLAGS) $(CPPFLAGS_$*) -M -MG > _tmp.depend
 #  Compilation flags
 #------------------------------------------------------------------------------
 
-CFLAGS_debug=-g
-CFLAGS_opt=-O3
+CFLAGS_debug=-g -Wall
+CFLAGS_opt=-O3 -Wall
 
-CXXFLAGS_debug=-g
-CXXFLAGS_opt=-O3
+CXXFLAGS_debug=-g -Wall
+CXXFLAGS_opt=-O3 -Wall
 

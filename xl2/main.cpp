@@ -176,7 +176,7 @@ int main(int argc, char **argv)
 #   if CONFIG_USE_SBRK
         IFTRACE(timing)
             fprintf(stderr, "Total memory usage: %ldK\n",
-                    ((char *) malloc(1) - low_water) / 1024);
+                    long ((char *) malloc(1) - low_water) / 1024);
 #   endif
 
     return 0;

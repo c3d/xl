@@ -30,6 +30,7 @@
 #include <ctype.h>
 #include <map>
 #include <iostream>
+#include <assert.h>
 
 
 // ============================================================================
@@ -997,6 +998,8 @@ void TranslateForm(XLTree *form, args_map &args, int nesting = 3)
         TranslateForm(((XLInfix *) form)->right, args, nesting+2);
         out << ")";
         break;
+    default:
+        assert(!"Invalid type in TranslateForm");
     }
 }
 

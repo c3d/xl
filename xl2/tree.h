@@ -50,6 +50,7 @@ struct XLTree
 // ----------------------------------------------------------------------------
 {
     typedef std::ostream ostream;
+    virtual ~XLTree() {}
     virtual void        Output(ostream &out) { out << "tree"; }
     virtual XLKind      Kind() { return xlUNKNOWN; }
     

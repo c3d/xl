@@ -55,6 +55,10 @@ OPTVAR(verbose,bool,false)
 OPTION(verbose, "Select more verbose error messages.", verbose = true)
 OPTION(v, "Short form for -verbose.", verbose = true)
 
+// Output file
+OPTVAR(output_file, std::string, "")
+OPTION(o, "Select output file", output_file = STRING)
+
 
 // Traces. The first ones must match the MzTrace definition in base.h
 // We use lower-case names here to avoid duplicate definition and be able

@@ -101,9 +101,9 @@ private:
     int                 priority;
 
 public:
+    int                 default_priority;
     int                 statement_priority;
     int                 function_priority;
-    int                 default_priority;
 };
 
 

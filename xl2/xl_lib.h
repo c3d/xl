@@ -276,8 +276,8 @@ struct XLTextIterator : XLIterator
     }
     virtual void next() { index++; }
     int index, max;
-    text text_range;
     char &value;
+    text text_range;
 };
 
 inline XLTextIterator *XLMakeIterator(char& what, const text &range)
@@ -298,8 +298,8 @@ struct XLMapIterator : XLIterator
         return has_more;
     }
     virtual void next() { it++; }
-    Map &range;
     Value &value;
+    Map &range;
     typename Map::iterator it;
 };
 
