@@ -23,11 +23,12 @@
 // * Date       : $Date$
 // ****************************************************************************
 
+#include "configuration.h"
+#if CONFIG_USE_SBRK
+#include <unistd.h>
+#endif
 #include <map>
 #include <iostream>
-#if CONFIG_USE_SBRK
-#   include <unistd.h>
-#endif
 #include "scanner.h"
 #include "parser.h"
 #include "tree.h"
