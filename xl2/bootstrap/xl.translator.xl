@@ -512,9 +512,12 @@ module XL.TRANSLATOR is
                 translate 'What'
                     'How'
             then
+                IO.WriteLn "{"
+                IO.WriteLn "bool XLtranslateDone = false;"
                 IO.WriteLn "do {"
                 XL2C_Translate What, How                    
                 IO.WriteLn "} while (0);"
+                IO.WriteLn "}"
 
 
             // ----------------------------------------------------------------
@@ -1092,9 +1095,7 @@ module XL.TRANSLATOR is
 
                XL2C_Stmt Body
                
-               IO.Write "("
-               XL2C to_translate
-               IO.Writeln ") = 0;"
+               IO.WriteLn "XLtranslateDone = true;"
                IO.Writeln "break;"
                IO.WriteLn "}}"
 
@@ -1102,9 +1103,7 @@ module XL.TRANSLATOR is
                'A' else 'B'
            then
                XL2C_Translate to_translate, A
-               IO.Write "if ("
-               XL2C to_translate
-               IO.Write ") {"
+               IO.WriteLn "if (!XLtranslateDone) {"
                XL2C_Stmt B
                IO.WriteLn "}"
 
