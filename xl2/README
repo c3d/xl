@@ -1,0 +1,12 @@
+To build the C++ version of the compiler, type "make" at the top level.
+
+If this is successful, to build the XL version of the compiler, go to the
+bootstrap directory and type "make".
+
+If this is successful, in that same bootstrap directory, type "make test".
+This will build two compilers in a row and compare their output.
+
+Please understand that this is very raw at that point.
+To get a better picture of where I want to go, see the XL compiler on
+the Mozart web site (http://mozart-dev.sf.net/xl.html). Note that there
+will be minor changes in syntax since then.
