@@ -321,6 +321,12 @@ inline std::pair<T,T> XLMakeRange(const T &first, const T&second)
 }
 
 
+inline text range (text &from, std::pair<int,int> range)
+{
+    return text(from, range.first, range.second-range.first+1);
+}
+
+
 
 // ============================================================================
 // 

@@ -6,7 +6,7 @@ INFIX
         40 :
         100 STATEMENT
         105 is
-        200 BLOCK DEFAULT
+        200 DEFAULT
         210 return with
         215 ,
         220 := += -= *= /= ^= |= &=
@@ -18,7 +18,7 @@ INFIX
         250 + -
         260 * /
         270 ^ **
-        300 FUNCTION "(" ")"
+        300 FUNCTION "(" ")" BLOCK
         310 "{" "[" "]" "}"
         320 .
 
