@@ -1,0 +1,118 @@
+// ****************************************************************************
+//  xl.parser.xl                    (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     The basic XL0 parser
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is confidential.
+// Do not redistribute without written permission
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import SC = XL.SCANNER
+
+module XL.PARSER is
+
+    function NewParser(name : text) return parser is
+    // ------------------------------------------------------------------------
+    //   Create a new parser
+    // ------------------------------------------------------------------------
+        result.scanner := SC.NewScanner(name)
+
+
+    type pending is record with
+    // ------------------------------------------------------------------------
+    //    Pending expression while parsing
+    // ------------------------------------------------------------------------
+        opcode             : text
+        argument           : PT.tree
+        priority           : integer
+
+
+    function Parse(P : parser) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   The top-level parsing function
+    // ------------------------------------------------------------------------
+        return Parse(P, character 0)
+
+
+    function NextToken(P : parser) return SC.token is
+    // ------------------------------------------------------------------------
+    //   Convenience function
+    // ------------------------------------------------------------------------
+        return SC.NextToken(P.scanner)
+
+
+    function Parse(P : parser; closing_paren : character) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   The actual parsing function
+    // ------------------------------------------------------------------------
+    // XL parsing is not very difficult, but a bit unusual, because it is based
+    // solely on dynamic information and not, for instance, on keywords.
+    // Consider the following cases, where p is "prefix-op" and i is "infix-op"
+    //     Write A
+    //  Parses as p(Write,A).
+    //     A and B
+    //  Parses as i(and,A,B) if 'and' has a priority,
+    //         as p(A,p(and,B)) otherwise
+    //  Write -A,B
+    //  This parses as (Write-A),B since "-" has a priority.
+    //  I wish I could fix that one...
+    //  The correct XL syntax is: Write (-A),B
+    // We hope that semantic will catch such a case later and let us know...
+        return 0
+
+        comment_end             : text
+        result                  : PT.tree
+        left                    : PT.tree
+        right                   : PT.tree
+        infix                   : text
+        name                    : text
+        spelling                : text
+        prefix                  : text          := ""
+        tok                     : SC.token
+        done                    : boolean       := false
+        opening                 : character
+        closing                 : character
+        default_priority        : integer       := P.default_priority
+        function_priority       : integer       := P.function_priority
+        statement_priority      : integer       := P.statement_priority
+        result_priority         : integer       := default_priority
+        prefix_priority         : integer
+        infix_priority          : integer
+        paren_priority          : integer
+        stack                   : string of pending
+        new_statement           : boolean       := true
+        pending_token           : SC.token      := SC.tokNONE
+        S                       : SC.scanner    := P.scanner
+
+        while not done loop
+            // If no token pending, scan one
+            if pending_token = SC.tokNONE then
+                right := nil
+                prefix_priority := default_priority
+                infix_priority := default_priority
+                tok := NextToken(P)
+            else if pending_token = SC.tokNEWLINE then
+                // We have a pending new-line:
+                // Skip actual token if it is also a new-line
+                tok := NextToken(P)
+                if tok = SC.tokNEWLINE then
+                    continue
+                else if tok = SC.tokSYMBOL or tok = SC.tokNAME then
+                    name := S.string_value
