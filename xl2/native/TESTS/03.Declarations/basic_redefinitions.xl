@@ -1,0 +1,36 @@
+// ****************************************************************************
+//  basic_redefinitions.xl          (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Redefinitions of simple names
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+// EXIT=2
+
+// Global declarations
+X : integer
+Y, Z : integer
+
+// Initializations
+X : integer := 1
+A, A : integer := 3
+JoeDALTON, joe_dalton : integer
+

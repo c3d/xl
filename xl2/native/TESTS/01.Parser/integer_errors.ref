@@ -1,0 +1,50 @@
+01.Parser/integer_errors.xl:30: Integer overflow
+| 1234567890123456789
+|____________________^
+01.Parser/integer_errors.xl:31: Exponent overflow
+| 1E25
+|_____^
+01.Parser/integer_errors.xl:34: Invalid use of '_' in number
+| 1__3
+|___^
+01.Parser/integer_errors.xl:36: Invalid use of '_' in number
+| 3_
+|___^
+01.Parser/integer_errors.xl:39: Invalid base (should be 2..36)
+| 1#0
+|__^
+01.Parser/integer_errors.xl:40: Invalid base (should be 2..36)
+| 37#A
+|___^
+01.Parser/integer_errors.xl:43: Digit is invalid for the base
+| 2#103
+|_____^
+01.Parser/integer_errors.xl:44: Digit is invalid for the base
+| 15#10FFE
+|______^
+
+(infix <CR>
+ (infix <CR>
+  (infix <CR>
+   (infix <CR>
+    (infix <CR>
+     (infix <CR>
+      (infix <CR>
+       (infix <CR>
+        2112454933
+        2147483647)
+       (prefix
+        (prefix
+         1
+         _)
+        3))
+      (prefix
+       _
+       3))
+     3)
+    0)
+   10)
+  11)
+ 65534)
+
+

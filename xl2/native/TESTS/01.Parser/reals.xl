@@ -1,0 +1,107 @@
+// ****************************************************************************
+//  reals.xl                        (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//    Test how real constants are being parsed
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+// CMD=%x -parse %f -style debug -show
+
+// Simple real values
+0.0
+1.1
+10.2
+100.3
+1000.4
+10000.5
+100000.6
+1000000.7
+
+// A prefix operator, not a change in number value
+-1.1
++3.3
+
+// Check that we can have underscores
+1_000.000_001
+100_000.0_0_0_1
+
+// Check exponents
+1.0E3
+100.1E3
+10_00.0E3
+1.0E-3
+100.1E-3
+10_00.0E-3
+1E-3
+100E-3
+10_00E-3
+
+// Check based numbers
+16#3A.A
+16#3A.A#
+16#3FFF_FFFF.FF0
+16#3FFF.FF#E3
+16#3F_FF.EC#E3
+
+// Check that this is not cases sensitive
+16#3a.a
+16#3a.a#
+16#3fff_ffff.ff0
+16#3fff.ff#e3
+16#3f_ff.ec#e3
+
+// Check each valid base (probably the only place we'll ever test them)
+2#101.101
+3#102.102
+4#103.103
+5#104.104
+6#105.105
+7#106.106
+8#107.107
+9#108.108
+10#109.109
+11#10A.10A
+12#10B.10B
+13#10C.10C
+14#10D.10D
+15#10E.10E
+16#10F.10F
+17#10G.10G
+18#10H.10H
+19#10I.10I
+20#10J.10J
+21#10K.10K
+22#10L.10L
+23#10M.10M
+24#10N.10N
+25#10O.10O
+26#10P.10P
+27#10Q.10Q
+28#10R.10R
+29#10S.10S
+30#10T.10T
+31#10U.10U
+32#10V.10V
+33#10W.10W
+34#10X.10X
+35#10Y.10Y
+36#10Z.10Z
+

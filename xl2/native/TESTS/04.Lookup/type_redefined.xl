@@ -1,0 +1,33 @@
+// ****************************************************************************
+//  type_redefined.xl               (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//    Detect attempts to redefine types
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+// EXIT=2
+
+XYZ : integer
+
+type integer
+
+type K is function (Z : integer) return integer
+type K is function (U : integer) return real

@@ -1,0 +1,2 @@
+X : integer := 1 + F (A , B , C , D) 
+{pragma} procedure Test (X : integer)

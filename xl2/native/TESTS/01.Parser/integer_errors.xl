@@ -1,0 +1,45 @@
+// ****************************************************************************
+//  integers_errors.xl              (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Test various error cases for integer parsing
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+//
+// EXIT=2
+// CMD=%x -parse %f -style debug -show
+
+// Integral number overflow
+1234567890123456789
+1E25
+
+// An integral number with incorrect use of underscore
+1__3
+_3 // This is actually valid, prefix _
+3_
+
+// An integral number with an invalid base
+1#0
+37#A
+
+// An integral number with a digit outside the base
+2#103
+15#10FFE
+

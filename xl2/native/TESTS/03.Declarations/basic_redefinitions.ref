@@ -1,0 +1,18 @@
+03.Declarations/basic_redefinitions.xl:33: Redeclaration of 'X' 
+| X : integer := 1
+|_^
+03.Declarations/basic_redefinitions.xl:29: Previous declaration of 'X' here
+| X : integer
+|_^
+03.Declarations/basic_redefinitions.xl:34: Redeclaration of 'A' 
+| A, A : integer := 3
+|____^
+03.Declarations/basic_redefinitions.xl:34: Previous declaration of 'A' here
+| A, A : integer := 3
+|_^
+03.Declarations/basic_redefinitions.xl:35: Redeclaration of 'joe_dalton' 
+| JoeDALTON, joe_dalton : integer
+|_____________________^
+03.Declarations/basic_redefinitions.xl:35: Previous declaration of 'JoeDALTON' here
+| JoeDALTON, joe_dalton : integer
+|_________^
