@@ -1,0 +1,96 @@
+// ****************************************************************************
+//  xl.plugin.include.xl            (C) 1992-2004 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Implementation of include
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// * Credits    : Sebastien <sebbrochet@users.sourceforge.net> (initial version)
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import BC = XL.BYTECODE
+import ERR = XL.ERRORS
+import XLT = XL.TRANSLATOR
+import SYM = XL.SYMBOLS
+import PR = XL.PARSER
+import PC = XL.PLUGIN.COMMON
+
+module XL.PLUGIN.INCLUDE is
+
+    function GetInclude (filename : PT.text_tree) return PT.Tree is
+    // ------------------------------------------------------------------------
+    //    Return the AST corresponding to a file content if possible
+    // ------------------------------------------------------------------------
+        aParser  : PR.parser  := PR.Open(filename.value)
+        aScanner : SC.scanner := aParser.scanner
+
+        if not IO.valid aScanner.input then
+           ERR.Error "Unable to include file : '$1'", filename
+           return parse_tree(@error)
+
+        tree   : BC.bytecode := PR.Parse(aParser)
+
+        return tree
+
+    translation Include
+    // ------------------------------------------------------------------------
+    //    Translations below an 'Include' pragma
+    // ------------------------------------------------------------------------
+
+        when
+           'Anything'
+        then
+           pragma : PT.tree := SYM.GetProperty(XLT.context, "PRAGMA")
+           // For debug purpose
+           // ERR.Error "Pragma = '$1'", Pragma
+
+           translate pragma
+              when
+                 'PragmaName' 'IncludeFile'
+              where
+                 IncludeFile.kind = PT.xlTEXT
+              then
+                 filename : IncludeFile as PT.text_tree
+                 return GetInclude(filename)
+
+              when
+                 'PragmaName' 'Symbol'
+              where
+                 Symbol.kind = PT.xlName
+              then
+                 symbol_name : Symbol as PT.text_tree
+                 DefineInfo : PT.Tree := PC.GetDefineInfo(symbol_name.value)
+
+                 if DefineInfo = nil then
+                    ERR.Error "Define is not defined : '$1'", Symbol
+                    return parse_tree(@error)
+
+                 filename : DefineInfo as PT.text_tree
+                 return GetInclude(filename)
+
+              when
+                 'PragmaName' 'IncludeFile'
+              then
+                 ERR.Error "Unknown form for include pragma : '$1'", IncludeFile
+                 return parse_tree(@error)
+
+              else
+                 ERR.Error "Syntax is : {Include Filename}", pragma.position
+                 return parse_tree(@error)
