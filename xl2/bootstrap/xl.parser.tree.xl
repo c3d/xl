@@ -1,0 +1,120 @@
+// ****************************************************************************
+//  xl.parser.tree.xl               (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Implementation of the parser tree
+// 
+//     This file actually only provides debug support
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is confidential.
+// Do not redistribute without written permission
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import IO = XL.TEXT_IO
+
+
+module XL.TEXT_IO with
+// ----------------------------------------------------------------------------
+//   Implements an extension of the TEXT_IO module for parse trees
+// ----------------------------------------------------------------------------
+
+    // Pseudo type to control indentation
+    type indent_pseudo
+    type indent_control is access to indent_pseudo
+    indent : indent_control := indent_control(3)
+    unindent : indent_control := indent_control(-3)
+    newline : indent_control := indent_control(0)
+    current_tree_indent : integer := 0
+
+    // Pseudo-type to control debug mode
+    type debug_pseudo
+    type debug_control is access to debug_pseudo
+    show_debug : debug_control := debug_controL(true)
+    hide_debug : debug_control := debug_control(false)
+    current_tree_debug : boolean := false
+
+
+    procedure write(direction : indent_control) is
+    // ------------------------------------------------------------------------
+    //    Write the appropriate amount of indentation
+    // ------------------------------------------------------------------------
+        I : integer
+        delta : integer := integer(direction)
+
+        current_tree_indent += delta
+        IO.writeln ()
+        for I in 1..current_tree_indent loop
+            IO.write ' '
+
+
+    procedure write(do_debug : debug_control) is
+    // ------------------------------------------------------------------------
+    //    Write the appropriate amount of indentation
+    // ------------------------------------------------------------------------
+        current_tree_debug := boolean(do_debug)
+
+
+    procedure write(what : TR.tree) is
+    // ------------------------------------------------------------------------
+    //    For debugging purpose, write a tree
+    // ------------------------------------------------------------------------
+        if what.kind = PT.xlINTEGER then
+            T : PT.integer_tree := PT.integer_tree(what)
+            IO.write T.value
+        else if what.kind = PT.xlREAL then
+            T : PT.real_tree := PT.real_tree(what)
+            IO.write T.value
+        else if what.kind = PT.xlSTRING then
+            T : PT.string_tree := PT.string_tree(what)
+            IO.write T.quote, T.value, T.quote
+        else if what.kind = PT.xlNAME then
+            T : PT.name_tree := PT.name_tree(what)
+            IO.write T.value
+        else if what.kind = PT.xlWILDCARD then
+            T : PT.wildcard_tree := PT.wildcard_tree(what)
+            IO.write "WILDCARD(", T.name, ")"
+        else if what.kind = PT.xlBLOCK then
+            T : PT.block_tree := PT.block_tree(what)
+            if ASCII.is_line_break(T.closing) then
+                if current_tree_debug then
+                    IO.write "{BL ", indent, T.child, unindent, " BL}"
+                else
+                    IO.write indent, T.child, unindent
+            else
+                IO.write T.opening, T.child, T.closing
+        else if what.kind = PT.xlPREFIX then
+            T : PT.prefix_tree := PT.prefix_tree(what)
+            if current_tree_debug then
+                IO.write '[', T.left, ' ', T.right, ']'
+            else
+                IO.write T.left, ' ', T.right
+        else if what.kind = PT.xlINFIX then
+            T : PT.infix_tree := PT.infix_tree(what)
+            if T.name = ASCII.CR then
+                IO.write T.left, newline, T.right
+            else if current_tree_debug then
+                IO.write '(', T.left, ' ', T.name, ' ', T.right, ')'
+            else
+                IO.write T.left, ' ', T.name, ' ', T.right
+
+
+
+procedure Debug (tree : PT.tree) is
+// ----------------------------------------------------------------------------
+//    This function is here to be invoked from the debugger
+// ----------------------------------------------------------------------------
+    IO.writeln IO.show_debug, tree
