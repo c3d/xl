@@ -41,9 +41,9 @@ OTHER_SOURCES=					\
 	../xl_lib.h				\
 	../xl.syntax
 
-TOCLEAN=bxl bbxl bbbxl
-PRODUCT=bxl
-XL=../xl
+TOCLEAN=bxl$(EXE) bbxl$(EXE) bbbxl$(EXE)
+PRODUCT=bxl$(EXE)
+XL=../xl$(EXE)
 
 include $(BROOT)Makefile.config
 
@@ -54,11 +54,11 @@ test: debug bootstrap bootstrap_test bootstrap_stability_test
 	echo ------ End of Differences -----------------------------------
 
 bootstrap:
-	$(MAKE) PRODUCT=bbxl XL=./bxl OBJROOT="$(OBJROOT)bbxl"
+	$(MAKE) PRODUCT=bbxl$(EXE) XL=./bxl$(EXE) OBJROOT="$(OBJROOT)bbxl"
 bootstrap_test:
-	$(MAKE) PRODUCT=bbbxl XL=./bbxl OBJROOT="$(OBJROOT)bbxl_test"
+	$(MAKE) PRODUCT=bbbxl$(EXE) XL=./bbxl$(EXE) OBJROOT="$(OBJROOT)bbxl_test"
 bootstrap_stability_test:
-	$(MAKE) PRODUCT=bbbbxl XL=./bbbxl OBJROOT="$(OBJROOT)bbxl_stability"
+	$(MAKE) PRODUCT=bbbbxl$(EXE) XL=./bbbxl$(EXE) OBJROOT="$(OBJROOT)bbxl_stability"
 
 
 prebuild: xl_lib.h xl.syntax

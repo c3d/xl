@@ -34,7 +34,7 @@ SOURCES     =					\
 	options.cpp				\
 	errors.cpp
 
-PRODUCT=xl
+PRODUCT=xl$(EXE)
 
 include $(BROOT)Makefile.config
 

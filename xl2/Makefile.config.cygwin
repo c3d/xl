@@ -32,6 +32,7 @@ BUILDENV=cygwin
 endif
 
 DEFINES_cygwin=-DCONFIG_CYGWIN
+EXE=.exe
 
 include $(BROOT)Makefile.config.gnu
 include $(BROOT)Makefile.rules

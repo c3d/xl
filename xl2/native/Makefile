@@ -82,9 +82,9 @@ OTHER_SOURCES=					\
 	xl.plugin.differentiation.xl		\
 	xl.plugin.constantfold.xl
 
-TOCLEAN=nxl
-PRODUCT=nxl
-XL=../bootstrap/bxl
+TOCLEAN=nxl$(EXE)
+PRODUCT=nxl$(EXE)
+XL=../bootstrap/bxl$(EXE)
 
 include $(BROOT)Makefile.config
 
@@ -99,11 +99,11 @@ test: debug regression native native_test native_stability_test
 # For now, we rely on mere transcoding to get the next generation compiler
 # We disable semantics, which is incomplete enough to cause more harm than good
 native:
-	$(MAKE) PRODUCT=nnxl XL="./nxl" XLOPTS="-bootstrap" OBJROOT="$(OBJROOT)nnxl"
+	$(MAKE) PRODUCT=nnxl$(EXE) XL="./nxl$(EXE)" XLOPTS="-bootstrap" OBJROOT="$(OBJROOT)nnxl"
 native_test: 
-	$(MAKE) PRODUCT=nnnxl XL="./nnxl" XLOPTS="-bootstrap" OBJROOT="$(OBJROOT)nnxl_test"
+	$(MAKE) PRODUCT=nnnxl$(EXE) XL="./nnxl$(EXE)" XLOPTS="-bootstrap" OBJROOT="$(OBJROOT)nnxl_test"
 native_stability_test: 
-	$(MAKE) PRODUCT=nnnnxl XL="./nnnxl" XLOPTS="-bootstrap" OBJROOT="$(OBJROOT)nnxl_stability"
+	$(MAKE) PRODUCT=nnnnxl$(EXE) XL="./nnnxl$(EXE)" XLOPTS="-bootstrap" OBJROOT="$(OBJROOT)nnxl_stability"
 regression: ALWAYS
 	cd TESTS; ./alltests
 ALWAYS:
