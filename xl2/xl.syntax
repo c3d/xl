@@ -39,7 +39,7 @@ BLOCK
         400     '(' ')' '[' ']' INDENT UNINDENT
 
 TEXT
-        "``" "``"
+        "<<" ">>"
                 
 COMMENT
         "//" NEWLINE
