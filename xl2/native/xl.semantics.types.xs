@@ -70,7 +70,7 @@ module XL.SEMANTICS.TYPES with
 
     // Record the type in a tree
     procedure SetType(tree : PT.tree; type : any_type)
-    function Type(tree : PT.tree) return any_type
+    function GetType(tree : PT.tree) return any_type
 
 
     // The types for literals

@@ -98,7 +98,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         for param_name in args loop
             value : PT.tree := XLT.XLSemantics(args[param_name])
             args[param_name] := value
-            value_type : TY.any_type := TY.Type(value)
+            value_type : TY.any_type := TY.GetType(value)
             decl : DCL.declaration := written.args_map[param_name]
             decl_type : TY.any_type := decl.type
             if not TY.SameType(decl_type, value_type) then

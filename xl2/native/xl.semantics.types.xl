@@ -134,8 +134,8 @@ module XL.SEMANTICS.TYPES is
             XLT.InitializeTranslator()
             integer_type   := EnterBuiltinType ("integer", 32, "Int")
             real_type      := EnterBuiltinType ("real", 64, "Real")
-            boolean_type   := EnterBuiltinType ("boolean", 1, "Boolean")
-            character_type := EnterBuiltinType ("character", 16, "Character")
+            boolean_type   := EnterBuiltinType ("boolean", 1, "Bool")
+            character_type := EnterBuiltinType ("character", 16, "Char")
             text_type      := EnterBuiltinType ("text", -1, "Text")
 
 
@@ -269,7 +269,7 @@ module XL.SEMANTICS.TYPES is
     // ------------------------------------------------------------------------
 
         // Check that we have types
-        exprType : any_type := Type(expr)
+        exprType : any_type := GetType(expr)
         if exprType = nil then
             ERR.Error "Expression '$1' has no type", expr
             return expr
@@ -300,7 +300,7 @@ module XL.SEMANTICS.TYPES is
         PT.SetInfo tree, "T", type
 
 
-    function Type(tree : PT.tree) return any_type is
+    function GetType(tree : PT.tree) return any_type is
     // ------------------------------------------------------------------------
     //    Return the type associated to a tree
     // ------------------------------------------------------------------------

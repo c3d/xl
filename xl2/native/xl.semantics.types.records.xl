@@ -175,7 +175,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         Record := XLT.XLSemantics(Record)
 
         // Evaluate expression type
-        tp : record_type := record_type(TY.Type(Record))
+        tp : record_type := record_type(TY.GetType(Record))
         if tp = nil then
             ERR.Error "No type for record '$1'", Record
             return parse_tree(@error)
