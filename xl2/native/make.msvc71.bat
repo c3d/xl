@@ -1,5 +1,5 @@
 @echo.
-@echo Simple but effective batch to run the basic bootstrapping test under Windows.
+@echo Simple but effective batch to run the basic Native test under Windows.
 @echo To use, run it in the command line with the build config name as the argument.
 @echo After it runs, compare xl2.cpp and xl3.cpp. They must be identical.
 @echo VC 7.1 (.NET 2003) must be ready for command line use (run its vcvars32.bat).
@@ -11,17 +11,19 @@
 
 copy ..\xl.syntax .
 
-..\%_BUILD%\xl2 compiler.xl > xl.cpp
-@if errorlevel 1 goto error
-cl /EHsc /I .. xl.cpp
-@if errorlevel 1 goto error
-
-xl compiler.xl > xl2.cpp
+..\bootstrap\xl compiler.xl > xl2.cpp
 @if errorlevel 1 goto error
 cl /EHsc /I .. xl2.cpp
 @if errorlevel 1 goto error
 
-xl2 compiler.xl > xl3.cpp
+..\native\xl2 -bootstrap compiler.xl > xl3.cpp
+@if errorlevel 1 goto error
+cl /EHsc /I .. xl3.cpp
+@if errorlevel 1 goto error
+
+..\native\xl3 -bootstrap compiler.xl > xl4.cpp
+@if errorlevel 1 goto error
+cl /EHsc /I .. xl4.cpp
 @if errorlevel 1 goto error
 
 @goto done
