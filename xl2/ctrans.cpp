@@ -1051,9 +1051,7 @@ void TranslateClauses(XLTree *clauses, XLTree *to_translate)
                             << "[text(\"" << it->first << "\")];\n";
                     }
                     XL2C(infix->right);
-                    out << ";\n(";
-                    XL2C(to_translate);
-                    out << " = 0);";
+                    out << ";\nXLtranslateDone = true;\n";
                     out << "\nbreak;\n}\n}\n";
 
                     return;
@@ -1065,9 +1063,7 @@ void TranslateClauses(XLTree *clauses, XLTree *to_translate)
         if (infix->name == text("else"))
         {
             TranslateClauses(infix->left, to_translate);
-            out << "if (";
-            XL2C(to_translate);
-            out << ") {\n";
+            out << "if (!XLtranslateDone) {\n";
             XL2C(infix->right);
             out << "}\n";
             return;                
@@ -1090,7 +1086,8 @@ PREFIX(translate)
         XLBlock *block = dynamic_cast<XLBlock *> (right->right);
         if (block)
         {
-            out << "do {";
+            out << "bool XLtranslateDone = false;\n";
+            out << "do {\n";
             TranslateClauses(block->child, to_translate);
             out << "\n} while (0);\n";
             return;
