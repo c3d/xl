@@ -75,7 +75,7 @@ module XL.SCANNER is
     //   Create and initialize a new scanner
     // ------------------------------------------------------------------------
         result.file := file_name
-        result.file := 1
+        result.line := 1
         result.input := 0
         result.token := ""
         result.string_value := ""
@@ -148,7 +148,7 @@ module XL.SCANNER is
             else if S.checking_indent then
                 // Can't mix tabs and spaces
                 if ASCII.is_space C then
-                    if S.indent_char <> 0 then
+                    if S.indent_char = 0 then
                         S.indent_char := C
                     else if S.indent_char <> C then
                         ERR.Report ERR.E_ScanMixedIndent, S.file, S.line

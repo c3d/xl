@@ -295,9 +295,9 @@ XLTree *XLParser::Parse(char closing_paren)
                 while (stack.size())
                 {
                     Pending &prev = stack.back();
-                    if (prev.priority < paren_priority ||
-                        prev.opcode == prefix)
+                    if (prev.priority < paren_priority)
                         break;
+                    result_priority = prev.priority;
                     result = new XLInfix(prev.opcode, prev.argument, result);
                     stack.pop_back();
                 }

@@ -40,7 +40,6 @@
 
 typedef std::string text;
 
-
 inline int length(text &t) { return t.length(); }
 
 template<class T>
@@ -48,6 +47,13 @@ inline std::vector<T> &operator += (std::vector<T> & what, const T& last)
 {
     what.push_back(last);
     return what;
+}
+
+
+template<class T>
+inline int size (std::vector<T> & what)
+{
+    return what.size();
 }
 
 
@@ -109,6 +115,14 @@ namespace xl
             }
         }
     }
+
+    namespace ui
+    {
+        namespace console
+        {
+            extern std::vector< ::text > arguments;
+        }
+    }
 }
 
 
@@ -132,7 +146,7 @@ template <class T> struct XLRangeIterator : XLIterator
     XLRangeIterator(T &v, const std::pair<T,T> &r)
         : value(v), range(r) {}
     virtual void first() { value = range.first; }
-    virtual bool more() { return value < range.second; }
+    virtual bool more() { return value <= range.second; }
     virtual void next() { value++; }
     T & value;
     std::pair<T,T> range;
@@ -206,5 +220,11 @@ template <class T> inline T& XLDeref(T * &x) { return *x; }
 // ============================================================================
 
 extern void XLMain();
-int main(int argc, char **argv) { XLMain(); return 0; }
+int main(int argc, char **argv)
+{
+    for (int arg = 0; arg < argc; arg++)
+        xl::ui::console::arguments.push_back(argv[arg]);
+    XLMain();
+    return 0;
+}
 

@@ -54,26 +54,16 @@ module XL.SCANNER
         tokERROR                    // Some error happened (hard to reach)
 
 
+    // Type representing the scanner
     type scanner_data
     type scanner is pointer to scanner_data
-    // ------------------------------------------------------------------------
-    //    Type representing the scanner
-    // ------------------------------------------------------------------------
 
-
+    // Create a new scanner
     function NewScanner(file_name : text) return scanner
-    // ------------------------------------------------------------------------
-    //   Create a new scanner
-    // ------------------------------------------------------------------------
 
-
+    // Parse the file until we get a complete token
     function NextToken(S : scanner) return token
-    // ------------------------------------------------------------------------
-    //    Parse the file until we get a complete token
-    // ------------------------------------------------------------------------
 
 
+    // Scan a comment until the given end
     function Comment(S : scanner; EndOfComment : text) return text
-    // ------------------------------------------------------------------------
-    //   Scan a comment until the given end
-    // ------------------------------------------------------------------------

@@ -23,7 +23,19 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-import SCANNER = XL.SCANNER
+import SC = XL.SCANNER
+import CS = XL.UI.CONSOLE
 
 procedure Main is
-    writeln "Hello"
+    I   : integer
+    Max : integer := size CS.arguments
+    S   : SC.scanner
+    T   : SC.token
+
+    WriteLn "Size", Max
+    for I in 1..Max-1 loop
+        S := SC.NewScanner CS.arguments[I]
+        loop
+            T := SC.NextToken(S)
+            WriteLn "T=", T, " text=", S.token
+            exit if T = SC.tokEOF
