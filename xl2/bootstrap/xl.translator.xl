@@ -36,6 +36,8 @@ module XL.TRANSLATOR is
     // 
     // ========================================================================
 
+    type args_map is map[text, integer]
+
     procedure XL2C_Arg (input : PT.tree)
     procedure XL2C_Args (input : PT.tree)
     procedure XL2C_Stmt (input : PT.tree)
@@ -45,6 +47,8 @@ module XL.TRANSLATOR is
     procedure XL2C_Module (name : PT.tree; body : PT.tree)
     procedure XL2C_Namespace (name : PT.tree)
     procedure XL2C_Translate (what : PT.tree; how : PT.tree)
+    procedure XL2C_Quote (form : PT.tree; in out args : args_map; nesting : integer; wildcard : boolean)
+
     procedure XL2C(input : PT.tree)
     procedure Rename(from : text; to : text)
     function XLNormalize (name : text) return text
@@ -712,6 +716,17 @@ module XL.TRANSLATOR is
                     IO.Write "."
                 XL2C B
 
+            when
+                quote
+                    'A'
+            then
+                args : args_map
+                XL2C_Quote A, args, 2, false
+            when
+                quote ('A')
+            then
+                args : args_map
+                XL2C_Quote A, args, 2, false
 
             // ----------------------------------------------------------------
             //   Some special case...
@@ -941,10 +956,7 @@ module XL.TRANSLATOR is
     // 
     // ========================================================================
 
-    type args_map is map[text, integer]
-
-
-    procedure TranslateForm (form : PT.tree; in out args : args_map; nesting : integer) is
+    procedure XL2C_Quote (form : PT.tree; in out args : args_map; nesting : integer; wildcard : boolean) is
     // ------------------------------------------------------------------------
     //    Emit the code for the translate form
     // ------------------------------------------------------------------------
@@ -964,8 +976,22 @@ module XL.TRANSLATOR is
 
         if form.kind = PT.xlSTRING then
             T : PT.string_tree := PT.string_tree(form)
-            IO.Write "xl::parser::tree::newwildcard(text("""
-            IO.Write XLSanitize(T.value, '"'), """))"
+            if wildcard then
+                IO.Write "xl::parser::tree::newwildcard(text("""
+                IO.Write XLSanitize(T.value, '"'), """))"
+            else
+                quote : character := character(0)
+                if length(T.value) > 2 then
+                   quote := T.value[0]
+                   if quote <> T.value[length(T.value)-1] then
+                       quote := character(0)
+                if ASCII.is_quote(quote) then
+                    IO.Write "xl::parser::tree::newstring(text("""
+                    IO.Write XLSanitize(T.value, '"')
+                    IO.Write """), '", XLSanitize(text("") + quote, ''''), "')"
+                else
+                    // Should we check that it's a single name?
+                    IO.Write XLNormalize(T.value)
             args[T.value] = 1
 
         if form.kind = PT.xlNAME then
@@ -976,7 +1002,7 @@ module XL.TRANSLATOR is
         if form.kind = PT.xlBLOCK then
             T : PT.block_tree := PT.block_tree(form)
             IO.Writeln "xl::parser::tree::newblock("
-            TranslateForm T.child, args, nesting+2
+            XL2C_Quote T.child, args, nesting+2, wildcard
             IO.Write ", "
             if ASCII.is_line_break(T.closing) then
                IO.Write "'\t', '\n'"
@@ -987,9 +1013,9 @@ module XL.TRANSLATOR is
         if form.kind = PT.xlPREFIX then
             T : PT.prefix_tree := PT.prefix_tree(form)
             IO.WriteLn "xl::parser::tree::newprefix("
-            TranslateForm T.left, args, nesting+2
+            XL2C_Quote T.left, args, nesting+2, wildcard
             IO.WriteLn ","
-            TranslateForm T.right, args, nesting+2
+            XL2C_Quote T.right, args, nesting+2, wildcard
             IO.WriteLn ")"
 
         if form.kind = PT.xlINFIX then
@@ -999,9 +1025,9 @@ module XL.TRANSLATOR is
                 IO.WriteLn "xl::textio::encoding::ascii::cr,"
             else
                 IO.WriteLn "text(", '"', T.name, '"', "),"
-            TranslateForm T.left, args, nesting+2
+            XL2C_Quote T.left, args, nesting+2, wildcard
             IO.WriteLn ","
-            TranslateForm T.right, args, nesting+2
+            XL2C_Quote T.right, args, nesting+2, wildcard
             IO.WriteLn ")"
 
 
@@ -1023,7 +1049,7 @@ module XL.TRANSLATOR is
 
                IO.WriteLn "{"
                IO.WriteLn "static xl::parser::tree::tree ref", loop_index, "="
-               TranslateForm ToMatch, args, 2
+               XL2C_Quote ToMatch, args, 2, true
                IO.WriteLn ";"
                IO.WriteLn "xl::translator::treemap args", loop_index, ";"
                IO.Write "if (xl::translator::matches("

@@ -25,6 +25,7 @@
 
 import PT = XL.PARSER.TREE
 import IO = XL.TEXT_IO
+import ASCII = XL.TEXT_IO.ENCODING.ASCII
 
 
 module XL.TEXT_IO with
@@ -68,7 +69,7 @@ module XL.TEXT_IO with
         current_tree_debug := boolean(do_debug)
 
 
-    procedure write(what : TR.tree) is
+    procedure write(what : PT.tree) is
     // ------------------------------------------------------------------------
     //    For debugging purpose, write a tree
     // ------------------------------------------------------------------------
