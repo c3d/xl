@@ -23,7 +23,7 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-module XL.TEXT_IO.ENCODING.ASCII
+module XL.TEXT_IO.ENCODING.ASCII with
 
     function to_lower(C : character) return character
     function is_space(C : character) return boolean

@@ -44,11 +44,13 @@ typedef void (*prefix_fn) (XLPrefix *);
 typedef std::map<text, text>            name_map;
 typedef std::map<text, infix_fn>        infix_map;
 typedef std::map<text, prefix_fn>       prefix_map;
+typedef std::map<text, int>             imports_map;
 
 name_map        XLNames;
 name_map        XLModules;
 prefix_map      XLUnaryOps;
 infix_map       XLBinaryOps;
+imports_map     XLImports;
 int in_parameter_declaration = 0;
 int in_procedure = 0;
 int in_namespace = 0;
@@ -59,10 +61,10 @@ text in_enum = "";
 
 #define NAME(x,y)
 #define SYMBOL(x,y)
-#define INFIX(x)        extern void infix_##x(XLInfix *);
-#define PREFIX(x)       extern void prefix_##x(XLPrefix *);
-#define BINARY(x,y)     extern void infix_##y(XLInfix *);
-#define UNARY(x,y)      extern void prefix_##y(XLPrefix *);
+#define INFIX(x)        extern void Infix_##x(XLInfix *);
+#define PREFIX(x)       extern void Prefix_##x(XLPrefix *);
+#define BINARY(x,y)     extern void Infix_##y(XLInfix *);
+#define UNARY(x,y)      extern void Prefix_##y(XLPrefix *);
 #include "ctrans.tbl"
 
 #define out     (std::cout)
@@ -82,10 +84,10 @@ void XLInitCTrans()
 {
 #define NAME(x,y)       XLNames[#x] = #y;
 #define SYMBOL(x,y)     XLNames[x] = y;
-#define INFIX(x)        XLBinaryOps[#x] = infix_##x;
-#define PREFIX(x)       XLUnaryOps[#x] = prefix_##x;
-#define BINARY(x,y)     XLBinaryOps[x] = infix_##y;
-#define UNARY(x,y)      XLUnaryOps[x] = prefix_##y;
+#define INFIX(x)        XLBinaryOps[#x] = Infix_##x;
+#define PREFIX(x)       XLUnaryOps[#x] = Prefix_##x;
+#define BINARY(x,y)     XLBinaryOps[x] = Infix_##y;
+#define UNARY(x,y)      XLUnaryOps[x] = Prefix_##y;
 #include "ctrans.tbl"
 
     out << "#include \"xl_lib.h\"\n";
@@ -298,8 +300,8 @@ void XL2C(XLTree *tree)
 // 
 // ****************************************************************************
 
-#define PREFIX(x)       void prefix_##x(XLPrefix *tree)
-#define INFIX(x)        void infix_##x(XLInfix *tree)
+#define PREFIX(x)       void Prefix_##x(XLPrefix *tree)
+#define INFIX(x)        void Infix_##x(XLInfix *tree)
 
 
 // ============================================================================
@@ -357,22 +359,31 @@ PREFIX(import)
     if (iface_file)
     {
         fclose(iface_file);
-        out << "\n/* " << interface << "*/\n";
-        XLParser iface_parser (interface.c_str(), &gContext);
-        XLTree *iface_tree = iface_parser.Parse();
-        XL2C(iface_tree);
-        out << ";\n";
+
+        if (~XLImports[imported] & 1)
+        {
+            out << "\n/* " << interface << "*/\n";
+            XLParser iface_parser (interface.c_str(), &gContext);
+            XLTree *iface_tree = iface_parser.Parse();
+            XL2C(iface_tree);
+            out << ";\n";
+            XLImports[imported] |= 1;
+        }
     }
 
     FILE *body_file = fopen(body.c_str(), "r");
     if (body_file)
     {
         fclose(body_file);
-        out << "\n/* " << body << "*/\n";
-        XLParser body_parser (body.c_str(), &gContext);
-        XLTree *body_tree = body_parser.Parse();
-        XL2C(body_tree);
-        out << ";\n";
+        if (~XLImports[imported] & 2)
+        {
+            out << "\n/* " << body << "*/\n";
+            XLParser body_parser (body.c_str(), &gContext);
+            XLTree *body_tree = body_parser.Parse();
+            XL2C(body_tree);
+            out << ";\n";
+            XLImports[imported] |= 2;
+        }
     }
 
     if (!iface_file && !body_file)
@@ -399,7 +410,7 @@ void XLModule2Namespace(XLTree *tree)
         if (infix && infix->name == text("."))
         {
             XLModule2Namespace(infix->left);
-            out << " { ";
+            out << " {\n";
             in_namespace++;
             XLModule2Namespace(infix->right);
         }
@@ -413,7 +424,8 @@ PREFIX(module)
 // ----------------------------------------------------------------------------
 {
     XLInfix *is_tree = dynamic_cast<XLInfix *> (tree->right);
-    if (is_tree && is_tree->name == text("is"))
+    if (is_tree &&
+        (is_tree->name == text("is") || is_tree->name == text("with")))
     {
         XLModule2Namespace(is_tree->left);
         XL2C(is_tree->right);        
@@ -423,6 +435,7 @@ PREFIX(module)
         XLPrefix *declare = dynamic_cast<XLPrefix *> (tree->right);
         if (declare)
         {
+            out << "\n#warning Deprecated use of module\n";
             XLModule2Namespace(declare->left);
             XL2C(declare->right);
         }
@@ -606,7 +619,7 @@ PREFIX(function)
         if (return_part && return_part->name == text("return"))
         {
             XL2C(return_part);
-            out << "\n{ ";
+            out << "\n{\n";
             IntSaver in_parm(in_parameter_declaration, 0);
             XL2C(return_part->right);
             out << " result = XLDefaultInit < ";
@@ -650,8 +663,12 @@ PREFIX(type)
             {
                 out << "struct ";
                 XL2C(right->left);
-                out << " : ";
-                XL2C(with->left);
+                name = dynamic_cast<XLName *> (with->left);
+                if (!name || name->value != text("record"))
+                {
+                    out << " : ";
+                    XL2C(with->left);
+                }
                 XL2C(with->right);
             }
             else
@@ -690,6 +707,7 @@ PREFIX(record)
 //   Record types are turned into structs
 // ----------------------------------------------------------------------------
 {
+    out << "#warning Deprecated use of record\n";
     out << "struct " << in_typedef << ' ';
     TextSaver str(in_struct, in_typedef);
     XL2C(tree->right);
@@ -815,6 +833,27 @@ PREFIX(out)
 }
 
 
+PREFIX(map)
+// ----------------------------------------------------------------------------
+//   Change map to use the template type
+// ----------------------------------------------------------------------------
+{
+    XLBlock *block = dynamic_cast<XLBlock *> (tree->right);
+    if (block && block->opening == '[' && block->closing == ']')
+    {
+        out << "std::map < ";
+        XL2C(block->child);
+        out << " > ";
+    }
+    else
+    {
+        out << "*** Unknown map ";
+        out << " ::map < ";
+        XL2C(tree->right);
+        out << " > ";
+    }
+}
+
 INFIX(of)
 // ----------------------------------------------------------------------------
 //   We turn A of B into A<B>, expecting a template type
@@ -832,8 +871,8 @@ INFIX(to)
 //   We turn pointer to X into X &, so that we can use X.Y
 // ----------------------------------------------------------------------------
 {
-    XLName *pointer = dynamic_cast<XLName *> (tree->left);
-    if (pointer && pointer->value == text("pointer"))
+    XLName *access = dynamic_cast<XLName *> (tree->left);
+    if (access && access->value == text("access"))
     {
         XL2C(tree->right);
         out << "*";

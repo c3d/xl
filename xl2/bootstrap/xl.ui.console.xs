@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  compiler.xl                     (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.ui.console.xs                (C) 1992-2003 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     The main body of the XL compiler
+//     The bootstrap implementation of the user-interface console
 // 
 // 
 // 
@@ -23,21 +23,6 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-import SC = XL.SCANNER
-import CS = XL.UI.CONSOLE
-import TR = XL.PARSER.TREE
-import PR = XL.PARSER
+module XL.UI.CONSOLE with
 
-procedure Main is
-    I   : integer
-    Max : integer := size CS.arguments
-    S   : SC.scanner
-    T   : SC.token
-
-    WriteLn "Size", Max
-    for I in 1..Max-1 loop
-        S := SC.NewScanner CS.arguments[I]
-        loop
-            T := SC.NextToken(S)
-            WriteLn "T=", T, " text=", S.token
-            exit if T = SC.tokEOF
+    arguments : string of text

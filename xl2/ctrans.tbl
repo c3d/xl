@@ -29,8 +29,6 @@ NAME(integer, int)
 NAME(real, double)
 NAME(boolean, bool)
 NAME(main, XLMain)
-SYMBOL("string", "std::vector")
-SYMBOL("text", "::text")
 
 SYMBOL(":=", "=")
 SYMBOL("=", "==")
@@ -43,9 +41,14 @@ PREFIX(out)
 
 BINARY(".", scope)
 BINARY("in", iterator)
+PREFIX(new) // Temporary
+
+// Data types
+SYMBOL("string", "std::vector")
+SYMBOL("text", "::text")
 INFIX(of)
 INFIX(to)
-PREFIX(new) // Temporary
+PREFIX(map)
 
 
 // Declarations

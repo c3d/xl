@@ -30,7 +30,7 @@ import ASCII = XL.TEXT_IO.ENCODING.ASCII
 
 module XL.SCANNER is
 
-    type scanner_data is record
+    type scanner_data is record with
     // ------------------------------------------------------------------------
     //   Implementation of the scanner type
     // ------------------------------------------------------------------------

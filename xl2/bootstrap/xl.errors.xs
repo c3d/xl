@@ -23,7 +23,7 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-module XL.ERRORS
+module XL.ERRORS with
 
     type error is enumeration
         E_FileNotFound,
