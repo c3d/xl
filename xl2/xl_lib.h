@@ -65,6 +65,15 @@ inline std::vector<T> &operator += (std::vector<T> & what, const T& last)
 
 
 template<class T>
+inline std::vector<T> &operator += (std::vector<T> & what,
+                                    const std::vector<T>& last)
+{
+    what.insert(what.end(), last.begin(), last.end());
+    return what;
+}
+
+
+template<class T>
 inline int size (std::vector<T> & what)
 {
     return what.size();
@@ -125,6 +134,7 @@ namespace xl
         typedef std::iostream *file;
         typedef std::ostream *outputfile;
         typedef std::istream *inputfile;
+        typedef std::ostringstream *outputstringstream;
         typedef std::ios_base::openmode openmode;
         const openmode readmode = std::ios_base::in;
         const openmode writemode = std::ios_base::out;
@@ -138,6 +148,16 @@ namespace xl
         inline void close(file f) { delete f; }
         inline void putback(file f, char c) { f->putback(c); }
         inline bool valid(file f) { return f->good(); }
+
+        inline outputstringstream openstringstream()
+        { return new std::ostringstream; }
+        inline text closestringstream(outputstringstream s)
+        {
+            text result = s->str();
+            delete s;
+            return result;
+        }
+
 
         // Since at this point we don't have valid varags
         // (unlike in the Mozart version), we just mimic them...
@@ -343,11 +363,38 @@ struct XLMapIterator : XLIterator
     typename Map::iterator it;
 };
 
+
 template <class Index, class Value>
 inline XLMapIterator<Index, std::map<Index, Value> > *
 XLMakeIterator(Index& w, std::map<Index, Value> &r)
 {
     return new XLMapIterator<Index, std::map<Index, Value> > (w, r);
+}
+
+
+template <class Value, class Vector>
+struct XLVectorIterator : XLIterator
+{
+    XLVectorIterator (Value &v, Vector &m)
+        : value(v), range(m) {}
+    virtual void first() { it = range.begin(); }
+    virtual bool more() {
+        bool has_more = it != range.end();
+        if (has_more) value = *it; 
+        return has_more;
+    }
+    virtual void next() { it++; }
+    Value &value;
+    Vector &range;
+    typename Vector::iterator it;
+};
+
+
+template <class Value>
+inline XLVectorIterator<Value, std::vector<Value> > *
+XLMakeIterator(Value& w, std::vector<Value> &r)
+{
+    return new XLVectorIterator<Value, std::vector<Value> > (w, r);
 }
 
 

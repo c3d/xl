@@ -40,6 +40,8 @@ module XL.ERRORS with
         InvalidAsmFormat     = "The bytecode opcode '$1' is invalid"
         InvalidAsmType       = "Internal error: invalid bytecode opcode type"
         UnexpectedTopLevel   = "'$1' literal is unexpected at program level"
+        AmbiguousTree        = "Both '$1' and '$2' match '$3'"
+        NoMatchForTree       = "No match for '$1'"
 
     // Signaling an error
     procedure Error (E : error_code; pos : integer; args : string of text)

@@ -30,3 +30,5 @@ module XL.TRANSLATOR with
     procedure Compile(input : PT.tree)
 
     verbose : boolean := false
+
+    semantics_translations_init : text

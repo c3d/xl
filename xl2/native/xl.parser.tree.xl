@@ -5,9 +5,9 @@
 // 
 //   File Description:
 // 
-//     Implementation of the parser tree
+//     Implementation of the parser tree specific functions
 // 
-//     This file actually only provides debug support
+//
 // 
 // 
 // 
@@ -32,6 +32,69 @@ module XL.PARSER.TREE is
 // ----------------------------------------------------------------------------
 //    Implementation of parse tree functions
 // ----------------------------------------------------------------------------
+
+    function XLNormalize (name : text) return text is
+    // ------------------------------------------------------------------------
+    //    Return the normalized name (lower-case, no underscores)
+    // ------------------------------------------------------------------------
+        result := ""
+        Max : integer := length(name)
+        I : integer
+        for I in 0..Max-1 loop
+            C : character := name[I]
+            if C <> '_' then
+                result += ASCII.tolower C
+
+
+    function FindInfo(from : tree; kind : integer) return tree_info_list is
+    // ------------------------------------------------------------------------
+    //   Find the associated info record, or return nil
+    // ------------------------------------------------------------------------
+        previous : tree_info_list := nil
+
+        // Search info list for the appropriate kind
+        result := from.info
+        while result <> nil loop
+            exit if result.kind = kind
+            previous := result
+            result := result.next
+
+        // Place returned info at head of list
+        if result <> nil and previous <> nil then
+            previous.next := result.next
+            result.next := from.info
+            from.info := result
+
+
+    procedure SetInfo(from : tree; info: tree_info_list) is
+    // ------------------------------------------------------------------------
+    //   Add given info to the info list for the tree
+    // ------------------------------------------------------------------------
+        assert info.next = nil
+        info.next := from.info
+        from.info := info
+
+
+    procedure PurgeInfo(from : tree; kind : integer) is
+    // ------------------------------------------------------------------------
+    //  Find if there is an entry, if so purge it
+    // ------------------------------------------------------------------------
+        info : tree_info_list := FindInfo(from, kind)
+        if info <> nil then
+            // It was placed at beginning of list
+            from.info := info.next
+            delete info
+
+
+    current_tree_info_kind : integer := 0
+
+    function AllocateInfoKind() return integer is
+    // ------------------------------------------------------------------------
+    //   Allocate a kind for tree info
+    // ------------------------------------------------------------------------
+        current_tree_info_kind += 1
+        return current_tree_info_kind
+
 
     function Matches (test : PT.tree;
                       ref : PT.tree;
@@ -96,7 +159,7 @@ module XL.PARSER.TREE is
         if test.kind = PT.xlNAME then
             T : PT.name_tree := PT.name_tree(test)
             R : PT.name_tree := PT.name_tree(ref)
-            if T.value = R.value then
+            if XLNormalize(T.value) = XLNormalize(R.value) then
                 return 1
             if verbose then IO.Writeln "/* Failed nameval */"
             return 0
@@ -111,7 +174,8 @@ module XL.PARSER.TREE is
                     return result + 1
             if verbose then
                 IO.Writeln "/* Failed block */"
-                IO.Writeln "/* o=", T.opening = R.opening, " c=", T.closing = R.closing, " */"
+                IO.Writeln "/* o=", T.opening = R.opening,
+                           " c=", T.closing = R.closing, " */"
                 IO.Writeln "/* r=", result, " */"
             return 0
 
@@ -138,6 +202,39 @@ module XL.PARSER.TREE is
             if verbose then IO.Writeln "/* Failed infix */"
             return 0
 
+
+    function LargestMatch (test : PT.tree;
+                           ref_list : tree_list;
+                           in out arg : tree_map) return integer is
+    // ------------------------------------------------------------------------
+    //    Finds the largest tree that matches from the list
+    // ------------------------------------------------------------------------
+
+        largest_score : integer := 0
+        score         : integer := 0
+        index         : integer := 0
+        ref           : PT.tree
+
+        result := -2 // Not found
+        for ref in ref_list loop
+            args_for_ref  : tree_map
+            score := Matches(test, ref, args_for_ref)
+            if score > largest_score then
+                result := index
+                arg := args_for_ref
+                largest_score := score
+            else if score > 0 and score = largest_score then
+                result := -1 // Ambiguous
+            index += 1
+        return result
+
+
+
+// ============================================================================
+// 
+//    I/O customization
+// 
+// ============================================================================
 
 module XL.TEXT_IO with
 // ----------------------------------------------------------------------------

@@ -30,6 +30,7 @@ import BC = XL.BYTECODE
 import SEM = XL.SEMANTICS
 import CG = XL.CODE_GENERATOR
 import OPT = XL.OPTIMIZER
+import SYM = XL.SEMANTICS.SYMBOLS
 
 
 module XL.TRANSLATOR is
@@ -57,6 +58,7 @@ module XL.TRANSLATOR is
     // ------------------------------------------------------------------------
     //    Compile the tree to a given file
     // ------------------------------------------------------------------------
+        SEM.InitSemantics()
         after_semantics     : BC.bytecode := SEM.Semantics(input)
         after_optimizations : BC.bytecode := OPT.Optimize(after_semantics)
         CG.Transcode after_optimizations, output

@@ -29,6 +29,7 @@ import PT = XL.PARSER.TREE
 import PR = XL.PARSER
 import IO = XL.TEXT_IO
 import XT = XL.TRANSLATOR
+import CG = XL.CODE_GENERATOR
 import ASCII = XL.TEXT_IO.ENCODING.ASCII
 
 
@@ -48,6 +49,8 @@ procedure Main is
             showParse := true
         else if name = "-tmatch" then
             XT.verbose := true
+            CG.verbose := true
+            PT.verbose := true
         else
             P := PR.Open(name)
             theProgram := PR.Parse(P)

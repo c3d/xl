@@ -30,3 +30,4 @@ module XL.CODE_GENERATOR with
 
     procedure Transcode (input : BC.bytecode; file : IO.output_file)
     verbose : boolean := false
+    semantics_translations_init : text

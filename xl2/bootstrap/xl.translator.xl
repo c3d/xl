@@ -53,6 +53,7 @@ module XL.TRANSLATOR is
     procedure XL2C_Module (name : PT.tree; body : PT.tree)
     procedure XL2C_Namespace (name : PT.tree)
     procedure XL2C_Translate (what : PT.tree; how : PT.tree)
+    procedure XL2C_SemanticsTranslation (How : PT.tree)
     procedure XL2C_Quote (form : PT.tree; in out args : args_map; nesting : integer; wildcard : boolean)
 
     procedure XL2C(input : PT.tree)
@@ -76,7 +77,8 @@ module XL.TRANSLATOR is
     loop_index          : integer
     namespace_closing   : text := ""
     in_function         : boolean := false
-    
+    current_module      : text := ""
+
 
 
     // ========================================================================
@@ -84,6 +86,17 @@ module XL.TRANSLATOR is
     //    Top-level
     // 
     // ========================================================================
+
+    procedure EmitSemanticsPlugins is
+    // ------------------------------------------------------------------------
+    //    Emit the code for the SemanticsPlugins function
+    // ------------------------------------------------------------------------
+        IO.WriteLn "namespace xl { namespace semantics {"
+        IO.WriteLn "void semanticspluginsinit() {"
+        IO.WriteLn semantics_translations_init
+        IO.WriteLn "}"
+        IO.WriteLn "}}"
+
 
     procedure Compile (input : PT.tree) is
     // ------------------------------------------------------------------------
@@ -109,6 +122,9 @@ module XL.TRANSLATOR is
         rename "text",       "::text"        
 
         XL2C input
+
+        EmitSemanticsPlugins
+
 
 
     // ========================================================================
@@ -470,10 +486,49 @@ module XL.TRANSLATOR is
                 IO.WriteLn "} while (0);"
                 IO.WriteLn "}"
 
+            when
+                semantics_translation
+                    'What'
+            then
+                XL2C_SemanticsTranslation What
+
 
             // ----------------------------------------------------------------
             //   Declarations
             // ----------------------------------------------------------------
+
+            // Procedure and function pointers
+            when
+                'Name' : procedure ( 'Args' )
+            then
+                IO.write "void (*"
+                XL2C Name
+                IO.write ")("
+                XL2C_Args Args
+                IO.writeln ");"
+            when
+                'Name' : procedure 'Name'
+            then
+                IO.write "void (*"
+                XL2C Name
+                IO.writeln ")(void);"
+
+            when
+                'Name' : function ( 'Args' ) return 'T'
+            then
+                XL2C T
+                IO.write " (*"
+                XL2C Name
+                IO.write ")("
+                XL2C_Args Args
+                IO.writeln ");"
+            when
+                'Name' : function return 'T'
+            then
+                XL2C T
+                IO.write " (*"
+                XL2C Name
+                IO.writeln ")(void);"
 
             when
                 'A' : 'B' := 'C'
@@ -669,7 +724,6 @@ module XL.TRANSLATOR is
                 IO.write " "
                 XL2C Name
                 IO.writeln "(void);"
-
 
 
             // ----------------------------------------------------------------
@@ -906,6 +960,10 @@ module XL.TRANSLATOR is
             else
                IO.write "namespace "
                XL2C name
+               if name.kind = PT.xlNAME then
+                   N : PT.name_tree := PT.name_tree(name)
+                   current_module += XLNormalize(N.value)
+                   current_module += "::"
 
 
     procedure XL2C_Module (name : PT.tree; body : PT.tree) is
@@ -913,6 +971,7 @@ module XL.TRANSLATOR is
     //    Display a module
     // ------------------------------------------------------------------------
 
+         current_module := ""
          XL2C_Namespace name
          if body <> nil then
              IO.WriteLn " {"
@@ -1003,7 +1062,7 @@ module XL.TRANSLATOR is
             else
                 if wildcard then
                     IO.Write "xl::parser::tree::newwildcard(text("""
-                    IO.Write XLSanitize(T.value, '"'), """))"
+                    IO.Write XLSanitize(XLNormalize(T.value), '"'), """))"
                 else
                     // We should check that it's a single name
                     IO.Write XLNormalize(T.value)
@@ -1011,7 +1070,7 @@ module XL.TRANSLATOR is
 
         if form.kind = PT.xlNAME then
             T : PT.name_tree := PT.name_tree(form)
-            IO.Write "xl::parser::tree::newname(text(""", T.value, """))"
+            IO.Write "xl::parser::tree::newname(text(""", XLNormalize(T.value), """))"
 
         // For non-atoms, check recursively
         if form.kind = PT.xlBLOCK then
@@ -1073,8 +1132,9 @@ module XL.TRANSLATOR is
 
                N : text
                for N in args loop
-                   IO.Write "xl::parser::tree::tree ", XLNormalize(N)
-                   IO.WriteLn " = args",loop_index,"[text(", '"', N, '"', ")];"
+                   Nm : text := XLNormalize(N)
+                   IO.Write "xl::parser::tree::tree ", Nm
+                   IO.WriteLn " = args",loop_index,"[text(", '"', Nm,'"', ")];"
 
                XL2C_Stmt Body
                
@@ -1099,4 +1159,71 @@ module XL.TRANSLATOR is
 
            else
               IO.Writeln "*** Ungrokable 'translate'"
+              IO.WriteLn IO.show_debug, "[[", how, "]]"
+
+
+    procedure XL2C_SemanticsTranslation (How: PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Translate a semantics_translation statement
+    // ------------------------------------------------------------------------
+
+        translate How
+           when
+              when
+                  'ToMatch'
+              then
+                  'Body'
+           then
+               args : args_map
+               loop_index += 1
+
+               // Write the initialization of the symbol table
+               old_stdout : IO.output_file := IO.standard_output
+               new_stdout : IO.output_string_stream := IO.open_string_stream()
+               IO.standard_output := new_stdout
+
+               IO.WriteLn "{"
+               IO.WriteLn "static xl::parser::tree::tree ref ="
+               XL2C_Quote ToMatch, args, 2, true
+               IO.WriteLn ";"
+               IO.WriteLn "xl::semantics::symbols::rewrite rew ="
+               IO.WriteLn "new xl::semantics::symbols::rewritedata;"
+               IO.WriteLn "rew->referenceform = ref;"
+               IO.WriteLn "rew->scoreadjust = 0;"
+               IO.WriteLn "rew->translator = "
+               IO.WriteLn current_module, "translator", loop_index, ";"
+               IO.WriteLn "xl::semantics::symbols::enter("
+               IO.WriteLn "  xl::semantics::context, rew);"
+               IO.WriteLn "}"
+
+               semantics_translations_init+=IO.close_string_stream(new_stdout)
+               IO.standard_output := old_stdout        
+
+
+               // Write the callback function
+               IO.WriteLn "xl::parser::tree::tree translator", loop_index
+               IO.WriteLn "  (xl::parser::tree::tree input,"
+               IO.WriteLn "   xl::semantics::symbols::rewrite info,"
+               IO.WriteLn "   xl::parser::tree::treemap &args) {"
+               
+               N : text
+               for N in args loop
+                   Nm : text := XLNormalize(N)
+                   IO.Write "xl::parser::tree::tree ", Nm
+                   IO.WriteLn " = args[text(", '"',Nm,'"', ")];"
+               IO.WriteLn "xl::parser::tree::tree result = input;"
+
+               XL2C_Stmt Body
+               IO.WriteLn "return result;"
+               IO.WriteLn "}"
+
+           when
+              'A'
+              'B'
+           then
+              XL2C_SemanticsTranslation A
+              XL2C_SemanticsTranslation B
+
+           else
+              IO.Writeln "*** Ungrokable 'semantics_translation'"
               IO.WriteLn IO.show_debug, "[[", how, "]]"

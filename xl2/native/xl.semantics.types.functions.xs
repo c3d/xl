@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  xl.semantics.types.xs           (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.semantics.types.functions.xs (C) 1992-2003 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Type system for XL
+//      Description of function types
 // 
 // 
 // 
@@ -23,33 +23,26 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-import PT = XL.PARSER.TREE
+import TY = XL.SEMANTICS.TYPES
+import DCL = XL.SEMANTICS.DECLARATIONS
 
 
-module XL.SEMANTICS.TYPES with
+module XL.SEMANTICS.TYPES.FUNCTIONS with
 // ----------------------------------------------------------------------------
-//   Implements data type representation
+//    Representation of function types
 // ----------------------------------------------------------------------------
 
-    type any_type_data is record with
+    type any_type_data  is TY.any_type_data
+    type any_type       is TY.any_type
+    type declaration    is DCL.declaration
+
+
+    type function_type_data is any_type_data with
     // ------------------------------------------------------------------------
-    //   All that the compiler knows about a type
+    //    Information in a function signature
     // ------------------------------------------------------------------------
 
-        // Flags set during semantics
-        is_constant             : boolean
-        is_variable             : boolean
-        is_generic              : boolean
-        is_polymorphic          : boolean
-        is_subroutine           : boolean
-        is_reference            : boolean
-        is_instantiation        : boolean
-        is_compiler_generated   : boolean
+        parameters      : string of declaration
+        return_type     : any_type
 
-        // Other information recorded about a type
-        type_uid                : integer // Cache for accelerated comparisons
-        bit_size                : integer
-        source_tree             : PT.tree
-        name                    : PT.tree // Not always there, may be nil
-
-    type any_type is access to any_type_data
+    type function_type is access to function_type_data

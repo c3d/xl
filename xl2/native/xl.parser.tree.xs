@@ -39,11 +39,30 @@ module XL.PARSER.TREE with
         xlLAST
 
 
-    // The base class for all trees
+    type tree_info;
+    type tree_info_list is access to tree_info;
+    type tree_info is record with
+    // ------------------------------------------------------------------------
+    //    Attributes attached to a tree by semantics
+    // ------------------------------------------------------------------------
+        next       : tree_info_list
+        kind       : integer
+
+
     type tree_node is record with
-        kind     : tree_kind
-        position : integer                      // Context-dependent position
+    // ------------------------------------------------------------------------
+    // The base class for all trees
+    // ------------------------------------------------------------------------
+        kind       : tree_kind
+        position   : integer                  // Context-dependent position
+        info       : tree_info_list
     type tree is access to tree_node
+
+
+    function FindInfo(from : tree; kind : integer) return tree_info_list
+    procedure SetInfo(from : tree; info: tree_info_list)
+    procedure PurgeInfo(from : tree; kind : integer)
+    function AllocateInfoKind() return integer
 
 
     // -- Leafs ---------------------------------------------------------------
@@ -56,6 +75,7 @@ module XL.PARSER.TREE with
                         pos : integer := -1) return integer_tree is
         result.kind := xlINTEGER
         result.position := pos
+        result.info = nil
         result.value := value
 
     // Representation of a real
@@ -65,6 +85,7 @@ module XL.PARSER.TREE with
     function NewReal(value : real; pos : integer := -1) return real_tree is
         result.kind := xlREAL
         result.position := pos
+        result.info = nil
         result.value := value
 
     // Representation of a text
@@ -77,6 +98,7 @@ module XL.PARSER.TREE with
                      pos : integer := -1) return text_tree is
         result.kind := xlTEXT
         result.position := pos
+        result.info = nil
         result.value := value
         result.quote := quote
 
@@ -87,6 +109,7 @@ module XL.PARSER.TREE with
     function NewName(value : text; pos : integer := -1) return name_tree is
         result.kind := xlNAME
         result.position := pos
+        result.info = nil
         result.value := value
 
 
@@ -103,6 +126,7 @@ module XL.PARSER.TREE with
                       pos : integer := -1) return block_tree is
         result.kind := xlBLOCK
         result.position := pos
+        result.info = nil
         result.child := child
         result.opening := opening
         result.closing := closing
@@ -117,6 +141,7 @@ module XL.PARSER.TREE with
                        pos : integer := -1) return prefix_tree is
         result.kind := xlPREFIX
         result.position := pos
+        result.info = nil
         result.left := left
         result.right := right
 
@@ -132,6 +157,7 @@ module XL.PARSER.TREE with
                       pos : integer := -1) return infix_tree is
         result.kind := xlINFIX
         result.position := pos
+        result.info = nil
         result.name := name
         result.left := left
         result.right := right
@@ -145,6 +171,7 @@ module XL.PARSER.TREE with
                          pos : integer := -1) return wildcard_tree is
         result.kind := xlWILDCARD
         result.position := pos
+        result.info = nil
         result.name := name
 
 
@@ -155,7 +182,12 @@ module XL.PARSER.TREE with
     // ========================================================================
 
     type tree_map is map[text, PT.tree]
+    type tree_list is string of tree
+    function XLNormalize (name : text) return text
     function Matches (test : PT.tree;
                       ref : PT.tree;
                       in out arg : tree_map) return integer
+    function LargestMatch (test : PT.tree;
+                           ref_list : tree_list;
+                           in out arg : tree_map) return integer
     verbose : boolean := false

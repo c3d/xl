@@ -28,17 +28,14 @@ import PT = XL.PARSER.TREE
 import BC = XL.BYTECODE
 import SYM = XL.SEMANTICS.SYMBOLS
 
+
 module XL.SEMANTICS with
 
     type symbol_table is SYM.symbol_table
+    context : symbol_table := nil
 
     // Top-level semantics
     function Semantics (input : PT.tree) return BC.bytecode
-    function ProgramSemantics (input : PT.tree;
-                               context : symbol_table) return BC.bytecode
-    function InfixSemantics  (input : PT.infix_tree;
-                              context : symbol_table) return BC.bytecode
-    function PrefixSemantics (input : PT.prefix_tree;
-                              context : symbol_table) return BC.bytecode
-    function BlockSemantics  (input : PT.block_tree;
-                              context : symbol_table) return BC.bytecode
+
+    // Automatically generated for 'semantics' statements
+    procedure SemanticsPluginsInit

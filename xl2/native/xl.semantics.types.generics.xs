@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  xl.semantics.types.xs           (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.semantics.types.generics.xs  (C) 1992-2003 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Type system for XL
+//     Description of generic types
 // 
 // 
 // 
@@ -23,33 +23,30 @@
 // * Date       : $Date$
 // ****************************************************************************
 
+import TY = XL.SEMANTICS.TYPES
+import DCL = XL.SEMANTICS.DECLARATIONS
 import PT = XL.PARSER.TREE
 
 
-module XL.SEMANTICS.TYPES with
+module XL.SEMANTICS.TYPES.GENERICS with
 // ----------------------------------------------------------------------------
-//   Implements data type representation
+//    Representation of generic types
 // ----------------------------------------------------------------------------
 
-    type any_type_data is record with
+    type any_type_data  is TY.any_type_data
+    type any_type       is TY.any_type
+    type declaration    is DCL.declaration
+
+
+    type generic_type_data is any_type_data with
     // ------------------------------------------------------------------------
-    //   All that the compiler knows about a type
+    //    Information in a generic type declaration
     // ------------------------------------------------------------------------
 
-        // Flags set during semantics
-        is_constant             : boolean
-        is_variable             : boolean
-        is_generic              : boolean
-        is_polymorphic          : boolean
-        is_subroutine           : boolean
-        is_reference            : boolean
-        is_instantiation        : boolean
-        is_compiler_generated   : boolean
+        parameters      : string of declaration
+        base_type       : any_type
+        validation      : PT.tree       // if "compiles A < B"
+        when_spec       : PT.tree       // when size(T) < 3
+        for_spec        : PT.tree       // for pointer to T
 
-        // Other information recorded about a type
-        type_uid                : integer // Cache for accelerated comparisons
-        bit_size                : integer
-        source_tree             : PT.tree
-        name                    : PT.tree // Not always there, may be nil
-
-    type any_type is access to any_type_data
+    type generic_type is access to generic_type_data
