@@ -58,6 +58,10 @@ module XL.SEMANTICS.PRAGMAS is
         SYM.SetText XLT.context, "PHASE", phase
         SYM.SetProperty XLT.context, "PRAGMA", pragma
         name : text := PragmaName(pragma)
+        name := PT.XLNormalize(name)
+        if SYM.GetInteger(XLT.context, name + ".pragma", 0, true) <> 1 then
+            ERR.Error "The pragma {$1} is not implemented",
+                PT.NewName(name, pragma.position)
         return SYM.LookupRewrite(XLT.context, name, input)
    
 
@@ -82,6 +86,12 @@ module XL.SEMANTICS.PRAGMAS is
                 result := XLT.XLDeclarations(result)
             else
                 result := XLT.XLDeclarations(Node)
+        when
+            { 'Pragma' }
+        then
+            result := ProcessPragma("xldeclarations", Pragma, nil)
+            if result <> input then
+                result := XLT.XLDeclarations(result)
 
 
     translation XLSemantics
@@ -105,6 +115,12 @@ module XL.SEMANTICS.PRAGMAS is
                 result := XLT.XLSemantics(result)
             else
                 result := XLT.XLSemantics(Node)
+        when
+            { 'Pragma' }
+        then
+            result := ProcessPragma("xlsemantics", Pragma, nil)
+            if result <> input then
+                result := XLT.XLSemantics(result)
 
 
     translation XLOptimizations
@@ -128,5 +144,9 @@ module XL.SEMANTICS.PRAGMAS is
                 result := XLT.XLOptimizations(result)
             else
                 result := XLT.XLOptimizations(Node)
-
-
+        when
+            { 'Pragma' }
+        then
+            result := ProcessPragma("xloptimizations", Pragma, nil)
+            if result <> input then
+                result := XLT.XLOptimizations(result)

@@ -1568,6 +1568,7 @@ module XL.CODE_GENERATOR is
     // ------------------------------------------------------------------------
         args : args_map
         NmT : text := PT.XLNormalize(Name.value)
+        first : boolean := false
         loop_index += 1
 
         // Local declaration for recursion
@@ -1579,6 +1580,7 @@ module XL.CODE_GENERATOR is
             IO.WriteLn "      """, NmT, ""","
             IO.WriteLn "      input);"
             IO.WriteLn "}"
+            first := true
 
         // Record that we had a translation for that name
         translations [NmT] := 1
@@ -1606,6 +1608,11 @@ module XL.CODE_GENERATOR is
         IO.WriteLn "  xl::translator::context,"
         IO.WriteLn "  ", '"', NmT, '"', ","
         IO.WriteLn "  rew);"
+        if first then
+            IO.WriteLn "xl::symbols::setinteger("
+            IO.WriteLn "  xl::translator::context,"
+            IO.WriteLn "  ", '"', NmT, ".pragma", '"', ","
+            IO.WriteLn "  1);"
         IO.WriteLn "}"
 
         semantics_translations_init+=IO.close_string_stream(new_stdout)
