@@ -25,6 +25,7 @@
 
 #include <map>
 #include <iostream>
+#include <unistd.h>
 #include "scanner.h"
 #include "parser.h"
 #include "tree.h"
