@@ -25,15 +25,163 @@
 
 import XLT = XL.TRANSLATOR
 import ERR = XL.ERRORS
+import FN = XL.SEMANTICS.FUNCTIONS
+import PT = XL.PARSER.TREE
+import DCL = XL.SEMANTICS.DECLARATIONS
+import ERR = XL.ERRORS
+import TY = XL.SEMANTICS.TYPES
+import CGM = XL.CODE_GENERATOR.MACHINE
+
 
 module XL.SEMANTICS.WRITTEN_FORMS is
+// ----------------------------------------------------------------------------
+//   Module dealing with the implementation of 'written' in declarations
+// ----------------------------------------------------------------------------
+
+    function CreateWildcards(form : PT.tree;
+                             in out parms : written_args_map) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Replace param names with identically-named wildcards
+    // ------------------------------------------------------------------------
+
+        if form.kind = PT.xlNAME then
+            name : form as PT.name_tree
+            if count(parms, name.value) > 0 then
+                return PT.NewWildcard(name.value, name.position)
+            return name
+
+        else if (form.kind = PT.xlINTEGER or
+                 form.kind = PT.xlREAL or
+                 form.kind = PT.xlTEXT) then
+            return form
+
+        else if form.kind = PT.xlBLOCK then
+            block : form as PT.block_tree
+            return PT.NewBlock(CreateWildcards(block.child, parms),
+                               block.opening, block.closing,
+                               block.position)
+
+        else if form.kind = PT.xlPREFIX then
+            prefix : form as PT.prefix_tree
+            return PT.NewPrefix(CreateWildcards(prefix.left, parms),
+                                CreateWildcards(prefix.right, parms),
+                                prefix.position)
+
+
+        else if form.kind = PT.xlINFIX then
+            infix : form as PT.infix_tree
+            return PT.NewInfix(infix.name,
+                               CreateWildcards(infix.left, parms),
+                               CreateWildcards(infix.right, parms),
+                               infix.position)
+
+        else
+            ERR.Error "Unknown tree type in written form: $1", form
+            return form
+
+
+    function WrittenScoreAdjust(test        : PT.tree;
+                                info        : SYM.rewrite;
+                                in out args : PT.tree_map;
+                                depth       : integer;
+                                base_score  : integer) return integer is
+    // -----------------------------------------------------------------------
+    //   Check the type of parameters to see if written is valid
+    // -----------------------------------------------------------------------
+    //   At this point, we already ran through PT.Matches, so the 'args'
+    //   map already contains the trees for each argument. We simply need
+    //   to check that the types match.
+    //   TODO: Implicit conversions
+
+        written : info as written_form
+        param_name : text
+        for param_name in args loop
+            value : PT.tree := XLT.XLSemantics(args[param_name])
+            args[param_name] := value
+            value_type : TY.any_type := TY.Type(value)
+            decl : DCL.declaration := written.args_map[param_name]
+            decl_type : TY.any_type := decl.type
+            if not TY.SameType(decl_type, value_type) then
+                return 0
+
+        return base_score
+
+
+    function WrittenTranslator (input       : PT.tree;
+                                info        : SYM.rewrite;
+                                in out args : PT.tree_map) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    For a valid written form, return function-call form
+    // ------------------------------------------------------------------------
+    //    We directly return the machine-level function call (CGM)
+
+        written : info as written_form
+        marg    : CGM.machine_arg
+        margs   : CGM.machine_args
+        fninfo  : FN.function := written.function
+        arg     : FN.declaration
+
+        // Order parameters in function call order
+        for arg in fninfo.parameters loop
+            name_tree : PT.name_tree := arg.name
+            name_text : text := name_tree.value
+            value     : PT.tree := args[name_text]
+
+            marg.machine_value := value
+            marg.is_input := true
+            marg.is_output := false
+            margs += marg
+
+        return CGM.FunctionCall (fninfo.machine_name, margs)
+
+
+    function EnterWrittenForm(fniface : PT.tree;
+                              wrform  : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Enter the written form in the symbol table
+    // ------------------------------------------------------------------------
+        // Find which function we are talking about
+        fninfo : FN.function := FN.FunctionInfo(fniface)
+        if fninfo = nil then
+            // If not a function, error message emitted already
+            return fniface
+
+        // Create the written form record
+        written : written_form
+        written.function := nil
+
+        // Discover all the function parameters
+        decl : FN.declaration
+        for decl in fninfo.parameters loop
+            nm : PT.name_tree := decl.name
+            written.args_map[nm.value] := decl
+
+        // Create copy of written form where params are replaced with wildcards
+        wildcards : PT.tree := CreateWildcards(wrform, written.args_map)
+        written.reference_form := wildcards
+        written.score_adjust := WrittenScoreAdjust
+        written.translator := WrittenTranslator
+        written.function := fninfo
+
+        // TODO: Check one-on-one mapping of params and written wildcards
+
+
+        // Enter that copy in the "XLSemantics" map
+        SYM.EnterRewrite XLT.context, "xlsemantics", written
+        
+        return fniface
+
 
     translation XLEnterFunction
+    // ------------------------------------------------------------------------
+    //   Entering a written form in a function declaration
+    // ------------------------------------------------------------------------
 
         // Translate written statements
         when
             'Interface' written 'WrForm'
         then
             result := XLT.XLEnterFunction(Interface)
-            ERR.Error "Written Form '$1': Not implemented yet", WrForm
+            trace [written] "/* Written ", WrForm, "*/"
+            result := EnterWrittenForm(result, WrForm)
 

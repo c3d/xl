@@ -116,7 +116,7 @@ exist (and they will remain alive for a long time), but they will
 never expand to reach the new areas that Java is currently
 exploring. An interesting twist in that case is that C++ is also
 exploring a number of areas that Java cannot touch, for instance
-template meta-programming. And ifnally, you wouldn't be able to
+template meta-programming. And finally, you wouldn't be able to
 develop anything interesting by today's standards using a 1980's
 version of Basic or Pascal, not matter how much energy you put into
 it.

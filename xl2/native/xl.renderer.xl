@@ -539,7 +539,7 @@ module XL.RENDERER is
                 RenderFormat output, W.closing, W.closing, "closing "
         else if what.kind = PT.xlWILDCARD then
             W : what as PT.wildcard_tree
-            RenderFormat output, "?wildcard?", W.name, "error "
+            RenderFormat output, W.name, "?wildcard?", "error "
         else
             RenderFormat output, "?unknown?", "?unknown?", "error "
 

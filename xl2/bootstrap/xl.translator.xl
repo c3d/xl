@@ -81,7 +81,8 @@ module XL.TRANSLATOR is
     in_function         : boolean := false
     current_module      : text := ""
     translations        : map[text, int]
-
+    traces              : map[text, int]
+    trace_count         : integer := 0
 
 
     // ========================================================================
@@ -122,6 +123,17 @@ module XL.TRANSLATOR is
         IO.WriteLn "void XLTerm() {"
         IO.WriteLn terminations
         IO.WriteLn "}"
+
+
+        // Emit traces
+        T : text
+        IO.WriteLn "char XLTrace[", trace_count + 1, "] = { 0 };"
+        IO.WriteLn "void XLTraceInit(int Argc, char **Argv) {"
+        IO.WriteLn "int Arg; for (Arg = 1; Arg < Argc; Arg++) {";
+        IO.WriteLn "::text N = Argv[Arg];"    
+        for T in traces loop
+            IO.WriteLn "if (N == ""-t", T, """) XLTrace[", traces[T], "] = 1; "
+        IO.WriteLn "}}"
 
 
     procedure Compile (input : PT.tree) is
@@ -883,6 +895,20 @@ module XL.TRANSLATOR is
                 IO.write "std::vector < "
                 XL2C A
                 IO.write " > "
+
+            when
+                trace ['A'] 'B'
+            then
+                if A.kind = PT.xlNAME then
+                    N : PT.name_tree := PT.name_tree(A)
+                    tname : text := XLNormalize(N.value)
+                    if count(traces, tname) = 0 then
+                        trace_count += 1
+                        traces[tname] := trace_count
+                    IO.Write "{ if (XLTrace[", traces[tname], "]) {"
+                    IO.Write " xl::textio::writeln(";
+                    XL2C B
+                    IO.WriteLn "); }}"
 
 
             // ----------------------------------------------------------------

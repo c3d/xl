@@ -489,11 +489,19 @@ template <class T> inline T& XLDeref(T * &x)
 extern void XLMain();
 extern void XLInit();
 extern void XLTerm();
+extern void XLTraceInit(int Argc, char **Argv);
+extern char XLTrace[];
+
 int main(int argc, char **argv)
 {
     for (int arg = 0; arg < argc; arg++)
-        xl::ui::console::arguments.push_back(argv[arg]);
+    {
+        if (!(argv[arg][0] == '-' && argv[arg][1] == 't'))
+            xl::ui::console::arguments.push_back(argv[arg]);
+    }
+
 #ifdef XLINIT
+    XLTraceInit(argc, argv);
     XLInit();
 #endif
     XLMain();

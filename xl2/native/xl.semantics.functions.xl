@@ -118,6 +118,11 @@ module XL.SEMANTICS.FUNCTIONS is
         PT.SetInfo SemanticsDecl, "FN", f
         PT.SetInfo Iface, "FN", f
 
+        pos : integer := Name.position
+        MachineDecl.position := pos
+        MachineIface.position := pos
+        SemanticsDecl.position := pos
+
         // Add the interface declaration
         XLT.AddScopeDecl SYM.Enclosing(XLT.context), MachineDecl
 

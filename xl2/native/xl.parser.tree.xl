@@ -85,9 +85,8 @@ module XL.PARSER.TREE is
     //   Check if the test tree matches the reference tree, return score
     // ------------------------------------------------------------------------
 
-        if verbose then
-            IO.WriteLn "/* Matching: ", test, " */"
-            IO.WriteLn "/* With: ", ref, " */"
+        trace [matches] "/* Matching: ", test, " */"
+        trace [matches] "/* With: ", ref, " */"
 
         // Check if the reference is a wildcard like 'A'
         // If so, check if we saw the same name, and then check compatibility
@@ -98,12 +97,11 @@ module XL.PARSER.TREE is
             // Did we see this name already?
             if count(arg, R.name) > 0 then
                 empty_args : tree_map
-                if verbose then
-                    IO.WriteLn "/* Already found ", R.name, ", checking */"
+                trace [matches] "/* Already found ", R.name, ", checking */"
                 result := Matches(test, arg[R.name], empty_args)
                 if result > 0 then
                     return result + 1
-                if verbose then IO.Writeln "/* Failed wildcard */"
+                trace [matches] "/* Failed wildcard */"
                 return 0
 
             // We did not see the name: assign it
@@ -112,7 +110,7 @@ module XL.PARSER.TREE is
 
         // If this is not a wildcard, then it must have the same kind
         if test.kind <> ref.kind then
-            if verbose then IO.Writeln "/* Failed kind */"
+            trace [matches] "/* Failed kind */"
             return 0
 
         // For each kind of atom, check and return 0 or 1
@@ -121,7 +119,7 @@ module XL.PARSER.TREE is
             R : ref as PT.integer_tree
             if T.value = R.value then
                 return 2
-            if verbose then IO.Writeln "/* Failed intval */"
+            trace [matches] "/* Failed intval */"
             return 0
 
         if test.kind = PT.xlREAL then
@@ -129,7 +127,7 @@ module XL.PARSER.TREE is
             R : ref as PT.real_tree
             if T.value = R.value then
                 return 2
-            if verbose then IO.Writeln "/* Failed realval */"
+            trace [matches] "/* Failed realval */"
             return 0
 
         if test.kind = PT.xlTEXT then
@@ -137,7 +135,7 @@ module XL.PARSER.TREE is
             R : ref as PT.text_tree
             if T.value = R.value and T.quote = R.quote then
                 return 2
-            if verbose then IO.Writeln "/* Failed textval */"
+            trace [matches] "/* Failed textval */"
             return 0
 
         if test.kind = PT.xlNAME then
@@ -145,7 +143,7 @@ module XL.PARSER.TREE is
             R : ref as PT.name_tree
             if XLNormalize(T.value) = XLNormalize(R.value) then
                 return 2
-            if verbose then IO.Writeln "/* Failed nameval */"
+            trace [matches] "/* Failed nameval */"
             return 0
 
         // For non-atoms, check recursively
@@ -156,11 +154,10 @@ module XL.PARSER.TREE is
                 result := Matches(T.child, R.child, arg)
                 if result > 0 then
                     return result + 3
-            if verbose then
-                IO.Writeln "/* Failed block */"
-                IO.Writeln "/* o=", T.opening = R.opening,
-                           " c=", T.closing = R.closing, " */"
-                IO.Writeln "/* r=", result, " */"
+            trace [matches] "/* Failed block */"
+            trace [matches] "/* o=", T.opening = R.opening,
+                            " c=", T.closing = R.closing, " */"
+            trace [matches] "/* r=", result, " */"
             return 0
 
         if test.kind = PT.xlPREFIX then
@@ -171,7 +168,7 @@ module XL.PARSER.TREE is
                 r_result : integer := Matches(T.right, R.right, arg)
                 if r_result > 0 then
                     return l_result + r_result + 1
-            if verbose then IO.Writeln "/* Failed prefix */"
+            trace [matches] "/* Failed prefix */"
             return 0
 
         if test.kind = PT.xlINFIX then
@@ -183,11 +180,11 @@ module XL.PARSER.TREE is
                     r_result : integer := Matches(T.right, R.right, arg)
                     if r_result > 0 then
                         return l_result + r_result + 2
-                    else if verbose then
-                        IO.WriteLn "/* Failed left */"
-                else if verbose then
-                    IO.WriteLn "/* Failed left */"
-            if verbose then IO.Writeln "/* Failed infix */"
+                    else
+                        trace [matches] "/* Failed left */"
+                else
+                    trace [matches] "/* Failed left */"
+            trace [matches] "/* Failed infix */"
             return 0
 
 

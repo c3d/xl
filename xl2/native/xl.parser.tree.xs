@@ -190,5 +190,4 @@ module XL.PARSER.TREE with
     function LargestMatch (test : PT.tree;
                            ref_list : tree_list;
                            in out arg : tree_map) return integer
-    verbose : boolean := false
 

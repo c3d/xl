@@ -59,8 +59,7 @@ module XL.SEMANTICS.OVERLOAD is
     //    Resolve the function name from its args
     // ------------------------------------------------------------------------
 
-        if verbose then
-            IO.WriteLn "Overload resolution: name=", NameTree, " args=", Args
+        trace [overload] "Overload resolution: name=", NameTree, " args=", Args
 
         if NameTree.kind <> PT.xlNAME then
             ERR.Error "Internal: Overload resolution, non-name '$1'", NameTree
@@ -78,8 +77,7 @@ module XL.SEMANTICS.OVERLOAD is
         // Perform semantics on all arguments
         for Arg in ArgList loop
             SemArgs += XLT.XLSemantics(Arg)
-            if verbose then
-                IO.WriteLn "Args->", back(SemArgs)
+            trace [overload] "Args->", back(SemArgs)
 
         // Scoring
         best      : PT.tree
@@ -99,24 +97,21 @@ module XL.SEMANTICS.OVERLOAD is
             // Find all candidates at this level
             candidates : SYM.tree_list
             SYM.Lookup table, "FN", Name.value, candidates, SYM.lookupLocalOnly
-            if verbose then
-                IO.WriteLn "In table ", table,
-                           " found ", size(candidates), "candidates"
+            trace [overload] "In table ", table,
+                             " found ", size(candidates), "candidates"
             table := SYM.Enclosing(table)
 
             // Loop on candidates to check compatibility
             C : PT.tree
             for C in candidates loop
 
-                if verbose then
-                     IO.WriteLn "Testing ", C
+                trace [overload] "Testing ", C
 
                 // Retrieve function information, ignore non functions
                 F : PT.FindInfo(C, "FN") as FN.function
                 if F = nil then
                     ERR.Error "Internal: No function info for '$1'", C
-                    if verbose then
-                        IO.WriteLn "FAIL: No function info"
+                    trace [overload] "FAIL: No function info"
                     restart
 
                 // Check number of parameters.
@@ -124,8 +119,7 @@ module XL.SEMANTICS.OVERLOAD is
                 if NA > NP then
                     ERR.Error "'$1' could not be selected because", C
                     ERR.Error "there are too many arguments for '$1'", Name
-                    if verbose then
-                        IO.WriteLn "FAIL: Too many arguments ", NA, ">", NP
+                    trace [overload] "FAIL: Too many arguments ", NA, ">", NP
                     restart
 
                 // Check type of parameters
@@ -136,28 +130,24 @@ module XL.SEMANTICS.OVERLOAD is
                 for D in F.parameters loop
                     if A < NA then
                         Arg := SemArgs[A]
-                        if verbose then
-                            IO.WriteLn "Testing argument ", Arg
+                        trace [overload] "Testing argument ", Arg
                     else
                         Arg := D.initializer
                         if Arg = nil then
                             ERR.Error "'$1' could not be selected because", C
                             ERR.Error "there is no value for '$1'", D.name
                             Matching := false
-                            if verbose then
-                                IO.WriteLn "No default argument "
+                            trace [overload] "No default argument "
                         else
                             SemArgs += Arg
-                            if verbose then
-                                 IO.WriteLn "Testing default argument ", Arg
+                            trace [overload] "Testing default argument ", Arg
                         exit if not Matching
                     AType : TY.any_type := TY.Type(Arg)
                     Matching := TY.SameType(D.type, AType)
                     if not Matching then
-                        if verbose then
-                            IO.WriteLn "FAIL: Type mismatch for ", D.name
-                            IO.WriteLn "      Expected ", D.type_source
-                            IO.WriteLn "      Got ", AType.name
+                        trace [overload] "FAIL: Type mismatch for ", D.name
+                        trace [overload] "      Expected ", D.type_source
+                        trace [overload] "      Got ", AType.name
                         ERR.Error "'$1' could not be selected because", C
                         if AType.name <> nil then
                           ERR.Error "the type '$3' of '$1' doesn't match '$2'",
@@ -171,27 +161,23 @@ module XL.SEMANTICS.OVERLOAD is
                 // If not matching, lookup next
                 if not Matching then
                     restart
-                if verbose then
-                    IO.WriteLn "PASS: The candidate matches"
+                trace [overload] "PASS: The candidate matches"
 
                 // Compare scores and results
                 if best = nil then
-                    if verbose then
-                        IO.WriteLn "BEST: Best score ", Score
+                    trace [overload] "BEST: Best score ", Score
                     best := C
                     bestScore := Score
                     bestF := F
                 else if Score < bestScore then
-                    if verbose then
-                        IO.WriteLn "BEST: New best score ", Score
+                    trace [overload] "BEST: New best score ", Score
                     best := C
                     bestScore := Score
                     bestF := F
                 else if Score = bestScore then
                     ambig := C
-                    if verbose then
-                        IO.WriteLn "AMBIGUOUS: Score ", Score
-                        IO.WriteLn "           Other: ", best
+                    trace [overload] "AMBIGUOUS: Score ", Score
+                    trace [overload] "           Other: ", best
 
         // Report results
         candidate_errors : text := ERR.PopErrorContext()
@@ -209,9 +195,8 @@ module XL.SEMANTICS.OVERLOAD is
                 marg.is_input := true
                 marg.is_output := false
                 margs += marg
-            if verbose then
-                IO.WriteLn "FOUND: Calling ", PT.tree(bestF.name),
-                           "=", PT.tree(bestF.machine_name)
+            trace [overload] "FOUND: Calling ", PT.tree(bestF.name),
+                             "=", PT.tree(bestF.machine_name)
             return CGM.FunctionCall (bestF.machine_name, margs)
 
         else

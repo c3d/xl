@@ -25,6 +25,8 @@
 
 import PT = XL.PARSER.TREE
 import DCL = XL.SEMANTICS.DECLARATIONS
+import SYM = XL.SYMBOLS
+import FN = XL.SEMANTICS.FUNCTIONS
 
 
 module XL.SEMANTICS.WRITTEN_FORMS with
@@ -32,11 +34,14 @@ module XL.SEMANTICS.WRITTEN_FORMS with
 //    Dealing with written forms
 // ----------------------------------------------------------------------------
 
-    type written_form_data
+    type written_args_map is map[text, FN.declaration]
+
+
+    type written_form_data is SYM.rewrite_data with
+    // ------------------------------------------------------------------------
+    //    Extra information stored about a written form
+    // ------------------------------------------------------------------------
+        function                : FN.function
+        args_map                : written_args_map
+
     type written_form is access to written_form_data
-    type written_form_data is record with
-    // ------------------------------------------------------------------------
-    //    Information stored about a written form
-    // ------------------------------------------------------------------------
-        form                    : PT.tree
-        declaration             : DCL.declaration

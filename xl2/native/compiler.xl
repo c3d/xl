@@ -92,14 +92,7 @@ procedure Main is
 
         else if name = "-g" then
             CG.debug := true
-        else if name = "-tmatch" then
-            XLT.verbose := true
-            CG.verbose := true
-            PT.verbose := true
-        else if name = "-tlookup" then
-            SYM.verbose := true
-        else if name = "-toverload" then
-            XL.SEMANTICS.OVERLOAD.verbose := true
+
         else
             P := PR.Open(name)
             theProgram := PR.Parse(P)

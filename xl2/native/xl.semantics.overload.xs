@@ -34,4 +34,3 @@ module XL.SEMANTICS.OVERLOAD with
     function Resolve(NameTree : PT.tree; Args : PT.tree) return BC.bytecode
     function IsFunction(T : PT.tree) return boolean
 
-    verbose : boolean := false

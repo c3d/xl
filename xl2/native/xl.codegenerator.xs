@@ -33,4 +33,3 @@ module XL.CODE_GENERATOR with
     initializations             : text
     terminations                : text
     debug                       : boolean := false
-    verbose                     : boolean := false

@@ -36,8 +36,6 @@ module XL.TRANSLATOR with
     procedure Compile(input : PT.tree; output : text)
     procedure Compile(input : PT.tree; output : IO.output_file)
 
-    verbose           : boolean := false
-
     context           : SYM.symbol_table := nil
     global_context    : SYM.symbol_table := nil
     main_context      : SYM.symbol_table := nil
@@ -77,3 +75,4 @@ module XL.TRANSLATOR with
     function XLOptimizations(input: PT.tree) return BC.bytecode// Generated
 
     function XLEnterFunction(input: PT.tree) return PT.tree    // Generated
+    function XLExpression(input : PT.tree) return PT.tree      // Generated

@@ -50,3 +50,5 @@ module XL.SEMANTICS.FUNCTIONS with
         return_type      : any_type
 
     type function is access to function_data
+
+    function FunctionInfo (input : PT.tree) return function
