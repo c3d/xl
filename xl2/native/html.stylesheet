@@ -1,0 +1,53 @@
+// ****************************************************************************
+//  html.stylesheet                 (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Style sheet for rendering colorized XL as HTML
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+// Character remapping
+space           = "&nbsp;"
+cr              = ``<BR>
+
+``
+'<'             = "&lt;"
+'>'             = "&gt;"
+'&'             = "&amper;"
+
+
+// Colorization of numbers
+"0"             = "<FONT color=""#800000"">" self "</FONT>"
+"0.0"           = "<FONT color=""#008000"">" self "</FONT>"
+
+// Basic keywords
+keyword         = "<FONT color=""#000080""><B>" self "</B></FONT>"
+
+"if"            = keyword
+"then"          = keyword
+"else"          = keyword
+"loop"          = keyword
+"while"         = keyword
+"for"           = keyword
+"exit"          = keyword
+"function"      = keyword
+"procedure"     = keyword
+"to"            = keyword
+

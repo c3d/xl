@@ -387,9 +387,11 @@ module XL.PARSER is
 
                         // Check priorities compared to stack
                         // A+B*C we got '*', keep 'A+..." on stack
+                        // Odd priorities are made right-associative by
+                        // clearing the low-bit in the test below
                         if not done then
-                            exit if prev.priority <> default_priority and infix_priority > prev.priority
-                            exit if prev.priority < statement_priority and infix_priority = prev.priority
+                            exit if prev.priority <> default_priority and infix_priority > (prev.priority & (bitwise_not 1))
+                            //exit if prev.priority < statement_priority and infix_priority = prev.priority
                         if prev.opcode = prefix then
                             left := PT.NewPrefix(prev.argument, left)
                         else
@@ -421,8 +423,8 @@ module XL.PARSER is
                 while size(stack) loop
                     prev : pending := back(stack)
                     if not done then
-                        exit if prev.priority <> default_priority and result_priority > prev.priority
-                        exit if prev.priority < statement_priority and result_priority = prev.priority
+                        exit if prev.priority <> default_priority and result_priority > (prev.priority & (bitwise_not 1))
+                        //exit if prev.priority < statement_priority and result_priority = prev.priority
                         exit if right_assoc and prev.opcode = prefix and result_priority = prev.priority
                     if prev.opcode = prefix then
                         result := PT.NewPrefix(prev.argument, result)

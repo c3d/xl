@@ -31,6 +31,7 @@ import IO = XL.TEXT_IO
 import XLT = XL.TRANSLATOR
 import CG = XL.CODE_GENERATOR
 import SYM = XL.SYMBOLS
+import RD = XL.RENDERER
 import ASCII = XL.TEXT_IO.ENCODING.ASCII
 
 // Things that we import just so that they get compiled
@@ -56,16 +57,21 @@ procedure Main is
     theProgram : PT.tree := nil
     compile    : boolean := false // TEMP
 
+    RD.DefaultRenderer := RD.Open("xl.stylesheet")
+
     for I in 1..Max-1 loop
         name : text := CS.arguments[i]
         if name = "-show" then
             IO.WriteLn theProgram
-        else if name = "-debug" then
-            IO.WriteLn IO.show_debug, theProgram, IO.hide_debug
         else if name[0] = '+' then
             plugin : text := name[1..length(name)-1]
             compile := false
             theProgram := SYM.LookupRewrite(XLT.context, plugin, theProgram)
+        else if name = "-style" then
+            if I + 1 <= Max - 1 then
+               I += 1
+               RD.Close RD.DefaultRenderer
+               RD.DefaultRenderer := RD.Open(CS.arguments[I] + ".stylesheet")
         else if name = "-parse" then
             compile := false
         else if name = "-sem" then

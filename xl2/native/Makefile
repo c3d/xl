@@ -57,6 +57,8 @@ OTHER_SOURCES=					\
 	xl.semantics.writtenforms.xs		\
 	xl.codegenerator.xs			\
 	xl.codegenerator.xl			\
+	xl.renderer.xs				\
+	xl.renderer.xl				\
 	xl.codegenerator.machine.xs		\
 	xl.codegenerator.machine.xl		\
 	xl.bytecode.xs				\

@@ -192,25 +192,3 @@ module XL.PARSER.TREE with
                            in out arg : tree_map) return integer
     verbose : boolean := false
 
-module XL.TEXT_IO with
-// ----------------------------------------------------------------------------
-//    I/O customization
-// ----------------------------------------------------------------------------
-    // Pseudo-type to control debug mode
-    type debug_pseudo
-    type debug_control is access to debug_pseudo
-    show_debug : debug_control := debug_controL(true)
-    hide_debug : debug_control := debug_control(false)
-
-    // Pseudo type to control indentation
-    type indent_pseudo
-    type indent_control is access to indent_pseudo
-    indent : indent_control := indent_control(3)
-    unindent : indent_control := indent_control(-3)
-    newline : indent_control := indent_control(0)
-
-    procedure write(direction : indent_control)
-    procedure write(do_debug : debug_control)
-    procedure write(what : PT.tree)
-
-procedure Debug (tree : PT.tree)

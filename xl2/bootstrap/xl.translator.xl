@@ -42,7 +42,6 @@ module XL.TRANSLATOR is
         value : text
     type enum_list is string of enum_info
 
-    procedure XL2C_Directive (input : PT.tree)
     procedure XL2C_Arg (input : PT.tree)
     procedure XL2C_Args (input : PT.tree)
     procedure XL2C_Stmt (input : PT.tree)
@@ -360,19 +359,6 @@ module XL.TRANSLATOR is
                 XL2C_Arg A
 
 
-    procedure XL2C_Directive (input : PT.tree) is
-    // ------------------------------------------------------------------------
-    //    Translate the compiler directive
-    // ------------------------------------------------------------------------
-
-        translate input
-            when
-                dumptree ( 'A' )
-            then
-                IO.Writeln IO.show_debug, "/* tree dumped: ( ", A, " ) */"
-
-
-
     procedure XL2C(input : PT.tree) is
     // ------------------------------------------------------------------------
     //    The main XL to C translator
@@ -415,11 +401,6 @@ module XL.TRANSLATOR is
             // ----------------------------------------------------------------
             //    Sequences
             // ----------------------------------------------------------------
-
-            when
-                {compiler} 'A'
-            then
-                XL2C_Directive A
 
             when
                 'A'

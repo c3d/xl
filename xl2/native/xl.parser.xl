@@ -287,18 +287,9 @@ module XL.PARSER is
                     // infix and prefix
                     infix_priority := GetInfixPriority (P, name)
                     if infix_priority <> default_priority then
-                        // We got an infix or a postfix, compare priorities
-                        postfix_priority := GetPostfixPriority (P, name)
-                        if (postfix_priority <> default_priority and
-                            postfix_priority >= infix_priority) then
-                            // We have a postfix operator
-                            right := PT.NewName(spelling, pos)
-                            right := PT.NewPrefix(result, right, pos)
-                            prefix_priority := postfix_priority
-                            result := nil
-                        else
-                            left := result
-                            infix := spelling
+                        // We got an infix
+                        left := result
+                        infix := spelling
                     else
                         postfix_priority := GetPostfixPriority (P, name)
                         if postfix_priority <> default_priority then
@@ -433,11 +424,14 @@ module XL.PARSER is
 
                         // Check priorities compared to stack
                         // A+B*C we got '*', keep 'A+..." on stack
+                        // Make odd priorities right associative by
+                        // clearing low-bit in previous priority
                         if not done then
                             exit if (prev.priority <> default_priority and
-                                     infix_priority > prev.priority)
-                            exit if (prev.priority < statement_priority and
-                                     infix_priority = prev.priority)
+                                     infix_priority >
+                                     (prev.priority & (bitwise_not 1)))
+                            // exit if (prev.priority < statement_priority and
+                            //         infix_priority = prev.priority)
                         if prev.opcode = prefix then
                             left := PT.NewPrefix(prev.argument, left,
                                                  prev.position)
@@ -471,14 +465,17 @@ module XL.PARSER is
             else if right <> nil then
 
                 // Check priorities for "A.B x,y" -> "(A.B) (x,y)"
+                // Make odd priorities right associative by
+                // clearing low-bit in previous priority
                 right_assoc : boolean := right.kind <> PT.xlBLOCK
                 while size(stack) loop
                     prev : pending := back(stack)
                     if not done then
                         exit if (prev.priority <> default_priority and
-                                 result_priority > prev.priority)
-                        exit if (prev.priority < statement_priority and
-                                 result_priority = prev.priority)
+                                 result_priority >
+                                 (prev.priority & (bitwise_not 1)))
+                        // exit if (prev.priority < statement_priority and
+                        //         result_priority = prev.priority)
                         exit if (right_assoc and
                                  prev.opcode = prefix and
                                  result_priority = prev.priority)

@@ -381,9 +381,11 @@ XLTree *XLParser::Parse(text closing_paren)
 
                     // Check priorities compared to stack
                     // A + B * C, we got '*': keep "A+..." on stack
+                    // Odd priorities are made right-associative by
+                    // turning the low-bit off in the comparison below
                     if (!done &&
                         prev.priority != default_priority &&
-                        infix_priority>prev.priority)
+                        infix_priority>(prev.priority & ~1))
                         break;
                     if (prev.opcode == prefix)
                         left = new XLPrefix(prev.argument, left);
@@ -410,12 +412,14 @@ XLTree *XLParser::Parse(text closing_paren)
         else if (right)
         {
             // Check priorities for something like "A.B x,y" -> "(A.B) (x,y)"
+            // Odd priorities are made right associative by turning the
+            // low bit off for the previous priority
             while (stack.size())
             {
                 Pending &prev = stack.back();
                 if (!done &&
                     prev.priority != default_priority &&
-                    result_priority>prev.priority)
+                    result_priority>(prev.priority & ~1))
                     break;
                 if (prev.opcode == prefix)
                     result = new XLPrefix(prev.argument, result);
