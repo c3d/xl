@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  compiler.xl                     (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  compiler.xl                     (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     The main body of the XL compiler
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This program is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -55,6 +55,8 @@ import XL.PLUGIN.LISTING
 import XL.PLUGIN.JUNK
 import XL.PLUGIN.TRANSFORMS
 import XL.PLUGIN.INCLUDE
+import XL.PLUGIN.DEFINE
+import XL.PLUGIN.IFDEFINED
 
 
 procedure Main is
