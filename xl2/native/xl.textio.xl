@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  xl.translator.xs                (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.text_io.xs                   (C) 1992-2003 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     The basic XL translator
+//    The bootstrap text I/O facility
 // 
 // 
 // 
@@ -23,10 +23,10 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-import PT = XL.PARSER.TREE
+module STD // The C++ std namespace
 
-module XL.TRANSLATOR with
+import XL.UI.CONSOLE
 
-    procedure Compile(input : PT.tree)
+module XL.TEXT_IO is
 
-    verbose : boolean := false
+    function nothing(x : integer) return integer

@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  xl.translator.xs                (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.optimizer.xs                 (C) 1992-2003 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     The basic XL translator
+//     An optimizer that works on XL bytecode
 // 
 // 
 // 
@@ -15,7 +15,7 @@
 // 
 // 
 // ****************************************************************************
-// This program is released under the GNU General Public License.
+// This document is released under the GNU Genral Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
@@ -23,10 +23,9 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-import PT = XL.PARSER.TREE
+import BC = XL.BYTECODE
 
-module XL.TRANSLATOR with
+module XL.OPTIMIZER with
 
-    procedure Compile(input : PT.tree)
-
-    verbose : boolean := false
+    // Perform various optimizations
+    function Optimize(input : BC.bytecode) return BC.bytecode

@@ -24,9 +24,12 @@
 // ****************************************************************************
 
 import PT = XL.PARSER.TREE
+import IO = XL.TEXT_IO
 
 module XL.TRANSLATOR with
 
     procedure Compile(input : PT.tree)
+    procedure Compile(input : PT.tree; output : text)
+    procedure Compile(input : PT.tree; output : IO.output_file)
 
     verbose : boolean := false

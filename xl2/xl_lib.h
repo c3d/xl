@@ -105,9 +105,15 @@ namespace xl
         typedef std::iostream *file;
         typedef std::ostream *outputfile;
         typedef std::istream *inputfile;
+        typedef std::ios_base::openmode openmode;
+        const openmode readmode = std::ios_base::in;
+        const openmode writemode = std::ios_base::out;
 
-        inline file open(text name)
-        { return new std::fstream(name.c_str(), std::ios_base::in); }
+        std::ostream *standardoutput = &std::cout;
+        std::istream *standardinput = &std::cin;
+
+        inline file open(text name, openmode mode = readmode)
+        { return new std::fstream(name.c_str(), mode); }
         inline void close(file f) { delete f; }
         inline void putback(file f, char c) { f->putback(c); }
         inline bool valid(file f) { return f->good(); }
@@ -117,8 +123,7 @@ namespace xl
         // exactly to the extent the bootstrap compiler needs it...
         template <class A>
         inline void write(const A& a)
-        { std::cout << a; }
-
+        { (*standardoutput) << a; }
         template <class A, class B>
         inline void write(const A& a, const B& b)
         { write(a); write(b); }

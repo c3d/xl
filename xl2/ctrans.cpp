@@ -1049,8 +1049,8 @@ void TranslateClauses(XLTree *clauses, XLTree *to_translate)
                         << " =\n";
                     TranslateForm(form->child, args);
                     out << ";\n";
-                    out << "xl::translator::treemap args" << idx << ";\n";
-                    out << "if (xl::translator::matches(";
+                    out << "xl::parser::tree::treemap args" << idx << ";\n";
+                    out << "if (xl::parser::tree::matches(";
                     XL2C(to_translate);
                     out << ", ref" << idx << ", args" << idx << ")) {\n";
 

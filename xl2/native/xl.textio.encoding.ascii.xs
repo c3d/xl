@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  xl.translator.xs                (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.text.encoding.ascii.xs       (C) 1992-2003 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     The basic XL translator
+//      Basic module describing the ASCII encoding
 // 
 // 
 // 
@@ -23,10 +23,11 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-import PT = XL.PARSER.TREE
+module XL.TEXT_IO.ENCODING.ASCII with
 
-module XL.TRANSLATOR with
-
-    procedure Compile(input : PT.tree)
-
-    verbose : boolean := false
+    function to_lower(C : character) return character
+    function is_space(C : character) return boolean
+    function is_line_break(C : character) return boolean
+    function is_digit(C : character) return boolean
+    function is_letter(C : character) return boolean
+    function is_nul(C : character) return boolean

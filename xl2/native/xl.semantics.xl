@@ -1,0 +1,61 @@
+// ****************************************************************************
+//  xl.semantics.xl                 (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//      This is the semantics phase of the XL compiler
+//      It takes an XL tree as input, and returns an XL tree as output
+//      after checking that the semantics are correct.
+// 
+//      The phase also performs what other compilers might call "expansion",
+//      that is the generation of lower-level trees from high-level
+//      constructs. The low-level constructs are found in XL.BYTECODE
+//      and can be used to directly generate code.
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU Genral Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+
+module XL.SEMANTICS is
+// ----------------------------------------------------------------------------
+//    Implementation of XL semantics
+// ----------------------------------------------------------------------------
+
+
+    type name_map is map [text, PT.tree]
+
+
+    type symbol_table_data is record with
+    // ------------------------------------------------------------------------
+    //    Data stored in a symbol table
+    // ------------------------------------------------------------------------
+        objects   : name_map
+
+
+    function Semantics (input : PT.tree; context : symbol_table) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Right now, the semantics is somewhat limited ;-)
+    // ------------------------------------------------------------------------
+        return input
+
+
+    function Semantics (input : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Top-level semantics
+    // ------------------------------------------------------------------------
+        top_level_context : symbol_table
+        return Semantics (input, top_level_context)
+
+
+
+    

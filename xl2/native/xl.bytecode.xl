@@ -1,0 +1,79 @@
+// ****************************************************************************
+//  xl.bytecode.xl                  (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     This file defines the XL "bytecode", a particular form of XL tree
+//     where only low-level trees exist. The bytecode is designed to be
+//     directly transcodable to a low-level language like C or assembly
+// 
+//     Bytecode entries are defined by the "opcode" statement
+//
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU Genral Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+
+module XL.BYTECODE is
+
+    // Add an instruction to a bytecode sequence
+    procedure Instruction (in out instructions : bytecode; opcode : text; dst : text ; src1 : text ; src2 : text ) is
+    // ------------------------------------------------------------------------
+    //   Generate a bytecode instruction with 3 arguments
+    // ------------------------------------------------------------------------
+    //   By convention, we reserve the "@" prefix for bytecode instructions
+        ins : bytecode
+        opcode_tree : PT.tree := PT.NewName(opcode)
+        if dst = "" then
+           ins := quote(@ 'opcode_tree')
+        else
+           dst_tree : bytecode := PT.NewName(dst)
+           if src1 = "" then
+               ins := quote(@ 'opcode_tree', 'dst_tree')
+           else
+               src1_tree : bytecode := PT.NewName(src1)
+               if src2 = "" then
+                   ins := quote(@ 'opcode_tree', 'dst_tree', 'src1_tree')
+               else
+                   src2_tree : bytecode := PT.NewName(src2)
+                   ins := quote(@ 'opcode_tree', 'dst_tree', 'src1_tree', 'src2_tree')
+
+        instructions := quote
+            'instructions'
+            'ins'
+
+
+    function OpenProcedure (in out parent : bytecode; name : text) return bytecode is
+    // ------------------------------------------------------------------------
+    //    Create the bytecode for a particular instruction
+    // ------------------------------------------------------------------------
+        name_tree : bytecode := PT.NewName(name)
+        result := quote (@ proc, 'name_tree')
+
+
+    procedure CloseProcedure (in out parent : bytecode; proc : bytecode) is
+    // ------------------------------------------------------------------------
+    //   Close the bytecode for a particular procedure
+    // ------------------------------------------------------------------------
+        // Append 'end' marker to procedure
+        ins : bytecode := quote (@ end)
+        proc := quote
+            'proc'
+            'ins'
+
+        // Insert procedure in parent
+        parent := quote
+            'parent'
+            'proc'

@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  xl.translator.xs                (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.errors.xs                    (C) 1992-2003 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     The basic XL translator
+//     Errors for the XL compiler
 // 
 // 
 // 
@@ -23,10 +23,16 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-import PT = XL.PARSER.TREE
+module XL.ERRORS with
 
-module XL.TRANSLATOR with
+    type error is enumeration
+        E_FileNotFound,
+        E_ScanMixedIndent,
+        E_ScanInconsistent,
+        E_ScanDoubleUnder,
+        E_ScanInvalidBase,
+        E_ScanStringEOL,
+        E_ParseMismatchParen,
+        E_ParseTrailingOp
 
-    procedure Compile(input : PT.tree)
-
-    verbose : boolean := false
+    procedure Report(E : error; file : text; line : integer)

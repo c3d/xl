@@ -37,10 +37,13 @@ PRODUCT=xl
 
 include $(BROOT)Makefile.config
 
-postbuild: bootstrap_compiler
+postbuild: bootstrap_compiler native_compiler
 
 bootstrap_compiler:
 	cd $(BROOT)bootstrap && make test
+
+native_compiler:
+	cd $(BROOT)native && make test
 
 errors.tbl: errors.txt
 	@echo Generating errors messages table

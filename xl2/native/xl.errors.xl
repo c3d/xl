@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  xl.translator.xs                (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.errors.xl                    (C) 1992-2003 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     The basic XL translator
+//     Errors for the XL compiler
 // 
 // 
 // 
@@ -23,10 +23,9 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-import PT = XL.PARSER.TREE
+import IO = XL.TEXT_IO
 
-module XL.TRANSLATOR with
+module XL.ERRORS is
 
-    procedure Compile(input : PT.tree)
-
-    verbose : boolean := false
+    procedure Report(E : error; file : text; line : integer) is
+        IO.WriteLn "", file, ":", line, ": Error ", integer(E)

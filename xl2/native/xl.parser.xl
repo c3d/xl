@@ -1,0 +1,482 @@
+// ****************************************************************************
+//  xl.parser.xl                    (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     The basic XL0 parser
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This program is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import SC = XL.SCANNER
+import ASCII = XL.TEXT_IO.ENCODING.ASCII
+import ERR = XL.ERRORS
+
+module XL.PARSER is
+
+    function NewParser(name : text) return parser is
+    // ------------------------------------------------------------------------
+    //   Create a new parser
+    // ------------------------------------------------------------------------
+        result.scanner := SC.NewScanner(name)
+        ReadSyntaxFile result, "xl.syntax"
+
+
+    type pending is record with
+    // ------------------------------------------------------------------------
+    //    Pending expression while parsing
+    // ------------------------------------------------------------------------
+        opcode             : text
+        argument           : PT.tree
+        priority           : integer
+
+
+    function Parse(P : parser) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   The top-level parsing function
+    // ------------------------------------------------------------------------
+        return Parse(P, character 0)
+
+
+    function NextToken(P : parser) return SC.token is
+    // ------------------------------------------------------------------------
+    //   Convenience function
+    // ------------------------------------------------------------------------
+        return SC.NextToken(P.scanner)
+
+
+    function IsComment(P: parser; sym: text; out eoc: text) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if a symbol represents a comment, if so return end of comment
+    // ------------------------------------------------------------------------
+        if count (P.comments, sym) > 0 then
+            eoc := P.comments[sym]
+            return true
+        return false
+
+
+    function GetPrefixPriority(P: parser; sym : text) return integer is
+    // ------------------------------------------------------------------------
+    //   Return the prefix priority or parser's default priority
+    // ------------------------------------------------------------------------
+        if count(P.prefix_priority, sym) > 0 then
+            return P.prefix_priority[sym]
+        return P.default_priority
+
+
+    function GetInfixPriority(P: parser; sym : text) return integer is
+    // ------------------------------------------------------------------------
+    //   Return the infix priority or parser's default priority
+    // ------------------------------------------------------------------------
+        if count(P.infix_priority, sym) > 0 then
+            return P.infix_priority[sym]
+        return P.default_priority
+
+
+    function Parse(P : parser; closing_paren : character) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   The actual parsing function
+    // ------------------------------------------------------------------------
+    // XL parsing is not very difficult, but a bit unusual, because it is based
+    // solely on dynamic information and not, for instance, on keywords.
+    // Consider the following cases, where p is "prefix-op" and i is "infix-op"
+    //     Write A
+    //  Parses as p(Write,A).
+    //     A and B
+    //  Parses as i(and,A,B) if 'and' has a priority,
+    //         as p(A,p(and,B)) otherwise
+    //  Write -A,B
+    //  This parses as (Write-A),B since "-" has a priority.
+    //  I wish I could fix that one...
+    //  The correct XL syntax is: Write (-A),B
+    // We hope that semantic will catch such a case later and let us know...
+
+        comment_end             : text
+        left                    : PT.tree
+        right                   : PT.tree
+        infix                   : text
+        name                    : text
+        spelling                : text
+        prefix                  : text          := ""
+        tok                     : SC.token
+        done                    : boolean       := false
+        opening                 : character
+        closing                 : character
+        default_priority        : integer       := P.default_priority
+        function_priority       : integer       := P.function_priority
+        statement_priority      : integer       := P.statement_priority
+        result_priority         : integer       := default_priority
+        prefix_priority         : integer
+        infix_priority          : integer
+        paren_priority          : integer
+        stack                   : string of pending
+        new_statement           : boolean       := true
+        pending_token           : SC.token      := SC.tokNONE
+        S                       : SC.scanner    := P.scanner
+
+        while not done loop
+            // If no token pending, scan one
+            if pending_token = SC.tokNONE then
+                right := nil
+                prefix_priority := default_priority
+                infix_priority := default_priority
+                tok := NextToken(P)
+            else if pending_token = SC.tokNEWLINE then
+                // We have a pending new-line:
+
+                // Skip actual token if it is also a new-line
+                tok := NextToken(P)
+                if tok = SC.tokNEWLINE then
+                    restart
+
+                // Check names and symbols, skip comments
+                else if tok = SC.tokSYMBOL or tok = SC.tokNAME then
+                    name := S.token
+                    if IsComment(P, name, comment_end) then
+                        // Got a comment with a pending new-line, skip it
+                        SC.Comment S, comment_end
+                        if comment_end = ASCII.CR then
+                            restart
+
+                    // Check if we got something like 'else'
+                    if GetInfixPriority(P, name) >= statement_priority then
+                        // Otherwise, delay current token and process
+                        // the 'fake' new-line
+                        pending_token := tok
+                        tok := SC.tokNEWLINE
+                    right := nil
+                    prefix_priority := default_priority
+                    infix_priority := default_priority
+
+                // Something that is itself a new-line parses directly
+                else if tok = SC.tokINDENT or tok = SC.tokEOF then
+                    pending_token := SC.tokNONE
+                    right := nil
+                    prefix_priority := default_priority
+                    infix_priority := default_priority
+
+                // Something else is delayed until after we deal with new-line
+                else
+                    pending_token := tok
+                    tok := SC.tokNEWLINE
+                    right := nil
+                    prefix_priority := default_priority
+                    infix_priority := default_priority
+
+            // Other pending tokens just fall through
+            else
+                tok := pending_token
+                pending_token := SC.tokNONE
+
+            if tok = SC.tokEOF or tok = SC.tokERROR then
+                done := true
+            else if tok = SC.tokINTEGER then
+                right := PT.NewInteger(S.integer_value)
+            else if tok = SC.tokREAL then
+                right := PT.NewReal(S.real_value)
+            else if tok = SC.tokSTRING then
+                right := PT.NewText(S.string_value, '"')
+            else if tok = SC.tokQUOTE then
+                right := PT.NewText(S.string_value, '''')
+            else if tok = SC.tokNAME or tok = SC.tokSYMBOL then
+                name := S.token
+                spelling := S.string_value
+                if IsComment(P, name, comment_end) then
+                    SC.Comment S, comment_end
+                    if comment_end = ASCII.CR then
+                        pending_token := SC.tokNEWLINE
+                    restart
+
+                else if not result then
+                    // If this is the very first thing we see
+                    prefix_priority := GetPrefixPriority(P, name)
+                    right := PT.NewName(spelling)
+                    if prefix_priority = default_priority then
+                        prefix_priority := function_priority
+                else if left <> nil then
+                    // This is the right of an infix operator
+                    // If we have "A and not B", where "not" has
+                    // higher priority than "and", we want to
+                    // parse tis as "A and (not B)" rather than as
+                    // "(A and not) B"
+                    prefix_priority := GetPrefixPriority (P, name)
+                    right := PT.NewName(spelling)
+                    if prefix_priority = default_priority then
+                        prefix_priority := function_priority
+                else
+                    // Complicated case: need to discriminate
+                    // infix and prefix
+                    infix_priority := GetInfixPriority (P, name)
+                    if infix_priority <> default_priority then
+                        // We got an infix
+                        left := result
+                        infix := spelling
+                    else
+                        // No priority : take this as a prefix by default
+                        prefix_priority := GetPrefixPriority(P, name)
+                        right := PT.NewName(spelling)
+                        if prefix_priority = default_priority then
+                            prefix_priority := function_priority
+
+            else if tok = SC.tokNEWLINE then
+                if pending_token = SC.tokNONE then
+                    tok := SC.NextToken S
+                    if tok = SC.tokSYMBOL or tok = SC.tokNAME then
+                        if IsComment(P, S.token, comment_end) then
+                            // Followed by a comment
+                            // Can't decide just yet what indent we have
+                            // Skip the comment
+                            SC.Comment S, comment_end
+                            restart
+                    // Otherwise, we'll deal with this other token next
+                    pending_token := tok
+
+                // Consider new-line as an infix operator
+                infix := ASCII.CR
+                name := infix
+                infix_priority := GetInfixPriority (P, infix)
+                left := result
+
+            else if tok = SC.tokPARCLOSE then
+                // Check for mismatched parentheses here
+                if S.token[0] <> closing_paren then
+                    ERR.Report ERR.E_ParseMismatchParen, S.file, S.line
+                    IO.WriteLn "Mismatched parenthese, got '", S.token, "', expected '", closing_paren, "'"
+                done := true
+
+            else if tok = SC.tokUNINDENT then
+                // Check for mismatched parentheses here
+                if not ASCII.is_line_break(closing_paren) then
+                    ERR.Report ERR.E_ParseMismatchParen, S.file, S.line
+                    IO.WriteLn "Mismatched parenthese, got unindent, expected '", closing_paren, "'"
+                done := true
+
+            else if tok = SC.tokPAROPEN or tok = SC.tokINDENT then
+                if tok = SC.tokPAROPEN then
+                    opening := S.token[0]
+                    if opening = '(' then closing := ')'
+                    if opening = '{' then closing := '}'
+                    if opening = '[' then closing := ']'
+                else
+                    opening := ASCII.TAB[0]
+                    closing := ASCII.CR[0]
+
+                name := text("") + opening
+                paren_priority := GetInfixPriority (P, name)
+
+                // Make sure 'foo.bar(x)' parses as '(foo.bar) (x)'
+                if result <> nil then
+                    while size(stack) loop
+                        prev : pending := back(stack)
+                        exit if prev.priority < paren_priority
+                        result_priority := prev.priority
+                        result := PT.NewInfix(prev.opcode,prev.argument,result)
+                        pop_back stack
+
+                // Parse the contents of the parenthese
+                right := Parse(P, closing)
+                if right = nil then
+                    right := PT.NewName ""
+                right := PT.NewBlock(right, opening, closing)
+
+                // Parse 'if (A+B) < C then...' as if ((A+B) < C) then ...'
+                // Parse 'A[B] := C' as '(A[B] := C)'
+                if result_priority = statement_priority and paren_priority > function_priority then
+                    result_priority := paren_priority
+
+                if tok = SC.tokINDENT then
+                    // Unindent to be seen as unindent followed by new-line
+                    // so that new-line operator combines lines
+                    pending_token := SC.tokNEWLINE
+
+            else
+                IO.writeln "Invalid token: ", tok, " (", S.token, ")"
+                assert not "Invalid token"
+
+            // Check what is the current result
+            if result = nil then
+
+                // First thing we parse
+                result := right
+                if new_statement and prefix_priority = default_priority then
+                    prefix_priority := statement_priority
+                result_priority := prefix_priority
+
+                // We are now in the middle of an expression
+                if result then
+                    new_statement := false
+
+            else if left <> nil then
+
+                // Check if we had a statement separator
+                new_statement := infix_priority < statement_priority
+
+                // We got left and infix-op, we are now looking for right
+                // If we have 'A and not B', where 'not' has higher priority
+                // than 'and', we want to finish parsing 'not B' first, rather
+                // than seeing this as '(A and not) B'.
+                if prefix_priority <> default_priority and prefix_priority > infix_priority then
+                    // Push "A and" in the above example
+                    T : pending
+                    T.opcode := infix
+                    T.argument := left
+                    T.priority := infix_priority
+                    stack += T
+                    left := nil
+
+                    // Start over with "not"
+                    result := right
+                    result_priority := prefix_priority
+
+                else
+                    while size(stack) loop
+                        prev : pending := back(stack)
+
+                        // Check priorities compared to stack
+                        // A+B*C we got '*', keep 'A+..." on stack
+                        if not done then
+                            exit if prev.priority <> default_priority and infix_priority > prev.priority
+                            exit if prev.priority < statement_priority and infix_priority = prev.priority
+                        if prev.opcode = prefix then
+                            left := PT.NewPrefix(prev.argument, left)
+                        else
+                            left := PT.NewInfix(prev.opcode, prev.argument, left)
+                        pop_back stack
+
+                    // Now we want to restart with the rightmost operand
+                    if done then
+                        // End of text: the result is what we just got
+                        result := left
+
+                    else
+                        // Something like A+B+C, just got second +
+                        T : pending
+                        T.opcode := infix
+                        T.argument := left
+                        T.priority := infix_priority
+                        stack += T
+                        result := nil
+
+                    left := nil
+
+            else if right <> nil then
+
+                // Check priorities for "A.B x,y" -> "(A.B) (x,y)"
+                while size(stack) loop
+                    prev : pending := back(stack)
+                    if not done then
+                        exit if prev.priority <> default_priority and result_priority > prev.priority
+                        exit if prev.priority < statement_priority and result_priority = prev.priority
+                    if prev.opcode = prefix then
+                        result := PT.NewPrefix(prev.argument, result)
+                    else
+                        result := PT.NewInfix(prev.opcode, prev.argument, result)
+                    pop_back stack
+
+                // Check if new statement
+                T : pending
+                if right.kind <> PT.xlBLOCK then
+                    if size(stack) = 0 then
+                        result_priority := statement_priority
+                    else
+                        T := back(stack)
+                        if T.priority < statement_priority then
+                            result_priority := statement_priority
+
+                // Push a recognized prefix op
+                T.opcode := prefix
+                T.argument := result
+                T.priority := result_priority
+                stack += T
+                result := right
+                result_priority := prefix_priority
+        // end "while not done"
+
+        if size(stack) then
+            if result = nil then
+                last : pending := back(stack)
+                if last.opcode <> ASCII.CR then
+                    ERR.Report ERR.E_ParseTrailingOp, S.file, S.line
+                result := last.argument
+                pop_back stack
+
+            // Check if some stuff remains on the stack
+            while size(stack) loop
+                prev : pending := back(stack)
+                if prev.opcode = prefix then
+                    result := PT.NewPrefix(prev.argument, result)
+                else
+                    result := PT.NewInfix(prev.opcode, prev.argument, result)
+                pop_back stack
+
+
+    procedure ReadSyntaxFile (P : PR.parser; syntax : text) is
+    // ------------------------------------------------------------------------
+    //   Read the xl.syntax file to get precedences
+    // ------------------------------------------------------------------------
+        in_prefix : boolean := false
+        in_infix : boolean := false
+        priority : integer := 0
+        tok : SC.token
+        S : SC.scanner := SC.NewScanner(syntax)
+
+        // Comments are hardcoded for now
+        P.comments["//"] := ASCII.CR
+
+        loop
+            tok := SC.NextToken(S)
+            exit if tok = SC.tokEOF
+
+            if tok = SC.tokNAME or tok = SC.tokSYMBOL then
+                if S.string_value = "INFIX" then
+                    in_infix := true
+                    in_prefix := false
+                else if S.string_value = "PREFIX" then
+                    in_infix := false
+                    in_prefix := true
+                else if S.string_value = "NEWLINE" then
+                    if in_prefix then
+                        P.prefix_priority[ASCII.CR] := priority
+                    if in_infix then
+                        P.infix_priority[ASCII.CR] := priority
+                else if S.string_value = "BLOCK" then
+                    if in_prefix then
+                        P.prefix_priority[ASCII.TAB] := priority
+                    if in_infix then
+                        P.infix_priority[ASCII.TAB] := priority
+                else if S.string_value = "STATEMENT" then
+                    P.statement_priority := priority
+                else if S.string_value = "FUNCTION" then
+                    P.function_priority := priority
+                else if S.string_value = "DEFAULT" then
+                    P.default_priority := priority
+                else if in_infix then
+                    P.infix_priority[S.string_value] := priority
+                else if in_prefix then
+                    P.prefix_priority[S.string_value] := priority
+
+            else if tok = SC.tokSTRING or tok = SC.tokQUOTE then
+                if in_prefix then
+                    P.prefix_priority[S.string_value] := priority
+                if in_infix then
+                    P.infix_priority[S.string_value] := priority
+
+            else if tok = SC.tokINTEGER then
+                priority := S.integer_value
+

@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  xl.translator.xs                (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.ui.console.xs                (C) 1992-2003 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     The basic XL translator
+//     The bootstrap implementation of the user-interface console
 // 
 // 
 // 
@@ -23,10 +23,6 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-import PT = XL.PARSER.TREE
+module XL.UI.CONSOLE with
 
-module XL.TRANSLATOR with
-
-    procedure Compile(input : PT.tree)
-
-    verbose : boolean := false
+    arguments : string of text

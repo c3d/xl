@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  xl.translator.xl                (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.codegenerator.xl             (C) 1992-2003 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     The basic XL translator
+//     This is the implementation of a basic C code generator
 // 
 // 
 // 
@@ -15,7 +15,7 @@
 // 
 // 
 // ****************************************************************************
-// This program is released under the GNU General Public License.
+// This document is released under the GNU Genral Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
@@ -27,8 +27,7 @@ import PT = XL.PARSER.TREE
 import PR = XL.PARSER
 import IO = XL.TEXT_IO
 
-module XL.TRANSLATOR is
-
+module XL.CODE_GENERATOR is
 
     // ========================================================================
     // 
@@ -38,25 +37,25 @@ module XL.TRANSLATOR is
 
     type args_map is map[text, integer]
 
-    procedure XL2C_Directive (input : PT.tree)
-    procedure XL2C_Arg (input : PT.tree)
-    procedure XL2C_Args (input : PT.tree)
-    procedure XL2C_Stmt (input : PT.tree)
-    procedure XL2C_Body (input : PT.tree; in_fn : boolean)
-    procedure XL2C_Enum (input : PT.tree)
-    procedure XL2C_Import (input : PT.tree; alias : PT.tree)
-    procedure XL2C_Module (name : PT.tree; body : PT.tree)
-    procedure XL2C_Namespace (name : PT.tree)
-    procedure XL2C_Translate (what : PT.tree; how : PT.tree)
-    procedure XL2C_Quote (form : PT.tree; in out args : args_map; nesting : integer; wildcard : boolean)
+    procedure XL2C_Directive (input : BC.bytecode)
+    procedure XL2C_Arg (input : BC.bytecode)
+    procedure XL2C_Args (input : BC.bytecode)
+    procedure XL2C_Stmt (input : BC.bytecode)
+    procedure XL2C_Body (input : BC.bytecode; in_fn : boolean)
+    procedure XL2C_Enum (input : BC.bytecode)
+    procedure XL2C_Import (input : BC.bytecode; alias : BC.bytecode)
+    procedure XL2C_Module (name : BC.bytecode; body : BC.bytecode)
+    procedure XL2C_Namespace (name : BC.bytecode)
+    procedure XL2C_Translate (what : BC.bytecode; how : BC.bytecode)
+    procedure XL2C_Quote (form : BC.bytecode; in out args : args_map; nesting : integer; wildcard : boolean)
 
-    procedure XL2C(input : PT.tree)
+    procedure XL2C(input : BC.bytecode)
     procedure Rename(from : text; to : text)
     function XLNormalize (name : text) return text
     function XLSanitize (str : text; quote : character) return text
-    function XLModuleName (name : PT.tree) return text
+    function XLModuleName (name : BC.bytecode) return text
     function XLModuleNameCPlus (name : text) return text
-    function XLNamespaceScope (dot : PT.tree) return boolean
+    function XLNamespaceScope (dot : BC.bytecode) return boolean
 
 
     // ========================================================================
@@ -80,10 +79,14 @@ module XL.TRANSLATOR is
     // 
     // ========================================================================
 
-    procedure Compile (input : PT.tree) is
+    procedure Transcode (input : BC.bytecode; output : IO.output_file) is
     // ------------------------------------------------------------------------
     //   Rewrite the whole tree
     // ------------------------------------------------------------------------
+
+        old_stdout : IO.output_file := IO.standard_output
+        IO.standard_output := output
+
         IO.writeln "#include ", '"', "xl_lib.h", '"'
 
         rename "character",  "char"
@@ -103,6 +106,8 @@ module XL.TRANSLATOR is
         rename "text",       "::text"        
 
         XL2C input
+
+        IO.standard_output := old_stdout
 
 
     // ========================================================================
@@ -154,20 +159,18 @@ module XL.TRANSLATOR is
                 result += C
 
 
-    procedure XL2C_Stmt (input : PT.tree) is
+    procedure XL2C_Stmt (input : BC.bytecode) is
     // ------------------------------------------------------------------------
     //    Translate a statement
     // ------------------------------------------------------------------------
 
         XL2C input
         if input.kind = PT.xlNAME then
-            name : PT.name_tree := PT.name_tree(input)
-            if name.value <> "return" then
-                IO.write "()"
+            IO.write "()"
         IO.writeln ";"
             
 
-    procedure XL2C_Body (input : PT.tree; in_fn : boolean) is
+    procedure XL2C_Body (input : BC.bytecode; in_fn : boolean) is
     // ------------------------------------------------------------------------
     //    Translate a statement
     // ------------------------------------------------------------------------
@@ -177,7 +180,7 @@ module XL.TRANSLATOR is
         in_function := old_in_function
             
 
-    procedure XL2C_Enum (input : PT.tree) is
+    procedure XL2C_Enum (input : BC.bytecode) is
     // ------------------------------------------------------------------------
     //    Translate an enumeration list
     // ------------------------------------------------------------------------
@@ -198,7 +201,7 @@ module XL.TRANSLATOR is
                     XL2C input
 
 
-    procedure XL2C_Arg (input : PT.tree) is
+    procedure XL2C_Arg (input : BC.bytecode) is
     // ------------------------------------------------------------------------
     //    Translate a single argument
     // ------------------------------------------------------------------------
@@ -223,7 +226,7 @@ module XL.TRANSLATOR is
                 XL2C input
 
 
-    procedure XL2C_Args (input : PT.tree) is
+    procedure XL2C_Args (input : BC.bytecode) is
     // ------------------------------------------------------------------------
     //    Translate the name portion of a procedure declaration
     // ------------------------------------------------------------------------
@@ -261,7 +264,8 @@ module XL.TRANSLATOR is
                 XL2C_Arg A
 
 
-    procedure XL2C_Directive (input : PT.tree) is
+
+    procedure XL2C_Directive (input : BC.bytecode) is
     // ------------------------------------------------------------------------
     //    Translate the compiler directive
     // ------------------------------------------------------------------------
@@ -274,7 +278,7 @@ module XL.TRANSLATOR is
 
 
 
-    procedure XL2C(input : PT.tree) is
+    procedure XL2C(input : BC.bytecode) is
     // ------------------------------------------------------------------------
     //    The main XL to C translator
     // ------------------------------------------------------------------------
@@ -706,7 +710,7 @@ module XL.TRANSLATOR is
 
                 if input.kind = PT.xlPREFIX then
                     T : PT.prefix_tree := PT.prefix_tree(input)
-                    R : PT.tree := T.right
+                    R : BC.bytecode := T.right
 
                     XL2C T.left
                     if R.kind <> PT.xlBLOCK then
@@ -732,7 +736,7 @@ module XL.TRANSLATOR is
 
 
 
-    function XLModuleName (name : PT.tree) return text is
+    function XLModuleName (name : BC.bytecode) return text is
     // ------------------------------------------------------------------------
     //   Return the XL module name for A.B.C
     // ------------------------------------------------------------------------
@@ -769,7 +773,7 @@ module XL.TRANSLATOR is
                 result += C
 
 
-    procedure XL2C_Import (modname : PT.tree; alias : PT.tree) is
+    procedure XL2C_Import (modname : BC.bytecode; alias : BC.bytecode) is
     // ------------------------------------------------------------------------
     //    Deal with import clauses
     // ------------------------------------------------------------------------
@@ -789,7 +793,7 @@ module XL.TRANSLATOR is
         done := module_imports[imported]
         if (done & 1) = 0 then
             iface_parser : PR.parser := PR.NewParser(interface_name)
-            iface_tree   : PT.tree := PR.Parse(iface_parser)
+            iface_tree   : BC.bytecode := PR.Parse(iface_parser)
             IO.WriteLn ""
             IO.WriteLn "// Interface ", interface_name, " done=", done
             module_imports[imported] |= 1
@@ -803,7 +807,7 @@ module XL.TRANSLATOR is
             IO.WriteLn ""
             IO.WriteLn "// Body ", body_name, " done=", done
             body_parser : PR.parser := PR.NewParser(body_name)
-            body_tree   : PT.tree := PR.Parse(body_parser)
+            body_tree   : BC.bytecode := PR.Parse(body_parser)
             module_imports[imported] |= 2
             if body_tree <> nil then
                 XL2C_Stmt body_tree
@@ -815,7 +819,7 @@ module XL.TRANSLATOR is
             IO.Writeln "*** Module ", imported, " not found"
 
 
-    procedure XL2C_Namespace (name : PT.tree) is
+    procedure XL2C_Namespace (name : BC.bytecode) is
     // ------------------------------------------------------------------------
     //   Translate a module
     // ------------------------------------------------------------------------
@@ -833,7 +837,7 @@ module XL.TRANSLATOR is
                XL2C name
 
 
-    procedure XL2C_Module (name : PT.tree; body : PT.tree) is
+    procedure XL2C_Module (name : BC.bytecode; body : BC.bytecode) is
     // ------------------------------------------------------------------------
     //    Display a module
     // ------------------------------------------------------------------------
@@ -848,7 +852,7 @@ module XL.TRANSLATOR is
          namespace_closing := ""
 
 
-    function XLNamespaceScope (name : PT.tree) return boolean is
+    function XLNamespaceScope (name : BC.bytecode) return boolean is
     // ------------------------------------------------------------------------
     //    Return true if the name denotes a namespace scope
     // ------------------------------------------------------------------------
@@ -885,7 +889,7 @@ module XL.TRANSLATOR is
     // 
     // ========================================================================
 
-    procedure XL2C_Quote (form : PT.tree; in out args : args_map; nesting : integer; wildcard : boolean) is
+    procedure XL2C_Quote (form : BC.bytecode; in out args : args_map; nesting : integer; wildcard : boolean) is
     // ------------------------------------------------------------------------
     //    Emit the code for the translate form
     // ------------------------------------------------------------------------
@@ -972,7 +976,7 @@ module XL.TRANSLATOR is
 
 
 
-    procedure XL2C_Translate (to_translate : PT.tree; how : PT.tree) is
+    procedure XL2C_Translate (to_translate : BC.bytecode; how : BC.bytecode) is
     // ------------------------------------------------------------------------
     //    Translate a translate statement
     // ------------------------------------------------------------------------

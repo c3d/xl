@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  xl.translator.xs                (C) 1992-2003 Christophe de Dinechin (ddd) 
+//  xl.codegenerator.xs             (C) 1992-2003 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     The basic XL translator
+//     The XL code generator. It currently generates C code
 // 
 // 
 // 
@@ -15,7 +15,7 @@
 // 
 // 
 // ****************************************************************************
-// This program is released under the GNU General Public License.
+// This document is released under the GNU Genral Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
@@ -23,10 +23,10 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-import PT = XL.PARSER.TREE
+import BC = XL.BYTECODE
+import IO = XL.TEXT_IO
 
-module XL.TRANSLATOR with
+module XL.CODE_GENERATOR with
 
-    procedure Compile(input : PT.tree)
-
+    procedure Transcode (input : BC.bytecode; file : IO.output_file)
     verbose : boolean := false

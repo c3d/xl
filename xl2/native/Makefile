@@ -37,27 +37,35 @@ OTHER_SOURCES=					\
 	xl.parser.xl				\
 	xl.translator.xs			\
 	xl.translator.xl			\
+	xl.semantics.xs				\
+	xl.semantics.xl				\
+	xl.codegenerator.xs			\
+	xl.codegenerator.xl			\
+	xl.bytecode.xs				\
+	xl.bytecode.xl				\
+	xl.optimizer.xs				\
+	xl.optimizer.xl				\
 	xl.textio.xl				\
 	../xl_lib.h
 
-TOCLEAN=bxl bbxl bbbxl
-PRODUCT=bxl
-XL=../xl
+TOCLEAN=nxl
+PRODUCT=nxl
+XL=../bootstrap/bxl
 
 include $(BROOT)Makefile.config
 
-test: debug bootstrap bootstrap_test bootstrap_stability_test
+test: debug native native_test native_stability_test
 	echo ------ Differences: -----------------------------------------
-	diff $(OBJROOT)bbxl_test/bootstrap/compiler.xl.C \
-	     $(OBJROOT)bbxl_stability/bootstrap/compiler.xl.C
+	diff $(OBJROOT)nnxl_test/native/compiler.xl.C \
+	     $(OBJROOT)nnxl_stability/native/compiler.xl.C
 	echo ------ End of Differences -----------------------------------
 
-bootstrap:
-	$(MAKE) PRODUCT=bbxl XL=./bxl OBJROOT="$(OBJROOT)bbxl"
-bootstrap_test:
-	$(MAKE) PRODUCT=bbbxl XL=./bbxl OBJROOT="$(OBJROOT)bbxl_test"
-bootstrap_stability_test:
-	$(MAKE) PRODUCT=bbbbxl XL=./bbbxl OBJROOT="$(OBJROOT)bbxl_stability"
+native:
+	$(MAKE) PRODUCT=nnxl XL=./nxl OBJROOT="$(OBJROOT)nnxl"
+native_test:
+	$(MAKE) PRODUCT=nnnxl XL=./nnxl OBJROOT="$(OBJROOT)nnxl_test"
+native_stability_test:
+	$(MAKE) PRODUCT=nnnnxl XL=./nnnxl OBJROOT="$(OBJROOT)nnxl_stability"
 
 
 prebuild: xl_lib.h xl.syntax
