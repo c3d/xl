@@ -1,1 +1,175 @@
 <!--Objects in XL-->
+
+Here is the outline of a module featuring shapes. It highlights some
+important properties of the XL {inside "objects"}.
+
+{pre}
+// Interface of module SHAPES
+module SHAPES with
+
+	// Coordinate types, a true generic type, defaulting to 'integer'
+	// (though you can instantiate SHAPES code with 'real' if you wish).
+	generic type coordinate like number is integer
+	generic type distance like number is integer
+
+	// Point type, implicitly generic since coordinate is
+	type point with
+		x, y : coordinate
+
+	// Interface of type shape
+	type shape with
+		visible	: boolean
+		center	: point
+
+	// Interface of type rectangle
+	type rectangle like shape with
+		top, left		: coordinate
+		bottom, right	: coordinate
+		top_left		: point
+		bottom_right	: point
+
+	// Interface of type circle
+	type circle like shape with
+		radius		: distance
+
+	// Interface of type polygon
+	type polygon like shape with
+		edges		: string of point
+
+	// Just added one that might require a destructor
+	type openGL_3D_shape like shape with
+		// ... whatever
+
+	// "Virtual" function, taking a polymorphic object as an argument
+	function Bounds (S: any shape) return rectangle
+
+	// "Doubly virtual" function, returns a polymorphic object
+	function Intersect (S1, S2 : any shape) return any shape
+
+	// Constructors
+	function Point(x, y : coordinate) return point
+	function Point(P : point) return point
+	function Rectangle (x, y, w, h : coordinate) return rectangle
+	function Rectangle (other : rectangle) return rectangle
+	function Circle (cx, cy : coordinate; radius : distance) return circle
+	function Circle (center : point; radius : distance) return circle
+	function Polygon() return polygon
+	function Polygon (x, y : coordinate; others) return polygon
+	function Polygon(edge : point ; others) return polygon
+	function OpenGL3DShape (...) return openGL_3D_shape
+
+
+// Module implementation
+module SHAPES is
+
+	// Type point is implemented as an actual type
+	// So the compiler maps x and y with the interface
+	type point is record with
+		x, y : coordinate
+
+	// Implementation of type shape.
+	// We decide to implement visibility as an actual field, while
+	// center will in general be derived from other fields
+	// and implemented through "getters" and "setters".
+	// For the base shape, it makes sense to simply ignore 'center'
+	type shape is record with
+		visible : boolean
+	function Center(S : any shape) return point written S.center is
+		return point(0, 0)
+	to SetCenter (S : any shape; center : point) written S.center := center is
+		// Ignored for basic shape
+		return
+
+	// Implementation of type rectangle
+	// The 'shape with' notation is a record extension, it means that we
+	// inherit the base type fields (visible in that case). When we write
+	// 'record with' for shape, we do a record extension on an empty record type
+	type rectangle is shape with
+		top, left, bottom, right : coordinate
+
+	// Need to override the 'center' operation
+	// Question: do we want a syntax making explicit that we override
+	// E.g. function Center (R : any rectangle like shape) return point...
+	// I think it's mostly noise, but I'm not sure.
+	function Center (R : any rectangle) return point written R.center is
+		return point((R.left+R.right)/2, (R.top+R.bottom)/2)
+
+	to SetCenter(R : any rectangle; P : point) written R.center := P is
+		width : distance := R.right - R.left
+		height : distance := R.bottom - R.top
+		R.left := P.x - width / 2
+		R.right := P.x + (width + 1) / 2
+		R.top := ...
+		R.bottom := ...
+
+	// Need to expose parts of the interface not otherwise implemented
+	function TopLeft(R : rectangle) return point written R.top_left is
+		return point(R.top, R.left)
+	to SetTopLeft(R : rectangle; P : point) written R.top_left := P is
+		R.top := P.y
+		R.left := P.x
+	// Same for bottom-right
+	[...]
+
+	// Same for type circle and polygon...
+
+	// Virtual function like "Bounds" to be defined for every type
+	// Notice that the class is not closed, it can be extended with new
+	// "virtual" functions at any location.
+	// We can also group implementations by function rather than by type
+	// if it makes more sense.
+	function Bounds (S : any shape) return rectangle is
+		return rectangle(0, 0, 0, 0)
+	function Bounds (R : any rectangle) return rectangle is
+		return R
+	// [...] same for other shapes
+
+
+	// Intersection of shapes
+	// Notice that we return a polymorphic object (the equivalent of an
+	// object pointer to a polymorphic class in C++)
+	// Also, since there is no constructor for shape, we can't build one
+	function Intersect (S1, S2 : any shape) return any shape is
+		return rectangle(0, 0, 0, 0)
+
+	// Here, we document the fact that the intersection of two rectangles
+	// is actually a rectangle. This information could be exported in the
+	// interface if necessary by declaring that function in the module
+	// interface.
+	function Intersect (R1, R2 : any rectangle) return any rectangle is
+		result.top := max(R1.top, R2.top)
+		result.bottom := min(R1.bottom, R2.bottom)
+		[...]
+
+
+	// Constructors
+	function Point(x, y : coordinate) return point is
+		result.x := x
+		result.y := y
+
+	// A constructor can call another constructor
+	function Point(P : point) return point is
+		return Point(P.x, P.y)
+
+	[... skip rectangle, circle]
+
+	// Create an empty polygon. edges is empty by default
+	function Polygon() return polygon is
+		return
+
+	// One case where calling another constructor is very useful
+	function Polygon (P : point; others) return polygon is
+		result := Polygon(others)
+		append result.edges, P
+	function Polygon (x, y : coordinate; others) return polygon is
+		return Polygon(point(x, y), others)
+
+	// Fancy constructor and destructor
+	// Note that the destructor is not necessarily visible to be called
+	function OpenGL3DShape (...) return openGL_3D_shape is
+		init_Open_GL_Shape ...
+
+	procedure Delete(S : openGL_3D_shape) is
+		destroy_Open_GL_shape ...
+
+{erp}

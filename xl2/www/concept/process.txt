@@ -5,7 +5,7 @@ The {@cp} development process consists in the following steps
 <OL>
 <LI>Identify the application domain and the problem to solve. This
   defines the {@pb} for your program or software component.
-<LI>Identify in the {@pb} the individual {@concepts}, that is the
+<LI>Identify in the {@pb} the individual {@concepts}, in other words the
   aspects of the {@pb} that actually matter to the program and will
   need to be represented in the {@code}.
 <LI>Identify the behavior of individual concepts and relationships

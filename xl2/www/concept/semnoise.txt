@@ -34,11 +34,11 @@ Here are a few examples of common forms of semantic noise:
   precision)... but not the same one!
 
 <LI>{@C} uses the {tt "&lt;&lt;"} operator to indicate left bit
-  shifts, so in C {tt "out&lt;&lt;3"} assumes shifts the integral value
+  shifts, so in C {tt "out&lt;&lt;3"} shifts the integral value
   {tt "out"} left by 3 bit positions (multiplying it by 8).
   {@C++} introduces the possibility to overload operators, and the C++
   standard library uses the {tt "&lt;&lt;"} operator with a totally
-  different meaning, which is that of outputing something to a
+  different meaning, to output something to a
   stream. So now {tt "out&lt;&lt;3"} may mean writing 3 into a file or on
   the console. There is a difference between the meaning a naive C
   programmer expects and the actual meaning. This is only a

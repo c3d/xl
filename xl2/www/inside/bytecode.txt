@@ -1,38 +1,52 @@
 <!--XL Bytecode-->
 
-In order to enable uses of {@xl} in interpreted environments (for
-instance as a {concept "script"} language), it would be useful to
-design or reuse a virtual machine. This is under investigation.
+The bytecode is the interface to the back-end. It is a form of XL0 that contains only low-level instructions in a limited, target-dependent set. For instance, the current C bytecode contains {tt "add_int"}, {tt "sub_int"}, {tt "add_float"}, {tt "sub_float"}, etc.
 
-The two possible approaches are:
-<UL>
-<LI>Using an existing virtual machine (Java or C# are the obvious
-  candidates). The drawback is that there are limitations in these
-  VMs that might make it difficult to {@represent} specific
-  {@semantics} of XL (for instance, 
-  {inside "object_model" "multiple inheritance"} or an advanced
-  {example "tasking" "tasking model"}). It is possible to perform
-  machine-level {@ccast}, at the expense of performance and with a
-  risk to generate unwanted side effects.
+The early phases prefix bytecode with {tt "@"} to quickly let it trickle through semantics and other passes of the compiler. So the following XL0 is the kind of bytecode you'd get from the front-end:
 
-<LI>Design an XL-specific virtual machine (tentatively named
-  XLR). This is currently the favored approach, though it requires
-  more work. The virtual machine
-  would take some inspiration from the MSIL in CLR, from the Smalltalk
-  virtual machine and from the
-  <A href="http://tao-group.com/">Taos</A> virtual assembly
-  language. One major benefit of this approach is that the input of
-  the VM could be written in {inside "xl012" "XL0"}.
+{pre}	@add_int Target, Source1, Source2
+{erp}
 
-</UL>
+then semantics and others mostly ignore it. The last phase of the compiler is going to lookup in the {tt "xl.bytecode"} file, which contains a line like the following (for the C variant of bytecode I currently use):
 
-The bytecode should also enable the generation of native code easily,
-much like MSIL for Microsoft .NET. Currently, the XL compiler
-generates C++, with the intent to generate other forms of text (in
-particular assembly language) in the future. But even for native code
-generation, a proper bytecode definition would be useful.
+{pre}	add_int	"$1 = $2 + $3;"
+{erp}
 
-Another consideration for the longer term is that XL is also intended
-to be a {concept "data"} language. It would be desirable for the XL
-{concept "translation"} process to be applicable to data as well.
-This should be taken into account in the design of the bytecode.
+and perform textual replacement, resulting in the following output:
+
+{pre}	Target = Source1 + Source2;
+{erp}
+
+Some bytecode is generated directly by semantics, and is expected to be present in all targets. These are things like tests, gotos, labels. Some bytecode is ABI-dependent and is emitted in a machine-dependent way by the {tt "XL.CODE_GENERATOR.MACHINE"} module. This includes things like function call conventions, record layout, etc.
+
+Finally, some bytecode represents operations defined by the library using declarations like:
+
+{pre}	function Add(X: integer; Y : integer) return integer written X+Y is
+		XL.BYTECODE.add_int
+	procedure Copy(out X : integer; Y : integer) written X:=Y is
+		XL.BYTECODE.copy_int
+{erp}
+
+The name is arbitrary here, and it results in a replacement of, say, {tt "3+4"} with an {tt "@add_int"} tree. In other words, the semantics of {tt "3+4"} is absolutely identical to that of a user-defined written form, except that the target function is defined to be a bytecode, so instead of a function call, we emit the corresponding bytecode.
+
+
+To see the bytecode output, you can use the following command:
+{pre}	./nxl -parse foo.xl -sem -style bytecode -show
+{erp}
+
+and to expand the bytecode using xl.bytecode as shipped, you use:
+{pre}	./nxl -parse foo.xl -sem -ccode
+{erp}
+
+You can try it with the following test code:
+{pre}
+	function Add(X: integer; Y : integer) return integer written X+Y is
+		XL.BYTECODE.add_int
+	procedure Copy(out X : integer; Y : integer) written X:=Y is
+		XL.BYTECODE.copy_int
+	procedure Test is
+		X : integer
+		X := 0
+		X := X + 3
+{erp}
+

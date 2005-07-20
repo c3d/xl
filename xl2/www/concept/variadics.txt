@@ -6,7 +6,7 @@ a set of entities, the size of set not necessarily being known ahead
 of time. A very common case is {example "writeln" "text I/O"}, where
 writing multiple elements is as common, if not more, than writing a
 single one. Another example is the computation of a
-{example "maxmimum"}, minimum or {example "average"} of a set of
+{example "maximum"}, minimum or {example "average"} of a set of
 values. A mathematician would denote that as {tt "max(x,y,z)"} for
 instance.
 

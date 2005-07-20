@@ -13,7 +13,7 @@ is OK to add entries in this table, notably when
 {inside "plugins" "compiler plug-ins"}.
 
 From a {inside "parser" "parsing point of view"}, {@xl} only
-classifies operators using along two dimensions: name vs. symbol, and
+classifies operators along two dimensions: name vs. symbol, and
 prefix vs. infix vs. block.
 <UL>
 <LI>Names are made of

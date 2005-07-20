@@ -1,24 +1,70 @@
 <!--Text I/Os in XL-->
 
-<LI>Actually, the above issue is minor and relatively harmless
-  harmless. A more serious issue with {tt "&lt;&lt;"} given the target
-  market of C++ is multithreading. Multiple {tt "&lt;&lt;"} operators
-  can be chained. Now, when a programmer writes something like
-  {tt "out&lt;&lt;\"A=\"&lt;&lt;A&lt;&lt;\",&nbsp;B=\"&lt;&lt;B&lt;&lt;'\\n'"},
-  she most likely understands that as a  single I/O
-  statement. However, in reality, it is made up of 5 function calls
-  to {tt "operator&lt;&lt;"}, with the interesting side effect that
-  there is no way for the compiler to make this I/O operation
-  atomic. In other words, if two threads are attempting to write
-  messages at the same time, their content might be mixed or
-  garbled.
+At first sight, text I/O in XL looks very similar to Pascal. Here is
+an example of a program containing very simple text I/O:
 
-  Some C++ programmers will tell you that this is the way it
-  is supposed to be, since synchronization between threads should be
-  made at the higher level. But then, why does the low-level library
-  actually synchronize between threads to guarantee that individual
-  characters are written properly and that the file buffers don't get
-  thrashed in the case of concurrent I/O operations?
+{pre}import IO = XL.UI.CONSOLE
+IO.WriteLn "List of 10 first squares:"
+for I in 1..10 loop
+    IO.WriteLn I, " squared is ", I * I
+{erp}
 
+The approach of featuring a {tt "WriteLn"} procedure as in Pascal was
+selected because it is the most natural way to display characters.
+It is convenient (you can display as many items as you want in a
+single statement), safe (there are no risks of type mismatch as in C),
+easy to use (there is no need for some complex formatting syntax).
 
-Semantics noise of end-of-line vs. line
+There was a main drawback in Pascal: you could not define {tt "WriteLn"}
+yourself in Pascal, because there was no way to define procedures
+taking a variable number of arguments, or arguments of variable types.
+These problem {concept "variadics" "don't exist in XL"}.
+
+XL text I/O  is implemented in two different packages:
+{tt "XL.TEXT_IO"} and {tt "XL.UI.CONSOLE"}. The first package deals with
+text formatting and conversions (for example, converting integers to
+text). The second package deals with a common form of user interface
+(UI), which is a text console with three I/O streams (input, output
+and error), as commonly found in Unix, Linux and many other operating
+systems supporting the C programming language.
+
+<B>Thread safety:</B>
+There are more subtle benefits to this approach. For instance, a
+given I/O is performed using a single function call. By contrast, the
+C++ approach (using {tt "operator&lt;&lt;"}) requires one call per
+item being printed. In addition to the obvious code bloat, there is
+another annoying side effect: it is practically impossible to make
+C++ text I/O behave well in a multi-threaded environment. A
+programmer might expect something like {tt "cout << \"I=\" << I << '\n'"}
+appear as a sequence of consecutive characters on the output.
+
+However, the best the runtime library can do is keep the character of
+a single call to an {tt "operator&lt;&lt;"} together, or alternatively
+wait until the end of line for each thread, which might delay
+characters for a very long time (and so nobody does that). Of course,
+C++ programmers believe that leaving the locking responsibility to
+the caller is the right thing to do. But this is clearly wrong, as
+illustrated by the locking required to keep internal buffers
+consistent when emitting individual characters. It would be more
+efficient to lock once for multiple characters.
+
+By contrast, it is very easy for the characters emitted by a single
+call to {tt "WriteLn"} (or {tt "Write"}) to be kept consecutive.
+
+<B>Definition of text lines:</B>
+Another interesting thing with text I/O as implemented in C (and later
+derived languages such as C++, Java) is that it is built around a
+rather annoying {concept "concept-cast" "concept cast"},
+where the concept of <em>line</em> is blurred and replaced with the
+related concept of <em>end-of-line character</em>. Why does it
+matter? Because there isn't always an end-of-line character.
+A line can be represented by records in a database, or the line
+length may be encoded before each line.
+
+A consequence of this particular cast can be found on the Windows
+platform, where the end of a line is traditionally represented not
+with one, but with <em>two</em> characters. On this platform, you can
+open files in "text mode" or in "binary mode", and the C runtime
+library has to perform on-the-fly conversion of line
+endings. Fortunately, this particular conversion is not too
+complicated.

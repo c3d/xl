@@ -1,1 +1,21 @@
 <!--XL Object Model-->
+
+While XL is object oriented, it doesn't have closed classes as in C++
+or C# or Java. The {example "object" "shape objects"} example should
+illustrate why.
+
+The idea is to, finally, offer true encapsulation. There is no way by
+looking at the interface to deduce how it is actually implemented. It
+doesn't mean that the compiler doesn't see it (so if you create a ".o"
+file for the module implementation, it needs to contain supplemental
+information that would go in a .h file in C++). The model also
+features multi-way dynamic dispatch as in the {tt "Intersect"} function
+in the example.
+
+Please note that I do consider having also a fairly standard {tt "class"}
+notation, but this will be just a simple plug-in generating the kind
+of code below (and adding things like {tt "using X"} to simulate the
+implicit reference to {tt "this"} in C++).
+
+
+

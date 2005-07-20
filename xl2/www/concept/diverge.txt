@@ -64,7 +64,7 @@ evaluate as 4. This notation is called <em>prefix
 {wiki "Polish_notation" "polish notation"}</em>, and is close in
 principle  to the
 <em>{wiki "Reverse_Polish_notation" "reverse polish notation"}</em>
- (RPN used in many HP calculators.
+ (RPN) used in many HP calculators.
 
 This notation is universal, simple to understand, and easy to
 implement. But it is not the natural notation we have been taught in
@@ -119,7 +119,7 @@ understood as "string of character", and the type system sometimes
 contained this denomination. {@Pascal} or {@C++} are examples of languages
 where the term "string" really denotes a string of characters, in
 other words what anybody but programmers would call <em>text</em>. In an
-interesting twist, when C++ developers introduced what could arguably
+ironic twist, when C++ developers introduced what could arguably
 be thought of as a real "string" type, they called it {tt "vector"},
 despite the fact that it is quite different from a mathematical
 vector, and reserved {tt "string"} for strings of characters.
