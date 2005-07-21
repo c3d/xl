@@ -157,6 +157,12 @@ void copy(T *output, T *input)
 
 namespace xl
 {
+    namespace parser {
+        namespace tree {
+            struct treenode;
+        }
+    }
+   
     namespace textio
     {
         typedef std::iostream *file;
@@ -190,6 +196,7 @@ namespace xl
         // Since at this point we don't have valid varags
         // (unlike in the Mozart version), we just mimic them...
         // exactly to the extent the bootstrap compiler needs it...
+        void write(xl::parser::tree::treenode *);
         template <class A>
         inline void write(const A& a)
         { (*standardoutput) << a; }
@@ -318,7 +325,6 @@ template <class T>
     xl::textio::standardoutput = old;
     return result;
 }
-
 
 
 // ============================================================================
