@@ -65,6 +65,7 @@ module XL.SEMANTICS.DECLARATIONS with
         frame_depth             : integer
 
 
+    function Lookup (NameTerminal : PT.tree) return BC.bytecode
     function ProcessDeclaration (Names : PT.tree;
                                  Type  : PT.tree;
                                  Value : PT.tree;

@@ -189,6 +189,8 @@ module XL.PARSER.TREE with
     function Matches (test : PT.tree;
                       ref : PT.tree;
                       in out arg : tree_map) return integer
+    function Matches (test : PT.tree;
+                      ref : PT.tree) return boolean
     function LargestMatch (test : PT.tree;
                            ref_list : tree_list;
                            in out arg : tree_map) return integer

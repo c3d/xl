@@ -41,6 +41,7 @@ init            "#define XLINIT 1"
                 "typedef char Bool;"
                 "typedef wchar_t Char;"
                 "typedef ::text Text;"
+                "typedef struct {} Rec, Mod;"
 
 term            "/*end*/"
 
@@ -49,6 +50,7 @@ type            "/* Type */"
 error           "/* ERROR */"
 value           "/* Value: $1 */"
 
+ref_decl        "/* $1 $2; Ref */"
 temp_decl       "$1 $2; /* Temp */"
 local_decl      "$1 $2; /* Local */"
 result_decl     "$1 $2; /* Result */"
@@ -81,7 +83,7 @@ record_begin    "typedef struct $1 {"
 record_field    "  $2 $3;"
 record_end      "} $1;"
 
-field           "$1 = $2.$3;"
+field           "#define $1 ($2.$3)"
 
 call_begin      ""
 call_ret1_decl  "$1 $2; /* Ret */"

@@ -220,6 +220,15 @@ module XL.PARSER.TREE is
         trace [matches] "/* With: ", ref, " */"
 
 
+    function Matches (test : PT.tree;
+                      ref : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //    Check if two trees match
+    // ------------------------------------------------------------------------
+        unused : tree_map
+        return Matches(test, ref, unused) > 0
+
+
     function LargestMatch (test : PT.tree;
                            ref_list : tree_list;
                            in out arg : tree_map) return integer is

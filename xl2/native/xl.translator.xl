@@ -54,6 +54,7 @@ module XL.TRANSLATOR is
 
         if context = nil then
             context := SYM.NewSymbolTable(nil)
+            modules := SYM.NewSymbolTable(nil)
             PluginsInit
             nop := parse_tree(@nop)
 
@@ -135,6 +136,7 @@ module XL.TRANSLATOR is
             old_global := global_context
             global_context := context
             SYM.SetInteger context, "GLOBAL", 1
+            last_import := context
             if scope = scopeMain then
                 // We are the outermost ('main') context
                 main_context := context

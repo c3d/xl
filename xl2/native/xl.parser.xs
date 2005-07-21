@@ -103,6 +103,7 @@ module XL.PARSER with
     // Creating a parser
     function Open(name : text; syntax : text := "xl.syntax") return parser
     procedure Close(P : parser)
+    function IsValid (P : parser) return boolean
     procedure ReadSyntaxFile (P : PR.parser; syntax : text)
 
     // Parsing

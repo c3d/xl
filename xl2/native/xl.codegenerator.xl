@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  xl.codegenerator.xl             (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  xl.codegenerator.xl             (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     This is the implementation of a basic C code generator
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details

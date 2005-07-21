@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  xl.stylesheet                   (C) 1992-2004 Christophe de Dinechin (ddd) 
+//  xl.semantics.modules.xs         (C) 1992-2004 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Default renderer for XL
+//     Implementation of modules and import statement
 // 
 // 
 // 
@@ -23,15 +23,6 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-// Nothing really special here...
-infix  = separator left space self space right separator
-prefix = separator left space right separator
-block  = separator opening separator child separator closing separator
+module XL.SEMANTICS.MODULES with
 
-cr     = newline indents
-indent = indent cr
-unindent = unindent cr
-indents = "    "
-"block I+ I-" = indent cr child unindent cr
-"block  ( ) " = "(" child ")"
-"?wildcard?" = "'" self "'"
+     modules_path : string of text

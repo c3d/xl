@@ -52,6 +52,18 @@ module XL.PARSER is
         delete P
 
 
+    function IsValid(P : parser) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if a parser appears valid
+    // ------------------------------------------------------------------------
+        if P <> nil then
+            S : SC.scanner := P.scanner
+            if S <> nil then
+                if S.input <> nil then
+                    return true
+        return false
+
+
     type pending is record with
     // ------------------------------------------------------------------------
     //    Pending expression while parsing
@@ -259,6 +271,8 @@ module XL.PARSER is
             else if tok = SC.tokQUOTE then
                 right := PT.NewText(S.string_value, '''', pos)
                 prefix_priority := function_priority
+                if result = nil and new_statement then
+                    is_expression := false
             else if tok = SC.tokNAME or tok = SC.tokSYMBOL then
                 name := S.token
                 spelling := S.string_value

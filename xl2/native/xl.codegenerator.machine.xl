@@ -60,6 +60,47 @@ module XL.CODE_GENERATOR.MACHINE is
         return SYM.Temporary(base, Name.position)
 
 
+    // ========================================================================
+    // 
+    //    Expression management
+    // 
+    // ========================================================================
+
+    function MakeExpression(computation : BC.bytecode;
+                            mname       : PT.name_tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Create an expression from consistutive parts
+    // ------------------------------------------------------------------------
+        return parse_tree
+            'computation'
+            @value 'mname'
+
+
+    procedure SplitExpression(in out arg  : PT.tree;
+                              in out code : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Split the evaluation of an argument if it is an @value
+    // ------------------------------------------------------------------------
+        translate arg
+            when
+                ('Value')
+            then
+                SplitExpression Value, code
+                arg := Value
+
+            when
+                'ValueGenerator'
+                @value 'ValueName'
+            then
+                if code = nil then
+                    code := ValueGenerator
+                else
+                    code := parse_tree
+                        'code'
+                        'ValueGenerator'
+                arg := ValueName
+
+
 
     // ========================================================================
     //
@@ -252,41 +293,6 @@ module XL.CODE_GENERATOR.MACHINE is
     //    Function calls
     //
     // ========================================================================
-
-    function MakeExpression(computation : BC.bytecode;
-                            mname       : PT.name_tree) return BC.bytecode is
-    // ------------------------------------------------------------------------
-    //    Create an expression from consistutive parts
-    // ------------------------------------------------------------------------
-        return parse_tree
-            'computation'
-            @value 'mname'
-
-
-    procedure SplitExpression(in out arg  : PT.tree;
-                              in out code : PT.tree) is
-    // ------------------------------------------------------------------------
-    //   Split the evaluation of an argument if it is an @value
-    // ------------------------------------------------------------------------
-        translate arg
-            when
-                ('Value')
-            then
-                SplitExpression Value, code
-                arg := Value
-
-            when
-                'ValueGenerator'
-                @value 'ValueName'
-            then
-                if code = nil then
-                    code := ValueGenerator
-                else
-                    code := parse_tree
-                        'code'
-                        'ValueGenerator'
-                arg := ValueName
-
 
     function FunctionCall (toCall   : FN.function;
                            margs    : machine_args) return BC.bytecode is
@@ -481,13 +487,14 @@ module XL.CODE_GENERATOR.MACHINE is
     // ------------------------------------------------------------------------
         mname : PT.name_tree := SYM.Temporary ("fld")
         fdecl : PT.tree :=
-                parse_tree(@temp_decl 'mtype' 'mname')
+                parse_tree(@ref_decl 'mtype' 'mname')
 
         XLT.AddScopeDecl XLT.function_context, fdecl
 
         // Evaluate the argument so that it is a single value
         SplitExpression Record, result
 
+        // Evaluate the field indexing 
         Idx : PT.tree := parse_tree(@field 'mname' 'Record' 'MField')
         if result <> nil then
             result := parse_tree

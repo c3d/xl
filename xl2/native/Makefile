@@ -52,6 +52,8 @@ OTHER_SOURCES=					\
 	xl.semantics.overload.xl		\
 	xl.semantics.instructions.xs		\
 	xl.semantics.instructions.xl		\
+	xl.semantics.modules.xs			\
+	xl.semantics.modules.xl			\
 	xl.semantics.types.xs			\
 	xl.semantics.types.xl			\
 	xl.semantics.types.functions.xs		\

@@ -1,0 +1,18 @@
+08.Aggregates/non_record.xl:30: 'not_a_record with 
+    X : integer 
+    Y : integer
+' used as a type, but doesn't look like one
+| type DataBlob is not_a_record with
+|__________________________________^
+08.Aggregates/non_record.xl:34: Type of 'z_4' is not a record
+| Z : DataBlob
+|_^
+08.Aggregates/non_record.xl:34: Type of 'z_4' is not a record
+| Z : DataBlob
+|_^
+08.Aggregates/non_record.xl:34: Type of 'z_4' is not a record
+| Z : DataBlob
+|_^
+08.Aggregates/non_record.xl:34: Type of 'z_4' is not a record
+| Z : DataBlob
+|_^

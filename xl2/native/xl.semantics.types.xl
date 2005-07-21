@@ -98,17 +98,19 @@ module XL.SEMANTICS.TYPES is
 
     function EnterBuiltinType (Name  : text;
                                Bits  : integer;
-                               MType : text) return PT.tree is
+                               MType : text;
+                               cst   : boolean) return PT.tree is
     // ------------------------------------------------------------------------
     //   Enter a built-in type in the symbol table
     // ------------------------------------------------------------------------
         NameTree : PT.tree := PT.NewName (Name)
         TypeTree : PT.tree := EnterType (NameTree, nil, nil) // No initial value
-        tp : any_type := any_type(PT.FindInfo(TypeTree, "TYPE"))
+        tp : any_type := GetType(TypeTree)
         assert tp <> nil
 
         // Defaults for built-in types
-        tp.is_variable := true
+        tp.is_variable := not cst
+        tp.is_constant := cst
         tp.type_uid := builtin_type_uid
         builtin_type_uid += 1
         tp.bit_size := Bits
@@ -133,13 +135,13 @@ module XL.SEMANTICS.TYPES is
 
         if integer_type = nil then
             XLT.InitializeTranslator()
-            integer_type   := EnterBuiltinType ("integer", 32, "Int")
-            real_type      := EnterBuiltinType ("real", 64, "Real")
-            boolean_type   := EnterBuiltinType ("boolean", 1, "Bool")
-            character_type := EnterBuiltinType ("character", 16, "Char")
-            text_type      := EnterBuiltinType ("text", -1, "Text")
-            record_type    := EnterBuiltinType ("record", 0, "Rec")
-            module_type    := EnterBuiltinType ("module", 0, "Mod")
+            integer_type   := EnterBuiltinType ("integer", 32, "Int", false)
+            real_type      := EnterBuiltinType ("real", 64, "Real", false)
+            boolean_type   := EnterBuiltinType ("boolean", 1, "Bool", false)
+            character_type := EnterBuiltinType ("character", 16, "Char", false)
+            text_type      := EnterBuiltinType ("text", -1, "Text", false)
+            record_type    := EnterBuiltinType ("record", 0, "Rec", false)
+            module_type    := EnterBuiltinType ("module", 0, "Mod", true)
 
             // Enter pre-defined constants true and false
             true_tree : PT.name_tree := PT.NewName("true")
@@ -331,14 +333,14 @@ module XL.SEMANTICS.TYPES is
     // ------------------------------------------------------------------------
     //   Record the type associated with a tree, if any
     // ------------------------------------------------------------------------
-        PT.SetInfo tree, "T", type
+        PT.SetInfo tree, "TYPE", type
 
 
     function GetType(tree : PT.tree) return any_type is
     // ------------------------------------------------------------------------
     //    Return the type associated to a tree
     // ------------------------------------------------------------------------
-        return any_type(PT.FindInfo(tree, "T"))
+        return any_type(PT.FindInfo(tree, "TYPE"))
 
 
 

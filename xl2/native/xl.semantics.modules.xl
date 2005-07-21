@@ -1,0 +1,224 @@
+// ****************************************************************************
+//  xl.semantics.modules.xl         (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Implementation of XL modules
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PR = XL.PARSER
+import PT = XL.PARSER.TREE
+import SYM = XL.SYMBOLS
+import ASCII = XL.TEXT_IO.ENCODING.ASCII
+import XLT = XL.TRANSLATOR
+import BC = XL.BYTECODE
+import ERR = XL.ERRORS
+import TY = XL.SEMANTICS.TYPES
+import REC = XL.SEMANTICS.TYPES.RECORDS
+import DCL = XL.SEMANTICS.DECLARATIONS
+
+
+module XL.SEMANTICS.MODULES is
+// ----------------------------------------------------------------------------
+//    Parse modules and import statements
+// ----------------------------------------------------------------------------
+
+    initialization
+    // ------------------------------------------------------------------------
+    //    Start with a '.' path
+    // ------------------------------------------------------------------------
+        modules_path += text "."
+
+
+    function Reconcile (Iface : PT.tree;
+                        Body  : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Reconcile the header and body of a function
+    // ------------------------------------------------------------------------
+
+        // Evacuate the trivial cases
+        if Iface = nil then
+            return XLT.ScopeSemantics (Body, XLT.scopeGlobal)
+        else if Body = nil then
+            return XLT.ScopeSemantics (Iface, XLT.scopeGlobal)
+
+        // Complicated case: reconcile the interface and body
+        Body := XLT.ScopeSemantics (Body, XLT.scopeGlobal)
+        if REC.IsRecord(Body) then
+            IO.WriteLn "// IsRecord"
+        else
+            IO.WriteLn "// !IsRecord"
+
+        return Body
+
+
+    function ProcessImport (LongName     : PT.tree;
+                            ShortName    : PT.tree;
+                            out FileName : text) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Internal function to process an 'import' statement
+    // ------------------------------------------------------------------------
+
+        // Split X.Y.Z into components, and import X.Y if necessary
+        LeafName : PT.name_tree
+        Base     : PT.tree := nil
+        if LongName.kind = PT.xlNAME then
+            LeafName := PT.name_tree(LongName)
+            FileName := PT.XLNormalize(LeafName.value)
+        else
+            translate LongName
+                when ('BaseImport'.'EnclosedImport') then
+                    Base := ProcessImport (BaseImport, nil, FileName)
+                    if EnclosedImport.kind <> PT.xlNAME then
+                        ERR.Error "'$1' is not a valid module name",
+                                  EnclosedImport
+                        return parse_tree(@error)
+                    LeafName := PT.name_tree(EnclosedImport)
+                    FileName += "."
+                    FileName += PT.XLNormalize(LeafName.value)
+                else
+                    ERR.Error "'$1' is not a valid import name", LongName
+
+        // Check if we already imported the current module
+        KeyName   : text := "MOD:" + FileName
+        OldModule : PT.tree := SYM.GetProperty(XLT.main_context,KeyName,false)
+        if OldModule <> nil then
+            return OldModule
+
+        // Parse the interface and implementation files
+        DirName : text
+        Pass    : integer := 0
+        FileExt : text := ".xs"
+        InIface : boolean := true
+        Parsed  : PT.tree := nil
+        Iface   : PT.tree := nil
+        Body    : PT.tree := nil
+        for Pass in 1..2 loop
+            Found   : boolean := false
+            for DirName in modules_path loop
+                // TODO: Machine dependency here
+                FullName : text := DirName + "/" + FileName + FileExt
+                P : PR.parser := PR.Open (FullName)
+                if PR.IsValid (P) then
+                    Parsed := PR.Parse(P)
+                    if Parsed <> nil then
+                        Found := true
+                PR.Close(P)
+                exit if Found
+
+            if InIface then
+                Iface := Parsed
+            else
+                Body := Parsed
+
+            FileExt := ".xl"
+            InIface := false
+
+        if Iface = nil and Body = nil then
+            ERR.Error "No file found for module '$1'", LongName
+            return parse_tree(@error)
+
+        // Once parsed, reconcile them - This also runs semantics
+        result := Reconcile (Iface, Body)
+
+        // Store for possible later use in other module
+        SYM.SetProperty XLT.main_context, KeyName, result
+ 
+
+    function FindImportedItem(LongName : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Check if X.Y is already in the symbol table, return nil otherwise
+    // ------------------------------------------------------------------------
+    //   Whatever item is found here is then added to the local symbol table
+    //   so that it can be found using a local reference
+        errors  : text
+        matched : boolean := false
+        old_context : SYM.symbol_table := XLT.context
+
+        // Reset import context
+        XLT.context := XLT.last_import
+
+        // Check if the import is a nested or 'deep' import
+        // TODO: Check if we can't solve that with a single lookup rule
+        if LongName.kind = PT.xlNAME then
+            matched := true
+            ERR.PushErrorContext()
+            result := DCL.Lookup(LongName)
+            errors := ERR.PopErrorContext()
+            if errors <> "" then
+                result := nil
+        else
+            translate LongName
+                when ('Record'.'Field') where (REC.IsRecord(Record) and
+                                               Field.kind = PT.xlNAME) then
+                    matched := true
+                    ERR.PushErrorContext()
+                    result := REC.Index (Record, PT.name_tree(Field))
+                    errors := ERR.PopErrorContext()
+                    if errors <> "" then
+                        result := nil
+
+        // Restore original context
+        XLT.context := old_context
+
+        // Error if we did not match the shape of any tree
+        if not matched then
+            ERR.Error "The form '$1' is not valid in an import", LongName
+            return parse_tree(@error)
+
+
+    function ProcessImport (LongName     : PT.tree;
+                            ShortName    : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Process an 'import' statement
+    // ------------------------------------------------------------------------
+        FileName: text
+
+        // Check if the module already exists
+        original : PT.tree
+        original := FindImportedItem (LongName)
+        if original <> nil then
+            if not PT.Matches(original, parse_tree(@error)) then
+                ERR.Error "There is already something named '$1'", LongName
+                ERR.Error "It was defined as '$1'", original
+            return parse_tree(@error)
+
+        result := ProcessImport(LongName, ShortName, FileName)
+
+        // Check if the module was successfully compiled in
+        original := FindImportedItem (LongName)
+        if original = nil then
+            ERR.Error "The imported file did not define '$1'", LongName
+            return parse_tree(@error)
+
+
+    translation XLDeclarations
+    // ------------------------------------------------------------------------
+    //   Declaration of modules
+    // ------------------------------------------------------------------------
+         when
+             import 'ShortName' = 'LongName'
+         then
+             return ProcessImport (LongName, ShortName)
+
+         when
+             import 'LongName'
+         then
+             return ProcessImport (LongName, nil)

@@ -26,6 +26,7 @@
 import XLT = XL.TRANSLATOR
 import TYP = XL.SEMANTICS.TYPES
 import CGM = XL.CODE_GENERATOR.MACHINE
+import REC = XL.SEMANTICS.TYPES.RECORDS
 import BC = XL.BYTECODE
 
 
@@ -415,6 +416,14 @@ module XL.SEMANTICS.DECLARATIONS is
         return decl.machine_name
 
 
+    function ExtendType (Base : PT.tree; Fields : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Extend a type with additional fields
+    // ------------------------------------------------------------------------
+         trace [recdecl] "Extend type ", Base, " with ", Fields
+         return REC.EnterType (Base, Base, Fields)
+
+
     translation XLDeclarations
     // ------------------------------------------------------------------------
     //    Semantics processing of declarations
@@ -422,16 +431,19 @@ module XL.SEMANTICS.DECLARATIONS is
         when
             'Names' : 'Type'
         then
+            trace [decl] "Decl1: Name=", Names, " Type=", Type
             return ProcessDeclaration (Names, Type, nil, false)
 
         when
             'Names' : 'Type' := 'Value'
         then
+            trace [decl] "Decl2: Name=",Names," Type=",Type," Value=",Value
             return ProcessDeclaration (Names, Type, Value, false)
 
         when
             'Names' : 'Type' is 'Value'
         then
+            trace [decl] "Decl3: Name=",Names," Type=",Type," Value=",Value
             return ProcessDeclaration (Names, Type, Value, true)
 
 
@@ -440,6 +452,7 @@ module XL.SEMANTICS.DECLARATIONS is
         where
             IsDeclaration (Type, Names)
         then
+            trace [decl] "Decl4: Name=",Names," Type=",Type
             return ProcessDeclaration (Names, Type, nil, false)
 
         when
@@ -447,6 +460,7 @@ module XL.SEMANTICS.DECLARATIONS is
         where
             IsDeclaration (Type, Name)
         then
+            trace [decl] "Decl5: Name=",Name," Type=",Type," Value=",Value
             return ProcessDeclaration (Name, Type, Value, false)
 
         when
@@ -454,7 +468,26 @@ module XL.SEMANTICS.DECLARATIONS is
         where
             IsDeclaration (Type, Name)
         then
+            trace [decl] "Decl6: Name=",Name," Type=",Type," Value=",Value
             return ProcessDeclaration (Name, Type, Value, true)
+
+        when
+            'Type' 'Name' with 'Fields'
+        where
+            IsDeclaration (Type, Name)
+        then
+            trace [decl] "Decl7: Name=",Name," Type=",Type," Fields=",Fields
+            return ProcessDeclaration (Name, ExtendType (Type, Fields),
+                                       nil, true)
+
+        when
+            'Type' 'Name' with 'Fields' is 'Value'
+        where
+            IsDeclaration (Type, Name)
+        then
+            trace [decl] "Decl8: Name=",Name," Type=",Type," Fields=",Fields
+            return ProcessDeclaration (Name, ExtendType (Type, Fields),
+                                       Value, true)
 
 
     translation XLSemantics

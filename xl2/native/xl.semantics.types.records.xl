@@ -35,6 +35,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
 // ----------------------------------------------------------------------------
 //    Implementation of the module
 // ---------------------------------------------------------------------------- 
+
     procedure MakeFieldList (Fields      : PT.tree;
                              in out list : declaration_list) is
     // ------------------------------------------------------------------------
@@ -65,10 +66,12 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 MakeFieldList Y, list
 
             else
+                trace [recdecl] "Fields: ", Fields
                 Fields := XLT.XLDeclarations (Fields)
                 info : PT.info := PT.FindInfo(Fields, "DECL")
                 if info then
                     decl : info as declaration
+                    trace [recdecl] "Decl: ", decl
                     list += decl
                 else
                     ERR.Error "'$1' isn't a field declaration", Fields

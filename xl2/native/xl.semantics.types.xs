@@ -75,13 +75,13 @@ module XL.SEMANTICS.TYPES with
     function GetType(tree : PT.tree) return any_type
 
 
-    // The types for literals
-    integer_type     : PT.tree := nil
-    real_type        : PT.tree := nil
-    boolean_type     : PT.tree := nil
-    character_type   : PT.tree := nil
-    text_type        : PT.tree := nil
-    record_type      : PT.tree := nil
-    module_type      : PT.tree := nil
+    // The built-in types
+    integer_type        : PT.tree := nil
+    real_type           : PT.tree := nil
+    boolean_type        : PT.tree := nil
+    character_type      : PT.tree := nil
+    text_type           : PT.tree := nil
+    record_type         : PT.tree := nil
+    module_type         : PT.tree := nil
 
     procedure InitializeTypes

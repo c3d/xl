@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  xl.stylesheet                   (C) 1992-2004 Christophe de Dinechin (ddd) 
+//  module_definition.xl            (C) 1992-2004 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Default renderer for XL
+//     Test if we can define a module
 // 
 // 
 // 
@@ -23,15 +23,7 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-// Nothing really special here...
-infix  = separator left space self space right separator
-prefix = separator left space right separator
-block  = separator opening separator child separator closing separator
+module Znort with
+    X : integer
+    Y : real
 
-cr     = newline indents
-indent = indent cr
-unindent = unindent cr
-indents = "    "
-"block I+ I-" = indent cr child unindent cr
-"block  ( ) " = "(" child ")"
-"?wildcard?" = "'" self "'"
