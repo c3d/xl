@@ -231,6 +231,8 @@ module XL.PARSER is
             else if tok = SC.tokQUOTE then
                 right := PT.NewText(S.string_value, '''')
                 prefix_priority := function_priority
+                if result = nil and new_statement then
+                    is_expression := false
             else if tok = SC.tokNAME or tok = SC.tokSYMBOL then
                 name := S.token
                 spelling := S.string_value
