@@ -33,6 +33,7 @@ import ERR = XL.ERRORS
 import TY = XL.SEMANTICS.TYPES
 import REC = XL.SEMANTICS.TYPES.RECORDS
 import DCL = XL.SEMANTICS.DECLARATIONS
+import FL = XL.FILES
 
 
 module XL.SEMANTICS.MODULES is
@@ -96,6 +97,8 @@ module XL.SEMANTICS.MODULES is
                 else
                     ERR.Error "'$1' is not a valid import name", LongName
 
+        trace[modules] "Importing ", FileName
+
         // Check if we already imported the current module
         KeyName   : text := "MOD:" + FileName
         OldModule : PT.tree := SYM.GetProperty(XLT.main_context,KeyName,false)
@@ -113,15 +116,23 @@ module XL.SEMANTICS.MODULES is
         for Pass in 1..2 loop
             Found   : boolean := false
             for DirName in modules_path loop
-                // TODO: Machine dependency here
-                FullName : text := DirName + "/" + FileName + FileExt
-                P : PR.parser := PR.Open (FullName)
-                if PR.IsValid (P) then
-                    Parsed := PR.Parse(P)
-                    if Parsed <> nil then
-                        Found := true
-                PR.Close(P)
-                exit if Found
+                NormalizedName : text := FileName + FileExt
+                NameInDir : text
+                Directory : string of text := FL.Directory(DirName)
+                for NameInDir in Directory loop
+                    if PT.XLNormalize(NameInDir) = NormalizedName then
+                        // TODO: Machine dependency here
+                        FullName : text := DirName + "/" + NameInDir
+                        trace[modules] "Trying ", FullName
+                        P : PR.parser := PR.Open (FullName)
+                        if PR.IsValid (P) then
+                            Parsed := PR.Parse(P)
+                            if Parsed <> nil then
+                                trace[modules] "File ", FullName, " was parsed"
+                                Found := true
+                        PR.Close(P)
+                    exit if Found
+                exit if found
 
             if InIface then
                 Iface := Parsed

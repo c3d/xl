@@ -107,8 +107,11 @@ procedure Main is
             compile := true
         else if name = "-I" then
             if I + 1 <= Max - 1 then
+                new_path : string of text
                 I += 1
-                MOD.modules_path += CS.arguments[I]
+                new_path += CS.arguments[I]
+                new_path += MOD.modules_path
+                MOD.modules_path := new_path
 
         else if name = "-g" then
             CG.debug := true

@@ -34,6 +34,8 @@
 #include <vector>
 #include <map>
 #include <ciso646>
+#include <sys/types.h>
+#include <sys/dir.h>
 
 
 // ============================================================================
@@ -309,6 +311,21 @@ namespace xl
         namespace console
         {
             extern std::vector< ::text > arguments;
+        }
+    }
+
+    namespace files
+    {
+        inline std::vector<std::string> directory(std::string where)
+        {
+            std::vector<std::string> result;
+            DIR *dirp = opendir(where.c_str());
+            while(struct dirent *dp = readdir(dirp))
+            {
+                std::string entry(dp->d_name, dp->d_namlen);
+                result.push_back(entry);
+            }
+            return result;
         }
     }
 }
