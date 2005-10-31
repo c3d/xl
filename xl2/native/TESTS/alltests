@@ -70,6 +70,7 @@ do
     EXIT=0
     RUN=
     COMPILE=
+    OPT="-I $(dirname $TEST)"
 
     # Extract interesting variables
     eval $(./alltests.awk $TESTNAME)
@@ -102,10 +103,11 @@ do
                 echo -n C++...
                 c++ -I. $BASE.cpp > $LOG 2>&1
                 if [ -x ./a.out ] ; then
-                    $RUN >> $LOG 2>&1
+                    $RUN > $LOG 2>&1
                     RC=$?
                 else
                     # Make sure we don't optimize test away until it works
+                    echo "*** Compilation errors on " $(date) " ***">> $BASE.cpp
                     cat $LOG >> $BASE.cpp
                 fi
             fi
@@ -126,6 +128,10 @@ do
             THIS_FAILED="Output mismatch"
             diff $REF $LOG > $LOG.diff
             mv $LOG.diff $LOG
+            if [ -f $BASE.cpp ]; then
+               echo "*** Execution error on " $(date) " ***" >> $BASE.cpp
+               cat $LOG >> $BASE.cpp
+            fi
         else
             THIS_FAILED="Missing reference"
         fi

@@ -43,9 +43,10 @@ module XL.SEMANTICS.TYPES.FUNCTIONS with
     // ------------------------------------------------------------------------
     //    Information in a function signature
     // ------------------------------------------------------------------------
+    //    The return type is used as base type, since this is what the
+    //    value returned by the function will be
 
         parameters      : declaration_list
-        return_type     : any_type
         outputs_count   : integer
         inputs_count    : integer
         symbols         : SYM.symbol_table
@@ -54,10 +55,10 @@ module XL.SEMANTICS.TYPES.FUNCTIONS with
 
 
     // Create a function type
-    function MakeFnType(Source     : PT.tree;
-                        Parms      : PT.tree;
-                        ReturnType : PT.tree) return function_type
+    function NewFnType(Source     : PT.tree;
+                       Parms      : PT.tree;
+                       ReturnType : PT.tree) return function_type
 
-    function EnterType (Source  : PT.tree;
-                        Parms   : PT.tree;
-                        Ret     : PT.tree) return PT.tree
+    function EnterFnType (Source  : PT.tree;
+                          Parms   : PT.tree;
+                          Ret     : PT.tree) return PT.tree

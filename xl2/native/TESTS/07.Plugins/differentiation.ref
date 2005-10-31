@@ -19,16 +19,9 @@
 @ fnbeginparms 
 @ fnendparms) 
 @ fndeclend) 
-(@ fndeclbegin 
-(@ fnret0 
-@ fnname znort_7 
-@ fnbeginparms 
-@ fnendparms) 
-@ fndeclend) 
 (@ globtermnone 
 (@ globinitnone 
-(import IO = XL . TEXT_IO 
-@ nop 
+(@ nop 
 @ nop 
 (@ fnbodybegin main_6 
 (@ fnret0 
@@ -36,38 +29,26 @@
 @ fnbeginparms 
 @ fnendparms) 
 @ fnbody main_6 
-(@ localdecl Real w_8 
-@ localdecl Real t0_9 
-@ localdecl Real t_10 
-@ localdecl Real b_11 
-@ localdecl Real a_12 
-@ localdecl Real a2_13 
-@ localdecl Real y_14 
-@ localdecl Real z_15 
+(@ localdecl Real w_7 
+@ localdecl Real t0_8 
+@ localdecl Real t_9 
+@ localdecl Real b_10 
+@ localdecl Real a_11 
+@ localdecl Real a2_12 
+@ localdecl Real y_13 
+@ localdecl Real z_14 
 
-    @ nop 
-    @ nop 
-    @ nop 
+    @ decl 
+    @ decl 
+    @ decl 
     B := - A + B 
     A := (- 0 * X + - 2 * 1) * exp ( - 2 * X) 
     A2 := dexp (2 * X) / dX + d (exp (2 * X) ) / dX 
     Y := d (exp ( - 2 * W * (T - T0) ) * sin (2 * W * (T - T0) ) ) / dT 
-    Z := {constantfold} (sin X - sin X) 
-    IO . WriteLn Y
+    Z := {constantfold} (sin X - sin X)
 
 @ exitlabel main_6) 
-@ fnbodyend main_6) 
-(@ fnbodybegin znort_7 
-(@ fnret0 
-@ fnname znort_7 
-@ fnbeginparms 
-@ fnendparms) 
-@ fnbody znort_7 
-(
-    U := A + B + C * D * E
-
-@ exitlabel znort_7) 
-@ fnbodyend znort_7)))) 
+@ fnbodyend main_6)))) 
 @ mainbegin 
 @ maininvoke 
 @ mainend

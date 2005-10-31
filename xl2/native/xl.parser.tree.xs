@@ -46,7 +46,7 @@ module XL.PARSER.TREE with
     // ------------------------------------------------------------------------
     //    Attributes attached to a tree by semantics
     // ------------------------------------------------------------------------
-        dummy     : integer
+        name      : text
 
 
     type tree_node is record with

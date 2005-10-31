@@ -60,6 +60,7 @@ module XL.CODE_GENERATOR.MACHINE is
         return SYM.Temporary(base, Name.position)
 
 
+
     // ========================================================================
     // 
     //    Expression management
@@ -71,9 +72,27 @@ module XL.CODE_GENERATOR.MACHINE is
     // ------------------------------------------------------------------------
     //    Create an expression from consistutive parts
     // ------------------------------------------------------------------------
-        return parse_tree
+        etype : TY.any_type := TY.GetType(mname)
+        result := parse_tree
+                        'computation'
+                        @value 'mname'
+        if etype <> nil then
+            TY.SetType result, etype
+
+
+    function MakeWritable(computation : BC.bytecode;
+                          write       : BC.bytecode;
+                          mname       : PT.name_tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Create an expression from consistutive parts
+    // ------------------------------------------------------------------------
+        etype : TY.any_type := TY.GetType(mname)
+        result := parse_tree
             'computation'
+            @write 'write'
             @value 'mname'
+        if etype <> nil then
+            TY.SetType result, etype
 
 
     procedure SplitExpression(in out arg  : PT.tree;
@@ -90,6 +109,7 @@ module XL.CODE_GENERATOR.MACHINE is
 
             when
                 'ValueGenerator'
+                @write 'WriteOp'
                 @value 'ValueName'
             then
                 if code = nil then
@@ -99,6 +119,57 @@ module XL.CODE_GENERATOR.MACHINE is
                         'code'
                         'ValueGenerator'
                 arg := ValueName
+            when
+                'ValueGenerator'
+                @value 'ValueName'
+            then
+                if code = nil then
+                    code := ValueGenerator
+                else
+                    code := parse_tree
+                        'code'
+                        'ValueGenerator'
+                arg := ValueName
+
+
+    procedure SplitWrite(in out arg      : PT.tree;
+                         in out code     : PT.tree;
+                         in out write_op : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Split the evaluation of an argument if it is a writable value
+    // ------------------------------------------------------------------------
+        translate arg
+            when
+                ('Value')
+            then
+                SplitExpression Value, code
+                arg := Value
+
+            when
+                'ValueGenerator'
+                @write 'WriteOperation'
+                @value 'ValueName'
+            then
+                if code = nil then
+                    code := ValueGenerator
+                else
+                    code := parse_tree
+                        'code'
+                        'ValueGenerator'
+                arg := ValueName
+                write_op = WriteOperation
+            when
+                'ValueGenerator'
+                @value 'ValueName'
+            then
+                if code = nil then
+                    code := ValueGenerator
+                else
+                    code := parse_tree
+                        'code'
+                        'ValueGenerator'
+                arg := ValueName
+                write_op := nil
 
 
 
@@ -118,6 +189,7 @@ module XL.CODE_GENERATOR.MACHINE is
     //   Return a machine-level function declaration from a function or ptr
     // ------------------------------------------------------------------------
         Parm     : DCL.declaration
+        ParmDType: TY.any_type
         ParmType : PT.tree
         ParmName : PT.tree
 
@@ -130,26 +202,28 @@ module XL.CODE_GENERATOR.MACHINE is
             result := parse_tree(@fn_ret0)
         else if ocnt = 1 then
             if RetType <> nil then
-                ParmType := RetType.machine_type
+                ParmType := RetType.machine_name
                 result := parse_tree(@fn_ret1 'ParmType')
             else
                 for Parm in Parms loop
                     if Parm.is_output then
-                        ParmType := Parm.machine_type
+                        ParmDType := Parm.type
+                        ParmType := ParmDType.machine_name
                         result := parse_tree(@fn_ret1 'ParmType')
         else
             // Emit return type declaration early
             retDecl : PT.tree := parse_tree(@fn_retN_begin 'BaseName')
             if RetType <> nil then
-                ParmType := RetType.machine_type
+                ParmType := RetType.machine_name
                 resName : PT.tree := PT.NewName("result",BaseName.position)
                 retDecl := parse_tree
                     'retDecl'
                     @fn_retN_decl 'ParmType' 'resName'
             for Parm in Parms loop
                 if Parm.is_output then
+                    ParmDType := Parm.type
                     ParmName := Parm.machine_name
-                    ParmType := Parm.machine_type
+                    ParmType := ParmDType.machine_name
                     retDecl := parse_tree
                         'retDecl'
                         @fn_retN_decl 'ParmType' 'ParmName'
@@ -170,8 +244,9 @@ module XL.CODE_GENERATOR.MACHINE is
         // Input parameters
         for Parm in Parms loop
             if Parm.is_input then
+                ParmDType := Parm.type
                 ParmName := Parm.machine_name
-                ParmType := Parm.machine_type
+                ParmType := ParmDType.machine_name
                 result := parse_tree
                     'result'
                     @fn_parm 'ParmType' 'ParmName'
@@ -187,10 +262,11 @@ module XL.CODE_GENERATOR.MACHINE is
     //    Entry for an actual function
     // ------------------------------------------------------------------------
         MName   : PT.tree := f.machine_name
-        RetType : TY.any_type := f.return_type
-        Parms   : FT.declaration_list := f.parameters
-        icnt    : integer := f.inputs_count
-        ocnt    : integer := f.outputs_count
+        FnType  : f.type as FT.function_type
+        RetType : TY.any_type := FnType.base
+        Parms   : FT.declaration_list := FnType.parameters
+        icnt    : integer := FnType.inputs_count
+        ocnt    : integer := FnType.outputs_count
 
         MName := parse_tree(@fn_name 'MName')
         return MakeEntry(MName, f.machine_name, RetType, Parms, icnt, ocnt)
@@ -202,7 +278,7 @@ module XL.CODE_GENERATOR.MACHINE is
     // ------------------------------------------------------------------------
         MName   : PT.name_tree := SYM.Temporary("FnPtr")
         PName   : PT.tree := parse_tree(@fn_ptr_name 'MName')
-        RetType : TY.any_type := f.return_type
+        RetType : TY.any_type := f.base
         Parms   : FT.declaration_list := f.parameters
         icnt    : integer := f.inputs_count
         ocnt    : integer := f.outputs_count
@@ -225,32 +301,48 @@ module XL.CODE_GENERATOR.MACHINE is
     // ------------------------------------------------------------------------
     //    Copy all the output parameters to a big return struct if required
 
-        retType   : TY.any_type := f.return_type
+        FnType    : f.type as FT.function_type
+        retType   : TY.any_type := FnType.base
         retName   : PT.name_tree
         mtype     : PT.name_tree
+        dtype     : TY.any_type
         mname     : PT.name_tree := f.machine_name
-        ocnt      : integer := f.outputs_count
-        parms     : FN.declaration_list := f.parameters
+        ocnt      : integer := FnType.outputs_count
+        parms     : FN.declaration_list := FnType.parameters
         parmCount : integer := size(parms)
         parmIndex : integer
 
         if retType <> nil then
             ocnt += 1
 
+        // Copy preconditions checks
+        condition : PT.tree
+        for condition in f.preconditions loop
+            Body := parse_tree
+                'condition'
+                'Body'
+
         Body := parse_tree
             'Body'
             @exit_label 'mname'
 
+        // Copy post-conditions
+        for condition in f.postconditions loop
+            Body := parse_tree
+                'Body'
+                'condition'
+
         if ocnt = 1 then
             // One output to declare. It will be the returned value
             if retType <> nil then
-                mtype := retType.machine_type
-                retName := f.result_mname
+                mtype := retType.machine_name
+                retName := f.result_machine_name
             else
                 for parmIndex in 0..parmCount-1 loop
                     decl : FN.declaration := parms[parmIndex]
                     if decl.is_output then
-                        mtype := decl.machine_type
+                        dtype := decl.type
+                        mtype := dtype.machine_name
                         retName := decl.machine_name
             Body := parse_tree
                 @entry_ret1_decl 'mtype' 'mname'
@@ -262,15 +354,16 @@ module XL.CODE_GENERATOR.MACHINE is
                 @entry_retN_decl 'mname'
                 'Body'
             if retType <> nil then
-                retName := f.result_mname
-                mtype := retType.machine_type
+                retName := f.result_machine_name
+                mtype := retType.machine_name
                 Body := parse_tree
                     'Body'
                     @exit_retN_set 'mname' result 'retName'
             for parmIndex in 0..parmCount-1 loop
                 decl : FN.declaration := parms[parmIndex]
                 if decl.is_output then
-                    mtype := decl.machine_type
+                    dtype := decl.type
+                    mtype := dtype.machine_name
                     retName := decl.machine_name
                     Body := parse_tree
                         @entry_retN_loc 'mtype' 'retName'
@@ -305,12 +398,13 @@ module XL.CODE_GENERATOR.MACHINE is
     //       @value 'Type' 'Name'
     //  The caller then "pops" the @value part to know where the value resides
 
-        parms        : FN.declaration_list := toCall.parameters
+        FnType       : toCall.type as FT.function_type
+        parms        : FN.declaration_list := FnType.parameters
         mname        : PT.name_tree := toCall.machine_name
-        ocnt         : integer := toCall.outputs_count
+        ocnt         : integer := FnType.outputs_count
         argCount     : integer := size(margs)
         parmCount    : integer := size(parms)
-        retType      : TY.any_type := toCall.return_type
+        retType      : TY.any_type := FnType.base
         retValueName : PT.name_tree := nil
         retValueType : PT.name_tree := nil
         outputsName  : PT.name_tree := nil
@@ -327,7 +421,7 @@ module XL.CODE_GENERATOR.MACHINE is
         // Create a local temporary holding the returned value
         if retType <> nil then
             retValueName := SYM.Temporary("ret")
-            retValueType := retType.machine_type
+            retValueType := retType.machine_name
             retDecl : PT.tree :=
                 parse_tree(@temp_decl 'retValueType' 'retValueName')
             XLT.AddScopeDecl XLT.function_context, retDecl
@@ -342,7 +436,7 @@ module XL.CODE_GENERATOR.MACHINE is
         if toCall.is_builtin then
 
             // The result is a bytecode tree
-            result := parse_tree(@ 'mname')
+            result := parse_tree('mname')
 
             // Check if there is a return value, if so it becomes first arg
             if retType <> nil then
@@ -351,6 +445,8 @@ module XL.CODE_GENERATOR.MACHINE is
             // Add other arguments
             for arg in margs loop
                 result := parse_tree('result' 'arg')
+
+            result := parse_tree(@ 'result')
 
         else // Not a built-in, regular function call
 
@@ -372,7 +468,8 @@ module XL.CODE_GENERATOR.MACHINE is
                     for argIndex in 0..argCount-1 loop
                         decl : FN.declaration := parms[argIndex]
                         if decl.is_output then
-                            declMType : PT.name_tree := decl.machine_type
+                            declDType : TY.any_type := decl.type
+                            declMType : PT.name_tree := declDType.machine_name
                             declMName : PT.name_tree := decl.machine_name
                             outputsDecl : PT.tree := parse_tree
                                 @call_ret1_decl 'declMType' 'declMName'
@@ -398,7 +495,8 @@ module XL.CODE_GENERATOR.MACHINE is
             for argIndex in 0..argCount-1 loop
                 decl : FN.declaration := parms[argIndex]
                 if decl.is_input then
-                    MType  : PT.name_tree := decl.machine_type
+                    DType  : TY.any_type := decl.type
+                    MType  : PT.name_tree := DType.machine_name
                     MValue : PT.tree := margs[argIndex]
                     result := parse_tree
                         'result'
@@ -425,7 +523,8 @@ module XL.CODE_GENERATOR.MACHINE is
                 for argIndex in 0..argCount-1 loop
                     decl : FN.declaration := parms[argIndex]
                     if decl.is_output then
-                        MType  : PT.name_tree := decl.machine_type
+                        DType  : TY.any_type := decl.type
+                        MType  : PT.name_tree := DType.machine_name
                         MName  : PT.name_tree := decl.machine_name
                         MValue : PT.tree := margs[argIndex]
                         result := parse_tree
@@ -458,6 +557,7 @@ module XL.CODE_GENERATOR.MACHINE is
     // ------------------------------------------------------------------------
         Field     : DCL.declaration
         Fields    : RT.declaration_list := R.fields
+        FieldDType: TY.any_type
         FieldType : PT.tree
         FieldName : PT.tree
         MDecl     : BC.bytecode
@@ -465,8 +565,9 @@ module XL.CODE_GENERATOR.MACHINE is
 
         MDecl := parse_tree(@record_begin 'MName')
         for Field in Fields loop
+            FieldDType := Field.type
             FieldName := Field.machine_name
-            FieldType := Field.machine_type
+            FieldType := FieldDType.machine_name
             MDecl := parse_tree
                 'MDecl'
                 @record_field 'MName' 'FieldType' 'FieldName'

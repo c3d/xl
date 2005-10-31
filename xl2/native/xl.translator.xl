@@ -54,7 +54,6 @@ module XL.TRANSLATOR is
 
         if context = nil then
             context := SYM.NewSymbolTable(nil)
-            modules := SYM.NewSymbolTable(nil)
             PluginsInit
             nop := parse_tree(@nop)
 
@@ -82,36 +81,11 @@ module XL.TRANSLATOR is
         IO.Close file
 
 
-    function AddMainInitAndTerm(input : PT.tree) return PT.tree is
-    // ------------------------------------------------------------------------
-    //    Add the init and termination code
-    // ------------------------------------------------------------------------
-        inits : PT.tree := SYM.ScopeItems(main_context, "MAIN_INIT")
-        terms : PT.tree := SYM.ScopeItems(main_context, "MAIN_TERM")
-        result := parse_tree
-            'input'
-            @main_begin
-        if inits <> nil then
-            result := parse_tree
-                'result'
-                'inits'
-        result := parse_tree
-            'result'
-            @main_invoke
-        if terms <> nil then
-            result := parse_tree
-                'result'
-                'terms'
-        result := parse_tree
-            'result'
-            @main_end
-
-
     procedure Compile(input : PT.tree; output : IO.output_file) is
     // ------------------------------------------------------------------------
     //    Compile the tree to a given file
     // ------------------------------------------------------------------------
-
+        full_compile := true
         after_semantics : BC.bytecode := ScopeSemantics(input, scopeMain)
         if ERR.error_count = 0 then
             after_opt : BC.bytecode := XLOptimizations(after_semantics)
@@ -119,6 +93,34 @@ module XL.TRANSLATOR is
                 CG.Transcode after_opt, output
         if ERR.error_count > 0 then
             exit 2
+
+
+    function Append (t1 : PT.tree; t2 : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Append two trees, each can be nil
+    // ------------------------------------------------------------------------
+        if t1 <> nil then
+            if t2 <> nil then
+                return parse_tree
+                    't1'
+                    't2'
+            return t1
+        return t2
+
+
+    function AddMainInitAndTerm(input : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Add the init and termination code
+    // ------------------------------------------------------------------------
+        inits : PT.tree := SYM.ScopeItems(main_context, "MAIN_INIT")
+        terms : PT.tree := SYM.ScopeItems(main_context, "MAIN_TERM")
+        decls : PT.tree := SYM.ScopeItems(main_context, "MAIN_DECL")
+        result := Append(input, parse_tree(@main_begin))
+        result := Append(result, inits)
+        result := Append(result, parse_tree(@main_invoke))
+        result := Append(result, terms)
+        result := Append(result, parse_tree(@main_end))
+        result := Append(decls, result)
 
 
     function ScopeSemantics (input  : PT.tree;
@@ -156,81 +158,55 @@ module XL.TRANSLATOR is
         // TERM are the terminations for the scope
         result := XLDeclarations(input)
         result := XLSemantics(result)
-        decl : PT.tree := SYM.ScopeItems(context, "DECL")
         init : PT.tree := SYM.ScopeItems(context, "INIT")
         term : PT.tree := SYM.ScopeItems(context, "TERM")
+        if init <> nil then
+            init := XLSemantics(init)
+        if term <> nil then
+            term := XLSemantics(term)
+        // The above semantics may have added declarations
+        decl : PT.tree := SYM.ScopeItems(context, "DECL")
+
         if scope = scopeGlobal then
             // Make sure global init and term invoked from 'main'
             if init <> nil then
-                init := XLSemantics(init)
                 SYM.AddScopeItem main_context, "MAIN_INIT", init
             if term <> nil then
-                term := XLSemantics(term)
                 SYM.AddScopeItem main_context, "MAIN_TERM", term
             if decl <> nil then
-                result := parse_tree
-                    'decl'
-                    'result'
+                SYM.AddScopeItem main_context, "MAIN_DECL", decl
+
         else if scope = scopeMain then
+            // Here, 'function_context' is used for XL_Init/XL_Term temps
+            local_decl : PT.tree := SYM.ScopeItems(function_context, "DECL")
             if init <> nil then
-                init := XLSemantics(init)
-                ldecl : PT.tree := SYM.ScopeItems(function_context, "DECL")
-                if ldecl <> nil then
-                    result := parse_tree
-                        @globinit_begin
-                        'ldecl'
-                        'init'
-                        @globinit_end
-                        'result'
-                else
-                    result := parse_tree
-                        @globinit_begin
-                        'init'
-                        @globinit_end
-                        'result'
+                init := Append(local_decl, init)
+                result := parse_tree
+                    @globinit_begin
+                    'init'
+                    @globinit_end
+                    'result'
             else
                 result := parse_tree
                     @globinit_none
                     'result'
             if term <> nil then
-                term := XLSemantics(term)
-                ldecl : PT.tree := SYM.ScopeItems(function_context, "DECL")
-                if ldecl <> nil then
-                    result := parse_tree
-                        @globterm_begin
-                        'ldecl'
-                        'term'
-                        @globterm_end
-                        'result'
-                else
-                    result := parse_tree
-                        @globterm_begin
-                        'term'
-                        @globterm_end
-                        'result'
+                term := Append(local_decl, init)
+                result := parse_tree
+                    @globterm_begin
+                    'term'
+                    @globterm_end
+                    'result'
             else
                 result := parse_tree
                     @globterm_none
                     'result'
-            if decl <> nil then
-                result := parse_tree
-                    'decl'
-                    'result'
+            result := Append(decl, result)
+
         else // Some local scope
-            if init <> nil then
-                init := XLSemantics(init)
-                result := parse_tree
-                    'init'
-                    'result'
-            if decl <> nil then
-                result := parse_tree
-                    'decl'
-                    'result'
-            if term <> nil then
-                term := XLSemantics(term)
-                result := parse_tree
-                    'result'
-                    'term'
+            result := Append(init, result)
+            result := Append(result, term)
+            result := Append(decl, result)
 
         // Get back to original context
         context := SYM.Enclosing (context)

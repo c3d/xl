@@ -277,6 +277,7 @@ module XL.SCANNER is
 
                 exponent : integer := 0
                 negative_exponent : boolean := false
+                had_exponent : boolean := false
 
                 // Exponent sign
                 if C = '+' then
@@ -289,12 +290,17 @@ module XL.SCANNER is
                 // Exponent value
                 while IO.valid S.input and DigitValue C < 10 loop
                     exponent := 10 * exponent + DigitValue C
+                    had_exponent := true
                     NextChar S, C
                     if C = '_' then
-                        IgnoreChar S, C
-                        if DigitValue C >= 10 then
+                       IgnoreChar S, C
+                       if DigitValue C >= 10 then
                            ERR.Error "Invalid use of '_' in number exponent",
                                      S.position
+
+                // Check that we had an exponent
+                if not had_exponent then
+                    ERR.Error "Missing exponent", S.position
 
                 // Compute base ^ exponent
                 exponent_value : real := 1.0
@@ -356,10 +362,7 @@ module XL.SCANNER is
                     if C <> eos then
                         IO.PutBack S.input, C
                         S.position -= 1
-                        if eos = '"' then
-                            return tokSTRING
-                        else
-                            return tokQUOTE
+                        return tokTEXT
 
                 if not IO.Valid S.input or ASCII.is_line_break(C) then
                     ERR.Error "End of line in a string", S.position-1

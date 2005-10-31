@@ -51,6 +51,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
             then
                 MakeParameterList X, list, icnt, ocnt
                 MakeParameterList Y, list, icnt, ocnt
+                return
 
             when
                 'X'
@@ -58,12 +59,11 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
             then
                 MakeParameterList X, list, icnt, ocnt
                 MakeParameterList Y, list, icnt, ocnt
+                return
 
             else
-                Parms := XLT.XLDeclarations (Parms)
-                info : PT.info := PT.FindInfo(Parms, "DECL")
-                if info then
-                    decl : info as declaration
+                decl : declaration := DCL.GetDeclaration(Parms)
+                if decl then
                     list += decl
                     if decl.is_output then
                         ocnt += 1
@@ -78,17 +78,95 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
                     ERR.Error "'$1' isn't a parameter declaration", Parms
 
 
-    function MakeFnType(Source     : PT.tree;
-                        Parms      : PT.tree;
-                        ReturnType : PT.tree) return function_type is
+    function FunctionTypeMatch(iface: any_type;
+                               body : any_type) return boolean is
     // ------------------------------------------------------------------------
-    //    Create a basic type, possibly named
+    //   Check if an interface type and a body type match for functions
+    // ------------------------------------------------------------------------
+        ifaceF : iface as function_type
+        bodyF  : iface as function_type
+        if ifaceF = nil then
+            ERR.Error "Internal: Interface '$1' is not a function type",
+                      TY.Source(iface)
+            return false
+        if bodyF = nil then
+            ERR.Error "'$1' is not a function type",
+                      TY.Source(body)
+            return false
+
+        // Check return type
+        retType : any_type := ifaceF.base
+        if retType = nil then
+            if bodyF.base <> nil then
+                ERR.Error "Type '$1' returns a value", TY.Source(body)
+                ERR.Error "but '$1' does not", TY.Source(iface)
+                return false
+        else
+            if bodyF.base = nil then
+                ERR.Error "Type '$1' doesn't return a value", TY.Source(body)
+                ERR.Error "but '$1' does", TY.Source(iface)
+                return false
+            if not TY.SameType(retType, bodyF.base) then
+                ERR.Error "The return type of '$1'", TY.Source(bodyF)
+                ERR.Error "doesn't match that of '$1'", TY.Source(ifaceF)
+                return false
+
+        // Check parameter counts
+        if ifaceF.inputs_count <> bodyF.inputs_count then
+            ERR.Error "Incorrect number of input parameters for '$1'",
+                      TY.Source(body)
+            return false
+        if ifaceF.outputs_count <> bodyF.outputs_count then
+            ERR.Error "Incorrect number of output parameters for '$1'",
+                      TY.Source(body)
+            return false
+
+        // Check that the parameters have the same type and name
+        parmCount : integer := size(ifaceF.parameters)
+        if parmCount <> size(bodyF.parameters) then
+            ERR.Error "Incorrect number of parameters for '$1'",
+                      TY.Source(body)
+            return false
+        i : integer
+        for i in 0..parmCount-1 loop
+            iface_decl : declaration := ifaceF.parameters[i]
+            body_decl  : declaration := bodyF.parameters[i]
+            iface_name : PT.name_tree := iface_decl.name
+            body_name  : PT.name_tree := body_decl.name
+            if iface_name.value <> body_name.value then
+                ERR.Error "Parameter name '$1'", body_name
+                ERR.Error "doesn't match parameter name '$1'", iface_name
+                return false
+            iface_type : any_type := iface_decl.type
+            body_type  : any_type := body_decl.type
+            if not TY.SameType(iface_type, body_type) then
+                ERR.Error "Mismatched parameter type for '$1'", iface_name
+                return false
+
+        // Everything seems in order - match
+        return true
+
+
+    function NewFnType(Source     : PT.tree;
+                       Parms      : PT.tree;
+                       ReturnType : PT.tree) return function_type is
+    // ------------------------------------------------------------------------
+    //    Create a function type
     // ------------------------------------------------------------------------
 
+        // Create a new context for the parameters
+        XLT.context := SYM.NewSymbolTable (XLT.context)
+        SYM.SetInteger XLT.context, "FNPARM", 1
+
         if ReturnType <> nil then
-            result.return_type := TY.EvaluateType (ReturnType)
+            result.base := TY.EvaluateType (ReturnType)
+            if result.base = nil then
+                ERR.Error "Return type '$1' is not a valid type", ReturnType
+                TmpN : PT.name_tree := PT.NewName("function", Source.position)
+                result.base := TY.NewType(TmpN)
         else
-            result.return_type := nil
+            result.base := nil
+        result.interface_match := FunctionTypeMatch
         result.inputs_count := 0
         result.outputs_count := 0
         result.symbols := XLT.context
@@ -99,51 +177,31 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
             if N.value = "" then
                 Parms := nil
         if Parms <> nil then
+            Parms := XLT.XLDeclarations (Parms)
             MakeParameterList Parms, result.parameters,
                               result.inputs_count, result.outputs_count
 
-        // Flags set during semantics are almost all clear initially
-        result.is_constant            := false
-        result.is_variable            := false
-        result.is_generic             := false
-        result.is_polymorphic         := false
-        result.is_subroutine          := true
-        result.is_record              := false
-        result.is_reference           := false
-        result.is_instantiation       := false
-        result.is_compiler_generated  := false
+        // Assign type to the tree
+        TY.SetType Source, result
 
-        result.type_uid               := -1 // Not set
-        result.bit_size               := -1 // Not set
-        result.source_tree            := Source
-        result.name                   := nil
-        result.machine_type           := nil
+        // Return to enclosing context
+        XLT.context := SYM.Enclosing (XLT.context)
 
 
-    function EnterType (Source  : PT.tree;
-                        Parms   : PT.tree;
-                        Ret     : PT.tree) return PT.tree is
+    function EnterFnType (Source  : PT.tree;
+                          Parms   : PT.tree;
+                          Ret     : PT.tree) return PT.tree is
     // ------------------------------------------------------------------------
-    //   Enter a type in the symbol table
+    //   Enter a function type in the symbol table
     // ------------------------------------------------------------------------
-    //   A type is entered in the symbol table as a simple replacement
-    //   with the name, and the type info is attached to the name
-
-        XLT.context := SYM.NewSymbolTable (XLT.context)
-        SYM.SetInteger XLT.context, "FNPARM", 1
 
         // Attach a type info to the original name
-        tp : function_type := MakeFnType(Source, Parms, Ret)
-        tp.machine_type := CGM.EntryPointer(tp)
-        PT.SetInfo Source, "TYPE", tp
-        PT.SetInfo Source, "FNTYPE", tp
+        tp : function_type := NewFnType(Source, Parms, Ret)
+        MType : PT.name_tree := CGM.EntryPointer(tp)
+        tp.machine_name := MType
+        TY.EnterSignature MType.value, tp
 
-        // Return the end type
-        result := parse_tree (@type)
-        PT.SetInfo result, "TYPE", tp
-        PT.SetInfo result, "FNTYPE", tp
-
-        XLT.context := SYM.Enclosing (XLT.context)
+        return Source
 
 
     translation XLEvaluateType
@@ -151,8 +209,8 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
     //    Translation of function types
     // ------------------------------------------------------------------------
         when (function ('Parms') return 'ReturnType') then
-            return EnterType (input, Parms, ReturnType)
+            return EnterFnType (input, Parms, ReturnType)
 
         when (procedure ('Parms')) then
-            return EnterType (input, Parms, nil)
+            return EnterFnType (input, Parms, nil)
 

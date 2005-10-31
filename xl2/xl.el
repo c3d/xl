@@ -59,9 +59,10 @@
 (defvar xl-keywords
   '("generic" "is" "import"
     "in" "out" "variable" "constant" "var" "const"
-    "return" "other" "assume" "ensure" "written"
+    "return" "other" "require" "ensure" "written"
     "try" "catch" "retry" "raise"
     "while" "until" "for" "do" "loop" "exit"
+    "translate" "when" "where" "with"
     "if" "then" "else" "not" "and" "or" "nil")
   "List of words highlighted as 'keywords' in XL mode")
 
@@ -74,7 +75,7 @@
   "List of words highlighted as 'types' in XL mode")
 
 (defvar xl-functors
-  '("function" "procedure" "to")
+  '("function" "procedure" "to" "translation")
   "List of words declaring functions in XL mode")
 
 (defvar xl-type-declarators
@@ -125,6 +126,12 @@
     (,(rx (group (eval (xl-separators-regexp xl-comments))))
      (1 font-lock-comment-face))
     
+    ;; Pragmas
+    (,(rx (group (and "{" (0+ blank) (0+ word))))
+     (1 font-lock-preprocessor-face))
+    (,(rx (group "}"))
+     (1 font-lock-preprocessor-face))
+    
     ;; Keywords
     (,(rx (group (and word-start
                       (eval (cons 'or xl-keywords))
@@ -135,7 +142,7 @@
     (,(rx (and word-start
                (group (eval (cons 'or xl-warnings)))
                (1+ space) (group (and (1+ word)
-                                      (0+ "." (1+ word))))))
+                                      (0+ (and "." (1+ word)))))))
      (1 font-lock-keyword-face) (2 font-lock-warning-face))
     
     ;; Constants
@@ -169,21 +176,21 @@
    (,(rx (and word-start
               (group (eval (cons 'or xl-functors)))
               (1+ space) (group (and (1+ word)
-                                     (0+ "." (1+ word))))))
+                                     (0+ (and "." (1+ word)))))))
     (1 font-lock-keyword-face) (2 font-lock-function-name-face))
 
    ;; Type declarations
    (,(rx (and word-start
               (group (eval (cons 'or xl-type-declarators)))
               (1+ space) (group (and (1+ word)
-                                     (0+ "." (1+ word))))))
+                                     (0+ (and "." (1+ word)))))))
     (1 font-lock-keyword-face) (2 font-lock-type-face))
 
    ;; Module declarations (we use the preprocessor face for these)
    (,(rx (and word-start
               (group (eval (cons 'or xl-module-declarators)))
               (1+ space) (group (and (1+ word)
-                                     (0+ "." (1+ word))))))
+                                     (0+ (and "." (1+ word)))))))
     (1 font-lock-keyword-face) (2 font-lock-preprocessor-face))
 
    ;; Import directives
@@ -192,7 +199,7 @@
               (1+ space) (group (1+ word))
               (0+ space) "=" (0+ space)
               (group (and (1+ word))
-                     (0+ "." (1+ word)))))
+                     (0+ (and "." (1+ word))))))
     (1 font-lock-keyword-face)
     (2 font-lock-variable-name-face)
     (3 font-lock-preprocessor-face))
@@ -200,7 +207,7 @@
               (group "import")
               (1+ space)
               (group (and (1+ word))
-                     (0+ "." (1+ word)))))
+                     (0+ (and "." (1+ word))))))
     (1 font-lock-keyword-face)
     (2 font-lock-preprocessor-face))
 
@@ -209,7 +216,7 @@
               (group (1+ word))
               (0+ space) ":" (0+ space)
               (group (and (1+ word))
-                     (0+ "." (1+ word)))))
+                     (0+ (and "." (1+ word))))))
     (1 font-lock-variable-name-face)
     (2 font-lock-type-face))
 
@@ -232,8 +239,9 @@
   (let ((map (make-sparse-keymap)))
     ;; Mostly taken from xl-mode.el.
     (define-key map "\177" 'xl-backspace)
-    (define-key map [(shift tab)] 'xl-shift-left)
+    (define-key map [(shift tab)] 'xl-unindent-for-tab)
     (define-key map [(control tab)] 'xl-shift-right)
+    (define-key map [(control shift tab)] 'xl-shift-left)
     (define-key map "\C-c<" 'xl-shift-left)
     (define-key map "\C-c>" 'xl-shift-right)
 
@@ -377,7 +385,7 @@ or that the bracket/paren nesting depth is nonzero."
              (xl-skip-comments/blanks t)
              (and (re-search-backward (rx graph) (point-min) t)
                   (looking-at (rx (syntax punctuation)))
-                  (not (looking-at (rx ";")))))
+                  (not (looking-at (rx (or ";" ")" "]" "}"))))))
            (not (syntax-ppss-context (syntax-ppss))))
       (/= 0 (syntax-ppss-depth
 	     (save-excursion	  ; syntax-ppss with arg changes point
@@ -630,7 +638,7 @@ corresponding block opening (or nil)."
         (save-excursion
           (while (xl-beginning-of-block)
             (push (cons (current-indentation) (xl-initial-text)) unindents)))
-        (setq levels (append (reverse unindents) levels))
+        (setq levels (append (reverse unindents) levels unindents levels))
         (push (cons (+ (current-indentation) xl-indent) t)
               levels)))
     levels))
@@ -650,6 +658,11 @@ corresponding block opening (or nil)."
       (if (> (- (point-max) pos) (point))
 	  (goto-char (- (point-max) pos))))))
 
+(defun xl-unindent-for-tab ()
+  "Indent for tab with a -1 argument"
+  (interactive)
+  (indent-for-tab-command))
+
 (defun xl-indent-line ()
   "Indent current line as XL code.
 When invoked via `indent-for-tab-command', cycle through possible
@@ -657,13 +670,19 @@ indentations for current line.  The cycle is broken by a command different
 from `indent-for-tab-command', i.e. successive TABs do the cycling."
   (interactive)
   ;; Don't do extra work if invoked via `indent-region', for instance.
-  (if (not (eq this-command 'indent-for-tab-command))
+  (if (not (or (eq this-command 'indent-for-tab-command)
+               (eq this-command 'xl-unindent-for-tab)))
       (xl-indent-line-1)
-    (if (eq last-command this-command)
+    (if (or (eq last-command 'indent-for-tab-command)
+            (eq last-command 'xl-unindent-for-tab))
 	(if (= 1 xl-indent-list-length)
 	    (message "Sole indentation")
-	  (progn (setq xl-indent-index (% (1+ xl-indent-index)
-					      xl-indent-list-length))
+	  (progn (setq xl-indent-index
+                       (mod 
+                        (if (eq this-command 'xl-unindent-for-tab)
+                            (1- xl-indent-index)
+                          (1+ xl-indent-index))
+                        xl-indent-list-length))
 		 (beginning-of-line)
 		 (delete-horizontal-space)
 		 (indent-to (car (nth xl-indent-index xl-indent-list)))

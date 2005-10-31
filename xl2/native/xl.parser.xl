@@ -154,11 +154,11 @@ module XL.PARSER is
                 else if IsText (P, name, eot) then
                     S.string_value := SC.Comment (S, eot)
                     if pending = SC.tokNEWLINE then
-                        P.pending_token := SC.tokSTRING
+                        P.pending_token := SC.tokTEXT
                         return SC.tokNEWLINE
                     if eot = ASCII.CR and pending = SC.tokNONE then
                         P.pending_token := SC.tokNEWLINE
-                    return SC.tokSTRING
+                    return SC.tokTEXT
 
                 // If the next token has a substatement infix priority
                 // this takes over any pending newline. Example: else
@@ -265,11 +265,10 @@ module XL.PARSER is
             else if tok = SC.tokREAL then
                 right := PT.NewReal(S.real_value, pos)
                 prefix_priority := function_priority
-            else if tok = SC.tokSTRING then
-                right := PT.NewText(S.string_value, '"', pos)
-                prefix_priority := function_priority
-            else if tok = SC.tokQUOTE then
-                right := PT.NewText(S.string_value, '''', pos)
+            else if tok = SC.tokTEXT then
+                text_separator : character := S.token[0]
+                if text_separator <> '''' then text_separator := '"'
+                right := PT.NewText(S.string_value, text_separator, pos)
                 prefix_priority := function_priority
                 if result = nil and new_statement then
                     is_expression := false
@@ -546,7 +545,7 @@ module XL.PARSER is
                 priority := S.integer_value
 
             else if (tok = SC.tokNAME or tok = SC.tokSYMBOL or
-                     tok = SC.tokSTRING or tok = SC.tokQUOTE) then
+                     tok = SC.tokTEXT) then
                 txt := S.string_value
                 if txt = "NEWLINE" then
                     txt := ASCII.CR

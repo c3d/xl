@@ -35,34 +35,231 @@ module XL.SEMANTICS.TYPES is
 //   Implements data type parsing and representation
 // ----------------------------------------------------------------------------
 
-    function MakeType(Name : PT.tree; Source : PT.tree) return any_type is
+    type_table : map[text, any_type]
     // ------------------------------------------------------------------------
-    //    Create a basic type, possibly named
+    //   A table holding all existing types
     // ------------------------------------------------------------------------
 
-        // Flags set during semantics are all clear initially
-        result.is_constant            := false
-        result.is_variable            := false
-        result.is_generic             := false
-        result.is_polymorphic         := false
-        result.is_subroutine          := false
-        result.is_record              := false
-        result.is_reference           := false
-        result.is_instantiation       := false
-        result.is_compiler_generated  := false
 
-        result.type_uid               := -1 // Not set
-        result.bit_size               := -1 // Not set
-        result.source_tree            := Source
-        result.name                   := Name
-        result.machine_type           := nil
-
-
-    function EnterType (Name : PT.tree;
-                        Value : any_type;
-                        Source : PT.tree) return PT.tree is
+    procedure SetType(tree : PT.tree; type : any_type) is
     // ------------------------------------------------------------------------
-    //   Enter a type in the symbol table
+    //   Record the type associated with a tree, if any
+    // ------------------------------------------------------------------------
+        PT.SetInfo tree, "TYPE", type
+
+
+    function GetType(tree : PT.tree) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return the type associated to a tree
+    // ------------------------------------------------------------------------
+        info : PT.info := PT.FindInfo(tree, "TYPE");
+        tp : info as any_type
+        return tp
+
+
+    function SourceTypeMatch(iface : any_type;
+                             body : any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if a source type and a body match
+    // ------------------------------------------------------------------------
+        stp : iface as source_type
+        if stp = nil then
+            ERR.Error "Internal: '$1' is not a source type", Source(iface)
+            return false
+        if stp.implementation <> nil then
+            result := SameType (stp.implementation, body)
+            if not result then
+                ERR.Error "Types '$1' and '$2' don't match",
+                          Source(stp.implementation), Source(body)
+                return false
+            return true
+
+        // Matches and remember what we matched.
+        stp.implementation := body
+        return true
+
+
+    function NewType(Name : PT.tree) return any_type is
+    // ------------------------------------------------------------------------
+    //   Create a new type from source
+    // ------------------------------------------------------------------------
+        tp : source_type
+        tp.base := nil
+        tp.machine_name := nil
+        tp.interface_match := SourceTypeMatch
+        tp.name := Name
+        tp.interface := nil
+        tp.implementation := nil
+        return tp
+
+
+    function ChangeTypeConstness(base : any_type;
+                                 cst  : boolean) return any_type is
+    // ------------------------------------------------------------------------
+    //   Make the constant version of a type if needed
+    // ------------------------------------------------------------------------
+
+        // Check if already in type table by name
+        sigbase : text
+        if cst then
+            sigbase := "K"
+        else
+            sigbase := "V"
+
+        // Check if already in type table
+        mtype : PT.name_tree := base.machine_name
+        if mtype = nil then
+            ERR.Error "Internal: ConstVarType on unknown type", -1
+        ksig : text := sigbase + mtype.value
+        result := SignatureType(ksig)
+        if result <> nil then
+            return result
+
+        // Check if this already has a const-ness
+        tp : any_type := base
+        while tp <> nil loop
+            ktp : tp as constvar_type
+            if ktp <> nil then
+                if ktp.is_constant = cst then
+                    // Same constness: just return original type
+                    return base
+                if ktp.is_constant then
+                    ERR.Error "Constant type cannot be made variable",
+                              mtype.position
+                else
+                    ERR.Error "Variable type cannot be made constant",
+                              mtype.position
+            tp := tp.base
+
+        // Generate new type, and enter it in table
+        ktype : constvar_type
+        ktype.base := base
+        ktype.machine_name := PT.NewName(ksig, mtype.position)
+        ktype.interface_match := SourceTypeMatch
+        ktype.is_constant := cst
+        EnterSignature ksig, ktype
+        return ktype
+
+
+    function ConstantType(base : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //    Create a 'constant' version of a type
+    // ------------------------------------------------------------------------
+        return ChangeTypeConstness (base, true)
+
+
+    function VariableType(base : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //    Create a 'variable' version of a type
+    // ------------------------------------------------------------------------
+        return ChangeTypeConstness (base, false)
+
+
+    procedure EnterSignature(sig : text; tp : any_type) is
+    // ------------------------------------------------------------------------
+    //   Enter a new type signature in the type table
+    // ------------------------------------------------------------------------
+        type_table[sig] := tp
+
+
+    function SignatureType(sig : text) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return the type associated with a type signature
+    // ------------------------------------------------------------------------
+        return type_table[sig]
+
+
+    function IsConstVar (tp: any_type; cst : boolean) return boolean is
+    // ------------------------------------------------------------------------
+    //    Check if a type is explicitly constant or variable
+    // ------------------------------------------------------------------------
+        while tp <> nil loop
+            tpk : tp as constvar_type
+            if tpk then
+                return tpk.is_constant = cst
+            tp := tp.base
+        return false
+
+
+    function IsConstant(tp: any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if a type is explicitly constant
+    // ------------------------------------------------------------------------
+        return IsConstVar(tp, true)
+
+
+    function IsVariable(tp: any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if a type is explicitly variable
+    // ------------------------------------------------------------------------
+        return IsConstVar(tp, false)
+
+
+    function BaseType(tp : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //   Return the base type
+    // ------------------------------------------------------------------------
+        if tp = nil then
+            return nil
+        return tp.base
+
+
+    function IsConstedType(tp : any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if the type is constant X or variable X
+    // ------------------------------------------------------------------------
+        ktp : tp as const_var_type
+        return ktp <> nil
+
+
+    function NonConstedType(tp : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //   Return the non-consted version of the type
+    // ------------------------------------------------------------------------
+        ktp : tp as const_var_type
+        if ktp <> nil then
+            return ktp.base
+        return tp
+
+
+    function MachineName (tp: any_type ) return PT.name_tree is
+    // ------------------------------------------------------------------------
+    //   Return the machine name, create one if necessary
+    // ------------------------------------------------------------------------
+
+        // Check if we need to create a machine name
+        if tp.machine_name = nil then
+            ERR.Error "Trying to get machine name for unknown type", -1
+
+        return tp.machine_name
+
+
+    function Source(tp : any_type) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Return some source representation of the type
+    // ------------------------------------------------------------------------
+        constness : const_var_type := nil
+        while tp <> nil loop
+            tpk : tp as const_var_type
+            if tpk then
+                constness := tpk
+            tps : tp as source_type
+            if tps <> nil then
+                Name : PT.tree := tps.name
+                if constness <> nil then
+                    if constness.is_constant then
+                        return parse_tree (constant 'Name')
+                    return parse_tree(variable 'Name')
+                return Name
+            tp := tp.base
+
+        // Not found...
+        return nil
+
+
+    function EnterTypeSym (Name : PT.tree; Value : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a named type in the symbol table
     // ------------------------------------------------------------------------
     //   A type is entered in the symbol table as a simple replacement
     //   with the name, and the type info is attached to the name
@@ -70,53 +267,75 @@ module XL.SEMANTICS.TYPES is
         // When we enter a type, we expect a valid type name
         if Name.kind <> PT.xlNAME then
             ERR.Error "A type name was expected, got '$1'", Name
-            Name := SYM.Temporary ("invalid_type")
+            Name := SYM.Temporary ("invalid_type", Name.position)
 
         // Check if there is already a type by that name
         N : Name as PT.name_tree
         original : PT.tree := SYM.LookupOne(XLT.context, "TYPE", N.value)
         if original <> nil then
-            ERR.Error "The name '$1' can't be used for a type", Name
-            ERR.Error "because it is already used by type '$1'", original
-            return nil
+            ERR.Error "The type '$1' can't be defined here", Name
+            ERR.Error "because a type named '$1' already exists", original
+            result := parse_tree(@error)
+            SetType result, TY.GetType(original)
+            return result
 
-        // Attach a type info to the original name
-        tp : any_type := Value
-        if tp = nil then
-            tp := MakeType(Name, Source)
-        PT.SetInfo Name, "TYPE", tp
+        // Check if we have a type value associated with it
+        tp : any_type
+        if Value <> nil then
+            tp := EvaluateType(Value)
+            if tp = nil then
+                ERR.Error "Expression '$1' is not a type", Value
+                tp := NewType(Name)
+        else
+            tp := NewType(Name)
+
+        // Attach the type to the name
+        SetType Name, tp
 
         // Store the original name (with its type info) in symbol table
         SYM.Enter XLT.context, "TYPE", N.value, Name
 
+        // Create the result node and attach type to it
         result := parse_tree(@type)
-        PT.SetInfo result, "TYPE", tp
-        return result
+        SetType result, tp
 
 
-    builtin_type_uid : integer := 0
-
-    function EnterBuiltinType (Name  : text;
-                               Bits  : integer;
-                               MType : text;
-                               cst   : boolean) return PT.tree is
+    function EnterBuiltinType (Name  : text; MType : text) return PT.tree is
     // ------------------------------------------------------------------------
     //   Enter a built-in type in the symbol table
     // ------------------------------------------------------------------------
-        NameTree : PT.tree := PT.NewName (Name)
-        TypeTree : PT.tree := EnterType (NameTree, nil, nil) // No initial value
-        tp : any_type := GetType(TypeTree)
-        assert tp <> nil
+        NameTree : PT.name_tree := PT.NewName(Name, -1)
+        result := EnterTypeSym(NameTree, nil)
+        tp  : any_type := GetType (result)
+        stp : tp as source_type
+        if tp <> stp then
+            ERR.Error "Internal: Error creating builtin type", -1
+        stp.machine_name := PT.NewName(MType)
+        EnterSignature MType, stp
+        return NameTree
 
-        // Defaults for built-in types
-        tp.is_variable := not cst
-        tp.is_constant := cst
-        tp.type_uid := builtin_type_uid
-        builtin_type_uid += 1
-        tp.bit_size := Bits
-        tp.machine_type := PT.NewName(MType)
 
-        return TypeTree
+    function EnterType(Name : PT.tree; Value : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a type definition from the source
+    // ------------------------------------------------------------------------
+        result := EnterTypeSym (Name, Value)
+
+        // The type may already have a machine name from EvaluateType(Value)
+        tp  : any_type := GetType(result)
+        if tp.machine_name = nil then
+
+            // No associated machine type: need to enter type
+            NameTree : Name as PT.name_tree
+            sig : text := "type"
+            if NameTree then
+                sig += "_"
+                sig += PT.XLNormalize(NameTree.Value)
+            tp.machine_name := SYM.Temporary(sig, Name.position)
+
+            NameTree := tp.machine_name
+            sig := NameTree.Value
+            EnterSignature sig, tp
 
 
     procedure InitializeTypes is
@@ -135,13 +354,21 @@ module XL.SEMANTICS.TYPES is
 
         if integer_type = nil then
             XLT.InitializeTranslator()
-            integer_type   := EnterBuiltinType ("integer", 32, "Int", false)
-            real_type      := EnterBuiltinType ("real", 64, "Real", false)
-            boolean_type   := EnterBuiltinType ("boolean", 1, "Bool", false)
-            character_type := EnterBuiltinType ("character", 16, "Char", false)
-            text_type      := EnterBuiltinType ("text", -1, "Text", false)
-            record_type    := EnterBuiltinType ("record", 0, "Rec", false)
-            module_type    := EnterBuiltinType ("module", 0, "Mod", true)
+
+            // Enter basic types
+            integer_type   := EnterBuiltinType ("integer", "Int")
+            real_type      := EnterBuiltinType ("real", "Real")
+            boolean_type   := EnterBuiltinType ("boolean", "Bool")
+            character_type := EnterBuiltinType ("character", "Char")
+            text_type      := EnterBuiltinType ("text", "Text")
+            record_type    := EnterBuiltinType ("record", "Rec")
+            module_type    := EnterBuiltinType ("module", "Mod")
+
+            // Enter the types for literals
+            integer_literal_type := ConstantType(GetType(integer_type))
+            real_literal_type := ConstantType(GetType(real_type))
+            character_literal_type := ConstantType(GetType(character_type))
+            text_literal_type := ConstantType(GetType(text_type))
 
             // Enter pre-defined constants true and false
             true_tree : PT.name_tree := PT.NewName("true")
@@ -167,76 +394,26 @@ module XL.SEMANTICS.TYPES is
 
         // Check if the node itself had a type computed for it
         original : PT.tree := type_expr
-        info : PT.info := PT.FindInfo(type_expr, "TYPE")
-        if info <> nil then
-            result := any_type (info)
+        result := GetType(original)
+        if result <> nil then
             return result
-
-        // Check constant and variable prefixes
-        var_flag : boolean := false
-        cst_flag : boolean := false
-        prefixen : boolean := type_expr.kind <> PT.xlNAME
-        while prefixen loop
-            translate type_expr
-                when
-                    constant 'T'
-                then
-                    cst_flag := true
-                    type_expr := T
-                when
-                    const 'T'
-                then
-                    cst_flag := true
-                    type_expr := T
-                when
-                    variable 'T'
-                then
-                    var_flag := true
-                    type_expr := T
-                when
-                    var 'T'
-                then
-                    var_flag := true
-                    type_expr := T
-                else
-                    prefixen := false
-
 
         // If non-name, try to find if there is an expression that matches
         if type_expr.kind <> PT.xlNAME then
             type_expr := XLT.XLEvaluateType(type_expr)
-            info := PT.FindInfo (type_expr, "TYPE")
-            if info <> nil then
-                result := any_type(info)
+            result := GetType(type_expr)
+            if type_expr <> original then
+                SetType original, result
+            if result = nil then
+                ERR.Error "Expression '$1' has no type", original
+            return result
 
         // For names, lookup in the type table.
-        // If found, return original type info and cache result
-        if result = nil then
-            if type_expr.kind = PT.xlNAME then
-                tname : type_expr as PT.name_tree
-                result := NamedType(tname)
-            else
-                ERR.Error "'$1' used as a type, but doesn't look like one",
-                          type_expr
-                return nil
-
-        if cst_flag or var_flag then
-            if cst_flag and var_flag then
-                ERR.Error "Type '$1' can't be both variable and constant",
-                          original
-            else
-                result := Clone(result)
-                if cst_flag then
-                    result.is_constant := true
-                    result.is_variable := false
-                else
-                    result.is_variable := true
-                    result.is_constant := false
-
-        // Cache for next time
-        PT.SetInfo type_expr, "TYPE", result
-        if type_expr <> original then
-            PT.SetInfo original, "TYPE", result
+        if type_expr.kind = PT.xlNAME then
+            tname : type_expr as PT.name_tree
+            result := NamedType(tname)
+            SetType original, result
+            return result
 
 
     function NamedType (tname : PT.name_tree) return any_type is
@@ -251,15 +428,16 @@ module XL.SEMANTICS.TYPES is
                 ERR.Error "Internal: Multiple types for '$1'", tname
                 ERR.Error "One candidate is '$1'", types[0]
                 ERR.Error "Another candidate is '$1'", types[1]
-            info : PT.info := PT.FindInfo(original, "TYPE")
-            if info <> nil then
-                result := any_type (info)
-            else
+            result := GetType(original)
+            if result = nil then
                 ERR.Error "The type '$1' is undefined", tname
-                return nil
         else
             ERR.Error "The type '$1' is unknown", tname
-            return nil
+
+        // If we did not find it, enter it to avoid cascade errors
+        if result = nil then
+            NewType : PT.tree := EnterType(tname, nil)
+            result := GetType(NewType)
 
 
     function IsTypeName(type_expr : PT.tree) return boolean is
@@ -274,29 +452,25 @@ module XL.SEMANTICS.TYPES is
         if size(types) < 1 then
             return false
         original : PT.tree := types[0]
-        info : PT.info := PT.FindInfo(original, "TYPE")
-        if info = nil then
-            return false
-        return true
-
-
-    function TypeExpression(typeToken : any_type) return PT.tree is
-    // ------------------------------------------------------------------------
-    //   Return the expression corresponding to a type
-    // ------------------------------------------------------------------------
-        return typeToken.source_tree
+        return GetType(original) <> nil
 
 
     function SameType (t1 : any_type; t2: any_type) return boolean is
     // ------------------------------------------------------------------------
     //   Check if two types are identical
     // ------------------------------------------------------------------------
+        return t1 = t2
 
-        // If same type uid, then they match
-        if t1.type_uid = t2.type_uid then
-            return true
 
-        return false
+    function InterfaceMatch (iface: any_type; body: any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if the interface and body of types match
+    // ------------------------------------------------------------------------
+        ERR.PushErrorContext()
+        result := iface.interface_match(iface, body)
+        messages : text := ERR.PopErrorContext()
+        if not result then
+            ERR.Display messages
 
 
     function Convert(expr : PT.tree; toType : any_type) return PT.tree is
@@ -318,6 +492,7 @@ module XL.SEMANTICS.TYPES is
             return expr
 
         // Otherwise, barf for now
+        // TODO: Find written forms like 'written X'
         ERR.Error "Type conversion unimplemented for '$1'", expr
         return expr
 
@@ -329,35 +504,21 @@ module XL.SEMANTICS.TYPES is
         return Convert(expr, EvaluateType(toType))
 
 
-    procedure SetType(tree : PT.tree; type : any_type) is
-    // ------------------------------------------------------------------------
-    //   Record the type associated with a tree, if any
-    // ------------------------------------------------------------------------
-        PT.SetInfo tree, "TYPE", type
-
-
-    function GetType(tree : PT.tree) return any_type is
-    // ------------------------------------------------------------------------
-    //    Return the type associated to a tree
-    // ------------------------------------------------------------------------
-        return any_type(PT.FindInfo(tree, "TYPE"))
-
-
-
     translation XLDeclarations
     // ------------------------------------------------------------------------
     //   Translation of type statements
     // ------------------------------------------------------------------------
+        // Type declaration (the implementation is unknown yet)
         when
             type 'Name'
         then
-            // Initial 'source' is undefined
-            return EnterType (Name, nil, input)
+            return EnterType (Name, nil)
 
+        // Type definition
         when
             type 'Name' is 'Value'
         then
-            return EnterType (Name, EvaluateType(Value), input)
+            return EnterType (Name, Value)
 
 
     translation XLSemantics
@@ -370,7 +531,7 @@ module XL.SEMANTICS.TYPES is
         where
             Thing.kind = PT.xlINTEGER
         then
-            SetType Thing, any_type(PT.FindInfo(integer_type, "TYPE"))
+            SetType Thing, integer_literal_type
             return Thing
 
         when
@@ -378,7 +539,7 @@ module XL.SEMANTICS.TYPES is
         where
             Thing.kind = PT.xlREAL
         then
-            SetType Thing, any_type(PT.FindInfo(real_type, "TYPE"))
+            SetType Thing, real_literal_type
             return Thing
 
         when
@@ -388,8 +549,29 @@ module XL.SEMANTICS.TYPES is
         then
             TextTerminal : Thing as PT.text_tree
             if TextTerminal.quote = '"' then
-                SetType Thing, any_type(PT.FindInfo(text_type, "TYPE"))
+                SetType Thing, text_literal_type
             else
-                SetType Thing, any_type(PT.FindInfo(character_type, "TYPE"))
+                SetType Thing, character_literal_type
             return Thing
+
+
+    translation XLEvaluateType
+    // ------------------------------------------------------------------------
+    //   Evaluate common type expressions
+    // ------------------------------------------------------------------------
+        when
+            constant 'T'
+        then
+            tp: any_type := EvaluateType(T)
+            tp := ConstantType(tp)
+            SetType input, tp
+            return input
+
+        when
+            variable 'T'
+        then
+            tp: any_type := EvaluateType(T)
+            tp := VariableType(tp)
+            SetType input, tp
+            return input
 

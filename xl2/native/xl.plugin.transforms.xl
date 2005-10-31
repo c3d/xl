@@ -43,6 +43,6 @@ module XL.PLUGIN.TRANSFORMS is
            'Anything'
         then
            marker : PT.info
-           marker.dummy := 1
+           marker.name := "TRANSFORMS"
            Anything.info["TRANSFORMS"] := marker
            return Anything

@@ -47,16 +47,19 @@ module XL.SEMANTICS is
         then
             A := XLT.XLDeclarations A
             B := XLT.XLDeclarations B
-            return parse_tree
-                'A'
-                'B'
+            infix : input as PT.infix_tree
+            infix.left := A
+            infix.right := B
+            return infix
         when
             'A' ; 'B'
         then
             A := XLT.XLDeclarations A
             B := XLT.XLDeclarations B
-            return parse_tree
-                'A' ; 'B'
+            infix : input as PT.infix_tree
+            infix.left := A
+            infix.right := B
+            return infix
 
         // When semantics have been done already, don't do it again
         when
@@ -77,16 +80,19 @@ module XL.SEMANTICS is
         then
             A := XLT.XLSemantics A
             B := XLT.XLSemantics B
-            return parse_tree
-                'A'
-                'B'
+            infix : input as PT.infix_tree
+            infix.left := A
+            infix.right := B
+            return infix
         when
             'A' ; 'B'
         then
             A := XLT.XLSemantics A
             B := XLT.XLSemantics B
-            return parse_tree
-                'A' ; 'B'
+            infix : input as PT.infix_tree
+            infix.left := A
+            infix.right := B
+            return infix
 
         when
             ( 'Expr' )
@@ -102,6 +108,14 @@ module XL.SEMANTICS is
             block.child := XLT.ScopeSemantics (block.child, XLT.scopeLocal)
             return block
 
+        // Catch-all rule in case we did not find something
+        when
+            'Thing'
+        then
+            if XLT.full_compile then
+                ERR.Error "No translation found for '$1'", Thing
+                return parse_tree(@error)
+            return input
 
         // When semantics have been done already, don't do it again
         when

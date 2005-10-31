@@ -66,6 +66,7 @@ module XL.PARSER.TREE is
                 delete old
 
             from.info[name] := data
+            data.name := name
 
 
     procedure PurgeInfo(from : tree; name : text) is

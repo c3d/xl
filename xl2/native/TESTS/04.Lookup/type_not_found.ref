@@ -1,6 +1,3 @@
 04.Lookup/type_not_found.xl:28: The type 'This_Type_Doesnt_Exist' is unknown
 | YAB, YAK : This_Type_Doesnt_Exist
 |_________________________________^
-04.Lookup/type_not_found.xl:28: The type 'This_Type_Doesnt_Exist' is unknown
-| YAB, YAK : This_Type_Doesnt_Exist
-|_________________________________^

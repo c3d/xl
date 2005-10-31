@@ -13,7 +13,7 @@
 06.Functions/invalid_parameter_forms.xl:30: The type 'zoba' is unknown
 | function Bazoo(X : zabo; Y : zoba) return kano is Y
 |_________________________________^
-06.Functions/invalid_parameter_forms.xl:31: A function name was expected, got 'Bozaa [3]'
+06.Functions/invalid_parameter_forms.xl:31: 'Bozaa [3]' is not a valid function name
 | function Bozaa[3] return vibes
 |_______________^
 06.Functions/invalid_parameter_forms.xl:31: The type 'vibes' is unknown
@@ -22,18 +22,6 @@
 06.Functions/invalid_parameter_forms.xl:28: Name 'Y' was not declared here
 | function Zaboo() return kano is Y
 |_________________________________^
-06.Functions/invalid_parameter_forms.xl:28: Internal: Declared name 'Y' has no decl
-| function Zaboo() return kano is Y
-|_________________________________^
-06.Functions/invalid_parameter_forms.xl:28: Internal: decl has no machine name
-| function Zaboo() return kano is Y
-|_________________________________^
 06.Functions/invalid_parameter_forms.xl:29: Name 'Y' was not declared here
-| function Zoba return kona is Y
-|______________________________^
-06.Functions/invalid_parameter_forms.xl:29: Internal: Declared name 'Y' has no decl
-| function Zoba return kona is Y
-|______________________________^
-06.Functions/invalid_parameter_forms.xl:29: Internal: decl has no machine name
 | function Zoba return kona is Y
 |______________________________^

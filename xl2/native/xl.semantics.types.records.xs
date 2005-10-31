@@ -41,12 +41,10 @@ module XL.SEMANTICS.TYPES.RECORDS with
 
     type record_type_data is any_type_data with
     // ------------------------------------------------------------------------
-    //    Information in a function signature
+    //    Information in a record description
     // ------------------------------------------------------------------------
-
         fields          : declaration_list
         symbols         : SYM.symbol_table
-
     type record_type is access to record_type_data
 
 

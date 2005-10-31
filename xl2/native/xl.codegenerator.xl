@@ -151,7 +151,7 @@ module XL.CODE_GENERATOR is
                 else
                     had_nl := false
                     symbol := name
-            else if tok = SC.tokSTRING then
+            else if tok = SC.tokTEXT then
                 format : text := S.string_value
                 if had_nl then
                     bytecode_formats[symbol] += ASCII.CR
@@ -787,7 +787,7 @@ module XL.CODE_GENERATOR is
                 XL2C C
                 IO.write " "
                 XL2C A
-                IO.write " = static_cast< "
+                IO.write " = dynamic_cast< "
                 XL2C C
                 IO.Write " > ("
                 XL2C B
@@ -838,6 +838,9 @@ module XL.CODE_GENERATOR is
                  IO.write "struct "
                  XL2C T
                  IO.writeln " {"
+                 IO.write "virtual ~"
+                 XL2C T
+                 IO.writeln "(){}"
                  XL2C_Body Fields, false
                  IO.writeln "};"
             when
@@ -1488,6 +1491,7 @@ module XL.CODE_GENERATOR is
             Nm : text := XLNormalize(N)
             IO.Write "xl::parser::tree::tree ", Nm
             IO.WriteLn " = args",loop_index,"[text(", '"',Nm,'"', ")];"
+            IO.WriteLn Nm, "=", Nm, ";"
 
         if Condition <> nil then
             IO.Write "if ("
@@ -1633,7 +1637,7 @@ module XL.CODE_GENERATOR is
             IO.WriteLn Nm, "=", Nm, ";"
         IO.WriteLn "xl::parser::tree::tree result = input;"
 
-        XL2C_Stmt Body
+        XL2C_Body Body, true
         IO.WriteLn "return result;"
         IO.WriteLn "}"
 
@@ -1723,7 +1727,7 @@ module XL.CODE_GENERATOR is
 
         // Write the initialization code in said function
         IO.WriteLn "void init_", loop_index, "() {"
-        XL2C_Stmt What
+        XL2C_Body What, true
         IO.WriteLn "}"
 
 
@@ -1743,7 +1747,7 @@ module XL.CODE_GENERATOR is
 
         // Write the initialization code that calls said function
         IO.WriteLn "void term_", loop_index, "() {"
-        XL2C_Stmt What
+        XL2C_Body What, true
         IO.WriteLn "}"
 
 

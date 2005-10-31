@@ -26,6 +26,7 @@
 import XLT = XL.TRANSLATOR
 import ERR = XL.ERRORS
 import FN = XL.SEMANTICS.FUNCTIONS
+import FT = XL.SEMANTICS.TYPES.FUNCTIONS
 import PT = XL.PARSER.TREE
 import DCL = XL.SEMANTICS.DECLARATIONS
 import ERR = XL.ERRORS
@@ -86,7 +87,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                                 depth       : integer;
                                 base_score  : integer) return integer is
     // -----------------------------------------------------------------------
-    //   Check the type of parameters to see if written is valid
+    //   Check the type of parameters to see if written form matches
     // -----------------------------------------------------------------------
     //   At this point, we already ran through PT.Matches, so the 'args'
     //   map already contains the trees for each argument. We simply need
@@ -98,10 +99,8 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         for param_name in args loop
             value : PT.tree := XLT.XLSemantics(args[param_name])
             args[param_name] := value
-            value_type : TY.any_type := TY.GetType(value)
             decl : DCL.declaration := written.args_map[param_name]
-            decl_type : TY.any_type := decl.type
-            if not TY.SameType(decl_type, value_type) then
+            if not DCL.Assignable(decl, value) then
                 return 0
 
         return base_score
@@ -118,10 +117,11 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         written : info as written_form
         margs   : CGM.machine_args
         fninfo  : FN.function := written.function
+        fntype  : fninfo.type as FT.function_type
         arg     : FN.declaration
 
         // Order parameters in function call order
-        for arg in fninfo.parameters loop
+        for arg in fntype.parameters loop
             name_tree : PT.name_tree := arg.name
             name_text : text := name_tree.value
             value     : PT.tree := args[name_text]
@@ -138,10 +138,11 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         trace[written] "Written form for ", fniface
 
         // Find which function we are talking about
-        fninfo : FN.function := FN.FunctionInfo(fniface)
+        fninfo : FN.function := FN.GetFunction(fniface)
         if fninfo = nil then
             // If not a function, error message emitted already
             return fniface
+        fntype : fninfo.type as FT.function_type
 
         // Create the written form record
         written : written_form
@@ -149,7 +150,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
 
         // Discover all the function parameters
         decl : FN.declaration
-        for decl in fninfo.parameters loop
+        for decl in fntype.parameters loop
             nm : PT.name_tree := decl.name
             trace[written] "Written parm ", nm.value
             written.args_map[nm.value] := decl

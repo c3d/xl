@@ -1,18 +1,36 @@
-08.Aggregates/non_record.xl:30: 'not_a_record with 
+08.Aggregates/non_record.xl:30: Expression 'not_a_record with 
     X : integer 
     Y : integer
-' used as a type, but doesn't look like one
+' has no type
 | type DataBlob is not_a_record with
 |__________________________________^
-08.Aggregates/non_record.xl:34: Type of 'z_4' is not a record
-| Z : DataBlob
-|_^
-08.Aggregates/non_record.xl:34: Type of 'z_4' is not a record
-| Z : DataBlob
-|_^
-08.Aggregates/non_record.xl:34: Type of 'z_4' is not a record
-| Z : DataBlob
-|_^
-08.Aggregates/non_record.xl:34: Type of 'z_4' is not a record
-| Z : DataBlob
-|_^
+08.Aggregates/non_record.xl:30: Expression 'not_a_record with 
+    X : integer 
+    Y : integer
+' is not a type
+| type DataBlob is not_a_record with
+|__________________________________^
+08.Aggregates/non_record.xl:37: No translation found for 'Z . X'
+|     I : integer := Z.X
+|_____________________^
+08.Aggregates/non_record.xl:37: No translation found for 'I := Z . X'
+|     I : integer := Z.X
+|_____________________^
+08.Aggregates/non_record.xl:39: No translation found for 'Z . X'
+|     I := Z.X
+|___________^
+08.Aggregates/non_record.xl:39: No translation found for 'I := Z . X'
+|     I := Z.X
+|________^
+08.Aggregates/non_record.xl:40: No translation found for 'Z . X'
+|     return Z.X
+|_____________^
+08.Aggregates/non_record.xl:40: No translation found for 'result := Z . X'
+|     return Z.X
+|_____________^
+08.Aggregates/non_record.xl:43: No translation found for 'Z . X'
+| K : integer := Z.X
+|_________________^
+08.Aggregates/non_record.xl:43: No translation found for 'K := Z . X'
+| K : integer := Z.X
+|_________________^

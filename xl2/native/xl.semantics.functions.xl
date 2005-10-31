@@ -32,6 +32,8 @@ import ERR = XL.ERRORS
 import TY = XL.SEMANTICS.TYPES
 import BC = XL.BYTECODE
 import CGM = XL.CODE_GENERATOR.MACHINE
+import POS = XL.SCANNER.POSITION
+import ASCII = XL.TEXT_IO.ENCODING.ASCII
 
 
 module XL.SEMANTICS.FUNCTIONS is
@@ -39,66 +41,17 @@ module XL.SEMANTICS.FUNCTIONS is
 //   Implementation of the semantics of basic C++-style functions
 // ----------------------------------------------------------------------------
 
-    function MakeFn(NameTree    : PT.tree;
-                    Parms       : PT.tree;
-                    ReturnType  : PT.tree) return function is
-    // ------------------------------------------------------------------------
-    //    Create a basic type, possibly named
-    // ------------------------------------------------------------------------
-
-        // Check if the name looks valid
-        if NameTree.kind <> PT.xlNAME then
-            ERR.Error "A function name was expected, got '$1'", NameTree
-            NameTree := SYM.Temporary ("invalid_function_name")
-        Name : NameTree as PT.name_tree
-
-        // Flags set during semantics are almost all clear initially
-        result.is_constant            := true
-        result.is_variable            := false
-        result.is_input               := false
-        result.is_output              := false
-        result.is_parameter           := false
-        result.is_local               := false
-        result.is_global              := false
-        result.is_field               := false
-        result.is_builtin             := false
-
-        fn_type : FT.function_type := FT.MakeFnType (Name, Parms, ReturnType)
-
-        result.parameters             := fn_type.parameters
-        result.return_type            := fn_type.return_type
-        result.outputs_count          := fn_type.outputs_count
-        result.inputs_count           := fn_type.inputs_count
-        result.result_mname           := nil
-        result.symbols                := XLT.context
-
-        result.name                   := Name
-        result.machine_name           := CGM.Name(Name, fn_type)
-        result.type_source            := nil
-        result.type                   := fn_type
-        result.initializer            := nil
-        result.written_as             := nil
-        result.precondition           := nil
-        result.postcondition          := nil
-        result.interface              := nil
-        result.body                   := nil
-        result.frame_depth            := -1
-
-
-    function FunctionInfo (input : PT.tree) return function is
+    function GetFunction (input : PT.tree) return function is
     // ------------------------------------------------------------------------
     //   Return the function info associated with a tree
     // ------------------------------------------------------------------------
-        info : PT.info := PT.FindInfo(input, "FN")
-        if info <> nil then
-            fn : function := function (info)
-            return fn
-        else
+        info : PT.FindInfo(input, "FN") as function
+        if info = nil then
             ERR.Error "'$1' doesn't look like a function declaration", input
-        return nil
+        return info
 
 
-    function EnterFunction (Name    : PT.tree;
+    function EnterFunction (Names   : PT.tree;
                             Parms   : PT.tree;
                             RetType : PT.tree;
                             Iface   : PT.tree) return PT.tree is
@@ -106,51 +59,64 @@ module XL.SEMANTICS.FUNCTIONS is
     //   Enter a function in symbol table and return corresponding bytecode
     // ------------------------------------------------------------------------
 
-        f : function := MakeFn (Name, Parms, RetType)
-        ActualName : PT.name_tree := F.Name
-        MachineIface  : PT.Tree := CGM.Entry (f)
+        // Check validity of input name
+        if Names.kind <> PT.xlNAME then
+            ERR.Error "'$1' is not a valid function name", Names
+            Names := PT.NewName("invalid_function", Names.position)
+        Name : Names as PT.name_tree
+
+        // Create the function
+        f : function
+        f.Name                  := Name
+        f.type                  := FT.NewFnType(Iface, Parms, RetType)
+        f.initializer           := nil
+        f.machine_name          := CGM.Name(Name, f.type)
+        f.frame_depth           := SYM.GetInteger(XLT.context, "FRAMEDEPTH")
+        f.is_input              := false
+        f.is_output             := false
+        f.is_parameter          := SYM.GetInteger(XLT.context, "FNPARM") <> 0
+        f.is_local              := SYM.GetInteger(XLT.context, "LOCAL") <> 0
+        f.is_global             := SYM.GetInteger(XLT.context, "GLOBAL") <> 0
+        f.is_field              := SYM.GetInteger(XLT.context, "FIELD") <> 0
+        f.is_builtin            := false
+        f.implementation        := nil
+        f.machine_interface     := CGM.Entry(f)
+        f.symbols               := nil          // Only create if has body
+
+        // Declare the bytecode for the function declaration
+        MachineIface  : PT.Tree := f.machine_interface
         MachineDecl   : PT.Tree := parse_tree
             @fn_decl_begin
             'MachineIface'
             @fn_decl_end
-        SemanticsDecl : PT.Tree := parse_tree(@@fn_decl 'MachineIface')
 
-        // Indicate that we are in a function (for return instructions)
-        SYM.SetProperty XLT.context, "FN", f.machine_name
-
-        PT.SetInfo MachineIface, "FN", f
-        PT.SetInfo MachineDecl, "FN", f
-        PT.SetInfo SemanticsDecl, "FN", f
+        // Indicate that this is a function and a declaration
         PT.SetInfo Iface, "FN", f
-
-        // This is also a declaration
-        PT.SetInfo MachineIface, "DECL", f
-        PT.SetInfo MachineDecl, "DECL", f
-        PT.SetInfo SemanticsDecl, "DECL", f
         PT.SetInfo Iface, "DECL", f
 
-        pos : integer := Name.position
-        MachineDecl.position := pos
-        MachineIface.position := pos
-        SemanticsDecl.position := pos
+        // Also for the MachineIface, which will survive after semantics
+        PT.SetInfo MachineIface, "FN", f
+        PT.SetInfo MachineIface, "DECL", f
 
-        // Add the interface declaration
-        XLT.AddScopeDecl SYM.Enclosing(XLT.context), MachineDecl
+        // Add the interface declaration in an outer scope
+        XLT.AddScopeDecl XLT.global_context, MachineDecl
 
         // Enter the machine interface into the symbol table
         // We enter it in enclosing context because current context is
         // for parameter declarations
-        SYM.Enter SYM.Enclosing(XLT.context), "FN", ActualName.value, Iface
+        SYM.Enter SYM.Enclosing(XLT.context), "FN", Name.value, Iface
 
-        // Return the interface for Semantics (@@fn_decl [machine])
-        return SemanticsDecl
+        // Wrap the interface until semantics, and mark as decl / function
+        result := parse_tree(@@fn_decl 'MachineIface')
+        PT.SetInfo result, "FN", f
+        PT.SetInfo result, "DECL", f
 
 
-    function EnterFunction (FnForm : PT.tree) return PT.tree is
+    function EnterFunction (FnIface : PT.tree) return PT.tree is
     // ------------------------------------------------------------------------
     //   Process function forms
     // ------------------------------------------------------------------------
-        return XLT.XLEnterFunction(FnForm)
+        return XLT.XLEnterFunction(FnIface)
 
 
     function EnterBuiltinFunction(input : PT.tree;
@@ -160,7 +126,7 @@ module XL.SEMANTICS.FUNCTIONS is
     //    Enter a builtin function (bytecode)
     // ------------------------------------------------------------------------
         Interface := EnterFunction(Interface)
-        f : function := FunctionInfo(Interface)
+        f : function := GetFunction(Interface)
         if f.initializer <> nil then
             ERR.Error "Built-in '$1' was given initializer '$2'",
                       BuiltinName, f.initializer
@@ -169,8 +135,7 @@ module XL.SEMANTICS.FUNCTIONS is
         else
             BN : BuiltinName as PT.name_tree
             f.is_builtin := true
-            f.machine_name := PT.NewName(PT.XLNormalize(BN.Value),
-                                         BN.position)
+            f.machine_name := PT.NewName(PT.XLNormalize(BN.Value),BN.position)
             return Interface
         return input
 
@@ -182,9 +147,10 @@ module XL.SEMANTICS.FUNCTIONS is
     //   Enter the body of a function
     // ------------------------------------------------------------------------
         Interface := EnterFunction(Interface)
-        f : function := FunctionInfo(Interface)
+        f : function := GetFunction(Interface)
         if f.initializer <> nil then
-            ERR.Error "Extraneous initializer '$1'", Body
+            ERR.Error "Duplicate initializer '$1'", Body
+            ERR.Error "Original initializer was '$1'", f.initializer
         else if f.is_builtin then
             ERR.Error "Initializer for builtin '$1'", Interface
         else
@@ -193,19 +159,55 @@ module XL.SEMANTICS.FUNCTIONS is
         return input
 
 
+    function NormalizeInterface(Interface : PT.tree;
+                                RestOfInterface : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Used when the rest of an interface is in a block
+    // ------------------------------------------------------------------------
+        if RestOfInterface.kind = PT.xlINFIX then
+            N : RestOfInterface as PT.infix_tree
+            if N.name = ASCII.CR then
+                Interface := NormalizeInterface(Interface, N.left)
+                Interface := NormalizeInterface(Interface, N.right)
+                return Interface
+            else
+                Interface := NormalizeInterface(Interface, N.left)
+                N.left := Interface
+                return N
+
+        if RestOfInterface.kind = PT.xlPREFIX then
+            N : RestOfInterface as PT.prefix_tree
+            Left : PT.tree := N.left
+            Right : PT.tree := N.right
+            if Left.kind = PT.xlNAME then
+                L : Left as PT.name_tree
+                if Right.kind = PT.xlINFIX then
+                    R : Right as PT.infix_tree
+                    if R.name = "is" then
+                        Interface := PT.NewInfix(L.value, Interface, R.left)
+                        Interface := PT.NewInfix("is", Interface, R.right)
+                        return Interface
+                Interface := PT.NewInfix (L.value, Interface, N.right)
+                return Interface
+
+        ERR.Error "Invalid function attribute '$1'", RestOfInterface
+        return Interface
+
+
     translation XLEnterFunction
     // ------------------------------------------------------------------------
     //   Entering a function and returning the corresponding form
     // ------------------------------------------------------------------------
-
-        when
-            'Interface' is xl.bytecode.'BuiltinName'
-        then
-            return EnterBuiltinFunction(input, Interface, BuiltinName)
+        // Normalize an interface that spans multiple lines
         when
             'Interface'
-                is xl.bytecode.'BuiltinName'
+                'RestOfInterface'
         then
+            Interface := NormalizeInterface(Interface, RestOfInterface)
+            return XLT.XLEnterFunction(Interface)
+
+        // Bytecode declarations
+        when ('Interface' is xl.bytecode.'BuiltinName') then
             return EnterBuiltinFunction(input, Interface, BuiltinName)
         when
             'Interface' is
@@ -213,108 +215,130 @@ module XL.SEMANTICS.FUNCTIONS is
         then
             return EnterBuiltinFunction(input, Interface, BuiltinName)
 
-        when
-            'Interface' is 'Body'
-        then
+        // Definition of a function
+        when ('Interface' is 'Body') then
             return EnterFunctionBody(input, Interface, Body)
 
-        // Translate function preconditions
-        when
-            'Interface' require 'Pre'
-        then
+        // Function preconditions and postconditions
+        when ('Interface' require 'Pre') then
             result := EnterFunction(Interface)
-            ERR.Error "Precondition '$1': Not implemented yet", Pre
-
-        // Translate function postconditions
-        when
-            'Interface' ensure 'Post'
-        then
+            f : function := GetFunction(result)
+            f.preconditions += Pre
+        when ('Interface' ensure 'Post') then
             result := EnterFunction(Interface)
-            ERR.Error "Postcondition '$1': Not implemented yet", Post
+            f : function := GetFunction(result)
+            f.postconditions += Post
 
-
-        // Translate parameter lists
+        // Parameter lists
         when ('Name' ('Parms') return 'RetType') then
-            return EnterFunction(Name, Parms, RetType, Input)
-
-        when ('Name' () return 'RetType') then
-            return EnterFunction(Name, nil, RetType, Input)
-
+            return EnterFunction(Name, Parms, RetType, input)
         when ('Name' return 'RetType') then
-            return EnterFunction(Name, nil, RetType, Input)
-
+            return EnterFunction(Name, nil, RetType, input)
         when ('Name' ('Parms')) then
-            return EnterFunction(Name, Parms, nil, Input)
-
-        when ('Name' ()) then
-            return EnterFunction(Name, nil, nil, Input)
-
+            return EnterFunction(Name, Parms, nil, input)
         when ('Name') then
-            return EnterFunction(Name, nil, nil, Input)
-
-
-    function EnterFunctionScope (FnForm : PT.tree) return PT.tree is
-    // ------------------------------------------------------------------------
-    //   Create a new function scope and enter there
-    // ------------------------------------------------------------------------
-        XLT.context := SYM.NewSymbolTable (XLT.context)
-        SYM.SetInteger XLT.context, "FNPARM", 1
-        result := EnterFunction (FnForm)
-        XLT.context := SYM.Enclosing (XLT.context)
+            return EnterFunction(Name, nil, nil, input)
 
 
     translation XLDeclarations
     // ------------------------------------------------------------------------
     //    Translation of function declarations
     // ------------------------------------------------------------------------
-    //  Because these are very short forms, they are the closest we have
-    //  to keywords
-
         when
             function 'FunctionStuff'
         then
-            return EnterFunctionScope (FunctionStuff)
+            return EnterFunction (FunctionStuff)
 
         when
             procedure 'FunctionStuff'
         then
-            return EnterFunctionScope (FunctionStuff)
+            return EnterFunction (FunctionStuff)
 
         when
             to 'FunctionStuff'
         then
-            return EnterFunctionScope (FunctionStuff)
+            return EnterFunction (FunctionStuff)
 
 
-    function ProcessFunction (Interface : PT.tree;
-                              Body      : PT.tree) return BC.bytecode is
+    function CallAssertion (cond : PT.tree;
+                            call: text) return BC.bytecode is
     // ------------------------------------------------------------------------
-    //   Process the body of a function
+    //    Generate the code to call an assertion
+    // ------------------------------------------------------------------------
+        file    : text
+        line    : integer
+        column  : integer
+        source  : text
+        POS.PositionToLine cond.position, file, line, column, source
+
+        fileT   : PT.tree := PT.NewText (file, '"', cond.position)
+        lineT   : PT.tree := PT.NewInteger (line, cond.position)
+        columnT : PT.tree := PT.NewInteger (column, cond.position)
+        sourceT : PT.tree := PT.NewText(source, '"', cond.position)
+        callT   : PT.tree := PT.NewName(call, cond.position)
+
+        code    : BC.bytecode
+        code := parse_tree
+            if not('cond') then
+                'callT' ('fileT', 'lineT', 'columnT', 'sourceT')
+
+        return XLT.ScopeSemantics(code, XLT.scopeFunction)
+
+
+    function FunctionSemantics (Interface : PT.tree;
+                                Body      : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Perform function semantics, primarily semantics on function body
     // ------------------------------------------------------------------------
 
         // Remove the coating around the machine interface
         translate Interface
             when
-                @@fn_decl 'MachineIface'
+                @@fn_decl 'DeclaredIface'
             then
-                Interface := MachineIface
+                Interface := DeclaredIface
+
+        // Create a symbol table for the body (taking parms as enclosing)
+        f           : function := GetFunction(Interface)
+        ftype       : f.type as FT.function_type
+        context     : SYM.symbol_table := XLT.context
+        frame_depth : integer := SYM.GetInteger(context, "FRAMEDEPTH")
+        XLT.context := SYM.NewSymbolTable (ftype.symbols)
+        SYM.SetInteger XLT.context, "FNPARM", 1
+        SYM.SetInteger XLT.context, "FRAMEDEPTH", frame_depth+1
+
+        // Indicate that we are in a function (for return instructions)
+        SYM.SetProperty XLT.context, "FN", f.machine_name
 
         // If there is a return type, create a 'result' variable
-        f : function := FunctionInfo(Interface)
-        context : SYM.symbol_table := XLT.context
-        XLT.context := f.symbols
-        retType : TY.any_type := f.return_type
+        retType : TY.any_type := ftype.base
         if retType <> nil then
-            retName : PT.name_tree := PT.NewName("result", Interface.position)
+            retName : PT.name_tree := PT.NewName("result", Body.position)
             decl    : DCL.declaration := DCL.Declare(retName, retType)
             if decl <> nil then
+                DType : TY.any_type := decl.type
                 MName : PT.name_tree := decl.machine_name
-                MType : PT.name_tree := decl.machine_type
-                f.result_mname := MName
+                MType : PT.name_tree := DType.machine_name
+                f.result_machine_name := MName
                 Body := parse_tree
                     @result_decl 'MType' 'MName'
                     'Body'
 
+        // Compute preconditions
+        preCond : PT.tree
+        preList : PT.tree_list
+        for preCond in f.preconditions loop
+            preList += CallAssertion(preCond, "precondition_error")
+        f.preconditions := preList
+
+        // Compute postconditions
+        postCond : PT.tree
+        postList : PT.tree_list
+        for postCond in f.postconditions loop
+            postList += CallAssertion(postCond, "postcondition_error")
+        f.postconditions := postList
+
+        // Perform body semantics
         Body := XLT.ScopeSemantics(Body, XLT.scopeFunction)
         result := CGM.FunctionBody(f, Interface, Body)
         XLT.context := context
@@ -328,7 +352,7 @@ module XL.SEMANTICS.FUNCTIONS is
         when
             @@fn_body 'Interface' 'Body'
         then
-            return ProcessFunction (Interface, Body)
+            return FunctionSemantics (Interface, Body)
 
         when
             @@fn_decl 'Interface'

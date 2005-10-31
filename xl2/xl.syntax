@@ -7,29 +7,31 @@ INFIX
         50      :
         100     STATEMENT
         110     is as
-        190     return with written
+        120     with written require ensure
         200     DEFAULT
         210     ,
         220     := += -= *= /= ^= |= &=
-        230     in of to
-        240     ..
-        250     and or xor
-        260     = < > <= >= <> !=
-        270     & |
-        280     + -
-        290     * /
-        300     ^ **
+        230     return 
+        240     and or xor
+        250     in of to
+        260     ..
+        270     = < > <= >= <>
+        280     & |
+        290     + -
+        300     * /
+        310     ^
         410     .
 
 PREFIX
         120     exit loop
-        125     case if return while when
-        310     not in out constant variable const var
-        320     function procedure to 
+        125     case if return while until when
+        320     not in out constant variable const var
+        330     function procedure to 
+        340     @
         400     ! ~
         400     - + * /
         400     FUNCTION
-        500     @ &
+        500     &
 
 POSTFIX
         400     ! ?

@@ -29,6 +29,7 @@ import SYM = XL.SYMBOLS
 import XLT = XL.TRANSLATOR
 import ERR = XL.ERRORS
 import FN = XL.SEMANTICS.FUNCTIONS
+import FT = XL.SEMANTICS.TYPES.FUNCTIONS
 import CGM = XL.CODE_GENERATOR.MACHINE
 import DCL = XL.SEMANTICS.DECLARATIONS
 import IO = XL.TEXT_IO
@@ -109,14 +110,15 @@ module XL.SEMANTICS.OVERLOAD is
                 trace [overload] "Testing ", C
 
                 // Retrieve function information, ignore non functions
-                F : PT.FindInfo(C, "FN") as FN.function
+                F : FN.function := FN.GetFunction(C)
                 if F = nil then
                     ERR.Error "Internal: No function info for '$1'", C
                     trace [overload] "FAIL: No function info"
                     restart
+                Ftype : F.type as FT.function_type
 
                 // Check number of parameters.
-                NP : integer := size(F.parameters)
+                NP : integer := size(Ftype.parameters)
                 if NA > NP then
                     ERR.Error "'$1' could not be selected because", C
                     ERR.Error "there are too many arguments for '$1'", Name
@@ -128,7 +130,7 @@ module XL.SEMANTICS.OVERLOAD is
                 Matching : boolean := true
                 Score    : integer := depth
                 A := 0
-                for D in F.parameters loop
+                for D in Ftype.parameters loop
                     if A < NA then
                         Arg := SemArgs[A]
                         trace [overload] "Testing argument ", Arg
@@ -144,18 +146,15 @@ module XL.SEMANTICS.OVERLOAD is
                             trace [overload] "Testing default argument ", Arg
                         exit if not Matching
                     AType : TY.any_type := TY.GetType(Arg)
-                    Matching := TY.SameType(D.type, AType)
+                    Matching := DCL.Assignable(D, Arg)
                     if not Matching then
                         trace [overload] "FAIL: Type mismatch for ", D.name
-                        trace [overload] "      Expected ", D.type_source
+                        trace [overload] "      Expected ", TY.Source(D.type)
                         trace [overload] "      Got ", AType.name
                         ERR.Error "'$1' could not be selected because", C
-                        if AType.name <> nil then
-                          ERR.Error "the type '$3' of '$1' doesn't match '$2'",
-                                    ArgList[A], D.type_source, AType.name
-                        else
-                          ERR.Error "the type of '$1' doesn't match '$2'",
-                                    ArgList[A], D.type_source
+                        ERR.Error "the type '$3' of '$1' doesn't match '$2'",
+                                    ArgList[A],
+                                    TY.Source(D.type), TY.Source(AType)
                         exit if not Matching
                     A += 1
 
@@ -211,7 +210,6 @@ module XL.SEMANTICS.OVERLOAD is
         OneFunction : PT.tree := SYM.LookupOne (XLT.context, "FN", Name.value)
         return OneFunction <> nil
 
-        // TODO: check if T is a name with a type value that has is_subroutine
         // TODO: deal with name in the form X.Y
 
 

@@ -1,2 +1,68 @@
 <!--The XL Scanner-->
 
+The XL scanner takes a sequence of characters from a file and turns it
+into a sequence of tokens. It is implemented in the module {tt "xl.scanner"}.
+
+XL scanning is quite simple. There are only five types of tokens:
+<OL>
+<LI>Integer or real numbers, beginning with a digit
+<LI>Names, beginning with a letter
+<LI>Strings, enclosed in single or double quotes
+<LI>Symbols, formed by consecutive sequences of punctuation characters
+<LI>Blanks and line separators
+</OL>
+
+<B>NUMBERS:</B> Numbers can be written in any base, using the '#'
+notation: {tt "16#FF"}.  They can contain a decimal dot to specify
+real numbers: {tt "5.21"}.  They can contain single underscores to
+group digits: {tt "1_980_000"}.  They can contain an exponent
+introduced with the letter E: {tt "1.31E6"}.  The exponent can be
+negative, indicating a real number: {tt "1.31E-6"}; {tt "1E-3"}.
+Another '#' sign can be used before 'E', in particular when 'E' is a
+digit of the base: {tt "16#FF#E20"}.  The exponent represents a power
+of the base: {tt "16#FF#E2"} is {tt "16#FF00"} Combinations of the
+above are valid: {tt "16#FF_00.00_FF#E-5"}.
+
+<B>NAMES:</B> Names begin with any letter, and are made of letters or
+digits: {tt "R19"},{tt "Hello"}.  Names can contain single underscores
+to group words: {tt "Big_Number"} Names are not case- nor
+underscore-sensitive: {tt "Joe_Dalton"}={tt "JOEDALTON"}
+
+
+<B>STRINGS:</B> Strings begin with a single or double quote, and
+terminate with the same quote used to begin them. They cannot contain
+a line termination.  A quote character can be embedded in a string by
+doubling it.  {tt "\"ABC\""} and {tt "'def ghi'"} are examples of
+valid strings.
+
+Note that the type associated with strings of characters is called
+{tt "text"}, not {tt "string"}.
+
+
+<B >SYMBOLS:</B> Symbols are sequences of punctuation characters other
+than a quote that are not separated by spaces. In symbols, the
+underscore is a significant character. Examples of valid symbols
+include ++ , ---> %-% Symbols are normally made of the longest
+possible sequence of punctuation characters (being terminated by any
+space, digit, letter or quote).  However, the six "parenthese"
+characters {tt "("} {tt ")"} {tt "["} {tt "]"} {tt "\{"} always
+represent a complete symbol by themselves.
+
+Examples:
+{tt "---X"} is the token {tt "---"} followed by the token {tt "X"}
+{tt "--((X))"} is the token {tt "--"} followed by two tokens {tt "("}
+followed by the token {tt "X"} followed by two tokens {tt ")"}
+
+
+<B>BLANKS:</B> In XL, indentation is significant, and represented
+internally by two special forms of parentheses, denoted as 'indent'
+and 'end'.  Indentation can use space or tabs, but not both in the
+same source file.
+
+
+<B>COMMENTS:</B> The scanner doesn't decide what is a comment. This
+decision is taken by the caller (normally the parser). The {tt "Comment"}
+function can be called, and skips until an 'end of comment'
+token is found. For XL, this is under-utilized, since an
+end-of-comment is always an end of line.
+

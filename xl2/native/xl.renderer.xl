@@ -66,7 +66,7 @@ module XL.RENDERER is
                 priority := S.integer_value
 
             else if (tok = SC.tokNAME or tok = SC.tokSYMBOL or
-                     tok = SC.tokSTRING or tok = SC.tokQUOTE) then
+                     tok = SC.tokTEXT) then
                 txt := S.string_value
                 if txt = "NEWLINE" then
                     txt := ASCII.CR

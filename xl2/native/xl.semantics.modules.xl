@@ -208,6 +208,16 @@ module XL.SEMANTICS.MODULES is
             ERR.Error "The imported file did not define '$1'", LongName
             return parse_tree(@error)
 
+        // Add the imported item into current scope
+        LN : LongName as PT.name_tree
+        if LN <> nil then
+            SYM.Enter XLT.context, "DECL", LN.value, original
+        SN : ShortName as PT.name_tree
+        if SN <> nil then
+            SYM.Enter XLT.context, "DECL", SN.value, original
+        else
+            ERR.Error "Short name '$1' is invalid", ShortName
+
 
     translation XLDeclarations
     // ------------------------------------------------------------------------

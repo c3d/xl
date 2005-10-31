@@ -34,7 +34,7 @@ module XL.SEMANTICS.FUNCTIONS with
 //    Interface of the semantics of basic C++-style functions
 // ----------------------------------------------------------------------------
 
-    type declaration            is DCL.declaration
+    type declaration            is FT.declaration
     type declaration_list       is FT.declaration_list
     type function_type          is FT.function_type
     type any_type               is TY.any_type 
@@ -44,16 +44,11 @@ module XL.SEMANTICS.FUNCTIONS with
     // ------------------------------------------------------------------------
     //   The function holds the parameters and return type
     // ------------------------------------------------------------------------
-    //   It is expected that the 'type' field be a function type, and
-    //   the type_source is empty
-
-        parameters       : declaration_list
-        return_type      : any_type
-        outputs_count    : integer
-        inputs_count     : integer
-        result_mname     : PT.name_tree
-        symbols          : SYM.symbol_table
-
+        machine_interface       : PT.tree
+        preconditions           : PT.tree_list
+        postconditions          : PT.tree_list
+        symbols                 : SYM.symbol_table // For locals
+        result_machine_name     : PT.name_tree
     type function is access to function_data
 
-    function FunctionInfo (input : PT.tree) return function
+    function GetFunction (input : PT.tree) return function

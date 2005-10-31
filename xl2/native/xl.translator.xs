@@ -44,7 +44,7 @@ module XL.TRANSLATOR with
     function_context  : SYM.symbol_table := nil
     main_context      : SYM.symbol_table := nil
     last_import       : SYM.symbol_table := nil
-    modules           : SYM.symbol_table := nil
+    full_compile      : boolean := false
 
     nop               : BC.bytecode
 

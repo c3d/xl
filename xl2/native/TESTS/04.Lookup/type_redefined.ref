@@ -1,10 +1,10 @@
-04.Lookup/type_redefined.xl:30: The name 'integer' can't be used for a type
+04.Lookup/type_redefined.xl:30: The type 'integer' can't be defined here
 | type integer
 |____________^
-[Compiler generated]: because it is already used by type 'integer'
-04.Lookup/type_redefined.xl:33: The name 'K' can't be used for a type
+[Compiler generated]: because a type named 'integer' already exists
+04.Lookup/type_redefined.xl:33: The type 'K' can't be defined here
 | type K is function (U : integer) return real
 |______^
-04.Lookup/type_redefined.xl:32: because it is already used by type 'K'
+04.Lookup/type_redefined.xl:32: because a type named 'K' already exists
 | type K is function (Z : integer) return integer
 |______^

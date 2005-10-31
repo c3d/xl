@@ -43,5 +43,4 @@ module XL.SEMANTICS.WRITTEN_FORMS with
     // ------------------------------------------------------------------------
         function                : FN.function
         args_map                : written_args_map
-
     type written_form is access to written_form_data
