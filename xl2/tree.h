@@ -25,7 +25,7 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-#include <ostream>
+#include <iostream>
 #include "base.h"
 
 
