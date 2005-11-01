@@ -175,32 +175,23 @@ module XL.TRANSLATOR is
                 SYM.AddScopeItem main_context, "MAIN_TERM", term
             if decl <> nil then
                 SYM.AddScopeItem main_context, "MAIN_DECL", decl
+            SYM.AddScopeItem main_context, "MAIN_INIT", result
+            result := parse_tree(@nop)
 
         else if scope = scopeMain then
             // Here, 'function_context' is used for XL_Init/XL_Term temps
             local_decl : PT.tree := SYM.ScopeItems(function_context, "DECL")
-            if init <> nil then
-                init := Append(local_decl, init)
-                result := parse_tree
-                    @globinit_begin
-                    'init'
-                    @globinit_end
-                    'result'
-            else
-                result := parse_tree
-                    @globinit_none
-                    'result'
-            if term <> nil then
-                term := Append(local_decl, init)
-                result := parse_tree
-                    @globterm_begin
-                    'term'
-                    @globterm_end
-                    'result'
-            else
-                result := parse_tree
-                    @globterm_none
-                    'result'
+            init := Append(local_decl, init)
+            init := Append(parse_tree(@globinit_begin), init)
+            init := Append(init, result) // Global code
+            init := Append(init, parse_tree(@globinit_end))
+
+            term := Append(local_decl, term)
+            term := Append(parse_tree(@globterm_begin), term)
+            term := Append(term, parse_tree(@globterm_end))
+
+            result := Append(init, SYM.ScopeItems(main_context, "MAIN_BODY"))
+            result := Append(result, term)
             result := Append(decl, result)
 
         else // Some local scope

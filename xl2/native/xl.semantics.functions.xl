@@ -302,10 +302,13 @@ module XL.SEMANTICS.FUNCTIONS is
         f           : function := GetFunction(Interface)
         ftype       : f.type as FT.function_type
         context     : SYM.symbol_table := XLT.context
-        frame_depth : integer := SYM.GetInteger(context, "FRAMEDEPTH")
+        frame_depth : integer := SYM.GetInteger(context, "FRAMEDEPTH", 0, true)
         XLT.context := SYM.NewSymbolTable (ftype.symbols)
         SYM.SetInteger XLT.context, "FNPARM", 1
         SYM.SetInteger XLT.context, "FRAMEDEPTH", frame_depth+1
+        if frame_depth > 0 then
+            ERR.Error "Nested functions are not supported yet",
+                      Body.position
 
         // Indicate that we are in a function (for return instructions)
         SYM.SetProperty XLT.context, "FN", f.machine_name
@@ -342,6 +345,10 @@ module XL.SEMANTICS.FUNCTIONS is
         Body := XLT.ScopeSemantics(Body, XLT.scopeFunction)
         result := CGM.FunctionBody(f, Interface, Body)
         XLT.context := context
+
+        // Add the function body to global scope
+        SYM.AddScopeItem XLT.main_context, "MAIN_BODY", result
+        result := parse_tree(@nop)
 
 
     translation XLSemantics
