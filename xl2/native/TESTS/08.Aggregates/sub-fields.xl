@@ -1,0 +1,40 @@
+// ****************************************************************************
+//  sub-fields.xl                   (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Test that we can access sub-fields in a record
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+type K0 is record with
+    A : integer
+    B : real
+
+record X with
+    A : integer
+    B : integer
+    C : K0
+
+to Copy(out Tgt : integer; in Src : integer) written Tgt := Src is XL.BYTECODE.copy_int
+
+procedure Main is
+    X.A := 0
+    X.C.A := 0
+

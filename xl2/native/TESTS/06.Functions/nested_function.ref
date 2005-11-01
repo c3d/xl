@@ -1,0 +1,3 @@
+06.Functions/nested_function.xl:33: Nested functions like are not supported yet
+|         return 0
+|________^

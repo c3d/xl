@@ -1,0 +1,35 @@
+// ****************************************************************************
+//  global_code.xl                  (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Test that we can execute instructions at global level
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+function EqualInt(A, B : integer)
+    return boolean
+    written A=B
+    is XL.BYTECODE.equ_int
+to CopyInt(out Tgt : integer; in Src : integer) written Tgt := Src is
+    XL.BYTECODE.CopyInt
+
+A : integer
+if A = 0 then
+    A := 1

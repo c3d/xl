@@ -1,0 +1,33 @@
+// ****************************************************************************
+//  write-to-lit.xl                 (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Check that we cannot write to a literal
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+// EXIT=2
+
+to Copy(out Tgt : integer; in Src : integer) written Tgt := Src
+
+A, B, C : integer
+
+procedure Main is
+    A := 0
+    0 := B
