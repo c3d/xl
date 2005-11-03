@@ -151,12 +151,12 @@ module XL.SEMANTICS.TYPES.RECORDS is
         // Attach a type info to the original name
         tp : record_type := MakeRecordType(Source, Base, Fields)
         tp.machine_name := CGM.DeclareRecord(tp)
-        TY.SetType Source, tp
+        TY.SetDefinedType Source, tp
         PT.SetInfo Source, "RECORD", tp
 
         // Return the end type
         result := parse_tree (@type)
-        TY.SetType result, tp
+        TY.SetDefinedType result, tp
         PT.SetInfo result, "RECORD", tp
 
         XLT.context := SYM.Enclosing (XLT.context)

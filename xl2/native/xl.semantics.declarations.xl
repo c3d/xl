@@ -359,7 +359,7 @@ module XL.SEMANTICS.DECLARATIONS is
                     ERR.Error "Internal: Multiple types for '$1'", tname
                     ERR.Error "One candidate is '$1'", types[0]
                     ERR.Error "Another candidate is '$1'", types[1]
-                if TY.GetType(original) <> nil then
+                if TY.GetDefinedType(original) <> nil then
                     return true
 
         // Otherwise, not a type name

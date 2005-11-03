@@ -57,6 +57,22 @@ module XL.SEMANTICS.TYPES is
         return tp
 
 
+    procedure SetDefinedType(tree : PT.tree; type : any_type) is
+    // ------------------------------------------------------------------------
+    //   Record the type associated with a tree, if any
+    // ------------------------------------------------------------------------
+        PT.SetInfo tree, "TYPEDEF", type
+
+
+    function GetDefinedType(tree : PT.tree) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return the type associated to a tree
+    // ------------------------------------------------------------------------
+        info : PT.info := PT.FindInfo(tree, "TYPEDEF");
+        tp : info as any_type
+        return tp
+
+
     function SourceTypeMatch(iface : any_type;
                              body : any_type) return boolean is
     // ------------------------------------------------------------------------
@@ -276,7 +292,7 @@ module XL.SEMANTICS.TYPES is
             ERR.Error "The type '$1' can't be defined here", Name
             ERR.Error "because a type named '$1' already exists", original
             result := parse_tree(@error)
-            SetType result, TY.GetType(original)
+            SetDefinedType result, TY.GetDefinedType(original)
             return result
 
         // Check if we have a type value associated with it
@@ -289,15 +305,15 @@ module XL.SEMANTICS.TYPES is
         else
             tp := NewType(Name)
 
-        // Attach the type to the name
-        SetType Name, tp
+        // Attach the type just defined to the name
+        SetDefinedType Name, tp
 
         // Store the original name (with its type info) in symbol table
         SYM.Enter XLT.context, "TYPE", N.value, Name
 
         // Create the result node and attach type to it
         result := parse_tree(@type)
-        SetType result, tp
+        SetDefinedType result, tp
 
 
     function EnterBuiltinType (Name  : text; MType : text) return PT.tree is
@@ -306,7 +322,7 @@ module XL.SEMANTICS.TYPES is
     // ------------------------------------------------------------------------
         NameTree : PT.name_tree := PT.NewName(Name, -1)
         result := EnterTypeSym(NameTree, nil)
-        tp  : any_type := GetType (result)
+        tp  : any_type := GetDefinedType (result)
         stp : tp as source_type
         if tp <> stp then
             ERR.Error "Internal: Error creating builtin type", -1
@@ -322,7 +338,7 @@ module XL.SEMANTICS.TYPES is
         result := EnterTypeSym (Name, Value)
 
         // The type may already have a machine name from EvaluateType(Value)
-        tp  : any_type := GetType(result)
+        tp  : any_type := GetDefinedType(result)
         if tp.machine_name = nil then
 
             // No associated machine type: need to enter type
@@ -365,10 +381,11 @@ module XL.SEMANTICS.TYPES is
             module_type    := EnterBuiltinType ("module", "Mod")
 
             // Enter the types for literals
-            integer_literal_type := ConstantType(GetType(integer_type))
-            real_literal_type := ConstantType(GetType(real_type))
-            character_literal_type := ConstantType(GetType(character_type))
-            text_literal_type := ConstantType(GetType(text_type))
+            const_boolean_type := ConstantType(GetDefinedType(boolean_type))
+            integer_literal_type := ConstantType(GetDefinedType(integer_type))
+            real_literal_type := ConstantType(GetDefinedType(real_type))
+            character_literal_type:=ConstantType(GetDefinedType(character_type))
+            text_literal_type := ConstantType(GetDefinedType(text_type))
 
             // Enter pre-defined constants true and false
             true_tree : PT.name_tree := PT.NewName("true")
@@ -394,16 +411,16 @@ module XL.SEMANTICS.TYPES is
 
         // Check if the node itself had a type computed for it
         original : PT.tree := type_expr
-        result := GetType(original)
+        result := GetDefinedType(original)
         if result <> nil then
             return result
 
         // If non-name, try to find if there is an expression that matches
         if type_expr.kind <> PT.xlNAME then
             type_expr := XLT.XLEvaluateType(type_expr)
-            result := GetType(type_expr)
+            result := GetDefinedType(type_expr)
             if type_expr <> original then
-                SetType original, result
+                SetDefinedType original, result
             if result = nil then
                 ERR.Error "Expression '$1' has no type", original
             return result
@@ -412,7 +429,7 @@ module XL.SEMANTICS.TYPES is
         if type_expr.kind = PT.xlNAME then
             tname : type_expr as PT.name_tree
             result := NamedType(tname)
-            SetType original, result
+            SetDefinedType original, result
             return result
 
 
@@ -428,7 +445,7 @@ module XL.SEMANTICS.TYPES is
                 ERR.Error "Internal: Multiple types for '$1'", tname
                 ERR.Error "One candidate is '$1'", types[0]
                 ERR.Error "Another candidate is '$1'", types[1]
-            result := GetType(original)
+            result := GetDefinedType(original)
             if result = nil then
                 ERR.Error "The type '$1' is undefined", tname
         else
@@ -437,7 +454,7 @@ module XL.SEMANTICS.TYPES is
         // If we did not find it, enter it to avoid cascade errors
         if result = nil then
             NewType : PT.tree := EnterType(tname, nil)
-            result := GetType(NewType)
+            result := GetDefinedType(NewType)
 
 
     function IsTypeName(type_expr : PT.tree) return boolean is
@@ -452,7 +469,7 @@ module XL.SEMANTICS.TYPES is
         if size(types) < 1 then
             return false
         original : PT.tree := types[0]
-        return GetType(original) <> nil
+        return GetDefinedType(original) <> nil
 
 
     function SameType (t1 : any_type; t2: any_type) return boolean is
@@ -490,6 +507,12 @@ module XL.SEMANTICS.TYPES is
         // If we already have the right type, return expression
         if SameType(exprType, toType) then
             return expr
+
+        // We can convert to constant
+        if IsConstant(toType) and not IsVariable(exprType) then
+            nonConsted : any_type := NonConstedType(toType)
+            if SameType(exprType, nonConsted) then
+                return expr
 
         // Otherwise, barf for now
         // TODO: Find written forms like 'written X'
@@ -564,7 +587,7 @@ module XL.SEMANTICS.TYPES is
         then
             tp: any_type := EvaluateType(T)
             tp := ConstantType(tp)
-            SetType input, tp
+            SetDefinedType input, tp
             return input
 
         when
@@ -572,6 +595,6 @@ module XL.SEMANTICS.TYPES is
         then
             tp: any_type := EvaluateType(T)
             tp := VariableType(tp)
-            SetType input, tp
+            SetDefinedType input, tp
             return input
 

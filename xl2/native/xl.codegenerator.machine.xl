@@ -520,6 +520,8 @@ module XL.CODE_GENERATOR.MACHINE is
         // If the callee has a value, then we specify it here
         if retType <> nil then
             result := MakeExpression(result, retValueName)
+            if not TY.IsVariable(retType) then
+                retType := TY.ConstantType(retType)
             TY.SetType retValueName, retType
             TY.SetType result, retType
 

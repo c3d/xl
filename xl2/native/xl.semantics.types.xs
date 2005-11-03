@@ -35,9 +35,13 @@ module XL.SEMANTICS.TYPES with
     type any_type_data
     type any_type is access to any_type_data
 
-    // Accessing the type in a parse tree
+    // Accessing the type in a parse tree (for values)
     procedure SetType(tree : PT.tree; type : any_type)
     function GetType(tree : PT.tree) return any_type
+
+    // Accessing the type in a parse tree (for type names)
+    procedure SetDefinedType(tree : PT.tree; type : any_type)
+    function GetDefinedType(tree : PT.tree) return any_type
 
     // Creating a new type
     function NewType(Name : PT.tree) return any_type
@@ -85,6 +89,7 @@ module XL.SEMANTICS.TYPES with
     module_type                 : PT.tree := nil
 
     // The literal types
+    const_boolean_type          : any_type := nil
     integer_literal_type        : any_type := nil
     real_literal_type           : any_type := nil
     character_literal_type      : any_type:= nil
@@ -127,3 +132,11 @@ module XL.SEMANTICS.TYPES with
     // ------------------------------------------------------------------------
         symbols                 : SYM.symbol_table
     type code_type is access to code_type_data
+
+
+    type type_type_data is any_type_data with
+    // ------------------------------------------------------------------------
+    //    Information regarding a type
+    // ------------------------------------------------------------------------
+        symbols                 : SYM.symbol_table
+    type type_type is access to type_type_data

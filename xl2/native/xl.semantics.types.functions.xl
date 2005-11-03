@@ -200,6 +200,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         MType : PT.name_tree := CGM.EntryPointer(tp)
         tp.machine_name := MType
         TY.EnterSignature MType.value, tp
+        TY.SetDefinedType Source, tp
 
         return Source
 

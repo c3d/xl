@@ -92,7 +92,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
 
         // Convert to boolean and evaluate condition
         Test := XLT.XLSemantics(Test)
-        Test := TY.Convert (Test, TY.boolean_type)
+        Test := TY.Convert (Test, TY.const_boolean_type)
         CGM.SplitExpression Test, prefix
 
         // Perform semantics on cases
