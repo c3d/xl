@@ -43,7 +43,6 @@ module XL.TRANSLATOR with
     global_context    : SYM.symbol_table := nil
     function_context  : SYM.symbol_table := nil
     main_context      : SYM.symbol_table := nil
-    last_import       : SYM.symbol_table := nil
     full_compile      : boolean := false
 
     nop               : BC.bytecode
@@ -63,6 +62,10 @@ module XL.TRANSLATOR with
     type recurse_fn is function(input : PT.tree) return BC.bytecode
     function Recurse(input : PT.tree;
                      what  : recurse_fn) return BC.bytecode
+
+    // Append two trees
+    function Append (t1 : PT.tree; t2 : PT.tree) return PT.tree
+
 
     // The following functions populate the local context
     procedure AddScopeDecl(table: SYM.symbol_table; decl : PT.tree)

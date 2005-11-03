@@ -167,7 +167,11 @@ module XL.SEMANTICS.WRITTEN_FORMS is
 
 
         // Enter that copy in the "XLSemantics" map
-        SYM.EnterRewrite SYM.Enclosing(XLT.context), "xlsemantics", written
+        trace [modules] "Entering written form into ", XLT.context
+        trace [modules] "Global context is  ", XLT.global_context
+        trace [modules] "Main context is  ", XLT.main_context
+
+        SYM.EnterRewrite XLT.context, "xlsemantics", written
 
         return fniface
 

@@ -112,23 +112,13 @@ module XL.CODE_GENERATOR.MACHINE is
                 @write 'WriteOp'
                 @value 'ValueName'
             then
-                if code = nil then
-                    code := ValueGenerator
-                else
-                    code := parse_tree
-                        'code'
-                        'ValueGenerator'
+                code := XLT.Append(code, ValueGenerator)
                 arg := ValueName
             when
                 'ValueGenerator'
                 @value 'ValueName'
             then
-                if code = nil then
-                    code := ValueGenerator
-                else
-                    code := parse_tree
-                        'code'
-                        'ValueGenerator'
+                code := XLT.Append(code, ValueGenerator)
                 arg := ValueName
 
 
@@ -150,24 +140,14 @@ module XL.CODE_GENERATOR.MACHINE is
                 @write 'WriteOperation'
                 @value 'ValueName'
             then
-                if code = nil then
-                    code := ValueGenerator
-                else
-                    code := parse_tree
-                        'code'
-                        'ValueGenerator'
+                code := XLT.Append(code, ValueGenerator)
                 arg := ValueName
                 write_op = WriteOperation
             when
                 'ValueGenerator'
                 @value 'ValueName'
             then
-                if code = nil then
-                    code := ValueGenerator
-                else
-                    code := parse_tree
-                        'code'
-                        'ValueGenerator'
+                code := XLT.Append(code, ValueGenerator)
                 arg := ValueName
                 write_op := nil
 

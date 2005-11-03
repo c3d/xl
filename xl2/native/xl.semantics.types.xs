@@ -119,3 +119,11 @@ module XL.SEMANTICS.TYPES with
     // ------------------------------------------------------------------------
         is_constant             : boolean
     type constvar_type is access to constvar_type_data
+
+
+    type code_type_data is any_type_data with
+    // ------------------------------------------------------------------------
+    //    Information regarding a code body
+    // ------------------------------------------------------------------------
+        symbols                 : SYM.symbol_table
+    type code_type is access to code_type_data

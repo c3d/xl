@@ -287,7 +287,7 @@ module XL.SEMANTICS.DECLARATIONS is
             SYM.Lookup body, "DECL", iface_name.value, list, SYM.lookupLocalOnly
 
             if size(list) = 0 then
-                ERR.Error "Did not find an implementation for '$1'", iface_name
+                ERR.Error "No implementation found for '$1'", iface_name
                 return false
 
             // It is enough if one matches
@@ -319,6 +319,9 @@ module XL.SEMANTICS.DECLARATIONS is
 
             // If we found a match, we may record the implementation
             iface_decl.implementation := found
+
+        // Everything seems to match...
+        return true
 
 
     function ExtendType (Base : PT.tree; Fields : PT.tree) return PT.tree is

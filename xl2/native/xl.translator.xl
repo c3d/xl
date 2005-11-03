@@ -28,6 +28,7 @@ import PR = XL.PARSER
 import IO = XL.TEXT_IO
 import BC = XL.BYTECODE
 import SEM = XL.SEMANTICS
+import TY = XL.SEMANTICS.TYPES
 import OPT = XL.OPTIMIZER
 import CG = XL.CODE_GENERATOR
 import SYM = XL.SYMBOLS
@@ -112,6 +113,8 @@ module XL.TRANSLATOR is
     // ------------------------------------------------------------------------
     //    Add the init and termination code
     // ------------------------------------------------------------------------
+    // The reason this is separate from other inits is to guarantee that the
+    // main initialization occurs after any module initialization
         inits : PT.tree := SYM.ScopeItems(main_context, "MAIN_INIT")
         terms : PT.tree := SYM.ScopeItems(main_context, "MAIN_TERM")
         decls : PT.tree := SYM.ScopeItems(main_context, "MAIN_DECL")
@@ -138,13 +141,15 @@ module XL.TRANSLATOR is
             old_global := global_context
             global_context := context
             SYM.SetInteger context, "GLOBAL", 1
-            last_import := context
+
+            // Storage for Init and Term temps
+            old_function := function_context
+            function_context := SYM.NewSymbolTable(context)
+
             if scope = scopeMain then
                 // We are the outermost ('main') context
                 main_context := context
                 old_global := context
-                // Storage for XL_Init and XL_Term temps
-                function_context := SYM.NewSymbolTable(context)
         else if scope = scopeFunction or scope = scopeLocal then
             SYM.SetInteger context, "LOCAL", 1
             if scope = scopeFunction then
@@ -167,8 +172,10 @@ module XL.TRANSLATOR is
         // The above semantics may have added declarations
         decl : PT.tree := SYM.ScopeItems(context, "DECL")
 
-        if scope = scopeGlobal then
+        if scope = scopeGlobal or scope = scopeMain then
             // Make sure global init and term invoked from 'main'
+            local_decl : PT.tree := SYM.ScopeItems(function_context, "DECL")
+            decl := Append(decl, local_decl)
             if init <> nil then
                 SYM.AddScopeItem main_context, "MAIN_INIT", init
             if term <> nil then
@@ -176,34 +183,27 @@ module XL.TRANSLATOR is
             if decl <> nil then
                 SYM.AddScopeItem main_context, "MAIN_DECL", decl
             SYM.AddScopeItem main_context, "MAIN_INIT", result
-            result := parse_tree(@nop)
-
-        else if scope = scopeMain then
-            // Here, 'function_context' is used for XL_Init/XL_Term temps
-            local_decl : PT.tree := SYM.ScopeItems(function_context, "DECL")
-            init := Append(local_decl, init)
-            init := Append(parse_tree(@globinit_begin), init)
-            init := Append(init, result) // Global code
-            init := Append(init, parse_tree(@globinit_end))
-
-            term := Append(local_decl, term)
-            term := Append(parse_tree(@globterm_begin), term)
-            term := Append(term, parse_tree(@globterm_end))
-
-            result := Append(init, SYM.ScopeItems(main_context, "MAIN_BODY"))
-            result := Append(result, term)
-            result := Append(decl, result)
-
+            if scope = scopeMain then
+                result := SYM.ScopeItems(main_context, "MAIN_BODY")
+            else
+                result := parse_tree(@nop)
         else // Some local scope
             result := Append(init, result)
             result := Append(result, term)
             result := Append(decl, result)
+
+        // Set the type of the result so that we can get inner symbols
+        if TY.GetType(result) = nil then
+            code_type : TY.code_type
+            code_type.symbols := context
+            TY.SetType result, code_type
 
         // Get back to original context
         context := SYM.Enclosing (context)
         if scope = scopeMain then
             result := AddMainInitAndTerm(result)
             global_context := old_global
+            function_context := old_function
         else if scope = scopeGlobal then
             global_context := old_global
         else if scope = scopeFunction then

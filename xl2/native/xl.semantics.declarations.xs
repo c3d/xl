@@ -25,6 +25,7 @@
 
 import PT = XL.PARSER.TREE
 import TY = XL.SEMANTICS.TYPES
+import SYM = XL.SYMBOLS
 
 
 module XL.SEMANTICS.DECLARATIONS with

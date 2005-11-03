@@ -48,186 +48,251 @@ module XL.SEMANTICS.MODULES is
         modules_path += text "."
 
 
+    procedure AddPath (path : text) is
+    // ------------------------------------------------------------------------
+    //   Add a path to the path list
+    // ------------------------------------------------------------------------
+        new_path : string of text
+        new_path += path
+        new_path += modules_path
+        modules_path := new_path
+
+
     function Reconcile (Iface : PT.tree;
-                        Body  : PT.tree) return BC.bytecode is
+                        Body  : PT.tree;
+                        Base  : PT.tree;
+                        Name  : PT.name_tree;
+                        Cached: boolean) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Reconcile the header and body of a function
     // ------------------------------------------------------------------------
 
-        // Evacuate the trivial cases
-        if Iface = nil then
-            return XLT.ScopeSemantics (Body, XLT.scopeGlobal)
-        else if Body = nil then
-            return XLT.ScopeSemantics (Iface, XLT.scopeGlobal)
+        // Find the enclosing symbol table
+        enclosing : SYM.symbol_table := XLT.global_context
+        iface_symbols : SYM.symbol_table
+        body_symbols  : SYM.symbol_table
 
-        // Complicated case: reconcile the interface and body
-        Body := XLT.ScopeSemantics (Body, XLT.scopeGlobal)
-        if REC.IsRecord(Body) then
-            IO.WriteLn "// IsRecord"
-        else
-            IO.WriteLn "// !IsRecord"
+        if Base <> nil then
+            BaseType : TY.GetType(Base) as TY.code_type
+            if BaseType = nil then
+                ERR.Error "Internal: Module '$1' has no code type", Base
+            else
+                enclosing := BaseType.symbols
 
-        return Body
+        // Run semantics on interface and body
+        // Get the type of the results, which should be a code type
+        if Iface <> nil then
+            iface_type : TY.GetType(Iface) as TY.code_type
+            if iface_type = nil then
+                ERR.Error "The imported interface '$1' is not valid", Iface
+                Iface := nil
+            else
+                iface_symbols := iface_type.symbols
+        if Body <> nil then
+            body_type : TY.GetType(Body) as TY.code_type
+            if body_type = nil then
+                ERR.Error "The imported body '$1' is not valid", Body
+                Body := nil
+            else
+                body_symbols := body_type.symbols
+
+        // Try to find the declarations in the interface
+        // There may be more than one matching, e.g. overloaded functions
+        // We add them to the enclosing scope
+        iface_defs: PT.tree_list
+        iface_def : PT.tree
+        decls     : DCL.declarations
+        decl      : DCL.declaration
+        if Iface <> nil then
+            SYM.Lookup iface_symbols, "DECL", Name.value,
+                       iface_defs,SYM.lookupLocalOnly
+            for iface_def in iface_defs loop
+                decl := DCL.GetDeclaration (iface_def)
+                if decl <> nil then
+                    decls += decl
+                    SYM.Enter enclosing, "DECL", Name.value, iface_def
+
+            if Body <> nil and not Cached then
+                if DCL.MatchInterface(decls, body_symbols) = false then
+                    ERR.Error "The body and interface of '$1' don't match", Name
+
+        else if Body <> nil then
+            SYM.Lookup body_symbols, "DECL", Name.value,
+                       iface_defs,SYM.lookupLocalOnly
+            for iface_def in iface_defs loop
+                decl := DCL.GetDeclaration (iface_def)
+                if decl <> nil then
+                    decls += decl
+                    SYM.Enter enclosing, "DECL", Name.value, iface_def
+
+        if size(decls) = 0 then
+            ERR.Error "No imported declaration found for '$1'", Name
+
+        return XLT.Append(Iface, Body)
 
 
-    function ProcessImport (LongName     : PT.tree;
-                            ShortName    : PT.tree;
-                            out FileName : text) return BC.bytecode is
+    function IsValidImport (LongName : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //    Check that the input long name looks valid
+    // ------------------------------------------------------------------------
+        if LongName.kind = PT.xlNAME then
+            return true
+        if LongName.kind = PT.xlINFIX then
+            LN : LongName as PT.infix_tree
+            if LN.name = "." then
+                return IsValidImport(LN.left) and IsValidImport(LN.right)
+        return false
+
+
+    function DottedName (LongName : PT.tree) return text is
+    // ------------------------------------------------------------------------
+    //    Return a string like 'X.Y.Z' for the corresponding tree
+    // ------------------------------------------------------------------------
+        if LongName.kind = PT.xlNAME then
+            LN : LongName as PT.name_tree
+            return LN.value
+        if LongName.kind = PT.xlINFIX then
+            LN : LongName as PT.infix_tree
+            if LN.name = "." then
+                return DottedName(LN.left) + "." + DottedName(LN.right)
+        return "<error>"
+
+
+    function TryToEvaluate(Value : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Try to evaluate the argument, return nil if it failed
+    // ------------------------------------------------------------------------
+        ERR.PushErrorContext()
+        result := XLT.XLSemantics(Value)
+        errors : text := ERR.PopErrorContext()
+        if errors <> "" then
+            result := nil
+
+
+    function ImportModule (LongName     : PT.tree;
+                           ShortName    : PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Internal function to process an 'import' statement
     // ------------------------------------------------------------------------
 
         // Split X.Y.Z into components, and import X.Y if necessary
         LeafName : PT.name_tree
-        Base     : PT.tree := nil
+        Base     : PT.tree
+
         if LongName.kind = PT.xlNAME then
             LeafName := PT.name_tree(LongName)
-            FileName := PT.XLNormalize(LeafName.value)
         else
             translate LongName
-                when ('BaseImport'.'EnclosedImport') then
-                    Base := ProcessImport (BaseImport, nil, FileName)
-                    if EnclosedImport.kind <> PT.xlNAME then
-                        ERR.Error "'$1' is not a valid module name",
-                                  EnclosedImport
+                when ('BaseImport'.'Enclosed') then
+                    Base := ImportModule (BaseImport, nil)
+                    if Enclosed.kind <> PT.xlNAME then
+                        ERR.Error "'$1' is not a valid module name", Enclosed
                         return parse_tree(@error)
-                    LeafName := PT.name_tree(EnclosedImport)
-                    FileName += "."
-                    FileName += PT.XLNormalize(LeafName.value)
+                    LeafName := PT.name_tree(Enclosed)
                 else
                     ERR.Error "'$1' is not a valid import name", LongName
 
-        trace[modules] "Importing ", FileName
+        FileName : text := PT.XLNormalize(DottedName(LongName))
+        trace[modules] "Looking for ", FileName
 
-        // Check if we already imported the current module
-        KeyName   : text := "MOD:" + FileName
-        OldModule : PT.tree := SYM.GetProperty(XLT.main_context,KeyName,false)
-        if OldModule <> nil then
-            return OldModule
+        // Check if we already imported the desired module
+        KeyI : text := "MODI:" + FileName
+        OldI : PT.tree := SYM.GetProperty(XLT.main_context, KeyI, false)
+        KeyB : text := "MODB:" + FileName
+        OldB : PT.tree := SYM.GetProperty(XLT.main_context, KeyB, false)
 
         // Parse the interface and implementation files
-        DirName : text
-        Pass    : integer := 0
-        FileExt : text := ".xs"
-        InIface : boolean := true
-        Parsed  : PT.tree := nil
-        Iface   : PT.tree := nil
-        Body    : PT.tree := nil
-        for Pass in 1..2 loop
-            Found   : boolean := false
-            for DirName in modules_path loop
-                NormalizedName : text := FileName + FileExt
-                NameInDir : text
-                Directory : string of text := FL.Directory(DirName)
-                for NameInDir in Directory loop
-                    if PT.XLNormalize(NameInDir) = NormalizedName then
-                        // TODO: Machine dependency here
-                        FullName : text := DirName + "/" + NameInDir
-                        trace[modules] "Trying ", FullName
-                        P : PR.parser := PR.Open (FullName)
-                        if PR.IsValid (P) then
-                            Parsed := PR.Parse(P)
-                            if Parsed <> nil then
-                                trace[modules] "File ", FullName, " was parsed"
-                                Found := true
-                        PR.Close(P)
-                    exit if Found
-                exit if found
+        if OldI = nil and OldB = nil then
+            DirName : text
+            Pass    : integer := 0
+            FileExt : text := ".xs"
+            Iface   : PT.tree := nil
+            Body    : PT.tree := nil
+            for Pass in 1..2 loop
+                Parsed  : PT.tree := nil
+                Found   : boolean := false
+                for DirName in modules_path loop
+                    NormalizedName : text := FileName + FileExt
+                    NameInDir : text
+                    Directory : string of text := FL.Directory(DirName)
+                    for NameInDir in Directory loop
+                        if PT.XLNormalize(NameInDir) = NormalizedName then
+                            // TODO: Machine dependency here
+                            FullName : text := DirName + "/" + NameInDir
+                            trace[modules] "Trying ", FullName
+                            P : PR.parser := PR.Open (FullName)
+                            if PR.IsValid (P) then
+                                Parsed := PR.Parse(P)
+                                if Parsed <> nil then
+                                    trace[modules] "Parsed file ", FullName
+                                    Found := true
+                            PR.Close(P)
+                        exit if Found
+                    exit if found
 
-            if InIface then
-                Iface := Parsed
-            else
-                Body := Parsed
+                if Pass = 1 then
+                    Iface := Parsed
+                else
+                    Body := Parsed
 
-            FileExt := ".xl"
-            InIface := false
+                FileExt := ".xl"
 
-        if Iface = nil and Body = nil then
-            ERR.Error "No file found for module '$1'", LongName
-            return parse_tree(@error)
+            if Iface = nil and Body = nil then
+                ERR.Error "No file found for module '$1'", LongName
+                return parse_tree(@error)
 
-        // Once parsed, reconcile them - This also runs semantics
-        result := Reconcile (Iface, Body)
+            // Run semantics on interface and body, and cache for next import
+            if Iface <> nil then
+                Iface := XLT.ScopeSemantics(Iface, XLT.scopeGlobal)
+                SYM.SetProperty XLT.main_context, KeyI, Iface
+            if Body <> nil then
+                Body := XLT.ScopeSemantics(Body, XLT.scopeGlobal)
+                SYM.SetProperty XLT.main_context, KeyB, Body
 
-        // Store for possible later use in other module
-        SYM.SetProperty XLT.main_context, KeyName, result
- 
+            // After semantics, reconcile them
+            result := Reconcile (Iface, Body, Base, LeafName, false)
 
-    function FindImportedItem(LongName : PT.tree) return PT.tree is
-    // ------------------------------------------------------------------------
-    //   Check if X.Y is already in the symbol table, return nil otherwise
-    // ------------------------------------------------------------------------
-    //   Whatever item is found here is then added to the local symbol table
-    //   so that it can be found using a local reference
-        errors  : text
-        matched : boolean := false
-        old_context : SYM.symbol_table := XLT.context
-
-        // Reset import context
-        XLT.context := XLT.last_import
-
-        // Check if the import is a nested or 'deep' import
-        // TODO: Check if we can't solve that with a single lookup rule
-        if LongName.kind = PT.xlNAME then
-            matched := true
-            ERR.PushErrorContext()
-            result := DCL.Lookup(LongName)
-            errors := ERR.PopErrorContext()
-            if errors <> "" then
-                result := nil
         else
-            translate LongName
-                when ('Record'.'Field') where (REC.IsRecord(Record) and
-                                               Field.kind = PT.xlNAME) then
-                    matched := true
-                    ERR.PushErrorContext()
-                    result := REC.Index (Record, PT.name_tree(Field))
-                    errors := ERR.PopErrorContext()
-                    if errors <> "" then
-                        result := nil
+            // We use the cached ones and enter them locally
+            result := Reconcile (OldI, OldB, Base, LeafName, true)
 
-        // Restore original context
-        XLT.context := old_context
-
-        // Error if we did not match the shape of any tree
-        if not matched then
-            ERR.Error "The form '$1' is not valid in an import", LongName
-            return parse_tree(@error)
-
+        // Make sure we actually defined what we were here for
+        existing : PT.tree := TryToEvaluate(LongName)
+        if existing = nil then
+            ERR.Error "Imported file did not define '$1'", LongName
+ 
 
     function ProcessImport (LongName     : PT.tree;
                             ShortName    : PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
     //    Process an 'import' statement
     // ------------------------------------------------------------------------
-        FileName: text
 
-        // Check if the module already exists
-        original : PT.tree
-        original := FindImportedItem (LongName)
-        if original <> nil then
-            if not PT.Matches(original, parse_tree(@error)) then
-                ERR.Error "There is already something named '$1'", LongName
-                ERR.Error "It was defined as '$1'", original
+        trace[modules] "Importing ", LongName, " as ", ShortName
+
+        // Check that the input is valid
+        if not IsValidImport(LongName) then
+            ERR.Error "The form '$1' is not a valid import name", LongName
             return parse_tree(@error)
+        if ShortName <> nil and ShortName.kind <> PT.xlNAME then
+            ERR.Error "The form '$1' is not a valid import shortcut", ShortName
+            ShortName = nil // Try to import anyway
 
-        result := ProcessImport(LongName, ShortName, FileName)
+        // Check if there was already something declared in current scope
+        existing : PT.tree := TryToEvaluate(LongName)
+        if existing <> nil then
+            ERR.Error "The import name '$1' already existsx", LongName
+            ERR.Error "It was defined as '$1'", existing
+            return existing
+        if ShortName <> nil then
+            existing := TryToEvaluate(LongName)
+            if existing <> nil then
+                ERR.Error "The import shortcut '$1' already exists", ShortName
+                ERR.Error "It was defined as '$1'", existing
+                ShortName := nil
 
-        // Check if the module was successfully compiled in
-        original := FindImportedItem (LongName)
-        if original = nil then
-            ERR.Error "The imported file did not define '$1'", LongName
-            return parse_tree(@error)
-
-        // Add the imported item into current scope
-        LN : LongName as PT.name_tree
-        if LN <> nil then
-            SYM.Enter XLT.context, "DECL", LN.value, original
-        SN : ShortName as PT.name_tree
-        if SN <> nil then
-            SYM.Enter XLT.context, "DECL", SN.value, original
-        else
-            ERR.Error "Short name '$1' is invalid", ShortName
+        // Import the module
+        result := ImportModule (LongName, ShortName)
 
 
     translation XLDeclarations

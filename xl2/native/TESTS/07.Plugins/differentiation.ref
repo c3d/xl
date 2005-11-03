@@ -19,11 +19,6 @@
 @ fnbeginparms 
 @ fnendparms) 
 @ fndeclend) 
-(@ globinitbegin 
-(@ nop 
-@ nop 
-@ nop) 
-@ globinitend 
 (@ fnbodybegin main_6 
 (@ fnret0 
 @ fnname main_6 
@@ -49,9 +44,10 @@
     Z := {constantfold} (sin X - sin X)
 
 @ exitlabel main_6) 
-@ fnbodyend main_6) 
-(@ globtermbegin 
-@ globtermend)) 
+@ fnbodyend main_6 
 @ mainbegin 
+(@ nop 
+@ nop 
+@ nop) 
 @ maininvoke 
-@ mainend
+@ mainend)
