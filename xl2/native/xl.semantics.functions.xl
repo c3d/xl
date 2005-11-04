@@ -102,9 +102,7 @@ module XL.SEMANTICS.FUNCTIONS is
         XLT.AddScopeDecl XLT.global_context, MachineDecl
 
         // Enter the machine interface into the symbol table
-        // We enter it in enclosing context because current context is
-        // for parameter declarations
-        SYM.Enter SYM.Enclosing(XLT.context), "FN", Name.value, Iface
+        SYM.Enter XLT.context, "FN", Name.value, Iface
 
         // Wrap the interface until semantics, and mark as decl / function
         result := parse_tree(@@fn_decl 'MachineIface')

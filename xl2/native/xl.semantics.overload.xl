@@ -30,6 +30,7 @@ import XLT = XL.TRANSLATOR
 import ERR = XL.ERRORS
 import FN = XL.SEMANTICS.FUNCTIONS
 import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import REC = XL.SEMANTICS.TYPES.RECORDS
 import CGM = XL.CODE_GENERATOR.MACHINE
 import DCL = XL.SEMANTICS.DECLARATIONS
 import IO = XL.TEXT_IO
@@ -60,11 +61,21 @@ module XL.SEMANTICS.OVERLOAD is
     //    Resolve the function name from its args
     // ------------------------------------------------------------------------
 
+        symbols : SYM.symbol_table := XLT.context
+        list : PT.tree_list
+        BaseRecord : PT.tree
+
         trace [overload] "Overload resolution: name=", NameTree, " args=", Args
 
         if NameTree.kind <> PT.xlNAME then
-            ERR.Error "Internal: Overload resolution, non-name '$1'", NameTree
-            return parse_tree(@error)
+            translate NameTree
+                when ('Record'.'Field') where Field.kind = PT.xlNAME then
+                    FN : Field as PT.name_tree
+                    REC.RecordDeclarations Record, FN, "FN", list, symbols
+                    BaseRecord := XLT.XLSemantics(Record)
+                else
+                    ERR.Error "Internal: Non-name functor '$1'", NameTree
+                    return parse_tree(@error)
         Name : NameTree as PT.name_tree
 
         // Convert arguments to a list for easier checking
@@ -87,7 +98,8 @@ module XL.SEMANTICS.OVERLOAD is
         bestF     : FN.function
         ambig     : PT.tree
         depth     : integer := 0
-        table     : SYM.symbol_table := XLT.context
+        table     : SYM.symbol_table := symbols
+        recurse   : boolean := symbols = XLT.context
 
         // Save errors for later display
         ERR.PushErrorContext()
@@ -98,10 +110,14 @@ module XL.SEMANTICS.OVERLOAD is
 
             // Find all candidates at this level
             candidates : SYM.tree_list
-            SYM.Lookup table, "FN", Name.value, candidates, SYM.lookupLocalOnly
+            if recurse then
+                SYM.Lookup table,"FN", Name.value,candidates,SYM.lookupLocalOnly
+                table := SYM.Enclosing(table)
+            else
+                candidates := list
+                table := nil
             trace [overload] "In table ", table,
                              " found ", size(candidates), "candidates"
-            table := SYM.Enclosing(table)
 
             // Loop on candidates to check compatibility
             C : PT.tree
@@ -190,7 +206,10 @@ module XL.SEMANTICS.OVERLOAD is
 
             trace [overload] "FOUND: Calling ", PT.tree(bestF.name),
                              "=", PT.tree(bestF.machine_name)
-            return CGM.FunctionCall (bestF, SemArgs)
+            if BaseRecord <> nil then
+                return CGM.FunctionCall (bestF, SemArgs)
+            else
+                return CGM.FunctionCall (bestF, SemArgs)
 
         else
             ERR.Error "No valid function found for '$1'", NameTree
@@ -204,13 +223,18 @@ module XL.SEMANTICS.OVERLOAD is
     //   Return true if a name indicates a function
     // ------------------------------------------------------------------------
         if T.kind <> PT.xlNAME then
+            translate T
+                when ('Record'.'Field') where Field.kind = PT.xlNAME then
+                    list : PT.tree_list
+                    syms : SYM.symbol_table
+                    FN : Field as PT.name_tree
+                    REC.RecordDeclarations Record, FN, "FN", list, syms
+                    return syms <> nil and size(list) > 0
             return false
 
         Name : T as PT.name_tree
         OneFunction : PT.tree := SYM.LookupOne (XLT.context, "FN", Name.value)
         return OneFunction <> nil
-
-        // TODO: deal with name in the form X.Y
 
 
     translation XLSemantics

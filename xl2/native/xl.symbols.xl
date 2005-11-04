@@ -47,6 +47,7 @@ module XL.SYMBOLS is
     //    Create a symbol table
     // ------------------------------------------------------------------------
         result.enclosing := enclosing
+        trace[symbols] "New table ", result, " enclosed by ", enclosing
 
 
     procedure DeleteSymbolTable (table : symbol_table) is

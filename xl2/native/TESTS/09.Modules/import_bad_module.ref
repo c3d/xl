@@ -1,0 +1,23 @@
+/Users/ddd/Development/xl2/native/TESTS/09.Modules/bad_module.xs:1: Found no valid implementation for 'BAD_MODULE'
+| module BAD_MODULE with
+|_________________^
+/Users/ddd/Development/xl2/native/TESTS/09.Modules/bad_module.xs:2: Found no valid implementation for 'FooZoo'
+|     function FooZoo (A : integer) return integer
+|___________________^
+[Compiler generated]: The return type 'real'
+[Compiler generated]: doesn't match 'integer'
+09.Modules/import_bad_module.xl:27: The body and interface of 'BAD_MODULE' don't match
+| import BAD_MODULE
+|_________________^
+09.Modules/import_bad_module.xl:32: Name 'SIMPLE_MODULE' was not declared here
+| Test_Call : integer := SIMPLE_MODULE.FooZoo(0)
+|____________________________________^
+09.Modules/import_bad_module.xl:32: Name 'SIMPLE_MODULE' was not declared here
+| Test_Call : integer := SIMPLE_MODULE.FooZoo(0)
+|____________________________________^
+09.Modules/import_bad_module.xl:32: No translation found for 'SIMPLE_MODULE . FooZoo (0)'
+| Test_Call : integer := SIMPLE_MODULE.FooZoo(0)
+|____________________________________________^
+09.Modules/import_bad_module.xl:32: No translation found for 'Test_Call := SIMPLE_MODULE . FooZoo (0)'
+| Test_Call : integer := SIMPLE_MODULE.FooZoo(0)
+|____________________________________________^

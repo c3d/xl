@@ -44,10 +44,19 @@ module XL.SEMANTICS.TYPES.RECORDS is
     //  Unlike for functions, we do not require an exact match, but that
     //  all declared fields can be found in the body symbol table
         ifaceR : iface as record_type
-        bodyR  : iface as record_type
+        bodyR  : body as record_type
+        bodyC  : body as code_type
+
         if ifaceR = nil then
             ERR.Error "Internal: '$1' is not a record type", TY.Source(iface)
             return false
+        if bodyC <> nil then
+            assert bodyR = nil
+            bodyR2 : bodyC.base as record_type
+            if bodyR2 = nil then
+                ERR.Error "Body '$1'is not a record type", TY.Source(Body)
+                return false
+            bodyR := bodyR2
         if bodyR = nil then
             ERR.Error "'$1' is not a record type", TY.Source(body)
             return false
@@ -60,6 +69,18 @@ module XL.SEMANTICS.TYPES.RECORDS is
             return false
 
         // Check that the interface is implemented correctly
+        if bodyC <> nil then
+            // Since we checked that we have the same base, we can inject it
+            if size(ifaceR.fields) > 0 then
+                decl : declaration := ifaceR.fields[0]
+                if TY.SameType (decl.type, baseType) then
+                    old  : SYM.symbol_table := XLT.context
+                    dname: PT.name_tree := decl.name
+                    dname := PT.NewName(dname.value, dname.position)
+                    XLT.context := bodyC.symbols
+                    decl := DCL.Declare(dname, decl.type)
+                    XLT.context := old
+            return DCL.MatchInterface(ifaceR.fields, bodyC.symbols)
         return DCL.MatchInterface(ifaceR.fields, bodyR.symbols)
 
 
@@ -152,12 +173,10 @@ module XL.SEMANTICS.TYPES.RECORDS is
         tp : record_type := MakeRecordType(Source, Base, Fields)
         tp.machine_name := CGM.DeclareRecord(tp)
         TY.SetDefinedType Source, tp
-        PT.SetInfo Source, "RECORD", tp
 
         // Return the end type
         result := parse_tree (@type)
         TY.SetDefinedType result, tp
-        PT.SetInfo result, "RECORD", tp
 
         XLT.context := SYM.Enclosing (XLT.context)
 
@@ -200,26 +219,40 @@ module XL.SEMANTICS.TYPES.RECORDS is
         return GetRecordType (Record) <> nil
 
 
+    procedure RecordDeclarations(Record   : PT.tree;
+                                 Field    : PT.name_tree;
+                                 kind     : text;
+                                 out defs : PT.tree_list;
+                                 out syms : SYM.symbol_table) is
+    // ------------------------------------------------------------------------
+    //   Find the field definitions in a given record
+    // ------------------------------------------------------------------------
+
+        // Evaluate record expression
+        tp : record_type := GetRecordType(Record)
+
+        // Evaluate expression type
+        if tp = nil then
+            syms := nil
+            return
+
+        // Lookup field
+        syms := tp.symbols
+        SYM.Lookup syms, kind, Field.value, defs, SYM.lookupLocalOnly
+
+
     function Index(Record : PT.tree;
                    Field  : PT.name_tree) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Index a record element
     // ------------------------------------------------------------------------
-
-        // Evaluate record expression
-        Record := XLT.XLSemantics(Record)
-
-        // Evaluate expression type
-        tp : record_type := GetRecordType(Record)
-        if tp = nil then
-            ERR.Error "No type for record '$1'", Record
-            return parse_tree(@error)
-
-        symbols : SYM.symbol_table := tp.symbols
+        symbols : SYM.symbol_table
         list : PT.tree_list
 
-        // Lookup field
-        SYM.Lookup symbols, "DECL", Field.value, list, SYM.lookupLocalOnly
+        RecordDeclarations Record, Field, "DECL", list, symbols
+
+        if symbols = nil then
+            ERR.Error "No type for record '$1'", Record
         if size(list) = 0 then
             ERR.Error "Field '$1' doesn't exist", Field
             return parse_tree(@error)
@@ -240,6 +273,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         mtype  : PT.name_tree := dtype.machine_name
 
         // Index the result
+        Record := XLT.XLSemantics(Record)
         result := CGM.IndexRecord(Record, mfield, mtype, dtype)
 
 
@@ -249,6 +283,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
     // ------------------------------------------------------------------------
         when ('Record'.'Field') where (IsRecord(Record) and
                                        Field.kind = PT.xlNAME) then
-            return Index(Record, PT.name_tree(Field))
+            FieldName : Field as PT.name_tree
+            return Index(Record, FieldName)
 
 

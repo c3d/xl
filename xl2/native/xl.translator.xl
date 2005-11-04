@@ -195,6 +195,9 @@ module XL.TRANSLATOR is
         // Set the type of the result so that we can get inner symbols
         if TY.GetType(result) = nil then
             code_type : TY.code_type
+            code_type.base := nil
+            code_type.machine_name := nil
+            code_type.interface_match := nil //TODO - Catch internal errors
             code_type.symbols := context
             TY.SetType result, code_type
 

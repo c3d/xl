@@ -27,6 +27,7 @@ import XLT = XL.TRANSLATOR
 import TYP = XL.SEMANTICS.TYPES
 import CGM = XL.CODE_GENERATOR.MACHINE
 import REC = XL.SEMANTICS.TYPES.RECORDS
+import FT = XL.SEMANTICS.TYPES.FUNCTIONS
 import BC = XL.BYTECODE
 import PR = XL.PARSER
 
@@ -283,8 +284,11 @@ module XL.SEMANTICS.DECLARATIONS is
             iface_type : TY.any_type := iface_decl.type
             list       : PT.tree_list
 
+            trace [interface] "Looking for ", iface_name.value
+
             // Try to find something with the same name
             SYM.Lookup body, "DECL", iface_name.value, list, SYM.lookupLocalOnly
+            SYM.Lookup body, "FN", iface_name.value, list, SYM.lookupLocalOnly
 
             if size(list) = 0 then
                 ERR.Error "No implementation found for '$1'", iface_name
@@ -298,6 +302,22 @@ module XL.SEMANTICS.DECLARATIONS is
             for field in list loop
                 body_decl : declaration := DCL.GetDeclaration(field)
                 body_type : TY.any_type := body_decl.type
+                body_name : PT.name_tree := body_decl.name
+
+                trace [interface] "For ", iface_name.value,
+                                  " testing ", body_name.value
+
+                // Check if initializer is a body of code ('module X is Y')
+                if body_decl.initializer <> nil then
+                    if TY.SameType(body_type, iface_type.base) then
+                        ct: TY.GetType(body_decl.initializer) as TY.code_type
+                        if ct <> nil then
+                            assert ct.base = nil or ct.base = iface_type
+                            ct.base := iface_type
+                            body_type := ct
+                            trace [interface] "... has body type"
+
+                // Check if declaration and implementation match
                 ERR.PushErrorContext()
                 if iface_type.interface_match(iface_type, body_type) then
                     if found = nil then
@@ -305,6 +325,7 @@ module XL.SEMANTICS.DECLARATIONS is
                     else
                         multi := body_decl
                 errors := ERR.PopErrorContext()
+                trace [interface] "For ", iface_name.value, " errors: ", errors
 
             if multi <> nil then
                 ERR.Error "Found too many implementations for '$1'", iface_name
@@ -324,12 +345,13 @@ module XL.SEMANTICS.DECLARATIONS is
         return true
 
 
-    function ExtendType (Base : PT.tree; Fields : PT.tree) return PT.tree is
+    function ExtendType (Input : PT.tree;
+                         Base : PT.tree; Fields : PT.tree) return PT.tree is
     // ------------------------------------------------------------------------
     //    Extend a type with additional fields
     // ------------------------------------------------------------------------
          trace [recdecl] "Extend type ", Base, " with ", Fields
-         return REC.EnterType (Base, Base, Fields)
+         return REC.EnterType (Input, Base, Fields)
 
 
     function IsDeclaration (type_expr : PT.tree;
@@ -436,7 +458,7 @@ module XL.SEMANTICS.DECLARATIONS is
             IsDeclaration (Type, Name)
         then
             trace [decl] "Decl7: Name=",Name," Type=",Type," Fields=",Fields
-            ExtType : PT.tree := ExtendType(Type, Fields)
+            ExtType : PT.tree := ExtendType(Name, Type, Fields)
             return EnterDeclaration (Name, ExtType, nil, false)
 
         when
@@ -445,7 +467,7 @@ module XL.SEMANTICS.DECLARATIONS is
             IsDeclaration (Type, Name)
         then
             trace [decl] "Decl8: Name=",Name," Type=",Type," Fields=",Fields
-            ExtType : PT.tree := ExtendType(Type, Fields)
+            ExtType : PT.tree := ExtendType(Name, Type, Fields)
             return EnterDeclaration (Name, ExtType, Value, true)
 
 

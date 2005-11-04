@@ -63,7 +63,7 @@ module XL.PARSER.TREE is
                 // Already done
                 return
             else if old <> nil then
-                delete old
+                IO.WriteLn "Warning: Overwriting info for ", from, ":", name
 
             from.info[name] := data
             data.name := name

@@ -84,7 +84,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
     //   Check if an interface type and a body type match for functions
     // ------------------------------------------------------------------------
         ifaceF : iface as function_type
-        bodyF  : iface as function_type
+        bodyF  : body as function_type
         if ifaceF = nil then
             ERR.Error "Internal: Interface '$1' is not a function type",
                       TY.Source(iface)
@@ -107,8 +107,8 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
                 ERR.Error "but '$1' does", TY.Source(iface)
                 return false
             if not TY.SameType(retType, bodyF.base) then
-                ERR.Error "The return type of '$1'", TY.Source(bodyF)
-                ERR.Error "doesn't match that of '$1'", TY.Source(ifaceF)
+                ERR.Error "The return type '$1'", TY.Source(bodyF)
+                ERR.Error "doesn't match '$1'", TY.Source(ifaceF)
                 return false
 
         // Check parameter counts
@@ -166,6 +166,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
                 result.base := TY.NewType(TmpN)
         else
             result.base := nil
+
         result.interface_match := FunctionTypeMatch
         result.inputs_count := 0
         result.outputs_count := 0
@@ -184,6 +185,10 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         // Assign type to the tree
         TY.SetType Source, result
 
+        // Generate a machine type in case we want to put it in a record
+        MType : PT.name_tree := CGM.EntryPointer(result)
+        result.machine_name := MType
+
         // Return to enclosing context
         XLT.context := SYM.Enclosing (XLT.context)
 
@@ -197,8 +202,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
 
         // Attach a type info to the original name
         tp : function_type := NewFnType(Source, Parms, Ret)
-        MType : PT.name_tree := CGM.EntryPointer(tp)
-        tp.machine_name := MType
+        MType : PT.name_tree := tp.machine_name
         TY.EnterSignature MType.value, tp
         TY.SetDefinedType Source, tp
 

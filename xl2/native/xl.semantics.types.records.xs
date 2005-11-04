@@ -26,6 +26,7 @@
 import TY = XL.SEMANTICS.TYPES
 import DCL = XL.SEMANTICS.DECLARATIONS
 import SYM = XL.SYMBOLS
+import PT = XL.PARSER.TREE
 
 
 module XL.SEMANTICS.TYPES.RECORDS with
@@ -63,5 +64,10 @@ module XL.SEMANTICS.TYPES.RECORDS with
 
     function GetRecordType(Record : PT.tree) return record_type
     function IsRecord (Record : PT.tree) return boolean
+    procedure RecordDeclarations(Record   : PT.tree;
+                                 Field    : PT.name_tree;
+                                 kind     : text;
+                                 out defs : PT.tree_list;
+                                 out syms : SYM.symbol_table)
     function Index(Record : PT.tree;
                    Field  : PT.name_tree) return BC.bytecode

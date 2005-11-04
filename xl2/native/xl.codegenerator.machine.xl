@@ -378,6 +378,12 @@ module XL.CODE_GENERATOR.MACHINE is
     //       @value 'Type' 'Name'
     //  The caller then "pops" the @value part to know where the value resides
 
+        // Check if this is a module implementation
+        if toCall.implementation <> nil then
+            toCallImpl : toCall.implementation as FN.function
+            if toCallImpl <> nil then
+                toCall := toCallImpl
+
         FnType       : toCall.type as FT.function_type
         parms        : FN.declaration_list := FnType.parameters
         mname        : PT.name_tree := toCall.machine_name
@@ -524,6 +530,17 @@ module XL.CODE_GENERATOR.MACHINE is
                 retType := TY.ConstantType(retType)
             TY.SetType retValueName, retType
             TY.SetType result, retType
+
+
+    function RecordFunctionCall (Record   : PT.tree;
+                                 toCall   : FN.function;
+                                 margs    : machine_args) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Call a function in a record
+    // ------------------------------------------------------------------------
+
+        // TODO: For now, ignore the record
+        return FunctionCall(toCall, margs)
 
 
 

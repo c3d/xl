@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  xl.semantics.overload.xs        (C) 1992-2004 Christophe de Dinechin (ddd) 
+//  import_bad_module.xl            (C) 1992-2004 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Interface for overload resolution
+//    Test that we correctly figure out when a module doesn't match
 // 
 // 
 // 
@@ -22,16 +22,11 @@
 // * Revision   : $Revision$
 // * Date       : $Date$
 // ****************************************************************************
+// EXIT=2
 
-import PT = XL.PARSER.TREE
-import BC = XL.BYTECODE
-import SYM = XL.SYMBOLS
+import BAD_MODULE
 
-module XL.SEMANTICS.OVERLOAD with
-// ----------------------------------------------------------------------------
-//   Interface for overload resolution
-// ----------------------------------------------------------------------------
+function Copy (out T : integer; in S : integer) written T := S is
+    XL.ByteCode.Copy_INT
 
-    function Resolve(NameTree : PT.tree; Args : PT.tree) return BC.bytecode
-    function IsFunction(T : PT.tree) return boolean
-
+Test_Call : integer := SIMPLE_MODULE.FooZoo(0)

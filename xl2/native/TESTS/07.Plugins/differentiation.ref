@@ -1,38 +1,59 @@
-@ fndeclbegin 
+@ fnptrbegin 
 (@ fnret1 Real 
-@ fnname sin_2 
+@ fnptrname FnPtr_2 
 @ fnbeginparms 
 @ fnparm Real x_1 
 @ fnendparms) 
-@ fndeclend 
+@ fnptrend 
 (@ fndeclbegin 
-(@ fnret0 
-@ fnname copy_5 
+(@ fnret1 Real 
+@ fnname sin_3 
 @ fnbeginparms 
-@ fnparm Real target_3 
-@ fnparm Real source_4 
+@ fnparm Real x_1 
 @ fnendparms) 
 @ fndeclend) 
+(@ fnptrbegin 
+(@ fnret0 
+@ fnptrname FnPtr_6 
+@ fnbeginparms 
+@ fnparm Real target_4 
+@ fnparm Real source_5 
+@ fnendparms) 
+@ fnptrend) 
 (@ fndeclbegin 
 (@ fnret0 
-@ fnname main_6 
+@ fnname copy_7 
+@ fnbeginparms 
+@ fnparm Real target_4 
+@ fnparm Real source_5 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret0 
+@ fnptrname FnPtr_8 
+@ fnbeginparms 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret0 
+@ fnname main_9 
 @ fnbeginparms 
 @ fnendparms) 
 @ fndeclend) 
-(@ fnbodybegin main_6 
+(@ fnbodybegin main_9 
 (@ fnret0 
-@ fnname main_6 
+@ fnname main_9 
 @ fnbeginparms 
 @ fnendparms) 
-@ fnbody main_6 
-(@ localdecl Real w_7 
-@ localdecl Real t0_8 
-@ localdecl Real t_9 
-@ localdecl Real b_10 
-@ localdecl Real a_11 
-@ localdecl Real a2_12 
-@ localdecl Real y_13 
-@ localdecl Real z_14 
+@ fnbody main_9 
+(@ localdecl Real w_10 
+@ localdecl Real t0_11 
+@ localdecl Real t_12 
+@ localdecl Real b_13 
+@ localdecl Real a_14 
+@ localdecl Real a2_15 
+@ localdecl Real y_16 
+@ localdecl Real z_17 
 
     @ decl 
     @ decl 
@@ -43,8 +64,8 @@
     Y := d (exp ( - 2 * W * (T - T0) ) * sin (2 * W * (T - T0) ) ) / dT 
     Z := {constantfold} (sin X - sin X)
 
-@ exitlabel main_6) 
-@ fnbodyend main_6 
+@ exitlabel main_9) 
+@ fnbodyend main_9 
 @ mainbegin 
 (@ nop 
 @ nop 
