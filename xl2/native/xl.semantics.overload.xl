@@ -99,7 +99,7 @@ module XL.SEMANTICS.OVERLOAD is
         ambig     : PT.tree
         depth     : integer := 0
         table     : SYM.symbol_table := symbols
-        recurse   : boolean := symbols = XLT.context
+        recurse   : boolean := BaseRecord = nil
 
         // Save errors for later display
         ERR.PushErrorContext()
@@ -111,7 +111,7 @@ module XL.SEMANTICS.OVERLOAD is
             // Find all candidates at this level
             candidates : SYM.tree_list
             if recurse then
-                SYM.Lookup table,"FN", Name.value,candidates,SYM.lookupLocalOnly
+                SYM.Lookup table,"FN",Name.value,candidates,SYM.lookupLocalUsing
                 table := SYM.Enclosing(table)
             else
                 candidates := list
@@ -126,11 +126,19 @@ module XL.SEMANTICS.OVERLOAD is
                 trace [overload] "Testing ", C
 
                 // Retrieve function information, ignore non functions
+                Scope : PT.tree := nil
                 F : FN.function := FN.GetFunction(C)
                 if F = nil then
-                    ERR.Error "Internal: No function info for '$1'", C
-                    trace [overload] "FAIL: No function info"
-                    restart
+                    // We can get a record-prefixed value from a lateral map
+                    if recurse then
+                        translate C
+                            when ('Record'.'Fcall') then
+                                F := FN.GetFunction(Fcall)
+                                Scope := Record
+                    if F = nil then
+                        ERR.Error "Internal: No function info for '$1'", C
+                        trace [overload] "FAIL: No function info"
+                        restart
                 Ftype : F.type as FT.function_type
 
                 // Check number of parameters.
@@ -186,11 +194,13 @@ module XL.SEMANTICS.OVERLOAD is
                     best := C
                     bestScore := Score
                     bestF := F
+                    if recurse then BaseRecord := Scope
                 else if Score < bestScore then
                     trace [overload] "BEST: New best score ", Score
                     best := C
                     bestScore := Score
                     bestF := F
+                    if recurse then BaseRecord := Scope
                 else if Score = bestScore then
                     ambig := C
                     trace [overload] "AMBIGUOUS: Score ", Score
@@ -207,7 +217,7 @@ module XL.SEMANTICS.OVERLOAD is
             trace [overload] "FOUND: Calling ", PT.tree(bestF.name),
                              "=", PT.tree(bestF.machine_name)
             if BaseRecord <> nil then
-                return CGM.FunctionCall (bestF, SemArgs)
+                return CGM.RecordFunctionCall (BaseRecord, bestF, SemArgs)
             else
                 return CGM.FunctionCall (bestF, SemArgs)
 

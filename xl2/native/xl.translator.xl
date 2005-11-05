@@ -142,6 +142,13 @@ module XL.TRANSLATOR is
             global_context := context
             SYM.SetInteger context, "GLOBAL", 1
 
+            // Make sure we see the built-in symbols
+            if false then
+                input := parse_tree
+                    import XL_BUILTINS
+                    using XL_BUILTINS
+                    'input'
+
             // Storage for Init and Term temps
             old_function := function_context
             function_context := SYM.NewSymbolTable(context)

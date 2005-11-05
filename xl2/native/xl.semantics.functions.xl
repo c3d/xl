@@ -46,8 +46,6 @@ module XL.SEMANTICS.FUNCTIONS is
     //   Return the function info associated with a tree
     // ------------------------------------------------------------------------
         info : PT.FindInfo(input, "FN") as function
-        if info = nil then
-            ERR.Error "'$1' doesn't look like a function declaration", input
         return info
 
 
@@ -125,6 +123,7 @@ module XL.SEMANTICS.FUNCTIONS is
     // ------------------------------------------------------------------------
         Interface := EnterFunction(Interface)
         f : function := GetFunction(Interface)
+        assert f <> nil
         if f.initializer <> nil then
             ERR.Error "Built-in '$1' was given initializer '$2'",
                       BuiltinName, f.initializer
@@ -146,6 +145,7 @@ module XL.SEMANTICS.FUNCTIONS is
     // ------------------------------------------------------------------------
         Interface := EnterFunction(Interface)
         f : function := GetFunction(Interface)
+        assert f <> nil
         if f.initializer <> nil then
             ERR.Error "Duplicate initializer '$1'", Body
             ERR.Error "Original initializer was '$1'", f.initializer
@@ -221,10 +221,12 @@ module XL.SEMANTICS.FUNCTIONS is
         when ('Interface' require 'Pre') then
             result := EnterFunction(Interface)
             f : function := GetFunction(result)
+            assert f <> nil
             f.preconditions += Pre
         when ('Interface' ensure 'Post') then
             result := EnterFunction(Interface)
             f : function := GetFunction(result)
+            assert f <> nil
             f.postconditions += Post
 
         // Parameter lists
@@ -298,6 +300,7 @@ module XL.SEMANTICS.FUNCTIONS is
 
         // Create a symbol table for the body (taking parms as enclosing)
         f           : function := GetFunction(Interface)
+        assert f <> nil
         ftype       : f.type as FT.function_type
         context     : SYM.symbol_table := XLT.context
         frame_depth : integer := SYM.GetInteger(context, "FRAMEDEPTH", 0, true)

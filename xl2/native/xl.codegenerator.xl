@@ -1606,7 +1606,7 @@ module XL.CODE_GENERATOR is
                        current_module, "scoreadjust_", loop_index, ";"
         else
             IO.WriteLn "rew->scoreadjust = 0;"
-        IO.WriteLn "rew->translator = "
+        IO.Write   "rew->translator = "
         IO.WriteLn current_module, "translator_", loop_index, ";"
         IO.WriteLn "xl::symbols::enterrewrite("
         IO.WriteLn "  xl::translator::context,"
@@ -1626,6 +1626,7 @@ module XL.CODE_GENERATOR is
         // Write the callback function
         IO.WriteLn "xl::parser::tree::tree translator_", loop_index
         IO.WriteLn "  (xl::parser::tree::tree input,"
+        IO.WriteLn "   xl::parser::tree::tree scope,"
         IO.WriteLn "   xl::symbols::rewrite info,"
         IO.WriteLn "   xl::parser::tree::treemap &Args) {"
 

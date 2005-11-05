@@ -107,6 +107,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
 
 
     function WrittenTranslator (input       : PT.tree;
+                                scope       : PT.tree;
                                 info        : SYM.rewrite;
                                 in out args : PT.tree_map) return PT.tree is
     // ------------------------------------------------------------------------
@@ -127,7 +128,11 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             value     : PT.tree := args[name_text]
             margs += value
 
-        return CGM.FunctionCall (fninfo, margs)
+        if scope = nil then
+            return CGM.FunctionCall (fninfo, margs)
+        else
+            scope := XLT.XLSemantics(scope)
+            return CGM.RecordFunctionCall(scope, fninfo, margs)
 
 
     function EnterWrittenForm(fniface : PT.tree;

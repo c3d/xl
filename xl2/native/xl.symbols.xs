@@ -48,6 +48,10 @@ module XL.SYMBOLS with
     // Walking the chain of enclosing contexts
     function Enclosing (table : symbol_table) return symbol_table
 
+    // Adding a "lateral" map for 'using' statements
+    procedure AddUsing(table : symbol_table;
+                       scope : PT.tree;
+                       syms  : symbol_table)
 
 
     // ========================================================================
@@ -69,6 +73,7 @@ module XL.SYMBOLS with
     // ------------------------------------------------------------------------
 
         lookupLocalOnly,        // Don't recurse at all
+        lookupLocalUsing,       // Local scope and using
         lookupInnermost,        // Closest scope where something is found
         lookupAll               // Return all results
 
@@ -116,6 +121,7 @@ module XL.SYMBOLS with
                                     depth       : integer;
                                     base_score  : integer) return integer
         translator      : function (input       : PT.tree;
+                                    scope       : PT.tree;
                                     info        : rewrite;
                                     in out args : PT.tree_map) return PT.tree
     type rewrites_list is string of rewrite

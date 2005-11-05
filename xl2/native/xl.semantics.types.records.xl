@@ -277,6 +277,16 @@ module XL.SEMANTICS.TYPES.RECORDS is
         result := CGM.IndexRecord(Record, mfield, mtype, dtype)
 
 
+    function EnterUsing (Record : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Enter a lateral map in the local context
+    // ------------------------------------------------------------------------
+        Record := XLT.XLSemantics(Record)
+        rtp : record_type := GetRecordType(Record)
+        SYM.AddUsing XLT.context, Record, rtp.symbols
+        return parse_tree(@nop)
+
+
     translation XLSemantics
     // ------------------------------------------------------------------------
     //    Try to translate X.Y expressions
@@ -285,5 +295,12 @@ module XL.SEMANTICS.TYPES.RECORDS is
                                        Field.kind = PT.xlNAME) then
             FieldName : Field as PT.name_tree
             return Index(Record, FieldName)
+
+        when
+            using 'Record'
+        where
+            IsRecord(Record)
+        then
+            return EnterUsing (Record)
 
 

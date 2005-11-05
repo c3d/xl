@@ -71,3 +71,4 @@ module XL.SEMANTICS.TYPES.RECORDS with
                                  out syms : SYM.symbol_table)
     function Index(Record : PT.tree;
                    Field  : PT.name_tree) return BC.bytecode
+    function EnterUsing (Record : PT.tree) return BC.bytecode
