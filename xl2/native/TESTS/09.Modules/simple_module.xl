@@ -15,4 +15,4 @@ module SIMPLE_MODULE is
 
     Klabooya : integer := 27
     Kmabooie : integer := 34
-    Klabooie : integer := 00001
+    Klabooie : integer := 00001 + 3001

@@ -13,9 +13,21 @@
 08.Aggregates/non_record.xl:37: No translation found for 'Z . X'
 |     I : integer := Z.X
 |_____________________^
+08.Aggregates/non_record.xl:37: No translation found for 'Z . X'
+|     I : integer := Z.X
+|_____________________^
+08.Aggregates/non_record.xl:37: No translation found for 'Z . X'
+|     I : integer := Z.X
+|_____________________^
 08.Aggregates/non_record.xl:37: No translation found for 'I := Z . X'
 |     I : integer := Z.X
 |_____________________^
+08.Aggregates/non_record.xl:39: No translation found for 'Z . X'
+|     I := Z.X
+|___________^
+08.Aggregates/non_record.xl:39: No translation found for 'Z . X'
+|     I := Z.X
+|___________^
 08.Aggregates/non_record.xl:39: No translation found for 'Z . X'
 |     I := Z.X
 |___________^
@@ -25,9 +37,21 @@
 08.Aggregates/non_record.xl:40: No translation found for 'Z . X'
 |     return Z.X
 |_____________^
+08.Aggregates/non_record.xl:40: No translation found for 'Z . X'
+|     return Z.X
+|_____________^
+08.Aggregates/non_record.xl:40: No translation found for 'Z . X'
+|     return Z.X
+|_____________^
 08.Aggregates/non_record.xl:40: No translation found for 'result := Z . X'
 |     return Z.X
 |_____________^
+08.Aggregates/non_record.xl:43: No translation found for 'Z . X'
+| K : integer := Z.X
+|_________________^
+08.Aggregates/non_record.xl:43: No translation found for 'Z . X'
+| K : integer := Z.X
+|_________________^
 08.Aggregates/non_record.xl:43: No translation found for 'Z . X'
 | K : integer := Z.X
 |_________________^

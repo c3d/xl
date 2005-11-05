@@ -132,25 +132,16 @@ module XL.TRANSLATOR is
     //   Deal with the semantics in a scope
     // ------------------------------------------------------------------------
 
-        old_global   : SYM.symbol_table
-        old_function : SYM.symbol_table
+        old_global   : SYM.symbol_table := global_context
+        old_function : SYM.symbol_table := function_context
 
         // First create the symbol table for this scope
         context := SYM.NewSymbolTable(context)
         if scope = scopeMain or scope = scopeGlobal then
-            old_global := global_context
             global_context := context
             SYM.SetInteger context, "GLOBAL", 1
 
-            // Make sure we see the built-in symbols
-            if false then
-                input := parse_tree
-                    import XL_BUILTINS
-                    using XL_BUILTINS
-                    'input'
-
             // Storage for Init and Term temps
-            old_function := function_context
             function_context := SYM.NewSymbolTable(context)
 
             if scope = scopeMain then
@@ -160,7 +151,6 @@ module XL.TRANSLATOR is
         else if scope = scopeFunction or scope = scopeLocal then
             SYM.SetInteger context, "LOCAL", 1
             if scope = scopeFunction then
-                old_function := function_context
                 function_context := context
 
         // 'Declarations' will populate sections in the
@@ -212,12 +202,8 @@ module XL.TRANSLATOR is
         context := SYM.Enclosing (context)
         if scope = scopeMain then
             result := AddMainInitAndTerm(result)
-            global_context := old_global
-            function_context := old_function
-        else if scope = scopeGlobal then
-            global_context := old_global
-        else if scope = scopeFunction then
-            function_context := old_function
+        global_context := old_global
+        function_context := old_function
 
 
     procedure AddScopeDecl(table: SYM.symbol_table; decl : PT.tree) is

@@ -9,15 +9,3 @@
 09.Modules/import_bad_module.xl:27: The body and interface of 'BAD_MODULE' don't match
 | import BAD_MODULE
 |_________________^
-09.Modules/import_bad_module.xl:32: Name 'SIMPLE_MODULE' was not declared here
-| Test_Call : integer := SIMPLE_MODULE.FooZoo(0)
-|____________________________________^
-09.Modules/import_bad_module.xl:32: Name 'SIMPLE_MODULE' was not declared here
-| Test_Call : integer := SIMPLE_MODULE.FooZoo(0)
-|____________________________________^
-09.Modules/import_bad_module.xl:32: No translation found for 'SIMPLE_MODULE . FooZoo (0)'
-| Test_Call : integer := SIMPLE_MODULE.FooZoo(0)
-|____________________________________________^
-09.Modules/import_bad_module.xl:32: No translation found for 'Test_Call := SIMPLE_MODULE . FooZoo (0)'
-| Test_Call : integer := SIMPLE_MODULE.FooZoo(0)
-|____________________________________________^

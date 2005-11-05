@@ -262,6 +262,7 @@ module XL.SYMBOLS is
                 score := PT.Matches(test_tree, R.reference_form, args)
                 trace [symbols] "Matching (", R.reference_form, ") = ", score
                 if score > 0 then
+                    score += 1000 - depth
                     if R.score_adjust <> nil then
                         score := R.score_adjust (test_tree, R, args,
                                                  depth, score)
@@ -295,6 +296,7 @@ module XL.SYMBOLS is
                     trace [symbols] "SubMatching (", R.reference_form,
                                     ") = ", score
                     if score > 0 then
+                        score += 1000 - depth
                         if R.score_adjust <> nil then
                             score := R.score_adjust (test_tree, R, args,
                                                      depth, score)

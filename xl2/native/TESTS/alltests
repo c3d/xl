@@ -46,6 +46,7 @@ export TESTDIR XL SUCCESS FAILURE PASS UPDATE
 ln -sf ../xl.bytecode .
 ln -sf ../xl.syntax .
 ln -sf ../xl_lib.h .
+ln -sf ../xl_builtins.xs .
 ln -sf ../*.stylesheet .
 ln -sf ../nxl .
 

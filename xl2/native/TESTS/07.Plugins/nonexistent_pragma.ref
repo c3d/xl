@@ -1,8 +1,9 @@
-07.Plugins/nonexistent_pragma.xl:35: The pragma {listingue} is not implemented
+07.Plugins/nonexistent_pragma.xl:36: The pragma {listingue} is not implemented
 | {listingue} procedure Bar is
 |__________^
-07.Plugins/nonexistent_pragma.xl:38: The pragma {listingue} is not implemented
+07.Plugins/nonexistent_pragma.xl:39: The pragma {listingue} is not implemented
 | {listingue "html"} function Baz(A : real) return real is
 |__________^
 function Foo (X : integer) return real is 
-    result := X + 1
+    temp : integer := X + 1 
+    return 0.7

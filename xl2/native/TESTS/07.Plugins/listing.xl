@@ -30,7 +30,7 @@
     result := X + 1
 
 procedure Bar is
-    return Foo(0)
+    X : real := Foo(0)
 
 {listing "html"} function Baz(A : real) return real is
     return A + A

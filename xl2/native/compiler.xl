@@ -93,6 +93,7 @@ procedure Main is
             transcode := false
         else if name = "-sem" then
             compile := false
+            theProgram := MOD.AddBuiltins(theProgram)
             theProgram := XLT.ScopeSemantics(theProgram, XLT.scopeMain)
         else if name = "-opt" then
             compile := false
@@ -117,6 +118,7 @@ procedure Main is
             theProgram := PR.Parse(P)
             PR.Close P
             if compile and ERR.error_count = 0 then
+                theProgram := MOD.AddBuiltins(theProgram)
                 XLT.Compile theProgram
             else if transcode and ERR.error_count = 0 then
                 CG.Transcode theProgram, IO.standard_output

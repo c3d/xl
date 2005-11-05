@@ -16,6 +16,3 @@
 03.Declarations/basic_redefinitions.xl:35: Previous declaration of 'JoeDALTON' here
 | JoeDALTON, joe_dalton : integer
 |_________^
-03.Declarations/basic_redefinitions.xl:34: No translation found for 'A := 3'
-| A, A : integer := 3
-|_^
