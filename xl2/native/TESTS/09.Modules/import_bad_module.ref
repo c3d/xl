@@ -1,13 +1,13 @@
-/Users/ddd/Development/xl2/native/TESTS/09.Modules/bad_module.xs:1: Found no valid implementation for 'BAD_MODULE'
+TESTS/09.Modules/bad_module.xs:1: Found no valid implementation for 'BAD_MODULE'
 | module BAD_MODULE with
 |_________________^
-/Users/ddd/Development/xl2/native/TESTS/09.Modules/bad_module.xs:2: Found no valid implementation for 'FooZoo'
+TESTS/09.Modules/bad_module.xs:2: Found no valid implementation for 'FooZoo'
 |     function FooZoo (A : integer) return integer
 |___________________^
-/Users/ddd/Development/xl2/native/TESTS/09.Modules/bad_module.xl:16: The return type of 'FooZoo (A : real) return real'
+TESTS/09.Modules/bad_module.xl:16: The return type of 'FooZoo (A : real) return real'
 |     function FooZoo (A : real) return real is
 |_____________________________________^
-/Users/ddd/Development/xl2/native/TESTS/09.Modules/bad_module.xs:2: doesn't match that of 'FooZoo (A : integer) return integer'
+TESTS/09.Modules/bad_module.xs:2: doesn't match that of 'FooZoo (A : integer) return integer'
 |     function FooZoo (A : integer) return integer
 |________________________________________^
 09.Modules/import_bad_module.xl:27: The body and interface of 'BAD_MODULE' don't match

@@ -120,6 +120,7 @@ do
     if [ $RC -ne $EXIT ]; then
         THIS_FAILED="Exit code $RC, expected $EXIT"
     elif [ ! -z "$REF" ]; then
+        sed 's@'$TESTDIR'@TESTS@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
         if diff -q $REF $LOG 2> /dev/null; then
             THIS=ok
         elif [ ! -z "$UPDATE" ]; then
