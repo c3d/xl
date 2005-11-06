@@ -117,6 +117,8 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
 
         entry : using_entry
+        found : map[PT.tree, boolean]
+
         name := category + ":" + PT.XLNormalize(name)
 
         trace [symbols] "Lookup: ", name, " from ", table
@@ -125,7 +127,12 @@ module XL.SYMBOLS is
             if count(table.names, name) > 0 then
                 trace [symbols] "  in ", table,
                                 " got ", size(table.names[name])
-                values += table.names[name]
+                list : PT.tree_list := table.names[name]
+                item : PT.tree
+                for item in list loop
+                    if found[item] = false then
+                        values += item
+                        found[item] := true
                 exit if mode = lookupInnermost
 
             exit if mode = lookupLocalOnly
@@ -139,10 +146,12 @@ module XL.SYMBOLS is
                     trace[symbols] "  in lateral ", subtable,
                                    " got ", size(subtable.names[name])
                     for subtree in subtable.names[name] loop
-                        scoped : PT.tree := parse_tree('scope'.'subtree')
-                        scoped.info := subtree.info
-                        scoped.position := subtree.position
-                        values += scoped
+                        if found[subtree] = false then
+                            scoped : PT.tree := parse_tree('scope'.'subtree')
+                            scoped.info := subtree.info
+                            scoped.position := subtree.position
+                            values += scoped
+                            found[subtree] := true
 
             exit if mode = lookupInnermost and size(values) > 0
             exit if mode = lookupLocalUsing
