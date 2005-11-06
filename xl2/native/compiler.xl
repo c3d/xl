@@ -34,7 +34,7 @@ import SYM = XL.SYMBOLS
 import RD = XL.RENDERER
 import ASCII = XL.TEXT_IO.ENCODING.ASCII
 import ERR = XL.ERRORS
-import MOD = XL.SEMANTICS.MODULES
+import MDL = XL.SEMANTICS.MODULES
 
 // Things that we import just so that they get compiled
 import XL.CONSTANTS
@@ -93,7 +93,7 @@ procedure Main is
             transcode := false
         else if name = "-sem" then
             compile := false
-            theProgram := MOD.AddBuiltins(theProgram)
+            theProgram := MDL.AddBuiltins(theProgram)
             theProgram := XLT.ScopeSemantics(theProgram, XLT.scopeMain)
         else if name = "-opt" then
             compile := false
@@ -109,7 +109,7 @@ procedure Main is
         else if name = "-I" then
             if I + 1 <= Max - 1 then
                 I += 1
-                MOD.AddPath CS.arguments[I]
+                MDL.AddPath CS.arguments[I]
         else if name = "-g" then
             CG.debug := true
 
@@ -118,7 +118,7 @@ procedure Main is
             theProgram := PR.Parse(P)
             PR.Close P
             if compile and ERR.error_count = 0 then
-                theProgram := MOD.AddBuiltins(theProgram)
+                theProgram := MDL.AddBuiltins(theProgram)
                 XLT.Compile theProgram
             else if transcode and ERR.error_count = 0 then
                 CG.Transcode theProgram, IO.standard_output

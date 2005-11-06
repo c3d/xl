@@ -97,7 +97,9 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         written : info as written_form
         param_name : text
         for param_name in args loop
+            ERR.PushErrorContext()
             value : PT.tree := XLT.XLSemantics(args[param_name])
+            errors: text := ERR.PopErrorContext()
             args[param_name] := value
             decl : DCL.declaration := written.args_map[param_name]
             if not DCL.Assignable(decl, value) then

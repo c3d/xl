@@ -38,7 +38,7 @@
 @ fnptrend) 
 (@ fndeclbegin 
 (@ fnret1 xlint 
-@ fnname sub_13 
+@ fnname subtract_13 
 @ fnbeginparms 
 @ fnparm xlint x_10 
 @ fnparm xlint y_11 
@@ -54,7 +54,7 @@
 @ fnptrend) 
 (@ fndeclbegin 
 (@ fnret1 xlint 
-@ fnname mul_17 
+@ fnname multiply_17 
 @ fnbeginparms 
 @ fnparm xlint x_14 
 @ fnparm xlint y_15 
@@ -70,14 +70,14 @@
 @ fnptrend) 
 (@ fndeclbegin 
 (@ fnret1 xlint 
-@ fnname div_21 
+@ fnname divide_21 
 @ fnbeginparms 
 @ fnparm xlint x_18 
 @ fnparm xlint y_19 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlbool 
+(@ fnret1 xlint 
 @ fnptrname FnPtr_24 
 @ fnbeginparms 
 @ fnparm xlint x_22 
@@ -85,15 +85,15 @@
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 xlbool 
-@ fnname cmpeq_25 
+(@ fnret1 xlint 
+@ fnname modulo_25 
 @ fnbeginparms 
 @ fnparm xlint x_22 
 @ fnparm xlint y_23 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlbool 
+(@ fnret1 xlint 
 @ fnptrname FnPtr_28 
 @ fnbeginparms 
 @ fnparm xlint x_26 
@@ -101,27 +101,27 @@
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 xlbool 
-@ fnname cmplt_29 
+(@ fnret1 xlint 
+@ fnname remainder_29 
 @ fnbeginparms 
 @ fnparm xlint x_26 
 @ fnparm xlint y_27 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlbool 
+(@ fnret1 xlint 
 @ fnptrname FnPtr_32 
 @ fnbeginparms 
 @ fnparm xlint x_30 
-@ fnparm xlint y_31 
+@ fnparm xluint y_31 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 xlbool 
-@ fnname cmple_33 
+(@ fnret1 xlint 
+@ fnname power_33 
 @ fnbeginparms 
 @ fnparm xlint x_30 
-@ fnparm xlint y_31 
+@ fnparm xluint y_31 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
@@ -134,7 +134,7 @@
 @ fnptrend) 
 (@ fndeclbegin 
 (@ fnret1 xlbool 
-@ fnname cmpgt_37 
+@ fnname equal_37 
 @ fnbeginparms 
 @ fnparm xlint x_34 
 @ fnparm xlint y_35 
@@ -150,7 +150,7 @@
 @ fnptrend) 
 (@ fndeclbegin 
 (@ fnret1 xlbool 
-@ fnname cmpge_41 
+@ fnname lessthan_41 
 @ fnbeginparms 
 @ fnparm xlint x_38 
 @ fnparm xlint y_39 
@@ -166,308 +166,3562 @@
 @ fnptrend) 
 (@ fndeclbegin 
 (@ fnret1 xlbool 
-@ fnname cmpne_45 
+@ fnname lessorequal_45 
 @ fnbeginparms 
 @ fnparm xlint x_42 
 @ fnparm xlint y_43 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlreal 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_48 
 @ fnbeginparms 
-@ fnparm xlreal src_47 
+@ fnparm xlint x_46 
+@ fnparm xlint y_47 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 xlreal 
-@ fnname copy_49 
+(@ fnret1 xlbool 
+@ fnname greaterthan_49 
 @ fnbeginparms 
-@ fnparm xlreal src_47 
+@ fnparm xlint x_46 
+@ fnparm xlint y_47 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlreal 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_52 
 @ fnbeginparms 
-@ fnparm xlreal x_50 
-@ fnparm xlreal y_51 
+@ fnparm xlint x_50 
+@ fnparm xlint y_51 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 xlreal 
-@ fnname add_53 
+(@ fnret1 xlbool 
+@ fnname greaterorequal_53 
 @ fnbeginparms 
-@ fnparm xlreal x_50 
-@ fnparm xlreal y_51 
+@ fnparm xlint x_50 
+@ fnparm xlint y_51 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlreal 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_56 
 @ fnbeginparms 
-@ fnparm xlreal x_54 
-@ fnparm xlreal y_55 
+@ fnparm xlint x_54 
+@ fnparm xlint y_55 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 xlreal 
-@ fnname sub_57 
+(@ fnret1 xlbool 
+@ fnname different_57 
 @ fnbeginparms 
-@ fnparm xlreal x_54 
-@ fnparm xlreal y_55 
+@ fnparm xlint x_54 
+@ fnparm xlint y_55 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlreal 
+(@ fnret1 xlint 
 @ fnptrname FnPtr_60 
 @ fnbeginparms 
-@ fnparm xlreal x_58 
-@ fnparm xlreal y_59 
+@ fnparm xlint x_58 
+@ fnparm xlint y_59 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 xlreal 
-@ fnname mul_61 
+(@ fnret1 xlint 
+@ fnname bitwiseand_61 
 @ fnbeginparms 
-@ fnparm xlreal x_58 
-@ fnparm xlreal y_59 
+@ fnparm xlint x_58 
+@ fnparm xlint y_59 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlreal 
+(@ fnret1 xlint 
 @ fnptrname FnPtr_64 
 @ fnbeginparms 
-@ fnparm xlreal x_62 
-@ fnparm xlreal y_63 
+@ fnparm xlint x_62 
+@ fnparm xlint y_63 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 xlreal 
-@ fnname div_65 
+(@ fnret1 xlint 
+@ fnname bitwiseor_65 
 @ fnbeginparms 
-@ fnparm xlreal x_62 
-@ fnparm xlreal y_63 
+@ fnparm xlint x_62 
+@ fnparm xlint y_63 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlbool 
+(@ fnret1 xlint 
 @ fnptrname FnPtr_68 
 @ fnbeginparms 
-@ fnparm xlreal x_66 
-@ fnparm xlreal y_67 
+@ fnparm xlint x_66 
+@ fnparm xlint y_67 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 xlbool 
-@ fnname cmpeq_69 
+(@ fnret1 xlint 
+@ fnname bitwisexor_69 
 @ fnbeginparms 
-@ fnparm xlreal x_66 
-@ fnparm xlreal y_67 
+@ fnparm xlint x_66 
+@ fnparm xlint y_67 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlbool 
-@ fnptrname FnPtr_72 
+(@ fnret1 xlint 
+@ fnptrname FnPtr_71 
 @ fnbeginparms 
-@ fnparm xlreal x_70 
-@ fnparm xlreal y_71 
+@ fnparm xlint x_70 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 xlbool 
-@ fnname cmplt_73 
+(@ fnret1 xlint 
+@ fnname bitwisenot_72 
 @ fnbeginparms 
-@ fnparm xlreal x_70 
-@ fnparm xlreal y_71 
+@ fnparm xlint x_70 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlbool 
-@ fnptrname FnPtr_76 
+(@ fnret1 xlint8 
+@ fnptrname FnPtr_75 
 @ fnbeginparms 
-@ fnparm xlreal x_74 
-@ fnparm xlreal y_75 
+@ fnparm xlint8 src_74 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 xlbool 
-@ fnname cmple_77 
+(@ fnret1 xlint8 
+@ fnname copy_76 
 @ fnbeginparms 
-@ fnparm xlreal x_74 
-@ fnparm xlreal y_75 
+@ fnparm xlint8 src_74 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlbool 
-@ fnptrname FnPtr_80 
+(@ fnret1 xlint8 
+@ fnptrname FnPtr_79 
 @ fnbeginparms 
-@ fnparm xlreal x_78 
-@ fnparm xlreal y_79 
+@ fnparm xlint8 x_77 
+@ fnparm xlint8 y_78 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 xlbool 
-@ fnname cmpgt_81 
+(@ fnret1 xlint8 
+@ fnname add_80 
 @ fnbeginparms 
-@ fnparm xlreal x_78 
-@ fnparm xlreal y_79 
+@ fnparm xlint8 x_77 
+@ fnparm xlint8 y_78 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlbool 
-@ fnptrname FnPtr_84 
+(@ fnret1 xlint8 
+@ fnptrname FnPtr_83 
 @ fnbeginparms 
-@ fnparm xlreal x_82 
-@ fnparm xlreal y_83 
+@ fnparm xlint8 x_81 
+@ fnparm xlint8 y_82 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 xlbool 
-@ fnname cmpge_85 
+(@ fnret1 xlint8 
+@ fnname subtract_84 
 @ fnbeginparms 
-@ fnparm xlreal x_82 
-@ fnparm xlreal y_83 
+@ fnparm xlint8 x_81 
+@ fnparm xlint8 y_82 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlbool 
-@ fnptrname FnPtr_88 
+(@ fnret1 xlint8 
+@ fnptrname FnPtr_87 
 @ fnbeginparms 
-@ fnparm xlreal x_86 
-@ fnparm xlreal y_87 
+@ fnparm xlint8 x_85 
+@ fnparm xlint8 y_86 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 xlbool 
-@ fnname cmpne_89 
+(@ fnret1 xlint8 
+@ fnname multiply_88 
 @ fnbeginparms 
-@ fnparm xlreal x_86 
-@ fnparm xlreal y_87 
+@ fnparm xlint8 x_85 
+@ fnparm xlint8 y_86 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlbool 
+(@ fnret1 xlint8 
 @ fnptrname FnPtr_91 
 @ fnbeginparms 
-@ fnparm xlbool value_90 
+@ fnparm xlint8 x_89 
+@ fnparm xlint8 y_90 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 xlbool 
-@ fnname booleannot_92 
+(@ fnret1 xlint8 
+@ fnname divide_92 
 @ fnbeginparms 
-@ fnparm xlbool value_90 
+@ fnparm xlint8 x_89 
+@ fnparm xlint8 y_90 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlbool 
+(@ fnret1 xlint8 
 @ fnptrname FnPtr_95 
 @ fnbeginparms 
-@ fnparm xlbool x_93 
-@ fnparm xlbool y_94 
+@ fnparm xlint8 x_93 
+@ fnparm xlint8 y_94 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 xlbool 
-@ fnname booleanand_96 
+(@ fnret1 xlint8 
+@ fnname modulo_96 
 @ fnbeginparms 
-@ fnparm xlbool x_93 
-@ fnparm xlbool y_94 
+@ fnparm xlint8 x_93 
+@ fnparm xlint8 y_94 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlbool 
+(@ fnret1 xlint8 
 @ fnptrname FnPtr_99 
 @ fnbeginparms 
-@ fnparm xlbool x_97 
-@ fnparm xlbool y_98 
+@ fnparm xlint8 x_97 
+@ fnparm xlint8 y_98 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 xlbool 
-@ fnname booleanor_100 
+(@ fnret1 xlint8 
+@ fnname remainder_100 
 @ fnbeginparms 
-@ fnparm xlbool x_97 
-@ fnparm xlbool y_98 
+@ fnparm xlint8 x_97 
+@ fnparm xlint8 y_98 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 xlbool 
+(@ fnret1 xlint8 
 @ fnptrname FnPtr_103 
 @ fnbeginparms 
-@ fnparm xlbool x_101 
-@ fnparm xlbool y_102 
+@ fnparm xlint8 x_101 
+@ fnparm xluint y_102 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint8 
+@ fnname power_104 
+@ fnbeginparms 
+@ fnparm xlint8 x_101 
+@ fnparm xluint y_102 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_107 
+@ fnbeginparms 
+@ fnparm xlint8 x_105 
+@ fnparm xlint8 y_106 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
 (@ fnret1 xlbool 
-@ fnname booleanxor_104 
+@ fnname equal_108 
 @ fnbeginparms 
-@ fnparm xlbool x_101 
-@ fnparm xlbool y_102 
+@ fnparm xlint8 x_105 
+@ fnparm xlint8 y_106 
 @ fnendparms) 
 @ fndeclend) 
-(@ recordbegin Record_106 
-@ recordfield Record_106 xlmodule base_1 
-@ recordend Record_106) 
-@ globaldecl Record_106 xlbuiltins_107 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_111 
+@ fnbeginparms 
+@ fnparm xlint8 x_109 
+@ fnparm xlint8 y_110 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessthan_112 
+@ fnbeginparms 
+@ fnparm xlint8 x_109 
+@ fnparm xlint8 y_110 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_115 
+@ fnbeginparms 
+@ fnparm xlint8 x_113 
+@ fnparm xlint8 y_114 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessorequal_116 
+@ fnbeginparms 
+@ fnparm xlint8 x_113 
+@ fnparm xlint8 y_114 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_119 
+@ fnbeginparms 
+@ fnparm xlint8 x_117 
+@ fnparm xlint8 y_118 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterthan_120 
+@ fnbeginparms 
+@ fnparm xlint8 x_117 
+@ fnparm xlint8 y_118 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_123 
+@ fnbeginparms 
+@ fnparm xlint8 x_121 
+@ fnparm xlint8 y_122 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterorequal_124 
+@ fnbeginparms 
+@ fnparm xlint8 x_121 
+@ fnparm xlint8 y_122 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_127 
+@ fnbeginparms 
+@ fnparm xlint8 x_125 
+@ fnparm xlint8 y_126 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname different_128 
+@ fnbeginparms 
+@ fnparm xlint8 x_125 
+@ fnparm xlint8 y_126 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint8 
+@ fnptrname FnPtr_131 
+@ fnbeginparms 
+@ fnparm xlint8 x_129 
+@ fnparm xlint8 y_130 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint8 
+@ fnname bitwiseand_132 
+@ fnbeginparms 
+@ fnparm xlint8 x_129 
+@ fnparm xlint8 y_130 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint8 
+@ fnptrname FnPtr_135 
+@ fnbeginparms 
+@ fnparm xlint8 x_133 
+@ fnparm xlint8 y_134 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint8 
+@ fnname bitwiseor_136 
+@ fnbeginparms 
+@ fnparm xlint8 x_133 
+@ fnparm xlint8 y_134 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint8 
+@ fnptrname FnPtr_139 
+@ fnbeginparms 
+@ fnparm xlint8 x_137 
+@ fnparm xlint8 y_138 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint8 
+@ fnname bitwisexor_140 
+@ fnbeginparms 
+@ fnparm xlint8 x_137 
+@ fnparm xlint8 y_138 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint8 
+@ fnptrname FnPtr_142 
+@ fnbeginparms 
+@ fnparm xlint8 x_141 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint8 
+@ fnname bitwisenot_143 
+@ fnbeginparms 
+@ fnparm xlint8 x_141 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint16 
+@ fnptrname FnPtr_146 
+@ fnbeginparms 
+@ fnparm xlint16 src_145 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint16 
+@ fnname copy_147 
+@ fnbeginparms 
+@ fnparm xlint16 src_145 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint16 
+@ fnptrname FnPtr_150 
+@ fnbeginparms 
+@ fnparm xlint16 x_148 
+@ fnparm xlint16 y_149 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint16 
+@ fnname add_151 
+@ fnbeginparms 
+@ fnparm xlint16 x_148 
+@ fnparm xlint16 y_149 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint16 
+@ fnptrname FnPtr_154 
+@ fnbeginparms 
+@ fnparm xlint16 x_152 
+@ fnparm xlint16 y_153 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint16 
+@ fnname subtract_155 
+@ fnbeginparms 
+@ fnparm xlint16 x_152 
+@ fnparm xlint16 y_153 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint16 
+@ fnptrname FnPtr_158 
+@ fnbeginparms 
+@ fnparm xlint16 x_156 
+@ fnparm xlint16 y_157 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint16 
+@ fnname multiply_159 
+@ fnbeginparms 
+@ fnparm xlint16 x_156 
+@ fnparm xlint16 y_157 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint16 
+@ fnptrname FnPtr_162 
+@ fnbeginparms 
+@ fnparm xlint16 x_160 
+@ fnparm xlint16 y_161 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint16 
+@ fnname divide_163 
+@ fnbeginparms 
+@ fnparm xlint16 x_160 
+@ fnparm xlint16 y_161 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint16 
+@ fnptrname FnPtr_166 
+@ fnbeginparms 
+@ fnparm xlint16 x_164 
+@ fnparm xlint16 y_165 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint16 
+@ fnname modulo_167 
+@ fnbeginparms 
+@ fnparm xlint16 x_164 
+@ fnparm xlint16 y_165 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint16 
+@ fnptrname FnPtr_170 
+@ fnbeginparms 
+@ fnparm xlint16 x_168 
+@ fnparm xlint16 y_169 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint16 
+@ fnname remainder_171 
+@ fnbeginparms 
+@ fnparm xlint16 x_168 
+@ fnparm xlint16 y_169 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint16 
+@ fnptrname FnPtr_174 
+@ fnbeginparms 
+@ fnparm xlint16 x_172 
+@ fnparm xluint y_173 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint16 
+@ fnname power_175 
+@ fnbeginparms 
+@ fnparm xlint16 x_172 
+@ fnparm xluint y_173 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_178 
+@ fnbeginparms 
+@ fnparm xlint16 x_176 
+@ fnparm xlint16 y_177 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname equal_179 
+@ fnbeginparms 
+@ fnparm xlint16 x_176 
+@ fnparm xlint16 y_177 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_182 
+@ fnbeginparms 
+@ fnparm xlint16 x_180 
+@ fnparm xlint16 y_181 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessthan_183 
+@ fnbeginparms 
+@ fnparm xlint16 x_180 
+@ fnparm xlint16 y_181 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_186 
+@ fnbeginparms 
+@ fnparm xlint16 x_184 
+@ fnparm xlint16 y_185 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessorequal_187 
+@ fnbeginparms 
+@ fnparm xlint16 x_184 
+@ fnparm xlint16 y_185 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_190 
+@ fnbeginparms 
+@ fnparm xlint16 x_188 
+@ fnparm xlint16 y_189 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterthan_191 
+@ fnbeginparms 
+@ fnparm xlint16 x_188 
+@ fnparm xlint16 y_189 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_194 
+@ fnbeginparms 
+@ fnparm xlint16 x_192 
+@ fnparm xlint16 y_193 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterorequal_195 
+@ fnbeginparms 
+@ fnparm xlint16 x_192 
+@ fnparm xlint16 y_193 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_198 
+@ fnbeginparms 
+@ fnparm xlint16 x_196 
+@ fnparm xlint16 y_197 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname different_199 
+@ fnbeginparms 
+@ fnparm xlint16 x_196 
+@ fnparm xlint16 y_197 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint16 
+@ fnptrname FnPtr_202 
+@ fnbeginparms 
+@ fnparm xlint16 x_200 
+@ fnparm xlint16 y_201 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint16 
+@ fnname bitwiseand_203 
+@ fnbeginparms 
+@ fnparm xlint16 x_200 
+@ fnparm xlint16 y_201 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint16 
+@ fnptrname FnPtr_206 
+@ fnbeginparms 
+@ fnparm xlint16 x_204 
+@ fnparm xlint16 y_205 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint16 
+@ fnname bitwiseor_207 
+@ fnbeginparms 
+@ fnparm xlint16 x_204 
+@ fnparm xlint16 y_205 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint16 
+@ fnptrname FnPtr_210 
+@ fnbeginparms 
+@ fnparm xlint16 x_208 
+@ fnparm xlint16 y_209 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint16 
+@ fnname bitwisexor_211 
+@ fnbeginparms 
+@ fnparm xlint16 x_208 
+@ fnparm xlint16 y_209 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint16 
+@ fnptrname FnPtr_213 
+@ fnbeginparms 
+@ fnparm xlint16 x_212 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint16 
+@ fnname bitwisenot_214 
+@ fnbeginparms 
+@ fnparm xlint16 x_212 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint32 
+@ fnptrname FnPtr_217 
+@ fnbeginparms 
+@ fnparm xlint32 src_216 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint32 
+@ fnname copy_218 
+@ fnbeginparms 
+@ fnparm xlint32 src_216 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint32 
+@ fnptrname FnPtr_221 
+@ fnbeginparms 
+@ fnparm xlint32 x_219 
+@ fnparm xlint32 y_220 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint32 
+@ fnname add_222 
+@ fnbeginparms 
+@ fnparm xlint32 x_219 
+@ fnparm xlint32 y_220 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint32 
+@ fnptrname FnPtr_225 
+@ fnbeginparms 
+@ fnparm xlint32 x_223 
+@ fnparm xlint32 y_224 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint32 
+@ fnname subtract_226 
+@ fnbeginparms 
+@ fnparm xlint32 x_223 
+@ fnparm xlint32 y_224 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint32 
+@ fnptrname FnPtr_229 
+@ fnbeginparms 
+@ fnparm xlint32 x_227 
+@ fnparm xlint32 y_228 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint32 
+@ fnname multiply_230 
+@ fnbeginparms 
+@ fnparm xlint32 x_227 
+@ fnparm xlint32 y_228 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint32 
+@ fnptrname FnPtr_233 
+@ fnbeginparms 
+@ fnparm xlint32 x_231 
+@ fnparm xlint32 y_232 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint32 
+@ fnname divide_234 
+@ fnbeginparms 
+@ fnparm xlint32 x_231 
+@ fnparm xlint32 y_232 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint32 
+@ fnptrname FnPtr_237 
+@ fnbeginparms 
+@ fnparm xlint32 x_235 
+@ fnparm xlint32 y_236 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint32 
+@ fnname modulo_238 
+@ fnbeginparms 
+@ fnparm xlint32 x_235 
+@ fnparm xlint32 y_236 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint32 
+@ fnptrname FnPtr_241 
+@ fnbeginparms 
+@ fnparm xlint32 x_239 
+@ fnparm xlint32 y_240 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint32 
+@ fnname remainder_242 
+@ fnbeginparms 
+@ fnparm xlint32 x_239 
+@ fnparm xlint32 y_240 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint32 
+@ fnptrname FnPtr_245 
+@ fnbeginparms 
+@ fnparm xlint32 x_243 
+@ fnparm xluint y_244 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint32 
+@ fnname power_246 
+@ fnbeginparms 
+@ fnparm xlint32 x_243 
+@ fnparm xluint y_244 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_249 
+@ fnbeginparms 
+@ fnparm xlint32 x_247 
+@ fnparm xlint32 y_248 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname equal_250 
+@ fnbeginparms 
+@ fnparm xlint32 x_247 
+@ fnparm xlint32 y_248 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_253 
+@ fnbeginparms 
+@ fnparm xlint32 x_251 
+@ fnparm xlint32 y_252 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessthan_254 
+@ fnbeginparms 
+@ fnparm xlint32 x_251 
+@ fnparm xlint32 y_252 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_257 
+@ fnbeginparms 
+@ fnparm xlint32 x_255 
+@ fnparm xlint32 y_256 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessorequal_258 
+@ fnbeginparms 
+@ fnparm xlint32 x_255 
+@ fnparm xlint32 y_256 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_261 
+@ fnbeginparms 
+@ fnparm xlint32 x_259 
+@ fnparm xlint32 y_260 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterthan_262 
+@ fnbeginparms 
+@ fnparm xlint32 x_259 
+@ fnparm xlint32 y_260 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_265 
+@ fnbeginparms 
+@ fnparm xlint32 x_263 
+@ fnparm xlint32 y_264 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterorequal_266 
+@ fnbeginparms 
+@ fnparm xlint32 x_263 
+@ fnparm xlint32 y_264 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_269 
+@ fnbeginparms 
+@ fnparm xlint32 x_267 
+@ fnparm xlint32 y_268 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname different_270 
+@ fnbeginparms 
+@ fnparm xlint32 x_267 
+@ fnparm xlint32 y_268 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint32 
+@ fnptrname FnPtr_273 
+@ fnbeginparms 
+@ fnparm xlint32 x_271 
+@ fnparm xlint32 y_272 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint32 
+@ fnname bitwiseand_274 
+@ fnbeginparms 
+@ fnparm xlint32 x_271 
+@ fnparm xlint32 y_272 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint32 
+@ fnptrname FnPtr_277 
+@ fnbeginparms 
+@ fnparm xlint32 x_275 
+@ fnparm xlint32 y_276 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint32 
+@ fnname bitwiseor_278 
+@ fnbeginparms 
+@ fnparm xlint32 x_275 
+@ fnparm xlint32 y_276 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint32 
+@ fnptrname FnPtr_281 
+@ fnbeginparms 
+@ fnparm xlint32 x_279 
+@ fnparm xlint32 y_280 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint32 
+@ fnname bitwisexor_282 
+@ fnbeginparms 
+@ fnparm xlint32 x_279 
+@ fnparm xlint32 y_280 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint32 
+@ fnptrname FnPtr_284 
+@ fnbeginparms 
+@ fnparm xlint32 x_283 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint32 
+@ fnname bitwisenot_285 
+@ fnbeginparms 
+@ fnparm xlint32 x_283 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint64 
+@ fnptrname FnPtr_288 
+@ fnbeginparms 
+@ fnparm xlint64 src_287 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint64 
+@ fnname copy_289 
+@ fnbeginparms 
+@ fnparm xlint64 src_287 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint64 
+@ fnptrname FnPtr_292 
+@ fnbeginparms 
+@ fnparm xlint64 x_290 
+@ fnparm xlint64 y_291 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint64 
+@ fnname add_293 
+@ fnbeginparms 
+@ fnparm xlint64 x_290 
+@ fnparm xlint64 y_291 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint64 
+@ fnptrname FnPtr_296 
+@ fnbeginparms 
+@ fnparm xlint64 x_294 
+@ fnparm xlint64 y_295 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint64 
+@ fnname subtract_297 
+@ fnbeginparms 
+@ fnparm xlint64 x_294 
+@ fnparm xlint64 y_295 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint64 
+@ fnptrname FnPtr_300 
+@ fnbeginparms 
+@ fnparm xlint64 x_298 
+@ fnparm xlint64 y_299 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint64 
+@ fnname multiply_301 
+@ fnbeginparms 
+@ fnparm xlint64 x_298 
+@ fnparm xlint64 y_299 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint64 
+@ fnptrname FnPtr_304 
+@ fnbeginparms 
+@ fnparm xlint64 x_302 
+@ fnparm xlint64 y_303 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint64 
+@ fnname divide_305 
+@ fnbeginparms 
+@ fnparm xlint64 x_302 
+@ fnparm xlint64 y_303 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint64 
+@ fnptrname FnPtr_308 
+@ fnbeginparms 
+@ fnparm xlint64 x_306 
+@ fnparm xlint64 y_307 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint64 
+@ fnname modulo_309 
+@ fnbeginparms 
+@ fnparm xlint64 x_306 
+@ fnparm xlint64 y_307 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint64 
+@ fnptrname FnPtr_312 
+@ fnbeginparms 
+@ fnparm xlint64 x_310 
+@ fnparm xlint64 y_311 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint64 
+@ fnname remainder_313 
+@ fnbeginparms 
+@ fnparm xlint64 x_310 
+@ fnparm xlint64 y_311 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint64 
+@ fnptrname FnPtr_316 
+@ fnbeginparms 
+@ fnparm xlint64 x_314 
+@ fnparm xluint y_315 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint64 
+@ fnname power_317 
+@ fnbeginparms 
+@ fnparm xlint64 x_314 
+@ fnparm xluint y_315 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_320 
+@ fnbeginparms 
+@ fnparm xlint64 x_318 
+@ fnparm xlint64 y_319 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname equal_321 
+@ fnbeginparms 
+@ fnparm xlint64 x_318 
+@ fnparm xlint64 y_319 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_324 
+@ fnbeginparms 
+@ fnparm xlint64 x_322 
+@ fnparm xlint64 y_323 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessthan_325 
+@ fnbeginparms 
+@ fnparm xlint64 x_322 
+@ fnparm xlint64 y_323 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_328 
+@ fnbeginparms 
+@ fnparm xlint64 x_326 
+@ fnparm xlint64 y_327 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessorequal_329 
+@ fnbeginparms 
+@ fnparm xlint64 x_326 
+@ fnparm xlint64 y_327 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_332 
+@ fnbeginparms 
+@ fnparm xlint64 x_330 
+@ fnparm xlint64 y_331 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterthan_333 
+@ fnbeginparms 
+@ fnparm xlint64 x_330 
+@ fnparm xlint64 y_331 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_336 
+@ fnbeginparms 
+@ fnparm xlint64 x_334 
+@ fnparm xlint64 y_335 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterorequal_337 
+@ fnbeginparms 
+@ fnparm xlint64 x_334 
+@ fnparm xlint64 y_335 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_340 
+@ fnbeginparms 
+@ fnparm xlint64 x_338 
+@ fnparm xlint64 y_339 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname different_341 
+@ fnbeginparms 
+@ fnparm xlint64 x_338 
+@ fnparm xlint64 y_339 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint64 
+@ fnptrname FnPtr_344 
+@ fnbeginparms 
+@ fnparm xlint64 x_342 
+@ fnparm xlint64 y_343 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint64 
+@ fnname bitwiseand_345 
+@ fnbeginparms 
+@ fnparm xlint64 x_342 
+@ fnparm xlint64 y_343 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint64 
+@ fnptrname FnPtr_348 
+@ fnbeginparms 
+@ fnparm xlint64 x_346 
+@ fnparm xlint64 y_347 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint64 
+@ fnname bitwiseor_349 
+@ fnbeginparms 
+@ fnparm xlint64 x_346 
+@ fnparm xlint64 y_347 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint64 
+@ fnptrname FnPtr_352 
+@ fnbeginparms 
+@ fnparm xlint64 x_350 
+@ fnparm xlint64 y_351 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint64 
+@ fnname bitwisexor_353 
+@ fnbeginparms 
+@ fnparm xlint64 x_350 
+@ fnparm xlint64 y_351 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlint64 
+@ fnptrname FnPtr_355 
+@ fnbeginparms 
+@ fnparm xlint64 x_354 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlint64 
+@ fnname bitwisenot_356 
+@ fnbeginparms 
+@ fnparm xlint64 x_354 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint 
+@ fnptrname FnPtr_359 
+@ fnbeginparms 
+@ fnparm xluint src_358 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint 
+@ fnname copy_360 
+@ fnbeginparms 
+@ fnparm xluint src_358 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint 
+@ fnptrname FnPtr_363 
+@ fnbeginparms 
+@ fnparm xluint x_361 
+@ fnparm xluint y_362 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint 
+@ fnname add_364 
+@ fnbeginparms 
+@ fnparm xluint x_361 
+@ fnparm xluint y_362 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint 
+@ fnptrname FnPtr_367 
+@ fnbeginparms 
+@ fnparm xluint x_365 
+@ fnparm xluint y_366 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint 
+@ fnname subtract_368 
+@ fnbeginparms 
+@ fnparm xluint x_365 
+@ fnparm xluint y_366 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint 
+@ fnptrname FnPtr_371 
+@ fnbeginparms 
+@ fnparm xluint x_369 
+@ fnparm xluint y_370 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint 
+@ fnname multiply_372 
+@ fnbeginparms 
+@ fnparm xluint x_369 
+@ fnparm xluint y_370 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint 
+@ fnptrname FnPtr_375 
+@ fnbeginparms 
+@ fnparm xluint x_373 
+@ fnparm xluint y_374 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint 
+@ fnname divide_376 
+@ fnbeginparms 
+@ fnparm xluint x_373 
+@ fnparm xluint y_374 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint 
+@ fnptrname FnPtr_379 
+@ fnbeginparms 
+@ fnparm xluint x_377 
+@ fnparm xluint y_378 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint 
+@ fnname modulo_380 
+@ fnbeginparms 
+@ fnparm xluint x_377 
+@ fnparm xluint y_378 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint 
+@ fnptrname FnPtr_383 
+@ fnbeginparms 
+@ fnparm xluint x_381 
+@ fnparm xluint y_382 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint 
+@ fnname remainder_384 
+@ fnbeginparms 
+@ fnparm xluint x_381 
+@ fnparm xluint y_382 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint 
+@ fnptrname FnPtr_387 
+@ fnbeginparms 
+@ fnparm xluint x_385 
+@ fnparm xluint y_386 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint 
+@ fnname power_388 
+@ fnbeginparms 
+@ fnparm xluint x_385 
+@ fnparm xluint y_386 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_391 
+@ fnbeginparms 
+@ fnparm xluint x_389 
+@ fnparm xluint y_390 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname equal_392 
+@ fnbeginparms 
+@ fnparm xluint x_389 
+@ fnparm xluint y_390 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_395 
+@ fnbeginparms 
+@ fnparm xluint x_393 
+@ fnparm xluint y_394 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessthan_396 
+@ fnbeginparms 
+@ fnparm xluint x_393 
+@ fnparm xluint y_394 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_399 
+@ fnbeginparms 
+@ fnparm xluint x_397 
+@ fnparm xluint y_398 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessorequal_400 
+@ fnbeginparms 
+@ fnparm xluint x_397 
+@ fnparm xluint y_398 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_403 
+@ fnbeginparms 
+@ fnparm xluint x_401 
+@ fnparm xluint y_402 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterthan_404 
+@ fnbeginparms 
+@ fnparm xluint x_401 
+@ fnparm xluint y_402 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_407 
+@ fnbeginparms 
+@ fnparm xluint x_405 
+@ fnparm xluint y_406 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterorequal_408 
+@ fnbeginparms 
+@ fnparm xluint x_405 
+@ fnparm xluint y_406 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_411 
+@ fnbeginparms 
+@ fnparm xluint x_409 
+@ fnparm xluint y_410 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname different_412 
+@ fnbeginparms 
+@ fnparm xluint x_409 
+@ fnparm xluint y_410 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint 
+@ fnptrname FnPtr_415 
+@ fnbeginparms 
+@ fnparm xluint x_413 
+@ fnparm xluint y_414 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint 
+@ fnname bitwiseand_416 
+@ fnbeginparms 
+@ fnparm xluint x_413 
+@ fnparm xluint y_414 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint 
+@ fnptrname FnPtr_419 
+@ fnbeginparms 
+@ fnparm xluint x_417 
+@ fnparm xluint y_418 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint 
+@ fnname bitwiseor_420 
+@ fnbeginparms 
+@ fnparm xluint x_417 
+@ fnparm xluint y_418 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint 
+@ fnptrname FnPtr_423 
+@ fnbeginparms 
+@ fnparm xluint x_421 
+@ fnparm xluint y_422 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint 
+@ fnname bitwisexor_424 
+@ fnbeginparms 
+@ fnparm xluint x_421 
+@ fnparm xluint y_422 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint 
+@ fnptrname FnPtr_426 
+@ fnbeginparms 
+@ fnparm xluint x_425 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint 
+@ fnname bitwisenot_427 
+@ fnbeginparms 
+@ fnparm xluint x_425 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint8 
+@ fnptrname FnPtr_430 
+@ fnbeginparms 
+@ fnparm xluint8 src_429 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint8 
+@ fnname copy_431 
+@ fnbeginparms 
+@ fnparm xluint8 src_429 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint8 
+@ fnptrname FnPtr_434 
+@ fnbeginparms 
+@ fnparm xluint8 x_432 
+@ fnparm xluint8 y_433 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint8 
+@ fnname add_435 
+@ fnbeginparms 
+@ fnparm xluint8 x_432 
+@ fnparm xluint8 y_433 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint8 
+@ fnptrname FnPtr_438 
+@ fnbeginparms 
+@ fnparm xluint8 x_436 
+@ fnparm xluint8 y_437 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint8 
+@ fnname subtract_439 
+@ fnbeginparms 
+@ fnparm xluint8 x_436 
+@ fnparm xluint8 y_437 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint8 
+@ fnptrname FnPtr_442 
+@ fnbeginparms 
+@ fnparm xluint8 x_440 
+@ fnparm xluint8 y_441 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint8 
+@ fnname multiply_443 
+@ fnbeginparms 
+@ fnparm xluint8 x_440 
+@ fnparm xluint8 y_441 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint8 
+@ fnptrname FnPtr_446 
+@ fnbeginparms 
+@ fnparm xluint8 x_444 
+@ fnparm xluint8 y_445 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint8 
+@ fnname divide_447 
+@ fnbeginparms 
+@ fnparm xluint8 x_444 
+@ fnparm xluint8 y_445 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint8 
+@ fnptrname FnPtr_450 
+@ fnbeginparms 
+@ fnparm xluint8 x_448 
+@ fnparm xluint8 y_449 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint8 
+@ fnname modulo_451 
+@ fnbeginparms 
+@ fnparm xluint8 x_448 
+@ fnparm xluint8 y_449 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint8 
+@ fnptrname FnPtr_454 
+@ fnbeginparms 
+@ fnparm xluint8 x_452 
+@ fnparm xluint8 y_453 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint8 
+@ fnname remainder_455 
+@ fnbeginparms 
+@ fnparm xluint8 x_452 
+@ fnparm xluint8 y_453 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint8 
+@ fnptrname FnPtr_458 
+@ fnbeginparms 
+@ fnparm xluint8 x_456 
+@ fnparm xluint y_457 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint8 
+@ fnname power_459 
+@ fnbeginparms 
+@ fnparm xluint8 x_456 
+@ fnparm xluint y_457 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_462 
+@ fnbeginparms 
+@ fnparm xluint8 x_460 
+@ fnparm xluint8 y_461 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname equal_463 
+@ fnbeginparms 
+@ fnparm xluint8 x_460 
+@ fnparm xluint8 y_461 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_466 
+@ fnbeginparms 
+@ fnparm xluint8 x_464 
+@ fnparm xluint8 y_465 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessthan_467 
+@ fnbeginparms 
+@ fnparm xluint8 x_464 
+@ fnparm xluint8 y_465 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_470 
+@ fnbeginparms 
+@ fnparm xluint8 x_468 
+@ fnparm xluint8 y_469 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessorequal_471 
+@ fnbeginparms 
+@ fnparm xluint8 x_468 
+@ fnparm xluint8 y_469 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_474 
+@ fnbeginparms 
+@ fnparm xluint8 x_472 
+@ fnparm xluint8 y_473 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterthan_475 
+@ fnbeginparms 
+@ fnparm xluint8 x_472 
+@ fnparm xluint8 y_473 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_478 
+@ fnbeginparms 
+@ fnparm xluint8 x_476 
+@ fnparm xluint8 y_477 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterorequal_479 
+@ fnbeginparms 
+@ fnparm xluint8 x_476 
+@ fnparm xluint8 y_477 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_482 
+@ fnbeginparms 
+@ fnparm xluint8 x_480 
+@ fnparm xluint8 y_481 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname different_483 
+@ fnbeginparms 
+@ fnparm xluint8 x_480 
+@ fnparm xluint8 y_481 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint8 
+@ fnptrname FnPtr_486 
+@ fnbeginparms 
+@ fnparm xluint8 x_484 
+@ fnparm xluint8 y_485 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint8 
+@ fnname bitwiseand_487 
+@ fnbeginparms 
+@ fnparm xluint8 x_484 
+@ fnparm xluint8 y_485 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint8 
+@ fnptrname FnPtr_490 
+@ fnbeginparms 
+@ fnparm xluint8 x_488 
+@ fnparm xluint8 y_489 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint8 
+@ fnname bitwiseor_491 
+@ fnbeginparms 
+@ fnparm xluint8 x_488 
+@ fnparm xluint8 y_489 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint8 
+@ fnptrname FnPtr_494 
+@ fnbeginparms 
+@ fnparm xluint8 x_492 
+@ fnparm xluint8 y_493 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint8 
+@ fnname bitwisexor_495 
+@ fnbeginparms 
+@ fnparm xluint8 x_492 
+@ fnparm xluint8 y_493 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint8 
+@ fnptrname FnPtr_497 
+@ fnbeginparms 
+@ fnparm xluint8 x_496 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint8 
+@ fnname bitwisenot_498 
+@ fnbeginparms 
+@ fnparm xluint8 x_496 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint16 
+@ fnptrname FnPtr_501 
+@ fnbeginparms 
+@ fnparm xluint16 src_500 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint16 
+@ fnname copy_502 
+@ fnbeginparms 
+@ fnparm xluint16 src_500 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint16 
+@ fnptrname FnPtr_505 
+@ fnbeginparms 
+@ fnparm xluint16 x_503 
+@ fnparm xluint16 y_504 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint16 
+@ fnname add_506 
+@ fnbeginparms 
+@ fnparm xluint16 x_503 
+@ fnparm xluint16 y_504 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint16 
+@ fnptrname FnPtr_509 
+@ fnbeginparms 
+@ fnparm xluint16 x_507 
+@ fnparm xluint16 y_508 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint16 
+@ fnname subtract_510 
+@ fnbeginparms 
+@ fnparm xluint16 x_507 
+@ fnparm xluint16 y_508 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint16 
+@ fnptrname FnPtr_513 
+@ fnbeginparms 
+@ fnparm xluint16 x_511 
+@ fnparm xluint16 y_512 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint16 
+@ fnname multiply_514 
+@ fnbeginparms 
+@ fnparm xluint16 x_511 
+@ fnparm xluint16 y_512 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint16 
+@ fnptrname FnPtr_517 
+@ fnbeginparms 
+@ fnparm xluint16 x_515 
+@ fnparm xluint16 y_516 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint16 
+@ fnname divide_518 
+@ fnbeginparms 
+@ fnparm xluint16 x_515 
+@ fnparm xluint16 y_516 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint16 
+@ fnptrname FnPtr_521 
+@ fnbeginparms 
+@ fnparm xluint16 x_519 
+@ fnparm xluint16 y_520 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint16 
+@ fnname modulo_522 
+@ fnbeginparms 
+@ fnparm xluint16 x_519 
+@ fnparm xluint16 y_520 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint16 
+@ fnptrname FnPtr_525 
+@ fnbeginparms 
+@ fnparm xluint16 x_523 
+@ fnparm xluint16 y_524 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint16 
+@ fnname remainder_526 
+@ fnbeginparms 
+@ fnparm xluint16 x_523 
+@ fnparm xluint16 y_524 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint16 
+@ fnptrname FnPtr_529 
+@ fnbeginparms 
+@ fnparm xluint16 x_527 
+@ fnparm xluint y_528 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint16 
+@ fnname power_530 
+@ fnbeginparms 
+@ fnparm xluint16 x_527 
+@ fnparm xluint y_528 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_533 
+@ fnbeginparms 
+@ fnparm xluint16 x_531 
+@ fnparm xluint16 y_532 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname equal_534 
+@ fnbeginparms 
+@ fnparm xluint16 x_531 
+@ fnparm xluint16 y_532 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_537 
+@ fnbeginparms 
+@ fnparm xluint16 x_535 
+@ fnparm xluint16 y_536 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessthan_538 
+@ fnbeginparms 
+@ fnparm xluint16 x_535 
+@ fnparm xluint16 y_536 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_541 
+@ fnbeginparms 
+@ fnparm xluint16 x_539 
+@ fnparm xluint16 y_540 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessorequal_542 
+@ fnbeginparms 
+@ fnparm xluint16 x_539 
+@ fnparm xluint16 y_540 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_545 
+@ fnbeginparms 
+@ fnparm xluint16 x_543 
+@ fnparm xluint16 y_544 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterthan_546 
+@ fnbeginparms 
+@ fnparm xluint16 x_543 
+@ fnparm xluint16 y_544 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_549 
+@ fnbeginparms 
+@ fnparm xluint16 x_547 
+@ fnparm xluint16 y_548 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterorequal_550 
+@ fnbeginparms 
+@ fnparm xluint16 x_547 
+@ fnparm xluint16 y_548 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_553 
+@ fnbeginparms 
+@ fnparm xluint16 x_551 
+@ fnparm xluint16 y_552 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname different_554 
+@ fnbeginparms 
+@ fnparm xluint16 x_551 
+@ fnparm xluint16 y_552 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint16 
+@ fnptrname FnPtr_557 
+@ fnbeginparms 
+@ fnparm xluint16 x_555 
+@ fnparm xluint16 y_556 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint16 
+@ fnname bitwiseand_558 
+@ fnbeginparms 
+@ fnparm xluint16 x_555 
+@ fnparm xluint16 y_556 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint16 
+@ fnptrname FnPtr_561 
+@ fnbeginparms 
+@ fnparm xluint16 x_559 
+@ fnparm xluint16 y_560 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint16 
+@ fnname bitwiseor_562 
+@ fnbeginparms 
+@ fnparm xluint16 x_559 
+@ fnparm xluint16 y_560 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint16 
+@ fnptrname FnPtr_565 
+@ fnbeginparms 
+@ fnparm xluint16 x_563 
+@ fnparm xluint16 y_564 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint16 
+@ fnname bitwisexor_566 
+@ fnbeginparms 
+@ fnparm xluint16 x_563 
+@ fnparm xluint16 y_564 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint16 
+@ fnptrname FnPtr_568 
+@ fnbeginparms 
+@ fnparm xluint16 x_567 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint16 
+@ fnname bitwisenot_569 
+@ fnbeginparms 
+@ fnparm xluint16 x_567 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint32 
+@ fnptrname FnPtr_572 
+@ fnbeginparms 
+@ fnparm xluint32 src_571 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint32 
+@ fnname copy_573 
+@ fnbeginparms 
+@ fnparm xluint32 src_571 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint32 
+@ fnptrname FnPtr_576 
+@ fnbeginparms 
+@ fnparm xluint32 x_574 
+@ fnparm xluint32 y_575 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint32 
+@ fnname add_577 
+@ fnbeginparms 
+@ fnparm xluint32 x_574 
+@ fnparm xluint32 y_575 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint32 
+@ fnptrname FnPtr_580 
+@ fnbeginparms 
+@ fnparm xluint32 x_578 
+@ fnparm xluint32 y_579 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint32 
+@ fnname subtract_581 
+@ fnbeginparms 
+@ fnparm xluint32 x_578 
+@ fnparm xluint32 y_579 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint32 
+@ fnptrname FnPtr_584 
+@ fnbeginparms 
+@ fnparm xluint32 x_582 
+@ fnparm xluint32 y_583 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint32 
+@ fnname multiply_585 
+@ fnbeginparms 
+@ fnparm xluint32 x_582 
+@ fnparm xluint32 y_583 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint32 
+@ fnptrname FnPtr_588 
+@ fnbeginparms 
+@ fnparm xluint32 x_586 
+@ fnparm xluint32 y_587 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint32 
+@ fnname divide_589 
+@ fnbeginparms 
+@ fnparm xluint32 x_586 
+@ fnparm xluint32 y_587 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint32 
+@ fnptrname FnPtr_592 
+@ fnbeginparms 
+@ fnparm xluint32 x_590 
+@ fnparm xluint32 y_591 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint32 
+@ fnname modulo_593 
+@ fnbeginparms 
+@ fnparm xluint32 x_590 
+@ fnparm xluint32 y_591 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint32 
+@ fnptrname FnPtr_596 
+@ fnbeginparms 
+@ fnparm xluint32 x_594 
+@ fnparm xluint32 y_595 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint32 
+@ fnname remainder_597 
+@ fnbeginparms 
+@ fnparm xluint32 x_594 
+@ fnparm xluint32 y_595 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint32 
+@ fnptrname FnPtr_600 
+@ fnbeginparms 
+@ fnparm xluint32 x_598 
+@ fnparm xluint y_599 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint32 
+@ fnname power_601 
+@ fnbeginparms 
+@ fnparm xluint32 x_598 
+@ fnparm xluint y_599 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_604 
+@ fnbeginparms 
+@ fnparm xluint32 x_602 
+@ fnparm xluint32 y_603 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname equal_605 
+@ fnbeginparms 
+@ fnparm xluint32 x_602 
+@ fnparm xluint32 y_603 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_608 
+@ fnbeginparms 
+@ fnparm xluint32 x_606 
+@ fnparm xluint32 y_607 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessthan_609 
+@ fnbeginparms 
+@ fnparm xluint32 x_606 
+@ fnparm xluint32 y_607 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_612 
+@ fnbeginparms 
+@ fnparm xluint32 x_610 
+@ fnparm xluint32 y_611 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessorequal_613 
+@ fnbeginparms 
+@ fnparm xluint32 x_610 
+@ fnparm xluint32 y_611 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_616 
+@ fnbeginparms 
+@ fnparm xluint32 x_614 
+@ fnparm xluint32 y_615 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterthan_617 
+@ fnbeginparms 
+@ fnparm xluint32 x_614 
+@ fnparm xluint32 y_615 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_620 
+@ fnbeginparms 
+@ fnparm xluint32 x_618 
+@ fnparm xluint32 y_619 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterorequal_621 
+@ fnbeginparms 
+@ fnparm xluint32 x_618 
+@ fnparm xluint32 y_619 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_624 
+@ fnbeginparms 
+@ fnparm xluint32 x_622 
+@ fnparm xluint32 y_623 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname different_625 
+@ fnbeginparms 
+@ fnparm xluint32 x_622 
+@ fnparm xluint32 y_623 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint32 
+@ fnptrname FnPtr_628 
+@ fnbeginparms 
+@ fnparm xluint32 x_626 
+@ fnparm xluint32 y_627 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint32 
+@ fnname bitwiseand_629 
+@ fnbeginparms 
+@ fnparm xluint32 x_626 
+@ fnparm xluint32 y_627 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint32 
+@ fnptrname FnPtr_632 
+@ fnbeginparms 
+@ fnparm xluint32 x_630 
+@ fnparm xluint32 y_631 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint32 
+@ fnname bitwiseor_633 
+@ fnbeginparms 
+@ fnparm xluint32 x_630 
+@ fnparm xluint32 y_631 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint32 
+@ fnptrname FnPtr_636 
+@ fnbeginparms 
+@ fnparm xluint32 x_634 
+@ fnparm xluint32 y_635 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint32 
+@ fnname bitwisexor_637 
+@ fnbeginparms 
+@ fnparm xluint32 x_634 
+@ fnparm xluint32 y_635 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint32 
+@ fnptrname FnPtr_639 
+@ fnbeginparms 
+@ fnparm xluint32 x_638 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint32 
+@ fnname bitwisenot_640 
+@ fnbeginparms 
+@ fnparm xluint32 x_638 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint64 
+@ fnptrname FnPtr_643 
+@ fnbeginparms 
+@ fnparm xluint64 src_642 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint64 
+@ fnname copy_644 
+@ fnbeginparms 
+@ fnparm xluint64 src_642 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint64 
+@ fnptrname FnPtr_647 
+@ fnbeginparms 
+@ fnparm xluint64 x_645 
+@ fnparm xluint64 y_646 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint64 
+@ fnname add_648 
+@ fnbeginparms 
+@ fnparm xluint64 x_645 
+@ fnparm xluint64 y_646 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint64 
+@ fnptrname FnPtr_651 
+@ fnbeginparms 
+@ fnparm xluint64 x_649 
+@ fnparm xluint64 y_650 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint64 
+@ fnname subtract_652 
+@ fnbeginparms 
+@ fnparm xluint64 x_649 
+@ fnparm xluint64 y_650 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint64 
+@ fnptrname FnPtr_655 
+@ fnbeginparms 
+@ fnparm xluint64 x_653 
+@ fnparm xluint64 y_654 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint64 
+@ fnname multiply_656 
+@ fnbeginparms 
+@ fnparm xluint64 x_653 
+@ fnparm xluint64 y_654 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint64 
+@ fnptrname FnPtr_659 
+@ fnbeginparms 
+@ fnparm xluint64 x_657 
+@ fnparm xluint64 y_658 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint64 
+@ fnname divide_660 
+@ fnbeginparms 
+@ fnparm xluint64 x_657 
+@ fnparm xluint64 y_658 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint64 
+@ fnptrname FnPtr_663 
+@ fnbeginparms 
+@ fnparm xluint64 x_661 
+@ fnparm xluint64 y_662 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint64 
+@ fnname modulo_664 
+@ fnbeginparms 
+@ fnparm xluint64 x_661 
+@ fnparm xluint64 y_662 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint64 
+@ fnptrname FnPtr_667 
+@ fnbeginparms 
+@ fnparm xluint64 x_665 
+@ fnparm xluint64 y_666 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint64 
+@ fnname remainder_668 
+@ fnbeginparms 
+@ fnparm xluint64 x_665 
+@ fnparm xluint64 y_666 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint64 
+@ fnptrname FnPtr_671 
+@ fnbeginparms 
+@ fnparm xluint64 x_669 
+@ fnparm xluint y_670 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint64 
+@ fnname power_672 
+@ fnbeginparms 
+@ fnparm xluint64 x_669 
+@ fnparm xluint y_670 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_675 
+@ fnbeginparms 
+@ fnparm xluint64 x_673 
+@ fnparm xluint64 y_674 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname equal_676 
+@ fnbeginparms 
+@ fnparm xluint64 x_673 
+@ fnparm xluint64 y_674 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_679 
+@ fnbeginparms 
+@ fnparm xluint64 x_677 
+@ fnparm xluint64 y_678 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessthan_680 
+@ fnbeginparms 
+@ fnparm xluint64 x_677 
+@ fnparm xluint64 y_678 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_683 
+@ fnbeginparms 
+@ fnparm xluint64 x_681 
+@ fnparm xluint64 y_682 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessorequal_684 
+@ fnbeginparms 
+@ fnparm xluint64 x_681 
+@ fnparm xluint64 y_682 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_687 
+@ fnbeginparms 
+@ fnparm xluint64 x_685 
+@ fnparm xluint64 y_686 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterthan_688 
+@ fnbeginparms 
+@ fnparm xluint64 x_685 
+@ fnparm xluint64 y_686 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_691 
+@ fnbeginparms 
+@ fnparm xluint64 x_689 
+@ fnparm xluint64 y_690 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterorequal_692 
+@ fnbeginparms 
+@ fnparm xluint64 x_689 
+@ fnparm xluint64 y_690 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_695 
+@ fnbeginparms 
+@ fnparm xluint64 x_693 
+@ fnparm xluint64 y_694 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname different_696 
+@ fnbeginparms 
+@ fnparm xluint64 x_693 
+@ fnparm xluint64 y_694 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint64 
+@ fnptrname FnPtr_699 
+@ fnbeginparms 
+@ fnparm xluint64 x_697 
+@ fnparm xluint64 y_698 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint64 
+@ fnname bitwiseand_700 
+@ fnbeginparms 
+@ fnparm xluint64 x_697 
+@ fnparm xluint64 y_698 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint64 
+@ fnptrname FnPtr_703 
+@ fnbeginparms 
+@ fnparm xluint64 x_701 
+@ fnparm xluint64 y_702 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint64 
+@ fnname bitwiseor_704 
+@ fnbeginparms 
+@ fnparm xluint64 x_701 
+@ fnparm xluint64 y_702 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint64 
+@ fnptrname FnPtr_707 
+@ fnbeginparms 
+@ fnparm xluint64 x_705 
+@ fnparm xluint64 y_706 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint64 
+@ fnname bitwisexor_708 
+@ fnbeginparms 
+@ fnparm xluint64 x_705 
+@ fnparm xluint64 y_706 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xluint64 
+@ fnptrname FnPtr_710 
+@ fnbeginparms 
+@ fnparm xluint64 x_709 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xluint64 
+@ fnname bitwisenot_711 
+@ fnbeginparms 
+@ fnparm xluint64 x_709 
+@ fnendparms) 
+@ fndeclend) 
 (@ fnptrbegin 
 (@ fnret1 xlreal 
-@ fnptrname FnPtr_109 
+@ fnptrname FnPtr_714 
 @ fnbeginparms 
-@ fnparm xlreal x_108 
+@ fnparm xlreal src_713 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal 
+@ fnname copy_715 
+@ fnbeginparms 
+@ fnparm xlreal src_713 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal 
+@ fnptrname FnPtr_718 
+@ fnbeginparms 
+@ fnparm xlreal x_716 
+@ fnparm xlreal y_717 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal 
+@ fnname add_719 
+@ fnbeginparms 
+@ fnparm xlreal x_716 
+@ fnparm xlreal y_717 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal 
+@ fnptrname FnPtr_722 
+@ fnbeginparms 
+@ fnparm xlreal x_720 
+@ fnparm xlreal y_721 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal 
+@ fnname subtract_723 
+@ fnbeginparms 
+@ fnparm xlreal x_720 
+@ fnparm xlreal y_721 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal 
+@ fnptrname FnPtr_726 
+@ fnbeginparms 
+@ fnparm xlreal x_724 
+@ fnparm xlreal y_725 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal 
+@ fnname multiply_727 
+@ fnbeginparms 
+@ fnparm xlreal x_724 
+@ fnparm xlreal y_725 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal 
+@ fnptrname FnPtr_730 
+@ fnbeginparms 
+@ fnparm xlreal x_728 
+@ fnparm xlreal y_729 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal 
+@ fnname divide_731 
+@ fnbeginparms 
+@ fnparm xlreal x_728 
+@ fnparm xlreal y_729 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal 
+@ fnptrname FnPtr_734 
+@ fnbeginparms 
+@ fnparm xlreal x_732 
+@ fnparm xlreal y_733 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal 
+@ fnname modulo_735 
+@ fnbeginparms 
+@ fnparm xlreal x_732 
+@ fnparm xlreal y_733 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal 
+@ fnptrname FnPtr_738 
+@ fnbeginparms 
+@ fnparm xlreal x_736 
+@ fnparm xlreal y_737 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal 
+@ fnname remainder_739 
+@ fnbeginparms 
+@ fnparm xlreal x_736 
+@ fnparm xlreal y_737 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal 
+@ fnptrname FnPtr_742 
+@ fnbeginparms 
+@ fnparm xlreal x_740 
+@ fnparm xluint y_741 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal 
+@ fnname power_743 
+@ fnbeginparms 
+@ fnparm xlreal x_740 
+@ fnparm xluint y_741 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal 
+@ fnptrname FnPtr_746 
+@ fnbeginparms 
+@ fnparm xlreal x_744 
+@ fnparm xlint y_745 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal 
+@ fnname power_747 
+@ fnbeginparms 
+@ fnparm xlreal x_744 
+@ fnparm xlint y_745 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal 
+@ fnptrname FnPtr_750 
+@ fnbeginparms 
+@ fnparm xlreal x_748 
+@ fnparm xlreal y_749 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal 
+@ fnname power_751 
+@ fnbeginparms 
+@ fnparm xlreal x_748 
+@ fnparm xlreal y_749 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_754 
+@ fnbeginparms 
+@ fnparm xlreal x_752 
+@ fnparm xlreal y_753 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname equal_755 
+@ fnbeginparms 
+@ fnparm xlreal x_752 
+@ fnparm xlreal y_753 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_758 
+@ fnbeginparms 
+@ fnparm xlreal x_756 
+@ fnparm xlreal y_757 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessthan_759 
+@ fnbeginparms 
+@ fnparm xlreal x_756 
+@ fnparm xlreal y_757 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_762 
+@ fnbeginparms 
+@ fnparm xlreal x_760 
+@ fnparm xlreal y_761 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessorequal_763 
+@ fnbeginparms 
+@ fnparm xlreal x_760 
+@ fnparm xlreal y_761 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_766 
+@ fnbeginparms 
+@ fnparm xlreal x_764 
+@ fnparm xlreal y_765 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterthan_767 
+@ fnbeginparms 
+@ fnparm xlreal x_764 
+@ fnparm xlreal y_765 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_770 
+@ fnbeginparms 
+@ fnparm xlreal x_768 
+@ fnparm xlreal y_769 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterorequal_771 
+@ fnbeginparms 
+@ fnparm xlreal x_768 
+@ fnparm xlreal y_769 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_774 
+@ fnbeginparms 
+@ fnparm xlreal x_772 
+@ fnparm xlreal y_773 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname different_775 
+@ fnbeginparms 
+@ fnparm xlreal x_772 
+@ fnparm xlreal y_773 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal32 
+@ fnptrname FnPtr_778 
+@ fnbeginparms 
+@ fnparm xlreal32 src_777 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal32 
+@ fnname copy_779 
+@ fnbeginparms 
+@ fnparm xlreal32 src_777 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal32 
+@ fnptrname FnPtr_782 
+@ fnbeginparms 
+@ fnparm xlreal32 x_780 
+@ fnparm xlreal32 y_781 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal32 
+@ fnname add_783 
+@ fnbeginparms 
+@ fnparm xlreal32 x_780 
+@ fnparm xlreal32 y_781 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal32 
+@ fnptrname FnPtr_786 
+@ fnbeginparms 
+@ fnparm xlreal32 x_784 
+@ fnparm xlreal32 y_785 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal32 
+@ fnname subtract_787 
+@ fnbeginparms 
+@ fnparm xlreal32 x_784 
+@ fnparm xlreal32 y_785 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal32 
+@ fnptrname FnPtr_790 
+@ fnbeginparms 
+@ fnparm xlreal32 x_788 
+@ fnparm xlreal32 y_789 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal32 
+@ fnname multiply_791 
+@ fnbeginparms 
+@ fnparm xlreal32 x_788 
+@ fnparm xlreal32 y_789 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal32 
+@ fnptrname FnPtr_794 
+@ fnbeginparms 
+@ fnparm xlreal32 x_792 
+@ fnparm xlreal32 y_793 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal32 
+@ fnname divide_795 
+@ fnbeginparms 
+@ fnparm xlreal32 x_792 
+@ fnparm xlreal32 y_793 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal32 
+@ fnptrname FnPtr_798 
+@ fnbeginparms 
+@ fnparm xlreal32 x_796 
+@ fnparm xlreal32 y_797 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal32 
+@ fnname modulo_799 
+@ fnbeginparms 
+@ fnparm xlreal32 x_796 
+@ fnparm xlreal32 y_797 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal32 
+@ fnptrname FnPtr_802 
+@ fnbeginparms 
+@ fnparm xlreal32 x_800 
+@ fnparm xlreal32 y_801 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal32 
+@ fnname remainder_803 
+@ fnbeginparms 
+@ fnparm xlreal32 x_800 
+@ fnparm xlreal32 y_801 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal32 
+@ fnptrname FnPtr_806 
+@ fnbeginparms 
+@ fnparm xlreal32 x_804 
+@ fnparm xluint y_805 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal32 
+@ fnname power_807 
+@ fnbeginparms 
+@ fnparm xlreal32 x_804 
+@ fnparm xluint y_805 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal32 
+@ fnptrname FnPtr_810 
+@ fnbeginparms 
+@ fnparm xlreal32 x_808 
+@ fnparm xlint y_809 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal32 
+@ fnname power_811 
+@ fnbeginparms 
+@ fnparm xlreal32 x_808 
+@ fnparm xlint y_809 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal32 
+@ fnptrname FnPtr_814 
+@ fnbeginparms 
+@ fnparm xlreal32 x_812 
+@ fnparm xlreal32 y_813 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal32 
+@ fnname power_815 
+@ fnbeginparms 
+@ fnparm xlreal32 x_812 
+@ fnparm xlreal32 y_813 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_818 
+@ fnbeginparms 
+@ fnparm xlreal32 x_816 
+@ fnparm xlreal32 y_817 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname equal_819 
+@ fnbeginparms 
+@ fnparm xlreal32 x_816 
+@ fnparm xlreal32 y_817 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_822 
+@ fnbeginparms 
+@ fnparm xlreal32 x_820 
+@ fnparm xlreal32 y_821 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessthan_823 
+@ fnbeginparms 
+@ fnparm xlreal32 x_820 
+@ fnparm xlreal32 y_821 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_826 
+@ fnbeginparms 
+@ fnparm xlreal32 x_824 
+@ fnparm xlreal32 y_825 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessorequal_827 
+@ fnbeginparms 
+@ fnparm xlreal32 x_824 
+@ fnparm xlreal32 y_825 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_830 
+@ fnbeginparms 
+@ fnparm xlreal32 x_828 
+@ fnparm xlreal32 y_829 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterthan_831 
+@ fnbeginparms 
+@ fnparm xlreal32 x_828 
+@ fnparm xlreal32 y_829 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_834 
+@ fnbeginparms 
+@ fnparm xlreal32 x_832 
+@ fnparm xlreal32 y_833 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterorequal_835 
+@ fnbeginparms 
+@ fnparm xlreal32 x_832 
+@ fnparm xlreal32 y_833 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_838 
+@ fnbeginparms 
+@ fnparm xlreal32 x_836 
+@ fnparm xlreal32 y_837 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname different_839 
+@ fnbeginparms 
+@ fnparm xlreal32 x_836 
+@ fnparm xlreal32 y_837 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal64 
+@ fnptrname FnPtr_842 
+@ fnbeginparms 
+@ fnparm xlreal64 src_841 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal64 
+@ fnname copy_843 
+@ fnbeginparms 
+@ fnparm xlreal64 src_841 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal64 
+@ fnptrname FnPtr_846 
+@ fnbeginparms 
+@ fnparm xlreal64 x_844 
+@ fnparm xlreal64 y_845 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal64 
+@ fnname add_847 
+@ fnbeginparms 
+@ fnparm xlreal64 x_844 
+@ fnparm xlreal64 y_845 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal64 
+@ fnptrname FnPtr_850 
+@ fnbeginparms 
+@ fnparm xlreal64 x_848 
+@ fnparm xlreal64 y_849 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal64 
+@ fnname subtract_851 
+@ fnbeginparms 
+@ fnparm xlreal64 x_848 
+@ fnparm xlreal64 y_849 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal64 
+@ fnptrname FnPtr_854 
+@ fnbeginparms 
+@ fnparm xlreal64 x_852 
+@ fnparm xlreal64 y_853 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal64 
+@ fnname multiply_855 
+@ fnbeginparms 
+@ fnparm xlreal64 x_852 
+@ fnparm xlreal64 y_853 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal64 
+@ fnptrname FnPtr_858 
+@ fnbeginparms 
+@ fnparm xlreal64 x_856 
+@ fnparm xlreal64 y_857 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal64 
+@ fnname divide_859 
+@ fnbeginparms 
+@ fnparm xlreal64 x_856 
+@ fnparm xlreal64 y_857 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal64 
+@ fnptrname FnPtr_862 
+@ fnbeginparms 
+@ fnparm xlreal64 x_860 
+@ fnparm xlreal64 y_861 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal64 
+@ fnname modulo_863 
+@ fnbeginparms 
+@ fnparm xlreal64 x_860 
+@ fnparm xlreal64 y_861 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal64 
+@ fnptrname FnPtr_866 
+@ fnbeginparms 
+@ fnparm xlreal64 x_864 
+@ fnparm xlreal64 y_865 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal64 
+@ fnname remainder_867 
+@ fnbeginparms 
+@ fnparm xlreal64 x_864 
+@ fnparm xlreal64 y_865 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal64 
+@ fnptrname FnPtr_870 
+@ fnbeginparms 
+@ fnparm xlreal64 x_868 
+@ fnparm xluint y_869 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal64 
+@ fnname power_871 
+@ fnbeginparms 
+@ fnparm xlreal64 x_868 
+@ fnparm xluint y_869 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal64 
+@ fnptrname FnPtr_874 
+@ fnbeginparms 
+@ fnparm xlreal64 x_872 
+@ fnparm xlint y_873 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal64 
+@ fnname power_875 
+@ fnbeginparms 
+@ fnparm xlreal64 x_872 
+@ fnparm xlint y_873 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlreal64 
+@ fnptrname FnPtr_878 
+@ fnbeginparms 
+@ fnparm xlreal64 x_876 
+@ fnparm xlreal64 y_877 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlreal64 
+@ fnname power_879 
+@ fnbeginparms 
+@ fnparm xlreal64 x_876 
+@ fnparm xlreal64 y_877 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_882 
+@ fnbeginparms 
+@ fnparm xlreal64 x_880 
+@ fnparm xlreal64 y_881 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname equal_883 
+@ fnbeginparms 
+@ fnparm xlreal64 x_880 
+@ fnparm xlreal64 y_881 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_886 
+@ fnbeginparms 
+@ fnparm xlreal64 x_884 
+@ fnparm xlreal64 y_885 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessthan_887 
+@ fnbeginparms 
+@ fnparm xlreal64 x_884 
+@ fnparm xlreal64 y_885 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_890 
+@ fnbeginparms 
+@ fnparm xlreal64 x_888 
+@ fnparm xlreal64 y_889 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname lessorequal_891 
+@ fnbeginparms 
+@ fnparm xlreal64 x_888 
+@ fnparm xlreal64 y_889 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_894 
+@ fnbeginparms 
+@ fnparm xlreal64 x_892 
+@ fnparm xlreal64 y_893 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterthan_895 
+@ fnbeginparms 
+@ fnparm xlreal64 x_892 
+@ fnparm xlreal64 y_893 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_898 
+@ fnbeginparms 
+@ fnparm xlreal64 x_896 
+@ fnparm xlreal64 y_897 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname greaterorequal_899 
+@ fnbeginparms 
+@ fnparm xlreal64 x_896 
+@ fnparm xlreal64 y_897 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_902 
+@ fnbeginparms 
+@ fnparm xlreal64 x_900 
+@ fnparm xlreal64 y_901 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname different_903 
+@ fnbeginparms 
+@ fnparm xlreal64 x_900 
+@ fnparm xlreal64 y_901 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_905 
+@ fnbeginparms 
+@ fnparm xlbool x_904 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname logicalnot_906 
+@ fnbeginparms 
+@ fnparm xlbool x_904 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_909 
+@ fnbeginparms 
+@ fnparm xlbool x_907 
+@ fnparm xlbool y_908 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname logicaland_910 
+@ fnbeginparms 
+@ fnparm xlbool x_907 
+@ fnparm xlbool y_908 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_913 
+@ fnbeginparms 
+@ fnparm xlbool x_911 
+@ fnparm xlbool y_912 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname logicalor_914 
+@ fnbeginparms 
+@ fnparm xlbool x_911 
+@ fnparm xlbool y_912 
+@ fnendparms) 
+@ fndeclend) 
+(@ fnptrbegin 
+(@ fnret1 xlbool 
+@ fnptrname FnPtr_917 
+@ fnbeginparms 
+@ fnparm xlbool x_915 
+@ fnparm xlbool y_916 
+@ fnendparms) 
+@ fnptrend) 
+(@ fndeclbegin 
+(@ fnret1 xlbool 
+@ fnname logicalxor_918 
+@ fnbeginparms 
+@ fnparm xlbool x_915 
+@ fnparm xlbool y_916 
+@ fnendparms) 
+@ fndeclend) 
+(@ recordbegin Record_920 
+@ recordfield Record_920 xlmodule base_1 
+@ recordend Record_920) 
+@ globaldecl Record_920 xlbuiltins_921 
+(@ fnptrbegin 
+(@ fnret1 xlreal 
+@ fnptrname FnPtr_923 
+@ fnbeginparms 
+@ fnparm xlreal x_922 
 @ fnendparms) 
 @ fnptrend 
 (@ fndeclbegin 
 (@ fnret1 xlreal 
-@ fnname sin_110 
+@ fnname sin_924 
 @ fnbeginparms 
-@ fnparm xlreal x_108 
+@ fnparm xlreal x_922 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
 (@ fnret0 
-@ fnptrname FnPtr_113 
+@ fnptrname FnPtr_927 
 @ fnbeginparms 
-@ fnparm xlreal target_111 
-@ fnparm xlreal source_112 
+@ fnparm xlreal target_925 
+@ fnparm xlreal source_926 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
 (@ fnret0 
-@ fnname copy_114 
+@ fnname copy_928 
 @ fnbeginparms 
-@ fnparm xlreal target_111 
-@ fnparm xlreal source_112 
+@ fnparm xlreal target_925 
+@ fnparm xlreal source_926 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
 (@ fnret0 
-@ fnptrname FnPtr_115 
+@ fnptrname FnPtr_929 
 @ fnbeginparms 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
 (@ fnret0 
-@ fnname main_116 
+@ fnname main_930 
 @ fnbeginparms 
 @ fnendparms) 
 @ fndeclend)) 
-(@ fnbodybegin main_116 
+(@ fnbodybegin main_930 
 (@ fnret0 
-@ fnname main_116 
+@ fnname main_930 
 @ fnbeginparms 
 @ fnendparms) 
-@ fnbody main_116 
-(@ localdecl xlreal w_117 
-@ localdecl xlreal t0_118 
-@ localdecl xlreal t_119 
-@ localdecl xlreal b_120 
-@ localdecl xlreal a_121 
-@ localdecl xlreal a2_122 
-@ localdecl xlreal y_123 
-@ localdecl xlreal z_124 
+@ fnbody main_930 
+(@ localdecl xlreal w_931 
+@ localdecl xlreal t0_932 
+@ localdecl xlreal t_933 
+@ localdecl xlreal b_934 
+@ localdecl xlreal a_935 
+@ localdecl xlreal a2_936 
+@ localdecl xlreal y_937 
+@ localdecl xlreal z_938 
 
     @ decl 
     @ decl 
@@ -478,8 +3732,8 @@
     Y := d (exp ( - 2 * W * (T - T0) ) * sin (2 * W * (T - T0) ) ) / dT 
     Z := {constantfold} (sin X - sin X)
 
-@ exitlabel main_116) 
-@ fnbodyend main_116 
+@ exitlabel main_930) 
+@ fnbodyend main_930 
 @ mainbegin 
 (@ decl 
 (@ nop 

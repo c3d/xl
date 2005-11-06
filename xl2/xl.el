@@ -63,7 +63,7 @@
     "try" "catch" "retry" "raise"
     "while" "until" "for" "do" "loop" "exit"
     "translate" "when" "where" "with"
-    "if" "then" "else" "not" "and" "or" "nil")
+    "if" "then" "else" "not" "and" "or" "xor" "nil")
   "List of words highlighted as 'keywords' in XL mode")
 
 (defvar xl-warnings

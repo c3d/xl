@@ -1,12 +1,3 @@
-09.Modules/import_simple_module_bad.xl:32: No translation found for 'FooZoo (0)'
-| Test_Call : integer := FooZoo(0)
-|______________________________^
-09.Modules/import_simple_module_bad.xl:32: No translation found for 'FooZoo (0)'
-| Test_Call : integer := FooZoo(0)
-|______________________________^
-09.Modules/import_simple_module_bad.xl:32: No translation found for 'FooZoo (0)'
-| Test_Call : integer := FooZoo(0)
-|______________________________^
 09.Modules/import_simple_module_bad.xl:32: No translation found for 'Test_Call := FooZoo (0)'
 | Test_Call : integer := FooZoo(0)
 |______________________________^
