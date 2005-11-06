@@ -140,10 +140,11 @@ module XL.SYMBOLS is
                                    " got ", size(subtable.names[name])
                     for subtree in subtable.names[name] loop
                         scoped : PT.tree := parse_tree('scope'.'subtree')
+                        scoped.info := subtree.info
+                        scoped.position := subtree.position
                         values += scoped
 
-                exit if mode = lookupInnermost and size(values) > 0
-
+            exit if mode = lookupInnermost and size(values) > 0
             exit if mode = lookupLocalUsing
             table := table.enclosing
 

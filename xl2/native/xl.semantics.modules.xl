@@ -194,16 +194,21 @@ module XL.SEMANTICS.MODULES is
         return nil
 
 
+    function InXlBuiltinsModule() return boolean is
+    // ------------------------------------------------------------------------
+    //    Detect if we are in the XL_BUILTINS module
+    // ------------------------------------------------------------------------
+        return SYM.GetInteger(XLT.main_context, "MOD:xlbuiltins") <> 2
+
+
     function AddBuiltins(Input : PT.tree) return PT.tree is
     // ------------------------------------------------------------------------
     //    Add the builtin module
     // ------------------------------------------------------------------------
-
         result := Input
-        if SYM.GetInteger(XLT.main_context, "MOD:xlbuiltins") <> 2 then
+        if InXlBuiltinsModule() then
             result := parse_tree
-                import XL_BUILTINS
-                using XL_BUILTINS
+                use XL_BUILTINS
                 'result'
 
 
@@ -358,3 +363,10 @@ module XL.SEMANTICS.MODULES is
              import 'LongName'
          then
              return ProcessImport (LongName, nil)
+
+         when
+             use 'LongName'
+         then
+             result := ProcessImport (LongName, nil)
+             result := XLT.Append(result, REC.EnterUsing(LongName))
+

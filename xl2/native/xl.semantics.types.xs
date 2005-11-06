@@ -89,6 +89,7 @@ module XL.SEMANTICS.TYPES with
     module_type                 : PT.tree := nil
 
     // The literal types
+    type_of_types               : any_type := nil
     const_boolean_type          : any_type := nil
     integer_literal_type        : any_type := nil
     real_literal_type           : any_type := nil

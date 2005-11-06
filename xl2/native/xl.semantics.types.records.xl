@@ -118,8 +118,9 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 Fields := XLT.XLDeclarations (Fields)
                 decl : DCL.declaration := DCL.GetDeclaration(Fields)
                 if decl then
-                    trace [recdecl] "Decl: ", decl
-                    list += decl
+                    if not decl.is_builtin then
+                        trace [recdecl] "Decl: ", decl
+                        list += decl
                 else
                     ERR.Error "'$1' isn't a field declaration", Fields
 

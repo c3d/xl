@@ -1,5 +1,43 @@
+// ****************************************************************************
+//  xl_builtins.xs                  (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     This defines the built-in operations in XL
+// 
+//     The module XL_BUILTINS is 'use'd at the beginning of every
+//     translation unit. Since it is not a direct ancestor but
+//     in a 'using' map, it is possible to redefine types named 'integer'
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
 module XL_BUILTINS with
 
+    // Bytecode type definitions
+    // The following is defined in the compiler for this module
+    // type module is XL.BYTECODE.xlmodule
+
+    type integer is XL.BYTECODE.xlint
+    type real is XL.BYTECODE.xlreal
+    type boolean is XL.BYTECODE.xlbool
+    type character is XL.BYTECODE.xlchar
+    type text is XL.BYTECODE.xltext
+    type record is XL.BYTECODE.xlrecord
+    type gateau is XL.BYTECODE.xlgateau
+
+    // Integer operations
     to Copy(out Tgt : integer; in Src : integer) written Tgt := Src is
         XL.BYTECODE.copy_int
 
@@ -24,7 +62,7 @@ module XL_BUILTINS with
     function CmpNe(X, Y : integer) return boolean written X<>Y is
         XL.BYTECODE.ne_int
 
-
+    // Real operations
     to Copy(out Tgt : real; in Src : real) written Tgt := Src is
         XL.BYTECODE.copy_real
 

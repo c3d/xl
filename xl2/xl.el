@@ -57,7 +57,7 @@
 
 ;;;; Font lock
 (defvar xl-keywords
-  '("generic" "is" "import" "using"
+  '("generic" "is" "import" "using" "use"
     "in" "out" "variable" "constant" "var" "const"
     "return" "other" "require" "ensure" "written"
     "try" "catch" "retry" "raise"

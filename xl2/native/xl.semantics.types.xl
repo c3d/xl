@@ -28,6 +28,7 @@ import SYM = XL.SYMBOLS
 import ERR = XL.ERRORS
 import XLT = XL.TRANSLATOR
 import CST = XL.CONSTANTS
+import DCL = XL.SEMANTICS.DECLARATIONS
 
 
 module XL.SEMANTICS.TYPES is
@@ -287,7 +288,8 @@ module XL.SEMANTICS.TYPES is
 
         // Check if there is already a type by that name
         N : Name as PT.name_tree
-        original : PT.tree := SYM.LookupOne(XLT.context, "TYPE", N.value)
+        original : PT.tree := SYM.LookupOne(XLT.context, "TYPE",
+                                            N.value, SYM.lookupInnermost)
         if original <> nil then
             ERR.Error "The type '$1' can't be defined here", Name
             ERR.Error "because a type named '$1' already exists", original
@@ -315,6 +317,29 @@ module XL.SEMANTICS.TYPES is
         result := parse_tree(@type)
         SetDefinedType result, tp
 
+        // Also make the type declaration a declaration
+        if type_of_types = nil then
+            tot : type_type
+            tot.symbols := nil
+            type_of_types := tot
+        decl : DCL.declaration
+        decl.name               := N
+        decl.type               := tp
+        decl.initializer        := nil
+        decl.machine_name       := nil
+        decl.frame_depth        := 0
+        decl.is_input           := false
+        decl.is_output          := false
+        decl.is_parameter       := false
+        decl.is_local           := false
+        decl.is_global          := false
+        decl.is_field           := false
+        decl.is_builtin         := false
+        decl.implementation     := nil
+
+        PT.SetInfo result, "DECL", decl
+        PT.SetInfo Name, "DECL", decl
+
 
     function EnterBuiltinType (Name  : text; MType : text) return PT.tree is
     // ------------------------------------------------------------------------
@@ -328,7 +353,58 @@ module XL.SEMANTICS.TYPES is
             ERR.Error "Internal: Error creating builtin type", -1
         stp.machine_name := PT.NewName(MType)
         EnterSignature MType, stp
+        decl : DCL.Declaration := DCL.GetDeclaration(result)
+        decl.is_builtin := true
+        PT.SetInfo NameTree, "DECL", decl
         return NameTree
+
+
+    function EnterBytecodeType (Name        : PT.name_tree;
+                                MachineName : PT.name_tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a bytecode type in the symbol table
+    // ------------------------------------------------------------------------
+        result := EnterTypeSym(Name, nil)
+        tp  : any_type := GetDefinedType (result)
+        stp : tp as source_type
+        if tp <> stp then
+            ERR.Error "Internal: Error creating builtin type", -1
+        stp.machine_name := MachineName
+        EnterSignature MachineName.Value, stp
+
+        // Record builtin type as necessary
+        mname : text := MachineName.value
+        if mname = "xlint" then
+            integer_type                := result
+            integer_literal_type        := ConstantType(stp)
+        else if mname = "xlreal" then
+            real_type                   := result
+            real_literal_type           := ConstantType(stp)
+        else if mname = "xlbool" then
+            const_boolean_type          := ConstantType(stp)
+
+            // REVISIT: Enter pre-defined constants true and false
+            // TODO: Define them as an enumeration when these work
+            true_tree : PT.name_tree := PT.NewName("true")
+            false_tree : PT.name_tree := PT.NewName("false")
+            CST.EnterNamedConstant true_tree, true_tree
+            CST.EnterNamedConstant false_tree, false_tree
+        else if mname = "xlchar" then
+            character_type              := result
+            character_literal_type      := ConstantType(stp)
+        else if mname = "xltext" then
+            text_type                   := result
+            text_literal_type           := ConstantType(stp)
+        else if mname = "xlrecord" then
+            record_type                 := result
+        else if mname = "xlmodule" then
+            module_type                 := result
+
+        decl : DCL.Declaration := DCL.GetDeclaration(result)
+        decl.is_builtin := true
+        PT.SetInfo Name, "DECL", decl
+
+        return Name
 
 
     function EnterType(Name : PT.tree; Value : PT.tree) return PT.tree is
@@ -368,30 +444,32 @@ module XL.SEMANTICS.TYPES is
     //    based on module dependencies works correctly
     //    This code rightfully belongs to initialization
 
-        if integer_type = nil then
+        if module_type = nil then
             XLT.InitializeTranslator()
-
+            
             // Enter basic types
-            integer_type   := EnterBuiltinType ("integer", "Int")
-            real_type      := EnterBuiltinType ("real", "Real")
-            boolean_type   := EnterBuiltinType ("boolean", "Bool")
-            character_type := EnterBuiltinType ("character", "Char")
-            text_type      := EnterBuiltinType ("text", "Text")
-            record_type    := EnterBuiltinType ("record", "Rec")
-            module_type    := EnterBuiltinType ("module", "Mod")
+            if false then
+                integer_type   := EnterBuiltinType ("integer", "xlint")
+                real_type      := EnterBuiltinType ("real", "xlreal")
+                boolean_type   := EnterBuiltinType ("boolean", "xlbool")
+                character_type := EnterBuiltinType ("character", "xlchar")
+                text_type      := EnterBuiltinType ("text", "xltext")
+                record_type    := EnterBuiltinType ("record", "xlrecord")
+            module_type    := EnterBuiltinType ("module", "xlmodule")
 
             // Enter the types for literals
-            const_boolean_type := ConstantType(GetDefinedType(boolean_type))
-            integer_literal_type := ConstantType(GetDefinedType(integer_type))
-            real_literal_type := ConstantType(GetDefinedType(real_type))
-            character_literal_type:=ConstantType(GetDefinedType(character_type))
-            text_literal_type := ConstantType(GetDefinedType(text_type))
+            if false then
+                const_boolean_type := ConstantType(GetDefinedType(boolean_type))
+                integer_literal_type := ConstantType(GetDefinedType(integer_type))
+                real_literal_type := ConstantType(GetDefinedType(real_type))
+                character_literal_type:=ConstantType(GetDefinedType(character_type))
+                text_literal_type := ConstantType(GetDefinedType(text_type))
 
-            // Enter pre-defined constants true and false
-            true_tree : PT.name_tree := PT.NewName("true")
-            false_tree : PT.name_tree := PT.NewName("false")
-            CST.EnterNamedConstant true_tree, true_tree
-            CST.EnterNamedConstant false_tree, false_tree
+                // Enter pre-defined constants true and false
+                true_tree : PT.name_tree := PT.NewName("true")
+                false_tree : PT.name_tree := PT.NewName("false")
+                CST.EnterNamedConstant true_tree, true_tree
+                CST.EnterNamedConstant false_tree, false_tree
 
 
     initialization
@@ -438,7 +516,7 @@ module XL.SEMANTICS.TYPES is
     //   Return the type for a name
     // ------------------------------------------------------------------------
         types : SYM.tree_list
-        SYM.Lookup XLT.context, "TYPE", tname.value, types
+        SYM.Lookup XLT.context, "TYPE", tname.value, types, SYM.lookupInnermost
         if size(types) > 0 then
             original : PT.tree := types[0]
             if size(types) > 1 then
@@ -465,7 +543,7 @@ module XL.SEMANTICS.TYPES is
             return false
         types : SYM.tree_list
         tname : type_expr as PT.name_tree
-        SYM.Lookup XLT.context, "TYPE", tname.value, types
+        SYM.Lookup XLT.context, "TYPE", tname.value, types, SYM.lookupInnermost
         if size(types) < 1 then
             return false
         original : PT.tree := types[0]
@@ -542,6 +620,16 @@ module XL.SEMANTICS.TYPES is
             type 'Name' is 'Value'
         then
             return EnterType (Name, Value)
+
+        // Bytecode type definition
+        when
+            type 'Name' is XL.BYTECODE.'MachineName'
+        where
+            Name.kind = PT.xlNAME and MachineName.kind = PT.xlNAME
+        then
+            TName : Name as PT.name_tree
+            MName : MachineName as PT.name_tree
+            return EnterBytecodeType (TName, MName)
 
 
     translation XLSemantics

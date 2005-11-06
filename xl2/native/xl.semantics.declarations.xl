@@ -374,7 +374,8 @@ module XL.SEMANTICS.DECLARATIONS is
                 return false
 
             types : SYM.tree_list
-            SYM.Lookup XLT.context, "TYPE", tname.value, types, SYM.lookupAll
+            SYM.Lookup XLT.context, "TYPE", tname.value,
+                       types, SYM.lookupInnermost
             if size(types) > 0 then
                 original : PT.tree := types[0]
                 if size(types) > 1 then

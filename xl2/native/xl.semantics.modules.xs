@@ -25,7 +25,7 @@
 
 module XL.SEMANTICS.MODULES with
 
-     modules_path : string of text
-     procedure AddPath (path : text)
-     function AddBuiltins(Input : PT.tree) return PT.tree
-
+    modules_path : string of text
+    procedure AddPath (path : text)
+    function AddBuiltins(Input : PT.tree) return PT.tree
+    function InXlBuiltinsModule() return boolean 
