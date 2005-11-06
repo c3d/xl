@@ -86,6 +86,7 @@ module XL.SYMBOLS is
         entry.scope := scope
         entry.symbols := syms
         table.usings += entry
+        table.usings += syms.usings
 
 
 
