@@ -106,6 +106,7 @@ module XL.SEMANTICS.TYPES with
         machine_name    : PT.name_tree
         interface_match : function (iface: any_type;
                                     body: any_type) return boolean
+        name            : PT.tree
 
     type source_type_data is any_type_data with
     // ------------------------------------------------------------------------
@@ -113,7 +114,6 @@ module XL.SEMANTICS.TYPES with
     // -----------------------------------------------------------------------
     //  These are the types created by NewType
     //  A source type can be created without a value
-        name                    : PT.tree
         interface               : any_type
         implementation          : any_type
     type source_type is access to source_type_data

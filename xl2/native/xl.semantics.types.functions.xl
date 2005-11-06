@@ -107,8 +107,8 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
                 ERR.Error "but '$1' does", TY.Source(iface)
                 return false
             if not TY.SameType(retType, bodyF.base) then
-                ERR.Error "The return type '$1'", TY.Source(bodyF)
-                ERR.Error "doesn't match '$1'", TY.Source(ifaceF)
+                ERR.Error "The return type of '$1'", TY.Source(body)
+                ERR.Error "doesn't match that of '$1'", TY.Source(iface)
                 return false
 
         // Check parameter counts
@@ -168,6 +168,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
             result.base := nil
 
         result.interface_match := FunctionTypeMatch
+        result.name := Source
         result.inputs_count := 0
         result.outputs_count := 0
         result.symbols := XLT.context

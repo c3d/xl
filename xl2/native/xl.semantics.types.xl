@@ -150,9 +150,14 @@ module XL.SEMANTICS.TYPES is
 
         // Generate new type, and enter it in table
         ktype : constvar_type
+        bname : PT.tree := base.name
         ktype.base := base
         ktype.machine_name := PT.NewName(ksig, mtype.position)
         ktype.interface_match := SourceTypeMatch
+        if cst then
+            ktype.name := parse_tree(constant 'bname')
+        else
+            ktype.name := parse_tree(variable 'bname')
         ktype.is_constant := cst
         EnterSignature ksig, ktype
         return ktype
@@ -255,23 +260,7 @@ module XL.SEMANTICS.TYPES is
     // ------------------------------------------------------------------------
     //   Return some source representation of the type
     // ------------------------------------------------------------------------
-        constness : const_var_type := nil
-        while tp <> nil loop
-            tpk : tp as const_var_type
-            if tpk then
-                constness := tpk
-            tps : tp as source_type
-            if tps <> nil then
-                Name : PT.tree := tps.name
-                if constness <> nil then
-                    if constness.is_constant then
-                        return parse_tree (constant 'Name')
-                    return parse_tree(variable 'Name')
-                return Name
-            tp := tp.base
-
-        // Not found...
-        return nil
+        return tp.name
 
 
     function EnterTypeSym (Name : PT.tree; Value : PT.tree) return PT.tree is
@@ -318,13 +307,9 @@ module XL.SEMANTICS.TYPES is
         SetDefinedType result, tp
 
         // Also make the type declaration a declaration
-        if type_of_types = nil then
-            tot : type_type
-            tot.symbols := nil
-            type_of_types := tot
         decl : DCL.declaration
         decl.name               := N
-        decl.type               := tp
+        decl.type               := type_of_types
         decl.initializer        := nil
         decl.machine_name       := nil
         decl.frame_depth        := 0
@@ -447,29 +432,17 @@ module XL.SEMANTICS.TYPES is
         if module_type = nil then
             XLT.InitializeTranslator()
             
-            // Enter basic types
-            if false then
-                integer_type   := EnterBuiltinType ("integer", "xlint")
-                real_type      := EnterBuiltinType ("real", "xlreal")
-                boolean_type   := EnterBuiltinType ("boolean", "xlbool")
-                character_type := EnterBuiltinType ("character", "xlchar")
-                text_type      := EnterBuiltinType ("text", "xltext")
-                record_type    := EnterBuiltinType ("record", "xlrecord")
+            // Enter the type for types
+            tot : type_type
+            tot.base := nil
+            tot.machine_name := parse_tree(xltype)
+            tot.interface_match := nil
+            tot.name := parse_tree(type)
+            tot.symbols := nil
+            type_of_types := tot
+
+            // Enter the module type so that we can deal with XL_BUILTINS
             module_type    := EnterBuiltinType ("module", "xlmodule")
-
-            // Enter the types for literals
-            if false then
-                const_boolean_type := ConstantType(GetDefinedType(boolean_type))
-                integer_literal_type := ConstantType(GetDefinedType(integer_type))
-                real_literal_type := ConstantType(GetDefinedType(real_type))
-                character_literal_type:=ConstantType(GetDefinedType(character_type))
-                text_literal_type := ConstantType(GetDefinedType(text_type))
-
-                // Enter pre-defined constants true and false
-                true_tree : PT.name_tree := PT.NewName("true")
-                false_tree : PT.name_tree := PT.NewName("false")
-                CST.EnterNamedConstant true_tree, true_tree
-                CST.EnterNamedConstant false_tree, false_tree
 
 
     initialization
@@ -675,6 +648,7 @@ module XL.SEMANTICS.TYPES is
         then
             tp: any_type := EvaluateType(T)
             tp := ConstantType(tp)
+            tp.name := input
             SetDefinedType input, tp
             return input
 
@@ -683,6 +657,7 @@ module XL.SEMANTICS.TYPES is
         then
             tp: any_type := EvaluateType(T)
             tp := VariableType(tp)
+            tp.name := input
             SetDefinedType input, tp
             return input
 

@@ -153,6 +153,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
             MakeFieldList Fields, result.fields
 
         result.interface_match := RecordTypeMatch
+        result.name := Source
 
         // Each record type gets a new machine name
         result.machine_name := SYM.Temporary("rectype", Source.position)

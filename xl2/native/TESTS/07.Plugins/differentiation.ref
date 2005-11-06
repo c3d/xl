@@ -1,471 +1,445 @@
 @ fnptrbegin 
-(@ fnret1 Int 
+(@ fnret1 xlint 
 @ fnptrname FnPtr_4 
 @ fnbeginparms 
-@ fnparm Int src_3 
+@ fnparm xlint src_3 
 @ fnendparms) 
 @ fnptrend 
 (@ fndeclbegin 
-(@ fnret1 Int 
+(@ fnret1 xlint 
 @ fnname copy_5 
 @ fnbeginparms 
-@ fnparm Int src_3 
+@ fnparm xlint src_3 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Int 
+(@ fnret1 xlint 
 @ fnptrname FnPtr_8 
 @ fnbeginparms 
-@ fnparm Int x_6 
-@ fnparm Int y_7 
+@ fnparm xlint x_6 
+@ fnparm xlint y_7 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Int 
+(@ fnret1 xlint 
 @ fnname add_9 
 @ fnbeginparms 
-@ fnparm Int x_6 
-@ fnparm Int y_7 
+@ fnparm xlint x_6 
+@ fnparm xlint y_7 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Int 
+(@ fnret1 xlint 
 @ fnptrname FnPtr_12 
 @ fnbeginparms 
-@ fnparm Int x_10 
-@ fnparm Int y_11 
+@ fnparm xlint x_10 
+@ fnparm xlint y_11 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Int 
+(@ fnret1 xlint 
 @ fnname sub_13 
 @ fnbeginparms 
-@ fnparm Int x_10 
-@ fnparm Int y_11 
+@ fnparm xlint x_10 
+@ fnparm xlint y_11 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Int 
+(@ fnret1 xlint 
 @ fnptrname FnPtr_16 
 @ fnbeginparms 
-@ fnparm Int x_14 
-@ fnparm Int y_15 
+@ fnparm xlint x_14 
+@ fnparm xlint y_15 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Int 
+(@ fnret1 xlint 
 @ fnname mul_17 
 @ fnbeginparms 
-@ fnparm Int x_14 
-@ fnparm Int y_15 
+@ fnparm xlint x_14 
+@ fnparm xlint y_15 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Int 
+(@ fnret1 xlint 
 @ fnptrname FnPtr_20 
 @ fnbeginparms 
-@ fnparm Int x_18 
-@ fnparm Int y_19 
+@ fnparm xlint x_18 
+@ fnparm xlint y_19 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Int 
+(@ fnret1 xlint 
 @ fnname div_21 
 @ fnbeginparms 
-@ fnparm Int x_18 
-@ fnparm Int y_19 
+@ fnparm xlint x_18 
+@ fnparm xlint y_19 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_24 
 @ fnbeginparms 
-@ fnparm Int x_22 
-@ fnparm Int y_23 
+@ fnparm xlint x_22 
+@ fnparm xlint y_23 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnname cmpeq_25 
 @ fnbeginparms 
-@ fnparm Int x_22 
-@ fnparm Int y_23 
+@ fnparm xlint x_22 
+@ fnparm xlint y_23 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_28 
 @ fnbeginparms 
-@ fnparm Int x_26 
-@ fnparm Int y_27 
+@ fnparm xlint x_26 
+@ fnparm xlint y_27 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnname cmplt_29 
 @ fnbeginparms 
-@ fnparm Int x_26 
-@ fnparm Int y_27 
+@ fnparm xlint x_26 
+@ fnparm xlint y_27 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_32 
 @ fnbeginparms 
-@ fnparm Int x_30 
-@ fnparm Int y_31 
+@ fnparm xlint x_30 
+@ fnparm xlint y_31 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnname cmple_33 
 @ fnbeginparms 
-@ fnparm Int x_30 
-@ fnparm Int y_31 
+@ fnparm xlint x_30 
+@ fnparm xlint y_31 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_36 
 @ fnbeginparms 
-@ fnparm Int x_34 
-@ fnparm Int y_35 
+@ fnparm xlint x_34 
+@ fnparm xlint y_35 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnname cmpgt_37 
 @ fnbeginparms 
-@ fnparm Int x_34 
-@ fnparm Int y_35 
+@ fnparm xlint x_34 
+@ fnparm xlint y_35 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_40 
 @ fnbeginparms 
-@ fnparm Int x_38 
-@ fnparm Int y_39 
+@ fnparm xlint x_38 
+@ fnparm xlint y_39 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnname cmpge_41 
 @ fnbeginparms 
-@ fnparm Int x_38 
-@ fnparm Int y_39 
+@ fnparm xlint x_38 
+@ fnparm xlint y_39 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_44 
 @ fnbeginparms 
-@ fnparm Int x_42 
-@ fnparm Int y_43 
+@ fnparm xlint x_42 
+@ fnparm xlint y_43 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnname cmpne_45 
 @ fnbeginparms 
-@ fnparm Int x_42 
-@ fnparm Int y_43 
+@ fnparm xlint x_42 
+@ fnparm xlint y_43 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Real 
+(@ fnret1 xlreal 
 @ fnptrname FnPtr_48 
 @ fnbeginparms 
-@ fnparm Real src_47 
+@ fnparm xlreal src_47 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Real 
+(@ fnret1 xlreal 
 @ fnname copy_49 
 @ fnbeginparms 
-@ fnparm Real src_47 
+@ fnparm xlreal src_47 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Real 
+(@ fnret1 xlreal 
 @ fnptrname FnPtr_52 
 @ fnbeginparms 
-@ fnparm Real x_50 
-@ fnparm Real y_51 
+@ fnparm xlreal x_50 
+@ fnparm xlreal y_51 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Real 
+(@ fnret1 xlreal 
 @ fnname add_53 
 @ fnbeginparms 
-@ fnparm Real x_50 
-@ fnparm Real y_51 
+@ fnparm xlreal x_50 
+@ fnparm xlreal y_51 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Real 
+(@ fnret1 xlreal 
 @ fnptrname FnPtr_56 
 @ fnbeginparms 
-@ fnparm Real x_54 
-@ fnparm Real y_55 
+@ fnparm xlreal x_54 
+@ fnparm xlreal y_55 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Real 
+(@ fnret1 xlreal 
 @ fnname sub_57 
 @ fnbeginparms 
-@ fnparm Real x_54 
-@ fnparm Real y_55 
+@ fnparm xlreal x_54 
+@ fnparm xlreal y_55 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Real 
+(@ fnret1 xlreal 
 @ fnptrname FnPtr_60 
 @ fnbeginparms 
-@ fnparm Real x_58 
-@ fnparm Real y_59 
+@ fnparm xlreal x_58 
+@ fnparm xlreal y_59 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Real 
+(@ fnret1 xlreal 
 @ fnname mul_61 
 @ fnbeginparms 
-@ fnparm Real x_58 
-@ fnparm Real y_59 
+@ fnparm xlreal x_58 
+@ fnparm xlreal y_59 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Real 
+(@ fnret1 xlreal 
 @ fnptrname FnPtr_64 
 @ fnbeginparms 
-@ fnparm Real x_62 
-@ fnparm Real y_63 
+@ fnparm xlreal x_62 
+@ fnparm xlreal y_63 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Real 
+(@ fnret1 xlreal 
 @ fnname div_65 
 @ fnbeginparms 
-@ fnparm Real x_62 
-@ fnparm Real y_63 
+@ fnparm xlreal x_62 
+@ fnparm xlreal y_63 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_68 
 @ fnbeginparms 
-@ fnparm Real x_66 
-@ fnparm Real y_67 
+@ fnparm xlreal x_66 
+@ fnparm xlreal y_67 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnname cmpeq_69 
 @ fnbeginparms 
-@ fnparm Real x_66 
-@ fnparm Real y_67 
+@ fnparm xlreal x_66 
+@ fnparm xlreal y_67 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_72 
 @ fnbeginparms 
-@ fnparm Real x_70 
-@ fnparm Real y_71 
+@ fnparm xlreal x_70 
+@ fnparm xlreal y_71 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnname cmplt_73 
 @ fnbeginparms 
-@ fnparm Real x_70 
-@ fnparm Real y_71 
+@ fnparm xlreal x_70 
+@ fnparm xlreal y_71 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_76 
 @ fnbeginparms 
-@ fnparm Real x_74 
-@ fnparm Real y_75 
+@ fnparm xlreal x_74 
+@ fnparm xlreal y_75 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnname cmple_77 
 @ fnbeginparms 
-@ fnparm Real x_74 
-@ fnparm Real y_75 
+@ fnparm xlreal x_74 
+@ fnparm xlreal y_75 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_80 
 @ fnbeginparms 
-@ fnparm Real x_78 
-@ fnparm Real y_79 
+@ fnparm xlreal x_78 
+@ fnparm xlreal y_79 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnname cmpgt_81 
 @ fnbeginparms 
-@ fnparm Real x_78 
-@ fnparm Real y_79 
+@ fnparm xlreal x_78 
+@ fnparm xlreal y_79 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_84 
 @ fnbeginparms 
-@ fnparm Real x_82 
-@ fnparm Real y_83 
+@ fnparm xlreal x_82 
+@ fnparm xlreal y_83 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnname cmpge_85 
 @ fnbeginparms 
-@ fnparm Real x_82 
-@ fnparm Real y_83 
+@ fnparm xlreal x_82 
+@ fnparm xlreal y_83 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_88 
 @ fnbeginparms 
-@ fnparm Real x_86 
-@ fnparm Real y_87 
+@ fnparm xlreal x_86 
+@ fnparm xlreal y_87 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnname cmpne_89 
 @ fnbeginparms 
-@ fnparm Real x_86 
-@ fnparm Real y_87 
+@ fnparm xlreal x_86 
+@ fnparm xlreal y_87 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_91 
 @ fnbeginparms 
-@ fnparm Bool value_90 
+@ fnparm xlbool value_90 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnname booleannot_92 
 @ fnbeginparms 
-@ fnparm Bool value_90 
+@ fnparm xlbool value_90 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_95 
 @ fnbeginparms 
-@ fnparm Bool x_93 
-@ fnparm Bool y_94 
+@ fnparm xlbool x_93 
+@ fnparm xlbool y_94 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnname booleanand_96 
 @ fnbeginparms 
-@ fnparm Bool x_93 
-@ fnparm Bool y_94 
+@ fnparm xlbool x_93 
+@ fnparm xlbool y_94 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_99 
 @ fnbeginparms 
-@ fnparm Bool x_97 
-@ fnparm Bool y_98 
+@ fnparm xlbool x_97 
+@ fnparm xlbool y_98 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnname booleanor_100 
 @ fnbeginparms 
-@ fnparm Bool x_97 
-@ fnparm Bool y_98 
+@ fnparm xlbool x_97 
+@ fnparm xlbool y_98 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnptrname FnPtr_103 
 @ fnbeginparms 
-@ fnparm Bool x_101 
-@ fnparm Bool y_102 
+@ fnparm xlbool x_101 
+@ fnparm xlbool y_102 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
-(@ fnret1 Bool 
+(@ fnret1 xlbool 
 @ fnname booleanxor_104 
 @ fnbeginparms 
-@ fnparm Bool x_101 
-@ fnparm Bool y_102 
+@ fnparm xlbool x_101 
+@ fnparm xlbool y_102 
 @ fnendparms) 
 @ fndeclend) 
 (@ recordbegin Record_106 
-@ recordfield Record_106 Mod base_1 
-@ recordfield Record_106 FnPtr_4 copyint 
-@ recordfield Record_106 FnPtr_8 addint 
-@ recordfield Record_106 FnPtr_12 subint 
-@ recordfield Record_106 FnPtr_16 mulint 
-@ recordfield Record_106 FnPtr_20 divint 
-@ recordfield Record_106 FnPtr_24 equint 
-@ recordfield Record_106 FnPtr_28 ltint 
-@ recordfield Record_106 FnPtr_32 leint 
-@ recordfield Record_106 FnPtr_36 gtint 
-@ recordfield Record_106 FnPtr_40 geint 
-@ recordfield Record_106 FnPtr_44 neint 
-@ recordfield Record_106 FnPtr_48 copyreal 
-@ recordfield Record_106 FnPtr_52 addreal 
-@ recordfield Record_106 FnPtr_56 subreal 
-@ recordfield Record_106 FnPtr_60 mulreal 
-@ recordfield Record_106 FnPtr_64 divreal 
-@ recordfield Record_106 FnPtr_68 equreal 
-@ recordfield Record_106 FnPtr_72 ltreal 
-@ recordfield Record_106 FnPtr_76 lereal 
-@ recordfield Record_106 FnPtr_80 gtreal 
-@ recordfield Record_106 FnPtr_84 gereal 
-@ recordfield Record_106 FnPtr_88 nereal 
-@ recordfield Record_106 FnPtr_91 notbool 
-@ recordfield Record_106 FnPtr_95 andbool 
-@ recordfield Record_106 FnPtr_99 orbool 
-@ recordfield Record_106 FnPtr_103 xorbool 
+@ recordfield Record_106 xlmodule base_1 
 @ recordend Record_106) 
 @ globaldecl Record_106 xlbuiltins_107 
 (@ fnptrbegin 
-(@ fnret1 Real 
+(@ fnret1 xlreal 
 @ fnptrname FnPtr_109 
 @ fnbeginparms 
-@ fnparm Real x_108 
+@ fnparm xlreal x_108 
 @ fnendparms) 
 @ fnptrend 
 (@ fndeclbegin 
-(@ fnret1 Real 
+(@ fnret1 xlreal 
 @ fnname sin_110 
 @ fnbeginparms 
-@ fnparm Real x_108 
+@ fnparm xlreal x_108 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
 (@ fnret0 
 @ fnptrname FnPtr_113 
 @ fnbeginparms 
-@ fnparm Real target_111 
-@ fnparm Real source_112 
+@ fnparm xlreal target_111 
+@ fnparm xlreal source_112 
 @ fnendparms) 
 @ fnptrend) 
 (@ fndeclbegin 
 (@ fnret0 
 @ fnname copy_114 
 @ fnbeginparms 
-@ fnparm Real target_111 
-@ fnparm Real source_112 
+@ fnparm xlreal target_111 
+@ fnparm xlreal source_112 
 @ fnendparms) 
 @ fndeclend) 
 (@ fnptrbegin 
@@ -486,14 +460,14 @@
 @ fnbeginparms 
 @ fnendparms) 
 @ fnbody main_116 
-(@ localdecl Real w_117 
-@ localdecl Real t0_118 
-@ localdecl Real t_119 
-@ localdecl Real b_120 
-@ localdecl Real a_121 
-@ localdecl Real a2_122 
-@ localdecl Real y_123 
-@ localdecl Real z_124 
+(@ localdecl xlreal w_117 
+@ localdecl xlreal t0_118 
+@ localdecl xlreal t_119 
+@ localdecl xlreal b_120 
+@ localdecl xlreal a_121 
+@ localdecl xlreal a2_122 
+@ localdecl xlreal y_123 
+@ localdecl xlreal z_124 
 
     @ decl 
     @ decl 
