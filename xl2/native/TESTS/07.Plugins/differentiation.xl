@@ -23,12 +23,12 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-// CMD=%x -parse %f -sem -show
+// CMD=%x -parse %f -sem
 
 function sin(X : real) return real
 to Copy(Target : real; Source : real) written Target := Source
 
-procedure Main is
+{listing} procedure Main is
     W, T0, T : real
 
     B : real := -A + B

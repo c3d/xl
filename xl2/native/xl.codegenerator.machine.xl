@@ -72,12 +72,10 @@ module XL.CODE_GENERATOR.MACHINE is
     // ------------------------------------------------------------------------
     //    Create an expression from consistutive parts
     // ------------------------------------------------------------------------
-        etype : TY.any_type := TY.GetType(mname)
         result := parse_tree
                         'computation'
                         @value 'mname'
-        if etype <> nil then
-            TY.SetType result, etype
+        result.info := mname.info
 
 
     function MakeWritable(computation : BC.bytecode;
@@ -86,13 +84,11 @@ module XL.CODE_GENERATOR.MACHINE is
     // ------------------------------------------------------------------------
     //    Create an expression from consistutive parts
     // ------------------------------------------------------------------------
-        etype : TY.any_type := TY.GetType(mname)
         result := parse_tree
             'computation'
             @write 'write'
             @value 'mname'
-        if etype <> nil then
-            TY.SetType result, etype
+        result.info := mname.info
 
 
     procedure SplitExpression(in out arg  : PT.tree;

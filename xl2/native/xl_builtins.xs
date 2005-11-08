@@ -49,6 +49,7 @@ module XL_BUILTINS with
 
     // Integer operations
     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
+    function Negate(X : integer) return integer                 written -X                      is XL.BYTECODE.neg_int
     function Add(X, Y : integer) return integer                 written X+Y                     is XL.BYTECODE.add_int
     function Subtract(X, Y : integer) return integer            written X-Y                     is XL.BYTECODE.sub_int
     function Multiply(X, Y : integer) return integer            written X*Y                     is XL.BYTECODE.mul_int
@@ -69,6 +70,7 @@ module XL_BUILTINS with
 
     // Sized integer operations
     to Copy(out Tgt : integer8; in Src : integer8)              written Tgt := Src              is XL.BYTECODE.copy_int8
+    function Negate(X : integer8) return integer8               written -X                      is XL.BYTECODE.neg_int8
     function Add(X, Y : integer8) return integer8               written X+Y                     is XL.BYTECODE.add_int8
     function Subtract(X, Y : integer8) return integer8          written X-Y                     is XL.BYTECODE.sub_int8
     function Multiply(X, Y : integer8) return integer8          written X*Y                     is XL.BYTECODE.mul_int8
@@ -88,6 +90,7 @@ module XL_BUILTINS with
     function BitwiseNot(X : integer8) return integer8           written not X                   is XL.BYTECODE.not_int8
 
     to Copy(out Tgt : integer16; in Src : integer16)            written Tgt := Src              is XL.BYTECODE.copy_int16
+    function Negate(X : integer16) return integer16             written -X                      is XL.BYTECODE.neg_int16
     function Add(X, Y : integer16) return integer16             written X+Y                     is XL.BYTECODE.add_int16
     function Subtract(X, Y : integer16) return integer16        written X-Y                     is XL.BYTECODE.sub_int16
     function Multiply(X, Y : integer16) return integer16        written X*Y                     is XL.BYTECODE.mul_int16
@@ -107,6 +110,7 @@ module XL_BUILTINS with
     function BitwiseNot(X : integer16) return integer16         written not X                   is XL.BYTECODE.not_int16
 
     to Copy(out Tgt : integer32; in Src : integer32)            written Tgt := Src              is XL.BYTECODE.copy_int32
+    function Negate(X : integer32) return integer32             written -X                      is XL.BYTECODE.neg_int32
     function Add(X, Y : integer32) return integer32             written X+Y                     is XL.BYTECODE.add_int32
     function Subtract(X, Y : integer32) return integer32        written X-Y                     is XL.BYTECODE.sub_int32
     function Multiply(X, Y : integer32) return integer32        written X*Y                     is XL.BYTECODE.mul_int32
@@ -126,6 +130,7 @@ module XL_BUILTINS with
     function BitwiseNot(X : integer32) return integer32         written not X                   is XL.BYTECODE.not_int32
 
     to Copy(out Tgt : integer64; in Src : integer64)            written Tgt := Src              is XL.BYTECODE.copy_int64
+    function Negate(X : integer64) return integer64             written -X                      is XL.BYTECODE.neg_int64
     function Add(X, Y : integer64) return integer64             written X+Y                     is XL.BYTECODE.add_int64
     function Subtract(X, Y : integer64) return integer64        written X-Y                     is XL.BYTECODE.sub_int64
     function Multiply(X, Y : integer64) return integer64        written X*Y                     is XL.BYTECODE.mul_int64
@@ -245,6 +250,7 @@ module XL_BUILTINS with
 
     // Real operations
     to Copy(out Tgt : real; in Src : real)                      written Tgt := Src              is XL.BYTECODE.copy_real
+    function Negate(X : real) return real                       written -X                      is XL.BYTECODE.neg_real
     function Add(X, Y : real) return real                       written X+Y                     is XL.BYTECODE.add_real
     function Subtract(X, Y : real) return real                  written X-Y                     is XL.BYTECODE.sub_real
     function Multiply(X, Y : real) return real                  written X*Y                     is XL.BYTECODE.mul_real
@@ -263,6 +269,7 @@ module XL_BUILTINS with
 
     // Sized real operations
     to Copy(out Tgt : real32; in Src : real32)                  written Tgt := Src              is XL.BYTECODE.copy_real32
+    function Negate(X : real32) return real32                   written -X                      is XL.BYTECODE.neg_real32
     function Add(X, Y : real32) return real32                   written X+Y                     is XL.BYTECODE.add_real32
     function Subtract(X, Y : real32) return real32              written X-Y                     is XL.BYTECODE.sub_real32
     function Multiply(X, Y : real32) return real32              written X*Y                     is XL.BYTECODE.mul_real32
@@ -280,6 +287,7 @@ module XL_BUILTINS with
     function Different(X, Y : real32) return boolean            written X<>Y                    is XL.BYTECODE.ne_real32
 
     to Copy(out Tgt : real64; in Src : real64)                  written Tgt := Src              is XL.BYTECODE.copy_real64
+    function Negate(X : real64) return real64                   written -X                      is XL.BYTECODE.neg_real64
     function Add(X, Y : real64) return real64                   written X+Y                     is XL.BYTECODE.add_real64
     function Subtract(X, Y : real64) return real64              written X-Y                     is XL.BYTECODE.sub_real64
     function Multiply(X, Y : real64) return real64              written X*Y                     is XL.BYTECODE.mul_real64

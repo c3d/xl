@@ -172,12 +172,6 @@ module XL.SEMANTICS.WRITTEN_FORMS is
 
         // TODO: Check one-on-one mapping of params and written wildcards
 
-
-        // Enter that copy in the "XLSemantics" map
-        trace [modules] "Entering written form into ", XLT.context
-        trace [modules] "Global context is  ", XLT.global_context
-        trace [modules] "Main context is  ", XLT.main_context
-
         SYM.EnterRewrite XLT.context, "xlsemantics", written
 
         return fniface

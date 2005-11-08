@@ -56,8 +56,11 @@ module XL.TRANSLATOR with
         scopeMain, scopeGlobal,
         scopeFunction, scopeLocal,
         scopeField, scopeArgs
-    function ScopeSemantics (input: PT.tree;
-                             scope : scope_kind) return BC.bytecode
+    function ScopeSemantics (input   : PT.tree;
+                             scope   : scope_kind) return BC.bytecode
+    function ScopeSemantics (input   : PT.tree;
+                             scope   : scope_kind;
+                             modname : PT.tree) return BC.bytecode
     // Recursive implementation of something
     type recurse_fn is function(input : PT.tree) return BC.bytecode
     function Recurse(input : PT.tree;

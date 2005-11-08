@@ -142,6 +142,21 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
             if not TY.SameType(iface_type, body_type) then
                 ERR.Error "Mismatched parameter type for '$1'", iface_name
                 return false
+            if iface_decl.initializer <> nil then
+                if body_decl.initializer <> nil then
+                    if not PT.Matches(iface_decl.initializer,
+                                      body_decl.initializer) then
+                        ERR.Error "Different initializer '$1' in interface",
+                                  iface_decl.initializer
+                        ERR.Error "and '$1' in implementation",
+                                  body_decl.initializer
+                        return false
+                else
+                    ERR.Error "Initializer '$1' in interface only",
+                              iface_decl.initializer
+            else if body_decl.initializer <> nil then
+                ERR.Error "Initializer '$1' in implementation only",
+                          body_decl.initializer
 
         // Everything seems in order - match
         return true

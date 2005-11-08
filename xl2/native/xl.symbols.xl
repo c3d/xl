@@ -356,7 +356,7 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
     //   Lookup the tree, assuming we do error handling in caller
     // ------------------------------------------------------------------------
-        return LookupRewrite (table, kind, tree, count, false, false)
+        result := LookupRewrite (table, kind, tree, count, false, false)
 
 
     function  LookupRewrite (table     : symbol_table;

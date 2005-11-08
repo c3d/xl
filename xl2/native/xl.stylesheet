@@ -24,7 +24,7 @@
 // ****************************************************************************
 
 // Nothing really special here...
-infix  = separator left space self space right separator
+infix  = separator left separator self separator right separator
 prefix = separator left space right separator
 block  = separator opening separator child separator closing separator
 

@@ -48,6 +48,7 @@ module XL.SEMANTICS.DECLARATIONS is
         in_flag    : boolean := false
         out_flag   : boolean := false
         prefixen   : boolean := Names.kind <> PT.xlNAME
+        modname    : PT.tree := nil
 
         // Check all declaration prefixes, like 'in X : integer'
         while prefixen loop
@@ -78,6 +79,20 @@ module XL.SEMANTICS.DECLARATIONS is
                     out_flag := true
                     Names := Nm
                     prefixen := Names.kind <> PT.xlNAME
+
+        // Check if we are at the top-level of a module
+        modname := SYM.GetProperty (XLT.context, "MODULE")
+        if modname <> nil then
+            trace[modules] "IsDeclaration(", Names, ") modname ", modname
+            translate Names
+                when ('Base'.'Child') then
+                    if PT.Matches(modname, Base) then
+                        Names := Child
+                        modname := nil
+        if modname <> nil then
+            ERR.Error "'$1' is not a submodule name", Names
+            ERR.Error "but is used as a submodule of '$1'", modname
+            Names := SYM.Temporary ("invalid_submodule")
 
         // Check that the declaration is not ill-formed
         if Names.kind <> PT.xlNAME then
@@ -359,6 +374,18 @@ module XL.SEMANTICS.DECLARATIONS is
     // ------------------------------------------------------------------------
     //   Check if the tree represents a type name, such as 'integer'
     // ------------------------------------------------------------------------
+
+        // Check if we are in the top-level of a module
+        modname : PT.tree := SYM.GetProperty(XLT.context, "MODULE")
+        if modname <> nil then
+            trace[modules] "IsDeclaration(", Names, ") modname ", modname
+            translate Names
+                when ('Base'.'Child') then
+                    if PT.Matches(modname, Base) then
+                        Names := Child
+                        modname := nil
+        if modname <> nil then
+            return false
 
         // We need a simple name for the declaration
         if Names.kind <> PT.xlNAME then

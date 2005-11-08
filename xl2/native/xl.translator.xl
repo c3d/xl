@@ -29,10 +29,12 @@ import IO = XL.TEXT_IO
 import BC = XL.BYTECODE
 import SEM = XL.SEMANTICS
 import TY = XL.SEMANTICS.TYPES
+import REC = XL.SEMANTICS.TYPES.RECORDS
 import OPT = XL.OPTIMIZER
 import CG = XL.CODE_GENERATOR
 import SYM = XL.SYMBOLS
 import ERR = XL.ERRORS
+import MDL = XL.SEMANTICS.MODULES
 
 
 module XL.TRANSLATOR is
@@ -126,19 +128,49 @@ module XL.TRANSLATOR is
         result := Append(decls, result)
 
 
-    function ScopeSemantics (input  : PT.tree;
+    function ScopeSemantics (input : PT.tree;
                              scope : scope_kind) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Scope semantics for non-module scopes
+    // ------------------------------------------------------------------------
+        return ScopeSemantics(input, scope, nil)
+
+
+    function ScopeSemantics (input  : PT.tree;
+                             scope  : scope_kind;
+                             modname: PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Deal with the semantics in a scope
     // ------------------------------------------------------------------------
 
         old_global   : SYM.symbol_table := global_context
         old_function : SYM.symbol_table := function_context
+        old_context  : SYM.symbol_table := context
 
-        // First create the symbol table for this scope
+        // If we are within a module, select that context
+        if modname <> nil then
+            trace[modules] "ScopeSemantics(", modname, ") in ", context
+            Base : PT.tree := XLT.XLSemantics(modname)
+            trace[modules] "Base(", modname, ") is ", Base
+            symbols : SYM.symbol_table := MDL.GetSymbols(Base)
+            if symbols <> nil then
+                // Use the module as enclosing context
+                context := symbols
+            else
+                ERR.Error "'$1' has no symbol table", modname
+                ERR.Error "Its type is ", TY.Source(TY.GetType(Base))
+            SYM.SetProperty context, "MODULE", modname
+
+        // Create the symbol table for this scope
         context := SYM.NewSymbolTable(context)
+
+        if modname <> nil then
+            SYM.SetProperty context, "MODULE", modname
+
         if scope = scopeMain or scope = scopeGlobal then
             global_context := context
+
+            // Set global context, except for submodules
             SYM.SetInteger context, "GLOBAL", 1
 
             // Storage for Init and Term temps
@@ -200,9 +232,9 @@ module XL.TRANSLATOR is
             TY.SetType result, code_type
 
         // Get back to original context
-        context := SYM.Enclosing (context)
         if scope = scopeMain then
             result := AddMainInitAndTerm(result)
+        context := old_context
         global_context := old_global
         function_context := old_function
 

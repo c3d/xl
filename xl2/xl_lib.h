@@ -320,10 +320,13 @@ namespace xl
         {
             std::vector<std::string> result;
             DIR *dirp = opendir(where.c_str());
-            while(struct dirent *dp = readdir(dirp))
+            if (dirp)
             {
-                std::string entry(dp->d_name, dp->d_namlen);
-                result.push_back(entry);
+                while(struct dirent *dp = readdir(dirp))
+                {
+                    std::string entry(dp->d_name, dp->d_namlen);
+                    result.push_back(entry);
+                }
             }
             return result;
         }
