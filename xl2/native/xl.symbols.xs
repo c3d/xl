@@ -53,6 +53,11 @@ module XL.SYMBOLS with
                        scope : PT.tree;
                        syms  : symbol_table)
 
+    // Copy all entries in a symbol table
+    procedure CopySymbols (toTable : symbol_table; fromTable : symbol_table)
+    procedure LocalSymbols (table : symbol_table; in out list : PT.tree_list)
+
+
 
     // ========================================================================
     // 

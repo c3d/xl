@@ -89,6 +89,26 @@ module XL.SYMBOLS is
         table.usings += syms.usings
 
 
+    procedure CopySymbols (toTable : symbol_table; fromTable : symbol_table) is
+    // ------------------------------------------------------------------------
+    //   Copy all entries in a symbol table
+    // ------------------------------------------------------------------------
+        toTable.names := fromTable.names
+        toTable.rewrites := fromTable.rewrites
+        toTable.properties := fromTable.properties
+        toTable.usings := fromTable.usings
+
+
+    procedure LocalSymbols (table : symbol_table;
+                            in out list : PT.tree_list) is
+    // ------------------------------------------------------------------------
+    //    Add all local symbols to the tree list
+    // ------------------------------------------------------------------------
+        name : text
+        for name in table.names loop
+            list += table.names[name]
+
+
 
     // ========================================================================
     //
@@ -273,7 +293,7 @@ module XL.SYMBOLS is
                 score := PT.Matches(test_tree, R.reference_form, args)
                 trace [symbols] "Matching (", R.reference_form, ") = ", score
                 if score > 0 then
-                    score += 1000 - depth
+                    score := 256 * score - depth
                     if R.score_adjust <> nil then
                         score := R.score_adjust (test_tree, R, args,
                                                  depth, score)
@@ -307,7 +327,7 @@ module XL.SYMBOLS is
                     trace [symbols] "SubMatching (", R.reference_form,
                                     ") = ", score
                     if score > 0 then
-                        score += 1000 - depth
+                        score := 256 * score - depth
                         if R.score_adjust <> nil then
                             score := R.score_adjust (test_tree, R, args,
                                                      depth, score)

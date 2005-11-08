@@ -64,6 +64,17 @@ module XL.PARSER.TREE with
     procedure SetInfo(from : tree; name : text; data: info)
     procedure PurgeInfo(from : tree; name : text)
 
+    type tree_info_data is info_data with
+    // ------------------------------------------------------------------------
+    //   Attaching a tree to another tree (e.g. written semantics cache)
+    // ------------------------------------------------------------------------
+        value   : tree
+    type tree_info is access to tree_info_data
+
+    procedure AttachTree(toTree : tree; key : text; attached : tree)
+    function Attached(toTree : tree; key : text) return tree
+
+
 
     // -- Leafs ---------------------------------------------------------------
     

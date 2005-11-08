@@ -76,6 +76,63 @@ module XL.SEMANTICS.MODULES is
         return nil
 
 
+    procedure AutoExport (modDecl : DCL.declaration) is
+    // ------------------------------------------------------------------------
+    //   Automatically create export type for 'module X is Y'
+    // ------------------------------------------------------------------------
+    //   In that case, we have no declaration list, no record type, so we
+    //   build one and attach it to the declaration
+
+        trace[modules] "Autoexport (", PT.tree(modDecl.name), ")"
+
+        Name : modDecl.name as PT.name_tree
+        if Name = nil then
+            ERR.Error "Module name '$1' is invalid", modDecl.name
+            return
+        
+        if modDecl.initializer = nil then
+            ERR.Error "Module '$1' has no implementation", modDecl.name
+            return
+
+        tp  : TY.any_type := TY.GetType(modDecl.initializer)
+        ctp : tp as TY.code_type
+        if ctp = nil then
+            ERR.Error "Module '$1' has an invalid initializer", modDecl.name
+            if tp <> nil then
+                ERR.Error "Its type is '$1'", TY.Source(tp)
+            return
+
+        syms    : SYM.symbol_table := ctp.symbols
+        defs    : PT.tree_list
+        def     : PT.tree
+        decls   : DCL.declarations
+        decl    : DCL.declaration
+        nm      : text := Name.value
+        SYM.LocalSymbols syms, defs
+        trace [modules] "Auto Found ", size(defs),
+                        " for ", nm, " in code ", syms
+        for def in defs loop
+            decl := DCL.GetDeclaration (def)
+            if decl <> nil then
+                dtype : TY.any_type := decl.type
+                decls += decl
+                trace[modules] "AutoExport ", PT.tree(decl.name),
+                               " in code ", syms
+                trace[modules] " type ", TY.Source(dtype),
+                               " mname ", PT.tree(dtype.machine_name)
+
+        // Create a record type
+        recType : PT.tree := REC.EnterType (Name, TY.module_type, nil)
+        rtp     : TY.GetDefinedType(recType) as REC.record_type
+        if rtp = nil then
+            ERR.Error "Internal: autoexport of '$1', no record type", Name
+        else
+            recSyms : SYM.symbol_table := rtp.symbols
+            rtp.fields := decls
+            modDecl.type := rtp
+            SYM.CopySymbols recSyms, syms
+
+
     function Reconcile (Iface   : PT.tree;
                         Body    : PT.tree;
                         BaseName: PT.tree;
@@ -126,15 +183,22 @@ module XL.SEMANTICS.MODULES is
         decls   : DCL.declarations
         decl    : DCL.declaration
         nm      : text := Name.value
+        dtype   : TY.any_type
         if Iface <> nil then
             SYM.Lookup iface_symbols, "DECL", nm, defs,SYM.lookupLocalOnly
             SYM.Lookup iface_symbols, "FN", nm, defs,SYM.lookupLocalOnly
             SYM.Lookup iface_symbols, "TYPE", nm, defs,SYM.lookupLocalOnly
+            trace [modules] "Found ", size(defs),
+                            " for ", nm, " in iface ", iface_symbols
             for def in defs loop
                 decl := DCL.GetDeclaration (def)
                 if decl <> nil then
                     decls += decl
-                    trace[modules] "Enter ", nm, " in iface ", enclosing
+                    dtype := decl.type
+                    trace[modules] "Enter ", PT.tree(decl.name),
+                                   " in interface ", enclosing
+                    trace[modules] " type ", TY.Source(dtype),
+                                   " mname ", PT.tree(dtype.machine_name)
                     SYM.Enter enclosing, "DECL", nm, def
 
             if Body <> nil and not Cached then
@@ -145,19 +209,21 @@ module XL.SEMANTICS.MODULES is
             SYM.Lookup body_symbols, "DECL", nm, defs,SYM.lookupLocalOnly
             SYM.Lookup body_symbols, "FN", nm, defs,SYM.lookupLocalOnly
             SYM.Lookup body_symbols, "TYPE", nm, defs,SYM.lookupLocalOnly
+            trace [modules] "Found ", size(defs),
+                            " for ", nm, " in body ", body_symbols
             for def in defs loop
                 decl := DCL.GetDeclaration (def)
                 if decl <> nil then
                     // If we have a body-only module, like module X is Y,
                     // use the type of the implementation instead of 'module'
-                    if SameType(decl.type, TY.GetType(TY.module_type)) then
-                        if decl.initializer <> nil then
-                            tp  : TY.any_type := TY.GetType(decl.initializer)
-                            ctp : tp as TY.code_type
-                            if ctp <> nil then
-                                decl.type := ctp
+                    dtype  := decl.type
+                    if SameType(dtype, TY.GetDefinedType(TY.module_type)) then
+                        AutoExport decl
                     decls += decl
-                    trace[modules] "Enter ", nm, " in body ", enclosing
+                    trace[modules] "Enter ", PT.tree(decl.name),
+                                   " in body ", enclosing
+                    trace[modules] " type ", TY.Source(dtype),
+                                   " mname ", PT.tree(dtype.machine_name)
                     SYM.Enter enclosing, "DECL", nm, def
 
         if size(decls) = 0 then
@@ -227,6 +293,10 @@ module XL.SEMANTICS.MODULES is
         Lookup symbols, "FN", symname, list, SYM.lookupLocalOnly
         trace[modules] "For ", Value, " name ", symname, " found ", size(list)
         if size(list) > 0 then
+            rtype : TY.any_type := TY.GetType(list[0])
+            trace [modules] "Eval=", list[0],
+                            " type ", TY.Source(rtype),
+                            " mname ", PT.tree(rtype.machine_name)
             return list[0]
         return nil
 

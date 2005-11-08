@@ -260,7 +260,9 @@ module XL.SEMANTICS.TYPES is
     // ------------------------------------------------------------------------
     //   Return some source representation of the type
     // ------------------------------------------------------------------------
-        return tp.name
+        if tp <> nil then
+            return tp.name
+        return nil
 
 
     function EnterTypeSym (Name : PT.tree; Value : PT.tree) return PT.tree is

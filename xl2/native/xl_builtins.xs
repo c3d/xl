@@ -306,6 +306,7 @@ module XL_BUILTINS with
 
 
     // Boolean operations
+    to Copy(out Tgt : boolean; in Src : boolean)                written Tgt := Src              is XL.BYTECODE.copy_bool
     function LogicalNot(X : boolean) return boolean             written not X                   is XL.BYTECODE.not_bool
     function LogicalAnd(X, Y : boolean) return boolean          written X and Y                 is XL.BYTECODE.and_bool
     function LogicalOr(X, Y : boolean) return boolean           written X or Y                  is XL.BYTECODE.or_bool

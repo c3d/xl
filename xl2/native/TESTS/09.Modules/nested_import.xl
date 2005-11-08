@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  differentiation.xl              (C) 1992-2004 Christophe de Dinechin (ddd) 
+//  nested_import.xl                (C) 1992-2004 Christophe de Dinechin (ddd) 
 //                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Test the differentiation and constantfold plugins
+//    Test that we can import nested modules
 // 
 // 
 // 
@@ -23,17 +23,6 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-// CMD=%x -parse %f -sem -show
+import SIMPLE_MODULE.NESTED_1.NESTED2
 
-function sin(X : real) return real
-to Copy(Target : real; Source : real) written Target := Source
-
-procedure Main is
-    W, T0, T : real
-
-    X : real := 0.3
-    B : real := -A + B
-    {differentiation} A : real := dexp(-2*X)/dX
-    A2 : real :=  dexp(2*X)/dX + d(exp(2*X))/dX
-    Y : real := d(exp(-2*W*(T-T0)) * sin(2*W*(T-T0)))/dT
-    Z : real := {constantfold} sin(X) - sin(1*X)
+Klaxon_Enabled : boolean := Simple_module.Nested_1.nested2.HasKlaxon(0.54)

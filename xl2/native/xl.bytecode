@@ -150,6 +150,7 @@ gt_real          "$1 = $2 > $3;"
 le_real          "$1 = $2 <= $3;"
 ge_real          "$1 = $2 >= $3;"
 
+copy_bool        "$1 = $2;"
 not_bool         "$1 = !$2;"
 and_bool         "$1 = $2 && $3;"
 or_bool          "$1 = $2 && $3;"

@@ -73,6 +73,7 @@ module XL.SEMANTICS.OVERLOAD is
                     FN : Field as PT.name_tree
                     REC.RecordDeclarations Record, FN, "FN", list, symbols
                     BaseRecord := XLT.XLSemantics(Record)
+                    NameTree := Field
                 else
                     ERR.Error "Internal: Non-name functor '$1'", NameTree
                     return parse_tree(@error)
@@ -117,7 +118,7 @@ module XL.SEMANTICS.OVERLOAD is
                 candidates := list
                 table := nil
             trace [overload] "In table ", table,
-                             " found ", size(candidates), "candidates"
+                             " found ", size(candidates), " candidates"
 
             // Loop on candidates to check compatibility
             C : PT.tree
@@ -140,6 +141,13 @@ module XL.SEMANTICS.OVERLOAD is
                         trace [overload] "FAIL: No function info"
                         restart
                 Ftype : F.type as FT.function_type
+                if Ftype = nil then
+                    NFtype : TY.any_type := F.type
+                    ERR.Error "'$1' could not be selected because", C
+                    ERR.Error "it has non-function type '$1'", TY.Source(NFtype)
+                    trace[overload] "FAIL: Non-function ",                                    
+                                    PT.tree(TY.Source(NFtype)),
+                                    " internal ", NFtype.machine_name
 
                 // Check number of parameters.
                 NP : integer := size(Ftype.parameters)

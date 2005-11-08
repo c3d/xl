@@ -50,7 +50,9 @@ module XL.PARSER.TREE is
     // ------------------------------------------------------------------------
     //   Find the associated info record, or return nil
     // ------------------------------------------------------------------------
-        return from.info[name]
+        if count(from.info, name) > 0 then
+            return from.info[name]
+        return nil
 
 
     procedure SetInfo(from : tree; name : text; data : info) is
@@ -77,6 +79,27 @@ module XL.PARSER.TREE is
         if data <> nil then
             delete data
             from.info[name] := nil
+
+
+    procedure AttachTree(toTree : tree; key : text; attached : tree) is
+    // ------------------------------------------------------------------------
+    //   Attach another tree to 'toTree'
+    // ------------------------------------------------------------------------
+        data : tree_info
+        data.name := key
+        data.value := attached
+        toTree.info[key] := data
+
+
+    function Attached(toTree : tree; key : text) return tree is
+    // ------------------------------------------------------------------------
+    //    Return the attached tree if it exists
+    // ------------------------------------------------------------------------
+        if count(toTree.info, key) > 0 then
+            data : toTree.info[key] as tree_info
+            if data <> nil then
+                return data.value
+        return nil
 
 
     function Matches (test : PT.tree;
