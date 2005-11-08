@@ -26,5 +26,6 @@
 
 module SIMPLE_MODULE.NESTED_1.NESTED_2 is
 
-    function HasKlaxon (volume : real) return boolean
+    function HasKlaxon (volume : real) return boolean is
+        return volume < 0.3
 
