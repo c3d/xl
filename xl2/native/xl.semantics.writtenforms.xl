@@ -104,8 +104,9 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                 ERR.PushErrorContext()
                 semArg := XLT.XLSemantics(value)
                 errors : text := ERR.PopErrorContext()
-                if errors = "" then
-                    PT.AttachTree value, key, semArg
+                PT.AttachTree value, key, semArg
+                if errors <> "" then
+                    ERR.Display errors
             args[param_name] := semArg
             decl : DCL.declaration := written.args_map[param_name]
             if not DCL.Assignable(decl, semArg) then

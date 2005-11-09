@@ -1394,7 +1394,7 @@ module XL.TRANSLATOR is
                 IO.Write "xl::parser::tree::tree ", Nm
                 IO.WriteLn " = Args[text(", '"',Nm,'"', ")];"
                 IO.WriteLn Nm, "=", Nm, ";"
-            IO.WriteLn "int result = Score + 1;"
+            IO.WriteLn "int result = Score + 0x100;"
             IO.Write "if (!("
             XL2C Condition
             IO.WriteLn ")) result = 0;"

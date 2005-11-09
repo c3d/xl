@@ -1,0 +1,43 @@
+// ****************************************************************************
+//  using.xl                        (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Test the use of 'using' for records
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+type Zoo is record with
+    animals : integer
+
+Z : Zoo
+
+type Flubber is record with
+    zygomatics : real
+
+function Flubbotron (zy : real) return Flubber is
+    result.zygomatics := zy
+
+using Z
+using Flubbotron (0.0)
+
+A : integer := animals
+B : real := zygomatics + zygomatics
+
+

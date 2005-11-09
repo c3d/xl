@@ -210,7 +210,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
             tp := TY.GetType(Record)
 
         // Evaluate expression type
-        rtp : tp as record_type
+        rtp : TY.NonConstedType(tp) as record_type
         return rtp
 
 
@@ -275,7 +275,8 @@ module XL.SEMANTICS.TYPES.RECORDS is
         mtype  : PT.name_tree := dtype.machine_name
 
         // Index the result
-        Record := XLT.XLSemantics(Record)
+        if TY.GetType(Record) = nil then
+            Record := XLT.XLSemantics(Record)
         result := CGM.IndexRecord(Record, mfield, mtype, dtype)
 
 
@@ -283,10 +284,14 @@ module XL.SEMANTICS.TYPES.RECORDS is
     // ------------------------------------------------------------------------
     //   Enter a lateral map in the local context
     // ------------------------------------------------------------------------
-        Record := XLT.XLSemantics(Record)
-        rtp : record_type := GetRecordType(Record)
-        SYM.AddUsing XLT.context, Record, rtp.symbols
-        return parse_tree(@nop)
+        Value : PT.tree := XLT.XLSemantics(Record)
+        rtp   : record_type := GetRecordType(Value)
+        Code  : PT.tree
+        CGM.SplitExpression Value, Code
+        SYM.AddUsing XLT.context, Value, rtp.symbols
+        if Code = nil then
+            Code := parse_tree(@nop)
+        return Code
 
 
     translation XLSemantics

@@ -19,18 +19,18 @@
 09.Modules/nested_import_nonmodule.xl:27: 'SIMPLE_IMPORTED.NESTED1' has no symbol table
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |_______________________^
-TESTS/09.Modules/simple_imported.nested1.nested2.xl:32: Its type is 
-| 
-|_^
+09.Modules/nested_import_nonmodule.xl:27: Its type is 
+| import SIMPLE_IMPORTED.NESTED1.NESTED2
+|______________________^
 09.Modules/nested_import_nonmodule.xl:27: No translation found for 'SIMPLE_IMPORTED.NESTED1'
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |_______________________^
 09.Modules/nested_import_nonmodule.xl:27: Did not find symbols in 'SIMPLE_IMPORTED.NESTED1'
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |_______________________^
-TESTS/09.Modules/simple_imported.nested1.nested2.xl:32: Its type is '?null?'
-| 
-|_^
+09.Modules/nested_import_nonmodule.xl:27: Its type is '?null?'
+| import SIMPLE_IMPORTED.NESTED1.NESTED2
+|______________________^
 09.Modules/nested_import_nonmodule.xl:27: No translation found for 'SIMPLE_IMPORTED.NESTED1'
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |_______________________^
@@ -43,4 +43,25 @@ TESTS/09.Modules/simple_imported.nested1.nested2.xl:32: Its type is '?null?'
 09.Modules/nested_import_nonmodule.xl:27: but is used as a submodule of 'SIMPLE_IMPORTED.NESTED1'
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |_______________________^
+09.Modules/nested_import_nonmodule.xl:29: No translation found for 'Simple_imported.Nested_1'
+| Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
+|____________________________________________^
+09.Modules/nested_import_nonmodule.xl:29: No translation found for 'Simple_imported.Nested_1'
+| Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
+|____________________________________________^
+09.Modules/nested_import_nonmodule.xl:29: No translation found for 'Simple_imported.Nested_1.nested2'
+| Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
+|_____________________________________________________^
+09.Modules/nested_import_nonmodule.xl:29: No translation found for 'Simple_imported.Nested_1'
+| Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
+|____________________________________________^
+09.Modules/nested_import_nonmodule.xl:29: No translation found for 'Simple_imported.Nested_1'
+| Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
+|____________________________________________^
+09.Modules/nested_import_nonmodule.xl:29: No translation found for 'Simple_imported.Nested_1.nested2'
+| Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
+|_____________________________________________________^
+09.Modules/nested_import_nonmodule.xl:29: No translation found for 'Simple_imported.Nested_1.nested2.HasKlaxon (0.54)'
+| Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
+|_______________________________________________________________________^
 [Compiler generated]: No translation found for 'invalid_submodule_969:=Simple_imported.Nested_1.nested2.HasKlaxon (0.54)'

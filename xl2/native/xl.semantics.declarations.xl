@@ -246,6 +246,13 @@ module XL.SEMANTICS.DECLARATIONS is
             ERR.Error "Name '$1' was not declared here", Name
             return parse_tree(@error)
 
+        // If the result is an index form (from a using), look it up
+        if Original.kind <> PT.xlNAME then
+            translate Original
+                when ('Context'.'Field') where Field.kind = PT.xlNAME then
+                    FieldName : Field as PT.name_tree
+                    return REC.Index(Context, FieldName)
+
         // Find associated declaration
         decl := GetDeclaration(Original)
         if decl = nil then
