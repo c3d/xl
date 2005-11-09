@@ -324,7 +324,12 @@ namespace xl
             {
                 while(struct dirent *dp = readdir(dirp))
                 {
-                    std::string entry(dp->d_name, dp->d_namlen);
+#ifdef linux
+                    int len = strlen(dp->d_name);
+#else
+                    int len = dp->d_namlen;
+#endif // CONFIG_LINUX
+                    std::string entry(dp->d_name, len);
                     result.push_back(entry);
                 }
             }
