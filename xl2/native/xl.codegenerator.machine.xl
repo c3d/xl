@@ -62,9 +62,9 @@ module XL.CODE_GENERATOR.MACHINE is
 
 
     // ========================================================================
-    // 
+    //
     //    Expression management
-    // 
+    //
     // ========================================================================
 
     function MakeExpression(computation : BC.bytecode;
@@ -590,7 +590,7 @@ module XL.CODE_GENERATOR.MACHINE is
         // Evaluate the argument so that it is a single value
         SplitExpression Record, result
 
-        // Evaluate the field indexing 
+        // Evaluate the field indexing
         Idx : PT.tree := parse_tree(@field 'mname' 'Record' 'MField')
         if result <> nil then
             result := parse_tree

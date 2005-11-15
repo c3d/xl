@@ -36,8 +36,14 @@ def sanitise(FullFilename):
 
     for line in list_of_all_the_lines:
         if line[:2] <> '//':
-            line = rstrip(line)
-        list_of_all_the_lines_after_sanitise.append(line)
+            new_line = rstrip(line)
+        else:
+            new_line = line
+
+        #if new_line != line:
+        #   print line + ' => ' + new_line
+
+        list_of_all_the_lines_after_sanitise.append(new_line)
 
     file_object.close()
 

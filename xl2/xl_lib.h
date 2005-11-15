@@ -35,7 +35,10 @@
 #include <map>
 #include <ciso646>
 #include <sys/types.h>
+
+#ifndef _MSC_VER
 #include <sys/dir.h>
+#endif
 
 
 // ============================================================================
@@ -314,6 +317,20 @@ namespace xl
         }
     }
 
+#ifdef _MSC_VER
+    namespace files
+    {
+        inline std::vector<std::string> directory(std::string where)
+        {
+        	  assert(0);
+            std::vector<std::string> result;            
+            return result;
+        }
+    }
+}
+
+#else
+
     namespace files
     {
         inline std::vector<std::string> directory(std::string where)
@@ -337,6 +354,8 @@ namespace xl
         }
     }
 }
+
+#endif
 
 
 template <class T>

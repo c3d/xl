@@ -13,17 +13,17 @@ copy ..\xl.syntax .
 
 ..\bootstrap\xl compiler.xl > xl2.cpp
 @if errorlevel 1 goto error
-cl /EHsc /I .. xl2.cpp
+cl /GR /EHsc /I .. xl2.cpp
 @if errorlevel 1 goto error
 
 ..\native\xl2 -bootstrap compiler.xl > xl3.cpp
 @if errorlevel 1 goto error
-cl /EHsc /I .. xl3.cpp
+cl /GR /EHsc /I .. xl3.cpp
 @if errorlevel 1 goto error
 
 ..\native\xl3 -bootstrap compiler.xl > xl4.cpp
 @if errorlevel 1 goto error
-cl /EHsc /I .. xl4.cpp
+cl /GR /EHsc /I .. xl4.cpp
 @if errorlevel 1 goto error
 
 @goto done

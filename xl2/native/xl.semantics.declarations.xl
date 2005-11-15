@@ -435,7 +435,7 @@ module XL.SEMANTICS.DECLARATIONS is
             then
                 return (IsDeclarationList(type_expr, X) and
                         IsDeclarationList(type_expr, Y))
-        
+
         return IsDeclaration (type_expr, Names)
 
 

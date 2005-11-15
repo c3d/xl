@@ -183,7 +183,7 @@ module XL.ERRORS is
         args += arg3
         Error E, pos, args
 
-    
+
     function ArgPosition(arg : PT.tree) return integer is
     // ------------------------------------------------------------------------
     //    Return the position for an input argument

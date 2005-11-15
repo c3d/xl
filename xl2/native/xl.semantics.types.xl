@@ -433,7 +433,7 @@ module XL.SEMANTICS.TYPES is
 
         if module_type = nil then
             XLT.InitializeTranslator()
-            
+
             // Enter the type for types
             tot : type_type
             tot.base := nil

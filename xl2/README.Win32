@@ -60,7 +60,7 @@ Open a 'DOS' command line shell, change dir to
 <WhereEverYouInstallXL>\xl2\bootstrap and type : make.msvc71.bat
 
 After a few moments, it should create two files in the current
-directory : xl.exe and xl2.exe
+directory : xl2.cpp and xl3.cpp
 
 Check that the size of these two files are identical, it should ;-)
 

@@ -33,7 +33,7 @@ type DataBlob is not_a_record with
 
 Z : DataBlob
 
-function Foo return integer is 
+function Foo return integer is
     I : integer := Z.X
     I := 1
     I := Z.X

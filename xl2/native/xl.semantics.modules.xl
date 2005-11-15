@@ -89,7 +89,7 @@ module XL.SEMANTICS.MODULES is
         if Name = nil then
             ERR.Error "Module name '$1' is invalid", modDecl.name
             return
-        
+
         if modDecl.initializer = nil then
             ERR.Error "Module '$1' has no implementation", modDecl.name
             return
@@ -265,7 +265,7 @@ module XL.SEMANTICS.MODULES is
     // ------------------------------------------------------------------------
         symbols : SYM.symbol_table := XLT.context
         symname : text
-    
+
         trace[modules] "Eval (", Value, ") in ", symbols
         if Value.kind = PT.xlNAME then
             Name : Value as PT.name_tree
@@ -438,7 +438,7 @@ module XL.SEMANTICS.MODULES is
         existing : PT.tree := WantToEvaluate(LongName)
         if existing = nil then
             ERR.Error "Imported file did not define '$1'", LongName
- 
+
 
     function ProcessImport (LongName     : PT.tree;
                             ShortName    : PT.tree) return BC.bytecode is

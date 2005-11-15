@@ -145,7 +145,7 @@ module XL.SEMANTICS.OVERLOAD is
                     NFtype : TY.any_type := F.type
                     ERR.Error "'$1' could not be selected because", C
                     ERR.Error "it has non-function type '$1'", TY.Source(NFtype)
-                    trace[overload] "FAIL: Non-function ",                                    
+                    trace[overload] "FAIL: Non-function ",
                                     PT.tree(TY.Source(NFtype)),
                                     " internal ", NFtype.machine_name
 
