@@ -187,6 +187,10 @@ void ReadContext(kstring file, XLContext &context)
     XLInitializeContext init(context);
     XLDo<XLInitializeContext> doInit(init);
     doInit(tree);
+
+    // Cheat grossly, now that the C++ parser behaves differently from the
+    // XL versions with respect to block priority...
+    context.SetInfixPriority(INDENT_MARKER, 400);
 }
 
 XLContext gContext;

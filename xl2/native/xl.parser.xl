@@ -228,7 +228,7 @@ module XL.PARSER is
         prefix_priority         : integer
         infix_priority          : integer
         postfix_priority        : integer
-        paren_priority          : integer
+        paren_priority          : integer       := GetInfixPriority(P, closing)
         stack                   : string of pending
         is_expression           : boolean       := true
         new_statement           : boolean       := true
@@ -236,6 +236,11 @@ module XL.PARSER is
         pos                     : integer       := 0
         line_continuation       : boolean       := false
         extra_indents           : integer       := 0
+
+        // When inside a () block, we are in 'expression' mode right away
+        if closing <> "" and paren_priority > statement_priority then
+            new_statement := false
+            is_expression := true
 
         while not done loop
 
@@ -595,6 +600,7 @@ module XL.PARSER is
                     stxst := inBlockDef
                     P.infix_priority[entry] := priority
                 else if stxst = inBlockDef then
+                    P.infix_priority[txt] := priority
                     P.blocks[entry] := txt
                     P.blocks[txt] := ""
                     stxst := inBlock

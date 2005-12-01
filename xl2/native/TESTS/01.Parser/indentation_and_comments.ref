@@ -1,16 +1,16 @@
-procedure K is
+procedure K is 
     translate 
         when 
             A
-        then
+        then 
             B
         
         when 
             C
-        then
-            D
-            E
-            F
+        then 
+            D 
+            E 
+            F 
             G
         
     

@@ -1,6 +1,6 @@
-09.Modules/simple_module.nested1.nested2.xl:27: No translation found for 'module SIMPLE_MODULE.NESTED_1.NESTED_2 is
-    function (HasKlaxon (volume:real)return boolean is
-        return (volume<0.3)
+09.Modules/simple_module.nested1.nested2.xl:27: No translation found for 'module SIMPLE_MODULE . NESTED_1 . NESTED_2 is 
+    function (HasKlaxon (volume : real) return boolean is 
+        return (volume < 0.3)
     )
 '
 | module SIMPLE_MODULE.NESTED_1.NESTED_2 is

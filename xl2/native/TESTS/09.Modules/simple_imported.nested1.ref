@@ -1,5 +1,5 @@
-09.Modules/simple_imported.nested1.xl:27: No translation found for 'module SIMPLE_IMPORTED.NESTED_1 is
-    procedure Klaxon (volume:real)
+09.Modules/simple_imported.nested1.xl:27: No translation found for 'module SIMPLE_IMPORTED . NESTED_1 is 
+    procedure Klaxon (volume : real)
 '
 | module SIMPLE_IMPORTED.NESTED_1 is
 |______________________^

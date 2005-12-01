@@ -10,7 +10,7 @@ INFIX
         120     with written require ensure
         200     DEFAULT
         210     ,
-        220     := += -= *= /= ^= |= &=
+        221     := += -= *= /= ^= |= &=
         230     return 
         240     and or xor
         250     in of to
@@ -19,8 +19,8 @@ INFIX
         280     & |
         290     + -
         300     * / mod rem
-        310     ^
-        410     .
+        311     ^
+        510     .
 
 PREFIX
         120     exit loop
@@ -28,8 +28,8 @@ PREFIX
         320     not in out constant variable const var
         330     function procedure to 
         340     @
-        400     ! ~
-        400     - + * /
+        380     ! ~
+        390     - + * /
         400     FUNCTION
         500     &
 
@@ -37,8 +37,9 @@ POSTFIX
         400     ! ?
 
 BLOCK
+        5       INDENT UNINDENT
         21      '{' '}'
-        400     '(' ')' '[' ']' INDENT UNINDENT
+        400     '(' ')' '[' ']'
 
 TEXT
         "<<" ">>"
