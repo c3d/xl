@@ -24,27 +24,27 @@
 |______^
 
 (infix <CR>
+ 2112454933
  (infix <CR>
+  2147483647
   (infix <CR>
+   (prefix
+    (prefix
+     1
+     _)
+    3)
    (infix <CR>
-    (infix <CR>
-     (infix <CR>
-      (infix <CR>
-       (infix <CR>
-        2112454933
-        2147483647)
-       (prefix
-        (prefix
-         1
-         _)
-        3))
-      (prefix
-       _
-       3))
+    (prefix
+     _
      3)
-    0)
-   10)
-  11)
- 65534)
+    (infix <CR>
+     3
+     (infix <CR>
+      0
+      (infix <CR>
+       10
+       (infix <CR>
+        11
+        65534))))))))
 
 

@@ -12,40 +12,40 @@
 |______^
 
 (infix <CR>
+ 1.23457e+18
  (infix <CR>
+  1e+25
   (infix <CR>
+   inf
    (infix <CR>
+    inf
     (infix <CR>
+     (prefix
+      (prefix
+       1
+       _)
+      3)
      (infix <CR>
+      (prefix
+       _.
+       3)
       (infix <CR>
-       (infix <CR>
-        (infix <CR>
-         (infix <CR>
-          (infix <CR>
-           1.23457e+18
-           1e+25)
-          inf)
-         inf)
-        (prefix
-         (prefix
-          1
-          _)
-         3))
        (prefix
-        _.
-        3))
-      (prefix
-       .
-       3))
-     (implicit ()
-      (prefix
-       3
-       ._)))
-    0)
-   10)
-  (infix .
-   2
-   3))
- 255.992)
+        .
+        3)
+       (infix <CR>
+        (implicit ()
+         (prefix
+          3
+          ._))
+        (infix <CR>
+         0
+         (infix <CR>
+          10
+          (infix <CR>
+           (infix .
+            2
+            3)
+           255.992)))))))))))
 
 

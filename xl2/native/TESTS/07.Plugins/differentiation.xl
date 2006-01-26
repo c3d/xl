@@ -23,7 +23,7 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-// CMD=%x -parse %f -sem -show
+// CMD=%x -parse %f -sem -style bytecode -show
 
 function sin(X : real) return real
 to Copy(Target : real; Source : real) written Target := Source

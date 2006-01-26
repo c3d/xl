@@ -62,3 +62,9 @@ module XL.SEMANTICS.TYPES.FUNCTIONS with
     function EnterFnType (Source  : PT.tree;
                           Parms   : PT.tree;
                           Ret     : PT.tree) return PT.tree
+
+    // Create a parameter list, exported for use in generics
+    procedure MakeParameterList (Parms : PT.tree;
+                                 in out list : declaration_list;
+                                 in out icnt : integer;
+                                 in out ocnt : integer)

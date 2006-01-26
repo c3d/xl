@@ -42,23 +42,23 @@ module XL.SEMANTICS is
 
         // Sequences
         when
-            'A'
-            'B'
+            'FirstDeclLine'
+            'SecondDeclLine'
         then
-            A := XLT.XLDeclarations A
-            B := XLT.XLDeclarations B
+            FirstDeclLine := XLT.XLDeclarations FirstDeclLine
+            SecondDeclLine := XLT.XLDeclarations SecondDeclLine
             infix : input as PT.infix_tree
-            infix.left := A
-            infix.right := B
+            infix.left := FirstDeclLine
+            infix.right := SecondDeclLine
             return infix
         when
-            'A' ; 'B'
+            'FirstDecl' ; 'SecondDecl'
         then
-            A := XLT.XLDeclarations A
-            B := XLT.XLDeclarations B
+            FirstDecl := XLT.XLDeclarations FirstDecl
+            SecondDecl := XLT.XLDeclarations SecondDecl
             infix : input as PT.infix_tree
-            infix.left := A
-            infix.right := B
+            infix.left := FirstDecl
+            infix.right := SecondDecl
             return infix
 
         // When semantics have been done already, don't do it again
@@ -75,23 +75,23 @@ module XL.SEMANTICS is
 
         // Sequences
         when
-            'A'
-            'B'
+            'FirstLine'
+            'SecondLine'
         then
-            A := XLT.XLSemantics A
-            B := XLT.XLSemantics B
+            FirstLine := XLT.XLSemantics FirstLine
+            SecondLine := XLT.XLSemantics SecondLine
             infix : input as PT.infix_tree
-            infix.left := A
-            infix.right := B
+            infix.left := FirstLine
+            infix.right := SecondLine
             return infix
         when
-            'A' ; 'B'
+            'FirstStatement' ; 'SecondStatement'
         then
-            A := XLT.XLSemantics A
-            B := XLT.XLSemantics B
+            FirstStatement := XLT.XLSemantics FirstStatement
+            SecondStatement := XLT.XLSemantics SecondStatement
             infix : input as PT.infix_tree
-            infix.left := A
-            infix.right := B
+            infix.left := FirstStatement
+            infix.right := SecondStatement
             return infix
 
         when

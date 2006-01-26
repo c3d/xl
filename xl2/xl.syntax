@@ -1,6 +1,6 @@
 INFIX
-        10      NEWLINE
-        20      ;
+        11      NEWLINE
+        21      ;
         30      loop
         35      else
         40      then where
@@ -23,14 +23,15 @@ INFIX
         510     .
 
 PREFIX
+        90      generic
         120     exit loop
         125     case if return while until when
         320     not in out constant variable const var
-        330     function procedure to 
-        340     @
+        340     @ 
         380     ! ~
         390     - + * /
         400     FUNCTION
+        410     function procedure to
         500     &
 
 POSTFIX

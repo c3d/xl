@@ -44,9 +44,24 @@ module XL.SEMANTICS.TYPES.GENERICS with
     // ------------------------------------------------------------------------
 
         parameters      : string of declaration
-        base_type       : any_type
         validation      : PT.tree       // if "compiles A < B"
         when_spec       : PT.tree       // when size(T) < 3
         for_spec        : PT.tree       // for pointer to T
+        symbols         : SYM.symbol_table
 
     type generic_type is access to generic_type_data
+
+    // Create a function type
+    function NewGenType(Source     : PT.tree;
+                        Base       : PT.tree;
+                        Parms      : PT.tree;
+                        Valid      : PT.tree;
+                        WhenSpec   : PT.tree;
+                        ForSpec    : PT.tree) return generic_type
+
+    function EnterGenType (Source     : PT.tree;
+                           Base       : PT.tree;
+                           Parms      : PT.tree;
+                           Valid      : PT.tree;
+                           WhenSpec   : PT.tree;
+                           ForSpec    : PT.tree) return PT.tree

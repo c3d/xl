@@ -510,15 +510,17 @@ module XL.RENDERER is
             L  : PT.tree := W.left
             R  : PT.tree := W.right
 
-            // Create blocks for implicit parentheses
-            // The (P0 | 1) trick deals with left/right associativity
-            // (don't ask...)
+            // Create blocks for implicit parentheses, dealing with assoc.
             P0 : integer := InfixPriority(W, output)
             PL : integer := InfixPriority(L, output)
             PR : integer := InfixPriority(R, output)
-            if PL < P0 or IsAmbiguousPrefix(L, output, false, true) then
+            LA : boolean := (P0 & 1) = 0    // Left assoc
+            RA : boolean := (P0 & 1) = 1    // Right assoc
+            if (PL < P0 or (PL = P0 and RA) or
+                IsAmbiguousPrefix(L, output, false, true)) then
                 L := ImplicitBlock(L)
-            if PR <= P0 or IsAmbiguousPrefix(R, output, false, true) then
+            if (PR < P0 or (PR = P0 and LA) or
+                IsAmbiguousPrefix(R, output, false, true)) then
                 R := ImplicitBlock(R)
 
             output.priority := P0

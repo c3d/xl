@@ -1,45 +1,44 @@
 
 (infix <CR>
+ (infix +
+  A
+  B)
  (infix <CR>
+  (infix -
+   A
+   B)
   (infix <CR>
+   (infix +
+    A
+    (infix *
+     B
+     C))
    (infix <CR>
-    (infix <CR>
-     (infix <CR>
-      (infix +
-       A
-       B)
-      (infix -
-       A
-       B))
-     (infix +
-      A
-      (infix *
-       B
-       C)))
     (infix +
      (infix *
       A
       B)
-     C))
-   (infix then
-    (infix then
-     A
-     B)
-    C))
-  (infix else
-   A
-   (implicit ()
-    (infix else
-     B
-     C))))
- (infix ;
-  (infix +
-   (infix +
-    (infix +
-     A
-     B)
-    C)
-   D)
-  E))
+     C)
+    (infix <CR>
+     (infix then
+      (infix then
+       A
+       B)
+      C)
+     (infix <CR>
+      (infix else
+       A
+       (infix else
+        B
+        C))
+      (infix ;
+       (infix +
+        (infix +
+         (infix +
+          A
+          B)
+         C)
+        D)
+       E)))))))
 
 
