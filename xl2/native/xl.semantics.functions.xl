@@ -88,6 +88,11 @@ module XL.SEMANTICS.FUNCTIONS is
             'MachineIface'
             @fn_decl_end
 
+        // Check if the type of the function is generic (from gen args)
+        ftype : f.type as function_type
+        if ftype.is_generic then
+            f.is_generic := true
+
         // Indicate that this is a function and a declaration
         PT.SetInfo Iface, "FN", f
         PT.SetInfo Iface, "DECL", f

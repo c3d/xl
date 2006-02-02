@@ -148,6 +148,9 @@ module XL.SEMANTICS.TYPES.RECORDS is
             Decl : declaration := DCL.Declare(BaseName, BaseType)
             result.fields += Decl
             result.base := BaseType
+            result.is_generic := BaseType.is_generic
+        else
+            result.is_generic := false
 
         if Fields <> nil then
             MakeFieldList Fields, result.fields

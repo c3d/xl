@@ -40,7 +40,8 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
     procedure MakeParameterList (Parms : PT.tree;
                                  in out list : declaration_list;
                                  in out icnt : integer;
-                                 in out ocnt : integer) is
+                                 in out ocnt : integer;
+                                 in out is_generic : boolean) is
     // ------------------------------------------------------------------------
     //    Translate a parameter list
     // ------------------------------------------------------------------------
@@ -49,22 +50,24 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
             when
                 'X' ; 'Y'
             then
-                MakeParameterList X, list, icnt, ocnt
-                MakeParameterList Y, list, icnt, ocnt
+                MakeParameterList X, list, icnt, ocnt, is_generic
+                MakeParameterList Y, list, icnt, ocnt, is_generic
                 return
 
             when
                 'X'
                 'Y'
             then
-                MakeParameterList X, list, icnt, ocnt
-                MakeParameterList Y, list, icnt, ocnt
+                MakeParameterList X, list, icnt, ocnt, is_generic
+                MakeParameterList Y, list, icnt, ocnt, is_generic
                 return
 
             else
                 decl : declaration := DCL.GetDeclaration(Parms)
                 if decl then
                     list += decl
+                    if decl.is_generic then
+                        is_generic := true
                     if decl.is_output then
                         ocnt += 1
                     if decl.is_input then
@@ -179,8 +182,11 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
                 ERR.Error "Return type '$1' is not a valid type", ReturnType
                 TmpN : PT.name_tree := PT.NewName("function", Source.position)
                 result.base := TY.NewType(TmpN)
+            retType : any_type := result.base
+            result.is_generic := retType.is_generic
         else
             result.base := nil
+            result.is_generic := false
 
         result.interface_match := FunctionTypeMatch
         result.name := Source
@@ -196,7 +202,8 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         if Parms <> nil then
             Parms := XLT.XLDeclarations (Parms)
             MakeParameterList Parms, result.parameters,
-                              result.inputs_count, result.outputs_count
+                              result.inputs_count, result.outputs_count,
+                              result.is_generic
 
         // Assign type to the tree
         TY.SetType Source, result

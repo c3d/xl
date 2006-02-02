@@ -107,6 +107,8 @@ module XL.SEMANTICS.TYPES with
         interface_match : function (iface: any_type;
                                     body: any_type) return boolean
         name            : PT.tree
+        is_generic      : boolean
+
 
     type source_type_data is any_type_data with
     // ------------------------------------------------------------------------

@@ -105,6 +105,7 @@ module XL.SEMANTICS.TYPES is
         tp.machine_name := nil
         tp.interface_match := SourceTypeMatch
         tp.name := Name
+        tp.is_generic := false
         tp.interface := nil
         tp.implementation := nil
         return tp
@@ -154,6 +155,7 @@ module XL.SEMANTICS.TYPES is
         ktype.base := base
         ktype.machine_name := PT.NewName(ksig, mtype.position)
         ktype.interface_match := SourceTypeMatch
+        ktype.is_generic := base.is_generic
         if cst then
             ktype.name := parse_tree(constant 'bname')
         else
@@ -439,6 +441,7 @@ module XL.SEMANTICS.TYPES is
             tot.base := nil
             tot.machine_name := parse_tree(xltype)
             tot.interface_match := nil
+            tot.is_generic := false
             tot.name := parse_tree(type)
             tot.symbols := nil
             type_of_types := tot
