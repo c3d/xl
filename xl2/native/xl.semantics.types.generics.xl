@@ -1,0 +1,128 @@
+// ****************************************************************************
+//  xl.semantics.types.generics.xl  (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+//
+//     Implementation of generic types 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import IO = XL.TEXT_IO
+
+
+module XL.SEMANTICS.TYPES.GENERICS is
+// ----------------------------------------------------------------------------
+//    Implementation of generic types
+// ----------------------------------------------------------------------------
+//   XL has two types of generics:
+//
+//   - explicit generics are similar to templates in C++, for instance:
+//       generic [type ordered] function Min (A, B : ordered) return ordered
+//     In that case, we create two scopes, as we do for functions.
+//     + The outer scope contains the generic parameters (like 'ordered' above)
+//       This outer scope has the "GENERIC" property set, so that all the
+//       declarations made in that scope are generic.
+//     + The inner scope contains the rest of the declaration, which become
+//       generic by virtue of referring to generic parameters.
+//     A generic reference to the inner declaration is then published into
+//     the enclosing scope (making references to 'Min' possible)
+//
+//   - true generics have no direct equivalent in C++, for instance:
+//       generic type Comparable
+//     A true generic is entered in the current symbol table much like
+//     generic parameters are in the first case. However, since it is
+//     entered in the symbol table, it can then be referred by any other
+//     declaration, making it generic.
+
+
+    function EnterGenericDecls(Decls  : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Declare a true generic type or entity
+    // ------------------------------------------------------------------------
+        trace [generics] "EnterGenericDecls Decls=(", Decls, ")"
+        wasGeneric : integer := SYM.GetInteger(XLT.context, "GENERIC")
+        SYM.SetInteger XLT.context, "GENERIC", 1
+        result := XLT.XLDeclarations(Decls)
+        SYM.SetInteger XLT.context, "GENERIC", wasGeneric
+
+
+    function EnterGeneric(Parms  : PT.tree;
+                          Decls  : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a generic declaration
+    // ------------------------------------------------------------------------
+
+        trace[generics] "EnterGeneric Parms=(", Parms, "), Decls=(", Decls, ")"
+
+        translate Decls
+            when
+                'FirstGenericDecl'
+                'SecondNonGenericDecl'
+            then
+                FirstGenericDecl := EnterGeneric (Parms, FirstGenericDecl)
+                SecondNonGenericDecl := XLT.XLDeclarations SecondNonGenericDecl
+                infix : Decls as PT.infix_tree
+                infix.left := FirstGenericDecl
+                infix.right := SecondNonGenericDecl
+                trace[generics] "EngerGeneric: 1=(", FirstGenericDecl, ")"
+                trace[generics] "EngerGeneric: 2=(", SecondNonGenericDecl, ")"
+                return infix
+
+        // Create a new context for the parameters
+        XLT.context := SYM.NewSymbolTable (XLT.context)
+        SYM.SetInteger XLT.context, "GENERIC", 1
+
+        // Declare the parameters in that context, making them generic
+        Parms := XLT.XLDeclarations (Parms)
+
+        // Create the inner context in which we will compile the decl
+        XLT.context := SYM.NewSymbolTable (XLT.context)
+        SYM.SetInteger XLT.context, "GENERIC", 1
+        result := XLT.XLDeclarations(Decls)
+
+        // Now export the inner scope into the top scope
+        genericContext : SYM.symbol_table := XLT.context
+        XLT.context := SYM.Enclosing (SYM.Enclosing (XLT.context))
+        SYM.AddSymbols XLT.context, genericContext
+
+
+    translation XLDeclarations
+    // ------------------------------------------------------------------------
+    //   Translation of generic type declarations
+    // ------------------------------------------------------------------------        // Type declaration (the implementation is unknown yet)
+        when
+            generic ['Parms'] 'Decls'
+        then
+            result := EnterGeneric (Parms, Decls)
+        when
+            generic 'Decls'
+        then
+            result := EnterGenericDecls (Decls)
+
+        when
+            generic ['Parms']
+            'Decls'
+        then
+            result := EnterGeneric (Parms, Decls)
+        when
+            generic
+            'Decls'
+        then
+            result := EnterGenericDecls (Decls)
