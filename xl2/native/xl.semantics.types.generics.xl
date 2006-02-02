@@ -81,8 +81,8 @@ module XL.SEMANTICS.TYPES.GENERICS is
                 infix : Decls as PT.infix_tree
                 infix.left := FirstGenericDecl
                 infix.right := SecondNonGenericDecl
-                trace[generics] "EngerGeneric: 1=(", FirstGenericDecl, ")"
-                trace[generics] "EngerGeneric: 2=(", SecondNonGenericDecl, ")"
+                trace[generics] "EnterGeneric: 1=(", FirstGenericDecl, ")"
+                trace[generics] "EnterGeneric: 2=(", SecondNonGenericDecl, ")"
                 return infix
 
         // Create a new context for the parameters

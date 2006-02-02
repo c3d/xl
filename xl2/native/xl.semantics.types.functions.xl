@@ -176,6 +176,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         XLT.context := SYM.NewSymbolTable (XLT.context)
         SYM.SetInteger XLT.context, "FNPARM", 1
 
+        result.is_generic := SYM.GetInteger(XLT.context, "GENERIC") <> 0
         if ReturnType <> nil then
             result.base := TY.EvaluateType (ReturnType)
             if result.base = nil then
@@ -183,10 +184,10 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
                 TmpN : PT.name_tree := PT.NewName("function", Source.position)
                 result.base := TY.NewType(TmpN)
             retType : any_type := result.base
-            result.is_generic := retType.is_generic
+            if retType.is_generic then
+                result.is_generic := true
         else
             result.base := nil
-            result.is_generic := false
 
         result.interface_match := FunctionTypeMatch
         result.name := Source

@@ -84,8 +84,9 @@ module XL.SEMANTICS.TYPES.RECORDS is
         return DCL.MatchInterface(ifaceR.fields, bodyR.symbols)
 
 
-    procedure MakeFieldList (Fields      : PT.tree;
-                             in out list : declaration_list) is
+    procedure MakeFieldList (Fields            : PT.tree;
+                             in out list       : declaration_list;
+                             in out is_generic : boolean) is
     // ------------------------------------------------------------------------
     //    Translate a field list from parse tree form into a list
     // ------------------------------------------------------------------------
@@ -94,7 +95,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
             block : Fields as PT.block_tree
             if (block.opening = XL.PARSER.INDENT_MARKER and
                 block.closing = XL.PARSER.UNINDENT_MARKER) then
-                MakeFieldList block.child, list
+                MakeFieldList block.child, list, is_generic
                 return
             else
                 ERR.Error "Block '$1' is not a valid field declaration", block
@@ -103,21 +104,23 @@ module XL.SEMANTICS.TYPES.RECORDS is
             when
                 'X' ; 'Y'
             then
-                MakeFieldList X, list
-                MakeFieldList Y, list
+                MakeFieldList X, list, is_generic
+                MakeFieldList Y, list, is_generic
 
             when
                 'X'
                 'Y'
             then
-                MakeFieldList X, list
-                MakeFieldList Y, list
+                MakeFieldList X, list, is_generic
+                MakeFieldList Y, list, is_generic
 
             else
                 trace [recdecl] "Fields: ", Fields
                 Fields := XLT.XLDeclarations (Fields)
                 decl : DCL.declaration := DCL.GetDeclaration(Fields)
                 if decl then
+                    if decl.is_generic then
+                        is_generic := true
                     if not decl.is_builtin then
                         trace [recdecl] "Decl: ", decl
                         list += decl
@@ -140,6 +143,8 @@ module XL.SEMANTICS.TYPES.RECORDS is
             if N.value = "" then
                 Fields := nil
 
+        result.is_generic := SYM.GetInteger(XLT.context, "GENERIC") <> 0
+
         // Add the base if there is one
         result.base := nil
         if Base <> nil then
@@ -148,12 +153,11 @@ module XL.SEMANTICS.TYPES.RECORDS is
             Decl : declaration := DCL.Declare(BaseName, BaseType)
             result.fields += Decl
             result.base := BaseType
-            result.is_generic := BaseType.is_generic
-        else
-            result.is_generic := false
+            if BaseType.is_generic then
+                result.is_generic := true
 
         if Fields <> nil then
-            MakeFieldList Fields, result.fields
+            MakeFieldList Fields, result.fields, result.is_generic
 
         result.interface_match := RecordTypeMatch
         result.name := Source

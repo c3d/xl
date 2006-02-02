@@ -105,7 +105,7 @@ module XL.SEMANTICS.TYPES is
         tp.machine_name := nil
         tp.interface_match := SourceTypeMatch
         tp.name := Name
-        tp.is_generic := false
+        tp.is_generic := SYM.GetInteger(XLT.context, "GENERIC") <> 0
         tp.interface := nil
         tp.implementation := nil
         return tp
