@@ -75,7 +75,7 @@ module XL.SEMANTICS.FUNCTIONS is
         f.is_parameter          := SYM.GetInteger(XLT.context, "FNPARM") <> 0
         f.is_local              := SYM.GetInteger(XLT.context, "LOCAL") <> 0
         f.is_global             := SYM.GetInteger(XLT.context, "GLOBAL") <> 0
-        f.is_field              := SYM.GetInteger(XLT.context, "FIELD") <> 0
+        f.is_generic            := SYM.GetInteger(XLT.context, "GENERIC") <> 0
         f.is_builtin            := false
         f.implementation        := nil
         f.machine_interface     := CGM.Entry(f)
@@ -342,13 +342,16 @@ module XL.SEMANTICS.FUNCTIONS is
             postList += CallAssertion(postCond, "postcondition_error")
         f.postconditions := postList
 
-        // Perform body semantics
-        Body := XLT.ScopeSemantics(Body, XLT.scopeFunction)
-        result := CGM.FunctionBody(f, Interface, Body)
-        XLT.context := context
+        // For generic functions, just skip body semantics and the like
+        if not f.is_generic then
+            // Perform body semantics
+            Body := XLT.ScopeSemantics(Body, XLT.scopeFunction)
+            result := CGM.FunctionBody(f, Interface, Body)
 
-        // Add the function body to global scope
-        SYM.AddScopeItem XLT.main_context, "MAIN_BODY", result
+            // Add the function body to global scope
+            SYM.AddScopeItem XLT.main_context, "MAIN_BODY", result
+
+        XLT.context := context
         result := parse_tree(@nop)
 
 

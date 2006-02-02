@@ -175,6 +175,7 @@ module XL.SEMANTICS.DECLARATIONS is
         decl.is_local           := SYM.GetInteger(XLT.context, "LOCAL") <> 0
         decl.is_global          := SYM.GetInteger(XLT.context, "GLOBAL") <> 0
         decl.is_field           := SYM.GetInteger(XLT.context, "FIELD") <> 0
+        decl.is_generic         := SYM.GetInteger(XLT.context, "GENERIC") <> 0
         decl.is_builtin         := false
         decl.implementation     := nil
 
@@ -515,7 +516,9 @@ module XL.SEMANTICS.DECLARATIONS is
             B : Value as PT.block_tree
             if B.opening = PR.INDENT_MARKER then
                 Value := B.child
-        decl.initializer := XLT.ScopeSemantics (Value, XLT.scopeGlobal)
+        if not decl.is_generic then
+            Value := XLT.ScopeSemantics(Value, XLT.scopeGlobal)
+        decl.initializer := Value
         result := decl.initializer
         PT.SetInfo result, "DECL", decl
 

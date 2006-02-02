@@ -99,6 +99,18 @@ module XL.SYMBOLS is
         toTable.usings := fromTable.usings
 
 
+    procedure AddSymbols (toTable : symbol_table; fromTable : symbol_table) is
+    // ------------------------------------------------------------------------
+    //   Add symbols from source into destination
+    // ------------------------------------------------------------------------
+        name : text
+        for name in fromTable.names loop
+            toTable.names[name] += fromTable.names[name]
+        for name in fromTable.rewrites loop
+            toTable.rewrites[name] += fromTable.rewrites[name]
+        toTable.usings += fromTable.usings
+
+
     procedure LocalSymbols (table : symbol_table;
                             in out list : PT.tree_list) is
     // ------------------------------------------------------------------------
