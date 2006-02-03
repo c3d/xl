@@ -324,6 +324,7 @@ module XL.SEMANTICS.TYPES is
         decl.is_global          := false
         decl.is_field           := false
         decl.is_builtin         := false
+        decl.is_generic         := tp.is_generic
         decl.implementation     := nil
 
         PT.SetInfo result, "DECL", decl

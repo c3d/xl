@@ -183,6 +183,8 @@ module XL.SEMANTICS.DECLARATIONS is
         if (integer(decl.is_parameter) + integer(decl.is_field) +
             integer(decl.is_local) + integer(decl.is_global) <> 1) then
             ERR.Error "Internal: Bad declaration scope for '$1'", Name
+        if tp.is_generic then
+            decl.is_generic := true
 
         // Store this declaration name in the symbol table
         SYM.Enter XLT.context, "DECL", Name.value, Name
