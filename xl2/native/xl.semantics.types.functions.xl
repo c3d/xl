@@ -210,8 +210,11 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         TY.SetType Source, result
 
         // Generate a machine type in case we want to put it in a record
-        MType : PT.name_tree := CGM.EntryPointer(result)
-        result.machine_name := MType
+        if result.is_generic then
+            result.machine_name := SYM.Temporary("<generic function type>")
+        else
+            MType : PT.name_tree := CGM.EntryPointer(result)
+            result.machine_name := MType
 
         // Return to enclosing context
         XLT.context := SYM.Enclosing (XLT.context)

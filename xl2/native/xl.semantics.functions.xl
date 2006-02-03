@@ -41,6 +41,7 @@ module XL.SEMANTICS.FUNCTIONS is
 //   Implementation of the semantics of basic C++-style functions
 // ----------------------------------------------------------------------------
 
+
     function GetFunction (input : PT.tree) return function is
     // ------------------------------------------------------------------------
     //   Return the function info associated with a tree
@@ -102,7 +103,8 @@ module XL.SEMANTICS.FUNCTIONS is
         PT.SetInfo MachineIface, "DECL", f
 
         // Add the interface declaration in an outer scope
-        XLT.AddScopeDecl XLT.global_context, MachineDecl
+        if not f.is_generic then
+            XLT.AddScopeDecl XLT.global_context, MachineDecl
 
         // Enter the machine interface into the symbol table
         SYM.Enter XLT.context, "FN", Name.value, Iface
