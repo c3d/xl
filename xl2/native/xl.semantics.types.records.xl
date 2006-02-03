@@ -180,7 +180,10 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
         // Attach a type info to the original name
         tp : record_type := MakeRecordType(Source, Base, Fields)
-        tp.machine_name := CGM.DeclareRecord(tp)
+        if tp.is_generic then
+            tp.machine_name := SYM.Temporary("<generic record>")
+        else
+            tp.machine_name := CGM.DeclareRecord(tp)
         TY.SetDefinedType Source, tp
 
         // Return the end type
