@@ -194,15 +194,16 @@ module XL.PARSER.TREE with
     // 
     // ========================================================================
 
-    type tree_map is map[text, PT.tree]
+    type tree_map is map[text, tree]
     type tree_list is string of tree
     function XLNormalize (name : text) return text
-    function Matches (test : PT.tree;
-                      ref : PT.tree;
+    function Matches (test : tree;
+                      ref : tree;
                       in out arg : tree_map) return integer
-    function Matches (test : PT.tree;
-                      ref : PT.tree) return boolean
-    function LargestMatch (test : PT.tree;
+    function Matches (test : tree;
+                      ref : tree) return boolean
+    function LargestMatch (test : tree;
                            ref_list : tree_list;
                            in out arg : tree_map) return integer
 
+    function Clone(original : tree) return tree

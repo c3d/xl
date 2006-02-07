@@ -25,6 +25,7 @@
 
 import DCL = XL.SEMANTICS.DECLARATIONS
 import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import GEN = XL.SEMANTICS.TYPES.GENERICS
 import PT = XL.PARSER.TREE
 import SYM = XL.SYMBOLS
 import XLT = XL.TRANSLATOR
@@ -76,7 +77,6 @@ module XL.SEMANTICS.FUNCTIONS is
         f.is_parameter          := SYM.GetInteger(XLT.context, "FNPARM") <> 0
         f.is_local              := SYM.GetInteger(XLT.context, "LOCAL") <> 0
         f.is_global             := SYM.GetInteger(XLT.context, "GLOBAL") <> 0
-        f.is_generic            := SYM.GetInteger(XLT.context, "GENERIC") <> 0
         f.is_builtin            := false
         f.implementation        := nil
         f.machine_interface     := CGM.Entry(f)
@@ -89,11 +89,6 @@ module XL.SEMANTICS.FUNCTIONS is
             'MachineIface'
             @fn_decl_end
 
-        // Check if the type of the function is generic (from gen args)
-        ftype : f.type as function_type
-        if ftype.is_generic then
-            f.is_generic := true
-
         // Indicate that this is a function and a declaration
         PT.SetInfo Iface, "FN", f
         PT.SetInfo Iface, "DECL", f
@@ -103,7 +98,7 @@ module XL.SEMANTICS.FUNCTIONS is
         PT.SetInfo MachineIface, "DECL", f
 
         // Add the interface declaration in an outer scope
-        if not f.is_generic then
+        if not GEN.IsGenericDeclaration(f) then
             XLT.AddScopeDecl XLT.global_context, MachineDecl
 
         // Enter the machine interface into the symbol table
@@ -350,7 +345,7 @@ module XL.SEMANTICS.FUNCTIONS is
         f.postconditions := postList
 
         // For generic functions, just skip body semantics and the like
-        if not f.is_generic then
+        if not GEN.IsGenericDeclaration(f) then
             // Perform body semantics
             Body := XLT.ScopeSemantics(Body, XLT.scopeFunction)
             result := CGM.FunctionBody(f, Interface, Body)

@@ -1,0 +1,361 @@
+// ****************************************************************************
+//  xl.semantics.generics.xl        (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Implementation of generic instantiation
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import TY = XL.SEMANTICS.TYPES
+import SYM = XL.SYMBOLS
+import XLT = XL.TRANSLATOR
+import ERR = XL.ERRORS
+import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import GEN = XL.SEMANTICS.TYPES.GENERICS
+import REC = XL.SEMANTICS.TYPES.RECORDS
+import CGM = XL.CODE_GENERATOR.MACHINE
+import DCL = XL.SEMANTICS.DECLARATIONS
+import IO = XL.TEXT_IO
+import OVL = XL.SEMANTICS.OVERLOAD
+
+
+module XL.SEMANTICS.GENERICS is
+// ----------------------------------------------------------------------------
+//    Module implementing generic instantiation
+// ----------------------------------------------------------------------------
+
+    procedure LookupInstantiation(NameTree       : PT.tree;
+                                  Args           : PT.tree;
+                                  kind           : text;
+                                  out BestDecl   : DCL.declaration;
+                                  out ActualArgs : PT.tree_list;
+                                  out ScopeExpr  : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Instantiate the corresponding generic
+    // ------------------------------------------------------------------------
+
+        symbols : SYM.symbol_table := XLT.context
+        list : PT.tree_list
+        BaseRecord : PT.tree
+
+        trace [inst] "Instantiate: name=", NameTree, " args=", Args
+
+        if NameTree.kind <> PT.xlNAME then
+            translate NameTree
+                when ('Record'.'Field') where Field.kind = PT.xlNAME then
+                    GN : Field as PT.name_tree
+                    REC.RecordDeclarations Record, GN, kind, list, symbols
+                    BaseRecord := XLT.XLSemantics(Record)
+                    NameTree := Field
+                else
+                    ERR.Error "Internal: Non-name generic '$1'", NameTree
+                    BestDecl := nil
+                    return
+        Name : NameTree as PT.name_tree
+
+        // Convert arguments to a list for easier checking
+        ArgList : PT.tree_list
+        SemArgs : PT.tree_list
+        OVL.ArgsTreeToList Args, ArgList
+        NA  : integer := size(ArgList)
+        A   : integer
+        Arg : PT.tree
+
+
+        // Scoring
+        best      : PT.tree
+        bestScore : integer
+        bestD     : DCL.declaration
+        ambig     : PT.tree
+        depth     : integer := 0
+        table     : SYM.symbol_table := symbols
+        recurse   : boolean := BaseRecord = nil
+
+        // Save errors for later display
+        ERR.PushErrorContext()
+
+        // Loop on all levels
+        while table <> nil loop
+            depth += 1
+
+            // Find all candidates at this level
+            candidates : SYM.tree_list
+            if recurse then
+                SYM.Lookup table, kind, Name.value, 
+                           candidates, SYM.lookupLocalUsing
+                table := SYM.Enclosing(table)
+            else
+                candidates := list
+                table := nil
+            trace [inst] "In table ", table,
+                         " found ", size(candidates), " candidates"
+
+            // Loop on candidates to check compatibility
+            C : PT.tree
+            for C in candidates loop
+
+                trace [inst] "Testing ", C
+
+                // Retrieve generic information, ignore non generics
+                TestArgs : PT.tree_list
+                Scope    : PT.tree := nil
+                Decl     : DCL.declaration := DCL.GetDeclaration(C)
+                if Decl = nil then
+                    // We can get a record-prefixed value from a lateral map
+                    if recurse then
+                        translate C
+                            when ('Record'.'Item') then
+                                Decl := DCL.GetDeclaration(Item)
+                                Scope := Record
+                    if Decl = nil then
+                        ERR.Error "Internal: No declaration info for '$1'", C
+                        trace [inst] "FAIL: No generic info"
+                        restart
+                if not GEN.IsGenericDeclaration(Decl) then
+                    ERR.Error "'$1' is not generic", C
+                    trace [inst] "FAIL: Not generic"
+                    restart
+
+
+                // Check number of parameters.
+                Dtype : GEN.generic_type := GEN.DeclGenericType(Decl)
+                if Dtype = nil then
+                    ERR.Error "Internal: Can't find generic for '$1'",
+                              DType.name
+                    trace [inst] "FAIL: No generic type"
+                    restart
+                       
+                NP : integer := size(Dtype.parameters)
+                if NA > NP then
+                    ERR.Error "'$1' could not be selected because", C
+                    ERR.Error "there are too many arguments for '$1'", Name
+                    trace [inst] "FAIL: Too many arguments ", NA, ">", NP
+                    restart
+
+                // Check type of parameters
+                D        : DCL.declaration
+                Matching : boolean := true
+                Score    : integer := depth
+                A := 0
+                for D in Dtype.parameters loop
+                    if A < NA then
+                        Arg := ArgList[A]
+                        trace [inst] "Testing argument ", Arg
+                    else
+                        Arg := D.initializer
+                        if Arg = nil then
+                            ERR.Error "'$1' could not be selected because", C
+                            ERR.Error "there is no value for '$1'", D.name
+                            Matching := false
+                            trace [inst] "No default argument "
+                        else
+                            trace [inst] "Testing default arg ", Arg
+                    exit if not Matching
+                    AType : TY.any_type
+                    if TY.SameType (D.type, TY.type_of_types) then
+                        // Type argument
+                        AType := TY.EvaluateType(Arg)
+                        Matching := AType <> nil
+                        if not Matching then
+                            trace [inst] "FAIL: Type mismatch for ", D.name
+                            trace [inst] "   Expected a type"
+                            ERR.Error "'$1' could not be selected because", C
+                            ERR.Error "'$1' is not a type",Arg,D.name
+                            ERR.Error "for parameter '$1'", D.name
+                    else
+                        // Non-type argument
+                        Arg := XLT.XLSemantics (Arg)
+                        AType : TY.any_type := TY.GetType(Arg)
+                        Matching := DCL.Assignable(D, Arg)
+                        if not Matching then
+                            trace [inst] "FAIL: Type mismatch for ", D.name
+                            trace [inst] "   Expected ", TY.Source(D.type)
+                            trace [inst] "   Got ", AType.name
+                            ERR.Error "'$1' could not be selected because", C
+                            ERR.Error "the type '$3' of '$1' is not '$2'",
+                                       ArgList[A],
+                                       TY.Source(D.type), TY.Source(AType)
+                            ERR.Error "for parameter '$1'", D.name
+                    exit if not Matching
+                    TestArgs += Arg
+                    A += 1
+
+
+                // If not matching, lookup next
+                if not Matching then
+                    restart
+                trace [inst] "PASS: The candidate matches"
+
+                // Compare scores and results
+                if best = nil then
+                    trace [inst] "BEST: Best score ", Score
+                    best := C
+                    bestScore := Score
+                    bestD := Decl
+                    SemArgs := TestArgs
+                    if recurse then BaseRecord := Scope
+                else if Score < bestScore then
+                    trace [inst] "BEST: New best score ", Score
+                    best := C
+                    bestScore := Score
+                    bestD := Decl
+                    SemArgs := TestArgs
+                    if recurse then BaseRecord := Scope
+                else if Score = bestScore then
+                    ambig := C
+                    trace [inst] "AMBIGUOUS: Score ", Score
+                    trace [inst] "           Other: ", best
+
+        // Report results
+        candidate_errors : text := ERR.PopErrorContext()
+        if best <> nil then
+            if ambig <> nil then
+                ERR.Error "The instantiation of '$1' is ambiguous", NameTree
+                ERR.Error "A first candidate is '$1'", best
+                ERR.Error "A second candidate is '$1'", ambig
+
+            trace [inst] "FOUND: Instantiating ", PT.tree(bestD.name)
+
+            // Pass result to caller
+            BestDecl := bestD
+            ActualArgs := SemArgs
+            ScopeExpr := BaseRecord
+            
+        else
+            ERR.Error "No valid generic found for '$1'", NameTree
+            ERR.Display candidate_errors
+            BestDecl := nil
+
+
+    function Instantiate(Decl       : DCL.declaration;
+                         Args       : PT.tree_list;
+                         BaseRecord : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Instantiate a specific declaration
+    // ------------------------------------------------------------------------
+
+        gtp : GEN.generic_type := GEN.DeclGenericType(decl)
+        if gtp = nil then
+            ERR.Error "Internal: '$1' is not a generic declaration", Decl.name
+            return parse_tree(@error)
+
+        oldContext : SYM.symbol_table := XLT.context
+
+        XLT.context := SYM.NewSymbolTable (gtp.context)
+        SYM.AddUsing XLT.context, nil, oldContext
+
+        // Insert declarations in the context
+        I : integer
+        for I in 0..size(Args)-1 loop
+            A : PT.tree := Args[I]
+            P : DCL.declaration := gtp.parameters[I]
+            N : P.name as PT.name_tree
+            C : PT.name_tree := PT.NewName(N.value, A.position)
+
+            if N = nil then
+                ERR.Error "Internal: '$1' is not a name", P.name
+                return parse_tree(@error)
+
+            trace[inst] "GenParm ", PT.tree(C),
+                        " : ", TY.Source(P.type),
+                        " is ", A
+            result := DCL.EnterDeclaration (C, TY.Source(P.type), A, true)
+
+        // Now evaluate the main declaration in the new context
+        Name : PT.tree := PT.Clone(Decl.Name)
+        Type : PT.tree := TY.Source(Decl.type)
+        Init : PT.tree := PT.Clone(Decl.initializer)
+        PT.AttachTree Name, "INSTANCEOF", Decl.Name
+        result := DCL.EnterDeclaration (Name, Type, Init, true)
+        result := XLT.XLSemantics(result)
+
+        XLT.context := oldContext
+
+
+    function InstantiateType (Name : PT.tree;
+                              Args : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Instantiate a specific type
+    // ------------------------------------------------------------------------
+        Decl       : DCL.declaration
+        ActualArgs : PT.tree_list
+        Scope      : PT.tree
+
+        // Save errors for later display
+        ERR.PushErrorContext()
+
+        LookupInstantiation Name, Args, "TYPE", Decl, ActualArgs, Scope
+        if Decl = nil then
+            return parse_tree(@error)
+
+        result := Instantiate(Decl, ActualArgs, Scope)
+
+        instantiation_errors : text := ERR.PopErrorContext()
+        if instantiation_errors <> "" then
+            ERR.Error "Unable to instantiate '$1', because", Name
+            ERR.Display instantiation_errors
+
+
+    function ContainsGenerics (List : PT.tree_list) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if any name corresponds to a generic thing
+    // ------------------------------------------------------------------------
+        Name : PT.tree
+        for Name in List loop
+            decl : DCL.declaration := DCL.GetDeclaration(Name)
+            if decl <> nil then
+                if GEN.IsGenericDeclaration(decl) then
+                    return true
+        return false
+
+
+    function IsGenericName(Name : PT.tree; kind : text) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if a name is possibly generic
+    // ------------------------------------------------------------------------
+        list : PT.tree_list
+        if Name.kind <> PT.xlNAME then
+            translate Name
+                when ('Record'.'Field') where Field.kind = PT.xlNAME then
+                    syms : SYM.symbol_table
+                    FN : Field as PT.name_tree
+                    REC.RecordDeclarations Record, FN, kind, list, syms
+                    if syms <> nil then
+                        if ContainsGenerics(list) then
+                            return true
+            return false
+
+        Nm : Name as PT.name_tree
+        SYM.Lookup XLT.context, kind, Nm.value, list, SYM.lookupAll
+        return ContainsGenerics (list)
+
+
+    translation XLEvaluateType
+    // ------------------------------------------------------------------------
+    //   Translation of instantiations
+    // ------------------------------------------------------------------------
+        
+        when
+            'Name' [ 'Args' ]
+        where
+            IsGenericName (Name, "TYPE")
+        then
+            return InstantiateType (Name, Args)

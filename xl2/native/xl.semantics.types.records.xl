@@ -29,6 +29,7 @@ import DCL = XL.SEMANTICS.DECLARATIONS
 import CGM = XL.CODE_GENERATOR.MACHINE
 import SYM = XL.SYMBOLS
 import XLT = XL.TRANSLATOR
+import GEN = XL.SEMANTICS.TYPES.GENERICS
 
 
 module XL.SEMANTICS.TYPES.RECORDS is
@@ -85,8 +86,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
 
     procedure MakeFieldList (Fields            : PT.tree;
-                             in out list       : declaration_list;
-                             in out is_generic : boolean) is
+                             in out list       : declaration_list) is
     // ------------------------------------------------------------------------
     //    Translate a field list from parse tree form into a list
     // ------------------------------------------------------------------------
@@ -95,7 +95,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
             block : Fields as PT.block_tree
             if (block.opening = XL.PARSER.INDENT_MARKER and
                 block.closing = XL.PARSER.UNINDENT_MARKER) then
-                MakeFieldList block.child, list, is_generic
+                MakeFieldList block.child, list
                 return
             else
                 ERR.Error "Block '$1' is not a valid field declaration", block
@@ -104,23 +104,23 @@ module XL.SEMANTICS.TYPES.RECORDS is
             when
                 'X' ; 'Y'
             then
-                MakeFieldList X, list, is_generic
-                MakeFieldList Y, list, is_generic
+                MakeFieldList X, list
+                MakeFieldList Y, list
 
             when
                 'X'
                 'Y'
             then
-                MakeFieldList X, list, is_generic
-                MakeFieldList Y, list, is_generic
+                MakeFieldList X, list
+                MakeFieldList Y, list
 
             else
                 trace [recdecl] "Fields: ", Fields
                 Fields := XLT.XLDeclarations (Fields)
                 decl : DCL.declaration := DCL.GetDeclaration(Fields)
                 if decl then
-                    if decl.is_generic then
-                        is_generic := true
+                    if GEN.IsGenericDeclaration(decl) then
+                        GEN.AddGenericDependency decl.type
                     if not decl.is_builtin then
                         trace [recdecl] "Decl: ", decl
                         list += decl
@@ -128,14 +128,15 @@ module XL.SEMANTICS.TYPES.RECORDS is
                     ERR.Error "'$1' isn't a field declaration", Fields
 
 
-    function MakeRecordType(Source     : PT.tree;
-                            Base       : PT.tree;
-                            Fields     : PT.tree) return record_type is
+    function NewRecordType(Source     : PT.tree;
+                           Base       : PT.tree;
+                           Fields     : PT.tree) return any_type is
     // ------------------------------------------------------------------------
-    //    Create a basic type, possibly named
+    //    Create a basic type, possibly named (record_type or generic_type)
     // ------------------------------------------------------------------------
+        rtp : record_type
 
-        result.symbols := XLT.context
+        rtp.symbols := XLT.context
 
         // Check if empty field list. () is a block with an empty name
         if Fields <> nil and Fields.kind = PT.xlNAME then
@@ -143,27 +144,33 @@ module XL.SEMANTICS.TYPES.RECORDS is
             if N.value = "" then
                 Fields := nil
 
-        result.is_generic := SYM.GetInteger(XLT.context, "GENERIC") <> 0
-
         // Add the base if there is one
-        result.base := nil
+        rtp.base := nil
         if Base <> nil then
             BaseType : any_type := TY.EvaluateType (Base)
             BaseName : PT.name_tree := PT.NewName("Base", Source.position)
             Decl : declaration := DCL.Declare(BaseName, BaseType)
-            result.fields += Decl
-            result.base := BaseType
-            if BaseType.is_generic then
-                result.is_generic := true
+            rtp.fields += Decl
+            rtp.base := BaseType
+            if GEN.IsGenericType (BaseType) then
+                GEN.AddGenericDependency BaseType
 
         if Fields <> nil then
-            MakeFieldList Fields, result.fields, result.is_generic
+            MakeFieldList Fields, rtp.fields
 
-        result.interface_match := RecordTypeMatch
-        result.name := Source
+        rtp.interface_match := RecordTypeMatch
+        rtp.name := Source
 
         // Each record type gets a new machine name
-        result.machine_name := SYM.Temporary("rectype", Source.position)
+        rtp.machine_name := SYM.Temporary("rectype", Source.position)
+
+        // If generic, make it generic
+        if GEN.IsGenericContext() then
+            rtp.machine_name := SYM.Temporary("<generic record>")
+            result := GEN.MakeGeneric(rtp)
+        else
+            rtp.machine_name := CGM.DeclareRecord(rtp)
+            result := rtp
 
 
     function EnterType (Source  : PT.tree;
@@ -179,11 +186,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         SYM.SetInteger XLT.context, "FIELD", 1
 
         // Attach a type info to the original name
-        tp : record_type := MakeRecordType(Source, Base, Fields)
-        if tp.is_generic then
-            tp.machine_name := SYM.Temporary("<generic record>")
-        else
-            tp.machine_name := CGM.DeclareRecord(tp)
+        tp : any_type := NewRecordType(Source, Base, Fields)
         TY.SetDefinedType Source, tp
 
         // Return the end type
@@ -220,7 +223,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
             tp := TY.GetType(Record)
 
         // Evaluate expression type
-        rtp : TY.NonConstedType(tp) as record_type
+        rtp : TY.NonConstedType(GEN.NonGenericType(tp)) as record_type
         return rtp
 
 

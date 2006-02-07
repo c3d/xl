@@ -5,7 +5,7 @@
 #
 #  File Description:
 #
-#
+#    Makefile for the native version of the XL compiler
 #
 #
 #
@@ -16,7 +16,7 @@
 #
 #******************************************************************************
 # This program is released under the GNU General Public License.
-# See http://www.gnu.org/copyleft/gpl.html for details
+# See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
 #******************************************************************************
 #* File       : $RCSFile$
 #* Revision   : $Revision$
@@ -50,6 +50,8 @@ OTHER_SOURCES=					\
 	xl.semantics.functions.xl		\
 	xl.semantics.overload.xs		\
 	xl.semantics.overload.xl		\
+	xl.semantics.generics.xs		\
+	xl.semantics.generics.xl		\
 	xl.semantics.instructions.xs		\
 	xl.semantics.instructions.xl		\
 	xl.semantics.modules.xs			\

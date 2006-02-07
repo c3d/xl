@@ -102,8 +102,8 @@ module XL.PARSER.TREE is
         return nil
 
 
-    function Matches (test : PT.tree;
-                      ref : PT.tree;
+    function Matches (test : tree;
+                      ref : tree;
                       in out arg : tree_map) return integer is
     // ------------------------------------------------------------------------
     //   Check if the test tree matches the reference tree, return score
@@ -115,8 +115,8 @@ module XL.PARSER.TREE is
         // Check if the reference is a wildcard like 'A'
         // If so, check if we saw the same name, and then check compatibility
         // If not, check
-        if ref.kind = PT.xlWILDCARD then
-            R : ref as PT.wildcard_tree
+        if ref.kind = xlWILDCARD then
+            R : ref as wildcard_tree
 
             // Did we see this name already?
             if count(arg, R.name) > 0 then
@@ -144,9 +144,9 @@ module XL.PARSER.TREE is
             return 0
 
         // For each kind of atom, check and return 0 or 1
-        if test.kind = PT.xlINTEGER then
-            T : test as PT.integer_tree
-            R : ref as PT.integer_tree
+        if test.kind = xlINTEGER then
+            T : test as integer_tree
+            R : ref as integer_tree
             if T.value = R.value then
                 trace [matched] "/* Matched: ", test, " */"
                 trace [matched] "/* With: ", ref, " */"
@@ -155,9 +155,9 @@ module XL.PARSER.TREE is
             trace [matches] "/* Failed intval */"
             return 0
 
-        if test.kind = PT.xlREAL then
-            T : test as PT.real_tree
-            R : ref as PT.real_tree
+        if test.kind = xlREAL then
+            T : test as real_tree
+            R : ref as real_tree
             if T.value = R.value then
                 trace [matched] "/* Matched: ", test, " */"
                 trace [matched] "/* With: ", ref, " */"
@@ -166,9 +166,9 @@ module XL.PARSER.TREE is
             trace [matches] "/* Failed realval */"
             return 0
 
-        if test.kind = PT.xlTEXT then
-            T : test as PT.text_tree
-            R : ref as PT.text_tree
+        if test.kind = xlTEXT then
+            T : test as text_tree
+            R : ref as text_tree
             if T.value = R.value and T.quote = R.quote then
                 trace [matched] "/* Matched: ", test, " */"
                 trace [matched] "/* With: ", ref, " */"
@@ -177,9 +177,9 @@ module XL.PARSER.TREE is
             trace [matches] "/* Failed textval */"
             return 0
 
-        if test.kind = PT.xlNAME then
-            T : test as PT.name_tree
-            R : ref as PT.name_tree
+        if test.kind = xlNAME then
+            T : test as name_tree
+            R : ref as name_tree
             if XLNormalize(T.value) = XLNormalize(R.value) then
                 trace [matched] "/* Matched: ", test, " */"
                 trace [matched] "/* With: ", ref, " */"
@@ -189,9 +189,9 @@ module XL.PARSER.TREE is
             return 0
 
         // For non-atoms, check recursively
-        if test.kind = PT.xlBLOCK then
-            T : test as PT.block_tree
-            R : ref as PT.block_tree
+        if test.kind = xlBLOCK then
+            T : test as block_tree
+            R : ref as block_tree
             if T.opening = R.opening and T.closing = R.closing then
                 result := Matches(T.child, R.child, arg)
                 if result > 0 then
@@ -205,9 +205,9 @@ module XL.PARSER.TREE is
             trace [matches] "/* r=", result, " */"
             return 0
 
-        if test.kind = PT.xlPREFIX then
-            T : test as PT.prefix_tree
-            R : ref as PT.prefix_tree
+        if test.kind = xlPREFIX then
+            T : test as prefix_tree
+            R : ref as prefix_tree
             l_result : integer := Matches(T.left, R.left, arg)
             if l_result > 0 then
                 r_result : integer := Matches(T.right, R.right, arg)
@@ -220,9 +220,9 @@ module XL.PARSER.TREE is
             trace [matches] "/* Failed prefix */"
             return 0
 
-        if test.kind = PT.xlINFIX then
-            T : test as PT.infix_tree
-            R : ref as PT.infix_tree
+        if test.kind = xlINFIX then
+            T : test as infix_tree
+            R : ref as infix_tree
             if T.name = R.name then
                 l_result : integer := Matches(T.left, R.left, arg)
                 if l_result > 0 then
@@ -244,8 +244,8 @@ module XL.PARSER.TREE is
         trace [matches] "/* With: ", ref, " */"
 
 
-    function Matches (test : PT.tree;
-                      ref : PT.tree) return boolean is
+    function Matches (test : tree;
+                      ref : tree) return boolean is
     // ------------------------------------------------------------------------
     //    Check if two trees match
     // ------------------------------------------------------------------------
@@ -253,7 +253,7 @@ module XL.PARSER.TREE is
         return Matches(test, ref, unused) > 0
 
 
-    function LargestMatch (test : PT.tree;
+    function LargestMatch (test : tree;
                            ref_list : tree_list;
                            in out arg : tree_map) return integer is
     // ------------------------------------------------------------------------
@@ -263,7 +263,7 @@ module XL.PARSER.TREE is
         largest_score : integer := 0
         score         : integer := 0
         index         : integer := 0
-        ref           : PT.tree
+        ref           : tree
 
         result := -2 // Not found
         for ref in ref_list loop
@@ -278,3 +278,39 @@ module XL.PARSER.TREE is
             index += 1
         return result
 
+
+    function Clone (original : tree) return tree is
+    // ------------------------------------------------------------------------
+    //   Create a deep clone of the tree
+    // ------------------------------------------------------------------------
+
+        if original = nil then
+            return original
+        if original.kind = xlINTEGER then
+            it : original as integer_tree
+            return NewInteger(it.value, it.position)
+        if original.kind = xlREAL then
+            rt : original as real_tree
+            return NewReal (rt.value, rt.position)
+        if original.kind = xlTEXT then
+            tt : original as text_tree
+            return NewText (tt.value, tt.quote, tt.position)
+        if original.kind = xlNAME then
+            nt : original as name_tree
+            return NewName(nt.value, nt.position)
+        if original.kind = xlBLOCK then
+            bt : original as block_tree
+            return NewBlock(Clone(bt.child),
+                            bt.opening, bt.closing, bt.position)
+        if original.kind = xlPREFIX then
+            xt : original as prefix_tree
+            return NewPrefix (Clone(xt.left), Clone(xt.right), xt.position)
+        if original.kind = xlINFIX then
+            it : original as infix_tree
+            return NewInfix (it.name,
+                             Clone(it.left), Clone(it.right), it.position)
+        if original.kind = xlWILDCARD then
+            wt : original as wildcard_tree
+            return NewWildcard(wt.name, wt.position)
+
+        assert original = nil

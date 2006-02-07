@@ -1,0 +1,14 @@
+// A simple generic type, as might be defined in C++
+generic [type item]
+type Pair is record with
+    Size : integer
+    First : item
+
+type kazoo is Pair[integer]
+type kazaa is Pair[real]
+type koza is Pair[kazaa]
+type kzoo is Pair[Pair[boo_lean]]
+
+flux : kzoo
+flax : Pair [Pair [ Pair [real ]]]
+

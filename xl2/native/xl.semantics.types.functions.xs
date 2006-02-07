@@ -57,14 +57,8 @@ module XL.SEMANTICS.TYPES.FUNCTIONS with
     // Create a function type
     function NewFnType(Source     : PT.tree;
                        Parms      : PT.tree;
-                       ReturnType : PT.tree) return function_type
+                       ReturnType : PT.tree) return any_type
 
     function EnterFnType (Source  : PT.tree;
                           Parms   : PT.tree;
                           Ret     : PT.tree) return PT.tree
-
-    // Create a parameter list, exported for use in generics
-    procedure MakeParameterList (Parms : PT.tree;
-                                 in out list : declaration_list;
-                                 in out icnt : integer;
-                                 in out ocnt : integer)

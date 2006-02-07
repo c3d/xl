@@ -25,7 +25,6 @@
 
 import PT = XL.PARSER.TREE
 import BC = XL.BYTECODE
-import SYM = XL.SYMBOLS
 
 module XL.SEMANTICS.OVERLOAD with
 // ----------------------------------------------------------------------------
@@ -34,4 +33,4 @@ module XL.SEMANTICS.OVERLOAD with
 
     function Resolve(NameTree : PT.tree; Args : PT.tree) return BC.bytecode
     function IsFunction(T : PT.tree) return boolean
-
+    procedure ArgsTreeToList(Args : PT.tree; in out List : PT.tree_list)

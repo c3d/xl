@@ -29,6 +29,7 @@ import ERR = XL.ERRORS
 import XLT = XL.TRANSLATOR
 import CST = XL.CONSTANTS
 import DCL = XL.SEMANTICS.DECLARATIONS
+import GEN = XL.SEMANTICS.TYPES.GENERICS
 
 
 module XL.SEMANTICS.TYPES is
@@ -105,7 +106,6 @@ module XL.SEMANTICS.TYPES is
         tp.machine_name := nil
         tp.interface_match := SourceTypeMatch
         tp.name := Name
-        tp.is_generic := SYM.GetInteger(XLT.context, "GENERIC") <> 0
         tp.interface := nil
         tp.implementation := nil
         return tp
@@ -155,7 +155,6 @@ module XL.SEMANTICS.TYPES is
         ktype.base := base
         ktype.machine_name := PT.NewName(ksig, mtype.position)
         ktype.interface_match := SourceTypeMatch
-        ktype.is_generic := base.is_generic
         if cst then
             ktype.name := parse_tree(constant 'bname')
         else
@@ -284,15 +283,27 @@ module XL.SEMANTICS.TYPES is
         original : PT.tree := SYM.LookupOne(XLT.context, "TYPE",
                                             N.value, SYM.lookupInnermost)
         if original <> nil then
-            ERR.Error "The type '$1' can't be defined here", Name
-            ERR.Error "because a type named '$1' already exists", original
-            result := parse_tree(@error)
-            SetDefinedType result, TY.GetDefinedType(original)
-            return result
+            otype : any_type := GetDefinedType (original)
+            // Accept redefinition if instantiating a type,
+            // or if overloading a generic type
+            if (not GEN.IsGenericType(otype) and
+                original <> PT.Attached(Name, "INSTANCEOF")) then
+                ERR.Error "The type '$1' can't be defined here", Name
+                ERR.Error "because a type named '$1' already exists", original
+                result := parse_tree(@error)
+                SetDefinedType result, otype
+                return result
 
-        // Check if we have a type value associated with it
+
+        // Check if the type is generic
         tp : any_type
-        if Value <> nil then
+        init : PT.tree
+        if GEN.IsGenericContext() then
+            tp := NewType(Name)
+            tp := GEN.MakeGeneric(tp)
+            init := Value
+        // Else check if we have a type value associated with it
+        else if Value <> nil then
             tp := EvaluateType(Value)
             if tp = nil then
                 ERR.Error "Expression '$1' is not a type", Value
@@ -314,7 +325,7 @@ module XL.SEMANTICS.TYPES is
         decl : DCL.declaration
         decl.name               := N
         decl.type               := type_of_types
-        decl.initializer        := nil
+        decl.initializer        := init
         decl.machine_name       := nil
         decl.frame_depth        := 0
         decl.is_input           := false
@@ -324,7 +335,6 @@ module XL.SEMANTICS.TYPES is
         decl.is_global          := false
         decl.is_field           := false
         decl.is_builtin         := false
-        decl.is_generic         := tp.is_generic
         decl.implementation     := nil
 
         PT.SetInfo result, "DECL", decl
@@ -442,10 +452,10 @@ module XL.SEMANTICS.TYPES is
             tot.base := nil
             tot.machine_name := parse_tree(xltype)
             tot.interface_match := nil
-            tot.is_generic := false
             tot.name := parse_tree(type)
             tot.symbols := nil
             type_of_types := tot
+            SetDefinedType tot.name, tot
 
             // Enter the module type so that we can deal with XL_BUILTINS
             module_type    := EnterBuiltinType ("module", "xlmodule")

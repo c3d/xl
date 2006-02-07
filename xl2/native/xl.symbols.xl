@@ -180,9 +180,11 @@ module XL.SYMBOLS is
                                    " got ", size(subtable.names[name])
                     for subtree in subtable.names[name] loop
                         if found[subtree] = false then
-                            scoped : PT.tree := parse_tree('scope'.'subtree')
-                            scoped.info := subtree.info
-                            scoped.position := subtree.position
+                            scoped : PT.tree := subtree
+                            if scope <> nil then
+                                scoped := parse_tree('scope'.'subtree')
+                                scoped.info := subtree.info
+                                scoped.position := subtree.position
                             values += scoped
                             found[subtree] := true
 

@@ -33,6 +33,7 @@ import FT = XL.SEMANTICS.TYPES.FUNCTIONS
 import REC = XL.SEMANTICS.TYPES.RECORDS
 import CGM = XL.CODE_GENERATOR.MACHINE
 import DCL = XL.SEMANTICS.DECLARATIONS
+import GN = XL.SEMANTICS.GENERICS
 import IO = XL.TEXT_IO
 
 
@@ -148,6 +149,7 @@ module XL.SEMANTICS.OVERLOAD is
                     trace[overload] "FAIL: Non-function ",
                                     PT.tree(TY.Source(NFtype)),
                                     " internal ", NFtype.machine_name
+                    restart
 
                 // Check number of parameters.
                 NP : integer := size(Ftype.parameters)
@@ -187,6 +189,7 @@ module XL.SEMANTICS.OVERLOAD is
                         ERR.Error "the type '$3' of '$1' doesn't match '$2'",
                                     ArgList[A],
                                     TY.Source(D.type), TY.Source(AType)
+                        ERR.Error "for parameter '$1'", D.name
                         exit if not Matching
                     A += 1
 

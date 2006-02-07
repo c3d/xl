@@ -54,9 +54,9 @@ module XL.SEMANTICS.TYPES.RECORDS with
                              in out List : declaration_list)
 
     // Create a function type
-    function MakeRecordType(Source     : PT.tree;
-                            Base       : PT.tree;
-                            Fields     : PT.tree) return record_type
+    function NewRecordType(Source     : PT.tree;
+                           Base       : PT.tree;
+                           Fields     : PT.tree) return any_type
 
     function EnterType (Source   : PT.tree;
                         Base     : PT.tree;

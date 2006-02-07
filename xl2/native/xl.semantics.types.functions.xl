@@ -27,6 +27,7 @@ import TY = XL.SEMANTICS.TYPES
 import PT = XL.PARSER.TREE
 import DCL = XL.SEMANTICS.DECLARATIONS
 import CGM = XL.CODE_GENERATOR.MACHINE
+import GEN = XL.SEMANTICS.TYPES.GENERICS
 
 
 module XL.SEMANTICS.TYPES.FUNCTIONS is
@@ -40,8 +41,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
     procedure MakeParameterList (Parms : PT.tree;
                                  in out list : declaration_list;
                                  in out icnt : integer;
-                                 in out ocnt : integer;
-                                 in out is_generic : boolean) is
+                                 in out ocnt : integer) is
     // ------------------------------------------------------------------------
     //    Translate a parameter list
     // ------------------------------------------------------------------------
@@ -50,24 +50,24 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
             when
                 'X' ; 'Y'
             then
-                MakeParameterList X, list, icnt, ocnt, is_generic
-                MakeParameterList Y, list, icnt, ocnt, is_generic
+                MakeParameterList X, list, icnt, ocnt
+                MakeParameterList Y, list, icnt, ocnt
                 return
 
             when
                 'X'
                 'Y'
             then
-                MakeParameterList X, list, icnt, ocnt, is_generic
-                MakeParameterList Y, list, icnt, ocnt, is_generic
+                MakeParameterList X, list, icnt, ocnt
+                MakeParameterList Y, list, icnt, ocnt
                 return
 
             else
                 decl : declaration := DCL.GetDeclaration(Parms)
                 if decl then
                     list += decl
-                    if decl.is_generic then
-                        is_generic := true
+                    if GEN.IsGenericDeclaration(decl) then
+                        GEN.AddGenericDependency decl.type
                     if decl.is_output then
                         ocnt += 1
                     if decl.is_input then
@@ -167,33 +167,34 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
 
     function NewFnType(Source     : PT.tree;
                        Parms      : PT.tree;
-                       ReturnType : PT.tree) return function_type is
+                       ReturnType : PT.tree) return any_type is
     // ------------------------------------------------------------------------
-    //    Create a function type
+    //    Create a function type (returns a function_type or generic_type)
     // ------------------------------------------------------------------------
+
+        ftp : function_type
 
         // Create a new context for the parameters
         XLT.context := SYM.NewSymbolTable (XLT.context)
         SYM.SetInteger XLT.context, "FNPARM", 1
 
-        result.is_generic := SYM.GetInteger(XLT.context, "GENERIC") <> 0
         if ReturnType <> nil then
-            result.base := TY.EvaluateType (ReturnType)
-            if result.base = nil then
+            ftp.base := TY.EvaluateType (ReturnType)
+            if ftp.base = nil then
                 ERR.Error "Return type '$1' is not a valid type", ReturnType
                 TmpN : PT.name_tree := PT.NewName("function", Source.position)
-                result.base := TY.NewType(TmpN)
-            retType : any_type := result.base
-            if retType.is_generic then
-                result.is_generic := true
+                ftp.base := TY.NewType(TmpN)
+            retType : any_type := ftp.base
+            if GEN.IsGenericType(retType) then
+                GEN.AddGenericDependency retType
         else
-            result.base := nil
+            ftp.base := nil
 
-        result.interface_match := FunctionTypeMatch
-        result.name := Source
-        result.inputs_count := 0
-        result.outputs_count := 0
-        result.symbols := XLT.context
+        ftp.interface_match := FunctionTypeMatch
+        ftp.name := Source
+        ftp.inputs_count := 0
+        ftp.outputs_count := 0
+        ftp.symbols := XLT.context
 
         // Check if empty parameter list. () is a block with an empty name
         if Parms <> nil and Parms.kind = PT.xlNAME then
@@ -202,19 +203,20 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
                 Parms := nil
         if Parms <> nil then
             Parms := XLT.XLDeclarations (Parms)
-            MakeParameterList Parms, result.parameters,
-                              result.inputs_count, result.outputs_count,
-                              result.is_generic
+            MakeParameterList Parms, ftp.parameters,
+                              ftp.inputs_count, ftp.outputs_count
 
         // Assign type to the tree
-        TY.SetType Source, result
+        TY.SetType Source, ftp
 
         // Generate a machine type in case we want to put it in a record
-        if result.is_generic then
-            result.machine_name := SYM.Temporary("<generic function type>")
+        if GEN.IsGenericContext() or GEN.IsGenericType(ftp) then
+            ftp.machine_name := SYM.Temporary("<generic function type>")
+            result := GEN.MakeGeneric (ftp)
         else
-            MType : PT.name_tree := CGM.EntryPointer(result)
-            result.machine_name := MType
+            MType : PT.name_tree := CGM.EntryPointer(ftp)
+            ftp.machine_name := MType
+            result := ftp
 
         // Return to enclosing context
         XLT.context := SYM.Enclosing (XLT.context)
@@ -228,7 +230,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
     // ------------------------------------------------------------------------
 
         // Attach a type info to the original name
-        tp : function_type := NewFnType(Source, Parms, Ret)
+        tp : any_type := NewFnType(Source, Parms, Ret)
         MType : PT.name_tree := tp.machine_name
         TY.EnterSignature MType.value, tp
         TY.SetDefinedType Source, tp

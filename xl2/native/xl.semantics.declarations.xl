@@ -28,6 +28,7 @@ import TYP = XL.SEMANTICS.TYPES
 import CGM = XL.CODE_GENERATOR.MACHINE
 import REC = XL.SEMANTICS.TYPES.RECORDS
 import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import GEN = XL.SEMANTICS.TYPES.GENERICS
 import BC = XL.BYTECODE
 import PR = XL.PARSER
 
@@ -107,6 +108,11 @@ module XL.SEMANTICS.DECLARATIONS is
             ERR.Error "Previous declaration of '$1' here", original
             return parse_tree(@error)
 
+        // Check if we get there for a type (from instantiation)
+        decl_type : TY.any_type := TY.EvaluateType(Type)
+        if TY.SameType (decl_type, TY.type_of_types) then
+           return TY.EnterType (Name, Value)
+
         // Build the declaration
         decl : declaration := Declare(Name, TY.EvaluateType(Type))
         decl.initializer        := Value
@@ -162,6 +168,11 @@ module XL.SEMANTICS.DECLARATIONS is
     // ------------------------------------------------------------------------
     //   Declare a name with the given type
     // ------------------------------------------------------------------------
+
+        if tp = nil then
+            ERR.Error "'$1' has no type", Name
+            tp := TY.NewType (SYM.Temporary("<undefined type>"))
+
         // Build the declaration
         decl : declaration
         decl.name               := Name
@@ -175,7 +186,6 @@ module XL.SEMANTICS.DECLARATIONS is
         decl.is_local           := SYM.GetInteger(XLT.context, "LOCAL") <> 0
         decl.is_global          := SYM.GetInteger(XLT.context, "GLOBAL") <> 0
         decl.is_field           := SYM.GetInteger(XLT.context, "FIELD") <> 0
-        decl.is_generic         := SYM.GetInteger(XLT.context, "GENERIC") <> 0
         decl.is_builtin         := false
         decl.implementation     := nil
 
@@ -183,8 +193,6 @@ module XL.SEMANTICS.DECLARATIONS is
         if (integer(decl.is_parameter) + integer(decl.is_field) +
             integer(decl.is_local) + integer(decl.is_global) <> 1) then
             ERR.Error "Internal: Bad declaration scope for '$1'", Name
-        if tp.is_generic then
-            decl.is_generic := true
 
         // Store this declaration name in the symbol table
         SYM.Enter XLT.context, "DECL", Name.value, Name
@@ -518,7 +526,7 @@ module XL.SEMANTICS.DECLARATIONS is
             B : Value as PT.block_tree
             if B.opening = PR.INDENT_MARKER then
                 Value := B.child
-        if not decl.is_generic then
+        if not GEN.IsGenericDeclaration(decl) then
             Value := XLT.ScopeSemantics(Value, XLT.scopeGlobal)
         decl.initializer := Value
         result := decl.initializer

@@ -227,7 +227,6 @@ module XL.TRANSLATOR is
             code_type.base := nil
             code_type.machine_name := nil
             code_type.interface_match := nil //TODO - Catch internal errors
-            code_type.is_generic := false
             code_type.name := input
             code_type.symbols := context
             TY.SetType result, code_type
