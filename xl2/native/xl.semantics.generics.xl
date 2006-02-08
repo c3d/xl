@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  xl.semantics.generics.xl        (C) 1992-2004 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  xl.semantics.generics.xl        (C) 1992-2004 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Implementation of generic instantiation
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
@@ -28,6 +28,7 @@ import TY = XL.SEMANTICS.TYPES
 import SYM = XL.SYMBOLS
 import XLT = XL.TRANSLATOR
 import ERR = XL.ERRORS
+import FN = XL.SEMANTICS.FUNCTIONS
 import FT = XL.SEMANTICS.TYPES.FUNCTIONS
 import GEN = XL.SEMANTICS.TYPES.GENERICS
 import REC = XL.SEMANTICS.TYPES.RECORDS
@@ -99,7 +100,7 @@ module XL.SEMANTICS.GENERICS is
             // Find all candidates at this level
             candidates : SYM.tree_list
             if recurse then
-                SYM.Lookup table, kind, Name.value, 
+                SYM.Lookup table, kind, Name.value,
                            candidates, SYM.lookupLocalUsing
                 table := SYM.Enclosing(table)
             else
@@ -142,7 +143,7 @@ module XL.SEMANTICS.GENERICS is
                               DType.name
                     trace [inst] "FAIL: No generic type"
                     restart
-                       
+
                 NP : integer := size(Dtype.parameters)
                 if NA > NP then
                     ERR.Error "'$1' could not be selected because", C
@@ -238,7 +239,7 @@ module XL.SEMANTICS.GENERICS is
             BestDecl := bestD
             ActualArgs := SemArgs
             ScopeExpr := BaseRecord
-            
+
         else
             ERR.Error "No valid generic found for '$1'", NameTree
             ERR.Display candidate_errors
@@ -251,6 +252,9 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
     //   Instantiate a specific declaration
     // ------------------------------------------------------------------------
+
+        trace [inst] "Instantiating ", PT.tree(Decl.name),
+                     " with ", size(Args), " args"
 
         gtp : GEN.generic_type := GEN.DeclGenericType(decl)
         if gtp = nil then
@@ -274,20 +278,27 @@ module XL.SEMANTICS.GENERICS is
                 ERR.Error "Internal: '$1' is not a name", P.name
                 return parse_tree(@error)
 
-            trace[inst] "GenParm ", PT.tree(C),
+            trace[inst] "GenArg ", PT.tree(C),
                         " : ", TY.Source(P.type),
                         " is ", A
             result := DCL.EnterDeclaration (C, TY.Source(P.type), A, true)
 
-        // Now evaluate the main declaration in the new context
+        // Create the required elements to enter the instantiated declaration
         Name : PT.tree := PT.Clone(Decl.Name)
         Type : PT.tree := TY.Source(GEN.NonGenericType(Decl.type))
         if not TY.SameType(Decl.type, TY.type_of_types) then
             Type := PT.Clone(Type)
         Init : PT.tree := PT.Clone(Decl.initializer)
         PT.AttachTree Name, "INSTANCEOF", Decl.Name
+
+        // Process the instantiated declaration
+        trace[inst] "GenDecl ", Name, " : ", Type, " is ", Init
         result := DCL.EnterDeclaration (Name, Type, Init, true)
-        // result := XLT.XLSemantics(result)
+        result := XLT.XLSemantics(result)
+        if Decl.is_global then
+            f : FN.function := FN.GetFunction (result)
+            result := XLT.PostScopeSemantics(result, XLT.scopeGlobal, nil)
+            PT.SetInfo result, "FN", f
 
         XLT.context := oldContext
 
@@ -301,7 +312,7 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
 
         DeclType : TY.any_type := Decl.type
-        ArgType  : TY.any_type := TY.GetType(Arg)
+        ArgType  : TY.any_type := TY.NonConstedType (TY.GetType(Arg))
         NG       : integer := size (FunType.parameters)
         G        : integer
 
@@ -314,9 +325,9 @@ module XL.SEMANTICS.GENERICS is
                     if Gargs[G] = nil then
                         Gargs[G] := typeExpr
                     else if Gargs[G] <> typeExpr then
-                        ERR.Error "Type '$1' can't be ", gd.name
-                        ERR.Error "both '$1'", Gargs[G]
-                        ERR.Error "and '$2'", typeExpr
+                        ERR.Error "Generic parameter type '$1' ", gd.name
+                        ERR.Error "cannot be both '$1'", Gargs[G]
+                        ERR.Error "and '$1' in the same instance", typeExpr
                         return false
                     return true
         return DCL.Assignable(Decl, Arg)
@@ -344,6 +355,24 @@ module XL.SEMANTICS.GENERICS is
         if instantiation_errors <> "" then
             ERR.Error "Unable to instantiate '$1', because", Name
             ERR.Display instantiation_errors
+
+
+    function InstantiateFunction (Source     : PT.tree;
+                                  Decl       : DCL.declaration;
+                                  Args       : PT.tree_list;
+                                  BaseRecord : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Instantiate a specific function
+    // ------------------------------------------------------------------------
+
+        ERR.PushErrorContext()
+
+        result := Instantiate (Decl, Args, BaseRecord) 
+
+        errors : text := ERR.PopErrorContext() 
+        if errors <> "" then
+            ERR.Error "Errors while instantiating '$1':", Source
+            ERR.Display errors
 
 
     function ContainsGenerics (List : PT.tree_list) return boolean is
@@ -384,7 +413,7 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
     //   Translation of instantiations
     // ------------------------------------------------------------------------
-        
+
         when
             'Name' [ 'Args' ]
         where

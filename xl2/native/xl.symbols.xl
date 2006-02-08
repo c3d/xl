@@ -121,6 +121,15 @@ module XL.SYMBOLS is
             list += table.names[name]
 
 
+    procedure CopyProperty (to   : SYM.symbol_table;
+                            from : SYM.symbol_table;
+                            name : text) is
+    // ------------------------------------------------------------------------
+    //    Copy a property from a symbol table to another
+    // ------------------------------------------------------------------------
+        to.properties[name] := from.properties[name]
+
+
 
     // ========================================================================
     //

@@ -267,8 +267,9 @@ module XL.SEMANTICS.OVERLOAD is
             trace [overload] "FOUND: Calling ", PT.tree(bestF.name),
                              "=", PT.tree(bestF.machine_name)
             if bestGtype <> nil then
-                gi : PT.tree := GN.Instantiate(bestF, bestGArgs, BaseRecord)
-                bestF := FN.GetFunction(gi)
+                result := GN.InstantiateFunction(NameTree, bestF,
+                                                 bestGArgs, BaseRecord)
+                bestF := FN.GetFunction(result)
             if BaseRecord <> nil then
                 return CGM.RecordFunctionCall (BaseRecord, bestF, SemArgs)
             else

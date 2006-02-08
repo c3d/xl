@@ -184,14 +184,42 @@ module XL.TRANSLATOR is
             SYM.SetInteger context, "LOCAL", 1
             if scope = scopeFunction then
                 function_context := context
+        result := XLDeclarations(input)
+        result := XLSemantics(result)
+        result := PostScopeSemantics (result, scope, modname)
+
+        // Set the type of the result so that we can get inner symbols
+        if TY.GetType(result) = nil then
+            code_type : TY.code_type
+            code_type.base := nil
+            code_type.machine_name := nil
+            code_type.interface_match := nil //TODO - Catch internal errors
+            code_type.name := input
+            code_type.symbols := context
+            TY.SetType result, code_type
+
+        // Get back to original context
+        if scope = scopeMain then
+            result := AddMainInitAndTerm(result)
+        context := old_context
+        global_context := old_global
+        function_context := old_function
+
+
+    function PostScopeSemantics (input   : PT.tree;
+                                 scope   : scope_kind;
+                                 modname : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Move inits, globals and so on where they belong
+    // ------------------------------------------------------------------------
+
+        result := input
 
         // 'Declarations' will populate sections in the
         // current context, called DECL, INIT, and TERM (see AddScopeXYZ)
         // DECL are local declarations
         // INIT are the initializations for the scope
         // TERM are the terminations for the scope
-        result := XLDeclarations(input)
-        result := XLSemantics(result)
         init : PT.tree := SYM.ScopeItems(context, "INIT")
         term : PT.tree := SYM.ScopeItems(context, "TERM")
         if init <> nil then
@@ -220,23 +248,6 @@ module XL.TRANSLATOR is
             result := Append(init, result)
             result := Append(result, term)
             result := Append(decl, result)
-
-        // Set the type of the result so that we can get inner symbols
-        if TY.GetType(result) = nil then
-            code_type : TY.code_type
-            code_type.base := nil
-            code_type.machine_name := nil
-            code_type.interface_match := nil //TODO - Catch internal errors
-            code_type.name := input
-            code_type.symbols := context
-            TY.SetType result, code_type
-
-        // Get back to original context
-        if scope = scopeMain then
-            result := AddMainInitAndTerm(result)
-        context := old_context
-        global_context := old_global
-        function_context := old_function
 
 
     procedure AddScopeDecl(table: SYM.symbol_table; decl : PT.tree) is

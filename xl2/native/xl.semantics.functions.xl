@@ -121,6 +121,10 @@ module XL.SEMANTICS.FUNCTIONS is
         PT.SetInfo result, "FN", f
         PT.SetInfo result, "DECL", f
 
+        // If we got an initializer (from instantiation)
+        if Init <> nil then
+            result := parse_tree(@@fn_body 'result' 'Init')
+
 
     function EnterFunction (FnIface : PT.tree) return PT.tree is
     // ------------------------------------------------------------------------
@@ -367,6 +371,7 @@ module XL.SEMANTICS.FUNCTIONS is
 
         XLT.context := context
         result := parse_tree(@nop)
+        PT.SetInfo result, "FN", f
 
 
     translation XLSemantics
@@ -385,4 +390,7 @@ module XL.SEMANTICS.FUNCTIONS is
             // We put a coating around the interface during Declarations
             // The interface itself is added to the scope decls, so
             // we don't need it anymore.
-            return parse_tree(@nop)
+            f : function := GetFunction(input)
+            result := parse_tree(@nop)
+            PT.SetInfo result, "FN", f
+            return result 

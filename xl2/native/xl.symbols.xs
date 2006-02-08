@@ -57,6 +57,9 @@ module XL.SYMBOLS with
     procedure CopySymbols (toTable : symbol_table; fromTable : symbol_table)
     procedure AddSymbols (toTable : symbol_table; fromTable : symbol_table)
     procedure LocalSymbols (table : symbol_table; in out list : PT.tree_list)
+    procedure CopyProperty (to   : SYM.symbol_table;
+                            from : SYM.symbol_table;
+                            name : text)
 
 
 

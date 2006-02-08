@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  xl.semantics.types.generics.xl  (C) 1992-2004 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  xl.semantics.types.generics.xl  (C) 1992-2004 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
 //
-//     Implementation of generic types 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//     Implementation of generic types
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
@@ -195,8 +195,8 @@ module XL.SEMANTICS.TYPES.GENERICS is
             return Dtype
         else
             Dtype : Decl.type as generic_type
-            return Dtype        
-                               
+            return Dtype
+
 
     function NonGenericType (tp : any_type) return any_type is
     // ------------------------------------------------------------------------
@@ -235,21 +235,42 @@ module XL.SEMANTICS.TYPES.GENERICS is
     // ------------------------------------------------------------------------
     //   If a generic type is used as argument/field, make fn/rec generic
     // ------------------------------------------------------------------------
+
+        trace[generics] "Adding dependency ", TY.Source(tp) 
+
         gtp : tp as generic_type
         if gtp = nil then
             ERR.Error "Internal: Dependency '$1' is not a generic type",
                       TY.Source(tp)
+            trace[generics] "Dependency is not generic ", TY.Source(tp) 
             return
 
         if generic_context = nil then
+            trace[generics] "Creating new context"
             generic_context.base := nil
             generic_context.interface_match := GenericTypeMatch
             generic_context.name := gtp.name
             generic_context.symbols := SYM.NewSymbolTable(XLT.context)
             generic_context.context := XLT.context
+            SYM.SetInteger generic_context.symbols, "GENPARM", 1
 
-        generic_context.machine_name := tp.machine_name
-        generic_context.parameters += gtp.parameters
+        // Check if we already have that parameter
+        Name : PT.tree := TY.Source(gtp)
+        Existing : DCL.declaration
+        for Existing in generic_context.parameters loop
+            if PT.Matches(Name, Existing.Name) then
+                trace[generics] "Already dependent on ", Name
+                return
+
+        // Create a declaration for the parameter
+        Name := PT.Clone(Name)
+        Type : PT.tree := TY.Source(TY.type_of_types)
+        Parm : PT.tree := DCL.EnterDeclaration (Name, Type, nil, true)
+        Decl : DCL.declaration := DCL.GetDeclaration(Parm)
+
+        generic_context.machine_name := gtp.machine_name
+        generic_context.parameters += Decl
+        trace[generics] "Dependency #", size(generic_context.parameters)
 
 
     function EnterGeneric(Parms  : PT.tree;
@@ -270,8 +291,6 @@ module XL.SEMANTICS.TYPES.GENERICS is
                 infix : Decls as PT.infix_tree
                 infix.left := FirstGenericDecl
                 infix.right := SecondNonGenericDecl
-                trace[generics] "EnterGeneric: 1=(", FirstGenericDecl, ")"
-                trace[generics] "EnterGeneric: 2=(", SecondNonGenericDecl, ")"
                 return infix
 
         // Create the generic context
@@ -292,6 +311,8 @@ module XL.SEMANTICS.TYPES.GENERICS is
             N : Parms as PT.name_tree
             if N.value = "" then
                 Parms := nil
+
+        // Declare the parameters in the generic context, making them generic
         if Parms <> nil then
             Parms := XLT.XLDeclarations (Parms)
             MakeParameterList Parms, gtp.parameters
@@ -299,9 +320,14 @@ module XL.SEMANTICS.TYPES.GENERICS is
         if generic_context <> nil then
             ERR.Error "Generic parameters '$1' are themselves generic", Parms
 
-        // Declare the parameters in the generic context, making them generic
+        // Process the main declaration, which will become generic
+        // because we have a generic context
         generic_context := gtp
         XLT.context := SYM.NewSymbolTable (XLT.context)
+        SYM.CopyProperty XLT.context, oldContext, "GLOBAL"
+        SYM.CopyProperty XLT.context, oldContext, "LOCAL"
+        SYM.CopyProperty XLT.context, oldContext, "FNPARM"
+        SYM.CopyProperty XLT.context, oldContext, "GENPARM"
         result := XLT.XLDeclarations(Decls)
 
         // Import the declarations from the new context into the old one
