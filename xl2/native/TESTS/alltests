@@ -33,9 +33,8 @@ PASS="pass"
 ONE_FAILED=
 PATTERN='[A-Za-z]*'
 UPDATE=
-DORUN=
-COMPILE=
-if [ "$1" == '-c++' ]; then DORUN=./a.out; COMPILE=./a.out; shift; fi
+NOCACHE=
+if [ "$1" == '-c++' ]; then NOCACHE=1; shift; fi
 if [ "$1" == "-update" -o "$1" == "-u" ]; then
    shift; UPDATE='*'$1'*'; PATTERN="$UPDATE"; shift;
 fi
@@ -64,54 +63,65 @@ do
     TESTNAME=${TEST/$TESTDIR\/}
     echo -n Test: $TESTNAME...
 
-    # Setup useful variables
-    BASE=${TESTNAME/\.xl}
-    REF=$BASE.ref
-    LOG=$BASE.log
-    CMD=
-    EXIT=0
-    RUN=
-    COMPILE=
-    OPT=
-    INC="-I $(dirname $TEST)"
+    # Setup useful variables - These can be set in the test files
+    BASE=${TESTNAME/\.xl}       # Basename
+    REF=$BASE.ref               # Reference file
+    LOG=$BASE.log               # Log file
+    CMD=                        # Command to execute
+    EXIT=0                      # Expected exit code (EXIT=2 for errors)
+    RUN=                        # What to run afterwards
+    COMPILE=                    # Compile command
+    OPT=                        # XL compiler options
+    INC="-I $(dirname $TEST)"   # XL include directory
+    CACHED=
 
-    # Extract interesting variables
+    # Extract interesting variables from the test
     eval $(./alltests.awk $TESTNAME)
-    [ -z "$CMD" ] && { CMD="$XL $INC $OPT $TESTNAME"; RUN=$DORUN; COMPILE=./a.out; }
 
-    # Run the test
+    # Defaults if not set by the test
+    if [ -z "$CMD" ]; then
+        CMD="$XL $INC $OPT $TESTNAME";
+        [ -z "$COMPILE" ] && { COMPILE="c++ -I. $BASE.cpp"; }
+        [ -z "$RUN" ] && { RUN="./a.out"; }
+    fi
+
+    # Run the XL compiler on the test
     THIS_FAILED=
     ( $CMD ) > $LOG 2>&1
     RC=$?
 
-    # Try to compile the resulting C++
+    # Try to compile the resulting C++ unless script specifies otherwise
     if [ $EXIT -eq 0 ]; then
         if [ $RC -eq 0 ]; then
-            if [ -z "$RUN" ]; then
-                if [ ! -z "$COMPILE" ]; then
-                    if [ -f "$BASE.cpp" ]; then
-                        if diff -q $LOG $BASE.cpp 2> /dev/null; then
-                            cp $REF $LOG
-                        else
-                            RUN=$COMPILE
-                        fi
-                    else
-                        RUN=$COMPILE
+            # If we have a cached version, check if it stayed identical
+            # If so, we can skip 'compile' and 'run', unless forced
+            if [ -z "$NOCACHE" ]; then
+                if [ -f "$BASE.cpp" ]; then
+                    if diff -q $LOG $BASE.cpp > /dev/null 2>&1; then
+                        # In that case, use the reference, don't run
+                        echo > $LOG
+                        cp $REF $LOG
+                        RUN=
+                        COMPILE=
+                        CACHED="(Cached)"
                     fi
                 fi
             fi
-            if [ ! -z "$RUN" ]; then
+
+            # Compile the C++ code if needed
+            if [ ! -z "$COMPILE" ]; then
+                echo -n Compile...
                 rm -f ./a.out
-                cp $LOG $BASE.cpp
-                echo -n C++...
-                c++ -I. $BASE.cpp > $LOG 2>&1
-                if [ -x ./a.out ] ; then
+                mv -f $LOG $BASE.cpp
+                $COMPILE > $LOG 2>&1
+                RC=$?
+            fi
+
+            # Run the target if needed
+            if [ $RC -eq 0 ]; then
+                if [ ! -z "$RUN" ]; then
                     $RUN > $LOG 2>&1
                     RC=$?
-                else
-                    # Make sure we don't optimize test away until it works
-                    echo "*** Compilation errors on " $(date) " ***">> $BASE.cpp
-                    cat $LOG >> $BASE.cpp
                 fi
             fi
         fi
@@ -122,7 +132,7 @@ do
         THIS_FAILED="Exit code $RC, expected $EXIT"
     elif [ ! -z "$REF" ]; then
         sed 's@'$TESTDIR'@TESTS@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
-        if diff -q $REF $LOG 2> /dev/null; then
+        if diff -q $REF $LOG > /dev/null 2>&1; then
             THIS=ok
         elif [ ! -z "$UPDATE" ]; then
             echo "Updating reference for " $BASE
@@ -132,10 +142,7 @@ do
             THIS_FAILED="Output mismatch"
             diff $REF $LOG > $LOG.diff
             mv $LOG.diff $LOG
-            if [ -f $BASE.cpp ]; then
-               echo "*** Execution error on " $(date) " ***" >> $BASE.cpp
-               cat $LOG >> $BASE.cpp
-            fi
+            rm -f $BASE.cpp
         else
             THIS_FAILED="Missing reference"
         fi
@@ -152,9 +159,9 @@ do
         if [ "$RC" -ne "0" ] ; then
             echo Success - negative test;
         else
-            echo Success;
+            echo Success $CACHED;
         fi
-        rm -f $LOG $OUTPUT
+        rm -f $LOG
     else
         echo $TEST:  $THIS_FAILED >> $FAILURE
         cat $LOG >> $FAILURE
