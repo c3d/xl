@@ -503,22 +503,22 @@ typedef struct Record_948 {
   xlmodule base_1;
 } Record_948;
 Record_948 xlbuiltins_949; /* Global */
-typedef xlint (*FnPtr_962) ( xlint x_961 ) ;
-xlint g_963 ( xlint x_961 ) ;
-xlint g_963 ( xlint x_961 ) {
-xlint ret_972; /* Temp */
-xlint ret_973; /* Temp */
-xlint ret_974; /* Temp */
-xlint result_971; /* Result */
+typedef xlint (*FnPtr_964) ( xlint x_963 ) ;
+xlint g_965 ( xlint x_963 ) ;
+xlint g_965 ( xlint x_963 ) {
+xlint ret_977; /* Temp */
+xlint ret_978; /* Temp */
+xlint ret_979; /* Temp */
+xlint result_976; /* Result */
 {
-ret_972 = x_961 - 1;
-ret_973 = g_963 ( ret_972 );
-ret_974 = ret_973 + 1;
-result_971 = ret_974;
-goto exit_g_963;
+ret_977 = x_963 - 1;
+ret_978 = g_965 ( ret_977 );
+ret_979 = ret_978 + 1;
+result_976 = ret_979;
+goto exit_g_965;
 }
-exit_g_963: 0;
-return result_971;
+exit_g_965: 0;
+return result_976;
 }
 namespace xl { namespace ui { namespace console {
 std::vector< ::text > arguments;

@@ -1,0 +1,7 @@
+// Test that implicit instantiation is declared in the proper scope
+// EXIT=2
+generic [type item]
+function Ajouter (X, Y : item) return item is
+    return X + Y
+
+X : text := Ajouter (3, 4)

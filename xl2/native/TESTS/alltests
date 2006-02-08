@@ -26,6 +26,7 @@
 
 # Environment - Note that 'xl' is typically a symbolic link to real compiler
 TESTDIR=$(pwd)
+SUBDIRS="[0-9]*"
 XL=./nxl
 SUCCESS=$TESTDIR/success.out
 FAILURE=$TESTDIR/failure.out
@@ -34,9 +35,12 @@ ONE_FAILED=
 PATTERN='[A-Za-z]*'
 UPDATE=
 NOCACHE=
-if [ "$1" == '-c++' ]; then NOCACHE=1; shift; fi
+if [ "$1" == '-c++' -o "$1" == "-c" ]; then NOCACHE=1; shift; fi
 if [ "$1" == "-update" -o "$1" == "-u" ]; then
    shift; UPDATE='*'$1'*'; PATTERN="$UPDATE"; shift;
+fi
+if [ "$1" == "-dir" -o "$1" == "-d" ]; then
+    SUBDIRS="$2"; shift; shift;
 fi
 if [ ! -z "$1" ]; then PATTERN='*'"$1"'*'; shift; fi
 
@@ -53,12 +57,12 @@ ln -sf ../nxl .
 # Cleanup the test results
 echo Tests successfully run on $(date) on $HOSTNAME > $SUCCESS
 echo Failed tests on $(date) on $HOSTNAME > $FAILURE
-rm -rf $TESTDIR/.xl
-
 export XL
 
 # Look for all possible tests in the test directory
-for TEST in $(find $TESTDIR -name "$PATTERN".xl -print)
+for SUBDIR in "$(find $TESTDIR -type d -a -name '*'$SUBDIRS'*')"
+do
+for TEST in $(find $SUBDIR -name "$PATTERN".xl -print)
 do
     TESTNAME=${TEST/$TESTDIR\/}
     echo -n Test: $TESTNAME...
@@ -96,7 +100,7 @@ do
             # If we have a cached version, check if it stayed identical
             # If so, we can skip 'compile' and 'run', unless forced
             if [ -z "$NOCACHE" ]; then
-                if [ -f "$BASE.cpp" ]; then
+                if [ -f "$BASE.cpp" -a -f "$REF" ]; then
                     if diff -q $LOG $BASE.cpp > /dev/null 2>&1; then
                         # In that case, use the reference, don't run
                         echo > $LOG
@@ -169,6 +173,7 @@ do
         ONE_FAILED=1
     fi
     rm -f ./a.out
+done
 done
 
 if [ "$ONE_FAILED" ]; then echo; echo '*** FAILURES: ***' ; cat $FAILURE; fi

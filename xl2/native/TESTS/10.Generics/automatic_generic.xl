@@ -1,4 +1,5 @@
 // Test that a type declared as generic makes types that use it generic
+// RUN=cat %b.cpp
 generic type Zabata
 
 function H1(X : Zabata) return integer is
