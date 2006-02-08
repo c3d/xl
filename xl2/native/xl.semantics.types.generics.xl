@@ -226,7 +226,8 @@ module XL.SEMANTICS.TYPES.GENERICS is
 
         // Make it base of current generic context
         result := generic_context
-        generic_context.base := tp
+        result.base := tp
+        result.name := tp.name
         generic_context := nil
 
 

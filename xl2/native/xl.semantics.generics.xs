@@ -26,6 +26,8 @@
 import PT = XL.PARSER.TREE
 import SYM = XL.SYMBOLS
 import DCL = XL.SEMANTICS.DECLARATIONS
+import TY = XL.SEMANTICS.TYPES
+import GEN = XL.SEMANTICS.TYPES.GENERICS
 
 module XL.SEMANTICS.GENERICS with
 // ----------------------------------------------------------------------------
@@ -47,3 +49,9 @@ module XL.SEMANTICS.GENERICS with
                               Args : PT.tree) return BC.bytecode
 
     function IsGenericName(Name : PT.tree; kind : text) return boolean
+
+    function Deduce (FunType      : GEN.generic_type;
+                     Decl         : DCL.declaration;
+                     Arg          : PT.tree;
+                     in out Gargs : PT.tree_list) return boolean
+

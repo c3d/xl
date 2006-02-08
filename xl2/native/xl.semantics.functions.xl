@@ -51,10 +51,10 @@ module XL.SEMANTICS.FUNCTIONS is
         return info
 
 
-    function EnterFunction (Names   : PT.tree;
-                            Parms   : PT.tree;
-                            RetType : PT.tree;
-                            Iface   : PT.tree) return PT.tree is
+    function EnterFunctionDecl (Names   : PT.tree;
+                                Parms   : PT.tree;
+                                RetType : PT.tree;
+                                Iface   : PT.tree) return PT.tree is
     // ------------------------------------------------------------------------
     //   Enter a function in symbol table and return corresponding bytecode
     // ------------------------------------------------------------------------
@@ -63,13 +63,25 @@ module XL.SEMANTICS.FUNCTIONS is
         if Names.kind <> PT.xlNAME then
             ERR.Error "'$1' is not a valid function name", Names
             Names := PT.NewName("invalid_function", Names.position)
+        fntype : any_type := FT.NewFnType(Iface, Parms, RetType)
+        return EnterFunction (Names, fntype, nil, Iface)
+ 
+
+    function EnterFunction (Names   : PT.tree;
+                            FnType  : any_type;
+                            Init    : PT.tree;
+                            Iface   : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a function in symbol table and return corresponding bytecode
+    // ------------------------------------------------------------------------
+
         Name : Names as PT.name_tree
 
         // Create the function
         f : function
         f.Name                  := Name
-        f.type                  := FT.NewFnType(Iface, Parms, RetType)
-        f.initializer           := nil
+        f.type                  := FnType
+        f.initializer           := Init
         f.machine_name          := CGM.Name(Name, f.type)
         f.frame_depth           := SYM.GetInteger(XLT.context, "FRAMEDEPTH")
         f.is_input              := false
@@ -233,13 +245,13 @@ module XL.SEMANTICS.FUNCTIONS is
 
         // Parameter lists
         when ('Name' ('Parms') return 'RetType') then
-            return EnterFunction(Name, Parms, RetType, input)
+            return EnterFunctionDecl(Name, Parms, RetType, input)
         when ('Name' return 'RetType') then
-            return EnterFunction(Name, nil, RetType, input)
+            return EnterFunctionDecl(Name, nil, RetType, input)
         when ('Name' ('Parms')) then
-            return EnterFunction(Name, Parms, nil, input)
+            return EnterFunctionDecl(Name, Parms, nil, input)
         when ('Name') then
-            return EnterFunction(Name, nil, nil, input)
+            return EnterFunctionDecl(Name, nil, nil, input)
 
 
     translation XLDeclarations

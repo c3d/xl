@@ -281,13 +281,45 @@ module XL.SEMANTICS.GENERICS is
 
         // Now evaluate the main declaration in the new context
         Name : PT.tree := PT.Clone(Decl.Name)
-        Type : PT.tree := TY.Source(Decl.type)
+        Type : PT.tree := TY.Source(GEN.NonGenericType(Decl.type))
+        if not TY.SameType(Decl.type, TY.type_of_types) then
+            Type := PT.Clone(Type)
         Init : PT.tree := PT.Clone(Decl.initializer)
         PT.AttachTree Name, "INSTANCEOF", Decl.Name
         result := DCL.EnterDeclaration (Name, Type, Init, true)
-        result := XLT.XLSemantics(result)
+        // result := XLT.XLSemantics(result)
 
         XLT.context := oldContext
+
+
+    function Deduce (FunType      : GEN.generic_type;
+                     Decl         : DCL.declaration;
+                     Arg          : PT.tree;
+                     in out Gargs : PT.tree_list) return boolean is
+    // ------------------------------------------------------------------------
+    //   Deduce a type from a function argument type
+    // ------------------------------------------------------------------------
+
+        DeclType : TY.any_type := Decl.type
+        ArgType  : TY.any_type := TY.GetType(Arg)
+        NG       : integer := size (FunType.parameters)
+        G        : integer
+
+        for G in 0..NG-1 loop
+            gd : DCL.declaration := FunType.parameters[G]
+            if TY.SameType (gd.type, TY.type_of_types) then
+                definedType : TY.any_type := TY.GetDefinedType (gd.name)
+                if TY.SameType (definedType, DeclType) then
+                    typeExpr : PT.tree := TY.Source(ArgType)
+                    if Gargs[G] = nil then
+                        Gargs[G] := typeExpr
+                    else if Gargs[G] <> typeExpr then
+                        ERR.Error "Type '$1' can't be ", gd.name
+                        ERR.Error "both '$1'", Gargs[G]
+                        ERR.Error "and '$2'", typeExpr
+                        return false
+                    return true
+        return DCL.Assignable(Decl, Arg)
 
 
     function InstantiateType (Name : PT.tree;

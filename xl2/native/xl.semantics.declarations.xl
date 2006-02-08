@@ -28,6 +28,7 @@ import TYP = XL.SEMANTICS.TYPES
 import CGM = XL.CODE_GENERATOR.MACHINE
 import REC = XL.SEMANTICS.TYPES.RECORDS
 import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import FN = XL.SEMANTICS.FUNCTIONS
 import GEN = XL.SEMANTICS.TYPES.GENERICS
 import BC = XL.BYTECODE
 import PR = XL.PARSER
@@ -112,6 +113,9 @@ module XL.SEMANTICS.DECLARATIONS is
         decl_type : TY.any_type := TY.EvaluateType(Type)
         if TY.SameType (decl_type, TY.type_of_types) then
            return TY.EnterType (Name, Value)
+        decl_fn_type : decl_type as FT.function_type
+        if decl_fn_type <> nil then
+            return FN.EnterFunction (Name, decl_fn_type, Value, Name)
 
         // Build the declaration
         decl : declaration := Declare(Name, TY.EvaluateType(Type))

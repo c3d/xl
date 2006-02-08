@@ -31,6 +31,9 @@ import ERR = XL.ERRORS
 import FN = XL.SEMANTICS.FUNCTIONS
 import FT = XL.SEMANTICS.TYPES.FUNCTIONS
 import REC = XL.SEMANTICS.TYPES.RECORDS
+import GEN = XL.SEMANTICS.TYPES.GENERICS
+import GEN = XL.SEMANTICS.TYPES.GENERICS
+import GN = XL.SEMANTICS.GENERICS
 import CGM = XL.CODE_GENERATOR.MACHINE
 import DCL = XL.SEMANTICS.DECLARATIONS
 import GN = XL.SEMANTICS.GENERICS
@@ -98,6 +101,8 @@ module XL.SEMANTICS.OVERLOAD is
         best      : PT.tree
         bestScore : integer
         bestF     : FN.function
+        bestGArgs : PT.tree_list
+        bestGtype : GEN.generic_type
         ambig     : PT.tree
         depth     : integer := 0
         table     : SYM.symbol_table := symbols
@@ -141,7 +146,20 @@ module XL.SEMANTICS.OVERLOAD is
                         ERR.Error "Internal: No function info for '$1'", C
                         trace [overload] "FAIL: No function info"
                         restart
+
+                // Check if it is a generic function
                 Ftype : F.type as FT.function_type
+                Gtype : F.type as GEN.generic_type
+                Gargs : PT.tree_list
+                if Ftype = nil and Gtype <> nil then
+                    GFType : Gtype.base as FT.function_type
+                    Ftype := GFType
+                    Gdecl : DCL.declaration
+                    nilT  : PT.tree
+                    for Gdecl in Gtype.parameters loop
+                        Gargs += nilT
+
+                // Check that we actually have a function
                 if Ftype = nil then
                     NFtype : TY.any_type := F.type
                     ERR.Error "'$1' could not be selected because", C
@@ -180,7 +198,10 @@ module XL.SEMANTICS.OVERLOAD is
                             trace [overload] "Testing default argument ", Arg
                         exit if not Matching
                     AType : TY.any_type := TY.GetType(Arg)
-                    Matching := DCL.Assignable(D, Arg)
+                    if Gtype <> nil then
+                        Matching := GN.Deduce (Gtype, D, Arg, Gargs)
+                    else
+                        Matching := DCL.Assignable(D, Arg)
                     if not Matching then
                         trace [overload] "FAIL: Type mismatch for ", D.name
                         trace [overload] "      Expected ", TY.Source(D.type)
@@ -193,6 +214,20 @@ module XL.SEMANTICS.OVERLOAD is
                         exit if not Matching
                     A += 1
 
+                // Check if there are non-deduced generic arguments
+                if Gtype <> nil then
+                    NG       : integer := size(Gargs)
+                    G        : integer
+                    assert NG = size(Gtype.parameters)
+                    for G in 0..NG-1 loop
+                        if Gargs[G] = nil then
+                            Gdecl : DCL.declaration := Gtype.parameters[G]
+                            Gargs[G] := Gdecl.initializer
+                            if Gargs[G] = nil then
+                                Matching := false
+                                trace [overload] "FAIL: Generic ", GDecl.name
+                                ERR.Error "Could not deduce '$1'", GDecl.name
+                                exit if not Matching
 
                 // If not matching, lookup next
                 if not Matching then
@@ -205,12 +240,16 @@ module XL.SEMANTICS.OVERLOAD is
                     best := C
                     bestScore := Score
                     bestF := F
+                    bestGArgs := Gargs
+                    bestGtype := Gtype
                     if recurse then BaseRecord := Scope
                 else if Score < bestScore then
                     trace [overload] "BEST: New best score ", Score
                     best := C
                     bestScore := Score
                     bestF := F
+                    bestGArgs := Gargs
+                    bestGtype := Gtype
                     if recurse then BaseRecord := Scope
                 else if Score = bestScore then
                     ambig := C
@@ -227,6 +266,9 @@ module XL.SEMANTICS.OVERLOAD is
 
             trace [overload] "FOUND: Calling ", PT.tree(bestF.name),
                              "=", PT.tree(bestF.machine_name)
+            if bestGtype <> nil then
+                gi : PT.tree := GN.Instantiate(bestF, bestGArgs, BaseRecord)
+                bestF := FN.GetFunction(gi)
             if BaseRecord <> nil then
                 return CGM.RecordFunctionCall (BaseRecord, bestF, SemArgs)
             else

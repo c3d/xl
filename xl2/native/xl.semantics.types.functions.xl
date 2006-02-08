@@ -110,8 +110,8 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
                 ERR.Error "but '$1' does", TY.Source(iface)
                 return false
             if not TY.SameType(retType, bodyF.base) then
-                ERR.Error "The return type of '$1'", TY.Source(body)
-                ERR.Error "doesn't match that of '$1'", TY.Source(iface)
+                ERR.Error "The return type '$1'", TY.Source(retType)
+                ERR.Error "doesn't match return type of '$1'", TY.Source(iface)
                 return false
 
         // Check parameter counts
@@ -187,11 +187,12 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
             retType : any_type := ftp.base
             if GEN.IsGenericType(retType) then
                 GEN.AddGenericDependency retType
+            ftp.name := parse_tree(function ('Parms') return 'ReturnType')
         else
             ftp.base := nil
+            ftp.name := parse_tree(procedure('Parms'))
 
         ftp.interface_match := FunctionTypeMatch
-        ftp.name := Source
         ftp.inputs_count := 0
         ftp.outputs_count := 0
         ftp.symbols := XLT.context
