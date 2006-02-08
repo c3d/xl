@@ -5,3 +5,5 @@ function Ajouter (X, Y : item) return item is
 
 A : real := Ajouter(1.5, 2.7)
 B : integer := Ajouter (3, 4)
+C : integer := Ajouter (3, 4)
+D : integer := Ajouter (3, 4)

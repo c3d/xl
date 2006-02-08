@@ -107,7 +107,7 @@ module XL.SEMANTICS.DECLARATIONS is
         if original <> nil then
             ERR.Error "Redeclaration of '$1' ", Name
             ERR.Error "Previous declaration of '$1' here", original
-            return parse_tree(@error)
+            // We go through since this is better at avoiding cascade errors
 
         // Check if we get there for a type (from instantiation)
         decl_type : TY.any_type := TY.EvaluateType(Type)

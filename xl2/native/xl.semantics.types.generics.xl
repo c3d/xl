@@ -253,6 +253,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
             generic_context.symbols := SYM.NewSymbolTable(XLT.context)
             generic_context.context := XLT.context
             SYM.SetInteger generic_context.symbols, "GENPARM", 1
+            generic_context.machine_name := SYM.Temporary("<generic context>")
 
         // Check if we already have that parameter
         Name : PT.tree := TY.Source(gtp)
@@ -262,15 +263,19 @@ module XL.SEMANTICS.TYPES.GENERICS is
                 trace[generics] "Already dependent on ", Name
                 return
 
-        // Create a declaration for the parameter
-        Name := PT.Clone(Name)
-        Type : PT.tree := TY.Source(TY.type_of_types)
-        Parm : PT.tree := DCL.EnterDeclaration (Name, Type, nil, true)
-        Decl : DCL.declaration := DCL.GetDeclaration(Parm)
-
-        generic_context.machine_name := gtp.machine_name
-        generic_context.parameters += Decl
-        trace[generics] "Dependency #", size(generic_context.parameters)
+        if size(gtp.parameters) = 0 then
+            // Create a declaration for a simple generic type
+            Name := PT.Clone(Name)
+            Type : PT.tree := TY.Source(TY.type_of_types)
+            Parm : PT.tree := DCL.EnterDeclaration (Name, Type, nil, true)
+            Decl : DCL.declaration := DCL.GetDeclaration(Parm)
+            generic_context.parameters += Decl
+            trace[generics] "Simple dependency #",
+                            size(generic_context.parameters), " is ", Name
+        else
+            // This is a complex type, e.g. function (K : somegeneric)
+            // In that case, we add the dependents themselves
+            generic_context.parameters += gtp.parameters
 
 
     function EnterGeneric(Parms  : PT.tree;

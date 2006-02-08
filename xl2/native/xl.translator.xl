@@ -232,6 +232,7 @@ module XL.TRANSLATOR is
         if scope = scopeGlobal or scope = scopeMain then
             // Make sure global init and term invoked from 'main'
             local_decl : PT.tree := SYM.ScopeItems(function_context, "DECL")
+            SYM.SetProperty (function_context, "DECL", nil)
             decl := Append(decl, local_decl)
             if init <> nil then
                 SYM.AddScopeItem main_context, "MAIN_INIT", init
