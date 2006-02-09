@@ -454,7 +454,7 @@ module XL.SEMANTICS.MODULES is
             return parse_tree(@error)
         if ShortName <> nil and ShortName.kind <> PT.xlNAME then
             ERR.Error "The form '$1' is not a valid import shortcut", ShortName
-            ShortName = nil // Try to import anyway
+            ShortName := nil // Try to import anyway
 
         // Check if there was already something declared in current scope
         existing : PT.tree := TryToEvaluate(LongName)

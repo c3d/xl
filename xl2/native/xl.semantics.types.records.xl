@@ -182,6 +182,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
     //   A type is entered in the symbol table as a simple replacement
     //   with the name, and the type info is attached to the name
 
+        oldContext : SYM.symbol_table := XLT.context
         XLT.context := SYM.NewSymbolTable (XLT.context)
         SYM.SetInteger XLT.context, "FIELD", 1
 
@@ -193,7 +194,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         result := parse_tree (@type)
         TY.SetDefinedType result, tp
 
-        XLT.context := SYM.Enclosing (XLT.context)
+        XLT.context := oldContext
 
 
     translation XLEvaluateType

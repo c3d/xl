@@ -138,7 +138,7 @@ module XL.CODE_GENERATOR.MACHINE is
             then
                 code := XLT.Append(code, ValueGenerator)
                 arg := ValueName
-                write_op = WriteOperation
+                write_op := WriteOperation
             when
                 'ValueGenerator'
                 @value 'ValueName'

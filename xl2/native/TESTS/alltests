@@ -101,7 +101,7 @@ do
             # If so, we can skip 'compile' and 'run', unless forced
             if [ -z "$NOCACHE" ]; then
                 if [ -f "$BASE.cpp" -a -f "$REF" ]; then
-                    if diff -q $LOG $BASE.cpp > /dev/null 2>&1; then
+                    if diff $LOG $BASE.cpp > /dev/null 2>&1; then
                         # In that case, use the reference, don't run
                         echo > $LOG
                         cp $REF $LOG
@@ -136,7 +136,7 @@ do
         THIS_FAILED="Exit code $RC, expected $EXIT"
     elif [ ! -z "$REF" ]; then
         sed 's@'$TESTDIR'@TESTS@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
-        if diff -q $REF $LOG > /dev/null 2>&1; then
+        if diff $REF $LOG > /dev/null 2>&1; then
             THIS=ok
         elif [ ! -z "$UPDATE" ]; then
             echo "Updating reference for " $BASE
@@ -169,7 +169,7 @@ do
     else
         echo $TEST:  $THIS_FAILED >> $FAILURE
         cat $LOG >> $FAILURE
-        echo '*** FAILURE ***'
+        echo '*** FAILURE ('$THIS_FAILED') ***'
         ONE_FAILED=1
     fi
     rm -f ./a.out

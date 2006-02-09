@@ -275,6 +275,9 @@ module XL.SEMANTICS.TYPES.GENERICS is
         else
             // This is a complex type, e.g. function (K : somegeneric)
             // In that case, we add the dependents themselves
+            trace[generics] "Recursive dependency #",
+                            size(generic_context.parameters), " has ",
+                            size(gtp.parameters), " deps" 
             generic_context.parameters += gtp.parameters
 
 

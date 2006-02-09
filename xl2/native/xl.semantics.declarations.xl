@@ -102,13 +102,6 @@ module XL.SEMANTICS.DECLARATIONS is
             Names := SYM.Temporary ("invalid_declaration")
         Name : Names as PT.name_tree
 
-        // Check if there is already an entity by that name
-        original : PT.tree := SYM.LookupOne(XLT.context, "DECL", Name.value)
-        if original <> nil then
-            ERR.Error "Redeclaration of '$1' ", Name
-            ERR.Error "Previous declaration of '$1' here", original
-            // We go through since this is better at avoiding cascade errors
-
         // Check if we get there for a type (from instantiation)
         decl_type : TY.any_type := TY.EvaluateType(Type)
         if TY.SameType (decl_type, TY.type_of_types) then
@@ -116,6 +109,13 @@ module XL.SEMANTICS.DECLARATIONS is
         decl_fn_type : decl_type as FT.function_type
         if decl_fn_type <> nil then
             return FN.EnterFunction (Name, decl_fn_type, Value, Name)
+
+        // Check if there is already an entity by that name
+        original : PT.tree := SYM.LookupOne(XLT.context, "DECL", Name.value)
+        if original <> nil then
+            ERR.Error "Redeclaration of '$1' ", Name
+            ERR.Error "Previous declaration of '$1' here", original
+            // We go through since this is better at avoiding cascade errors
 
         // Build the declaration
         decl : declaration := Declare(Name, TY.EvaluateType(Type))

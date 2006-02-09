@@ -175,6 +175,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         ftp : function_type
 
         // Create a new context for the parameters
+        oldContext : SYM.symbol_table := XLT.context 
         XLT.context := SYM.NewSymbolTable (XLT.context)
         SYM.SetInteger XLT.context, "FNPARM", 1
 
@@ -220,7 +221,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
             result := ftp
 
         // Return to enclosing context
-        XLT.context := SYM.Enclosing (XLT.context)
+        XLT.context := oldContext
 
 
     function EnterFnType (Source  : PT.tree;
