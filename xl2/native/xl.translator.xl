@@ -120,12 +120,14 @@ module XL.TRANSLATOR is
         inits : PT.tree := SYM.ScopeItems(main_context, "MAIN_INIT")
         terms : PT.tree := SYM.ScopeItems(main_context, "MAIN_TERM")
         decls : PT.tree := SYM.ScopeItems(main_context, "MAIN_DECL")
-        result := Append(input, parse_tree(@main_begin))
+        locals: PT.tree := SYM.ScopeItems(main_context, "MAIN_LOCALS")
+        result := Append(decls, input)
+        result := Append(result, parse_tree(@main_begin))
+        result := Append(result, locals)
         result := Append(result, inits)
         result := Append(result, parse_tree(@main_invoke))
         result := Append(result, terms)
         result := Append(result, parse_tree(@main_end))
-        result := Append(decls, result)
 
 
     function ScopeSemantics (input : PT.tree;
@@ -240,6 +242,8 @@ module XL.TRANSLATOR is
                 SYM.AddScopeItem main_context, "MAIN_TERM", term
             if decl <> nil then
                 SYM.AddScopeItem main_context, "MAIN_DECL", decl
+            if local_decl <> nil then
+                SYM.AddScopeItem main_context, "MAIN_LOCALS", local_decl
             SYM.AddScopeItem main_context, "MAIN_INIT", result
             if scope = scopeMain then
                 result := SYM.ScopeItems(main_context, "MAIN_BODY")
