@@ -1,0 +1,15 @@
+// Check that implicit instantiation works with "true" generic types
+// RUN=cat %b.cpp
+
+generic [type item]
+function Ajouter(X, Y : item) return item is
+    return X + Y
+
+Koba : integer := Ajouter(1, 2)
+
+generic type tablo
+
+function Soustraire(X, Y : tablo) return tablo is
+    return Y - X
+
+LKabo : integer := Soustraire(3, 5)
