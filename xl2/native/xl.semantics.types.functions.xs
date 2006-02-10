@@ -47,9 +47,10 @@ module XL.SEMANTICS.TYPES.FUNCTIONS with
     //    value returned by the function will be
 
         parameters      : declaration_list
+        symbols         : SYM.symbol_table
         outputs_count   : integer
         inputs_count    : integer
-        symbols         : SYM.symbol_table
+        variadic        : boolean
 
     type function_type is access to function_type_data
 

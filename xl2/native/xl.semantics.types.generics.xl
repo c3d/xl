@@ -182,6 +182,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
         // Create the generic info, and attach it to the prop
         gi : generic_info
         gi.symbols := ctxt
+        gi.validation := nil
         PT.SetInfo prop, "GENERIC", gi
 
         // Mark the context as generic
@@ -259,6 +260,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
         gc.name := tp.name
         gc.symbols := gi.symbols
         gc.parameters := gi.parameters
+        gc.validation := gi.validation
 
         // Record that we made a generic type
         gi.generic_types += gc
@@ -321,25 +323,66 @@ module XL.SEMANTICS.TYPES.GENERICS is
                     gi.parameters += Decl
 
 
+    procedure AddVariadicity (anchor : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   If a variadic declaration is seen, store it in the generic context
+    // ------------------------------------------------------------------------
+
+        trace[generics] "Adding variadicity"
+
+        // If the current context is not generic, make it generic
+        gi : generic_info := GenericContext()
+        if gi = nil then
+            gi := NewGenericContext (XLT.context, anchor)
+            assert gi <> nil
+
+        // Check if we are already variadic
+        existing : PT.tree := SYM.LookupOne(gi.symbols, "...", "...")
+        if existing <> nil then
+            ERR.Error "The context for '$1' is used is alread variadic", anchor
+            ERR.Error "Variadicity was declared here with '$1'", existing
+            return
+
+        SYM.Enter gi.symbols, "...", "...", anchor
+
+
+    function VariadicExpression() return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Return the current variadic expression if it exists
+    // ------------------------------------------------------------------------
+        return SYM.LookupOne (XLT.context, "...", "EXPR")
+
+
+    function VariadicDeclarations() return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Return the current variadic declarations if they exist
+    // ------------------------------------------------------------------------
+        return SYM.LookupOne (XLT.context, "...", "DECL")
+
+
     function EnterGeneric(Parms  : PT.tree;
-                          Decls  : PT.tree) return PT.tree is
+                          Decls  : PT.tree;
+                          Valid  : PT.tree) return PT.tree is
     // ------------------------------------------------------------------------
     //   Enter a generic declaration
     // ------------------------------------------------------------------------
 
-        trace[generics] "EnterGeneric Parms=(", Parms, "), Decls=(", Decls, ")"
+        trace[generics] "EnterGeneric Parms=(", Parms, ")"
+        trace[generics] "             Decls=(", Decls, ")"
+        trace[generics] "             Valid=(", Valid, ")"
 
         translate Decls
             when
                 'FirstGenericDecl'
                 'SecondNonGenericDecl'
             then
-                FirstGenericDecl := EnterGeneric (Parms, FirstGenericDecl)
+                FirstGenericDecl := EnterGeneric (Parms,FirstGenericDecl,Valid)
                 SecondNonGenericDecl := XLT.XLDeclarations SecondNonGenericDecl
                 infix : Decls as PT.infix_tree
                 infix.left := FirstGenericDecl
                 infix.right := SecondNonGenericDecl
                 return infix
+
 
         // Avoid nested generics (necessary?)
         if IsGenericContext() then
@@ -352,6 +395,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
         gi : generic_info := NewGenericContext(syms, Decls)
         assert gi <> nil
         assert gi.symbols = syms
+        gi.validation := Valid
         XLT.context := syms
 
         // Check if empty parameter list. [ ] is a block with an empty name
@@ -391,21 +435,41 @@ module XL.SEMANTICS.TYPES.GENERICS is
         when
             generic ['Parms'] 'Decls'
         then
-            result := EnterGeneric (Parms, Decls)
+            result := EnterGeneric (Parms, Decls, nil)
         when
             generic 'Decls'
         then
-            result := EnterGeneric (nil, Decls)
+            result := EnterGeneric (nil, Decls, nil)
 
         when
             generic ['Parms']
             'Decls'
         then
-            result := EnterGeneric (Parms, Decls)
+            result := EnterGeneric (Parms, Decls, nil)
         when
             generic
             'Decls'
         then
-            result := EnterGeneric (nil, Decls)
+            result := EnterGeneric (nil, Decls, nil)
 
+        when
+            generic ['Parms'] 'Decls' where 'Validation'
+        then
+            result := EnterGeneric (Parms, Decls, Validation)
+        when
+            generic 'Decls' where 'Validation'
+        then
+            result := EnterGeneric (nil, Decls, Validation)
 
+        when
+            generic ['Parms']
+            'Decls'
+            where 'Validation'
+        then
+            result := EnterGeneric (Parms, Decls, Validation)
+        when
+            generic
+            'Decls'
+            where 'Validation'
+        then
+            result := EnterGeneric (nil, Decls, Validation)

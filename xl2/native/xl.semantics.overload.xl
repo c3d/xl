@@ -56,6 +56,18 @@ module XL.SEMANTICS.OVERLOAD is
                 then
                     ArgsTreeToList A, List
                     ArgsTreeToList B, List
+
+                when
+                    ...
+                then
+                    VariadicExpr : PT.tree := GEN.VariadicExpression()
+                    trace[overload] "Variadic: ", VariadicExpr
+                    if VariadicExpr = nil then
+                        ERR.Error "'$1' used outside of variadic context", Args
+                        return
+                    if not PT.Matches(VariadicExpr, parse_tree()) then
+                        ArgsTreeToList VariadicExpr, List
+
                 else
                     List += Args
 
@@ -103,6 +115,7 @@ module XL.SEMANTICS.OVERLOAD is
         bestF     : FN.function
         bestGArgs : PT.tree_list
         bestGtype : GEN.generic_type
+        bestVArgs : PT.tree
         ambig     : PT.tree
         depth     : integer := 0
         table     : SYM.symbol_table := symbols
@@ -151,6 +164,8 @@ module XL.SEMANTICS.OVERLOAD is
                 Ftype : F.type as FT.function_type
                 Gtype : F.type as GEN.generic_type
                 Gargs : PT.tree_list
+                Vargs : PT.tree
+                Score : integer := depth
                 if Ftype = nil and Gtype <> nil then
                     GFType : Gtype.base as FT.function_type
                     Ftype := GFType
@@ -158,6 +173,7 @@ module XL.SEMANTICS.OVERLOAD is
                     nilT  : PT.tree
                     for Gdecl in Gtype.parameters loop
                         Gargs += nilT
+                    Score *= 16#100
 
                 // Check that we actually have a function
                 if Ftype = nil then
@@ -171,16 +187,17 @@ module XL.SEMANTICS.OVERLOAD is
 
                 // Check number of parameters.
                 NP : integer := size(Ftype.parameters)
-                if NA > NP then
+                if Ftype.variadic then
+                    Score *= 16#100
+                else if NA > NP then
                     ERR.Error "'$1' could not be selected because", C
                     ERR.Error "there are too many arguments for '$1'", Name
-                    trace [overload] "FAIL: Too many arguments ", NA, ">", NP
+                    trace [overload] "FAIL: Too many arguments ",NA,">",NP
                     restart
 
                 // Check type of parameters
                 D        : DCL.declaration
                 Matching : boolean := true
-                Score    : integer := depth
                 A := 0
                 for D in Ftype.parameters loop
                     if A < NA then
@@ -213,6 +230,22 @@ module XL.SEMANTICS.OVERLOAD is
                         ERR.Error "for parameter '$1'", D.name
                         exit if not Matching
                     A += 1
+                if not Matching then
+                    restart
+
+                // Check if this is a variadic and there are args left
+                Vargs := nil
+                if A < NA then
+                    assert Ftype.variadic
+                    Vargs := SemArgs[A]
+                    A += 1
+                    while A < NA loop
+                        Arg := SemArgs[A]
+                        Vargs := parse_tree ('Vargs', 'Arg')
+                        A += 1
+                    trace[overload] "INFO: Variadics ", Vargs
+                else if Ftype.variadic then
+                    Vargs := parse_tree()
 
                 // Check if there are non-deduced generic arguments
                 if Gtype <> nil then
@@ -242,6 +275,7 @@ module XL.SEMANTICS.OVERLOAD is
                     bestF := F
                     bestGArgs := Gargs
                     bestGtype := Gtype
+                    bestVargs := Vargs
                     if recurse then BaseRecord := Scope
                 else if Score < bestScore then
                     trace [overload] "BEST: New best score ", Score
@@ -250,6 +284,7 @@ module XL.SEMANTICS.OVERLOAD is
                     bestF := F
                     bestGArgs := Gargs
                     bestGtype := Gtype
+                    bestVargs := Vargs
                     if recurse then BaseRecord := Scope
                 else if Score = bestScore then
                     ambig := C
@@ -266,10 +301,14 @@ module XL.SEMANTICS.OVERLOAD is
 
             trace [overload] "FOUND: Calling ", PT.tree(bestF.name),
                              "=", PT.tree(bestF.machine_name)
-            if bestGtype <> nil then
+            if bestGtype <> nil or bestVargs <> nil then
                 result := GN.InstantiateFunction(NameTree, bestF,
-                                                 bestGArgs, BaseRecord)
+                                                 bestGArgs, bestVargs,
+                                                 BaseRecord)
                 bestF := FN.GetFunction(result)
+                if bestF = nil then
+                    // Instantiation error
+                    return result
             if BaseRecord <> nil then
                 return CGM.RecordFunctionCall (BaseRecord, bestF, SemArgs)
             else

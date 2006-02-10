@@ -152,7 +152,7 @@ module XL.TRANSLATOR is
         // If we are within a module, select that context
         if modname <> nil then
             trace[modules] "ScopeSemantics(", modname, ") in ", context
-            Base : PT.tree := XLT.XLSemantics(modname)
+            Base : PT.tree := XLSemantics(modname)
             trace[modules] "Base(", modname, ") is ", Base
             symbols : SYM.symbol_table := MDL.GetSymbols(Base)
             if symbols <> nil then

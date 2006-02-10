@@ -43,6 +43,10 @@ module XL.SEMANTICS.GENERICS is
 //    Module implementing generic instantiation
 // ----------------------------------------------------------------------------
 
+    max_instantiations : integer := 50
+    instantiations     : integer := 0
+
+
     procedure LookupInstantiation(NameTree       : PT.tree;
                                   Args           : PT.tree;
                                   kind           : text;
@@ -246,15 +250,71 @@ module XL.SEMANTICS.GENERICS is
             BestDecl := nil
 
 
+    procedure VariadicToKey (Variadic    : PT.tree;
+                             in out Key  : text) is
+    // ------------------------------------------------------------------------
+    //   Build an instantiation key from a variadic tree
+    // ------------------------------------------------------------------------
+        assert Variadic <> nil
+        translate Variadic
+            when ('FirstVariadicArg', 'SecondVariadicArg') then
+                VariadicToKey FirstVariadicArg, Key
+                Key += ","
+                VariadicToKey SecondVariadicArg, Key
+                return
+            when () then
+                return
+        tp : TY.any_type := TY.NonConstedType(TY.GetType(Variadic))
+        if tp <> nil then
+            MachineName : PT.name_tree := tp.machine_name
+            Key += MachineName.value
+
+
+    procedure VariadicToTrees (Variadic     : PT.tree;
+                               in out Decls : PT.tree;
+                               in out Exprs : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Build a declaration list matching the variadics part
+    // ------------------------------------------------------------------------
+        if Variadic <> nil then
+            translate Variadic
+                when ('FirstVariadicArg', 'SecondVariadicArg') then
+                    VariadicToTrees FirstVariadicArg, Decls, Exprs
+                    VariadicToTrees SecondVariadicArg, Decls, Exprs
+                    return
+                when () then
+                    Exprs := Variadic
+                    Decls := Variadic
+                    return
+
+            // Build a parameter for the generated function
+            Name : PT.name_tree := SYM.Temporary("variadic")
+            tp   : TY.any_type := TY.GetType(Variadic)
+            if tp = nil then
+                ERR.Error "Variadic '$1' has no type", Variadic
+                tp := TY.NewType(SYM.Temporary("<variadic>"))
+            Type : PT.tree := TY.Source(TY.NonConstedType(tp))
+            Decl : PT.tree := parse_tree('Name' : 'Type')
+            if Exprs = nil then
+                Exprs := Name
+            else
+                Exprs := parse_tree('Exprs', 'Name')
+            if Decls = nil then
+                Decls := Decl
+            else
+                Decls := parse_tree('Decls'; 'Decl')
+
+
     function Instantiate(Decl       : DCL.declaration;
                          Args       : PT.tree_list;
+                         Variadics  : PT.tree;
                          BaseRecord : PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Instantiate a specific declaration
     // ------------------------------------------------------------------------
 
         trace [inst] "Instantiating ", PT.tree(Decl.name),
-                     " with ", size(Args), " args"
+                     " with ", size(Args), " args, variadics ", Variadics
 
         gtp : GEN.generic_type := GEN.DeclGenericType(decl)
         if gtp = nil then
@@ -265,13 +325,15 @@ module XL.SEMANTICS.GENERICS is
 
         // Check if we already instantiated that guy
         I   : integer
+        NA  : integer := size(Args)
         mn  : PT.name_tree := Decl.machine_name
         if mn = nil then
             mn := SYM.Temporary("<generic>")
             Decl.machine_name := mn
         key : text := mn.value
         key += "["
-        for I in 0..size(Args)-1 loop
+        assert size(gtp.parameters) = NA
+        for I in 0..NA-1 loop
             A : PT.tree := Args[I]
             P : DCL.declaration := gtp.parameters[I]
             if I > 0 then
@@ -283,19 +345,24 @@ module XL.SEMANTICS.GENERICS is
                     key += mn.value
             else
                 key += text(A)
+        if Variadics <> nil then
+            key += "..."
+            VariadicToKey Variadics, key
         key += "]"
         trace[inst] "Looking up ", key
-        result := SYM.LookupOne (oldContext, "INSTANCE", key)
+        result := SYM.LookupOne (XLT.global_context, "INSTANCE", key)
         if result <> nil then
             trace[inst] "Found cached: ", result
             return result
 
         // Create instantiation context
-        XLT.context := SYM.NewSymbolTable (SYM.Enclosing(gtp.symbols))
-        SYM.AddUsing XLT.context, nil, oldContext
+        declContext : SYM.symbol_table := SYM.Enclosing(gtp.symbols)
+        instContext : SYM.symbol_table := SYM.NewSymbolTable(declContext)
+        XLT.context := instContext
+        SYM.AddUsing instContext, nil, oldContext
 
         // Insert declarations in the instantiation context
-        for I in 0..size(Args)-1 loop
+        for I in 0..NA-1 loop
             A : PT.tree := Args[I]
             P : DCL.declaration := gtp.parameters[I]
             N : P.name as PT.name_tree
@@ -310,11 +377,27 @@ module XL.SEMANTICS.GENERICS is
                         " is ", A
             A := DCL.EnterDeclaration (C, TY.Source(P.type), A, true)
 
+        // Check infinite recursion
+        if instantiations > max_instantiations then
+            ERR.Error "Too many recursive instantitiations at '$1'", Decl.name
+            return parse_tree(@error)
+        instantiations += 1
+
         // Create the required elements to enter the instantiated declaration
         Name : PT.tree := PT.Clone(Decl.Name)
         Type : PT.tree := TY.Source(GEN.NonGenericType(Decl.type))
         if not TY.SameType(Decl.type, TY.type_of_types) then
             Type := PT.Clone(Type)
+            // Insert variadic declarations
+            if Variadics <> nil then
+                ExprTree : PT.tree
+                DeclTree : PT.tree
+                VariadicToTrees Variadics, DeclTree, ExprTree
+                trace[inst] "Variadic Expr = ", ExprTree
+                trace[inst] "Variadic Decl = ", DeclTree
+                SYM.Enter instContext, "...", "EXPR", ExprTree
+                SYM.Enter instContext, "...", "DECL", DeclTree
+
         Init : PT.tree := PT.Clone(Decl.initializer)
         PT.AttachTree Name, "INSTANCEOF", Decl.Name
 
@@ -328,8 +411,9 @@ module XL.SEMANTICS.GENERICS is
             PT.SetInfo result, "FN", f
 
         // Cache the result for next time
-        SYM.Enter oldContext, "INSTANCE", key, result
+        SYM.Enter XLT.global_context, "INSTANCE", key, result
         XLT.context := oldContext
+        instantiations -= 1
 
 
     function Deduce (FunType      : GEN.generic_type;
@@ -378,7 +462,7 @@ module XL.SEMANTICS.GENERICS is
         if Decl = nil then
             return parse_tree(@error)
 
-        result := Instantiate(Decl, ActualArgs, Scope)
+        result := Instantiate(Decl, ActualArgs, nil, Scope)
 
         instantiation_errors : text := ERR.PopErrorContext()
         if instantiation_errors <> "" then
@@ -389,6 +473,7 @@ module XL.SEMANTICS.GENERICS is
     function InstantiateFunction (Source     : PT.tree;
                                   Decl       : DCL.declaration;
                                   Args       : PT.tree_list;
+                                  Variadics  : PT.tree;
                                   BaseRecord : PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Instantiate a specific function
@@ -396,11 +481,13 @@ module XL.SEMANTICS.GENERICS is
 
         ERR.PushErrorContext()
 
-        result := Instantiate (Decl, Args, BaseRecord) 
+        result := Instantiate (Decl, Args, Variadics, BaseRecord) 
 
         errors : text := ERR.PopErrorContext() 
         if errors <> "" then
             ERR.Error "Errors while instantiating '$1':", Source
+            if Variadics <> nil then
+                ERR.Error "with '...' set to '$1'", Variadics
             ERR.Display errors
 
 

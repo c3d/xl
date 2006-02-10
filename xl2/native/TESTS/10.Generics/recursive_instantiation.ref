@@ -1,0 +1,318 @@
+10.Generics/recursive_instantiation.xl:7: Errors while instantiating 'Max':
+| L : integer := Max(3)
+|__________________^
+10.Generics/recursive_instantiation.xl:7: with '...' set to '3'
+| L : integer := Max(3)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic954_955'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic959_961 , variadic960_962'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic966_969 , variadic967_970 , variadic968_971'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic975_979 , variadic976_980 , variadic977_981 , variadic978_982'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic986_991 , variadic987_992 , variadic988_993 , variadic989_994 , variadic990_995'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic999_1005 , variadic1000_1006 , variadic1001_1007 , variadic1002_1008 , variadic1003_1009 , variadic1004_1010'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1014_1021 , variadic1015_1022 , variadic1016_1023 , variadic1017_1024 , variadic1018_1025 , variadic1019_1026 , variadic1020_1027'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1031_1039 , variadic1032_1040 , variadic1033_1041 , variadic1034_1042 , variadic1035_1043 , variadic1036_1044 , variadic1037_1045 , variadic1038_1046'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1050_1059 , variadic1051_1060 , variadic1052_1061 , variadic1053_1062 , variadic1054_1063 , variadic1055_1064 , variadic1056_1065 , variadic1057_1066 , variadic1058_1067'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1071_1081 , variadic1072_1082 , variadic1073_1083 , variadic1074_1084 , variadic1075_1085 , variadic1076_1086 , variadic1077_1087 , variadic1078_1088 , variadic1079_1089 , variadic1080_1090'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1094_1105 , variadic1095_1106 , variadic1096_1107 , variadic1097_1108 , variadic1098_1109 , variadic1099_1110 , variadic1100_1111 , variadic1101_1112 , variadic1102_1113 , variadic1103_1114 , variadic1104_1115'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1119_1131 , variadic1120_1132 , variadic1121_1133 , variadic1122_1134 , variadic1123_1135 , variadic1124_1136 , variadic1125_1137 , variadic1126_1138 , variadic1127_1139 , variadic1128_1140 , variadic1129_1141 , variadic1130_1142'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1146_1159 , variadic1147_1160 , variadic1148_1161 , variadic1149_1162 , variadic1150_1163 , variadic1151_1164 , variadic1152_1165 , variadic1153_1166 , variadic1154_1167 , variadic1155_1168 , variadic1156_1169 , variadic1157_1170 , variadic1158_1171'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1175_1189 , variadic1176_1190 , variadic1177_1191 , variadic1178_1192 , variadic1179_1193 , variadic1180_1194 , variadic1181_1195 , variadic1182_1196 , variadic1183_1197 , variadic1184_1198 , variadic1185_1199 , variadic1186_1200 , variadic1187_1201 , variadic1188_1202'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1206_1221 , variadic1207_1222 , variadic1208_1223 , variadic1209_1224 , variadic1210_1225 , variadic1211_1226 , variadic1212_1227 , variadic1213_1228 , variadic1214_1229 , variadic1215_1230 , variadic1216_1231 , variadic1217_1232 , variadic1218_1233 , variadic1219_1234 , variadic1220_1235'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1239_1255 , variadic1240_1256 , variadic1241_1257 , variadic1242_1258 , variadic1243_1259 , variadic1244_1260 , variadic1245_1261 , variadic1246_1262 , variadic1247_1263 , variadic1248_1264 , variadic1249_1265 , variadic1250_1266 , variadic1251_1267 , variadic1252_1268 , variadic1253_1269 , variadic1254_1270'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1274_1291 , variadic1275_1292 , variadic1276_1293 , variadic1277_1294 , variadic1278_1295 , variadic1279_1296 , variadic1280_1297 , variadic1281_1298 , variadic1282_1299 , variadic1283_1300 , variadic1284_1301 , variadic1285_1302 , variadic1286_1303 , variadic1287_1304 , variadic1288_1305 , variadic1289_1306 , variadic1290_1307'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1311_1329 , variadic1312_1330 , variadic1313_1331 , variadic1314_1332 , variadic1315_1333 , variadic1316_1334 , variadic1317_1335 , variadic1318_1336 , variadic1319_1337 , variadic1320_1338 , variadic1321_1339 , variadic1322_1340 , variadic1323_1341 , variadic1324_1342 , variadic1325_1343 , variadic1326_1344 , variadic1327_1345 , variadic1328_1346'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1350_1369 , variadic1351_1370 , variadic1352_1371 , variadic1353_1372 , variadic1354_1373 , variadic1355_1374 , variadic1356_1375 , variadic1357_1376 , variadic1358_1377 , variadic1359_1378 , variadic1360_1379 , variadic1361_1380 , variadic1362_1381 , variadic1363_1382 , variadic1364_1383 , variadic1365_1384 , variadic1366_1385 , variadic1367_1386 , variadic1368_1387'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1391_1411 , variadic1392_1412 , variadic1393_1413 , variadic1394_1414 , variadic1395_1415 , variadic1396_1416 , variadic1397_1417 , variadic1398_1418 , variadic1399_1419 , variadic1400_1420 , variadic1401_1421 , variadic1402_1422 , variadic1403_1423 , variadic1404_1424 , variadic1405_1425 , variadic1406_1426 , variadic1407_1427 , variadic1408_1428 , variadic1409_1429 , variadic1410_1430'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1434_1455 , variadic1435_1456 , variadic1436_1457 , variadic1437_1458 , variadic1438_1459 , variadic1439_1460 , variadic1440_1461 , variadic1441_1462 , variadic1442_1463 , variadic1443_1464 , variadic1444_1465 , variadic1445_1466 , variadic1446_1467 , variadic1447_1468 , variadic1448_1469 , variadic1449_1470 , variadic1450_1471 , variadic1451_1472 , variadic1452_1473 , variadic1453_1474 , variadic1454_1475'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1479_1501 , variadic1480_1502 , variadic1481_1503 , variadic1482_1504 , variadic1483_1505 , variadic1484_1506 , variadic1485_1507 , variadic1486_1508 , variadic1487_1509 , variadic1488_1510 , variadic1489_1511 , variadic1490_1512 , variadic1491_1513 , variadic1492_1514 , variadic1493_1515 , variadic1494_1516 , variadic1495_1517 , variadic1496_1518 , variadic1497_1519 , variadic1498_1520 , variadic1499_1521 , variadic1500_1522'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1526_1549 , variadic1527_1550 , variadic1528_1551 , variadic1529_1552 , variadic1530_1553 , variadic1531_1554 , variadic1532_1555 , variadic1533_1556 , variadic1534_1557 , variadic1535_1558 , variadic1536_1559 , variadic1537_1560 , variadic1538_1561 , variadic1539_1562 , variadic1540_1563 , variadic1541_1564 , variadic1542_1565 , variadic1543_1566 , variadic1544_1567 , variadic1545_1568 , variadic1546_1569 , variadic1547_1570 , variadic1548_1571'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1575_1599 , variadic1576_1600 , variadic1577_1601 , variadic1578_1602 , variadic1579_1603 , variadic1580_1604 , variadic1581_1605 , variadic1582_1606 , variadic1583_1607 , variadic1584_1608 , variadic1585_1609 , variadic1586_1610 , variadic1587_1611 , variadic1588_1612 , variadic1589_1613 , variadic1590_1614 , variadic1591_1615 , variadic1592_1616 , variadic1593_1617 , variadic1594_1618 , variadic1595_1619 , variadic1596_1620 , variadic1597_1621 , variadic1598_1622'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1626_1651 , variadic1627_1652 , variadic1628_1653 , variadic1629_1654 , variadic1630_1655 , variadic1631_1656 , variadic1632_1657 , variadic1633_1658 , variadic1634_1659 , variadic1635_1660 , variadic1636_1661 , variadic1637_1662 , variadic1638_1663 , variadic1639_1664 , variadic1640_1665 , variadic1641_1666 , variadic1642_1667 , variadic1643_1668 , variadic1644_1669 , variadic1645_1670 , variadic1646_1671 , variadic1647_1672 , variadic1648_1673 , variadic1649_1674 , variadic1650_1675'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1679_1705 , variadic1680_1706 , variadic1681_1707 , variadic1682_1708 , variadic1683_1709 , variadic1684_1710 , variadic1685_1711 , variadic1686_1712 , variadic1687_1713 , variadic1688_1714 , variadic1689_1715 , variadic1690_1716 , variadic1691_1717 , variadic1692_1718 , variadic1693_1719 , variadic1694_1720 , variadic1695_1721 , variadic1696_1722 , variadic1697_1723 , variadic1698_1724 , variadic1699_1725 , variadic1700_1726 , variadic1701_1727 , variadic1702_1728 , variadic1703_1729 , variadic1704_1730'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1734_1761 , variadic1735_1762 , variadic1736_1763 , variadic1737_1764 , variadic1738_1765 , variadic1739_1766 , variadic1740_1767 , variadic1741_1768 , variadic1742_1769 , variadic1743_1770 , variadic1744_1771 , variadic1745_1772 , variadic1746_1773 , variadic1747_1774 , variadic1748_1775 , variadic1749_1776 , variadic1750_1777 , variadic1751_1778 , variadic1752_1779 , variadic1753_1780 , variadic1754_1781 , variadic1755_1782 , variadic1756_1783 , variadic1757_1784 , variadic1758_1785 , variadic1759_1786 , variadic1760_1787'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1791_1819 , variadic1792_1820 , variadic1793_1821 , variadic1794_1822 , variadic1795_1823 , variadic1796_1824 , variadic1797_1825 , variadic1798_1826 , variadic1799_1827 , variadic1800_1828 , variadic1801_1829 , variadic1802_1830 , variadic1803_1831 , variadic1804_1832 , variadic1805_1833 , variadic1806_1834 , variadic1807_1835 , variadic1808_1836 , variadic1809_1837 , variadic1810_1838 , variadic1811_1839 , variadic1812_1840 , variadic1813_1841 , variadic1814_1842 , variadic1815_1843 , variadic1816_1844 , variadic1817_1845 , variadic1818_1846'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1850_1879 , variadic1851_1880 , variadic1852_1881 , variadic1853_1882 , variadic1854_1883 , variadic1855_1884 , variadic1856_1885 , variadic1857_1886 , variadic1858_1887 , variadic1859_1888 , variadic1860_1889 , variadic1861_1890 , variadic1862_1891 , variadic1863_1892 , variadic1864_1893 , variadic1865_1894 , variadic1866_1895 , variadic1867_1896 , variadic1868_1897 , variadic1869_1898 , variadic1870_1899 , variadic1871_1900 , variadic1872_1901 , variadic1873_1902 , variadic1874_1903 , variadic1875_1904 , variadic1876_1905 , variadic1877_1906 , variadic1878_1907'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1911_1941 , variadic1912_1942 , variadic1913_1943 , variadic1914_1944 , variadic1915_1945 , variadic1916_1946 , variadic1917_1947 , variadic1918_1948 , variadic1919_1949 , variadic1920_1950 , variadic1921_1951 , variadic1922_1952 , variadic1923_1953 , variadic1924_1954 , variadic1925_1955 , variadic1926_1956 , variadic1927_1957 , variadic1928_1958 , variadic1929_1959 , variadic1930_1960 , variadic1931_1961 , variadic1932_1962 , variadic1933_1963 , variadic1934_1964 , variadic1935_1965 , variadic1936_1966 , variadic1937_1967 , variadic1938_1968 , variadic1939_1969 , variadic1940_1970'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic1974_2005 , variadic1975_2006 , variadic1976_2007 , variadic1977_2008 , variadic1978_2009 , variadic1979_2010 , variadic1980_2011 , variadic1981_2012 , variadic1982_2013 , variadic1983_2014 , variadic1984_2015 , variadic1985_2016 , variadic1986_2017 , variadic1987_2018 , variadic1988_2019 , variadic1989_2020 , variadic1990_2021 , variadic1991_2022 , variadic1992_2023 , variadic1993_2024 , variadic1994_2025 , variadic1995_2026 , variadic1996_2027 , variadic1997_2028 , variadic1998_2029 , variadic1999_2030 , variadic2000_2031 , variadic2001_2032 , variadic2002_2033 , variadic2003_2034 , variadic2004_2035'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic2039_2071 , variadic2040_2072 , variadic2041_2073 , variadic2042_2074 , variadic2043_2075 , variadic2044_2076 , variadic2045_2077 , variadic2046_2078 , variadic2047_2079 , variadic2048_2080 , variadic2049_2081 , variadic2050_2082 , variadic2051_2083 , variadic2052_2084 , variadic2053_2085 , variadic2054_2086 , variadic2055_2087 , variadic2056_2088 , variadic2057_2089 , variadic2058_2090 , variadic2059_2091 , variadic2060_2092 , variadic2061_2093 , variadic2062_2094 , variadic2063_2095 , variadic2064_2096 , variadic2065_2097 , variadic2066_2098 , variadic2067_2099 , variadic2068_2100 , variadic2069_2101 , variadic2070_2102'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic2106_2139 , variadic2107_2140 , variadic2108_2141 , variadic2109_2142 , variadic2110_2143 , variadic2111_2144 , variadic2112_2145 , variadic2113_2146 , variadic2114_2147 , variadic2115_2148 , variadic2116_2149 , variadic2117_2150 , variadic2118_2151 , variadic2119_2152 , variadic2120_2153 , variadic2121_2154 , variadic2122_2155 , variadic2123_2156 , variadic2124_2157 , variadic2125_2158 , variadic2126_2159 , variadic2127_2160 , variadic2128_2161 , variadic2129_2162 , variadic2130_2163 , variadic2131_2164 , variadic2132_2165 , variadic2133_2166 , variadic2134_2167 , variadic2135_2168 , variadic2136_2169 , variadic2137_2170 , variadic2138_2171'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic2175_2209 , variadic2176_2210 , variadic2177_2211 , variadic2178_2212 , variadic2179_2213 , variadic2180_2214 , variadic2181_2215 , variadic2182_2216 , variadic2183_2217 , variadic2184_2218 , variadic2185_2219 , variadic2186_2220 , variadic2187_2221 , variadic2188_2222 , variadic2189_2223 , variadic2190_2224 , variadic2191_2225 , variadic2192_2226 , variadic2193_2227 , variadic2194_2228 , variadic2195_2229 , variadic2196_2230 , variadic2197_2231 , variadic2198_2232 , variadic2199_2233 , variadic2200_2234 , variadic2201_2235 , variadic2202_2236 , variadic2203_2237 , variadic2204_2238 , variadic2205_2239 , variadic2206_2240 , variadic2207_2241 , variadic2208_2242'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic2246_2281 , variadic2247_2282 , variadic2248_2283 , variadic2249_2284 , variadic2250_2285 , variadic2251_2286 , variadic2252_2287 , variadic2253_2288 , variadic2254_2289 , variadic2255_2290 , variadic2256_2291 , variadic2257_2292 , variadic2258_2293 , variadic2259_2294 , variadic2260_2295 , variadic2261_2296 , variadic2262_2297 , variadic2263_2298 , variadic2264_2299 , variadic2265_2300 , variadic2266_2301 , variadic2267_2302 , variadic2268_2303 , variadic2269_2304 , variadic2270_2305 , variadic2271_2306 , variadic2272_2307 , variadic2273_2308 , variadic2274_2309 , variadic2275_2310 , variadic2276_2311 , variadic2277_2312 , variadic2278_2313 , variadic2279_2314 , variadic2280_2315'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic2319_2355 , variadic2320_2356 , variadic2321_2357 , variadic2322_2358 , variadic2323_2359 , variadic2324_2360 , variadic2325_2361 , variadic2326_2362 , variadic2327_2363 , variadic2328_2364 , variadic2329_2365 , variadic2330_2366 , variadic2331_2367 , variadic2332_2368 , variadic2333_2369 , variadic2334_2370 , variadic2335_2371 , variadic2336_2372 , variadic2337_2373 , variadic2338_2374 , variadic2339_2375 , variadic2340_2376 , variadic2341_2377 , variadic2342_2378 , variadic2343_2379 , variadic2344_2380 , variadic2345_2381 , variadic2346_2382 , variadic2347_2383 , variadic2348_2384 , variadic2349_2385 , variadic2350_2386 , variadic2351_2387 , variadic2352_2388 , variadic2353_2389 , variadic2354_2390'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic2394_2431 , variadic2395_2432 , variadic2396_2433 , variadic2397_2434 , variadic2398_2435 , variadic2399_2436 , variadic2400_2437 , variadic2401_2438 , variadic2402_2439 , variadic2403_2440 , variadic2404_2441 , variadic2405_2442 , variadic2406_2443 , variadic2407_2444 , variadic2408_2445 , variadic2409_2446 , variadic2410_2447 , variadic2411_2448 , variadic2412_2449 , variadic2413_2450 , variadic2414_2451 , variadic2415_2452 , variadic2416_2453 , variadic2417_2454 , variadic2418_2455 , variadic2419_2456 , variadic2420_2457 , variadic2421_2458 , variadic2422_2459 , variadic2423_2460 , variadic2424_2461 , variadic2425_2462 , variadic2426_2463 , variadic2427_2464 , variadic2428_2465 , variadic2429_2466 , variadic2430_2467'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic2471_2509 , variadic2472_2510 , variadic2473_2511 , variadic2474_2512 , variadic2475_2513 , variadic2476_2514 , variadic2477_2515 , variadic2478_2516 , variadic2479_2517 , variadic2480_2518 , variadic2481_2519 , variadic2482_2520 , variadic2483_2521 , variadic2484_2522 , variadic2485_2523 , variadic2486_2524 , variadic2487_2525 , variadic2488_2526 , variadic2489_2527 , variadic2490_2528 , variadic2491_2529 , variadic2492_2530 , variadic2493_2531 , variadic2494_2532 , variadic2495_2533 , variadic2496_2534 , variadic2497_2535 , variadic2498_2536 , variadic2499_2537 , variadic2500_2538 , variadic2501_2539 , variadic2502_2540 , variadic2503_2541 , variadic2504_2542 , variadic2505_2543 , variadic2506_2544 , variadic2507_2545 , variadic2508_2546'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic2550_2589 , variadic2551_2590 , variadic2552_2591 , variadic2553_2592 , variadic2554_2593 , variadic2555_2594 , variadic2556_2595 , variadic2557_2596 , variadic2558_2597 , variadic2559_2598 , variadic2560_2599 , variadic2561_2600 , variadic2562_2601 , variadic2563_2602 , variadic2564_2603 , variadic2565_2604 , variadic2566_2605 , variadic2567_2606 , variadic2568_2607 , variadic2569_2608 , variadic2570_2609 , variadic2571_2610 , variadic2572_2611 , variadic2573_2612 , variadic2574_2613 , variadic2575_2614 , variadic2576_2615 , variadic2577_2616 , variadic2578_2617 , variadic2579_2618 , variadic2580_2619 , variadic2581_2620 , variadic2582_2621 , variadic2583_2622 , variadic2584_2623 , variadic2585_2624 , variadic2586_2625 , variadic2587_2626 , variadic2588_2627'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic2631_2671 , variadic2632_2672 , variadic2633_2673 , variadic2634_2674 , variadic2635_2675 , variadic2636_2676 , variadic2637_2677 , variadic2638_2678 , variadic2639_2679 , variadic2640_2680 , variadic2641_2681 , variadic2642_2682 , variadic2643_2683 , variadic2644_2684 , variadic2645_2685 , variadic2646_2686 , variadic2647_2687 , variadic2648_2688 , variadic2649_2689 , variadic2650_2690 , variadic2651_2691 , variadic2652_2692 , variadic2653_2693 , variadic2654_2694 , variadic2655_2695 , variadic2656_2696 , variadic2657_2697 , variadic2658_2698 , variadic2659_2699 , variadic2660_2700 , variadic2661_2701 , variadic2662_2702 , variadic2663_2703 , variadic2664_2704 , variadic2665_2705 , variadic2666_2706 , variadic2667_2707 , variadic2668_2708 , variadic2669_2709 , variadic2670_2710'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic2714_2755 , variadic2715_2756 , variadic2716_2757 , variadic2717_2758 , variadic2718_2759 , variadic2719_2760 , variadic2720_2761 , variadic2721_2762 , variadic2722_2763 , variadic2723_2764 , variadic2724_2765 , variadic2725_2766 , variadic2726_2767 , variadic2727_2768 , variadic2728_2769 , variadic2729_2770 , variadic2730_2771 , variadic2731_2772 , variadic2732_2773 , variadic2733_2774 , variadic2734_2775 , variadic2735_2776 , variadic2736_2777 , variadic2737_2778 , variadic2738_2779 , variadic2739_2780 , variadic2740_2781 , variadic2741_2782 , variadic2742_2783 , variadic2743_2784 , variadic2744_2785 , variadic2745_2786 , variadic2746_2787 , variadic2747_2788 , variadic2748_2789 , variadic2749_2790 , variadic2750_2791 , variadic2751_2792 , variadic2752_2793 , variadic2753_2794 , variadic2754_2795'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic2799_2841 , variadic2800_2842 , variadic2801_2843 , variadic2802_2844 , variadic2803_2845 , variadic2804_2846 , variadic2805_2847 , variadic2806_2848 , variadic2807_2849 , variadic2808_2850 , variadic2809_2851 , variadic2810_2852 , variadic2811_2853 , variadic2812_2854 , variadic2813_2855 , variadic2814_2856 , variadic2815_2857 , variadic2816_2858 , variadic2817_2859 , variadic2818_2860 , variadic2819_2861 , variadic2820_2862 , variadic2821_2863 , variadic2822_2864 , variadic2823_2865 , variadic2824_2866 , variadic2825_2867 , variadic2826_2868 , variadic2827_2869 , variadic2828_2870 , variadic2829_2871 , variadic2830_2872 , variadic2831_2873 , variadic2832_2874 , variadic2833_2875 , variadic2834_2876 , variadic2835_2877 , variadic2836_2878 , variadic2837_2879 , variadic2838_2880 , variadic2839_2881 , variadic2840_2882'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic2886_2929 , variadic2887_2930 , variadic2888_2931 , variadic2889_2932 , variadic2890_2933 , variadic2891_2934 , variadic2892_2935 , variadic2893_2936 , variadic2894_2937 , variadic2895_2938 , variadic2896_2939 , variadic2897_2940 , variadic2898_2941 , variadic2899_2942 , variadic2900_2943 , variadic2901_2944 , variadic2902_2945 , variadic2903_2946 , variadic2904_2947 , variadic2905_2948 , variadic2906_2949 , variadic2907_2950 , variadic2908_2951 , variadic2909_2952 , variadic2910_2953 , variadic2911_2954 , variadic2912_2955 , variadic2913_2956 , variadic2914_2957 , variadic2915_2958 , variadic2916_2959 , variadic2917_2960 , variadic2918_2961 , variadic2919_2962 , variadic2920_2963 , variadic2921_2964 , variadic2922_2965 , variadic2923_2966 , variadic2924_2967 , variadic2925_2968 , variadic2926_2969 , variadic2927_2970 , variadic2928_2971'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic2975_3019 , variadic2976_3020 , variadic2977_3021 , variadic2978_3022 , variadic2979_3023 , variadic2980_3024 , variadic2981_3025 , variadic2982_3026 , variadic2983_3027 , variadic2984_3028 , variadic2985_3029 , variadic2986_3030 , variadic2987_3031 , variadic2988_3032 , variadic2989_3033 , variadic2990_3034 , variadic2991_3035 , variadic2992_3036 , variadic2993_3037 , variadic2994_3038 , variadic2995_3039 , variadic2996_3040 , variadic2997_3041 , variadic2998_3042 , variadic2999_3043 , variadic3000_3044 , variadic3001_3045 , variadic3002_3046 , variadic3003_3047 , variadic3004_3048 , variadic3005_3049 , variadic3006_3050 , variadic3007_3051 , variadic3008_3052 , variadic3009_3053 , variadic3010_3054 , variadic3011_3055 , variadic3012_3056 , variadic3013_3057 , variadic3014_3058 , variadic3015_3059 , variadic3016_3060 , variadic3017_3061 , variadic3018_3062'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic3066_3111 , variadic3067_3112 , variadic3068_3113 , variadic3069_3114 , variadic3070_3115 , variadic3071_3116 , variadic3072_3117 , variadic3073_3118 , variadic3074_3119 , variadic3075_3120 , variadic3076_3121 , variadic3077_3122 , variadic3078_3123 , variadic3079_3124 , variadic3080_3125 , variadic3081_3126 , variadic3082_3127 , variadic3083_3128 , variadic3084_3129 , variadic3085_3130 , variadic3086_3131 , variadic3087_3132 , variadic3088_3133 , variadic3089_3134 , variadic3090_3135 , variadic3091_3136 , variadic3092_3137 , variadic3093_3138 , variadic3094_3139 , variadic3095_3140 , variadic3096_3141 , variadic3097_3142 , variadic3098_3143 , variadic3099_3144 , variadic3100_3145 , variadic3101_3146 , variadic3102_3147 , variadic3103_3148 , variadic3104_3149 , variadic3105_3150 , variadic3106_3151 , variadic3107_3152 , variadic3108_3153 , variadic3109_3154 , variadic3110_3155'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic3159_3205 , variadic3160_3206 , variadic3161_3207 , variadic3162_3208 , variadic3163_3209 , variadic3164_3210 , variadic3165_3211 , variadic3166_3212 , variadic3167_3213 , variadic3168_3214 , variadic3169_3215 , variadic3170_3216 , variadic3171_3217 , variadic3172_3218 , variadic3173_3219 , variadic3174_3220 , variadic3175_3221 , variadic3176_3222 , variadic3177_3223 , variadic3178_3224 , variadic3179_3225 , variadic3180_3226 , variadic3181_3227 , variadic3182_3228 , variadic3183_3229 , variadic3184_3230 , variadic3185_3231 , variadic3186_3232 , variadic3187_3233 , variadic3188_3234 , variadic3189_3235 , variadic3190_3236 , variadic3191_3237 , variadic3192_3238 , variadic3193_3239 , variadic3194_3240 , variadic3195_3241 , variadic3196_3242 , variadic3197_3243 , variadic3198_3244 , variadic3199_3245 , variadic3200_3246 , variadic3201_3247 , variadic3202_3248 , variadic3203_3249 , variadic3204_3250'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic3254_3301 , variadic3255_3302 , variadic3256_3303 , variadic3257_3304 , variadic3258_3305 , variadic3259_3306 , variadic3260_3307 , variadic3261_3308 , variadic3262_3309 , variadic3263_3310 , variadic3264_3311 , variadic3265_3312 , variadic3266_3313 , variadic3267_3314 , variadic3268_3315 , variadic3269_3316 , variadic3270_3317 , variadic3271_3318 , variadic3272_3319 , variadic3273_3320 , variadic3274_3321 , variadic3275_3322 , variadic3276_3323 , variadic3277_3324 , variadic3278_3325 , variadic3279_3326 , variadic3280_3327 , variadic3281_3328 , variadic3282_3329 , variadic3283_3330 , variadic3284_3331 , variadic3285_3332 , variadic3286_3333 , variadic3287_3334 , variadic3288_3335 , variadic3289_3336 , variadic3290_3337 , variadic3291_3338 , variadic3292_3339 , variadic3293_3340 , variadic3294_3341 , variadic3295_3342 , variadic3296_3343 , variadic3297_3344 , variadic3298_3345 , variadic3299_3346 , variadic3300_3347'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic3351_3399 , variadic3352_3400 , variadic3353_3401 , variadic3354_3402 , variadic3355_3403 , variadic3356_3404 , variadic3357_3405 , variadic3358_3406 , variadic3359_3407 , variadic3360_3408 , variadic3361_3409 , variadic3362_3410 , variadic3363_3411 , variadic3364_3412 , variadic3365_3413 , variadic3366_3414 , variadic3367_3415 , variadic3368_3416 , variadic3369_3417 , variadic3370_3418 , variadic3371_3419 , variadic3372_3420 , variadic3373_3421 , variadic3374_3422 , variadic3375_3423 , variadic3376_3424 , variadic3377_3425 , variadic3378_3426 , variadic3379_3427 , variadic3380_3428 , variadic3381_3429 , variadic3382_3430 , variadic3383_3431 , variadic3384_3432 , variadic3385_3433 , variadic3386_3434 , variadic3387_3435 , variadic3388_3436 , variadic3389_3437 , variadic3390_3438 , variadic3391_3439 , variadic3392_3440 , variadic3393_3441 , variadic3394_3442 , variadic3395_3443 , variadic3396_3444 , variadic3397_3445 , variadic3398_3446'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic3450_3499 , variadic3451_3500 , variadic3452_3501 , variadic3453_3502 , variadic3454_3503 , variadic3455_3504 , variadic3456_3505 , variadic3457_3506 , variadic3458_3507 , variadic3459_3508 , variadic3460_3509 , variadic3461_3510 , variadic3462_3511 , variadic3463_3512 , variadic3464_3513 , variadic3465_3514 , variadic3466_3515 , variadic3467_3516 , variadic3468_3517 , variadic3469_3518 , variadic3470_3519 , variadic3471_3520 , variadic3472_3521 , variadic3473_3522 , variadic3474_3523 , variadic3475_3524 , variadic3476_3525 , variadic3477_3526 , variadic3478_3527 , variadic3479_3528 , variadic3480_3529 , variadic3481_3530 , variadic3482_3531 , variadic3483_3532 , variadic3484_3533 , variadic3485_3534 , variadic3486_3535 , variadic3487_3536 , variadic3488_3537 , variadic3489_3538 , variadic3490_3539 , variadic3491_3540 , variadic3492_3541 , variadic3493_3542 , variadic3494_3543 , variadic3495_3544 , variadic3496_3545 , variadic3497_3546 , variadic3498_3547'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic3551_3601 , variadic3552_3602 , variadic3553_3603 , variadic3554_3604 , variadic3555_3605 , variadic3556_3606 , variadic3557_3607 , variadic3558_3608 , variadic3559_3609 , variadic3560_3610 , variadic3561_3611 , variadic3562_3612 , variadic3563_3613 , variadic3564_3614 , variadic3565_3615 , variadic3566_3616 , variadic3567_3617 , variadic3568_3618 , variadic3569_3619 , variadic3570_3620 , variadic3571_3621 , variadic3572_3622 , variadic3573_3623 , variadic3574_3624 , variadic3575_3625 , variadic3576_3626 , variadic3577_3627 , variadic3578_3628 , variadic3579_3629 , variadic3580_3630 , variadic3581_3631 , variadic3582_3632 , variadic3583_3633 , variadic3584_3634 , variadic3585_3635 , variadic3586_3636 , variadic3587_3637 , variadic3588_3638 , variadic3589_3639 , variadic3590_3640 , variadic3591_3641 , variadic3592_3642 , variadic3593_3643 , variadic3594_3644 , variadic3595_3645 , variadic3596_3646 , variadic3597_3647 , variadic3598_3648 , variadic3599_3649 , variadic3600_3650'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Max':
+|     return Max(2, ...)
+|______________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , variadic3654_3705 , variadic3655_3706 , variadic3656_3707 , variadic3657_3708 , variadic3658_3709 , variadic3659_3710 , variadic3660_3711 , variadic3661_3712 , variadic3662_3713 , variadic3663_3714 , variadic3664_3715 , variadic3665_3716 , variadic3666_3717 , variadic3667_3718 , variadic3668_3719 , variadic3669_3720 , variadic3670_3721 , variadic3671_3722 , variadic3672_3723 , variadic3673_3724 , variadic3674_3725 , variadic3675_3726 , variadic3676_3727 , variadic3677_3728 , variadic3678_3729 , variadic3679_3730 , variadic3680_3731 , variadic3681_3732 , variadic3682_3733 , variadic3683_3734 , variadic3684_3735 , variadic3685_3736 , variadic3686_3737 , variadic3687_3738 , variadic3688_3739 , variadic3689_3740 , variadic3690_3741 , variadic3691_3742 , variadic3692_3743 , variadic3693_3744 , variadic3694_3745 , variadic3695_3746 , variadic3696_3747 , variadic3697_3748 , variadic3698_3749 , variadic3699_3750 , variadic3700_3751 , variadic3701_3752 , variadic3702_3753 , variadic3703_3754 , variadic3704_3755'
+|     return Max(2, ...)
+|________________^
+10.Generics/recursive_instantiation.xl:4: Too many recursive instantitiations at 'Max'
+| function Max(...) return integer is
+|____________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Max (2 , ... )'
+|     return Max(2, ...)
+|_______________^

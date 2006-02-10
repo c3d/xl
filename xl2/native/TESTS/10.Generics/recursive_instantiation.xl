@@ -1,0 +1,7 @@
+// Test that recursive instantiation is detected
+// This also tests that "upwards" instantiation is possible
+// EXIT=2
+function Max(...) return integer is
+    return Max(2, ...)
+
+L : integer := Max(3)

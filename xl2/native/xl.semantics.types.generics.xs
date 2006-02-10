@@ -45,6 +45,7 @@ module XL.SEMANTICS.TYPES.GENERICS with
     // ------------------------------------------------------------------------
         parameters      : declaration_list
         symbols         : SYM.symbol_table
+        validation      : PT.tree
     type generic_type is access to generic_type_data
 
 
@@ -54,6 +55,7 @@ module XL.SEMANTICS.TYPES.GENERICS with
     // ------------------------------------------------------------------------
         parameters      : declaration_list
         symbols         : SYM.symbol_table
+        validation      : PT.tree
         generic_types   : string of generic_type
     type generic_info is access to generic_info_data
 
@@ -66,8 +68,12 @@ module XL.SEMANTICS.TYPES.GENERICS with
     function NonGenericType (tp : any_type) return any_type
     function MakeGeneric(tp : any_type) return any_type
     procedure AddGenericDependency (tp : any_type)
+    procedure AddVariadicity (anchor : PT.tree)
+    function VariadicExpression() return PT.tree
+    function VariadicDeclarations() return PT.tree
 
     // Enter a generic declaration
     function EnterGeneric(Parms : PT.tree;
-                          Decls : PT.tree) return PT.tree
+                          Decls : PT.tree;
+                          Valid : PT.tree) return PT.tree
 

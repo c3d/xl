@@ -1,0 +1,17 @@
+// Test that simple recursive definitions of variadics work
+// RUN=cat %b.cpp
+
+generic type ordered
+
+function Max (X : ordered) return ordered is
+    return X
+
+function Max (X : ordered; ...) return ordered is
+    result := Max(...)
+    if result < X then
+        result := X
+
+K : integer := Max(1, 2, 3, 4)
+L : integer := Max(1, 2, 3)
+M : real := Max (1.5, 7.9, 8.43)
+Z : real := Max(0.0, 0.0, 0.1)

@@ -165,6 +165,17 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         return true
 
 
+    function IsNullParm(Parms : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //    Return true if Parms is a null parameter list
+    // ------------------------------------------------------------------------
+    //    In the parse tree, () is a block with a null name inside
+        if Parms <> nil and Parms.kind = PT.xlNAME then
+            N : Parms as PT.name_tree
+            return N.value = ""
+        return false
+
+
     function NewFnType(Source     : PT.tree;
                        Parms      : PT.tree;
                        ReturnType : PT.tree) return any_type is
@@ -196,14 +207,57 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         ftp.interface_match := FunctionTypeMatch
         ftp.inputs_count := 0
         ftp.outputs_count := 0
+        ftp.variadic := false
         ftp.symbols := XLT.context
 
+        // Check if parameter list has '...' in it
+        VariadicDecls : PT.tree := GEN.VariadicDeclarations()
+        if VariadicDecls = nil then
+            // In declaration context, record variadicity
+            translate Parms
+                when (...) then
+                    ftp.variadic := true
+                    Parms := parse_tree()
+                when ('FirstParms'; ...) then
+                    ftp.variadic := true
+                    Parms := FirstParms
+                when
+                    'FirstParmsLine'
+                    ...
+                then
+                    ftp.variadic := true
+                    Parms := FirstParmsLine
+            if ftp.variadic then
+                GEN.AddVariadicity Source
+        else
+            // In instantiation context, replace variadicity
+            translate Parms
+                when (...) then
+                    Parms := VariadicDecls
+                when ('FirstParms'; ...) then
+                    if IsNullParm(VariadicDecls) then
+                        Parms := FirstParms
+                    else
+                        Parms := parse_tree('FirstParms'; 'VariadicDecls')
+                when
+                    'FirstParmsLine'
+                    ...
+                then
+                    if IsNullParm(VariadicDecls) then
+                        Parms := FirstParmsLine
+                    else
+                        Parms := parse_tree
+                            'FirstParmsLine'
+                            'VariadicDecls'
+
+
         // Check if empty parameter list. () is a block with an empty name
-        if Parms <> nil and Parms.kind = PT.xlNAME then
-            N : Parms as PT.name_tree
-            if N.value = "" then
-                Parms := nil
-        if Parms <> nil then
+        if IsNullParm(Parms) then
+            Parms := nil
+        else if Parms <> nil then
+            if GEN.IsGenericContext() then
+                // Preserve the "source" type identically
+                Parms := PT.Clone(Parms)
             Parms := XLT.XLDeclarations (Parms)
             MakeParameterList Parms, ftp.parameters,
                               ftp.inputs_count, ftp.outputs_count

@@ -43,6 +43,7 @@ module XL.SEMANTICS.GENERICS with
 
     function Instantiate(Decl       : DCL.declaration;
                          Args       : PT.tree_list;
+                         Variadics  : PT.tree;
                          BaseRecord : PT.tree) return BC.bytecode
 
     function InstantiateType (Name : PT.tree;
@@ -50,6 +51,7 @@ module XL.SEMANTICS.GENERICS with
     function InstantiateFunction (Source     : PT.tree;
                                   Decl       : DCL.declaration;
                                   Args       : PT.tree_list;
+                                  Variadics  : PT.tree;
                                   BaseRecord : PT.tree) return BC.bytecode
 
     function IsGenericName(Name : PT.tree; kind : text) return boolean
