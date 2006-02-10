@@ -1,0 +1,22 @@
+// Checks that type deduction conflicts are correctly reported
+// EXIT=2
+
+generic type something
+
+function Pang (A : something; B : something) return boolean is
+   return A = B
+
+function Pong (A : something; B : integer) return something is
+   return A + B
+
+function Ping (A : integer; B : integer) return something is
+   return A + B
+
+X : boolean := Pang (1, 2)
+Y : boolean := Pang (3.0, 4.0)
+Z : boolean := Pang (1, 3.0)
+
+T : integer := Pong (1, 3)
+U : real := Pong (1.0, 3)
+
+K : integer := Ping(1, 2)

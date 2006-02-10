@@ -41,25 +41,23 @@ module XL.SEMANTICS is
     // ------------------------------------------------------------------------
 
         // Sequences
+        // Don't do them in place, generic instantiation depends on
+        // resulting declarations being "clones" of the original
         when
             'FirstDeclLine'
             'SecondDeclLine'
         then
             FirstDeclLine := XLT.XLDeclarations FirstDeclLine
             SecondDeclLine := XLT.XLDeclarations SecondDeclLine
-            infix : input as PT.infix_tree
-            infix.left := FirstDeclLine
-            infix.right := SecondDeclLine
-            return infix
+            return parse_tree
+                'FirstDeclLine'
+                'SecondDeclLine'
         when
             'FirstDecl' ; 'SecondDecl'
         then
             FirstDecl := XLT.XLDeclarations FirstDecl
             SecondDecl := XLT.XLDeclarations SecondDecl
-            infix : input as PT.infix_tree
-            infix.left := FirstDecl
-            infix.right := SecondDecl
-            return infix
+            return parse_tree ('FirstDecl'; 'SecondDecl')
 
         // When semantics have been done already, don't do it again
         when

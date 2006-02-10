@@ -255,9 +255,6 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         if IsNullParm(Parms) then
             Parms := nil
         else if Parms <> nil then
-            if GEN.IsGenericContext() then
-                // Preserve the "source" type identically
-                Parms := PT.Clone(Parms)
             Parms := XLT.XLDeclarations (Parms)
             MakeParameterList Parms, ftp.parameters,
                               ftp.inputs_count, ftp.outputs_count
