@@ -87,7 +87,7 @@ module XL.CONSTANTS is
     //   Check if something is a named constant and if so, return it
     // ------------------------------------------------------------------------
         list : SYM.tree_list
-        SYM.Lookup XLT.context, "cst", name.value, list, SYM.lookupAll
+        SYM.Lookup XLT.context, "CST", name.value, list, SYM.lookupAll
         if size(list) = 1 then
             return list[0]
         return nil
@@ -97,7 +97,7 @@ module XL.CONSTANTS is
     // ------------------------------------------------------------------------
     //   Enter a named constant in the tree
     // ------------------------------------------------------------------------
-        SYM.Enter XLT.context, "cst", name.value, value
+        SYM.Enter XLT.context, "CST", name.value, value
 
 
     true_tree  : PT.tree := nil

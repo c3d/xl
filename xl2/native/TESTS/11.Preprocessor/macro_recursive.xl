@@ -1,0 +1,6 @@
+// Test that infinite recursion is bad
+// EXIT=2
+replace (sin 'X') with (sin (cos('X')))
+
+A : real := sin A
+

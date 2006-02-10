@@ -1,0 +1,6 @@
+11.Preprocessor/macro_recursive.xl:3: Too many macro recursions at 'sin (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos (A) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )'
+| replace (sin 'X') with (sin (cos('X')))
+|_____________________________^
+11.Preprocessor/macro_recursive.xl:5: No translation found for 'A := sin A'
+| A : real := sin A
+|_________________^

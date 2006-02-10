@@ -46,6 +46,8 @@ OTHER_SOURCES=					\
 	xl.semantics.xl				\
 	xl.semantics.declarations.xs		\
 	xl.semantics.declarations.xl		\
+	xl.semantics.macros.xs			\
+	xl.semantics.macros.xl			\
 	xl.semantics.functions.xs		\
 	xl.semantics.functions.xl		\
 	xl.semantics.overload.xs		\

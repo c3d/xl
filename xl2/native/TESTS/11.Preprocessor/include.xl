@@ -1,0 +1,4 @@
+// Test that we can include another file
+// RUN=cat %b.cpp
+include "11.Preprocessor/macros.xl"
+

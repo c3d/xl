@@ -1,0 +1,15 @@
+// Test that the macro system sort of works
+// RUN=cat %b.cpp
+
+replace (DEFAULT) with (1.0)
+
+replace XLDeclarations(let 'X') with ('X' : real := DEFAULT)
+
+let K
+let L
+let O
+
+replace ('K' + 'K') with ('K' * 2)
+
+S : integer
+T : integer := (S+S) + (S+S)
