@@ -440,7 +440,6 @@ module XL.SEMANTICS.GENERICS is
         declContext : SYM.symbol_table := SYM.Enclosing(GenType.symbols)
         instContext : SYM.symbol_table := SYM.NewSymbolTable(declContext)
         XLT.context := instContext
-        SYM.AddUsing instContext, nil, oldContext
 
         // Insert declarations for the replacement type
         IName : PT.tree := PT.Clone(GenType.name)
@@ -449,7 +448,7 @@ module XL.SEMANTICS.GENERICS is
         Decl  : PT.tree := DCL.EnterDeclaration(IName, IType, IInit, true)
         trace[inst] "Validation entered decl ", Decl
 
-        // Check the validation if there is one
+        // Check the validation
         ERR.PushErrorContext()
         XLT.context := instContext
         valid : PT.tree := PT.Clone(GenType.validation)
