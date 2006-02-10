@@ -453,23 +453,6 @@ module XL.SEMANTICS.TYPES.GENERICS is
             result := EnterGeneric (nil, Decls, nil)
 
         when
-            generic ['Parms'] 'Decls' where 'Validation'
-        then
-            result := EnterGeneric (Parms, Decls, Validation)
-        when
             generic 'Decls' where 'Validation'
-        then
-            result := EnterGeneric (nil, Decls, Validation)
-
-        when
-            generic ['Parms']
-            'Decls'
-            where 'Validation'
-        then
-            result := EnterGeneric (Parms, Decls, Validation)
-        when
-            generic
-            'Decls'
-            where 'Validation'
         then
             result := EnterGeneric (nil, Decls, Validation)

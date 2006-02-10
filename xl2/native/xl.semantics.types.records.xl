@@ -125,6 +125,14 @@ module XL.SEMANTICS.TYPES.RECORDS is
                         trace [recdecl] "Decl: ", decl
                         list += decl
                 else
+                    translate Fields
+                        when
+                            'X'
+                            'Y'
+                        then
+                            MakeFieldList X, list
+                            MakeFieldList Y, list
+                            return                            
                     ERR.Error "'$1' isn't a field declaration", Fields
 
 

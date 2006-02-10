@@ -321,8 +321,6 @@ module XL.SEMANTICS.GENERICS is
             ERR.Error "Internal: '$1' is not a generic declaration", Decl.name
             return parse_tree(@error)
 
-        oldContext : SYM.symbol_table := XLT.context
-
         // Check if we already instantiated that guy
         I   : integer
         NA  : integer := size(Args)
@@ -355,7 +353,14 @@ module XL.SEMANTICS.GENERICS is
             trace[inst] "Found cached: ", result
             return result
 
+        // Check infinite recursion
+        if instantiations > max_instantiations then
+            ERR.Error "Too many recursive instantitiations at '$1'", Decl.name
+            return parse_tree(@error)
+        instantiations += 1
+
         // Create instantiation context
+        oldContext : SYM.symbol_table := XLT.context
         declContext : SYM.symbol_table := SYM.Enclosing(gtp.symbols)
         instContext : SYM.symbol_table := SYM.NewSymbolTable(declContext)
         XLT.context := instContext
@@ -370,18 +375,14 @@ module XL.SEMANTICS.GENERICS is
 
             if N = nil then
                 ERR.Error "Internal: '$1' is not a name", P.name
+                instantiations -= 1
+                XLT.context := oldContext
                 return parse_tree(@error)
 
             trace[inst] "GenArg ", PT.tree(C),
                         " : ", TY.Source(P.type),
                         " is ", A
             A := DCL.EnterDeclaration (C, TY.Source(P.type), A, true)
-
-        // Check infinite recursion
-        if instantiations > max_instantiations then
-            ERR.Error "Too many recursive instantitiations at '$1'", Decl.name
-            return parse_tree(@error)
-        instantiations += 1
 
         // Create the required elements to enter the instantiated declaration
         Name : PT.tree := PT.Clone(Decl.Name)
@@ -398,11 +399,10 @@ module XL.SEMANTICS.GENERICS is
                 SYM.Enter instContext, "...", "EXPR", ExprTree
                 SYM.Enter instContext, "...", "DECL", DeclTree
 
-        Init : PT.tree := PT.Clone(Decl.initializer)
-        PT.AttachTree Name, "INSTANCEOF", Decl.Name
-
         // Process the instantiated declaration
+        Init : PT.tree := PT.Clone(Decl.initializer)
         trace[inst] "GenDecl ", Name, " : ", Type, " is ", Init
+        PT.AttachTree Name, "INSTANCEOF", Decl.Name
         result := DCL.EnterDeclaration (Name, Type, Init, true)
         result := XLT.XLSemantics(result)
         if Decl.is_global then
@@ -416,26 +416,86 @@ module XL.SEMANTICS.GENERICS is
         instantiations -= 1
 
 
-    function Deduce (FunType      : GEN.generic_type;
-                     Decl         : DCL.declaration;
+    function Validate(GenType   : GEN.generic_type;
+                      ActType   : TY.any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //    Check if ActType is a valid instance of GenType
+    // ------------------------------------------------------------------------
+
+        trace [inst] "Validating ", TY.Source(GenType),
+                     " with ", TY.Source (ActType)
+
+        // If there is no validation, that's easy to answer
+        if GenType.validation = nil then
+            return true
+
+        // We only validate simple generic types
+        if size (GenType.parameters) > 0 then
+            ERR.Error "Internal: Validating parameterized '$1'",
+                      TY.Source(GenType)
+            return false
+
+        // Create instantiation context
+        oldContext : SYM.symbol_table := XLT.context
+        declContext : SYM.symbol_table := SYM.Enclosing(GenType.symbols)
+        instContext : SYM.symbol_table := SYM.NewSymbolTable(declContext)
+        XLT.context := instContext
+        SYM.AddUsing instContext, nil, oldContext
+
+        // Insert declarations for the replacement type
+        IName : PT.tree := PT.Clone(GenType.name)
+        IType : PT.tree := TY.Source(TY.type_of_types)
+        IInit : PT.tree := PT.Clone(TY.Source(ActType))
+        Decl  : PT.tree := DCL.EnterDeclaration(IName, IType, IInit, true)
+        trace[inst] "Validation entered decl ", Decl
+
+        // Check the validation if there is one
+        ERR.PushErrorContext()
+        XLT.context := instContext
+        valid : PT.tree := PT.Clone(GenType.validation)
+        trace[inst] "Validation: ", valid
+        valid := XLT.XLDeclarations(valid)
+        valid := XLT.XLSemantics(valid)
+        errors : text := ERR.PopErrorContext() 
+        trace[inst] "Validated as: ", valid, " errors=", errors
+        if errors <> "" then
+            ERR.Error "Generic validation failed for '$1'", IName
+            ERR.Display errors
+            result := false
+        else
+            result := true
+        XLT.context := oldContext
+
+
+    function Deduce (FunGenType   : GEN.generic_type;
+                     FunParm      : DCL.declaration;
                      Arg          : PT.tree;
                      in out Gargs : PT.tree_list) return boolean is
     // ------------------------------------------------------------------------
     //   Deduce a type from a function argument type
     // ------------------------------------------------------------------------
 
-        DeclType : TY.any_type := Decl.type
+        ParmType : TY.any_type := FunParm.type
         ArgType  : TY.any_type := TY.NonConstedType (TY.GetType(Arg))
-        NG       : integer := size (FunType.parameters)
+        NG       : integer := size (FunGenType.parameters)
         G        : integer
 
+        // Check all generic parameters for the function
         for G in 0..NG-1 loop
-            gd : DCL.declaration := FunType.parameters[G]
+            gd : DCL.declaration := FunGenType.parameters[G]
             if TY.SameType (gd.type, TY.type_of_types) then
-                definedType : TY.any_type := TY.GetDefinedType (gd.name)
-                if TY.SameType (definedType, DeclType) then
+                // Generic parameter is a type.
+                GenTypeParm : TY.GetDefinedType (gd.name) as GEN.generic_type
+                assert GenTypeParm <> nil
+
+                // Check if we can map it to one of our generic arguments
+                if TY.SameType (GenTypeParm, ParmType) then
+                    // Function parameter has that generic type
                     typeExpr : PT.tree := TY.Source(ArgType)
                     if Gargs[G] = nil then
+                        // Check if we can validate the type
+                        if not Validate (GenTypeParm, ArgType) then
+                            return false
                         Gargs[G] := typeExpr
                     else if Gargs[G] <> typeExpr then
                         ERR.Error "Generic parameter type '$1' ", gd.name
@@ -443,7 +503,7 @@ module XL.SEMANTICS.GENERICS is
                         ERR.Error "and '$1' in the same instance", typeExpr
                         return false
                     return true
-        return DCL.Assignable(Decl, Arg)
+        return DCL.Assignable(FunParm, Arg)
 
 
     function InstantiateType (Name : PT.tree;
