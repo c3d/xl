@@ -503,46 +503,74 @@ typedef struct Record_948 {
   xlmodule base_1;
 } Record_948;
 Record_948 xlbuiltins_949; /* Global */
-xlint ret_970; /* Temp */
+xlint ret_973; /* Temp */
+xlint ret_974; /* Temp */
+xlint ret_981; /* Temp */
+xlint ret_982; /* Temp */
 xlint koba_956; /* Global */
-xlint lkabo_963; /* Global */
-typedef xlint (*FnPtr_966) ( xlint x_964 , xlint y_965 ) ;
-xlint ajouter_967 ( xlint x_964 , xlint y_965 ) ;
-typedef xlint (*FnPtr_973) ( xlint x_971 , xlint y_972 ) ;
-xlint soustraire_974 ( xlint x_971 , xlint y_972 ) ;
-xlint ret_977; /* Temp */
-xlint ajouter_967 ( xlint x_964 , xlint y_965 ) {
-xlint ret_969; /* Temp */
-xlint result_968; /* Result */
+xlint kabo_957; /* Global */
+xlint lkabo_964; /* Global */
+xlint kubi_965; /* Global */
+xlreal klonx_966; /* Global */
+typedef xlint (*FnPtr_969) ( xlint x_967 , xlint y_968 ) ;
+xlint ajouter_970 ( xlint x_967 , xlint y_968 ) ;
+typedef xlint (*FnPtr_977) ( xlint x_975 , xlint y_976 ) ;
+xlint soustraire_978 ( xlint x_975 , xlint y_976 ) ;
+typedef xlreal (*FnPtr_985) ( xlreal x_983 , xlreal y_984 ) ;
+xlreal soustraire_986 ( xlreal x_983 , xlreal y_984 ) ;
+xlreal ret_989; /* Temp */
+xlint ajouter_970 ( xlint x_967 , xlint y_968 ) {
+xlint ret_972; /* Temp */
+xlint result_971; /* Result */
 {
-ret_969 = x_964 + y_965;
-result_968 = ret_969;
-goto exit_ajouter_967;
+ret_972 = x_967 + y_968;
+result_971 = ret_972;
+goto exit_ajouter_970;
 }
-exit_ajouter_967: 0;
-return result_968;
+exit_ajouter_970: 0;
+return result_971;
 }
-xlint soustraire_974 ( xlint x_971 , xlint y_972 ) {
-xlint ret_976; /* Temp */
-xlint result_975; /* Result */
+xlint soustraire_978 ( xlint x_975 , xlint y_976 ) {
+xlint ret_980; /* Temp */
+xlint result_979; /* Result */
 {
-ret_976 = y_972 - x_971;
-result_975 = ret_976;
-goto exit_soustraire_974;
+ret_980 = y_976 - x_975;
+result_979 = ret_980;
+goto exit_soustraire_978;
 }
-exit_soustraire_974: 0;
-return result_975;
+exit_soustraire_978: 0;
+return result_979;
+}
+xlreal soustraire_986 ( xlreal x_983 , xlreal y_984 ) {
+xlreal ret_988; /* Temp */
+xlreal result_987; /* Result */
+{
+ret_988 = y_984 - x_983;
+result_987 = ret_988;
+goto exit_soustraire_986;
+}
+exit_soustraire_986: 0;
+return result_987;
 }
 namespace xl { namespace ui { namespace console {
 std::vector< ::text > arguments;
 }}}
 void XLMain() {
-xlint ret_970; /* Temp */
-xlint ret_977; /* Temp */
-ret_970 = ajouter_967 ( 1 , 2 );
-koba_956 = ret_970;
-ret_977 = soustraire_974 ( 3 , 5 );
-lkabo_963 = ret_977;
+xlint ret_973; /* Temp */
+xlint ret_974; /* Temp */
+xlint ret_981; /* Temp */
+xlint ret_982; /* Temp */
+xlreal ret_989; /* Temp */
+ret_973 = ajouter_970 ( 1 , 2 );
+koba_956 = ret_973;
+ret_974 = ajouter_970 ( 3 , 4 );
+kabo_957 = ret_974;
+ret_981 = soustraire_978 ( 3 , 5 );
+lkabo_964 = ret_981;
+ret_982 = soustraire_978 ( 6 , 15 );
+kubi_965 = ret_982;
+ret_989 = soustraire_986 ( 3.7 , 2.9 );
+klonx_966 = ret_989;
 /* Type */
 /* Main */
 }

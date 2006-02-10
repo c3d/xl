@@ -263,11 +263,38 @@ module XL.SEMANTICS.GENERICS is
 
         oldContext : SYM.symbol_table := XLT.context
 
+        // Check if we already instantiated that guy
+        I   : integer
+        mn  : PT.name_tree := Decl.machine_name
+        if mn = nil then
+            mn := SYM.Temporary("<generic>")
+            Decl.machine_name := mn
+        key : text := mn.value
+        key += "["
+        for I in 0..size(Args)-1 loop
+            A : PT.tree := Args[I]
+            P : DCL.declaration := gtp.parameters[I]
+            if I > 0 then
+                key += ","
+            if TY.SameType (P.type, TY.type_of_types) then
+                tp : TY.any_type := TY.EvaluateType(A)
+                if tp <> nil then
+                    mn := tp.machine_name
+                    key += mn.value
+            else
+                key += text(A)
+        key += "]"
+        trace[inst] "Looking up ", key
+        result := SYM.LookupOne (oldContext, "INSTANCE", key)
+        if result <> nil then
+            trace[inst] "Found cached: ", result
+            return result
+
+        // Create instantiation context
         XLT.context := SYM.NewSymbolTable (SYM.Enclosing(gtp.symbols))
         SYM.AddUsing XLT.context, nil, oldContext
 
-        // Insert declarations in the context
-        I : integer
+        // Insert declarations in the instantiation context
         for I in 0..size(Args)-1 loop
             A : PT.tree := Args[I]
             P : DCL.declaration := gtp.parameters[I]
@@ -281,7 +308,7 @@ module XL.SEMANTICS.GENERICS is
             trace[inst] "GenArg ", PT.tree(C),
                         " : ", TY.Source(P.type),
                         " is ", A
-            result := DCL.EnterDeclaration (C, TY.Source(P.type), A, true)
+            A := DCL.EnterDeclaration (C, TY.Source(P.type), A, true)
 
         // Create the required elements to enter the instantiated declaration
         Name : PT.tree := PT.Clone(Decl.Name)
@@ -300,6 +327,8 @@ module XL.SEMANTICS.GENERICS is
             result := XLT.PostScopeSemantics(result, XLT.scopeGlobal, nil)
             PT.SetInfo result, "FN", f
 
+        // Cache the result for next time
+        SYM.Enter oldContext, "INSTANCE", key, result
         XLT.context := oldContext
 
 
