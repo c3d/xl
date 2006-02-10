@@ -76,6 +76,13 @@ module XL.SYMBOLS is
         return nil
 
 
+    procedure SetEnclosing (table : symbol_table; enclosing : symbol_table) is
+    // ------------------------------------------------------------------------
+    //    Set the enclosing of the table
+    // ------------------------------------------------------------------------
+        table.enclosing := enclosing
+
+
     procedure AddUsing(table : symbol_table;
                        scope : PT.tree;
                        syms  : symbol_table) is

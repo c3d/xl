@@ -39,15 +39,23 @@ module XL.SEMANTICS.TYPES.GENERICS with
     type declaration_list   is string of declaration
 
 
-    type generic_type_data
-    type generic_type is access to generic_type_data
     type generic_type_data is any_type_data with
     // ------------------------------------------------------------------------
     //    Information in a generic type
     // ------------------------------------------------------------------------
         parameters      : declaration_list
         symbols         : SYM.symbol_table
-        context         : SYM.symbol_table
+    type generic_type is access to generic_type_data
+
+
+    type generic_info_data is PT.info_data with
+    // ------------------------------------------------------------------------
+    //   Information about a context where generics are being declared
+    // ------------------------------------------------------------------------
+        parameters      : declaration_list
+        symbols         : SYM.symbol_table
+        generic_types   : string of generic_type
+    type generic_info is access to generic_info_data
 
 
     // Access to the current generic context

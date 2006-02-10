@@ -263,7 +263,7 @@ module XL.SEMANTICS.GENERICS is
 
         oldContext : SYM.symbol_table := XLT.context
 
-        XLT.context := SYM.NewSymbolTable (gtp.context)
+        XLT.context := SYM.NewSymbolTable (SYM.Enclosing(gtp.symbols))
         SYM.AddUsing XLT.context, nil, oldContext
 
         // Insert declarations in the context

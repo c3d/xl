@@ -51,10 +51,6 @@ module XL.SEMANTICS.TYPES.GENERICS is
 //     entered in the symbol table, it can then be referred by any other
 //     declaration, making it generic.
 
-    // The global generic context
-    generic_context : generic_type := nil
-
-
     procedure MakeParameterList (Parms : PT.tree;
                                  in out list : declaration_list) is
     // ------------------------------------------------------------------------
@@ -158,11 +154,40 @@ module XL.SEMANTICS.TYPES.GENERICS is
         return true
 
 
+    function GenericContext() return generic_info is
+    // ------------------------------------------------------------------------
+    //    Return the generic type information for current context
+    // ------------------------------------------------------------------------
+        prop : PT.tree := SYM.GetProperty(XLT.context, "GENERIC", true)
+        if prop = nil then
+            return nil
+        gc : PT.FindInfo (prop, "GENERIC") as generic_info
+        return gc
+
+
     function IsGenericContext() return boolean is
     // ------------------------------------------------------------------------
     //    Check if the current context is generic or not
     // ------------------------------------------------------------------------
-        return generic_context <> nil
+        return GenericContext() <> nil
+
+
+    function NewGenericContext(ctxt : SYM.symbol_table;
+                               prop : PT.tree) return generic_info is
+    // ------------------------------------------------------------------------
+    //   Create a generic context in the given symbol table
+    // ------------------------------------------------------------------------
+        trace[generics] "Creating new context in ", ctxt, " for ", prop
+
+        // Create the generic info, and attach it to the prop
+        gi : generic_info
+        gi.symbols := ctxt
+        PT.SetInfo prop, "GENERIC", gi
+
+        // Mark the context as generic
+        SYM.SetProperty ctxt, "GENERIC", prop
+
+        return gi
 
 
     function IsGenericType (tp : any_type) return boolean is
@@ -212,23 +237,34 @@ module XL.SEMANTICS.TYPES.GENERICS is
     // ------------------------------------------------------------------------
     //    Make a given type generic in the current generic context
     // ------------------------------------------------------------------------
-        if generic_context = nil then
-            ERR.Error "Internal: Type '$1' made generic without context",
+
+        // Find the current generic context
+        gi : generic_info := GenericContext()
+        if gi = nil then
+            ERR.Error "'$1' is not declared in a generic context",
                       TY.Source(tp)
             return tp
 
-        if generic_context.base <> nil then
-            ERR.Error "Internal: Type '$1' made generic with context",
-                      TY.Source(tp)
-            ERR.Error "Internal: already used by '$1'",
-                      TY.Source(generic_context.base)
-            return tp
+        // Check if we already made this type generic
+        existing : generic_type
+        for existing in gi.generic_types loop
+            if TY.SameType (tp, existing.base) then
+                return existing
 
-        // Make it base of current generic context
-        result := generic_context
-        result.base := tp
-        result.name := tp.name
-        generic_context := nil
+        // Make a generic type out of the context and the input type
+        gc : generic_type
+        gc.base := tp
+        gc.machine_name := SYM.Temporary ("<generic type>")
+        gc.interface_match := GenericTypeMatch
+        gc.name := tp.name
+        gc.symbols := gi.symbols
+        gc.parameters := gi.parameters
+
+        // Record that we made a generic type
+        gi.generic_types += gc
+
+        // Return the generic type we just created
+        return gc
 
 
     procedure AddGenericDependency (tp : any_type) is
@@ -242,43 +278,47 @@ module XL.SEMANTICS.TYPES.GENERICS is
         if gtp = nil then
             ERR.Error "Internal: Dependency '$1' is not a generic type",
                       TY.Source(tp)
-            trace[generics] "Dependency is not generic ", TY.Source(tp) 
             return
 
-        if generic_context = nil then
-            trace[generics] "Creating new context"
-            generic_context.base := nil
-            generic_context.interface_match := GenericTypeMatch
-            generic_context.name := gtp.name
-            generic_context.symbols := SYM.NewSymbolTable(XLT.context)
-            generic_context.context := XLT.context
-            SYM.SetInteger generic_context.symbols, "GENPARM", 1
-            generic_context.machine_name := SYM.Temporary("<generic context>")
+        // If the current context is not generic, make it generic
+        gi : generic_info := GenericContext()
+        if gi = nil then
+            gi := NewGenericContext (XLT.context, PT.Clone(TY.Source(gtp)))
+            assert gi <> nil
 
-        // Check if we already have that parameter
-        Name : PT.tree := TY.Source(gtp)
-        Existing : DCL.declaration
-        for Existing in generic_context.parameters loop
-            if PT.Matches(Name, Existing.Name) then
-                trace[generics] "Already dependent on ", Name
+        // Check if we already have a dependency on that type
+        existing : generic_type
+        for existing in gi.generic_types loop
+            if TY.SameType(existing, gtp) then
+                trace[generics] "Already dependent on ", TY.Source(gtp)
                 return
 
+        // Add the right declaration to the local generic info
+        // CHECK: we don't add it to the generic symbol table, because
+        // presumably the declaration is already visible in context
         if size(gtp.parameters) = 0 then
-            // Create a declaration for a simple generic type
-            Name := PT.Clone(Name)
-            Type : PT.tree := TY.Source(TY.type_of_types)
-            Parm : PT.tree := DCL.EnterDeclaration (Name, Type, nil, true)
-            Decl : DCL.declaration := DCL.GetDeclaration(Parm)
-            generic_context.parameters += Decl
+
+            Name : PT.tree := TY.Source(gtp)
+            Decl : DCL.declaration := DCL.GetDeclaration(Name)
+            assert Decl <> nil
+            gi.parameters += Decl
+            gi.generic_types += gtp
+
             trace[generics] "Simple dependency #",
-                            size(generic_context.parameters), " is ", Name
+                            size(gi.parameters), " is ", Name
         else
             // This is a complex type, e.g. function (K : somegeneric)
             // In that case, we add the dependents themselves
             trace[generics] "Recursive dependency #",
-                            size(generic_context.parameters), " has ",
+                            size(gi.parameters), " has ",
                             size(gtp.parameters), " deps" 
-            generic_context.parameters += gtp.parameters
+            Decl : DCL.declaration
+            for Decl in gtp.parameters loop
+                if TY.SameType(Decl.type, TY.type_of_types) then
+                    subtype : any_type := TY.GetDefinedType(Decl.name)
+                    AddGenericDependency subtype
+                else
+                    gi.parameters += Decl
 
 
     function EnterGeneric(Parms  : PT.tree;
@@ -301,20 +341,20 @@ module XL.SEMANTICS.TYPES.GENERICS is
                 infix.right := SecondNonGenericDecl
                 return infix
 
-        // Create the generic context
+        // Avoid nested generics (necessary?)
+        if IsGenericContext() then
+            ERR.Error "Generic declaration '$1' is nested", Decls
+            return XLT.XLDeclarations Decls
+
+        // Create a local symbol table, and make it our generic context
         oldContext : SYM.symbol_table := XLT.context
-        wasGeneric : generic_type := generic_context
-        gtp : generic_type
-        gtp.base := nil
-        gtp.interface_match := GenericTypeMatch
-        gtp.name := Decls
-        gtp.symbols := SYM.NewSymbolTable(XLT.context)
-        gtp.context := XLT.context
-        XLT.context := gtp.symbols
-        SYM.SetInteger XLT.context, "GENPARM", 1
+        syms : SYM.symbol_table := SYM.NewSymbolTable(XLT.context)
+        gi : generic_info := NewGenericContext(syms, Decls)
+        assert gi <> nil
+        assert gi.symbols = syms
+        XLT.context := syms
 
         // Check if empty parameter list. [ ] is a block with an empty name
-        generic_context := nil
         if Parms <> nil and Parms.kind = PT.xlNAME then
             N : Parms as PT.name_tree
             if N.value = "" then
@@ -323,29 +363,25 @@ module XL.SEMANTICS.TYPES.GENERICS is
         // Declare the parameters in the generic context, making them generic
         if Parms <> nil then
             Parms := XLT.XLDeclarations (Parms)
-            MakeParameterList Parms, gtp.parameters
+            MakeParameterList Parms, gi.parameters
 
-        if generic_context <> nil then
-            ERR.Error "Generic parameters '$1' are themselves generic", Parms
-
-        // Process the main declaration, which will become generic
-        // because we have a generic context
-        generic_context := gtp
-        XLT.context := SYM.NewSymbolTable (XLT.context)
-        SYM.CopyProperty XLT.context, oldContext, "GLOBAL"
-        SYM.CopyProperty XLT.context, oldContext, "LOCAL"
-        SYM.CopyProperty XLT.context, oldContext, "FNPARM"
-        SYM.CopyProperty XLT.context, oldContext, "GENPARM"
+        // Process the main declaration in a nested generic context
+        genContext : SYM.symbol_table := SYM.NewSymbolTable(XLT.context)
+        XLT.context := genContext
+        SYM.CopyProperty genContext, oldContext, "GLOBAL"
+        SYM.CopyProperty genContext, oldContext, "LOCAL"
+        SYM.CopyProperty genContext, oldContext, "FNPARM"
+        SYM.CopyProperty genContext, oldContext, "GENPARM"
         result := XLT.XLDeclarations(Decls)
 
         // Import the declarations from the new context into the old one
-        SYM.AddSymbols oldContext, XLT.context
+        SYM.AddSymbols oldContext, genContext
         XLT.context := oldContext
 
         // If no type became generic because of the context, error
-        if gtp.base = nil then
-            ERR.Error "Unable to make '$1' generic", Decls
-        generic_context := wasGeneric
+        if size(gi.generic_types) = 0 then
+            ERR.Error "There was no generic declaration in '$1'", Decls
+
 
 
     translation XLDeclarations

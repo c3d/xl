@@ -503,21 +503,21 @@ typedef struct Record_948 {
   xlmodule base_1;
 } Record_948;
 Record_948 xlbuiltins_949; /* Global */
-typedef xlint (*FnPtr_964) ( xlint x_963 ) ;
-xlint g_965 ( xlint x_963 ) ;
-xlint g_965 ( xlint x_963 ) {
+typedef xlint (*FnPtr_965) ( xlint x_964 ) ;
+xlint g_966 ( xlint x_964 ) ;
+xlint g_966 ( xlint x_964 ) {
 xlint ret_977; /* Temp */
 xlint ret_978; /* Temp */
 xlint ret_979; /* Temp */
 xlint result_976; /* Result */
 {
-ret_977 = x_963 - 1;
-ret_978 = g_965 ( ret_977 );
+ret_977 = x_964 - 1;
+ret_978 = g_966 ( ret_977 );
 ret_979 = ret_978 + 1;
 result_976 = ret_979;
-goto exit_g_965;
+goto exit_g_966;
 }
-exit_g_965: 0;
+exit_g_966: 0;
 return result_976;
 }
 namespace xl { namespace ui { namespace console {
