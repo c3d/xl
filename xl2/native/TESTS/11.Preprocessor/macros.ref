@@ -510,20 +510,18 @@ xlint s_953; /* Global */
 xlint t_954; /* Global */
 xlint ret_955; /* Temp */
 xlint ret_956; /* Temp */
-xlint ret_957; /* Temp */
 namespace xl { namespace ui { namespace console {
 std::vector< ::text > arguments;
 }}}
 void XLMain() {
 xlint ret_955; /* Temp */
 xlint ret_956; /* Temp */
-xlint ret_957; /* Temp */
 k_950 = 1;
 l_951 = 1;
 o_952 = 1;
 ret_955 = s_953 * 2;
-ret_957 = ret_955 * 2;
-t_954 = ret_957;
+ret_956 = ret_955 * 2;
+t_954 = ret_956;
 /* Main */
 }
 namespace xl { namespace translator {
