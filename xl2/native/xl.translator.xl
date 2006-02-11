@@ -28,6 +28,8 @@ import PR = XL.PARSER
 import IO = XL.TEXT_IO
 import BC = XL.BYTECODE
 import SEM = XL.SEMANTICS
+import PPR = XL.SEMANTICS.MACROS
+import FL = XL.FILES
 import TY = XL.SEMANTICS.TYPES
 import REC = XL.SEMANTICS.TYPES.RECORDS
 import OPT = XL.OPTIMIZER
@@ -144,6 +146,9 @@ module XL.TRANSLATOR is
     // ------------------------------------------------------------------------
     //   Deal with the semantics in a scope
     // ------------------------------------------------------------------------
+
+        if scope = scopeMain or scope = scopeGlobal then
+            input := PPR.Preprocess (input)
 
         old_global   : SYM.symbol_table := global_context
         old_function : SYM.symbol_table := function_context

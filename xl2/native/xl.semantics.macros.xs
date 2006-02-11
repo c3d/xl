@@ -41,3 +41,4 @@ module XL.SEMANTICS.MACROS with
 
 
     procedure EnterMacro (kind : text; from : PT.tree; to : PT.tree)
+    function Preprocess (input : PT.tree) return PT.tree

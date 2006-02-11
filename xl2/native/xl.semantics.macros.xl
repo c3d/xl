@@ -192,19 +192,34 @@ module XL.SEMANTICS.MACROS is
             return parse_tree (@error)
         includes += 1
         result := PR.Parse(P)
-        result := XLT.XLDeclarations(result)
+        result := Preprocess(result)
         includes -= 1
+
+
+    function Preprocess (input : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Run a preprocessing phase before compilation
+    // ------------------------------------------------------------------------
+        if input = nil then
+            return input
+        result := XLT.XLMacros (input)
+        if result.kind = PT.xlBLOCK then
+            bt : result as PT.block_tree
+            bt.child := Preprocess(bt.child)
+        else if result.kind = PT.xlPREFIX then
+            xt : result as PT.prefix_tree
+            xt.left := Preprocess(xt.left)
+            xt.right := Preprocess(xt.right)
+        if result.kind = PT.xlINFIX then
+            it : result as PT.infix_tree
+            it.left := Preprocess(it.left)
+            it.right := Preprocess(it.right)
 
 
     translation XLDeclarations
     // ------------------------------------------------------------------------
-    //   The translations done by the macro system
+    //   The scoped translations done by the macro system at declaration time
     // ------------------------------------------------------------------------
-        when
-            replace ('MatchExpr') with ('ReplExpr')
-        then
-            EnterMacro "xlsemantics", MatchExpr, ReplExpr
-            return parse_tree(@nop)
         when
             replace 'Phase' ('MatchExpr') with ('ReplExpr')
         where
@@ -214,6 +229,16 @@ module XL.SEMANTICS.MACROS is
             EnterMacro PT.XLNormalize(PhaseName.value), MatchExpr, ReplExpr
             return parse_tree(@nop)
 
+
+    translation XLMacros
+    // ------------------------------------------------------------------------
+    //   The non-scoped translations done during preprocessing
+    // ------------------------------------------------------------------------
+        when
+            replace ('MatchExpr') with ('ReplExpr')
+        then
+            EnterMacro "xlmacros", MatchExpr, ReplExpr
+            return parse_tree(@nop)
         when
             include 'File'
         then

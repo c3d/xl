@@ -98,3 +98,4 @@ module XL.TRANSLATOR with
     function XLEnterFunction(input: PT.tree) return PT.tree    // Generated
     function XLExpression(input : PT.tree) return PT.tree      // Generated
     function XLConstant(input : PT.tree) return PT.tree        // Generated
+    function XLMacros(input : PT.tree) return PT.tree          // Generated
