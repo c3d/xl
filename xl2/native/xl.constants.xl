@@ -133,12 +133,22 @@ module XL.CONSTANTS is
             return true
         return false
 
-
     function IsBoolean(expr : PT.tree) return boolean is
     // ------------------------------------------------------------------------
     //   Return true if the expression evaluates as true or false
     // ------------------------------------------------------------------------
         return PT.Matches(expr, true_tree) or PT.Matches(expr, false_tree)
+
+
+    function IsText(expr : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if the expression evaluates as a text literal
+    // ------------------------------------------------------------------------
+        if expr.kind = PT.xlTEXT then
+            astext : expr as PT.text_tree
+            if astext.quote <> '''' then
+                return true
+        return false
 
 
     translation XLConstant
@@ -303,4 +313,20 @@ module XL.CONSTANTS is
         when (not 'X') where IsBoolean(X) then
             return AsBoolean(IsFalse(X), input.position)
 
+
+        // TEXT
+        when ('X' + 'Y') where (IsText(X) and IsText(Y)) then
+            txX : X as PT.text_tree
+            txY : Y as PT.text_tree
+            return PT.NewText (txX.value + txY.value, '"', input.position)
+        when (xl.length('X')) where IsText(X) then
+            txX : X as PT.text_tree
+            return PT.NewInteger (length(txX.value), input.position)
+        when ('X'['A'..'B']) where (IsText(X) and
+                                    A.kind = PT.xlINTEGER and
+                                    B.kind = PT.xlINTEGER) then
+            txX : X as PT.text_tree
+            inA : A as PT.integer_tree
+            inB : B as PT.integer_tree
+            return PT.NewText (txX.value[inA.Value..inB.Value], input.position)
 

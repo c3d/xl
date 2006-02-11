@@ -1,15 +1,15 @@
 // Test that the macro system sort of works
-// RUN=cat %b.cpp
+// RUN=cat %c
 
-replace (DEFAULT) with (1.0)
+xl.replace (DEFAULT) with (1.0)
 
-replace XLDeclarations(let 'X') with ('X' : real := DEFAULT)
+xl.replace XLDeclarations(let 'X') with ('X' : real := DEFAULT)
 
 let K
 let L
 let O
 
-replace ('K' + 'K') with ('K' * 2)
+xl.replace ('K' + 'K') with ('K' * 2)
 
 S : integer
 T : integer := (S+S) + (S+S)

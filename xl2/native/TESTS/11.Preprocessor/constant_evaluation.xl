@@ -1,7 +1,7 @@
 // Check the behavior of constant_evaluation
-// RUN=cat %b.cpp
+// RUN=cat %c
 
-replace (fact 0) with (1)
-replace (fact 'X') with (constant_evaluation('X' * fact ('X'-1)))
+xl.replace (fact 0) with (1)
+xl.replace (fact 'X') with (xl.value('X' * xl.value(fact ('X'-1))))
 
 K : integer := fact(5)

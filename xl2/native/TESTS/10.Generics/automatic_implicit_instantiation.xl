@@ -1,5 +1,5 @@
 // Check that implicit instantiation works with "true" generic types
-// RUN=cat %b.cpp
+// RUN=cat %c
 
 generic [type item]
 function Ajouter(X, Y : item) return item is

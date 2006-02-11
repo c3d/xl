@@ -1,6 +1,4 @@
 11.Preprocessor/macro_recursive.xl:3: Too many macro recursions at 'sin (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos (A) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )'
-| replace (sin 'X') with (sin (cos('X')))
-|_____________________________^
-11.Preprocessor/macro_recursive.xl:3: No translation found for 'A := @ error'
-| replace (sin 'X') with (sin (cos('X')))
-|_____________________________^
+| xl.replace (sin 'X') with (sin (cos('X')))
+|________________________________^
+[Compiler generated]: No translation found for 'A := @ nop'

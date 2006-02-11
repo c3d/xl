@@ -1,5 +1,5 @@
 // The quintessential XL test now passes :-)
-// RUN=cat %b.cpp
+// RUN=cat %c
 
 generic type ordered where
     A, B : ordered

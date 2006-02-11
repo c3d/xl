@@ -1,0 +1,22 @@
+// Implement an 'assert' macro, using elements like position, etc
+// RUN=cat %c
+// The output should contain only one test, since 2+1<4 is true at compile time
+
+// Evaluate the expression, expand the condition as text
+xl.replace (my_assert('cond')) with (my_assert_implementation(xl.value('cond'), xl.text('cond'), 'cond'))
+
+// Check the constant cases for static asserts
+xl.replace (my_assert_implementation(true, 'message', 'source')) with (@nop)
+xl.replace (my_assert_implementation(false, 'message', 'source')) with (xl.error ("Assertion '$1' is false at compile time", 'source'))
+
+// Otherwise, expand to a runtime test
+xl.replace (my_assert_implementation('cond', 'msg', 'src')) with (if not ('cond') then my_assertion_failure ('msg', xl.file('src'), xl.line('src')))
+
+// Tests
+procedure my_assertion_failure(msg : text; file : text; line : integer) is
+    line := line - 1
+
+procedure test_it(X : integer; Y : integer) is
+    my_assert (2 + 1 < 4)
+    my_assert (X + Y < 34)
+

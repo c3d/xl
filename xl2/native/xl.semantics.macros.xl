@@ -31,6 +31,8 @@ import SC = XL.SCANNER
 import IO = XL.TEXT_IO
 import FL = XL.FILES
 import CST = XL.CONSTANTS
+import ERR = XL.ERRORS
+import POS = XL.SCANNER.POSITION
 
 
 module XL.SEMANTICS.MACROS is
@@ -157,21 +159,31 @@ module XL.SEMANTICS.MACROS is
 
         if recursions > max_recursions then
             ERR.Error "Too many macro recursions at '$1'", input
-            return parse_tree (@error)
+            return parse_tree(@nop)
+
+        ERR.PushErrorContext()
         recursions += 1
 
         // Apply the macro itself
         mac     : info as macro
-        trace [macro] "Macro:  ", input
-        trace [macro] "Macro-> ", mac.replacement
+        trace [macro] "Macro #", recursions, ": ", input
+        trace [macro] "Macro #", recursions, " replacement: ", mac.replacement
         result := Replace (mac.replacement, args)
-        trace [macro] "Macro=> ", result
+        trace [macro] "Macro #", recursions, " expanded to: ", result
 
-        // Reapply the same kind of translation that we had on input
-        result := SYM.LookupRewrite(XLT.context, mac.kind, result)
-        trace [macro] "Macro=  ", result
+        // Reapply XLMacros if this is not what we are doing, so that
+        // things like xl.include, xl.value or xl.file work for other macros
+        if mac.kind <> "xlmacros" then
+            result := Preprocess(result)
+            trace [macro] "Macro #", recursions, " preprocessed to: ", result
+            result := SYM.LookupRewrite (XLT.context, mac.kind, result)
+            trace [macro] "Macro #", recursions, " translated to: ", result
 
         recursions -= 1
+        errors : text := ERR.PopErrorContext()
+        if errors <> "" then
+            ERR.Error "While preprocessing '$1'", input
+            ERR.Display errors            
 
 
     procedure EnterMacro (kind : text; from : PT.tree; to : PT.tree) is
@@ -197,8 +209,13 @@ module XL.SEMANTICS.MACROS is
         trace[macro] "Include ", filename
         if filename.kind <> PT.xlTEXT then
             ERR.Error "'$1' is not a valid include file name", filename
-            return parse_tree(@error)
+            return parse_tree(@nop)
 
+        if includes > max_includes then
+            ERR.Error "Too many recursive file inclusions at '$1'", filename
+            return parse_tree(@nop)
+
+        includes += 1
         name    : filename as PT.text_tree
         P       : PR.parser := nil
         DirName : text
@@ -221,19 +238,10 @@ module XL.SEMANTICS.MACROS is
                 exit if result <> nil
             exit if result <> nil
 
+        includes -= 1
         if result = nil then
            ERR.Error "Cannot open include file '$1'", filename
-           return parse_tree(@error)
-
-        if includes > max_includes then
-            ERR.Error "Too many recursive file inclusions at '$1'", name
-            return result
-
-        includes += 1
-        trace[macro] "Include parsed ", result
-        result := Preprocess(result)
-        trace[macro] "Include preprocessed ", result
-        includes -= 1
+           return parse_tree(@nop)
 
 
     function Preprocess (input : PT.tree) return PT.tree is
@@ -242,6 +250,9 @@ module XL.SEMANTICS.MACROS is
     // ------------------------------------------------------------------------
         if input = nil then
             return input
+        if recursions > max_recursions then
+            ERR.Error "Too many macro recursions at '$1'", input
+            return parse_tree(@nop)
         result := XLT.XLMacros (input)
         if result.kind = PT.xlBLOCK then
             bt : result as PT.block_tree
@@ -254,6 +265,27 @@ module XL.SEMANTICS.MACROS is
             it : result as PT.infix_tree
             it.left := Preprocess(it.left)
             it.right := Preprocess(it.right)
+        if result <> input then
+            recursions += 1
+            result := Preprocess(result)
+            recursions -= 1
+
+
+    procedure EmitError (Message : PT.tree;
+                         Arg1    : PT.tree := nil;
+                         Arg2    : PT.tree := nil;
+                         Arg3    : PT.tree := nil) is
+    // ------------------------------------------------------------------------
+    //   Make the compiler emit an error message (from xl.error)
+    // ------------------------------------------------------------------------
+        MsgTxt : text
+        Message := CST.EvaluateConstant (Message)
+        if Message.kind = PT.xlTEXT then
+            Msg : Message as PT.text_tree
+            MsgTxt := Msg.value
+        else
+            MsgTxt := text (Message)
+        ERR.Error MsgTxt, Arg1, Arg2, Arg3
 
 
     translation XLDeclarations
@@ -261,7 +293,7 @@ module XL.SEMANTICS.MACROS is
     //   The scoped translations done by the macro system at declaration time
     // ------------------------------------------------------------------------
         when
-            replace 'Phase' ('MatchExpr') with ('ReplExpr')
+            xl.replace 'Phase' ('MatchExpr') with ('ReplExpr')
         where
             Phase.kind = PT.xlNAME
         then
@@ -275,25 +307,80 @@ module XL.SEMANTICS.MACROS is
     //   The non-scoped translations done during preprocessing
     // ------------------------------------------------------------------------
         when
-            replace ('MatchExpr') with ('ReplExpr')
+            xl.replace ('MatchExpr') with ('ReplExpr')
         then
             EnterMacro "xlmacros", MatchExpr, ReplExpr
             return parse_tree(@nop)
         when
-            include 'File'
+            xl.define 'Variable' as 'Value'
+        where
+            Variable.kind = PT.xlNAME
+        then
+            VarName : Variable as PT.name_tree
+            CST.EnterNamedConstant VarName, CST.EvaluateConstant(Value)
+            return parse_tree(@nop)
+        when
+            xl.include 'File'
         then
             return Include (File)
-        when
-            constant_evaluation('Expression')
-        then
+        when (xl.value('Expression')) then
+            // Constant evaluation of an expression
+            count : integer := 0
             trace[macro] "Constant ", Expression
             Expression := XLT.XLMacros (Expression)
             trace[macro] "Expand as ", Expression
             result := CST.EvaluateConstant(Expression)
             while result <> Expression loop
+                count += 1
+                if count > max_recursions then
+                    ERR.Error "Too many recursive evaluations of '$1'", result
+                    return result
                 trace[macro] "Reprocess ", result
                 Expression := Preprocess (result)
                 trace[macro] "Reprocessed as ", Expression
                 result := CST.EvaluateConstant (Expression)
             trace[macro] "Constant value ", result
-                
+        when (xl.position ('Expression')) then
+            // Return the position of the expression (not that useful)
+            return PT.NewInteger (Expression.position, input.position)
+        when (xl.file ('Expression')) then
+            // Return the file where a given expression was seen
+            file   : text
+            offset : integer
+            POS.PositionToFile Expression.position, file, offset
+            return PT.NewText (file, '"', input.position)
+        when (xl.line ('Expression')) then
+            // Return the line where a given expression was seen
+            file, source : text
+            line, column : integer
+            POS.PositionToLine Expression.position, file, line, column, source
+            return PT.NewInteger (line, input.position)
+        when (xl.column ('Expression')) then
+            // Return the line where a given expression was seen
+            file, source : text
+            line, column : integer
+            POS.PositionToLine Expression.position, file, line, column, source
+            return PT.NewInteger (column, input.position)
+        when (xl.source_text ('Expression')) then
+            // Return the line where a given expression was seen
+            file, source : text
+            line, column : integer
+            POS.PositionToLine Expression.position, file, line, column, source
+            return PT.NewText (source, '"', input.position)
+        when (xl.text('Expression')) then
+            // Turn an expression into the equivalent text
+            return PT.NewText (text(Expression), '"', input.position)
+        when (xl.error('Message')) then
+            EmitError Message, input
+            return parse_tree (@nop)
+        when (xl.error('Message', 'Arg1')) then
+            EmitError Message, Arg1
+            return parse_tree (@nop)
+        when (xl.error('Message', 'Arg1', 'Arg2')) then
+            EmitError Message, Arg1, Arg2
+            return parse_tree (@nop)
+        when (xl.error('Message', 'Arg1', 'Arg2', 'Arg3')) then
+            EmitError Message, Arg1, Arg2, Arg3
+            return parse_tree (@nop)
+            
+

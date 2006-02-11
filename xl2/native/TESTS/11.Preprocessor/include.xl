@@ -1,4 +1,4 @@
 // Test that we can include another file
-// RUN=cat %b.cpp
-include "macros.xl"
+// RUN=cat %c
+xl.include "macros.xl"
 

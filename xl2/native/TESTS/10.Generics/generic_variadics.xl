@@ -1,5 +1,5 @@
 // Test that simple recursive definitions of variadics work
-// RUN=cat %b.cpp
+// RUN=cat %c
 
 generic type ordered
 
