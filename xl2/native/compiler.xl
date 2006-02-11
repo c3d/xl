@@ -37,7 +37,7 @@ import ERR = XL.ERRORS
 import MDL = XL.SEMANTICS.MODULES
 
 // Things that we import just so that they get compiled
-import XL.CONSTANTS
+import CST = XL.CONSTANTS
 import XL.SEMANTICS.TYPES
 import XL.SEMANTICS.DECLARATIONS
 import XL.SEMANTICS.TYPES.FUNCTIONS
@@ -49,7 +49,7 @@ import XL.SEMANTICS.GENERICS
 import XL.SEMANTICS.WRITTEN_FORMS
 import XL.SEMANTICS.INSTRUCTIONS
 import XL.SEMANTICS.PRAGMAS
-import XL.SEMANTICS.MACROS
+import PPR = XL.SEMANTICS.MACROS
 
 // Plugins
 import XL.PLUGIN.DIFFERENTIATION
@@ -113,6 +113,7 @@ procedure Main is
             if I + 1 <= Max - 1 then
                 I += 1
                 MDL.AddPath CS.arguments[I]
+                PPR.AddPath CS.arguments[I]
         else if name = "-g" then
             CG.debug := true
 

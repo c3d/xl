@@ -70,25 +70,20 @@ module XL.SEMANTICS.INSTRUCTIONS is
 
         // Check if this is a compile-time if
         TestConstant : PT.tree := CST.EvaluateConstant(Test)
-        if TestConstant then
-            if TestConstant.kind <> PT.xlNAME then
-                ERR.Error "Compile-time test '$1' has wrong type",
-                          Test
-            else
-                ResultName : TestConstant as PT.name_tree
-                if ResultName.value = "true" then
-                    if TrueCase <> nil then
-                        return XLT.ScopeSemantics(TrueCase, XLT.scopeLocal)
-                    else
-                        return parse_tree(@nop)
-                else if ResultName.value = "false" then
-                    if FalseCase <> nil then
-                        return XLT.ScopeSemantics(TrueCase, XLT.scopeLocal)
-                    else
-                        return parse_tree(@nop)
+        if CST.IsBoolean(TestConstant) then
+            if CST.IsTrue(TestConstant) then
+                if TrueCase <> nil then
+                    return XLT.ScopeSemantics(TrueCase, XLT.scopeLocal)
                 else
-                    ERR.Error "Compile-time test '$1' must be true or false",
-                              ResultName
+                    return parse_tree(@nop)
+            else if CST.IsFalse(TestConstant) then
+                if FalseCase <> nil then
+                    return XLT.ScopeSemantics(TrueCase, XLT.scopeLocal)
+                else
+                    return parse_tree(@nop)
+            else
+                ERR.Error "Internal: Compile-time test '$1' is not true/false",
+                          TestConstant
 
         // Convert to boolean and evaluate condition
         Test := XLT.XLSemantics(Test)

@@ -31,7 +31,7 @@ import XLT = XL.TRANSLATOR
 import SYM = XL.SYMBOLS
 import PR = XL.PARSER
 import PC = XL.PLUGIN.COMMON
-import XLC = XL.CONSTANTS
+import CST = XL.CONSTANTS
 
 module XL.PLUGIN.IFP is
 // ----------------------------------------------------------------------------
@@ -47,23 +47,16 @@ module XL.PLUGIN.IFP is
            'Anything'
         then
            pragma : PT.tree := SYM.GetProperty(XLT.context, "PRAGMA")
-
            translate pragma
 
               when
-                 'PragmaName' 'Variable'
+                  'PragmaName' 'Variable'
               then
-                 Value : PT.Tree := XLC.EvaluateConstant(Variable)
-
-                 Args  : PT.tree_map
-
-                 if PT.Matches(Value, XLC.ConstantTrue(), Args) > 0 then
-                    return input
-                 else
-                    return nil
-
+                  if CST.IsTrue (Variable) then
+                      return input
+                  else
+                      return parse_tree(@nop)
               else
-                 ERR.Error "Pragma error : '$1'", pragma
-                 ERR.Error "Syntax is : {Ifp Variable }", pragma.position
+                 ERR.Error "Incorrect syntax '$1', use {ifp value}", pragma
                  return parse_tree(@error)
 

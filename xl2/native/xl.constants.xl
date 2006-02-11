@@ -32,10 +32,22 @@ module XL.CONSTANTS is
 //    Implements basic evaluation of constants
 // ----------------------------------------------------------------------------
 
+    true_tree : PT.tree := nil
+    false_tree : PT.tree := nil
+    
     function EvaluateConstant(input : PT.tree) return PT.tree is
     // ------------------------------------------------------------------------
     //   Evaluate a constant and return it, or return nil
     // ------------------------------------------------------------------------
+
+        // Enter 'true' and 'false' constants
+        if true_tree = nil then
+            name : PT.name_tree := PT.NewName("true")
+            EnterNamedConstant name, name
+            true_tree := name
+            name := PT.NewName("false")
+            EnterNamedConstant name, name
+            false_tree := name
 
         // Evaluate leaf values
         if input.kind = PT.xlINTEGER then
@@ -52,34 +64,26 @@ module XL.CONSTANTS is
             infix : input as PT.infix_tree
             left : PT.tree := EvaluateConstant(infix.left)
             right : PT.tree := EvaluateConstant(infix.right)
-            if left <> nil and right <> nil then
+            if left <> infix.left or right <> infix.right then
                 input := PT.NewInfix(infix.name, left, right, infix.position)
 
         else if input.kind = PT.xlPREFIX then
             prefix : input as PT.prefix_tree
             left : PT.tree := EvaluateConstant(prefix.left)
             right : PT.tree := EvaluateConstant(prefix.right)
-            if left <> nil and right <> nil then
+            if left <> prefix.left or right <> prefix.right then
                 input := PT.NewPrefix(left, right, prefix.position)
 
         else if input.kind = PT.xlBLOCK then
             block : input as PT.block_tree
             child : PT.tree := EvaluateConstant(block.child)
-            if child <> nil then
+            if child <> block.child then
                 input := PT.NewBlock(child,
                                      block.opening, block.closing,
                                      block.position)
 
         // Then check if we can evaluate the constants in the result
         result := XLT.XLConstant(input)
-
-        if result <> nil then
-            if result.kind = PT.xlBLOCK then
-                return nil
-            else if result.kind = PT.xlINFIX then
-                return nil
-            else if result.kind = PT.xlPREFIX then
-                return nil
 
 
     function NamedConstant(name : PT.name_tree) return PT.tree is
@@ -90,7 +94,7 @@ module XL.CONSTANTS is
         SYM.Lookup XLT.context, "CST", name.value, list, SYM.lookupAll
         if size(list) = 1 then
             return list[0]
-        return nil
+        return name
 
 
     procedure EnterNamedConstant(name : PT.name_tree; value : PT.tree) is
@@ -100,27 +104,41 @@ module XL.CONSTANTS is
         SYM.Enter XLT.context, "CST", name.value, value
 
 
-    true_tree  : PT.tree := nil
-    false_tree : PT.tree := nil
-
-    function ConstantTrue return PT.Tree is
-    // ------------------------------------------------------------------------
-    //    Return the boolean tree for True
-    // ------------------------------------------------------------------------
-        return true_tree
-
-    function AsBoolean(B : boolean) return PT.tree is
+    function AsBoolean(B : boolean; pos : integer) return PT.tree is
     // ------------------------------------------------------------------------
     //    Return a boolean tree
     // ------------------------------------------------------------------------
-        if true_tree = nil then
-            true_tree := NamedConstant(PT.NewName("true"))
-            false_tree := NamedConstant(PT.NewName("false"))
-
         if B then
-            return true_tree
+            result := PT.NewName("true", pos)
         else
-            return false_tree
+            result := PT.NewName("false", pos)
+
+
+    function IsTrue (expr : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if an expression evaluates to true
+    // ------------------------------------------------------------------------
+        expr := EvaluateConstant (expr)
+        if PT.matches(expr, true_tree) then
+            return true
+        return false
+
+
+    function IsFalse (expr : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if an expression evaluates to true
+    // ------------------------------------------------------------------------
+        expr := EvaluateConstant (expr)
+        if PT.matches(expr, false_tree) then
+            return true
+        return false
+
+
+    function IsBoolean(expr : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if the expression evaluates as true or false
+    // ------------------------------------------------------------------------
+        return PT.Matches(expr, true_tree) or PT.Matches(expr, false_tree)
 
 
     translation XLConstant
@@ -130,7 +148,11 @@ module XL.CONSTANTS is
 
         // Parentheses
         when (('Expression')) then
-            return EvaluateConstant(Expression)
+            result := EvaluateConstant(Expression)
+            if (result.kind = PT.xlINFIX or
+                result.kind = PT.xlPREFIX) then
+                result := parse_tree(('result'))
+            return result
 
         // INTEGERS
 
@@ -139,76 +161,79 @@ module XL.CONSTANTS is
                                 Y.kind = PT.xlINTEGER) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return PT.NewInteger(intX.value + intY.value)
+            return PT.NewInteger(intX.value + intY.value, input.position)
 
         when ('X' - 'Y') where (X.kind = PT.xlINTEGER and
                                 Y.kind = PT.xlINTEGER) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return PT.NewInteger(intX.value - intY.value)
+            return PT.NewInteger(intX.value - intY.value, input.position)
 
         when ('X' * 'Y') where (X.kind = PT.xlINTEGER and
                                 Y.kind = PT.xlINTEGER) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return PT.NewInteger(intX.value * intY.value)
+            return PT.NewInteger(intX.value * intY.value, input.position)
 
         when ('X' / 'Y') where (X.kind = PT.xlINTEGER and
                                 Y.kind = PT.xlINTEGER) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return PT.NewInteger(intX.value / intY.value)
+            return PT.NewInteger(intX.value / intY.value, input.position)
 
         // Logic - Integer
         when ('X' and 'Y') where (X.kind = PT.xlINTEGER and
                                   Y.kind = PT.xlINTEGER) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return PT.NewInteger(intX.value and intY.value)
+            return PT.NewInteger(intX.value and intY.value, input.position)
 
         when ('X' or 'Y') where (X.kind = PT.xlINTEGER and
                                 Y.kind = PT.xlINTEGER) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return PT.NewInteger(intX.value or intY.value)
+            return PT.NewInteger(intX.value or intY.value, input.position)
 
         when ('X' xor 'Y') where (X.kind = PT.xlINTEGER and
-                                Y.kind = PT.xlINTEGER) then
+                                  Y.kind = PT.xlINTEGER) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return PT.NewInteger(intX.value xor intY.value)
+            return PT.NewInteger(intX.value xor intY.value, input.position)
+        when (not 'X') where (X.kind = PT.xlINTEGER) then
+            intX : X as PT.integer_tree
+            return PT.NewInteger(not intX.value)
 
         // Comparisons - Integer
         when ('X' = 'Y') where (X.kind = PT.xlINTEGER and
                                 Y.kind = PT.xlINTEGER) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return AsBoolean(intX.value = intY.value)
+            return AsBoolean(intX.value = intY.value, input.position)
         when ('X' < 'Y') where (X.kind = PT.xlINTEGER and
                                 Y.kind = PT.xlINTEGER) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return AsBoolean(intX.value < intY.value)
+            return AsBoolean(intX.value < intY.value, input.position)
         when ('X' > 'Y') where (X.kind = PT.xlINTEGER and
                                 Y.kind = PT.xlINTEGER) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return AsBoolean(intX.value > intY.value)
+            return AsBoolean(intX.value > intY.value, input.position)
         when ('X' <> 'Y') where (X.kind = PT.xlINTEGER and
-                                Y.kind = PT.xlINTEGER) then
+                                 Y.kind = PT.xlINTEGER) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return AsBoolean(intX.value <> intY.value)
+            return AsBoolean(intX.value <> intY.value, input.position)
         when ('X' <= 'Y') where (X.kind = PT.xlINTEGER and
-                                Y.kind = PT.xlINTEGER) then
+                                 Y.kind = PT.xlINTEGER) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return AsBoolean(intX.value <= intY.value)
+            return AsBoolean(intX.value <= intY.value, input.position)
         when ('X' >= 'Y') where (X.kind = PT.xlINTEGER and
-                                Y.kind = PT.xlINTEGER) then
+                                 Y.kind = PT.xlINTEGER) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return AsBoolean(intX.value >= intY.value)
+            return AsBoolean(intX.value >= intY.value, input.position)
 
 
         // REALS
@@ -218,67 +243,64 @@ module XL.CONSTANTS is
                                 Y.kind = PT.xlREAL) then
             reX : X as PT.real_tree
             reY : Y as PT.real_tree
-            return PT.NewReal(reX.value + reY.value)
+            return PT.NewReal(reX.value + reY.value, input.position)
 
         when ('X' - 'Y') where (X.kind = PT.xlREAL and
                                 Y.kind = PT.xlREAL) then
             reX : X as PT.real_tree
             reY : Y as PT.real_tree
-            return PT.NewReal(reX.value - reY.value)
+            return PT.NewReal(reX.value - reY.value, input.position)
 
         when ('X' * 'Y') where (X.kind = PT.xlREAL and
                                 Y.kind = PT.xlREAL) then
             reX : X as PT.real_tree
             reY : Y as PT.real_tree
-            return PT.NewReal(reX.value * reY.value)
+            return PT.NewReal(reX.value * reY.value, input.position)
 
         when ('X' / 'Y') where (X.kind = PT.xlREAL and
                                 Y.kind = PT.xlREAL) then
             reX : X as PT.real_tree
             reY : Y as PT.real_tree
-            return PT.NewReal(reX.value / reY.value)
+            return PT.NewReal(reX.value / reY.value, input.position)
 
         // Comparisons - Real
         when ('X' = 'Y') where (X.kind = PT.xlREAL and
                                 Y.kind = PT.xlREAL) then
             reX : X as PT.real_tree
             reY : Y as PT.real_tree
-            return AsBoolean(reX.value = reY.value)
+            return AsBoolean(reX.value = reY.value, input.position)
         when ('X' < 'Y') where (X.kind = PT.xlREAL and
                                 Y.kind = PT.xlREAL) then
             reX : X as PT.real_tree
             reY : Y as PT.real_tree
-            return AsBoolean(reX.value < reY.value)
+            return AsBoolean(reX.value < reY.value, input.position)
         when ('X' > 'Y') where (X.kind = PT.xlREAL and
                                 Y.kind = PT.xlREAL) then
             reX : X as PT.real_tree
             reY : Y as PT.real_tree
-            return AsBoolean(reX.value > reY.value)
+            return AsBoolean(reX.value > reY.value, input.position)
         when ('X' <> 'Y') where (X.kind = PT.xlREAL and
-                                Y.kind = PT.xlREAL) then
+                                 Y.kind = PT.xlREAL) then
             reX : X as PT.real_tree
             reY : Y as PT.real_tree
-            return AsBoolean(reX.value <> reY.value)
+            return AsBoolean(reX.value <> reY.value, input.position)
         when ('X' <= 'Y') where (X.kind = PT.xlREAL and
-                                Y.kind = PT.xlREAL) then
+                                 Y.kind = PT.xlREAL) then
             reX : X as PT.real_tree
             reY : Y as PT.real_tree
-            return AsBoolean(reX.value <= reY.value)
+            return AsBoolean(reX.value <= reY.value, input.position)
         when ('X' >= 'Y') where (X.kind = PT.xlREAL and
-                                Y.kind = PT.xlREAL) then
+                                 Y.kind = PT.xlREAL) then
             reX : X as PT.real_tree
             reY : Y as PT.real_tree
-            return AsBoolean(reX.value >= reY.value)
+            return AsBoolean(reX.value >= reY.value, input.position)
+
+        // LOGIC
+        when ('X' and 'Y') where (IsBoolean(X) and IsBoolean(Y)) then
+            return AsBoolean(IsTrue(X) and IsTrue(Y), input.position)
+        when ('X' or 'Y') where (IsBoolean(X) and IsBoolean(Y)) then
+            return AsBoolean(IsTrue(X) or IsTrue(Y), input.position)
+        when (not 'X') where IsBoolean(X) then
+            return AsBoolean(IsFalse(X), input.position)
 
 
-    translation XLConstantFold
-    // ------------------------------------------------------------------------
-    //   Perform XL constant evaluation for inner nodes
-    // ------------------------------------------------------------------------
-
-        when
-            'T'
-        then
-            result := EvaluateConstant(T)
-            if result = nil then
-                return XLT.Recurse(T, XLConstantFold)

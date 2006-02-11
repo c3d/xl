@@ -1,3 +1,6 @@
-11.Preprocessor/include_recursive.xl:3: Too many recursive file inclusions at '"11.Preprocessor/include_recursive.xl"'
-| include "11.Preprocessor/include_recursive.xl"
-|______________________________________________^
+TESTS/11.Preprocessor/include_recursive.xl:3: Too many recursive file inclusions at '"include_recursive.xl"'
+| include "include_recursive.xl"
+|______________________________^
+./xl_builtins.xs:1: No translation found for 'include "include_recursive.xl"'
+| // ****************************************************************************
+|________________________________________________________^

@@ -31,6 +31,9 @@ module XL.SEMANTICS.MACROS with
 //    Implement the macro system
 // ----------------------------------------------------------------------------
 
+    include_path : string of text
+
+
     type macro_data is SYM.rewrite_data with
     // ------------------------------------------------------------------------
     //    Extra information stored about macro parameters
@@ -40,5 +43,7 @@ module XL.SEMANTICS.MACROS with
     type macro is access to macro_data
 
 
+    procedure AddPath (path : text)
     procedure EnterMacro (kind : text; from : PT.tree; to : PT.tree)
     function Preprocess (input : PT.tree) return PT.tree
+    function Include (filename : PT.tree) return PT.tree

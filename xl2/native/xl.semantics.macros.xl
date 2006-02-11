@@ -29,6 +29,8 @@ import SYM = XL.SYMBOLS
 import PR = XL.PARSER
 import SC = XL.SCANNER
 import IO = XL.TEXT_IO
+import FL = XL.FILES
+import CST = XL.CONSTANTS
 
 
 module XL.SEMANTICS.MACROS is
@@ -40,6 +42,23 @@ module XL.SEMANTICS.MACROS is
     recursions     : integer := 0
     max_includes   : integer := 100
     includes       : integer := 0
+
+
+    initialization
+    // ------------------------------------------------------------------------
+    //    Start with a '.' path
+    // ------------------------------------------------------------------------
+        include_path += text "."
+
+
+    procedure AddPath (path : text) is
+    // ------------------------------------------------------------------------
+    //   Add a path to the path list
+    // ------------------------------------------------------------------------
+        new_path : string of text
+        new_path += path
+        new_path += include_path
+        include_path := new_path
 
 
     function CreateWildcards(form : PT.tree) return PT.tree is
@@ -175,24 +194,45 @@ module XL.SEMANTICS.MACROS is
     // ------------------------------------------------------------------------
     //    Parse the file, and return the parsed file
     // ------------------------------------------------------------------------
+        trace[macro] "Include ", filename
         if filename.kind <> PT.xlTEXT then
             ERR.Error "'$1' is not a valid include file name", filename
             return parse_tree(@error)
 
-        name : filename as PT.text_tree
-        P    : PR.parser  := PR.Open(name.value)
-        S    : SC.scanner := P.scanner
+        name    : filename as PT.text_tree
+        P       : PR.parser := nil
+        DirName : text
+        for DirName in include_path loop
+            NormalizedName : text := PT.XLNormalize(name.value)
+            NameInDir : text
+            Directory : string of text := FL.Directory(DirName)
+            trace[macro] "Looking for ", filename, " in ", DirName
+            for NameInDir in Directory loop
+                if PT.XLNormalize(NameInDir) = NormalizedName then
+                    // TODO: Machine dependency here
+                    FullName : text := DirName + "/" + NameInDir
+                    trace[macro] "Found matching name ", FullName
+                    P := PR.Open (FullName)
+                    if PR.IsValid (P) then
+                        trace[macro] "Including ", FullName
+                        result := PR.Parse(P)
+                        exit if result <> nil
+                    PR.Close(P)
+                exit if result <> nil
+            exit if result <> nil
 
-        if not IO.valid(S.input) then
+        if result = nil then
            ERR.Error "Cannot open include file '$1'", filename
            return parse_tree(@error)
 
         if includes > max_includes then
             ERR.Error "Too many recursive file inclusions at '$1'", name
-            return parse_tree (@error)
+            return result
+
         includes += 1
-        result := PR.Parse(P)
+        trace[macro] "Include parsed ", result
         result := Preprocess(result)
+        trace[macro] "Include preprocessed ", result
         includes -= 1
 
 
@@ -243,4 +283,17 @@ module XL.SEMANTICS.MACROS is
             include 'File'
         then
             return Include (File)
-
+        when
+            constant_evaluation('Expression')
+        then
+            trace[macro] "Constant ", Expression
+            Expression := XLT.XLMacros (Expression)
+            trace[macro] "Expand as ", Expression
+            result := CST.EvaluateConstant(Expression)
+            while result <> Expression loop
+                trace[macro] "Reprocess ", result
+                Expression := Preprocess (result)
+                trace[macro] "Reprocessed as ", Expression
+                result := CST.EvaluateConstant (Expression)
+            trace[macro] "Constant value ", result
+                
