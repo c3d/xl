@@ -524,7 +524,9 @@ ret_961 = x_955 + y_956;
 ret_962 = ret_961 < 34;
 ret_963 = !ret_962;
 if(!(ret_963)) goto else_if_960;
-myassertionfailure_954 ( "X + Y < 34" , "11.Preprocessor/assert_macro.xl" , 21 );
+{
+myassertionfailure_954 ( "X + Y < 34" , "11.Preprocessor/assert_macro.xl" , 27 );
+}
 goto endif_if_960;
 else_if_960: 0;
 endif_if_960: 0;

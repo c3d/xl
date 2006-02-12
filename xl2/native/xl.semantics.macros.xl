@@ -312,6 +312,12 @@ module XL.SEMANTICS.MACROS is
         then
             EnterMacro "xlmacros", MatchExpr, ReplExpr
             return parse_tree(@nop)
+        when
+            xl.replace ('MatchExpr') with
+                'ReplExpr'
+        then
+            EnterMacro "xlmacros", MatchExpr, ReplExpr
+            return parse_tree(@nop)
         when (xl.set 'Variable' = 'Value') where Variable.kind = PT.xlNAME then
             VarName : Variable as PT.name_tree
             VarValue : PT.tree := CST.EvaluateConstant(Value)
