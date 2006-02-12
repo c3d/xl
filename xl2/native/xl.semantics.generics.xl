@@ -437,9 +437,13 @@ module XL.SEMANTICS.GENERICS is
 
         // Create instantiation context
         oldContext : SYM.symbol_table := XLT.context
+        oldFunction: SYM.symbol_table := XLT.function_context
+        oldGlobal  : SYM.symbol_table := XLT.global_context
         declContext : SYM.symbol_table := SYM.Enclosing(GenType.symbols)
         instContext : SYM.symbol_table := SYM.NewSymbolTable(declContext)
         XLT.context := instContext
+        XLT.function_context := instContext
+        XLT.global_context := instContext
 
         // Insert declarations for the replacement type
         IName : PT.tree := PT.Clone(GenType.name)
@@ -464,6 +468,8 @@ module XL.SEMANTICS.GENERICS is
         else
             result := true
         XLT.context := oldContext
+        XLT.function_context := oldFunction
+        XLT.global_context := oldGlobal
 
 
     function Deduce (FunGenType   : GEN.generic_type;
