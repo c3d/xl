@@ -266,6 +266,7 @@ module XL.SEMANTICS.MACROS is
             it.left := Preprocess(it.left)
             it.right := Preprocess(it.right)
         if result <> input then
+            trace[macro] "Macro reprocessing #", recursions, " for: ", result
             recursions += 1
             result := Preprocess(result)
             recursions -= 1
@@ -311,13 +312,21 @@ module XL.SEMANTICS.MACROS is
         then
             EnterMacro "xlmacros", MatchExpr, ReplExpr
             return parse_tree(@nop)
+        when (xl.set 'Variable' = 'Value') where Variable.kind = PT.xlNAME then
+            VarName : Variable as PT.name_tree
+            VarValue : PT.tree := CST.EvaluateConstant(Value)
+            trace[macro] "Setting ", Variable, " to ", Value, " = ", VarValue
+            CST.EnterNamedConstant VarName, VarValue
+            return parse_tree(@nop)
         when
-            xl.define 'Variable' as 'Value'
+            xl.set 'Variable' = 'Value'
         where
             Variable.kind = PT.xlNAME
         then
             VarName : Variable as PT.name_tree
-            CST.EnterNamedConstant VarName, CST.EvaluateConstant(Value)
+            VarValue : PT.tree := CST.EvaluateConstant(Value)
+            trace[macro] "Setting ", Variable, " to ", Value, " = ", VarValue
+            CST.EnterNamedConstant VarName, VarValue
             return parse_tree(@nop)
         when
             xl.include 'File'

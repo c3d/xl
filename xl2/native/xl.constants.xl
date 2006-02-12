@@ -90,18 +90,17 @@ module XL.CONSTANTS is
     // ------------------------------------------------------------------------
     //   Check if something is a named constant and if so, return it
     // ------------------------------------------------------------------------
-        list : SYM.tree_list
-        SYM.Lookup XLT.context, "CST", name.value, list, SYM.lookupAll
-        if size(list) = 1 then
-            return list[0]
-        return name
+        result := SYM.GetProperty (XLT.context,
+                                   "CST:" + PT.XLNormalize(name.value))
+        if result = nil then
+            result := name
 
 
     procedure EnterNamedConstant(name : PT.name_tree; value : PT.tree) is
     // ------------------------------------------------------------------------
     //   Enter a named constant in the tree
     // ------------------------------------------------------------------------
-        SYM.Enter XLT.context, "CST", name.value, value
+        SYM.SetProperty XLT.context, "CST:"+PT.XLNormalize(name.value), value
 
 
     function AsBoolean(B : boolean; pos : integer) return PT.tree is

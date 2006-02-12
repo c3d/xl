@@ -1,0 +1,17 @@
+// This tests the xl.set preprocessing directive
+// RUN=cat %c
+
+xl.set X = 0
+A : integer := xl.value(X)
+xl.set X = 25
+B : integer := xl.value(X+1)
+xl.set X = X+1
+C : integer := xl.value(X+1)
+
+xl.set TMP=0
+xl.replace (foo 'Var') with (xl.set TMP = TMP+1
+                             'Var' : integer := xl.value(TMP))
+
+foo X
+foo Y
+foo Z
