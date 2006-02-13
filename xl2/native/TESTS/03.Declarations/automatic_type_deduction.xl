@@ -1,0 +1,7 @@
+// This tests automatic type deduction (from the initialization value)
+// RUN=cat %c
+
+K : variable := 3
+L : variable := 0.3
+
+
