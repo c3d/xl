@@ -53,10 +53,13 @@ module XL.SEMANTICS.TYPES.GENERICS with
     // ------------------------------------------------------------------------
     //   Information about a context where generics are being declared
     // ------------------------------------------------------------------------
-        parameters      : declaration_list
+        context         : SYM.symbol_table
         symbols         : SYM.symbol_table
+        parameters      : declaration_list
+        initializer     : PT.tree
         validation      : PT.tree
         generic_types   : string of generic_type
+        rest            : PT.tree
     type generic_info is access to generic_info_data
 
 
@@ -73,7 +76,4 @@ module XL.SEMANTICS.TYPES.GENERICS with
     function VariadicDeclarations() return PT.tree
 
     // Enter a generic declaration
-    function EnterGeneric(Parms : PT.tree;
-                          Decls : PT.tree;
-                          Valid : PT.tree) return PT.tree
-
+    function EnterGenericDecl(Decl  : PT.tree) return PT.tree

@@ -535,6 +535,23 @@ module XL.SEMANTICS.GENERICS is
             ERR.Display instantiation_errors
 
 
+    function InstantiateType (Decl : DCL.declaration;
+                              Args : PT.tree_list) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Instantiate a specific type
+    // ------------------------------------------------------------------------
+
+        // Save errors for later display
+        ERR.PushErrorContext()
+
+        result := Instantiate(Decl, Args, nil, nil)
+
+        instantiation_errors : text := ERR.PopErrorContext()
+        if instantiation_errors <> "" then
+            ERR.Error "Unable to instantiate '$1', because", Decl.Name
+            ERR.Display instantiation_errors
+
+
     function InstantiateFunction (Source     : PT.tree;
                                   Decl       : DCL.declaration;
                                   Args       : PT.tree_list;

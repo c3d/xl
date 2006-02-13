@@ -23,10 +23,11 @@
 // * Date       : $Date$
 // ****************************************************************************
 
+import SYM = XL.SYMBOLS
 import PT = XL.PARSER.TREE
 import DCL = XL.SEMANTICS.DECLARATIONS
-import SYM = XL.SYMBOLS
 import FN = XL.SEMANTICS.FUNCTIONS
+import GEN = XL.SEMANTICS.TYPES.GENERICS
 
 
 module XL.SEMANTICS.WRITTEN_FORMS with
@@ -44,3 +45,19 @@ module XL.SEMANTICS.WRITTEN_FORMS with
         function                : FN.function
         args_map                : written_args_map
     type written_form is access to written_form_data
+
+    type generic_written_form_data is SYM.rewrite_data with
+    // ------------------------------------------------------------------------
+    //    Extra information stored about a written form
+    // ------------------------------------------------------------------------
+        generic_type            : GEN.generic_type
+        args_map                : written_args_map
+        declaration             : DCL.declaration
+    type generic_written_form is access to generic_written_form_data
+
+    function EnterWrittenForm(fniface : PT.tree;
+                              wrform  : PT.tree) return PT.tree
+    procedure EnterWrittenForm(GenDecl : DCL.declaration;
+                               gentype : GEN.generic_type
+                               wrform  : PT.tree)
+

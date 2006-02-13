@@ -126,13 +126,6 @@ module XL.SEMANTICS.FUNCTIONS is
             result := parse_tree(@@fn_body 'result' 'Init')
 
 
-    function EnterFunction (FnIface : PT.tree) return PT.tree is
-    // ------------------------------------------------------------------------
-    //   Process function forms
-    // ------------------------------------------------------------------------
-        return XLT.XLEnterFunction(FnIface)
-
-
     function EnterBuiltinFunction(input : PT.tree;
                                   Interface : PT.tree;
                                   BuiltinName : PT.tree) return PT.tree is
@@ -256,6 +249,13 @@ module XL.SEMANTICS.FUNCTIONS is
             return EnterFunctionDecl(Name, Parms, nil, input)
         when ('Name') then
             return EnterFunctionDecl(Name, nil, nil, input)
+
+
+    function EnterFunction (FnIface : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Process function forms
+    // ------------------------------------------------------------------------
+        return XLT.XLEnterFunction(FnIface)
 
 
     translation XLDeclarations

@@ -53,6 +53,7 @@ module XL.SEMANTICS.FUNCTIONS with
 
     function GetFunction (input : PT.tree) return function
 
+    function EnterFunction (FnIface : PT.tree) return PT.tree
     function EnterFunction (Names   : PT.tree;
                             FnType  : any_type;
                             Init    : PT.tree;

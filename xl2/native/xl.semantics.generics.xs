@@ -48,6 +48,8 @@ module XL.SEMANTICS.GENERICS with
 
     function InstantiateType (Name : PT.tree;
                               Args : PT.tree) return BC.bytecode
+    function InstantiateType (Decl : DCL.declaration;
+                              Args : PT.tree_list) return BC.bytecode
     function InstantiateFunction (Source     : PT.tree;
                                   Decl       : DCL.declaration;
                                   Args       : PT.tree_list;
