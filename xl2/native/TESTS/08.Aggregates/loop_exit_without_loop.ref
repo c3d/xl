@@ -1,0 +1,3 @@
+08.Aggregates/loop_exit_without_loop.xl:4: No loop surrounding 'exit' instruction
+| exit
+|____^

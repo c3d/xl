@@ -113,9 +113,18 @@ goto_exit       "goto exit_$1;"
 
 if              "if($1) goto else_$2;"
 ifnot           "if(!($1)) goto else_$2;"
-ifelse          "goto endif_$1;"
-                "else_$1: 0;"
+ifskip          "goto endif_$1;"
+ifelse          "else_$1: 0;"
 ifend           "endif_$1: 0;"
+
+loopentry       "loopentry_$1: 0;"
+loopagain       "goto loopentry_$1;"
+loopskip        "goto loopend_$1;"
+loopend         "loopend_$1: 0;"
+loopif          "if ($1) goto loopentry_$2;"
+loopifnot       "if (!($1)) goto loopentry_$2;"
+loopexit        "loopexit_$1: 0;"
+exitloop        "goto loopexit_$1;"
 
 // Temporary hack in main for something normally declared in XL.UI.CONSOLE
 main_begin      "namespace xl { namespace ui { namespace console {"

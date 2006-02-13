@@ -1,0 +1,26 @@
+// This test the basic functionality of loops
+// RUN=cat %c
+
+I : integer := 1
+
+loop
+    I := I + 1
+    exit if I > 100
+
+while I < 200 loop
+    I := I + 2
+
+until I > 300 loop
+    I := I + 3
+
+loop I := I + 4 while I < 400
+
+loop I := I + 5 until I > 500
+
+loop
+    I := I + 6
+while I < 600
+
+loop
+    I := I + 7
+until I > 700

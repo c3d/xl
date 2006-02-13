@@ -1,0 +1,4 @@
+// This checks that 'exit' without a loop fails
+// EXIT=2
+
+exit

@@ -6,7 +6,7 @@ INFIX
         40      then where
         50      :
         100     STATEMENT
-        110     is as
+        110     is as  while until
         120     with written require ensure
         200     DEFAULT
         210     ,

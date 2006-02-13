@@ -62,7 +62,6 @@ module XL.SEMANTICS.INSTRUCTIONS is
     // ------------------------------------------------------------------------
     //   Generate the code for an 'if'
     // ------------------------------------------------------------------------
-    //   TODO : If expressions...
 
         // Label base for that if
         label  : PT.name_tree := SYM.Temporary("if")
@@ -91,24 +90,31 @@ module XL.SEMANTICS.INSTRUCTIONS is
         CGM.SplitExpression Test, prefix
 
         // Perform semantics on cases
-        result := parse_tree
-            @ifnot 'Test' 'label'
         if TrueCase <> nil then
             TrueCase := XLT.ScopeSemantics(TrueCase, XLT.scopeLocal)
-            result := parse_tree
-                'result'
-                'TrueCase'
-        result := parse_tree
-            'result'
-            @ifelse 'label'
-        if FalseCase <> nil then
+            if FalseCase <> nil then
+                FalseCase := XLT.ScopeSemantics(FalseCase, XLT.scopeLocal)
+                result := parse_tree
+                    @ifnot 'Test' 'label'
+                    'TrueCase'
+                    @ifskip 'label'
+                    @ifelse 'label'
+                    'FalseCase'
+                    @ifend 'label'
+            else
+                result := parse_tree
+                    @ifnot 'Test' 'label'
+                    'TrueCase'
+                    @ifelse 'label'
+        else if FalseCase <> nil then
             FalseCase := XLT.ScopeSemantics(FalseCase, XLT.scopeLocal)
             result := parse_tree
-                'result'
+                @if 'Test' 'label'
                 'FalseCase'
-        result := parse_tree
-            'result'
-            @ifend 'label'
+                @ifelse 'label'
+        else
+            // Degenerate case...
+            result := parse_tree(@nop)
 
         if prefix <> nil then
             result := parse_tree
@@ -116,6 +122,121 @@ module XL.SEMANTICS.INSTRUCTIONS is
                 'result'
 
 
+    function DoLoop(Body : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Generate the code for an infinite loop
+    // ------------------------------------------------------------------------
+
+        // Label base for that loop
+        label  : PT.name_tree := SYM.Temporary("loop")
+        oldLoop : PT.tree := SYM.GetProperty (XLT.context, "LOOP")
+        SYM.SetProperty XLT.context, "LOOP", label
+
+        Body := XLT.ScopeSemantics (Body, XLT.scopeLocal)
+        result := parse_tree
+            @loopentry 'label'
+            'Body'
+            @loopagain 'label'
+            @loopexit 'label'
+        SYM.SetProperty XLT.context, "LOOP", oldLoop
+
+
+    function DoConditionalLoop(Test     : PT.tree;
+                               Body     : PT.tree;
+                               loopWhile: boolean;
+                               testAtEnd: boolean) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Generate the code for a while loop
+    // ------------------------------------------------------------------------
+
+        // Label base for that loop
+        label  : PT.name_tree := SYM.Temporary("while")
+        prefix : PT.tree := nil
+
+        // Check if this is a compile-time case
+        TestConstant : PT.tree := CST.EvaluateConstant(Test)
+        if CST.IsBoolean(TestConstant) then
+            TestValue : boolean
+            if CST.IsTrue(TestConstant) then
+                TestValue := true
+            else if CST.IsFalse(TestConstant) then
+                TestValue := false
+            else
+                ERR.Error "Internal: Compile-time test '$1' is not true/false",
+                          TestConstant
+            if TestValue = loopWhile then
+                return DoLoop(Body)
+            else if testAtEnd then
+                oldLoop : PT.tree := SYM.GetProperty (XLT.context, "LOOP")
+                SYM.SetProperty XLT.context, "LOOP", label
+                result := XLT.ScopeSemantics(Body, XLT.scopeLocal)
+                result := parse_tree
+                    'result'
+                    @loopexit 'label'
+                SYM.SetProperty XLT.context, "LOOP", oldLoop
+                return result
+            else
+                return parse_tree (@nop)
+
+        // Save loop exit pointer
+        oldLoop : PT.tree := SYM.GetProperty (XLT.context, "LOOP")
+        SYM.SetProperty XLT.context, "LOOP", label
+
+        // Convert test to boolean and evaluate condition
+        Test := XLT.XLSemantics(Test)
+        Test := TY.Convert (Test, TY.const_boolean_type)
+        CGM.SplitExpression Test, prefix
+
+        // Perform semantics on the body
+        Body := XLT.ScopeSemantics(Body, XLT.scopeLocal)
+
+        // Check which test we use
+        CondTest : PT.tree
+        if loopWhile then
+            CondTest := parse_tree(loopif)
+        else
+            CondTest := parse_tree(loopifnot)
+
+        // Generate the body of the loop
+        result := parse_tree
+            @loopentry 'label'
+            'Body'
+            @loopend 'label'
+        if prefix <> nil then
+            result := parse_tree
+                'result'
+                'prefix'
+        result := parse_tree
+            'result'
+            @ 'CondTest' 'Test' 'label'
+            @loopexit 'label'
+
+        // If we test at beginning of loop, skip to test
+        if not testAtEnd then
+            result := parse_tree
+                @loopskip 'label'
+                'result'
+
+        SYM.SetProperty XLT.context, "LOOP", oldLoop
+
+
+    function DoExit (Instr : PT.tree; Test : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Implement the 'exit' instruction
+    // ------------------------------------------------------------------------
+        if Test <> nil then
+            result := parse_tree
+                if 'Test' then exit
+            return XLT.XLSemantics (result)
+
+        label : PT.tree := SYM.GetProperty (XLT.context, "LOOP", true)
+        if label = nil then
+            ERR.Error "No loop surrounding '$1' instruction", Instr
+            return parse_tree(@error)
+
+        return parse_tree
+            @exit_loop 'label'
+    
 
     translation XLSemantics
     // ------------------------------------------------------------------------
@@ -140,3 +261,66 @@ module XL.SEMANTICS.INSTRUCTIONS is
             if 'Cond' then 'TrueCase' else 'FalseCase'
         then
             return DoIf(Cond, TrueCase, FalseCase)
+
+        when
+            loop 'Body'
+        then
+            return DoLoop(Body)
+
+        when
+            while 'Test' loop 'Body'
+        then
+            return DoConditionalLoop(Test, Body, true, false)
+        when
+            until 'Test' loop 'Body'
+        then
+            return DoConditionalLoop(Test, Body, false, false)
+        when
+            loop 'Body' while 'Test'
+        then
+            return DoConditionalLoop (Test, Body, true, true)
+        when
+            loop 'Body' until 'Test'
+        then
+            return DoConditionalLoop (Test, Body, false, true)
+
+        when
+            loop 'Body'
+            while 'Test'
+        then
+            return DoConditionalLoop (Test, Body, true, true)
+        when
+            loop 'Body'
+            until 'Test'
+        then
+            return DoConditionalLoop (Test, Body, false, true)
+
+        when
+            loop 'Body'
+            while 'Test'
+            'Rest'
+        then
+            result := DoConditionalLoop (Test, Body, true, true)
+            Rest := XLT.XLSemantics(Rest)
+            return parse_tree
+                'result'
+                'Rest'
+        when
+            loop 'Body'
+            until 'Test'
+            'Rest'
+        then
+            result := DoConditionalLoop (Test, Body, false, true)
+            Rest := XLT.XLSemantics(Rest)
+            return parse_tree
+                'result'
+                'Rest'
+
+        when
+            exit
+        then
+            return DoExit(input, nil)
+        when
+            exit if 'Condition'
+        then
+            return DoExit(input, Condition)
