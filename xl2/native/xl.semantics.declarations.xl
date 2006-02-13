@@ -105,14 +105,18 @@ module XL.SEMANTICS.DECLARATIONS is
         // Check if the type is just 'variable' or 'var'
         // If so, try to deduce the type from the context
         tname : Type as PT.name_tree
-        if tname <> nil and Value <> nil then
+        if tname <> nil then
             if tname.value = "variable" or tname.value = "var" then
-                SemValue : PT.tree := XLT.XLSemantics(Value)
-                tp : TY.any_type := TY.GetType(SemValue)
-                if tp = nil then
-                    ERR.Error "No type for '$1'", Value
+                if Value = nil then
+                    ERR.Error "No initialization giving type of '$1'", Type
                 else
-                    Type := TY.Source(TY.NonConstedType(tp))
+                    SemValue : PT.tree := XLT.XLSemantics(Value)
+                    tp : TY.any_type := TY.GetType(SemValue)
+                    if tp = nil then
+                        ERR.Error "No type for '$1'", Type
+                        ERR.Error "can be deduced from '$2'", Value
+                    else
+                        Type := TY.Source(TY.NonConstedType(tp))
 
         // Check if we get there for a type (from instantiation)
         decl_type : TY.any_type := TY.EvaluateType(Type)
