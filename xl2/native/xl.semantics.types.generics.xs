@@ -55,6 +55,7 @@ module XL.SEMANTICS.TYPES.GENERICS with
     // ------------------------------------------------------------------------
         context         : SYM.symbol_table
         symbols         : SYM.symbol_table
+        generic_context : SYM.symbol_table
         parameters      : declaration_list
         initializer     : PT.tree
         validation      : PT.tree

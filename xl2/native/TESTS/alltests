@@ -139,7 +139,7 @@ do
         if diff $REF $LOG > /dev/null 2>&1; then
             THIS=ok
         elif [ ! -z "$UPDATE" ]; then
-            echo "Updating reference for " $BASE
+            echo -n "Updating reference... "
             mv -f $REF $REF.old
             cp $LOG $REF
         elif [ -f $REF ]; then

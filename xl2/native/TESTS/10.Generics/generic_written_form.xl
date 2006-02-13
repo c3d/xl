@@ -1,0 +1,24 @@
+// Generic written forms, see 'pair of integer'
+// RUN=cat %c
+
+generic [type item]
+type pair written pair of item is record with
+    first  : item
+    second : item
+
+K : pair of integer
+
+
+generic [type item]
+type poor
+written poor of item
+is record with
+    first  : item
+    second : item
+
+L : poor of integer
+
+Z : poor of (pair of integer)
+
+U : poor of pair of integer
+

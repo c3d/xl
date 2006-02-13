@@ -13,7 +13,8 @@ INFIX
         221     := += -= *= /= ^= |= &=
         230     return 
         240     and or xor
-        250     in of to
+        250     in
+        251     of to
         260     ..
         270     = < > <= >= <>
         280     & |
@@ -23,7 +24,7 @@ INFIX
         510     .
 
 PREFIX
-        90      generic
+        30      generic
         120     exit loop
         125     case if return while until when
         320     not in out constant variable const var
@@ -31,7 +32,7 @@ PREFIX
         380     ! ~
         390     - + * /
         400     FUNCTION
-        410     function procedure to
+        410     function procedure to type
         500     &
 
 POSTFIX

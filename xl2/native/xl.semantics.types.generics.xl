@@ -166,6 +166,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
         gi : generic_info
         gi.context := XLT.context
         gi.symbols := symbols
+        gi.generic_context := nil
         gi.initializer := nil
         gi.validation := nil
         gi.rest := nil
@@ -332,7 +333,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
             // In that case, we add the dependents themselves
             trace[generics] "Recursive dependency #",
                             size(gi.parameters), " has ",
-                            size(gtp.parameters), " deps" 
+                            size(gtp.parameters), " deps"
             Decl : DCL.declaration
             for Decl in gtp.parameters loop
                 if TY.SameType(Decl.type, TY.type_of_types) then
@@ -391,6 +392,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
         oldContext : SYM.symbol_table := gi.context
         genContext : SYM.symbol_table := SYM.NewSymbolTable(gi.symbols)
         XLT.context := genContext
+        gi.generic_context := genContext
         SYM.CopyProperty genContext, oldContext, "GLOBAL"
         SYM.CopyProperty genContext, oldContext, "LOCAL"
         SYM.CopyProperty genContext, oldContext, "FNPARM"
@@ -406,9 +408,6 @@ module XL.SEMANTICS.TYPES.GENERICS is
                 prefix.right := parse_tree('right' is 'Init')
         trace[generics] "Generic EnterDecl (", Decl, ") gi ", gi
         result := XLT.XLDeclarations(Decl)
-
-        // Import the declarations from the new context into the old one
-        SYM.AddSymbols oldContext, genContext
         XLT.context := oldContext
 
 
@@ -418,7 +417,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
     //   Enter the parameters for a generic declaration
     // ------------------------------------------------------------------------
         gi : generic_info := NeededGenericContext(Decl)
-        trace[generics] "Generic parms (", Parms, ") gi ", gi
+        trace[generics] "Generic parms (",Parms,") Decl (",Decl,")  gi ",gi
 
         // We can't have parameters more than once
         if size(gi.parameters) > 0 then
@@ -466,7 +465,14 @@ module XL.SEMANTICS.TYPES.GENERICS is
             ERR.Error "Written form '$1' applied to non-generic type '$2'",
                       WrForm, TY.Source(decl.type)
             return result
-        WRF.EnterWrittenForm Decl, gtp, WrForm
+        oldContext : SYM.symbol_table := XLT.context
+        XLT.context := gi.generic_context
+        if XLT.context = nil then
+            ERR.Error "Internal: No symbols for declaration '$1' written '$2'",
+                      Decl.name, WrForm
+        else
+            WRF.EnterWrittenForm Decl, gtp, WrForm
+        XLT.context := oldContext
 
 
     function EnterGenericInitializer (Decl : PT.tree;
@@ -501,56 +507,129 @@ module XL.SEMANTICS.TYPES.GENERICS is
     // ------------------------------------------------------------------------
     //   Parse the elements in a generic interface
     // ------------------------------------------------------------------------
+    //   This is a little bit ugly, because generics are long declarations
+    //   which we may want to write in a number of different ways which
+    //   happen to not parse exactly the same way. We put the complexity here
+    //   rather than in the individual declarations (function, etc.)
+    //   Since this is a 'translation', it is extensible if it needs to be...
 
         // Declaration of parameters
         when (['Parms'] 'Decl') then
+            trace[generics] "Case 1"
             return EnterGenericParms (Parms, Decl)
         when
             ['Parms']
             'Decl'
         then
+            trace[generics] "Case 2"
             return EnterGenericParms (Parms, Decl)
 
         // Declaration of an initializer
         when ('Decl' is 'Initializer') then
-            return EnterGenericInitializer (Decl, Initializer)
-        when
-            'Decl'
-            is 'Initializer'
-        then
+            trace[generics] "Case 3"
             return EnterGenericInitializer (Decl, Initializer)
 
         // Declaration of a validation clause
         when ('Decl' where 'Validation') then
-            return EnterGenericValidation (Decl, Validation)
-        when 
-            'Decl'
-            where 'Validation'
-        then
+            trace[generics] "Case 4"
             return EnterGenericValidation (Decl, Validation)
 
         // Declaration of a written form
         when ('Decl' written 'WrittenForm') then
+            trace[generics] "Case 5"
             return EnterGenericWrittenForm(Decl, WrittenForm)
+
+        // Alternate multi-line forms at end of file
+        when
+            'Decl'
+            is 'Initializer'
+        then
+            trace[generics] "Case 6"
+            return EnterGenericInitializer (Decl, Initializer)
+        when
+            'Decl'
+            where 'Validation'
+        then
+            trace[generics] "Case 7"
+            return EnterGenericValidation (Decl, Validation)
         when
             'Decl'
             written 'WrittenForm'
         then
-            return EnterGenericWrittenForm(Decl, WrittenForm)
+            trace[generics] "Case 8"
+            return EnterGenericWrittenForm (Decl, WrittenForm)
 
-        // Make sure we deal with the next declaration correctly
+        // Alternate multi-line forms not at end of file
+        when
+            'Decl'
+            is 'Initializer'
+            'Rest'
+        then
+            trace[generics] "Case 9"
+            Decl := parse_tree
+                'Decl' is 'Initializer'
+                'Rest'
+            return XLT.XLEnterGeneric (Decl)
+        when
+            'Decl'
+            where 'Validation'
+            'Rest'
+        then
+            trace[generics] "Case 10"
+            Decl := parse_tree
+                'Decl' where 'Validation'
+                'Rest'
+            return XLT.XLEnterGeneric (Decl)
+        when
+            'Decl'
+            written 'WrittenForm'
+            'Rest'
+        then
+            trace[generics] "Case 11"
+            Decl := parse_tree
+                'Decl' written 'WrittenForm'
+                'Rest'
+            return XLT.XLEnterGeneric (Decl)
+
+        // Priority inversions for type declarations
+        when
+            type 'Decl' written 'WrittenForm'
+        then
+            trace[generics] "Case 12"
+            Decl := parse_tree(type 'Decl')
+            return EnterGenericWrittenForm(Decl, WrittenForm)
+        when
+            type 'Decl' where 'Validation'
+        then
+            trace[generics] "Case 13"
+            Decl := parse_tree(type 'Decl')
+            return EnterGenericValidation(Decl, Validation)
+        when
+            type 'Decl' is 'Init'
+        then
+            trace[generics] "Case 13"
+            Decl := parse_tree(type 'Decl')
+            return EnterGenericInitializer(Decl, Init)
+
+
+        // Deal with whatever code follows the generic
         when
             'FirstGenericDecl'
             'SecondNonGenericDecl'
         then
+            trace[generics] "Case 14"
             gi : generic_info := NeededGenericContext(FirstGenericDecl)
-            gi.rest := SecondNonGenericDecl
             result := XLT.XLEnterGeneric (FirstGenericDecl)
+            if gi.rest <> nil then
+                ERR.Error "Internal: '$1' and '$2' following generic",
+                          SecondNonGenericDecl, gi.rest
+            gi.rest := SecondNonGenericDecl
 
         // For all other cases, just enter the declaration
         when
             'GenericDecl'
         then
+            trace[generics] "Case 15"
             result := EnterGenericDecl (GenericDecl)
 
 
@@ -573,18 +652,23 @@ module XL.SEMANTICS.TYPES.GENERICS is
         assert gi <> nil
         assert gi.context = oldContext
         assert gi.symbols <> nil
-        XLT.context := gi.symbols
+        XLT.context := genSymbols
         result := XLT.XLEnterGeneric (GenIface)
         XLT.context := oldContext
+
+        // Import the declarations from the new context into the old one
+        if gi.generic_context <> nil then
+            SYM.AddSymbols oldContext, gi.generic_context
 
         // If no type became generic because of the context, error
         if size(gi.generic_types) = 0 then
             ERR.Error "There was no generic declaration in '$1'", GenIface
 
-        if gi.rest <> nil then
-            Rest : PT.tree := gi.rest
-            trace[generics] "Generic Rest (", Rest, ") gi ", gi
-            Rest := XLT.XLDeclarations (gi.rest)
+        // Now that we are back in the non-generic context, we can
+        // deal with whatever follows the generic declaration
+        Rest : PT.tree := gi.rest
+        if Rest <> nil then
+            Rest := XLT.XLDeclarations(Rest)
             result := parse_tree
                 'result'
                 'Rest'
@@ -597,6 +681,14 @@ module XL.SEMANTICS.TYPES.GENERICS is
         when
             generic 'GenericStuff'
         then
+            result := EnterGeneric (GenericStuff)
+        when
+            generic 'GenericStuff'
+            'OtherStuff'
+        then
+            GenericStuff := parse_tree
+                'GenericStuff'
+                'OtherStuff'
             result := EnterGeneric (GenericStuff)
         when
             generic ['Parms']

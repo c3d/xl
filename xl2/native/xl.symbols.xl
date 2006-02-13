@@ -114,6 +114,7 @@ module XL.SYMBOLS is
         for name in fromTable.names loop
             toTable.names[name] += fromTable.names[name]
         for name in fromTable.rewrites loop
+            trace [written] "Copying ", name, " into ", toTable
             toTable.rewrites[name] += fromTable.rewrites[name]
         toTable.usings += fromTable.usings
 

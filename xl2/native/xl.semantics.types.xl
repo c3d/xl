@@ -677,3 +677,7 @@ module XL.SEMANTICS.TYPES is
             SetDefinedType input, tp
             return input
 
+        when
+            ('T')
+        then
+            return XLT.XLEvaluateType(T)

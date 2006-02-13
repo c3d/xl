@@ -100,3 +100,4 @@ module XL.TRANSLATOR with
     function XLExpression(input : PT.tree) return PT.tree      // Generated
     function XLConstant(input : PT.tree) return PT.tree        // Generated
     function XLMacros(input : PT.tree) return PT.tree          // Generated
+    function XLNormalizeGeneric(input : PT.tree) return PT.tree// Generated

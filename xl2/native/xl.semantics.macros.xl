@@ -207,6 +207,7 @@ module XL.SEMANTICS.MACROS is
     //    Parse the file, and return the parsed file
     // ------------------------------------------------------------------------
         trace[macro] "Include ", filename
+        filename := CST.EvaluateConstant(filename)
         if filename.kind <> PT.xlTEXT then
             ERR.Error "'$1' is not a valid include file name", filename
             return parse_tree(@nop)

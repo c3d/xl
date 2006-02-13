@@ -7,6 +7,7 @@
 ;; Maintainer: FSF
 ;; Created: July 2005
 ;; Keywords: languages
+;; WARNING: This file works only on Emacs 22, it fails with 21.x
 
 ;; This file is part of GNU Emacs.
 
