@@ -536,9 +536,7 @@ if(!(ret_986)) goto else_if_985;
 {
 result_983 = x_979;
 }
-goto endif_if_985;
 else_if_985: 0;
-endif_if_985: 0;
 }
 exit_max_982: 0;
 return result_983;
@@ -555,9 +553,7 @@ if(!(ret_989)) goto else_if_988;
 {
 result_977 = x_972;
 }
-goto endif_if_988;
 else_if_988: 0;
-endif_if_988: 0;
 }
 exit_max_976: 0;
 return result_977;
@@ -574,9 +570,7 @@ if(!(ret_992)) goto else_if_991;
 {
 result_969 = x_963;
 }
-goto endif_if_991;
 else_if_991: 0;
-endif_if_991: 0;
 }
 exit_max_968: 0;
 return result_969;

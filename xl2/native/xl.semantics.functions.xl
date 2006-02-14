@@ -148,6 +148,27 @@ module XL.SEMANTICS.FUNCTIONS is
         return input
 
 
+    function EnterCFunction(input : PT.tree;
+                            Interface : PT.tree;
+                            CName : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Enter a builtin function (bytecode)
+    // ------------------------------------------------------------------------
+        Interface := EnterFunction(Interface)
+        f : function := GetFunction(Interface)
+        assert f <> nil
+        if f.initializer <> nil then
+            ERR.Error "C function '$1' was given initializer '$2'",
+                      CName, f.initializer
+        else if CName.kind <> PT.xlNAME then
+            ERR.Error "'$1' is not a valid C function name", CName
+        else
+            BN : CName as PT.name_tree
+            f.machine_name := BN
+            return Interface
+        return input
+
+
     function EnterFunctionBody(input : PT.tree;
                                Interface : PT.tree;
                                Body : PT.tree) return PT.tree is
@@ -223,6 +244,13 @@ module XL.SEMANTICS.FUNCTIONS is
                 xl.bytecode.'BuiltinName'
         then
             return EnterBuiltinFunction(input, Interface, BuiltinName)
+        when ('Interface' is C.'CName') then
+            return EnterCFunction(input, Interface, CName)
+        when
+            'Interface' is
+                C.'CName'
+        then
+            return EnterCFunction(input, Interface, CName)
 
         // Definition of a function
         when ('Interface' is 'Body') then

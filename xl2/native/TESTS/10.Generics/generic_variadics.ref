@@ -546,9 +546,7 @@ if(!(ret_993)) goto else_if_992;
 {
 result_986 = x_982;
 }
-goto endif_if_992;
 else_if_992: 0;
-endif_if_992: 0;
 }
 exit_max_985: 0;
 return result_986;
@@ -565,9 +563,7 @@ if(!(ret_996)) goto else_if_995;
 {
 result_980 = x_975;
 }
-goto endif_if_995;
 else_if_995: 0;
-endif_if_995: 0;
 }
 exit_max_979: 0;
 return result_980;
@@ -584,9 +580,7 @@ if(!(ret_999)) goto else_if_998;
 {
 result_972 = x_966;
 }
-goto endif_if_998;
 else_if_998: 0;
-endif_if_998: 0;
 }
 exit_max_971: 0;
 return result_972;
@@ -612,9 +606,7 @@ if(!(ret_1022)) goto else_if_1021;
 {
 result_1015 = x_1011;
 }
-goto endif_if_1021;
 else_if_1021: 0;
-endif_if_1021: 0;
 }
 exit_max_1014: 0;
 return result_1015;
@@ -631,9 +623,7 @@ if(!(ret_1025)) goto else_if_1024;
 {
 result_1009 = x_1004;
 }
-goto endif_if_1024;
 else_if_1024: 0;
-endif_if_1024: 0;
 }
 exit_max_1008: 0;
 return result_1009;

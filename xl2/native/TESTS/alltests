@@ -51,6 +51,7 @@ ln -sf ../xl.bytecode .
 ln -sf ../xl.syntax .
 ln -sf ../xl_lib.h .
 ln -sf ../xl_builtins.xs .
+ln -sf ../library .
 ln -sf ../*.stylesheet .
 ln -sf ../nxl .
 
@@ -68,15 +69,15 @@ do
     echo -n Test: $TESTNAME...
 
     # Setup useful variables - These can be set in the test files
-    BASE=${TESTNAME/\.xl}       # Basename
-    REF=$BASE.ref               # Reference file
-    LOG=$BASE.log               # Log file
-    CMD=                        # Command to execute
-    EXIT=0                      # Expected exit code (EXIT=2 for errors)
-    RUN=                        # What to run afterwards
-    COMPILE=                    # Compile command
-    OPT=                        # XL compiler options
-    INC="-I $(dirname $TEST)"   # XL include directory
+    BASE=${TESTNAME/\.xl}                           # Basename
+    REF=$BASE.ref                                   # Reference file
+    LOG=$BASE.log                                   # Log file
+    CMD=                                            # Command to execute
+    EXIT=0                                          # Expected exit code
+    RUN=                                            # What to run afterwards
+    COMPILE=                                        # Compile command
+    OPT=                                            # XL compiler options
+    INC="-I $(dirname $TEST) -I $(TESTDIR)/library" # XL include directory
     CACHED=
 
     # Extract interesting variables from the test

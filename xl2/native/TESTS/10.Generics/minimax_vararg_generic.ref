@@ -555,9 +555,7 @@ if(!(ret_1019)) goto else_if_1018;
 {
 result_1004 = x_1000;
 }
-goto endif_if_1018;
 else_if_1018: 0;
-endif_if_1018: 0;
 }
 exit_max_1003: 0;
 return result_1004;
@@ -574,9 +572,7 @@ if(!(ret_1022)) goto else_if_1021;
 {
 result_994 = x_989;
 }
-goto endif_if_1021;
 else_if_1021: 0;
-endif_if_1021: 0;
 }
 exit_max_993: 0;
 return result_994;
@@ -593,9 +589,7 @@ if(!(ret_1025)) goto else_if_1024;
 {
 result_978 = x_972;
 }
-goto endif_if_1024;
 else_if_1024: 0;
-endif_if_1024: 0;
 }
 exit_max_977: 0;
 return result_978;
@@ -621,9 +615,7 @@ if(!(ret_1098)) goto else_if_1097;
 {
 result_1083 = x_1079;
 }
-goto endif_if_1097;
 else_if_1097: 0;
-endif_if_1097: 0;
 }
 exit_max_1082: 0;
 return result_1083;
@@ -640,9 +632,7 @@ if(!(ret_1101)) goto else_if_1100;
 {
 result_1073 = x_1068;
 }
-goto endif_if_1100;
 else_if_1100: 0;
-endif_if_1100: 0;
 }
 exit_max_1072: 0;
 return result_1073;
@@ -659,9 +649,7 @@ if(!(ret_1104)) goto else_if_1103;
 {
 result_1061 = x_1055;
 }
-goto endif_if_1103;
 else_if_1103: 0;
-endif_if_1103: 0;
 }
 exit_max_1060: 0;
 return result_1061;
@@ -678,9 +666,7 @@ if(!(ret_1107)) goto else_if_1106;
 {
 result_1043 = x_1036;
 }
-goto endif_if_1106;
 else_if_1106: 0;
-endif_if_1106: 0;
 }
 exit_max_1042: 0;
 return result_1043;
