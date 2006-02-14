@@ -119,7 +119,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 Fields := XLT.XLDeclarations (Fields)
                 decl : DCL.declaration := DCL.GetDeclaration(Fields)
                 if decl then
-                    if GEN.IsGenericDeclaration(decl) then
+                    if GEN.IsGenericType(decl.type) then
                         GEN.AddGenericDependency decl.type
                     if not decl.is_builtin then
                         trace [recdecl] "Decl: ", decl

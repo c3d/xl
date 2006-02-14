@@ -188,22 +188,23 @@ module XL.SYMBOLS is
             exit if mode = lookupLocalOnly
 
             // Lookup in lateral maps
-            for entry in table.usings loop
-                subtable : symbol_table := entry.symbols
-                if count(subtable.names, name) > 0 then
-                    scope   : PT.tree := entry.scope
-                    subtree : PT.tree
-                    trace[symbols] "  in lateral ", subtable,
-                                   " got ", size(subtable.names[name])
-                    for subtree in subtable.names[name] loop
-                        if found[subtree] = false then
-                            scoped : PT.tree := subtree
-                            if scope <> nil then
-                                scoped := parse_tree('scope'.'subtree')
-                                scoped.info := subtree.info
-                                scoped.position := subtree.position
-                            values += scoped
-                            found[subtree] := true
+            if mode <> lookupDirect then
+                for entry in table.usings loop
+                    subtable : symbol_table := entry.symbols
+                    if count(subtable.names, name) > 0 then
+                        scope   : PT.tree := entry.scope
+                        subtree : PT.tree
+                        trace[symbols] "  in lateral ", subtable,
+                                       " got ", size(subtable.names[name])
+                        for subtree in subtable.names[name] loop
+                            if found[subtree] = false then
+                                scoped : PT.tree := subtree
+                                if scope <> nil then
+                                    scoped := parse_tree('scope'.'subtree')
+                                    scoped.info := subtree.info
+                                    scoped.position := subtree.position
+                                values += scoped
+                                found[subtree] := true
 
             exit if mode = lookupInnermost and size(values) > 0
             exit if mode = lookupLocalUsing

@@ -1,12 +1,18 @@
-04.Lookup/type_redefined.xl:30: The type 'integer' can't be defined here
-| type integer
-|____________^
-./xl_builtins.xs:31: because a type named 'xlbuiltins_949 . integer' already exists
-|     type integer                                                                                is XL.BYTECODE.xlint
-|________________^
-04.Lookup/type_redefined.xl:33: The type 'K' can't be defined here
+04.Lookup/type_redefined.xl:32: The type 'K' can't be defined here
 | type K is function (U : integer) return real
 |______^
-04.Lookup/type_redefined.xl:32: because a type named 'K' already exists
+04.Lookup/type_redefined.xl:31: because a type named 'K' already exists
 | type K is function (Z : integer) return integer
 |______^
+04.Lookup/type_redefined.xl:34: The type 'integer' can't be defined here
+| type integer
+|____________^
+04.Lookup/type_redefined.xl:29: because a type named 'integer' already exists
+| type integer
+|____________^
+04.Lookup/type_redefined.xl:37: The type 'integer' can't be defined here
+|    type integer
+|_______________^
+04.Lookup/type_redefined.xl:29: because a type named 'integer' already exists
+| type integer
+|____________^

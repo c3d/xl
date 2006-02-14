@@ -85,6 +85,7 @@ module XL.SYMBOLS with
         lookupLocalOnly,        // Don't recurse at all
         lookupLocalUsing,       // Local scope and using
         lookupInnermost,        // Closest scope where something is found
+        lookupDirect,           // Do not look in using maps
         lookupAll               // Return all results
 
 

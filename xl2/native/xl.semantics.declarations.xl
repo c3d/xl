@@ -127,7 +127,8 @@ module XL.SEMANTICS.DECLARATIONS is
             return FN.EnterFunction (Name, decl_fn_type, Value, Name)
 
         // Check if there is already an entity by that name
-        original : PT.tree := SYM.LookupOne(XLT.context, "DECL", Name.value)
+        original : PT.tree := SYM.LookupOne(XLT.context, "DECL",
+                                            Name.value, SYM.lookupDirect)
         if original <> nil then
             ERR.Error "Redeclaration of '$1' ", Name
             ERR.Error "Previous declaration of '$1' here", original

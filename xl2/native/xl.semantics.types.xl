@@ -281,7 +281,7 @@ module XL.SEMANTICS.TYPES is
         // Check if there is already a type by that name
         N : Name as PT.name_tree
         original : PT.tree := SYM.LookupOne(XLT.context, "TYPE",
-                                            N.value, SYM.lookupInnermost)
+                                            N.value, SYM.lookupDirect)
         if original <> nil then
             otype : any_type := GetDefinedType (original)
             // Accept redefinition if instantiating a type,
