@@ -77,7 +77,7 @@ do
     RUN=                                            # What to run afterwards
     COMPILE=                                        # Compile command
     OPT=                                            # XL compiler options
-    INC="-I $(dirname $TEST) -I $(TESTDIR)/library" # XL include directory
+    INC="-I $(dirname $TEST) -I $TESTDIR/library"   # XL include directory
     CACHED=
 
     # Extract interesting variables from the test
@@ -86,7 +86,7 @@ do
     # Defaults if not set by the test
     if [ -z "$CMD" ]; then
         CMD="$XL $INC $OPT $TESTNAME";
-        [ -z "$COMPILE" ] && { COMPILE="c++ -I. $BASE.cpp"; }
+        [ -z "$COMPILE" ] && { COMPILE="cc -I. $BASE.c"; }
         [ -z "$RUN" ] && { RUN="./a.out"; }
     fi
 
@@ -101,8 +101,8 @@ do
             # If we have a cached version, check if it stayed identical
             # If so, we can skip 'compile' and 'run', unless forced
             if [ -z "$NOCACHE" ]; then
-                if [ -f "$BASE.cpp" -a -f "$REF" ]; then
-                    if diff $LOG $BASE.cpp > /dev/null 2>&1; then
+                if [ -f "$BASE.c" -a -f "$REF" ]; then
+                    if diff $LOG $BASE.c > /dev/null 2>&1; then
                         # In that case, use the reference, don't run
                         echo > $LOG
                         cp $REF $LOG
@@ -117,9 +117,13 @@ do
             if [ ! -z "$COMPILE" ]; then
                 echo -n Compile...
                 rm -f ./a.out
-                mv -f $LOG $BASE.cpp
+                mv -f $LOG $BASE.c
                 $COMPILE > $LOG 2>&1
                 RC=$?
+                if [ $RC -ne $EXIT ]; then
+                    cat $BASE.c >> $LOG
+                    rm $BASE.c
+                fi
             fi
 
             # Run the target if needed
@@ -147,7 +151,7 @@ do
             THIS_FAILED="Output mismatch"
             diff $REF $LOG > $LOG.diff
             mv $LOG.diff $LOG
-            rm -f $BASE.cpp
+            rm -f $BASE.c
         else
             THIS_FAILED="Missing reference"
         fi

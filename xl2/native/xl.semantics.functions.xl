@@ -76,13 +76,16 @@ module XL.SEMANTICS.FUNCTIONS is
     // ------------------------------------------------------------------------
 
         Name : Names as PT.name_tree
+        MName : PT.Attached (Iface, "MNAME") as PT.name_tree
 
         // Create the function
         f : function
         f.Name                  := Name
         f.type                  := FnType
         f.initializer           := Init
-        f.machine_name          := CGM.Name(Name, f.type)
+        if MName = nil then
+            MName := CGM.Name(Name, f.type)
+        f.machine_name          := MName
         f.frame_depth           := SYM.GetInteger(XLT.context, "FRAMEDEPTH")
         f.is_input              := false
         f.is_output             := false
@@ -132,41 +135,50 @@ module XL.SEMANTICS.FUNCTIONS is
     // ------------------------------------------------------------------------
     //    Enter a builtin function (bytecode)
     // ------------------------------------------------------------------------
+        savedGlobals : PT.tree := SYM.GetProperty(XLT.global_context, "DECL")
+        SYM.SetProperty XLT.global_context, "DECL", nil
+
         Interface := EnterFunction(Interface)
         f : function := GetFunction(Interface)
         assert f <> nil
         if f.initializer <> nil then
             ERR.Error "Built-in '$1' was given initializer '$2'",
                       BuiltinName, f.initializer
+            result := input
         else if BuiltinName.kind <> PT.xlNAME then
             ERR.Error "'$1' is not a valid built-in name", BuiltinName
+            result := input
         else
             BN : BuiltinName as PT.name_tree
             f.is_builtin := true
             f.machine_name := PT.NewName(PT.XLNormalize(BN.Value),BN.position)
-            return Interface
-        return input
+            result := Interface
+        newGlobals : PT.tree := SYM.GetProperty(XLT.global_context, "DECL")
+        PT.AttachTree f.machine_name, "GLOBALDECL", newGlobals
+        SYM.SetProperty XLT.global_context, "DECL", savedGlobals
 
 
     function EnterCFunction(input : PT.tree;
                             Interface : PT.tree;
                             CName : PT.tree) return PT.tree is
     // ------------------------------------------------------------------------
-    //    Enter a builtin function (bytecode)
+    //    Enter a function declared in C
     // ------------------------------------------------------------------------
+        PT.AttachTree Interface, "MNAME", CName
         Interface := EnterFunction(Interface)
         f : function := GetFunction(Interface)
         assert f <> nil
         if f.initializer <> nil then
             ERR.Error "C function '$1' was given initializer '$2'",
                       CName, f.initializer
+            result := input
         else if CName.kind <> PT.xlNAME then
             ERR.Error "'$1' is not a valid C function name", CName
+            result := input
         else
             BN : CName as PT.name_tree
-            f.machine_name := BN
-            return Interface
-        return input
+            assert f.machine_name = BN
+            result := Interface
 
 
     function EnterFunctionBody(input : PT.tree;

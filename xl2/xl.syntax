@@ -11,7 +11,7 @@ INFIX
         200     DEFAULT
         210     ,
         221     := += -= *= /= ^= |= &=
-        230     return 
+        230     return
         240     and or xor
         250     in
         251     of to
@@ -26,7 +26,7 @@ INFIX
 PREFIX
         30      generic
         120     exit loop
-        125     case if return while until when
+        125     case if return while until when yield
         320     not in out constant variable const var
         340     @ 
         380     ! ~

@@ -23,8 +23,11 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-init            "#define XLINIT 1"
+xcinit          "#define XLINIT 1"
                 "#include ""xl_lib.h"""
+xcterm          ""
+
+init            "#include <stdio.h>"
 
                 "typedef char                   xlint8;"
                 "typedef short                  xlint16;"
@@ -40,9 +43,11 @@ init            "#define XLINIT 1"
                 "typedef unsigned               xluint;"
                 "typedef double                 xlreal;"
                 "typedef char                   xlbool;"
-                "typedef wchar_t                xlchar;"
-                "typedef ::text                 xltext;"
+                "typedef char                   xlchar;"
+                "typedef const char *           xltext;"
+                "typedef void *                 xlptr;"
                 "typedef struct {}              xlrecord, xlmodule;"
+                "typedef FILE *                 xlfile;"
 
 term            "/*end*/"
 
@@ -126,13 +131,11 @@ loopifnot       "if (!($1)) goto loopentry_$2;"
 loopexit        "loopexit_$1: 0;"
 exitloop        "goto loopexit_$1;"
 
-// Temporary hack in main for something normally declared in XL.UI.CONSOLE
-main_begin      "namespace xl { namespace ui { namespace console {"
-                "std::vector< ::text > arguments;"
-                "}}}"
-                "void XLMain() {"
-main_invoke     "/* Main */"
-main_end        "}"
+main_begin      "int main(int _argc, char **_argv)"
+                "{"
+main_invoke     "    /* Main */"
+main_end        "    return 0;"
+                "}"
 
 xltest          "xl::textio::writeln($1);"
 

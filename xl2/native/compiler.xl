@@ -104,9 +104,14 @@ procedure Main is
         else if name = "-bootstrap" then
             compile := false
             transcode := true
+        else if name = "-xcode" then
+            compile := false
+            transcode := false
+            CG.Transcode theProgram, IO.standard_output
         else if name = "-ccode" then
             compile := false
-            CG.Transcode theProgram, IO.standard_output
+            transcode := false
+            CG.Generate theProgram, IO.standard_output
         else if name = "-full" then
             compile := true
         else if name = "-I" then

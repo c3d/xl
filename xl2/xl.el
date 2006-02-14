@@ -60,9 +60,9 @@
 (defvar xl-keywords
   '("generic" "is" "import" "using" "use"
     "in" "out" "variable" "constant" "var" "const"
-    "return" "other" "require" "ensure" "written"
+    "return" "other" "require" "ensure" "written" "yield"
     "try" "catch" "retry" "raise"
-    "while" "until" "for" "do" "loop" "exit"
+    "while" "until" "for" "do" "loop" "exit" "restart"
     "translate" "when" "where" "with"
     "if" "then" "else" "not" "and" "or" "xor" "nil")
   "List of words highlighted as 'keywords' in XL mode")
@@ -76,7 +76,7 @@
   "List of words highlighted as 'types' in XL mode")
 
 (defvar xl-functors
-  '("function" "procedure" "to" "translation")
+  '("function" "procedure" "to" "translation" "iterator")
   "List of words declaring functions in XL mode")
 
 (defvar xl-type-declarators

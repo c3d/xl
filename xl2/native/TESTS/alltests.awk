@@ -6,7 +6,7 @@ BEGIN {
     base=file;
     sub("[.]xl", "", base);
     csource=file;
-    sub("[.]xl", ".cpp", csource);
+    sub("[.]xl", ".c", csource);
 }
 /\/\/ [A-Z]+=/ {
     name=substr($1, 4);

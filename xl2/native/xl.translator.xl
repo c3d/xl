@@ -95,7 +95,7 @@ module XL.TRANSLATOR is
         if ERR.error_count = 0 then
             after_opt : BC.bytecode := XLOptimizations(after_semantics)
             if ERR.error_count = 0 then
-                CG.Transcode after_opt, output
+                CG.Generate after_opt, output
         if ERR.error_count > 0 then
             exit 2
 

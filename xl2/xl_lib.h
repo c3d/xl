@@ -350,6 +350,7 @@ namespace xl
                     result.push_back(entry);
                 }
             }
+            closedir(dirp);
             return result;
         }
     }

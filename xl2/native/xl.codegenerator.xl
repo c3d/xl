@@ -222,6 +222,7 @@ module XL.CODE_GENERATOR is
         InitializeRenames
         InitializeBytecodeMap
 
+        IO.writeln bytecode_formats["xcinit"]
         IO.writeln bytecode_formats["init"]
 
         XL2C input
@@ -230,6 +231,70 @@ module XL.CODE_GENERATOR is
         EmitSemanticsPlugins
         EmitXLInitAndTerm
 
+        IO.writeln bytecode_formats["term"]
+        IO.writeln bytecode_formats["xcterm"]
+
+        IO.standard_output := old_stdout
+
+
+    procedure Generate (input : BC.bytecode) is
+    // ------------------------------------------------------------------------
+    //    Rewrite an individual tree
+    // ------------------------------------------------------------------------
+        if input.kind = PT.xlPREFIX then
+            // Prefix trees have to be '@' something
+            translate input
+                when
+                    @ 'name' 'arg1' 'arg2' 'arg3' 'arg4'
+                then
+                    XL2C_Asm name, arg1, arg2, arg3, arg4
+                when
+                    @ 'name' 'arg1' 'arg2' 'arg3'
+                then
+                    XL2C_Asm name, arg1, arg2, arg3, nil
+                when
+                    @ 'name' 'arg1' 'arg2'
+                then
+                    XL2C_Asm name, arg1, arg2, nil, nil
+                when
+                    @ 'name' 'arg1'
+                then
+                    XL2C_Asm name, arg1, nil, nil, nil
+                when
+                    @ 'name'
+                then
+                    XL2C_Asm name, nil, nil, nil, nil
+                else
+                    ERR.Error "Invalid prefix bytecode '$1'", input
+        else if input.kind = PT.xlINFIX then
+            infix : input as PT.infix_tree
+            if infix.name <> ASCII.CR and infix.name <> ";" then
+                ERR.Error "Invalid infix bytecode '$1'", input
+            Generate infix.left
+            Generate infix.right
+        else if input.kind = PT.xlBLOCK then
+            block : input as PT.block_tree
+            if (block.opening <> PR.INDENT_MARKER or
+                block.closing <> PR.UNINDENT_MARKER) then
+                ERR.Error "Invalid block bytecode '$1'", input
+            Generate block.child
+        else
+            ERR.Error "Invalid bytecode kind '$1'", input
+        
+
+
+    procedure Generate (input : BC.bytecode; output : IO.output_file) is
+    // ------------------------------------------------------------------------
+    //   Rewrite the whole tree
+    // ------------------------------------------------------------------------
+
+        old_stdout : IO.output_file := IO.standard_output
+        IO.standard_output := output
+
+        InitializeBytecodeMap
+
+        IO.writeln bytecode_formats["init"]
+        Generate input
         IO.writeln bytecode_formats["term"]
 
         IO.standard_output := old_stdout
