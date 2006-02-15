@@ -26,14 +26,14 @@ typedef xlint (*FnPtr_957) ( xlint x_956 ) ;
 xlint max_958 ( xlint x_956 ) ;
 xlint k_963; /* Global */
 xlint l_964; /* Global */
-typedef xlint (*FnPtr_973) ( xlint x_969 , xlint variadic966_970 , xlint variadic967_971 , xlint variadic968_972 ) ;
-xlint max_974 ( xlint x_969 , xlint variadic966_970 , xlint variadic967_971 , xlint variadic968_972 ) ;
-typedef xlint (*FnPtr_981) ( xlint x_978 , xlint variadic976_979 , xlint variadic977_980 ) ;
-xlint max_982 ( xlint x_978 , xlint variadic976_979 , xlint variadic977_980 ) ;
-typedef xlint (*FnPtr_987) ( xlint x_985 , xlint variadic984_986 ) ;
-xlint max_988 ( xlint x_985 , xlint variadic984_986 ) ;
-xlint ret_999; /* Temp */
+typedef xlint (*FnPtr_974) ( xlint x_970 , xlint variadic967_971 , xlint variadic968_972 , xlint variadic969_973 ) ;
+xlint max_975 ( xlint x_970 , xlint variadic967_971 , xlint variadic968_972 , xlint variadic969_973 ) ;
+typedef xlint (*FnPtr_982) ( xlint x_979 , xlint variadic977_980 , xlint variadic978_981 ) ;
+xlint max_983 ( xlint x_979 , xlint variadic977_980 , xlint variadic978_981 ) ;
+typedef xlint (*FnPtr_988) ( xlint x_986 , xlint variadic985_987 ) ;
+xlint max_989 ( xlint x_986 , xlint variadic985_987 ) ;
 xlint ret_1000; /* Temp */
+xlint ret_1001; /* Temp */
 xlint max_958 ( xlint x_956 ) {
 xlint result_965; /* Result */
 result_965 = x_956;
@@ -41,53 +41,53 @@ goto exit_max_958;
 exit_max_958: 0;
 return result_965;
 }
-xlint max_988 ( xlint x_985 , xlint variadic984_986 ) {
-xlint ret_990; /* Temp */
-xlbool ret_992; /* Temp */
-xlint result_989; /* Result */
-ret_990 = max_958 ( variadic984_986 );
-result_989 = ret_990;
-ret_992 = result_989 < x_985;
-if(!(ret_992)) goto else_if_991;
-result_989 = x_985;
-else_if_991: 0;
-exit_max_988: 0;
-return result_989;
+xlint max_989 ( xlint x_986 , xlint variadic985_987 ) {
+xlint ret_991; /* Temp */
+xlbool ret_993; /* Temp */
+xlint result_990; /* Result */
+ret_991 = max_958 ( variadic985_987 );
+result_990 = ret_991;
+ret_993 = result_990 < x_986;
+if(!(ret_993)) goto else_if_992;
+result_990 = x_986;
+else_if_992: 0;
+exit_max_989: 0;
+return result_990;
 }
-xlint max_982 ( xlint x_978 , xlint variadic976_979 , xlint variadic977_980 ) {
-xlint ret_993; /* Temp */
-xlbool ret_995; /* Temp */
-xlint result_983; /* Result */
-ret_993 = max_988 ( variadic976_979 , variadic977_980 );
-result_983 = ret_993;
-ret_995 = result_983 < x_978;
-if(!(ret_995)) goto else_if_994;
-result_983 = x_978;
-else_if_994: 0;
-exit_max_982: 0;
-return result_983;
+xlint max_983 ( xlint x_979 , xlint variadic977_980 , xlint variadic978_981 ) {
+xlint ret_994; /* Temp */
+xlbool ret_996; /* Temp */
+xlint result_984; /* Result */
+ret_994 = max_989 ( variadic977_980 , variadic978_981 );
+result_984 = ret_994;
+ret_996 = result_984 < x_979;
+if(!(ret_996)) goto else_if_995;
+result_984 = x_979;
+else_if_995: 0;
+exit_max_983: 0;
+return result_984;
 }
-xlint max_974 ( xlint x_969 , xlint variadic966_970 , xlint variadic967_971 , xlint variadic968_972 ) {
-xlint ret_996; /* Temp */
-xlbool ret_998; /* Temp */
-xlint result_975; /* Result */
-ret_996 = max_982 ( variadic966_970 , variadic967_971 , variadic968_972 );
-result_975 = ret_996;
-ret_998 = result_975 < x_969;
-if(!(ret_998)) goto else_if_997;
-result_975 = x_969;
-else_if_997: 0;
-exit_max_974: 0;
-return result_975;
+xlint max_975 ( xlint x_970 , xlint variadic967_971 , xlint variadic968_972 , xlint variadic969_973 ) {
+xlint ret_997; /* Temp */
+xlbool ret_999; /* Temp */
+xlint result_976; /* Result */
+ret_997 = max_983 ( variadic967_971 , variadic968_972 , variadic969_973 );
+result_976 = ret_997;
+ret_999 = result_976 < x_970;
+if(!(ret_999)) goto else_if_998;
+result_976 = x_970;
+else_if_998: 0;
+exit_max_975: 0;
+return result_976;
 }
 int main(int _argc, char **_argv)
 {
-xlint ret_999; /* Temp */
 xlint ret_1000; /* Temp */
-ret_999 = max_974 ( 1 , 2 , 3 , 4 );
-k_963 = ret_999;
-ret_1000 = max_982 ( 1 , 2 , 3 );
-l_964 = ret_1000;
+xlint ret_1001; /* Temp */
+ret_1000 = max_975 ( 1 , 2 , 3 , 4 );
+k_963 = ret_1000;
+ret_1001 = max_983 ( 1 , 2 , 3 );
+l_964 = ret_1001;
     /* Main */
     return 0;
 }

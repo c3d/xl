@@ -359,7 +359,8 @@ module XL.SEMANTICS.FUNCTIONS is
         // Create a symbol table for the body (taking parms as enclosing)
         f           : function := GetFunction(Interface)
         assert f <> nil
-        ftype       : f.type as FT.function_type
+        ftype       : GEN.NonGenericType(f.type) as FT.function_type
+        assert ftype <> nil
         context     : SYM.symbol_table := XLT.context
         frame_depth : integer := SYM.GetInteger(context, "FRAMEDEPTH", 0, true)
         XLT.context := SYM.NewSymbolTable (ftype.symbols)
@@ -386,22 +387,22 @@ module XL.SEMANTICS.FUNCTIONS is
                     @result_decl 'MType' 'MName'
                     'Body'
 
-        // Compute preconditions
-        preCond : PT.tree
-        preList : PT.tree_list
-        for preCond in f.preconditions loop
-            preList += CallAssertion(preCond, "precondition_error")
-        f.preconditions := preList
-
-        // Compute postconditions
-        postCond : PT.tree
-        postList : PT.tree_list
-        for postCond in f.postconditions loop
-            postList += CallAssertion(postCond, "postcondition_error")
-        f.postconditions := postList
-
         // For generic functions, just skip body semantics and the like
         if not GEN.IsGenericDeclaration(f) then
+            // Compute preconditions
+            preCond : PT.tree
+            preList : PT.tree_list
+            for preCond in f.preconditions loop
+                preList += CallAssertion(preCond, "precondition_error")
+            f.preconditions := preList
+
+            // Compute postconditions
+            postCond : PT.tree
+            postList : PT.tree_list
+            for postCond in f.postconditions loop
+                postList += CallAssertion(postCond, "postcondition_error")
+            f.postconditions := postList
+
             // Perform body semantics
             Body := XLT.ScopeSemantics(Body, XLT.scopeFunction)
             result := CGM.FunctionBody(f, Interface, Body)

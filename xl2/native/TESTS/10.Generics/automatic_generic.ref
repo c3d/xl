@@ -16,26 +16,26 @@ typedef char                   xlbool;
 typedef char                   xlchar;
 typedef const char *           xltext;
 typedef void *                 xlptr;
-typedef struct {}              xlrecord, xlmodule;
+typedef struct {} /* !ANSIC */ xlrecord, xlmodule;
 typedef FILE *                 xlfile;
-typedef struct Record_948 {
+typedef struct Record_954 {
   xlmodule base_1;
-} Record_948;
-Record_948 xlbuiltins_949; /* Global */
-typedef xlint (*FnPtr_965) ( xlint x_964 ) ;
-xlint g_966 ( xlint x_964 ) ;
-xlint g_966 ( xlint x_964 ) {
-xlint ret_977; /* Temp */
-xlint ret_978; /* Temp */
-xlint ret_979; /* Temp */
-xlint result_976; /* Result */
-ret_977 = x_964 - 1;
-ret_978 = g_966 ( ret_977 );
-ret_979 = ret_978 + 1;
-result_976 = ret_979;
-goto exit_g_966;
-exit_g_966: 0;
-return result_976;
+} Record_954;
+Record_954 xlbuiltins_955; /* Global */
+typedef xlint (*FnPtr_971) ( xlint x_970 ) ;
+xlint g_972 ( xlint x_970 ) ;
+xlint g_972 ( xlint x_970 ) {
+xlint ret_986; /* Temp */
+xlint ret_987; /* Temp */
+xlint ret_988; /* Temp */
+xlint result_985; /* Result */
+ret_986 = x_970 - 1;
+ret_987 = g_972 ( ret_986 );
+ret_988 = ret_987 + 1;
+result_985 = ret_988;
+goto exit_g_972;
+exit_g_972: 0;
+return result_985;
 }
 int main(int _argc, char **_argv)
 {
