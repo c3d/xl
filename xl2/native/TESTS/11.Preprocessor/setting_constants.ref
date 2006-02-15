@@ -16,26 +16,26 @@ typedef char                   xlbool;
 typedef char                   xlchar;
 typedef const char *           xltext;
 typedef void *                 xlptr;
-typedef struct {}              xlrecord, xlmodule;
+typedef struct {} /* !ANSIC */ xlrecord, xlmodule;
 typedef FILE *                 xlfile;
-typedef struct Record_948 {
+typedef struct Record_954 {
   xlmodule base_1;
-} Record_948;
-Record_948 xlbuiltins_949; /* Global */
-xlint a_950; /* Global */
-xlint b_951; /* Global */
-xlint c_952; /* Global */
-xlint x_953; /* Global */
-xlint y_954; /* Global */
-xlint z_955; /* Global */
+} Record_954;
+Record_954 xlbuiltins_955; /* Global */
+xlint a_956; /* Global */
+xlint b_957; /* Global */
+xlint c_958; /* Global */
+xlint x_959; /* Global */
+xlint y_960; /* Global */
+xlint z_961; /* Global */
 int main(int _argc, char **_argv)
 {
-a_950 = 0;
-b_951 = 26;
-c_952 = 27;
-x_953 = 1;
-y_954 = 2;
-z_955 = 3;
+a_956 = 0;
+b_957 = 26;
+c_958 = 27;
+x_959 = 1;
+y_960 = 2;
+z_961 = 3;
     /* Main */
     return 0;
 }

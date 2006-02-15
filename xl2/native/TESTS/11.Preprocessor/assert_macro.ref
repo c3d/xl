@@ -16,33 +16,33 @@ typedef char                   xlbool;
 typedef char                   xlchar;
 typedef const char *           xltext;
 typedef void *                 xlptr;
-typedef struct {}              xlrecord, xlmodule;
+typedef struct {} /* !ANSIC */ xlrecord, xlmodule;
 typedef FILE *                 xlfile;
-typedef struct Record_948 {
+typedef struct Record_954 {
   xlmodule base_1;
-} Record_948;
-Record_948 xlbuiltins_949; /* Global */
-typedef void (*FnPtr_953) ( xltext msg_950 , xltext file_951 , xlint line_952 ) ;
-void myassertionfailure_954 ( xltext msg_950 , xltext file_951 , xlint line_952 ) ;
-typedef void (*FnPtr_957) ( xlint x_955 , xlint y_956 ) ;
-void testit_958 ( xlint x_955 , xlint y_956 ) ;
-void myassertionfailure_954 ( xltext msg_950 , xltext file_951 , xlint line_952 ) {
-xlint ret_959; /* Temp */
-ret_959 = line_952 - 1;
-line_952 = ret_959;
-exit_myassertionfailure_954: 0;
+} Record_954;
+Record_954 xlbuiltins_955; /* Global */
+typedef void (*FnPtr_959) ( xltext msg_956 , xltext file_957 , xlint line_958 ) ;
+void myassertionfailure_960 ( xltext msg_956 , xltext file_957 , xlint line_958 ) ;
+typedef void (*FnPtr_963) ( xlint x_961 , xlint y_962 ) ;
+void testit_964 ( xlint x_961 , xlint y_962 ) ;
+void myassertionfailure_960 ( xltext msg_956 , xltext file_957 , xlint line_958 ) {
+xlint ret_965; /* Temp */
+ret_965 = line_958 - 1;
+line_958 = ret_965;
+exit_myassertionfailure_960: 0;
 }
-void testit_958 ( xlint x_955 , xlint y_956 ) {
-xlint ret_961; /* Temp */
-xlbool ret_962; /* Temp */
-xlbool ret_963; /* Temp */
-ret_961 = x_955 + y_956;
-ret_962 = ret_961 < 34;
-ret_963 = !ret_962;
-if(!(ret_963)) goto else_if_960;
-myassertionfailure_954 ( "X + Y < 34" , "11.Preprocessor/assert_macro.xl" , 27 );
-else_if_960: 0;
-exit_testit_958: 0;
+void testit_964 ( xlint x_961 , xlint y_962 ) {
+xlint ret_967; /* Temp */
+xlbool ret_968; /* Temp */
+xlbool ret_969; /* Temp */
+ret_967 = x_961 + y_962;
+ret_968 = ret_967 < 34;
+ret_969 = !ret_968;
+if(!(ret_969)) goto else_if_966;
+myassertionfailure_960 ( "X + Y < 34" , "11.Preprocessor/assert_macro.xl" , 27 );
+else_if_966: 0;
+exit_testit_964: 0;
 }
 int main(int _argc, char **_argv)
 {

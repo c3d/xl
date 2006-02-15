@@ -16,18 +16,18 @@ typedef char                   xlbool;
 typedef char                   xlchar;
 typedef const char *           xltext;
 typedef void *                 xlptr;
-typedef struct {}              xlrecord, xlmodule;
+typedef struct {} /* !ANSIC */ xlrecord, xlmodule;
 typedef FILE *                 xlfile;
-typedef struct Record_948 {
+typedef struct Record_954 {
   xlmodule base_1;
-} Record_948;
-Record_948 xlbuiltins_949; /* Global */
-xlint k_950; /* Global */
-xlreal l_951; /* Global */
+} Record_954;
+Record_954 xlbuiltins_955; /* Global */
+xlint k_956; /* Global */
+xlreal l_957; /* Global */
 int main(int _argc, char **_argv)
 {
-k_950 = 3;
-l_951 = 0.3;
+k_956 = 3;
+l_957 = 0.3;
     /* Main */
     return 0;
 }

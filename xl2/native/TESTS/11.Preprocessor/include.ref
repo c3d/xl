@@ -16,29 +16,29 @@ typedef char                   xlbool;
 typedef char                   xlchar;
 typedef const char *           xltext;
 typedef void *                 xlptr;
-typedef struct {}              xlrecord, xlmodule;
+typedef struct {} /* !ANSIC */ xlrecord, xlmodule;
 typedef FILE *                 xlfile;
-typedef struct Record_948 {
+typedef struct Record_954 {
   xlmodule base_1;
-} Record_948;
-Record_948 xlbuiltins_949; /* Global */
-xlreal k_950; /* Global */
-xlreal l_951; /* Global */
-xlreal o_952; /* Global */
-xlint s_953; /* Global */
-xlint t_954; /* Global */
-xlint ret_955; /* Temp */
-xlint ret_956; /* Temp */
+} Record_954;
+Record_954 xlbuiltins_955; /* Global */
+xlreal k_956; /* Global */
+xlreal l_957; /* Global */
+xlreal o_958; /* Global */
+xlint s_959; /* Global */
+xlint t_960; /* Global */
+xlint ret_961; /* Temp */
+xlint ret_962; /* Temp */
 int main(int _argc, char **_argv)
 {
-xlint ret_955; /* Temp */
-xlint ret_956; /* Temp */
-k_950 = 1;
-l_951 = 1;
-o_952 = 1;
-ret_955 = s_953 * 2;
-ret_956 = ret_955 * 2;
-t_954 = ret_956;
+xlint ret_961; /* Temp */
+xlint ret_962; /* Temp */
+k_956 = 1;
+l_957 = 1;
+o_958 = 1;
+ret_961 = s_959 * 2;
+ret_962 = ret_961 * 2;
+t_960 = ret_962;
     /* Main */
     return 0;
 }

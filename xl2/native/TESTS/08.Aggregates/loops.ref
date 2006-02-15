@@ -16,19 +16,15 @@ typedef char                   xlbool;
 typedef char                   xlchar;
 typedef const char *           xltext;
 typedef void *                 xlptr;
-typedef struct {}              xlrecord, xlmodule;
+typedef struct {} /* !ANSIC */ xlrecord, xlmodule;
 typedef FILE *                 xlfile;
-typedef struct Record_948 {
+typedef struct Record_954 {
   xlmodule base_1;
-} Record_948;
-Record_948 xlbuiltins_949; /* Global */
-xlint i_950; /* Global */
-xlint ret_952; /* Temp */
-xlbool ret_954; /* Temp */
-xlbool ret_956; /* Temp */
-xlint ret_957; /* Temp */
-xlbool ret_959; /* Temp */
-xlint ret_960; /* Temp */
+} Record_954;
+Record_954 xlbuiltins_955; /* Global */
+xlint i_956; /* Global */
+xlint ret_958; /* Temp */
+xlbool ret_960; /* Temp */
 xlbool ret_962; /* Temp */
 xlint ret_963; /* Temp */
 xlbool ret_965; /* Temp */
@@ -37,14 +33,14 @@ xlbool ret_968; /* Temp */
 xlint ret_969; /* Temp */
 xlbool ret_971; /* Temp */
 xlint ret_972; /* Temp */
+xlbool ret_974; /* Temp */
+xlint ret_975; /* Temp */
+xlbool ret_977; /* Temp */
+xlint ret_978; /* Temp */
 int main(int _argc, char **_argv)
 {
-xlint ret_952; /* Temp */
-xlbool ret_954; /* Temp */
-xlbool ret_956; /* Temp */
-xlint ret_957; /* Temp */
-xlbool ret_959; /* Temp */
-xlint ret_960; /* Temp */
+xlint ret_958; /* Temp */
+xlbool ret_960; /* Temp */
 xlbool ret_962; /* Temp */
 xlint ret_963; /* Temp */
 xlbool ret_965; /* Temp */
@@ -53,60 +49,64 @@ xlbool ret_968; /* Temp */
 xlint ret_969; /* Temp */
 xlbool ret_971; /* Temp */
 xlint ret_972; /* Temp */
-i_950 = 1;
-loopentry_loop_951: 0;
-ret_952 = i_950 + 1;
-i_950 = ret_952;
-ret_954 = i_950 > 100;
-if(!(ret_954)) goto else_if_953;
-goto loopexit_loop_951;
-else_if_953: 0;
-goto loopentry_loop_951;
-loopexit_loop_951: 0;
-goto loopend_while_955;
-loopentry_while_955: 0;
-ret_957 = i_950 + 2;
-i_950 = ret_957;
-loopend_while_955: 0;
-ret_956 = i_950 < 200;
-if (ret_956) goto loopentry_while_955;
-loopexit_while_955: 0;
-goto loopend_while_958;
-loopentry_while_958: 0;
-ret_960 = i_950 + 3;
-i_950 = ret_960;
-loopend_while_958: 0;
-ret_959 = i_950 > 300;
-if (!(ret_959)) goto loopentry_while_958;
-loopexit_while_958: 0;
+xlbool ret_974; /* Temp */
+xlint ret_975; /* Temp */
+xlbool ret_977; /* Temp */
+xlint ret_978; /* Temp */
+i_956 = 1;
+loopentry_loop_957: 0;
+ret_958 = i_956 + 1;
+i_956 = ret_958;
+ret_960 = i_956 > 100;
+if(!(ret_960)) goto else_if_959;
+goto loopexit_loop_957;
+else_if_959: 0;
+goto loopentry_loop_957;
+loopexit_loop_957: 0;
+goto loopend_while_961;
 loopentry_while_961: 0;
-ret_963 = i_950 + 4;
-i_950 = ret_963;
+ret_963 = i_956 + 2;
+i_956 = ret_963;
 loopend_while_961: 0;
-ret_962 = i_950 < 400;
+ret_962 = i_956 < 200;
 if (ret_962) goto loopentry_while_961;
 loopexit_while_961: 0;
+goto loopend_while_964;
 loopentry_while_964: 0;
-ret_966 = i_950 + 5;
-i_950 = ret_966;
+ret_966 = i_956 + 3;
+i_956 = ret_966;
 loopend_while_964: 0;
-ret_965 = i_950 > 500;
+ret_965 = i_956 > 300;
 if (!(ret_965)) goto loopentry_while_964;
 loopexit_while_964: 0;
 loopentry_while_967: 0;
-ret_969 = i_950 + 6;
-i_950 = ret_969;
+ret_969 = i_956 + 4;
+i_956 = ret_969;
 loopend_while_967: 0;
-ret_968 = i_950 < 600;
+ret_968 = i_956 < 400;
 if (ret_968) goto loopentry_while_967;
 loopexit_while_967: 0;
 loopentry_while_970: 0;
-ret_972 = i_950 + 7;
-i_950 = ret_972;
+ret_972 = i_956 + 5;
+i_956 = ret_972;
 loopend_while_970: 0;
-ret_971 = i_950 > 700;
+ret_971 = i_956 > 500;
 if (!(ret_971)) goto loopentry_while_970;
 loopexit_while_970: 0;
+loopentry_while_973: 0;
+ret_975 = i_956 + 6;
+i_956 = ret_975;
+loopend_while_973: 0;
+ret_974 = i_956 < 600;
+if (ret_974) goto loopentry_while_973;
+loopexit_while_973: 0;
+loopentry_while_976: 0;
+ret_978 = i_956 + 7;
+i_956 = ret_978;
+loopend_while_976: 0;
+ret_977 = i_956 > 700;
+if (!(ret_977)) goto loopentry_while_976;
+loopexit_while_976: 0;
     /* Main */
     return 0;
 }
