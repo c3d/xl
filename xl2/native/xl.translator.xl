@@ -147,6 +147,7 @@ module XL.TRANSLATOR is
     //   Deal with the semantics in a scope
     // ------------------------------------------------------------------------
 
+        ModIface : PT.tree := PT.Attached(input, "MODIFACE")
         if scope = scopeMain or scope = scopeGlobal then
             input := PPR.Preprocess (input)
 
@@ -174,14 +175,13 @@ module XL.TRANSLATOR is
         if modname <> nil then
             SYM.SetProperty context, "MODULE", modname
 
-            // If there are symbols in the interface, see them in body
-            ModIface : PT.tree := PT.Attached(modname, "MODIFACE")
-            if ModIface <> nil then
-                ifaceSyms : SYM.symbol_table := MDL.GetSymbols(ModIface)
-                if ifaceSyms <> nil then
-                    trace[modules] "Using interface symbols ", ifaceSyms,
-                                   " for ", ModName
-                    SYM.AddUsing context, nil, ifaceSyms
+        // If there are symbols in the interface, see them in body
+        if ModIface <> nil then
+            ifaceSyms : SYM.symbol_table := MDL.GetSymbols(ModIface)
+            if ifaceSyms <> nil then
+                trace[modules] "Using interface symbols ", ifaceSyms,
+                               " for ", ModName
+                SYM.AddUsing context, nil, ifaceSyms
 
         if scope = scopeMain or scope = scopeGlobal then
             global_context := context

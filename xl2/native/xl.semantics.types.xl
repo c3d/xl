@@ -430,6 +430,14 @@ module XL.SEMANTICS.TYPES is
             EnterSignature sig, tp
 
 
+    function TypeTypeMatch (iface : any_type;
+                            body  : any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //    Check if the type type matches
+    // ------------------------------------------------------------------------
+        return iface = body
+
+
     procedure InitializeTypes is
     // ------------------------------------------------------------------------
     //    Initialize the type table
@@ -451,7 +459,7 @@ module XL.SEMANTICS.TYPES is
             tot : type_type
             tot.base := nil
             tot.machine_name := parse_tree(xltype)
-            tot.interface_match := nil
+            tot.interface_match := TypeTypeMatch
             tot.name := parse_tree(type)
             tot.symbols := nil
             type_of_types := tot

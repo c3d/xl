@@ -173,7 +173,14 @@ module XL.SEMANTICS.TYPES.RECORDS is
         rtp.machine_name := SYM.Temporary("rectype", Source.position)
 
         // If generic, make it generic
-        if GEN.IsGenericContext() then
+        if rtp.base = TY.GetDefinedType(TY.module_type) then
+            if GEN.IsGenericContext() then
+                // Do not make modules generic
+                voided : any_type := GEN.MakeGeneric(rtp)
+                voided := voided // Keep compiler quiet
+            rtp.machine_name := CGM.DeclareRecord(rtp)
+            result := rtp
+        else if GEN.IsGenericContext() then
             rtp.machine_name := SYM.Temporary("<generic record>")
             result := GEN.MakeGeneric(rtp)
         else

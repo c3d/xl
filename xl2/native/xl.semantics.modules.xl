@@ -133,6 +133,37 @@ module XL.SEMANTICS.MODULES is
             SYM.CopySymbols recSyms, syms
 
 
+    procedure ReconcileOne (nm           : text;
+                            kind         : text;
+                            symbols      : SYM.symbol_table;
+                            enclosing    : SYM.symbol_table;
+                            in out decls : DCL.declarations;
+                            in_body      : boolean) is
+    // ------------------------------------------------------------------------
+    //   Reconcile one kind of symbol
+    // ------------------------------------------------------------------------
+        defs    : PT.tree_list
+        def     : PT.tree
+        decl    : DCL.declaration
+        dtype   : TY.any_type
+        SYM.Lookup symbols, kind, nm, defs,SYM.lookupLocalOnly
+        trace [modules] "Found ", size(defs), " for ", nm, " in ", symbols
+        for def in defs loop
+            decl := DCL.GetDeclaration (def)
+            if decl <> nil then
+                decls += decl
+                dtype := decl.type
+                // If we have a body-only module, like module X is Y,
+                // use the type of the implementation instead of 'module'
+                if in_body then
+                    if SameType(dtype, TY.GetDefinedType(TY.module_type)) then
+                        AutoExport decl
+                trace[modules] "Enter ", PT.tree(decl.name), " in ", enclosing
+                trace[modules] " type ", TY.Source(dtype),
+                               " mname ", PT.tree(dtype.machine_name)
+                SYM.Enter enclosing, kind, nm, def
+
+
     function Reconcile (Iface   : PT.tree;
                         Body    : PT.tree;
                         BaseName: PT.tree;
@@ -158,11 +189,6 @@ module XL.SEMANTICS.MODULES is
                 ERR.Error "Its type is '$1'", TY.Source(TY.GetType(Base))
         trace[modules] "Module symbols ", enclosing, " for ", Iface
 
-        s : SYM.symbol_table := enclosing
-        while s <> nil loop
-            trace[modules] "  table ", s
-            s := SYM.Enclosing(s)
-
         // Get the symbols from the results, which should have code types
         if Iface <> nil then
             iface_symbols := GetSymbols(Iface)
@@ -178,53 +204,21 @@ module XL.SEMANTICS.MODULES is
         // Try to find the declarations in the interface
         // There may be more than one matching, e.g. overloaded functions
         // We add them to the enclosing scope
-        defs    : PT.tree_list
-        def     : PT.tree
-        decls   : DCL.declarations
-        decl    : DCL.declaration
         nm      : text := Name.value
-        dtype   : TY.any_type
+        decls   : DCL.declarations
         if Iface <> nil then
-            SYM.Lookup iface_symbols, "DECL", nm, defs,SYM.lookupLocalOnly
-            SYM.Lookup iface_symbols, "FN", nm, defs,SYM.lookupLocalOnly
-            SYM.Lookup iface_symbols, "TYPE", nm, defs,SYM.lookupLocalOnly
-            trace [modules] "Found ", size(defs),
-                            " for ", nm, " in iface ", iface_symbols
-            for def in defs loop
-                decl := DCL.GetDeclaration (def)
-                if decl <> nil then
-                    decls += decl
-                    dtype := decl.type
-                    trace[modules] "Enter ", PT.tree(decl.name),
-                                   " in interface ", enclosing
-                    trace[modules] " type ", TY.Source(dtype),
-                                   " mname ", PT.tree(dtype.machine_name)
-                    SYM.Enter enclosing, "DECL", nm, def
+            ReconcileOne nm, "DECL", iface_symbols, enclosing, decls, false
+            ReconcileOne nm, "FN", iface_symbols, enclosing, decls, false
+            ReconcileOne nm, "TYPE", iface_symbols, enclosing, decls, false
 
             if Body <> nil and not Cached then
                 if DCL.MatchInterface(decls, body_symbols) = false then
                     ERR.Error "The body and interface of '$1' don't match", Name
 
         else if Body <> nil then
-            SYM.Lookup body_symbols, "DECL", nm, defs,SYM.lookupLocalOnly
-            SYM.Lookup body_symbols, "FN", nm, defs,SYM.lookupLocalOnly
-            SYM.Lookup body_symbols, "TYPE", nm, defs,SYM.lookupLocalOnly
-            trace [modules] "Found ", size(defs),
-                            " for ", nm, " in body ", body_symbols
-            for def in defs loop
-                decl := DCL.GetDeclaration (def)
-                if decl <> nil then
-                    // If we have a body-only module, like module X is Y,
-                    // use the type of the implementation instead of 'module'
-                    dtype  := decl.type
-                    if SameType(dtype, TY.GetDefinedType(TY.module_type)) then
-                        AutoExport decl
-                    decls += decl
-                    trace[modules] "Enter ", PT.tree(decl.name),
-                                   " in body ", enclosing
-                    trace[modules] " type ", TY.Source(dtype),
-                                   " mname ", PT.tree(dtype.machine_name)
-                    SYM.Enter enclosing, "DECL", nm, def
+            ReconcileOne nm, "DECL", body_symbols, enclosing, decls, true
+            ReconcileOne nm, "FN", body_symbols, enclosing, decls, true
+            ReconcileOne nm, "TYPE", body_symbols, enclosing, decls, true
 
         if size(decls) = 0 then
             ERR.Error "No imported declaration found for '$1'", Name
@@ -420,9 +414,9 @@ module XL.SEMANTICS.MODULES is
                 Iface := XLT.ScopeSemantics(Iface, XLT.scopeGlobal, BaseName)
                 SYM.SetProperty XLT.main_context, KeyI, Iface
             if Body <> nil then
-                if Iface <> nil then
-                    PT.AttachTree BaseName, "MODIFACE", Iface
                 Body := AddBuiltins (Body)
+                if Iface <> nil then
+                    PT.AttachTree Body, "MODIFACE", Iface
                 Body := XLT.ScopeSemantics(Body, XLT.scopeGlobal, BaseName)
                 SYM.SetProperty XLT.main_context, KeyB, Body
 

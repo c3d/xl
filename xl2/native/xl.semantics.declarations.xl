@@ -337,16 +337,29 @@ module XL.SEMANTICS.DECLARATIONS is
             iface_name : PT.name_tree := iface_decl.name
             iface_type : TY.any_type := iface_decl.type
             list       : PT.tree_list
+            isType     : boolean := TY.SameType(iface_type,TY.type_of_types)
+            needIt     : boolean := iface_decl.initializer = nil
 
             trace [interface] "Looking for ", iface_name.value
 
             // Try to find something with the same name
-            SYM.Lookup body, "DECL", iface_name.value, list, SYM.lookupLocalOnly
-            SYM.Lookup body, "FN", iface_name.value, list, SYM.lookupLocalOnly
+            if isType then
+                SYM.Lookup body,"TYPE",iface_name.value,list,SYM.lookupLocalOnly
+            else
+                SYM.Lookup body,"DECL",iface_name.value,list,SYM.lookupLocalOnly
+                SYM.Lookup body,"FN",iface_name.value,list,SYM.lookupLocalOnly
 
-            if size(list) = 0 then
-                ERR.Error "No implementation found for '$1'", iface_name
-                return false
+            if needIt then
+                if size(list) = 0 then
+                    // It is OK for a generic type to be declared only in
+                    // the interface
+                    if isType then
+                        gtp : TY.any_type := TY.GetDefinedType(iface_name)
+                        if GEN.IsGenericType(gtp) then
+                            trace[interface] "Generic type ", iface_name.value
+                            restart
+                    ERR.Error "No implementation found for '$1'", iface_name
+                    return false
 
             // It is enough if one matches
             found : declaration := nil
@@ -373,13 +386,20 @@ module XL.SEMANTICS.DECLARATIONS is
 
                 // Check if declaration and implementation match
                 ERR.PushErrorContext()
-                if iface_type.interface_match(iface_type, body_type) then
+                if (iface_type = body_type or
+                    iface_type.interface_match(iface_type, body_type)) then
                     if found = nil then
                         found := body_decl
                     else
                         multi := body_decl
                 errors := ERR.PopErrorContext()
                 trace [interface] "For ", iface_name.value, " errors: ", errors
+
+            if not needIt then
+                if found <> nil then
+                    ERR.Error "An implementation of '$1' exists,", found.name
+                    ERR.Error "but '$1' is already defined", iface_name
+                    return false
 
             if multi <> nil then
                 ERR.Error "Found too many implementations for '$1'", iface_name

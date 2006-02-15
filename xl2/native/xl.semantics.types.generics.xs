@@ -44,6 +44,7 @@ module XL.SEMANTICS.TYPES.GENERICS with
     //    Information in a generic type
     // ------------------------------------------------------------------------
         parameters      : declaration_list
+        context         : SYM.symbol_table
         symbols         : SYM.symbol_table
         validation      : PT.tree
     type generic_type is access to generic_type_data
