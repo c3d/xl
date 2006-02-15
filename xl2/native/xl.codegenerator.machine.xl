@@ -29,6 +29,7 @@ import PT = XL.PARSER.TREE
 import SYM = XL.SYMBOLS
 import TY = XL.SEMANTICS.TYPES
 import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import GEN = XL.SEMANTICS.TYPES.GENERICS
 import XLT = XL.TRANSLATOR
 
 
@@ -561,11 +562,13 @@ module XL.CODE_GENERATOR.MACHINE is
         MDecl := parse_tree(@record_begin 'MName')
         for Field in Fields loop
             FieldDType := Field.type
-            FieldName := Field.machine_name
-            FieldType := FieldDType.machine_name
-            MDecl := parse_tree
-                'MDecl'
-                @record_field 'MName' 'FieldType' 'FieldName'
+            if not TY.IsTypeType(FieldDType) then
+                if not GEN.IsGenericType(FieldDType) then
+                    FieldName := Field.machine_name
+                    FieldType := FieldDType.machine_name
+                    MDecl := parse_tree
+                        'MDecl'
+                        @record_field 'MName' 'FieldType' 'FieldName'
         MDecl := parse_tree
             'MDecl'
             @record_end 'MName'

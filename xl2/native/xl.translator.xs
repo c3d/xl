@@ -56,6 +56,9 @@ module XL.TRANSLATOR with
         scopeMain, scopeGlobal,
         scopeFunction, scopeLocal,
         scopeField, scopeArgs
+
+    procedure CopyScopeProperties(toTable   : SYM.symbol_table;
+                                  fromTable : SYM.symbol_table)
     function ScopeSemantics (input   : PT.tree;
                              scope   : scope_kind) return BC.bytecode
     function ScopeSemantics (input   : PT.tree;

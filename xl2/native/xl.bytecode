@@ -46,7 +46,7 @@ init            "#include <stdio.h>"
                 "typedef char                   xlchar;"
                 "typedef const char *           xltext;"
                 "typedef void *                 xlptr;"
-                "typedef struct {}              xlrecord, xlmodule;"
+                "typedef struct {} /* !ANSIC */ xlrecord, xlmodule;"
                 "typedef FILE *                 xlfile;"
 
 term            "/*end*/"
@@ -169,3 +169,11 @@ not_bool         "$1 = !$2;"
 and_bool         "$1 = $2 && $3;"
 or_bool          "$1 = $2 && $3;"
 xor_bool         "$1 = !$2 != !$3;"
+
+int_to_char      "$1 = (xlchar) $2;"
+char_to_int      "$1 = (xlint) $2;"
+
+get_stdin        "$1 = stdin;"
+get_stdout       "$1 = stdout;"
+get_stderr       "$1 = stderr;"
+

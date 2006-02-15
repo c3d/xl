@@ -43,10 +43,10 @@ qtest: all
 postbuild: bootstrap_compiler native_compiler
 
 bootstrap_compiler:
-	cd $(BROOT)bootstrap && make test
+	cd $(BROOT)bootstrap && $(MAKE) test
 
 native_compiler:
-	cd $(BROOT)native && make test
+	cd $(BROOT)native && $(MAKE) test
 
 errors.tbl: errors.txt
 	@echo Generating errors messages table

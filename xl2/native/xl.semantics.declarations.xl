@@ -120,7 +120,7 @@ module XL.SEMANTICS.DECLARATIONS is
 
         // Check if we get there for a type (from instantiation)
         decl_type : TY.any_type := TY.EvaluateType(Type)
-        if TY.SameType (decl_type, TY.type_of_types) then
+        if TY.IsTypeType (decl_type) then
            return TY.EnterType (Name, Value)
         decl_fn_type : decl_type as FT.function_type
         if decl_fn_type <> nil then
@@ -337,7 +337,7 @@ module XL.SEMANTICS.DECLARATIONS is
             iface_name : PT.name_tree := iface_decl.name
             iface_type : TY.any_type := iface_decl.type
             list       : PT.tree_list
-            isType     : boolean := TY.SameType(iface_type,TY.type_of_types)
+            isType     : boolean := TY.IsTypeType(iface_type)
             needIt     : boolean := iface_decl.initializer = nil
 
             trace [interface] "Looking for ", iface_name.value

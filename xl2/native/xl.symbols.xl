@@ -313,8 +313,11 @@ module XL.SYMBOLS is
 
         cnt := 0
         while table <> nil loop
-            List  : rewrites_list := table.rewrites[Name]
-            List += table.rewrites[Wild]
+            List  : rewrites_list
+            if count(table.rewrites, Name) > 0 then
+                List := table.rewrites[Name]
+            if count (table.rewrites, Wild) > 0 then
+                List += table.rewrites[Wild]
 
             trace [rewrite] "Table ", table, " has ",
                             size (List), " rewrites"
@@ -347,8 +350,11 @@ module XL.SYMBOLS is
             depth += 1
             for entry in table.usings loop
                 subtable : symbol_table := entry.symbols
-                subList  : rewrites_list := subtable.rewrites[Name]
-                subList += subtable.rewrites[Wild]
+                subList  : rewrites_list
+                if count(subtable.rewrites, Name) > 0 then
+                    subList := subtable.rewrites[Name]
+                if count (subtable.rewrites, Wild) > 0 then
+                    subList += subtable.rewrites[Wild]
 
                 trace [rewrite] "SubTable ", subtable, " has ",
                                 size (subList), " rewrites"
@@ -564,3 +570,29 @@ module XL.SYMBOLS is
         return PT.NewName (base, pos)
 
 
+    procedure Debug(S : symbol_table; indent : text) is
+    // ------------------------------------------------------------------------
+    //   Dump a symbol table
+    // ------------------------------------------------------------------------
+        IO.WriteLn indent, "Symbol table ", S
+        name : text
+        indt : text := indent + " "
+        for name in S.names loop
+            IO.WriteLn indt, "Name ", name, ": ", size(S.names[name])
+        for name in S.rewrites loop
+            IO.WriteLn indt, "Rewr ", name, ": ", size(S.rewrites[name])
+        for name in S.properties loop
+            IO.Write indt, "Prop ", name, ": "
+            prop : PT.tree := S.properties[name] 
+            if prop = nil then
+                IO.WriteLn "nil"
+            else if (prop.kind = PT.xlINTEGER or prop.kind = PT.xlREAL or
+                     prop.kind = PT.xlTEXT or prop.kind = PT.xlNAME) then
+                IO.WriteLn prop
+            else
+                IO.WriteLn "p debug(0x", PT.name_tree(prop), ")"
+        ue : using_entry
+        for ue in S.usings loop
+            IO.WriteLn indt, "Usng ",ue.scope," p symbols(0x",ue.symbols, ")"
+        if S.enclosing <> nil then
+            IO.WriteLn "Parent: p symbols(0x", S.enclosing, ")"

@@ -37,7 +37,11 @@
 #include <sys/types.h>
 
 #ifndef _MSC_VER
+#if !defined(CONFIG_HPUX) && !defined(__hpux)
 #include <sys/dir.h>
+#else
+#include <dirent.h>
+#endif
 #endif
 
 

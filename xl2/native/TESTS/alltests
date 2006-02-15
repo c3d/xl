@@ -45,6 +45,7 @@ fi
 if [ ! -z "$1" ]; then PATTERN='*'"$1"'*'; shift; fi
 
 export TESTDIR XL SUCCESS FAILURE PASS UPDATE
+export CCOPTS=-Agcc
 
 # Make sure the proper files are linked in place
 ln -sf ../xl.bytecode .

@@ -314,6 +314,8 @@ module XL_BUILTINS with
 
 
     // Character operations
+    function character(Value : integer) return character                                        is XL.BYTECODE.int_to_char
+    function integer(Char : character) return integer                                           is XL.BYTECODE.char_to_int
 
 
     // Text operations

@@ -74,6 +74,7 @@ module XL.SEMANTICS.TYPES with
     // Check if two types are identical
     function SameType (t1 : any_type; t2: any_type) return boolean
     function InterfaceMatch (iface: any_type; body: any_type) return boolean
+    function IsTypeType (t : any_type) return boolean
 
     // Convert to a given type
     function Convert(expr : PT.tree; toType : any_type) return PT.tree

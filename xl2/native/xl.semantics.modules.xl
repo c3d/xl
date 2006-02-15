@@ -129,11 +129,19 @@ module XL.SEMANTICS.MODULES is
         else
             recSyms : SYM.symbol_table := rtp.symbols
             rtp.fields := decls
+            Name := PT.NewName (Name.value, Name.position)
+            TY.SetType Name, rtp
+            TY.SetType rtp.machine_name, rtp
             modDecl.type := rtp
+            modDecl.name := Name
             SYM.CopySymbols recSyms, syms
+            trace[modules] "AutoExport ", PT.tree(Name),
+                           " as ", PT.tree(modDecl.machine_name),
+                           " type ", PT.tree(rtp.machine_name)
 
 
     procedure ReconcileOne (nm           : text;
+                            alias        : text;
                             kind         : text;
                             symbols      : SYM.symbol_table;
                             enclosing    : SYM.symbol_table;
@@ -158,16 +166,21 @@ module XL.SEMANTICS.MODULES is
                 if in_body then
                     if SameType(dtype, TY.GetDefinedType(TY.module_type)) then
                         AutoExport decl
+                        dtype := decl.type
                 trace[modules] "Enter ", PT.tree(decl.name), " in ", enclosing
                 trace[modules] " type ", TY.Source(dtype),
                                " mname ", PT.tree(dtype.machine_name)
                 SYM.Enter enclosing, kind, nm, def
+                if alias <> "" then
+                    trace[modules] "Enter alias ", alias, " for ", nm
+                    SYM.Enter enclosing, kind, alias, def
 
 
     function Reconcile (Iface   : PT.tree;
                         Body    : PT.tree;
                         BaseName: PT.tree;
                         Name    : PT.name_tree;
+                        Alias   : PT.name_tree;
                         Cached  : boolean) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Reconcile the header and body of a function
@@ -175,8 +188,8 @@ module XL.SEMANTICS.MODULES is
 
         // Find the enclosing symbol table
         enclosing : SYM.symbol_table := XLT.global_context
-        iface_symbols : SYM.symbol_table
-        body_symbols  : SYM.symbol_table
+        iface_sym : SYM.symbol_table
+        body_sym  : SYM.symbol_table
 
         if BaseName <> nil then
             Base : PT.tree := XLT.XLSemantics(BaseName)
@@ -191,13 +204,13 @@ module XL.SEMANTICS.MODULES is
 
         // Get the symbols from the results, which should have code types
         if Iface <> nil then
-            iface_symbols := GetSymbols(Iface)
-            if iface_symbols = nil then
+            iface_sym := GetSymbols(Iface)
+            if iface_sym = nil then
                 ERR.Error "No symbols in interface '$1'", Iface
                 Iface := nil
         if Body <> nil then
-            body_symbols := GetSymbols(Body)
-            if body_symbols = nil then
+            body_sym := GetSymbols(Body)
+            if body_sym = nil then
                 ERR.Error "No symbols in body '$1'", Body
                 Body := nil
 
@@ -205,25 +218,79 @@ module XL.SEMANTICS.MODULES is
         // There may be more than one matching, e.g. overloaded functions
         // We add them to the enclosing scope
         nm      : text := Name.value
+        alinm   : text := ""
         decls   : DCL.declarations
+        if Alias <> nil then
+            alinm := Alias.value
         if Iface <> nil then
-            ReconcileOne nm, "DECL", iface_symbols, enclosing, decls, false
-            ReconcileOne nm, "FN", iface_symbols, enclosing, decls, false
-            ReconcileOne nm, "TYPE", iface_symbols, enclosing, decls, false
+            ReconcileOne nm, alinm, "DECL", iface_sym, enclosing, decls, false
+            ReconcileOne nm, alinm, "FN", iface_sym, enclosing, decls, false
+            ReconcileOne nm, alinm, "TYPE", iface_sym, enclosing, decls, false
 
             if Body <> nil and not Cached then
-                if DCL.MatchInterface(decls, body_symbols) = false then
+                if DCL.MatchInterface(decls, body_sym) = false then
                     ERR.Error "The body and interface of '$1' don't match", Name
 
         else if Body <> nil then
-            ReconcileOne nm, "DECL", body_symbols, enclosing, decls, true
-            ReconcileOne nm, "FN", body_symbols, enclosing, decls, true
-            ReconcileOne nm, "TYPE", body_symbols, enclosing, decls, true
+            ReconcileOne nm, alinm, "DECL", body_sym, enclosing, decls, true
+            ReconcileOne nm, alinm, "FN", body_sym, enclosing, decls, true
+            ReconcileOne nm, alinm, "TYPE", body_sym, enclosing, decls, true
 
         if size(decls) = 0 then
             ERR.Error "No imported declaration found for '$1'", Name
 
         result := XLT.Append(Iface, Body)
+
+
+    function FindModule (Iface   : PT.tree;
+                         BaseName: PT.tree;
+                         Name    : PT.name_tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   If we are declaring a module, find its declaration in iface
+    // ------------------------------------------------------------------------
+
+        // Find the enclosing symbol table
+        enclosing     : SYM.symbol_table := XLT.global_context
+        iface_symbols : SYM.symbol_table
+
+        if BaseName <> nil then
+            Base : PT.tree := XLT.XLSemantics(BaseName)
+            syms : SYM.symbol_table := GetSymbols(Base)
+            if syms <> nil then
+                trace[modules] "FindModule base symbols ", syms
+                enclosing := syms
+            else
+                ERR.Error "Did not find symbols in '$1'", BaseName
+                ERR.Error "Its type is '$1'", TY.Source(TY.GetType(Base))
+        trace[modules] "FindModule symbols ", enclosing, " for ", Iface
+
+        // Get the symbols from the results, which should have code types
+        iface_symbols := GetSymbols(Iface)
+        if iface_symbols = nil then
+            ERR.Error "No symbols in interface '$1'", Iface
+            return nil
+
+        // Try to find the declarations in the interface
+        // There may be more than one matching, e.g. overloaded functions
+        // We add them to the enclosing scope
+        nm      : text := Name.value
+        decls   : DCL.declarations
+        defs    : PT.tree_list
+        decl    : DCL.declaration
+        dtype   : TY.any_type
+        SYM.Lookup iface_symbols, "DECL", nm, defs, SYM.lookupLocalOnly
+        trace [modules] "Found ", size(defs), " for ", nm," in ",iface_symbols
+        if size(defs) <> 1 then
+            return nil
+        decl := DCL.GetDeclaration (defs[0])
+        if decl <> nil then
+            dtype := decl.type
+            // If we have a body-only module, like module X is Y,
+            // use the type of the implementation instead of 'module'
+            if SameType(dtype, TY.GetDefinedType(TY.module_type)) then
+                return nil
+            return decl.name
+        return nil
 
 
     function IsValidImport (LongName : PT.tree) return boolean is
@@ -287,7 +354,8 @@ module XL.SEMANTICS.MODULES is
         Lookup symbols, "FN", symname, list, SYM.lookupLocalOnly
         trace[modules] "For ", Value, " name ", symname, " found ", size(list)
         if size(list) > 0 then
-            rtype : TY.any_type := TY.GetType(list[0])
+            rdecl : DCL.declaration := DCL.GetDeclaration(list[0])
+            rtype : TY.any_type := rdecl.type
             trace [modules] "Eval=", list[0],
                             " type ", TY.Source(rtype),
                             " mname ", PT.tree(rtype.machine_name)
@@ -332,6 +400,7 @@ module XL.SEMANTICS.MODULES is
         LeafName : PT.name_tree
         Base     : PT.tree
         BaseName : PT.tree
+        Alias    : ShortName as PT.name_tree
 
         FileName : text := PT.XLNormalize(DottedName(LongName))
         trace[modules] "Looking for ", FileName, " symbols ", XLT.context
@@ -416,19 +485,20 @@ module XL.SEMANTICS.MODULES is
             if Body <> nil then
                 Body := AddBuiltins (Body)
                 if Iface <> nil then
-                    PT.AttachTree Body, "MODIFACE", Iface
+                    PT.AttachTree Body, "MODIFACE",
+                                  FindModule(Iface, BaseName, LeafName)
                 Body := XLT.ScopeSemantics(Body, XLT.scopeGlobal, BaseName)
                 SYM.SetProperty XLT.main_context, KeyB, Body
 
             // After semantics, reconcile them
-            result := Reconcile (Iface, Body, BaseName, LeafName, false)
+            result := Reconcile (Iface, Body, BaseName, LeafName, Alias, false)
             result := XLT.Append(Base, result)
 
             SYM.SetInteger(XLT.main_context, KeyR, 1)
 
         else
             // We use the cached ones and enter them locally
-            result := Reconcile (OldI, OldB, BaseName, LeafName, true)
+            result := Reconcile (OldI, OldB, BaseName, LeafName, Alias, true)
 
         // Make sure we actually defined what we were here for
         existing : PT.tree := WantToEvaluate(LongName)

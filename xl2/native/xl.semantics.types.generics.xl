@@ -110,7 +110,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
                 ERR.Error "Internal: generic '$1' body has no implementation",
                           TY.Source(iface)
                 return false
-            if not TY.SameType(implType, bodyG.base) then
+            if not implType.interface_match(implType, bodyG.base) then
                 ERR.Error "The implementation type of '$1'", TY.Source(body)
                 ERR.Error "doesn't match that of '$1'", TY.Source(iface)
                 return false
@@ -235,7 +235,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
     // ------------------------------------------------------------------------
     //   Return the generic type associated with a decl if any
     // ------------------------------------------------------------------------
-        if TY.SameType (Decl.type, TY.type_of_types) then
+        if TY.IsTypeType (Decl.type) then
             Dtypedef : TY.any_type := TY.GetDefinedType (Decl.name)
             Dtype : Dtypedef as GEN.generic_type
             return Dtype
@@ -339,7 +339,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
                             size(gtp.parameters), " deps"
             Decl : DCL.declaration
             for Decl in gtp.parameters loop
-                if TY.SameType(Decl.type, TY.type_of_types) then
+                if TY.IsTypeType(Decl.type) then
                     subtype : any_type := TY.GetDefinedType(Decl.name)
                     AddGenericDependency subtype
                 else
@@ -396,10 +396,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
         genContext : SYM.symbol_table := SYM.NewSymbolTable(gi.symbols)
         XLT.context := genContext
         gi.generic_context := genContext
-        SYM.CopyProperty genContext, oldContext, "GLOBAL"
-        SYM.CopyProperty genContext, oldContext, "LOCAL"
-        SYM.CopyProperty genContext, oldContext, "FNPARM"
-        SYM.CopyProperty genContext, oldContext, "GENPARM"
+        XLT.CopyScopeProperties genContext, oldContext
         Init : PT.tree := gi.initializer
         if Init <> nil then
             // Restructure the initializer as it would be if parsed

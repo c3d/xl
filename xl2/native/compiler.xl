@@ -134,3 +134,12 @@ procedure Main is
 
     if ERR.error_count > 0 then
         exit 2
+
+procedure Symbols(S : SYM.symbol_table) is
+// ------------------------------------------------------------------------
+//   Dump a symbol table
+// ------------------------------------------------------------------------
+    if S = nil then
+        S := XLT.context
+    SYM.Debug S, ""
+

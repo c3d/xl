@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  xl.symbols.xs                   (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  xl.symbols.xs                   (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     XL symbol table
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU Genral Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -32,9 +32,9 @@ module XL.SYMBOLS with
 // ----------------------------------------------------------------------------
 
     // ========================================================================
-    // 
+    //
     //   Symbol table creation and properties
-    // 
+    //
     // ========================================================================
 
     type symbol_table_data
@@ -65,9 +65,9 @@ module XL.SYMBOLS with
 
 
     // ========================================================================
-    // 
+    //
     //    Simple name lookup
-    // 
+    //
     // ========================================================================
     //  This associates a name to a list of tree values
     //  Multiple trees may be associated with a simple name.
@@ -102,13 +102,13 @@ module XL.SYMBOLS with
                         category    : text;
                         name        : text;
                         mode        : lookup_kind := lookupAll) return PT.tree
-                     
+
 
 
     // ========================================================================
-    // 
+    //
     //    Rewriting trees
-    // 
+    //
     // ========================================================================
     //  XL uses tree rewrites at very fundamental levels, notably while
     //  processing language semantics, where tree forms are pattern-matched
@@ -148,7 +148,7 @@ module XL.SYMBOLS with
                              report_misses : boolean;
                              report_ambig  : boolean) return PT.tree;
 
-    // Lookup helpers                      
+    // Lookup helpers
     function  LookupRewrite (table     : symbol_table;
                              kind      : text;
                              tree      : PT.tree) return PT.tree
@@ -171,9 +171,9 @@ module XL.SYMBOLS with
 
 
     // ========================================================================
-    // 
+    //
     //    Properties
-    // 
+    //
     // ========================================================================
     //
     //  Properties are component-specific information held in the symbol
@@ -218,10 +218,11 @@ module XL.SYMBOLS with
 
 
     // ========================================================================
-    // 
+    //
     //    Misc helpers
-    // 
+    //
     // ========================================================================
 
     // Creating a temporary compiler-generated name
     function Temporary(base : text; pos : integer := -1) return PT.name_tree
+    procedure Debug(S : symbol_table; indent : text)

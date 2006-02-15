@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  xl.semantics.types.records.xl   (C) 1992-2004 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  xl.semantics.types.records.xl   (C) 1992-2004 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //    Implementation of record types
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -35,7 +35,7 @@ import GEN = XL.SEMANTICS.TYPES.GENERICS
 module XL.SEMANTICS.TYPES.RECORDS is
 // ----------------------------------------------------------------------------
 //    Implementation of the module
-// ---------------------------------------------------------------------------- 
+// ----------------------------------------------------------------------------
 
     function RecordTypeMatch(iface : any_type;
                              body : any_type) return boolean is
@@ -132,7 +132,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
                         then
                             MakeFieldList X, list
                             MakeFieldList Y, list
-                            return                            
+                            return
                     ERR.Error "'$1' isn't a field declaration", Fields
 
 

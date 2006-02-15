@@ -175,7 +175,7 @@ module XL.SEMANTICS.GENERICS is
                             trace [inst] "Testing default arg ", Arg
                     exit if not Matching
                     AType : TY.any_type
-                    if TY.SameType (D.type, TY.type_of_types) then
+                    if TY.IsTypeType (D.type) then
                         // Type argument
                         AType := TY.EvaluateType(Arg)
                         Matching := AType <> nil
@@ -315,8 +315,11 @@ module XL.SEMANTICS.GENERICS is
 
         trace [inst] "Instantiating ", PT.tree(Decl.name),
                      " with ", size(Args), " args, variadics ", Variadics
+        if Decl.implementation <> nil then
+            Decl := Decl.implementation
+            trace[inst] "Using imlementation ", Decl.name
 
-        gtp : GEN.generic_type := GEN.DeclGenericType(decl)
+        gtp : GEN.generic_type := GEN.DeclGenericType(Decl)
         if gtp = nil then
             ERR.Error "Internal: '$1' is not a generic declaration", Decl.name
             return parse_tree(@error)
@@ -336,7 +339,7 @@ module XL.SEMANTICS.GENERICS is
             P : DCL.declaration := gtp.parameters[I]
             if I > 0 then
                 key += ","
-            if TY.SameType (P.type, TY.type_of_types) then
+            if TY.IsTypeType (P.type) then
                 tp : TY.any_type := TY.EvaluateType(A)
                 if tp <> nil then
                     mn := tp.machine_name
@@ -365,6 +368,7 @@ module XL.SEMANTICS.GENERICS is
         instContext : SYM.symbol_table := SYM.NewSymbolTable(declContext)
         XLT.context := instContext
         SYM.AddUsing instContext, nil, oldContext
+        XLT.CopyScopeProperties instContext, oldContext
 
         // Insert declarations in the instantiation context
         for I in 0..NA-1 loop
@@ -387,7 +391,7 @@ module XL.SEMANTICS.GENERICS is
         // Create the required elements to enter the instantiated declaration
         Name : PT.tree := PT.Clone(Decl.Name)
         Type : PT.tree := TY.Source(GEN.NonGenericType(Decl.type))
-        if not TY.SameType(Decl.type, TY.type_of_types) then
+        if not TY.IsTypeType(Decl.type) then
             Type := PT.Clone(Type)
             // Insert variadic declarations
             if Variadics <> nil then
@@ -488,7 +492,7 @@ module XL.SEMANTICS.GENERICS is
         // Check all generic parameters for the function
         for G in 0..NG-1 loop
             gd : DCL.declaration := FunGenType.parameters[G]
-            if TY.SameType (gd.type, TY.type_of_types) then
+            if TY.IsTypeType (gd.type) then
                 // Generic parameter is a type.
                 GenTypeParm : TY.GetDefinedType (gd.name) as GEN.generic_type
                 assert GenTypeParm <> nil

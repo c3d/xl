@@ -33,5 +33,20 @@ endif
 
 DEFINES_hpux=-DCONFIG_HPUX
 
-include $(BROOT)Makefile.config.gnu
+
+CC=/opt/ansic/bin/cc
+CXX=/opt/aCC/bin/aCC
+#CPP=$(BE_VARS) $(BE)opt/langtools/lbin/cpp
+LD=$(CXX)
+CC_DEPEND=$(CC) $(CPPFLAGS) $(CPPFLAGS_$*) -Wp,-M_tmp.depend > /dev/null
+CXX_DEPEND=$(CXX) $(CPPFLAGS) $(CPPFLAGS_$*) +M > _tmp.depend -E
+
+CFLAGS_debug=-g +W2111,2381,2550,2236
+CFLAGS_opt=-O3
+
+CXXFLAGS_debug=-g  +W2111,2381,2550,2236
+CXXFLAGS_opt=-O3
+
+CCOPTS="-Agcc"
+
 include $(BROOT)Makefile.rules

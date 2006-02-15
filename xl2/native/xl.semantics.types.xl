@@ -554,6 +554,13 @@ module XL.SEMANTICS.TYPES is
         return t1 = t2
 
 
+    function IsTypeType (t : any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if this is the type type
+    // ------------------------------------------------------------------------
+        return t = type_of_types
+
+
     function InterfaceMatch (iface: any_type; body: any_type) return boolean is
     // ------------------------------------------------------------------------
     //   Return true if the interface and body of types match

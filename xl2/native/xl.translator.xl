@@ -132,6 +132,18 @@ module XL.TRANSLATOR is
         result := Append(result, parse_tree(@main_end))
 
 
+    procedure CopyScopeProperties(toTable   : SYM.symbol_table;
+                                  fromTable : SYM.symbol_table) is
+    // ------------------------------------------------------------------------
+    //   Copy the properties used to identify a scope
+    // ------------------------------------------------------------------------
+        SYM.CopyProperty toTable, fromTable, "GLOBAL"
+        SYM.CopyProperty toTable, fromTable, "LOCAL"
+        SYM.CopyProperty toTable, fromTable, "FNPARM"
+        // SYM.CopyProperty toTable, fromTable, "FIELD"
+        SYM.CopyProperty toTable, fromTable, "GENPARM"
+
+
     function ScopeSemantics (input : PT.tree;
                              scope : scope_kind) return BC.bytecode is
     // ------------------------------------------------------------------------
@@ -182,6 +194,7 @@ module XL.TRANSLATOR is
                 trace[modules] "Using interface symbols ", ifaceSyms,
                                " for ", ModName
                 SYM.AddUsing context, nil, ifaceSyms
+                CopyScopeProperties context, ifaceSyms 
 
         if scope = scopeMain or scope = scopeGlobal then
             global_context := context
