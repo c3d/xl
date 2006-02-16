@@ -443,11 +443,15 @@ module XL.SEMANTICS.GENERICS is
         oldContext : SYM.symbol_table := XLT.context
         oldFunction: SYM.symbol_table := XLT.function_context
         oldGlobal  : SYM.symbol_table := XLT.global_context
-        declContext : SYM.symbol_table := SYM.Enclosing(GenType.symbols)
+        declContext : SYM.symbol_table := GenType.context
         instContext : SYM.symbol_table := SYM.NewSymbolTable(declContext)
         XLT.context := instContext
         XLT.function_context := instContext
         XLT.global_context := instContext
+
+        // Make the instantiation context visible for validation
+        SYM.AddUsing instContext, nil, oldContext
+        XLT.CopyScopeProperties instContext, oldContext
 
         // Insert declarations for the replacement type
         IName : PT.tree := PT.Clone(GenType.name)

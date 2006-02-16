@@ -579,9 +579,17 @@ module XL.SYMBOLS is
         name : text
         indt : text := indent + " "
         for name in S.names loop
-            IO.WriteLn indt, "Name ", name, ": ", size(S.names[name])
+            IO.Write indt, "Name ", name, ": "
+            T : PT.tree
+            for T in S.names[name] loop
+                IO.Write PT.name_tree(T), " "
+            IO.WriteLn ""
         for name in S.rewrites loop
-            IO.WriteLn indt, "Rewr ", name, ": ", size(S.rewrites[name])
+            IO.Write indt, "Rewr ", name, ": ", size(S.rewrites[name])
+            R : rewrite
+            for R in S.rewrites[name] loop
+                IO.Write R, " "
+            IO.WriteLn ""
         for name in S.properties loop
             IO.Write indt, "Prop ", name, ": "
             prop : PT.tree := S.properties[name] 

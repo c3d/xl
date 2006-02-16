@@ -156,18 +156,16 @@ module XL.SEMANTICS.TYPES.GENERICS is
         return true
 
 
-    function NewGenericContext(symbols : SYM.symbol_table;
-                               prop    : PT.tree) return generic_info is
+    function NewGenericContext(syms : SYM.symbol_table;
+                               prop : PT.tree) return generic_info is
     // ------------------------------------------------------------------------
     //   Create a generic context in the given symbol table
     // ------------------------------------------------------------------------
 
-        if SYM.GetInteger(XLT.context, "GLOBAL") 
-
         // Create the generic info, and attach it to the prop
         gi : generic_info
         gi.context := XLT.context
-        gi.symbols := symbols
+        gi.symbols := syms
         gi.generic_context := nil
         gi.initializer := nil
         gi.validation := nil
@@ -187,7 +185,12 @@ module XL.SEMANTICS.TYPES.GENERICS is
     // ------------------------------------------------------------------------
     //    Return the generic type information for current context
     // ------------------------------------------------------------------------
-        prop : PT.tree := SYM.GetProperty(XLT.context, "GENERIC", true)
+        syms : SYM.symbol_table := XLT.context
+        prop : PT.tree := SYM.GetProperty(syms, "GENERIC", false)
+        if prop = nil then
+            if SYM.GetInteger(syms, "FNPARM", 0, false) = 1 then
+                syms := SYM.Enclosing(syms)
+                prop := SYM.GetProperty(syms, "GENERIC", false)
         if prop = nil then
             return nil
         gc : PT.FindInfo (prop, "GENERIC") as generic_info
@@ -395,23 +398,35 @@ module XL.SEMANTICS.TYPES.GENERICS is
         trace[generics] "Generic Decl (", Decl, ") gi ", gi
 
         // Process the main declaration in a nested generic context
+        oldTypeCount : integer := size(gi.generic_types)
         oldContext : SYM.symbol_table := gi.context
         genContext : SYM.symbol_table := SYM.NewSymbolTable(gi.symbols)
         XLT.context := genContext
         gi.generic_context := genContext
         XLT.CopyScopeProperties genContext, oldContext
+
+        // Make sure we know how to find the generic context
+        genProp : PT.tree := SYM.GetProperty(gi.symbols, "GENERIC")
+        SYM.SetProperty genContext, "GENERIC", genProp
+
+        // Restructure the initializer as it would be if parsed
         Init : PT.tree := gi.initializer
         if Init <> nil then
-            // Restructure the initializer as it would be if parsed
             if Decl.kind <> PT.xlPREFIX then
                 ERR.Error "Internal: '$1' doesn't have prefix structure", Decl
             else
                 prefix : Decl as PT.prefix_tree
                 right  : PT.tree := prefix.right
                 prefix.right := parse_tree('right' is 'Init')
+
+        // Actually enter the generic declaration
         trace[generics] "Generic EnterDecl (", Decl, ") gi ", gi
         result := XLT.XLDeclarations(Decl)
         XLT.context := oldContext
+
+        // If no type became generic because of the context, error
+        if size(gi.generic_types) = oldTypeCount then
+            ERR.Error "There is no generic declaration in '$1'", Decl
 
 
     function EnterGenericParms (Parms : PT.tree;
@@ -662,10 +677,6 @@ module XL.SEMANTICS.TYPES.GENERICS is
         // Import the declarations from the new context into the old one
         if gi.generic_context <> nil then
             SYM.AddSymbols oldContext, gi.generic_context
-
-        // If no type became generic because of the context, error
-        if size(gi.generic_types) = 0 then
-            ERR.Error "There was no generic declaration in '$1'", GenIface
 
         // Now that we are back in the non-generic context, we can
         // deal with whatever follows the generic declaration
