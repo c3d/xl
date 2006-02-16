@@ -351,6 +351,9 @@ module XL.SEMANTICS.TYPES.GENERICS is
     //   If a variadic declaration is seen, store it in the generic context
     // ------------------------------------------------------------------------
 
+        if SYM.GetInteger(XLT.context, "FNPARM") <> 1 then
+            ERR.Error "Internal: Variadic '$1' in non-parameter context",anchor
+
         gi : generic_info := GenericContext()
         trace[generics] "Adding variadicity gi ", gi
 

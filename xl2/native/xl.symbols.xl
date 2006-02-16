@@ -481,7 +481,8 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
         result := nil
         while result = nil and table loop
-            result := table.properties[name]
+            if count (table.properties, name) >0 then
+                result := table.properties[name]
             table := table.enclosing
             exit if not enclosed
 
@@ -590,9 +591,9 @@ module XL.SYMBOLS is
                      prop.kind = PT.xlTEXT or prop.kind = PT.xlNAME) then
                 IO.WriteLn prop
             else
-                IO.WriteLn "p debug(0x", PT.name_tree(prop), ")"
+                IO.WriteLn "p debug(", PT.name_tree(prop), ")"
         ue : using_entry
         for ue in S.usings loop
-            IO.WriteLn indt, "Usng ",ue.scope," p symbols(0x",ue.symbols, ")"
+            IO.WriteLn indt, "Usng ",ue.scope," p symbols(",ue.symbols, ")"
         if S.enclosing <> nil then
-            IO.WriteLn "Parent: p symbols(0x", S.enclosing, ")"
+            IO.WriteLn "Parent: p symbols(", S.enclosing, ")"
