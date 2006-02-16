@@ -362,7 +362,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
         // Check if we are already variadic
         existing : PT.tree := SYM.LookupOne(gi.symbols, "...", "...")
         if existing <> nil then
-            ERR.Error "The context for '$1' is used is alread variadic", anchor
+            ERR.Error "The context for '$1' is already variadic", anchor
             ERR.Error "Variadicity was declared here with '$1'", existing
             return
 
