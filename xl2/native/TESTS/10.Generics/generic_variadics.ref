@@ -28,18 +28,18 @@ xlint k_965; /* Global */
 xlint l_966; /* Global */
 xlreal m_967; /* Global */
 xlreal z_968; /* Global */
-typedef xlint (*FnPtr_978) ( xlint x_974 , xlint variadic971_975 , xlint variadic972_976 , xlint variadic973_977 ) ;
-xlint max_979 ( xlint x_974 , xlint variadic971_975 , xlint variadic972_976 , xlint variadic973_977 ) ;
-typedef xlint (*FnPtr_986) ( xlint x_983 , xlint variadic981_984 , xlint variadic982_985 ) ;
-xlint max_987 ( xlint x_983 , xlint variadic981_984 , xlint variadic982_985 ) ;
-typedef xlint (*FnPtr_992) ( xlint x_990 , xlint variadic989_991 ) ;
-xlint max_993 ( xlint x_990 , xlint variadic989_991 ) ;
+typedef xlint (*FnPtr_978) ( xlint x_974 , xlint var971_975 , xlint var972_976 , xlint var973_977 ) ;
+xlint max_979 ( xlint x_974 , xlint var971_975 , xlint var972_976 , xlint var973_977 ) ;
+typedef xlint (*FnPtr_986) ( xlint x_983 , xlint var981_984 , xlint var982_985 ) ;
+xlint max_987 ( xlint x_983 , xlint var981_984 , xlint var982_985 ) ;
+typedef xlint (*FnPtr_992) ( xlint x_990 , xlint var989_991 ) ;
+xlint max_993 ( xlint x_990 , xlint var989_991 ) ;
 typedef xlint (*FnPtr_996) ( xlint x_995 ) ;
 xlint max_997 ( xlint x_995 ) ;
-typedef xlreal (*FnPtr_1015) ( xlreal x_1012 , xlreal variadic1010_1013 , xlreal variadic1011_1014 ) ;
-xlreal max_1016 ( xlreal x_1012 , xlreal variadic1010_1013 , xlreal variadic1011_1014 ) ;
-typedef xlreal (*FnPtr_1021) ( xlreal x_1019 , xlreal variadic1018_1020 ) ;
-xlreal max_1022 ( xlreal x_1019 , xlreal variadic1018_1020 ) ;
+typedef xlreal (*FnPtr_1015) ( xlreal x_1012 , xlreal var1010_1013 , xlreal var1011_1014 ) ;
+xlreal max_1016 ( xlreal x_1012 , xlreal var1010_1013 , xlreal var1011_1014 ) ;
+typedef xlreal (*FnPtr_1021) ( xlreal x_1019 , xlreal var1018_1020 ) ;
+xlreal max_1022 ( xlreal x_1019 , xlreal var1018_1020 ) ;
 typedef xlreal (*FnPtr_1025) ( xlreal x_1024 ) ;
 xlreal max_1026 ( xlreal x_1024 ) ;
 xlreal ret_1034; /* Temp */
@@ -51,11 +51,11 @@ goto exit_max_997;
 exit_max_997: 0;
 return result_998;
 }
-xlint max_993 ( xlint x_990 , xlint variadic989_991 ) {
+xlint max_993 ( xlint x_990 , xlint var989_991 ) {
 xlint ret_999; /* Temp */
 xlbool ret_1001; /* Temp */
 xlint result_994; /* Result */
-ret_999 = max_997 ( variadic989_991 );
+ret_999 = max_997 ( var989_991 );
 result_994 = ret_999;
 ret_1001 = result_994 < x_990;
 if(!(ret_1001)) goto else_if_1000;
@@ -64,11 +64,11 @@ else_if_1000: 0;
 exit_max_993: 0;
 return result_994;
 }
-xlint max_987 ( xlint x_983 , xlint variadic981_984 , xlint variadic982_985 ) {
+xlint max_987 ( xlint x_983 , xlint var981_984 , xlint var982_985 ) {
 xlint ret_1002; /* Temp */
 xlbool ret_1004; /* Temp */
 xlint result_988; /* Result */
-ret_1002 = max_993 ( variadic981_984 , variadic982_985 );
+ret_1002 = max_993 ( var981_984 , var982_985 );
 result_988 = ret_1002;
 ret_1004 = result_988 < x_983;
 if(!(ret_1004)) goto else_if_1003;
@@ -77,11 +77,11 @@ else_if_1003: 0;
 exit_max_987: 0;
 return result_988;
 }
-xlint max_979 ( xlint x_974 , xlint variadic971_975 , xlint variadic972_976 , xlint variadic973_977 ) {
+xlint max_979 ( xlint x_974 , xlint var971_975 , xlint var972_976 , xlint var973_977 ) {
 xlint ret_1005; /* Temp */
 xlbool ret_1007; /* Temp */
 xlint result_980; /* Result */
-ret_1005 = max_987 ( variadic971_975 , variadic972_976 , variadic973_977 );
+ret_1005 = max_987 ( var971_975 , var972_976 , var973_977 );
 result_980 = ret_1005;
 ret_1007 = result_980 < x_974;
 if(!(ret_1007)) goto else_if_1006;
@@ -97,11 +97,11 @@ goto exit_max_1026;
 exit_max_1026: 0;
 return result_1027;
 }
-xlreal max_1022 ( xlreal x_1019 , xlreal variadic1018_1020 ) {
+xlreal max_1022 ( xlreal x_1019 , xlreal var1018_1020 ) {
 xlreal ret_1028; /* Temp */
 xlbool ret_1030; /* Temp */
 xlreal result_1023; /* Result */
-ret_1028 = max_1026 ( variadic1018_1020 );
+ret_1028 = max_1026 ( var1018_1020 );
 result_1023 = ret_1028;
 ret_1030 = result_1023 < x_1019;
 if(!(ret_1030)) goto else_if_1029;
@@ -110,11 +110,11 @@ else_if_1029: 0;
 exit_max_1022: 0;
 return result_1023;
 }
-xlreal max_1016 ( xlreal x_1012 , xlreal variadic1010_1013 , xlreal variadic1011_1014 ) {
+xlreal max_1016 ( xlreal x_1012 , xlreal var1010_1013 , xlreal var1011_1014 ) {
 xlreal ret_1031; /* Temp */
 xlbool ret_1033; /* Temp */
 xlreal result_1017; /* Result */
-ret_1031 = max_1022 ( variadic1010_1013 , variadic1011_1014 );
+ret_1031 = max_1022 ( var1010_1013 , var1011_1014 );
 result_1017 = ret_1031;
 ret_1033 = result_1017 < x_1012;
 if(!(ret_1033)) goto else_if_1032;

@@ -60,6 +60,7 @@ module XL.SEMANTICS.TYPES.GENERICS with
         parameters      : declaration_list
         initializer     : PT.tree
         validation      : PT.tree
+        variadicity     : PT.tree
         generic_types   : string of generic_type
         rest            : PT.tree
     type generic_info is access to generic_info_data

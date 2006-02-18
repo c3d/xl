@@ -169,6 +169,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
         gi.generic_context := nil
         gi.initializer := nil
         gi.validation := nil
+        gi.variadicity := nil
         gi.rest := nil
         PT.SetInfo prop, "GENERIC", gi
 
@@ -238,12 +239,12 @@ module XL.SEMANTICS.TYPES.GENERICS is
     // ------------------------------------------------------------------------
     //   Return the generic type associated with a decl if any
     // ------------------------------------------------------------------------
-        if TY.IsTypeType (Decl.type) then
-            Dtypedef : TY.any_type := TY.GetDefinedType (Decl.name)
+        if TY.IsTypeType (decl.type) then
+            Dtypedef : TY.any_type := TY.GetDefinedType (decl.name)
             Dtype : Dtypedef as GEN.generic_type
             return Dtype
         else
-            Dtype : Decl.type as generic_type
+            Dtype : decl.type as generic_type
             return Dtype
 
 
@@ -366,13 +367,13 @@ module XL.SEMANTICS.TYPES.GENERICS is
             assert gi <> nil
 
         // Check if we are already variadic
-        existing : PT.tree := SYM.LookupOne(gi.symbols, "...", "...")
+        existing : PT.tree := gi.variadicity
         if existing <> nil then
             ERR.Error "The context for '$1' is already variadic", anchor
             ERR.Error "Variadicity was declared here with '$1'", existing
             return
 
-        SYM.Enter gi.symbols, "...", "...", anchor
+        gi.variadicity := anchor
 
 
     function VariadicExpression() return PT.tree is

@@ -321,10 +321,12 @@ module XL.CODE_GENERATOR.MACHINE is
                         dtype := decl.type
                         mtype := dtype.machine_name
                         retName := decl.machine_name
+                        Body := parse_tree
+                            @entry_ret1_decl 'mtype' 'retName'
+                            'Body'
             Body := parse_tree
-                @entry_ret1_decl 'mtype' 'mname'
                 'Body'
-                @exit_ret1 'retName' 'mtype' 'mname'
+                @exit_ret1 'retName'
 
         else if ocnt > 1 then
             Body := parse_tree

@@ -86,7 +86,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
 
     procedure MakeFieldList (Fields            : PT.tree;
-                             in out list       : declaration_list) is
+                             in out rtp        : record_type) is
     // ------------------------------------------------------------------------
     //    Translate a field list from parse tree form into a list
     // ------------------------------------------------------------------------
@@ -95,7 +95,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
             block : Fields as PT.block_tree
             if (block.opening = XL.PARSER.INDENT_MARKER and
                 block.closing = XL.PARSER.UNINDENT_MARKER) then
-                MakeFieldList block.child, list
+                MakeFieldList block.child, rtp
                 return
             else
                 ERR.Error "Block '$1' is not a valid field declaration", block
@@ -104,34 +104,35 @@ module XL.SEMANTICS.TYPES.RECORDS is
             when
                 'X' ; 'Y'
             then
-                MakeFieldList X, list
-                MakeFieldList Y, list
+                MakeFieldList X, rtp
+                MakeFieldList Y, rtp
 
             when
                 'X'
                 'Y'
             then
-                MakeFieldList X, list
-                MakeFieldList Y, list
+                MakeFieldList X, rtp
+                MakeFieldList Y, rtp
 
             else
                 trace [recdecl] "Fields: ", Fields
                 Fields := XLT.XLDeclarations (Fields)
                 decl : DCL.declaration := DCL.GetDeclaration(Fields)
                 if decl then
-                    if GEN.IsGenericType(decl.type) then
-                        GEN.AddGenericDependency decl.type
+                    if not TY.IsModuleType(rtp.base) then
+                        if GEN.IsGenericType(decl.type) then
+                            GEN.AddGenericDependency decl.type
                     if not decl.is_builtin then
                         trace [recdecl] "Decl: ", decl
-                        list += decl
+                        rtp.fields += decl
                 else
                     translate Fields
                         when
                             'X'
                             'Y'
                         then
-                            MakeFieldList X, list
-                            MakeFieldList Y, list
+                            MakeFieldList X, rtp
+                            MakeFieldList Y, rtp
                             return
                     ERR.Error "'$1' isn't a field declaration", Fields
 
@@ -164,16 +165,16 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 GEN.AddGenericDependency BaseType
 
         if Fields <> nil then
-            MakeFieldList Fields, rtp.fields
+            MakeFieldList Fields, rtp
 
         rtp.interface_match := RecordTypeMatch
         rtp.name := Source
 
         // Each record type gets a new machine name
-        rtp.machine_name := SYM.Temporary("rectype", Source.position)
+        rtp.machine_name := SYM.Temporary("rec", Source.position)
 
         // If generic, make it generic
-        if rtp.base = TY.GetDefinedType(TY.module_type) then
+        if TY.IsModuleType(rtp.base) then
             if GEN.IsGenericContext() then
                 // Do not make modules generic
                 voided : any_type := GEN.MakeGeneric(rtp)

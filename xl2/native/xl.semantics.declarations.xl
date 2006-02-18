@@ -29,6 +29,7 @@ import CGM = XL.CODE_GENERATOR.MACHINE
 import REC = XL.SEMANTICS.TYPES.RECORDS
 import FT = XL.SEMANTICS.TYPES.FUNCTIONS
 import FN = XL.SEMANTICS.FUNCTIONS
+import OVL = XL.SEMANTICS.OVERLOAD
 import GEN = XL.SEMANTICS.TYPES.GENERICS
 import BC = XL.BYTECODE
 import PR = XL.PARSER
@@ -340,7 +341,8 @@ module XL.SEMANTICS.DECLARATIONS is
             isType     : boolean := TY.IsTypeType(iface_type)
             needIt     : boolean := iface_decl.initializer = nil
 
-            trace [interface] "Looking for ", iface_name.value
+            trace [interface] "Looking for ", iface_name.value,
+                              " : ", TY.Source(iface_type)
 
             // Try to find something with the same name
             if isType then
@@ -372,7 +374,8 @@ module XL.SEMANTICS.DECLARATIONS is
                 body_name : PT.name_tree := body_decl.name
 
                 trace [interface] "For ", iface_name.value,
-                                  " testing ", body_name.value
+                                  " testing ", body_name.value,
+                                  " : ", TY.Source(body_type)
 
                 // Check if initializer is a body of code ('module X is Y')
                 if body_decl.initializer <> nil then
@@ -394,6 +397,17 @@ module XL.SEMANTICS.DECLARATIONS is
                         multi := body_decl
                 errors := ERR.PopErrorContext()
                 trace [interface] "For ", iface_name.value, " errors: ", errors
+
+            if found = nil then
+                trace [interface] "For ", iface_name.value, " found none"
+            else
+                trace [interface] "For ", iface_name.value,
+                                  " found ", PT.tree(found.name),
+                                  " : ", TY.Source(found.type)
+                if multi <> nil then
+                    trace [interface] "  and also  ", multi.name,
+                                      " : ", TY.Source(multi.type)
+
 
             if not needIt then
                 if found <> nil then
@@ -581,7 +595,7 @@ module XL.SEMANTICS.DECLARATIONS is
         when
             'NameTerminal'
         where
-            NameTerminal.kind = PT.xlNAME
+            NameTerminal.kind = PT.xlNAME and not OVL.IsFunction(NameTerminal)
         then
             return Lookup(NameTerminal)
 

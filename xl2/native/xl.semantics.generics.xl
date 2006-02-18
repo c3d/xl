@@ -288,7 +288,7 @@ module XL.SEMANTICS.GENERICS is
                     return
 
             // Build a parameter for the generated function
-            Name : PT.name_tree := SYM.Temporary("variadic")
+            Name : PT.name_tree := SYM.Temporary("var")
             tp   : TY.any_type := TY.GetType(Variadic)
             if tp = nil then
                 ERR.Error "Variadic '$1' has no type", Variadic
@@ -456,7 +456,7 @@ module XL.SEMANTICS.GENERICS is
         // Insert declarations for the replacement type
         IName : PT.tree := PT.Clone(GenType.name)
         IType : PT.tree := TY.Source(TY.type_of_types)
-        IInit : PT.tree := PT.Clone(TY.Source(ActType))
+        IInit : PT.tree := TY.Source(ActType)
         Decl  : PT.tree := DCL.EnterDeclaration(IName, IType, IInit, true)
         trace[inst] "Validation entered decl ", Decl
 

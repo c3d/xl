@@ -75,6 +75,7 @@ module XL.SEMANTICS.TYPES with
     function SameType (t1 : any_type; t2: any_type) return boolean
     function InterfaceMatch (iface: any_type; body: any_type) return boolean
     function IsTypeType (t : any_type) return boolean
+    function IsModuleType (t : any_type) return boolean
 
     // Convert to a given type
     function Convert(expr : PT.tree; toType : any_type) return PT.tree
@@ -96,6 +97,7 @@ module XL.SEMANTICS.TYPES with
     real_literal_type           : any_type := nil
     character_literal_type      : any_type:= nil
     text_literal_type           : any_type := nil
+    type_of_modules             : any_type := nil
 
     procedure InitializeTypes
 

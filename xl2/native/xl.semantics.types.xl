@@ -341,24 +341,6 @@ module XL.SEMANTICS.TYPES is
         PT.SetInfo Name, "DECL", decl
 
 
-    function EnterBuiltinType (Name  : text; MType : text) return PT.tree is
-    // ------------------------------------------------------------------------
-    //   Enter a built-in type in the symbol table
-    // ------------------------------------------------------------------------
-        NameTree : PT.name_tree := PT.NewName(Name, -1)
-        result := EnterTypeSym(NameTree, nil)
-        tp  : any_type := GetDefinedType (result)
-        stp : tp as source_type
-        if tp <> stp then
-            ERR.Error "Internal: Error creating builtin type", -1
-        stp.machine_name := PT.NewName(MType)
-        EnterSignature MType, stp
-        decl : DCL.Declaration := DCL.GetDeclaration(result)
-        decl.is_builtin := true
-        PT.SetInfo NameTree, "DECL", decl
-        return NameTree
-
-
     function EnterBytecodeType (Name        : PT.name_tree;
                                 MachineName : PT.name_tree) return PT.tree is
     // ------------------------------------------------------------------------
@@ -399,12 +381,20 @@ module XL.SEMANTICS.TYPES is
             record_type                 := result
         else if mname = "xlmodule" then
             module_type                 := result
+            type_of_modules             := tp
 
         decl : DCL.Declaration := DCL.GetDeclaration(result)
         decl.is_builtin := true
         PT.SetInfo Name, "DECL", decl
 
         return Name
+
+
+    function EnterBuiltinType (Name  : text; MType : text) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a built-in type in the symbol table
+    // ------------------------------------------------------------------------
+        return EnterBytecodeType(PT.NewName(Name), PT.NewName(MType))
 
 
     function EnterType(Name : PT.tree; Value : PT.tree) return PT.tree is
@@ -551,14 +541,21 @@ module XL.SEMANTICS.TYPES is
     // ------------------------------------------------------------------------
     //   Check if two types are identical
     // ------------------------------------------------------------------------
-        return t1 = t2
+        result := t1 = t2
 
 
     function IsTypeType (t : any_type) return boolean is
     // ------------------------------------------------------------------------
     //   Check if this is the type type
     // ------------------------------------------------------------------------
-        return t = type_of_types
+        result := t = type_of_types
+
+
+    function IsModuleType (t : any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if this is the type for modules
+    // ------------------------------------------------------------------------
+        result := t = type_of_modules
 
 
     function InterfaceMatch (iface: any_type; body: any_type) return boolean is

@@ -106,7 +106,7 @@ call_outarg1    "$1 = $2;"
 call_outargN    "$1 = $2.$3;"
 call_end        ""
 
-entry_ret1_decl ""
+entry_ret1_decl "$1 $2; /* Out=Ret */"
 entry_retN_decl "struct Ret_$1 RetVal_$1;"
 entry_retN_loc  "$1 $2;"
 exit_label      "exit_$1: 0;"

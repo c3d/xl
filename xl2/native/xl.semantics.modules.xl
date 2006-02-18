@@ -141,7 +141,6 @@ module XL.SEMANTICS.MODULES is
 
 
     procedure ReconcileOne (nm           : text;
-                            alias        : text;
                             kind         : text;
                             symbols      : SYM.symbol_table;
                             enclosing    : SYM.symbol_table;
@@ -164,23 +163,19 @@ module XL.SEMANTICS.MODULES is
                 // If we have a body-only module, like module X is Y,
                 // use the type of the implementation instead of 'module'
                 if in_body then
-                    if SameType(dtype, TY.GetDefinedType(TY.module_type)) then
+                    if TY.IsModuleType(dtype) then
                         AutoExport decl
                         dtype := decl.type
                 trace[modules] "Enter ", PT.tree(decl.name), " in ", enclosing
                 trace[modules] " type ", TY.Source(dtype),
                                " mname ", PT.tree(dtype.machine_name)
                 SYM.Enter enclosing, kind, nm, def
-                if alias <> "" then
-                    trace[modules] "Enter alias ", alias, " for ", nm
-                    SYM.Enter enclosing, kind, alias, def
 
 
     function Reconcile (Iface   : PT.tree;
                         Body    : PT.tree;
                         BaseName: PT.tree;
                         Name    : PT.name_tree;
-                        Alias   : PT.name_tree;
                         Cached  : boolean) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Reconcile the header and body of a function
@@ -218,23 +213,20 @@ module XL.SEMANTICS.MODULES is
         // There may be more than one matching, e.g. overloaded functions
         // We add them to the enclosing scope
         nm      : text := Name.value
-        alinm   : text := ""
         decls   : DCL.declarations
-        if Alias <> nil then
-            alinm := Alias.value
         if Iface <> nil then
-            ReconcileOne nm, alinm, "DECL", iface_sym, enclosing, decls, false
-            ReconcileOne nm, alinm, "FN", iface_sym, enclosing, decls, false
-            ReconcileOne nm, alinm, "TYPE", iface_sym, enclosing, decls, false
+            ReconcileOne nm, "DECL", iface_sym, enclosing, decls, false
+            ReconcileOne nm, "FN", iface_sym, enclosing, decls, false
+            ReconcileOne nm, "TYPE", iface_sym, enclosing, decls, false
 
             if Body <> nil and not Cached then
                 if DCL.MatchInterface(decls, body_sym) = false then
                     ERR.Error "The body and interface of '$1' don't match", Name
 
         else if Body <> nil then
-            ReconcileOne nm, alinm, "DECL", body_sym, enclosing, decls, true
-            ReconcileOne nm, alinm, "FN", body_sym, enclosing, decls, true
-            ReconcileOne nm, alinm, "TYPE", body_sym, enclosing, decls, true
+            ReconcileOne nm, "DECL", body_sym, enclosing, decls, true
+            ReconcileOne nm, "FN", body_sym, enclosing, decls, true
+            ReconcileOne nm, "TYPE", body_sym, enclosing, decls, true
 
         if size(decls) = 0 then
             ERR.Error "No imported declaration found for '$1'", Name
@@ -287,7 +279,7 @@ module XL.SEMANTICS.MODULES is
             dtype := decl.type
             // If we have a body-only module, like module X is Y,
             // use the type of the implementation instead of 'module'
-            if SameType(dtype, TY.GetDefinedType(TY.module_type)) then
+            if TY.IsModuleType(dtype) then
                 return nil
             return decl.name
         return nil
@@ -491,19 +483,26 @@ module XL.SEMANTICS.MODULES is
                 SYM.SetProperty XLT.main_context, KeyB, Body
 
             // After semantics, reconcile them
-            result := Reconcile (Iface, Body, BaseName, LeafName, Alias, false)
+            result := Reconcile (Iface, Body, BaseName, LeafName, false)
             result := XLT.Append(Base, result)
 
             SYM.SetInteger(XLT.main_context, KeyR, 1)
 
         else
             // We use the cached ones and enter them locally
-            result := Reconcile (OldI, OldB, BaseName, LeafName, Alias, true)
+            result := Reconcile (OldI, OldB, BaseName, LeafName, true)
 
         // Make sure we actually defined what we were here for
         existing : PT.tree := WantToEvaluate(LongName)
         if existing = nil then
             ERR.Error "Imported file did not define '$1'", LongName
+        else if Alias <> nil then
+            if not REC.IsRecord(existing) then
+                ERR.Error "Defining an alias '$1' for non-record module", Alias
+            else
+                SYM.Enter XLT.context, "DECL", Alias.value, existing
+
+            
 
 
     function ProcessImport (LongName     : PT.tree;
@@ -529,7 +528,7 @@ module XL.SEMANTICS.MODULES is
             ERR.Error "It was defined as '$1'", existing
             return existing
         if ShortName <> nil then
-            existing := TryToEvaluate(LongName)
+            existing := TryToEvaluate(ShortName)
             if existing <> nil then
                 ERR.Error "The import shortcut '$1' already exists", ShortName
                 ERR.Error "It was defined as '$1'", existing
