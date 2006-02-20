@@ -342,8 +342,8 @@ module XL.SEMANTICS.MODULES is
 
         list : PT.tree_list
         Lookup symbols, "TYPE", symname, list, SYM.lookupLocalOnly
-        Lookup symbols, "DECL", symname, list, SYM.lookupLocalOnly
         Lookup symbols, "FN", symname, list, SYM.lookupLocalOnly
+        Lookup symbols, "DECL", symname, list, SYM.lookupLocalOnly
         trace[modules] "For ", Value, " name ", symname, " found ", size(list)
         if size(list) > 0 then
             rdecl : DCL.declaration := DCL.GetDeclaration(list[0])
