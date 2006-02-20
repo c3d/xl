@@ -4,12 +4,12 @@ TESTS/09.Modules/bad_module.xs:1: Found no valid implementation for 'BAD_MODULE'
 TESTS/09.Modules/bad_module.xs:2: Found no valid implementation for 'FooZoo'
 |     function FooZoo (A : integer) return integer
 |___________________^
-./xl_builtins.xs:31: The return type 'integer'
+./xl_builtins.xs:41: The return type 'real'
+|     type real                                                                                   is XL.BYTECODE.xlreal
+|_____________^
+./xl_builtins.xs:31: doesn't match return type 'integer'
 |     type integer                                                                                is XL.BYTECODE.xlint
 |________________^
-TESTS/09.Modules/bad_module.xs:2: doesn't match return type of 'function (A : integer) return integer'
-|     function FooZoo (A : integer) return integer
-|______________________^
 09.Modules/import_bad_module.xl:27: The body and interface of 'BAD_MODULE' don't match
 | import BAD_MODULE
 |_________________^

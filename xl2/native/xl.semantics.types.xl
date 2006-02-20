@@ -541,7 +541,19 @@ module XL.SEMANTICS.TYPES is
     // ------------------------------------------------------------------------
     //   Check if two types are identical
     // ------------------------------------------------------------------------
-        result := t1 = t2
+        if t1 = nil or t2 = nil then
+            return false
+        if t1 = t2 then
+            return true
+        t1s : t1 as source_type
+        t2s : t2 as source_type
+        if t1s <> nil then
+            if t1s.implementation = t2 then
+                return true
+        if t2s <> nil then
+            if t1 = t2s.implementation then
+                return true
+        return false
 
 
     function IsTypeType (t : any_type) return boolean is

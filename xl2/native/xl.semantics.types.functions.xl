@@ -121,8 +121,8 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
                 ERR.Error "but '$1' does", TY.Source(iface)
                 return false
             if not TY.SameType(retType, bodyF.base) then
-                ERR.Error "The return type '$1'", TY.Source(retType)
-                ERR.Error "doesn't match return type of '$1'", TY.Source(iface)
+                ERR.Error "The return type '$1'", TY.Source(bodyF.base)
+                ERR.Error "doesn't match return type '$1'", TY.Source(retType)
                 return false
 
         // Check parameter counts
