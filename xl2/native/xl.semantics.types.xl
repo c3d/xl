@@ -418,6 +418,7 @@ module XL.SEMANTICS.TYPES is
             NameTree := tp.machine_name
             sig := NameTree.Value
             EnterSignature sig, tp
+            SetDefinedType NameTree, tp
 
 
     function TypeTypeMatch (iface : any_type;

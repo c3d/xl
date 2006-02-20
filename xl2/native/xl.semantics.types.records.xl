@@ -213,12 +213,53 @@ module XL.SEMANTICS.TYPES.RECORDS is
         XLT.context := oldContext
 
 
+    function IndexType(Record : PT.tree;
+                       Field  : PT.name_tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Index a record element
+    // ------------------------------------------------------------------------
+        symbols : SYM.symbol_table
+        list : PT.tree_list
+
+        RecordDeclarations Record, Field, "TYPE", list, symbols
+
+        if symbols = nil then
+            ERR.Error "No type for record '$1'", Record
+        if size(list) = 0 then
+            ERR.Error "Field '$1' doesn't exist", Field
+            return parse_tree(@error)
+        if size(list) > 1 then
+            ERR.Error "Type name '$1' is ambiguous", Field
+            ERR.Error "A first candidate is '$1", list[0]
+            ERR.Error "A second candidate is '$1", list[1]
+
+        // Find corresponding declaration
+        decl : declaration := DCL.GetDeclaration(list[0])
+        if decl = nil then
+            ERR.Error "Internal: Record field '$1' has no decl", Field
+            return parse_tree(@error)
+
+        // Find machine name of field
+        dname  : PT.tree := decl.name
+        dtype  : TY.any_type  := TY.GetDefinedType(dname)
+        if dtype = nil then
+            ERR.Error "Internal: Record field '$1' has no defined type", dname
+            return parse_tree(@error)
+
+        return dtype.machine_name
+
+
     translation XLEvaluateType
     // ------------------------------------------------------------------------
     //    Translation of function types
     // ------------------------------------------------------------------------
         when ('Base' with 'Fields') where TY.IsTypeName(Base) then
             return EnterType (input, Base, Fields)
+
+        when ('Record'.'Field') where (IsRecord(Record) and
+                                       Field.kind = PT.xlNAME) then
+            FieldName : Field as PT.name_tree
+            return IndexType(Record, FieldName)
 
 
 

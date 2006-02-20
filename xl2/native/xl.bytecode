@@ -186,3 +186,4 @@ get_stdin        "$1 = stdin;"
 get_stdout       "$1 = stdout;"
 get_stderr       "$1 = stderr;"
 
+copy_ptr        "$1 = $2;"
