@@ -47,6 +47,7 @@ module XL.SEMANTICS.TYPES.GENERICS with
         context         : SYM.symbol_table
         symbols         : SYM.symbol_table
         validation      : PT.tree
+        in_validation   : boolean
     type generic_type is access to generic_type_data
 
 
