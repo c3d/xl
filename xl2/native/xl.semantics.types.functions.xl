@@ -38,10 +38,8 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
 //    Z : function (X : integer) return integer
 
 
-    procedure MakeParameterList (Parms : PT.tree;
-                                 in out list : declaration_list;
-                                 in out icnt : integer;
-                                 in out ocnt : integer) is
+    procedure MakeParameterList (Parms      : PT.tree;
+                                 in out ftp : function_type) is
     // ------------------------------------------------------------------------
     //    Translate a parameter list
     // ------------------------------------------------------------------------
@@ -50,30 +48,43 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
             when
                 'X' ; 'Y'
             then
-                MakeParameterList X, list, icnt, ocnt
-                MakeParameterList Y, list, icnt, ocnt
+                MakeParameterList X, ftp
+                MakeParameterList Y, ftp
                 return
 
             when
                 'X'
                 'Y'
             then
-                MakeParameterList X, list, icnt, ocnt
-                MakeParameterList Y, list, icnt, ocnt
+                MakeParameterList X, ftp
+                MakeParameterList Y, ftp
                 return
+
+            when
+                ...
+            then
+                // Check if parameter list has '...' in it
+                VariadicDecls : PT.tree := GEN.VariadicDeclarations()
+                if VariadicDecls = nil then
+                    ftp.variadic := true
+                    GEN.AddVariadicity Parms
+                else
+                    // In instantiation context, replace variadicity
+                    VariadicDecls := XLT.XLDeclarations (VariadicDecls)
+                    MakeParameterList VariadicDecls, ftp
 
             else
                 decl : declaration := DCL.GetDeclaration(Parms)
                 if decl then
-                    list += decl
+                    ftp.parameters += decl
                     if GEN.IsGenericType(decl.type) then
                         GEN.AddGenericDependency decl.type
                     if decl.is_output then
-                        ocnt += 1
+                        ftp.outputs_count += 1
                     if decl.is_input then
-                        icnt += 1
+                        ftp.inputs_count += 1
                     else if not(decl.is_output) then
-                        icnt += 1
+                        ftp.inputs_count += 1
                         ERR.Error "Hmmm, '$1' is not input nor output",
                                   decl.name
                         decl.is_input := true
@@ -210,54 +221,12 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         ftp.variadic := false
         ftp.symbols := XLT.context
 
-        // Check if parameter list has '...' in it
-        VariadicDecls : PT.tree := GEN.VariadicDeclarations()
-        if VariadicDecls = nil then
-            // In declaration context, record variadicity
-            translate Parms
-                when (...) then
-                    ftp.variadic := true
-                    Parms := parse_tree()
-                when ('FirstParms'; ...) then
-                    ftp.variadic := true
-                    Parms := FirstParms
-                when
-                    'FirstParmsLine'
-                    ...
-                then
-                    ftp.variadic := true
-                    Parms := FirstParmsLine
-            if ftp.variadic then
-                GEN.AddVariadicity Source
-        else
-            // In instantiation context, replace variadicity
-            translate Parms
-                when (...) then
-                    Parms := VariadicDecls
-                when ('FirstParms'; ...) then
-                    if IsNullParm(VariadicDecls) then
-                        Parms := FirstParms
-                    else
-                        Parms := parse_tree('FirstParms'; 'VariadicDecls')
-                when
-                    'FirstParmsLine'
-                    ...
-                then
-                    if IsNullParm(VariadicDecls) then
-                        Parms := FirstParmsLine
-                    else
-                        Parms := parse_tree
-                            'FirstParmsLine'
-                            'VariadicDecls'
-
-
         // Check if empty parameter list. () is a block with an empty name
         if IsNullParm(Parms) then
             Parms := nil
         else if Parms <> nil then
             Parms := XLT.XLDeclarations (Parms)
-            MakeParameterList Parms, ftp.parameters,
-                              ftp.inputs_count, ftp.outputs_count
+            MakeParameterList Parms, ftp
 
         // Assign type to the tree
         TY.SetType Source, ftp
