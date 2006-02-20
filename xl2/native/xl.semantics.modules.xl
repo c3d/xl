@@ -46,6 +46,7 @@ module XL.SEMANTICS.MODULES is
     //    Start with a '.' path
     // ------------------------------------------------------------------------
         modules_path += text "."
+        modules_path += text "library"
 
 
     procedure AddPath (path : text) is

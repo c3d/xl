@@ -393,6 +393,20 @@ module XL.SEMANTICS.DECLARATIONS is
                     iface_type.interface_match(iface_type, body_type)) then
                     if found = nil then
                         found := body_decl
+                        if isType then
+                            idt : TY.any_type := TY.GetDefinedType(iface_name)
+                            bdt : TY.any_type := TY.GetDefinedType(body_name)
+                            if idt = nil then
+                                ERR.Error "Internal: missing i-type for '$1'",
+                                          iface_name
+                            else if bdt = nil then
+                                ERR.Error "Internal: missing b-type for '$1'",
+                                          body_name
+                            else if not idt.interface_match(idt, bdt) then
+                                ERR.Error "Internal: type mismatch for '$1'",
+                                          TY.Source(idt)
+                                ERR.Error "Internal: mismatched is '$1'",
+                                          TY.Source(bdt)
                     else
                         multi := body_decl
                 errors := ERR.PopErrorContext()
