@@ -387,7 +387,7 @@ module XL.SEMANTICS.TYPES is
         decl.is_builtin := true
         PT.SetInfo Name, "DECL", decl
 
-        return Name
+        return result
 
 
     function EnterBuiltinType (Name  : text; MType : text) return PT.tree is
