@@ -63,6 +63,7 @@ module XL.SEMANTICS.TYPES with
 
     // Evaluate a type expression
     function EvaluateType (type_expr : PT.tree) return any_type
+    function EvaluateTypeAsTree (type_expr : PT.tree) return PT.tree
 
     // Entering a named type in the symbol table
     function EnterType(Name : PT.tree; Value : PT.tree) return PT.tree

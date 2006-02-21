@@ -228,7 +228,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             semArg : PT.tree := PT.Attached(value, key)
             if semArg = nil then
                 ERR.PushErrorContext()
-                semArg := XLT.XLEvaluateType(value)
+                semArg := TY.EvaluateTypeAsTree(value)
                 errors : text := ERR.PopErrorContext()
                 PT.AttachTree value, key, semArg
                 if errors <> "" then

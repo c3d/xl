@@ -32,7 +32,6 @@ import FN = XL.SEMANTICS.FUNCTIONS
 import FT = XL.SEMANTICS.TYPES.FUNCTIONS
 import REC = XL.SEMANTICS.TYPES.RECORDS
 import GEN = XL.SEMANTICS.TYPES.GENERICS
-import GEN = XL.SEMANTICS.TYPES.GENERICS
 import GN = XL.SEMANTICS.GENERICS
 import CGM = XL.CODE_GENERATOR.MACHINE
 import DCL = XL.SEMANTICS.DECLARATIONS
@@ -77,14 +76,17 @@ module XL.SEMANTICS.OVERLOAD is
     //    Resolve the function name from its args
     // ------------------------------------------------------------------------
 
-        symbols : SYM.symbol_table := XLT.context
-        list : PT.tree_list
-        BaseRecord : PT.tree
+        symbols         : SYM.symbol_table := XLT.context
+        list            : PT.tree_list
+        BaseRecord      : PT.tree
+        anyLookup       : boolean := false
 
         trace [overload] "Overload resolution: name=", NameTree, " args=", Args
 
         if NameTree.kind <> PT.xlNAME then
             translate NameTree
+                when (any.'Name') then
+                    anyLookup := true
                 when ('Record'.'Field') where Field.kind = PT.xlNAME then
                     FN : Field as PT.name_tree
                     REC.RecordDeclarations Record, FN, "FN", list, symbols
@@ -123,6 +125,16 @@ module XL.SEMANTICS.OVERLOAD is
 
         // Save errors for later display
         ERR.PushErrorContext()
+
+        // Add 'any' lookup as necessary
+        if anyLookup then
+            coi : SYM.symbol_table := GN.ContextOfInstantiation()
+            if coi = nil then
+                ERR.Error "Internal: No context of instantiation for '$1'",
+                          NameTree
+                anyLookup := false
+            else
+                SYM.AddImplicit symbols, coi
 
         // Loop on all levels
         while table <> nil loop
@@ -291,6 +303,10 @@ module XL.SEMANTICS.OVERLOAD is
                     trace [overload] "AMBIGUOUS: Score ", Score
                     trace [overload] "           Other: ", best
 
+        // Remove 'any' context if we added it
+        if anyLookup then
+            SYM.RemoveImplicit symbols
+
         // Report results
         candidate_errors : text := ERR.PopErrorContext()
         if best <> nil then
@@ -327,6 +343,15 @@ module XL.SEMANTICS.OVERLOAD is
     // ------------------------------------------------------------------------
         if T.kind <> PT.xlNAME then
             translate T
+                when (any.'Name') then
+                    coi : SYM.symbol_table := GN.ContextOfInstantiation()
+                    if coi = nil then
+                        ERR.Error "No context of instantiation for '$1'", Name
+                        return IsFunction(Name)
+                    SYM.AddImplicit XLT.context, coi
+                    result := IsFunction(Name)
+                    SYM.RemoveImplicit XLT.context
+                    return result
                 when ('Record'.'Field') where Field.kind = PT.xlNAME then
                     list : PT.tree_list
                     syms : SYM.symbol_table

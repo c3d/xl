@@ -49,6 +49,7 @@ module XL.SYMBOLS is
         rewrites        : map [text, rewrites_list]
         properties      : map [text, PT.tree]
         usings          : string of using_entry
+        implicit        : string of symbol_table
 
 
     function NewSymbolTable (enclosing : symbol_table) return symbol_table is
@@ -95,6 +96,20 @@ module XL.SYMBOLS is
         table.usings += entry
         table.usings += syms.usings
         trace[symbols] "Added using ", syms, " to ", table, " scope ", scope
+
+
+    procedure AddImplicit (table : symbol_table; syms : symbol_table) is
+    // ------------------------------------------------------------------------
+    //   Add an implicit table that is looked up when the rest fails
+    // ------------------------------------------------------------------------
+        table.implicit += syms
+
+
+    procedure RemoveImplicit(table : symbol_table) is
+    // ------------------------------------------------------------------------
+    //   Remove the last implicit table
+    // ------------------------------------------------------------------------
+        pop_back table.implicit
 
 
     procedure CopySymbols (toTable : symbol_table; fromTable : symbol_table) is
@@ -208,6 +223,12 @@ module XL.SYMBOLS is
 
             exit if mode = lookupInnermost and size(values) > 0
             exit if mode = lookupLocalUsing
+
+            // Lookup in implicit tables
+            impl : symbol_table
+            for impl in table.implicit loop
+                Lookup impl, category, name, values, mode
+
             table := table.enclosing
 
 
@@ -380,6 +401,42 @@ module XL.SYMBOLS is
                                 cnt := 1
                             else if score = best and R <> bestR then
                                 trace [rewrite] "Sub Ambiguity"
+                                ambig := R
+                                cnt += 1
+
+            // Add implicit maps
+            subtable : symbol_table
+            for subtable in table.implicit loop
+                subList  : rewrites_list
+                if count(subtable.rewrites, Name) > 0 then
+                    subList := subtable.rewrites[Name]
+                if count (subtable.rewrites, Wild) > 0 then
+                    subList += subtable.rewrites[Wild]
+
+                trace [rewrite] "Implicit ", subtable, " has ",
+                                size (subList), " rewrites"
+
+                for R in subList loop
+                    args  : PT.tree_map
+                    score := PT.Matches(test_tree, R.reference_form, args)
+                    trace [rewrite] "ImpMatching (", R.reference_form,
+                                    ") = ", score
+                    if score > 0 then
+                        score := 16#100 * score - depth
+                        if R.score_adjust <> nil then
+                            score := R.score_adjust (test_tree, R, args,
+                                                     depth, score)
+                        if score > 0 then
+                            if score > best then
+                                trace [rewrite] "Imp Best so far"
+                                bestR := R
+                                bestA := args
+                                bestS := entry.scope
+                                best := score
+                                ambig := nil
+                                cnt := 1
+                            else if score = best and R <> bestR then
+                                trace [rewrite] "Imp Ambiguity"
                                 ambig := R
                                 cnt += 1
 

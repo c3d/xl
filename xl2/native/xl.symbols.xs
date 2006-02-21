@@ -54,6 +54,10 @@ module XL.SYMBOLS with
                        scope : PT.tree;
                        syms  : symbol_table)
 
+    // Adding implicit contexts that are looked up if other lookups fail
+    procedure AddImplicit (table : symbol_table; syms : symbol_table)
+    procedure RemoveImplicit(table : symbol_table)
+
     // Copy all entries in a symbol table
     procedure CopySymbols (toTable : symbol_table; fromTable : symbol_table)
     procedure AddSymbols (toTable : symbol_table; fromTable : symbol_table)

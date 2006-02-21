@@ -499,6 +499,15 @@ module XL.SEMANTICS.TYPES is
             return result
 
 
+    function EvaluateTypeAsTree (type_expr : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Evaluate a type, return a tree
+    // ------------------------------------------------------------------------
+        tp : any_type := EvaluateType(type_expr)
+        assert GetDefinedType(type_expr) = tp
+        return type_expr
+
+
     function NamedType (tname : PT.name_tree) return any_type is
     // ------------------------------------------------------------------------
     //   Return the type for a name
@@ -705,4 +714,11 @@ module XL.SEMANTICS.TYPES is
         when
             ('T')
         then
-            return XLT.XLEvaluateType(T)
+            return EvaluateTypeAsTree(T)
+
+        when
+            'T'
+        where
+            T.kind = PT.xlNAME
+        then
+            return EvaluateTypeAsTree(T)
