@@ -608,3 +608,27 @@ module XL.CODE_GENERATOR.MACHINE is
 
         TY.SetType result, Type
         TY.SetType mname, Type
+
+
+    // ========================================================================
+    // 
+    //   Declaring types in the generated code
+    // 
+    // ========================================================================
+
+    function DeclareType(tp   : TY.any_type;
+                         Name : PT.name_tree) return PT.name_tree is
+    // ------------------------------------------------------------------------
+    //   Create the global declaration for a record type
+    // ------------------------------------------------------------------------
+        sig       : text := "type"
+        if Name <> nil then
+            sig += "_"
+            sig += PT.XLNormalize(Name.Value)
+        MName     : PT.name_tree := SYM.Temporary(sig)
+
+        MDecl : PT.tree := parse_tree(@type_decl 'MName' 'MName')
+        XLT.AddGlobalDecl MDecl
+        return MName
+
+

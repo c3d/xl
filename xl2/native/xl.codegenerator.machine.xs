@@ -67,3 +67,7 @@ module XL.CODE_GENERATOR.MACHINE with
                          MField  : PT.tree;
                          MType   : PT.tree;
                          Type    : TY.any_type) return BC.bytecode
+
+    // Declare other types
+    function DeclareType(tp   : TY.any_type;
+                         Name : PT.name_tree) return PT.name_tree

@@ -409,14 +409,10 @@ module XL.SEMANTICS.TYPES is
 
             // No associated machine type: need to enter type
             NameTree : Name as PT.name_tree
-            sig : text := "type"
-            if NameTree then
-                sig += "_"
-                sig += PT.XLNormalize(NameTree.Value)
-            tp.machine_name := SYM.Temporary(sig, Name.position)
+            tp.machine_name := CGM.DeclareType(tp, NameTree)
 
             NameTree := tp.machine_name
-            sig := NameTree.Value
+            sig : text := NameTree.Value
             EnterSignature sig, tp
             SetDefinedType NameTree, tp
 

@@ -67,6 +67,8 @@ error           "/* ERROR */"
 value           "/* Value: $1 */"
 write           "/* Write: $1 */"
 
+type_decl       "typedef struct $1_data *$2;"
+
 ref_decl        "/* $1 $2; Ref */"
 temp_decl       "$1 $2; /* Temp */"
 local_decl      "$1 $2; /* Local */"
