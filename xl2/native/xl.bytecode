@@ -98,8 +98,10 @@ fn_body_begin   ""
 fn_body         "{"
 fn_body_end     "}"
 
+externc         ""
+
 record_begin    "typedef struct $1 {"
-record_field    "  $2 $3;"
+record_field    "  $2 $3; /* RecF */"
 record_end      "} $1;"
 
 field           "#define $1 ($2.$3)"

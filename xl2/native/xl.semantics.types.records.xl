@@ -81,8 +81,14 @@ module XL.SEMANTICS.TYPES.RECORDS is
                     XLT.context := bodyC.symbols
                     decl := DCL.Declare(dname, decl.type)
                     XLT.context := old
-            return DCL.MatchInterface(ifaceR.fields, bodyC.symbols)
-        return DCL.MatchInterface(ifaceR.fields, bodyR.symbols)
+            result := DCL.MatchInterface(ifaceR.fields, bodyC.symbols)
+            if result then
+                if ifaceR.machine_name = nil or bodyC.machine_name <> nil then
+                    ifaceR.machine_name := bodyC.machine_name
+        else
+            result := DCL.MatchInterface(ifaceR.fields, bodyR.symbols)
+            if ifaceR.machine_name = nil or bodyR.machine_name <> nil then
+                ifaceR.machine_name := bodyR.machine_name
 
 
     procedure MakeFieldList (Fields            : PT.tree;
@@ -157,7 +163,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         rtp.base := nil
         if Base <> nil then
             BaseType : any_type := TY.EvaluateType (Base)
-            BaseName : PT.name_tree := PT.NewName("Base", Source.position)
+            BaseName : PT.name_tree := PT.NewName("BaseRecord", Source.position)
             Decl : declaration := DCL.Declare(BaseName, BaseType)
             rtp.fields += Decl
             rtp.base := BaseType

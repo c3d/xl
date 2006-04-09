@@ -75,8 +75,9 @@ module XL.SEMANTICS.FUNCTIONS is
     //   Enter a function in symbol table and return corresponding bytecode
     // ------------------------------------------------------------------------
 
-        Name : Names as PT.name_tree
-        MName : PT.Attached (Iface, "MNAME") as PT.name_tree
+        Name        : Names as PT.name_tree
+        MName       : PT.Attached (Iface, "MNAME") as PT.name_tree
+        PreCoating  : PT.Attached (Iface, "EXTERN") as PT.tree
 
         // Create the function
         f : function
@@ -94,7 +95,7 @@ module XL.SEMANTICS.FUNCTIONS is
         f.is_global             := SYM.GetInteger(XLT.context, "GLOBAL") <> 0
         f.is_builtin            := false
         f.implementation        := nil
-        f.machine_interface     := CGM.Entry(f)
+        f.machine_interface     := XLT.Append(PreCoating, CGM.Entry(f))
         f.symbols               := nil          // Only create if has body
 
         // Declare the bytecode for the function declaration
@@ -165,6 +166,7 @@ module XL.SEMANTICS.FUNCTIONS is
     //    Enter a function declared in C
     // ------------------------------------------------------------------------
         PT.AttachTree Interface, "MNAME", CName
+        PT.AttachTree Interface, "EXTERN", parse_tree(@externc)
         Interface := EnterFunction(Interface)
         f : function := GetFunction(Interface)
         assert f <> nil

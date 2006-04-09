@@ -27,7 +27,7 @@ xlfile xl_getstdfile(int n) {
   return NULL;
 }
 typedef struct Record_954 {
-  xlmodule base_1;
+  xlmodule baserecord_1; /* RecF */
 } Record_954;
 Record_954 xlbuiltins_955; /* Global */
 xlreal k_956; /* Global */

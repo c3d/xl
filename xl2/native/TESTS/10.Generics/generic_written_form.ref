@@ -27,25 +27,25 @@ xlfile xl_getstdfile(int n) {
   return NULL;
 }
 typedef struct Record_954 {
-  xlmodule base_1;
+  xlmodule baserecord_1; /* RecF */
 } Record_954;
 Record_954 xlbuiltins_955; /* Global */
 typedef struct Record_963 {
-  xlrecord base_959;
-  xlint first_960;
-  xlint second_961;
+  xlrecord baserecord_959; /* RecF */
+  xlint first_960; /* RecF */
+  xlint second_961; /* RecF */
 } Record_963;
 Record_963 k_964; /* Global */
 typedef struct Record_972 {
-  xlrecord base_968;
-  xlint first_969;
-  xlint second_970;
+  xlrecord baserecord_968; /* RecF */
+  xlint first_969; /* RecF */
+  xlint second_970; /* RecF */
 } Record_972;
 Record_972 l_973; /* Global */
 typedef struct Record_978 {
-  xlrecord base_974;
-  Record_963 first_975;
-  Record_963 second_976;
+  xlrecord baserecord_974; /* RecF */
+  Record_963 first_975; /* RecF */
+  Record_963 second_976; /* RecF */
 } Record_978;
 Record_978 z_979; /* Global */
 Record_978 u_980; /* Global */

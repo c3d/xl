@@ -173,6 +173,9 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
                           body_decl.initializer
 
         // Everything seems in order - match
+        if ifaceF.machine_name = nil or  bodyF.machine_name <> nil then
+            ifaceF.machine_name := bodyF.machine_name
+
         return true
 
 

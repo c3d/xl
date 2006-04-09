@@ -1,0 +1,48 @@
+// ****************************************************************************
+//  xl.ui.console.xl                (C) 1992-2006 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//    The console is a simple text-based user interface with
+//    input, output and error streams.
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+module XL.UI.CONSOLE is
+
+    function GetStdFile (index : integer) return IO.file is XL.BYTECODE.stdfile
+    to Copy(out Tgt : IO.file;
+            in  Src : IO.file) written Tgt := Src is XL.BYTECODE.copy_ptr
+
+    StandardInput  : IO.file := GetStdFile(0)
+    StandardOutput : IO.file := GetStdFile(1)
+    StandardError  : IO.file := GetStdFile(2)
+
+
+    to Write (...) is
+    // ------------------------------------------------------------------------
+    //    Write something to standard output
+    // ------------------------------------------------------------------------
+        IO.Write StandardOutput, ...
+
+
+    to WriteLn (...) is
+    // ------------------------------------------------------------------------
+    //    Write something to standard output
+    // ------------------------------------------------------------------------
+        IO.WriteLn StandardOutput, ...

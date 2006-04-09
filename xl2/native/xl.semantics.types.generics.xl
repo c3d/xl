@@ -153,6 +153,9 @@ module XL.SEMANTICS.TYPES.GENERICS is
                           body_decl.initializer
 
         // Everything seems in order - match
+        if ifaceG.machine_name = nil or bodyG.machine_name <> nil then
+            ifaceG.machine_name := bodyG.machine_name
+
         return true
 
 

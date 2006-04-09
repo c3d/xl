@@ -90,10 +90,14 @@ module XL.SEMANTICS.TYPES is
                 ERR.Error "Types '$1' and '$2' don't match",
                           Source(stp.implementation), Source(body)
                 return false
+            if stp.machine_name = nil or body.machine_name <> nil then
+                stp.machine_name := body.machine_name
             return true
 
         // Matches and remember what we matched.
         stp.implementation := body
+        if stp.machine_name = nil or body.machine_name <> nil then
+            stp.machine_name := body.machine_name
         return true
 
 
@@ -353,6 +357,7 @@ module XL.SEMANTICS.TYPES is
             ERR.Error "Internal: Error creating builtin type", -1
         stp.machine_name := MachineName
         EnterSignature MachineName.Value, stp
+        SetDefinedType MachineName, stp
 
         // Record builtin type as necessary
         mname : text := MachineName.value
