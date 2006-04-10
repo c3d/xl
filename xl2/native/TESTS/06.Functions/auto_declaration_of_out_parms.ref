@@ -1,0 +1,73 @@
+#include <stdio.h>
+typedef char                   xlint8;
+typedef short                  xlint16;
+typedef int                    xlint32;
+typedef long long              xlint64;
+typedef unsigned char          xluint8;
+typedef unsigned short         xluint16;
+typedef unsigned int           xluint32;
+typedef unsigned long long     xluint64;
+typedef float                  xlreal32;
+typedef double                 xlreal64;
+typedef int                    xlint;
+typedef unsigned               xluint;
+typedef double                 xlreal;
+typedef char                   xlbool;
+typedef char                   xlchar;
+typedef const char *           xltext;
+typedef void *                 xlptr;
+typedef struct {} /* !ANSIC */ xlrecord, xlmodule;
+typedef FILE *                 xlfile;
+xlfile xl_getstdfile(int n) {
+  switch(n) {
+    case 0: return stdin;
+    case 1: return stdout;
+    case 2: return stderr;
+  }
+  return NULL;
+}
+typedef struct Record_954 {
+  xlmodule baserecord_1; /* RecF */
+} Record_954;
+Record_954 xlbuiltins_955; /* Global */
+typedef xlint (*FnPtr_958) ( xlint b_957 ) ;
+xlint makeit_959 ( xlint b_957 ) ;
+typedef xlreal (*FnPtr_962) ( xlreal b_961 ) ;
+xlreal makeit_963 ( xlreal b_961 ) ;
+typedef void (*FnPtr_964) ( ) ;
+void test_965 ( ) ;
+xlint glop_967; /* Global */
+xlreal glap_968; /* Global */
+xlint a_956; /* Ret */
+xlreal a_960; /* Ret */
+xlint makeit_959 ( xlint b_957 ) {
+xlint a_956; /* Out=Ret */
+a_956 = b_957;
+exit_makeit_959: 0;
+return a_956;
+}
+xlreal makeit_963 ( xlreal b_961 ) {
+xlreal a_960; /* Out=Ret */
+a_960 = b_961;
+exit_makeit_963: 0;
+return a_960;
+}
+void test_965 ( ) {
+xlint zero_966; /* Local */
+xlint a_956; /* Ret */
+a_956 = makeit_959 ( 1 );
+zero_966 = a_956;
+exit_test_965: 0;
+}
+int main(int _argc, char **_argv)
+{
+xlint a_956; /* Ret */
+xlreal a_960; /* Ret */
+a_956 = makeit_959 ( 2 );
+glop_967 = a_956;
+a_960 = makeit_963 ( 1.5 );
+glap_968 = a_960;
+    /* Main */
+    return 0;
+}
+/*end*/

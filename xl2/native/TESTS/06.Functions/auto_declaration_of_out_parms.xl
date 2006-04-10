@@ -1,0 +1,33 @@
+// Check that a variable automatically gets declared when used to call
+// a subroutine with an output parameter and name does not exist in scope
+// RUN=cat %c
+
+procedure MakeIt (out A : integer; B : integer) is
+    A := B
+procedure MakeIt (out A : real; B : real) is
+    A := B
+generic [type item]
+procedure MakeIt (out A : item; B : item) is
+    A := B
+
+procedure Test is
+    MakeIt Zero, 1
+
+    // Check that it works with declarations
+    MakeIt Glop, 2
+    MakeIt Glap, 1.5
+
+    // Check that it does not redeclare
+    MakeIt Glop, 3
+    MakeIt Glap, 6.3
+
+// Check the generic case
+type zoo is record with
+    A, B : integer
+procedure Copy(out Target : zoo; in Source : zoo) written Target := Source is
+    Target.A := Source.B
+    Target.B := Source.A
+
+Crapal, Fungoid : zoo
+MakeIt Znort, Crapal
+MakeIt Znort, Fungoid

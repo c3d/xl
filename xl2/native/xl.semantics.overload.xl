@@ -100,16 +100,12 @@ module XL.SEMANTICS.OVERLOAD is
         // Convert arguments to a list for easier checking
         ArgList : PT.tree_list
         SemArgs : PT.tree_list
+        ActArgs : PT.tree_list
+        ToBeDef : string of boolean
         ArgsTreeToList Args, ArgList
         NA  : integer := size(ArgList)
         A   : integer
         Arg : PT.tree
-
-
-        // Perform semantics on all arguments
-        for Arg in ArgList loop
-            SemArgs += XLT.XLSemantics(Arg)
-            trace [overload] "Args->", back(SemArgs)
 
         // Scoring
         best      : PT.tree
@@ -118,6 +114,8 @@ module XL.SEMANTICS.OVERLOAD is
         bestGArgs : PT.tree_list
         bestGtype : GEN.generic_type
         bestVArgs : PT.tree
+        bestDNames: string of PT.name_tree
+        bestDidx  : string of integer
         ambig     : PT.tree
         depth     : integer := 0
         table     : SYM.symbol_table := symbols
@@ -125,6 +123,22 @@ module XL.SEMANTICS.OVERLOAD is
 
         // Save errors for later display
         ERR.PushErrorContext()
+
+        // Perform semantics on all arguments
+        for Arg in ArgList loop
+            ToBeDefined : boolean := false
+            if Arg.kind = PT.xlNAME then
+                DName : Arg as PT.name_tree
+                Dval  : text := Dname.value
+                Orig  : PT.tree := SYM.LookupOne(XLT.context, "DECL", Dval)
+                if Orig = nil then
+                    ToBeDefined := true
+                    trace[overload] "Arg ", Dval, " is to be defined"
+            if not ToBeDefined then
+                Arg := XLT.XLSemantics (Arg)
+            ActArgs += Arg
+            ToBeDef += ToBeDefined
+            trace [overload] "Args->", Arg
 
         // Add 'any' lookup as necessary
         if anyLookup then
@@ -156,6 +170,7 @@ module XL.SEMANTICS.OVERLOAD is
             for C in candidates loop
 
                 trace [overload] "Testing ", C
+                SemArgs := ActArgs
 
                 // Retrieve function information, ignore non functions
                 Scope : PT.tree := nil
@@ -210,11 +225,24 @@ module XL.SEMANTICS.OVERLOAD is
                 // Check type of parameters
                 D        : DCL.declaration
                 Matching : boolean := true
+                DNames   : string of PT.name_tree
+                Didx     : string of integer
                 A := 0
                 for D in Ftype.parameters loop
                     if A < NA then
                         Arg := SemArgs[A]
                         trace [overload] "Testing argument ", Arg
+                        if ToBeDef[A] then
+                            if D.is_output and not D.is_input then
+                                Dname : Arg as PT.name_tree
+                                trace [overload] "Tentative undeclared ", Arg
+                                DNames += Dname
+                                Didx += A
+                                A += 1
+                                restart
+                            else
+                                trace[overload] "FAIL: Cannot declare ", Arg
+                                trace[overload] "      non-out ", D.name
                     else
                         Arg := D.initializer
                         if Arg = nil then
@@ -223,7 +251,7 @@ module XL.SEMANTICS.OVERLOAD is
                             Matching := false
                             trace [overload] "No default argument "
                         else
-                            SemArgs += Arg
+                            SemArgs += XLT.XLSemantics (Arg)
                             trace [overload] "Testing default argument ", Arg
                         exit if not Matching
                     AType : TY.any_type := TY.GetType(Arg)
@@ -277,6 +305,7 @@ module XL.SEMANTICS.OVERLOAD is
                 // If not matching, lookup next
                 if not Matching then
                     restart
+
                 trace [overload] "PASS: The candidate matches"
 
                 // Compare scores and results
@@ -288,6 +317,8 @@ module XL.SEMANTICS.OVERLOAD is
                     bestGArgs := Gargs
                     bestGtype := Gtype
                     bestVargs := Vargs
+                    bestDNames := DNames
+                    bestDidx := Didx
                     if recurse then BaseRecord := Scope
                 else if Score < bestScore then
                     trace [overload] "BEST: New best score ", Score
@@ -297,6 +328,8 @@ module XL.SEMANTICS.OVERLOAD is
                     bestGArgs := Gargs
                     bestGtype := Gtype
                     bestVargs := Vargs
+                    bestDNames := DNames
+                    bestDidx := Didx
                     if recurse then BaseRecord := Scope
                 else if Score = bestScore then
                     ambig := C
@@ -317,6 +350,7 @@ module XL.SEMANTICS.OVERLOAD is
 
             trace [overload] "FOUND: Calling ", PT.tree(bestF.name),
                              "=", PT.tree(bestF.machine_name)
+
             if bestGtype <> nil or bestVargs <> nil then
                 result := GN.InstantiateFunction(NameTree, bestF,
                                                  bestGArgs, bestVargs,
@@ -325,6 +359,22 @@ module XL.SEMANTICS.OVERLOAD is
                 if bestF = nil then
                     // Instantiation error
                     return result
+
+            // If there are parameters to declare, declare them now
+            if size(bestDNames) > 0 then
+                ToDeclCount : integer := size(bestDNames)
+                ToDecl : integer
+                for ToDecl in 0..ToDeclCount - 1 loop
+                    DName : PT.name_tree := bestDNames[ToDecl]
+                    Didx  : integer := bestDidx[ToDecl]
+                    ftp   : bestF.type as FT.function_type
+                    D     : DCL.declaration := ftp.parameters[Didx]
+                    Dummy : DCL.Declaration :=
+                        DCL.Declare (DName, D.type)
+                    Dummy := Dummy
+                    if SemArgs[Didx] = PT.tree(DName) then
+                        SemArgs[Didx] := XLT.XLSemantics(DName)
+
             if BaseRecord <> nil then
                 return CGM.RecordFunctionCall (BaseRecord, bestF, SemArgs)
             else
