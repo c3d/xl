@@ -455,13 +455,13 @@ module XL.CODE_GENERATOR.MACHINE is
                         if decl.is_output then
                             declDType : TY.any_type := decl.type
                             declMType : PT.name_tree := declDType.machine_name
-                            declMName : PT.name_tree := decl.machine_name
+                            retValueName := SYM.Temporary("outret")
                             outputsDecl : PT.tree := parse_tree
-                                @call_ret1_decl 'declMType' 'declMName'
+                                @call_ret1_decl 'declMType' 'retValueName'
                             XLT.AddScopeDecl XLT.function_context, outputsDecl
                             result := parse_tree
                                'result'
-                               @call_ret1 'declMType' 'declMName'
+                               @call_ret1 'declMType' 'retValueName'
             else if ocnt > 1 then
                 outputsName := SYM.Temporary("out")
                 result := parse_tree
@@ -512,6 +512,8 @@ module XL.CODE_GENERATOR.MACHINE is
                         MType  : PT.name_tree := DType.machine_name
                         MName  : PT.name_tree := decl.machine_name
                         MValue : PT.tree := margs[argIndex]
+                        if ocnt = 1 then
+                            MName := retValueName
                         result := parse_tree
                             'result'
                             @'Kind' 'MValue' 'outputsName' 'MName' 'MType'
