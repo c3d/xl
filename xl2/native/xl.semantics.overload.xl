@@ -127,7 +127,7 @@ module XL.SEMANTICS.OVERLOAD is
         // Perform semantics on all arguments
         for Arg in ArgList loop
             ToBeDefined : boolean := false
-            if Arg.kind = PT.xlNAME then
+            if Arg.kind = PT.xlNAME and DCL.GetDeclaration(Arg) = nil then
                 DName : Arg as PT.name_tree
                 Dval  : text := Dname.value
                 Orig  : PT.tree := SYM.LookupOne(XLT.context, "DECL", Dval)

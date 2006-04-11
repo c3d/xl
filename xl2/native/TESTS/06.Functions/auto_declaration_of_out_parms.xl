@@ -2,12 +2,12 @@
 // a subroutine with an output parameter and name does not exist in scope
 // RUN=cat %c
 
-procedure MakeIt (out A : integer; B : integer) is
+procedure MakeIt (out A : integer; B : integer) written A &= B is
     A := B
-procedure MakeIt (out A : real; B : real) is
+procedure MakeIt (out A : real; B : real) written A &= B is
     A := B
 generic [type item]
-procedure MakeIt (out A : item; B : item) is
+procedure MakeIt (out A : item; B : item) written A &= B is
     A := B
 
 procedure Test is
@@ -31,3 +31,10 @@ procedure Copy(out Target : zoo; in Source : zoo) written Target := Source is
 Crapal, Fungoid : zoo
 MakeIt Znort, Crapal
 MakeIt Znort, Fungoid
+
+// Test with operators
+to TestOperators is
+   Bingo &= 1
+   Bonga &= 2.3
+   // Uh oh, do we support generic operators?
+   // Blatoid &= Fungoid
