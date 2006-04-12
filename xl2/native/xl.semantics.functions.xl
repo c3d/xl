@@ -267,6 +267,9 @@ module XL.SEMANTICS.FUNCTIONS is
             return EnterCFunction(input, Interface, CName)
 
         // Definition of a function
+        when ('Interface' is nil) then
+            return EnterFunctionBody(input, Interface, parse_tree(@nop))
+
         when ('Interface' is 'Body') then
             return EnterFunctionBody(input, Interface, Body)
 

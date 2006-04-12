@@ -2,6 +2,7 @@
 
 use XL.UI.CONSOLE
 
+// Define iterator I in 1..5 "manually"
 procedure LoopEntry (out It : integer;
                      Low, High : integer) written First(It in Low..High) is
     It := Low
@@ -15,10 +16,36 @@ procedure LoopNext (in out It : integer;
     It := It + 1
 
 procedure LoopLast(It : integer;
-                   Low, High : integer) written Last(It in Low..High) is
-    It := It
+                   Low, High : integer) written Last(It in Low..High) is nil
+
+
+// Define 'J := 1 to 5' using the iterator syntax, which makes it simpler
+iterator IntFor(It : integer; Low, High : integer) written It := Low to High is
+    It := Low
+    while It <= High loop
+        It := It + 1
+
 
 for I in 1..5 loop
-    for J in 1..5 loop
+    for J := 2 to 4 loop
         WriteLn "I=", I, " and J=", J
 
+
+// Define more complex iterators
+iterator TeaForTwo(It : integer; Low, High : integer) written It=[Low..High] is
+    It := Low
+    WriteLn "Entering For loop, It=", It
+    while It <= High loop
+        WriteLn "End of for loop, It=", It
+        It := It + 1
+    WriteLn "Exited for loop, It=", It
+    WriteLn "Bye Bye!"
+
+iterator BeeBopBelula(It : integer; High : integer) written It < High is
+    while It < High loop
+        It := It + 2
+
+for I=[30..50] loop
+    Writeln "TeaForTwo I=", I
+for I < 70 loop
+    WriteLn "BeeBopBelula I=", I

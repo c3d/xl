@@ -61,16 +61,19 @@ module XL.TEXT_IO is
     // ------------------------------------------------------------------------
     //    Writing an integer
     // ------------------------------------------------------------------------
-    // REVISIT: All this should be unsigned, doesn't work with negative
+        if N < 0 then
+            dummy : integer := PutCharInFile (integer('-'), F)
+            N := - N
+
         divisor : integer := 1
         base    : integer := 10
-        while base * divisor < N loop
+        while base * divisor <= N loop
             divisor := divisor * base
 
         loop
             digit : integer := N / divisor
             dummy : integer := PutCharInFile (digit + integer('0'), F)
-            N := N - base * digit
+            N := N - divisor * digit
             divisor := divisor / base
         while divisor > 0
 
