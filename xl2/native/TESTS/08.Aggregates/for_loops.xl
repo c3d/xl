@@ -1,0 +1,24 @@
+// This tests the behavior of for loops
+
+use XL.UI.CONSOLE
+
+procedure LoopEntry (out It : integer;
+                     Low, High : integer) written First(It in Low..High) is
+    It := Low
+
+function LoopMore (It : integer;
+                   Low, High : integer) return boolean written More (It in Low..High) is
+    return It <= High
+
+procedure LoopNext (in out It : integer;
+                    Low, High : integer) written Next(It in Low..High) is
+    It := It + 1
+
+procedure LoopLast(It : integer;
+                   Low, High : integer) written Last(It in Low..High) is
+    It := It
+
+for I in 1..5 loop
+    for J in 1..5 loop
+        WriteLn "I=", I, " and J=", J
+
