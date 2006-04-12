@@ -317,6 +317,17 @@ module XL.SEMANTICS.INSTRUCTIONS is
                 'Rest'
 
         when
+            for 'Iterator' loop 'Body'
+        then
+            result := parse_tree
+                First ('Iterator')
+                while More('Iterator') loop
+                    'Body'
+                    Next('Iterator')
+                Last('Iterator')
+            return XLT.XLSemantics(result)
+
+        when
             exit
         then
             return DoExit(input, nil)
