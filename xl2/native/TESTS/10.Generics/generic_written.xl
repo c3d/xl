@@ -1,0 +1,14 @@
+// This tests that generic subroutines can have written forms
+// (It doesn't work yet)
+use XL.UI.CONSOLE
+
+generic [type item]
+procedure GenericAssign(out X: item; Y : item) written X := Y is
+    WriteLn "GenericAssign called"
+
+type zebulon is record with
+    X : integer
+    Y : real
+
+Z : zebulon
+U : zebulon := Z

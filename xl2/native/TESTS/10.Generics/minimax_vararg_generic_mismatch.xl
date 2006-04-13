@@ -1,0 +1,17 @@
+// Checks that we detect and report type mismatches in variadics
+// EXIT=2
+
+generic type ordered where
+    A, B : ordered
+    Test : boolean := A < B
+
+function Max (X : ordered) return ordered is
+    return X
+
+function Max (X : ordered; ...) return ordered is
+    result := Max(...)
+    if result < X then
+        result := X
+
+Test_integer : integer := Max(1, 2, 4, 6)
+Test_bad     : integer := Max(1, 2.5)

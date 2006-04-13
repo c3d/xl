@@ -97,6 +97,19 @@ module XL.SEMANTICS.WRITTEN_FORMS is
 
         written : info as written_form
         param_name : text
+        F     : FN.function := written.function
+        FType : F.type as FT.function_type
+        Gtype : F.type as GEN.generic_type
+        Gargs : PT.tree_list
+
+        if Ftype = nil and Gtype <> nil then
+            Gdecl : DCL.declaration
+            nilT  : PT.tree
+            for Gdecl in Gtype.parameters loop
+                Gargs += nilT
+        else
+            base_score *= 16#100
+
         for param_name in args loop
             value  : PT.tree := args[param_name]
             key    : text := "WARG"
@@ -122,9 +135,14 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                     PT.AttachTree value, key, semArg
             args[param_name] := semArg
             if not skip then
-                if not DCL.Assignable(decl, semArg) then
-                    return 0
+                if Gtype <> nil then
+                    if not GN.Deduce (Gtype, decl, semArg, Gargs) then
+                        return 0
+                else
+                    if not DCL.Assignable(decl, semArg) then
+                        return 0
 
+        written.generic_args := Gargs
         return base_score
 
 
@@ -141,7 +159,13 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         margs   : CGM.machine_args
         fninfo  : FN.function := written.function
         fntype  : fninfo.type as FT.function_type
+        gentype : fninfo.type as GEN.generic_type
         arg     : FN.declaration
+
+        // Check for generic functions
+        if gentype <> nil then
+            GFType : gentype.base as FT.function_type
+            fntype := GFType
 
         // Order parameters in function call order
         for arg in fntype.parameters loop
@@ -159,6 +183,16 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                         decl := DCL.Declare(Name, decl.type)
                         value := XLT.XLSemantics(value)
             margs += value
+
+        // See if callee is a generic function
+        if gentype <> nil then
+            result := GN.InstantiateFunction (fninfo.name, fninfo,
+                                              written.generic_args, nil,
+                                              scope)
+            fninfo := FN.GetFunction (result)
+            if fninfo = nil then
+                // Instantiation error
+                return result
 
         if scope = nil then
             return CGM.FunctionCall (fninfo, margs)
@@ -180,6 +214,13 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             // If not a function, error message emitted already
             return fniface
         fntype : fninfo.type as FT.function_type
+
+        // Check for generic functions
+        gentype : fninfo.type as GEN.generic_type
+        if gentype <> nil then
+            GFType : gentype.base as FT.function_type
+            fntype := GFType
+            
 
         written : written_form
 

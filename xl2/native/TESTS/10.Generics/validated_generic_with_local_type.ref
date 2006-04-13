@@ -1,0 +1,92 @@
+#include <stdio.h>
+typedef char                   xlint8;
+typedef short                  xlint16;
+typedef int                    xlint32;
+typedef long long              xlint64;
+typedef unsigned char          xluint8;
+typedef unsigned short         xluint16;
+typedef unsigned int           xluint32;
+typedef unsigned long long     xluint64;
+typedef float                  xlreal32;
+typedef double                 xlreal64;
+typedef int                    xlint;
+typedef unsigned               xluint;
+typedef double                 xlreal;
+typedef char                   xlbool;
+typedef char                   xlchar;
+typedef const char *           xltext;
+typedef void *                 xlptr;
+typedef struct {} /* !ANSIC */ xlrecord, xlmodule;
+typedef FILE *                 xlfile;
+xlfile xl_getstdfile(int n) {
+  switch(n) {
+    case 0: return stdin;
+    case 1: return stdout;
+    case 2: return stderr;
+  }
+  return NULL;
+}
+typedef struct Record_954 {
+  xlmodule baserecord_1; /* RecF */
+} Record_954;
+Record_954 xlbuiltins_955; /* Global */
+typedef struct Record_965 {
+  xlrecord baserecord_961; /* RecF */
+  xlreal re_962; /* RecF */
+  xlreal im_963; /* RecF */
+} Record_965;
+typedef xlbool (*FnPtr_968) ( Record_965 x_966 , Record_965 y_967 ) ;
+xlbool lessthan_969 ( Record_965 x_966 , Record_965 y_967 ) ;
+typedef Record_965 (*FnPtr_972) ( Record_965 src_971 ) ;
+Record_965 copy_973 ( Record_965 src_971 ) ;
+Record_965 z_974; /* Global */
+typedef Record_965 (*FnPtr_987) ( Record_965 x_986 ) ;
+Record_965 max_988 ( Record_965 x_986 ) ;
+Record_965 ret_991; /* Temp */
+Record_965 outret_992; /* Ret */
+xlbool lessthan_969 ( Record_965 x_966 , Record_965 y_967 ) {
+xlbool ret_977; /* Temp */
+xlbool result_976; /* Result */
+ret_977 = lessthan_969 ( x_966 , y_967 );
+result_976 = ret_977;
+goto exit_lessthan_969;
+exit_lessthan_969: 0;
+return result_976;
+}
+Record_965 copy_973 ( Record_965 src_971 ) {
+Record_965 tgt_970; /* Out=Ret */
+/* xlreal fld_978; Ref */
+/* xlreal fld_979; Ref */
+/* xlreal fld_980; Ref */
+/* xlreal fld_981; Ref */
+#define fld_979 (tgt_970.re_962)
+#define fld_978 (src_971.re_962)
+fld_979 = fld_978;
+#define fld_981 (tgt_970.im_963)
+#define fld_980 (src_971.im_963)
+fld_981 = fld_980;
+exit_copy_973: 0;
+return tgt_970;
+}
+Record_965 max_988 ( Record_965 x_986 ) {
+Record_965 outret_990; /* Ret */
+Record_965 result_989; /* Result */
+outret_990 = copy_973 ( x_986 );
+result_989 = outret_990;
+goto exit_max_988;
+exit_max_988: 0;
+return result_989;
+}
+int main(int _argc, char **_argv)
+{
+Record_965 ret_991; /* Temp */
+Record_965 outret_992; /* Ret */
+ret_991 = max_988 ( z_974 );
+outret_992 = copy_973 ( ret_991 );
+z_974 = outret_992;
+/* Type */
+/* Type */
+    /* Main */
+    return 0;
+}
+/*end*/

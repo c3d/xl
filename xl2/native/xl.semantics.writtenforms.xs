@@ -44,7 +44,9 @@ module XL.SEMANTICS.WRITTEN_FORMS with
     // ------------------------------------------------------------------------
         function                : FN.function
         args_map                : written_args_map
+        generic_args            : PT.tree_list
     type written_form is access to written_form_data
+
 
     type generic_written_form_data is SYM.rewrite_data with
     // ------------------------------------------------------------------------
@@ -54,6 +56,7 @@ module XL.SEMANTICS.WRITTEN_FORMS with
         args_map                : written_args_map
         declaration             : DCL.declaration
     type generic_written_form is access to generic_written_form_data
+
 
     function EnterWrittenForm(fniface : PT.tree;
                               wrform  : PT.tree) return PT.tree

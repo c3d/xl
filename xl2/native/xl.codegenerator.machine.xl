@@ -208,9 +208,7 @@ module XL.CODE_GENERATOR.MACHINE is
                 'retDecl'
                 @fn_retN_end
             XLT.AddGlobalDecl retDecl
-            result := parse_tree
-                'result'
-                @fn_retN 'BaseName'
+            result := XLT.Append(result, parse_tree(@fn_retN 'BaseName'))
 
         // Follow the return value declaration with name
         result := parse_tree
