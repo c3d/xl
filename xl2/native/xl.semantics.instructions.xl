@@ -254,6 +254,18 @@ module XL.SEMANTICS.INSTRUCTIONS is
             then
                 ProcessIteratorBody First, init, cond, incr, term
                 ProcessIteratorBody Second, init, cond, incr, term
+            when
+                'First'; 'Second'
+            then
+                ProcessIteratorBody First, init, cond, incr, term
+                ProcessIteratorBody Second, init, cond, incr, term
+
+            when
+                'Names' : 'Type'
+            then
+                // Temporary implementation limit:
+                // We generate multiple subroutines from one iterator
+                ERR.Error "'$1' cannot be declared in an iterator", Names
 
             when
                 while 'aCond' loop 'anIncr'
