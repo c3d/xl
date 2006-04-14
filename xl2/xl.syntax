@@ -32,7 +32,7 @@ PREFIX
         380     ! ~
         390     - + * /
         400     FUNCTION
-        410     function procedure to type
+        410     function procedure to type iterator
         500     &
 
 POSTFIX

@@ -30,6 +30,7 @@ import XLT = XL.TRANSLATOR
 import ERR = XL.ERRORS
 import FN = XL.SEMANTICS.FUNCTIONS
 import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import ITER = XL.SEMANTICS.ITERATORS
 import REC = XL.SEMANTICS.TYPES.RECORDS
 import GEN = XL.SEMANTICS.TYPES.GENERICS
 import GN = XL.SEMANTICS.GENERICS
@@ -120,9 +121,11 @@ module XL.SEMANTICS.OVERLOAD is
         depth     : integer := 0
         table     : SYM.symbol_table := symbols
         recurse   : boolean := BaseRecord = nil
+        inIterator: boolean := SYM.GetProperty(symbols, "ITERATING") <> nil
 
         // Save errors for later display
         ERR.PushErrorContext()
+
 
         // Perform semantics on all arguments
         for Arg in ArgList loop
@@ -130,7 +133,7 @@ module XL.SEMANTICS.OVERLOAD is
             if Arg.kind = PT.xlNAME and DCL.GetDeclaration(Arg) = nil then
                 DName : Arg as PT.name_tree
                 Dval  : text := Dname.value
-                Orig  : PT.tree := SYM.LookupOne(XLT.context, "DECL", Dval)
+                Orig  : PT.tree := SYM.LookupOne(symbols, "DECL", Dval)
                 if Orig = nil then
                     ToBeDefined := true
                     trace[overload] "Arg ", Dval, " is to be defined"
@@ -212,6 +215,16 @@ module XL.SEMANTICS.OVERLOAD is
                                     " internal ", NFtype.machine_name
                     restart
 
+                // Check if it's an iterator, and if that matches usage
+                iterator : F as ITER.iterator
+                if (iterator <> nil) <> inIterator then
+                    if inIterator then
+                        ERR.Error "'$1' is not an iterator", C
+                    else
+                        ERR.Error "'$1' is not an iterator", C
+                    trace[overload] "FAIL: iterator mismatch ", C
+                    restart
+
                 // Check number of parameters.
                 NP : integer := size(Ftype.parameters)
                 if Ftype.variadic then
@@ -233,7 +246,7 @@ module XL.SEMANTICS.OVERLOAD is
                         Arg := SemArgs[A]
                         trace [overload] "Testing argument ", Arg
                         if ToBeDef[A] then
-                            if D.is_output and not D.is_input then
+                            if D.is_variable then
                                 Dname : Arg as PT.name_tree
                                 trace [overload] "Tentative undeclared ", Arg
                                 DNames += Dname
@@ -374,6 +387,11 @@ module XL.SEMANTICS.OVERLOAD is
                     Dummy := Dummy
                     if SemArgs[Didx] = PT.tree(DName) then
                         SemArgs[Didx] := XLT.XLSemantics(DName)
+
+            // Check if this is an iterator call
+            iterator : bestF as ITER.iterator
+            if iterator <> nil then
+                return ITER.InvokeIterator(Name, BaseRecord, iterator, SemArgs)
 
             if BaseRecord <> nil then
                 return CGM.RecordFunctionCall (BaseRecord, bestF, SemArgs)

@@ -50,6 +50,8 @@ OTHER_SOURCES=					\
 	xl.semantics.macros.xl			\
 	xl.semantics.functions.xs		\
 	xl.semantics.functions.xl		\
+	xl.semantics.iterators.xs		\
+	xl.semantics.iterators.xl		\
 	xl.semantics.overload.xs		\
 	xl.semantics.overload.xl		\
 	xl.semantics.generics.xs		\

@@ -50,6 +50,7 @@ module XL.SEMANTICS.DECLARATIONS is
 
         in_flag    : boolean := false
         out_flag   : boolean := false
+        var_flag   : boolean := false
         prefixen   : boolean := Names.kind <> PT.xlNAME
         modname    : PT.tree := nil
 
@@ -80,6 +81,18 @@ module XL.SEMANTICS.DECLARATIONS is
                     out 'Nm'
                 then
                     out_flag := true
+                    Names := Nm
+                    prefixen := Names.kind <> PT.xlNAME
+                when
+                    var 'Nm'
+                then
+                    var_flag := true
+                    Names := Nm
+                    prefixen := Names.kind <> PT.xlNAME
+                when
+                    variable 'Nm'
+                then
+                    var_flag := true
                     Names := Nm
                     prefixen := Names.kind <> PT.xlNAME
 
@@ -140,6 +153,7 @@ module XL.SEMANTICS.DECLARATIONS is
         decl.initializer        := Value
         decl.is_input           := in_flag
         decl.is_output          := out_flag
+        decl.is_variable        := var_flag
 
         // Check some consistency
         if out_flag and TY.IsConstant(decl.type) then
@@ -204,6 +218,7 @@ module XL.SEMANTICS.DECLARATIONS is
         decl.frame_depth        := SYM.GetInteger(XLT.context, "FRAMEDEPTH")
         decl.is_input           := false
         decl.is_output          := false
+        decl.is_variable        := false
         decl.is_parameter       := SYM.GetInteger(XLT.context, "FNPARM") <> 0
         decl.is_local           := SYM.GetInteger(XLT.context, "LOCAL") <> 0
         decl.is_global          := SYM.GetInteger(XLT.context, "GLOBAL") <> 0
@@ -285,6 +300,8 @@ module XL.SEMANTICS.DECLARATIONS is
                 when ('Context'.'Field') where Field.kind = PT.xlNAME then
                     FieldName : Field as PT.name_tree
                     return REC.Index(Context, FieldName)
+                else
+                    return Original
 
         // Find associated declaration
         decl := GetDeclaration(Original)

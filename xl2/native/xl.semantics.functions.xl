@@ -90,6 +90,7 @@ module XL.SEMANTICS.FUNCTIONS is
         f.frame_depth           := SYM.GetInteger(XLT.context, "FRAMEDEPTH")
         f.is_input              := false
         f.is_output             := false
+        f.is_variable           := false
         f.is_parameter          := SYM.GetInteger(XLT.context, "FNPARM") <> 0
         f.is_local              := SYM.GetInteger(XLT.context, "LOCAL") <> 0
         f.is_global             := SYM.GetInteger(XLT.context, "GLOBAL") <> 0

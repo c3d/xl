@@ -613,6 +613,73 @@ module XL.SYMBOLS is
 
     // ========================================================================
     //
+    //    Named context property
+    //
+    // ========================================================================
+
+    type context_info_data is PT.info_data with
+    // ------------------------------------------------------------------------
+    //    Used to record a context property
+    // ------------------------------------------------------------------------
+        context         : SYM.symbol_table
+    type context_info is access to context_info_data
+
+
+    procedure SetContextProperty (into        : symbol_table;
+                                  name        : text;
+                                  value       : symbol_table) is
+    // ------------------------------------------------------------------------
+    //   Record the context in a property
+    // ------------------------------------------------------------------------
+        prop  : PT.tree := PT.NewName("")
+        coinf : context_info
+        coinf.context := value
+        PT.SetInfo prop, name, coinf
+        SetProperty into, name, prop
+
+
+    function ContextProperty (ctxt    : symbol_table;
+                              name    : text;
+                              recurse : boolean) return symbol_table is
+    // ------------------------------------------------------------------------
+    //   Return the context property for that name
+    // ------------------------------------------------------------------------
+        prop  : PT.tree := GetProperty(ctxt, name, recurse)
+        if prop = nil then
+            return nil
+        coinf : PT.FindInfo (prop, name) as context_info
+        if coinf = nil then
+            return nil
+        return coinf.context
+
+
+    procedure SetContextProperty (data  : PT.tree;
+                                  name  : text;
+                                  value : symbol_table) is
+    // ------------------------------------------------------------------------
+    //   Record the context in a property
+    // ------------------------------------------------------------------------
+        coinf : context_info
+        coinf.context := value
+        PT.SetInfo data, name, coinf
+
+
+    function ContextProperty (data    : PT.tree;
+                              name    : text) return symbol_table is
+    // ------------------------------------------------------------------------
+    //   Return the context property for that name
+    // ------------------------------------------------------------------------
+        if data = nil then
+            return nil
+        coinf : PT.FindInfo (data, name) as context_info
+        if coinf = nil then
+            return nil
+        return coinf.context
+
+
+
+    // ========================================================================
+    //
     //    Misc helpers
     //
     // ========================================================================

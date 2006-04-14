@@ -334,6 +334,7 @@ module XL.SEMANTICS.TYPES is
         decl.frame_depth        := 0
         decl.is_input           := false
         decl.is_output          := false
+        decl.is_variable        := false
         decl.is_parameter       := false
         decl.is_local           := false
         decl.is_global          := false

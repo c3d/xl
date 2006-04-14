@@ -55,7 +55,10 @@ module XL.SEMANTICS.GENERICS with
                                   Args       : PT.tree_list;
                                   Variadics  : PT.tree;
                                   BaseRecord : PT.tree) return BC.bytecode
+    procedure SetContextOfInstantiation (instContext : SYM.symbol_table;
+                                         oldContext  : SYM.symbol_table)
     function ContextOfInstantiation () return SYM.symbol_table
+
 
     function IsGenericName(Name : PT.tree; kind : text) return boolean
 

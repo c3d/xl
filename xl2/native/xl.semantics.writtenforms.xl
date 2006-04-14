@@ -28,6 +28,7 @@ import ERR = XL.ERRORS
 import PT = XL.PARSER.TREE
 import DCL = XL.SEMANTICS.DECLARATIONS
 import FN = XL.SEMANTICS.FUNCTIONS
+import ITER = XL.SEMANTICS.ITERATORS
 import TY = XL.SEMANTICS.TYPES
 import FT = XL.SEMANTICS.TYPES.FUNCTIONS
 import GEN = XL.SEMANTICS.TYPES.GENERICS
@@ -95,12 +96,12 @@ module XL.SEMANTICS.WRITTEN_FORMS is
     //   to check that the types match.
     //   TODO: Implicit conversions
 
-        written : info as written_form
+        written    : info as written_form
         param_name : text
-        F     : FN.function := written.function
-        FType : F.type as FT.function_type
-        Gtype : F.type as GEN.generic_type
-        Gargs : PT.tree_list
+        F          : FN.function := written.function
+        FType      : F.type as FT.function_type
+        Gtype      : F.type as GEN.generic_type
+        Gargs      : PT.tree_list
 
         if Ftype = nil and Gtype <> nil then
             Gdecl : DCL.declaration
@@ -110,6 +111,13 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         else
             base_score *= 16#100
 
+        // Check whether this is an iterator / we are looking for one
+        inIterator: boolean := SYM.GetProperty(XLT.context, "ITERATING") <> nil
+        asIterator: F as ITER.iterator
+        if (asIterator <> nil) <> inIterator then
+            return 0
+
+        // Check parameter types
         for param_name in args loop
             value  : PT.tree := args[param_name]
             key    : text := "WARG"
@@ -119,7 +127,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             if semArg = nil then
                 if value.kind=PT.xlNAME and DCL.GetDeclaration(value)=nil then
                     // Undeclared out parameters will be declared in call
-                    if decl.is_output and not decl.is_input then
+                    if decl.is_variable then
                         Name : value as PT.name_tree
                         N    : text := Name.value
                         Orig : PT.tree := SYM.LookupOne(XLT.context, "DECL", N)
@@ -175,7 +183,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             if value.kind=PT.xlNAME and DCL.GetDeclaration(value)=nil then
                 decl   : DCL.declaration := written.args_map[name_text]
                 // Declare the undeclared out parameters
-                if decl.is_output and not decl.is_input then
+                if decl.is_variable then
                     Name : value as PT.name_tree
                     N    : text := Name.value
                     Orig : PT.tree := SYM.LookupOne(XLT.context, "DECL", N)
@@ -193,6 +201,11 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             if fninfo = nil then
                 // Instantiation error
                 return result
+
+        // Check if this is an iterator call
+        iterator : fninfo as ITER.iterator
+        if iterator <> nil then
+            return ITER.InvokeIterator(input, scope, iterator, margs)
 
         if scope = nil then
             return CGM.FunctionCall (fninfo, margs)
@@ -220,8 +233,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         if gentype <> nil then
             GFType : gentype.base as FT.function_type
             fntype := GFType
-            
-
+ 
         written : written_form
 
         // Discover all the function parameters
@@ -256,6 +268,20 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             'Interface' written 'WrForm'
         then
             result := XLT.XLEnterFunction(Interface)
+            trace [written] "/* Written ", WrForm, "*/"
+            result := EnterWrittenForm(result, WrForm)
+
+
+    translation XLEnterIterator
+    // ------------------------------------------------------------------------
+    //   Entering a written form in an iterator declaration
+    // ------------------------------------------------------------------------
+
+        // Translate written statements
+        when
+            'Interface' written 'WrForm'
+        then
+            result := XLT.XLEnterIterator(Interface)
             trace [written] "/* Written ", WrForm, "*/"
             result := EnterWrittenForm(result, WrForm)
 

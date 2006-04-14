@@ -56,6 +56,35 @@ module XL.SEMANTICS.INSTRUCTIONS is
              result := parse_tree(@goto_exit 'mname')
 
 
+    function DoYield(Yield : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Translation of the 'yield' statement
+    // ------------------------------------------------------------------------
+    //   This can only be used in an iterator, and it evaluates as the body
+    //   The only real trick is that the scope is the iterator enclosing scope
+
+        body : PT.tree := SYM.GetProperty(XLT.context, "ITERATING", true)
+        if body = nil then
+            ERR.Error "'$1' is not in an iterator", Yield
+            return parse_tree(@error)
+
+        // Evaluate the body in its original context
+        oldContext   : SYM.symbol_table := XLT.context
+        XLT.context := SYM.ContextProperty(body, "ITERCTX")
+
+        // Make sure that we don't try to 'yield' twice
+        if XLT.context = nil then
+            ERR.Error "This '$1' instruction", Yield
+            ERR.Error "is the second one for this loop body", Body.position
+            result := parse_tree(@error)
+        else
+            // Run semantics on the body in that context
+            PT.PurgeInfo body, "ITERCTX"
+            result := XLT.XLSemantics(body)
+
+        XLT.context := oldContext
+
+
     function DoIf(Test      : PT.tree;
                   TrueCase  : PT.tree;
                   FalseCase : PT.tree) return PT.tree is
@@ -238,139 +267,6 @@ module XL.SEMANTICS.INSTRUCTIONS is
             @exit_loop 'label'
 
 
-    procedure ProcessIteratorBody (Body : PT.tree;
-                                   in out init : PT.tree;
-                                   in out cond : PT.tree;
-                                   in out incr : PT.tree;
-                                   in out term : PT.tree) is
-    // ------------------------------------------------------------------------
-    //   Try to make sense of an iterator body
-    // ------------------------------------------------------------------------
-
-        translate Body
-            when
-                'First'
-                'Second'
-            then
-                ProcessIteratorBody First, init, cond, incr, term
-                ProcessIteratorBody Second, init, cond, incr, term
-            when
-                'First'; 'Second'
-            then
-                ProcessIteratorBody First, init, cond, incr, term
-                ProcessIteratorBody Second, init, cond, incr, term
-
-            when
-                'Names' : 'Type'
-            then
-                // Temporary implementation limit:
-                // We generate multiple subroutines from one iterator
-                ERR.Error "'$1' cannot be declared in an iterator", Names
-
-            when
-                while 'aCond' loop 'anIncr'
-            then
-                if cond <> nil then
-                    ERR.Error "Iterator condition '$1' overriden by", cond
-                    ERR.Error "new condition '$1'", aCond
-                if incr <> nil then
-                    ERR.Error "Iterator increment '$1' overriden by", incr
-                    ERR.Error "new increment '$1'", anIncr
-                cond := aCond
-                incr := anIncr
-            else
-                if cond <> nil then
-                    // Add this to terminator
-                    term := XLT.Append(term, Body)
-                else
-                    init := XLT.Append(init, Body)
-
-
-    function EnterIterator(Name   : PT.tree;
-                           Parms  : PT.tree;
-                           WrForm : PT.tree;
-                           Body   : PT.tree) return BC.bytecode is
-    // ------------------------------------------------------------------------
-    //   Enter an iterator defining a 'for' loop
-    // ------------------------------------------------------------------------
-    //   Iterators are an easy way to define the shape of a 'for' loop
-
-        if Name.kind <> PT.xlNAME then
-            ERR.Error "'$1' is not a valid iterator name", Name
-            Name := SYM.Temporary("iterator")
-        N : Name as PT.name_tree
-        T : text := N.value
-
-        // Decode the interface part
-        defName    : PT.tree
-        defType    : PT.tree
-        otherDecls : PT.tree
-        translate Parms
-            when ('FirstName' : 'FirstType' ; 'restOfParms') then
-                if FirstName.kind <> PT.xlNAME then
-                    ERR.Error "'$1' is not an iterating variable", FirstName
-                    FirstName := SYM.Temporary("iterating")
-                defName := FirstName
-                defType := FirstType
-                otherDecls := restOfParms
-            else
-                ERR.Error "'$1' is not a valid iterator parameter list", Parms
-                return parse_tree(@error)
-
-        // Decode the body part
-        init : PT.tree
-        cond : PT.tree
-        incr : PT.tree
-        term : PT.tree
-        ProcessIteratorBody Body, init, cond, incr, term
-        if init = nil then
-            init := parse_tree(@nop)
-        if cond = nil then
-            ERR.Error "No condition found for iterator '$1'", Name
-            cond := parse_tree(false)
-        if incr = nil then
-            incr := parse_tree(@nop)
-        if term = nil then
-            term := parse_tree(@nop)
-
-        // Generate the result
-        nameOfInit : PT.name_tree := PT.NewName(T + "Initializer", N.position)
-        nameOfMore : PT.name_tree := PT.NewName(T + "Condition", N.position)
-        nameOfIncr : PT.name_tree := PT.NewName(T + "Incrementer", N.position)
-        nameOfLast : PT.name_tree := PT.NewName(T + "Terminator", N.position)
-        defName2   : PT.tree := PT.Clone(defName)
-        defName3   : PT.tree := PT.Clone(defName)
-        defName4   : PT.tree := PT.Clone(defName)
-        defType2   : PT.tree := PT.Clone(defType)
-        defType3   : PT.tree := PT.Clone(defType)
-        defType4   : PT.tree := PT.Clone(defType)
-        WrForm2    : PT.tree := PT.Clone(WrForm)
-        WrForm3    : PT.tree := PT.Clone(WrForm)
-        WrForm4    : PT.tree := PT.Clone(WrForm)
-        otherDecls2: PT.tree := PT.Clone(otherDecls)
-        otherDecls3: PT.tree := PT.Clone(otherDecls)
-        otherDecls4: PT.tree := PT.Clone(otherDecls)
-        result := parse_tree
-            procedure 'nameOfInit' (out 'defName' : 'defType';
-                                    'otherDecls') written First('WrForm') is
-                'init'
-            function 'nameOfMore' ('defName2' : 'defType2';
-                                   'otherDecls2')
-                return boolean
-                written More('WrForm2') is
-                return 'cond'
-            procedure 'nameOfIncr' (in out 'defName3' : 'defType3';
-                                    'otherDecls3') written Next('WrForm3') is
-                'incr'
-            procedure 'nameOfLast' (in out 'defName4' : 'defType4';
-                                    'otherDecls4') written Last('WrForm4') is
-                'term'
-
-        // And process it
-        return XLT.XLDeclarations(result)
-
-    
-
     translation XLSemantics
     // ------------------------------------------------------------------------
     //   Translation forms
@@ -385,6 +281,11 @@ module XL.SEMANTICS.INSTRUCTIONS is
             return
         then
             return DoReturn(input, nil)
+
+        when
+            yield
+        then
+            return DoYield(input)
 
         when
             if 'Cond' then 'TrueCase'
@@ -450,17 +351,6 @@ module XL.SEMANTICS.INSTRUCTIONS is
                 'Rest'
 
         when
-            for 'Iterator' loop 'Body'
-        then
-            result := parse_tree
-                First ('Iterator')
-                while More('Iterator') loop
-                    'Body'
-                    Next('Iterator')
-                Last('Iterator')
-            return XLT.XLSemantics(result)
-
-        when
             exit
         then
             return DoExit(input, nil)
@@ -470,14 +360,4 @@ module XL.SEMANTICS.INSTRUCTIONS is
             return DoExit(input, Condition)
 
 
-
-    translation XLDeclarations
-    // ------------------------------------------------------------------------
-    //   Entering iterator declarations
-    // ------------------------------------------------------------------------
-        when
-            iterator 'Name' ('Parms') written 'WrForm' is
-                'Body'
-        then
-            return EnterIterator(Name, Parms, WrForm, Body)
 

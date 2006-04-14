@@ -318,24 +318,14 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
     //   Record the context of instantiation in the instantiation context
     // ------------------------------------------------------------------------
-        prop  : PT.tree := PT.NewName("<context of instantiation>")
-        coinf : context_info
-        coinf.context := oldContext
-        PT.SetInfo prop, "COINST", coinf
-        SYM.SetProperty instContext, "COINST", prop
-        
+        SYM.SetContextProperty instContext, "COINST", oldContext
+
 
     function ContextOfInstantiation () return SYM.symbol_table is
     // ------------------------------------------------------------------------
     //   Return the context of instantiation for the instantiation context
     // ------------------------------------------------------------------------
-        prop  : PT.tree := SYM.GetProperty(XLT.context, "COINST", true)
-        if prop = nil then
-            return nil
-        coinf : PT.FindInfo (prop, "COINST") as context_info
-        if coinf = nil then
-            return nil
-        return coinf.context
+        return SYM.ContextProperty(XLT.context, "COINST", true)
 
 
     function Instantiate(Decl       : DCL.declaration;
@@ -508,7 +498,7 @@ module XL.SEMANTICS.GENERICS is
         trace[inst] "Validation: ", valid
         valid := XLT.XLDeclarations(valid)
         valid := XLT.XLSemantics(valid)
-        errors : text := ERR.PopErrorContext() 
+        errors : text := ERR.PopErrorContext()
         trace[inst] "Validated as: ", valid, " errors=", errors
         if errors <> "" then
             ERR.Error "Generic validation failed for '$1'", IName
@@ -613,9 +603,9 @@ module XL.SEMANTICS.GENERICS is
 
         ERR.PushErrorContext()
 
-        result := Instantiate (Decl, Args, Variadics, BaseRecord) 
+        result := Instantiate (Decl, Args, Variadics, BaseRecord)
 
-        errors : text := ERR.PopErrorContext() 
+        errors : text := ERR.PopErrorContext()
         if errors <> "" then
             ERR.Error "Errors while instantiating '$1':", Source
             if Variadics <> nil then

@@ -63,6 +63,7 @@ module XL.SEMANTICS.DECLARATIONS with
         frame_depth             : integer
         is_input                : boolean
         is_output               : boolean
+        is_variable             : boolean
         is_parameter            : boolean
         is_local                : boolean
         is_global               : boolean

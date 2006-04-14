@@ -67,7 +67,6 @@ module XL.SYMBOLS with
                             name : text)
 
 
-
     // ========================================================================
     //
     //    Simple name lookup
@@ -219,6 +218,19 @@ module XL.SYMBOLS with
     procedure AddScopeItem(table : symbol_table; section: text; item : PT.tree)
     function ScopeItems (table : symbol_table; section : text) return PT.tree
 
+    // Context properties
+    procedure SetContextProperty (table : symbol_table;
+                                  name  : text;
+                                  value : symbol_table)
+    function ContextProperty (table   : symbol_table;
+                              name    : text;
+                              recurse : boolean) return symbol_table
+    procedure SetContextProperty (data  : PT.tree;
+                                  name  : text;
+                                  value : symbol_table)
+    function ContextProperty (data    : PT.tree;
+                              name    : text) return symbol_table
+ 
 
 
     // ========================================================================

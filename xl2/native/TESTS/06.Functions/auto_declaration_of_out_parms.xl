@@ -2,12 +2,12 @@
 // a subroutine with an output parameter and name does not exist in scope
 // RUN=cat %c
 
-procedure MakeIt (out A : integer; B : integer) written A &= B is
+procedure MakeIt (var out A : integer; B : integer) written A &= B is
     A := B
-procedure MakeIt (out A : real; B : real) written A &= B is
+procedure MakeIt (variable out A : real; B : real) written A &= B is
     A := B
 generic [type item]
-procedure MakeIt (out A : item; B : item) written A &= B is
+procedure MakeIt (var out A : item; B : item) written A &= B is
     A := B
 
 procedure Test is
@@ -36,5 +36,3 @@ MakeIt Znort, Fungoid
 to TestOperators is
    Bingo &= 1
    Bonga &= 2.3
-   // Uh oh, do we support generic operators?
-   // Blatoid &= Fungoid
