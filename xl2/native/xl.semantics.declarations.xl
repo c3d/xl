@@ -29,6 +29,7 @@ import CGM = XL.CODE_GENERATOR.MACHINE
 import REC = XL.SEMANTICS.TYPES.RECORDS
 import FT = XL.SEMANTICS.TYPES.FUNCTIONS
 import FN = XL.SEMANTICS.FUNCTIONS
+import ITER = XL.SEMANTICS.ITERATORS
 import OVL = XL.SEMANTICS.OVERLOAD
 import GEN = XL.SEMANTICS.TYPES.GENERICS
 import BC = XL.BYTECODE
@@ -138,6 +139,8 @@ module XL.SEMANTICS.DECLARATIONS is
            return TY.EnterType (Name, Value)
         decl_fn_type : decl_type as FT.function_type
         if decl_fn_type <> nil then
+            if decl_fn_type.iterator then
+                return ITER.EnterIterator(Name, decl_fn_type, Value, Name)
             return FN.EnterFunction (Name, decl_fn_type, Value, Name)
 
         // Check if there is already an entity by that name

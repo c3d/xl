@@ -192,7 +192,8 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
 
     function NewFnType(Source     : PT.tree;
                        Parms      : PT.tree;
-                       ReturnType : PT.tree) return any_type is
+                       ReturnType : PT.tree;
+                       iterator_tp: boolean) return any_type is
     // ------------------------------------------------------------------------
     //    Create a function type (returns a function_type or generic_type)
     // ------------------------------------------------------------------------
@@ -214,6 +215,9 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
             if GEN.IsGenericType(retType) then
                 GEN.AddGenericDependency retType
             ftp.name := parse_tree(function ('Parms') return 'ReturnType')
+        else if iterator_tp then
+            ftp.base := nil
+            ftp.name := parse_tree(iterator('Parms'))
         else
             ftp.base := nil
             ftp.name := parse_tree(procedure('Parms'))
@@ -222,6 +226,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         ftp.inputs_count := 0
         ftp.outputs_count := 0
         ftp.variadic := false
+        ftp.iterator := iterator_tp
         ftp.symbols := XLT.context
 
         // Check if empty parameter list. () is a block with an empty name
@@ -247,6 +252,23 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         XLT.context := oldContext
 
 
+    function NewFnType(Source     : PT.tree;
+                       Parms      : PT.tree;
+                       ReturnType : PT.tree) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return an actual function type
+    // ------------------------------------------------------------------------
+        return NewFnType(Source, Parms, ReturnType, false)
+
+
+    function NewIteratorType(Source     : PT.tree;
+                             Parms      : PT.tree) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return an iterator type
+    // ------------------------------------------------------------------------
+        return NewFnType (Source, Parms, nil, true)
+
+
     function EnterFnType (Source  : PT.tree;
                           Parms   : PT.tree;
                           Ret     : PT.tree) return PT.tree is
@@ -263,6 +285,21 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         return Source
 
 
+    function EnterIteratorType (Source  : PT.tree;
+                                Parms   : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a function type in the symbol table
+    // ------------------------------------------------------------------------
+
+        // Attach a type info to the original name
+        tp : any_type := NewIteratorType(Source, Parms)
+        MType : PT.name_tree := tp.machine_name
+        TY.EnterSignature MType.value, tp
+        TY.SetDefinedType Source, tp
+
+        return Source
+
+
     translation XLEvaluateType
     // ------------------------------------------------------------------------
     //    Translation of function types
@@ -272,4 +309,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
 
         when (procedure ('Parms')) then
             return EnterFnType (input, Parms, nil)
+
+        when (iterator ('Parms')) then
+            return EnterIteratorType (input, Parms)
 

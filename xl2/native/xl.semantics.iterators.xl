@@ -62,7 +62,7 @@ module XL.SEMANTICS.ITERATORS is
         if Names.kind <> PT.xlNAME then
             ERR.Error "'$1' is not a valid iterator name", Names
             Names := PT.NewName("invalid_iterator", Names.position)
-        fntype : any_type := FT.NewFnType(Iface, Parms, nil)
+        fntype : any_type := FT.NewIteratorType(Iface, Parms)
         return EnterIterator (Names, fntype, nil, Iface)
 
 
@@ -209,7 +209,7 @@ module XL.SEMANTICS.ITERATORS is
 
     function InvokeIterator(Input   : PT.tree;
                             Base    : PT.tree;
-                            iter    : iterator;
+                            it      : iterator;
                             Args    : PT.tree_list) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Perform iterator semantics, primarily semantics on iterator body
@@ -221,33 +221,33 @@ module XL.SEMANTICS.ITERATORS is
         // Check that this is invoked in a for loop
         LoopBody    : PT.tree := SYM.GetProperty(context, "ITERATING")
         if LoopBody = nil then
-            ERR.Error "'$1' called outside of loop", iter.name
+            ERR.Error "'$1' called outside of loop", it.name
             ERR.Error "as '$1'", Input
             return parse_tree(@error)
 
         // Create a symbol table for the iterator body
-        decl_context : SYM.symbol_table := iter.declaration_context
+        decl_context : SYM.symbol_table := it.declaration_context
         iter_context : SYM.symbol_table := SYM.NewSymbolTable (decl_context)
         XLT.context := iter_context
         SYM.SetInteger XLT.context, "LOCAL", 1
         SYM.SetProperty iter_context, "ITERATING", LoopBody
 
         // This should not be generic code at that stage...
-        if GEN.IsGenericDeclaration(iter) then
-            ERR.Error "The iterator '$1' is generic", iter.Name
+        if GEN.IsGenericDeclaration(it) then
+            ERR.Error "The iterator '$1' is generic", it.Name
             ERR.Error "while evaluating '$1'", Input
 
         // Find the parameters for the iterator
-        ftype : GEN.NonGenericType(iter.type) as FT.function_type
+        ftype : GEN.NonGenericType(it.type) as FT.function_type
         if ftype = nil then
-            ERR.Error "'$1' doesn't have a function type", iter.Name
+            ERR.Error "'$1' doesn't have a function type", it.Name
             ERR.Error "while evaluating '$1'", Input
             return parse_tree(@error)
         Parms : DCL.declarations := ftype.parameters
         NA    : integer := size(Args)
         NP    : integer := size(Parms)
         if NA <> NP then
-            ERR.Error "'$1' called with wrong number of arguments", iter.Name
+            ERR.Error "'$1' called with wrong number of arguments", it.Name
             ERR.Error "as '$1'", Input
             return parse_tree(@error)
 
@@ -273,7 +273,7 @@ module XL.SEMANTICS.ITERATORS is
                Local := Local
 
         // Create a clone of the iterator body, add it to parm decls/copies
-        result := XLT.Append(result, PT.Clone(iter.initializer))
+        result := XLT.Append(result, PT.Clone(it.initializer))
 
         // Copy output parameters if needed
         for A in 0..NA-1 loop

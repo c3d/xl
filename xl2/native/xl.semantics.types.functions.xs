@@ -51,6 +51,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS with
         outputs_count   : integer
         inputs_count    : integer
         variadic        : boolean
+        iterator        : boolean
 
     type function_type is access to function_type_data
 
@@ -59,7 +60,9 @@ module XL.SEMANTICS.TYPES.FUNCTIONS with
     function NewFnType(Source     : PT.tree;
                        Parms      : PT.tree;
                        ReturnType : PT.tree) return any_type
-
+    function NewIteratorType(Source     : PT.tree;
+                             Parms      : PT.tree) return any_type
+        
     function EnterFnType (Source  : PT.tree;
                           Parms   : PT.tree;
                           Ret     : PT.tree) return PT.tree

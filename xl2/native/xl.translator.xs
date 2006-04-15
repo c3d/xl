@@ -101,7 +101,6 @@ module XL.TRANSLATOR with
     function XLEnterFunction(input: PT.tree) return PT.tree    // Generated
     function XLEnterIterator(input: PT.tree) return PT.tree    // Generated
     function XLEnterGeneric(input: PT.tree) return PT.tree     // Generated
-    function XLExpression(input : PT.tree) return PT.tree      // Generated
     function XLConstant(input : PT.tree) return PT.tree        // Generated
     function XLMacros(input : PT.tree) return PT.tree          // Generated
     function XLNormalizeGeneric(input : PT.tree) return PT.tree// Generated

@@ -169,6 +169,8 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         fntype  : fninfo.type as FT.function_type
         gentype : fninfo.type as GEN.generic_type
         arg     : FN.declaration
+        Dnames  : PT.tree_list
+        Didx    : string of integer
 
         // Check for generic functions
         if gentype <> nil then
@@ -176,6 +178,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             fntype := GFType
 
         // Order parameters in function call order
+        a : integer := 0
         for arg in fntype.parameters loop
             name_tree : PT.name_tree := arg.name
             name_text : text := name_tree.value
@@ -188,9 +191,10 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                     N    : text := Name.value
                     Orig : PT.tree := SYM.LookupOne(XLT.context, "DECL", N)
                     if Orig = nil then
-                        decl := DCL.Declare(Name, decl.type)
-                        value := XLT.XLSemantics(value)
+                        Dnames += value
+                        Didx += a
             margs += value
+            a += 1
 
         // See if callee is a generic function
         if gentype <> nil then
@@ -201,6 +205,16 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             if fninfo = nil then
                 // Instantiation error
                 return result
+
+        if size(Dnames) > 0 then
+            ftype : fninfo.type as FN.function_type
+            for a in 0..size(Dnames)-1 loop
+                Name : Dnames[a] as PT.name_tree
+                idx  : integer := Didx[a]
+                parm : DCL.declaration := ftype.parameters[idx]
+                decl : DCL.declaration := DCL.Declare(Name, parm.type)
+                decl := decl
+                margs[a] := XLT.XLSemantics(margs[a])
 
         // Check if this is an iterator call
         iterator : fninfo as ITER.iterator
