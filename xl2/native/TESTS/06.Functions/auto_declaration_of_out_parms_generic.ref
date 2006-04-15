@@ -1,0 +1,138 @@
+#include <stdio.h>
+typedef char                   xlint8;
+typedef short                  xlint16;
+typedef int                    xlint32;
+typedef long long              xlint64;
+typedef unsigned char          xluint8;
+typedef unsigned short         xluint16;
+typedef unsigned int           xluint32;
+typedef unsigned long long     xluint64;
+typedef float                  xlreal32;
+typedef double                 xlreal64;
+typedef int                    xlint;
+typedef unsigned               xluint;
+typedef double                 xlreal;
+typedef char                   xlbool;
+typedef char                   xlchar;
+typedef const char *           xltext;
+typedef void *                 xlptr;
+typedef struct {} /* !ANSIC */ xlrecord, xlmodule;
+typedef FILE *                 xlfile;
+xlfile xl_getstdfile(int n) {
+  switch(n) {
+    case 0: return stdin;
+    case 1: return stdout;
+    case 2: return stderr;
+  }
+  return NULL;
+}
+typedef struct Record_954 {
+  xlmodule baserecord_1; /* RecF */
+} Record_954;
+Record_954 xlbuiltins_955; /* Global */
+typedef xlint (*FnPtr_958) ( xlint b_957 ) ;
+xlint makeit_959 ( xlint b_957 ) ;
+typedef xlreal (*FnPtr_962) ( xlreal b_961 ) ;
+xlreal makeit_963 ( xlreal b_961 ) ;
+typedef void (*FnPtr_970) ( ) ;
+void test_971 ( ) ;
+typedef struct Record_976 {
+  xlrecord baserecord_972; /* RecF */
+  xlint a_973; /* RecF */
+  xlint b_974; /* RecF */
+} Record_976;
+typedef Record_976 (*FnPtr_979) ( Record_976 source_978 ) ;
+Record_976 copy_980 ( Record_976 source_978 ) ;
+Record_976 crapal_981; /* Global */
+Record_976 fungoid_982; /* Global */
+typedef void (*FnPtr_983) ( ) ;
+void testoperators_984 ( ) ;
+typedef Record_976 (*FnPtr_999) ( Record_976 b_998 ) ;
+Record_976 makeit_1000 ( Record_976 b_998 ) ;
+Record_976 znort_1002; /* Global */
+Record_976 outret_1003; /* Ret */
+Record_976 outret_1004; /* Ret */
+xlint makeit_959 ( xlint b_957 ) {
+xlint a_956; /* Out=Ret */
+a_956 = b_957;
+exit_makeit_959: 0;
+return a_956;
+}
+xlreal makeit_963 ( xlreal b_961 ) {
+xlreal a_960; /* Out=Ret */
+a_960 = b_961;
+exit_makeit_963: 0;
+return a_960;
+}
+void test_971 ( ) {
+xlint zero_985; /* Local */
+xlint outret_986; /* Ret */
+xlint glop_987; /* Local */
+xlint outret_988; /* Ret */
+xlreal glap_989; /* Local */
+xlreal outret_990; /* Ret */
+xlint outret_991; /* Ret */
+xlreal outret_992; /* Ret */
+outret_986 = makeit_959 ( 1 );
+zero_985 = outret_986;
+outret_988 = makeit_959 ( 2 );
+glop_987 = outret_988;
+outret_990 = makeit_963 ( 1.5 );
+glap_989 = outret_990;
+outret_991 = makeit_959 ( 3 );
+glop_987 = outret_991;
+outret_992 = makeit_963 ( 6.3 );
+glap_989 = outret_992;
+exit_test_971: 0;
+}
+Record_976 copy_980 ( Record_976 source_978 ) {
+Record_976 target_977; /* Out=Ret */
+/* xlint fld_993; Ref */
+/* xlint fld_994; Ref */
+/* xlint fld_995; Ref */
+/* xlint fld_996; Ref */
+#define fld_994 (target_977.a_973)
+#define fld_993 (source_978.b_974)
+fld_994 = fld_993;
+#define fld_996 (target_977.b_974)
+#define fld_995 (source_978.a_973)
+fld_996 = fld_995;
+exit_copy_980: 0;
+return target_977;
+}
+Record_976 makeit_1000 ( Record_976 b_998 ) {
+Record_976 a_997; /* Out=Ret */
+Record_976 outret_1001; /* Ret */
+outret_1001 = copy_980 ( b_998 );
+a_997 = outret_1001;
+exit_makeit_1000: 0;
+return a_997;
+}
+void testoperators_984 ( ) {
+xlint bingo_1005; /* Local */
+xlint outret_1006; /* Ret */
+xlreal bonga_1007; /* Local */
+xlreal outret_1008; /* Ret */
+Record_976 blatoid_1009; /* Local */
+Record_976 outret_1010; /* Ret */
+outret_1006 = makeit_959 ( 1 );
+bingo_1005 = outret_1006;
+outret_1008 = makeit_963 ( 2.3 );
+bonga_1007 = outret_1008;
+outret_1010 = makeit_1000 ( fungoid_982 );
+blatoid_1009 = outret_1010;
+exit_testoperators_984: 0;
+}
+int main(int _argc, char **_argv)
+{
+Record_976 outret_1003; /* Ret */
+Record_976 outret_1004; /* Ret */
+/* Type */
+outret_1003 = makeit_1000 ( crapal_981 );
+znort_1002 = outret_1003;
+outret_1004 = makeit_1000 ( fungoid_982 );
+znort_1002 = outret_1004;
+    /* Main */
+    return 0;
+}
+/*end*/
