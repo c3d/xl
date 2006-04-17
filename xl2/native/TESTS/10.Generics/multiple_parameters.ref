@@ -26,51 +26,51 @@ xlfile xl_getstdfile(int n) {
   }
   return NULL;
 }
-typedef struct Record_954 {
+typedef struct Record_970 {
   xlmodule baserecord_1; /* RecF */
-} Record_954;
-Record_954 xlbuiltins_955; /* Global */
-xlint ret_979; /* Temp */
-xlint ret_980; /* Temp */
-xlint q_962; /* Global */
-xlint z_970; /* Global */
-typedef xlint (*FnPtr_975) ( xlint a_973 , xlint b_974 ) ;
-xlint f_976 ( xlint a_973 , xlint b_974 ) ;
-typedef xlint (*FnPtr_985) ( xlint a_981 , xlint b_982 , xlint c_983 , xlint d_984 ) ;
-xlint g_986 ( xlint a_981 , xlint b_982 , xlint c_983 , xlint d_984 ) ;
-xlint ret_991; /* Temp */
-xlint f_976 ( xlint a_973 , xlint b_974 ) {
-xlint ret_978; /* Temp */
-xlint result_977; /* Result */
-ret_978 = a_973 + b_974;
-result_977 = ret_978;
-goto exit_f_976;
-exit_f_976: 0;
-return result_977;
+} Record_970;
+Record_970 xlbuiltins_971; /* Global */
+xlint ret_995; /* Temp */
+xlint ret_996; /* Temp */
+xlint q_978; /* Global */
+xlint z_986; /* Global */
+typedef xlint (*FnPtr_991) ( xlint a_989 , xlint b_990 ) ;
+xlint f_992 ( xlint a_989 , xlint b_990 ) ;
+typedef xlint (*FnPtr_1001) ( xlint a_997 , xlint b_998 , xlint c_999 , xlint d_1000 ) ;
+xlint g_1002 ( xlint a_997 , xlint b_998 , xlint c_999 , xlint d_1000 ) ;
+xlint ret_1007; /* Temp */
+xlint f_992 ( xlint a_989 , xlint b_990 ) {
+xlint ret_994; /* Temp */
+xlint result_993; /* Result */
+ret_994 = a_989 + b_990;
+result_993 = ret_994;
+goto exit_f_992;
+exit_f_992: 0;
+return result_993;
 }
-xlint g_986 ( xlint a_981 , xlint b_982 , xlint c_983 , xlint d_984 ) {
-xlint ret_988; /* Temp */
-xlint ret_989; /* Temp */
-xlint ret_990; /* Temp */
-xlint result_987; /* Result */
-ret_988 = b_982 * c_983;
-ret_989 = ret_988 / d_984;
-ret_990 = a_981 + ret_989;
-result_987 = ret_990;
-goto exit_g_986;
-exit_g_986: 0;
-return result_987;
+xlint g_1002 ( xlint a_997 , xlint b_998 , xlint c_999 , xlint d_1000 ) {
+xlint ret_1004; /* Temp */
+xlint ret_1005; /* Temp */
+xlint ret_1006; /* Temp */
+xlint result_1003; /* Result */
+ret_1004 = b_998 * c_999;
+ret_1005 = ret_1004 / d_1000;
+ret_1006 = a_997 + ret_1005;
+result_1003 = ret_1006;
+goto exit_g_1002;
+exit_g_1002: 0;
+return result_1003;
 }
 int main(int _argc, char **_argv)
 {
-xlint ret_979; /* Temp */
-xlint ret_980; /* Temp */
-xlint ret_991; /* Temp */
-ret_979 = f_976 ( 1 , 5 );
-q_962 = ret_979;
-ret_980 = -3;
-ret_991 = g_986 ( 1 , ret_980 , 6 , 4 );
-z_970 = ret_991;
+xlint ret_995; /* Temp */
+xlint ret_996; /* Temp */
+xlint ret_1007; /* Temp */
+ret_995 = f_992 ( 1 , 5 );
+q_978 = ret_995;
+ret_996 = -3;
+ret_1007 = g_1002 ( 1 , ret_996 , 6 , 4 );
+z_986 = ret_1007;
 /* Type */
     /* Main */
     return 0;

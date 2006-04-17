@@ -637,3 +637,23 @@ module XL.SEMANTICS.DECLARATIONS is
             @@def 'Name' 'Value'
         then
             return Define (Name, Value)
+
+
+    procedure CallDestructors (table : SYM.symbol_table) is
+    // ------------------------------------------------------------------------
+    //    Find all the destructors in the current scope and call them
+    // ------------------------------------------------------------------------
+        names : PT.tree_list
+        entry : PT.tree
+        SYM.LocalSymbols table, names
+        for entry in names loop
+            if entry.kind = PT.xlNAME then
+                name : entry as PT.name_tree
+                dtorCall : PT.tree := parse_tree(delete 'name')
+                ERR.PushErrorContext()
+                dtorCall := XLT.XLSemantics(dtorCall)
+                errors : text := ERR.PopErrorContext()
+                if errors = "" then
+                    XLT.AddScopeTerm table, dtorCall
+
+        

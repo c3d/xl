@@ -26,31 +26,31 @@ xlfile xl_getstdfile(int n) {
   }
   return NULL;
 }
-typedef struct Record_954 {
+typedef struct Record_970 {
   xlmodule baserecord_1; /* RecF */
-} Record_954;
-Record_954 xlbuiltins_955; /* Global */
-typedef void (*FnPtr_959) ( xltext msg_956 , xltext file_957 , xlint line_958 ) ;
-void myassertionfailure_960 ( xltext msg_956 , xltext file_957 , xlint line_958 ) ;
-typedef void (*FnPtr_963) ( xlint x_961 , xlint y_962 ) ;
-void testit_964 ( xlint x_961 , xlint y_962 ) ;
-void myassertionfailure_960 ( xltext msg_956 , xltext file_957 , xlint line_958 ) {
-xlint ret_965; /* Temp */
-ret_965 = line_958 - 1;
-line_958 = ret_965;
-exit_myassertionfailure_960: 0;
+} Record_970;
+Record_970 xlbuiltins_971; /* Global */
+typedef void (*FnPtr_975) ( xltext msg_972 , xltext file_973 , xlint line_974 ) ;
+void myassertionfailure_976 ( xltext msg_972 , xltext file_973 , xlint line_974 ) ;
+typedef void (*FnPtr_979) ( xlint x_977 , xlint y_978 ) ;
+void testit_980 ( xlint x_977 , xlint y_978 ) ;
+void myassertionfailure_976 ( xltext msg_972 , xltext file_973 , xlint line_974 ) {
+xlint ret_981; /* Temp */
+ret_981 = line_974 - 1;
+line_974 = ret_981;
+exit_myassertionfailure_976: 0;
 }
-void testit_964 ( xlint x_961 , xlint y_962 ) {
-xlint ret_967; /* Temp */
-xlbool ret_968; /* Temp */
-xlbool ret_969; /* Temp */
-ret_967 = x_961 + y_962;
-ret_968 = ret_967 < 34;
-ret_969 = !ret_968;
-if(!(ret_969)) goto else_if_966;
-myassertionfailure_960 ( "X + Y < 34" , "11.Preprocessor/assert_macro.xl" , 27 );
-else_if_966: 0;
-exit_testit_964: 0;
+void testit_980 ( xlint x_977 , xlint y_978 ) {
+xlint ret_983; /* Temp */
+xlbool ret_984; /* Temp */
+xlbool ret_985; /* Temp */
+ret_983 = x_977 + y_978;
+ret_984 = ret_983 < 34;
+ret_985 = !ret_984;
+if(!(ret_985)) goto else_if_982;
+myassertionfailure_976 ( "X + Y < 34" , "11.Preprocessor/assert_macro.xl" , 27 );
+else_if_982: 0;
+exit_testit_980: 0;
 }
 int main(int _argc, char **_argv)
 {

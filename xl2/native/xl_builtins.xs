@@ -49,6 +49,10 @@ module XL_BUILTINS with
 
     // Integer operations
     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
+    to Add(out X : integer; in Y : integer)                     written X+=Y                    is XL.BYTECODE.adds_int
+    to Subtract(out X : integer; in Y : integer)                written X-=Y                    is XL.BYTECODE.subs_int
+    to Multiply(out X : integer; in Y : integer)                written X*=Y                    is XL.BYTECODE.muls_int
+    to Divide(out X : integer; in Y : integer)                  written X/=Y                    is XL.BYTECODE.divs_int
     function Negate(X : integer) return integer                 written -X                      is XL.BYTECODE.neg_int
     function Add(X, Y : integer) return integer                 written X+Y                     is XL.BYTECODE.add_int
     function Subtract(X, Y : integer) return integer            written X-Y                     is XL.BYTECODE.sub_int

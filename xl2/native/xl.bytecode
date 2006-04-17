@@ -154,6 +154,10 @@ xltest          "xl::textio::writeln($1);"
 
 
 copy_int        "$1 = $2;"
+adds_int        "$1 = $1 + $2;"
+subs_int        "$1 = $1 - $2;"
+muls_int        "$1 = $1 * $2;"
+divs_int        "$1 = $1 / $2;"
 add_int         "$1 = $2 + $3;"
 sub_int         "$1 = $2 - $3;"
 mul_int         "$1 = $2 * $3;"

@@ -216,6 +216,7 @@ module XL.SYMBOLS with
 
     // Creating and getting scope items
     procedure AddScopeItem(table : symbol_table; section: text; item : PT.tree)
+    procedure PushScopeItem(table : symbol_table; section: text; item : PT.tree)
     function ScopeItems (table : symbol_table; section : text) return PT.tree
 
     // Context properties

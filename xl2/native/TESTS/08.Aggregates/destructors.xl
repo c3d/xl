@@ -1,0 +1,59 @@
+// This tests that destructors are invoked at the right time
+
+use XL.UI.CONSOLE
+
+to Delete (in out K : integer) is
+    WriteLn "Destructor for ", K
+
+iterator IntegerIterator(var It : integer;
+                         Low, High : integer) written It in Low..High is
+    It := Low
+    while It <= High loop
+        yield
+        It := It + 1
+
+
+for I in 1..5 loop
+    for J in 1..I loop
+        WriteLn "I=", I, " and J=", J
+
+// Define a more complex iterator with local state
+iterator Accumulator(var It : integer;
+                     Low, High : integer) written It=[Low..High] is
+    Sum : integer := 0
+    It := Low
+    WriteLn "Entering For loop, It=", It
+    while It <= High loop
+        WriteLn "Entering body, It=", It
+        yield
+        Sum := Sum + It
+        WriteLn "End of body, It=", It
+        It := It + 1
+    WriteLn "Exited for loop, It=", It, " Sum=", Sum
+    WriteLn "Bye Bye!"
+
+for I=[3..5] loop
+    Writeln "TeaForTwo I=", I
+
+
+// Define a two-variable iterator
+iterator MatrixIterator (
+    var I : integer;
+    LowI, HighI : integer;
+    var J : integer;
+    LowJ, HighJ : integer) written I,J in [LowI..HighI, LowJ..HighJ] is
+    I := LowI
+    while I <= HighI loop
+        J := LowJ
+        while J <= HighJ loop
+            yield
+            J := J + 1
+        I := I + 1
+
+for A, B in [3..5, 7..9] loop
+    WriteLn "A=", A, " and B=", B
+
+// Try reusing variable names that are in the iterator
+WriteLn "Final A=", A, " and B=", B
+for I, J in [A..A+3, B-1..B+2] loop
+    WriteLn "I=", I, " and J=", J

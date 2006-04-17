@@ -26,112 +26,112 @@ xlfile xl_getstdfile(int n) {
   }
   return NULL;
 }
-typedef struct Record_954 {
+typedef struct Record_970 {
   xlmodule baserecord_1; /* RecF */
-} Record_954;
-Record_954 xlbuiltins_955; /* Global */
-typedef xlint (*FnPtr_958) ( xlint b_957 ) ;
-xlint makeit_959 ( xlint b_957 ) ;
-typedef xlreal (*FnPtr_962) ( xlreal b_961 ) ;
-xlreal makeit_963 ( xlreal b_961 ) ;
-typedef void (*FnPtr_970) ( ) ;
-void test_971 ( ) ;
-typedef struct Record_976 {
-  xlrecord baserecord_972; /* RecF */
-  xlint a_973; /* RecF */
-  xlint b_974; /* RecF */
-} Record_976;
-typedef Record_976 (*FnPtr_979) ( Record_976 source_978 ) ;
-Record_976 copy_980 ( Record_976 source_978 ) ;
-Record_976 crapal_981; /* Global */
-Record_976 fungoid_982; /* Global */
-typedef void (*FnPtr_983) ( ) ;
-void testoperators_984 ( ) ;
-typedef Record_976 (*FnPtr_999) ( Record_976 b_998 ) ;
-Record_976 makeit_1000 ( Record_976 b_998 ) ;
-Record_976 znort_1002; /* Global */
-Record_976 outret_1003; /* Ret */
-Record_976 outret_1004; /* Ret */
-xlint makeit_959 ( xlint b_957 ) {
-xlint a_956; /* Out=Ret */
-a_956 = b_957;
-exit_makeit_959: 0;
-return a_956;
+} Record_970;
+Record_970 xlbuiltins_971; /* Global */
+typedef xlint (*FnPtr_974) ( xlint b_973 ) ;
+xlint makeit_975 ( xlint b_973 ) ;
+typedef xlreal (*FnPtr_978) ( xlreal b_977 ) ;
+xlreal makeit_979 ( xlreal b_977 ) ;
+typedef void (*FnPtr_986) ( ) ;
+void test_987 ( ) ;
+typedef struct Record_992 {
+  xlrecord baserecord_988; /* RecF */
+  xlint a_989; /* RecF */
+  xlint b_990; /* RecF */
+} Record_992;
+typedef Record_992 (*FnPtr_995) ( Record_992 source_994 ) ;
+Record_992 copy_996 ( Record_992 source_994 ) ;
+Record_992 crapal_997; /* Global */
+Record_992 fungoid_998; /* Global */
+typedef void (*FnPtr_999) ( ) ;
+void testoperators_1000 ( ) ;
+typedef Record_992 (*FnPtr_1015) ( Record_992 b_1014 ) ;
+Record_992 makeit_1016 ( Record_992 b_1014 ) ;
+Record_992 znort_1018; /* Global */
+Record_992 outret_1019; /* Ret */
+Record_992 outret_1020; /* Ret */
+xlint makeit_975 ( xlint b_973 ) {
+xlint a_972; /* Out=Ret */
+a_972 = b_973;
+exit_makeit_975: 0;
+return a_972;
 }
-xlreal makeit_963 ( xlreal b_961 ) {
-xlreal a_960; /* Out=Ret */
-a_960 = b_961;
-exit_makeit_963: 0;
-return a_960;
+xlreal makeit_979 ( xlreal b_977 ) {
+xlreal a_976; /* Out=Ret */
+a_976 = b_977;
+exit_makeit_979: 0;
+return a_976;
 }
-void test_971 ( ) {
-xlint zero_985; /* Local */
-xlint outret_986; /* Ret */
-xlint glop_987; /* Local */
-xlint outret_988; /* Ret */
-xlreal glap_989; /* Local */
-xlreal outret_990; /* Ret */
-xlint outret_991; /* Ret */
-xlreal outret_992; /* Ret */
-outret_986 = makeit_959 ( 1 );
-zero_985 = outret_986;
-outret_988 = makeit_959 ( 2 );
-glop_987 = outret_988;
-outret_990 = makeit_963 ( 1.5 );
-glap_989 = outret_990;
-outret_991 = makeit_959 ( 3 );
-glop_987 = outret_991;
-outret_992 = makeit_963 ( 6.3 );
-glap_989 = outret_992;
-exit_test_971: 0;
-}
-Record_976 copy_980 ( Record_976 source_978 ) {
-Record_976 target_977; /* Out=Ret */
-/* xlint fld_993; Ref */
-/* xlint fld_994; Ref */
-/* xlint fld_995; Ref */
-/* xlint fld_996; Ref */
-#define fld_994 (target_977.a_973)
-#define fld_993 (source_978.b_974)
-fld_994 = fld_993;
-#define fld_996 (target_977.b_974)
-#define fld_995 (source_978.a_973)
-fld_996 = fld_995;
-exit_copy_980: 0;
-return target_977;
-}
-Record_976 makeit_1000 ( Record_976 b_998 ) {
-Record_976 a_997; /* Out=Ret */
-Record_976 outret_1001; /* Ret */
-outret_1001 = copy_980 ( b_998 );
-a_997 = outret_1001;
-exit_makeit_1000: 0;
-return a_997;
-}
-void testoperators_984 ( ) {
-xlint bingo_1005; /* Local */
-xlint outret_1006; /* Ret */
-xlreal bonga_1007; /* Local */
+void test_987 ( ) {
+xlint zero_1001; /* Local */
+xlint outret_1002; /* Ret */
+xlint glop_1003; /* Local */
+xlint outret_1004; /* Ret */
+xlreal glap_1005; /* Local */
+xlreal outret_1006; /* Ret */
+xlint outret_1007; /* Ret */
 xlreal outret_1008; /* Ret */
-Record_976 blatoid_1009; /* Local */
-Record_976 outret_1010; /* Ret */
-outret_1006 = makeit_959 ( 1 );
-bingo_1005 = outret_1006;
-outret_1008 = makeit_963 ( 2.3 );
-bonga_1007 = outret_1008;
-outret_1010 = makeit_1000 ( fungoid_982 );
-blatoid_1009 = outret_1010;
-exit_testoperators_984: 0;
+outret_1002 = makeit_975 ( 1 );
+zero_1001 = outret_1002;
+outret_1004 = makeit_975 ( 2 );
+glop_1003 = outret_1004;
+outret_1006 = makeit_979 ( 1.5 );
+glap_1005 = outret_1006;
+outret_1007 = makeit_975 ( 3 );
+glop_1003 = outret_1007;
+outret_1008 = makeit_979 ( 6.3 );
+glap_1005 = outret_1008;
+exit_test_987: 0;
+}
+Record_992 copy_996 ( Record_992 source_994 ) {
+Record_992 target_993; /* Out=Ret */
+/* xlint fld_1009; Ref */
+/* xlint fld_1010; Ref */
+/* xlint fld_1011; Ref */
+/* xlint fld_1012; Ref */
+#define fld_1010 (target_993.a_989)
+#define fld_1009 (source_994.b_990)
+fld_1010 = fld_1009;
+#define fld_1012 (target_993.b_990)
+#define fld_1011 (source_994.a_989)
+fld_1012 = fld_1011;
+exit_copy_996: 0;
+return target_993;
+}
+Record_992 makeit_1016 ( Record_992 b_1014 ) {
+Record_992 a_1013; /* Out=Ret */
+Record_992 outret_1017; /* Ret */
+outret_1017 = copy_996 ( b_1014 );
+a_1013 = outret_1017;
+exit_makeit_1016: 0;
+return a_1013;
+}
+void testoperators_1000 ( ) {
+xlint bingo_1021; /* Local */
+xlint outret_1022; /* Ret */
+xlreal bonga_1023; /* Local */
+xlreal outret_1024; /* Ret */
+Record_992 blatoid_1025; /* Local */
+Record_992 outret_1026; /* Ret */
+outret_1022 = makeit_975 ( 1 );
+bingo_1021 = outret_1022;
+outret_1024 = makeit_979 ( 2.3 );
+bonga_1023 = outret_1024;
+outret_1026 = makeit_1016 ( fungoid_998 );
+blatoid_1025 = outret_1026;
+exit_testoperators_1000: 0;
 }
 int main(int _argc, char **_argv)
 {
-Record_976 outret_1003; /* Ret */
-Record_976 outret_1004; /* Ret */
+Record_992 outret_1019; /* Ret */
+Record_992 outret_1020; /* Ret */
 /* Type */
-outret_1003 = makeit_1000 ( crapal_981 );
-znort_1002 = outret_1003;
-outret_1004 = makeit_1000 ( fungoid_982 );
-znort_1002 = outret_1004;
+outret_1019 = makeit_1016 ( crapal_997 );
+znort_1018 = outret_1019;
+outret_1020 = makeit_1016 ( fungoid_998 );
+znort_1018 = outret_1020;
     /* Main */
     return 0;
 }

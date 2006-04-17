@@ -216,6 +216,7 @@ module XL.TRANSLATOR is
                 function_context := context
         result := XLDeclarations(input)
         result := XLSemantics(result)
+        DCL.CallDestructors context
         result := PostScopeSemantics (result, scope, modname)
 
         // Set the type of the result so that we can get inner symbols
@@ -242,7 +243,6 @@ module XL.TRANSLATOR is
     // ------------------------------------------------------------------------
     //    Move inits, globals and so on where they belong
     // ------------------------------------------------------------------------
-
         result := input
 
         // 'Declarations' will populate sections in the
@@ -301,7 +301,7 @@ module XL.TRANSLATOR is
     // ------------------------------------------------------------------------
     //   Add a termination to the TERM section
     // ------------------------------------------------------------------------
-        SYM.AddScopeItem table, "TERM", term
+        SYM.PushScopeItem table, "TERM", term
 
 
     procedure AddGlobalDecl(decl : PT.tree) is

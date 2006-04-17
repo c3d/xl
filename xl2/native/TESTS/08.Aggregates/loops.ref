@@ -26,95 +26,95 @@ xlfile xl_getstdfile(int n) {
   }
   return NULL;
 }
-typedef struct Record_954 {
+typedef struct Record_970 {
   xlmodule baserecord_1; /* RecF */
-} Record_954;
-Record_954 xlbuiltins_955; /* Global */
-xlint i_956; /* Global */
-xlint ret_958; /* Temp */
-xlbool ret_960; /* Temp */
-xlbool ret_962; /* Temp */
-xlint ret_963; /* Temp */
-xlbool ret_965; /* Temp */
-xlint ret_966; /* Temp */
-xlbool ret_968; /* Temp */
-xlint ret_969; /* Temp */
-xlbool ret_971; /* Temp */
-xlint ret_972; /* Temp */
-xlbool ret_974; /* Temp */
-xlint ret_975; /* Temp */
-xlbool ret_977; /* Temp */
-xlint ret_978; /* Temp */
+} Record_970;
+Record_970 xlbuiltins_971; /* Global */
+xlint i_972; /* Global */
+xlint ret_974; /* Temp */
+xlbool ret_976; /* Temp */
+xlbool ret_978; /* Temp */
+xlint ret_979; /* Temp */
+xlbool ret_981; /* Temp */
+xlint ret_982; /* Temp */
+xlbool ret_984; /* Temp */
+xlint ret_985; /* Temp */
+xlbool ret_987; /* Temp */
+xlint ret_988; /* Temp */
+xlbool ret_990; /* Temp */
+xlint ret_991; /* Temp */
+xlbool ret_993; /* Temp */
+xlint ret_994; /* Temp */
 int main(int _argc, char **_argv)
 {
-xlint ret_958; /* Temp */
-xlbool ret_960; /* Temp */
-xlbool ret_962; /* Temp */
-xlint ret_963; /* Temp */
-xlbool ret_965; /* Temp */
-xlint ret_966; /* Temp */
-xlbool ret_968; /* Temp */
-xlint ret_969; /* Temp */
-xlbool ret_971; /* Temp */
-xlint ret_972; /* Temp */
-xlbool ret_974; /* Temp */
-xlint ret_975; /* Temp */
-xlbool ret_977; /* Temp */
-xlint ret_978; /* Temp */
-i_956 = 1;
-loopentry_loop_957: 0;
-ret_958 = i_956 + 1;
-i_956 = ret_958;
-ret_960 = i_956 > 100;
-if(!(ret_960)) goto else_if_959;
-goto loopexit_loop_957;
-else_if_959: 0;
-goto loopentry_loop_957;
-loopexit_loop_957: 0;
-goto loopend_while_961;
-loopentry_while_961: 0;
-ret_963 = i_956 + 2;
-i_956 = ret_963;
-loopend_while_961: 0;
-ret_962 = i_956 < 200;
-if (ret_962) goto loopentry_while_961;
-loopexit_while_961: 0;
-goto loopend_while_964;
-loopentry_while_964: 0;
-ret_966 = i_956 + 3;
-i_956 = ret_966;
-loopend_while_964: 0;
-ret_965 = i_956 > 300;
-if (!(ret_965)) goto loopentry_while_964;
-loopexit_while_964: 0;
-loopentry_while_967: 0;
-ret_969 = i_956 + 4;
-i_956 = ret_969;
-loopend_while_967: 0;
-ret_968 = i_956 < 400;
-if (ret_968) goto loopentry_while_967;
-loopexit_while_967: 0;
-loopentry_while_970: 0;
-ret_972 = i_956 + 5;
-i_956 = ret_972;
-loopend_while_970: 0;
-ret_971 = i_956 > 500;
-if (!(ret_971)) goto loopentry_while_970;
-loopexit_while_970: 0;
-loopentry_while_973: 0;
-ret_975 = i_956 + 6;
-i_956 = ret_975;
-loopend_while_973: 0;
-ret_974 = i_956 < 600;
-if (ret_974) goto loopentry_while_973;
-loopexit_while_973: 0;
-loopentry_while_976: 0;
-ret_978 = i_956 + 7;
-i_956 = ret_978;
-loopend_while_976: 0;
-ret_977 = i_956 > 700;
-if (!(ret_977)) goto loopentry_while_976;
-loopexit_while_976: 0;
+xlint ret_974; /* Temp */
+xlbool ret_976; /* Temp */
+xlbool ret_978; /* Temp */
+xlint ret_979; /* Temp */
+xlbool ret_981; /* Temp */
+xlint ret_982; /* Temp */
+xlbool ret_984; /* Temp */
+xlint ret_985; /* Temp */
+xlbool ret_987; /* Temp */
+xlint ret_988; /* Temp */
+xlbool ret_990; /* Temp */
+xlint ret_991; /* Temp */
+xlbool ret_993; /* Temp */
+xlint ret_994; /* Temp */
+i_972 = 1;
+loopentry_loop_973: 0;
+ret_974 = i_972 + 1;
+i_972 = ret_974;
+ret_976 = i_972 > 100;
+if(!(ret_976)) goto else_if_975;
+goto loopexit_loop_973;
+else_if_975: 0;
+goto loopentry_loop_973;
+loopexit_loop_973: 0;
+goto loopend_while_977;
+loopentry_while_977: 0;
+ret_979 = i_972 + 2;
+i_972 = ret_979;
+loopend_while_977: 0;
+ret_978 = i_972 < 200;
+if (ret_978) goto loopentry_while_977;
+loopexit_while_977: 0;
+goto loopend_while_980;
+loopentry_while_980: 0;
+ret_982 = i_972 + 3;
+i_972 = ret_982;
+loopend_while_980: 0;
+ret_981 = i_972 > 300;
+if (!(ret_981)) goto loopentry_while_980;
+loopexit_while_980: 0;
+loopentry_while_983: 0;
+ret_985 = i_972 + 4;
+i_972 = ret_985;
+loopend_while_983: 0;
+ret_984 = i_972 < 400;
+if (ret_984) goto loopentry_while_983;
+loopexit_while_983: 0;
+loopentry_while_986: 0;
+ret_988 = i_972 + 5;
+i_972 = ret_988;
+loopend_while_986: 0;
+ret_987 = i_972 > 500;
+if (!(ret_987)) goto loopentry_while_986;
+loopexit_while_986: 0;
+loopentry_while_989: 0;
+ret_991 = i_972 + 6;
+i_972 = ret_991;
+loopend_while_989: 0;
+ret_990 = i_972 < 600;
+if (ret_990) goto loopentry_while_989;
+loopexit_while_989: 0;
+loopentry_while_992: 0;
+ret_994 = i_972 + 7;
+i_972 = ret_994;
+loopend_while_992: 0;
+ret_993 = i_972 > 700;
+if (!(ret_993)) goto loopentry_while_992;
+loopexit_while_992: 0;
     /* Main */
     return 0;
 }

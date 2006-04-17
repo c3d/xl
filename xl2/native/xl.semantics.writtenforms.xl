@@ -112,7 +112,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             base_score *= 16#100
 
         // Check whether this is an iterator / we are looking for one
-        inIterator: boolean := SYM.GetProperty(XLT.context, "ITERATING") <> nil
+        inIterator: boolean := PT.FindInfo(test, "ITERATOR_EXPR") <> nil
         asIterator: F as ITER.iterator
         if (asIterator <> nil) <> inIterator then
             return 0
@@ -139,7 +139,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                     semArg := XLT.XLSemantics(value)
                     errors : text := ERR.PopErrorContext()
                     if errors <> "" then
-                        ERR.Display errors
+                        return 0
                     PT.AttachTree value, key, semArg
             args[param_name] := semArg
             if not skip then

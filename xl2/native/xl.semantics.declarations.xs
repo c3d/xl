@@ -47,6 +47,8 @@ module XL.SEMANTICS.DECLARATIONS with
     function Assignable(Tgt: declaration; Src: PT.tree) return boolean
     function MatchInterface(iface : declarations;
                             body  : SYM.symbol_table) return boolean
+    procedure CallDestructors (table : SYM.symbol_table)
+
 
     type declaration_data is PT.info_data with
     // ------------------------------------------------------------------------

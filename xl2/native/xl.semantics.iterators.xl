@@ -290,7 +290,7 @@ module XL.SEMANTICS.ITERATORS is
         XLT.context := context
 
 
-    function DoForLoop (Iterator : PT.tree;
+    function DoForLoop (IterExpr : PT.tree;
                         Body     : PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Implement for loops
@@ -305,12 +305,15 @@ module XL.SEMANTICS.ITERATORS is
 
         // Evaluate the iterator expression, which should indirectly call
         // 'InvokeIterator' above through either written form or call form
-        result := XLT.XLSemantics (Iterator)
+        markAsIterator : PT.info
+        markAsIterator.name := ""
+        PT.SetInfo IterExpr, "ITERATOR_EXPR", markAsIterator
+        result := XLT.XLSemantics (IterExpr)
 
         // Check that we did indeed call the iterator and yield the body
         if SYM.ContextProperty (Body, "ITERCTX") <> nil then
             ERR.Error "The loop body was never executed", Body.position
-            ERR.Error "by iterator '$1'", Iterator
+            ERR.Error "by iterator '$1'", IterExpr
 
         // Restore iterating context we had on entry
         SYM.SetProperty XLT.context, "ITERATING", oldIterating

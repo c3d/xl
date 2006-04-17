@@ -72,12 +72,15 @@ module XL.SEMANTICS.OVERLOAD is
                     List += Args
 
 
-    function Resolve(NameTree : PT.tree; Args : PT.tree) return BC.bytecode is
+    function Resolve(NameTree : PT.tree;
+                     Args : PT.tree;
+                     Input: PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
     //    Resolve the function name from its args
     // ------------------------------------------------------------------------
 
-        symbols         : SYM.symbol_table := XLT.context
+        context         : SYM.symbol_table := XLT.context
+        symbols         : SYM.symbol_table := context
         list            : PT.tree_list
         BaseRecord      : PT.tree
         anyLookup       : boolean := false
@@ -121,7 +124,7 @@ module XL.SEMANTICS.OVERLOAD is
         depth     : integer := 0
         table     : SYM.symbol_table := symbols
         recurse   : boolean := BaseRecord = nil
-        inIterator: boolean := SYM.GetProperty(symbols, "ITERATING") <> nil
+        inIterator: boolean := FindInfo(Input, "ITERATOR_EXPR") <> nil
 
         // Save errors for later display
         ERR.PushErrorContext()
@@ -133,7 +136,7 @@ module XL.SEMANTICS.OVERLOAD is
             if Arg.kind = PT.xlNAME and DCL.GetDeclaration(Arg) = nil then
                 DName : Arg as PT.name_tree
                 Dval  : text := Dname.value
-                Orig  : PT.tree := SYM.LookupOne(symbols, "DECL", Dval)
+                Orig  : PT.tree := SYM.LookupOne(context, "DECL", Dval)
                 if Orig = nil then
                     ToBeDefined := true
                     trace[overload] "Arg ", Dval, " is to be defined"
@@ -443,26 +446,26 @@ module XL.SEMANTICS.OVERLOAD is
         where
             IsFunction (FunctionName)
         then
-            return Resolve(FunctionName, FunctionArgs)
+            return Resolve(FunctionName, FunctionArgs, input)
 
         when
             'FunctionName' ()
         where
             IsFunction (FunctionName)
         then
-            return Resolve(FunctionName, nil)
+            return Resolve(FunctionName, nil, input)
 
         when
             'FunctionName' 'FunctionArgs'
         where
             IsFunction (FunctionName)
         then
-            return Resolve(FunctionName, FunctionArgs)
+            return Resolve(FunctionName, FunctionArgs, input)
 
         when
             'FunctionName'
         where
             IsFunction (FunctionName)
         then
-            return Resolve(FunctionName, nil)
+            return Resolve(FunctionName, nil, input)
 

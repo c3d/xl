@@ -1,26 +1,3 @@
-10.Generics/validation_failure.xl:14: No valid function found for 'F'
-| Q : complex := F(P)
-|________________^
-10.Generics/validation_failure.xl:3: Generic validation failed for 'ordered'
-| generic type ordered where
-|____________________^
-10.Generics/validation_failure.xl:5: No translation found for 'A < B'
-|     Test : boolean := A < B
-|_________________________^
-10.Generics/validation_failure.xl:5: No translation found for 'Test := A < B'
-|     Test : boolean := A < B
-|_________________________^
-10.Generics/validation_failure.xl:7: 'F (A : ordered) return ordered' could not be selected because
-| function F (A : ordered) return ordered is
-|_______________________________^
-10.Generics/validation_failure.xl:14: the type 'record with 
-    re , im : real
-' of 'P' doesn't match 'ordered'
-| Q : complex := F(P)
-|__________________^
-10.Generics/validation_failure.xl:7: for parameter 'A'
-| function F (A : ordered) return ordered is
-|_____________^
 10.Generics/validation_failure.xl:14: No translation found for 'Q := F (P)'
 | Q : complex := F(P)
 |_________________^

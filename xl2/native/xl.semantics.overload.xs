@@ -31,6 +31,8 @@ module XL.SEMANTICS.OVERLOAD with
 //   Interface for overload resolution
 // ----------------------------------------------------------------------------
 
-    function Resolve(NameTree : PT.tree; Args : PT.tree) return BC.bytecode
+    function Resolve(NameTree : PT.tree;
+                     Args     : PT.tree;
+                     Input    : PT.tree) return BC.bytecode
     function IsFunction(T : PT.tree) return boolean
     procedure ArgsTreeToList(Args : PT.tree; in out List : PT.tree_list)

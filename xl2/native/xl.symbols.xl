@@ -603,6 +603,19 @@ module XL.SYMBOLS is
         table.properties[section] := item
 
 
+    procedure PushScopeItem(table:symbol_table; section:text; item:PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Add an item to a section in the current context
+    // ------------------------------------------------------------------------
+
+        old : PT.tree := table.properties[section]
+        if old <> nil then
+            item := parse_tree
+               'item'
+               'old'
+        table.properties[section] := item
+
+
     function ScopeItems (table:symbol_table; section:text) return PT.tree is
     // ------------------------------------------------------------------------
     //   Return the current list of scope items, or @nop

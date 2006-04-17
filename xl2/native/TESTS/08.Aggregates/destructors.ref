@@ -1,0 +1,63 @@
+I=1 and J=1
+Destructor for 2
+I=2 and J=1
+I=2 and J=2
+Destructor for 3
+I=3 and J=1
+I=3 and J=2
+I=3 and J=3
+Destructor for 4
+I=4 and J=1
+I=4 and J=2
+I=4 and J=3
+I=4 and J=4
+Destructor for 5
+I=5 and J=1
+I=5 and J=2
+I=5 and J=3
+I=5 and J=4
+I=5 and J=5
+Destructor for 6
+Entering For loop, It=3
+Entering body, It=3
+TeaForTwo I=3
+End of body, It=3
+Entering body, It=4
+TeaForTwo I=4
+End of body, It=4
+Entering body, It=5
+TeaForTwo I=5
+End of body, It=5
+Exited for loop, It=6 Sum=12
+Bye Bye!
+Destructor for 12
+A=3 and B=7
+A=3 and B=8
+A=3 and B=9
+A=4 and B=7
+A=4 and B=8
+A=4 and B=9
+A=5 and B=7
+A=5 and B=8
+A=5 and B=9
+Final A=6 and B=10
+I=6 and J=9
+I=6 and J=10
+I=6 and J=11
+I=6 and J=12
+I=7 and J=9
+I=7 and J=10
+I=7 and J=11
+I=7 and J=12
+I=8 and J=9
+I=8 and J=10
+I=8 and J=11
+I=8 and J=12
+I=9 and J=9
+I=9 and J=10
+I=9 and J=11
+I=9 and J=12
+Destructor for 13
+Destructor for 10
+Destructor for 10
+Destructor for 6
