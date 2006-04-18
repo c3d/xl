@@ -26,51 +26,51 @@ xlfile xl_getstdfile(int n) {
   }
   return NULL;
 }
-typedef struct Record_970 {
+typedef struct Record_1245 {
   xlmodule baserecord_1; /* RecF */
-} Record_970;
-Record_970 xlbuiltins_971; /* Global */
-xlint ret_995; /* Temp */
-xlint ret_996; /* Temp */
-xlint q_978; /* Global */
-xlint z_986; /* Global */
-typedef xlint (*FnPtr_991) ( xlint a_989 , xlint b_990 ) ;
-xlint f_992 ( xlint a_989 , xlint b_990 ) ;
-typedef xlint (*FnPtr_1001) ( xlint a_997 , xlint b_998 , xlint c_999 , xlint d_1000 ) ;
-xlint g_1002 ( xlint a_997 , xlint b_998 , xlint c_999 , xlint d_1000 ) ;
-xlint ret_1007; /* Temp */
-xlint f_992 ( xlint a_989 , xlint b_990 ) {
-xlint ret_994; /* Temp */
-xlint result_993; /* Result */
-ret_994 = a_989 + b_990;
-result_993 = ret_994;
-goto exit_f_992;
-exit_f_992: 0;
-return result_993;
+} Record_1245;
+Record_1245 xlbuiltins_1246; /* Global */
+xlint ret_1270; /* Temp */
+xlint ret_1271; /* Temp */
+xlint q_1253; /* Global */
+xlint z_1261; /* Global */
+typedef xlint (*FnPtr_1266) ( xlint a_1264 , xlint b_1265 ) ;
+xlint f_1267 ( xlint a_1264 , xlint b_1265 ) ;
+typedef xlint (*FnPtr_1276) ( xlint a_1272 , xlint b_1273 , xlint c_1274 , xlint d_1275 ) ;
+xlint g_1277 ( xlint a_1272 , xlint b_1273 , xlint c_1274 , xlint d_1275 ) ;
+xlint ret_1282; /* Temp */
+xlint f_1267 ( xlint a_1264 , xlint b_1265 ) {
+xlint ret_1269; /* Temp */
+xlint result_1268; /* Result */
+ret_1269 = a_1264 + b_1265;
+result_1268 = ret_1269;
+goto exit_f_1267;
+exit_f_1267: 0;
+return result_1268;
 }
-xlint g_1002 ( xlint a_997 , xlint b_998 , xlint c_999 , xlint d_1000 ) {
-xlint ret_1004; /* Temp */
-xlint ret_1005; /* Temp */
-xlint ret_1006; /* Temp */
-xlint result_1003; /* Result */
-ret_1004 = b_998 * c_999;
-ret_1005 = ret_1004 / d_1000;
-ret_1006 = a_997 + ret_1005;
-result_1003 = ret_1006;
-goto exit_g_1002;
-exit_g_1002: 0;
-return result_1003;
+xlint g_1277 ( xlint a_1272 , xlint b_1273 , xlint c_1274 , xlint d_1275 ) {
+xlint ret_1279; /* Temp */
+xlint ret_1280; /* Temp */
+xlint ret_1281; /* Temp */
+xlint result_1278; /* Result */
+ret_1279 = b_1273 * c_1274;
+ret_1280 = ret_1279 / d_1275;
+ret_1281 = a_1272 + ret_1280;
+result_1278 = ret_1281;
+goto exit_g_1277;
+exit_g_1277: 0;
+return result_1278;
 }
 int main(int _argc, char **_argv)
 {
-xlint ret_995; /* Temp */
-xlint ret_996; /* Temp */
-xlint ret_1007; /* Temp */
-ret_995 = f_992 ( 1 , 5 );
-q_978 = ret_995;
-ret_996 = -3;
-ret_1007 = g_1002 ( 1 , ret_996 , 6 , 4 );
-z_986 = ret_1007;
+xlint ret_1270; /* Temp */
+xlint ret_1271; /* Temp */
+xlint ret_1282; /* Temp */
+ret_1270 = f_1267 ( 1 , 5 );
+q_1253 = ret_1270;
+ret_1271 = -3;
+ret_1282 = g_1277 ( 1 , ret_1271 , 6 , 4 );
+z_1261 = ret_1282;
 /* Type */
     /* Main */
     return 0;

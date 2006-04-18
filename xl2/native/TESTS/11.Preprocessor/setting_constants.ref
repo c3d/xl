@@ -26,24 +26,24 @@ xlfile xl_getstdfile(int n) {
   }
   return NULL;
 }
-typedef struct Record_970 {
+typedef struct Record_1245 {
   xlmodule baserecord_1; /* RecF */
-} Record_970;
-Record_970 xlbuiltins_971; /* Global */
-xlint a_972; /* Global */
-xlint b_973; /* Global */
-xlint c_974; /* Global */
-xlint x_975; /* Global */
-xlint y_976; /* Global */
-xlint z_977; /* Global */
+} Record_1245;
+Record_1245 xlbuiltins_1246; /* Global */
+xlint a_1247; /* Global */
+xlint b_1248; /* Global */
+xlint c_1249; /* Global */
+xlint x_1250; /* Global */
+xlint y_1251; /* Global */
+xlint z_1252; /* Global */
 int main(int _argc, char **_argv)
 {
-a_972 = 0;
-b_973 = 26;
-c_974 = 27;
-x_975 = 1;
-y_976 = 2;
-z_977 = 3;
+a_1247 = 0;
+b_1248 = 26;
+c_1249 = 27;
+x_1250 = 1;
+y_1251 = 2;
+z_1252 = 3;
     /* Main */
     return 0;
 }

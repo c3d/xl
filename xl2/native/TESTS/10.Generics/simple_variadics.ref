@@ -26,76 +26,76 @@ xlfile xl_getstdfile(int n) {
   }
   return NULL;
 }
-typedef struct Record_970 {
+typedef struct Record_1245 {
   xlmodule baserecord_1; /* RecF */
-} Record_970;
-Record_970 xlbuiltins_971; /* Global */
-typedef xlint (*FnPtr_973) ( xlint x_972 ) ;
-xlint max_974 ( xlint x_972 ) ;
-xlint k_979; /* Global */
-xlint l_980; /* Global */
-typedef xlint (*FnPtr_990) ( xlint x_986 , xlint var983_987 , xlint var984_988 , xlint var985_989 ) ;
-xlint max_991 ( xlint x_986 , xlint var983_987 , xlint var984_988 , xlint var985_989 ) ;
-typedef xlint (*FnPtr_998) ( xlint x_995 , xlint var993_996 , xlint var994_997 ) ;
-xlint max_999 ( xlint x_995 , xlint var993_996 , xlint var994_997 ) ;
-typedef xlint (*FnPtr_1004) ( xlint x_1002 , xlint var1001_1003 ) ;
-xlint max_1005 ( xlint x_1002 , xlint var1001_1003 ) ;
-xlint ret_1016; /* Temp */
-xlint ret_1017; /* Temp */
-xlint max_974 ( xlint x_972 ) {
-xlint result_981; /* Result */
-result_981 = x_972;
-goto exit_max_974;
-exit_max_974: 0;
-return result_981;
+} Record_1245;
+Record_1245 xlbuiltins_1246; /* Global */
+typedef xlint (*FnPtr_1248) ( xlint x_1247 ) ;
+xlint max_1249 ( xlint x_1247 ) ;
+xlint k_1254; /* Global */
+xlint l_1255; /* Global */
+typedef xlint (*FnPtr_1265) ( xlint x_1261 , xlint var1258_1262 , xlint var1259_1263 , xlint var1260_1264 ) ;
+xlint max_1266 ( xlint x_1261 , xlint var1258_1262 , xlint var1259_1263 , xlint var1260_1264 ) ;
+typedef xlint (*FnPtr_1273) ( xlint x_1270 , xlint var1268_1271 , xlint var1269_1272 ) ;
+xlint max_1274 ( xlint x_1270 , xlint var1268_1271 , xlint var1269_1272 ) ;
+typedef xlint (*FnPtr_1279) ( xlint x_1277 , xlint var1276_1278 ) ;
+xlint max_1280 ( xlint x_1277 , xlint var1276_1278 ) ;
+xlint ret_1291; /* Temp */
+xlint ret_1292; /* Temp */
+xlint max_1249 ( xlint x_1247 ) {
+xlint result_1256; /* Result */
+result_1256 = x_1247;
+goto exit_max_1249;
+exit_max_1249: 0;
+return result_1256;
 }
-xlint max_1005 ( xlint x_1002 , xlint var1001_1003 ) {
-xlint ret_1007; /* Temp */
-xlbool ret_1009; /* Temp */
-xlint result_1006; /* Result */
-ret_1007 = max_974 ( var1001_1003 );
-result_1006 = ret_1007;
-ret_1009 = result_1006 < x_1002;
-if(!(ret_1009)) goto else_if_1008;
-result_1006 = x_1002;
-else_if_1008: 0;
-exit_max_1005: 0;
-return result_1006;
+xlint max_1280 ( xlint x_1277 , xlint var1276_1278 ) {
+xlint ret_1282; /* Temp */
+xlbool ret_1284; /* Temp */
+xlint result_1281; /* Result */
+ret_1282 = max_1249 ( var1276_1278 );
+result_1281 = ret_1282;
+ret_1284 = result_1281 < x_1277;
+if(!(ret_1284)) goto else_if_1283;
+result_1281 = x_1277;
+else_if_1283: 0;
+exit_max_1280: 0;
+return result_1281;
 }
-xlint max_999 ( xlint x_995 , xlint var993_996 , xlint var994_997 ) {
-xlint ret_1010; /* Temp */
-xlbool ret_1012; /* Temp */
-xlint result_1000; /* Result */
-ret_1010 = max_1005 ( var993_996 , var994_997 );
-result_1000 = ret_1010;
-ret_1012 = result_1000 < x_995;
-if(!(ret_1012)) goto else_if_1011;
-result_1000 = x_995;
-else_if_1011: 0;
-exit_max_999: 0;
-return result_1000;
+xlint max_1274 ( xlint x_1270 , xlint var1268_1271 , xlint var1269_1272 ) {
+xlint ret_1285; /* Temp */
+xlbool ret_1287; /* Temp */
+xlint result_1275; /* Result */
+ret_1285 = max_1280 ( var1268_1271 , var1269_1272 );
+result_1275 = ret_1285;
+ret_1287 = result_1275 < x_1270;
+if(!(ret_1287)) goto else_if_1286;
+result_1275 = x_1270;
+else_if_1286: 0;
+exit_max_1274: 0;
+return result_1275;
 }
-xlint max_991 ( xlint x_986 , xlint var983_987 , xlint var984_988 , xlint var985_989 ) {
-xlint ret_1013; /* Temp */
-xlbool ret_1015; /* Temp */
-xlint result_992; /* Result */
-ret_1013 = max_999 ( var983_987 , var984_988 , var985_989 );
-result_992 = ret_1013;
-ret_1015 = result_992 < x_986;
-if(!(ret_1015)) goto else_if_1014;
-result_992 = x_986;
-else_if_1014: 0;
-exit_max_991: 0;
-return result_992;
+xlint max_1266 ( xlint x_1261 , xlint var1258_1262 , xlint var1259_1263 , xlint var1260_1264 ) {
+xlint ret_1288; /* Temp */
+xlbool ret_1290; /* Temp */
+xlint result_1267; /* Result */
+ret_1288 = max_1274 ( var1258_1262 , var1259_1263 , var1260_1264 );
+result_1267 = ret_1288;
+ret_1290 = result_1267 < x_1261;
+if(!(ret_1290)) goto else_if_1289;
+result_1267 = x_1261;
+else_if_1289: 0;
+exit_max_1266: 0;
+return result_1267;
 }
 int main(int _argc, char **_argv)
 {
-xlint ret_1016; /* Temp */
-xlint ret_1017; /* Temp */
-ret_1016 = max_991 ( 1 , 2 , 3 , 4 );
-k_979 = ret_1016;
-ret_1017 = max_999 ( 1 , 2 , 3 );
-l_980 = ret_1017;
+xlint ret_1291; /* Temp */
+xlint ret_1292; /* Temp */
+ret_1291 = max_1266 ( 1 , 2 , 3 , 4 );
+k_1254 = ret_1291;
+ret_1292 = max_1274 ( 1 , 2 , 3 );
+l_1255 = ret_1292;
     /* Main */
     return 0;
 }
