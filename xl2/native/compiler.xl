@@ -122,6 +122,8 @@ procedure Main is
                 PPR.AddPath CS.arguments[I]
         else if name = "-g" then
             CG.debug := true
+        else if name = "-v" then
+            XLT.verbose := true
 
         else
             P := PR.Open(name)

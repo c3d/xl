@@ -377,6 +377,10 @@ module XL.SEMANTICS.GENERICS is
         result := SYM.LookupOne (XLT.global_context, "INSTANCE", key)
         if result <> nil then
             trace[inst] "Found cached: ", result
+            translate result
+                when (@error 'errorText') then
+                    errT : errorText as PT.text_tree
+                    ERR.Display errT.value
             return result
 
         // Check infinite recursion
@@ -429,6 +433,7 @@ module XL.SEMANTICS.GENERICS is
                 SYM.Enter instContext, "...", "DECL", DeclTree
 
         // Process the instantiated declaration
+        ERR.PushErrorContext()
         Init : PT.tree := PT.Clone(Decl.initializer)
         trace[inst] "GenDecl ", Name, " : ", Type, " is ", Init
         PT.AttachTree Name, "INSTANCEOF", Decl.Name
@@ -438,8 +443,13 @@ module XL.SEMANTICS.GENERICS is
             f : FN.function := FN.GetFunction (result)
             result := XLT.PostScopeSemantics(result, XLT.scopeGlobal, nil)
             PT.SetInfo result, "FN", f
+        errors : text := ERR.PopErrorContext()
 
         // Cache the result for next time
+        if errors <> "" then
+            errorText : PT.text_tree := PT.NewText(errors,'"',result.position)
+            ERR.Display errors
+            result := parse_tree(@error 'errorText')
         SYM.Enter XLT.global_context, "INSTANCE", key, result
         XLT.context := oldContext
         instantiations -= 1
