@@ -81,7 +81,7 @@ module XL.SEMANTICS.ITERATORS is
         f.Name                  := Name
         f.type                  := FnType
         f.initializer           := Init
-        f.machine_name          := nil
+        f.machine_name          := SYM.Temporary("iterator", Names.position)
         f.frame_depth           := SYM.GetInteger(XLT.context, "FRAMEDEPTH")
         f.is_input              := false
         f.is_output             := false

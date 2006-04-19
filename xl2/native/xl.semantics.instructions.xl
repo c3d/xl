@@ -93,7 +93,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
     // ------------------------------------------------------------------------
 
         // Label base for that if
-        label  : PT.name_tree := SYM.Temporary("if")
+        label  : PT.name_tree := SYM.Temporary("if", Test.position)
         prefix : PT.tree := nil
 
         // Check if this is a compile-time if
@@ -145,10 +145,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
             // Degenerate case...
             result := parse_tree(@nop)
 
-        if prefix <> nil then
-            result := parse_tree
-                'prefix'
-                'result'
+        result := XLT.Append(prefix, result)
 
 
     function DoLoop(Body : PT.tree) return PT.tree is
@@ -267,6 +264,68 @@ module XL.SEMANTICS.INSTRUCTIONS is
             @exit_loop 'label'
 
 
+    function DoCase(Cases : PT.tree;
+                    exitL : PT.name_tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Implement the 'case' instruction (selecting one among N cases)
+    // ------------------------------------------------------------------------
+        translate Cases
+            when
+                'Case1'
+                'Case2'
+            then
+                Case1 := DoCase(Case1, exitL)
+                if PT.Attached(Case1, "TRUE_CASE") = nil then
+                    Case2 := DoCase(Case2, exitL)
+                else
+                    Case2 := nil
+                return XLT.Append(Case1, Case2)
+            when
+                'Test' : 'Statement'
+            then
+                prefix : PT.tree := nil
+
+                // Check if this is a compile-time if
+                TestConstant : PT.tree := CST.EvaluateConstant(Test)
+                if CST.IsBoolean(TestConstant) then
+                    if CST.IsTrue(TestConstant) then
+                        result := XLT.ScopeSemantics(Statement, XLT.scopeLocal)
+                        result := XLT.Append(result,
+                                             parse_tree(@ifskip 'exitL'))
+                        PT.AttachTree result, "TRUE_CASE", result
+                        return result
+                    else if CST.IsFalse(TestConstant) then
+                        return nil
+                    else
+                        ERR.Error "Internal: Non-boolean test '$1'",
+                                  TestConstant
+                        return parse_tree(@error)
+
+                // Convert to boolean and evaluate condition
+                label : PT.name_tree := SYM.Temporary("case", Test.position)
+                Test := XLT.XLSemantics(Test)
+                Test := TY.Convert (Test, TY.const_boolean_type)
+                CGM.SplitExpression Test, prefix
+
+                // Perform semantics on statement
+                Statement := XLT.ScopeSemantics(Statement, XLT.scopeLocal)
+                result := parse_tree
+                    @ifnot 'Test' 'label'
+                    'Statement'
+                    @ifskip 'exitL'
+                    @ifelse 'label'
+                result := XLT.Append(prefix, result)
+
+
+    function DoCase(Cases : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Implement the 'case' instruction (selecting one among N cases)
+    // ------------------------------------------------------------------------
+        exitL  : PT.name_tree := SYM.Temporary("case_exit", Cases.position)
+        result := DoCase(Cases, exitL)
+        result := XLT.Append(result, parse_tree(@ifend 'exitL'))
+
+
     translation XLSemantics
     // ------------------------------------------------------------------------
     //   Translation forms
@@ -359,5 +418,9 @@ module XL.SEMANTICS.INSTRUCTIONS is
         then
             return DoExit(input, Condition)
 
-
+        when
+            case
+               'Cases'
+        then
+            return DoCase(Cases)
 

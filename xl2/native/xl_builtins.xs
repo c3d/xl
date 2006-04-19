@@ -412,3 +412,34 @@ module XL_BUILTINS with
 
 
     // Records
+
+
+    iterator IntegerIterator (
+            var out Counter : integer
+            Low, High       : integer) written Counter in Low..High is
+        Counter := Low
+        while Counter <= High loop
+            yield
+            Counter += 1
+
+    iterator IntegerIncrementingIterator (
+            var out Counter : integer
+            Low, High, Incr : integer) written Counter in Low..High step Incr is
+        Counter := Low
+        while Counter <= High loop
+            yield
+            Counter += Incr
+
+    iterator RealIncrementingIterator (
+            var out Counter : real
+            Low, High, Incr : real) written Counter in Low..High step Incr is
+        Counter := Low
+        while Counter <= High loop
+            yield
+            Counter += Incr
+
+
+
+
+
+

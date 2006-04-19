@@ -1,100 +1,129 @@
-recordbegin Record_1277 
-recordfield Record_1277 xlmodule baserecord_1 
-recordend Record_1277 
-globaldecl Record_1277 xlbuiltins_1278 
+fnptrbegin 
+fnret1 xlint 
+fnptrname FnPtr_1279 
+fnbeginparms 
+fnparm xlint low_1277 
+fnparm xlint high_1278 
+fnendparms 
+fnptrend 
+fnptrbegin 
+fnret1 xlint 
+fnptrname FnPtr_1285 
+fnbeginparms 
+fnparm xlint low_1282 
+fnparm xlint high_1283 
+fnparm xlint incr_1284 
+fnendparms 
+fnptrend 
 fnptrbegin 
 fnret1 xlreal 
-fnptrname FnPtr_1280 
+fnptrname FnPtr_1291 
 fnbeginparms 
-fnparm xlreal x_1279 
+fnparm xlreal low_1288 
+fnparm xlreal high_1289 
+fnparm xlreal incr_1290 
+fnendparms 
+fnptrend 
+recordbegin Record_1294 
+recordfield Record_1294 xlmodule baserecord_1 
+recordfield Record_1294 FnPtr_1279 iterator_1280 
+recordfield Record_1294 FnPtr_1285 iterator_1286 
+recordfield Record_1294 FnPtr_1291 iterator_1292 
+recordend Record_1294 
+globaldecl Record_1294 xlbuiltins_1295 
+fnptrbegin 
+fnret1 xlreal 
+fnptrname FnPtr_1297 
+fnbeginparms 
+fnparm xlreal x_1296 
 fnendparms 
 fnptrend 
 fndeclbegin 
 fnret1 xlreal 
-fnname sin_1281 
+fnname sin_1298 
 fnbeginparms 
-fnparm xlreal x_1279 
+fnparm xlreal x_1296 
 fnendparms 
 fndeclend 
 fnptrbegin 
 fnret0 
-fnptrname FnPtr_1284 
+fnptrname FnPtr_1301 
 fnbeginparms 
-fnparm xlreal target_1282 
-fnparm xlreal source_1283 
+fnparm xlreal target_1299 
+fnparm xlreal source_1300 
 fnendparms 
 fnptrend 
 fndeclbegin 
 fnret0 
-fnname copy_1285 
+fnname copy_1302 
 fnbeginparms 
-fnparm xlreal target_1282 
-fnparm xlreal source_1283 
+fnparm xlreal target_1299 
+fnparm xlreal source_1300 
 fnendparms 
 fndeclend 
 fnptrbegin 
 fnret0 
-fnptrname FnPtr_1286 
+fnptrname FnPtr_1303 
 fnbeginparms 
 fnendparms 
 fnptrend 
 fndeclbegin 
 fnret0 
-fnname main_1287 
+fnname main_1304 
 fnbeginparms 
 fnendparms 
 fndeclend 
-fnbodybegin main_1287 
+fnbodybegin main_1304 
 fnret0 
-fnname main_1287 
+fnname main_1304 
 fnbeginparms 
 fnendparms 
-fnbody main_1287 
-localdecl xlreal w_1288 
-tempdecl xlreal ret_1289 
-localdecl xlreal t0_1290 
-tempdecl xlreal ret_1291 
-localdecl xlreal t_1292 
-tempdecl xlreal ret_1293 
-localdecl xlreal x_1294 
-localdecl xlreal b_1295 
-localdecl xlreal a_1296 
-localdecl xlreal a2_1297 
-localdecl xlreal y_1298 
-localdecl xlreal z_1299 
-tempdecl xlreal ret_1300 
-tempdecl xlreal ret_1301 
-tempdecl xlint ret_1302 
-zeroreal ret_1289 
-callbegin copy_1285 
-callargsbegin copy_1285 
-callarg xlreal w_1288 
-callarg xlreal ret_1289 
-callargsend copy_1285 
-zeroreal ret_1291 
-callbegin copy_1285 
-callargsbegin copy_1285 
-callarg xlreal t0_1290 
-callarg xlreal ret_1291 
-callargsend copy_1285 
-zeroreal ret_1293 
-callbegin copy_1285 
-callargsbegin copy_1285 
-callarg xlreal t_1292 
-callarg xlreal ret_1293 
-callargsend copy_1285 
-callbegin copy_1285 
-callargsbegin copy_1285 
-callarg xlreal x_1294 
+fnbody main_1304 
+localdecl xlreal w_1305 
+tempdecl xlreal ret_1306 
+localdecl xlreal t0_1307 
+tempdecl xlreal ret_1308 
+localdecl xlreal t_1309 
+tempdecl xlreal ret_1310 
+localdecl xlreal x_1311 
+localdecl xlreal b_1312 
+localdecl xlreal a_1313 
+localdecl xlreal a2_1314 
+localdecl xlreal y_1315 
+localdecl xlreal z_1316 
+tempdecl xlreal ret_1317 
+tempdecl xlreal ret_1318 
+tempdecl xlint ret_1319 
+zeroreal ret_1306 
+callbegin copy_1302 
+callargsbegin copy_1302 
+callarg xlreal w_1305 
+callarg xlreal ret_1306 
+callargsend copy_1302 
+zeroreal ret_1308 
+callbegin copy_1302 
+callargsbegin copy_1302 
+callarg xlreal t0_1307 
+callarg xlreal ret_1308 
+callargsend copy_1302 
+zeroreal ret_1310 
+callbegin copy_1302 
+callargsbegin copy_1302 
+callarg xlreal t_1309 
+callarg xlreal ret_1310 
+callargsend copy_1302 
+callbegin copy_1302 
+callargsbegin copy_1302 
+callarg xlreal x_1311 
 callarg xlreal 0.3 
-callargsend copy_1285 
-negreal ret_1300 a_1296 
-addreal ret_1301 ret_1300 b_1295 
-callbegin copy_1285 
-callargsbegin copy_1285 
-callarg xlreal b_1295 
-callarg xlreal ret_1301 
-callargsend copy_1285 
+callargsend copy_1302 
+negreal ret_1317 a_1313 
+addreal ret_1318 ret_1317 b_1312 
+callbegin copy_1302 
+callargsbegin copy_1302 
+callarg xlreal b_1312 
+callarg xlreal ret_1318 
+callargsend copy_1302 
 A := - 0 * X + - 2 * 1 * exp ( - 2 * X) 
 A2 := dexp (2 * X) / dX + d (exp (2 * X) ) / dX 
 Y := d (exp ( - 2 * W * (T - T0) ) * sin (2 * W * (T - T0) ) ) / dT 
@@ -108,8 +137,8 @@ delete T
 delete B 
 delete A2 
 delete A 
-exitlabel main_1287 
-fnbodyend main_1287 
+exitlabel main_1304 
+fnbodyend main_1304 
 mainbegin 
 decl 
 nop 
