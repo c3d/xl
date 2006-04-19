@@ -198,7 +198,12 @@ module XL.SEMANTICS.OVERLOAD is
                 Gtype : F.type as GEN.generic_type
                 Gargs : PT.tree_list
                 Vargs : PT.tree
-                Score : integer := depth
+                Score : integer := depth * 2
+                // Favor local candidate over candidate found in 'using' map
+                if C.kind = PT.xlINFIX then
+                    infix : C as PT.infix_tree
+                    if infix.name = "." then
+                        Score += 1
                 if Ftype = nil and Gtype <> nil then
                     GFType : Gtype.base as FT.function_type
                     Ftype := GFType
@@ -377,6 +382,7 @@ module XL.SEMANTICS.OVERLOAD is
                     return result
 
             // If there are parameters to declare, declare them now
+            constructors : PT.tree
             if size(bestDNames) > 0 then
                 ToDeclCount : integer := size(bestDNames)
                 ToDecl : integer
@@ -385,21 +391,23 @@ module XL.SEMANTICS.OVERLOAD is
                     Didx  : integer := bestDidx[ToDecl]
                     ftp   : bestF.type as FT.function_type
                     D     : DCL.declaration := ftp.parameters[Didx]
-                    Dummy : DCL.Declaration :=
+                    Local : DCL.Declaration :=
                         DCL.Declare (DName, D.type)
-                    Dummy := Dummy
+                    if D.is_input or not D.is_output then
+                        constructors := XLT.Append(constructors,
+                                                   DCL.CallConstructor(Local))
                     if SemArgs[Didx] = PT.tree(DName) then
                         SemArgs[Didx] := XLT.XLSemantics(DName)
 
             // Check if this is an iterator call
             iterator : bestF as ITER.iterator
             if iterator <> nil then
-                return ITER.InvokeIterator(Name, BaseRecord, iterator, SemArgs)
-
-            if BaseRecord <> nil then
-                return CGM.RecordFunctionCall (BaseRecord, bestF, SemArgs)
+                result := ITER.InvokeIterator(Name,BaseRecord,iterator,SemArgs)
+            else if BaseRecord <> nil then
+                result := CGM.RecordFunctionCall (BaseRecord, bestF, SemArgs)
             else
-                return CGM.FunctionCall (bestF, SemArgs)
+                result := CGM.FunctionCall (bestF, SemArgs)
+            result := XLT.Append(constructors, result)
 
         else
             ERR.Error "No valid function found for '$1'", NameTree

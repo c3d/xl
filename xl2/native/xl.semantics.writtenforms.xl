@@ -206,6 +206,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                 // Instantiation error
                 return result
 
+        constructors : PT.tree
         if size(Dnames) > 0 then
             ftype : fninfo.type as FN.function_type
             for a in 0..size(Dnames)-1 loop
@@ -213,19 +214,23 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                 idx  : integer := Didx[a]
                 parm : DCL.declaration := ftype.parameters[idx]
                 decl : DCL.declaration := DCL.Declare(Name, parm.type)
-                decl := decl
+                if parm.is_input or not parm.is_output then
+                    constructors := XLT.Append(constructors,
+                                               DCL.CallConstructor(decl))
                 margs[a] := XLT.XLSemantics(margs[a])
+
 
         // Check if this is an iterator call
         iterator : fninfo as ITER.iterator
         if iterator <> nil then
-            return ITER.InvokeIterator(input, scope, iterator, margs)
-
-        if scope = nil then
-            return CGM.FunctionCall (fninfo, margs)
+            result := ITER.InvokeIterator(input, scope, iterator, margs)
+        else if scope = nil then
+            result := CGM.FunctionCall (fninfo, margs)
         else
             scope := XLT.XLSemantics(scope)
-            return CGM.RecordFunctionCall(scope, fninfo, margs)
+            result := CGM.RecordFunctionCall(scope, fninfo, margs)
+
+        result := XLT.Append(constructors, result)
 
 
     function EnterWrittenForm(fniface : PT.tree;

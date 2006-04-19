@@ -163,7 +163,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         rtp.base := nil
         if Base <> nil then
             BaseType : any_type := TY.EvaluateType (Base)
-            BaseName : PT.name_tree := PT.NewName("BaseRecord", Source.position)
+            BaseName : PT.name_tree := PT.NewName("BaseRecord",Source.position)
             Decl : declaration := DCL.Declare(BaseName, BaseType)
             rtp.fields += Decl
             rtp.base := BaseType

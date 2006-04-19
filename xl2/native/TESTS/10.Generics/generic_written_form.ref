@@ -26,29 +26,29 @@ xlfile xl_getstdfile(int n) {
   }
   return NULL;
 }
-typedef struct Record_1245 {
+typedef struct Record_1277 {
   xlmodule baserecord_1; /* RecF */
-} Record_1245;
-Record_1245 xlbuiltins_1246; /* Global */
-typedef struct Record_1254 {
-  xlrecord baserecord_1250; /* RecF */
-  xlint first_1251; /* RecF */
-  xlint second_1252; /* RecF */
-} Record_1254;
-Record_1254 k_1255; /* Global */
-typedef struct Record_1263 {
-  xlrecord baserecord_1259; /* RecF */
-  xlint first_1260; /* RecF */
-  xlint second_1261; /* RecF */
-} Record_1263;
-Record_1263 l_1264; /* Global */
-typedef struct Record_1269 {
-  xlrecord baserecord_1265; /* RecF */
-  Record_1254 first_1266; /* RecF */
-  Record_1254 second_1267; /* RecF */
-} Record_1269;
-Record_1269 z_1270; /* Global */
-Record_1269 u_1271; /* Global */
+} Record_1277;
+Record_1277 xlbuiltins_1278; /* Global */
+typedef struct Record_1286 {
+  xlrecord baserecord_1282; /* RecF */
+  xlint first_1283; /* RecF */
+  xlint second_1284; /* RecF */
+} Record_1286;
+Record_1286 k_1287; /* Global */
+typedef struct Record_1295 {
+  xlrecord baserecord_1291; /* RecF */
+  xlint first_1292; /* RecF */
+  xlint second_1293; /* RecF */
+} Record_1295;
+Record_1295 l_1296; /* Global */
+typedef struct Record_1301 {
+  xlrecord baserecord_1297; /* RecF */
+  Record_1286 first_1298; /* RecF */
+  Record_1286 second_1299; /* RecF */
+} Record_1301;
+Record_1301 z_1302; /* Global */
+Record_1301 u_1303; /* Global */
 int main(int _argc, char **_argv)
 {
 /* Type */

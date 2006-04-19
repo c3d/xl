@@ -192,8 +192,11 @@ module XL.SEMANTICS.DECLARATIONS is
             else
                 // Definition will be processed at semantics time
                 result := parse_tree(@@def 'Name' 'Value')
+        else
+            result := DCL.CallConstructor(decl)
 
-        // TODO: Check existence of constructor
+
+        // Make sure we have a result to attach the decl to
         if result = nil then
             result := parse_tree(@decl)
 
@@ -360,16 +363,17 @@ module XL.SEMANTICS.DECLARATIONS is
             list       : PT.tree_list
             isType     : boolean := TY.IsTypeType(iface_type)
             needIt     : boolean := iface_decl.initializer = nil
+            iname      : text := iface_name.value
 
             trace [interface] "Looking for ", iface_name.value,
                               " : ", TY.Source(iface_type)
 
             // Try to find something with the same name
             if isType then
-                SYM.Lookup body,"TYPE",iface_name.value,list,SYM.lookupLocalOnly
+                SYM.Lookup body, "TYPE", iname, list, SYM.lookupLocalOnly
             else
-                SYM.Lookup body,"DECL",iface_name.value,list,SYM.lookupLocalOnly
-                SYM.Lookup body,"FN",iface_name.value,list,SYM.lookupLocalOnly
+                SYM.Lookup body, "DECL", iname, list, SYM.lookupLocalOnly
+                SYM.Lookup body, "FN",iname, list, SYM.lookupLocalOnly
 
             if needIt then
                 if size(list) = 0 then
@@ -656,4 +660,22 @@ module XL.SEMANTICS.DECLARATIONS is
                 if errors = "" then
                     XLT.AddScopeTerm table, dtorCall
 
-        
+
+    function CallConstructor (decl : declaration) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Return a constructor call if needed
+    // ------------------------------------------------------------------------
+    //   This function is called only if there is no initializer
+    //   If there is any function that matches the type name, then
+    //   the type is constructed, and we try to call a function with no args
+        if decl.is_local or decl.is_global then
+            assert decl.type
+            tname : TY.Source(decl.type) as PT.name_tree
+            if tname <> nil then
+                list : PT.tree_list
+                SYM.Lookup XLT.context, "FN", tname.value, list, SYM.lookupAll
+                if size(list) > 0 then
+                    dname : PT.name_tree := decl.name
+                    result := parse_tree('dname' := 'tname' ())
+                    result.position := dname.position
+                    result := XLT.XLSemantics(result)

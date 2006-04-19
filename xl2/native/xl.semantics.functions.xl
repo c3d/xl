@@ -389,6 +389,7 @@ module XL.SEMANTICS.FUNCTIONS is
                 MName : PT.name_tree := decl.machine_name
                 MType : PT.name_tree := DType.machine_name
                 f.result_machine_name := MName
+                Body := XLT.Append(DCL.CallConstructor(decl), Body)
                 Body := parse_tree
                     @result_decl 'MType' 'MName'
                     'Body'

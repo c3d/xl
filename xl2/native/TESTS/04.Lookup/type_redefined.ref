@@ -16,3 +16,6 @@
 04.Lookup/type_redefined.xl:29: because a type named 'integer' already exists
 | type integer
 |____________^
+04.Lookup/type_redefined.xl:38: No translation found for 'L := integer ( )'
+|    L : integer
+|____^

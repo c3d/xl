@@ -270,7 +270,8 @@ module XL.SEMANTICS.ITERATORS is
                Local : DCL.declaration := DCL.Declare (Name, Parm.type)
                if Parm.is_input or not Parm.is_output then
                    result := XLT.Append(result, parse_tree('Name' := 'Arg'))
-               Local := Local
+               else
+                   result := XLT.Append(result, DCL.CallConstructor(Local))
 
         // Create a clone of the iterator body, add it to parm decls/copies
         result := XLT.Append(result, PT.Clone(it.initializer))

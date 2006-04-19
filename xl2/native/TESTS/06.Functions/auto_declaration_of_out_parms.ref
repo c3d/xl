@@ -26,108 +26,108 @@ xlfile xl_getstdfile(int n) {
   }
   return NULL;
 }
-typedef struct Record_1245 {
+typedef struct Record_1277 {
   xlmodule baserecord_1; /* RecF */
-} Record_1245;
-Record_1245 xlbuiltins_1246; /* Global */
-typedef xlint (*FnPtr_1249) ( xlint b_1248 ) ;
-xlint makeit_1250 ( xlint b_1248 ) ;
-typedef xlreal (*FnPtr_1253) ( xlreal b_1252 ) ;
-xlreal makeit_1254 ( xlreal b_1252 ) ;
-typedef void (*FnPtr_1261) ( ) ;
-void test_1262 ( ) ;
-typedef struct Record_1267 {
-  xlrecord baserecord_1263; /* RecF */
-  xlint a_1264; /* RecF */
-  xlint b_1265; /* RecF */
-} Record_1267;
-typedef Record_1267 (*FnPtr_1270) ( Record_1267 source_1269 ) ;
-Record_1267 copy_1271 ( Record_1267 source_1269 ) ;
-Record_1267 crapal_1272; /* Global */
-Record_1267 fungoid_1273; /* Global */
-typedef void (*FnPtr_1274) ( ) ;
-void testoperators_1275 ( ) ;
-typedef Record_1267 (*FnPtr_1290) ( Record_1267 b_1289 ) ;
-Record_1267 makeit_1291 ( Record_1267 b_1289 ) ;
-Record_1267 znort_1293; /* Global */
-Record_1267 outret_1294; /* Ret */
-Record_1267 outret_1295; /* Ret */
-xlint makeit_1250 ( xlint b_1248 ) {
-xlint a_1247; /* Out=Ret */
-a_1247 = b_1248;
-exit_makeit_1250: 0;
-return a_1247;
+} Record_1277;
+Record_1277 xlbuiltins_1278; /* Global */
+typedef xlint (*FnPtr_1281) ( xlint b_1280 ) ;
+xlint makeit_1282 ( xlint b_1280 ) ;
+typedef xlreal (*FnPtr_1285) ( xlreal b_1284 ) ;
+xlreal makeit_1286 ( xlreal b_1284 ) ;
+typedef void (*FnPtr_1293) ( ) ;
+void test_1294 ( ) ;
+typedef struct Record_1299 {
+  xlrecord baserecord_1295; /* RecF */
+  xlint a_1296; /* RecF */
+  xlint b_1297; /* RecF */
+} Record_1299;
+typedef Record_1299 (*FnPtr_1302) ( Record_1299 source_1301 ) ;
+Record_1299 copy_1303 ( Record_1299 source_1301 ) ;
+Record_1299 crapal_1304; /* Global */
+Record_1299 fungoid_1305; /* Global */
+typedef void (*FnPtr_1306) ( ) ;
+void testoperators_1307 ( ) ;
+typedef Record_1299 (*FnPtr_1322) ( Record_1299 b_1321 ) ;
+Record_1299 makeit_1323 ( Record_1299 b_1321 ) ;
+Record_1299 znort_1325; /* Global */
+Record_1299 outret_1326; /* Ret */
+Record_1299 outret_1327; /* Ret */
+xlint makeit_1282 ( xlint b_1280 ) {
+xlint a_1279; /* Out=Ret */
+a_1279 = b_1280;
+exit_makeit_1282: 0;
+return a_1279;
 }
-xlreal makeit_1254 ( xlreal b_1252 ) {
-xlreal a_1251; /* Out=Ret */
-a_1251 = b_1252;
-exit_makeit_1254: 0;
-return a_1251;
+xlreal makeit_1286 ( xlreal b_1284 ) {
+xlreal a_1283; /* Out=Ret */
+a_1283 = b_1284;
+exit_makeit_1286: 0;
+return a_1283;
 }
-void test_1262 ( ) {
-xlint zero_1276; /* Local */
-xlint outret_1277; /* Ret */
-xlint glop_1278; /* Local */
-xlint outret_1279; /* Ret */
-xlreal glap_1280; /* Local */
-xlreal outret_1281; /* Ret */
-xlint outret_1282; /* Ret */
-xlreal outret_1283; /* Ret */
-outret_1277 = makeit_1250 ( 1 );
-zero_1276 = outret_1277;
-outret_1279 = makeit_1250 ( 2 );
-glop_1278 = outret_1279;
-outret_1281 = makeit_1254 ( 1.5 );
-glap_1280 = outret_1281;
-outret_1282 = makeit_1250 ( 3 );
-glop_1278 = outret_1282;
-outret_1283 = makeit_1254 ( 6.3 );
-glap_1280 = outret_1283;
-exit_test_1262: 0;
+void test_1294 ( ) {
+xlint zero_1308; /* Local */
+xlint outret_1309; /* Ret */
+xlint glop_1310; /* Local */
+xlint outret_1311; /* Ret */
+xlreal glap_1312; /* Local */
+xlreal outret_1313; /* Ret */
+xlint outret_1314; /* Ret */
+xlreal outret_1315; /* Ret */
+outret_1309 = makeit_1282 ( 1 );
+zero_1308 = outret_1309;
+outret_1311 = makeit_1282 ( 2 );
+glop_1310 = outret_1311;
+outret_1313 = makeit_1286 ( 1.5 );
+glap_1312 = outret_1313;
+outret_1314 = makeit_1282 ( 3 );
+glop_1310 = outret_1314;
+outret_1315 = makeit_1286 ( 6.3 );
+glap_1312 = outret_1315;
+exit_test_1294: 0;
 }
-Record_1267 copy_1271 ( Record_1267 source_1269 ) {
-Record_1267 target_1268; /* Out=Ret */
-/* xlint fld_1284; Ref */
-/* xlint fld_1285; Ref */
-/* xlint fld_1286; Ref */
-/* xlint fld_1287; Ref */
-#define fld_1285 (target_1268.a_1264)
-#define fld_1284 (source_1269.b_1265)
-fld_1285 = fld_1284;
-#define fld_1287 (target_1268.b_1265)
-#define fld_1286 (source_1269.a_1264)
-fld_1287 = fld_1286;
-exit_copy_1271: 0;
-return target_1268;
+Record_1299 copy_1303 ( Record_1299 source_1301 ) {
+Record_1299 target_1300; /* Out=Ret */
+/* xlint fld_1316; Ref */
+/* xlint fld_1317; Ref */
+/* xlint fld_1318; Ref */
+/* xlint fld_1319; Ref */
+#define fld_1317 (target_1300.a_1296)
+#define fld_1316 (source_1301.b_1297)
+fld_1317 = fld_1316;
+#define fld_1319 (target_1300.b_1297)
+#define fld_1318 (source_1301.a_1296)
+fld_1319 = fld_1318;
+exit_copy_1303: 0;
+return target_1300;
 }
-Record_1267 makeit_1291 ( Record_1267 b_1289 ) {
-Record_1267 a_1288; /* Out=Ret */
-Record_1267 outret_1292; /* Ret */
-outret_1292 = copy_1271 ( b_1289 );
-a_1288 = outret_1292;
-exit_makeit_1291: 0;
-return a_1288;
+Record_1299 makeit_1323 ( Record_1299 b_1321 ) {
+Record_1299 a_1320; /* Out=Ret */
+Record_1299 outret_1324; /* Ret */
+outret_1324 = copy_1303 ( b_1321 );
+a_1320 = outret_1324;
+exit_makeit_1323: 0;
+return a_1320;
 }
-void testoperators_1275 ( ) {
-xlint bingo_1296; /* Local */
-xlint outret_1297; /* Ret */
-xlreal bonga_1298; /* Local */
-xlreal outret_1299; /* Ret */
-outret_1297 = makeit_1250 ( 1 );
-bingo_1296 = outret_1297;
-outret_1299 = makeit_1254 ( 2.3 );
-bonga_1298 = outret_1299;
-exit_testoperators_1275: 0;
+void testoperators_1307 ( ) {
+xlint bingo_1328; /* Local */
+xlint outret_1329; /* Ret */
+xlreal bonga_1330; /* Local */
+xlreal outret_1331; /* Ret */
+outret_1329 = makeit_1282 ( 1 );
+bingo_1328 = outret_1329;
+outret_1331 = makeit_1286 ( 2.3 );
+bonga_1330 = outret_1331;
+exit_testoperators_1307: 0;
 }
 int main(int _argc, char **_argv)
 {
-Record_1267 outret_1294; /* Ret */
-Record_1267 outret_1295; /* Ret */
+Record_1299 outret_1326; /* Ret */
+Record_1299 outret_1327; /* Ret */
 /* Type */
-outret_1294 = makeit_1291 ( crapal_1272 );
-znort_1293 = outret_1294;
-outret_1295 = makeit_1291 ( fungoid_1273 );
-znort_1293 = outret_1295;
+outret_1326 = makeit_1323 ( crapal_1304 );
+znort_1325 = outret_1326;
+outret_1327 = makeit_1323 ( fungoid_1305 );
+znort_1325 = outret_1327;
     /* Main */
     return 0;
 }

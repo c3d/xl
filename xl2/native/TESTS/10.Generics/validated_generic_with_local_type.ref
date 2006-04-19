@@ -26,64 +26,64 @@ xlfile xl_getstdfile(int n) {
   }
   return NULL;
 }
-typedef struct Record_1245 {
+typedef struct Record_1277 {
   xlmodule baserecord_1; /* RecF */
-} Record_1245;
-Record_1245 xlbuiltins_1246; /* Global */
-typedef struct Record_1256 {
-  xlrecord baserecord_1252; /* RecF */
-  xlreal re_1253; /* RecF */
-  xlreal im_1254; /* RecF */
-} Record_1256;
-typedef xlbool (*FnPtr_1259) ( Record_1256 x_1257 , Record_1256 y_1258 ) ;
-xlbool lessthan_1260 ( Record_1256 x_1257 , Record_1256 y_1258 ) ;
-typedef Record_1256 (*FnPtr_1263) ( Record_1256 src_1262 ) ;
-Record_1256 copy_1264 ( Record_1256 src_1262 ) ;
-Record_1256 z_1265; /* Global */
-typedef Record_1256 (*FnPtr_1278) ( Record_1256 x_1277 ) ;
-Record_1256 max_1279 ( Record_1256 x_1277 ) ;
-Record_1256 ret_1282; /* Temp */
-Record_1256 outret_1283; /* Ret */
-xlbool lessthan_1260 ( Record_1256 x_1257 , Record_1256 y_1258 ) {
-xlbool ret_1268; /* Temp */
-xlbool result_1267; /* Result */
-ret_1268 = lessthan_1260 ( x_1257 , y_1258 );
-result_1267 = ret_1268;
-goto exit_lessthan_1260;
-exit_lessthan_1260: 0;
-return result_1267;
+} Record_1277;
+Record_1277 xlbuiltins_1278; /* Global */
+typedef struct Record_1288 {
+  xlrecord baserecord_1284; /* RecF */
+  xlreal re_1285; /* RecF */
+  xlreal im_1286; /* RecF */
+} Record_1288;
+typedef xlbool (*FnPtr_1291) ( Record_1288 x_1289 , Record_1288 y_1290 ) ;
+xlbool lessthan_1292 ( Record_1288 x_1289 , Record_1288 y_1290 ) ;
+typedef Record_1288 (*FnPtr_1295) ( Record_1288 src_1294 ) ;
+Record_1288 copy_1296 ( Record_1288 src_1294 ) ;
+Record_1288 z_1297; /* Global */
+typedef Record_1288 (*FnPtr_1310) ( Record_1288 x_1309 ) ;
+Record_1288 max_1311 ( Record_1288 x_1309 ) ;
+Record_1288 ret_1314; /* Temp */
+Record_1288 outret_1315; /* Ret */
+xlbool lessthan_1292 ( Record_1288 x_1289 , Record_1288 y_1290 ) {
+xlbool ret_1300; /* Temp */
+xlbool result_1299; /* Result */
+ret_1300 = lessthan_1292 ( x_1289 , y_1290 );
+result_1299 = ret_1300;
+goto exit_lessthan_1292;
+exit_lessthan_1292: 0;
+return result_1299;
 }
-Record_1256 copy_1264 ( Record_1256 src_1262 ) {
-Record_1256 tgt_1261; /* Out=Ret */
-/* xlreal fld_1269; Ref */
-/* xlreal fld_1270; Ref */
-/* xlreal fld_1271; Ref */
-/* xlreal fld_1272; Ref */
-#define fld_1270 (tgt_1261.re_1253)
-#define fld_1269 (src_1262.re_1253)
-fld_1270 = fld_1269;
-#define fld_1272 (tgt_1261.im_1254)
-#define fld_1271 (src_1262.im_1254)
-fld_1272 = fld_1271;
-exit_copy_1264: 0;
-return tgt_1261;
+Record_1288 copy_1296 ( Record_1288 src_1294 ) {
+Record_1288 tgt_1293; /* Out=Ret */
+/* xlreal fld_1301; Ref */
+/* xlreal fld_1302; Ref */
+/* xlreal fld_1303; Ref */
+/* xlreal fld_1304; Ref */
+#define fld_1302 (tgt_1293.re_1285)
+#define fld_1301 (src_1294.re_1285)
+fld_1302 = fld_1301;
+#define fld_1304 (tgt_1293.im_1286)
+#define fld_1303 (src_1294.im_1286)
+fld_1304 = fld_1303;
+exit_copy_1296: 0;
+return tgt_1293;
 }
-Record_1256 max_1279 ( Record_1256 x_1277 ) {
-Record_1256 outret_1281; /* Ret */
-Record_1256 result_1280; /* Result */
-outret_1281 = copy_1264 ( x_1277 );
-result_1280 = outret_1281;
-goto exit_max_1279;
-exit_max_1279: 0;
-return result_1280;
+Record_1288 max_1311 ( Record_1288 x_1309 ) {
+Record_1288 outret_1313; /* Ret */
+Record_1288 result_1312; /* Result */
+outret_1313 = copy_1296 ( x_1309 );
+result_1312 = outret_1313;
+goto exit_max_1311;
+exit_max_1311: 0;
+return result_1312;
 }
 int main(int _argc, char **_argv)
 {
-Record_1256 ret_1282; /* Temp */
-Record_1256 outret_1283; /* Ret */
-ret_1282 = max_1279 ( z_1265 );
-outret_1283 = copy_1264 ( ret_1282 );
-z_1265 = outret_1283;
+Record_1288 ret_1314; /* Temp */
+Record_1288 outret_1315; /* Ret */
+ret_1314 = max_1311 ( z_1297 );
+outret_1315 = copy_1296 ( ret_1314 );
+z_1297 = outret_1315;
 /* Type */
 /* Type */
     /* Main */

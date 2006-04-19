@@ -26,16 +26,16 @@ xlfile xl_getstdfile(int n) {
   }
   return NULL;
 }
-typedef struct Record_1245 {
+typedef struct Record_1277 {
   xlmodule baserecord_1; /* RecF */
-} Record_1245;
-Record_1245 xlbuiltins_1246; /* Global */
-xlint k_1247; /* Global */
-xlreal l_1248; /* Global */
+} Record_1277;
+Record_1277 xlbuiltins_1278; /* Global */
+xlint k_1279; /* Global */
+xlreal l_1280; /* Global */
 int main(int _argc, char **_argv)
 {
-k_1247 = 3;
-l_1248 = 0.3;
+k_1279 = 3;
+l_1280 = 0.3;
     /* Main */
     return 0;
 }

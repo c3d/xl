@@ -26,95 +26,95 @@ xlfile xl_getstdfile(int n) {
   }
   return NULL;
 }
-typedef struct Record_1245 {
+typedef struct Record_1277 {
   xlmodule baserecord_1; /* RecF */
-} Record_1245;
-Record_1245 xlbuiltins_1246; /* Global */
-xlint i_1247; /* Global */
-xlint ret_1249; /* Temp */
-xlbool ret_1251; /* Temp */
-xlbool ret_1253; /* Temp */
-xlint ret_1254; /* Temp */
-xlbool ret_1256; /* Temp */
-xlint ret_1257; /* Temp */
-xlbool ret_1259; /* Temp */
-xlint ret_1260; /* Temp */
-xlbool ret_1262; /* Temp */
-xlint ret_1263; /* Temp */
-xlbool ret_1265; /* Temp */
-xlint ret_1266; /* Temp */
-xlbool ret_1268; /* Temp */
-xlint ret_1269; /* Temp */
+} Record_1277;
+Record_1277 xlbuiltins_1278; /* Global */
+xlint i_1279; /* Global */
+xlint ret_1281; /* Temp */
+xlbool ret_1283; /* Temp */
+xlbool ret_1285; /* Temp */
+xlint ret_1286; /* Temp */
+xlbool ret_1288; /* Temp */
+xlint ret_1289; /* Temp */
+xlbool ret_1291; /* Temp */
+xlint ret_1292; /* Temp */
+xlbool ret_1294; /* Temp */
+xlint ret_1295; /* Temp */
+xlbool ret_1297; /* Temp */
+xlint ret_1298; /* Temp */
+xlbool ret_1300; /* Temp */
+xlint ret_1301; /* Temp */
 int main(int _argc, char **_argv)
 {
-xlint ret_1249; /* Temp */
-xlbool ret_1251; /* Temp */
-xlbool ret_1253; /* Temp */
-xlint ret_1254; /* Temp */
-xlbool ret_1256; /* Temp */
-xlint ret_1257; /* Temp */
-xlbool ret_1259; /* Temp */
-xlint ret_1260; /* Temp */
-xlbool ret_1262; /* Temp */
-xlint ret_1263; /* Temp */
-xlbool ret_1265; /* Temp */
-xlint ret_1266; /* Temp */
-xlbool ret_1268; /* Temp */
-xlint ret_1269; /* Temp */
-i_1247 = 1;
-loopentry_loop_1248: 0;
-ret_1249 = i_1247 + 1;
-i_1247 = ret_1249;
-ret_1251 = i_1247 > 100;
-if(!(ret_1251)) goto else_if_1250;
-goto loopexit_loop_1248;
-else_if_1250: 0;
-goto loopentry_loop_1248;
-loopexit_loop_1248: 0;
-goto loopend_while_1252;
-loopentry_while_1252: 0;
-ret_1254 = i_1247 + 2;
-i_1247 = ret_1254;
-loopend_while_1252: 0;
-ret_1253 = i_1247 < 200;
-if (ret_1253) goto loopentry_while_1252;
-loopexit_while_1252: 0;
-goto loopend_while_1255;
-loopentry_while_1255: 0;
-ret_1257 = i_1247 + 3;
-i_1247 = ret_1257;
-loopend_while_1255: 0;
-ret_1256 = i_1247 > 300;
-if (!(ret_1256)) goto loopentry_while_1255;
-loopexit_while_1255: 0;
-loopentry_while_1258: 0;
-ret_1260 = i_1247 + 4;
-i_1247 = ret_1260;
-loopend_while_1258: 0;
-ret_1259 = i_1247 < 400;
-if (ret_1259) goto loopentry_while_1258;
-loopexit_while_1258: 0;
-loopentry_while_1261: 0;
-ret_1263 = i_1247 + 5;
-i_1247 = ret_1263;
-loopend_while_1261: 0;
-ret_1262 = i_1247 > 500;
-if (!(ret_1262)) goto loopentry_while_1261;
-loopexit_while_1261: 0;
-loopentry_while_1264: 0;
-ret_1266 = i_1247 + 6;
-i_1247 = ret_1266;
-loopend_while_1264: 0;
-ret_1265 = i_1247 < 600;
-if (ret_1265) goto loopentry_while_1264;
-loopexit_while_1264: 0;
-loopentry_while_1267: 0;
-ret_1269 = i_1247 + 7;
-i_1247 = ret_1269;
-loopend_while_1267: 0;
-ret_1268 = i_1247 > 700;
-if (!(ret_1268)) goto loopentry_while_1267;
-loopexit_while_1267: 0;
+xlint ret_1281; /* Temp */
+xlbool ret_1283; /* Temp */
+xlbool ret_1285; /* Temp */
+xlint ret_1286; /* Temp */
+xlbool ret_1288; /* Temp */
+xlint ret_1289; /* Temp */
+xlbool ret_1291; /* Temp */
+xlint ret_1292; /* Temp */
+xlbool ret_1294; /* Temp */
+xlint ret_1295; /* Temp */
+xlbool ret_1297; /* Temp */
+xlint ret_1298; /* Temp */
+xlbool ret_1300; /* Temp */
+xlint ret_1301; /* Temp */
+i_1279 = 1;
+loopentry_loop_1280: 0;
+ret_1281 = i_1279 + 1;
+i_1279 = ret_1281;
+ret_1283 = i_1279 > 100;
+if(!(ret_1283)) goto else_if_1282;
+goto loopexit_loop_1280;
+else_if_1282: 0;
+goto loopentry_loop_1280;
+loopexit_loop_1280: 0;
+goto loopend_while_1284;
+loopentry_while_1284: 0;
+ret_1286 = i_1279 + 2;
+i_1279 = ret_1286;
+loopend_while_1284: 0;
+ret_1285 = i_1279 < 200;
+if (ret_1285) goto loopentry_while_1284;
+loopexit_while_1284: 0;
+goto loopend_while_1287;
+loopentry_while_1287: 0;
+ret_1289 = i_1279 + 3;
+i_1279 = ret_1289;
+loopend_while_1287: 0;
+ret_1288 = i_1279 > 300;
+if (!(ret_1288)) goto loopentry_while_1287;
+loopexit_while_1287: 0;
+loopentry_while_1290: 0;
+ret_1292 = i_1279 + 4;
+i_1279 = ret_1292;
+loopend_while_1290: 0;
+ret_1291 = i_1279 < 400;
+if (ret_1291) goto loopentry_while_1290;
+loopexit_while_1290: 0;
+loopentry_while_1293: 0;
+ret_1295 = i_1279 + 5;
+i_1279 = ret_1295;
+loopend_while_1293: 0;
+ret_1294 = i_1279 > 500;
+if (!(ret_1294)) goto loopentry_while_1293;
+loopexit_while_1293: 0;
+loopentry_while_1296: 0;
+ret_1298 = i_1279 + 6;
+i_1279 = ret_1298;
+loopend_while_1296: 0;
+ret_1297 = i_1279 < 600;
+if (ret_1297) goto loopentry_while_1296;
+loopexit_while_1296: 0;
+loopentry_while_1299: 0;
+ret_1301 = i_1279 + 7;
+i_1279 = ret_1301;
+loopend_while_1299: 0;
+ret_1300 = i_1279 > 700;
+if (!(ret_1300)) goto loopentry_while_1299;
+loopexit_while_1299: 0;
     /* Main */
     return 0;
 }
