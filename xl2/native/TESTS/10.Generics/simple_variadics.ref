@@ -30,72 +30,88 @@ typedef struct Record_1277 {
   xlmodule baserecord_1; /* RecF */
 } Record_1277;
 Record_1277 xlbuiltins_1278; /* Global */
+xlint ret_1317; /* Temp */
+xlint ret_1310; /* Temp */
+xlint ret_1289; /* Temp */
+xlint ret_1301; /* Temp */
 typedef xlint (*FnPtr_1280) ( xlint x_1279 ) ;
 xlint max_1281 ( xlint x_1279 ) ;
 xlint k_1286; /* Global */
 xlint l_1287; /* Global */
-typedef xlint (*FnPtr_1297) ( xlint x_1293 , xlint var1290_1294 , xlint var1291_1295 , xlint var1292_1296 ) ;
-xlint max_1298 ( xlint x_1293 , xlint var1290_1294 , xlint var1291_1295 , xlint var1292_1296 ) ;
-typedef xlint (*FnPtr_1305) ( xlint x_1302 , xlint var1300_1303 , xlint var1301_1304 ) ;
-xlint max_1306 ( xlint x_1302 , xlint var1300_1303 , xlint var1301_1304 ) ;
-typedef xlint (*FnPtr_1311) ( xlint x_1309 , xlint var1308_1310 ) ;
-xlint max_1312 ( xlint x_1309 , xlint var1308_1310 ) ;
-xlint ret_1323; /* Temp */
-xlint ret_1324; /* Temp */
+typedef xlint (*FnPtr_1298) ( xlint x_1294 , xlint var1291_1295 , xlint var1292_1296 , xlint var1293_1297 ) ;
+xlint max_1299 ( xlint x_1294 , xlint var1291_1295 , xlint var1292_1296 , xlint var1293_1297 ) ;
+typedef xlint (*FnPtr_1307) ( xlint x_1304 , xlint var1302_1305 , xlint var1303_1306 ) ;
+xlint max_1308 ( xlint x_1304 , xlint var1302_1305 , xlint var1303_1306 ) ;
+typedef xlint (*FnPtr_1314) ( xlint x_1312 , xlint var1311_1313 ) ;
+xlint max_1315 ( xlint x_1312 , xlint var1311_1313 ) ;
+xlint ret_1327; /* Temp */
+xlint ret_1328; /* Temp */
 xlint max_1281 ( xlint x_1279 ) {
 xlint result_1288; /* Result */
+ret_1289 = 0;
+result_1288 = ret_1289;
 result_1288 = x_1279;
 goto exit_max_1281;
 exit_max_1281: 0;
 return result_1288;
 }
-xlint max_1312 ( xlint x_1309 , xlint var1308_1310 ) {
-xlint ret_1314; /* Temp */
-xlbool ret_1316; /* Temp */
-xlint result_1313; /* Result */
-ret_1314 = max_1281 ( var1308_1310 );
-result_1313 = ret_1314;
-ret_1316 = result_1313 < x_1309;
-if(!(ret_1316)) goto else_if_1315;
-result_1313 = x_1309;
-else_if_1315: 0;
-exit_max_1312: 0;
-return result_1313;
+xlint max_1315 ( xlint x_1312 , xlint var1311_1313 ) {
+xlint ret_1318; /* Temp */
+xlbool ret_1320; /* Temp */
+xlint result_1316; /* Result */
+ret_1317 = 0;
+result_1316 = ret_1317;
+ret_1318 = max_1281 ( var1311_1313 );
+result_1316 = ret_1318;
+ret_1320 = result_1316 < x_1312;
+if(!(ret_1320)) goto else_if_1319;
+result_1316 = x_1312;
+else_if_1319: 0;
+exit_max_1315: 0;
+return result_1316;
 }
-xlint max_1306 ( xlint x_1302 , xlint var1300_1303 , xlint var1301_1304 ) {
-xlint ret_1317; /* Temp */
-xlbool ret_1319; /* Temp */
-xlint result_1307; /* Result */
-ret_1317 = max_1312 ( var1300_1303 , var1301_1304 );
-result_1307 = ret_1317;
-ret_1319 = result_1307 < x_1302;
-if(!(ret_1319)) goto else_if_1318;
-result_1307 = x_1302;
-else_if_1318: 0;
-exit_max_1306: 0;
-return result_1307;
+xlint max_1308 ( xlint x_1304 , xlint var1302_1305 , xlint var1303_1306 ) {
+xlint ret_1321; /* Temp */
+xlbool ret_1323; /* Temp */
+xlint result_1309; /* Result */
+ret_1310 = 0;
+result_1309 = ret_1310;
+ret_1321 = max_1315 ( var1302_1305 , var1303_1306 );
+result_1309 = ret_1321;
+ret_1323 = result_1309 < x_1304;
+if(!(ret_1323)) goto else_if_1322;
+result_1309 = x_1304;
+else_if_1322: 0;
+exit_max_1308: 0;
+return result_1309;
 }
-xlint max_1298 ( xlint x_1293 , xlint var1290_1294 , xlint var1291_1295 , xlint var1292_1296 ) {
-xlint ret_1320; /* Temp */
-xlbool ret_1322; /* Temp */
-xlint result_1299; /* Result */
-ret_1320 = max_1306 ( var1290_1294 , var1291_1295 , var1292_1296 );
-result_1299 = ret_1320;
-ret_1322 = result_1299 < x_1293;
-if(!(ret_1322)) goto else_if_1321;
-result_1299 = x_1293;
-else_if_1321: 0;
-exit_max_1298: 0;
-return result_1299;
+xlint max_1299 ( xlint x_1294 , xlint var1291_1295 , xlint var1292_1296 , xlint var1293_1297 ) {
+xlint ret_1324; /* Temp */
+xlbool ret_1326; /* Temp */
+xlint result_1300; /* Result */
+ret_1301 = 0;
+result_1300 = ret_1301;
+ret_1324 = max_1308 ( var1291_1295 , var1292_1296 , var1293_1297 );
+result_1300 = ret_1324;
+ret_1326 = result_1300 < x_1294;
+if(!(ret_1326)) goto else_if_1325;
+result_1300 = x_1294;
+else_if_1325: 0;
+exit_max_1299: 0;
+return result_1300;
 }
 int main(int _argc, char **_argv)
 {
-xlint ret_1323; /* Temp */
-xlint ret_1324; /* Temp */
-ret_1323 = max_1298 ( 1 , 2 , 3 , 4 );
-k_1286 = ret_1323;
-ret_1324 = max_1306 ( 1 , 2 , 3 );
-l_1287 = ret_1324;
+xlint ret_1317; /* Temp */
+xlint ret_1310; /* Temp */
+xlint ret_1289; /* Temp */
+xlint ret_1301; /* Temp */
+xlint ret_1327; /* Temp */
+xlint ret_1328; /* Temp */
+ret_1327 = max_1299 ( 1 , 2 , 3 , 4 );
+k_1286 = ret_1327;
+ret_1328 = max_1308 ( 1 , 2 , 3 );
+l_1287 = ret_1328;
     /* Main */
     return 0;
 }

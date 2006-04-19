@@ -30,8 +30,17 @@ typedef struct Record_1277 {
   xlmodule baserecord_1; /* RecF */
 } Record_1277;
 Record_1277 xlbuiltins_1278; /* Global */
-xlint ret_1363; /* Temp */
-xlreal ret_1364; /* Temp */
+xlint ret_1357; /* Temp */
+xlint ret_1340; /* Temp */
+xlint ret_1327; /* Temp */
+xlint ret_1312; /* Temp */
+xlreal ret_1449; /* Temp */
+xlreal ret_1432; /* Temp */
+xlreal ret_1419; /* Temp */
+xlreal ret_1404; /* Temp */
+xlint ret_1367; /* Temp */
+xlreal ret_1368; /* Temp */
+xlreal ret_1387; /* Temp */
 xlint testinteger_1288; /* Global */
 xlreal testreal_1289; /* Global */
 xlint testinteger1_1290; /* Global */
@@ -40,154 +49,181 @@ xlint testinteger2_1292; /* Global */
 xlreal testreal2_1293; /* Global */
 typedef xlint (*FnPtr_1309) ( xlint x_1305 , xlint var1302_1306 , xlint var1303_1307 , xlint var1304_1308 ) ;
 xlint max_1310 ( xlint x_1305 , xlint var1302_1306 , xlint var1303_1307 , xlint var1304_1308 ) ;
-typedef xlint (*FnPtr_1323) ( xlint x_1320 , xlint var1318_1321 , xlint var1319_1322 ) ;
-xlint max_1324 ( xlint x_1320 , xlint var1318_1321 , xlint var1319_1322 ) ;
-typedef xlint (*FnPtr_1335) ( xlint x_1333 , xlint var1332_1334 ) ;
-xlint max_1336 ( xlint x_1333 , xlint var1332_1334 ) ;
-typedef xlint (*FnPtr_1351) ( xlint x_1350 ) ;
-xlint max_1352 ( xlint x_1350 ) ;
-typedef xlreal (*FnPtr_1380) ( xlreal x_1375 , xlreal var1371_1376 , xlreal var1372_1377 , xlreal var1373_1378 , xlreal var1374_1379 ) ;
-xlreal max_1381 ( xlreal x_1375 , xlreal var1371_1376 , xlreal var1372_1377 , xlreal var1373_1378 , xlreal var1374_1379 ) ;
-typedef xlreal (*FnPtr_1396) ( xlreal x_1392 , xlreal var1389_1393 , xlreal var1390_1394 , xlreal var1391_1395 ) ;
-xlreal max_1397 ( xlreal x_1392 , xlreal var1389_1393 , xlreal var1390_1394 , xlreal var1391_1395 ) ;
-typedef xlreal (*FnPtr_1410) ( xlreal x_1407 , xlreal var1405_1408 , xlreal var1406_1409 ) ;
-xlreal max_1411 ( xlreal x_1407 , xlreal var1405_1408 , xlreal var1406_1409 ) ;
-typedef xlreal (*FnPtr_1422) ( xlreal x_1420 , xlreal var1419_1421 ) ;
-xlreal max_1423 ( xlreal x_1420 , xlreal var1419_1421 ) ;
-typedef xlreal (*FnPtr_1438) ( xlreal x_1437 ) ;
-xlreal max_1439 ( xlreal x_1437 ) ;
-xlreal ret_1453; /* Temp */
-xlint ret_1466; /* Temp */
-xlreal ret_1479; /* Temp */
-xlint ret_1486; /* Temp */
-xlreal ret_1493; /* Temp */
-xlint max_1352 ( xlint x_1350 ) {
-xlint result_1353; /* Result */
-result_1353 = x_1350;
-goto exit_max_1352;
-exit_max_1352: 0;
-return result_1353;
+typedef xlint (*FnPtr_1324) ( xlint x_1321 , xlint var1319_1322 , xlint var1320_1323 ) ;
+xlint max_1325 ( xlint x_1321 , xlint var1319_1322 , xlint var1320_1323 ) ;
+typedef xlint (*FnPtr_1337) ( xlint x_1335 , xlint var1334_1336 ) ;
+xlint max_1338 ( xlint x_1335 , xlint var1334_1336 ) ;
+typedef xlint (*FnPtr_1354) ( xlint x_1353 ) ;
+xlint max_1355 ( xlint x_1353 ) ;
+typedef xlreal (*FnPtr_1384) ( xlreal x_1379 , xlreal var1375_1380 , xlreal var1376_1381 , xlreal var1377_1382 , xlreal var1378_1383 ) ;
+xlreal max_1385 ( xlreal x_1379 , xlreal var1375_1380 , xlreal var1376_1381 , xlreal var1377_1382 , xlreal var1378_1383 ) ;
+typedef xlreal (*FnPtr_1401) ( xlreal x_1397 , xlreal var1394_1398 , xlreal var1395_1399 , xlreal var1396_1400 ) ;
+xlreal max_1402 ( xlreal x_1397 , xlreal var1394_1398 , xlreal var1395_1399 , xlreal var1396_1400 ) ;
+typedef xlreal (*FnPtr_1416) ( xlreal x_1413 , xlreal var1411_1414 , xlreal var1412_1415 ) ;
+xlreal max_1417 ( xlreal x_1413 , xlreal var1411_1414 , xlreal var1412_1415 ) ;
+typedef xlreal (*FnPtr_1429) ( xlreal x_1427 , xlreal var1426_1428 ) ;
+xlreal max_1430 ( xlreal x_1427 , xlreal var1426_1428 ) ;
+typedef xlreal (*FnPtr_1446) ( xlreal x_1445 ) ;
+xlreal max_1447 ( xlreal x_1445 ) ;
+xlreal ret_1462; /* Temp */
+xlint ret_1475; /* Temp */
+xlreal ret_1488; /* Temp */
+xlint ret_1495; /* Temp */
+xlreal ret_1502; /* Temp */
+xlint max_1355 ( xlint x_1353 ) {
+xlint result_1356; /* Result */
+ret_1357 = 0;
+result_1356 = ret_1357;
+result_1356 = x_1353;
+goto exit_max_1355;
+exit_max_1355: 0;
+return result_1356;
 }
-xlint max_1336 ( xlint x_1333 , xlint var1332_1334 ) {
-xlint ret_1354; /* Temp */
-xlbool ret_1356; /* Temp */
-xlint result_1337; /* Result */
-ret_1354 = max_1352 ( var1332_1334 );
-result_1337 = ret_1354;
-ret_1356 = result_1337 < x_1333;
-if(!(ret_1356)) goto else_if_1355;
-result_1337 = x_1333;
-else_if_1355: 0;
-exit_max_1336: 0;
-return result_1337;
+xlint max_1338 ( xlint x_1335 , xlint var1334_1336 ) {
+xlint ret_1358; /* Temp */
+xlbool ret_1360; /* Temp */
+xlint result_1339; /* Result */
+ret_1340 = 0;
+result_1339 = ret_1340;
+ret_1358 = max_1355 ( var1334_1336 );
+result_1339 = ret_1358;
+ret_1360 = result_1339 < x_1335;
+if(!(ret_1360)) goto else_if_1359;
+result_1339 = x_1335;
+else_if_1359: 0;
+exit_max_1338: 0;
+return result_1339;
 }
-xlint max_1324 ( xlint x_1320 , xlint var1318_1321 , xlint var1319_1322 ) {
-xlint ret_1357; /* Temp */
-xlbool ret_1359; /* Temp */
-xlint result_1325; /* Result */
-ret_1357 = max_1336 ( var1318_1321 , var1319_1322 );
-result_1325 = ret_1357;
-ret_1359 = result_1325 < x_1320;
-if(!(ret_1359)) goto else_if_1358;
-result_1325 = x_1320;
-else_if_1358: 0;
-exit_max_1324: 0;
-return result_1325;
+xlint max_1325 ( xlint x_1321 , xlint var1319_1322 , xlint var1320_1323 ) {
+xlint ret_1361; /* Temp */
+xlbool ret_1363; /* Temp */
+xlint result_1326; /* Result */
+ret_1327 = 0;
+result_1326 = ret_1327;
+ret_1361 = max_1338 ( var1319_1322 , var1320_1323 );
+result_1326 = ret_1361;
+ret_1363 = result_1326 < x_1321;
+if(!(ret_1363)) goto else_if_1362;
+result_1326 = x_1321;
+else_if_1362: 0;
+exit_max_1325: 0;
+return result_1326;
 }
 xlint max_1310 ( xlint x_1305 , xlint var1302_1306 , xlint var1303_1307 , xlint var1304_1308 ) {
-xlint ret_1360; /* Temp */
-xlbool ret_1362; /* Temp */
+xlint ret_1364; /* Temp */
+xlbool ret_1366; /* Temp */
 xlint result_1311; /* Result */
-ret_1360 = max_1324 ( var1302_1306 , var1303_1307 , var1304_1308 );
-result_1311 = ret_1360;
-ret_1362 = result_1311 < x_1305;
-if(!(ret_1362)) goto else_if_1361;
+ret_1312 = 0;
+result_1311 = ret_1312;
+ret_1364 = max_1325 ( var1302_1306 , var1303_1307 , var1304_1308 );
+result_1311 = ret_1364;
+ret_1366 = result_1311 < x_1305;
+if(!(ret_1366)) goto else_if_1365;
 result_1311 = x_1305;
-else_if_1361: 0;
+else_if_1365: 0;
 exit_max_1310: 0;
 return result_1311;
 }
-xlreal max_1439 ( xlreal x_1437 ) {
-xlreal result_1440; /* Result */
-result_1440 = x_1437;
-goto exit_max_1439;
-exit_max_1439: 0;
-return result_1440;
+xlreal max_1447 ( xlreal x_1445 ) {
+xlreal result_1448; /* Result */
+ret_1449 = 0.0;
+result_1448 = ret_1449;
+result_1448 = x_1445;
+goto exit_max_1447;
+exit_max_1447: 0;
+return result_1448;
 }
-xlreal max_1423 ( xlreal x_1420 , xlreal var1419_1421 ) {
-xlreal ret_1441; /* Temp */
-xlbool ret_1443; /* Temp */
-xlreal result_1424; /* Result */
-ret_1441 = max_1439 ( var1419_1421 );
-result_1424 = ret_1441;
-ret_1443 = result_1424 < x_1420;
-if(!(ret_1443)) goto else_if_1442;
-result_1424 = x_1420;
-else_if_1442: 0;
-exit_max_1423: 0;
-return result_1424;
-}
-xlreal max_1411 ( xlreal x_1407 , xlreal var1405_1408 , xlreal var1406_1409 ) {
-xlreal ret_1444; /* Temp */
-xlbool ret_1446; /* Temp */
-xlreal result_1412; /* Result */
-ret_1444 = max_1423 ( var1405_1408 , var1406_1409 );
-result_1412 = ret_1444;
-ret_1446 = result_1412 < x_1407;
-if(!(ret_1446)) goto else_if_1445;
-result_1412 = x_1407;
-else_if_1445: 0;
-exit_max_1411: 0;
-return result_1412;
-}
-xlreal max_1397 ( xlreal x_1392 , xlreal var1389_1393 , xlreal var1390_1394 , xlreal var1391_1395 ) {
-xlreal ret_1447; /* Temp */
-xlbool ret_1449; /* Temp */
-xlreal result_1398; /* Result */
-ret_1447 = max_1411 ( var1389_1393 , var1390_1394 , var1391_1395 );
-result_1398 = ret_1447;
-ret_1449 = result_1398 < x_1392;
-if(!(ret_1449)) goto else_if_1448;
-result_1398 = x_1392;
-else_if_1448: 0;
-exit_max_1397: 0;
-return result_1398;
-}
-xlreal max_1381 ( xlreal x_1375 , xlreal var1371_1376 , xlreal var1372_1377 , xlreal var1373_1378 , xlreal var1374_1379 ) {
+xlreal max_1430 ( xlreal x_1427 , xlreal var1426_1428 ) {
 xlreal ret_1450; /* Temp */
 xlbool ret_1452; /* Temp */
-xlreal result_1382; /* Result */
-ret_1450 = max_1397 ( var1371_1376 , var1372_1377 , var1373_1378 , var1374_1379 );
-result_1382 = ret_1450;
-ret_1452 = result_1382 < x_1375;
+xlreal result_1431; /* Result */
+ret_1432 = 0.0;
+result_1431 = ret_1432;
+ret_1450 = max_1447 ( var1426_1428 );
+result_1431 = ret_1450;
+ret_1452 = result_1431 < x_1427;
 if(!(ret_1452)) goto else_if_1451;
-result_1382 = x_1375;
+result_1431 = x_1427;
 else_if_1451: 0;
-exit_max_1381: 0;
-return result_1382;
+exit_max_1430: 0;
+return result_1431;
+}
+xlreal max_1417 ( xlreal x_1413 , xlreal var1411_1414 , xlreal var1412_1415 ) {
+xlreal ret_1453; /* Temp */
+xlbool ret_1455; /* Temp */
+xlreal result_1418; /* Result */
+ret_1419 = 0.0;
+result_1418 = ret_1419;
+ret_1453 = max_1430 ( var1411_1414 , var1412_1415 );
+result_1418 = ret_1453;
+ret_1455 = result_1418 < x_1413;
+if(!(ret_1455)) goto else_if_1454;
+result_1418 = x_1413;
+else_if_1454: 0;
+exit_max_1417: 0;
+return result_1418;
+}
+xlreal max_1402 ( xlreal x_1397 , xlreal var1394_1398 , xlreal var1395_1399 , xlreal var1396_1400 ) {
+xlreal ret_1456; /* Temp */
+xlbool ret_1458; /* Temp */
+xlreal result_1403; /* Result */
+ret_1404 = 0.0;
+result_1403 = ret_1404;
+ret_1456 = max_1417 ( var1394_1398 , var1395_1399 , var1396_1400 );
+result_1403 = ret_1456;
+ret_1458 = result_1403 < x_1397;
+if(!(ret_1458)) goto else_if_1457;
+result_1403 = x_1397;
+else_if_1457: 0;
+exit_max_1402: 0;
+return result_1403;
+}
+xlreal max_1385 ( xlreal x_1379 , xlreal var1375_1380 , xlreal var1376_1381 , xlreal var1377_1382 , xlreal var1378_1383 ) {
+xlreal ret_1459; /* Temp */
+xlbool ret_1461; /* Temp */
+xlreal result_1386; /* Result */
+ret_1387 = 0.0;
+result_1386 = ret_1387;
+ret_1459 = max_1402 ( var1375_1380 , var1376_1381 , var1377_1382 , var1378_1383 );
+result_1386 = ret_1459;
+ret_1461 = result_1386 < x_1379;
+if(!(ret_1461)) goto else_if_1460;
+result_1386 = x_1379;
+else_if_1460: 0;
+exit_max_1385: 0;
+return result_1386;
 }
 int main(int _argc, char **_argv)
 {
-xlint ret_1363; /* Temp */
-xlreal ret_1364; /* Temp */
-xlreal ret_1453; /* Temp */
-xlint ret_1466; /* Temp */
-xlreal ret_1479; /* Temp */
-xlint ret_1486; /* Temp */
-xlreal ret_1493; /* Temp */
-ret_1363 = max_1310 ( 1 , 2 , 4 , 6 );
-testinteger_1288 = ret_1363;
-ret_1364 = -2.6;
-ret_1453 = max_1381 ( 1.5 , ret_1364 , 2.7 , 8.41 , 2.21 );
-testreal_1289 = ret_1453;
-ret_1466 = max_1352 ( 1 );
-testinteger1_1290 = ret_1466;
-ret_1479 = max_1439 ( 2.21 );
-testreal1_1291 = ret_1479;
-ret_1486 = max_1336 ( 1 , 817 );
-testinteger2_1292 = ret_1486;
-ret_1493 = max_1423 ( 2.21 , 0.004441 );
-testreal2_1293 = ret_1493;
+xlint ret_1357; /* Temp */
+xlint ret_1340; /* Temp */
+xlint ret_1327; /* Temp */
+xlint ret_1312; /* Temp */
+xlreal ret_1449; /* Temp */
+xlreal ret_1432; /* Temp */
+xlreal ret_1419; /* Temp */
+xlreal ret_1404; /* Temp */
+xlint ret_1367; /* Temp */
+xlreal ret_1368; /* Temp */
+xlreal ret_1387; /* Temp */
+xlreal ret_1462; /* Temp */
+xlint ret_1475; /* Temp */
+xlreal ret_1488; /* Temp */
+xlint ret_1495; /* Temp */
+xlreal ret_1502; /* Temp */
+ret_1367 = max_1310 ( 1 , 2 , 4 , 6 );
+testinteger_1288 = ret_1367;
+ret_1368 = -2.6;
+ret_1462 = max_1385 ( 1.5 , ret_1368 , 2.7 , 8.41 , 2.21 );
+testreal_1289 = ret_1462;
+ret_1475 = max_1355 ( 1 );
+testinteger1_1290 = ret_1475;
+ret_1488 = max_1447 ( 2.21 );
+testreal1_1291 = ret_1488;
+ret_1495 = max_1338 ( 1 , 817 );
+testinteger2_1292 = ret_1495;
+ret_1502 = max_1430 ( 2.21 , 0.004441 );
+testreal2_1293 = ret_1502;
 /* Type */
     /* Main */
     return 0;

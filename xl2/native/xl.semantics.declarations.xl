@@ -192,7 +192,7 @@ module XL.SEMANTICS.DECLARATIONS is
             else
                 // Definition will be processed at semantics time
                 result := parse_tree(@@def 'Name' 'Value')
-        else
+        else if decl.is_local or decl.is_global then
             result := DCL.CallConstructor(decl)
 
 
@@ -643,24 +643,6 @@ module XL.SEMANTICS.DECLARATIONS is
             return Define (Name, Value)
 
 
-    procedure CallDestructors (table : SYM.symbol_table) is
-    // ------------------------------------------------------------------------
-    //    Find all the destructors in the current scope and call them
-    // ------------------------------------------------------------------------
-        names : PT.tree_list
-        entry : PT.tree
-        SYM.LocalSymbols table, names
-        for entry in names loop
-            if entry.kind = PT.xlNAME then
-                name : entry as PT.name_tree
-                dtorCall : PT.tree := parse_tree(delete 'name')
-                ERR.PushErrorContext()
-                dtorCall := XLT.XLSemantics(dtorCall)
-                errors : text := ERR.PopErrorContext()
-                if errors = "" then
-                    XLT.AddScopeTerm table, dtorCall
-
-
     function CallConstructor (decl : declaration) return PT.tree is
     // ------------------------------------------------------------------------
     //   Return a constructor call if needed
@@ -668,14 +650,38 @@ module XL.SEMANTICS.DECLARATIONS is
     //   This function is called only if there is no initializer
     //   If there is any function that matches the type name, then
     //   the type is constructed, and we try to call a function with no args
-        if decl.is_local or decl.is_global then
-            assert decl.type
-            tname : TY.Source(decl.type) as PT.name_tree
-            if tname <> nil then
-                list : PT.tree_list
-                SYM.Lookup XLT.context, "FN", tname.value, list, SYM.lookupAll
-                if size(list) > 0 then
-                    dname : PT.name_tree := decl.name
-                    result := parse_tree('dname' := 'tname' ())
-                    result.position := dname.position
-                    result := XLT.XLSemantics(result)
+
+        assert decl.type
+        tname : TY.Source(decl.type) as PT.name_tree
+        if tname <> nil then
+            list : PT.tree_list
+            SYM.Lookup XLT.context, "FN", tname.value, list, SYM.lookupAll
+            if size(list) > 0 then
+                dname : PT.name_tree := decl.name
+                result := parse_tree('dname' := 'tname' ())
+                result.position := dname.position
+                result := XLT.XLSemantics(result)
+
+
+    procedure CallDestructors (table : SYM.symbol_table) is
+    // ------------------------------------------------------------------------
+    //    Find all the destructors in the current scope and call them
+    // ------------------------------------------------------------------------
+
+        names : PT.tree_list
+        entry : PT.tree
+        SYM.LocalSymbols table, names
+        for entry in names loop
+            decl : DCL.declaration := DCL.GetDeclaration(entry)
+            if entry.kind = PT.xlNAME and decl <> nil then
+                needDtor : boolean := decl.is_local or decl.is_global
+                if needDtor then
+                    name : entry as PT.name_tree
+                    dtorCall : PT.tree := parse_tree(delete 'name')
+                    ERR.PushErrorContext()
+                    dtorCall := XLT.XLSemantics(dtorCall)
+                    errors : text := ERR.PopErrorContext()
+                    if errors = "" then
+                        XLT.AddScopeTerm table, dtorCall
+
+

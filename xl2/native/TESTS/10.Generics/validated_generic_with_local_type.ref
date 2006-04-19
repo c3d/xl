@@ -30,6 +30,7 @@ typedef struct Record_1277 {
   xlmodule baserecord_1; /* RecF */
 } Record_1277;
 Record_1277 xlbuiltins_1278; /* Global */
+xlbool ret_1300; /* Temp */
 typedef struct Record_1288 {
   xlrecord baserecord_1284; /* RecF */
   xlreal re_1285; /* RecF */
@@ -40,50 +41,53 @@ xlbool lessthan_1292 ( Record_1288 x_1289 , Record_1288 y_1290 ) ;
 typedef Record_1288 (*FnPtr_1295) ( Record_1288 src_1294 ) ;
 Record_1288 copy_1296 ( Record_1288 src_1294 ) ;
 Record_1288 z_1297; /* Global */
-typedef Record_1288 (*FnPtr_1310) ( Record_1288 x_1309 ) ;
-Record_1288 max_1311 ( Record_1288 x_1309 ) ;
-Record_1288 ret_1314; /* Temp */
-Record_1288 outret_1315; /* Ret */
+typedef Record_1288 (*FnPtr_1311) ( Record_1288 x_1310 ) ;
+Record_1288 max_1312 ( Record_1288 x_1310 ) ;
+Record_1288 ret_1315; /* Temp */
+Record_1288 outret_1316; /* Ret */
 xlbool lessthan_1292 ( Record_1288 x_1289 , Record_1288 y_1290 ) {
-xlbool ret_1300; /* Temp */
+xlbool ret_1301; /* Temp */
 xlbool result_1299; /* Result */
-ret_1300 = lessthan_1292 ( x_1289 , y_1290 );
+ret_1300 = 0;
 result_1299 = ret_1300;
+ret_1301 = lessthan_1292 ( x_1289 , y_1290 );
+result_1299 = ret_1301;
 goto exit_lessthan_1292;
 exit_lessthan_1292: 0;
 return result_1299;
 }
 Record_1288 copy_1296 ( Record_1288 src_1294 ) {
 Record_1288 tgt_1293; /* Out=Ret */
-/* xlreal fld_1301; Ref */
 /* xlreal fld_1302; Ref */
 /* xlreal fld_1303; Ref */
 /* xlreal fld_1304; Ref */
-#define fld_1302 (tgt_1293.re_1285)
-#define fld_1301 (src_1294.re_1285)
-fld_1302 = fld_1301;
-#define fld_1304 (tgt_1293.im_1286)
-#define fld_1303 (src_1294.im_1286)
-fld_1304 = fld_1303;
+/* xlreal fld_1305; Ref */
+#define fld_1303 (tgt_1293.re_1285)
+#define fld_1302 (src_1294.re_1285)
+fld_1303 = fld_1302;
+#define fld_1305 (tgt_1293.im_1286)
+#define fld_1304 (src_1294.im_1286)
+fld_1305 = fld_1304;
 exit_copy_1296: 0;
 return tgt_1293;
 }
-Record_1288 max_1311 ( Record_1288 x_1309 ) {
-Record_1288 outret_1313; /* Ret */
-Record_1288 result_1312; /* Result */
-outret_1313 = copy_1296 ( x_1309 );
-result_1312 = outret_1313;
-goto exit_max_1311;
-exit_max_1311: 0;
-return result_1312;
+Record_1288 max_1312 ( Record_1288 x_1310 ) {
+Record_1288 outret_1314; /* Ret */
+Record_1288 result_1313; /* Result */
+outret_1314 = copy_1296 ( x_1310 );
+result_1313 = outret_1314;
+goto exit_max_1312;
+exit_max_1312: 0;
+return result_1313;
 }
 int main(int _argc, char **_argv)
 {
-Record_1288 ret_1314; /* Temp */
-Record_1288 outret_1315; /* Ret */
-ret_1314 = max_1311 ( z_1297 );
-outret_1315 = copy_1296 ( ret_1314 );
-z_1297 = outret_1315;
+xlbool ret_1300; /* Temp */
+Record_1288 ret_1315; /* Temp */
+Record_1288 outret_1316; /* Ret */
+ret_1315 = max_1312 ( z_1297 );
+outret_1316 = copy_1296 ( ret_1315 );
+z_1297 = outret_1316;
 /* Type */
 /* Type */
     /* Main */

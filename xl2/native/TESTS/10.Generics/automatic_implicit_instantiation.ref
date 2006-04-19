@@ -30,10 +30,13 @@ typedef struct Record_1277 {
   xlmodule baserecord_1; /* RecF */
 } Record_1277;
 Record_1277 xlbuiltins_1278; /* Global */
-xlint ret_1304; /* Temp */
+xlint ret_1303; /* Temp */
 xlint ret_1305; /* Temp */
+xlint ret_1306; /* Temp */
 xlint ret_1312; /* Temp */
-xlint ret_1313; /* Temp */
+xlint ret_1314; /* Temp */
+xlint ret_1315; /* Temp */
+xlreal ret_1321; /* Temp */
 xlint koba_1285; /* Global */
 xlint kabo_1286; /* Global */
 xlint lkabo_1293; /* Global */
@@ -41,55 +44,64 @@ xlint kubi_1294; /* Global */
 xlreal klonx_1295; /* Global */
 typedef xlint (*FnPtr_1300) ( xlint x_1298 , xlint y_1299 ) ;
 xlint ajouter_1301 ( xlint x_1298 , xlint y_1299 ) ;
-typedef xlint (*FnPtr_1308) ( xlint x_1306 , xlint y_1307 ) ;
-xlint soustraire_1309 ( xlint x_1306 , xlint y_1307 ) ;
-typedef xlreal (*FnPtr_1316) ( xlreal x_1314 , xlreal y_1315 ) ;
-xlreal soustraire_1317 ( xlreal x_1314 , xlreal y_1315 ) ;
-xlreal ret_1320; /* Temp */
+typedef xlint (*FnPtr_1309) ( xlint x_1307 , xlint y_1308 ) ;
+xlint soustraire_1310 ( xlint x_1307 , xlint y_1308 ) ;
+typedef xlreal (*FnPtr_1318) ( xlreal x_1316 , xlreal y_1317 ) ;
+xlreal soustraire_1319 ( xlreal x_1316 , xlreal y_1317 ) ;
+xlreal ret_1323; /* Temp */
 xlint ajouter_1301 ( xlint x_1298 , xlint y_1299 ) {
-xlint ret_1303; /* Temp */
+xlint ret_1304; /* Temp */
 xlint result_1302; /* Result */
-ret_1303 = x_1298 + y_1299;
+ret_1303 = 0;
 result_1302 = ret_1303;
+ret_1304 = x_1298 + y_1299;
+result_1302 = ret_1304;
 goto exit_ajouter_1301;
 exit_ajouter_1301: 0;
 return result_1302;
 }
-xlint soustraire_1309 ( xlint x_1306 , xlint y_1307 ) {
-xlint ret_1311; /* Temp */
-xlint result_1310; /* Result */
-ret_1311 = y_1307 - x_1306;
-result_1310 = ret_1311;
-goto exit_soustraire_1309;
-exit_soustraire_1309: 0;
-return result_1310;
+xlint soustraire_1310 ( xlint x_1307 , xlint y_1308 ) {
+xlint ret_1313; /* Temp */
+xlint result_1311; /* Result */
+ret_1312 = 0;
+result_1311 = ret_1312;
+ret_1313 = y_1308 - x_1307;
+result_1311 = ret_1313;
+goto exit_soustraire_1310;
+exit_soustraire_1310: 0;
+return result_1311;
 }
-xlreal soustraire_1317 ( xlreal x_1314 , xlreal y_1315 ) {
-xlreal ret_1319; /* Temp */
-xlreal result_1318; /* Result */
-ret_1319 = y_1315 - x_1314;
-result_1318 = ret_1319;
-goto exit_soustraire_1317;
-exit_soustraire_1317: 0;
-return result_1318;
+xlreal soustraire_1319 ( xlreal x_1316 , xlreal y_1317 ) {
+xlreal ret_1322; /* Temp */
+xlreal result_1320; /* Result */
+ret_1321 = 0.0;
+result_1320 = ret_1321;
+ret_1322 = y_1317 - x_1316;
+result_1320 = ret_1322;
+goto exit_soustraire_1319;
+exit_soustraire_1319: 0;
+return result_1320;
 }
 int main(int _argc, char **_argv)
 {
-xlint ret_1304; /* Temp */
+xlint ret_1303; /* Temp */
 xlint ret_1305; /* Temp */
+xlint ret_1306; /* Temp */
 xlint ret_1312; /* Temp */
-xlint ret_1313; /* Temp */
-xlreal ret_1320; /* Temp */
-ret_1304 = ajouter_1301 ( 1 , 2 );
-koba_1285 = ret_1304;
-ret_1305 = ajouter_1301 ( 3 , 4 );
-kabo_1286 = ret_1305;
-ret_1312 = soustraire_1309 ( 3 , 5 );
-lkabo_1293 = ret_1312;
-ret_1313 = soustraire_1309 ( 6 , 15 );
-kubi_1294 = ret_1313;
-ret_1320 = soustraire_1317 ( 3.7 , 2.9 );
-klonx_1295 = ret_1320;
+xlint ret_1314; /* Temp */
+xlint ret_1315; /* Temp */
+xlreal ret_1321; /* Temp */
+xlreal ret_1323; /* Temp */
+ret_1305 = ajouter_1301 ( 1 , 2 );
+koba_1285 = ret_1305;
+ret_1306 = ajouter_1301 ( 3 , 4 );
+kabo_1286 = ret_1306;
+ret_1314 = soustraire_1310 ( 3 , 5 );
+lkabo_1293 = ret_1314;
+ret_1315 = soustraire_1310 ( 6 , 15 );
+kubi_1294 = ret_1315;
+ret_1323 = soustraire_1319 ( 3.7 , 2.9 );
+klonx_1295 = ret_1323;
 /* Type */
     /* Main */
     return 0;

@@ -10,6 +10,9 @@
 04.Lookup/type_redefined.xl:29: because a type named 'integer' already exists
 | type integer
 |____________^
+04.Lookup/type_redefined.xl:37: No translation found for 'result := integer ( )'
+|    type integer
+|___^
 04.Lookup/type_redefined.xl:37: The type 'integer' can't be defined here
 |    type integer
 |_______________^

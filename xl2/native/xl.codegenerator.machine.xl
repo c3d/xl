@@ -343,8 +343,11 @@ module XL.CODE_GENERATOR.MACHINE is
                     dtype := decl.type
                     mtype := dtype.machine_name
                     retName := decl.machine_name
+                    if not decl.is_input then
+                        Body := parse_tree
+                            @entry_retN_loc 'mtype' 'retName'
+                            'Body'
                     Body := parse_tree
-                        @entry_retN_loc 'mtype' 'retName'
                         'Body'
                         @exit_retN_set 'mname' 'retName' 'retName'
             Body := parse_tree

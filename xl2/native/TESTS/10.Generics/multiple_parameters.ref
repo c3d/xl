@@ -30,47 +30,55 @@ typedef struct Record_1277 {
   xlmodule baserecord_1; /* RecF */
 } Record_1277;
 Record_1277 xlbuiltins_1278; /* Global */
-xlint ret_1302; /* Temp */
+xlint ret_1301; /* Temp */
 xlint ret_1303; /* Temp */
+xlint ret_1304; /* Temp */
+xlint ret_1312; /* Temp */
 xlint q_1285; /* Global */
 xlint z_1293; /* Global */
 typedef xlint (*FnPtr_1298) ( xlint a_1296 , xlint b_1297 ) ;
 xlint f_1299 ( xlint a_1296 , xlint b_1297 ) ;
-typedef xlint (*FnPtr_1308) ( xlint a_1304 , xlint b_1305 , xlint c_1306 , xlint d_1307 ) ;
-xlint g_1309 ( xlint a_1304 , xlint b_1305 , xlint c_1306 , xlint d_1307 ) ;
-xlint ret_1314; /* Temp */
+typedef xlint (*FnPtr_1309) ( xlint a_1305 , xlint b_1306 , xlint c_1307 , xlint d_1308 ) ;
+xlint g_1310 ( xlint a_1305 , xlint b_1306 , xlint c_1307 , xlint d_1308 ) ;
+xlint ret_1316; /* Temp */
 xlint f_1299 ( xlint a_1296 , xlint b_1297 ) {
-xlint ret_1301; /* Temp */
+xlint ret_1302; /* Temp */
 xlint result_1300; /* Result */
-ret_1301 = a_1296 + b_1297;
+ret_1301 = 0;
 result_1300 = ret_1301;
+ret_1302 = a_1296 + b_1297;
+result_1300 = ret_1302;
 goto exit_f_1299;
 exit_f_1299: 0;
 return result_1300;
 }
-xlint g_1309 ( xlint a_1304 , xlint b_1305 , xlint c_1306 , xlint d_1307 ) {
-xlint ret_1311; /* Temp */
-xlint ret_1312; /* Temp */
+xlint g_1310 ( xlint a_1305 , xlint b_1306 , xlint c_1307 , xlint d_1308 ) {
 xlint ret_1313; /* Temp */
-xlint result_1310; /* Result */
-ret_1311 = b_1305 * c_1306;
-ret_1312 = ret_1311 / d_1307;
-ret_1313 = a_1304 + ret_1312;
-result_1310 = ret_1313;
-goto exit_g_1309;
-exit_g_1309: 0;
-return result_1310;
+xlint ret_1314; /* Temp */
+xlint ret_1315; /* Temp */
+xlint result_1311; /* Result */
+ret_1312 = 0;
+result_1311 = ret_1312;
+ret_1313 = b_1306 * c_1307;
+ret_1314 = ret_1313 / d_1308;
+ret_1315 = a_1305 + ret_1314;
+result_1311 = ret_1315;
+goto exit_g_1310;
+exit_g_1310: 0;
+return result_1311;
 }
 int main(int _argc, char **_argv)
 {
-xlint ret_1302; /* Temp */
+xlint ret_1301; /* Temp */
 xlint ret_1303; /* Temp */
-xlint ret_1314; /* Temp */
-ret_1302 = f_1299 ( 1 , 5 );
-q_1285 = ret_1302;
-ret_1303 = -3;
-ret_1314 = g_1309 ( 1 , ret_1303 , 6 , 4 );
-z_1293 = ret_1314;
+xlint ret_1304; /* Temp */
+xlint ret_1312; /* Temp */
+xlint ret_1316; /* Temp */
+ret_1303 = f_1299 ( 1 , 5 );
+q_1285 = ret_1303;
+ret_1304 = -3;
+ret_1316 = g_1310 ( 1 , ret_1304 , 6 , 4 );
+z_1293 = ret_1316;
 /* Type */
     /* Main */
     return 0;

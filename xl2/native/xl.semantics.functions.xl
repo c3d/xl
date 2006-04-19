@@ -364,6 +364,7 @@ module XL.SEMANTICS.FUNCTIONS is
 
         // Create a symbol table for the body (taking parms as enclosing)
         f           : function := GetFunction(Interface)
+        preCode     : PT.tree
         assert f <> nil
         ftype       : GEN.NonGenericType(f.type) as FT.function_type
         assert ftype <> nil
@@ -389,13 +390,33 @@ module XL.SEMANTICS.FUNCTIONS is
                 MName : PT.name_tree := decl.machine_name
                 MType : PT.name_tree := DType.machine_name
                 f.result_machine_name := MName
-                Body := XLT.Append(DCL.CallConstructor(decl), Body)
-                Body := parse_tree
-                    @result_decl 'MType' 'MName'
-                    'Body'
+                decl.is_output := true
+                preCode := parse_tree(@result_decl 'MType' 'MName')
 
         // For generic functions, just skip body semantics and the like
         if not GEN.IsGenericDeclaration(f) then
+
+            // Insert constructors for out parameters, except 'result'
+            // if the function is itself a constructor for the result type
+            entries : PT.tree_list
+            entry   : PT.tree
+            SYM.LocalSymbols XLT.context, entries
+            SYM.LocalSymbols ftype.symbols, entries
+            for entry in entries loop
+                decl : DCL.declaration := DCL.GetDeclaration(entry)
+                if entry.kind = PT.xlNAME and decl <> nil then
+                    if decl.is_output and not decl.is_input then
+                        needCtor : boolean := true
+                        if decl.machine_name = f.result_machine_name then
+                            rtName : TY.Source(retType) as PT.name_tree
+                            if rtName <> nil then
+                                fName  : PT.name_tree := f.name
+                                if rtName.value = fName.value then
+                                    needCtor := false
+                        if needCtor then
+                            ctor : PT.tree := DCL.CallConstructor(decl)
+                            preCode := XLT.Append(preCode, ctor)
+
             // Compute preconditions
             preCond : PT.tree
             preList : PT.tree_list
@@ -411,6 +432,7 @@ module XL.SEMANTICS.FUNCTIONS is
             f.postconditions := postList
 
             // Perform body semantics
+            Body := XLT.Append(preCode, Body)
             Body := XLT.ScopeSemantics(Body, XLT.scopeFunction)
             result := CGM.FunctionBody(f, Interface, Body)
 
