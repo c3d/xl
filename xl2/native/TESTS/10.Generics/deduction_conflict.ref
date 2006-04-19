@@ -1,6 +1,9 @@
 10.Generics/deduction_conflict.xl:17: No translation found for 'Z := Pang (1 , 3)'
 | Z : boolean := Pang (1, 3.0)
 |_____________________^
+10.Generics/deduction_conflict.xl:20: No translation found for 'U := Pong (1 , 3)'
+| U : real := Pong (1.0, 3)
+|__________________^
 10.Generics/deduction_conflict.xl:22: No translation found for 'K := Ping (1 , 2)'
 | K : integer := Ping(1, 2)
 |____________________^

@@ -4,27 +4,33 @@
 10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
 |     Second : nonexistent_item
 |_____________________________^
+10.Generics/simple_pair_fail.xl:8: Expression 'Pair [integer]' has no type
+| type kazoo is Pair[integer]
+|___________________^
+10.Generics/simple_pair_fail.xl:8: Expression 'Pair [integer]' is not a type
+| type kazoo is Pair[integer]
+|___________________^
 10.Generics/simple_pair_fail.xl:9: Unable to instantiate 'Pair', because
 | type kazaa is Pair[real]
 |__________________^
 10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
 |     Second : nonexistent_item
 |_____________________________^
+10.Generics/simple_pair_fail.xl:9: Expression 'Pair [real]' has no type
+| type kazaa is Pair[real]
+|___________________^
+10.Generics/simple_pair_fail.xl:9: Expression 'Pair [real]' is not a type
+| type kazaa is Pair[real]
+|___________________^
 10.Generics/simple_pair_fail.xl:10: Unable to instantiate 'Pair', because
 | type koza is Pair[kazaa]
 |_________________^
 10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
 |     Second : nonexistent_item
 |_____________________________^
-10.Generics/simple_pair_fail.xl:11: Unable to instantiate 'Pair', because
-| type kzoo is Pair[Pair[boo_lean]]
-|_________________^
-10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
-|     Second : nonexistent_item
-|_____________________________^
-10.Generics/simple_pair_fail.xl:14: Unable to instantiate 'Pair', because
-| flax : Pair [Pair [ Pair [real ]]]
-|___________^
-10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
-|     Second : nonexistent_item
-|_____________________________^
+10.Generics/simple_pair_fail.xl:10: Expression 'Pair [kazaa]' has no type
+| type koza is Pair[kazaa]
+|__________________^
+10.Generics/simple_pair_fail.xl:10: Expression 'Pair [kazaa]' is not a type
+| type koza is Pair[kazaa]
+|__________________^
