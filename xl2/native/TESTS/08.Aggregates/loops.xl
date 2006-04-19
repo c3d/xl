@@ -1,26 +1,35 @@
 // This test the basic functionality of loops
-// RUN=cat %c
+use XL.UI.CONSOLE
 
 I : integer := 1
 
 loop
+    WriteLn "Infinite I=", I
     I := I + 1
     exit if I > 100
 
 while I < 200 loop
+    WriteLn "Pre-while I=", I
     I := I + 2
 
 until I > 300 loop
+    WriteLn "Pre-until I=", I
     I := I + 3
 
 loop I := I + 4 while I < 400
+WriteLn "Inline while I=", I
 
 loop I := I + 5 until I > 500
+WriteLn "Inline until I=", I
 
 loop
+    WriteLn "Post-while I=", I
     I := I + 6
 while I < 600
 
 loop
+    WriteLn "Post-until I=", I
     I := I + 7
 until I > 700
+
+WriteLn "Final I=", I

@@ -411,7 +411,8 @@ module XL.SEMANTICS.FUNCTIONS is
                             rtName : TY.Source(retType) as PT.name_tree
                             if rtName <> nil then
                                 fName  : PT.name_tree := f.name
-                                if rtName.value = fName.value then
+                                if PT.XLNormalize (rtName.value) =
+                                   PT.XLNormalize (fName.value) then
                                     needCtor := false
                         if needCtor then
                             ctor : PT.tree := DCL.CallConstructor(decl)

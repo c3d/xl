@@ -1,0 +1,40 @@
+use XL.UI.C_on_SOLE
+
+Counter : integer := 777
+function Integer () return integer is
+   Counter += 1
+   WriteLn "Constructed ", Counter
+   return Counter
+
+to Delete (Value : integer) is
+   WriteLn "Destroyed ", Value
+
+function F(in InVar : integer;
+           out OutVar : integer;
+           in out InOutVar : integer) return integer is
+    WriteLn "On entry:"
+    WriteLn " InVar=", InVar
+    WriteLn " OutVar=", OutVar
+    WriteLn " InOutVar=", InOutVar
+    WriteLn " Result=", Result
+
+    OutVar *= 2
+    InOutVar *= 3
+
+    WriteLn "On exit:"
+    WriteLn " InVar=", InVar
+    WriteLn " OutVar=", OutVar
+    WriteLn " InOutVar=", InOutVar
+    WriteLn " Result=", Result
+
+Global, General, Universal : integer
+
+WriteLn "Global variables:"
+WriteLn " Global=", Global
+WriteLn " General=", Gener_Al
+WriteLn " Universal=", UniVERSAL
+WriteLn "F=", F(Global, General, UniverSAL)
+WriteLn "Global variables after call to F:"
+WriteLn " Global=", Global
+WriteLn " General=", Gener_Al
+WriteLn " Universal=", UniVERSAL

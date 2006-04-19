@@ -439,9 +439,32 @@ module XL.SEMANTICS.OVERLOAD is
                     return syms <> nil and size(list) > 0
             return false
 
-        Name : T as PT.name_tree
-        OneFunction : PT.tree := SYM.LookupOne (XLT.context, "FN", Name.value)
-        return OneFunction <> nil
+        // Check that there is at least one function
+        // If there is one, and if there is a local name, check that there
+        // are local functions, otherwise, assume the local name takes over
+        // external functions. This way, instantiationg XL.TEXT_IO.Write
+        // doesn't break just because you happen to have a function called "F"
+        // (which is otherwise visible during instantiation)
+        Name        : T as PT.name_tree
+        scope       : map[PT.tree, integer]
+        funs        : PT.tree_list
+        fnDepth     : integer := 0
+        SYM.Lookup XLT.context, "FN", Name.value, funs,
+                   scope, fnDepth, SYM.lookupInnermost
+        if size(funs) = 0 then
+            return false        // No function at all
+
+        dcls        : PT.tree_list
+        dclDepth    : integer := 0
+        SYM.Lookup XLT.context, "DECL", Name.value, dcls,
+                   scope, dclDepth, SYM.lookupInnermost
+        if size(dcls) = 0 then
+            return true         // There are functions, but no decl
+
+        // This is a function name if the closest scope where we find a
+        // function is at least as close as the first scope where we find
+        // a non-function declaration
+        return scope[funs[0]] <= scope[dcls[0]]
 
 
     translation XLSemantics

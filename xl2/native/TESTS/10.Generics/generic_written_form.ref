@@ -26,29 +26,35 @@ xlfile xl_getstdfile(int n) {
   }
   return NULL;
 }
-typedef struct Record_1277 {
+typedef xlint (*FnPtr_1279) ( xlint low_1277 , xlint high_1278 ) ;
+typedef xlint (*FnPtr_1285) ( xlint low_1282 , xlint high_1283 , xlint incr_1284 ) ;
+typedef xlreal (*FnPtr_1291) ( xlreal low_1288 , xlreal high_1289 , xlreal incr_1290 ) ;
+typedef struct Record_1294 {
   xlmodule baserecord_1; /* RecF */
-} Record_1277;
-Record_1277 xlbuiltins_1278; /* Global */
-typedef struct Record_1286 {
-  xlrecord baserecord_1282; /* RecF */
-  xlint first_1283; /* RecF */
-  xlint second_1284; /* RecF */
-} Record_1286;
-Record_1286 k_1287; /* Global */
-typedef struct Record_1295 {
-  xlrecord baserecord_1291; /* RecF */
-  xlint first_1292; /* RecF */
-  xlint second_1293; /* RecF */
-} Record_1295;
-Record_1295 l_1296; /* Global */
-typedef struct Record_1301 {
-  xlrecord baserecord_1297; /* RecF */
-  Record_1286 first_1298; /* RecF */
-  Record_1286 second_1299; /* RecF */
-} Record_1301;
-Record_1301 z_1302; /* Global */
-Record_1301 u_1303; /* Global */
+  FnPtr_1279 iterator_1280; /* RecF */
+  FnPtr_1285 iterator_1286; /* RecF */
+  FnPtr_1291 iterator_1292; /* RecF */
+} Record_1294;
+Record_1294 xlbuiltins_1295; /* Global */
+typedef struct Record_1303 {
+  xlrecord baserecord_1299; /* RecF */
+  xlint first_1300; /* RecF */
+  xlint second_1301; /* RecF */
+} Record_1303;
+Record_1303 k_1304; /* Global */
+typedef struct Record_1312 {
+  xlrecord baserecord_1308; /* RecF */
+  xlint first_1309; /* RecF */
+  xlint second_1310; /* RecF */
+} Record_1312;
+Record_1312 l_1313; /* Global */
+typedef struct Record_1318 {
+  xlrecord baserecord_1314; /* RecF */
+  Record_1303 first_1315; /* RecF */
+  Record_1303 second_1316; /* RecF */
+} Record_1318;
+Record_1318 z_1319; /* Global */
+Record_1318 u_1320; /* Global */
 int main(int _argc, char **_argv)
 {
 /* Type */

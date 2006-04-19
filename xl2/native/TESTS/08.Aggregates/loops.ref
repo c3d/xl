@@ -1,121 +1,218 @@
-#include <stdio.h>
-typedef char                   xlint8;
-typedef short                  xlint16;
-typedef int                    xlint32;
-typedef long long              xlint64;
-typedef unsigned char          xluint8;
-typedef unsigned short         xluint16;
-typedef unsigned int           xluint32;
-typedef unsigned long long     xluint64;
-typedef float                  xlreal32;
-typedef double                 xlreal64;
-typedef int                    xlint;
-typedef unsigned               xluint;
-typedef double                 xlreal;
-typedef char                   xlbool;
-typedef char                   xlchar;
-typedef const char *           xltext;
-typedef void *                 xlptr;
-typedef struct {} /* !ANSIC */ xlrecord, xlmodule;
-typedef FILE *                 xlfile;
-xlfile xl_getstdfile(int n) {
-  switch(n) {
-    case 0: return stdin;
-    case 1: return stdout;
-    case 2: return stderr;
-  }
-  return NULL;
-}
-typedef struct Record_1277 {
-  xlmodule baserecord_1; /* RecF */
-} Record_1277;
-Record_1277 xlbuiltins_1278; /* Global */
-xlint i_1279; /* Global */
-xlint ret_1281; /* Temp */
-xlbool ret_1283; /* Temp */
-xlbool ret_1285; /* Temp */
-xlint ret_1286; /* Temp */
-xlbool ret_1288; /* Temp */
-xlint ret_1289; /* Temp */
-xlbool ret_1291; /* Temp */
-xlint ret_1292; /* Temp */
-xlbool ret_1294; /* Temp */
-xlint ret_1295; /* Temp */
-xlbool ret_1297; /* Temp */
-xlint ret_1298; /* Temp */
-xlbool ret_1300; /* Temp */
-xlint ret_1301; /* Temp */
-int main(int _argc, char **_argv)
-{
-xlint ret_1281; /* Temp */
-xlbool ret_1283; /* Temp */
-xlbool ret_1285; /* Temp */
-xlint ret_1286; /* Temp */
-xlbool ret_1288; /* Temp */
-xlint ret_1289; /* Temp */
-xlbool ret_1291; /* Temp */
-xlint ret_1292; /* Temp */
-xlbool ret_1294; /* Temp */
-xlint ret_1295; /* Temp */
-xlbool ret_1297; /* Temp */
-xlint ret_1298; /* Temp */
-xlbool ret_1300; /* Temp */
-xlint ret_1301; /* Temp */
-i_1279 = 1;
-loopentry_loop_1280: 0;
-ret_1281 = i_1279 + 1;
-i_1279 = ret_1281;
-ret_1283 = i_1279 > 100;
-if(!(ret_1283)) goto else_if_1282;
-goto loopexit_loop_1280;
-else_if_1282: 0;
-goto loopentry_loop_1280;
-loopexit_loop_1280: 0;
-goto loopend_while_1284;
-loopentry_while_1284: 0;
-ret_1286 = i_1279 + 2;
-i_1279 = ret_1286;
-loopend_while_1284: 0;
-ret_1285 = i_1279 < 200;
-if (ret_1285) goto loopentry_while_1284;
-loopexit_while_1284: 0;
-goto loopend_while_1287;
-loopentry_while_1287: 0;
-ret_1289 = i_1279 + 3;
-i_1279 = ret_1289;
-loopend_while_1287: 0;
-ret_1288 = i_1279 > 300;
-if (!(ret_1288)) goto loopentry_while_1287;
-loopexit_while_1287: 0;
-loopentry_while_1290: 0;
-ret_1292 = i_1279 + 4;
-i_1279 = ret_1292;
-loopend_while_1290: 0;
-ret_1291 = i_1279 < 400;
-if (ret_1291) goto loopentry_while_1290;
-loopexit_while_1290: 0;
-loopentry_while_1293: 0;
-ret_1295 = i_1279 + 5;
-i_1279 = ret_1295;
-loopend_while_1293: 0;
-ret_1294 = i_1279 > 500;
-if (!(ret_1294)) goto loopentry_while_1293;
-loopexit_while_1293: 0;
-loopentry_while_1296: 0;
-ret_1298 = i_1279 + 6;
-i_1279 = ret_1298;
-loopend_while_1296: 0;
-ret_1297 = i_1279 < 600;
-if (ret_1297) goto loopentry_while_1296;
-loopexit_while_1296: 0;
-loopentry_while_1299: 0;
-ret_1301 = i_1279 + 7;
-i_1279 = ret_1301;
-loopend_while_1299: 0;
-ret_1300 = i_1279 > 700;
-if (!(ret_1300)) goto loopentry_while_1299;
-loopexit_while_1299: 0;
-    /* Main */
-    return 0;
-}
-/*end*/
+Infinite I=1
+Infinite I=2
+Infinite I=3
+Infinite I=4
+Infinite I=5
+Infinite I=6
+Infinite I=7
+Infinite I=8
+Infinite I=9
+Infinite I=10
+Infinite I=11
+Infinite I=12
+Infinite I=13
+Infinite I=14
+Infinite I=15
+Infinite I=16
+Infinite I=17
+Infinite I=18
+Infinite I=19
+Infinite I=20
+Infinite I=21
+Infinite I=22
+Infinite I=23
+Infinite I=24
+Infinite I=25
+Infinite I=26
+Infinite I=27
+Infinite I=28
+Infinite I=29
+Infinite I=30
+Infinite I=31
+Infinite I=32
+Infinite I=33
+Infinite I=34
+Infinite I=35
+Infinite I=36
+Infinite I=37
+Infinite I=38
+Infinite I=39
+Infinite I=40
+Infinite I=41
+Infinite I=42
+Infinite I=43
+Infinite I=44
+Infinite I=45
+Infinite I=46
+Infinite I=47
+Infinite I=48
+Infinite I=49
+Infinite I=50
+Infinite I=51
+Infinite I=52
+Infinite I=53
+Infinite I=54
+Infinite I=55
+Infinite I=56
+Infinite I=57
+Infinite I=58
+Infinite I=59
+Infinite I=60
+Infinite I=61
+Infinite I=62
+Infinite I=63
+Infinite I=64
+Infinite I=65
+Infinite I=66
+Infinite I=67
+Infinite I=68
+Infinite I=69
+Infinite I=70
+Infinite I=71
+Infinite I=72
+Infinite I=73
+Infinite I=74
+Infinite I=75
+Infinite I=76
+Infinite I=77
+Infinite I=78
+Infinite I=79
+Infinite I=80
+Infinite I=81
+Infinite I=82
+Infinite I=83
+Infinite I=84
+Infinite I=85
+Infinite I=86
+Infinite I=87
+Infinite I=88
+Infinite I=89
+Infinite I=90
+Infinite I=91
+Infinite I=92
+Infinite I=93
+Infinite I=94
+Infinite I=95
+Infinite I=96
+Infinite I=97
+Infinite I=98
+Infinite I=99
+Infinite I=100
+Pre-while I=101
+Pre-while I=103
+Pre-while I=105
+Pre-while I=107
+Pre-while I=109
+Pre-while I=111
+Pre-while I=113
+Pre-while I=115
+Pre-while I=117
+Pre-while I=119
+Pre-while I=121
+Pre-while I=123
+Pre-while I=125
+Pre-while I=127
+Pre-while I=129
+Pre-while I=131
+Pre-while I=133
+Pre-while I=135
+Pre-while I=137
+Pre-while I=139
+Pre-while I=141
+Pre-while I=143
+Pre-while I=145
+Pre-while I=147
+Pre-while I=149
+Pre-while I=151
+Pre-while I=153
+Pre-while I=155
+Pre-while I=157
+Pre-while I=159
+Pre-while I=161
+Pre-while I=163
+Pre-while I=165
+Pre-while I=167
+Pre-while I=169
+Pre-while I=171
+Pre-while I=173
+Pre-while I=175
+Pre-while I=177
+Pre-while I=179
+Pre-while I=181
+Pre-while I=183
+Pre-while I=185
+Pre-while I=187
+Pre-while I=189
+Pre-while I=191
+Pre-while I=193
+Pre-while I=195
+Pre-while I=197
+Pre-while I=199
+Pre-until I=201
+Pre-until I=204
+Pre-until I=207
+Pre-until I=210
+Pre-until I=213
+Pre-until I=216
+Pre-until I=219
+Pre-until I=222
+Pre-until I=225
+Pre-until I=228
+Pre-until I=231
+Pre-until I=234
+Pre-until I=237
+Pre-until I=240
+Pre-until I=243
+Pre-until I=246
+Pre-until I=249
+Pre-until I=252
+Pre-until I=255
+Pre-until I=258
+Pre-until I=261
+Pre-until I=264
+Pre-until I=267
+Pre-until I=270
+Pre-until I=273
+Pre-until I=276
+Pre-until I=279
+Pre-until I=282
+Pre-until I=285
+Pre-until I=288
+Pre-until I=291
+Pre-until I=294
+Pre-until I=297
+Pre-until I=300
+Inline while I=403
+Inline until I=503
+Post-while I=503
+Post-while I=509
+Post-while I=515
+Post-while I=521
+Post-while I=527
+Post-while I=533
+Post-while I=539
+Post-while I=545
+Post-while I=551
+Post-while I=557
+Post-while I=563
+Post-while I=569
+Post-while I=575
+Post-while I=581
+Post-while I=587
+Post-while I=593
+Post-while I=599
+Post-until I=605
+Post-until I=612
+Post-until I=619
+Post-until I=626
+Post-until I=633
+Post-until I=640
+Post-until I=647
+Post-until I=654
+Post-until I=661
+Post-until I=668
+Post-until I=675
+Post-until I=682
+Post-until I=689
+Post-until I=696
+Final I=703

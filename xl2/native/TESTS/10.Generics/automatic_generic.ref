@@ -26,31 +26,37 @@ xlfile xl_getstdfile(int n) {
   }
   return NULL;
 }
-typedef struct Record_1277 {
+typedef xlint (*FnPtr_1279) ( xlint low_1277 , xlint high_1278 ) ;
+typedef xlint (*FnPtr_1285) ( xlint low_1282 , xlint high_1283 , xlint incr_1284 ) ;
+typedef xlreal (*FnPtr_1291) ( xlreal low_1288 , xlreal high_1289 , xlreal incr_1290 ) ;
+typedef struct Record_1294 {
   xlmodule baserecord_1; /* RecF */
-} Record_1277;
-Record_1277 xlbuiltins_1278; /* Global */
-typedef xlint (*FnPtr_1294) ( xlint x_1293 ) ;
-xlint g_1295 ( xlint x_1293 ) ;
-xlint ret_1309; /* Temp */
-xlint g_1295 ( xlint x_1293 ) {
-xlint ret_1310; /* Temp */
-xlint ret_1311; /* Temp */
-xlint ret_1312; /* Temp */
-xlint result_1308; /* Result */
-ret_1309 = 0;
-result_1308 = ret_1309;
-ret_1310 = x_1293 - 1;
-ret_1311 = g_1295 ( ret_1310 );
-ret_1312 = ret_1311 + 1;
-result_1308 = ret_1312;
-goto exit_g_1295;
-exit_g_1295: 0;
-return result_1308;
+  FnPtr_1279 iterator_1280; /* RecF */
+  FnPtr_1285 iterator_1286; /* RecF */
+  FnPtr_1291 iterator_1292; /* RecF */
+} Record_1294;
+Record_1294 xlbuiltins_1295; /* Global */
+typedef xlint (*FnPtr_1311) ( xlint x_1310 ) ;
+xlint g_1312 ( xlint x_1310 ) ;
+xlint ret_1326; /* Temp */
+xlint g_1312 ( xlint x_1310 ) {
+xlint ret_1327; /* Temp */
+xlint ret_1328; /* Temp */
+xlint ret_1329; /* Temp */
+xlint result_1325; /* Result */
+ret_1326 = 0;
+result_1325 = ret_1326;
+ret_1327 = x_1310 - 1;
+ret_1328 = g_1312 ( ret_1327 );
+ret_1329 = ret_1328 + 1;
+result_1325 = ret_1329;
+goto exit_g_1312;
+exit_g_1312: 0;
+return result_1325;
 }
 int main(int _argc, char **_argv)
 {
-xlint ret_1309; /* Temp */
+xlint ret_1326; /* Temp */
 /* Type */
 /* Type */
     /* Main */

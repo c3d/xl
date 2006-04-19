@@ -26,31 +26,37 @@ xlfile xl_getstdfile(int n) {
   }
   return NULL;
 }
-typedef struct Record_1277 {
+typedef xlint (*FnPtr_1279) ( xlint low_1277 , xlint high_1278 ) ;
+typedef xlint (*FnPtr_1285) ( xlint low_1282 , xlint high_1283 , xlint incr_1284 ) ;
+typedef xlreal (*FnPtr_1291) ( xlreal low_1288 , xlreal high_1289 , xlreal incr_1290 ) ;
+typedef struct Record_1294 {
   xlmodule baserecord_1; /* RecF */
-} Record_1277;
-Record_1277 xlbuiltins_1278; /* Global */
-typedef void (*FnPtr_1282) ( xltext msg_1279 , xltext file_1280 , xlint line_1281 ) ;
-void myassertionfailure_1283 ( xltext msg_1279 , xltext file_1280 , xlint line_1281 ) ;
-typedef void (*FnPtr_1286) ( xlint x_1284 , xlint y_1285 ) ;
-void testit_1287 ( xlint x_1284 , xlint y_1285 ) ;
-void myassertionfailure_1283 ( xltext msg_1279 , xltext file_1280 , xlint line_1281 ) {
-xlint ret_1288; /* Temp */
-ret_1288 = line_1281 - 1;
-line_1281 = ret_1288;
-exit_myassertionfailure_1283: 0;
+  FnPtr_1279 iterator_1280; /* RecF */
+  FnPtr_1285 iterator_1286; /* RecF */
+  FnPtr_1291 iterator_1292; /* RecF */
+} Record_1294;
+Record_1294 xlbuiltins_1295; /* Global */
+typedef void (*FnPtr_1299) ( xltext msg_1296 , xltext file_1297 , xlint line_1298 ) ;
+void myassertionfailure_1300 ( xltext msg_1296 , xltext file_1297 , xlint line_1298 ) ;
+typedef void (*FnPtr_1303) ( xlint x_1301 , xlint y_1302 ) ;
+void testit_1304 ( xlint x_1301 , xlint y_1302 ) ;
+void myassertionfailure_1300 ( xltext msg_1296 , xltext file_1297 , xlint line_1298 ) {
+xlint ret_1305; /* Temp */
+ret_1305 = line_1298 - 1;
+line_1298 = ret_1305;
+exit_myassertionfailure_1300: 0;
 }
-void testit_1287 ( xlint x_1284 , xlint y_1285 ) {
-xlint ret_1290; /* Temp */
-xlbool ret_1291; /* Temp */
-xlbool ret_1292; /* Temp */
-ret_1290 = x_1284 + y_1285;
-ret_1291 = ret_1290 < 34;
-ret_1292 = !ret_1291;
-if(!(ret_1292)) goto else_if_1289;
-myassertionfailure_1283 ( "X + Y < 34" , "11.Preprocessor/assert_macro.xl" , 27 );
-else_if_1289: 0;
-exit_testit_1287: 0;
+void testit_1304 ( xlint x_1301 , xlint y_1302 ) {
+xlint ret_1307; /* Temp */
+xlbool ret_1308; /* Temp */
+xlbool ret_1309; /* Temp */
+ret_1307 = x_1301 + y_1302;
+ret_1308 = ret_1307 < 34;
+ret_1309 = !ret_1308;
+if(!(ret_1309)) goto else_if_1306;
+myassertionfailure_1300 ( "X + Y < 34" , "11.Preprocessor/assert_macro.xl" , 27 );
+else_if_1306: 0;
+exit_testit_1304: 0;
 }
 int main(int _argc, char **_argv)
 {

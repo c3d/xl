@@ -1,5 +1,5 @@
 // This tests the xl.set preprocessing directive
-// RUN=cat %c
+use XL.UI.CONSOLE
 
 xl.set X = 0
 A : integer := xl.value(X)
@@ -15,3 +15,11 @@ xl.replace (foo 'Var') with (xl.set TMP = TMP+1
 foo X
 foo Y
 foo Z
+
+WriteLn "A=", A
+WriteLn "B=", B
+WriteLn "C=", C
+WriteLn "X=", X
+WriteLn "Y=", Y
+WriteLn "Z=", Z
+

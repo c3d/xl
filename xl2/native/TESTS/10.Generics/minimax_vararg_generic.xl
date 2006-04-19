@@ -1,5 +1,5 @@
 // The quintessential XL test now passes :-)
-// RUN=cat %c
+use XL.UI.CONSOLE
 
 generic type ordered where
     A, B : ordered
@@ -19,3 +19,10 @@ Test_integer1 : integer := Max(1)
 Test_real1 : real := Max (2.21)
 Test_integer2 : integer := Max(1, 817)
 Test_real2 : real := Max (2.21, 4.441e-3)
+
+WriteLn "Integer = ", Test_integer
+WriteLn "Real = ", Test_real
+WriteLn "Integer1 = ", Test_integer1
+WriteLn "Real1 = ", Test_real1
+WriteLn "Integer2 = ", Test_integer2
+WriteLn "Real2 = ", Test_real2

@@ -1,4 +1,5 @@
 // Test that we can include another file
-// RUN=cat %c
 xl.include "macros.xl"
 
+WriteLn "S=", S
+WriteLn "T=", T

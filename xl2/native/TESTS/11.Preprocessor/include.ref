@@ -1,57 +1,7 @@
-#include <stdio.h>
-typedef char                   xlint8;
-typedef short                  xlint16;
-typedef int                    xlint32;
-typedef long long              xlint64;
-typedef unsigned char          xluint8;
-typedef unsigned short         xluint16;
-typedef unsigned int           xluint32;
-typedef unsigned long long     xluint64;
-typedef float                  xlreal32;
-typedef double                 xlreal64;
-typedef int                    xlint;
-typedef unsigned               xluint;
-typedef double                 xlreal;
-typedef char                   xlbool;
-typedef char                   xlchar;
-typedef const char *           xltext;
-typedef void *                 xlptr;
-typedef struct {} /* !ANSIC */ xlrecord, xlmodule;
-typedef FILE *                 xlfile;
-xlfile xl_getstdfile(int n) {
-  switch(n) {
-    case 0: return stdin;
-    case 1: return stdout;
-    case 2: return stderr;
-  }
-  return NULL;
-}
-typedef struct Record_1277 {
-  xlmodule baserecord_1; /* RecF */
-} Record_1277;
-Record_1277 xlbuiltins_1278; /* Global */
-xlreal k_1279; /* Global */
-xlreal l_1280; /* Global */
-xlreal o_1281; /* Global */
-xlint s_1282; /* Global */
-xlint t_1284; /* Global */
-xlint ret_1283; /* Temp */
-xlint ret_1285; /* Temp */
-xlint ret_1286; /* Temp */
-int main(int _argc, char **_argv)
-{
-xlint ret_1283; /* Temp */
-xlint ret_1285; /* Temp */
-xlint ret_1286; /* Temp */
-k_1279 = 1;
-l_1280 = 1;
-o_1281 = 1;
-ret_1285 = s_1282 * 2;
-ret_1286 = ret_1285 * 2;
-t_1284 = ret_1286;
-ret_1283 = 0;
-s_1282 = ret_1283;
-    /* Main */
-    return 0;
-}
-/*end*/
+K=4
+L=4
+O=4
+S=17
+T=68
+S=17
+T=68

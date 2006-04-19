@@ -1,50 +1,6 @@
-#include <stdio.h>
-typedef char                   xlint8;
-typedef short                  xlint16;
-typedef int                    xlint32;
-typedef long long              xlint64;
-typedef unsigned char          xluint8;
-typedef unsigned short         xluint16;
-typedef unsigned int           xluint32;
-typedef unsigned long long     xluint64;
-typedef float                  xlreal32;
-typedef double                 xlreal64;
-typedef int                    xlint;
-typedef unsigned               xluint;
-typedef double                 xlreal;
-typedef char                   xlbool;
-typedef char                   xlchar;
-typedef const char *           xltext;
-typedef void *                 xlptr;
-typedef struct {} /* !ANSIC */ xlrecord, xlmodule;
-typedef FILE *                 xlfile;
-xlfile xl_getstdfile(int n) {
-  switch(n) {
-    case 0: return stdin;
-    case 1: return stdout;
-    case 2: return stderr;
-  }
-  return NULL;
-}
-typedef struct Record_1277 {
-  xlmodule baserecord_1; /* RecF */
-} Record_1277;
-Record_1277 xlbuiltins_1278; /* Global */
-xlint a_1279; /* Global */
-xlint b_1280; /* Global */
-xlint c_1281; /* Global */
-xlint x_1282; /* Global */
-xlint y_1283; /* Global */
-xlint z_1284; /* Global */
-int main(int _argc, char **_argv)
-{
-a_1279 = 0;
-b_1280 = 26;
-c_1281 = 27;
-x_1282 = 1;
-y_1283 = 2;
-z_1284 = 3;
-    /* Main */
-    return 0;
-}
-/*end*/
+A=0
+B=26
+C=27
+X=1
+Y=2
+Z=3

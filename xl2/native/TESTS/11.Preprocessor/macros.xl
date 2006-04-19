@@ -1,9 +1,9 @@
 // Test that the macro system sort of works
-// RUN=cat %c
+use XL.UI.CONSOLE
 
-xl.replace (DEFAULT) with (1.0)
+xl.replace (DEFAULT) with (4)
 
-xl.replace XLDeclarations(let 'X') with ('X' : real := DEFAULT)
+xl.replace XLDeclarations(let 'X') with ('X' : integer := DEFAULT)
 
 let K
 let L
@@ -11,5 +11,11 @@ let O
 
 xl.replace ('K' + 'K') with ('K' * 2)
 
-S : integer
+S : integer := 17
 T : integer := (S+S) + (S+S)
+
+WriteLn "K=", K
+WriteLn "L=", K
+WriteLn "O=", K
+WriteLn "S=", S
+WriteLn "T=", T

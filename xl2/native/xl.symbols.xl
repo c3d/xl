@@ -181,28 +181,45 @@ module XL.SYMBOLS is
     //   Fill the tree list with all the values found
     // ------------------------------------------------------------------------
 
-        entry : using_entry
-        found : map[PT.tree, boolean]
+        scope : map[PT.tree, integer]
+        depth : integer := 0
+        Lookup table, category, name, values, scope, depth, mode
+
+
+    procedure Lookup (table         : symbol_table;
+                      category      : text
+                      name          : text;
+                      in out values : tree_list;
+                      in out scopes : map[PT.tree, integer];
+                      in out depth  : integer;
+                      mode          : lookup_kind) is
+    // ------------------------------------------------------------------------
+    //    Lookup and store the depth of each symbol
+    // ------------------------------------------------------------------------
+
+        entry    : using_entry
 
         name := category + ":" + PT.XLNormalize(name)
 
         trace [lookup] "Lookup: ", name, " from ", table
         while table <> nil loop
             // Lookup in main map
+            depth += 1
             if count(table.names, name) > 0 then
                 trace [lookup] "  in ", table,
                                " got ", size(table.names[name])
                 list : PT.tree_list := table.names[name]
                 item : PT.tree
                 for item in list loop
-                    if found[item] = false then
+                    if scopes[item] = 0 then
                         values += item
-                        found[item] := true
+                        scopes[item] := depth
                 exit if mode = lookupInnermost
 
             exit if mode = lookupLocalOnly
 
             // Lookup in lateral maps
+            depth += 1
             if mode <> lookupDirect then
                 for entry in table.usings loop
                     subtable : symbol_table := entry.symbols
@@ -212,14 +229,14 @@ module XL.SYMBOLS is
                         trace[lookup] "  in lateral ", subtable,
                                       " got ", size(subtable.names[name])
                         for subtree in subtable.names[name] loop
-                            if found[subtree] = false then
+                            if scopes[subtree] = 0 then
                                 scoped : PT.tree := subtree
                                 if scope <> nil then
                                     scoped := parse_tree('scope'.'subtree')
                                     scoped.info := subtree.info
                                     scoped.position := subtree.position
                                 values += scoped
-                                found[subtree] := true
+                                scopes[subtree] := depth
 
             exit if mode = lookupInnermost and size(values) > 0
             exit if mode = lookupLocalUsing
@@ -227,7 +244,8 @@ module XL.SYMBOLS is
             // Lookup in implicit tables
             impl : symbol_table
             for impl in table.implicit loop
-                Lookup impl, category, name, values, mode
+                implDepth : integer := depth    // REVISIT?
+                Lookup impl, category, name, values, scopes, implDepth, mode
 
             table := table.enclosing
 

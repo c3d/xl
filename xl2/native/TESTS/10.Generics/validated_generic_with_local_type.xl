@@ -1,5 +1,5 @@
 // The quintessential XL test now passes :-)
-// RUN=cat %c
+use XL.UI.CONSOLE
 
 generic type ordered where
     A, B : ordered
@@ -18,3 +18,5 @@ to Copy (out Tgt : complex; in Src : complex) written Tgt := Src is
     Tgt.im := Src.im
 
 Z : complex := Max(z)
+
+WriteLn "Z.re=", Z.re, " Z.im=", Z.im

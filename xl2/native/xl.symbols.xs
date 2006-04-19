@@ -101,6 +101,13 @@ module XL.SYMBOLS with
                       name          : text;
                       in out values : tree_list;
                       mode          : lookup_kind := lookupAll)
+    procedure Lookup (table         : symbol_table;
+                      category      : text
+                      name          : text;
+                      in out values : tree_list;
+                      in out scopes : map[PT.tree, integer];
+                      in out depth  : integer;
+                      mode          : lookup_kind := lookupAll)
     function LookupOne (table       : symbol_table;
                         category    : text;
                         name        : text;

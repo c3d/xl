@@ -1,5 +1,6 @@
 // Check that we can instantiate with multiple parameters
-// RUN=cat %c
+use XL.UI.CONSOLE
+
 generic type ordered
 
 function F(A : ordered; B : ordered) return ordered is
@@ -11,4 +12,7 @@ function G(A, B : ordered; C : ordered; D : ordered) return ordered is
     return A + B * C/D
 
 Z : integer := G(1, -3, 6,4)
+
+WriteLn "Q=", Q
+WriteLn "Z=", Z
 
