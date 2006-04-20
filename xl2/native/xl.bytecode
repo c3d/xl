@@ -135,6 +135,13 @@ ifskip          "goto endif_$1;"
 ifelse          "else_$1: 0;"
 ifend           "endif_$1: 0;"
 
+case_begin      "switch($2) {"
+case_entry      "case $2:"
+case_exit       "break;"
+case_def_entry  "default:"
+case_def_exit   "break;"
+case_end        "}"
+
 loopentry       "loopentry_$1: 0;"
 loopagain       "goto loopentry_$1;"
 loopskip        "goto loopend_$1;"

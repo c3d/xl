@@ -314,7 +314,10 @@ module XL.SEMANTICS.INSTRUCTIONS is
                     'Statement'
                     @ifskip 'exitL'
                     @ifelse 'label'
-                result := XLT.Append(prefix, result)
+                return XLT.Append(prefix, result)
+
+        ERR.Error "'$1' is not a valid case", Cases
+        return nil
 
 
     function DoCase(Cases : PT.tree) return BC.bytecode is
@@ -324,6 +327,98 @@ module XL.SEMANTICS.INSTRUCTIONS is
         exitL  : PT.name_tree := SYM.Temporary("case_exit", Cases.position)
         result := DoCase(Cases, exitL)
         result := XLT.Append(result, parse_tree(@ifend 'exitL'))
+
+
+    procedure SplitCases (Cases         : PT.tree;
+                          in out values : PT.tree_list;
+                          in out stmts  : PT.tree_list;
+                          in out defStmt: PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Split the cases in a 'case' statement
+    // ------------------------------------------------------------------------
+        translate Cases
+            when
+                'Case1'
+                'Case2'
+            then
+                SplitCases Case1, values, stmts, defStmt
+                SplitCases Case2, values, stmts, defStmt
+            when
+                default : 'Statement'
+            then
+                if defStmt <> nil then
+                    ERR.Error "Duplicate default statement '$1'", Statement
+                    ERR.Error "Previously defined here", defStmt.position
+                defStmt := Statement
+            when
+                'Value' : 'Statement'
+            then
+                values += Value
+                stmts  += Statement
+            else
+                ERR.Error "'$1' is not a valid case", Cases
+
+
+    function DoCaseValue(Value : PT.tree;
+                         Cases : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Implement the 'case' instruction with a value
+    // ------------------------------------------------------------------------
+        values : PT.tree_list
+        stmts  : PT.tree_list
+        defStmt: PT.tree
+
+        // Split the individual cases
+        SplitCases Cases, values, stmts, defStmt
+
+        // Build the 'Index' call
+        Args : PT.tree := Value
+        V    : PT.tree
+        for V in values loop
+            Args := parse_tree('Args', 'V')
+        Index : PT.tree := parse_tree(Index('Args'))
+
+        // Evaluate the Index call
+        IndexVal : PT.tree := XLT.XLSemantics(Index)
+        IndexType : TY.any_type := TY.GetType(IndexVal)
+        if not TY.SameType (IndexType, TY.integer_literal_type) then
+            ERR.Error "The type '$2' of '$1' is not integer",
+                      Index, TY.Source(IndexType)
+            IndexVal := TY.Convert(IndexVal, TY.integer_type)
+
+        // Generate "switch" entry
+        prefix : PT.tree
+        label  : PT.name_tree := SYM.Temporary("case", Cases.position)
+        CGM.SplitExpression IndexVal, prefix
+        result := parse_tree
+            'prefix'
+            @case_begin 'label' 'IndexVal'
+
+        // Generate all the entries
+        E : integer
+        for E in 0..size(values)-1 loop
+            Eval  : PT.tree := values[E]
+            Entry : PT.tree := PT.NewInteger(E, Eval.position)
+            Code  : PT.tree := XLT.XLSemantics(stmts[E])
+            result := parse_tree
+                'result'
+                @case_entry 'label' 'Entry'
+                'Code'
+                @case_exit 'label' 'Entry'
+
+        // Generate the default entry if required
+        if defStmt <> nil then
+            Code : PT.tree := XLT.XLSemantics(defStmt)
+            result := parse_tree
+                'result'
+                @case_def_entry 'label'
+                'Code'
+                @case_def_exit 'label'
+                
+        // Generate the switch exit
+        result := parse_tree
+            'result'
+            @case_end 'label'
 
 
     translation XLSemantics
@@ -423,4 +518,10 @@ module XL.SEMANTICS.INSTRUCTIONS is
                'Cases'
         then
             return DoCase(Cases)
+
+        when
+            case 'Value'
+               'Cases'
+        then
+            return DoCaseValue(Value, Cases)
 

@@ -19,3 +19,25 @@ case
    1 = 1: WriteLn "This case is always taken"
    3 = 3: This case does not need to compile either, because it is never taken
 
+
+// Check the index case
+function Index(Val : integer; Ref : integer; ...) return integer is
+    if Val = Ref then
+        return 0
+    return 1 + Index(Val, ...)
+function Index(Val : integer) return integer is
+    return 1
+
+for I in 1..10 loop
+    case I
+        0 : WriteLn "Zero"
+        2 : WriteLn "Two"
+        4 :
+            WriteLn "Four"
+            WriteLn " (of a kind)"
+        5 : WriteLn "Five"
+        8 : WriteLn "Eight"
+        9 : WriteLn "Nine"
+        default: WriteLn "I forgot..."
+
+

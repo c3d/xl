@@ -72,6 +72,9 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
                     // In instantiation context, replace variadicity
                     VariadicDecls := XLT.XLDeclarations (VariadicDecls)
                     MakeParameterList VariadicDecls, ftp
+            when () then
+                // Empty parameter list gotten from a variadics decl
+                return
 
             else
                 decl : declaration := DCL.GetDeclaration(Parms)

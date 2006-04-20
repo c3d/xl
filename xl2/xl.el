@@ -63,7 +63,7 @@
     "return" "other" "require" "ensure" "written" "yield"
     "try" "catch" "retry" "raise"
     "while" "until" "for" "do" "loop" "exit" "restart"
-    "translate" "when" "where" "with"
+    "translate" "when" "where" "with" "case"
     "if" "then" "else" "not" "and" "or" "xor" "nil")
   "List of words highlighted as 'keywords' in XL mode")
 
