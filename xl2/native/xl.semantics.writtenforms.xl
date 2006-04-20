@@ -213,19 +213,28 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                 // Instantiation error
                 return result
 
-        constructors : PT.tree
+        cdtors       : PT.tree
+        declaredHere : map[DCL.declaration, boolean]
+        ftype        : fninfo.type as FN.function_type
         if size(Dnames) > 0 then
-            ftype : fninfo.type as FN.function_type
             for a in 0..size(Dnames)-1 loop
                 Name : Dnames[a] as PT.name_tree
                 idx  : integer := Didx[a]
                 parm : DCL.declaration := ftype.parameters[idx]
                 decl : DCL.declaration := DCL.Declare(Name, parm.type)
                 if parm.is_input or not parm.is_output then
-                    constructors := XLT.Append(constructors,
-                                               DCL.CallConstructor(decl))
+                    cdtors := XLT.Append(cdtors, DCL.CallConstructor(decl))
                 margs[a] := XLT.XLSemantics(margs[a])
+                declaredHere[parm] := true
 
+        // Call the destructors for all output parameters
+        // (the value will be constructed in the callee)
+        for a in 0..size(ftype.parameters)-1 loop
+            parm : DCL.declaration := ftype.parameters[a]
+            if parm.is_output and not parm.is_input then
+                if not declaredHere[parm] then
+                    dtorCall : PT.tree := DCL.CallDestructor(margs[a])
+                    cdtors := XLT.Append(cdtors, dtorCall)
 
         // Check if this is an iterator call
         iterator : fninfo as ITER.iterator
@@ -237,7 +246,15 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             scope := XLT.XLSemantics(scope)
             result := CGM.RecordFunctionCall(scope, fninfo, margs)
 
-        result := XLT.Append(constructors, result)
+        if cdtors <> nil then
+            mcode : PT.tree
+            CGM.SplitExpression result, mcode
+            if mcode <> nil then
+                cdtors := XLT.Append(cdtors, mcode)
+                mname : result as PT.name_tree
+                result := CGM.MakeExpression (mcode, mname)
+            else
+                result := XLT.Append(cdtors, result)
 
 
     function EnterWrittenForm(fniface : PT.tree;

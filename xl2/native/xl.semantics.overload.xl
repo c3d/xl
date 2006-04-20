@@ -423,9 +423,12 @@ module XL.SEMANTICS.OVERLOAD is
             if cdtors <> nil then
                 mcode : PT.tree
                 CGM.SplitExpression result, mcode
-                mcode := XLT.Append(cdtors, mcode)
-                mname : result as PT.name_tree
-                result := CGM.MakeExpression (mcode, mname)
+                if mcode <> nil then
+                    cdtors := XLT.Append(cdtors, mcode)
+                    mname : result as PT.name_tree
+                    result := CGM.MakeExpression (mcode, mname)
+                else
+                    result := XLT.Append(cdtors, result)
 
         else
             ERR.Error "No valid function found for '$1'", NameTree
