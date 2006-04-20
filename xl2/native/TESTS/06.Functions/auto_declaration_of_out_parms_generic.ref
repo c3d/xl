@@ -36,8 +36,6 @@ typedef struct Record_1294 {
   FnPtr_1291 iterator_1292; /* RecF */
 } Record_1294;
 Record_1294 xlbuiltins_1295; /* Global */
-xlint ret_1325; /* Temp */
-xlreal ret_1326; /* Temp */
 typedef xlint (*FnPtr_1298) ( xlint b_1297 ) ;
 xlint makeit_1299 ( xlint b_1297 ) ;
 typedef xlreal (*FnPtr_1302) ( xlreal b_1301 ) ;
@@ -58,10 +56,9 @@ void testoperators_1324 ( ) ;
 typedef Record_1316 (*FnPtr_1341) ( Record_1316 b_1340 ) ;
 Record_1316 makeit_1342 ( Record_1316 b_1340 ) ;
 Record_1316 znort_1344; /* Global */
-Record_1316 outret_1345; /* Ret */
-Record_1316 outret_1346; /* Ret */
 xlint makeit_1299 ( xlint b_1297 ) {
 xlint a_1296; /* Out=Ret */
+xlint ret_1325; /* Temp */
 ret_1325 = 0;
 a_1296 = ret_1325;
 a_1296 = b_1297;
@@ -70,6 +67,7 @@ return a_1296;
 }
 xlreal makeit_1303 ( xlreal b_1301 ) {
 xlreal a_1300; /* Out=Ret */
+xlreal ret_1326; /* Temp */
 ret_1326 = 0.0;
 a_1300 = ret_1326;
 a_1300 = b_1301;
@@ -137,8 +135,6 @@ exit_testoperators_1324: 0;
 }
 int main(int _argc, char **_argv)
 {
-xlint ret_1325; /* Temp */
-xlreal ret_1326; /* Temp */
 Record_1316 outret_1345; /* Ret */
 Record_1316 outret_1346; /* Ret */
 /* Type */

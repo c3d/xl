@@ -53,7 +53,7 @@ module XL.CODE_GENERATOR.MACHINE with
                           Iface : PT.tree;
                           Body  : PT.tree) return PT.tree
 
-    // Interface for function calls                   
+    // Interface for function calls
     type machine_args is string of PT.tree
     function FunctionCall (toCall   : FN.function;
                            margs    : machine_args) return BC.bytecode

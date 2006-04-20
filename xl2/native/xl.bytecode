@@ -73,7 +73,7 @@ ref_decl        "/* $1 $2; Ref */"
 temp_decl       "$1 $2; /* Temp */"
 local_decl      "$1 $2; /* Local */"
 result_decl     "$1 $2; /* Result */"
-parm_decl       "/* $1 $2 */ "
+parm_decl       "/* $1 $2; Parm */"
 global_decl     "$1 $2; /* Global */"
 field_decl      "$1 $2; /* Field */"
 

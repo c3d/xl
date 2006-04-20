@@ -182,7 +182,8 @@ module XL.TRANSLATOR is
             SYM.SetProperty context, "MODULE", modname
 
         // Create the symbol table for this scope
-        context := SYM.NewSymbolTable(context)
+        if scope <> scopeFunction then
+            context := SYM.NewSymbolTable(context)
 
         if modname <> nil then
             SYM.SetProperty context, "MODULE", modname
@@ -212,8 +213,6 @@ module XL.TRANSLATOR is
                 old_global := context
         else if scope = scopeFunction or scope = scopeLocal then
             SYM.SetInteger context, "LOCAL", 1
-            if scope = scopeFunction then
-                function_context := context
         result := XLDeclarations(input)
         result := XLSemantics(result)
         DCL.CallDestructors context
@@ -263,7 +262,6 @@ module XL.TRANSLATOR is
             // Make sure global init and term invoked from 'main'
             local_decl : PT.tree := SYM.ScopeItems(function_context, "DECL")
             SYM.SetProperty (function_context, "DECL", nil)
-            decl := Append(decl, local_decl)
             if init <> nil then
                 SYM.AddScopeItem main_context, "MAIN_INIT", init
             if term <> nil then

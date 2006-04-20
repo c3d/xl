@@ -346,7 +346,16 @@ module XL.SEMANTICS.FUNCTIONS is
             if not('cond') then
                 'callT' ('fileT', 'lineT', 'columnT', 'sourceT')
 
-        return XLT.ScopeSemantics(code, XLT.scopeFunction)
+        oldContext : SYM.symbol_table := XLT.context
+        fnContext  : SYM.symbol_table := XLT.function_context
+
+        XLT.context := SYM.NewSymbolTable(XLT.context)
+        XLT.function_context := XLT.context
+
+        result := XLT.ScopeSemantics(code, XLT.scopeFunction)
+
+        XLT.context := oldContext
+        XLT.function_context := fnContext
 
 
     function FunctionSemantics (Interface : PT.tree;
@@ -369,8 +378,10 @@ module XL.SEMANTICS.FUNCTIONS is
         ftype       : GEN.NonGenericType(f.type) as FT.function_type
         assert ftype <> nil
         context     : SYM.symbol_table := XLT.context
+        fncontext   : SYM.symbol_table := XLT.function_context
         frame_depth : integer := SYM.GetInteger(context, "FRAMEDEPTH", 0, true)
         XLT.context := SYM.NewSymbolTable (ftype.symbols)
+        XLT.function_context := XLT.context
         SYM.SetInteger XLT.context, "FNPARM", 1
         SYM.SetInteger XLT.context, "FRAMEDEPTH", frame_depth+1
         if frame_depth > 0 then
@@ -440,9 +451,11 @@ module XL.SEMANTICS.FUNCTIONS is
             // Add the function body to global scope
             SYM.AddScopeItem XLT.main_context, "MAIN_BODY", result
 
-        XLT.context := context
         result := parse_tree(@nop)
         PT.SetInfo result, "FN", f
+
+        XLT.context := context
+        XLT.function_context := fncontext
 
 
     translation XLSemantics

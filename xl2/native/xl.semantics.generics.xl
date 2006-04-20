@@ -391,9 +391,11 @@ module XL.SEMANTICS.GENERICS is
 
         // Create instantiation context
         oldContext : SYM.symbol_table := XLT.context
+        fnContext : SYM.symbol_table := XLT.function_context
         declContext : SYM.symbol_table := SYM.Enclosing(gtp.symbols)
         instContext : SYM.symbol_table := SYM.NewSymbolTable(declContext)
         XLT.context := instContext
+        XLT.function_context := instContext
         XLT.CopyScopeProperties instContext, oldContext
 
         // Record where to find the context of instantiation (oldContext)
@@ -410,6 +412,7 @@ module XL.SEMANTICS.GENERICS is
                 ERR.Error "Internal: '$1' is not a name", P.name
                 instantiations -= 1
                 XLT.context := oldContext
+                XLT.function_context := fnContext
                 return parse_tree(@error)
 
             trace[inst] "GenArg ", PT.tree(C),
@@ -452,6 +455,7 @@ module XL.SEMANTICS.GENERICS is
             result := parse_tree(@error 'errorText')
         SYM.Enter XLT.global_context, "INSTANCE", key, result
         XLT.context := oldContext
+        XLT.function_context := fnContext
         instantiations -= 1
 
 

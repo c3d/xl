@@ -38,8 +38,9 @@ typedef struct Record_1294 {
 Record_1294 xlbuiltins_1295; /* Global */
 typedef xlint (*FnPtr_1311) ( xlint x_1310 ) ;
 xlint g_1312 ( xlint x_1310 ) ;
-xlint ret_1326; /* Temp */
 xlint g_1312 ( xlint x_1310 ) {
+/* xlint result_1325; Parm */
+xlint ret_1326; /* Temp */
 xlint ret_1327; /* Temp */
 xlint ret_1328; /* Temp */
 xlint ret_1329; /* Temp */
@@ -56,7 +57,6 @@ return result_1325;
 }
 int main(int _argc, char **_argv)
 {
-xlint ret_1326; /* Temp */
 /* Type */
 /* Type */
     /* Main */

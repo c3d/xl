@@ -48,6 +48,7 @@ module XL.SEMANTICS.DECLARATIONS with
     function MatchInterface(iface : declarations;
                             body  : SYM.symbol_table) return boolean
     function CallConstructor (decl : declaration) return PT.tree
+    function CallDestructor (name : PT.tree) return PT.tree
     procedure CallDestructors (table : SYM.symbol_table)
 
 

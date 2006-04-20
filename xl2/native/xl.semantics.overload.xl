@@ -382,22 +382,34 @@ module XL.SEMANTICS.OVERLOAD is
                     return result
 
             // If there are parameters to declare, declare them now
-            constructors : PT.tree
+            cdtors       : PT.tree
+            declaredHere : map[DCL.declaration, boolean]
+            ftp          : bestF.type as FT.function_type
             if size(bestDNames) > 0 then
                 ToDeclCount : integer := size(bestDNames)
-                ToDecl : integer
+                ToDecl      : integer
                 for ToDecl in 0..ToDeclCount - 1 loop
                     DName : PT.name_tree := bestDNames[ToDecl]
                     Didx  : integer := bestDidx[ToDecl]
-                    ftp   : bestF.type as FT.function_type
                     D     : DCL.declaration := ftp.parameters[Didx]
                     Local : DCL.Declaration :=
                         DCL.Declare (DName, D.type)
                     if D.is_input or not D.is_output then
-                        constructors := XLT.Append(constructors,
-                                                   DCL.CallConstructor(Local))
+                        cdtors := XLT.Append(cdtors,DCL.CallConstructor(Local))
                     if SemArgs[Didx] = PT.tree(DName) then
                         SemArgs[Didx] := XLT.XLSemantics(DName)
+                    declaredHere[D] := true
+
+            // Call the destructors for all output parameters
+            // (the value will be constructed in the callee)
+            parm : DCL.declaration
+            P    : integer := 0
+            for parm in ftp.parameters loop
+                if parm.is_output and not parm.is_input then
+                    if not declaredHere[parm] then
+                        dtorCall : PT.tree := DCL.CallDestructor(SemArgs[P])
+                        cdtors := XLT.Append(cdtors, dtorCall)
+                P += 1
 
             // Check if this is an iterator call
             iterator : bestF as ITER.iterator
@@ -407,7 +419,13 @@ module XL.SEMANTICS.OVERLOAD is
                 result := CGM.RecordFunctionCall (BaseRecord, bestF, SemArgs)
             else
                 result := CGM.FunctionCall (bestF, SemArgs)
-            result := XLT.Append(constructors, result)
+
+            if cdtors <> nil then
+                mcode : PT.tree
+                CGM.SplitExpression result, mcode
+                mcode := XLT.Append(cdtors, mcode)
+                mname : result as PT.name_tree
+                result := CGM.MakeExpression (mcode, mname)
 
         else
             ERR.Error "No valid function found for '$1'", NameTree

@@ -663,25 +663,35 @@ module XL.SEMANTICS.DECLARATIONS is
                 result := XLT.XLSemantics(result)
 
 
+    function CallDestructor (entry : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Call the destructor for a given name
+    // ------------------------------------------------------------------------
+        decl : DCL.declaration := DCL.GetDeclaration(entry)
+        if entry.kind = PT.xlNAME and decl <> nil then
+            needDtor : boolean := decl.is_local or decl.is_global
+            if needDtor then
+                name : entry as PT.name_tree
+                dtorCall : PT.tree := parse_tree(delete 'name')
+                ERR.PushErrorContext()
+                dtorCall := XLT.XLSemantics(dtorCall)
+                errors : text := ERR.PopErrorContext()
+                if errors = "" then
+                    return dtorCall
+        return nil
+
+
     procedure CallDestructors (table : SYM.symbol_table) is
     // ------------------------------------------------------------------------
     //    Find all the destructors in the current scope and call them
     // ------------------------------------------------------------------------
-
         names : PT.tree_list
         entry : PT.tree
         SYM.LocalSymbols table, names
         for entry in names loop
-            decl : DCL.declaration := DCL.GetDeclaration(entry)
-            if entry.kind = PT.xlNAME and decl <> nil then
-                needDtor : boolean := decl.is_local or decl.is_global
-                if needDtor then
-                    name : entry as PT.name_tree
-                    dtorCall : PT.tree := parse_tree(delete 'name')
-                    ERR.PushErrorContext()
-                    dtorCall := XLT.XLSemantics(dtorCall)
-                    errors : text := ERR.PopErrorContext()
-                    if errors = "" then
-                        XLT.AddScopeTerm table, dtorCall
+            dtorCall : PT.tree := CallDestructor (entry)
+            if dtorCall <> nil then
+                XLT.AddScopeTerm table, dtorCall
+
 
 

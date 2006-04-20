@@ -36,13 +36,6 @@ typedef struct Record_1294 {
   FnPtr_1291 iterator_1292; /* RecF */
 } Record_1294;
 Record_1294 xlbuiltins_1295; /* Global */
-xlint ret_1320; /* Temp */
-xlint ret_1322; /* Temp */
-xlint ret_1323; /* Temp */
-xlint ret_1329; /* Temp */
-xlint ret_1331; /* Temp */
-xlint ret_1332; /* Temp */
-xlreal ret_1338; /* Temp */
 xlint koba_1302; /* Global */
 xlint kabo_1303; /* Global */
 xlint lkabo_1310; /* Global */
@@ -54,8 +47,9 @@ typedef xlint (*FnPtr_1326) ( xlint x_1324 , xlint y_1325 ) ;
 xlint soustraire_1327 ( xlint x_1324 , xlint y_1325 ) ;
 typedef xlreal (*FnPtr_1335) ( xlreal x_1333 , xlreal y_1334 ) ;
 xlreal soustraire_1336 ( xlreal x_1333 , xlreal y_1334 ) ;
-xlreal ret_1340; /* Temp */
 xlint ajouter_1318 ( xlint x_1315 , xlint y_1316 ) {
+/* xlint result_1319; Parm */
+xlint ret_1320; /* Temp */
 xlint ret_1321; /* Temp */
 xlint result_1319; /* Result */
 ret_1320 = 0;
@@ -67,6 +61,8 @@ exit_ajouter_1318: 0;
 return result_1319;
 }
 xlint soustraire_1327 ( xlint x_1324 , xlint y_1325 ) {
+/* xlint result_1328; Parm */
+xlint ret_1329; /* Temp */
 xlint ret_1330; /* Temp */
 xlint result_1328; /* Result */
 ret_1329 = 0;
@@ -78,6 +74,8 @@ exit_soustraire_1327: 0;
 return result_1328;
 }
 xlreal soustraire_1336 ( xlreal x_1333 , xlreal y_1334 ) {
+/* xlreal result_1337; Parm */
+xlreal ret_1338; /* Temp */
 xlreal ret_1339; /* Temp */
 xlreal result_1337; /* Result */
 ret_1338 = 0.0;
@@ -90,13 +88,10 @@ return result_1337;
 }
 int main(int _argc, char **_argv)
 {
-xlint ret_1320; /* Temp */
 xlint ret_1322; /* Temp */
 xlint ret_1323; /* Temp */
-xlint ret_1329; /* Temp */
 xlint ret_1331; /* Temp */
 xlint ret_1332; /* Temp */
-xlreal ret_1338; /* Temp */
 xlreal ret_1340; /* Temp */
 ret_1322 = ajouter_1318 ( 1 , 2 );
 koba_1302 = ret_1322;
