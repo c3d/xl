@@ -65,17 +65,11 @@ module XL.TEXT_IO is
             dummy : integer := PutCharInFile (integer('-'), F)
             N := - N
 
-        divisor : integer := 1
         base    : integer := 10
-        while base * divisor <= N loop
-            divisor := divisor * base
-
-        loop
-            digit : integer := N / divisor
-            dummy : integer := PutCharInFile (digit + integer('0'), F)
-            N := N - divisor * digit
-            divisor := divisor / base
-        while divisor > 0
+        if N / base <> 0 then
+            Write F, N/base
+        N := N mod base
+        N := PutCharInFile(N + integer('0'), F)
 
 
     to Write(F : file; N : real) is

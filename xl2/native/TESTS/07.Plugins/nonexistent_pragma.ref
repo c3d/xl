@@ -1,9 +1,9 @@
-function Foo (X : integer) return real is 
-    temp : integer := X + 1 
-    return 0.7
 07.Plugins/nonexistent_pragma.xl:36: The pragma {listingue} is not implemented
 | {listingue} procedure Bar is
 |__________^
 07.Plugins/nonexistent_pragma.xl:39: The pragma {listingue} is not implemented
 | {listingue "html"} function Baz(A : real) return real is
 |__________^
+function Foo (X : integer) return real is 
+    temp : integer := X + 1 
+    return 0.7
