@@ -50,6 +50,8 @@ module XL.SEMANTICS.DECLARATIONS with
     function CallConstructor (decl : declaration) return PT.tree
     function CallDestructor (name : PT.tree) return PT.tree
     procedure CallDestructors (table : SYM.symbol_table)
+    function ScopeDestructors (inner : SYM.symbol_table;
+                               outer : SYM.symbol_table) return BC.bytecode
     procedure DoNotDelete (table : SYM.symbol_table; decl : declaration)
 
 

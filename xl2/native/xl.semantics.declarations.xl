@@ -686,25 +686,39 @@ module XL.SEMANTICS.DECLARATIONS is
 
     procedure CallDestructors (table : SYM.symbol_table) is
     // ------------------------------------------------------------------------
+    //    Call all destructors for the current table
+    // ------------------------------------------------------------------------
+        dtors : PT.tree := ScopeDestructors(table, table)
+        if dtors <> nil then
+            XLT.AddScopeTerm table, dtors
+
+
+    function ScopeDestructors (inner : SYM.symbol_table;
+                               outer : SYM.symbol_table) return BC.bytecode is
+    // ------------------------------------------------------------------------
     //    Find all the destructors in the current scope and call them
     // ------------------------------------------------------------------------
-        names   : PT.tree_list
-        entry   : PT.tree
-        deleted : map[PT.tree, boolean]
+        while inner <> nil loop
+            names   : PT.tree_list
+            entry   : PT.tree
+            deleted : map[PT.tree, boolean]
 
-        SYM.LocalSymbols table, names
-        for entry in names loop
-            if not deleted[entry] then
-                deleted[entry] := true
-                decl  : DCL.declaration := DCL.GetDeclaration(entry)
-                if decl <> nil then
-                    mname : PT.name_tree := decl.machine_name
-                    if mname <> nil then
-                        key   : text := "KEEP:" + mname.value
-                        if SYM.GetProperty(table, key, false) = nil then
-                            dtorCall : PT.tree := CallDestructor (entry)
-                            if dtorCall <> nil then
-                                XLT.AddScopeTerm table, dtorCall
+            SYM.LocalSymbols inner, names
+            for entry in names loop
+                if not deleted[entry] then
+                    deleted[entry] := true
+                    decl  : DCL.declaration := DCL.GetDeclaration(entry)
+                    if decl <> nil then
+                        mname : PT.name_tree := decl.machine_name
+                        if mname <> nil then
+                            key   : text := "KEEP:" + mname.value
+                            if SYM.GetProperty(inner, key, false) = nil then
+                                dtorCall : PT.tree := CallDestructor (entry)
+                                if dtorCall <> nil then
+                                    result := XLT.Append(result, dtorCall)
+
+            exit if inner = outer
+            inner := SYM.Enclosing(inner)
 
 
     procedure DoNotDelete (table : SYM.symbol_table; decl : declaration) is

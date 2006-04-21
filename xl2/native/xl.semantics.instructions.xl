@@ -46,14 +46,19 @@ module XL.SEMANTICS.INSTRUCTIONS is
          if mname = nil then
              ERR.Error "Return statement '$1' not in a function", Ret
              return parse_tree(@error)
+
+         // Branch to exit of function
+         result := parse_tree(@goto_exit 'mname')
+
+         // Invoke destructors for all scopes we quit
+         dtors : PT.tree :=
+             DCL.ScopeDestructors(XLT.context, XLT.function_context)
+         result := XLT.Append(dtors, result)
+
          if Value <> nil then
-             result := parse_tree(result := 'Value')
-             result := XLT.XLSemantics(result)
-             result := parse_tree
-                 'result'
-                 @goto_exit 'mname'
-         else
-             result := parse_tree(@goto_exit 'mname')
+             setResult : PT.tree := parse_tree(result := 'Value')
+             setResult := XLT.XLSemantics(setResult)
+             result := XLT.Append(setResult, result)
 
 
     function DoYield(Yield : PT.tree) return PT.tree is

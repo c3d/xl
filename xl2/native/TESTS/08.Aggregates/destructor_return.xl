@@ -1,0 +1,15 @@
+use XL.UI.CONSOLE
+
+to Delete (K : integer) is
+    WriteLn "Deleted ", K
+
+function Foo (I : integer) return integer is
+   LocalVar : integer := I + 1
+
+   if I = 0 then
+       return 27
+
+   result += I
+
+WriteLn "Cas 1: ", Foo(1)
+WriteLn "Cas 0: ", Foo(0)
