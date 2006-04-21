@@ -52,7 +52,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
 
          // Invoke destructors for all scopes we quit
          dtors : PT.tree :=
-             DCL.ScopeDestructors(XLT.context, XLT.function_context)
+             DCL.ScopeDestructors(XLT.context, XLT.function_context, false)
          result := XLT.Append(dtors, result)
 
          if Value <> nil then
@@ -75,6 +75,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
 
         // Evaluate the body in its original context
         oldContext   : SYM.symbol_table := XLT.context
+        exitLabel    : PT.tree := SYM.GetProperty(oldContext, "LOOP", true)
         XLT.context := SYM.ContextProperty(body, "ITERCTX")
 
         // Make sure that we don't try to 'yield' twice
@@ -85,6 +86,8 @@ module XL.SEMANTICS.INSTRUCTIONS is
         else
             // Run semantics on the body in that context
             PT.PurgeInfo body, "ITERCTX"
+            if exitLabel <> nil then
+                SYM.SetProperty XLT.context, "LOOP", exitLabel
             result := XLT.XLSemantics(body)
 
         XLT.context := oldContext
@@ -159,9 +162,10 @@ module XL.SEMANTICS.INSTRUCTIONS is
     // ------------------------------------------------------------------------
 
         // Label base for that loop
-        label  : PT.name_tree := SYM.Temporary("loop")
-        oldLoop : PT.tree := SYM.GetProperty (XLT.context, "LOOP")
+        label  : PT.name_tree := SYM.Temporary("loop", Body.position)
+        oldLoop : PT.tree := SYM.GetProperty (XLT.context, "LOOP", false)
         SYM.SetProperty XLT.context, "LOOP", label
+        SYM.SetContextProperty label, "LOOPCONTEXT", XLT.context
 
         Body := XLT.ScopeSemantics (Body, XLT.scopeLocal)
         result := parse_tree
@@ -198,8 +202,9 @@ module XL.SEMANTICS.INSTRUCTIONS is
             if TestValue = loopWhile then
                 return DoLoop(Body)
             else if testAtEnd then
-                oldLoop : PT.tree := SYM.GetProperty (XLT.context, "LOOP")
+                oldLoop : PT.tree := SYM.GetProperty (XLT.context, "LOOP",false)
                 SYM.SetProperty XLT.context, "LOOP", label
+                SYM.SetContextProperty label, "LOOPCONTEXT", XLT.context
                 result := XLT.ScopeSemantics(Body, XLT.scopeLocal)
                 result := parse_tree
                     'result'
@@ -210,8 +215,9 @@ module XL.SEMANTICS.INSTRUCTIONS is
                 return parse_tree (@nop)
 
         // Save loop exit pointer
-        oldLoop : PT.tree := SYM.GetProperty (XLT.context, "LOOP")
+        oldLoop : PT.tree := SYM.GetProperty (XLT.context, "LOOP", false)
         SYM.SetProperty XLT.context, "LOOP", label
+        SYM.SetContextProperty label, "LOOPCONTEXT", XLT.context
 
         // Convert test to boolean and evaluate condition
         Test := XLT.XLSemantics(Test)
@@ -265,8 +271,12 @@ module XL.SEMANTICS.INSTRUCTIONS is
             ERR.Error "No loop surrounding '$1' instruction", Instr
             return parse_tree(@error)
 
-        return parse_tree
-            @exit_loop 'label'
+        outer : SYM.symbol_table := SYM.ContextProperty(label, "LOOPCONTEXT")
+        if outer = nil then
+            outer := XLT.context
+        dtors : PT.tree := DCL.ScopeDestructors(XLT.context, outer, true)
+        result := parse_tree(@exit_loop 'label')
+        result := XLT.Append(dtors, result)
 
 
     function DoCase(Cases : PT.tree;

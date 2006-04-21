@@ -190,7 +190,7 @@ module XL.SEMANTICS.DECLARATIONS is
                     PT.AttachTree result, "CTORCALL", result
                 else if decl.is_global then
                     ctor : PT.tree := parse_tree('Name' := 'Value')
-                    PT.AttachTree result, "CTORCALL", result
+                    PT.AttachTree ctor, "CTORCALL", ctor
                     XLT.AddGlobalInit ctor
             else
                 // Definition will be processed at semantics time
@@ -688,17 +688,20 @@ module XL.SEMANTICS.DECLARATIONS is
     // ------------------------------------------------------------------------
     //    Call all destructors for the current table
     // ------------------------------------------------------------------------
-        dtors : PT.tree := ScopeDestructors(table, table)
+        dtors : PT.tree := ScopeDestructors(table, table, false)
         if dtors <> nil then
             XLT.AddScopeTerm table, dtors
 
 
     function ScopeDestructors (inner : SYM.symbol_table;
-                               outer : SYM.symbol_table) return BC.bytecode is
+                               outer : SYM.symbol_table;
+                               exclu : boolean) return BC.bytecode is
     // ------------------------------------------------------------------------
     //    Find all the destructors in the current scope and call them
     // ------------------------------------------------------------------------
         while inner <> nil loop
+            exit if exclu and inner = outer
+
             names   : PT.tree_list
             entry   : PT.tree
             deleted : map[PT.tree, boolean]

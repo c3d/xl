@@ -13,3 +13,14 @@ function Foo (I : integer) return integer is
 
 WriteLn "Cas 1: ", Foo(1)
 WriteLn "Cas 0: ", Foo(0)
+
+Z : integer := 3
+while Z < 12 loop
+    exit if Z > 7
+    WriteLn "Looping with Z=", Z
+    Z += 2
+
+for W in 1..18 loop
+    exit if W > 5
+    WriteLn "Looping with W=", W
+
