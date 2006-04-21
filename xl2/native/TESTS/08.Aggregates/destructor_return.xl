@@ -22,5 +22,9 @@ while Z < 12 loop
 
 for W in 1..18 loop
     exit if W > 5
+    if W > 4 then
+        lalalalere : integer := 777
+        WriteLn "In inner block"
+        exit
     WriteLn "Looping with W=", W
 

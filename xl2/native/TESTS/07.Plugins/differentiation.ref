@@ -128,15 +128,15 @@ A := - 0 * X + - 2 * 1 * exp ( - 2 * X)
 A2 := dexp (2 * X) / dX + d (exp (2 * X) ) / dX 
 Y := d (exp ( - 2 * W * (T - T0) ) * sin (2 * W * (T - T0) ) ) / dT 
 Z := {constantfold} sin X - sin X 
-delete Z 
-delete Y 
-delete X 
-delete W 
-delete T0 
-delete T 
-delete B 
-delete A2 
-delete A 
+delete a_1313 
+delete a2_1314 
+delete b_1312 
+delete t_1309 
+delete t0_1307 
+delete w_1305 
+delete x_1311 
+delete y_1315 
+delete z_1316 
 exitlabel main_1304 
 fnbodyend main_1304 
 mainbegin 
@@ -147,7 +147,7 @@ nop
 nop 
 nop 
 maininvoke 
-delete XL_BUILTINS 
-delete Main 
-delete XL_BUILTINS 
+delete xlbuiltins_1295 
+delete xlbuiltins_1295 
+delete main_1304 
 mainend
