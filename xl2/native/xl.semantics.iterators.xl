@@ -210,7 +210,9 @@ module XL.SEMANTICS.ITERATORS is
     function InvokeIterator(Input   : PT.tree;
                             Base    : PT.tree;
                             it      : iterator;
-                            Args    : PT.tree_list) return BC.bytecode is
+                            Args    : PT.tree_list;
+                            ctors   : PT.tree;
+                            dtors   : PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Perform iterator semantics, primarily semantics on iterator body
     // ------------------------------------------------------------------------
@@ -263,18 +265,26 @@ module XL.SEMANTICS.ITERATORS is
                if Arg.kind <> PT.xlNAME then
                    ERR.Error "Iterator variable '$1'", Name
                    ERR.Error "was given non-name '$1'", Arg
+                   Arg := SYM.Temporary("iterarg", Arg.position)
                SYM.Enter iter_context, "DECL", Name.value, Arg
+               DCL.DoNotDelete iter_context, DCL.GetDeclaration(Arg)
            else
                // Create a local declaration
                Name := PT.NewName(Name.value, Name.position)
                Local : DCL.declaration := DCL.Declare (Name, Parm.type)
                if Parm.is_input or not Parm.is_output then
-                   result := XLT.Append(result, parse_tree('Name' := 'Arg'))
+                   DCL.DoNotDelete iter_context, Local
+                   argCopy : PT.tree := parse_tree('Name' := 'Arg')
+                   PT.AttachTree argCopy, "CTORCALL", argCopy
+                   result := XLT.Append(result, argCopy)
                else
                    result := XLT.Append(result, DCL.CallConstructor(Local))
 
         // Create a clone of the iterator body, add it to parm decls/copies
         result := XLT.Append(result, PT.Clone(it.initializer))
+        result := XLT.Append(ctors, result)
+        result := XLT.Append(result, dtors)
+
 
         // Copy output parameters if needed
         for A in 0..NA-1 loop
@@ -282,7 +292,9 @@ module XL.SEMANTICS.ITERATORS is
            Arg  : PT.tree := Args[A]
            Name : PT.name_tree := Parm.name
            if Parm.is_output and not Parm.is_variable then
-               result := XLT.Append(result, parse_tree('Arg' := 'Name'))
+               argCopy : PT.tree := parse_tree('Arg' := 'Name')
+               PT.AttachTree argCopy, "CTORCALL", argCopy
+               result := XLT.Append(result, argCopy)
 
         // Run semantics on the whole result
         result := XLT.ScopeSemantics (result, XLT.scopeFunction)

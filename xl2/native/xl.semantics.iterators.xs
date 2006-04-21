@@ -57,4 +57,6 @@ module XL.SEMANTICS.ITERATORS with
     function InvokeIterator(Input   : PT.tree;
                             Base    : PT.tree;
                             iter    : iterator;
-                            Args    : PT.tree_list) return BC.bytecode
+                            Args    : PT.tree_list;
+                            ctors   : PT.tree;
+                            dtors   : PT.tree) return BC.bytecode

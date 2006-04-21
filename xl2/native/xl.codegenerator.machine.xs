@@ -56,10 +56,14 @@ module XL.CODE_GENERATOR.MACHINE with
     // Interface for function calls
     type machine_args is string of PT.tree
     function FunctionCall (toCall   : FN.function;
-                           margs    : machine_args) return BC.bytecode
+                           margs    : machine_args;
+                           ctors    : PT.tree;
+                           dtors    : PT.tree) return BC.bytecode
     function RecordFunctionCall (Record : PT.tree;
                                  toCall   : FN.function;
-                                 margs    : machine_args) return BC.bytecode
+                                 margs    : machine_args;
+                                 ctors    : PT.tree;
+                                 dtors    : PT.tree) return BC.bytecode
 
     // Interface for record types
     function DeclareRecord(r : RT.record_type) return PT.name_tree

@@ -50,6 +50,7 @@ module XL.SEMANTICS.DECLARATIONS with
     function CallConstructor (decl : declaration) return PT.tree
     function CallDestructor (name : PT.tree) return PT.tree
     procedure CallDestructors (table : SYM.symbol_table)
+    procedure DoNotDelete (table : SYM.symbol_table; decl : declaration)
 
 
     type declaration_data is PT.info_data with

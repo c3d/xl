@@ -28,6 +28,7 @@ import ERR = XL.ERRORS
 import PT = XL.PARSER.TREE
 import DCL = XL.SEMANTICS.DECLARATIONS
 import FN = XL.SEMANTICS.FUNCTIONS
+import OVL = XL.SEMANTICS.OVERLOAD
 import ITER = XL.SEMANTICS.ITERATORS
 import TY = XL.SEMANTICS.TYPES
 import FT = XL.SEMANTICS.TYPES.FUNCTIONS
@@ -213,7 +214,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                 // Instantiation error
                 return result
 
-        cdtors       : PT.tree
+        ctors        : PT.tree
         declaredHere : map[DCL.declaration, boolean]
         ftype        : fninfo.type as FN.function_type
         if size(Dnames) > 0 then
@@ -223,38 +224,32 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                 parm : DCL.declaration := ftype.parameters[idx]
                 decl : DCL.declaration := DCL.Declare(Name, parm.type)
                 if parm.is_input or not parm.is_output then
-                    cdtors := XLT.Append(cdtors, DCL.CallConstructor(decl))
+                    ctors := XLT.Append(ctors, DCL.CallConstructor(decl))
                 margs[a] := XLT.XLSemantics(margs[a])
                 declaredHere[parm] := true
 
         // Call the destructors for all output parameters
         // (the value will be constructed in the callee)
-        for a in 0..size(ftype.parameters)-1 loop
-            parm : DCL.declaration := ftype.parameters[a]
-            if parm.is_output and not parm.is_input then
-                if not declaredHere[parm] then
-                    dtorCall : PT.tree := DCL.CallDestructor(margs[a])
-                    cdtors := XLT.Append(cdtors, dtorCall)
+        // Avoid doing that if this is 'Copy' as called by ctor calls...
+        dtors : PT.tree
+        if PT.Attached (input, "CTORCALL") = nil then
+            for a in 0..size(ftype.parameters)-1 loop
+                parm : DCL.declaration := ftype.parameters[a]
+                if parm.is_output and not parm.is_input then
+                    if not declaredHere[parm] then
+                        dtorCall : PT.tree := DCL.CallDestructor(margs[a])
+                        dtors := XLT.Append(dtors, dtorCall)
 
         // Check if this is an iterator call
         iterator : fninfo as ITER.iterator
         if iterator <> nil then
-            result := ITER.InvokeIterator(input, scope, iterator, margs)
+            result := ITER.InvokeIterator(input, scope, iterator,
+                                          margs, ctors, dtors)
         else if scope = nil then
-            result := CGM.FunctionCall (fninfo, margs)
+            result := CGM.FunctionCall (fninfo, margs, ctors, dtors)
         else
             scope := XLT.XLSemantics(scope)
-            result := CGM.RecordFunctionCall(scope, fninfo, margs)
-
-        if cdtors <> nil then
-            mcode : PT.tree
-            CGM.SplitExpression result, mcode
-            if mcode <> nil then
-                cdtors := XLT.Append(cdtors, mcode)
-                mname : result as PT.name_tree
-                result := CGM.MakeExpression (mcode, mname)
-            else
-                result := XLT.Append(cdtors, result)
+            result := CGM.RecordFunctionCall(scope,fninfo, margs,ctors,dtors)
 
 
     function EnterWrittenForm(fniface : PT.tree;

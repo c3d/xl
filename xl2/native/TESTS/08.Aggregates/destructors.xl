@@ -2,7 +2,8 @@
 
 use XL.UI.CONSOLE
 
-to Delete (in out K : integer) is
+
+to Delete (K : integer) is
     WriteLn "Destructor for ", K
 
 iterator IntegerIterator(var It : integer;

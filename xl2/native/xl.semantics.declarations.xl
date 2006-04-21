@@ -187,8 +187,11 @@ module XL.SEMANTICS.DECLARATIONS is
                 // Return initialization
                 if decl.is_local then
                     result := parse_tree ('Name' := 'Value')
+                    PT.AttachTree result, "CTORCALL", result
                 else if decl.is_global then
-                    XLT.AddGlobalInit parse_tree('Name' := 'Value')
+                    ctor : PT.tree := parse_tree('Name' := 'Value')
+                    PT.AttachTree result, "CTORCALL", result
+                    XLT.AddGlobalInit ctor
             else
                 // Definition will be processed at semantics time
                 result := parse_tree(@@def 'Name' 'Value')
@@ -659,6 +662,7 @@ module XL.SEMANTICS.DECLARATIONS is
             if size(list) > 0 then
                 dname : PT.name_tree := decl.name
                 result := parse_tree('dname' := 'tname' ())
+                PT.AttachTree result, "CTORCALL", result // Avoid dtor calls
                 result.position := dname.position
                 result := XLT.XLSemantics(result)
 
@@ -669,10 +673,9 @@ module XL.SEMANTICS.DECLARATIONS is
     // ------------------------------------------------------------------------
         decl : DCL.declaration := DCL.GetDeclaration(entry)
         if entry.kind = PT.xlNAME and decl <> nil then
-            needDtor : boolean := decl.is_local or decl.is_global
-            if needDtor then
-                name : entry as PT.name_tree
-                dtorCall : PT.tree := parse_tree(delete 'name')
+            if decl.is_local or decl.is_global then
+                mname : PT.name_tree := decl.machine_name
+                dtorCall : PT.tree := parse_tree(delete 'mname')
                 ERR.PushErrorContext()
                 dtorCall := XLT.XLSemantics(dtorCall)
                 errors : text := ERR.PopErrorContext()
@@ -685,13 +688,32 @@ module XL.SEMANTICS.DECLARATIONS is
     // ------------------------------------------------------------------------
     //    Find all the destructors in the current scope and call them
     // ------------------------------------------------------------------------
-        names : PT.tree_list
-        entry : PT.tree
+        names   : PT.tree_list
+        entry   : PT.tree
+        deleted : map[PT.tree, boolean]
+
         SYM.LocalSymbols table, names
         for entry in names loop
-            dtorCall : PT.tree := CallDestructor (entry)
-            if dtorCall <> nil then
-                XLT.AddScopeTerm table, dtorCall
+            if not deleted[entry] then
+                deleted[entry] := true
+                decl  : DCL.declaration := DCL.GetDeclaration(entry)
+                if decl <> nil then
+                    mname : PT.name_tree := decl.machine_name
+                    if mname <> nil then
+                        key   : text := "KEEP:" + mname.value
+                        if SYM.GetProperty(table, key, false) = nil then
+                            dtorCall : PT.tree := CallDestructor (entry)
+                            if dtorCall <> nil then
+                                XLT.AddScopeTerm table, dtorCall
 
 
+    procedure DoNotDelete (table : SYM.symbol_table; decl : declaration) is
+    // ------------------------------------------------------------------------
+    //   Mark the name to indicate we don't want it deleted in current scope
+    // ------------------------------------------------------------------------
+        assert decl <> nil
+        name : PT.name_tree := decl.machine_name
+        assert name <> nil
+        key  : text := "KEEP:" + name.value
+        SYM.SetProperty table, key, name
 
