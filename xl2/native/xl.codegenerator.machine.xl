@@ -527,13 +527,26 @@ module XL.CODE_GENERATOR.MACHINE is
         result := XLT.Append(prefixCode, result)
         result := XLT.Append(ctors, result)
 
-        // If the callee has a value, then we specify it here
         if retType <> nil then
+            // If the callee has a value, then we specify it here
             result := MakeExpression(result, retValueName)
             if not TY.IsVariable(retType) then
                 retType := TY.ConstantType(retType)
             TY.SetType retValueName, retType
             TY.SetType result, retType
+
+            // Post a temporary destructor for the temp we just created
+            if retValueType <> nil then
+                dtor : PT.tree := parse_tree(delete 'retValueName')
+                ERR.PushErrorContext()
+                dtor := XLT.XLSemantics(dtor)
+                if ERR.PopErrorContext() = "" then
+                    SYM.AddScopeItem XLT.context, "TEMPDTORS", dtor
+        else
+            // Otherwise, time to cleanup all call temporaries
+            dtors : PT.tree := SYM.ScopeItems(XLT.context, "TEMPDTORS")
+            SYM.SetProperty XLT.context, "TEMPDTORS", nil
+            result := XLT.Append(result, dtors)
 
 
     function RecordFunctionCall (Record   : PT.tree;

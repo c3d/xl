@@ -1,13 +1,18 @@
 Constructed 778
+Destroyed 778
 Constructed 779
+Destroyed 779
 Constructed 780
+Destroyed 780
 Global variables:
  Global=778
  General=779
  Universal=780
 Destroyed 779
 Constructed 781
+Destroyed 781
 Constructed 782
+Destroyed 782
 On entry:
  InVar=778
  OutVar=782
@@ -19,6 +24,7 @@ On exit:
  InOutVar=2340
  Result=781
 F=781
+Destroyed 781
 Global variables after call to F:
  Global=778
  General=1564

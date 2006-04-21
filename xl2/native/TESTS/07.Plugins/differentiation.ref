@@ -100,18 +100,21 @@ callargsbegin copy_1302
 callarg xlreal w_1305 
 callarg xlreal ret_1306 
 callargsend copy_1302 
+delete ret_1306 
 zeroreal ret_1308 
 callbegin copy_1302 
 callargsbegin copy_1302 
 callarg xlreal t0_1307 
 callarg xlreal ret_1308 
 callargsend copy_1302 
+delete ret_1308 
 zeroreal ret_1310 
 callbegin copy_1302 
 callargsbegin copy_1302 
 callarg xlreal t_1309 
 callarg xlreal ret_1310 
 callargsend copy_1302 
+delete ret_1310 
 callbegin copy_1302 
 callargsbegin copy_1302 
 callarg xlreal x_1311 
@@ -124,6 +127,8 @@ callargsbegin copy_1302
 callarg xlreal b_1312 
 callarg xlreal ret_1318 
 callargsend copy_1302 
+delete ret_1317 
+delete ret_1318 
 A := - 0 * X + - 2 * 1 * exp ( - 2 * X) 
 A2 := dexp (2 * X) / dX + d (exp (2 * X) ) / dX 
 Y := d (exp ( - 2 * W * (T - T0) ) * sin (2 * W * (T - T0) ) ) / dT 
