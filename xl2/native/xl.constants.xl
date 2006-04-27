@@ -339,5 +339,34 @@ module XL.CONSTANTS is
             txX : X as PT.text_tree
             inA : A as PT.integer_tree
             inB : B as PT.integer_tree
-            return PT.NewText (txX.value[inA.Value..inB.Value], input.position)
+            return PT.NewText (txX.value[inA.Value..inB.Value],
+                               '''', input.position)
+
+
+        // Conversions
+        when (integer('X')) where X.kind = PT.xlINTEGER then
+            return X
+        when (integer('X')) where X.kind = PT.xlREAL then
+            reX : X as PT.real_tree
+            return PT.NewInteger(integer(reX.value), input.position)
+        when (integer('X')) where X.kind = PT.xlTEXT then
+            txX : X as PT.text_tree
+            if txX.quote = '''' then
+                // Character conversion
+                txVal : text := txX.value
+                txNum : integer := integer(txVal[0])
+                return PT.NewInteger(txNum, input.position)
+            return input
+        when (real('X')) where X.kind = PT.xlINTEGER then
+            inX : X as PT.integer_tree
+            return PT.NewReal(real(inX.value), input.position)
+        when (real('X')) where X.kind = PT.xlREAL then
+            return X
+        when (character('X')) where X.kind = PT.xlINTEGER then
+            inX : X as PT.integer_tree
+            txt : text
+            txt += character(inX.value)
+            return PT.NewText(txt, '''', input.position)
+
+
 
