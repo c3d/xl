@@ -25,9 +25,12 @@
 
 module XL_BUILTINS with
 
-    // Bytecode type definitions
-    // The following is defined in the compiler for this module
-    // type module is XL.BYTECODE.xlmodule
+    // ========================================================================
+    // 
+    //   Bytecode types
+    // 
+    // ========================================================================
+
     type integer                                                                                is XL.BYTECODE.xlint
     type integer8                                                                               is XL.BYTECODE.xlint8
     type integer16                                                                              is XL.BYTECODE.xlint16
@@ -47,6 +50,16 @@ module XL_BUILTINS with
     type text                                                                                   is XL.BYTECODE.xltext
     type record                                                                                 is XL.BYTECODE.xlrecord
 
+    // The following is defined in the compiler for this module
+    // type module is XL.BYTECODE.xlmodule
+
+
+
+    // ========================================================================
+    // 
+    //   Signed integers
+    // 
+    // ========================================================================
 
     // Integer operations
     function Integer() return integer                                                           is XL.BYTECODE.zero_int
@@ -175,6 +188,14 @@ module XL_BUILTINS with
     function BitwiseXor(X, Y : integer64) return integer64      written X xor Y                 is XL.BYTECODE.xor_int64
     function BitwiseNot(X : integer64) return integer64         written not X                   is XL.BYTECODE.not_int64
 
+
+    // ========================================================================
+    // 
+    //   Unsigned integer operations
+    // 
+    // ========================================================================
+    // REVISIT: Would 'cardinal' or 'natural' be a better name than 'unsigned'?
+
     // Unsigned integer operations
     function Unsigned() return unsigned                                                         is XL.BYTECODE.zero_uint
     to Copy(out Tgt : unsigned; in Src : unsigned)              written Tgt := Src              is XL.BYTECODE.copy_uint
@@ -298,6 +319,12 @@ module XL_BUILTINS with
     function BitwiseNot(X : unsigned64) return unsigned64       written not X                   is XL.BYTECODE.not_uint64
 
 
+    // ========================================================================
+    // 
+    //    Floating-point operations
+    // 
+    // ========================================================================
+
     // Real operations
     function Real() return real                                                                 is XL.BYTECODE.zero_real
     to Copy(out Tgt : real; in Src : real)                      written Tgt := Src              is XL.BYTECODE.copy_real
@@ -393,6 +420,22 @@ module XL_BUILTINS with
     function Different(X, Y : real80) return boolean            written X<>Y                    is XL.BYTECODE.ne_real80
 
 
+
+    // ========================================================================
+    // 
+    //    Fixed-point operations
+    // 
+    // ========================================================================
+
+    // TO BE DONE
+
+
+    // ========================================================================
+    // 
+    //    Boolean operations
+    // 
+    // ========================================================================
+
     // Boolean operations
     function Boolean() return boolean                                                           is XL.BYTECODE.zero_bool
     to Copy(out Tgt : boolean; in Src : boolean)                written Tgt := Src              is XL.BYTECODE.copy_bool
@@ -400,19 +443,332 @@ module XL_BUILTINS with
     function LogicalAnd(X, Y : boolean) return boolean          written X and Y                 is XL.BYTECODE.and_bool
     function LogicalOr(X, Y : boolean) return boolean           written X or Y                  is XL.BYTECODE.or_bool
     function LogicalXor(X, Y : boolean) return boolean          written X xor Y                 is XL.BYTECODE.xor_bool
+    function Equal(X, Y : boolean) return boolean               written X=Y                     is XL.BYTECODE.equ_bool
+    function LessThan(X, Y : boolean) return boolean            written X<Y                     is XL.BYTECODE.lt_bool
+    function LessOrEqual(X, Y : boolean) return boolean         written X<=Y                    is XL.BYTECODE.le_bool
+    function GreaterThan(X, Y : boolean) return boolean         written X>Y                     is XL.BYTECODE.gt_bool
+    function GreaterOrEqual(X, Y : boolean) return boolean      written X>=Y                    is XL.BYTECODE.ge_bool
+    function Different(X, Y : boolean) return boolean           written X<>Y                    is XL.BYTECODE.ne_bool
 
+
+
+    // ========================================================================
+    // 
+    //    Character operations
+    // 
+    // ========================================================================
 
     // Character operations
     function character() return character                                                       is XL.BYTECODE.zero_char
+    to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+    function Equal(X, Y : character) return boolean             written X=Y                     is XL.BYTECODE.equ_char
+    function LessThan(X, Y : character) return boolean          written X<Y                     is XL.BYTECODE.lt_char
+    function LessOrEqual(X, Y : character) return boolean       written X<=Y                    is XL.BYTECODE.le_char
+    function GreaterThan(X, Y : character) return boolean       written X>Y                     is XL.BYTECODE.gt_char
+    function GreaterOrEqual(X, Y : character) return boolean    written X>=Y                    is XL.BYTECODE.ge_char
+    function Different(X, Y : character) return boolean         written X<>Y                    is XL.BYTECODE.ne_char
+
+
+
+    // ========================================================================
+    // 
+    //    Text
+    // 
+    // ========================================================================
+
+
+    // ========================================================================
+    // 
+    //    Ranges
+    // 
+    // ========================================================================
+
+
+    // ========================================================================
+    // 
+    //    Arrays
+    // 
+    // ========================================================================
+
+
+
+    // ========================================================================
+    // 
+    //    Type conversions
+    // 
+    // ========================================================================
+
+    // Convert to integer
+    function integer(Value : integer) return integer                                            is XL.BYTECODE.int_to_int
+    function integer(Value : integer8) return integer                                           is XL.BYTECODE.int8_to_int
+    function integer(Value : integer16) return integer                                          is XL.BYTECODE.int16_to_int
+    function integer(Value : integer32) return integer                                          is XL.BYTECODE.int32_to_int
+    function integer(Value : integer64) return integer                                          is XL.BYTECODE.int64_to_int
+    function integer(Value : unsigned8) return integer                                          is XL.BYTECODE.uint8_to_int
+    function integer(Value : unsigned16) return integer                                         is XL.BYTECODE.uint16_to_int
+    function integer(Value : unsigned32) return integer                                         is XL.BYTECODE.uint32_to_int
+    function integer(Value : unsigned64) return integer                                         is XL.BYTECODE.uint64_to_int
+    function integer(Value : character) return integer                                          is XL.BYTECODE.char_to_int
+    function integer(Value : boolean) return integer                                            is XL.BYTECODE.bool_to_int
+    function integer(Value : real) return integer                                               is XL.BYTECODE.real_to_int
+    function integer(Value : real32) return integer                                             is XL.BYTECODE.real32_to_int
+    function integer(Value : real64) return integer                                             is XL.BYTECODE.real64_to_int
+    function integer(Value : real80) return integer                                             is XL.BYTECODE.real80_to_int
+
+    // Convert to integer8
+    function integer8(Value : integer) return integer8                                          is XL.BYTECODE.int_to_int8
+    function integer8(Value : integer8) return integer8                                         is XL.BYTECODE.int8_to_int8
+    function integer8(Value : integer16) return integer8                                        is XL.BYTECODE.int16_to_int8
+    function integer8(Value : integer32) return integer8                                        is XL.BYTECODE.int32_to_int8
+    function integer8(Value : integer64) return integer8                                        is XL.BYTECODE.int64_to_int8
+    function integer8(Value : unsigned8) return integer8                                        is XL.BYTECODE.uint8_to_int8
+    function integer8(Value : unsigned16) return integer8                                       is XL.BYTECODE.uint16_to_int8
+    function integer8(Value : unsigned32) return integer8                                       is XL.BYTECODE.uint32_to_int8
+    function integer8(Value : unsigned64) return integer8                                       is XL.BYTECODE.uint64_to_int8
+    function integer8(Value : character) return integer8                                        is XL.BYTECODE.char_to_int8
+    function integer8(Value : boolean) return integer8                                          is XL.BYTECODE.bool_to_int8
+    function integer8(Value : real) return integer8                                             is XL.BYTECODE.real_to_int8
+    function integer8(Value : real32) return integer8                                           is XL.BYTECODE.real32_to_int8
+    function integer8(Value : real64) return integer8                                           is XL.BYTECODE.real64_to_int8
+    function integer8(Value : real80) return integer8                                           is XL.BYTECODE.real80_to_int8
+
+    // Convert to integer16
+    function integer16(Value : integer) return integer16                                        is XL.BYTECODE.int_to_int16
+    function integer16(Value : integer8) return integer16                                       is XL.BYTECODE.int8_to_int16
+    function integer16(Value : integer16) return integer16                                      is XL.BYTECODE.int16_to_int16
+    function integer16(Value : integer32) return integer16                                      is XL.BYTECODE.int32_to_int16
+    function integer16(Value : integer64) return integer16                                      is XL.BYTECODE.int64_to_int16
+    function integer16(Value : unsigned8) return integer16                                      is XL.BYTECODE.uint8_to_int16
+    function integer16(Value : unsigned16) return integer16                                     is XL.BYTECODE.uint16_to_int16
+    function integer16(Value : unsigned32) return integer16                                     is XL.BYTECODE.uint32_to_int16
+    function integer16(Value : unsigned64) return integer16                                     is XL.BYTECODE.uint64_to_int16
+    function integer16(Value : character) return integer16                                      is XL.BYTECODE.char_to_int16
+    function integer16(Value : boolean) return integer16                                        is XL.BYTECODE.bool_to_int16
+    function integer16(Value : real) return integer16                                           is XL.BYTECODE.real_to_int16
+    function integer16(Value : real32) return integer16                                         is XL.BYTECODE.real32_to_int16
+    function integer16(Value : real64) return integer16                                         is XL.BYTECODE.real64_to_int16
+    function integer16(Value : real80) return integer16                                         is XL.BYTECODE.real80_to_int16
+
+    // Convert to integer32
+    function integer32(Value : integer) return integer32                                        is XL.BYTECODE.int_to_int32
+    function integer32(Value : integer8) return integer32                                       is XL.BYTECODE.int8_to_int32
+    function integer32(Value : integer16) return integer32                                      is XL.BYTECODE.int16_to_int32
+    function integer32(Value : integer32) return integer32                                      is XL.BYTECODE.int32_to_int32
+    function integer32(Value : integer64) return integer32                                      is XL.BYTECODE.int64_to_int32
+    function integer32(Value : unsigned8) return integer32                                      is XL.BYTECODE.uint8_to_int32
+    function integer32(Value : unsigned16) return integer32                                     is XL.BYTECODE.uint16_to_int32
+    function integer32(Value : unsigned32) return integer32                                     is XL.BYTECODE.uint32_to_int32
+    function integer32(Value : unsigned64) return integer32                                     is XL.BYTECODE.uint64_to_int32
+    function integer32(Value : character) return integer32                                      is XL.BYTECODE.char_to_int32
+    function integer32(Value : boolean) return integer32                                        is XL.BYTECODE.bool_to_int32
+    function integer32(Value : real) return integer32                                           is XL.BYTECODE.real_to_int32
+    function integer32(Value : real32) return integer32                                         is XL.BYTECODE.real32_to_int32
+    function integer32(Value : real64) return integer32                                         is XL.BYTECODE.real64_to_int32
+    function integer32(Value : real80) return integer32                                         is XL.BYTECODE.real80_to_int32
+
+    // Convert to integer64
+    function integer64(Value : integer) return integer64                                        is XL.BYTECODE.int_to_int64
+    function integer64(Value : integer8) return integer64                                       is XL.BYTECODE.int8_to_int64
+    function integer64(Value : integer16) return integer64                                      is XL.BYTECODE.int16_to_int64
+    function integer64(Value : integer32) return integer64                                      is XL.BYTECODE.int32_to_int64
+    function integer64(Value : integer64) return integer64                                      is XL.BYTECODE.int64_to_int64
+    function integer64(Value : unsigned8) return integer64                                      is XL.BYTECODE.uint8_to_int64
+    function integer64(Value : unsigned16) return integer64                                     is XL.BYTECODE.uint16_to_int64
+    function integer64(Value : unsigned32) return integer64                                     is XL.BYTECODE.uint32_to_int64
+    function integer64(Value : unsigned64) return integer64                                     is XL.BYTECODE.uint64_to_int64
+    function integer64(Value : character) return integer64                                      is XL.BYTECODE.char_to_int64
+    function integer64(Value : boolean) return integer64                                        is XL.BYTECODE.bool_to_int64
+    function integer64(Value : real) return integer64                                           is XL.BYTECODE.real_to_int64
+    function integer64(Value : real32) return integer64                                         is XL.BYTECODE.real32_to_int64
+    function integer64(Value : real64) return integer64                                         is XL.BYTECODE.real64_to_int64
+    function integer64(Value : real80) return integer64                                         is XL.BYTECODE.real80_to_int64
+
+    // Convert to unsigned
+    function unsigned(Value : integer) return unsigned                                          is XL.BYTECODE.int_to_uint
+    function unsigned(Value : integer8) return unsigned                                         is XL.BYTECODE.int8_to_uint
+    function unsigned(Value : integer16) return unsigned                                        is XL.BYTECODE.int16_to_uint
+    function unsigned(Value : integer32) return unsigned                                        is XL.BYTECODE.int32_to_uint
+    function unsigned(Value : integer64) return unsigned                                        is XL.BYTECODE.int64_to_uint
+    function unsigned(Value : unsigned8) return unsigned                                        is XL.BYTECODE.uint8_to_uint
+    function unsigned(Value : unsigned16) return unsigned                                       is XL.BYTECODE.uint16_to_uint
+    function unsigned(Value : unsigned32) return unsigned                                       is XL.BYTECODE.uint32_to_uint
+    function unsigned(Value : unsigned64) return unsigned                                       is XL.BYTECODE.uint64_to_uint
+    function unsigned(Value : character) return unsigned                                        is XL.BYTECODE.char_to_uint
+    function unsigned(Value : boolean) return unsigned                                          is XL.BYTECODE.bool_to_uint
+    function unsigned(Value : real) return unsigned                                             is XL.BYTECODE.real_to_uint
+    function unsigned(Value : real32) return unsigned                                           is XL.BYTECODE.real32_to_uint
+    function unsigned(Value : real64) return unsigned                                           is XL.BYTECODE.real64_to_uint
+    function unsigned(Value : real80) return unsigned                                           is XL.BYTECODE.real80_to_uint
+
+    // Convert to unsigned8
+    function unsigned8(Value : integer) return unsigned8                                        is XL.BYTECODE.int_to_uint8
+    function unsigned8(Value : integer8) return unsigned8                                       is XL.BYTECODE.int8_to_uint8
+    function unsigned8(Value : integer16) return unsigned8                                      is XL.BYTECODE.int16_to_uint8
+    function unsigned8(Value : integer32) return unsigned8                                      is XL.BYTECODE.int32_to_uint8
+    function unsigned8(Value : integer64) return unsigned8                                      is XL.BYTECODE.int64_to_uint8
+    function unsigned8(Value : unsigned8) return unsigned8                                      is XL.BYTECODE.uint8_to_uint8
+    function unsigned8(Value : unsigned16) return unsigned8                                     is XL.BYTECODE.uint16_to_uint8
+    function unsigned8(Value : unsigned32) return unsigned8                                     is XL.BYTECODE.uint32_to_uint8
+    function unsigned8(Value : unsigned64) return unsigned8                                     is XL.BYTECODE.uint64_to_uint8
+    function unsigned8(Value : character) return unsigned8                                      is XL.BYTECODE.char_to_uint8
+    function unsigned8(Value : boolean) return unsigned8                                        is XL.BYTECODE.bool_to_uint8
+    function unsigned8(Value : real) return unsigned8                                           is XL.BYTECODE.real_to_uint8
+    function unsigned8(Value : real32) return unsigned8                                         is XL.BYTECODE.real32_to_uint8
+    function unsigned8(Value : real64) return unsigned8                                         is XL.BYTECODE.real64_to_uint8
+    function unsigned8(Value : real80) return unsigned8                                         is XL.BYTECODE.real80_to_uint8
+
+    // Convert to unsigned16
+    function unsigned16(Value : integer) return unsigned16                                      is XL.BYTECODE.int_to_uint16
+    function unsigned16(Value : integer8) return unsigned16                                     is XL.BYTECODE.int8_to_uint16
+    function unsigned16(Value : integer16) return unsigned16                                    is XL.BYTECODE.int16_to_uint16
+    function unsigned16(Value : integer32) return unsigned16                                    is XL.BYTECODE.int32_to_uint16
+    function unsigned16(Value : integer64) return unsigned16                                    is XL.BYTECODE.int64_to_uint16
+    function unsigned16(Value : unsigned8) return unsigned16                                    is XL.BYTECODE.uint8_to_uint16
+    function unsigned16(Value : unsigned16) return unsigned16                                   is XL.BYTECODE.uint16_to_uint16
+    function unsigned16(Value : unsigned32) return unsigned16                                   is XL.BYTECODE.uint32_to_uint16
+    function unsigned16(Value : unsigned64) return unsigned16                                   is XL.BYTECODE.uint64_to_uint16
+    function unsigned16(Value : character) return unsigned16                                    is XL.BYTECODE.char_to_uint16
+    function unsigned16(Value : boolean) return unsigned16                                      is XL.BYTECODE.bool_to_uint16
+    function unsigned16(Value : real) return unsigned16                                         is XL.BYTECODE.real_to_uint16
+    function unsigned16(Value : real32) return unsigned16                                       is XL.BYTECODE.real32_to_uint16
+    function unsigned16(Value : real64) return unsigned16                                       is XL.BYTECODE.real64_to_uint16
+    function unsigned16(Value : real80) return unsigned16                                       is XL.BYTECODE.real80_to_uint16
+
+    // Convert to unsigned32
+    function unsigned32(Value : integer) return unsigned32                                      is XL.BYTECODE.int_to_uint32
+    function unsigned32(Value : integer8) return unsigned32                                     is XL.BYTECODE.int8_to_uint32
+    function unsigned32(Value : integer16) return unsigned32                                    is XL.BYTECODE.int16_to_uint32
+    function unsigned32(Value : integer32) return unsigned32                                    is XL.BYTECODE.int32_to_uint32
+    function unsigned32(Value : integer64) return unsigned32                                    is XL.BYTECODE.int64_to_uint32
+    function unsigned32(Value : unsigned8) return unsigned32                                    is XL.BYTECODE.uint8_to_uint32
+    function unsigned32(Value : unsigned16) return unsigned32                                   is XL.BYTECODE.uint16_to_uint32
+    function unsigned32(Value : unsigned32) return unsigned32                                   is XL.BYTECODE.uint32_to_uint32
+    function unsigned32(Value : unsigned64) return unsigned32                                   is XL.BYTECODE.uint64_to_uint32
+    function unsigned32(Value : character) return unsigned32                                    is XL.BYTECODE.char_to_uint32
+    function unsigned32(Value : boolean) return unsigned32                                      is XL.BYTECODE.bool_to_uint32
+    function unsigned32(Value : real) return unsigned32                                         is XL.BYTECODE.real_to_uint32
+    function unsigned32(Value : real32) return unsigned32                                       is XL.BYTECODE.real32_to_uint32
+    function unsigned32(Value : real64) return unsigned32                                       is XL.BYTECODE.real64_to_uint32
+    function unsigned32(Value : real80) return unsigned32                                       is XL.BYTECODE.real80_to_uint32
+
+    // Convert to unsigned64
+    function unsigned64(Value : integer) return unsigned64                                      is XL.BYTECODE.int_to_uint64
+    function unsigned64(Value : integer8) return unsigned64                                     is XL.BYTECODE.int8_to_uint64
+    function unsigned64(Value : integer16) return unsigned64                                    is XL.BYTECODE.int16_to_uint64
+    function unsigned64(Value : integer32) return unsigned64                                    is XL.BYTECODE.int32_to_uint64
+    function unsigned64(Value : integer64) return unsigned64                                    is XL.BYTECODE.int64_to_uint64
+    function unsigned64(Value : unsigned8) return unsigned64                                    is XL.BYTECODE.uint8_to_uint64
+    function unsigned64(Value : unsigned16) return unsigned64                                   is XL.BYTECODE.uint16_to_uint64
+    function unsigned64(Value : unsigned32) return unsigned64                                   is XL.BYTECODE.uint32_to_uint64
+    function unsigned64(Value : unsigned64) return unsigned64                                   is XL.BYTECODE.uint64_to_uint64
+    function unsigned64(Value : character) return unsigned64                                    is XL.BYTECODE.char_to_uint64
+    function unsigned64(Value : boolean) return unsigned64                                      is XL.BYTECODE.bool_to_uint64
+    function unsigned64(Value : real) return unsigned64                                         is XL.BYTECODE.real_to_uint64
+    function unsigned64(Value : real32) return unsigned64                                       is XL.BYTECODE.real32_to_uint64
+    function unsigned64(Value : real64) return unsigned64                                       is XL.BYTECODE.real64_to_uint64
+    function unsigned64(Value : real80) return unsigned64                                       is XL.BYTECODE.real80_to_uint64
+
+    // Convert to real
+    function real(Value : integer) return real                                                  is XL.BYTECODE.int_to_real
+    function real(Value : integer8) return real                                                 is XL.BYTECODE.int8_to_real
+    function real(Value : integer16) return real                                                is XL.BYTECODE.int16_to_real
+    function real(Value : integer32) return real                                                is XL.BYTECODE.int32_to_real
+    function real(Value : integer64) return real                                                is XL.BYTECODE.int64_to_real
+    function real(Value : unsigned8) return real                                                is XL.BYTECODE.uint8_to_real
+    function real(Value : unsigned16) return real                                               is XL.BYTECODE.uint16_to_real
+    function real(Value : unsigned32) return real                                               is XL.BYTECODE.uint32_to_real
+    function real(Value : unsigned64) return real                                               is XL.BYTECODE.uint64_to_real
+    function real(Value : real) return real                                                     is XL.BYTECODE.real_to_real
+    function real(Value : real32) return real                                                   is XL.BYTECODE.real32_to_real
+    function real(Value : real64) return real                                                   is XL.BYTECODE.real64_to_real
+    function real(Value : real80) return real                                                   is XL.BYTECODE.real80_to_real
+
+    // Convert to real32
+    function real32(Value : integer) return real32                                              is XL.BYTECODE.int_to_real32
+    function real32(Value : integer8) return real32                                             is XL.BYTECODE.int8_to_real32
+    function real32(Value : integer16) return real32                                            is XL.BYTECODE.int16_to_real32
+    function real32(Value : integer32) return real32                                            is XL.BYTECODE.int32_to_real32
+    function real32(Value : integer64) return real32                                            is XL.BYTECODE.int64_to_real32
+    function real32(Value : unsigned8) return real32                                            is XL.BYTECODE.uint8_to_real32
+    function real32(Value : unsigned16) return real32                                           is XL.BYTECODE.uint16_to_real32
+    function real32(Value : unsigned32) return real32                                           is XL.BYTECODE.uint32_to_real32
+    function real32(Value : unsigned64) return real32                                           is XL.BYTECODE.uint64_to_real32
+    function real32(Value : real) return real32                                                 is XL.BYTECODE.real_to_real32
+    function real32(Value : real32) return real32                                               is XL.BYTECODE.real32_to_real32
+    function real32(Value : real64) return real32                                               is XL.BYTECODE.real64_to_real32
+    function real32(Value : real80) return real32                                               is XL.BYTECODE.real80_to_real32
+
+    // Convert to real64
+    function real64(Value : integer) return real64                                              is XL.BYTECODE.int_to_real64
+    function real64(Value : integer8) return real64                                             is XL.BYTECODE.int8_to_real64
+    function real64(Value : integer16) return real64                                            is XL.BYTECODE.int16_to_real64
+    function real64(Value : integer32) return real64                                            is XL.BYTECODE.int32_to_real64
+    function real64(Value : integer64) return real64                                            is XL.BYTECODE.int64_to_real64
+    function real64(Value : unsigned8) return real64                                            is XL.BYTECODE.uint8_to_real64
+    function real64(Value : unsigned16) return real64                                           is XL.BYTECODE.uint16_to_real64
+    function real64(Value : unsigned32) return real64                                           is XL.BYTECODE.uint32_to_real64
+    function real64(Value : unsigned64) return real64                                           is XL.BYTECODE.uint64_to_real64
+    function real64(Value : real) return real64                                                 is XL.BYTECODE.real_to_real64
+    function real64(Value : real32) return real64                                               is XL.BYTECODE.real32_to_real64
+    function real64(Value : real64) return real64                                               is XL.BYTECODE.real64_to_real64
+    function real64(Value : real80) return real64                                               is XL.BYTECODE.real80_to_real64
+
+    // Convert to real80
+    function real80(Value : integer) return real80                                              is XL.BYTECODE.int_to_real80
+    function real80(Value : integer8) return real80                                             is XL.BYTECODE.int8_to_real80
+    function real80(Value : integer16) return real80                                            is XL.BYTECODE.int16_to_real80
+    function real80(Value : integer32) return real80                                            is XL.BYTECODE.int32_to_real80
+    function real80(Value : integer64) return real80                                            is XL.BYTECODE.int64_to_real80
+    function real80(Value : unsigned8) return real80                                            is XL.BYTECODE.uint8_to_real80
+    function real80(Value : unsigned16) return real80                                           is XL.BYTECODE.uint16_to_real80
+    function real80(Value : unsigned32) return real80                                           is XL.BYTECODE.uint32_to_real80
+    function real80(Value : unsigned64) return real80                                           is XL.BYTECODE.uint64_to_real80
+    function real80(Value : real) return real80                                                 is XL.BYTECODE.real_to_real80
+    function real80(Value : real32) return real80                                               is XL.BYTECODE.real32_to_real80
+    function real80(Value : real64) return real80                                               is XL.BYTECODE.real64_to_real80
+    function real80(Value : real80) return real80                                               is XL.BYTECODE.real80_to_real80
+
+    // Convert to character
     function character(Value : integer) return character                                        is XL.BYTECODE.int_to_char
-    function integer(Char : character) return integer                                           is XL.BYTECODE.char_to_int
+    function character(Value : integer8) return character                                       is XL.BYTECODE.int8_to_char
+    function character(Value : integer16) return character                                      is XL.BYTECODE.int16_to_char
+    function character(Value : integer32) return character                                      is XL.BYTECODE.int32_to_char
+    function character(Value : integer64) return character                                      is XL.BYTECODE.int64_to_char
+    function character(Value : unsigned8) return character                                      is XL.BYTECODE.uint8_to_char
+    function character(Value : unsigned16) return character                                     is XL.BYTECODE.uint16_to_char
+    function character(Value : unsigned32) return character                                     is XL.BYTECODE.uint32_to_char
+    function character(Value : unsigned64) return character                                     is XL.BYTECODE.uint64_to_char
+    function character(Value : character) return character                                      is XL.BYTECODE.char_to_char
+    function character(Value : boolean) return character                                        is XL.BYTECODE.bool_to_char
+    function character(Value : real) return character                                           is XL.BYTECODE.real_to_char
+    function character(Value : real32) return character                                         is XL.BYTECODE.real32_to_char
+    function character(Value : real64) return character                                         is XL.BYTECODE.real64_to_char
+    function character(Value : real80) return character                                         is XL.BYTECODE.real80_to_char
+
+    // Convert to boolean
+    function boolean(Value : integer) return boolean                                            is XL.BYTECODE.int_to_bool
+    function boolean(Value : integer8) return boolean                                           is XL.BYTECODE.int8_to_bool
+    function boolean(Value : integer16) return boolean                                          is XL.BYTECODE.int16_to_bool
+    function boolean(Value : integer32) return boolean                                          is XL.BYTECODE.int32_to_bool
+    function boolean(Value : integer64) return boolean                                          is XL.BYTECODE.int64_to_bool
+    function boolean(Value : unsigned8) return boolean                                          is XL.BYTECODE.uint8_to_bool
+    function boolean(Value : unsigned16) return boolean                                         is XL.BYTECODE.uint16_to_bool
+    function boolean(Value : unsigned32) return boolean                                         is XL.BYTECODE.uint32_to_bool
+    function boolean(Value : unsigned64) return boolean                                         is XL.BYTECODE.uint64_to_bool
+    function boolean(Value : character) return boolean                                          is XL.BYTECODE.char_to_bool
+    function boolean(Value : boolean) return boolean                                            is XL.BYTECODE.bool_to_bool
+    function boolean(Value : real) return boolean                                               is XL.BYTECODE.real_to_bool
+    function boolean(Value : real32) return boolean                                             is XL.BYTECODE.real32_to_bool
+    function boolean(Value : real64) return boolean                                             is XL.BYTECODE.real64_to_bool
+    function boolean(Value : real80) return boolean                                             is XL.BYTECODE.real80_to_bool
 
 
-    // Text operations
 
-
-    // Records
-
+    // ========================================================================
+    // 
+    //    Iterators
+    // 
+    // ========================================================================
 
     iterator IntegerIterator (
             var out Counter : integer
