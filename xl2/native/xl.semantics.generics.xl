@@ -36,6 +36,7 @@ import CGM = XL.CODE_GENERATOR.MACHINE
 import DCL = XL.SEMANTICS.DECLARATIONS
 import IO = XL.TEXT_IO
 import OVL = XL.SEMANTICS.OVERLOAD
+import CST = XL.CONSTANTS
 
 
 module XL.SEMANTICS.GENERICS is
@@ -189,6 +190,7 @@ module XL.SEMANTICS.GENERICS is
                     else
                         // Non-type argument
                         Arg := XLT.XLSemantics (Arg)
+                        Arg := CST.EvaluateConstant (Arg)
                         AType : TY.any_type := TY.GetType(Arg)
                         Matching := DCL.Assignable(D, Arg)
                         if not Matching then
@@ -200,6 +202,13 @@ module XL.SEMANTICS.GENERICS is
                                        ArgList[A],
                                        TY.Source(D.type), TY.Source(AType)
                             ERR.Error "for parameter '$1'", D.name
+                        else if not CST.IsConstant(Arg) then
+                            trace [inst] "FAIL: Non const arg for ", D.name
+                            ERR.Error "'$1' could not be selected because", C
+                            ERR.Error "'$1' is not a constant", Arg
+                            ERR.Error "for parameter '$1'", D.name
+                            Matching := false
+
                     exit if not Matching
                     TestArgs += Arg
                     A += 1

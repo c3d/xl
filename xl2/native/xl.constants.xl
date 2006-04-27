@@ -132,11 +132,23 @@ module XL.CONSTANTS is
             return true
         return false
 
+
     function IsBoolean(expr : PT.tree) return boolean is
     // ------------------------------------------------------------------------
     //   Return true if the expression evaluates as true or false
     // ------------------------------------------------------------------------
         return PT.Matches(expr, true_tree) or PT.Matches(expr, false_tree)
+
+
+    function IsConstant(expr : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if the expression is a constant (call after cst eval)
+    // ------------------------------------------------------------------------
+        return (expr.kind = PT.xlINTEGER or
+                expr.kind = PT.xlREAL or
+                expr.kind = PT.xlTEXT or
+                PT.Matches(expr, true_tree) or
+                PT.Matches(expr, false_tree))
 
 
     function IsText(expr : PT.tree) return boolean is

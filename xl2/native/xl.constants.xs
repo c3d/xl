@@ -40,3 +40,4 @@ module XL.CONSTANTS with
     function IsTrue (cst : PT.tree) return boolean
     function IsFalse (cst : PT.tree) return boolean
     function IsBoolean (cst : PT.tree) return boolean
+    function IsConstant (cst : PT.tree) return boolean
