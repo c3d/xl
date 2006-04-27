@@ -210,3 +210,5 @@ get_stderr       "$1 = stderr;"
 
 zero_ptr         "$1 = (void *) 0;"
 copy_ptr         "$1 = $2;"
+
+array_type       "typedef $1 $3[$2];"

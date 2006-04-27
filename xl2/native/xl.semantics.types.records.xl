@@ -194,6 +194,8 @@ module XL.SEMANTICS.TYPES.RECORDS is
             rtp.machine_name := CGM.DeclareRecord(rtp)
             result := rtp
 
+        TY.SetDefinedType rtp.machine_name, rtp
+
 
     function EnterType (Source  : PT.tree;
                         Base    : PT.tree;

@@ -98,6 +98,7 @@ XL=../bootstrap/bxl$(EXE)
 include $(BROOT)Makefile.config
 
 qtest: debug regression
+otest: opt regression
 
 test: debug regression native native_test native_stability_test
 	echo ------ Differences: -----------------------------------------

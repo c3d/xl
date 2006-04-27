@@ -185,6 +185,7 @@ module XL.SEMANTICS.GENERICS is
                             ERR.Error "'$1' could not be selected because", C
                             ERR.Error "'$1' is not a type",Arg,D.name
                             ERR.Error "for parameter '$1'", D.name
+                        Arg := AType.machine_name
                     else
                         // Non-type argument
                         Arg := XLT.XLSemantics (Arg)
@@ -437,15 +438,34 @@ module XL.SEMANTICS.GENERICS is
 
         // Process the instantiated declaration
         ERR.PushErrorContext()
+
         Init : PT.tree := PT.Clone(Decl.initializer)
         trace[inst] "GenDecl ", Name, " : ", Type, " is ", Init
-        PT.AttachTree Name, "INSTANCEOF", Decl.Name
-        result := DCL.EnterDeclaration (Name, Type, Init, true)
-        result := XLT.XLSemantics(result)
-        if Decl.is_global then
-            f : FN.function := FN.GetFunction (result)
-            result := XLT.PostScopeSemantics(result, XLT.scopeGlobal, nil)
-            PT.SetInfo result, "FN", f
+        if Decl.is_builtin then
+            // Check if this is a generic bytecode
+            if TY.IsTypeType(Decl.type) then
+                dn       : Decl.name as PT.name_tree
+                instName : PT.name_tree := SYM.Temporary(dn.value, dn.position)
+                instCode : PT.tree := gtp.machine_name
+                for I in 0..NA-1 loop
+                    A : PT.tree := Args[I]
+                    instCode := parse_tree('instCode' 'A')
+                instCode := parse_tree(@ 'instCode' 'instName')
+                tp : TY.any_type := TY.NewType(instName)
+                tp.machine_name := instName
+                TY.SetDefinedType instCode, tp
+                TY.SetDefinedType instName, tp
+                XLT.AddGlobalDecl instCode
+                result := instName
+        else
+            PT.AttachTree Name, "INSTANCEOF", Decl.Name
+            result := DCL.EnterDeclaration (Name, Type, Init, true)
+            result := XLT.XLSemantics(result)
+            if Decl.is_global then
+                f : FN.function := FN.GetFunction (result)
+                result := XLT.PostScopeSemantics(result, XLT.scopeGlobal, nil)
+                if f <> nil then
+                    PT.SetInfo result, "FN", f
         errors : text := ERR.PopErrorContext()
 
         // Cache the result for next time

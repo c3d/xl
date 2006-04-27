@@ -76,6 +76,7 @@ module XL.SEMANTICS.DECLARATIONS with
         is_local                : boolean
         is_global               : boolean
         is_field                : boolean
+        is_generic_parm         : boolean
         is_builtin              : boolean
         implementation          : declaration
 

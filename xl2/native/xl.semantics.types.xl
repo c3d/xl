@@ -339,6 +339,7 @@ module XL.SEMANTICS.TYPES is
         decl.is_local           := false
         decl.is_global          := false
         decl.is_field           := false
+        decl.is_generic_parm    := false
         decl.is_builtin         := false
         decl.implementation     := nil
 
@@ -355,21 +356,23 @@ module XL.SEMANTICS.TYPES is
         tp  : any_type := GetDefinedType (result)
         stp : tp as source_type
         if tp <> stp then
-            ERR.Error "Internal: Error creating builtin type", -1
-        stp.machine_name := MachineName
-        EnterSignature MachineName.Value, stp
-        SetDefinedType MachineName, stp
+            gtp : tp as GEN.generic_type
+            if tp <> gtp then
+                ERR.Error "Internal: Error creating builtin type", -1
+        tp.machine_name := MachineName
+        EnterSignature MachineName.Value, tp
+        SetDefinedType MachineName, tp
 
         // Record builtin type as necessary
         mname : text := MachineName.value
         if mname = "xlint" then
             integer_type                := result
-            integer_literal_type        := ConstantType(stp)
+            integer_literal_type        := ConstantType(tp)
         else if mname = "xlreal" then
             real_type                   := result
-            real_literal_type           := ConstantType(stp)
+            real_literal_type           := ConstantType(tp)
         else if mname = "xlbool" then
-            const_boolean_type          := ConstantType(stp)
+            const_boolean_type          := ConstantType(tp)
 
             // REVISIT: Enter pre-defined constants true and false
             // TODO: Define them as an enumeration when these work
@@ -379,10 +382,10 @@ module XL.SEMANTICS.TYPES is
             CST.EnterNamedConstant false_tree, false_tree
         else if mname = "xlchar" then
             character_type              := result
-            character_literal_type      := ConstantType(stp)
+            character_literal_type      := ConstantType(tp)
         else if mname = "xltext" then
             text_type                   := result
-            text_literal_type           := ConstantType(stp)
+            text_literal_type           := ConstantType(tp)
         else if mname = "xlrecord" then
             record_type                 := result
         else if mname = "xlmodule" then

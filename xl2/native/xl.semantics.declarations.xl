@@ -232,12 +232,16 @@ module XL.SEMANTICS.DECLARATIONS is
         decl.is_local           := SYM.GetInteger(XLT.context, "LOCAL") <> 0
         decl.is_global          := SYM.GetInteger(XLT.context, "GLOBAL") <> 0
         decl.is_field           := SYM.GetInteger(XLT.context, "FIELD") <> 0
+        decl.is_generic_parm    := SYM.GetProperty(XLT.context, "GENERIC")<>nil
         decl.is_builtin         := false
         decl.implementation     := nil
 
         // Check internal consistency for flags of the declaration
+        if decl.is_parameter then
+            decl.is_generic_parm := false
         if (integer(decl.is_parameter) + integer(decl.is_field) +
-            integer(decl.is_local) + integer(decl.is_global) <> 1) then
+            integer(decl.is_local) + integer(decl.is_global) +
+            integer(decl.is_generic_parm) <> 1) then
             ERR.Error "Internal: Bad declaration scope for '$1'", Name
 
         // Store this declaration name in the symbol table
@@ -260,6 +264,8 @@ module XL.SEMANTICS.DECLARATIONS is
             kind := parse_tree(field_decl)
         else if decl.is_parameter then
             kind := parse_tree(parm_decl)
+        else if decl.is_generic_parm then
+            kind := parse_tree(genparm_decl)
 
         XLT.AddScopeDecl ctxt, parse_tree(@ 'kind' 'mtype' 'mname')
 
