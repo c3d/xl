@@ -1,7 +1,14 @@
 // This tests automatic type deduction (from the initialization value)
-// RUN=cat %c
+use XL.UI.CONSOLE
 
 K : variable := 3
 L : variable := 0.3
 
+to Validate(I : integer) is
+   WriteLn "Got an integer ", I
 
+to Validate(I : real) is
+   WriteLn "Got a real ", I
+
+Validate K
+Validate L

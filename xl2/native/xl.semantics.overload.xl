@@ -362,7 +362,7 @@ module XL.SEMANTICS.OVERLOAD is
             SYM.RemoveImplicit symbols
 
         // Report results
-        candidate_errors : text := ERR.PopErrorContext()
+        candidate_errors : boolean := ERR.PopErrorContext()
         if best <> nil then
             if ambig <> nil then
                 ERR.Error "The call to '$1' is ambiguous", NameTree
@@ -425,7 +425,8 @@ module XL.SEMANTICS.OVERLOAD is
 
         else
             ERR.Error "No valid function found for '$1'", NameTree
-            ERR.Display candidate_errors
+            if candidate_errors then
+                ERR.DisplayLastErrors()
             return parse_tree(@error)
 
 

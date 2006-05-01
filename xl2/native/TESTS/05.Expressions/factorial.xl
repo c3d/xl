@@ -23,11 +23,7 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-// Temporarily, we need these definitions (until we import XL.BUILTIN)
-function Equal(X : integer; Y : integer) return boolean written X = Y is xl.bytecode.equ_int
-function Sub(X : integer; Y : integer) return integer written X - Y is xl.bytecode.sub_int
-function Mul(X : integer; Y : integer) return integer written X * Y is xl.bytecode.mul_int
-to Copy(out Target : integer; in Source : integer) written Target := Source is xl.bytecode.copy_int
+use XL.UI.CONSOLE
 
 function Factorial (N : integer) return integer written N! is
     if N = 0 then
@@ -35,3 +31,6 @@ function Factorial (N : integer) return integer written N! is
     // Hellox
     else
         return N * (N-1)!
+
+for I in 0..5 loop
+   WriteLn I, "!=", I!

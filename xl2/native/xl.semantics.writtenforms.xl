@@ -138,8 +138,8 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                 if semArg = nil then
                     ERR.PushErrorContext()
                     semArg := XLT.XLSemantics(value)
-                    errors : text := ERR.PopErrorContext()
-                    if errors <> "" then
+                    if ERR.PopErrorContext() then
+                        errors : text := ERR.GetLastErrorsText()
                         E : PT.tree := PT.NewText(errors, '"', value.position)
                         semArg := parse_tree(@error 'E')
                         PT.AttachTree value, key, semArg
@@ -356,10 +356,10 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             if semArg = nil then
                 ERR.PushErrorContext()
                 semArg := TY.EvaluateTypeAsTree(value)
-                errors : text := ERR.PopErrorContext()
+                errors : boolean := ERR.PopErrorContext()
                 PT.AttachTree value, key, semArg
-                if errors <> "" then
-                    ERR.Display errors
+                if errors then
+                    ERR.DisplayLastErrors()
 
 
             // Look at the generic declaration

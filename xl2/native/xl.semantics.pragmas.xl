@@ -61,7 +61,9 @@ module XL.SEMANTICS.PRAGMAS is
         name : text := PT.XLNormalize(p_name.value)
         if SYM.GetInteger(XLT.context, name + ".pragma", 0, true) <> 1 then
             ERR.Error "The pragma {$1} is not implemented", p_name
-        return SYM.LookupRewrite(XLT.context, name, input)
+        result := SYM.LookupRewrite(XLT.context, name, input)
+        trace[pragmas] "Pragma ", name, ".", phase, "(", input, ")"
+        trace[pragmas] "Pragma result ", name, ".", phase, "=(", result, ")"
 
 
     translation XLDeclarations
@@ -72,25 +74,13 @@ module XL.SEMANTICS.PRAGMAS is
             { 'Pragma' } 'Node'
         then
             result := ProcessPragma("xldeclarations", Pragma, Node)
-            if result <> input then
-                result := XLT.XLDeclarations(result)
-            else
-                result := XLT.XLDeclarations(Node)
+            result := XLT.XLDeclarations(result)
         when
             { 'Pragma' }
             'Node'
         then
             result := ProcessPragma("xldeclarations", Pragma, Node)
-            if result <> input then
-                result := XLT.XLDeclarations(result)
-            else
-                result := XLT.XLDeclarations(Node)
-        when
-            { 'Pragma' }
-        then
-            result := ProcessPragma("xldeclarations", Pragma, nil)
-            if result <> input then
-                result := XLT.XLDeclarations(result)
+            result := XLT.XLDeclarations(result)
 
 
     translation XLSemantics
@@ -101,25 +91,13 @@ module XL.SEMANTICS.PRAGMAS is
             { 'Pragma' } 'Node'
         then
             result := ProcessPragma("xlsemantics", Pragma, Node)
-            if result <> input then
-                result := XLT.XLSemantics(result)
-            else
-                result := XLT.XLSemantics(Node)
+            result := XLT.XLSemantics(result)
         when
             { 'Pragma' }
             'Node'
         then
             result := ProcessPragma("xlsemantics", Pragma, Node)
-            if result <> input then
-                result := XLT.XLSemantics(result)
-            else
-                result := XLT.XLSemantics(Node)
-        when
-            { 'Pragma' }
-        then
-            result := ProcessPragma("xlsemantics", Pragma, nil)
-            if result <> input then
-                result := XLT.XLSemantics(result)
+            result := XLT.XLSemantics(result)
 
 
     translation XLOptimizations
@@ -130,22 +108,10 @@ module XL.SEMANTICS.PRAGMAS is
             { 'Pragma' } 'Node'
         then
             result := ProcessPragma("xloptimizations", Pragma, Node)
-            if result <> input then
-                result := XLT.XLOptimizations(result)
-            else
-                result := XLT.XLOptimizations(Node)
+            result := XLT.XLOptimizations(result)
         when
             { 'Pragma' }
             'Node'
         then
             result := ProcessPragma("xloptimizations", Pragma, Node)
-            if result <> input then
-                result := XLT.XLOptimizations(result)
-            else
-                result := XLT.XLOptimizations(Node)
-        when
-            { 'Pragma' }
-        then
-            result := ProcessPragma("xloptimizations", Pragma, nil)
-            if result <> input then
-                result := XLT.XLOptimizations(result)
+            result := XLT.XLOptimizations(result)

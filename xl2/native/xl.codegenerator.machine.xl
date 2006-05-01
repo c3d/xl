@@ -540,7 +540,7 @@ module XL.CODE_GENERATOR.MACHINE is
                 dtor : PT.tree := parse_tree(delete 'retValueName')
                 ERR.PushErrorContext()
                 dtor := XLT.XLSemantics(dtor)
-                if ERR.PopErrorContext() = "" then
+                if not ERR.PopErrorContext() then
                     SYM.AddScopeItem XLT.context, "TEMPDTORS", dtor
         else
             // Otherwise, time to cleanup all call temporaries

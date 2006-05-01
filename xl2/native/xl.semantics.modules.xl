@@ -362,7 +362,8 @@ module XL.SEMANTICS.MODULES is
     // ------------------------------------------------------------------------
         ERR.PushErrorContext()
         result := WantToEvaluate(Value)
-        errors : text := ERR.PopErrorContext()
+        ignored : boolean := ERR.PopErrorContext()
+        ignored := ignored
 
 
     function InXlBuiltinsModule() return boolean is

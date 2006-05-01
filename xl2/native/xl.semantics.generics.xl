@@ -240,7 +240,7 @@ module XL.SEMANTICS.GENERICS is
                     trace [inst] "           Other: ", best
 
         // Report results
-        candidate_errors : text := ERR.PopErrorContext()
+        candidate_errors : boolean := ERR.PopErrorContext()
         if best <> nil then
             if ambig <> nil then
                 ERR.Error "The instantiation of '$1' is ambiguous", NameTree
@@ -256,7 +256,8 @@ module XL.SEMANTICS.GENERICS is
 
         else
             ERR.Error "No valid generic found for '$1'", NameTree
-            ERR.Display candidate_errors
+            if candidate_errors then
+                ERR.DisplayLastErrors()
             BestDecl := nil
 
 
@@ -390,7 +391,7 @@ module XL.SEMANTICS.GENERICS is
             translate result
                 when (@error 'errorText') then
                     errT : errorText as PT.text_tree
-                    ERR.Display errT.value
+                    ERR.Error errT.value, result.position
             return result
 
         // Check infinite recursion
@@ -475,13 +476,12 @@ module XL.SEMANTICS.GENERICS is
                 result := XLT.PostScopeSemantics(result, XLT.scopeGlobal, nil)
                 if f <> nil then
                     PT.SetInfo result, "FN", f
-        errors : text := ERR.PopErrorContext()
-
         // Cache the result for next time
-        if errors <> "" then
+        if ERR.PopErrorContext() then
+            errors : text := ERR.GetLastErrorsText()
             errorText : PT.text_tree := PT.NewText(errors,'"',result.position)
-            ERR.Display errors
             result := parse_tree(@error 'errorText')
+            ERR.DisplayLastErrors()
         SYM.Enter XLT.global_context, "INSTANCE", key, result
         XLT.context := oldContext
         XLT.function_context := fnContext
@@ -549,13 +549,13 @@ module XL.SEMANTICS.GENERICS is
         trace[inst] "Validation: ", valid
         valid := XLT.XLDeclarations(valid)
         valid := XLT.XLSemantics(valid)
-        errors : text := ERR.PopErrorContext()
-        trace[inst] "Validated as: ", valid, " errors=", errors
-        if errors <> "" then
+        if ERR.PopErrorContext() then
+            trace[inst] "Errors during validation, result=", valid
             ERR.Error "Generic validation failed for '$1'", IName
-            ERR.Display errors
+            ERR.DisplayLastErrors()
             result := false
         else
+            trace[inst] "Validated as: ", valid
             result := true
         XLT.context := oldContext
         XLT.function_context := oldFunction
@@ -626,10 +626,9 @@ module XL.SEMANTICS.GENERICS is
 
         result := Instantiate(Decl, ActualArgs, nil, Scope)
 
-        instantiation_errors : text := ERR.PopErrorContext()
-        if instantiation_errors <> "" then
+        if ERR.PopErrorContext() then
             ERR.Error "Unable to instantiate '$1', because", Name
-            ERR.Display instantiation_errors
+            ERR.DisplayLastErrors()
 
 
     function InstantiateType (Decl : DCL.declaration;
@@ -643,10 +642,9 @@ module XL.SEMANTICS.GENERICS is
 
         result := Instantiate(Decl, Args, nil, nil)
 
-        instantiation_errors : text := ERR.PopErrorContext()
-        if instantiation_errors <> "" then
+        if ERR.PopErrorContext() then
             ERR.Error "Unable to instantiate '$1', because", Decl.Name
-            ERR.Display instantiation_errors
+            ERR.DisplayLastErrors()
 
 
     function InstantiateFunction (Source     : PT.tree;
@@ -662,12 +660,11 @@ module XL.SEMANTICS.GENERICS is
 
         result := Instantiate (Decl, Args, Variadics, BaseRecord)
 
-        errors : text := ERR.PopErrorContext()
-        if errors <> "" then
+        if ERR.PopErrorContext() then
             ERR.Error "Errors while instantiating '$1':", Source
             if Variadics <> nil then
                 ERR.Error "with '...' set to '$1'", Variadics
-            ERR.Display errors
+            ERR.DisplayLastErrors()
 
 
     function ContainsGenerics (List : PT.tree_list) return boolean is

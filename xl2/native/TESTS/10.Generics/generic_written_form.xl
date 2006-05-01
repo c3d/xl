@@ -1,5 +1,5 @@
 // Generic written forms, see 'pair of integer'
-// RUN=cat %c
+import XL.UI.CONSOLE
 
 generic [type item]
 type pair written pair of item is record with
@@ -13,12 +13,17 @@ generic [type item]
 type poor
 written poor of item
 is record with
-    first  : item
-    second : item
+    zap : item
+    zop : item
 
 L : poor of integer
 
 Z : poor of (pair of integer)
 
 U : poor of pair of integer
+
+WriteLn U.zap.first
+WriteLn U.zap.second
+WriteLn U.zop.first
+WriteLn U.zop.second
 

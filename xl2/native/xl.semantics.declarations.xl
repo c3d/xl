@@ -400,7 +400,7 @@ module XL.SEMANTICS.DECLARATIONS is
             found : declaration := nil
             multi : declaration := nil
             field : PT.tree
-            errors: text := ""
+            errors: boolean := false
             for field in list loop
                 body_decl : declaration := DCL.GetDeclaration(field)
                 body_type : TY.any_type := body_decl.type
@@ -469,8 +469,8 @@ module XL.SEMANTICS.DECLARATIONS is
                 return false
             if found = nil then
                 ERR.Error "Found no valid implementation for '$1'", iface_name
-                if errors <> "" then
-                    ERR.Display errors
+                if errors then
+                    ERR.DisplayLastErrors()
                 return false
 
             // If we found a match, we may record the implementation
@@ -684,8 +684,7 @@ module XL.SEMANTICS.DECLARATIONS is
                 dtorCall : PT.tree := parse_tree(delete 'mname')
                 ERR.PushErrorContext()
                 dtorCall := XLT.XLSemantics(dtorCall)
-                errors : text := ERR.PopErrorContext()
-                if errors = "" then
+                if not ERR.PopErrorContext() then
                     return dtorCall
         return nil
 

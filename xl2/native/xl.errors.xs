@@ -29,8 +29,9 @@ module XL.ERRORS with
 
     // Saving and restoring errors
     procedure PushErrorContext()
-    function PopErrorContext() return text
-    procedure Display(E : text)
+    function PopErrorContext() return boolean
+    procedure DisplayLastErrors()
+    function GetLastErrorsText() return text
 
     // Signaling an error
     procedure Error (E : text; pos : integer; args : string of text)

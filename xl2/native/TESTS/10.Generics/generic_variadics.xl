@@ -1,17 +1,25 @@
 // Test that simple recursive definitions of variadics work
-// RUN=cat %c
+use XL.UI.CONSOLE
 
 generic type ordered
 
-function Max (X : ordered) return ordered is
+function MyMax (X : ordered) return ordered is
+    WriteLn "MyMax one ", X
     return X
 
-function Max (X : ordered; ...) return ordered is
-    result := Max(...)
+function MyMax (X : ordered; ...) return ordered is
+    result := MyMax(...)
+    Write "MyMax more ", X, " and ", result
     if result < X then
         result := X
+    WriteLn "is ", result
 
-K : integer := Max(1, 2, 3, 4)
-L : integer := Max(1, 2, 3)
-M : real := Max (1.5, 7.9, 8.43)
-Z : real := Max(0.0, 0.0, 0.1)
+K : integer := MyMax(1, 2, 3, 4)
+L : integer := MyMax(1, 2, 3)
+M : real := MyMax (1.5, 7.9, 8.43)
+Z : real := MyMax(0.0, 0.0, 0.1)
+
+WriteLn "K=", K
+WriteLn "L=", L
+WriteLn "M=", M
+WriteLn "Z=", Z

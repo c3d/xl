@@ -591,9 +591,9 @@ module XL.SEMANTICS.TYPES is
     // ------------------------------------------------------------------------
         ERR.PushErrorContext()
         result := iface.interface_match(iface, body)
-        messages : text := ERR.PopErrorContext()
-        if not result then
-            ERR.Display messages
+        messages : boolean := ERR.PopErrorContext()
+        if messages then
+            ERR.DisplayLastErrors()
 
 
     function Convert(expr : PT.tree; toType : any_type) return PT.tree is

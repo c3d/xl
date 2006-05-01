@@ -1,22 +1,18 @@
 // Test that a type declared as generic makes types that use it generic
-// RUN=cat %c
+use XL.UI.CONSOLE
+
 generic type Zabata
 
 function H1(X : Zabata) return integer is
-    return H1(X-1) + 1
-function H2(X : integer) return Zabata is
-    return H2(X-1) + 1
-
-generic [type T]
-function F(X : integer) return integer is
-    return F(X-1) + 1
-
-function G(X : integer) return integer is
-    return G(X-1) + 1
-
+    WriteLn "H1 called with ", X
+    return 0
 
 type zortibus is record with
     Z : Zabata
 
 function K(U : zortibus) return integer is
-    return U-1
+    WriteLn "K called with ", U.Z
+    return 0
+
+Alpha : integer := H1(0)
+Beta  : integer := H1(0.5)

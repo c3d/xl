@@ -1,3 +1,3 @@
-10.Generics/recursive_instantiation.xl:7: No translation found for 'L := Max (3)'
-| L : integer := Max(3)
-|___________________^
+10.Generics/recursive_instantiation.xl:7: No translation found for 'L := Moxotron (3)'
+| L : integer := Moxotron(3)
+|________________________^

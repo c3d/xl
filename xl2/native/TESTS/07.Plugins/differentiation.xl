@@ -22,18 +22,11 @@
 // * Revision   : $Revision$
 // * Date       : $Date$
 // ****************************************************************************
+// We use the error messages to check the shape of the differentiated expr
+// EXIT=2
 
-// CMD=%x -parse %f -sem -style bytecode -show
-
-function sin(X : real) return real
-to Copy(Target : real; Source : real) written Target := Source
-
-procedure Main is
-    W, T0, T : real
-
+procedure MainTest is
     X : real := 0.3
     B : real := -A + B
     {differentiation} A : real := dexp(-2*X)/dX
-    A2 : real :=  dexp(2*X)/dX + d(exp(2*X))/dX
-    Y : real := d(exp(-2*W*(T-T0)) * sin(2*W*(T-T0)))/dT
-    Z : real := {constantfold} sin(X) - sin(1*X)
+    Z : real := {constantfold} f(X) - f(1*X) // Valid even without an 'f'

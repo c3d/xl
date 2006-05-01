@@ -1,13 +1,16 @@
 // Check that a variable automatically gets declared when used to call
 // a subroutine with an output parameter and name does not exist in scope
-// RUN=cat %c
+use XL.UI.CONSOLE
 
 procedure MakeIt (var out A : integer; B : integer) written A &= B is
+    WriteLn "MakeIt (integer) ", B
     A := B
 procedure MakeIt (variable out A : real; B : real) written A &= B is
+    WriteLn "MakeIt (real) ", B
     A := B
 generic [type item]
 procedure MakeIt (var out A : item; B : item) written A &= B is
+    WriteLn "MakeIt (generic) "
     A := B
 
 procedure Test is
@@ -20,6 +23,10 @@ procedure Test is
     // Check that it does not redeclare
     MakeIt Glop, 3
     MakeIt Glap, 6.3
+
+    WriteLn "Zero=", Zero
+    WriteLn "Glop=", Glop
+    WriteLn "Glap=", Glap
 
 // Check the generic case
 type zoo is record with
@@ -36,3 +43,10 @@ MakeIt Znort, Fungoid
 to TestOperators is
    Bingo &= 1
    Bonga &= 2.3
+   Blatoid &= Fungoid
+   WriteLn "Bingo=", Bingo
+   WriteLn "Bonga=", Bonga
+   WriteLn "Blatoid=", Blatoid.A, ":", Blatoid.B
+
+Test
+TestOperators

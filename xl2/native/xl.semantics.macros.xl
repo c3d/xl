@@ -180,10 +180,9 @@ module XL.SEMANTICS.MACROS is
             trace [macro] "Macro #", recursions, " translated to: ", result
 
         recursions -= 1
-        errors : text := ERR.PopErrorContext()
-        if errors <> "" then
+        if ERR.PopErrorContext() then
             ERR.Error "While preprocessing '$1'", input
-            ERR.Display errors            
+            ERR.DisplayLastErrors()
 
 
     procedure EnterMacro (kind : text; from : PT.tree; to : PT.tree) is

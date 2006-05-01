@@ -1,13 +1,13 @@
 09.Modules/nested_import_nonmodule.xl:27: 'SIMPLE_IMPORTED' has no symbol table
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |______________________^
-./xl_builtins.xs:31: Its type is 
+./xl_builtins.xs:34: Its type is 
 |     type integer                                                                                is XL.BYTECODE.xlint
 |________________^
 09.Modules/nested_import_nonmodule.xl:27: Did not find symbols in 'SIMPLE_IMPORTED'
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |______________________^
-./xl_builtins.xs:31: Its type is 'integer'
+./xl_builtins.xs:34: Its type is 'integer'
 |     type integer                                                                                is XL.BYTECODE.xlint
 |________________^
 09.Modules/nested_import_nonmodule.xl:27: Imported file did not define 'SIMPLE_IMPORTED . NESTED1'
@@ -43,4 +43,4 @@
 09.Modules/nested_import_nonmodule.xl:27: but is used as a submodule of 'SIMPLE_IMPORTED . NESTED1'
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |_______________________^
-[Compiler generated]: No translation found for 'invalid_submodule_1315 := Simple_imported . Nested_1 . nested2 . HasKlaxon (0.54)'
+[Compiler generated]: No translation found for 'invalid_submodule_2074 := Simple_imported . Nested_1 . nested2 . HasKlaxon (0.54)'

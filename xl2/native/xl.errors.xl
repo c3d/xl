@@ -38,43 +38,53 @@ module XL.ERRORS is
         return E
 
 
-    error_out_stack     : string of IO.output_string_stream
+    type error_stack_element is record with
+        message         : text
+        position        : integer
+    type error_stack_level is string of error_stack_element
+    error_stack         : string of error_stack_level
+    last_errors         : error_stack_level
 
 
     procedure PushErrorContext() is
     // ------------------------------------------------------------------------
     //    Push a new output string stream to store errors
     // ------------------------------------------------------------------------
-        error_out_stack += IO.open_string_stream()
+        level : error_stack_level
+        error_stack += level
 
 
-    function PopErrorContext() return text is
+    function PopErrorContext() return boolean is
     // ------------------------------------------------------------------------
     //   Pop last string stream for errors
     // ------------------------------------------------------------------------
-        out : IO.output_string_stream := back(error_out_stack)
-        pop_back error_out_stack
-        return IO.close_string_stream(out)
+        last_errors := back(error_stack)
+        pop_back error_stack
+        return size(last_errors) > 0
 
 
-    procedure Display(E : text) is
+    procedure DisplayLastErrors() is
     // ------------------------------------------------------------------------
-    //   Display an error from an error context
+    //   Display the last errors
     // ------------------------------------------------------------------------
-        old_stdout : IO.output_file := IO.standard_output
-        if size (error_out_stack) > 0 then
-            IO.standard_output := back(error_out_stack)
+        if size(error_stack) > 0 then
+            back(error_stack) += last_errors
         else
-            // Count all errors, to shame poor user
-            error_count += 1
-            IO.standard_output := IO.standard_error
-
-        IO.Write E
-
-        IO.standard_output := old_stdout
+            E : error_stack_element
+            for E in last_errors loop
+                Error E.message, E.position
 
 
-    procedure ErrorInt (E : text; pos : integer; args : string of text) is
+    function GetLastErrorsText() return text is
+    // ------------------------------------------------------------------------
+    //   Display the last errors
+    // ------------------------------------------------------------------------
+        if size(last_errors) > 0 then
+            E : error_stack_element := last_errors[0]
+            result := E.message
+
+
+    procedure Error (E : text; pos : integer; args : string of text) is
     // ------------------------------------------------------------------------
     //    Report the given error
     // ------------------------------------------------------------------------
@@ -106,42 +116,33 @@ module XL.ERRORS is
             else
                 fmt += C
 
-        // Convert positon to line and column
-        if pos = -1 then
-            IO.WriteLn "[Compiler generated]: ", fmt
-        else
-            POS.PositionToLine pos, file, line, column, linetext
-
-            // Display message
-            if file <> "" then
-                IO.WriteLn file, ":", line, ": ", fmt
-
-                // Display line contents and caret
-                IO.Writeln "| ", linetext
-                IO.Write   "|_"
-                while column > 0 loop
-                    IO.Write "_"
-                    column -= 1
-                IO.writeln "^"
-            else
-                IO.WriteLn "[Unknown position]: ", fmt
-
-
-    procedure Error (E : text; pos : integer; args : string of text) is
-    // ------------------------------------------------------------------------
-    //   Report the given error on the current stream
-    // ------------------------------------------------------------------------
-
-        old_stdout : IO.output_file := IO.standard_output
-        if size (error_out_stack) > 0 then
-            IO.standard_output := back(error_out_stack)
+        if size(error_stack) > 0 then
+            E : error_stack_element
+            E.message := fmt
+            E.position := pos
+            back(error_stack) += E
         else
             error_count += 1
-            IO.standard_output := IO.standard_error
 
-        ErrorInt E, pos, args
+            // Convert positon to line and column
+            if pos = -1 then
+                IO.WriteLn "[Compiler generated]: ", fmt
+            else
+                POS.PositionToLine pos, file, line, column, linetext
 
-        IO.standard_output := old_stdout
+                // Display message
+                if file <> "" then
+                    IO.WriteLn file, ":", line, ": ", fmt
+
+                    // Display line contents and caret
+                    IO.Writeln "| ", linetext
+                    IO.Write   "|_"
+                    while column > 0 loop
+                        IO.Write "_"
+                        column -= 1
+                    IO.writeln "^"
+                else
+                    IO.WriteLn "[Unknown position]: ", fmt
 
 
     procedure Error (E : text; pos : integer) is
@@ -264,4 +265,3 @@ module XL.ERRORS is
         args += text arg2
         args += text arg3
         Error E, ArgPosition(arg), args
-
