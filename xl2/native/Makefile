@@ -115,7 +115,7 @@ native_test:
 native_stability_test: 
 	$(MAKE) PRODUCT=nnnnxl$(EXE) XL="./nnnxl$(EXE)" XLOPTS="-bootstrap" OBJROOT="$(OBJROOT)nnxl_stability"
 regression: ALWAYS
-	cd TESTS; ./alltests
+	cd TESTS; time ./alltests
 ALWAYS:
 
 prebuild: xl_lib.h xl.syntax

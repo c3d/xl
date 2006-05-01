@@ -479,9 +479,44 @@ module XL_BUILTINS with
 
     // ========================================================================
     // 
+    //    Ordered and min/max
+    // 
+    // ========================================================================
+
+    generic type ordered where
+        X, Y : ordered
+        Test : boolean := X < Y
+
+    function Min(X : ordered) return ordered is
+        return X
+    function Min(X : ordered; ...) return ordered is
+        result := Min(...)
+        if X < result then
+            result := X
+
+    function Max(X : ordered) return ordered is
+        return X
+    function Max(X : ordered; ...) return ordered is
+        result := Min(...)
+        if X < result then
+            result := X
+
+
+
+    // ========================================================================
+    // 
     //    Ranges
     // 
     // ========================================================================
+
+    // generic [type ordered_type]
+    // type range is record with
+    //    First, Last : ordered_type
+
+    // function Range (First, Last : ordered)
+    //   return range[ordered] written First..Last is
+    //     result.First := First
+    //     result.Last := Last
 
 
     // ========================================================================

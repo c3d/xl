@@ -133,6 +133,8 @@ module XL.SEMANTICS.FUNCTIONS is
         // If we got an initializer (from instantiation)
         if Init <> nil then
             result := parse_tree(@@fn_body 'result' 'Init')
+            PT.SetInfo result, "FN", f
+            PT.SetInfo result, "DECL", f
 
 
     function EnterBuiltinFunction(input : PT.tree;
@@ -204,7 +206,10 @@ module XL.SEMANTICS.FUNCTIONS is
             ERR.Error "Initializer for builtin '$1'", Interface
         else
             f.initializer := Body
-            return parse_tree(@@fn_body 'Interface' 'Body')
+            result := parse_tree(@@fn_body 'Interface' 'Body')
+            PT.SetInfo result, "FN", f
+            PT.SetInfo result, "DECL", f
+            return result
         return input
 
 

@@ -511,6 +511,14 @@ module XL.SEMANTICS.GENERICS is
         if GenType.in_validation then
             ERR.Error "Recursive validation of '$1'", TY.Source(GenType)
             return false
+
+        // Check if we have a cached answer
+        mn     : PT.name_tree := ActType.machine_name
+        key    : text := "VALID:" + mn.value
+        cached : integer := SYM.GetInteger(XLT.global_context, key)
+        if cached <> 0 then
+            return cached = 1
+
         GenType.in_validation := true
 
         // Create instantiation context
@@ -553,6 +561,12 @@ module XL.SEMANTICS.GENERICS is
         XLT.function_context := oldFunction
         XLT.global_context := oldGlobal
         GenType.in_validation := false
+
+        if result then
+            cached := 1
+        else
+            cached := -1
+        SYM.SetInteger(XLT.global_context, key, cached)
 
 
     function Deduce (FunGenType   : GEN.generic_type;

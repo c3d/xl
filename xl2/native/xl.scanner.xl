@@ -379,6 +379,9 @@ module XL.SCANNER is
             return tokPARCLOSE
 
         // Other symbols
+        if not ASCII.is_punctuation C then
+            ERR.Error "Invalid input character", S.position-1
+            return tokERROR
         while IO.valid S.input and ASCII.is_punctuation C loop
             exit if ASCII.is_quote C
             exit if count(S.blocks, text("") + C) > 0
