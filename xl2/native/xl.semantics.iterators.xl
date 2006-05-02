@@ -300,6 +300,7 @@ module XL.SEMANTICS.ITERATORS is
                PT.AttachTree argCopy, "CTORCALL", argCopy
                result := XLT.Append(result, argCopy)
 
+
         // Run semantics on the whole result
         result := XLT.ScopeSemantics (result, XLT.scopeFunction)
 
