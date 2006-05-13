@@ -1,5 +1,5 @@
 export CVS_RSH=ssh
-export CVSROOT=:ext:descubes@cvs.sourceforge.net:/cvsroot/xlr
+export CVSROOT=:ext:descubes@xlr.cvs.sourceforge.net:/cvsroot/xlr
 #export CVSROOT=:ext:ddd@tgv.local:/Volumes/FuteRoot/CVSROOT/xlr
 export BUILDENV=macosx
 
