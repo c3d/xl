@@ -129,7 +129,7 @@ module XL.SEMANTICS.DECLARATIONS is
                     tp : TY.any_type := TY.GetType(SemValue)
                     if tp = nil then
                         ERR.Error "No type for '$1'", Type
-                        ERR.Error "can be deduced from '$2'", Value
+                        ERR.Error "can be deduced from '$1'", Value
                     else
                         Type := TY.Source(TY.NonConstedType(tp))
 
