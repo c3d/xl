@@ -649,6 +649,12 @@ module XL.SEMANTICS.TYPES is
         then
             return EnterType (Name, Value)
 
+        // The following two are for generic parameters
+        when (type 'Name' is 'Value') then
+            return EnterType (Name, Value)
+        when (type 'Name' := 'Value') then
+            return EnterType (Name, Value)
+
         // Bytecode type definition
         when
             type 'Name' is XL.BYTECODE.'MachineName'

@@ -31,9 +31,6 @@
 09.Modules/nested_import_nonmodule.xl:27: Its type is '?null?'
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |______________________^
-09.Modules/nested_import_nonmodule.xl:27: No translation found for 'SIMPLE_IMPORTED . NESTED1'
-| import SIMPLE_IMPORTED.NESTED1.NESTED2
-|_______________________^
 09.Modules/nested_import_nonmodule.xl:27: Imported file did not define 'SIMPLE_IMPORTED . NESTED1 . NESTED2'
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |_______________________________^

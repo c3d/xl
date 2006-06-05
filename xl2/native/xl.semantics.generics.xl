@@ -744,12 +744,10 @@ module XL.SEMANTICS.GENERICS is
     //   Translation of instantiations
     // ------------------------------------------------------------------------
 
-        when
-            'Name' [ 'Args' ]
-        where
-            IsGenericName (Name, "TYPE")
-        then
+        when ('Name'['Args']) where IsGenericName (Name, "TYPE") then
             return InstantiateType (Name, Args)
+        when ('Name'[]) where IsGenericName (Name, "TYPE") then
+            return InstantiateType (Name, nil)
 
         when ('GenType'.'Arg') where (IsGenericName(GenType, "TYPE") and
                                       Arg.kind = PT.xlNAME) then
