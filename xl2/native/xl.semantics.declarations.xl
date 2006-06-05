@@ -461,16 +461,17 @@ module XL.SEMANTICS.DECLARATIONS is
                     ERR.Error "An implementation of '$1' exists,", found.name
                     ERR.Error "but '$1' is already defined", iface_name
                     return false
+            else if found = nil then
+                ERR.Error "There is no valid implementation for '$1'",
+                          iface_name
+                if errors then
+                    ERR.DisplayLastErrors()
+                return false
 
             if multi <> nil then
                 ERR.Error "Found too many implementations for '$1'", iface_name
                 ERR.Error "A first possible implementation is '$1'", found.name
                 ERR.Error "Another possible implementation is '$1'", multi.name
-                return false
-            if found = nil then
-                ERR.Error "Found no valid implementation for '$1'", iface_name
-                if errors then
-                    ERR.DisplayLastErrors()
                 return false
 
             // If we found a match, we may record the implementation

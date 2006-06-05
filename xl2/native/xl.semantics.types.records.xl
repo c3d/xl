@@ -300,7 +300,10 @@ module XL.SEMANTICS.TYPES.RECORDS is
     // ------------------------------------------------------------------------
     //   Return true if something is a record
     // ------------------------------------------------------------------------
-        return GetRecordType (Record) <> nil
+        ERR.PushErrorContext()
+        result := GetRecordType (Record) <> nil
+        if ERR.PopErrorContext() then
+            result := false
 
 
     procedure RecordDeclarations(Record   : PT.tree;

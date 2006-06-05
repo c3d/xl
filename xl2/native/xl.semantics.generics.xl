@@ -667,7 +667,7 @@ module XL.SEMANTICS.GENERICS is
             ERR.DisplayLastErrors()
 
 
-    function ContainsGenerics (List : PT.tree_list) return boolean is
+    function ContainsGenerics (List : PT.tree_list) return DCL.declaration is
     // ------------------------------------------------------------------------
     //   Return true if any name corresponds to a generic thing
     // ------------------------------------------------------------------------
@@ -676,11 +676,12 @@ module XL.SEMANTICS.GENERICS is
             decl : DCL.declaration := DCL.GetDeclaration(Name)
             if decl <> nil then
                 if GEN.IsGenericDeclaration(decl) then
-                    return true
-        return false
+                    return decl
+        return nil
 
 
-    function IsGenericName(Name : PT.tree; kind : text) return boolean is
+    function GenericDeclaration(Name : PT.tree;
+                                kind : text) return DCL.declaration is
     // ------------------------------------------------------------------------
     //   Check if a name is possibly generic
     // ------------------------------------------------------------------------
@@ -689,16 +690,53 @@ module XL.SEMANTICS.GENERICS is
             translate Name
                 when ('Record'.'Field') where Field.kind = PT.xlNAME then
                     syms : SYM.symbol_table
-                    FN : Field as PT.name_tree
-                    REC.RecordDeclarations Record, FN, kind, list, syms
+                    fName : Field as PT.name_tree
+                    REC.RecordDeclarations Record, fName, kind, list, syms
                     if syms <> nil then
-                        if ContainsGenerics(list) then
-                            return true
+                        result := ContainsGenerics(list)
+                        if result <> nil then
+                            return result
             return false
 
         Nm : Name as PT.name_tree
         SYM.Lookup XLT.context, kind, Nm.value, list, SYM.lookupAll
-        return ContainsGenerics (list)
+        result := ContainsGenerics (list)
+
+
+    function IsGenericName (Name : PT.tree;
+                            kind : text) return boolean is
+    // ------------------------------------------------------------------------
+    //    Return true if the name is a generic declaration
+    // ------------------------------------------------------------------------
+        return GenericDeclaration(Name, kind) <> nil
+
+
+    function GenericParameter(GenType  : PT.tree;
+                              ParmName : PT.name_tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Return the generic parameter for a given type
+    // ------------------------------------------------------------------------
+        decl : DCL.declaration := GenericDeclaration(GenType, "TYPE")
+        if decl = nil then
+            ERR.Error "'$1' is not a generic type", GenType
+        else
+            gtype : TY.GetDefinedType(decl.name) as GEN.generic_type
+            if gtype <> nil then
+                types : SYM.tree_list
+                SYM.Lookup gtype.symbols, "TYPE", ParmName.value,
+                           types, SYM.lookupInnermost
+                if size(types) > 0 then
+                    result := types[0]
+                    if size(types) > 1 then
+                        ERR.Error "Internal: Multiple types for '$1'", ParmName
+                        ERR.Error "One candidate is '$1'", types[0]
+                        ERR.Error "Another candidate is '$1'", types[1]
+                else
+                    ERR.Error "No parameter named '$1' in generic type '$2'",
+                              ParmName, GenType
+            else
+                ERR.Error "There is a generic type for '$1'", GenType
+                ERR.Error "but '$1' is not a generic type", decl.name
 
 
     translation XLEvaluateType
@@ -712,6 +750,11 @@ module XL.SEMANTICS.GENERICS is
             IsGenericName (Name, "TYPE")
         then
             return InstantiateType (Name, Args)
+
+        when ('GenType'.'Arg') where (IsGenericName(GenType, "TYPE") and
+                                      Arg.kind = PT.xlNAME) then
+            ParmName : Arg as PT.name_tree
+            return GenericParameter(GenType, ParmName)
 
         when (any.'T') then
             coi : SYM.symbol_table := ContextOfInstantiation()
