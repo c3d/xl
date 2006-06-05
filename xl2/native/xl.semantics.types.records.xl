@@ -122,7 +122,6 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
             else
                 trace [recdecl] "Fields: ", Fields
-                Fields := XLT.XLDeclarations (Fields)
                 decl : DCL.declaration := DCL.GetDeclaration(Fields)
                 if decl then
                     if not TY.IsModuleType(rtp.base) then
@@ -171,6 +170,10 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 GEN.AddGenericDependency BaseType
 
         if Fields <> nil then
+            if Fields.kind = PT.xlBLOCK then
+                block : Fields as PT.block_tree
+                Fields := block.child
+            Fields := XLT.XLDeclarations(Fields)
             MakeFieldList Fields, rtp
 
         rtp.interface_match := RecordTypeMatch

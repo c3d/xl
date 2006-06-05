@@ -238,13 +238,17 @@ module XL.CODE_GENERATOR.MACHINE is
     // ------------------------------------------------------------------------
         MName   : PT.tree := f.machine_name
         FnType  : f.type as FT.function_type
-        RetType : TY.any_type := FnType.base
-        Parms   : FT.declaration_list := FnType.parameters
-        icnt    : integer := FnType.inputs_count
-        ocnt    : integer := FnType.outputs_count
+        if FnType <> nil then
+            RetType : TY.any_type := FnType.base
+            Parms   : FT.declaration_list := FnType.parameters
+            icnt    : integer := FnType.inputs_count
+            ocnt    : integer := FnType.outputs_count
 
-        MName := parse_tree(@fn_name 'MName')
-        return MakeEntry(MName, f.machine_name, RetType, Parms, icnt, ocnt)
+            MName := parse_tree(@fn_name 'MName')
+            return MakeEntry(MName, f.machine_name, RetType, Parms, icnt, ocnt)
+        else
+            // We get here for generic interfaces
+            return parse_tree(@nop)
 
 
     function EntryPointer (f : FT.function_type) return PT.name_tree is

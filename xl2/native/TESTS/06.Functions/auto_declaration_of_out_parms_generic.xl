@@ -1,14 +1,17 @@
 // Check that a variable automatically gets declared when used to call
 // a subroutine with an output parameter and name does not exist in scope
-// RUN=cat %c
+import CS = XL.UI.CONSOLE
 
 procedure MakeIt (var out A : integer; B : integer) written A &= B is
     A := B
+    CS.WriteLn "MakeItInt ", A
 procedure MakeIt (variable out A : real; B : real) written A &= B is
     A := B
+    CS.WriteLn "MakeItReal ", A
 generic [type item]
 procedure MakeIt (var out A : item; B : item) written A &= B is
     A := B
+    CS.WriteLn "MakeItGeneric "
 
 procedure Test is
     MakeIt Zero, 1
@@ -37,3 +40,6 @@ to TestOperators is
    Bingo &= 1
    Bonga &= 2.3
    Blatoid &= Fungoid
+
+TestOperators
+

@@ -32,6 +32,8 @@ module XL.SYMBOLS is
 //    Implementation of XL symbol tables
 // ----------------------------------------------------------------------------
 
+    type rewrite_list is string of rewrite
+
     type using_entry is record with
     // ------------------------------------------------------------------------
     //    An entry describing a 'lateral' map
@@ -46,7 +48,7 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
         enclosing       : symbol_table
         names           : map [text, tree_list]
-        rewrites        : map [text, rewrites_list]
+        rewrites        : map [text, rewrite_list]
         properties      : map [text, PT.tree]
         usings          : string of using_entry
         implicit        : string of symbol_table
@@ -341,18 +343,18 @@ module XL.SYMBOLS is
         entry      : using_entry
 
         if track then
-            IO.WriteLn "Rewrite: ", TName, "[", test_tree, "]"
+            IO.WriteLn "Rewrite: ", TName, "(", test_tree, ")"
             info := test_tree.info[key]
 
         Name += TreeName(test_tree)
         Wild += "*"
         result := test_tree
 
-        trace [rewrite] "LookupRewrite (", test_tree, " as [", Name, "])"
+        trace [rewrite] "Rewrite ", TName, "(", test_tree, ")"
 
         cnt := 0
         while table <> nil loop
-            List  : rewrites_list
+            List  : rewrite_list
             if count(table.rewrites, Name) > 0 then
                 List := table.rewrites[Name]
             if count (table.rewrites, Wild) > 0 then
@@ -389,7 +391,7 @@ module XL.SYMBOLS is
             depth += 1
             for entry in table.usings loop
                 subtable : symbol_table := entry.symbols
-                subList  : rewrites_list
+                subList  : rewrite_list
                 if count(subtable.rewrites, Name) > 0 then
                     subList := subtable.rewrites[Name]
                 if count (subtable.rewrites, Wild) > 0 then
@@ -425,7 +427,7 @@ module XL.SYMBOLS is
             // Add implicit maps
             subtable : symbol_table
             for subtable in table.implicit loop
-                subList  : rewrites_list
+                subList  : rewrite_list
                 if count(subtable.rewrites, Name) > 0 then
                     subList := subtable.rewrites[Name]
                 if count (subtable.rewrites, Wild) > 0 then
@@ -478,7 +480,7 @@ module XL.SYMBOLS is
             ERR.Error "No match for '$1'", test_tree
 
         if track then
-            IO.WriteLn "Rewritten: ", TName, "[", test_tree, "]=", result
+            IO.WriteLn "Rewritten: ", TName, "(", test_tree, ")=", result
             result.info[key] := info
 
 

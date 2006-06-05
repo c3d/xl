@@ -8,7 +8,6 @@ Global variables:
  Global=778
  General=779
  Universal=780
-Destroyed 779
 Constructed 781
 Destroyed 781
 Constructed 782
@@ -23,6 +22,7 @@ On exit:
  OutVar=1564
  InOutVar=2340
  Result=781
+Destroyed 779
 F=781
 Destroyed 781
 Global variables after call to F:

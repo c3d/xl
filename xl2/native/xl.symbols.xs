@@ -145,7 +145,6 @@ module XL.SYMBOLS with
                                     scope       : PT.tree;
                                     info        : rewrite;
                                     in out args : PT.tree_map) return PT.tree
-    type rewrites_list is string of rewrite
 
 
     procedure EnterRewrite  (into : symbol_table;
