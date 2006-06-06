@@ -139,23 +139,23 @@ module XL.SEMANTICS.DECLARATIONS is
         if TY.IsTypeType (decl_type) then
            return TY.EnterType (Name, Value)
 
-        // Check if this is an uninstantiated generic type
-        decl_gen_type : decl_type as GEN.generic_type
-        if decl_gen_type <> nil then
-            islocal  : boolean := SYM.GetInteger(XLT.context, "LOCAL") <> 0
-            isglobal : boolean := SYM.GetInteger(XLT.context, "GLOBAL") <> 0
-            if islocal or isglobal then
-                isgen    : boolean := GEN.IsGenericContext()
-                if not isgen then
-                    Type := GN.InstantiateType(Type, nil)
-                    decl_type := TY.EvaluateType(Type)
-
         // Check if this is a function type we need to enter
         decl_fn_type : decl_type as FT.function_type
         if decl_fn_type <> nil then
             if decl_fn_type.iterator then
                 return ITER.EnterIterator(Name, decl_fn_type, Value, Name)
             return FN.EnterFunction (Name, decl_fn_type, Value, Name)
+
+        // Check if this is an uninstantiated generic type
+        decl_gen_type : decl_type as GEN.generic_type
+        if decl_gen_type <> nil then
+            isparm : boolean := SYM.GetInteger(XLT.context, "FNPARM") <> 0
+            if not isparm then
+                Type := GN.InstantiateType(Type, nil)
+                decl_type := TY.EvaluateType(Type)
+                gtype2 : decl_type as GEN.generic_type
+                if gtype2 <> nil then
+                    ERR.Error "Type '$1' is generic", Type
 
  
         // Check if there is already an entity by that name

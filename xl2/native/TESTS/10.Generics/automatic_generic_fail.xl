@@ -1,0 +1,7 @@
+// Test that a type declared as generic makes types that use it generic
+// EXIT=2
+
+generic type Zabata
+
+type zortibus is record with
+    Z : Zabata

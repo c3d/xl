@@ -7,12 +7,5 @@ function H1(X : Zabata) return integer is
     WriteLn "H1 called with ", X
     return 0
 
-type zortibus is record with
-    Z : Zabata
-
-function K(U : zortibus) return integer is
-    WriteLn "K called with ", U.Z
-    return 0
-
 Alpha : integer := H1(0)
 Beta  : integer := H1(0.5)

@@ -468,6 +468,8 @@ module XL.SEMANTICS.GENERICS is
                 XLT.AddGlobalDecl instCode
                 result := instName
         else
+            if Init = nil then
+                ERR.Error "Generic '$1' has no initializer", Name
             PT.AttachTree Name, "INSTANCEOF", Decl.Name
             result := DCL.EnterDeclaration (Name, Type, Init, true)
             result := XLT.XLSemantics(result)

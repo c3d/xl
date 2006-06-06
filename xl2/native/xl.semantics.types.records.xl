@@ -124,9 +124,6 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 trace [recdecl] "Fields: ", Fields
                 decl : DCL.declaration := DCL.GetDeclaration(Fields)
                 if decl then
-                    if not TY.IsModuleType(rtp.base) then
-                        if GEN.IsGenericType(decl.type) then
-                            GEN.AddGenericDependency decl.type
                     if not decl.is_builtin then
                         trace [recdecl] "Decl: ", decl
                         rtp.fields += decl
