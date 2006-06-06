@@ -32,6 +32,7 @@ import FN = XL.SEMANTICS.FUNCTIONS
 import ITER = XL.SEMANTICS.ITERATORS
 import OVL = XL.SEMANTICS.OVERLOAD
 import GEN = XL.SEMANTICS.TYPES.GENERICS
+import GN = XL.SEMANTICS.GENERICS
 import BC = XL.BYTECODE
 import PR = XL.PARSER
 
@@ -137,12 +138,26 @@ module XL.SEMANTICS.DECLARATIONS is
         decl_type : TY.any_type := TY.EvaluateType(Type)
         if TY.IsTypeType (decl_type) then
            return TY.EnterType (Name, Value)
+
+        // Check if this is an uninstantiated generic type
+        decl_gen_type : decl_type as GEN.generic_type
+        if decl_gen_type <> nil then
+            islocal  : boolean := SYM.GetInteger(XLT.context, "LOCAL") <> 0
+            isglobal : boolean := SYM.GetInteger(XLT.context, "GLOBAL") <> 0
+            if islocal or isglobal then
+                isgen    : boolean := GEN.IsGenericContext()
+                if not isgen then
+                    Type := GN.InstantiateType(Type, nil)
+                    decl_type := TY.EvaluateType(Type)
+
+        // Check if this is a function type we need to enter
         decl_fn_type : decl_type as FT.function_type
         if decl_fn_type <> nil then
             if decl_fn_type.iterator then
                 return ITER.EnterIterator(Name, decl_fn_type, Value, Name)
             return FN.EnterFunction (Name, decl_fn_type, Value, Name)
 
+ 
         // Check if there is already an entity by that name
         original : PT.tree := SYM.LookupOne(XLT.context, "DECL",
                                             Name.value, SYM.lookupDirect)
