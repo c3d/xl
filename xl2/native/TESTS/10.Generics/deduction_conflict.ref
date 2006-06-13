@@ -34,9 +34,6 @@
 10.Generics/deduction_conflict.xl:10: No translation found for 'A + B'
 |    return A + B
 |_____________^
-10.Generics/deduction_conflict.xl:9: Cannot convert 'b_484' to type 'real'
-| function Pong (A : something; B : integer) return something is
-|_______________________________^
 10.Generics/deduction_conflict.xl:22: No translation found for 'K := Ping (1 , 2)'
 | K : integer := Ping(1, 2)
 |____________________^

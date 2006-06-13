@@ -2,4 +2,3 @@
 | xl.replace (sin 'X') with (sin (cos('X')))
 |________________________________^
 [Compiler generated]: No translation found for 'A := @ nop'
-[Compiler generated]: Expression '@ nop' has no type

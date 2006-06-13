@@ -10,13 +10,6 @@
 07.Plugins/differentiation.xl:31: No translation found for '- 0 * X'
 |     {differentiation} A : real := dexp(-2*X)/dX
 |___________________________________________^
-./xl_builtins.xs:60: Cannot convert '@ negint ret_442 0 
-@ value ret_442' to type 'real'
-|     function Negate(X : integer) return integer                 written -X                      is XL.BYTECODE.neg_int
-|______________________________________________________________________________________________________________________^
 07.Plugins/differentiation.xl:32: No translation found for 'Z := {constantfold} (f X - f X)'
 |     Z : real := {constantfold} f(X) - f(1*X) // Valid even without an 'f'
 |________________________________^
-07.Plugins/differentiation.xl:32: Cannot convert '0' to type 'character'
-|     Z : real := {constantfold} f(X) - f(1*X) // Valid even without an 'f'
-|_____________________________________^

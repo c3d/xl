@@ -13,9 +13,6 @@
 10.Generics/validation_failure.xl:5: No translation found for 'A < B'
 |     Test : boolean := A < B
 |_________________________^
-10.Generics/validation_failure.xl:4: Cannot convert 'a_447' to type 'character'
-|     A, B : ordered
-|_____^
 10.Generics/validation_failure.xl:7: 'F (A : ordered) return ordered' could not be selected because
 | function F (A : ordered) return ordered is
 |_______________________________^

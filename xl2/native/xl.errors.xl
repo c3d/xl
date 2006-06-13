@@ -97,6 +97,14 @@ module XL.ERRORS is
         I         : integer
         Max       : integer
         hadDollar : boolean := false
+        arg       : text
+
+        // Eliminate internal errors, those that refer to bytecode (@)
+        for arg in args loop
+            C : character
+            for C in arg loop
+                if C = '@' then
+                    return
 
         // Get message and perform substitution
         msg := Localize E
@@ -115,6 +123,8 @@ module XL.ERRORS is
                 hadDollar := false
             else
                 fmt += C
+
+        trace[errors] "Error @", pos, ": ", fmt
 
         if size(error_stack) > 0 then
             E : error_stack_element
