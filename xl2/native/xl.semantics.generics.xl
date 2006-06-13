@@ -725,14 +725,17 @@ module XL.SEMANTICS.GENERICS is
         ERR.PushErrorContext()
 
         LookupInstantiation Name, Args, "TYPE", Decl, ActualArgs, Scope
+
+        if ERR.PopErrorContext() then
+            ERR.Error "Unable to instantiate '$1', because", Name
+            ERR.DisplayLastErrors()
+            return parse_tree(@error)
+
         if Decl = nil then
             return parse_tree(@error)
 
         result := Instantiate(Decl, ActualArgs, nil, Scope)
 
-        if ERR.PopErrorContext() then
-            ERR.Error "Unable to instantiate '$1', because", Name
-            ERR.DisplayLastErrors()
 
 
     function InstantiateType (Decl : DCL.declaration;
