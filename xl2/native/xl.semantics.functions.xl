@@ -51,6 +51,14 @@ module XL.SEMANTICS.FUNCTIONS is
         return info
 
 
+    procedure SetFunction (input : PT.tree; fn : function) is
+    // ------------------------------------------------------------------------
+    //    Set the function info for the tree
+    // ------------------------------------------------------------------------
+        DCL.SetDeclaration input, fn
+        PT.SetInfo input, "FN", fn
+
+
     function EnterFunctionDecl (Names   : PT.tree;
                                 Parms   : PT.tree;
                                 RetType : PT.tree;
@@ -111,12 +119,8 @@ module XL.SEMANTICS.FUNCTIONS is
             @fn_decl_end
 
         // Indicate that this is a function and a declaration
-        PT.SetInfo Iface, "FN", f
-        PT.SetInfo Iface, "DECL", f
-
-        // Also for the MachineIface, which will survive after semantics
-        PT.SetInfo MachineIface, "FN", f
-        PT.SetInfo MachineIface, "DECL", f
+        SetFunction Iface, f
+        SetFunction MachineIface, f
 
         // Add the interface declaration in an outer scope
         if not GEN.IsGenericDeclaration(f) then
@@ -127,14 +131,12 @@ module XL.SEMANTICS.FUNCTIONS is
 
         // Wrap the interface until semantics, and mark as decl / function
         result := parse_tree(@@fn_decl 'MachineIface')
-        PT.SetInfo result, "FN", f
-        PT.SetInfo result, "DECL", f
+        SetFunction result, f
 
         // If we got an initializer (from instantiation)
         if Init <> nil then
             result := parse_tree(@@fn_body 'result' 'Init')
-            PT.SetInfo result, "FN", f
-            PT.SetInfo result, "DECL", f
+            SetFunction result, f
 
 
     function EnterBuiltinFunction(input : PT.tree;
@@ -207,8 +209,7 @@ module XL.SEMANTICS.FUNCTIONS is
         else
             f.initializer := Body
             result := parse_tree(@@fn_body 'Interface' 'Body')
-            PT.SetInfo result, "FN", f
-            PT.SetInfo result, "DECL", f
+            SetFunction result, f
             return result
         return input
 

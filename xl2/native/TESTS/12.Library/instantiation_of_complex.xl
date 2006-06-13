@@ -1,0 +1,7 @@
+use XL.MATH.COMPLEX
+
+K : complex[real] // Todo : remove real
+
+K := K + K
+
+Copy K, Add(K,K)

@@ -28,6 +28,7 @@ import PT = XL.PARSER.TREE
 import DCL = XL.SEMANTICS.DECLARATIONS
 import FN = XL.SEMANTICS.FUNCTIONS
 import GEN = XL.SEMANTICS.TYPES.GENERICS
+import GN = XL.SEMANTICS.GENERICS
 
 
 module XL.SEMANTICS.WRITTEN_FORMS with
@@ -44,7 +45,7 @@ module XL.SEMANTICS.WRITTEN_FORMS with
     // ------------------------------------------------------------------------
         function                : FN.function
         args_map                : written_args_map
-        generic_args            : PT.tree_list
+        generic_args            : GN.generic_map
     type written_form is access to written_form_data
 
 

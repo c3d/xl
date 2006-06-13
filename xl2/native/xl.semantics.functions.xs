@@ -52,6 +52,7 @@ module XL.SEMANTICS.FUNCTIONS with
     type function is access to function_data
 
     function GetFunction (input : PT.tree) return function
+    procedure SetFunction (input : PT.tree; fn : function)
 
     function EnterFunction (FnIface : PT.tree) return PT.tree
     function EnterFunction (Names   : PT.tree;

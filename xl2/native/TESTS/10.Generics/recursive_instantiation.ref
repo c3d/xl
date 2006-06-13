@@ -1,3 +1,471 @@
 10.Generics/recursive_instantiation.xl:7: No translation found for 'L := Moxotron (3)'
 | L : integer := Moxotron(3)
 |________________________^
+10.Generics/recursive_instantiation.xl:7: Errors while instantiating 'Moxotron':
+| L : integer := Moxotron(3)
+|_______________________^
+10.Generics/recursive_instantiation.xl:7: with '...' set to '3'
+| L : integer := Moxotron(3)
+|_________________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2060_2061'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2066_2068 , var2067_2069'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2074_2077 , var2075_2078 , var2076_2079'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2084_2088 , var2085_2089 , var2086_2090 , var2087_2091'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2096_2101 , var2097_2102 , var2098_2103 , var2099_2104 , var2100_2105'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2110_2116 , var2111_2117 , var2112_2118 , var2113_2119 , var2114_2120 , var2115_2121'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2126_2133 , var2127_2134 , var2128_2135 , var2129_2136 , var2130_2137 , var2131_2138 , var2132_2139'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2144_2152 , var2145_2153 , var2146_2154 , var2147_2155 , var2148_2156 , var2149_2157 , var2150_2158 , var2151_2159'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2164_2173 , var2165_2174 , var2166_2175 , var2167_2176 , var2168_2177 , var2169_2178 , var2170_2179 , var2171_2180 , var2172_2181'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2186_2196 , var2187_2197 , var2188_2198 , var2189_2199 , var2190_2200 , var2191_2201 , var2192_2202 , var2193_2203 , var2194_2204 , var2195_2205'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2210_2221 , var2211_2222 , var2212_2223 , var2213_2224 , var2214_2225 , var2215_2226 , var2216_2227 , var2217_2228 , var2218_2229 , var2219_2230 , var2220_2231'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2236_2248 , var2237_2249 , var2238_2250 , var2239_2251 , var2240_2252 , var2241_2253 , var2242_2254 , var2243_2255 , var2244_2256 , var2245_2257 , var2246_2258 , var2247_2259'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2264_2277 , var2265_2278 , var2266_2279 , var2267_2280 , var2268_2281 , var2269_2282 , var2270_2283 , var2271_2284 , var2272_2285 , var2273_2286 , var2274_2287 , var2275_2288 , var2276_2289'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2294_2308 , var2295_2309 , var2296_2310 , var2297_2311 , var2298_2312 , var2299_2313 , var2300_2314 , var2301_2315 , var2302_2316 , var2303_2317 , var2304_2318 , var2305_2319 , var2306_2320 , var2307_2321'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2326_2341 , var2327_2342 , var2328_2343 , var2329_2344 , var2330_2345 , var2331_2346 , var2332_2347 , var2333_2348 , var2334_2349 , var2335_2350 , var2336_2351 , var2337_2352 , var2338_2353 , var2339_2354 , var2340_2355'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2360_2376 , var2361_2377 , var2362_2378 , var2363_2379 , var2364_2380 , var2365_2381 , var2366_2382 , var2367_2383 , var2368_2384 , var2369_2385 , var2370_2386 , var2371_2387 , var2372_2388 , var2373_2389 , var2374_2390 , var2375_2391'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2396_2413 , var2397_2414 , var2398_2415 , var2399_2416 , var2400_2417 , var2401_2418 , var2402_2419 , var2403_2420 , var2404_2421 , var2405_2422 , var2406_2423 , var2407_2424 , var2408_2425 , var2409_2426 , var2410_2427 , var2411_2428 , var2412_2429'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2434_2452 , var2435_2453 , var2436_2454 , var2437_2455 , var2438_2456 , var2439_2457 , var2440_2458 , var2441_2459 , var2442_2460 , var2443_2461 , var2444_2462 , var2445_2463 , var2446_2464 , var2447_2465 , var2448_2466 , var2449_2467 , var2450_2468 , var2451_2469'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2474_2493 , var2475_2494 , var2476_2495 , var2477_2496 , var2478_2497 , var2479_2498 , var2480_2499 , var2481_2500 , var2482_2501 , var2483_2502 , var2484_2503 , var2485_2504 , var2486_2505 , var2487_2506 , var2488_2507 , var2489_2508 , var2490_2509 , var2491_2510 , var2492_2511'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2516_2536 , var2517_2537 , var2518_2538 , var2519_2539 , var2520_2540 , var2521_2541 , var2522_2542 , var2523_2543 , var2524_2544 , var2525_2545 , var2526_2546 , var2527_2547 , var2528_2548 , var2529_2549 , var2530_2550 , var2531_2551 , var2532_2552 , var2533_2553 , var2534_2554 , var2535_2555'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2560_2581 , var2561_2582 , var2562_2583 , var2563_2584 , var2564_2585 , var2565_2586 , var2566_2587 , var2567_2588 , var2568_2589 , var2569_2590 , var2570_2591 , var2571_2592 , var2572_2593 , var2573_2594 , var2574_2595 , var2575_2596 , var2576_2597 , var2577_2598 , var2578_2599 , var2579_2600 , var2580_2601'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2606_2628 , var2607_2629 , var2608_2630 , var2609_2631 , var2610_2632 , var2611_2633 , var2612_2634 , var2613_2635 , var2614_2636 , var2615_2637 , var2616_2638 , var2617_2639 , var2618_2640 , var2619_2641 , var2620_2642 , var2621_2643 , var2622_2644 , var2623_2645 , var2624_2646 , var2625_2647 , var2626_2648 , var2627_2649'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2654_2677 , var2655_2678 , var2656_2679 , var2657_2680 , var2658_2681 , var2659_2682 , var2660_2683 , var2661_2684 , var2662_2685 , var2663_2686 , var2664_2687 , var2665_2688 , var2666_2689 , var2667_2690 , var2668_2691 , var2669_2692 , var2670_2693 , var2671_2694 , var2672_2695 , var2673_2696 , var2674_2697 , var2675_2698 , var2676_2699'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2704_2728 , var2705_2729 , var2706_2730 , var2707_2731 , var2708_2732 , var2709_2733 , var2710_2734 , var2711_2735 , var2712_2736 , var2713_2737 , var2714_2738 , var2715_2739 , var2716_2740 , var2717_2741 , var2718_2742 , var2719_2743 , var2720_2744 , var2721_2745 , var2722_2746 , var2723_2747 , var2724_2748 , var2725_2749 , var2726_2750 , var2727_2751'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2756_2781 , var2757_2782 , var2758_2783 , var2759_2784 , var2760_2785 , var2761_2786 , var2762_2787 , var2763_2788 , var2764_2789 , var2765_2790 , var2766_2791 , var2767_2792 , var2768_2793 , var2769_2794 , var2770_2795 , var2771_2796 , var2772_2797 , var2773_2798 , var2774_2799 , var2775_2800 , var2776_2801 , var2777_2802 , var2778_2803 , var2779_2804 , var2780_2805'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2810_2836 , var2811_2837 , var2812_2838 , var2813_2839 , var2814_2840 , var2815_2841 , var2816_2842 , var2817_2843 , var2818_2844 , var2819_2845 , var2820_2846 , var2821_2847 , var2822_2848 , var2823_2849 , var2824_2850 , var2825_2851 , var2826_2852 , var2827_2853 , var2828_2854 , var2829_2855 , var2830_2856 , var2831_2857 , var2832_2858 , var2833_2859 , var2834_2860 , var2835_2861'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2866_2893 , var2867_2894 , var2868_2895 , var2869_2896 , var2870_2897 , var2871_2898 , var2872_2899 , var2873_2900 , var2874_2901 , var2875_2902 , var2876_2903 , var2877_2904 , var2878_2905 , var2879_2906 , var2880_2907 , var2881_2908 , var2882_2909 , var2883_2910 , var2884_2911 , var2885_2912 , var2886_2913 , var2887_2914 , var2888_2915 , var2889_2916 , var2890_2917 , var2891_2918 , var2892_2919'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2924_2952 , var2925_2953 , var2926_2954 , var2927_2955 , var2928_2956 , var2929_2957 , var2930_2958 , var2931_2959 , var2932_2960 , var2933_2961 , var2934_2962 , var2935_2963 , var2936_2964 , var2937_2965 , var2938_2966 , var2939_2967 , var2940_2968 , var2941_2969 , var2942_2970 , var2943_2971 , var2944_2972 , var2945_2973 , var2946_2974 , var2947_2975 , var2948_2976 , var2949_2977 , var2950_2978 , var2951_2979'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var2984_3013 , var2985_3014 , var2986_3015 , var2987_3016 , var2988_3017 , var2989_3018 , var2990_3019 , var2991_3020 , var2992_3021 , var2993_3022 , var2994_3023 , var2995_3024 , var2996_3025 , var2997_3026 , var2998_3027 , var2999_3028 , var3000_3029 , var3001_3030 , var3002_3031 , var3003_3032 , var3004_3033 , var3005_3034 , var3006_3035 , var3007_3036 , var3008_3037 , var3009_3038 , var3010_3039 , var3011_3040 , var3012_3041'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var3046_3076 , var3047_3077 , var3048_3078 , var3049_3079 , var3050_3080 , var3051_3081 , var3052_3082 , var3053_3083 , var3054_3084 , var3055_3085 , var3056_3086 , var3057_3087 , var3058_3088 , var3059_3089 , var3060_3090 , var3061_3091 , var3062_3092 , var3063_3093 , var3064_3094 , var3065_3095 , var3066_3096 , var3067_3097 , var3068_3098 , var3069_3099 , var3070_3100 , var3071_3101 , var3072_3102 , var3073_3103 , var3074_3104 , var3075_3105'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var3110_3141 , var3111_3142 , var3112_3143 , var3113_3144 , var3114_3145 , var3115_3146 , var3116_3147 , var3117_3148 , var3118_3149 , var3119_3150 , var3120_3151 , var3121_3152 , var3122_3153 , var3123_3154 , var3124_3155 , var3125_3156 , var3126_3157 , var3127_3158 , var3128_3159 , var3129_3160 , var3130_3161 , var3131_3162 , var3132_3163 , var3133_3164 , var3134_3165 , var3135_3166 , var3136_3167 , var3137_3168 , var3138_3169 , var3139_3170 , var3140_3171'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var3176_3208 , var3177_3209 , var3178_3210 , var3179_3211 , var3180_3212 , var3181_3213 , var3182_3214 , var3183_3215 , var3184_3216 , var3185_3217 , var3186_3218 , var3187_3219 , var3188_3220 , var3189_3221 , var3190_3222 , var3191_3223 , var3192_3224 , var3193_3225 , var3194_3226 , var3195_3227 , var3196_3228 , var3197_3229 , var3198_3230 , var3199_3231 , var3200_3232 , var3201_3233 , var3202_3234 , var3203_3235 , var3204_3236 , var3205_3237 , var3206_3238 , var3207_3239'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var3244_3277 , var3245_3278 , var3246_3279 , var3247_3280 , var3248_3281 , var3249_3282 , var3250_3283 , var3251_3284 , var3252_3285 , var3253_3286 , var3254_3287 , var3255_3288 , var3256_3289 , var3257_3290 , var3258_3291 , var3259_3292 , var3260_3293 , var3261_3294 , var3262_3295 , var3263_3296 , var3264_3297 , var3265_3298 , var3266_3299 , var3267_3300 , var3268_3301 , var3269_3302 , var3270_3303 , var3271_3304 , var3272_3305 , var3273_3306 , var3274_3307 , var3275_3308 , var3276_3309'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var3314_3348 , var3315_3349 , var3316_3350 , var3317_3351 , var3318_3352 , var3319_3353 , var3320_3354 , var3321_3355 , var3322_3356 , var3323_3357 , var3324_3358 , var3325_3359 , var3326_3360 , var3327_3361 , var3328_3362 , var3329_3363 , var3330_3364 , var3331_3365 , var3332_3366 , var3333_3367 , var3334_3368 , var3335_3369 , var3336_3370 , var3337_3371 , var3338_3372 , var3339_3373 , var3340_3374 , var3341_3375 , var3342_3376 , var3343_3377 , var3344_3378 , var3345_3379 , var3346_3380 , var3347_3381'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var3386_3421 , var3387_3422 , var3388_3423 , var3389_3424 , var3390_3425 , var3391_3426 , var3392_3427 , var3393_3428 , var3394_3429 , var3395_3430 , var3396_3431 , var3397_3432 , var3398_3433 , var3399_3434 , var3400_3435 , var3401_3436 , var3402_3437 , var3403_3438 , var3404_3439 , var3405_3440 , var3406_3441 , var3407_3442 , var3408_3443 , var3409_3444 , var3410_3445 , var3411_3446 , var3412_3447 , var3413_3448 , var3414_3449 , var3415_3450 , var3416_3451 , var3417_3452 , var3418_3453 , var3419_3454 , var3420_3455'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var3460_3496 , var3461_3497 , var3462_3498 , var3463_3499 , var3464_3500 , var3465_3501 , var3466_3502 , var3467_3503 , var3468_3504 , var3469_3505 , var3470_3506 , var3471_3507 , var3472_3508 , var3473_3509 , var3474_3510 , var3475_3511 , var3476_3512 , var3477_3513 , var3478_3514 , var3479_3515 , var3480_3516 , var3481_3517 , var3482_3518 , var3483_3519 , var3484_3520 , var3485_3521 , var3486_3522 , var3487_3523 , var3488_3524 , var3489_3525 , var3490_3526 , var3491_3527 , var3492_3528 , var3493_3529 , var3494_3530 , var3495_3531'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var3536_3573 , var3537_3574 , var3538_3575 , var3539_3576 , var3540_3577 , var3541_3578 , var3542_3579 , var3543_3580 , var3544_3581 , var3545_3582 , var3546_3583 , var3547_3584 , var3548_3585 , var3549_3586 , var3550_3587 , var3551_3588 , var3552_3589 , var3553_3590 , var3554_3591 , var3555_3592 , var3556_3593 , var3557_3594 , var3558_3595 , var3559_3596 , var3560_3597 , var3561_3598 , var3562_3599 , var3563_3600 , var3564_3601 , var3565_3602 , var3566_3603 , var3567_3604 , var3568_3605 , var3569_3606 , var3570_3607 , var3571_3608 , var3572_3609'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var3614_3652 , var3615_3653 , var3616_3654 , var3617_3655 , var3618_3656 , var3619_3657 , var3620_3658 , var3621_3659 , var3622_3660 , var3623_3661 , var3624_3662 , var3625_3663 , var3626_3664 , var3627_3665 , var3628_3666 , var3629_3667 , var3630_3668 , var3631_3669 , var3632_3670 , var3633_3671 , var3634_3672 , var3635_3673 , var3636_3674 , var3637_3675 , var3638_3676 , var3639_3677 , var3640_3678 , var3641_3679 , var3642_3680 , var3643_3681 , var3644_3682 , var3645_3683 , var3646_3684 , var3647_3685 , var3648_3686 , var3649_3687 , var3650_3688 , var3651_3689'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var3694_3733 , var3695_3734 , var3696_3735 , var3697_3736 , var3698_3737 , var3699_3738 , var3700_3739 , var3701_3740 , var3702_3741 , var3703_3742 , var3704_3743 , var3705_3744 , var3706_3745 , var3707_3746 , var3708_3747 , var3709_3748 , var3710_3749 , var3711_3750 , var3712_3751 , var3713_3752 , var3714_3753 , var3715_3754 , var3716_3755 , var3717_3756 , var3718_3757 , var3719_3758 , var3720_3759 , var3721_3760 , var3722_3761 , var3723_3762 , var3724_3763 , var3725_3764 , var3726_3765 , var3727_3766 , var3728_3767 , var3729_3768 , var3730_3769 , var3731_3770 , var3732_3771'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var3776_3816 , var3777_3817 , var3778_3818 , var3779_3819 , var3780_3820 , var3781_3821 , var3782_3822 , var3783_3823 , var3784_3824 , var3785_3825 , var3786_3826 , var3787_3827 , var3788_3828 , var3789_3829 , var3790_3830 , var3791_3831 , var3792_3832 , var3793_3833 , var3794_3834 , var3795_3835 , var3796_3836 , var3797_3837 , var3798_3838 , var3799_3839 , var3800_3840 , var3801_3841 , var3802_3842 , var3803_3843 , var3804_3844 , var3805_3845 , var3806_3846 , var3807_3847 , var3808_3848 , var3809_3849 , var3810_3850 , var3811_3851 , var3812_3852 , var3813_3853 , var3814_3854 , var3815_3855'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var3860_3901 , var3861_3902 , var3862_3903 , var3863_3904 , var3864_3905 , var3865_3906 , var3866_3907 , var3867_3908 , var3868_3909 , var3869_3910 , var3870_3911 , var3871_3912 , var3872_3913 , var3873_3914 , var3874_3915 , var3875_3916 , var3876_3917 , var3877_3918 , var3878_3919 , var3879_3920 , var3880_3921 , var3881_3922 , var3882_3923 , var3883_3924 , var3884_3925 , var3885_3926 , var3886_3927 , var3887_3928 , var3888_3929 , var3889_3930 , var3890_3931 , var3891_3932 , var3892_3933 , var3893_3934 , var3894_3935 , var3895_3936 , var3896_3937 , var3897_3938 , var3898_3939 , var3899_3940 , var3900_3941'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var3946_3988 , var3947_3989 , var3948_3990 , var3949_3991 , var3950_3992 , var3951_3993 , var3952_3994 , var3953_3995 , var3954_3996 , var3955_3997 , var3956_3998 , var3957_3999 , var3958_4000 , var3959_4001 , var3960_4002 , var3961_4003 , var3962_4004 , var3963_4005 , var3964_4006 , var3965_4007 , var3966_4008 , var3967_4009 , var3968_4010 , var3969_4011 , var3970_4012 , var3971_4013 , var3972_4014 , var3973_4015 , var3974_4016 , var3975_4017 , var3976_4018 , var3977_4019 , var3978_4020 , var3979_4021 , var3980_4022 , var3981_4023 , var3982_4024 , var3983_4025 , var3984_4026 , var3985_4027 , var3986_4028 , var3987_4029'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var4034_4077 , var4035_4078 , var4036_4079 , var4037_4080 , var4038_4081 , var4039_4082 , var4040_4083 , var4041_4084 , var4042_4085 , var4043_4086 , var4044_4087 , var4045_4088 , var4046_4089 , var4047_4090 , var4048_4091 , var4049_4092 , var4050_4093 , var4051_4094 , var4052_4095 , var4053_4096 , var4054_4097 , var4055_4098 , var4056_4099 , var4057_4100 , var4058_4101 , var4059_4102 , var4060_4103 , var4061_4104 , var4062_4105 , var4063_4106 , var4064_4107 , var4065_4108 , var4066_4109 , var4067_4110 , var4068_4111 , var4069_4112 , var4070_4113 , var4071_4114 , var4072_4115 , var4073_4116 , var4074_4117 , var4075_4118 , var4076_4119'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var4124_4168 , var4125_4169 , var4126_4170 , var4127_4171 , var4128_4172 , var4129_4173 , var4130_4174 , var4131_4175 , var4132_4176 , var4133_4177 , var4134_4178 , var4135_4179 , var4136_4180 , var4137_4181 , var4138_4182 , var4139_4183 , var4140_4184 , var4141_4185 , var4142_4186 , var4143_4187 , var4144_4188 , var4145_4189 , var4146_4190 , var4147_4191 , var4148_4192 , var4149_4193 , var4150_4194 , var4151_4195 , var4152_4196 , var4153_4197 , var4154_4198 , var4155_4199 , var4156_4200 , var4157_4201 , var4158_4202 , var4159_4203 , var4160_4204 , var4161_4205 , var4162_4206 , var4163_4207 , var4164_4208 , var4165_4209 , var4166_4210 , var4167_4211'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var4216_4261 , var4217_4262 , var4218_4263 , var4219_4264 , var4220_4265 , var4221_4266 , var4222_4267 , var4223_4268 , var4224_4269 , var4225_4270 , var4226_4271 , var4227_4272 , var4228_4273 , var4229_4274 , var4230_4275 , var4231_4276 , var4232_4277 , var4233_4278 , var4234_4279 , var4235_4280 , var4236_4281 , var4237_4282 , var4238_4283 , var4239_4284 , var4240_4285 , var4241_4286 , var4242_4287 , var4243_4288 , var4244_4289 , var4245_4290 , var4246_4291 , var4247_4292 , var4248_4293 , var4249_4294 , var4250_4295 , var4251_4296 , var4252_4297 , var4253_4298 , var4254_4299 , var4255_4300 , var4256_4301 , var4257_4302 , var4258_4303 , var4259_4304 , var4260_4305'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var4310_4356 , var4311_4357 , var4312_4358 , var4313_4359 , var4314_4360 , var4315_4361 , var4316_4362 , var4317_4363 , var4318_4364 , var4319_4365 , var4320_4366 , var4321_4367 , var4322_4368 , var4323_4369 , var4324_4370 , var4325_4371 , var4326_4372 , var4327_4373 , var4328_4374 , var4329_4375 , var4330_4376 , var4331_4377 , var4332_4378 , var4333_4379 , var4334_4380 , var4335_4381 , var4336_4382 , var4337_4383 , var4338_4384 , var4339_4385 , var4340_4386 , var4341_4387 , var4342_4388 , var4343_4389 , var4344_4390 , var4345_4391 , var4346_4392 , var4347_4393 , var4348_4394 , var4349_4395 , var4350_4396 , var4351_4397 , var4352_4398 , var4353_4399 , var4354_4400 , var4355_4401'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var4406_4453 , var4407_4454 , var4408_4455 , var4409_4456 , var4410_4457 , var4411_4458 , var4412_4459 , var4413_4460 , var4414_4461 , var4415_4462 , var4416_4463 , var4417_4464 , var4418_4465 , var4419_4466 , var4420_4467 , var4421_4468 , var4422_4469 , var4423_4470 , var4424_4471 , var4425_4472 , var4426_4473 , var4427_4474 , var4428_4475 , var4429_4476 , var4430_4477 , var4431_4478 , var4432_4479 , var4433_4480 , var4434_4481 , var4435_4482 , var4436_4483 , var4437_4484 , var4438_4485 , var4439_4486 , var4440_4487 , var4441_4488 , var4442_4489 , var4443_4490 , var4444_4491 , var4445_4492 , var4446_4493 , var4447_4494 , var4448_4495 , var4449_4496 , var4450_4497 , var4451_4498 , var4452_4499'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var4504_4552 , var4505_4553 , var4506_4554 , var4507_4555 , var4508_4556 , var4509_4557 , var4510_4558 , var4511_4559 , var4512_4560 , var4513_4561 , var4514_4562 , var4515_4563 , var4516_4564 , var4517_4565 , var4518_4566 , var4519_4567 , var4520_4568 , var4521_4569 , var4522_4570 , var4523_4571 , var4524_4572 , var4525_4573 , var4526_4574 , var4527_4575 , var4528_4576 , var4529_4577 , var4530_4578 , var4531_4579 , var4532_4580 , var4533_4581 , var4534_4582 , var4535_4583 , var4536_4584 , var4537_4585 , var4538_4586 , var4539_4587 , var4540_4588 , var4541_4589 , var4542_4590 , var4543_4591 , var4544_4592 , var4545_4593 , var4546_4594 , var4547_4595 , var4548_4596 , var4549_4597 , var4550_4598 , var4551_4599'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var4604_4653 , var4605_4654 , var4606_4655 , var4607_4656 , var4608_4657 , var4609_4658 , var4610_4659 , var4611_4660 , var4612_4661 , var4613_4662 , var4614_4663 , var4615_4664 , var4616_4665 , var4617_4666 , var4618_4667 , var4619_4668 , var4620_4669 , var4621_4670 , var4622_4671 , var4623_4672 , var4624_4673 , var4625_4674 , var4626_4675 , var4627_4676 , var4628_4677 , var4629_4678 , var4630_4679 , var4631_4680 , var4632_4681 , var4633_4682 , var4634_4683 , var4635_4684 , var4636_4685 , var4637_4686 , var4638_4687 , var4639_4688 , var4640_4689 , var4641_4690 , var4642_4691 , var4643_4692 , var4644_4693 , var4645_4694 , var4646_4695 , var4647_4696 , var4648_4697 , var4649_4698 , var4650_4699 , var4651_4700 , var4652_4701'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var4706_4756 , var4707_4757 , var4708_4758 , var4709_4759 , var4710_4760 , var4711_4761 , var4712_4762 , var4713_4763 , var4714_4764 , var4715_4765 , var4716_4766 , var4717_4767 , var4718_4768 , var4719_4769 , var4720_4770 , var4721_4771 , var4722_4772 , var4723_4773 , var4724_4774 , var4725_4775 , var4726_4776 , var4727_4777 , var4728_4778 , var4729_4779 , var4730_4780 , var4731_4781 , var4732_4782 , var4733_4783 , var4734_4784 , var4735_4785 , var4736_4786 , var4737_4787 , var4738_4788 , var4739_4789 , var4740_4790 , var4741_4791 , var4742_4792 , var4743_4793 , var4744_4794 , var4745_4795 , var4746_4796 , var4747_4797 , var4748_4798 , var4749_4799 , var4750_4800 , var4751_4801 , var4752_4802 , var4753_4803 , var4754_4804 , var4755_4805'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:5: No translation found for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+10.Generics/recursive_instantiation.xl:5: Errors while instantiating 'Moxotron':
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: with '...' set to '2 , var4810_4861 , var4811_4862 , var4812_4863 , var4813_4864 , var4814_4865 , var4815_4866 , var4816_4867 , var4817_4868 , var4818_4869 , var4819_4870 , var4820_4871 , var4821_4872 , var4822_4873 , var4823_4874 , var4824_4875 , var4825_4876 , var4826_4877 , var4827_4878 , var4828_4879 , var4829_4880 , var4830_4881 , var4831_4882 , var4832_4883 , var4833_4884 , var4834_4885 , var4835_4886 , var4836_4887 , var4837_4888 , var4838_4889 , var4839_4890 , var4840_4891 , var4841_4892 , var4842_4893 , var4843_4894 , var4844_4895 , var4845_4896 , var4846_4897 , var4847_4898 , var4848_4899 , var4849_4900 , var4850_4901 , var4851_4902 , var4852_4903 , var4853_4904 , var4854_4905 , var4855_4906 , var4856_4907 , var4857_4908 , var4858_4909 , var4859_4910 , var4860_4911'
+|     return Moxotron(2, ...)
+|_____________________^
+10.Generics/recursive_instantiation.xl:4: Too many recursive instantitiations at 'Moxotron'
+| function Moxotron(...) return integer is
+|_________________^

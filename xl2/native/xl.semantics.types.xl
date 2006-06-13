@@ -343,8 +343,8 @@ module XL.SEMANTICS.TYPES is
         decl.is_builtin         := false
         decl.implementation     := nil
 
-        PT.SetInfo result, "DECL", decl
-        PT.SetInfo Name, "DECL", decl
+        DCL.SetDeclaration result, decl
+        DCL.SetDeclaration Name, decl
 
 
     function EnterBytecodeType (Name        : PT.name_tree;
@@ -394,7 +394,7 @@ module XL.SEMANTICS.TYPES is
 
         decl : DCL.Declaration := DCL.GetDeclaration(result)
         decl.is_builtin := true
-        PT.SetInfo Name, "DECL", decl
+        DCL.SetDeclaration Name, decl
 
         return result
 
@@ -620,9 +620,19 @@ module XL.SEMANTICS.TYPES is
             if SameType(exprType, nonConsted) then
                 return expr
 
-        // Otherwise, barf for now
-        // TODO: Find written forms like 'written X'
-        ERR.Error "Type conversion unimplemented for '$1'", expr
+        // Find if there is an implicit conversion
+        tgtName : PT.tree := toType.machine_name
+        implConv : PT.tree := parse_tree(@@convert 'tgtName' 'expr')
+        ERR.PushErrorContext()
+        result := XLT.XLSemantics(implConv)
+        if not ERR.PopErrorContext() then
+            if result <> implConv then
+                trace[implconv] "Convert ", expr, " to ", TY.Source(toType),
+                                " is", result
+                return result
+
+        // Otherwise, barf
+        ERR.Error "Cannot convert '$1' to type '$2'", expr, TY.Source(toType)
         return expr
 
 
@@ -631,6 +641,16 @@ module XL.SEMANTICS.TYPES is
     //   Convertion given a type expression
     // ------------------------------------------------------------------------
         return Convert(expr, EvaluateType(toType))
+
+
+    function TryConvert(expr : PT.tree; toType : any_type) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Try to convert to target type, return nil on errors
+    // ------------------------------------------------------------------------
+        ERR.PushErrorContext()
+        result := Convert(expr, toType)
+        if ERR.PopErrorContext() then
+            return nil
 
 
     translation XLDeclarations

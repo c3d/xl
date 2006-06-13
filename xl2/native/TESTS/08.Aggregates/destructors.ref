@@ -50,9 +50,9 @@ A=5 and B=8
 A=5 and B=9
 Final A=6 and B=10
 Destructor for 0
-Destructor for -1073744756
+Destructor for -1073744740
 Destructor for 9504
-Destructor for -1073744960
+Destructor for -1073744928
 I=6 and J=9
 I=6 and J=10
 I=6 and J=11

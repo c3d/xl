@@ -48,6 +48,7 @@ module XL.SEMANTICS.ITERATORS with
     type iterator is access to iterator_data
 
     function GetIterator (input : PT.tree) return iterator
+    procedure SetIterator (input : PT.tree; it : iterator)
 
     function EnterIterator (FnIface : PT.tree) return PT.tree
     function EnterIterator (Names   : PT.tree;

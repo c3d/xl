@@ -102,14 +102,9 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         F          : FN.function := written.function
         FType      : F.type as FT.function_type
         Gtype      : F.type as GEN.generic_type
-        Gargs      : PT.tree_list
+        Gargs      : GN.generic_map
 
-        if Ftype = nil and Gtype <> nil then
-            Gdecl : DCL.declaration
-            nilT  : PT.tree
-            for Gdecl in Gtype.parameters loop
-                Gargs += nilT
-        else
+        if Ftype <> nil or Gtype = nil then
             base_score *= 16#100
 
         // Check whether this is an iterator / we are looking for one
@@ -156,7 +151,14 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                         return 0
                 else
                     if not DCL.Assignable(decl, semArg) then
-                        return 0
+                        // Try implicit conversion
+                        semArg := TY.TryConvert(semArg, decl.type)
+                        if semArg = nil then
+                            return 0
+                        if not DCL.Assignable(decl, semArg) then
+                            return 0
+                        args[param_name] := semArg
+                        base_score -= 1
 
         written.generic_args := Gargs
         return base_score
@@ -284,13 +286,22 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         // Create copy of written form where params are replaced with wildcards
         wildcards : PT.tree := CreateWildcards(wrform, written.args_map)
         trace[written] "Wildcards=", wildcards
+
+        // Check for the case of "F(X) written X"
+        if wildcards.kind = PT.xlWILDCARD then
+            // This is an implicit conversion
+            tgtType : TY.any_type := fntype.base
+            tgtName : PT.tree := tgtType.machine_name
+            wildcards := parse_tree(@@convert 'tgtName' 'wildcards')
+
+
+        // TODO: Check one-on-one mapping of params and written wildcards
+
+        // Enter written form in current context
         written.reference_form := wildcards
         written.score_adjust := WrittenScoreAdjust
         written.translator := WrittenTranslator
         written.function := fninfo
-
-        // TODO: Check one-on-one mapping of params and written wildcards
-
         SYM.EnterRewrite XLT.context, "xlsemantics", written
 
         return fniface
@@ -387,7 +398,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
     // ------------------------------------------------------------------------
 
         written : info as generic_written_form
-        ArgList : PT.tree_list
+        ArgList : GN.generic_map
         gentype : GEN.generic_type := written.generic_type
         arg     : DCL.declaration
 
@@ -396,7 +407,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             name_tree : PT.name_tree := arg.name
             name_text : text := name_tree.value
             value     : PT.tree := args[name_text]
-            ArgList += value
+            ArgList[name_tree] := value
 
         // Instantiate type
         return GN.InstantiateType (written.declaration, ArgList)

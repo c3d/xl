@@ -1,0 +1,8 @@
+import CS = XL.MATH.COMPLEX
+
+K : CS.complex[real] // Todo : remove real
+
+CS.Copy K, CS.Add(K,K)
+
+
+

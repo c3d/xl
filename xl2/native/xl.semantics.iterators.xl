@@ -26,6 +26,7 @@
 import DCL = XL.SEMANTICS.DECLARATIONS
 import FT = XL.SEMANTICS.TYPES.FUNCTIONS
 import GEN = XL.SEMANTICS.TYPES.GENERICS
+import FN = XL.SEMANTICS.FUNCTIONS
 import PT = XL.PARSER.TREE
 import SYM = XL.SYMBOLS
 import XLT = XL.TRANSLATOR
@@ -49,6 +50,14 @@ module XL.SEMANTICS.ITERATORS is
     // ------------------------------------------------------------------------
         info : PT.FindInfo(input, "ITERATOR") as iterator
         return info
+
+
+    procedure SetIterator (input : PT.tree; it : iterator) is
+    // ------------------------------------------------------------------------
+    //    Set iterator (and function and decl) for the tree
+    // ------------------------------------------------------------------------
+        PT.SetInfo input, "ITERATOR", it
+        FN.SetFunction input, it
 
 
     function EnterIteratorDecl (Names   : PT.tree;
@@ -99,19 +108,15 @@ module XL.SEMANTICS.ITERATORS is
         if f.is_parameter then
             f.is_generic_parm := false
 
-        // Indicate that this is a iterator and a declaration
-        PT.SetInfo Iface, "FN", f
-        PT.SetInfo Iface, "DECL", f
-        PT.SetInfo Iface, "ITERATOR", f
+        // Indicate that this is a iterator (and a function and a declaration)
+        SetIterator Iface, f
 
         // Enter the machine interface into the symbol table
         SYM.Enter XLT.context, "FN", Name.value, Iface
 
         // Mark the result as iterator/decl
         result := parse_tree(@nop)
-        PT.SetInfo result, "FN", f
-        PT.SetInfo result, "DECL", f
-        PT.SetInfo result, "ITERATOR", f
+        SetIterator result, f
 
 
     function EnterIteratorBody(input : PT.tree;

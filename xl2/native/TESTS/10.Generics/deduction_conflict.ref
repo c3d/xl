@@ -1,9 +1,48 @@
 10.Generics/deduction_conflict.xl:17: No translation found for 'Z := Pang (1 , 3)'
 | Z : boolean := Pang (1, 3.0)
 |_____________________^
+10.Generics/deduction_conflict.xl:17: No valid function found for 'Pang'
+| Z : boolean := Pang (1, 3.0)
+|___________________^
+10.Generics/deduction_conflict.xl:4: Generic parameter type 'something' 
+| generic type something
+|______________________^
+./xl_builtins.xs:34: cannot be both 'integer'
+|     type integer                                                                                is XL.BYTECODE.xlint
+|________________^
+./xl_builtins.xs:44: and 'real' in the same instance
+|     type real                                                                                   is XL.BYTECODE.xlreal
+|_____________^
+10.Generics/deduction_conflict.xl:6: 'Pang (A : something ; B : something) return boolean' could not be selected because
+| function Pang (A : something; B : something) return boolean is
+|___________________________________________________^
+10.Generics/deduction_conflict.xl:17: the type 'constant real' of '3' doesn't match 'something'
+| Z : boolean := Pang (1, 3.0)
+|___________________________^
+10.Generics/deduction_conflict.xl:6: for parameter 'B'
+| function Pang (A : something; B : something) return boolean is
+|_______________________________^
 10.Generics/deduction_conflict.xl:20: No translation found for 'U := Pong (1 , 3)'
 | U : real := Pong (1.0, 3)
 |__________________^
+10.Generics/deduction_conflict.xl:20: Errors while instantiating 'Pong':
+| U : real := Pong (1.0, 3)
+|________________^
+10.Generics/deduction_conflict.xl:10: No translation found for 'result := A + B'
+|    return A + B
+|_____________^
+10.Generics/deduction_conflict.xl:10: No translation found for 'A + B'
+|    return A + B
+|_____________^
+10.Generics/deduction_conflict.xl:9: Cannot convert 'a_2104' to type 'real80'
+| function Pong (A : something; B : integer) return something is
+|________________^
 10.Generics/deduction_conflict.xl:22: No translation found for 'K := Ping (1 , 2)'
 | K : integer := Ping(1, 2)
 |____________________^
+10.Generics/deduction_conflict.xl:22: No valid function found for 'Ping'
+| K : integer := Ping(1, 2)
+|___________________^
+10.Generics/deduction_conflict.xl:4: Could not deduce 'something'
+| generic type something
+|______________________^

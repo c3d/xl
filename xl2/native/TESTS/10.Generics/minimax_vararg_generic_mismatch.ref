@@ -1,3 +1,20 @@
 10.Generics/minimax_vararg_generic_mismatch.xl:17: No translation found for 'Test_bad := Max (1 , 2.5)'
 | Test_bad     : integer := Max(1, 2.5)
 |______________________________^
+10.Generics/minimax_vararg_generic_mismatch.xl:17: Errors while instantiating 'Max':
+| Test_bad     : integer := Max(1, 2.5)
+|_____________________________^
+10.Generics/minimax_vararg_generic_mismatch.xl:17: with '...' set to '2.5'
+| Test_bad     : integer := Max(1, 2.5)
+|____________________________________^
+10.Generics/minimax_vararg_generic_mismatch.xl:12: No translation found for 'result := Max ( ... )'
+|     result := Max(...)
+|_____________^
+10.Generics/minimax_vararg_generic_mismatch.xl:8: Cannot convert '((((@ callbegin max_2131 
+@ callret1 xlreal ret_2134) 
+@ callargsbegin max_2131) 
+@ callarg xlreal var2116_2118) 
+@ callargsend max_2131) 
+@ value ret_2134' to type 'character'
+| function Max (X : ordered) return ordered is
+|____________^

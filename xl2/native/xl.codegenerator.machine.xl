@@ -638,6 +638,9 @@ module XL.CODE_GENERATOR.MACHINE is
 
         TY.SetType result, Type
         TY.SetType mname, Type
+        DCL.SetLookupResult result, mname // Indicate semantic already ran
+        DCL.SetLookupResult mname, mname
+
 
 
     // ========================================================================

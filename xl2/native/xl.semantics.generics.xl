@@ -52,7 +52,7 @@ module XL.SEMANTICS.GENERICS is
                                   Args           : PT.tree;
                                   kind           : text;
                                   out BestDecl   : DCL.declaration;
-                                  out ActualArgs : PT.tree_list;
+                                  out ActualArgs : generic_map;
                                   out ScopeExpr  : PT.tree) is
     // ------------------------------------------------------------------------
     //    Instantiate the corresponding generic
@@ -79,11 +79,11 @@ module XL.SEMANTICS.GENERICS is
 
         // Convert arguments to a list for easier checking
         ArgList : PT.tree_list
-        SemArgs : PT.tree_list
         OVL.ArgsTreeToList Args, ArgList
         NA  : integer := size(ArgList)
         A   : integer
         Arg : PT.tree
+        SemArgs : generic_map
 
 
         // Scoring
@@ -121,7 +121,7 @@ module XL.SEMANTICS.GENERICS is
                 trace [inst] "Testing ", C
 
                 // Retrieve generic information, ignore non generics
-                TestArgs : PT.tree_list
+                TestArgs : generic_map
                 Scope    : PT.tree := nil
                 Decl     : DCL.declaration := DCL.GetDeclaration(C)
                 if Decl = nil then
@@ -210,7 +210,8 @@ module XL.SEMANTICS.GENERICS is
                             Matching := false
 
                     exit if not Matching
-                    TestArgs += Arg
+                    assert Testargs[D.name] = nil
+                    TestArgs[D.name] := Arg
                     A += 1
 
 
@@ -340,15 +341,14 @@ module XL.SEMANTICS.GENERICS is
 
 
     function Instantiate(Decl       : DCL.declaration;
-                         Args       : PT.tree_list;
+                         Args       : generic_map;
                          Variadics  : PT.tree;
                          BaseRecord : PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Instantiate a specific declaration
     // ------------------------------------------------------------------------
 
-        trace [inst] "Instantiating ", PT.tree(Decl.name),
-                     " with ", size(Args), " args, variadics ", Variadics
+        trace [inst] "Instantiating ", PT.tree(Decl.name)
         if Decl.implementation <> nil then
             Decl := Decl.implementation
             trace[inst] "Using implementation ", Decl.name
@@ -360,17 +360,23 @@ module XL.SEMANTICS.GENERICS is
 
         // Check if we already instantiated that guy
         I   : integer
-        NA  : integer := size(Args)
+        NP  : integer := size(gtp.parameters)
         mn  : PT.name_tree := Decl.machine_name
         if mn = nil then
             mn := SYM.Temporary("<generic>")
             Decl.machine_name := mn
         key : text := mn.value
         key += "["
-        assert size(gtp.parameters) = NA
-        for I in 0..NA-1 loop
-            A : PT.tree := Args[I]
+        for I in 0..NP-1 loop
             P : DCL.declaration := gtp.parameters[I]
+            A : PT.tree := Args[P.name]
+            if A = nil then
+                A := P.initializer
+                if A = nil then
+                    ERR.Error "Cannot instantiate '$1'", Decl.Name
+                    ERR.Error "since '$1' is undefined", P.name
+                    return parse_tree(@error)
+                Args[P.name] := A
             if I > 0 then
                 key += ","
             if TY.IsTypeType (P.type) then
@@ -413,11 +419,13 @@ module XL.SEMANTICS.GENERICS is
         SetContextOfInstantiation instContext, oldContext
 
         // Insert declarations in the instantiation context
-        for I in 0..NA-1 loop
-            A : PT.tree := Args[I]
+        Source : PT.tree := nil
+        SourcePosition : integer := PT.NOPOS
+        for I in 0..NP-1 loop
             P : DCL.declaration := gtp.parameters[I]
             N : P.name as PT.name_tree
-            C : PT.name_tree := PT.NewName(N.value, A.position)
+            A : PT.tree := Args[N]
+            assert A <> nil // Checked above in key loop
 
             if N = nil then
                 ERR.Error "Internal: '$1' is not a name", P.name
@@ -426,6 +434,15 @@ module XL.SEMANTICS.GENERICS is
                 XLT.function_context := fnContext
                 return parse_tree(@error)
 
+            // Build the source args list
+            if Source = nil then
+                Source := A
+                SourcePosition := A.position
+            else
+                Source := parse_tree('Source', 'A')
+
+            // Enter declaration for parameter
+            C : PT.name_tree := PT.NewName(N.value, A.position)
             trace[inst] "GenArg ", PT.tree(C),
                         " : ", TY.Source(P.type),
                         " is ", A
@@ -446,6 +463,10 @@ module XL.SEMANTICS.GENERICS is
                 SYM.Enter instContext, "...", "EXPR", ExprTree
                 SYM.Enter instContext, "...", "DECL", DeclTree
 
+        // Build the source representation for error messages
+        Source := parse_tree('Name' [ 'Source' ])
+        Source.position := SourcePosition
+
         // Process the instantiated declaration
         ERR.PushErrorContext()
 
@@ -457,12 +478,14 @@ module XL.SEMANTICS.GENERICS is
                 dn       : Decl.name as PT.name_tree
                 instName : PT.name_tree := SYM.Temporary(dn.value, dn.position)
                 instCode : PT.tree := gtp.machine_name
-                for I in 0..NA-1 loop
-                    A : PT.tree := Args[I]
+                for I in 0..NP-1 loop
+                    P : DCL.declaration := gtp.parameters[I]
+                    A : PT.tree := Args[P.name]
                     instCode := parse_tree('instCode' 'A')
                 instCode := parse_tree(@ 'instCode' 'instName')
                 tp : TY.any_type := TY.NewType(instName)
                 tp.machine_name := instName
+                tp.name := Source
                 TY.SetDefinedType instCode, tp
                 TY.SetDefinedType instName, tp
                 XLT.AddGlobalDecl instCode
@@ -478,6 +501,11 @@ module XL.SEMANTICS.GENERICS is
                 result := XLT.PostScopeSemantics(result, XLT.scopeGlobal, nil)
                 if f <> nil then
                     PT.SetInfo result, "FN", f
+            tp : TY.any_type := TY.GetDefinedType(result)
+            if tp <> nil then
+                PT.AttachTree Source, "INSTANCEOF", Decl.Name
+                tp.name := Source
+
         // Cache the result for next time
         if ERR.PopErrorContext() then
             errors : text := ERR.GetLastErrorsText()
@@ -574,39 +602,113 @@ module XL.SEMANTICS.GENERICS is
     function Deduce (FunGenType   : GEN.generic_type;
                      FunParm      : DCL.declaration;
                      Arg          : PT.tree;
-                     in out Gargs : PT.tree_list) return boolean is
+                     in out Gargs : generic_map) return boolean is
     // ------------------------------------------------------------------------
     //   Deduce a type from a function argument type
     // ------------------------------------------------------------------------
 
         ParmType : TY.any_type := FunParm.type
-        ArgType  : TY.any_type := TY.NonConstedType (TY.GetType(Arg))
-        NG       : integer := size (FunGenType.parameters)
-        G        : integer
 
-        // Check all generic parameters for the function
-        for G in 0..NG-1 loop
-            gd : DCL.declaration := FunGenType.parameters[G]
-            if TY.IsTypeType (gd.type) then
-                // Generic parameter is a type.
-                GenTypeParm : TY.GetDefinedType (gd.name) as GEN.generic_type
-                assert GenTypeParm <> nil
+        // If the function parameter has a generic type, we try to deduce
+        // the generic type parameters.
+        // E.g. if parm is complex[value], and arg is complex[integer],
+        // we deduce complex -> complex[integer]
+        GenParmType : ParmType as GEN.generic_type
+        if GenParmType <> nil then
 
-                // Check if we can map it to one of our generic arguments
-                if TY.SameType (GenTypeParm, ParmType) then
-                    // Function parameter has that generic type
-                    typeExpr : PT.tree := TY.Source(ArgType)
-                    if Gargs[G] = nil then
-                        // Check if we can validate the type
-                        if not Validate (GenTypeParm, ArgType) then
+            // Check if the argument type is an instance of the parameter type
+            // e.g. the actual type has to be complex[something]
+            ArgType  : TY.any_type := TY.NonConstedType (TY.GetType(Arg))
+            InstanceSource : PT.tree := TY.Source (ArgType)
+            InstanceOf : PT.tree := PT.Attached(InstanceSource, "INSTANCEOF")
+            if InstanceOf <> nil then
+                GenArgType : TY.any_type := TY.GetDefinedType(InstanceOf)
+                if TY.SameType(GenParmType, GenArgType) then
+
+                    // Extract the actual template arguments,
+                    // e.g. integer from complex[integer]
+                    ArgList : PT.tree_list
+                    translate InstanceSource
+                        when ('GenericName' [ 'GenericArgs' ]) then
+                            OVL.ArgsTreeToList GenericArgs, ArgList
+                        else
+                            ERR.Error "Generic instance '$1' is malformed",
+                                      InstanceSource
                             return false
-                        Gargs[G] := typeExpr
-                    else if Gargs[G] <> typeExpr then
-                        ERR.Error "Generic parameter type '$1' ", gd.name
-                        ERR.Error "cannot be both '$1'", Gargs[G]
-                        ERR.Error "and '$1' in the same instance", typeExpr
+
+                    // Check that the number of arguments we have matches
+                    NGP : integer := size(GenParmType.parameters)
+                    GP  : integer
+                    if size(ArgList) <> NGP then
+                        ERR.Error "Internal: Bad generic argument count ('$1')",
+                                  InstanceSource
                         return false
-                    return true
+
+                    // Check that there is no conflict with what was already
+                    // deduced for these parameters, and else record deductions
+                    for GP in 0..NGP-1 loop
+                        subParm : DCL.declaration := GenParmType.parameters[GP]
+                        subArg : PT.tree := ArgList[GP]
+                        N : PT.name_tree := subParm.name
+                        if Gargs[N] = nil then
+                            Gargs[N] := subArg
+                        else if Gargs[N] <> subArg then
+                            ERR.Error "Generic parameter '$1' ", subParm.name
+                            ERR.Error "cannot be both '$1'", Gargs[N]
+                            ERR.Error "and '$1' in the same instance", subArg
+                            return false
+
+                    // OK, it looks sane. Remainder test below applies
+
+                else if size(GenParmType.parameters) then
+                    ERR.Error "'$1' is not an instance of '$2'",
+                              InstanceSource, TY.Source(GenParmType)
+                    return false
+
+
+            // Check consistency with deductions, or deduce if not found
+            NG       : integer := size (FunGenType.parameters)
+            G        : integer
+            for G in 0..NG-1 loop
+                gd : DCL.declaration := FunGenType.parameters[G]
+                if TY.IsTypeType (gd.type) then
+                    // Generic parameter is a type, get the type it defines,
+                    // e.g. in generic[type T] F(X : T), it would be T
+                    gtp : TY.GetDefinedType (gd.name) as GEN.generic_type
+                    assert gtp <> nil
+
+                    // Check if we can map it to one of our generic arguments
+                    // E.g. in the above, check if X has type T
+                    if TY.SameType (gtp, ParmType) then
+                        // Check that the use of the type is consistent for all
+                        // function arguments.
+                        // e.g F(X:T, Y:T) cannot be called as
+                        // F(1, "Hello") since T can't be both
+                        // 'integer' and 'text'
+                        N : PT.tree := gtp.name
+                        if Gargs[N] = nil then
+                            // Check if we can validate the type
+                            // e.g. if T is 'ordered' and we test F(integer),
+                            // test that 'integer' is an 'ordered'
+                            if not Validate (gtp, ArgType) then
+                                return false
+                            Gargs[N] := InstanceSource
+                        else if Gargs[N] <> InstanceSource then
+                            ERR.Error "Generic parameter type '$1' ", N
+                            ERR.Error "cannot be both '$1'", Gargs[N]
+                            ERR.Error "and '$1' in the same instance",
+                                      InstanceSource
+                            return false
+                        return true
+
+            // If not found in function generic parameters, what is it?
+            ERR.Error "Internal: '$1' is generic, but not found in ",
+                      TY.Source (ParmType)
+            ERR.Error "parameters of '$1'", TY.Source(FunGenType)
+            return false
+
+
+        // If this is not a generic parameter, then we just check it matches
         return DCL.Assignable(FunParm, Arg)
 
 
@@ -616,7 +718,7 @@ module XL.SEMANTICS.GENERICS is
     //   Instantiate a specific type
     // ------------------------------------------------------------------------
         Decl       : DCL.declaration
-        ActualArgs : PT.tree_list
+        ActualArgs : generic_map
         Scope      : PT.tree
 
         // Save errors for later display
@@ -634,7 +736,7 @@ module XL.SEMANTICS.GENERICS is
 
 
     function InstantiateType (Decl : DCL.declaration;
-                              Args : PT.tree_list) return BC.bytecode is
+                              Args : generic_map) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Instantiate a specific type
     // ------------------------------------------------------------------------
@@ -651,7 +753,7 @@ module XL.SEMANTICS.GENERICS is
 
     function InstantiateFunction (Source     : PT.tree;
                                   Decl       : DCL.declaration;
-                                  Args       : PT.tree_list;
+                                  Args       : generic_map;
                                   Variadics  : PT.tree;
                                   BaseRecord : PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
@@ -741,6 +843,13 @@ module XL.SEMANTICS.GENERICS is
                 ERR.Error "but '$1' is not a generic type", decl.name
 
 
+    function InParameterDeclaration() return boolean is
+    // ------------------------------------------------------------------------
+    //    Return true if we are in a parameter declaration
+    // ------------------------------------------------------------------------
+        return SYM.GetInteger(XLT.context, "FNPARM") <> 0
+
+
     translation XLEvaluateType
     // ------------------------------------------------------------------------
     //   Translation of instantiations
@@ -751,9 +860,17 @@ module XL.SEMANTICS.GENERICS is
         when ('Name'[]) where IsGenericName (Name, "TYPE") then
             return InstantiateType (Name, nil)
 
-        when ('GenType'.'Arg') where (IsGenericName(GenType, "TYPE") and
-                                      Arg.kind = PT.xlNAME) then
+        // Generic dependency in parameter list
+        when ('GenType'.'Arg') where (Arg.kind = PT.xlNAME and
+                                      IsGenericName(GenType, "TYPE") and
+                                      InParameterDeclaration()) then
             ParmName : Arg as PT.name_tree
+            decl : DCL.declaration := GenericDeclaration(GenType, "TYPE")
+            gt   : TY.GetDefinedType(decl.name) as GEN.generic_type
+            if gt = nil then
+                ERR.Error "Internal: No generic type for '$1'", decl.name
+            else
+                GEN.AddGenericDependency gt
             return GenericParameter(GenType, ParmName)
 
         when (any.'T') then

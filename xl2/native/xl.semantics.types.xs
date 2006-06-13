@@ -81,6 +81,7 @@ module XL.SEMANTICS.TYPES with
     // Convert to a given type
     function Convert(expr : PT.tree; toType : any_type) return PT.tree
     function Convert(expr : PT.tree; toType : PT.tree) return PT.tree
+    function TryConvert(expr : PT.tree; toType : any_type) return PT.tree
 
     // The built-in types
     integer_type                : PT.tree := nil

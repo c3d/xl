@@ -300,6 +300,36 @@ module XL.SEMANTICS.TYPES.GENERICS is
         return gc
 
 
+    function DependsOn(gi : generic_info; tp : TY.any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //    Return true if we already depend on the given type
+    // ------------------------------------------------------------------------
+        // Check if we already have a dependency on that type
+        existing : generic_type
+        for existing in gi.generic_types loop
+
+            // Check if we directly depend on the type
+            if TY.SameType(existing, tp) then
+                trace[generics] "Dependent on ", TY.Source(tp)
+                return true
+
+            // Check if the type is one of the type parameters
+            // E.g. in complex[value], if we depend on 'complex', we
+            // implicitly already depend on 'value'
+            parm : DCL.declaration
+            for parm in existing.parameters loop
+                subType : TY.GetDefinedType(parm.name) as generic_type
+                if subType <> nil then
+                    if TY.SameType(subType, tp) then
+                        trace[generics] "Indirect dependency of ",
+                                        TY.Source(subType)
+                        return true
+
+        // No dependency found
+        return false
+
+
+
     procedure AddGenericDependency (tp : any_type) is
     // ------------------------------------------------------------------------
     //   If a generic type is used as argument/field, make fn/rec generic
@@ -318,40 +348,22 @@ module XL.SEMANTICS.TYPES.GENERICS is
         if gi = nil then
             gi := NewGenericContext (XLT.context, PT.Clone(TY.Source(gtp)))
             assert gi <> nil
-
-        // Check if we already have a dependency on that type
-        existing : generic_type
-        for existing in gi.generic_types loop
-            if TY.SameType(existing, gtp) then
-                trace[generics] "Already dependent on ", TY.Source(gtp)
+        else
+            // Check if we already have a dependency on that type
+            if DependsOn(gi, gtp) then
                 return
 
         // Add the right declaration to the local generic info
         // CHECK: we don't add it to the generic symbol table, because
         // presumably the declaration is already visible in context
-        if size(gtp.parameters) = 0 then
+        Name : PT.tree := TY.Source(gtp)
+        Decl : DCL.declaration := DCL.GetDeclaration(Name)
+        assert Decl <> nil
+        gi.parameters += Decl
+        gi.generic_types += gtp
 
-            Name : PT.tree := TY.Source(gtp)
-            Decl : DCL.declaration := DCL.GetDeclaration(Name)
-            assert Decl <> nil
-            gi.parameters += Decl
-            gi.generic_types += gtp
-
-            trace[generics] "Simple dependency #",
-                            size(gi.parameters), " is ", Name
-        else
-            // This is a complex type, e.g. function (K : somegeneric)
-            // In that case, we add the dependents themselves
-            trace[generics] "Recursive dependency #",
-                            size(gi.parameters), " has ",
-                            size(gtp.parameters), " deps"
-            Decl : DCL.declaration
-            for Decl in gtp.parameters loop
-                if TY.IsTypeType(Decl.type) then
-                    subtype : any_type := TY.GetDefinedType(Decl.name)
-                    AddGenericDependency subtype
-                else
-                    gi.parameters += Decl
+        trace[generics] "Simple dependency #",
+                        size(gi.parameters), " is ", Name
 
 
     procedure AddVariadicity (anchor : PT.tree) is

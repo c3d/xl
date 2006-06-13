@@ -829,4 +829,3 @@ module XL_BUILTINS with
             yield
             Counter += Incr
 
-

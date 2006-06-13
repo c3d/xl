@@ -13,6 +13,10 @@
 04.Lookup/type_redefined.xl:37: No translation found for 'result := integer ( )'
 |    type integer
 |___^
+./xl_builtins.xs:65: Cannot convert '@ zeroint ret_2064 
+@ value ret_2064' to type 'character'
+|     function Integer() return integer                                                           is XL.BYTECODE.zero_int
+|_______________________________________________________________________________________________________________________^
 04.Lookup/type_redefined.xl:37: The type 'integer' can't be defined here
 |    type integer
 |_______________^
@@ -22,3 +26,7 @@
 04.Lookup/type_redefined.xl:38: No translation found for 'L := integer ( )'
 |    L : integer
 |____^
+./xl_builtins.xs:65: Cannot convert '@ zeroint ret_2066 
+@ value ret_2066' to type 'character'
+|     function Integer() return integer                                                           is XL.BYTECODE.zero_int
+|_______________________________________________________________________________________________________________________^

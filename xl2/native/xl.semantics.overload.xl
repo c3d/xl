@@ -115,7 +115,8 @@ module XL.SEMANTICS.OVERLOAD is
         best      : PT.tree
         bestScore : integer
         bestF     : FN.function
-        bestGArgs : PT.tree_list
+        bestArgs  : PT.tree_list
+        bestGArgs : GN.generic_map
         bestGtype : GEN.generic_type
         bestVArgs : PT.tree
         bestDNames: string of PT.name_tree
@@ -196,7 +197,7 @@ module XL.SEMANTICS.OVERLOAD is
                 // Check if it is a generic function
                 Ftype : F.type as FT.function_type
                 Gtype : F.type as GEN.generic_type
-                Gargs : PT.tree_list
+                Gargs : GN.generic_map
                 Vargs : PT.tree
                 Score : integer := depth * 2
                 // Favor local candidate over candidate found in 'using' map
@@ -207,10 +208,6 @@ module XL.SEMANTICS.OVERLOAD is
                 if Ftype = nil and Gtype <> nil then
                     GFType : Gtype.base as FT.function_type
                     Ftype := GFType
-                    Gdecl : DCL.declaration
-                    nilT  : PT.tree
-                    for Gdecl in Gtype.parameters loop
-                        Gargs += nilT
                     Score *= 16#100
 
                 // Check that we actually have a function
@@ -280,6 +277,16 @@ module XL.SEMANTICS.OVERLOAD is
                         Matching := GN.Deduce (Gtype, D, Arg, Gargs)
                     else
                         Matching := DCL.Assignable(D, Arg)
+                        if not Matching then
+                            // Try implicit conversions
+                            Arg := TY.TryConvert(Arg, D.type)
+                            Matching := Arg <> nil and DCL.Assignable(D, Arg)
+                            if Matching then
+                                trace[overload] "Implicit conversion to ",
+                                                TY.Source(D.type)
+                                trace[overload] "Expr=", Arg
+                                SemArgs[A] := Arg
+                                Score += 1 // Make it worse
                     if not Matching then
                         trace [overload] "FAIL: Type mismatch for ", D.name
                         trace [overload] "      Expected ", TY.Source(D.type)
@@ -310,14 +317,14 @@ module XL.SEMANTICS.OVERLOAD is
 
                 // Check if there are non-deduced generic arguments
                 if Gtype <> nil then
-                    NG       : integer := size(Gargs)
+                    NG       : integer := size(Gtype.parameters)
                     G        : integer
-                    assert NG = size(Gtype.parameters)
                     for G in 0..NG-1 loop
-                        if Gargs[G] = nil then
-                            Gdecl : DCL.declaration := Gtype.parameters[G]
-                            Gargs[G] := Gdecl.initializer
-                            if Gargs[G] = nil then
+                        Gdecl : DCL.declaration := Gtype.parameters[G]
+                        Gname : PT.tree := Gdecl.name
+                        if Gargs[Gname] = nil then
+                            Gargs[Gname] := Gdecl.initializer
+                            if Gargs[Gname] = nil then
                                 Matching := false
                                 trace [overload] "FAIL: Generic ", GDecl.name
                                 ERR.Error "Could not deduce '$1'", GDecl.name
@@ -335,6 +342,7 @@ module XL.SEMANTICS.OVERLOAD is
                     best := C
                     bestScore := Score
                     bestF := F
+                    bestArgs := SemArgs
                     bestGArgs := Gargs
                     bestGtype := Gtype
                     bestVargs := Vargs
@@ -346,6 +354,7 @@ module XL.SEMANTICS.OVERLOAD is
                     best := C
                     bestScore := Score
                     bestF := F
+                    bestArgs := SemArgs
                     bestGArgs := Gargs
                     bestGtype := Gtype
                     bestVargs := Vargs
@@ -396,8 +405,8 @@ module XL.SEMANTICS.OVERLOAD is
                         DCL.Declare (DName, D.type)
                     if D.is_input or not D.is_output then
                         ctors := XLT.Append(ctors,DCL.CallConstructor(Local))
-                    if SemArgs[Didx] = PT.tree(DName) then
-                        SemArgs[Didx] := XLT.XLSemantics(DName)
+                    if bestArgs[Didx] = PT.tree(DName) then
+                        bestArgs[Didx] := XLT.XLSemantics(DName)
                     declaredHere[D] := true
 
             // Call the destructors for all output parameters
@@ -408,7 +417,7 @@ module XL.SEMANTICS.OVERLOAD is
             for parm in ftp.parameters loop
                 if parm.is_output and not parm.is_input then
                     if not declaredHere[parm] then
-                        dtorCall : PT.tree := DCL.CallDestructor(SemArgs[P])
+                        dtorCall : PT.tree := DCL.CallDestructor(bestArgs[P])
                         dtors := XLT.Append(dtors, dtorCall)
                 P += 1
 
@@ -416,12 +425,12 @@ module XL.SEMANTICS.OVERLOAD is
             iterator : bestF as ITER.iterator
             if iterator <> nil then
                 result := ITER.InvokeIterator(Name, BaseRecord, iterator,
-                                              SemArgs, ctors, dtors)
+                                              bestArgs, ctors, dtors)
             else if BaseRecord <> nil then
                 result := CGM.RecordFunctionCall (BaseRecord, bestF,
-                                                  SemArgs, ctors, dtors)
+                                                  bestArgs, ctors, dtors)
             else
-                result := CGM.FunctionCall (bestF, SemArgs, ctors, dtors)
+                result := CGM.FunctionCall (bestF, bestArgs, ctors, dtors)
 
         else
             ERR.Error "No valid function found for '$1'", NameTree

@@ -34,25 +34,27 @@ module XL.SEMANTICS.GENERICS with
 //    Module implementing manipulations of generics
 // ----------------------------------------------------------------------------
 
+    type generic_map is map[PT.tree, PT.tree]
+
     procedure LookupInstantiation(NameTree       : PT.tree;
                                   Args           : PT.tree;
                                   kind           : text;
                                   out BestDecl   : DCL.declaration;
-                                  out ActualArgs : PT.tree_list;
+                                  out ActualArgs : generic_map;
                                   out ScopeExpr  : PT.tree)
 
     function Instantiate(Decl       : DCL.declaration;
-                         Args       : PT.tree_list;
+                         Args       : generic_map;
                          Variadics  : PT.tree;
                          BaseRecord : PT.tree) return BC.bytecode
 
     function InstantiateType (Name : PT.tree;
                               Args : PT.tree) return BC.bytecode
     function InstantiateType (Decl : DCL.declaration;
-                              Args : PT.tree_list) return BC.bytecode
+                              Args : generic_map) return BC.bytecode
     function InstantiateFunction (Source     : PT.tree;
                                   Decl       : DCL.declaration;
-                                  Args       : PT.tree_list;
+                                  Args       : generic_map;
                                   Variadics  : PT.tree;
                                   BaseRecord : PT.tree) return BC.bytecode
     procedure SetContextOfInstantiation (instContext : SYM.symbol_table;
@@ -65,5 +67,5 @@ module XL.SEMANTICS.GENERICS with
     function Deduce (FunType      : GEN.generic_type;
                      Decl         : DCL.declaration;
                      Arg          : PT.tree;
-                     in out Gargs : PT.tree_list) return boolean
+                     in out Gargs : generic_map) return boolean
 

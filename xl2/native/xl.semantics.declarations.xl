@@ -200,13 +200,9 @@ module XL.SEMANTICS.DECLARATIONS is
         if Value <> nil then
             if not IsDefinition then
                 // Return initialization
-                if decl.is_local then
+                if decl.is_local or decl.is_global then
                     result := parse_tree ('Name' := 'Value')
                     PT.AttachTree result, "CTORCALL", result
-                else if decl.is_global then
-                    ctor : PT.tree := parse_tree('Name' := 'Value')
-                    PT.AttachTree ctor, "CTORCALL", ctor
-                    XLT.AddGlobalInit ctor
             else
                 // Definition will be processed at semantics time
                 result := parse_tree(@@def 'Name' 'Value')
@@ -219,7 +215,7 @@ module XL.SEMANTICS.DECLARATIONS is
             result := parse_tree(@decl)
 
         // Attach the declaration to the result
-        PT.SetInfo result, "DECL", decl
+        SetDeclaration result, decl
         return result
 
 
@@ -289,8 +285,8 @@ module XL.SEMANTICS.DECLARATIONS is
         TY.SetType mname, decl.type
 
         // Attach the declaration to the name (this is where we find it later)
-        PT.SetInfo Name, "DECL", decl
-        PT.SetInfo mname, "DECL", decl
+        SetDeclaration Name, decl
+        SetDeclaration mname, decl
 
         return decl
 
@@ -303,12 +299,29 @@ module XL.SEMANTICS.DECLARATIONS is
         return decl_info
 
 
+    procedure SetDeclaration(decl : PT.tree; info : declaration) is
+    // ------------------------------------------------------------------------
+    //    Return the declaration for the tree, if there is one
+    // ------------------------------------------------------------------------
+        PT.SetInfo decl, "DECL", info
+
+
+    procedure SetLookupResult (NameTerminal : PT.tree; Value : BC.bytecode) is
+    // ------------------------------------------------------------------------
+    //   Force lookup to return a given value
+    // ------------------------------------------------------------------------
+        PT.AttachTree NameTerminal, "LOOKUPVALUE", Value
+
+
     function Lookup (NameTerminal : PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
     //    Return the machine name for a name terminal
     // ------------------------------------------------------------------------
 
         // Check if we already ran semantics on it
+        result := PT.Attached(NameTerminal, "LOOKUPVALUE")
+        if result <> nil then
+            return result
         decl : declaration := GetDeclaration(NameTerminal)
         if decl <> nil then
             return decl.machine_name
@@ -648,7 +661,7 @@ module XL.SEMANTICS.DECLARATIONS is
             Value := XLT.ScopeSemantics(Value, XLT.scopeGlobal)
         decl.initializer := Value
         result := decl.initializer
-        PT.SetInfo result, "DECL", decl
+        SetDeclaration result, decl
 
 
     translation XLSemantics

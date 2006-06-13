@@ -3,3 +3,6 @@
 '
 | module SIMPLE_MODULE.NESTED_1 is
 |____________________^
+./xl_builtins.xs:26: No translation found for 'delete xlbuiltins_2054'
+| module XL_BUILTINS with
+|__________________^
