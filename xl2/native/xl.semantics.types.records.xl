@@ -253,7 +253,8 @@ module XL.SEMANTICS.TYPES.RECORDS is
         if dtype = nil then
             ERR.Error "Internal: Record field '$1' has no defined type", dname
             return parse_tree(@error)
-
+        if TY.GetDefinedType(dtype.machine_name) = nil and dtype <> nil then
+            TY.SetDefinedType dtype.machine_name, dtype
         return dtype.machine_name
 
 
