@@ -1,6 +1,6 @@
 05.Expressions/write-to-function.xl:35: No translation found for 'F (0) := B'
 |     F(0) := B
 |___________^
-05.Expressions/write-to-function.xl:29: Cannot convert 'b_2062' to type 'character'
+05.Expressions/write-to-function.xl:29: Cannot convert 'b_441' to type 'character'
 | A, B, C : integer
 |____^

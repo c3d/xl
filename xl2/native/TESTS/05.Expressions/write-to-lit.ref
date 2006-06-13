@@ -1,6 +1,6 @@
 05.Expressions/write-to-lit.xl:33: No translation found for '0 := B'
 |     0 := B
 |________^
-05.Expressions/write-to-lit.xl:29: Cannot convert 'b_2062' to type 'character'
+05.Expressions/write-to-lit.xl:29: Cannot convert 'b_441' to type 'character'
 | A, B, C : integer
 |____^

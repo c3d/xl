@@ -10,7 +10,7 @@
 ./xl_builtins.xs:34: cannot be both 'integer'
 |     type integer                                                                                is XL.BYTECODE.xlint
 |________________^
-./xl_builtins.xs:44: and 'real' in the same instance
+./xl_builtins.xs:36: and 'real' in the same instance
 |     type real                                                                                   is XL.BYTECODE.xlreal
 |_____________^
 10.Generics/deduction_conflict.xl:6: 'Pang (A : something ; B : something) return boolean' could not be selected because
@@ -34,9 +34,9 @@
 10.Generics/deduction_conflict.xl:10: No translation found for 'A + B'
 |    return A + B
 |_____________^
-10.Generics/deduction_conflict.xl:9: Cannot convert 'a_2104' to type 'real80'
+10.Generics/deduction_conflict.xl:9: Cannot convert 'b_484' to type 'real'
 | function Pong (A : something; B : integer) return something is
-|________________^
+|_______________________________^
 10.Generics/deduction_conflict.xl:22: No translation found for 'K := Ping (1 , 2)'
 | K : integer := Ping(1, 2)
 |____________________^

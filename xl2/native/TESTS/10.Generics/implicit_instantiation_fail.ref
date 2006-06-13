@@ -10,7 +10,7 @@
 ./xl_builtins.xs:34: cannot be both 'integer'
 |     type integer                                                                                is XL.BYTECODE.xlint
 |________________^
-./xl_builtins.xs:50: and 'text' in the same instance
+./xl_builtins.xs:39: and 'text' in the same instance
 |     type text                                                                                   is XL.BYTECODE.xltext
 |_____________^
 10.Generics/implicit_instantiation_fail.xl:4: 'Ajouter (X , Y : item) return item' could not be selected because

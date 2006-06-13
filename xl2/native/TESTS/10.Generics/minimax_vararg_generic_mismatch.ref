@@ -10,11 +10,11 @@
 10.Generics/minimax_vararg_generic_mismatch.xl:12: No translation found for 'result := Max ( ... )'
 |     result := Max(...)
 |_____________^
-10.Generics/minimax_vararg_generic_mismatch.xl:8: Cannot convert '((((@ callbegin max_2131 
-@ callret1 xlreal ret_2134) 
-@ callargsbegin max_2131) 
-@ callarg xlreal var2116_2118) 
-@ callargsend max_2131) 
-@ value ret_2134' to type 'character'
+10.Generics/minimax_vararg_generic_mismatch.xl:8: Cannot convert '((((@ callbegin max_510 
+@ callret1 xlreal ret_513) 
+@ callargsbegin max_510) 
+@ callarg xlreal var495_497) 
+@ callargsend max_510) 
+@ value ret_513' to type 'character'
 | function Max (X : ordered) return ordered is
 |____________^
