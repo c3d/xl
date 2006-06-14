@@ -619,8 +619,8 @@ module XL.SEMANTICS.GENERICS is
             // Check if the argument type is an instance of the parameter type
             // e.g. the actual type has to be complex[something]
             ArgType  : TY.any_type := TY.NonConstedType (TY.GetType(Arg))
-            InstanceSource : PT.tree := TY.Source (ArgType)
-            InstanceOf : PT.tree := PT.Attached(InstanceSource, "INSTANCEOF")
+            ArgTypeSrc : PT.tree := TY.Source (ArgType)
+            InstanceOf : PT.tree := PT.Attached(ArgTypeSrc, "INSTANCEOF")
             if InstanceOf <> nil then
                 GenArgType : TY.any_type := TY.GetDefinedType(InstanceOf)
                 if TY.SameType(GenParmType, GenArgType) then
@@ -628,12 +628,12 @@ module XL.SEMANTICS.GENERICS is
                     // Extract the actual template arguments,
                     // e.g. integer from complex[integer]
                     ArgList : PT.tree_list
-                    translate InstanceSource
+                    translate ArgTypeSrc
                         when ('GenericName' [ 'GenericArgs' ]) then
                             OVL.ArgsTreeToList GenericArgs, ArgList
                         else
                             ERR.Error "Generic instance '$1' is malformed",
-                                      InstanceSource
+                                      ArgTypeSrc
                             return false
 
                     // Check that the number of arguments we have matches
@@ -641,7 +641,7 @@ module XL.SEMANTICS.GENERICS is
                     GP  : integer
                     if size(ArgList) <> NGP then
                         ERR.Error "Internal: Bad generic argument count ('$1')",
-                                  InstanceSource
+                                  ArgTypeSrc
                         return false
 
                     // Check that there is no conflict with what was already
@@ -662,7 +662,7 @@ module XL.SEMANTICS.GENERICS is
 
                 else if size(GenParmType.parameters) then
                     ERR.Error "'$1' is not an instance of '$2'",
-                              InstanceSource, TY.Source(GenParmType)
+                              ArgTypeSrc, TY.Source(GenParmType)
                     return false
 
 
@@ -692,14 +692,45 @@ module XL.SEMANTICS.GENERICS is
                             // test that 'integer' is an 'ordered'
                             if not Validate (gtp, ArgType) then
                                 return false
-                            Gargs[N] := InstanceSource
-                        else if Gargs[N] <> InstanceSource then
+                            Gargs[N] := ArgTypeSrc
+                        else if Gargs[N] <> ArgTypeSrc then
                             ERR.Error "Generic parameter type '$1' ", N
                             ERR.Error "cannot be both '$1'", Gargs[N]
                             ERR.Error "and '$1' in the same instance",
-                                      InstanceSource
+                                      ArgTypeSrc
                             return false
                         return true
+
+                    else
+                        // Check if this is an argument to the generic type
+                        // e.g. we may have F(X: complex.value) with arg=real,
+                        // and want to deduce complex[real] and value=real
+                        NP : integer := size (gtp.parameters)
+                        P  : integer
+                        for P in 0..NP-1 loop
+                            // Get declaration for sub parameter
+                            // i.e. we have F[complex](complex.value), and
+                            // complex[value], and we try to deduce value
+                            subParm : DCL.declaration := gtp.parameters[P]
+
+                            if TY.IsTypeType (subParm.type) then
+                                subType1 : TY.any_type
+                                subType1 := TY.GetDefinedType (subParm.name)
+                                subType : subType1 as GEN.generic_type
+                                assert subType <> nil
+
+                                if TY.SameType (subType, ParmType) then
+                                    N : PT.tree := subParm.name
+                                    if Gargs[N] = nil then
+                                        if not Validate (subType, ArgType) then
+                                            return false
+                                        Gargs[N] := ArgTypeSrc
+                                    else if Gargs[N] <> ArgTypeSrc then
+                                        ERR.Error "Generic subtype '$1'", N
+                                        ERR.Error "can't be both '$1' and '$2'",
+                                                  Gargs[N], ArgTypeSrc
+                                        return false
+                                    return true
 
             // If not found in function generic parameters, what is it?
             ERR.Error "Internal: '$1' is generic, but not found in ",
