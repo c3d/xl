@@ -189,6 +189,7 @@ module XL.SEMANTICS.OVERLOAD is
                             when ('Record'.'Fcall') then
                                 F := FN.GetFunction(Fcall)
                                 Scope := Record
+
                     if F = nil then
                         ERR.Error "Internal: No function info for '$1'", C
                         trace [overload] "FAIL: No function info"
@@ -513,5 +514,12 @@ module XL.SEMANTICS.OVERLOAD is
         where
             IsFunction (FunctionName)
         then
+            // If we can find through normal lookup, that's it
+            ERR.PushErrorContext()
+            result := DCL.Lookup (FunctionName)
+            if not ERR.PopErrorContext() then
+                return result
+
+            // Otherwise, try to find the function
             return Resolve(FunctionName, nil, input)
 

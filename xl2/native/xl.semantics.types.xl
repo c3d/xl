@@ -632,7 +632,8 @@ module XL.SEMANTICS.TYPES is
                 return result
 
         // Otherwise, barf
-        ERR.Error "Cannot convert '$1' to type '$2'", expr, TY.Source(toType)
+        ERR.Error "Cannot convert '$1' to from '$2' to '$3'",
+                  expr, TY.Source(exprType), TY.Source(toType)
         return expr
 
 
