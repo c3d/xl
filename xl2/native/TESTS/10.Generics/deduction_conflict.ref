@@ -40,6 +40,6 @@
 10.Generics/deduction_conflict.xl:22: No valid function found for 'Ping'
 | K : integer := Ping(1, 2)
 |___________________^
-10.Generics/deduction_conflict.xl:4: Could not deduce 'something'
+10.Generics/deduction_conflict.xl:4: Unable to deduce 'something'
 | generic type something
 |______________________^

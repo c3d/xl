@@ -936,6 +936,80 @@ module XL.SEMANTICS.GENERICS is
         return SYM.GetInteger(XLT.context, "FNPARM") <> 0
 
 
+    function ContainsInstance (GDecl : DCL.declaration;
+                               List  : PT.tree_list) return DCL.declaration is
+    // ------------------------------------------------------------------------
+    //   Return declaration of instance if any
+    // ------------------------------------------------------------------------
+        Name : PT.tree
+        for Name in List loop
+            decl : DCL.declaration := DCL.GetDeclaration(Name)
+            if decl <> nil then
+                if not GEN.IsGenericDeclaration(decl) then
+                    instType : TY.any_type := TY.GetDefinedType(decl.name)
+                    instSrc  : PT.tree := TY.Source(instType)
+                    instOf : PT.tree := PT.Attached(instSrc, "INSTANCEOF")
+                    if instOf = GDecl.name then
+                        return decl
+        return nil
+
+
+    function GenericInstance(GenName  : PT.tree;
+                             ParmName : PT.name_tree;
+                             GenDecl  : DCL.declaration) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   When we see 'array.element', check if array is an instance
+    // ------------------------------------------------------------------------
+        list : PT.tree_list
+        if GenName.kind <> PT.xlNAME then
+            translate GenName
+                when ('Record'.'Field') where Field.kind = PT.xlNAME then
+                    syms : SYM.symbol_table
+                    fName : Field as PT.name_tree
+                    REC.RecordDeclarations Record, fName, "TYPE", list, syms
+                    if syms = nil then
+                        return nil
+                else
+                    return nil
+        else
+            Nm : GenName as PT.name_tree
+            SYM.Lookup XLT.context, "TYPE", Nm.value, list, SYM.lookupAll
+
+        // Check if we have an instance of the right declaration
+        instOf : DCL.declaration := ContainsInstance(GenDecl, list)
+        if instOf = nil then
+            return nil
+
+        // If so, then find the parameter type by position in arg list
+        instType : TY.any_type := TY.GetDefinedType(instOf.name)
+        instSrc  : PT.tree := TY.Source(instType) // complex[real]
+        translate instSrc
+            when ('Name'['Args']) then
+                ArgList : PT.tree_list
+                OVL.ArgsTreeToList Args, ArgList
+                gtype : TY.GetDefinedType(GenDecl.name) as GEN.generic_type
+                if gtype <> nil then
+                    NP : integer := size(gtype.parameters)
+                    P  : integer
+                    if NP <> size(ArgList) then
+                        ERR.Error "Internal: Wrong number of args in '$1'",
+                                  instSrc
+                        return nil
+                    for P in 0..NP-1 loop
+                        Parm : DCL.declaration := gtype.parameters[P]
+                        if PT.Matches(Parm.name, ParmName) then
+                            return ArgList[P]
+                    ERR.Error "Internal: parameter '$1' not found in '$2'",
+                              ParmName, instSrc
+                    return nil
+                else
+                    ERR.Error "Internal: '$1' is not generic", GenDecl.name
+                    return nil
+            else
+                ERR.Error "Internal: Instance '$1' has invalid shape", instSrc
+                return nil
+
+
     translation XLEvaluateType
     // ------------------------------------------------------------------------
     //   Translation of instantiations
@@ -956,6 +1030,11 @@ module XL.SEMANTICS.GENERICS is
             if gt = nil then
                 ERR.Error "Internal: No generic type for '$1'", decl.name
             else
+                // Check if there is an instantiation of that guy
+                result := GenericInstance(GenType, ParmName, decl)
+                if result <> nil then
+                    return result
+
                 GEN.AddGenericDependency gt
             return GenericParameter(GenType, ParmName)
 
