@@ -371,6 +371,7 @@ module XL.SEMANTICS.GENERICS is
             P : DCL.declaration := gtp.parameters[I]
             A : PT.tree := Args[P.name]
             if A = nil then
+                // If we could not find A by instantiation, try default value
                 A := P.initializer
                 if A = nil then
                     ERR.Error "Cannot instantiate '$1'", Decl.Name
@@ -743,6 +744,57 @@ module XL.SEMANTICS.GENERICS is
         return DCL.Assignable(FunParm, Arg)
 
 
+    function FinalizeDeductions (FunType      : GEN.generic_type;
+                                 in out Gargs : generic_map) return boolean is
+    // ------------------------------------------------------------------------
+    //   Find  values of parameters that have not been deduced
+    // ------------------------------------------------------------------------
+    //   If we have F(X : array.element), it becomes generic[type array],
+    //   but we supply only array.element. We need to instantiate
+    //   array[element] as its generic argument
+
+        NP  : integer := size(FunType.parameters)
+        P   : integer
+        result := true
+        for P in 0..NP-1 loop
+            Parm : DCL.declaration := FunType.parameters[P]
+            Arg  : PT.tree := Gargs[Parm.name]
+
+            if Arg = nil then
+                if TY.IsTypeType(Parm.type) then
+                    // Get the 'array' generic type
+                    subT    : TY.GetDefinedType(Parm.name) as GEN.generic_type
+                    subArgs : generic_map
+                    if subT <> nil then
+                        NsubP : integer := size(subT.parameters)
+                        subP  : integer
+                        for subP in 0..NsubP-1 loop
+                            subParm : DCL.declaration := subT.parameters[subP]
+                            subArg  : PT.tree := Gargs[subParm.name]
+                            if subArg = nil then
+                                subArg := subParm.initializer
+                            if subArg <> nil then
+                                subArgs[subParm.name] := subArg
+                            else
+                                result := false
+                            exit if not result
+                    if result then
+                        ERR.PushErrorContext()
+                        Arg := Instantiate(Parm, subArgs, nil, nil)
+                        result := not ERR.PopErrorContext()
+                        if result then
+                            Gargs[Parm.name] := Arg
+
+            if Arg = nil then
+                Arg := Parm.initializer
+                if Arg <> nil then
+                    result := true
+
+            if not result then
+                ERR.Error "Unable to deduce '$1'", Parm.name
+                return false
+
+
     function InstantiateType (Name : PT.tree;
                               Args : PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
@@ -896,8 +948,8 @@ module XL.SEMANTICS.GENERICS is
 
         // Generic dependency in parameter list
         when ('GenType'.'Arg') where (Arg.kind = PT.xlNAME and
-                                      IsGenericName(GenType, "TYPE") and
-                                      InParameterDeclaration()) then
+                                      InParameterDeclaration() and
+                                      IsGenericName(GenType, "TYPE")) then
             ParmName : Arg as PT.name_tree
             decl : DCL.declaration := GenericDeclaration(GenType, "TYPE")
             gt   : TY.GetDefinedType(decl.name) as GEN.generic_type

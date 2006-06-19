@@ -317,18 +317,10 @@ module XL.SEMANTICS.OVERLOAD is
 
                 // Check if there are non-deduced generic arguments
                 if Gtype <> nil then
-                    NG       : integer := size(Gtype.parameters)
-                    G        : integer
-                    for G in 0..NG-1 loop
-                        Gdecl : DCL.declaration := Gtype.parameters[G]
-                        Gname : PT.tree := Gdecl.name
-                        if Gargs[Gname] = nil then
-                            Gargs[Gname] := Gdecl.initializer
-                            if Gargs[Gname] = nil then
-                                Matching := false
-                                trace [overload] "FAIL: Generic ", GDecl.name
-                                ERR.Error "Could not deduce '$1'", GDecl.name
-                                exit if not Matching
+                    if not GN.FinalizeDeductions(Gtype, Gargs) then
+                        Matching := false
+                        trace [overload] "FAIL: Cannot finalize deductions"
+                        exit if not Matching
 
                 // If not matching, lookup next
                 if not Matching then

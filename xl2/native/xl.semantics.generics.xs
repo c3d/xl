@@ -69,3 +69,5 @@ module XL.SEMANTICS.GENERICS with
                      Arg          : PT.tree;
                      in out Gargs : generic_map) return boolean
 
+    function FinalizeDeductions (FunType      : GEN.generic_type;
+                                 in out Gargs : generic_map) return boolean
