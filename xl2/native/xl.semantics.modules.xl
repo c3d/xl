@@ -544,19 +544,25 @@ module XL.SEMANTICS.MODULES is
     // ------------------------------------------------------------------------
     //   Declaration of modules
     // ------------------------------------------------------------------------
+    //   They are tagged with REPROCESSMACROS so that we will reprocess
+    //   the following node through the preprocessor
+
          when
              import 'ShortName' = 'LongName'
          then
-             return ProcessImport (LongName, ShortName)
+             result := ProcessImport (LongName, ShortName)
+             PT.AttachTree(result, "REPROCESSMACROS", result)
 
          when
              import 'LongName'
          then
-             return ProcessImport (LongName, nil)
+             result := ProcessImport (LongName, nil)
+             PT.AttachTree(result, "REPROCESSMACROS", result)
 
          when
              use 'LongName'
          then
              result := ProcessImport (LongName, nil)
              result := XLT.Append(result, REC.EnterUsing(LongName))
+             PT.AttachTree(result, "REPROCESSMACROS", result)
 

@@ -28,6 +28,7 @@ import PT = XL.PARSER.TREE
 import SYM = XL.SYMBOLS
 import ASCII = XL.TEXT_IO.ENCODING.ASCII
 import XLT = XL.TRANSLATOR
+import PPR = XL.SEMANTICS.MACROS
 
 
 module XL.SEMANTICS is
@@ -48,6 +49,8 @@ module XL.SEMANTICS is
             'SecondDeclLine'
         then
             FirstDeclLine := XLT.XLDeclarations FirstDeclLine
+            if PT.Attached(FirstDeclLine, "REPROCESSMACROS") <> nil then
+                SecondDeclLine := PPR.Preprocess(SecondDeclLine)
             SecondDeclLine := XLT.XLDeclarations SecondDeclLine
             return parse_tree
                 'FirstDeclLine'
@@ -56,6 +59,8 @@ module XL.SEMANTICS is
             'FirstDecl' ; 'SecondDecl'
         then
             FirstDecl := XLT.XLDeclarations FirstDecl
+            if PT.Attached(FirstDecl, "REPROCESSMACROS") <> nil then
+                SecondDecl := PPR.Preprocess(SecondDecl)
             SecondDecl := XLT.XLDeclarations SecondDecl
             return parse_tree ('FirstDecl'; 'SecondDecl')
 

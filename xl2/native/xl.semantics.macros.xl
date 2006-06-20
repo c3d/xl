@@ -201,6 +201,16 @@ module XL.SEMANTICS.MACROS is
         SYM.EnterRewrite XLT.context, kind, mac
 
 
+    procedure EnterGlobalMacro (kind : text; from : PT.tree; to : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Enter a macro in the main table
+    // ------------------------------------------------------------------------
+        old : SYM.symbol_table := XLT.context
+        XLT.context := XLT.main_context
+        EnterMacro kind, from, to
+        XLT.context := old
+
+
     function Include (filename : PT.tree) return PT.tree is
     // ------------------------------------------------------------------------
     //    Parse the file, and return the parsed file
@@ -298,8 +308,19 @@ module XL.SEMANTICS.MACROS is
         where
             Phase.kind = PT.xlNAME
         then
-            PhaseName : Phase as PT.name_tree
-            EnterMacro PT.XLNormalize(PhaseName.value), MatchExpr, ReplExpr
+            PhaseTree : Phase as PT.name_tree
+            PhaseName : text := PT.XLNormalize(PhaseTree.value)
+            EnterMacro PhaseName, MatchExpr, ReplExpr
+            return parse_tree(@nop)
+        when
+            xl.replace 'Phase' ('MatchExpr') with 
+                'ReplExpr'
+        where
+            Phase.kind = PT.xlNAME
+        then
+            PhaseTree : Phase as PT.name_tree
+            PhaseName : text := PT.XLNormalize(PhaseTree.value)
+            EnterMacro PhaseName, MatchExpr, ReplExpr
             return parse_tree(@nop)
 
 
