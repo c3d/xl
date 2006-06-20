@@ -592,6 +592,16 @@ module XL.SEMANTICS.DECLARATIONS is
             return EnterDeclaration (Names, Type, nil, false)
 
         when
+            'Names' : 'Type' ( 'Args' )
+        then
+            trace [decl] "Decl1: Name=", Names, " Type=", Type
+            if not TY.IsTypeName(Type) then
+                ERR.Error "'$1' is not a type name", Type
+            init : PT.tree := parse_tree('Type' ('Args'))
+            vartype : PT.tree := parse_tree(variable)
+            return EnterDeclaration (Names, vartype, init, false)
+
+        when
             'Names' : 'Type' := 'Value'
         then
             trace [decl] "Decl2: Name=",Names," Type=",Type," Value=",Value
