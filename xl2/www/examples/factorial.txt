@@ -1,0 +1,119 @@
+<!--Computing a factorial in XL-->
+
+A simple {wiki "Recursion" "recursive"} implementation of
+{wiki "Factorial" "factorial"} for integer numbers is:
+
+{pre}function Factorial (N : integer) return integer written N! is
+    if N = 0 then
+        return 1
+    else
+        return N * (N-1)!
+{erp}
+
+This function makes use of a {example "written"} form to implement
+{concept "expred" "expression reduction"} for expressions of the
+form {tt "N!"}. In other words, the expression {tt "(N-1)!"} is
+equivalent to {tt "Factorial(N-1)"}.
+
+The function above is takes an {tt "integer"} argument and returns an
+integer. In practice, this type is an implementation-defined built-in
+data type with a limited number of bits. So factorial of relatively
+small numbers will be too large for the type. This is an example of
+{@semnoise}, and we have to make a trade-off. A better solution for
+some applications makes use of the {tt "big_integer"} type for the
+return value.
+
+{pre}import BIG = XL.MATH.BIG_INTEGER
+function Factorial (N : integer) return BIG.integer written N! is
+    if N = 0 then
+        return 1
+    else
+        return N * (N-1)!
+{erp}
+
+Note that the name of the integer type in the {tt "XL.MATH.BIG_INTEGER"}
+module is also {tt "integer"}. In XL, {tt "integer"} is not a keyword
+but a type name, and it can be redefined where it makes sense.
+
+This implementation will work for very large factorials (depending on
+the amount of memory available to the program. However, computing
+large factorials may require substantial amount of machine resources
+(memory, CPU time). It may sometimes be preferable to have an
+approximation of the result, even if this means that some digits are
+lost. This can be done by returning a real number instead of the
+normal integer result. This is left as an exercise for the reader.
+
+As these examples illustrate, the choice of the return type is best
+left to the user of the factorial. We can do that by using a
+{concept "generics" "generic type"} as the return value.
+
+{pre}generic [type large_integer]
+function Factorial (N : integer) return large_integer written N! is
+    if N = 0 then
+        return 1
+    else
+        return N * (N-1)!
+{erp}
+
+With that particular implementation, the user of the factorial can
+select to use {tt "integer"}, {tt "BIG.integer"} or {tt "real"} as
+the return type. The compiler will automatically create the
+appropriate code. The above can be simplified further by making use
+of a predefined {concept "truegen" "true generic type"} called
+{tt "number"}, which will ensure that only types considered numbers
+will be used to instantiate {tt "Factorial"}.
+
+{pre}function Factorial(N : integer) return number written N! is
+    if N = 0 then
+        return 1
+    else
+        return N * (N-1)!
+{erp}
+
+All the implementations above were recursive. It is often more
+efficient to write iterative code, since recursion for that example consumes
+more resources. An iterative version of the code above can be written
+as:
+
+{pre}function Factorial(N : integer) return number written N! is
+    I : integer
+    result := 1
+    for I in 1..N loop
+        result *= I
+{erp}
+
+This version makes use of the {tt "result"} predefined variable,
+which can be used to hold the result of a function. It uses a
+{inside "statements" "for loop"} to iterate over the range
+{tt "1..N"}. The {tt "*="} operator has the same meaning as in
+{@C} or {@C++}, it multiplies its left operand in place by its right
+operand.
+
+This version doesn't correctly {@represent} the original factorial
+{@concept} yet, because based on the {@code} above, one can call
+{tt "Factorial(-1)"} and expect a result. This is not defined in the
+{@pb}. Similarly, if one uses an size-limited integer type which
+doesn't perform range checking, the factorial of a sufficiently large
+input would be zero or negative, due to limitations of the type.
+A {tt "require"} specification can be used to limit input to positive
+numbers. A {tt "ensure"} specification can be used to indicate that
+only positive results are valid. Together, they form
+a <em>contract</em>, as popularized by the {@eiffel} language.
+
+{pre}function Factorial(N : integer) return number
+    written N!
+    require N &gt;= 0
+    ensure result &gt; 0
+is
+    I : integer
+    result := 1
+    for I in 1..N loop
+        result *= I
+{erp}
+
+The contract specifies the responsibilities. A negative input
+indicates a bug in the caller of the function. A negative output
+indicates a bug in the body of the function (which might be, in our
+case, because it has been instantiated with an integer type which is
+too limited).  Appropriate use of contracts can significantly reduce
+{@semnoise}.
