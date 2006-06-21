@@ -1,0 +1,5 @@
+<!--Modules-->
+
+Modules are more or less working. The type system was reworked last week. {tt "using"} and {tt "import"} statement were both implemented. The compiler checks consistency between the module interface and its implementation. The compiler now imports {tt "XL_BUILTINS"} automatically.
+
+Why all this activity? <A href="http://h71028.www7.hp.com/enterprise/cache/262803-0-0-0-121.htm">Integrity Virtual Machine</A> version 1.0 was just released, so I got more time now.

@@ -1,0 +1,39 @@
+<!--New implementation of iterators-->
+
+I was actually not totally satisfied with the previous implementation
+of iterators. One big issue was that it was impossible to declare
+local state without severe brain trauma.
+
+The new implementation is significantly more complex, because it gives
+iterators a real status (they are essentially behaving like
+functions), and because I had to implement a sort of simple inliner.
+
+But now you can have state inside an iterator (simply by declaring
+local variables), and it works as it should.
+Another change is that there is a new 'yield' statement, which is used
+to indicate where in the iterator the loop body should be.
+That gives better control on what you can do with them.
+
+So yesterday's example now could look like:
+
+{pre}
+iterator IntFor(It : integer; Low, High : integer) written It in Low..High is
+    did_loop : boolean := false
+    It := Low
+    while It <= High loop
+        yield
+        It := It + 1
+        did_loop := true
+    if not did_loop then
+        WriteLn "You are using an iterator for nothing, dude"
+
+for I in 1..5 loop
+   WriteLn "I=", I
+{erp}
+
+
+Some issues however. It looks like "Hello world" sometimes
+breaks. There is probably an uninitialized variable somewhere, or some
+similar goofiness. To be investigated.
+
+

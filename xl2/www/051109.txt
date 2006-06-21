@@ -1,0 +1,17 @@
+<!--Nested Modules-->
+
+The implementation of modules now passes a set of basic tests,
+including for nested modules. When you seen that I
+was <A href="041012.html">already working on that</A> more than one
+year ago, you can see that the pace increased dramatically in the past
+weeks. We may be getting somewhere very soon now.
+
+I also added the definition of a basic
+<A href="http://cvs.sourceforge.net/viewcvs.py/xlr/xl2/native/xl_builtins.xs?view=markup">
+XL_BUILTINS</A> module implementation. So now we have things like
+integer and real types, addition, and so on. The bytecode is not fully
+updated yet, but that should help you understand what all I did so far
+was about.
+
+On to generics...
+

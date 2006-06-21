@@ -1,0 +1,25 @@
+<!--Is Linux still Free?-->
+
+Today I had to look for a Linux distribution...Well, it seems pretty
+difficult to find a free Linux version these days. I am a bit worried
+about that, because it means that GNU ideal of free software (as in
+"free speech") doesn't prevent successful free software from becoming
+inaccessible to the masses because it is no longer free (as in "free
+beer").
+
+I renamed {tt "quote"} to {tt "parse_tree"}, which probably makes it
+easier to read. At least, that's my hope.
+
+Something I forgot to mention yesterday: my brother told me that
+the GPL reportedly has an issue with French/European law, because of
+the "hand washing" clause (limiting liability of developers beyond
+what is accepted here). I am not convinced yet that this is the case at
+this point, since section 11 of the GPL specifically states: "to the
+extent permitted by law". Anyways, it looks like Inria has developed a
+license that is compatible both with the GPL and with local laws,
+called CeCILL. I might switch to that license if I feel that this is
+necessary.
+
+References:
+{link "http://lists.debian.org/debian-legal/2004/07/msg00067.html"},
+{link "http://www.inria.fr/valorisation/logiciels/Licence.CeCILL-V1.US.pdf"}

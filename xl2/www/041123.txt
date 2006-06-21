@@ -1,0 +1,10 @@
+<!--More documentation-->
+
+Following the discussions on the mailing lists, I updated the
+{inside "bytecode"} and the {inside "objects"} pages. Tom raised
+good questions about the execution model / memory model. That needs
+investigation if we want to support multi-threaded programs well.
+
+An interesting article on <A href="http://www.onboard.jetbrains.com/articles/04/10/lop/">Language-Oriented Programming</A>.
+Those familiar with this site will certainly recognize a few ideas...
+

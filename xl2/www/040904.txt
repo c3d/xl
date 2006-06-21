@@ -1,0 +1,15 @@
+<!--Expression Reduction-->
+
+I am currently in the process of implementing
+{@concept "expred" "expression reduction"}. Also, I added a {tt "trace"}
+statement in the compiler, to automate the generation of traces. The
+usage is in the form:
+
+{pre}trace [sometrace] "Hello, X=", X
+{erp}
+
+It works like {tt "WriteLn"}, but is conditional on a flag named
+{tt "sometrace"}, which you trigger form the command line by
+specifying {tt "-tsometrace"}.
+
+

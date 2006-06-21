@@ -1,0 +1,7 @@
+<!--Generics-->
+
+I am making some serious progress on generics (the XL equivalent of
+C++ templates). This turned out to be much much simpler in this
+version of the XL compiler than it was with the previous version, the
+one that had been written in C++.
+

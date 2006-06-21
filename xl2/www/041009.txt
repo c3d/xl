@@ -1,0 +1,17 @@
+<!--Discussions-->
+
+I mentioned XL on this
+<A href="http://developers.slashdot.org/comments.pl?sid=124877">
+Slashdot discussion</A>, and was told that I was developing a clone
+of Python.
+
+There was a suggestion from Gustavo on the
+<A href="http://sourceforge.net/mailarchive/forum.php?forum=mozart-dev-lx-lang">
+XL mailing list</A> that I will try to follow: adding Next and
+Previous buttons on the web site. I just want to automate it,
+otherwise it will never be up to date. Back to Emacs Lisp
+(I use <A href="http://billstclair.com/blogmax/">BlogMax</A>).
+
+A lot of things to do during the week-end, so no work done on XL,
+unfortunately.
+

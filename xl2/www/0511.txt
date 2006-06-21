@@ -1,0 +1,17 @@
+<!--November 2005-->
+October | <b>November 2005</b> | December
+<p>
+Saturday, 5 November: Modules
+<ul>
+<li>Why all this activity? <A href="http://h71028.www7.hp.com/enterprise/cache/262803-0-0-0-121.htm">Integrity Virtual Machine</A>
+</ul>
+<a href="051109.html">Wednesday, 9 November</a>: Nested Modules
+<ul>
+<li><A href="041012.html">already working on that</A>
+<li>I also added the definition of a basic
+<A href="http://cvs.sourceforge.net/viewcvs.py/xlr/xl2/native/xl_builtins.xs?view=markup">
+XL_BUILTINS</A>
+</ul>
+
+<p>
+October | <b>November 2005</b> | December

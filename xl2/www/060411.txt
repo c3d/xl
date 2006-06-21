@@ -1,0 +1,6 @@
+<!--Added auto-declaration for operators-->
+
+Added support for auto-declaration in operators. While writing the
+test for it, I discovered that apparently, written forms calling
+generic subroutines were not implemented. Ouch.
+

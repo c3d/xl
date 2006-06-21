@@ -1,0 +1,110 @@
+<!--Rebutting Max Goff-->
+
+Max Goff published three articles (
+<A href="http://today.java.net/pub/a/today/2004/09/09/blacksmith.html">
+part 1</A>,
+<A href="http://today.java.net/pub/a/today/2004/09/28/Blacksmith2.html">
+part 2</A>, and
+<A href="http://today.java.net/pub/a/today/2004/10/12/Blacksmith3.html">
+part 3</A>), where he argues that the developers will go the way of the
+dodo (or, rather, to use his terms, the way of the blacksmith). I
+disagree with his analysis on three key points:
+
+<UL>
+<LI><B>Blacksmithing didn't disappear</B>, it morphed, and not
+  significantly more than bookkeeping. A blacksmith produced tools and
+  other metal artifacts. We still produce tools and metal artifacts
+  today, and their design is, as far as I can tell, not much more
+  automated than before. The designer now uses a computer rather than
+  a hammer and an anvil, but that doesn't change his or her role.
+
+  <P>To use his analogy, bookkeeping also morphed significantly. I
+    grant Max Goff that a blacksmith of centuries past would be unable
+    to design a car using today's computer, but would a bookkeeper
+    trained in 1900 know how to use Excel? Probably not.  Conversely,
+    Max Goff points out that today's car mechanic would be unable to
+    "bend, shape and temper" a piece of metal as his ancestor would
+    have done. But others know how to do that. They use machines,
+    certainly, but the art of metallurgy was not lost with the
+    blacksmith. Just like a car mechanic is not the best person to
+    shape a piece of metal, a tax consultant is probably not the best
+    person to balance the books of a small business.
+
+  <P>My opinion is that, as the complexity of both blacksmithing and
+    bookkeeping increased, both jobs exploded into a multitude of
+    highly-specialized subgroups.
+
+<LI><B>Programmers already did their industrial revolution</B>.
+  Programmers have been using ways to automate their work for a very
+  long time: compilers, makefiles, scripting languages, even text
+  editors with things like auto-completion. Everything that can be
+  automated, programmers try to automate. The very notion of
+  automation is the reason for programming. There are probably very
+  few parts of the industry where there is more automation than in
+  programming.
+
+  <P>Did automation hurt? Are programmers going extinct for that? I
+  don't think so. It simply
+    <A href="concept/moore.html">
+      improves our productivity
+    </A>. We can certainly find new and improved ways to
+    innovate. For instance, since the GUI logic is always similar, we
+    can invent interface builders. Since the presentation layer and
+    database interface of web applications tend to be quite similar
+    from project to project, why not automate that too. These are
+    more tools, and that's good.
+
+  <P>Genetic programming is another kind of tool. As an aside, the
+  first one who writes a {inside "plugin"} for XL to implement genetic
+  programming gets a free bonus point. But genetic programming can
+  only find algorithms, not applications. In
+    {concept "cp" "concept-programming"} terms, it lives in the
+    {concept "code" "code space"} rather than in the
+    {concept "problem" "problem space"}. Crossing that boundary is
+  where AI resides. And we are not there yet. By far.
+
+  <P>The whole point of XL is to automate more, to take advantage of
+  the extra power to let the computer do more and keep the
+  programmers focused on the most important things.
+
+<LI><B>Where there's a will</B>, there's a programmer. Max Goff asks
+  whether, by editing HTML code, he programmed. My answer is yes,
+  because there is a will, an intent. The programming language
+  doesn't matter. There is a creative process, a design
+  process. There is no difference between the creative process of
+  selecting colors for a web page, and the creative process of
+  picking an algorithm among those Knuth offers us. I already wrote
+  <A href="http://mozart-dev.sf.net/blog.html">elsewhere</A>
+  about programming as an art form.
+
+  <P>I believe that Max Goff should have read Knuth more
+  carefully. Specifically... What was the name of Donald Knuth's
+  masterpiece, again? Ah, yes, <I>The <U>Art</U> of Computer
+  Programming</I>. Not the <I><U>Technique</U></I> nor the
+  <I><U>Magic</U></I> nor the <I><U>Evolution</U></I>. The
+  <I><U>Art</U></I>. The word "Art" indicates a will, a meaning, an
+  intent. A genetic algorithm can only execute that intent, more or
+  less accurately. It cannot replace it.
+
+  <P>A blacksmith willed the shape of the tool, and that will
+  transferred today to the designer of the tools. A bookkeeper didn't
+  express a personal will. There is no creation in the act of
+  bookkeeping. There are, as Max Goff points out, a few other things
+  that make it difficult to automate, like understanding a complicated
+  business context. But what makes a patent is not the technique
+  used to solve a problem. What makes a good patent is the problem
+  itself. And I bet that the programs designed by John R. Koza were
+  unable to figure out which problems to solve (unless someone
+  somehow "rewarded them" for finding good problems, which is a way
+  to encode, or "program", the desired output).
+</UL>
+
+Having written that, which is more likely to happen? That one day, a
+black box knows how to program itself based on
+{concept "complexity" "loosely defined input"}? Or that all companies
+in the world standardize an XML format to exchange accounting
+information, and that bookkeeping becomes a matter of signing off
+what
+<A href="http://www.google.com/search?q=automated+trading&ie=UTF-8&oe=UTF-8">
+the computers agreed</A>
+was the right price? If I had to bet, I would not bet on the bookkeeper...

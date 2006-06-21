@@ -1,0 +1,73 @@
+<!--Generic deduction-->
+
+I just checked-in some code that fixes generic argument deduction done
+from generic parameter types.
+
+Consider for example that you have a generic type for complex numbers,
+where the {tt "value"} generic parameter allows you to create complex
+numbers with the numeric precision you need. It might be defined as:
+
+{pre}
+generic [type value is real]
+type complex is record with
+    re : value
+    im : value
+{erp}
+
+Since XL supports using generic types to declare functions, one can
+write for instance:
+
+{pre}
+function Add(Z1, Z2 : complex) return complex written Z1+Z2 is
+    result.re := Z1.re + Z2.re
+    result.im := Z1.im + Z2.im
+{erp}
+
+The actual generic type will be deduced when you use the function. For
+example, in the following code, the compiler can instantiate
+{tt "Add"} with the {tt "complex[real]"} type:
+
+{pre}
+A, B : complex[real]
+C : complex[real] := A + B
+{erp}
+
+But then, consider a complex constructor that takes two real
+numbers. One could write it as:
+{pre}
+generic [type value]
+function Complex (re, im : value) return complex[value]
+{erp}
+
+However, this flies in the face of the efforts made so that generic
+types can be used much like real types. So an alternate way to write
+the above is:
+
+{pre}
+function Complex(re, im: complex.value) return complex
+{erp}
+
+Now, since {tt "complex"} is a generic type, it works much like the
+above. Today's check-in implements what is necessary so that when you
+write {tt "Complex(1.5,2.6)"}, it first deduces that {tt "value"} is
+{tt "real"}, then instantiates {tt "complex[real]"} and finally
+instantiates the constructor.
+
+Here is a complete example where this code is in action:
+
+{pre}generic [type value]
+type complex is record with
+   re : value
+   im : value
+
+function Complex (re : complex.value) return complex is
+   result.re := re
+   result.im := re - re
+
+to Copy (out Tgt : complex; in Src : complex) written Tgt := Src is
+   Tgt.re := Src.re
+   Tgt.im := Src.im
+
+Z : variable := complex(1.5)
+{erp}
+

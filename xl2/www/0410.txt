@@ -1,0 +1,79 @@
+<!--October 2004-->
+September | <b>October 2004</b> | November
+<p>
+Saturday, 2 October: Import takes more time than expected
+<ul>
+<li>Found in a Slashdot signature:
+<A HREF="http://www.greenfaces.se/upload/uploads/godvsbush.gif">
+God is against Bush</A>
+</ul>
+Sunday, 3 October: How not to do free software
+<ul>
+<li><A href="mailto:mozart-dev-lx-lang@lists.sourceforge.net">Sign-up to
+  help!</A>
+<li><A href="http://www.wsanchez.net">Wilfredo Sanchez</A>
+</ul>
+Monday, 4 October: HP fights against blogs
+<ul>
+<li>But <A href="http://www.osnews.com/story.php?news_id=8446">this</A>
+<li>And then, if saying that HP-UX is dying is so bad, shouldn't HP also
+<A href="http://www.osnews.com/story.php?news_id=8448">write to Bill
+  Gates</A>
+</ul>
+Wednesday, 6 October: Recruiting
+<ul>
+<li><A href="http://www.marssociety.org">
+very low probability of ever being strapped in a
+insanely high-velocity projectile either</A>
+<li>To be fair, even companies 
+<A href="http://www.eweek.com/article2/0,1759,1189424,00.asp">
+professing an undying love of open-source or free software</A>
+<li>Regarding <A href="http://emacs-on-aqua.sf.net">another project</A>
+<A href="http://penguin.med.cornell.edu/stuff/emacs-gnustep.png">
+completed an adaptation</A>
+</ul>
+Thursday, 7 October: Declarative programming
+<ul>
+<li><A href="http://it.slashdot.org/article.pl?sid=04/10/06/1451216">article
+   on Slashdot about XAML</A>
+<A href="http://www.xamlon.com/">the Xamlon web site</A>
+<A href="http://www.myxaml.com/">free software
+  alternative</A>
+<li>First of all, to put things a little in perspective, compare the
+above web sites with <A href="http://www.laszlosystems.com/">Laszlo's</A>
+<li><A href="http://www.google.com/search?q=declarative+programming&ie=UTF-8&oe=UTF-8">exactly new</A>
+<li><A href="http://www.sellsbrothers.com/spout/#The_Wonder_that_is_XAMLs_Extended_Attribute_Syntax">XML fragment</A>
+</ul>
+Saturday, 9 October: Discussions
+<ul>
+<li><A href="http://developers.slashdot.org/comments.pl?sid=124877">
+Slashdot discussion</A>
+<li>There was a suggestion from Gustavo on the
+<A href="http://sourceforge.net/mailarchive/forum.php?forum=mozart-dev-lx-lang">
+XL mailing list</A>
+<A href="http://billstclair.com/blogmax/">BlogMax</A>
+</ul>
+Tuesday, 12 October: Navigation upate
+<ul>
+</ul>
+Sunday, 17 October: Building and Space
+<ul>
+</ul>
+<a href="041018.html">Monday, 18 October</a>: Rebutting Max Goff
+<ul>
+<li><A href="http://today.java.net/pub/a/today/2004/09/09/blacksmith.html">
+part 1</A>
+<A href="http://today.java.net/pub/a/today/2004/09/28/Blacksmith2.html">
+part 2</A>
+<A href="http://today.java.net/pub/a/today/2004/10/12/Blacksmith3.html">
+part 3</A>
+<li><A href="concept/moore.html">
+      improves our productivity
+    </A>
+<li><A href="http://mozart-dev.sf.net/blog.html">elsewhere</A>
+<li><A href="http://www.google.com/search?q=automated+trading&ie=UTF-8&oe=UTF-8">
+the computers agreed</A>
+</ul>
+
+<p>
+September | <b>October 2004</b> | November

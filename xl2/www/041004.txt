@@ -1,0 +1,19 @@
+<!--HP fights against blogs-->
+
+Much has been said recently about a blog war between Sun and RedHat
+employees. I'm not sure of the value of shouting "my open source is
+better than yours" to the world.
+
+But <A href="http://www.osnews.com/story.php?news_id=8446">this</A>
+is even more ridiculous. Now, we have HP asking a competitor "could
+you please stop saying bad things about our products?". Hey, HP, do
+you think that you can change a thing about Sun's opinion of HP
+products by doing that? Does anybody at HP think that customers will
+think higher of HP-UX because of that action?
+
+And then, if saying that HP-UX is dying is so bad, shouldn't HP also
+<A href="http://www.osnews.com/story.php?news_id=8448">write to Bill
+  Gates</A>? It seems pretty clear to me that a "Windows and Linux
+  only game" implies that HP-UX won't be there in a few years...
+
+

@@ -1,0 +1,5 @@
+<!--The subtle cases of destructors-->
+
+Fine tuning the destructors. There are plenty of litlte nasty cases to
+take care of, like loop exits, return instructions, parameters.
+

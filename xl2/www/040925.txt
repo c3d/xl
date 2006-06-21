@@ -1,0 +1,10 @@
+<!--Zeroth release-->
+
+Release zero of the XL compiler has been posted.
+Click
+{link "http://sourceforge.net/project/showfiles.php?group_id=54212&package_id=48816"}
+to access the file.
+
+Please note the version number before complaining of lack of features
+:-)
+
