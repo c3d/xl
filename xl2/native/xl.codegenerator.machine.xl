@@ -547,12 +547,15 @@ module XL.CODE_GENERATOR.MACHINE is
 
             // Post a temporary destructor for the temp we just created
             if retValueType <> nil then
+                oldDtor : integer := SYM.GetInteger(XLT.context, "INDTOR")
+                SYM.SetInteger(XLT.context, "INDTOR", 1)
                 dtor : PT.tree := parse_tree(delete 'retValueName')
                 ERR.PushErrorContext()
                 dtor := XLT.XLSemantics(dtor)
                 if not ERR.PopErrorContext() then
                     SYM.AddScopeItem XLT.context, "TEMPDTORS", dtor
-        else
+                SYM.SetInteger(XLT.context, "INDTOR", oldDtor)
+        else if SYM.GetInteger(XLT.context, "INDTOR") = 0 then
             // Otherwise, time to cleanup all call temporaries
             calldtors : PT.tree := SYM.ScopeItems(XLT.context, "TEMPDTORS")
             SYM.SetProperty XLT.context, "TEMPDTORS", nil
