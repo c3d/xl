@@ -64,6 +64,9 @@ module XL.CODE_GENERATOR.MACHINE with
                                  margs    : machine_args;
                                  ctors    : PT.tree;
                                  dtors    : PT.tree) return BC.bytecode
+    function EnterCall() return integer
+    procedure AddCallDtors(dtor : PT.tree)
+    procedure ExitCall(depth : integer; in out value : PT.tree)
 
     // Interface for record types
     function DeclareRecord(r : RT.record_type) return PT.name_tree

@@ -228,6 +228,8 @@ module XL.SEMANTICS.ITERATORS is
 
         // Save current context
         context     : SYM.symbol_table := XLT.context
+        oldTemps    : PT.tree := SYM.ScopeItems(XLT.context, "TEMPDTORS")
+        SYM.SetProperty XLT.context, "TEMPDTORS", nil
 
         // Check that this is invoked in a for loop
         LoopBody    : PT.tree := SYM.GetProperty(context, "ITERATING")
@@ -253,6 +255,8 @@ module XL.SEMANTICS.ITERATORS is
         if ftype = nil then
             ERR.Error "'$1' doesn't have a function type", it.Name
             ERR.Error "while evaluating '$1'", Input
+            XLT.context := context
+            SYM.SetProperty XLT.context, "TEMPDTORS", oldTemps
             return parse_tree(@error)
         Parms : DCL.declarations := ftype.parameters
         NA    : integer := size(Args)
@@ -260,6 +264,8 @@ module XL.SEMANTICS.ITERATORS is
         if NA <> NP then
             ERR.Error "'$1' called with wrong number of arguments", it.Name
             ERR.Error "as '$1'", Input
+            XLT.context := context
+            SYM.SetProperty XLT.context, "TEMPDTORS", oldTemps
             return parse_tree(@error)
 
         // Enter evaluated arguments in the newly created symbol table
@@ -309,8 +315,13 @@ module XL.SEMANTICS.ITERATORS is
         // Run semantics on the whole result
         result := XLT.ScopeSemantics (result, XLT.scopeFunction)
 
+        // Cleanup all call temporaries
+        calldtors : PT.tree := SYM.ScopeItems(XLT.context, "TEMPDTORS")
+        result := XLT.Append(result, calldtors)
+
         // Restore original context
         XLT.context := context
+        SYM.SetProperty XLT.context, "TEMPDTORS", oldTemps
 
 
     function DoForLoop (IterExpr : PT.tree;

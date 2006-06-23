@@ -101,22 +101,27 @@ module XL.SEMANTICS.INSTRUCTIONS is
     // ------------------------------------------------------------------------
 
         // Label base for that if
-        label  : PT.name_tree := SYM.Temporary("if", Test.position)
-        prefix : PT.tree := nil
+        label     : PT.name_tree := SYM.Temporary("if", Test.position)
+        prefix    : PT.tree := nil
+        callDepth : integer := CGM.EnterCall()
 
         // Check if this is a compile-time if
         TestConstant : PT.tree := CST.EvaluateConstant(Test)
         if CST.IsBoolean(TestConstant) then
             if CST.IsTrue(TestConstant) then
+                CGM.ExitCall callDepth, result
                 if TrueCase <> nil then
-                    return XLT.ScopeSemantics(TrueCase, XLT.scopeLocal)
+                    result := XLT.ScopeSemantics(TrueCase, XLT.scopeLocal)
                 else
-                    return parse_tree(@nop)
+                    result := parse_tree(@nop)
+                return result 
             else if CST.IsFalse(TestConstant) then
+                CGM.ExitCall callDepth, result
                 if FalseCase <> nil then
-                    return XLT.ScopeSemantics(TrueCase, XLT.scopeLocal)
+                    result := XLT.ScopeSemantics(TrueCase, XLT.scopeLocal)
                 else
-                    return parse_tree(@nop)
+                    result := parse_tree(@nop)
+                return result 
             else
                 ERR.Error "Internal: Compile-time test '$1' is not true/false",
                           TestConstant
@@ -125,6 +130,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
         Test := XLT.XLSemantics(Test)
         Test := TY.Convert (Test, TY.const_boolean_type)
         CGM.SplitExpression Test, prefix
+        CGM.ExitCall callDepth, prefix // REVISIT: wrong if boolean has dtor
 
         // Perform semantics on cases
         if TrueCase <> nil then
@@ -184,8 +190,9 @@ module XL.SEMANTICS.INSTRUCTIONS is
     // ------------------------------------------------------------------------
 
         // Label base for that loop
-        label  : PT.name_tree := SYM.Temporary("while")
-        prefix : PT.tree := nil
+        label     : PT.name_tree := SYM.Temporary("while")
+        prefix    : PT.tree := nil
+        callDepth : integer := CGM.EnterCall()
 
         // Check if this is a compile-time case
         TestConstant : PT.tree := CST.EvaluateConstant(Test)
@@ -198,6 +205,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
             else
                 ERR.Error "Internal: Compile-time test '$1' is not true/false",
                           TestConstant
+            CGM.ExitCall callDepth, result
             if TestValue = loopWhile then
                 return DoLoop(Body)
             else if testAtEnd then
@@ -220,6 +228,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
         Test := XLT.XLSemantics(Test)
         Test := TY.Convert (Test, TY.const_boolean_type)
         CGM.SplitExpression Test, prefix
+        CGM.ExitCall callDepth, prefix // REVISIT: Wrong if boolean has dtor
 
         // Perform semantics on the body
         Body := XLT.ScopeSemantics(Body, XLT.scopeLocal)
@@ -236,10 +245,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
             @loopentry 'label'
             'Body'
             @loopend 'label'
-        if prefix <> nil then
-            result := parse_tree
-                'result'
-                'prefix'
+        result := XLT.Append(result, prefix)
         result := parse_tree
             'result'
             @ 'CondTest' 'Test' 'label'
@@ -294,13 +300,23 @@ module XL.SEMANTICS.INSTRUCTIONS is
                     Case2 := nil
                 return XLT.Append(Case1, Case2)
             when
+                default : 'Statement'
+            then
+                result := XLT.ScopeSemantics(Statement, XLT.scopeLocal)
+                result := XLT.Append(result,
+                                     parse_tree(@ifskip 'exitL'))
+                PT.AttachTree result, "TRUE_CASE", result
+                return result
+            when
                 'Test' : 'Statement'
             then
-                prefix : PT.tree := nil
+                prefix    : PT.tree := nil
+                callDepth : integer := CGM.EnterCall()
 
                 // Check if this is a compile-time if
                 TestConstant : PT.tree := CST.EvaluateConstant(Test)
                 if CST.IsBoolean(TestConstant) then
+                    CGM.ExitCall callDepth, result
                     if CST.IsTrue(TestConstant) then
                         result := XLT.ScopeSemantics(Statement, XLT.scopeLocal)
                         result := XLT.Append(result,
@@ -319,6 +335,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
                 Test := XLT.XLSemantics(Test)
                 Test := TY.Convert (Test, TY.const_boolean_type)
                 CGM.SplitExpression Test, prefix
+                CGM.ExitCall callDepth, prefix // REVISIT: Wrong if boolean dtor
 
                 // Perform semantics on statement
                 Statement := XLT.ScopeSemantics(Statement, XLT.scopeLocal)
@@ -392,6 +409,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
         Index : PT.tree := parse_tree(Index('Args'))
 
         // Evaluate the Index call
+        callDepth : integer := CGM.EnterCall()
         IndexVal : PT.tree := XLT.XLSemantics(Index)
         IndexType : TY.any_type := TY.GetType(IndexVal)
         if not TY.SameType (IndexType, TY.integer_literal_type) then
@@ -403,6 +421,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
         prefix : PT.tree
         label  : PT.name_tree := SYM.Temporary("case", Cases.position)
         CGM.SplitExpression IndexVal, prefix
+        CGM.ExitCall callDepth, prefix // REVISIT: Wrong if integer dtor
         result := parse_tree
             'prefix'
             @case_begin 'label' 'IndexVal'

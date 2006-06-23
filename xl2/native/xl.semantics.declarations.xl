@@ -126,8 +126,10 @@ module XL.SEMANTICS.DECLARATIONS is
                 if Value = nil then
                     ERR.Error "No initialization giving type of '$1'", Type
                 else
+                    callDepth : integer := CGM.EnterCall()
                     SemValue : PT.tree := XLT.XLSemantics(Value)
                     tp : TY.any_type := TY.GetType(SemValue)
+                    CGM.ExitCall callDepth, SemValue
                     if tp = nil then
                         ERR.Error "No type for '$1'", Type
                         ERR.Error "can be deduced from '$1'", Value
@@ -749,6 +751,9 @@ module XL.SEMANTICS.DECLARATIONS is
             names   : PT.tree_list
             entry   : PT.tree
             deleted : map[PT.tree, boolean]
+
+            temps   : PT.tree := SYM.GetProperty(inner, "TEMPDTORS")
+            result := XLT.Append (result, temps)
 
             SYM.LocalSymbols inner, names
             for entry in names loop

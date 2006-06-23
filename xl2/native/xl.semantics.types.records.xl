@@ -302,6 +302,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         result := GetRecordType (Record) <> nil
         if ERR.PopErrorContext() then
             result := false
+            
 
 
     procedure RecordDeclarations(Record   : PT.tree;
@@ -367,10 +368,15 @@ module XL.SEMANTICS.TYPES.RECORDS is
     // ------------------------------------------------------------------------
     //   Enter a lateral map in the local context
     // ------------------------------------------------------------------------
-        Value : PT.tree := XLT.XLSemantics(Record)
-        rtp   : record_type := GetRecordType(Value)
-        Code  : PT.tree
+        callDepth : integer := CGM.EnterCall()
+        Value     : PT.tree := XLT.XLSemantics(Record)
+        rtp       : record_type := GetRecordType(Value)
+        Code      : PT.tree
+        if rtp = nil then
+            ERR.Error "The type of '$1' is not a record type", Record
+
         CGM.SplitExpression Value, Code
+        CGM.ExitCall callDepth, Code
         SYM.AddUsing XLT.context, Value, rtp.symbols
         if Code = nil then
             Code := parse_tree(@nop)
@@ -388,8 +394,6 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
         when
             using 'Record'
-        where
-            IsRecord(Record)
         then
             return EnterUsing (Record)
 

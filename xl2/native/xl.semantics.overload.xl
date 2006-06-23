@@ -84,6 +84,7 @@ module XL.SEMANTICS.OVERLOAD is
         list            : PT.tree_list
         BaseRecord      : PT.tree
         anyLookup       : boolean := false
+        callDepth       : integer := CGM.EnterCall()
 
         trace [overload] "Overload resolution: name=", NameTree, " args=", Args
 
@@ -98,6 +99,7 @@ module XL.SEMANTICS.OVERLOAD is
                     NameTree := Field
                 else
                     ERR.Error "Internal: Non-name functor '$1'", NameTree
+                    CGM.ExitCall callDepth, result
                     return parse_tree(@error)
         Name : NameTree as PT.name_tree
 
@@ -381,12 +383,15 @@ module XL.SEMANTICS.OVERLOAD is
                 bestF := FN.GetFunction(result)
                 if bestF = nil then
                     // Instantiation error
+                    CGM.ExitCall callDepth, result
                     return result
 
             // If there are parameters to declare, declare them now
             ctors        : PT.tree
             declaredHere : map[DCL.declaration, boolean]
             ftp          : bestF.type as FT.function_type
+            if callDepth = 0 and ftp.base <> nil then
+                ERR.Error "The value returned by '$1' is ignored", NameTree
             if size(bestDNames) > 0 then
                 ToDeclCount : integer := size(bestDNames)
                 ToDecl      : integer
@@ -429,7 +434,11 @@ module XL.SEMANTICS.OVERLOAD is
             ERR.Error "No valid function found for '$1'", NameTree
             if candidate_errors then
                 ERR.DisplayLastErrors()
+            CGM.ExitCall callDepth, result
             return parse_tree(@error)
+
+        // Destroy temporaries if necessary
+        CGM.ExitCall callDepth, result
 
 
     function IsFunction(T : PT.tree) return boolean is

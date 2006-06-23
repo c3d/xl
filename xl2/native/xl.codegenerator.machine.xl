@@ -537,6 +537,7 @@ module XL.CODE_GENERATOR.MACHINE is
         result := XLT.Append(prefixCode, result)
         result := XLT.Append(ctors, result)
 
+        // Check if we need to compute a return value
         if retType <> nil then
             // If the callee has a value, then we specify it here
             result := MakeExpression(result, retValueName)
@@ -547,19 +548,11 @@ module XL.CODE_GENERATOR.MACHINE is
 
             // Post a temporary destructor for the temp we just created
             if retValueType <> nil then
-                oldDtor : integer := SYM.GetInteger(XLT.context, "INDTOR")
-                SYM.SetInteger(XLT.context, "INDTOR", 1)
                 dtor : PT.tree := parse_tree(delete 'retValueName')
                 ERR.PushErrorContext()
                 dtor := XLT.XLSemantics(dtor)
                 if not ERR.PopErrorContext() then
-                    SYM.AddScopeItem XLT.context, "TEMPDTORS", dtor
-                SYM.SetInteger(XLT.context, "INDTOR", oldDtor)
-        else if SYM.GetInteger(XLT.context, "INDTOR") = 0 then
-            // Otherwise, time to cleanup all call temporaries
-            calldtors : PT.tree := SYM.ScopeItems(XLT.context, "TEMPDTORS")
-            SYM.SetProperty XLT.context, "TEMPDTORS", nil
-            result := XLT.Append(result, calldtors)
+                    AddCallDtors dtor
 
 
     function RecordFunctionCall (Record   : PT.tree;
@@ -574,6 +567,32 @@ module XL.CODE_GENERATOR.MACHINE is
         // TODO: For now, ignore the record
         return FunctionCall(toCall, margs, ctors, dtors)
 
+
+    function EnterCall() return integer is
+    // ------------------------------------------------------------------------
+    //   Increase call depth to keep track of temporaries
+    // ------------------------------------------------------------------------
+        result := SYM.GetInteger(XLT.context, "CALLDEPTH")
+        SYM.SetInteger XLT.context, "CALLDEPTH", result+1
+
+
+    procedure AddCallDtors(dtor : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Add a destructor created during argument passing
+    // ------------------------------------------------------------------------
+        SYM.AddScopeItem XLT.Context, "TEMPDTORS", dtor
+
+
+    procedure ExitCall(depth : integer; in out value : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Check if we need to cleanup call temporaries
+    // ------------------------------------------------------------------------
+        assert SYM.GetInteger(XLT.context, "CALLDEPTH") = depth+1
+        SYM.SetInteger XLT.context, "CALLDEPTH", depth
+        if depth = 0 then
+            calldtors : PT.tree := SYM.ScopeItems(XLT.context, "TEMPDTORS")
+            SYM.SetProperty XLT.context, "TEMPDTORS", nil
+            value := XLT.Append(value, calldtors)
 
 
     // ========================================================================
