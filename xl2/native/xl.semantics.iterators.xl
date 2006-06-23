@@ -288,7 +288,6 @@ module XL.SEMANTICS.ITERATORS is
                Name := PT.NewName(Name.value, Name.position)
                Local : DCL.declaration := DCL.Declare (Name, Parm.type)
                if Parm.is_input or not Parm.is_output then
-                   DCL.DoNotDelete iter_context, Local
                    argCopy : PT.tree := parse_tree('Name' := 'Arg')
                    PT.AttachTree argCopy, "CTORCALL", argCopy
                    result := XLT.Append(result, argCopy)
@@ -308,7 +307,6 @@ module XL.SEMANTICS.ITERATORS is
            Name : PT.name_tree := Parm.name
            if Parm.is_output and not Parm.is_variable then
                argCopy : PT.tree := parse_tree('Arg' := 'Name')
-               PT.AttachTree argCopy, "CTORCALL", argCopy
                result := XLT.Append(result, argCopy)
 
 
