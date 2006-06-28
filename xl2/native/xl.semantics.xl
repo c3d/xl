@@ -126,3 +126,21 @@ module XL.SEMANTICS is
             @ 'AsmStatement'
         then
             return input
+
+
+    translation Tentative
+    // ------------------------------------------------------------------------
+    //   The 'tentative' pragma indicates that something may compile or not
+    // ------------------------------------------------------------------------
+    //   This is used for default constructors and destructors
+
+        when ('thing') then
+            ERR.PushErrorContext ()
+            phase : text := SYM.GetText(XLT.context, "PHASE")
+            result := SYM.LookupRewrite(XLT.context, phase, thing)
+            if ERR.PopErrorContext() then
+                result := parse_tree(@nop)
+            else if result = thing then
+                result := parse_tree({tentative} 'result')
+
+

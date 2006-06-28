@@ -62,8 +62,8 @@ module XL.SEMANTICS.PRAGMAS is
         if SYM.GetInteger(XLT.context, name + ".pragma", 0, true) <> 1 then
             ERR.Error "The pragma {$1} is not implemented", p_name
         result := SYM.LookupRewrite(XLT.context, name, input)
-        trace[pragmas] "Pragma ", name, ".", phase, "(", input, ")"
-        trace[pragmas] "Pragma result ", name, ".", phase, "=(", result, ")"
+        trace[pragmas] "Pragma " + name + ".", phase,
+                       "(", input, ")=(", result, ")"
 
 
     translation XLDeclarations
@@ -74,13 +74,11 @@ module XL.SEMANTICS.PRAGMAS is
             { 'Pragma' } 'Node'
         then
             result := ProcessPragma("xldeclarations", Pragma, Node)
-            result := XLT.XLDeclarations(result)
         when
             { 'Pragma' }
             'Node'
         then
             result := ProcessPragma("xldeclarations", Pragma, Node)
-            result := XLT.XLDeclarations(result)
 
 
     translation XLSemantics
@@ -91,13 +89,11 @@ module XL.SEMANTICS.PRAGMAS is
             { 'Pragma' } 'Node'
         then
             result := ProcessPragma("xlsemantics", Pragma, Node)
-            result := XLT.XLSemantics(result)
         when
             { 'Pragma' }
             'Node'
         then
             result := ProcessPragma("xlsemantics", Pragma, Node)
-            result := XLT.XLSemantics(result)
 
 
     translation XLOptimizations
@@ -108,10 +104,8 @@ module XL.SEMANTICS.PRAGMAS is
             { 'Pragma' } 'Node'
         then
             result := ProcessPragma("xloptimizations", Pragma, Node)
-            result := XLT.XLOptimizations(result)
         when
             { 'Pragma' }
             'Node'
         then
             result := ProcessPragma("xloptimizations", Pragma, Node)
-            result := XLT.XLOptimizations(result)

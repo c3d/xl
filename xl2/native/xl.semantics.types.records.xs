@@ -72,3 +72,8 @@ module XL.SEMANTICS.TYPES.RECORDS with
     function Index(Record : PT.tree;
                    Field  : PT.name_tree) return BC.bytecode
     function EnterUsing (Record : PT.tree) return BC.bytecode
+
+    function EnterDefaultConstructor(rtp : record_type) return BC.bytecode
+    function EnterFieldConstructor(rtp : record_type) return BC.bytecode
+    function EnterDestructor(rtp : record_type) return BC.bytecode
+    function EnterCopy(rtp : record_type) return BC.bytecode

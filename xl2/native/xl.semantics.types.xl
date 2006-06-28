@@ -30,6 +30,7 @@ import XLT = XL.TRANSLATOR
 import CST = XL.CONSTANTS
 import DCL = XL.SEMANTICS.DECLARATIONS
 import GEN = XL.SEMANTICS.TYPES.GENERICS
+import REC = XL.SEMANTICS.TYPES.RECORDS
 
 
 module XL.SEMANTICS.TYPES is
@@ -321,6 +322,11 @@ module XL.SEMANTICS.TYPES is
         // Store the original name (with its type info) in symbol table
         SYM.Enter XLT.context, "TYPE", N.value, Name
 
+        // Use the name given as the type name
+        existingName : tp.name as PT.name_tree
+        if existingName = nil and Name <> nil then
+            tp.name := Name
+
         // Create the result node and attach type to it
         result := parse_tree(@type)
         SetDefinedType result, tp
@@ -424,6 +430,14 @@ module XL.SEMANTICS.TYPES is
             sig : text := NameTree.Value
             EnterSignature sig, tp
             SetDefinedType NameTree, tp
+
+        // Check if this is record type, and if so enter default ctors/dtors
+        rtp : tp as REC.record_type
+        if rtp <> nil then
+            result := XLT.Append(result, REC.EnterDefaultConstructor(rtp))
+            result := XLT.Append(result, REC.EnterFieldConstructor(rtp))
+            result := XLT.Append(result, REC.EnterDestructor(rtp))
+            result := XLT.Append(result, REC.EnterCopy(rtp))
 
 
     function TypeTypeMatch (iface : any_type;

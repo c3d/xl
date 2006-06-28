@@ -1,0 +1,8 @@
+use XL.UI.CONSOLE
+
+K : integer
+
+{tentative} K := K + 1
+{tentative} K := Z + 1
+
+WriteLn "K=", K
