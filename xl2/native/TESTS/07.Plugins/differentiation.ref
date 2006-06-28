@@ -1,15 +1,30 @@
-07.Plugins/differentiation.xl:31: No translation found for 'A := (- 0 * X + - 2 * 1) * exp ( - 2 * X)'
+07.Plugins/differentiation.xl:30: No translation found for 'B := - A + B'
+|     B : real := -A + B
+|____________________^
+07.Plugins/differentiation.xl:30: No translation found for '- A + B'
+|     B : real := -A + B
+|____________________^
+07.Plugins/differentiation.xl:30: No translation found for '- A'
+|     B : real := -A + B
+|__________________^
+07.Plugins/differentiation.xl:30: Name 'A' was not declared here
+|     B : real := -A + B
+|__________________^
+07.Plugins/differentiation.xl:31: No translation found for 'A : real := (- 0 * X + - 2 * 1) * exp ( - 2 * X)'
 |     {differentiation} A : real := dexp(-2*X)/dX
-|___________________________________________^
-07.Plugins/differentiation.xl:31: No translation found for '(- 0 * X + - 2 * 1) * exp ( - 2 * X)'
-|     {differentiation} A : real := dexp(-2*X)/dX
-|___________________________________________^
-07.Plugins/differentiation.xl:31: No translation found for '- 0 * X + - 2 * 1'
-|     {differentiation} A : real := dexp(-2*X)/dX
-|___________________________________________^
-07.Plugins/differentiation.xl:31: No translation found for '- 0 * X'
-|     {differentiation} A : real := dexp(-2*X)/dX
-|___________________________________________^
+|_______________________^
+07.Plugins/differentiation.xl:30: No translation found for '- A + B'
+|     B : real := -A + B
+|____________________^
+07.Plugins/differentiation.xl:30: No translation found for '- A'
+|     B : real := -A + B
+|__________________^
+07.Plugins/differentiation.xl:30: Name 'A' was not declared here
+|     B : real := -A + B
+|__________________^
 07.Plugins/differentiation.xl:32: No translation found for 'Z := {constantfold} (f X - f X)'
 |     Z : real := {constantfold} f(X) - f(1*X) // Valid even without an 'f'
 |________________________________^
+07.Plugins/differentiation.xl:32: Expression '0' has no type
+|     Z : real := {constantfold} f(X) - f(1*X) // Valid even without an 'f'
+|_____________________________________^
