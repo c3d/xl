@@ -405,20 +405,20 @@ module XL.SEMANTICS.TYPES.RECORDS is
             return nil
 
         // If evaluation was successful, then add the context as a lateral
-        SYM.AddUsing context, nil, newsyms
+        SYM.AddUsing XLT.global_context, nil, newsyms
 
 
-    function EnterDefaultConstructor(rtp : record_type) return BC.bytecode is
+    function EnterDefaultConstructor(recName : PT.name_tree;
+                                     rtp : record_type) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Enter a constructor built from defaults for all fields
     // ------------------------------------------------------------------------
     //   We create a tentative function body, which is created only
     //   if we can find defaults for all fields
-        recName : rtp.name as PT.name_tree
-        if recName <> nil then
-            // Loop on all fields
-            F    : declaration
-            for F in rtp.fields loop
+        // Loop on all fields
+        F    : declaration
+        for F in rtp.fields loop
+            if not TY.SameType (F.type, TY.type_of_records) then
                 ftype : TY.Source(F.type) as PT.name_tree
                 if ftype <> nil then
                     fname : PT.tree := PT.Clone(F.name)
@@ -426,26 +426,26 @@ module XL.SEMANTICS.TYPES.RECORDS is
                         result.'fname' := 'ftype' ()
                     result := XLT.Append(result, ctorCall)
 
-            // If we found any, then generate a 'delete' procedure here
-            if result <> nil then
-                result := parse_tree
-                    function 'recName' () return 'recName' is
-                        'result'
-                result := EnterDefaultFunction(result)
+        // If we found any, then generate a 'delete' procedure here
+        if result <> nil then
+            result := parse_tree
+                function 'recName' () return 'recName' is
+                    'result'
+            result := EnterDefaultFunction(result)
 
 
-    function EnterFieldConstructor(rtp : record_type) return BC.bytecode is
+    function EnterFieldConstructor(recName : PT.name_tree;
+                                   rtp : record_type) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Enter a constructor taking a value for each field
     // ------------------------------------------------------------------------
     //   We create a tentative function body, which is created only
     //   if we can find copies for all fields
-        recName : rtp.name as PT.name_tree
-        if recName <> nil then
-            // Loop on all fields
-            F     : declaration
-            Parms : PT.tree
-            for F in rtp.fields loop
+        // Loop on all fields
+        F       : declaration
+        Parms   : PT.tree
+        for F in rtp.fields loop
+            if not TY.SameType (F.type, TY.type_of_records) then
                 ftype : PT.tree := TY.Source(F.type)
                 fname : PT.tree := PT.Clone(F.name)
                 pname : PT.tree := PT.Clone(F.name)
@@ -455,12 +455,12 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 Parm   : PT.tree := parse_tree('pname' : 'ftype')
                 Parms  := XLT.Append(Parms, parm)
 
-            // If we found any, then generate a 'delete' procedure here
-            if result <> nil then
-                result := parse_tree
-                    function 'recName'('Parms') return 'recName' is
-                        'result'
-                result := EnterDefaultFunction(result)
+        // If we found any, then generate a 'delete' procedure here
+        if result <> nil then
+            result := parse_tree
+                function 'recName'('Parms') return 'recName' is
+                    'result'
+            result := EnterDefaultFunction(result)
 
 
     function EnterDestructor(rtp : record_type) return BC.bytecode is
@@ -473,10 +473,11 @@ module XL.SEMANTICS.TYPES.RECORDS is
         // Loop on all fields
         F    : declaration
         for F in rtp.fields loop
-            fname : PT.tree := PT.Clone(F.name)
-            dtorCall : PT.tree := parse_tree
-                {tentative} delete this.'fname'
-            result := XLT.Append(result, dtorCall)
+            if not TY.SameType (F.type, TY.type_of_records) then
+                fname : PT.tree := PT.Clone(F.name)
+                dtorCall : PT.tree := parse_tree
+                    {tentative} delete this.'fname'
+                result := XLT.Append(result, dtorCall)
 
         // If we found any, then generate a 'delete' procedure here
         if result <> nil then
@@ -496,11 +497,12 @@ module XL.SEMANTICS.TYPES.RECORDS is
         // Loop on all fields
         F    : declaration
         for F in rtp.fields loop
-            thisName : PT.tree := PT.Clone(F.name)
-            thatName : PT.tree := PT.Clone(F.name)
-            copyCall : PT.tree := parse_tree
-                this.'thisName' := that.'thatName'
-            result := XLT.Append(result, copyCall)
+            if not TY.SameType (F.type, TY.type_of_records) then
+                thisName : PT.tree := PT.Clone(F.name)
+                thatName : PT.tree := PT.Clone(F.name)
+                copyCall : PT.tree := parse_tree
+                    this.'thisName' := that.'thatName'
+                result := XLT.Append(result, copyCall)
 
         // If we found any, then generate a 'delete' procedure here
         if result <> nil then

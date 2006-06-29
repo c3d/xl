@@ -60,6 +60,7 @@ module XL.SEMANTICS.TYPES with
     function NonConstedType (tp: any_type) return any_type
     function MachineName(tp: any_type) return PT.name_tree
     function Source(tp : any_type) return PT.tree
+    function SourceName(tp : any_type) return PT.name_tree
 
     // Evaluate a type expression
     function EvaluateType (type_expr : PT.tree) return any_type
@@ -99,6 +100,7 @@ module XL.SEMANTICS.TYPES with
     real_literal_type           : any_type := nil
     character_literal_type      : any_type:= nil
     text_literal_type           : any_type := nil
+    type_of_records             : any_type := nil
     type_of_modules             : any_type := nil
 
     procedure InitializeTypes

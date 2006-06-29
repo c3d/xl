@@ -271,6 +271,17 @@ module XL.SEMANTICS.TYPES is
         return nil
 
 
+    function SourceName(tp : any_type) return PT.name_tree is
+    // ------------------------------------------------------------------------
+    //   Return the name given to type when declared, if any
+    // ------------------------------------------------------------------------
+        if tp <> nil then
+            typeDecl : DCL.declaration := DCL.GetDeclaration(tp.name)
+            if typeDecl <> nil then
+                return typeDecl.name
+        return nil
+
+
     function EnterTypeSym (Name : PT.tree; Value : PT.tree) return PT.tree is
     // ------------------------------------------------------------------------
     //   Enter a named type in the symbol table
@@ -389,6 +400,7 @@ module XL.SEMANTICS.TYPES is
             text_literal_type           := ConstantType(tp)
         else if mname = "xlrecord" then
             record_type                 := result
+            type_of_records             := tp
         else if mname = "xlmodule" then
             module_type                 := result
             type_of_modules             := tp
@@ -429,11 +441,13 @@ module XL.SEMANTICS.TYPES is
         // Check if this is record type, and if so enter default ctors/dtors
         rtp : tp as REC.record_type
         if rtp <> nil then
-            result := XLT.Append(result, REC.EnterDefaultConstructor(rtp))
-            result := XLT.Append(result, REC.EnterFieldConstructor(rtp))
-            result := XLT.Append(result, REC.EnterDestructor(rtp))
-            result := XLT.Append(result, REC.EnterCopy(rtp))
-            SetDefinedType result, tp
+            N : Name as PT.name_tree
+            if N <> nil  and PT.Attached(N, "INSTANCEOF") = nil then
+                //result := XLT.Append(result,REC.EnterDefaultConstructor(N,rtp))
+                //result := XLT.Append(result,REC.EnterFieldConstructor(N,rtp))
+                result := XLT.Append(result, REC.EnterDestructor(rtp))
+                result := XLT.Append(result, REC.EnterCopy(rtp))
+                SetDefinedType result, tp
 
 
     function TypeTypeMatch (iface : any_type;
