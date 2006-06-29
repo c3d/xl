@@ -372,12 +372,13 @@ module XL.SEMANTICS.TYPES.RECORDS is
         Value     : PT.tree := XLT.XLSemantics(Record)
         rtp       : record_type := GetRecordType(Value)
         Code      : PT.tree
-        if rtp = nil then
-            ERR.Error "The type of '$1' is not a record type", Record
 
         CGM.SplitExpression Value, Code
         CGM.ExitCall callDepth, Code
-        SYM.AddUsing XLT.context, Value, rtp.symbols
+        if rtp = nil then
+            ERR.Error "The type of '$1' is not a record type", Record
+        else
+            SYM.AddUsing XLT.context, Value, rtp.symbols
         if Code = nil then
             Code := parse_tree(@nop)
         return Code
