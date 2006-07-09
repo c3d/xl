@@ -34,7 +34,7 @@ module XL.SEMANTICS.GENERICS with
 //    Module implementing manipulations of generics
 // ----------------------------------------------------------------------------
 
-    type generic_map is map[PT.tree, PT.tree]
+    type generic_map is GEN.generic_map
 
     procedure LookupInstantiation(NameTree       : PT.tree;
                                   Args           : PT.tree;

@@ -392,16 +392,32 @@ module XL.SEMANTICS.TYPES.RECORDS is
     //    - It makes it possible to override it in the local scope
     //    - It is easier to destroy if there is any error
 
+        // Save existing context, including global decls
         context : SYM.symbol_table := XLT.context
-        newsyms : SYM.symbol_table := SYM.NewSymbolTable(context)
+        globals : SYM.symbol_table := XLT.global_context
+        init    : PT.tree := SYM.ScopeItems(XLT.main_context, "MAIN_INIT")
+        term    : PT.tree := SYM.ScopeItems(XLT.main_context, "MAIN_TERM")
+        decl    : PT.tree := SYM.ScopeItems(XLT.main_context, "MAIN_DECL")
+        locals  : PT.tree := SYM.ScopeItems(XLT.main_context, "MAIN_LOCALS")
+        body    : PT.tree := SYM.ScopeItems(XLT.main_context, "MAIN_BODY")
+
+        // Create new symbol table
+        newsyms : SYM.symbol_table := SYM.NewSymbolTable(globals)
         XLT.context := newsyms
+        XLT.global_context := newsyms
 
         // Try to evaluate the tentative function
         ERR.PushErrorContext()
         result := XLT.XLDeclarations(source)
         result := XLT.XLSemantics(result)
         XLT.context := context
+        XLT.global_context := globals
         if ERR.PopErrorContext() then
+            SYM.SetProperty XLT.main_context, "MAIN_INIT", init
+            SYM.SetProperty XLT.main_context, "MAIN_TERM", term
+            SYM.SetProperty XLT.main_context, "MAIN_DECL", decl
+            SYM.SetProperty XLT.main_context, "MAIN_BODY", body
+            SYM.SetProperty XLT.main_context, "MAIN_LOCALS", locals
             return nil
 
         // If evaluation was successful, then add the context as a lateral
@@ -426,7 +442,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
                         result.'fname' := 'ftype' ()
                     result := XLT.Append(result, ctorCall)
 
-        // If we found any, then generate a 'delete' procedure here
+        // If we found any, then generate a constructor here
         if result <> nil then
             result := parse_tree
                 function 'recName' () return 'recName' is

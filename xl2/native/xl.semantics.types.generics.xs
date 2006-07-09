@@ -67,6 +67,16 @@ module XL.SEMANTICS.TYPES.GENERICS with
     type generic_info is access to generic_info_data
 
 
+    type generic_map is map[PT.tree, PT.tree]
+
+    type instantiated_type_data is any_type_data with
+    // ------------------------------------------------------------------------
+    //   Representation for partial instantiation of generic types
+    // ------------------------------------------------------------------------
+        args            : generic_map
+    type instantiated_type is access to instantiated_type_data
+
+
     // Access to the current generic context
     function IsGenericContext() return boolean
     function IsGenericType (tp : any_type) return boolean

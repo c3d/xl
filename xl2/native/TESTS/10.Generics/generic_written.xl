@@ -3,12 +3,14 @@
 use XL.UI.CONSOLE
 
 generic [type item]
-procedure GenericAssign(out X: item; Y : item) written X := Y is
-    WriteLn "GenericAssign called"
+function GenericZebulonOperator(X: item;
+                                Y : item) return item written X <-> Y is
+    WriteLn "GenericZebulonOperator called"
 
 type zebulon is record with
     X : integer
     Y : real
 
 Z : zebulon
-U : zebulon := Z
+U : zebulon := Z <-> Z
+

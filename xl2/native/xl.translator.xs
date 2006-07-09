@@ -43,6 +43,7 @@ module XL.TRANSLATOR with
     global_context    : SYM.symbol_table := nil
     function_context  : SYM.symbol_table := nil
     main_context      : SYM.symbol_table := nil
+    top_context       : SYM.symbol_table := nil
     full_compile      : boolean := false
     verbose           : boolean := false
 
@@ -54,7 +55,7 @@ module XL.TRANSLATOR with
     // In XL, all symbols in a scope are visible within that scope
     // This function deals with the two-pass declaration process
     type scope_kind is enumeration
-        scopeMain, scopeGlobal,
+        scopeMain, scopeModule, scopeGlobal,
         scopeFunction, scopeLocal,
         scopeField, scopeArgs
 

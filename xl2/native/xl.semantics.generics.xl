@@ -340,6 +340,15 @@ module XL.SEMANTICS.GENERICS is
         return SYM.ContextProperty(XLT.context, "COINST", true)
 
 
+    function InstantiatedTypeMatch(iface: TY.any_type;
+                                   body : TY.any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //    This should never be called?
+    // ------------------------------------------------------------------------
+        assert InstantiatedTypeMatch = nil
+        return false
+
+
     function Instantiate(Decl       : DCL.declaration;
                          Args       : generic_map;
                          Variadics  : PT.tree;
@@ -359,9 +368,10 @@ module XL.SEMANTICS.GENERICS is
             return parse_tree(@error)
 
         // Check if we already instantiated that guy
-        I   : integer
-        NP  : integer := size(gtp.parameters)
-        mn  : PT.name_tree := Decl.machine_name
+        I         : integer
+        NP        : integer := size(gtp.parameters)
+        mn        : PT.name_tree := Decl.machine_name
+        isPartial : boolean := false
         if mn = nil then
             mn := SYM.Temporary("<generic>")
             Decl.machine_name := mn
@@ -385,6 +395,10 @@ module XL.SEMANTICS.GENERICS is
                 if tp <> nil then
                     mn := tp.machine_name
                     key += mn.value
+                    genArgType : tp as GEN.generic_type
+                    if genArgType <> nil then
+                        // Partial instantiation, some args are generic
+                        isPartial := true
             else
                 key += text(A)
         if Variadics <> nil then
@@ -443,11 +457,12 @@ module XL.SEMANTICS.GENERICS is
                 Source := parse_tree('Source', 'A')
 
             // Enter declaration for parameter
-            C : PT.name_tree := PT.NewName(N.value, A.position)
-            trace[inst] "GenArg ", PT.tree(C),
+            NT : PT.name_tree := PT.NewName(N.value, A.position)
+            trace[inst] "GenArg ", PT.tree(NT),
                         " : ", TY.Source(P.type),
                         " is ", A
-            A := DCL.EnterDeclaration (C, TY.Source(P.type), A, true)
+            PT.AttachTree NT, "INSTARG", N
+            A := DCL.EnterDeclaration (NT, TY.Source(P.type), A, true)
 
         // Create the required elements to enter the instantiated declaration
         Name : PT.tree := PT.Clone(Decl.Name)
@@ -473,7 +488,17 @@ module XL.SEMANTICS.GENERICS is
 
         Init : PT.tree := PT.Clone(Decl.initializer)
         trace[inst] "GenDecl ", Name, " : ", Type, " is ", Init
-        if Decl.is_builtin then
+        if isPartial then
+            trace[inst] "PARTIAL: ", Source
+            result := Source
+            itp : GEN.instantiated_type
+            itp.base := gtp
+            itp.machine_name := nil
+            itp.interface_match := InstantiatedTypeMatch
+            itp.name := Source
+            itp.args := Args
+            TY.SetDefinedType result, itp
+        else if Decl.is_builtin then
             // Check if this is a generic bytecode
             if TY.IsTypeType(Decl.type) then
                 dn       : Decl.name as PT.name_tree
@@ -851,10 +876,10 @@ module XL.SEMANTICS.GENERICS is
         result := Instantiate (Decl, Args, Variadics, BaseRecord)
 
         if ERR.PopErrorContext() then
-            ERR.Error "Errors while instantiating '$1':", Source
+            ERR.DisplayLastErrors()
+            ERR.Error "while instantiating '$1':", Source
             if Variadics <> nil then
                 ERR.Error "with '...' set to '$1'", Variadics
-            ERR.DisplayLastErrors()
 
 
     function ContainsGenerics (List : PT.tree_list) return DCL.declaration is

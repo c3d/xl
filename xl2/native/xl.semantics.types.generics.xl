@@ -224,7 +224,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
     // ------------------------------------------------------------------------
         while tp <> nil loop
             tpg : tp as generic_type
-            if tpg then
+            if tpg <> nil then
                 return true
             tp := tp.base
         return false
@@ -292,6 +292,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
         gc.parameters := gi.parameters
         gc.validation := gi.validation
         gc.in_validation := false
+        TY.SetDefinedType gc.machine_name, gc
 
         // Record that we made a generic type
         gi.generic_types += gc
@@ -338,6 +339,23 @@ module XL.SEMANTICS.TYPES.GENERICS is
         gi : generic_info := GenericContext()
         trace[generics] "Adding dependency ", TY.Source(tp), " gi ", gi
 
+        // Check if this is partially instantiated type, like range[ordered]
+        // In that case, we actually depend on the type arguments
+        itp : tp as instantiated_type
+        if itp <> nil then
+            Parm : PT.tree
+            trace[generics] "Type ", TY.Source(itp), " is instantiated"
+            for Parm in itp.args loop
+                Arg      : PT.tree := itp.args[Parm]
+                ArgType  : TY.any_type := TY.GetDefinedType(Arg)
+                ParmType : TY.any_type := TY.GetDefinedType(Parm)
+                trace[generics] "  Parm ", TY.Source(ParmType),
+                                " Arg ", TY.Source(ArgType)
+                if IsGenericType(ArgType) then
+                    AddGenericDependency ArgType
+            return
+
+        // Otherwise, this should be a generic type
         gtp : tp as generic_type
         if gtp = nil then
             ERR.Error "Internal: Dependency '$1' is not a generic type",
@@ -550,28 +568,23 @@ module XL.SEMANTICS.TYPES.GENERICS is
 
         // Declaration of parameters
         when (['Parms'] 'Decl') then
-            trace[generics] "Case 1"
             return EnterGenericParms (Parms, Decl)
         when
             ['Parms']
             'Decl'
         then
-            trace[generics] "Case 2"
             return EnterGenericParms (Parms, Decl)
 
         // Declaration of an initializer
         when ('Decl' is 'Initializer') then
-            trace[generics] "Case 3"
             return EnterGenericInitializer (Decl, Initializer)
 
         // Declaration of a validation clause
         when ('Decl' where 'Validation') then
-            trace[generics] "Case 4"
             return EnterGenericValidation (Decl, Validation)
 
         // Declaration of a written form
         when ('Decl' written 'WrittenForm') then
-            trace[generics] "Case 5"
             return EnterGenericWrittenForm(Decl, WrittenForm)
 
         // Alternate multi-line forms at end of file
@@ -579,19 +592,16 @@ module XL.SEMANTICS.TYPES.GENERICS is
             'Decl'
             is 'Initializer'
         then
-            trace[generics] "Case 6"
             return EnterGenericInitializer (Decl, Initializer)
         when
             'Decl'
             where 'Validation'
         then
-            trace[generics] "Case 7"
             return EnterGenericValidation (Decl, Validation)
         when
             'Decl'
             written 'WrittenForm'
         then
-            trace[generics] "Case 8"
             return EnterGenericWrittenForm (Decl, WrittenForm)
 
         // Alternate multi-line forms not at end of file
@@ -600,7 +610,6 @@ module XL.SEMANTICS.TYPES.GENERICS is
             is 'Initializer'
             'Rest'
         then
-            trace[generics] "Case 9"
             Decl := parse_tree
                 'Decl' is 'Initializer'
                 'Rest'
@@ -610,7 +619,6 @@ module XL.SEMANTICS.TYPES.GENERICS is
             where 'Validation'
             'Rest'
         then
-            trace[generics] "Case 10"
             Decl := parse_tree
                 'Decl' where 'Validation'
                 'Rest'
@@ -620,7 +628,6 @@ module XL.SEMANTICS.TYPES.GENERICS is
             written 'WrittenForm'
             'Rest'
         then
-            trace[generics] "Case 11"
             Decl := parse_tree
                 'Decl' written 'WrittenForm'
                 'Rest'
@@ -630,19 +637,16 @@ module XL.SEMANTICS.TYPES.GENERICS is
         when
             type 'Decl' written 'WrittenForm'
         then
-            trace[generics] "Case 12"
             Decl := parse_tree(type 'Decl')
             return EnterGenericWrittenForm(Decl, WrittenForm)
         when
             type 'Decl' where 'Validation'
         then
-            trace[generics] "Case 13"
             Decl := parse_tree(type 'Decl')
             return EnterGenericValidation(Decl, Validation)
         when
             type 'Decl' is 'Init'
         then
-            trace[generics] "Case 13"
             Decl := parse_tree(type 'Decl')
             return EnterGenericInitializer(Decl, Init)
 
@@ -652,7 +656,6 @@ module XL.SEMANTICS.TYPES.GENERICS is
             'FirstGenericDecl'
             'SecondNonGenericDecl'
         then
-            trace[generics] "Case 14"
             gi : generic_info := NeededGenericContext(FirstGenericDecl)
             result := XLT.XLEnterGeneric (FirstGenericDecl)
             if gi.rest <> nil then
@@ -664,7 +667,6 @@ module XL.SEMANTICS.TYPES.GENERICS is
         when
             'GenericDecl'
         then
-            trace[generics] "Case 15"
             result := EnterGenericDecl (GenericDecl)
 
 
@@ -672,7 +674,6 @@ module XL.SEMANTICS.TYPES.GENERICS is
     // ------------------------------------------------------------------------
     //   Process generic forms
     // ------------------------------------------------------------------------
-        trace[generics] "Generic Iface (", GenIface, ")"
 
         // Avoid nested generics (necessary?)
         if IsGenericContext() then
@@ -683,7 +684,6 @@ module XL.SEMANTICS.TYPES.GENERICS is
         oldContext : SYM.symbol_table := XLT.context
         genSymbols : SYM.symbol_table := SYM.NewSymbolTable(oldContext)
         gi : generic_info := NewGenericContext(genSymbols, GenIface)
-        trace[generics] "Generic Iface (", GenIface, ") gi ", gi
         assert gi <> nil
         assert gi.context = oldContext
         assert gi.symbols <> nil

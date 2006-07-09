@@ -209,6 +209,7 @@ zero_char        "$1 = 0;"
 int_to_char      "$1 = (xlchar) $2;"
 char_to_int      "$1 = (xlint) $2;"
 int_to_real      "$1 = (xlreal) $2;"
+real_to_int      "$1 = (xlint) $2;"
 
 get_stdin        "$1 = stdin;"
 get_stdout       "$1 = stdout;"

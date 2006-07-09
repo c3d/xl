@@ -229,14 +229,6 @@ module XL_BUILTINS with
     // 
     // ========================================================================
 
-    // generic [type ordered_type]
-    // type range is record with
-    //    First, Last : ordered_type
-
-    // function Range (First, Last : ordered)
-    //   return range[ordered] written First..Last is
-    //     result.First := First
-    //     result.Last := Last
 
 
     // ========================================================================

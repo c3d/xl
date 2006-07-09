@@ -59,6 +59,7 @@ module XL.TRANSLATOR is
 
         if context = nil then
             context := SYM.NewSymbolTable(nil)
+            top_context := context
             PluginsInit
             nop := parse_tree(@nop)
 
@@ -160,7 +161,7 @@ module XL.TRANSLATOR is
     // ------------------------------------------------------------------------
 
         ModIface : PT.tree := PT.Attached(input, "MODIFACE")
-        if scope = scopeMain or scope = scopeGlobal then
+        if scope = scopeMain or scope = scopeModule then
             input := PPR.Preprocess (input)
 
         old_global   : SYM.symbol_table := global_context
@@ -182,7 +183,9 @@ module XL.TRANSLATOR is
             SYM.SetProperty context, "MODULE", modname
 
         // Create the symbol table for this scope
-        if scope <> scopeFunction then
+        if scope = scopeMain or scope = scopeModule then
+            context := SYM.NewSymbolTable(top_context)
+        else if scope <> scopeFunction then
             context := SYM.NewSymbolTable(context)
 
         if modname <> nil then
@@ -198,7 +201,7 @@ module XL.TRANSLATOR is
                 SYM.AddUsing context, nil, SYM.Enclosing(ifaceSyms)
                 CopyScopeProperties context, ifaceSyms 
 
-        if scope = scopeMain or scope = scopeGlobal then
+        if scope = scopeMain or scope = scopeModule or scope = scopeGlobal then
             global_context := context
 
             // Set global context, except for submodules
@@ -258,7 +261,7 @@ module XL.TRANSLATOR is
         // The above semantics may have added declarations
         decl : PT.tree := SYM.ScopeItems(context, "DECL")
 
-        if scope = scopeGlobal or scope = scopeMain then
+        if scope = scopeGlobal or scope = scopeModule or scope = scopeMain then
             // Make sure global init and term invoked from 'main'
             local_decl : PT.tree := SYM.ScopeItems(function_context, "DECL")
             SYM.SetProperty (function_context, "DECL", nil)

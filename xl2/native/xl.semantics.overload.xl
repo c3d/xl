@@ -161,12 +161,15 @@ module XL.SEMANTICS.OVERLOAD is
 
         // Loop on all levels
         while table <> nil loop
-            depth += 1
+            depth += 2
+            localDepth : integer := depth
+            itemDepth  : map[PT.tree, integer]
 
             // Find all candidates at this level
             candidates : SYM.tree_list
             if recurse then
-                SYM.Lookup table,"FN",Name.value,candidates,SYM.lookupLocalUsing
+                SYM.Lookup table, "FN", Name.value, candidates,
+                           itemDepth, localDepth, SYM.lookupLocalUsing
                 table := SYM.Enclosing(table)
             else
                 candidates := list
@@ -202,12 +205,9 @@ module XL.SEMANTICS.OVERLOAD is
                 Gtype : F.type as GEN.generic_type
                 Gargs : GN.generic_map
                 Vargs : PT.tree
-                Score : integer := depth * 2
-                // Favor local candidate over candidate found in 'using' map
-                if C.kind = PT.xlINFIX then
-                    infix : C as PT.infix_tree
-                    if infix.name = "." then
-                        Score += 1
+                Score : integer := depth
+                if recurse then Score := itemDepth[C]
+                assert Score >= depth
                 if Ftype = nil and Gtype <> nil then
                     GFType : Gtype.base as FT.function_type
                     Ftype := GFType
@@ -356,7 +356,7 @@ module XL.SEMANTICS.OVERLOAD is
                     bestDNames := DNames
                     bestDidx := Didx
                     if recurse then BaseRecord := Scope
-                else if Score = bestScore then
+                else if Score = bestScore and F <> bestF then
                     ambig := C
                     trace [overload] "AMBIGUOUS: Score ", Score
                     trace [overload] "           Other: ", best

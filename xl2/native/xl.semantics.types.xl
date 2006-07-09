@@ -439,12 +439,14 @@ module XL.SEMANTICS.TYPES is
             SetDefinedType NameTree, tp
 
         // Check if this is record type, and if so enter default ctors/dtors
-        rtp : tp as REC.record_type
+        rtp : GEN.NonGenericType(tp) as REC.record_type
         if rtp <> nil then
             N : Name as PT.name_tree
-            if N <> nil  and PT.Attached(N, "INSTANCEOF") = nil then
-                //result := XLT.Append(result,REC.EnterDefaultConstructor(N,rtp))
-                //result := XLT.Append(result,REC.EnterFieldConstructor(N,rtp))
+            if (N <> nil and
+                PT.Attached(N, "INSTANCEOF") = nil and
+                PT.Attached(N, "INSTARG") = nil) then
+                result := XLT.Append(result,REC.EnterDefaultConstructor(N,rtp))
+                result := XLT.Append(result,REC.EnterFieldConstructor(N,rtp))
                 result := XLT.Append(result, REC.EnterDestructor(rtp))
                 result := XLT.Append(result, REC.EnterCopy(rtp))
                 SetDefinedType result, tp

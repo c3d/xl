@@ -136,7 +136,7 @@ module XL.ERRORS is
 
             // Convert positon to line and column
             if pos = -1 then
-                IO.WriteLn "[Compiler generated]: ", fmt
+                IO.WriteLn "[Compiler generated] ", fmt
             else
                 POS.PositionToLine pos, file, line, column, linetext
 
@@ -152,7 +152,7 @@ module XL.ERRORS is
                         column -= 1
                     IO.writeln "^"
                 else
-                    IO.WriteLn "[Unknown position]: ", fmt
+                    IO.WriteLn "[Unknown position] ", fmt
 
 
     procedure Error (E : text; pos : integer) is

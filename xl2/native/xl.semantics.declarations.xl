@@ -158,7 +158,6 @@ module XL.SEMANTICS.DECLARATIONS is
                 gtype2 : decl_type as GEN.generic_type
                 if gtype2 <> nil then
                     ERR.Error "Type '$1' is generic", Type
-
  
         // Check if there is already an entity by that name
         original : PT.tree := SYM.LookupOne(XLT.context, "DECL",

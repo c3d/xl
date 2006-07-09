@@ -370,7 +370,7 @@ module XL.SEMANTICS.MODULES is
     // ------------------------------------------------------------------------
     //    Detect if we are in the XL_BUILTINS module
     // ------------------------------------------------------------------------
-        return SYM.GetInteger(XLT.main_context, "MOD:xlbuiltins") <> 2
+        return SYM.GetInteger(XLT.main_context, "MOD:xlbuiltins") = 2
 
 
     function AddBuiltins(Input : PT.tree) return PT.tree is
@@ -378,7 +378,7 @@ module XL.SEMANTICS.MODULES is
     //    Add the builtin module
     // ------------------------------------------------------------------------
         result := Input
-        if InXlBuiltinsModule() then
+        if not InXlBuiltinsModule() then
             result := parse_tree
                 use XL_BUILTINS
                 'result'
@@ -474,14 +474,14 @@ module XL.SEMANTICS.MODULES is
             // Run semantics on interface and body, and cache for next import
             if Iface <> nil then
                 Iface := AddBuiltins(Iface)
-                Iface := XLT.ScopeSemantics(Iface, XLT.scopeGlobal, BaseName)
+                Iface := XLT.ScopeSemantics(Iface, XLT.scopeModule, BaseName)
                 SYM.SetProperty XLT.main_context, KeyI, Iface
             if Body <> nil then
                 Body := AddBuiltins (Body)
                 if Iface <> nil then
                     PT.AttachTree Body, "MODIFACE",
                                   FindModule(Iface, BaseName, LeafName)
-                Body := XLT.ScopeSemantics(Body, XLT.scopeGlobal, BaseName)
+                Body := XLT.ScopeSemantics(Body, XLT.scopeModule, BaseName)
                 SYM.SetProperty XLT.main_context, KeyB, Body
 
             // After semantics, reconcile them
