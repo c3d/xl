@@ -103,13 +103,11 @@ module XL.SEMANTICS.FUNCTIONS is
         f.is_local              := SYM.GetInteger(XLT.context, "LOCAL") <> 0
         f.is_global             := SYM.GetInteger(XLT.context, "GLOBAL") <> 0
         f.is_field              := SYM.GetInteger(XLT.context, "FIELD") <> 0
-        f.is_generic_parm       := SYM.GetProperty(XLT.context, "GENERIC")<>nil
+        f.is_generic_parm       := false
         f.is_builtin            := false
         f.implementation        := nil
         f.machine_interface     := XLT.Append(PreCoating, CGM.Entry(f))
         f.symbols               := nil          // Only create if has body
-        if f.is_parameter then
-            f.is_generic_parm := false
 
         // Declare the bytecode for the function declaration
         MachineIface  : PT.Tree := f.machine_interface

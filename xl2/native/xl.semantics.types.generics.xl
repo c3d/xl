@@ -79,6 +79,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
                 decl : declaration := DCL.GetDeclaration(Parms)
                 if decl then
                     list += decl
+                    decl.is_generic_parm := true
                 else
                     ERR.Error "'$1' isn't a valid generic parameter", Parms
 

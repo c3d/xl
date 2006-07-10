@@ -166,7 +166,10 @@ module XL.SEMANTICS.GENERICS is
                         Arg := ArgList[A]
                         trace [inst] "Testing argument ", Arg
                     else
-                        Arg := D.initializer
+                        if D.is_generic_parm then
+                            Arg := D.initializer
+                        else
+                            Arg := nil
                         if Arg = nil then
                             ERR.Error "'$1' could not be selected because", C
                             ERR.Error "there is no value for '$1'", D.name
@@ -382,7 +385,8 @@ module XL.SEMANTICS.GENERICS is
             A : PT.tree := Args[P.name]
             if A = nil then
                 // If we could not find A by instantiation, try default value
-                A := P.initializer
+                if P.is_generic_parm then
+                    A := P.initializer
                 if A = nil then
                     ERR.Error "Cannot instantiate '$1'", Decl.Name
                     ERR.Error "since '$1' is undefined", P.name
