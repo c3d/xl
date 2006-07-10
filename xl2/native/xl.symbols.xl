@@ -92,9 +92,8 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
     //    Add the entry corresponding to a 'using' statement
     // ------------------------------------------------------------------------
-        assert table
-        assert syms
-        
+        assert table <> nil
+        assert syms <> nil
         entry : using_entry
         entry.scope := scope
         entry.symbols := syms
