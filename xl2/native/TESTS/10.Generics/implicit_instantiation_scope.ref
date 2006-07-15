@@ -1,12 +1,12 @@
 10.Generics/implicit_instantiation_scope.xl:7: No translation found for 'X := Ajouter (3 , 4)'
 | X : text := Ajouter (3, 4)
 |_____________________^
+10.Generics/implicit_instantiation_scope.xl:7: Error instantiating 'Ajouter'
+| X : text := Ajouter (3, 4)
+|___________________^
 10.Generics/implicit_instantiation_scope.xl:4: Redeclaration of 'X' 
 | function Ajouter (X, Y : item) return item is
 |___________________^
 10.Generics/implicit_instantiation_scope.xl:7: Previous declaration of 'X' here
 | X : text := Ajouter (3, 4)
 |_^
-10.Generics/implicit_instantiation_scope.xl:7: while instantiating 'Ajouter':
-| X : text := Ajouter (3, 4)
-|___________________^

@@ -25,15 +25,15 @@
 10.Generics/deduction_conflict.xl:20: No translation found for 'U := Pong (1 , 3)'
 | U : real := Pong (1.0, 3)
 |__________________^
+10.Generics/deduction_conflict.xl:20: Error instantiating 'Pong'
+| U : real := Pong (1.0, 3)
+|________________^
 10.Generics/deduction_conflict.xl:10: No translation found for 'result := A + B'
 |    return A + B
 |_____________^
 10.Generics/deduction_conflict.xl:10: No translation found for 'A + B'
 |    return A + B
 |_____________^
-10.Generics/deduction_conflict.xl:20: while instantiating 'Pong':
-| U : real := Pong (1.0, 3)
-|________________^
 10.Generics/deduction_conflict.xl:22: No translation found for 'K := Ping (1 , 2)'
 | K : integer := Ping(1, 2)
 |____________________^

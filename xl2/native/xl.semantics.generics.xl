@@ -880,10 +880,12 @@ module XL.SEMANTICS.GENERICS is
         result := Instantiate (Decl, Args, Variadics, BaseRecord)
 
         if ERR.PopErrorContext() then
-            ERR.DisplayLastErrors()
-            ERR.Error "while instantiating '$1':", Source
             if Variadics <> nil then
-                ERR.Error "with '...' set to '$1'", Variadics
+                ERR.Error "Error instantiating '$1' with '...' set to '$2'",
+                          Source, Variadics
+            else
+                ERR.Error "Error instantiating '$1'", Source
+            ERR.DisplayLastErrors()
 
 
     function ContainsGenerics (List : PT.tree_list) return DCL.declaration is
