@@ -1,6 +1,9 @@
 10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
 |     Second : nonexistent_item
 |_____________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
 10.Generics/simple_pair_fail.xl:8: Expression 'Pair [integer]' has no type
 | type kazoo is Pair[integer]
 |___________________^

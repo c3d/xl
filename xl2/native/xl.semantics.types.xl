@@ -311,21 +311,21 @@ module XL.SEMANTICS.TYPES is
                 return result
 
 
-        // Check if the type is generic
+        // Check if we have a type value associated with the type
         tp : any_type
         init : PT.tree
-        if GEN.IsGenericContext() then
-            tp := NewType(Name)
-            tp := GEN.MakeGeneric(tp)
-            init := Value
-        // Else check if we have a type value associated with it
-        else if Value <> nil then
+        if Value <> nil then
             tp := EvaluateType(Value)
             if tp = nil then
                 ERR.Error "Expression '$1' is not a type", Value
                 tp := NewType(Name)
         else
             tp := NewType(Name)
+
+        if GEN.IsGenericContext() then
+            tp := GEN.MakeGeneric(tp)
+            tp.name := Name
+            init := Value
 
         // Attach the type just defined to the name
         SetDefinedType Name, tp
@@ -445,11 +445,14 @@ module XL.SEMANTICS.TYPES is
             if (N <> nil and
                 PT.Attached(N, "INSTANCEOF") = nil and
                 PT.Attached(N, "INSTARG") = nil) then
+                declared : DCL.declaration := DCL.GetDeclaration(result)
                 result := XLT.Append(result,REC.EnterDefaultConstructor(N,rtp))
                 result := XLT.Append(result,REC.EnterFieldConstructor(N,rtp))
                 result := XLT.Append(result, REC.EnterDestructor(rtp))
                 result := XLT.Append(result, REC.EnterCopy(rtp))
                 SetDefinedType result, tp
+                if declared <> nil then
+                    DCL.SetDeclaration result, declared
 
 
     function TypeTypeMatch (iface : any_type;

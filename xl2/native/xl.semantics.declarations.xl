@@ -142,17 +142,21 @@ module XL.SEMANTICS.DECLARATIONS is
            return TY.EnterType (Name, Value)
 
         // Check if this is a function type we need to enter
-        decl_fn_type : decl_type as FT.function_type
+        decl_gen_type : decl_type as GEN.generic_type
+        decl_base_type : TY.any_type := decl_type
+        if decl_gen_type <> nil then
+            decl_base_type := decl_gen_type.base
+        decl_fn_type : decl_base_type as FT.function_type
         if decl_fn_type <> nil then
             if decl_fn_type.iterator then
                 return ITER.EnterIterator(Name, decl_fn_type, Value, Name)
             return FN.EnterFunction (Name, decl_fn_type, Value, Name)
 
         // Check if this is an uninstantiated generic type
-        decl_gen_type : decl_type as GEN.generic_type
         if decl_gen_type <> nil then
             isparm : boolean := SYM.GetInteger(XLT.context, "FNPARM") <> 0
-            if not isparm then
+            isgen  : PT.tree := SYM.GetProperty(XLT.context, "GENERIC", true)
+            if not isparm and isgen = nil then
                 Type := GN.InstantiateType(Type, nil)
                 decl_type := TY.EvaluateType(Type)
                 gtype2 : decl_type as GEN.generic_type
@@ -249,7 +253,7 @@ module XL.SEMANTICS.DECLARATIONS is
         decl.implementation     := nil
 
         // Check internal consistency for flags of the declaration
-        if SYM.GetProperty(XLT.context, "GENERIC") = nil then
+        if SYM.GetProperty(XLT.context, "GENERIC", true) = nil then
             if (integer(decl.is_parameter) + integer(decl.is_field) +
                 integer(decl.is_local) + integer(decl.is_global) <> 1) then
                 ERR.Error "Internal: Bad declaration scope for '$1'", Name
