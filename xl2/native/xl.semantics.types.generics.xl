@@ -192,10 +192,11 @@ module XL.SEMANTICS.TYPES.GENERICS is
     // ------------------------------------------------------------------------
         syms : SYM.symbol_table := XLT.context
         prop : PT.tree := SYM.GetProperty(syms, "GENERIC", false)
-        if prop = nil then
-            if SYM.GetInteger(syms, "FNPARM", 0, false) = 1 then
-                syms := SYM.Enclosing(syms)
-                prop := SYM.GetProperty(syms, "GENERIC", false)
+        while (prop = nil and
+               (SYM.GetInteger(syms, "FNPARM", 0, false) = 1 or
+                SYM.GetInteger(syms, "FIELD", 0, false) = 1)) loop
+            syms := SYM.Enclosing(syms)
+            prop := SYM.GetProperty(syms, "GENERIC", false)
         if prop = nil then
             return nil
         gc : PT.FindInfo (prop, "GENERIC") as generic_info
@@ -277,8 +278,14 @@ module XL.SEMANTICS.TYPES.GENERICS is
             return tp
 
         // Check if we already made this type generic
-        existing : generic_type
+        existing : tp as generic_type
+        if existing <> nil then
+            if existing.context = gi.context then
+                if existing.symbols = gi.symbols then
+                    return existing
         for existing in gi.generic_types loop
+            if TY.SameType (tp, existing) then
+                return existing
             if TY.SameType (tp, existing.base) then
                 return existing
 

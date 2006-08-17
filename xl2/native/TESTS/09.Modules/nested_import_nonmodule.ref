@@ -40,7 +40,7 @@
 09.Modules/nested_import_nonmodule.xl:27: but is used as a submodule of 'SIMPLE_IMPORTED . NESTED1'
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |_______________________^
-[Compiler generated] No translation found for 'invalid_submodule_458 := Simple_imported . Nested_1 . nested2 . HasKlaxon (0.54)'
+[Compiler generated] No translation found for 'invalid_submodule_493 := Simple_imported . Nested_1 . nested2 . HasKlaxon (0.54)'
 09.Modules/nested_import_nonmodule.xl:29: No translation found for 'Simple_imported . Nested_1'
 | Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
 |____________________________________________^

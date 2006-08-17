@@ -132,7 +132,6 @@ module XL.SEMANTICS.OVERLOAD is
         // Save errors for later display
         ERR.PushErrorContext()
 
-
         // Perform semantics on all arguments
         for Arg in ArgList loop
             ToBeDefined : boolean := false
@@ -158,6 +157,13 @@ module XL.SEMANTICS.OVERLOAD is
                 anyLookup := false
             else
                 SYM.AddImplicit symbols, coi
+
+        // If there were errors while evaluating arguments, don't go further
+        if ERR.PopErrorContext() then
+            ERR.Error "Unable to evaluate arguments to '$1'", NameTree
+            ERR.DisplayLastErrors()
+            return parse_tree(@error)
+        ERR.PushErrorContext()
 
         // Loop on all levels
         while table <> nil loop

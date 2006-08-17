@@ -448,8 +448,8 @@ module XL.SEMANTICS.TYPES is
                 declared : DCL.declaration := DCL.GetDeclaration(result)
                 result := XLT.Append(result,REC.EnterDefaultConstructor(N,rtp))
                 result := XLT.Append(result,REC.EnterFieldConstructor(N,rtp))
-                result := XLT.Append(result, REC.EnterDestructor(rtp))
-                result := XLT.Append(result, REC.EnterCopy(rtp))
+                result := XLT.Append(result, REC.EnterDestructor(N,rtp))
+                result := XLT.Append(result, REC.EnterCopy(N,rtp))
                 SetDefinedType result, tp
                 if declared <> nil then
                     DCL.SetDeclaration result, declared

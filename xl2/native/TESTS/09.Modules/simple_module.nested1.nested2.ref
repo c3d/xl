@@ -5,6 +5,3 @@
 '
 | module SIMPLE_MODULE.NESTED_1.NESTED_2 is
 |____________________^
-./xl_builtins.xs:26: No translation found for 'delete xlbuiltins_438'
-| module XL_BUILTINS with
-|__________________^

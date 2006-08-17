@@ -40,6 +40,7 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
         scope           : PT.tree
         symbols         : symbol_table
+    type using_entries is string of using_entry
 
 
     type symbol_table_data is record with
@@ -50,7 +51,7 @@ module XL.SYMBOLS is
         names           : map [text, tree_list]
         rewrites        : map [text, rewrite_list]
         properties      : map [text, PT.tree]
-        usings          : string of using_entry
+        usings          : using_entries
         implicit        : string of symbol_table
 
 
@@ -98,7 +99,6 @@ module XL.SYMBOLS is
         entry.scope := scope
         entry.symbols := syms
         table.usings += entry
-        table.usings += syms.usings
         trace[symbols] "Added using ", syms, " to ", table, " scope ", scope
 
 
@@ -176,6 +176,28 @@ module XL.SYMBOLS is
         table.names[name] += value
 
 
+    procedure GetUsings (table : symbol_table;
+                         in out usingMap  : map[symbol_table, boolean];
+                         in out usingList : using_entries) is
+    // ------------------------------------------------------------------------
+    //   Get all usings recursively
+    // ------------------------------------------------------------------------
+        if count(usingMap, table) = 0 then
+            entry : using_entry
+            usingMap[table] := true
+            for entry in table.usings loop
+                usingList += entry
+                GetUsings entry.symbols, usingMap, usingList
+
+
+    function AllUsings (table : symbol_table) return using_entries is
+    // ------------------------------------------------------------------------
+    //    Return all usings, including recursive ones
+    // ------------------------------------------------------------------------
+        usingMap : map[symbol_table, boolean]
+        GetUsings table, usingMap, result
+
+
     procedure Lookup (table         : symbol_table;
                       category      : text;
                       name          : text;
@@ -225,7 +247,8 @@ module XL.SYMBOLS is
             // Lookup in lateral maps
             depth += 1
             if mode <> lookupDirect then
-                for entry in table.usings loop
+                usings : using_entries := AllUsings(table)
+                for entry in usings loop
                     subtable : symbol_table := entry.symbols
                     if count(subtable.names, name) > 0 then
                         scope   : PT.tree := entry.scope
@@ -375,7 +398,8 @@ module XL.SYMBOLS is
 
             // Add lateral maps
             depth += 1
-            for entry in table.usings loop
+            usings : using_entries := AllUsings(table)
+            for entry in usings loop
                 subtable : symbol_table := entry.symbols
                 if count(subtable.rewrites, Name) > 0 then
                     List += subtable.rewrites[Name]

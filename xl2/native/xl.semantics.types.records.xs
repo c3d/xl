@@ -77,5 +77,7 @@ module XL.SEMANTICS.TYPES.RECORDS with
                                      rtp : record_type) return BC.bytecode
     function EnterFieldConstructor(recName : PT.name_tree;
                                    rtp : record_type) return BC.bytecode
-    function EnterDestructor(rtp : record_type) return BC.bytecode
-    function EnterCopy(rtp : record_type) return BC.bytecode
+    function EnterDestructor(recName : PT.name_tree;
+                             rtp : record_type) return BC.bytecode
+    function EnterCopy(recName : PT.name_tree;
+                       rtp : record_type) return BC.bytecode

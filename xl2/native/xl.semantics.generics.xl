@@ -535,6 +535,7 @@ module XL.SEMANTICS.GENERICS is
             if tp <> nil then
                 PT.AttachTree Source, "INSTANCEOF", Decl.Name
                 tp.name := Source
+                TY.SetDefinedType Source, tp
 
         // Cache the result for next time
         if ERR.PopErrorContext() then

@@ -188,13 +188,13 @@ module XL.SEMANTICS.TYPES.RECORDS is
             rtp.machine_name := CGM.DeclareRecord(rtp)
             result := rtp
         else if GEN.IsGenericContext() then
-            rtp.machine_name := SYM.Temporary("<generic record>")
+            rtp.machine_name := SYM.Temporary("<generic_record>")
             result := GEN.MakeGeneric(rtp)
         else
             rtp.machine_name := CGM.DeclareRecord(rtp)
             result := rtp
 
-        TY.SetDefinedType rtp.machine_name, rtp
+        TY.SetDefinedType rtp.machine_name, result
 
 
     function EnterType (Source  : PT.tree;
@@ -471,7 +471,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 Parm   : PT.tree := parse_tree('pname' : 'ftype')
                 Parms  := XLT.Append(Parms, parm)
 
-        // If we found any, then generate a 'delete' procedure here
+        // If we found any, then generate a constructor here
         if result <> nil then
             result := parse_tree
                 function 'recName'('Parms') return 'recName' is
@@ -479,7 +479,8 @@ module XL.SEMANTICS.TYPES.RECORDS is
             result := EnterDefaultFunction(result)
 
 
-    function EnterDestructor(rtp : record_type) return BC.bytecode is
+    function EnterDestructor(recName : PT.name_tree;
+                             rtp : record_type) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Enter a destructor deleting each field
     // ------------------------------------------------------------------------
@@ -497,14 +498,14 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
         // If we found any, then generate a 'delete' procedure here
         if result <> nil then
-            mname : PT.tree := rtp.machine_name
             result := parse_tree
-                procedure delete (this : 'mname') is
+                procedure delete (this : 'recName') is
                     'result'
             result := EnterDefaultFunction(result)
 
 
-    function EnterCopy(rtp : record_type) return BC.bytecode is
+    function EnterCopy(recName : PT.name_tree;
+                       rtp : record_type) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Enter a copy subroutine copying every field
     // ------------------------------------------------------------------------
@@ -520,12 +521,11 @@ module XL.SEMANTICS.TYPES.RECORDS is
                     this.'thisName' := that.'thatName'
                 result := XLT.Append(result, copyCall)
 
-        // If we found any, then generate a 'delete' procedure here
+        // If we found any, then generate a 'copy' procedure here
         if result <> nil then
-            mname : PT.tree := rtp.machine_name
             result := parse_tree
-                procedure copy (out this:'mname';
-                                that : 'mname') written this := that is
+                procedure copy (out this:'recName';
+                                that : 'recName') written this := that is
                     'result'
             result := EnterDefaultFunction(result)
 
