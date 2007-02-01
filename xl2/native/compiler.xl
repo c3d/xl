@@ -96,6 +96,7 @@ procedure Main is
             compile := false
             transcode := false
         else if name = "-sem" then
+            XLT.full_compile := true
             compile := false
             theProgram := MDL.AddBuiltins(theProgram)
             theProgram := XLT.ScopeSemantics(theProgram, XLT.scopeMain)

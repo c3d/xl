@@ -40,14 +40,14 @@ module XL.PLUGIN.DIFFERENTIATION is
         translate expr
 
             when ('K') where K.kind = PT.xlINTEGER or K.kind = PT.xlREAL then
-                return parse_tree(0)
+                return parse_tree(0.0)
 
             when ('X') where X.kind = PT.xlNAME then
                 Xname : X as PT.name_tree
                 if Xname.value = dv then
-                    return parse_tree(1)
+                    return parse_tree(1.0)
                 else
-                    return parse_tree(0)
+                    return parse_tree(0.0)
 
             when (('X')) then
                 X := Differentiate (X, dv)
