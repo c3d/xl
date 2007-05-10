@@ -5,7 +5,7 @@
 <\body>
   <assign|by-text|> <assign|name|<macro|x|<arg|x>>> <doc-data|<doc-title|A
   Theory of Incomplete Measurements<with|color|grey|<with|color|red| - Draft
-  23>>>||<\doc-author-data|<author-name|Christophe de
+  24>>>||<\doc-author-data|<author-name|Christophe de
   Dinechin>|<\author-address>
     Sophia Antipolis, France
   </author-address>>
@@ -16,16 +16,15 @@
 
   <\abstract>
     When physicists write an equation like
-    <with|mode|math|<wide|F|\<vect\>>=m*<wide|a|\<vect\>>>, does it depend on
-    the precise physical process used to measure
+    <with|mode|math|<wide|F|\<vect\>>=m*<wide|a|\<vect\>>>, how does it
+    depend on the precise physical process used to measure
     <with|mode|math|<wide|F|\<vect\>>>, <with|mode|math|m> or
-    <with|mode|math|<wide|a|\<vect\>>>? And if not, then why not? To answer
-    this question, we must define a notation allowing formal reasoning on
-    physical events, which does not set constraints on the mathematical tools
-    used to represent physics laws applying to measurement results. This
-    formalism can be used to discuss the properties of the physical processes
-    we are willing to call ``measurements'', and enables a precise
-    definition.
+    <with|mode|math|<wide|a|\<vect\>>>? To answer this question, we must
+    define a notation allowing formal reasoning on physical experiments. The
+    proposed notation leaves us free to use any mathematical tool of our
+    choice to represent physics laws. This formalism can be used to discuss
+    the properties of the physical processes we are willing to call
+    ``measurements'', and enables a precise definition.
 
     Under a reasonable set of conditions commonly observed in nature,
     properties such as linearity or continuity emerge from choices we are
@@ -41,10 +40,10 @@
     probabilistic. In that case, we can demonstrate that the same definition
     of measurements given earlier implies many of the standard axioms of
     quantum mechanics. We can formally justify the traditional form of the
-    wave-function, its evolution (or ``collapse''), as well as several ad-hoc
-    techniques. The resulting interpretation of quantum mechanics is devoid
-    of what is usually called the ``measurement problem'' and suggests a new
-    approach to renormalization.
+    wave-function, its evolution (or ``collapse''), as well as several widely
+    used ad-hoc techniques. The resulting interpretation of quantum mechanics
+    is devoid of what is usually called the ``measurement problem'' and
+    suggests a new approach to renormalization.
   </abstract>
 
   <section|Introduction>
@@ -68,20 +67,21 @@
   <with|mode|math|<wide|F|\<vect\>>> represents a physical force, something
   that we can measure for instance with a dynamometer; <with|mode|math|m>
   represents a mass, that we can measure with weights;
-  <with|mode|math|<wide|a|\<vect\>>> is an acceleration, that we can compute
-  as a derivative of speed; and so on.
+  <with|mode|math|<wide|a|\<vect\>>> is an acceleration, that we can derive
+  from speed or position measurements; and so on.
 
   However, a question follows from the fundamental premise: does it matter,
   how we measure <with|mode|math|<wide|F|\<vect\>>>, <with|mode|math|m> or
   <with|mode|math|<wide|a|\<vect\>>>? The laws of physics are never written
-  with a specification of how you must measure a given physical entitie.
+  with a specification of how you must measure a given physical entity.
   Therefore, the classical answer appears to be that it does not matter.
 
-  The main thesis presented here is, on the contrary, that the measurement
-  being chosen does matter. Furthermore, we will attempt to demonstrate that
-  many of the properties that we take for granted, or that we use as axioms
-  for physics laws, are indeed a consequence of the choices we make with
-  respect to the physical processes we accept to call ``measurements''.
+  The main thesis presented here is, on the contrary, that the physical
+  measurement being chosen does matter. Furthermore, we will attempt to
+  demonstrate that many of the properties that we take for granted, or that
+  we use as axioms for physics laws, are indeed a consequence of the choices
+  we make with respect to the physical processes we accept to call
+  ``measurements''.
 
   In the process, we will establish a number of essential properties of both
   general relativity and quantum mechanics, which become two approximations
@@ -147,9 +147,9 @@
 
     <item>in a repeatable way,
 
-    <item>gathering information about an ``unknown'' fragment
+    <item>gathering information about an ``unknown'' or ``input'' fragment
 
-    <item>represented by a change in a ``display'' fragment
+    <item>represented by a change in a ``display'' or ``output'' fragment
 
     <item>which can be given a numerical or symbolic interpretation.
   </enumerate-numeric>
@@ -182,13 +182,16 @@
 
     <item>Since we live in the universe, the result of the measurement
     manifests as a change in the ``display'' universe fragment. If your
-    voltmeter display does not move in response to voltage, the voltmeter is
-    broken and cannot be used to perform actual measurements.
+    voltmeter display does not move in response to voltage, or moves
+    noticeably in response to some other influence, the voltmeter is broken
+    and cannot be used to perform actual measurements.
 
     <item>In order for the measurement to give quantitative and not just
     qualitative results, the ``display'' fragment of the universe is
     associated with a graduation, which allows us to map the changes to a
-    symbolic or numeric value.
+    symbolic or numeric value. Only this graduation and associated
+    calibration allow us to know that a particular voltmeter state
+    corresponds to a particular voltage on the inputs.
   </enumerate-numeric>
 
   These statements are a possible definition of what we want to accept as
@@ -219,9 +222,9 @@
 
   Let us define the notation <with|mode|math|P*\<frak-F\>> as the application
   of process <with|mode|math|P> to universe fragment
-  <with|mode|math|\<frak-F\>>. In reality, <with|mode|math|P> applies in the
-  universe as a whole, but the notation <with|mode|math|P*\<frak-F\>> tells
-  us that:
+  <with|mode|math|\<frak-F\>>. In reality, <with|mode|math|P> presumably
+  applies in the universe as a whole, but the notation
+  <with|mode|math|P*\<frak-F\>> tells us that:
 
   <\itemize>
     <item>the physical process <with|mode|math|P> is compatible with the
@@ -231,23 +234,26 @@
     with respect to the fragment <with|mode|math|\<frak-F\>>.
   </itemize>
 
-  In many cases, we presume that <with|mode|math|P> has an effect that is
-  local to fragment <with|mode|math|\<frak-F\>> and that we can ignore any
+  In many cases, we can presume that <with|mode|math|P> has an effect that is
+  local to fragment <with|mode|math|\<frak-F\>>, and that we can ignore any
   effect on the rest of the universe, but this is not a general rule.
 
   <paragraph|Correlating>We can define the notation
   <with|mode|math|\<frak-F\><rsub|1>=\<frak-F\><rsub|2>> to indicate that
   what we know about the universe fragment
   <with|mode|math|\<frak-F\><rsub|1>> is compatible with what we know about
-  the universe fragment <with|mode|math|\<frak-F\><rsub|2>>. This relation
-  does not map a single state of the universe fragment
-  <with|mode|math|\<frak-F\><rsub|1>> to a single state of the universe
-  fragment <with|mode|math|\<frak-F\><rsub|2>>. Instead, it relates all the
-  possible compatible states. We can then write <eqref|eq:display> to
-  indicate that a measurement <with|mode|math|M> is a valid physical process
-  collecting information from a universe fragment <with|mode|math|\<frak-F\>>
-  and showing that information in the ``display'' fragment
-  <with|mode|math|\<frak-D\>>:
+  the universe fragment <with|mode|math|\<frak-F\><rsub|2>>. A notation using
+  an equal sign is reasonable, because the relation is reflexive, transitive
+  and symmetric like the traditional mathematical equality.
+
+  However, this relation does not necessarily map a single state of the
+  universe fragment <with|mode|math|\<frak-F\><rsub|1>> to a single state of
+  the universe fragment <with|mode|math|\<frak-F\><rsub|2>>. Instead, it
+  relates all the possible compatible states. We can then write
+  <eqref|eq:display> to indicate that a measurement <with|mode|math|M> is a
+  valid physical process collecting information from a universe fragment
+  <with|mode|math|\<frak-F\>> and showing that information in the ``display''
+  fragment <with|mode|math|\<frak-D\>>:
 
   <\equation>
     <label|eq:display>M*\<frak-F\>=M*\<frak-D\>
@@ -303,7 +309,7 @@
   unknown fragment <with|mode|math|\<frak-F\>>><em| by applying measurement
   <with|mode|math|M>>''.
 
-  Other physical processes have this property, and they are said to be
+  Other physical processes may have this property, and will be said to be
   <dfn|focused on <with|mode|math|\<frak-F\>>>.
 
   <paragraph|Quantifiable>The relation between fragment
@@ -324,9 +330,12 @@
   Graduations are somewhat arbitrary. They integrate the frequently used
   notion of measurement <dfn|unit>. A graduation like <eqref|eq:graduation>
   relates the possible states of <with|mode|math|\<frak-D\>> to the possible
-  values of <with|mode|math|m>, so it may for instance relate an unknown or
-  partially known state of <with|mode|math|\<frak-D\>> to a probability
-  distribution <with|mode|math|m>.
+  values of <with|mode|math|m>. We do not specify the mathematical
+  formulation of <with|mode|math|m>, and specifically, <with|mode|math|m>
+  does not need to be a real number, or even a number at all. For example,
+  <eqref|eq:grad> could relate an unknown or partially known state of
+  <with|mode|math|\<frak-D\>> to a probability distribution
+  <with|mode|math|m>.
 
   Conversely, the display can show a range of numerical values, and a
   <dfn|state prediction equation> like the one shown in <eqref|eq:predict>
@@ -372,13 +381,13 @@
     <label|eq:inverse>A<rsup|-1>*A<rsup|k>*\<frak-F\>=A<rsup|k-1>*\<frak-F\>
   </equation>
 
-  At a macroscopic scale, most measurement processes appear to have an
-  inverse with respect to the system being measured. For example, the inverse
-  of ``connecting a voltmeter'' is ``disconnecting a voltmeter''; the inverse
-  of ``placing a rod alongside an object'' is ``putting the rod back in the
-  original place''. This is not a general rule: destructive measurements do
-  not have an obvious inverse, since the object being measured cannot easily
-  be reconstructed.
+  At a macroscopic scale, most measurement processes appear to have, at least
+  approximately, an inverse with respect to the system being measured and the
+  measurement process. For example, the inverse of ``connecting a voltmeter''
+  is ``disconnecting a voltmeter''; the inverse of ``placing a rod alongside
+  an object'' is ``putting the rod back in the original place''. This is not
+  a general rule: destructive measurements do not have an obvious inverse,
+  since the object being measured cannot easily be reconstructed.
 
   <paragraph|Identical Processes>In many cases, we will have to write
   equations that are valid for all physically acceptable systems, such as
@@ -865,7 +874,7 @@
   gravitational interaction, for example as it defines the movement of
   celestial bodies. However, as we have seen with time, two distinct physical
   processes that can be linearized locally to match one another do not
-  necessarily measure the same space and time coordinates at larger scale. It
+  necessarily measure the same space and time coordinates at any scale. It
   seems therefore unreasonable to assume that definitions of ``space'' or
   ``time'' based on distinct physical processes that happen to be in
   agreement locally will remain in agreement at any scale.
@@ -1158,11 +1167,11 @@
   energy is represented by the momentum along the time dimension, and the
   flow along the direction of time represents a density.
 
-  Like for the metric, we have a problem definining precisely what
-  measurement is valid to measure <with|mode|math|T>. At first sight, a
-  measurement of mass at rest with respect to the measurement apparatus seems
-  relatively easy to define: we put the mass on a scale. But this simple
-  definition relies on the reaction of the mass to the pull of gravitation.
+  Like for the metric, we have a problem defining precisely what measurement
+  is valid to measure <with|mode|math|T>. At first sight, a measurement of
+  mass at rest with respect to the measurement apparatus seems relatively
+  easy to define: we put the mass on a scale. But this simple definition
+  relies on the reaction of the mass to the pull of gravitation.
 
   It seems that a better choice is to define it as a linearization of the
   property of individual particles using <eqref|eq:linearity>, where the
@@ -1178,6 +1187,13 @@
   acceleration. In other words, it also relies on a definition of time and
   space. It would be more satisfying if we could avoid such an implicitly
   recursive definition of the mass.
+
+  Charles Francis has implicitly proposed such a definition<cite|relaq> by
+  showing how, for a single particle, the Schwarzschild metric can be derived
+  from an intrinsic mass-dependent proper time delay
+  <with|mode|math|\<chi\>=4*G*m/c<rsup|3>> between the absorption and the
+  re-emission of a photon by the particle. By this construction, a mass is
+  simply identified to a proper time.
 
   <paragraph|Field equation>The law of gravitation in general relativity
   relates the stress-energy tensor <with|mode|math|T> to the Einstein tensor
@@ -1380,7 +1396,7 @@
   sphere <with|mode|math|\<bbb-S\><rsup|n-1>>. Using Dirac's bra-ket
   notation, we can write the vector as <with|mode|math|\|\<psi\>\<rangle\>>
   and the probability condition as <with|mode|math|\<langle\>\<psi\>\|\<psi\>\<rangle\>=1>.
-  One particular vector state writen as <with|mode|math|\|k\<rangle\>>
+  One particular vector state written as <with|mode|math|\|k\<rangle\>>
   correspond to a certainty that the measurement will return the symbolic
   value <with|mode|math|m<rsub|k>>. Its component representation verifies
   <with|mode|math|\<psi\><rsub|i><rsup|2>=\<delta\><rsub|i k>>. Based on the
@@ -2101,54 +2117,58 @@
       <newblock><with|font-shape|italic|Annales de la Fondation Louis de
       Broglie>, vol 30 no 1:87--95, 2005.
 
-      <bibitem*|15><label|bib-darksideofthemoon>Brian Greene.
+      <bibitem*|15><label|bib-relaq>Charles Francis. <newblock>A relational
+      quantum theory incorporating gravity.
+      <newblock><with|font-shape|italic|gr-qc/0508077>, 2005.
+
+      <bibitem*|16><label|bib-darksideofthemoon>Brian Greene.
       <newblock><with|font-shape|italic|The fabric of the cosmos>,
       chapter<nbsp>4, page<nbsp>93. <newblock>Vintage, New York, 2005.
 
-      <bibitem*|16><label|bib-jacobssteck>Kurt Jacobs and Daniel<nbsp>A.
+      <bibitem*|17><label|bib-jacobssteck>Kurt Jacobs and Daniel<nbsp>A.
       Steck. <newblock>A straightforward introduction to continuous quantum
       measurement. <newblock><with|font-shape|italic|Contemporary Physics>,
       quant-ph/0611067, 2006.
 
-      <bibitem*|17><label|bib-nonunit>Thomas<nbsp>Mehen Jaume<nbsp>Gomis.
+      <bibitem*|18><label|bib-nonunit>Thomas<nbsp>Mehen Jaume<nbsp>Gomis.
       <newblock>Space-time noncommutative field theories and unitarity.
       <newblock><with|font-shape|italic|Nucl. Phys.>, B591:265--276, 2000.
 
-      <bibitem*|18><label|bib-langevin>Paul Langevin. <newblock>L'evolution
+      <bibitem*|19><label|bib-langevin>Paul Langevin. <newblock>L'evolution
       de l'espace et du temps. <newblock><with|font-shape|italic|Scientia>,
       X, 1911.
 
-      <bibitem*|19><label|bib-cosmocst>Leonard<nbsp>Susskind Lisa<nbsp>Dyson,
+      <bibitem*|20><label|bib-cosmocst>Leonard<nbsp>Susskind Lisa<nbsp>Dyson,
       Matthew<nbsp>Kleban. <newblock>Disturbing implications of a
       cosmological constant. <newblock><with|font-shape|italic|JHEP>, 0210,
       2002.
 
-      <bibitem*|20><label|bib-pondicherry>Ulrich Mohrhoff. <newblock>The
+      <bibitem*|21><label|bib-pondicherry>Ulrich Mohrhoff. <newblock>The
       pondicherry interpretation of quantum mechanics.
       <newblock><with|font-shape|italic|Am.J.Phys>, 68:728--745, 2000.
 
-      <bibitem*|21><label|bib-scalerelat>Laurent Nottale. <newblock>The
+      <bibitem*|22><label|bib-scalerelat>Laurent Nottale. <newblock>The
       theory of scale relativity. <newblock><with|font-shape|italic|Int. J.
       Mod. Phys.>, A7:4899--4936, 1992.
 
-      <bibitem*|22><label|bib-fractalspacetime>Laurent Nottale.
+      <bibitem*|23><label|bib-fractalspacetime>Laurent Nottale.
       <newblock><with|font-shape|italic|Fractal Space Time and Microphysics>.
       <newblock>World Scientific, Singapore, 1993.
 
-      <bibitem*|23><label|bib-relatquantmech>Carlo Rovelli.
+      <bibitem*|24><label|bib-relatquantmech>Carlo Rovelli.
       <newblock>Relational quantum mechanics.
       <newblock><with|font-shape|italic|Int. J. of Theor. Phys.>, 35, 1996.
 
-      <bibitem*|24><label|bib-quantdecoherence>Maximilian Schlosshauer.
+      <bibitem*|25><label|bib-quantdecoherence>Maximilian Schlosshauer.
       <newblock>Decoherence, the measurement problem, and interpretations of
       quantum mechanics. <newblock><with|font-shape|italic|Rev. Mod. Phys.>,
       76:1267--1305, 2004.
 
-      <bibitem*|25><label|bib-liftsandtopologies>Gavriel Segre.
+      <bibitem*|26><label|bib-liftsandtopologies>Gavriel Segre.
       <newblock>Einstein's lifts and topologies: topological investigations
       on the principle of equivalence.
 
-      <bibitem*|26><label|bib-darkmatter>Fritz Zwicky. <newblock>Die
+      <bibitem*|27><label|bib-darkmatter>Fritz Zwicky. <newblock>Die
       rotverschiebung von extragalaktischen nebeln.
       <newblock><with|font-shape|italic|Helvetica Physica Acta>, 6:110--127,
       1933.
@@ -2259,28 +2279,29 @@
     <associate|bib-basdevant|<tuple|4|23>>
     <associate|bib-cohen|<tuple|6|23>>
     <associate|bib-connes|<tuple|7|23>>
-    <associate|bib-cosmocst|<tuple|19|23>>
-    <associate|bib-darkmatter|<tuple|26|23>>
-    <associate|bib-darksideofthemoon|<tuple|15|23>>
+    <associate|bib-cosmocst|<tuple|20|23>>
+    <associate|bib-darkmatter|<tuple|27|23>>
+    <associate|bib-darksideofthemoon|<tuple|16|23>>
     <associate|bib-epr|<tuple|1|23>>
-    <associate|bib-fractalspacetime|<tuple|22|23>>
+    <associate|bib-fractalspacetime|<tuple|23|23>>
     <associate|bib-freefalling|<tuple|14|23>>
     <associate|bib-gausscoordinates|<tuple|10|23>>
-    <associate|bib-jacobssteck|<tuple|16|23>>
+    <associate|bib-jacobssteck|<tuple|17|23>>
     <associate|bib-justifyrelativity|<tuple|11|23>>
-    <associate|bib-langevin|<tuple|18|23>>
-    <associate|bib-liftsandtopologies|<tuple|25|23>>
+    <associate|bib-langevin|<tuple|19|23>>
+    <associate|bib-liftsandtopologies|<tuple|26|23>>
     <associate|bib-malgebras|<tuple|8|23>>
     <associate|bib-noncomm|<tuple|2|23>>
-    <associate|bib-nonunit|<tuple|17|23>>
+    <associate|bib-nonunit|<tuple|18|23>>
     <associate|bib-pioneer|<tuple|13|23>>
-    <associate|bib-pondicherry|<tuple|20|23>>
+    <associate|bib-pondicherry|<tuple|21|23>>
     <associate|bib-qmforce|<tuple|8|21>>
-    <associate|bib-quantdecoherence|<tuple|24|23>>
+    <associate|bib-quantdecoherence|<tuple|25|23>>
+    <associate|bib-relaq|<tuple|15|?>>
     <associate|bib-relativity|<tuple|8|9>>
-    <associate|bib-relatquantmech|<tuple|23|23>>
+    <associate|bib-relatquantmech|<tuple|24|23>>
     <associate|bib-renormalization|<tuple|9|23>>
-    <associate|bib-scalerelat|<tuple|21|23>>
+    <associate|bib-scalerelat|<tuple|22|23>>
     <associate|bib-spacemsmt|<tuple|12|23>>
     <associate|bib-timemsmt|<tuple|5|23>>
     <associate|eq1|<tuple|2|?>>
@@ -2362,6 +2383,8 @@
       justifyrelativity
 
       cosmocst
+
+      relaq
 
       darkmatter
 
