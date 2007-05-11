@@ -5,7 +5,7 @@
 <\body>
   <assign|by-text|> <assign|name|<macro|x|<arg|x>>> <doc-data|<doc-title|A
   Theory of Incomplete Measurements<with|color|grey|<with|color|red| - Draft
-  24>>>||<\doc-author-data|<author-name|Christophe de
+  25>>>||<\doc-author-data|<author-name|Christophe de
   Dinechin>|<\author-address>
     Sophia Antipolis, France
   </author-address>>
@@ -206,7 +206,7 @@
 
   It is possible to transpose the statements made earlier into a formal
   notation that facilitates a precise description of complex statements about
-  the universe<nocite|malgebras>.<assign|eq|<macro|refid|eq.<nbsp>(<arg|refid>)>><assign|eqref|<macro|rfid|<eq|<reference|<arg|rfid>>>>>
+  the universe<cite|malgebras>.<assign|eq|<macro|refid|eq.<nbsp>(<arg|refid>)>><assign|eqref|<macro|rfid|<eq|<reference|<arg|rfid>>>>>
   This formalism is called the ``theory of incomplete measurements'' because
   it describes measurements as a very partial and fragmentary perception of
   the universe, but also because individual measurements may take some time
@@ -388,6 +388,8 @@
   an object'' is ``putting the rod back in the original place''. This is not
   a general rule: destructive measurements do not have an obvious inverse,
   since the object being measured cannot easily be reconstructed.
+
+  \;
 
   <paragraph|Identical Processes>In many cases, we will have to write
   equations that are valid for all physically acceptable systems, such as
@@ -1244,11 +1246,11 @@
   nothing less than the introduction of a ``force'' in general relativity.
   General relativity does not do away with forces, it gives an interpretation
   of gravitation that is not based on geometric
-  considerations<cite|freefalling><nocite|liftsandtopologies>. The movement
-  predicted by <eqref|eq:grelmmove> cannot be reduced to any curvature of
-  space-time, because it depends on the charge of the particle. A single
-  space-time curvature cannot explain why one particle would turn left while
-  another with exactly the same properties but the charge would turn right.
+  considerations<cite|freefalling|liftsandtopologies>. The movement predicted
+  by <eqref|eq:grelmmove> cannot be reduced to any curvature of space-time,
+  because it depends on the charge of the particle. A single space-time
+  curvature cannot explain why one particle would turn left while another
+  with exactly the same properties but the charge would turn right.
 
   General relativity did not dispense with the notion of ``force'' entirely.
   While it showed that specific geometric properties are equivalent to a
@@ -1560,7 +1562,7 @@
   vector>'', and ``<em|observable>'' with ``<em|measurement operator>''.
 
   Many formulation of quantum mechanics exist. We will use the following
-  principles<cite|basdevant><cite|cohen> to illustrate the parallel with the
+  principles<cite|basdevant|cohen> to illustrate the parallel with the
   formalism presented here:
 
   <\enumerate>
@@ -1794,7 +1796,7 @@
   reversible, it is difficult to explain why the wave-function should
   collapse. The need for this rule is widely considered as a problem, and
   many suggestions have been made to try and explain
-  it<cite|epr><cite|pondicherry><cite|relatquantmech>.
+  it<cite|epr|pondicherry|relatquantmech>.
 
   In the present formalism, the wave-function collapses because the
   measurement system is designed to produce a repeatable numerical result.
@@ -2052,126 +2054,124 @@
   children, who patiently accommodated the long hours thinking, writing, and
   then starting all over again.
 
-  <\bibliography|bib|plain|tim.bib>
+  <\bibliography|bib|ieeetr|tim.bib>
     <\bib-list|10>
-      <bibitem*|1><label|bib-epr>Boris<nbsp>Podolsky Albert<nbsp>Einstein and
-      Nathan Rosen. <newblock>Can quantum-mechanical description of physical
-      reality be considered complete? <newblock><with|font-shape|italic|Phys.
-      Rev.>, 47:777, 1935.
+      <bibitem*|1><label|bib-malgebras>D.<nbsp>M.<nbsp>G. Daniel<nbsp>Lehman,
+      Kurt<nbsp>Engesser, ``Algebras of measurements: the logical structure
+      of quantum mechanics,'' <with|font-shape|italic|International Journal
+      of Theoretical Physics>, vol.<nbsp>45(4).
 
-      <bibitem*|2><label|bib-noncomm>C.<nbsp>Molina P. Teotonio-Sobrinho
-      A.P.<nbsp>Balachandran, T.R.<nbsp>Govindarajan. <newblock>Unitary
-      quantum physics with time-space noncommutativity.
-      <newblock><with|font-shape|italic|JHEP>, 0410:072, 2004.
+      <bibitem*|2><label|bib-timemsmt>B.<nbsp>G. Claude<nbsp>Audoin,
+      <with|font-shape|italic|Les fondements de la mesure du temps>.
+      <newblock>Paris: Masson.
 
-      <bibitem*|3><label|bib-aspect>Alain Aspect. <newblock>Three
-      experimental tests of bell inequalities by the measurement of
-      polarization correlations between photons.
-      <newblock><with|font-shape|italic|PhD Thesis>, 1983.
+      <bibitem*|3><label|bib-spacemsmt>E.<nbsp>O. et<nbsp>al, ``Process in
+      absolute distance measurement using a dye laser,''
+      <with|font-shape|italic|Nanotechnology>, 1995.
 
-      <bibitem*|4><label|bib-basdevant>Jean-Louis Basdevant.
-      <newblock><with|font-shape|italic|Mecanique Quantique, cours de l'Ecole
-      Polytechnique>. <newblock>Ellipse, Paris.
+      <bibitem*|4><label|bib-gausscoordinates>A.<nbsp>Einstein,
+      <with|font-shape|italic|Ueber die spezielle und allgemeine
+      Relativitaetstheorie>, ch.<nbsp>25. <newblock>Berlin: Springer-Verlag.
 
-      <bibitem*|5><label|bib-timemsmt>Bernard<nbsp>Guinot Claude<nbsp>Audoin.
-      <newblock><with|font-shape|italic|Les fondements de la mesure du
-      temps>. <newblock>Masson, Paris.
+      <bibitem*|5><label|bib-langevin>P.<nbsp>Langevin, ``L'evolution de
+      l'espace et du temps,'' <with|font-shape|italic|Scientia>, vol.<nbsp>X,
+      1911.
 
-      <bibitem*|6><label|bib-cohen>Frank<nbsp>Laloe Claude Cohen-Tannoudji,
-      Bernard<nbsp>Diu. <newblock><with|font-shape|italic|Mecanique Quantique
-      I>. <newblock>Hermann, Paris.
+      <bibitem*|6><label|bib-justifyrelativity>A.<nbsp>Einstein,
+      <with|font-shape|italic|Ueber die spezielle und allgemeine
+      Relativitaetstheorie>, ch.<nbsp>23. <newblock>Berlin: Springer-Verlag.
 
-      <bibitem*|7><label|bib-connes>Alain Connes.
-      <newblock><with|font-shape|italic|Noncommutative Geometry>.
-      <newblock>Academic Press, San Diego, 1994.
+      <bibitem*|7><label|bib-cosmocst>L.<nbsp>S. Lisa<nbsp>Dyson,
+      Matthew<nbsp>Kleban, ``Disturbing implications of a cosmological
+      constant,'' <with|font-shape|italic|JHEP>, vol.<nbsp>0210, 2002.
 
-      <bibitem*|8><label|bib-malgebras>Dov M.<nbsp>Gabbay Daniel<nbsp>Lehman,
-      Kurt<nbsp>Engesser. <newblock>Algebras of measurements: the logical
-      structure of quantum mechanics. <newblock><with|font-shape|italic|International
-      Journal of Theoretical Physics>, 45(4).
+      <bibitem*|8><label|bib-relaq>C.<nbsp>Francis, ``A relational quantum
+      theory incorporating gravity,'' <with|font-shape|italic|gr-qc/0508077>,
+      2005.
 
-      <bibitem*|9><label|bib-renormalization>Bertrand Delamotte. <newblock>A
-      hint of renormalization. <newblock><with|font-shape|italic|Am.J.Phys.>,
-      72:170--184, 2004.
+      <bibitem*|9><label|bib-darkmatter>F.<nbsp>Zwicky, ``Die rotverschiebung
+      von extragalaktischen nebeln,'' <with|font-shape|italic|Helvetica
+      Physica Acta>, vol.<nbsp>6, pp.<nbsp>110--127, 1933.
 
-      <bibitem*|10><label|bib-gausscoordinates>Albert Einstein.
-      <newblock><with|font-shape|italic|Ueber die spezielle und allgemeine
-      Relativitaetstheorie>, chapter<nbsp>25. <newblock>Springer-Verlag,
-      Berlin.
+      <bibitem*|10><label|bib-pioneer>J.<nbsp>A. et<nbsp>al, ``Study of the
+      anomalous acceleration of pioneer 10 and 11,''
+      <with|font-shape|italic|Phys. Rev.>, vol.<nbsp>D 65.
 
-      <bibitem*|11><label|bib-justifyrelativity>Albert Einstein.
-      <newblock><with|font-shape|italic|Ueber die spezielle und allgemeine
-      Relativitaetstheorie>, chapter<nbsp>23. <newblock>Springer-Verlag,
-      Berlin.
+      <bibitem*|11><label|bib-freefalling>L.<nbsp>Fabbri, ``Free falling
+      electric charge in a static homogeneous gravitational field,''
+      <with|font-shape|italic|Annales de la Fondation Louis de Broglie>,
+      vol.<nbsp>vol 30 no 1, pp.<nbsp>87--95, 2005.
 
-      <bibitem*|12><label|bib-spacemsmt>E.<nbsp>Ogita et<nbsp>al.
-      <newblock>Process in absolute distance measurement using a dye laser.
-      <newblock><with|font-shape|italic|Nanotechnology>, 1995.
+      <bibitem*|12><label|bib-liftsandtopologies>G.<nbsp>Segre, ``Einstein's
+      lifts and topologies: topological investigations on the principle of
+      equivalence.''
 
-      <bibitem*|13><label|bib-pioneer>John<nbsp>Anderson et<nbsp>al.
-      <newblock>Study of the anomalous acceleration of pioneer 10 and 11.
-      <newblock><with|font-shape|italic|Phys. Rev.>, D 65.
+      <bibitem*|13><label|bib-renormalization>B.<nbsp>Delamotte, ``A hint of
+      renormalization,'' <with|font-shape|italic|Am.J.Phys.>, vol.<nbsp>72,
+      pp.<nbsp>170--184, 2004.
 
-      <bibitem*|14><label|bib-freefalling>Luca Fabbri. <newblock>Free falling
-      electric charge in a static homogeneous gravitational field.
-      <newblock><with|font-shape|italic|Annales de la Fondation Louis de
-      Broglie>, vol 30 no 1:87--95, 2005.
+      <bibitem*|14><label|bib-scalerelat>L.<nbsp>Nottale, ``The theory of
+      scale relativity,'' <with|font-shape|italic|Int. J. Mod. Phys.>,
+      vol.<nbsp>A7, pp.<nbsp>4899--4936, 1992.
 
-      <bibitem*|15><label|bib-relaq>Charles Francis. <newblock>A relational
-      quantum theory incorporating gravity.
-      <newblock><with|font-shape|italic|gr-qc/0508077>, 2005.
+      <bibitem*|15><label|bib-fractalspacetime>L.<nbsp>Nottale,
+      <with|font-shape|italic|Fractal Space Time and Microphysics>.
+      <newblock>Singapore: World Scientific, 1993.
 
-      <bibitem*|16><label|bib-darksideofthemoon>Brian Greene.
-      <newblock><with|font-shape|italic|The fabric of the cosmos>,
-      chapter<nbsp>4, page<nbsp>93. <newblock>Vintage, New York, 2005.
+      <bibitem*|16><label|bib-basdevant>J.-L. Basdevant,
+      <with|font-shape|italic|Mecanique Quantique, cours de l'Ecole
+      Polytechnique>. <newblock>Paris: Ellipse.
 
-      <bibitem*|17><label|bib-jacobssteck>Kurt Jacobs and Daniel<nbsp>A.
-      Steck. <newblock>A straightforward introduction to continuous quantum
-      measurement. <newblock><with|font-shape|italic|Contemporary Physics>,
-      quant-ph/0611067, 2006.
+      <bibitem*|17><label|bib-cohen>F.<nbsp>L. Claude Cohen-Tannoudji,
+      Bernard<nbsp>Diu, <with|font-shape|italic|Mecanique Quantique I>.
+      <newblock>Paris: Hermann.
 
-      <bibitem*|18><label|bib-nonunit>Thomas<nbsp>Mehen Jaume<nbsp>Gomis.
-      <newblock>Space-time noncommutative field theories and unitarity.
-      <newblock><with|font-shape|italic|Nucl. Phys.>, B591:265--276, 2000.
+      <bibitem*|18><label|bib-epr>B.<nbsp>P. Albert<nbsp>Einstein and
+      N.<nbsp>Rosen, ``Can quantum-mechanical description of physical reality
+      be considered complete?,'' <with|font-shape|italic|Phys. Rev.>,
+      vol.<nbsp>47, p.<nbsp>777, 1935.
 
-      <bibitem*|19><label|bib-langevin>Paul Langevin. <newblock>L'evolution
-      de l'espace et du temps. <newblock><with|font-shape|italic|Scientia>,
-      X, 1911.
+      <bibitem*|19><label|bib-pondicherry>U.<nbsp>Mohrhoff, ``The pondicherry
+      interpretation of quantum mechanics,''
+      <with|font-shape|italic|Am.J.Phys>, vol.<nbsp>68, pp.<nbsp>728--745,
+      2000.
 
-      <bibitem*|20><label|bib-cosmocst>Leonard<nbsp>Susskind Lisa<nbsp>Dyson,
-      Matthew<nbsp>Kleban. <newblock>Disturbing implications of a
-      cosmological constant. <newblock><with|font-shape|italic|JHEP>, 0210,
-      2002.
+      <bibitem*|20><label|bib-relatquantmech>C.<nbsp>Rovelli, ``Relational
+      quantum mechanics,'' <with|font-shape|italic|Int. J. of Theor. Phys.>,
+      vol.<nbsp>35, 1996.
 
-      <bibitem*|21><label|bib-pondicherry>Ulrich Mohrhoff. <newblock>The
-      pondicherry interpretation of quantum mechanics.
-      <newblock><with|font-shape|italic|Am.J.Phys>, 68:728--745, 2000.
+      <bibitem*|21><label|bib-quantdecoherence>M.<nbsp>Schlosshauer,
+      ``Decoherence, the measurement problem, and interpretations of quantum
+      mechanics,'' <with|font-shape|italic|Rev. Mod. Phys.>, vol.<nbsp>76,
+      pp.<nbsp>1267--1305, 2004.
 
-      <bibitem*|22><label|bib-scalerelat>Laurent Nottale. <newblock>The
-      theory of scale relativity. <newblock><with|font-shape|italic|Int. J.
-      Mod. Phys.>, A7:4899--4936, 1992.
+      <bibitem*|22><label|bib-jacobssteck>K.<nbsp>Jacobs and D.<nbsp>A.
+      Steck, ``A straightforward introduction to continuous quantum
+      measurement,'' <with|font-shape|italic|Contemporary Physics>,
+      vol.<nbsp>quant-ph/0611067, 2006.
 
-      <bibitem*|23><label|bib-fractalspacetime>Laurent Nottale.
-      <newblock><with|font-shape|italic|Fractal Space Time and Microphysics>.
-      <newblock>World Scientific, Singapore, 1993.
+      <bibitem*|23><label|bib-darksideofthemoon>B.<nbsp>Greene,
+      <with|font-shape|italic|The fabric of the cosmos>, ch.<nbsp>4,
+      p.<nbsp>93. <newblock>New York: Vintage, 2005.
 
-      <bibitem*|24><label|bib-relatquantmech>Carlo Rovelli.
-      <newblock>Relational quantum mechanics.
-      <newblock><with|font-shape|italic|Int. J. of Theor. Phys.>, 35, 1996.
+      <bibitem*|24><label|bib-connes>A.<nbsp>Connes,
+      <with|font-shape|italic|Noncommutative Geometry>. <newblock>San Diego:
+      Academic Press, 1994.
 
-      <bibitem*|25><label|bib-quantdecoherence>Maximilian Schlosshauer.
-      <newblock>Decoherence, the measurement problem, and interpretations of
-      quantum mechanics. <newblock><with|font-shape|italic|Rev. Mod. Phys.>,
-      76:1267--1305, 2004.
+      <bibitem*|25><label|bib-noncomm>C.<nbsp>M. P. T.-S.
+      A.P.<nbsp>Balachandran, T.R.<nbsp>Govindarajan, ``Unitary quantum
+      physics with time-space noncommutativity,''
+      <with|font-shape|italic|JHEP>, vol.<nbsp>0410, p.<nbsp>072, 2004.
 
-      <bibitem*|26><label|bib-liftsandtopologies>Gavriel Segre.
-      <newblock>Einstein's lifts and topologies: topological investigations
-      on the principle of equivalence.
+      <bibitem*|26><label|bib-nonunit>T.<nbsp>M. Jaume<nbsp>Gomis,
+      ``Space-time noncommutative field theories and unitarity,''
+      <with|font-shape|italic|Nucl. Phys.>, vol.<nbsp>B591,
+      pp.<nbsp>265--276, 2000.
 
-      <bibitem*|27><label|bib-darkmatter>Fritz Zwicky. <newblock>Die
-      rotverschiebung von extragalaktischen nebeln.
-      <newblock><with|font-shape|italic|Helvetica Physica Acta>, 6:110--127,
-      1933.
+      <bibitem*|27><label|bib-aspect>A.<nbsp>Aspect, ``Three experimental
+      tests of bell inequalities by the measurement of polarization
+      correlations between photons,'' <with|font-shape|italic|PhD Thesis>,
+      1983.
     </bib-list>
   </bibliography>
 </body>
@@ -2185,7 +2185,7 @@
 
 <\references>
   <\collection>
-    <associate|analogy|<tuple|4.2|17>>
+    <associate|analogy|<tuple|4.2|18>>
     <associate|auto-1|<tuple|1|1>>
     <associate|auto-10|<tuple|6|4>>
     <associate|auto-11|<tuple|2.3|4>>
@@ -2224,7 +2224,7 @@
     <associate|auto-41|<tuple|27|13>>
     <associate|auto-42|<tuple|28|13>>
     <associate|auto-43|<tuple|29|13>>
-    <associate|auto-44|<tuple|30|13>>
+    <associate|auto-44|<tuple|30|14>>
     <associate|auto-45|<tuple|31|14>>
     <associate|auto-46|<tuple|32|14>>
     <associate|auto-47|<tuple|33|14>>
@@ -2238,29 +2238,29 @@
     <associate|auto-54|<tuple|37|16>>
     <associate|auto-55|<tuple|38|16>>
     <associate|auto-56|<tuple|39|16>>
-    <associate|auto-57|<tuple|40|16>>
-    <associate|auto-58|<tuple|41|16>>
+    <associate|auto-57|<tuple|40|17>>
+    <associate|auto-58|<tuple|41|17>>
     <associate|auto-59|<tuple|42|17>>
     <associate|auto-6|<tuple|2|3>>
     <associate|auto-60|<tuple|43|17>>
     <associate|auto-61|<tuple|44|17>>
-    <associate|auto-62|<tuple|4.2|17>>
+    <associate|auto-62|<tuple|4.2|18>>
     <associate|auto-63|<tuple|45|18>>
-    <associate|auto-64|<tuple|46|18>>
+    <associate|auto-64|<tuple|46|19>>
     <associate|auto-65|<tuple|47|19>>
     <associate|auto-66|<tuple|4.3|19>>
-    <associate|auto-67|<tuple|48|19>>
-    <associate|auto-68|<tuple|49|19>>
+    <associate|auto-67|<tuple|48|20>>
+    <associate|auto-68|<tuple|49|20>>
     <associate|auto-69|<tuple|50|20>>
     <associate|auto-7|<tuple|3|3>>
     <associate|auto-70|<tuple|51|20>>
     <associate|auto-71|<tuple|52|20>>
-    <associate|auto-72|<tuple|53|20>>
-    <associate|auto-73|<tuple|54|20>>
+    <associate|auto-72|<tuple|53|21>>
+    <associate|auto-73|<tuple|54|21>>
     <associate|auto-74|<tuple|55|21>>
     <associate|auto-75|<tuple|56|21>>
     <associate|auto-76|<tuple|57|21>>
-    <associate|auto-77|<tuple|5|21>>
+    <associate|auto-77|<tuple|5|22>>
     <associate|auto-78|<tuple|58|22>>
     <associate|auto-79|<tuple|59|22>>
     <associate|auto-8|<tuple|4|4>>
@@ -2275,35 +2275,35 @@
     <associate|auto-88|<tuple|6|?>>
     <associate|auto-89|<tuple|<with|mode|<quote|math>|\<bullet\>>|?>>
     <associate|auto-9|<tuple|5|4>>
-    <associate|bib-aspect|<tuple|3|23>>
-    <associate|bib-basdevant|<tuple|4|23>>
-    <associate|bib-cohen|<tuple|6|23>>
-    <associate|bib-connes|<tuple|7|23>>
-    <associate|bib-cosmocst|<tuple|20|23>>
-    <associate|bib-darkmatter|<tuple|27|23>>
-    <associate|bib-darksideofthemoon|<tuple|16|23>>
-    <associate|bib-epr|<tuple|1|23>>
-    <associate|bib-fractalspacetime|<tuple|23|23>>
-    <associate|bib-freefalling|<tuple|14|23>>
-    <associate|bib-gausscoordinates|<tuple|10|23>>
-    <associate|bib-jacobssteck|<tuple|17|23>>
-    <associate|bib-justifyrelativity|<tuple|11|23>>
-    <associate|bib-langevin|<tuple|19|23>>
-    <associate|bib-liftsandtopologies|<tuple|26|23>>
-    <associate|bib-malgebras|<tuple|8|23>>
-    <associate|bib-noncomm|<tuple|2|23>>
-    <associate|bib-nonunit|<tuple|18|23>>
-    <associate|bib-pioneer|<tuple|13|23>>
-    <associate|bib-pondicherry|<tuple|21|23>>
+    <associate|bib-aspect|<tuple|27|23>>
+    <associate|bib-basdevant|<tuple|16|23>>
+    <associate|bib-cohen|<tuple|17|23>>
+    <associate|bib-connes|<tuple|24|23>>
+    <associate|bib-cosmocst|<tuple|7|24>>
+    <associate|bib-darkmatter|<tuple|9|24>>
+    <associate|bib-darksideofthemoon|<tuple|23|23>>
+    <associate|bib-epr|<tuple|18|23>>
+    <associate|bib-fractalspacetime|<tuple|15|24>>
+    <associate|bib-freefalling|<tuple|11|23>>
+    <associate|bib-gausscoordinates|<tuple|4|23>>
+    <associate|bib-jacobssteck|<tuple|22|23>>
+    <associate|bib-justifyrelativity|<tuple|6|23>>
+    <associate|bib-langevin|<tuple|5|23>>
+    <associate|bib-liftsandtopologies|<tuple|12|24>>
+    <associate|bib-malgebras|<tuple|1|23>>
+    <associate|bib-noncomm|<tuple|25|23>>
+    <associate|bib-nonunit|<tuple|26|23>>
+    <associate|bib-pioneer|<tuple|10|23>>
+    <associate|bib-pondicherry|<tuple|19|24>>
     <associate|bib-qmforce|<tuple|8|21>>
-    <associate|bib-quantdecoherence|<tuple|25|23>>
-    <associate|bib-relaq|<tuple|15|?>>
+    <associate|bib-quantdecoherence|<tuple|21|24>>
+    <associate|bib-relaq|<tuple|8|23>>
     <associate|bib-relativity|<tuple|8|9>>
-    <associate|bib-relatquantmech|<tuple|24|23>>
-    <associate|bib-renormalization|<tuple|9|23>>
-    <associate|bib-scalerelat|<tuple|22|23>>
-    <associate|bib-spacemsmt|<tuple|12|23>>
-    <associate|bib-timemsmt|<tuple|5|23>>
+    <associate|bib-relatquantmech|<tuple|20|24>>
+    <associate|bib-renormalization|<tuple|13|23>>
+    <associate|bib-scalerelat|<tuple|14|24>>
+    <associate|bib-spacemsmt|<tuple|3|23>>
+    <associate|bib-timemsmt|<tuple|2|23>>
     <associate|eq1|<tuple|2|?>>
     <associate|eq:christoffel|<tuple|23|15>>
     <associate|eq:commut|<tuple|10|5>>
@@ -2314,7 +2314,7 @@
     <associate|eq:cossin2|<tuple|21|9>>
     <associate|eq:display|<tuple|1|3>>
     <associate|eq:eigen|<tuple|13|6>>
-    <associate|eq:einsteintensor|<tuple|23|13>>
+    <associate|eq:einsteintensor|<tuple|23|14>>
     <associate|eq:elmmove|<tuple|41|?>>
     <associate|eq:expected|<tuple|28|17>>
     <associate|eq:field|<tuple|30|21>>
