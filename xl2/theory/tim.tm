@@ -5,7 +5,7 @@
 <\body>
   <assign|by-text|> <assign|name|<macro|x|<arg|x>>> <doc-data|<doc-title|A
   Theory of Incomplete Measurements<with|color|grey|<with|color|red| - Draft
-  25>>>||<\doc-author-data|<author-name|Christophe de
+  26>>>||<\doc-author-data|<author-name|Christophe de
   Dinechin>|<\author-address>
     Sophia Antipolis, France
   </author-address>>
@@ -87,10 +87,9 @@
   general relativity and quantum mechanics, which become two approximations
   of the theory presented here. It is important to note that this result is
   not obtained by suggesting some new and improved Lagrangian or action that
-  models both, an approach that has been tried many times without clear
-  success. Instead, the result is obtained by revisiting a much deeper
-  foundation of physics theories, namely the very meaning given to variables
-  like <with|mode|math|x> in the equations.
+  models both, but by revisiting a much deeper foundation of physics
+  theories, namely the very meaning given to variables like
+  <with|mode|math|x> in the equations.
 
   <paragraph|Overview of the article>In the first section of this article, we
   will propose a definition of measurements (section <reference|postulates>),
@@ -999,10 +998,11 @@
 
   <subsection|<label|generalrelativity>General Relativity equations>
 
-  A reminder of the traditional formulation of general relativity is useful
-  to see how it relates to the theory of measurements presented here. In the
-  following equations, we will use Einstein's convention of summing terms
-  with identical lower and upper indices.
+  A reminder of the traditional formulation of general
+  relativity<cite|baez-2005-73> is useful to see how it relates to the theory
+  of measurements presented here. In the following equations, we will use
+  Einstein's convention of summing terms with identical lower and upper
+  indices.
 
   <paragraph|Mathematical tools>Many of the formulas in general relativity
   are mathematical tools that do not need any matching physical reality to be
@@ -1194,8 +1194,11 @@
   showing how, for a single particle, the Schwarzschild metric can be derived
   from an intrinsic mass-dependent proper time delay
   <with|mode|math|\<chi\>=4*G*m/c<rsup|3>> between the absorption and the
-  re-emission of a photon by the particle. By this construction, a mass is
-  simply identified to a proper time.
+  re-emission of a photon by the particle. With this construction, a mass is
+  simply identified to a proper time delay in a fundamental interaction,
+  which numerically matches the Shapiro delay<cite|shapiro> but can be
+  interpreted as a cause of curvature instead of its effect. It is unclear,
+  however, how this proposed model extends correctly to multiple masses.
 
   <paragraph|Field equation>The law of gravitation in general relativity
   relates the stress-energy tensor <with|mode|math|T> to the Einstein tensor
@@ -1244,13 +1247,16 @@
   The laws of electromagnetism in general relativity are not obviously
   related to space-time curvature. In particular, <eqref|eq:grelmmove> is
   nothing less than the introduction of a ``force'' in general relativity.
-  General relativity does not do away with forces, it gives an interpretation
-  of gravitation that is not based on geometric
+  General relativity does not do away with forces, even it gives an
+  interpretation of gravitation that is based on geometric
   considerations<cite|freefalling|liftsandtopologies>. The movement predicted
   by <eqref|eq:grelmmove> cannot be reduced to any curvature of space-time,
   because it depends on the charge of the particle. A single space-time
   curvature cannot explain why one particle would turn left while another
-  with exactly the same properties but the charge would turn right.
+  with exactly the same properties but the charge would turn right. Today,
+  the numerous attempts to give a geometric formulation of multiple forces
+  using for example torsion <cite|uft25|distpar|uft28|uft29a|uft29h|uft29c|uft30>
+  are generally regarded as unsuccessful.
 
   General relativity did not dispense with the notion of ``force'' entirely.
   While it showed that specific geometric properties are equivalent to a
@@ -2081,94 +2087,136 @@
       <with|font-shape|italic|Ueber die spezielle und allgemeine
       Relativitaetstheorie>, ch.<nbsp>23. <newblock>Berlin: Springer-Verlag.
 
-      <bibitem*|7><label|bib-cosmocst>L.<nbsp>S. Lisa<nbsp>Dyson,
+      <bibitem*|7><label|bib-baez-2005-73>J.<nbsp>C. Baez and E.<nbsp>F.
+      Bunn, ``The meaning of einstein's equation,''
+      <with|font-shape|italic|Amer.Jour.Phys.>, vol.<nbsp>73, p.<nbsp>644,
+      2005.
+
+      <bibitem*|8><label|bib-cosmocst>L.<nbsp>S. Lisa<nbsp>Dyson,
       Matthew<nbsp>Kleban, ``Disturbing implications of a cosmological
       constant,'' <with|font-shape|italic|JHEP>, vol.<nbsp>0210, 2002.
 
-      <bibitem*|8><label|bib-relaq>C.<nbsp>Francis, ``A relational quantum
+      <bibitem*|9><label|bib-relaq>C.<nbsp>Francis, ``A relational quantum
       theory incorporating gravity,'' <with|font-shape|italic|gr-qc/0508077>,
       2005.
 
-      <bibitem*|9><label|bib-darkmatter>F.<nbsp>Zwicky, ``Die rotverschiebung
-      von extragalaktischen nebeln,'' <with|font-shape|italic|Helvetica
-      Physica Acta>, vol.<nbsp>6, pp.<nbsp>110--127, 1933.
+      <bibitem*|10><label|bib-shapiro>I.<nbsp>I. Shapiro, ``Fourth test of
+      general relativity,'' <with|font-shape|italic|Phys. Rev.>,
+      vol.<nbsp>13, pp.<nbsp>789--791, 1964.
 
-      <bibitem*|10><label|bib-pioneer>J.<nbsp>A. et<nbsp>al, ``Study of the
+      <bibitem*|11><label|bib-darkmatter>F.<nbsp>Zwicky, ``Die
+      rotverschiebung von extragalaktischen nebeln,''
+      <with|font-shape|italic|Helvetica Physica Acta>, vol.<nbsp>6,
+      pp.<nbsp>110--127, 1933.
+
+      <bibitem*|12><label|bib-pioneer>J.<nbsp>A. et<nbsp>al, ``Study of the
       anomalous acceleration of pioneer 10 and 11,''
       <with|font-shape|italic|Phys. Rev.>, vol.<nbsp>D 65.
 
-      <bibitem*|11><label|bib-freefalling>L.<nbsp>Fabbri, ``Free falling
+      <bibitem*|13><label|bib-freefalling>L.<nbsp>Fabbri, ``Free falling
       electric charge in a static homogeneous gravitational field,''
       <with|font-shape|italic|Annales de la Fondation Louis de Broglie>,
       vol.<nbsp>vol 30 no 1, pp.<nbsp>87--95, 2005.
 
-      <bibitem*|12><label|bib-liftsandtopologies>G.<nbsp>Segre, ``Einstein's
+      <bibitem*|14><label|bib-liftsandtopologies>G.<nbsp>Segre, ``Einstein's
       lifts and topologies: topological investigations on the principle of
       equivalence.''
 
-      <bibitem*|13><label|bib-renormalization>B.<nbsp>Delamotte, ``A hint of
+      <bibitem*|15><label|bib-uft25>A.<nbsp>Einstein, ``Unified field theory
+      of gravitation and electricity,'' <with|font-shape|italic|Session
+      report>, pp.<nbsp>414--419, July 25h, 1928.
+
+      <bibitem*|16><label|bib-distpar>A.<nbsp>Einstein, ``Riemannian geometry
+      with maintaining the notion of distant parallelism,''
+      <with|font-shape|italic|Session report>, pp.<nbsp>217--221, June 7th,
+      1928.
+
+      <bibitem*|17><label|bib-uft28>A.<nbsp>Einstein, ``New possibility for a
+      unified field theory of gravitation and electricity,''
+      <with|font-shape|italic|Session report>, pp.<nbsp>224--227, June 14th,
+      1928.
+
+      <bibitem*|18><label|bib-uft29a>A.<nbsp>Einstein, ``About the unified
+      field theory,'' <with|font-shape|italic|Session report>, pp.<nbsp>2--7,
+      January 10th, 1929.
+
+      <bibitem*|19><label|bib-uft29h>A.<nbsp>Einstein, ``Unified field theory
+      and hamiltonian principle,'' <with|font-shape|italic|Session report>,
+      pp.<nbsp>156--159, March 29th, 1929.
+
+      <bibitem*|20><label|bib-uft29c>A.<nbsp>Einstein, ``The compatibility of
+      the field equations in the unified field theory,''
+      <with|font-shape|italic|Session report>, pp.<nbsp>18--23, December
+      12th, 1929.
+
+      <bibitem*|21><label|bib-uft30>A.<nbsp>Einstein, ``Unified field theory
+      based on riemannian metrics and distant parallelism,''
+      <with|font-shape|italic|Math. Annal.>, vol.<nbsp>102,
+      pp.<nbsp>685--697, 1930.
+
+      <bibitem*|22><label|bib-renormalization>B.<nbsp>Delamotte, ``A hint of
       renormalization,'' <with|font-shape|italic|Am.J.Phys.>, vol.<nbsp>72,
       pp.<nbsp>170--184, 2004.
 
-      <bibitem*|14><label|bib-scalerelat>L.<nbsp>Nottale, ``The theory of
+      <bibitem*|23><label|bib-scalerelat>L.<nbsp>Nottale, ``The theory of
       scale relativity,'' <with|font-shape|italic|Int. J. Mod. Phys.>,
       vol.<nbsp>A7, pp.<nbsp>4899--4936, 1992.
 
-      <bibitem*|15><label|bib-fractalspacetime>L.<nbsp>Nottale,
+      <bibitem*|24><label|bib-fractalspacetime>L.<nbsp>Nottale,
       <with|font-shape|italic|Fractal Space Time and Microphysics>.
       <newblock>Singapore: World Scientific, 1993.
 
-      <bibitem*|16><label|bib-basdevant>J.-L. Basdevant,
+      <bibitem*|25><label|bib-basdevant>J.-L. Basdevant,
       <with|font-shape|italic|Mecanique Quantique, cours de l'Ecole
       Polytechnique>. <newblock>Paris: Ellipse.
 
-      <bibitem*|17><label|bib-cohen>F.<nbsp>L. Claude Cohen-Tannoudji,
+      <bibitem*|26><label|bib-cohen>F.<nbsp>L. Claude Cohen-Tannoudji,
       Bernard<nbsp>Diu, <with|font-shape|italic|Mecanique Quantique I>.
       <newblock>Paris: Hermann.
 
-      <bibitem*|18><label|bib-epr>B.<nbsp>P. Albert<nbsp>Einstein and
+      <bibitem*|27><label|bib-epr>B.<nbsp>P. Albert<nbsp>Einstein and
       N.<nbsp>Rosen, ``Can quantum-mechanical description of physical reality
       be considered complete?,'' <with|font-shape|italic|Phys. Rev.>,
       vol.<nbsp>47, p.<nbsp>777, 1935.
 
-      <bibitem*|19><label|bib-pondicherry>U.<nbsp>Mohrhoff, ``The pondicherry
+      <bibitem*|28><label|bib-pondicherry>U.<nbsp>Mohrhoff, ``The pondicherry
       interpretation of quantum mechanics,''
       <with|font-shape|italic|Am.J.Phys>, vol.<nbsp>68, pp.<nbsp>728--745,
       2000.
 
-      <bibitem*|20><label|bib-relatquantmech>C.<nbsp>Rovelli, ``Relational
+      <bibitem*|29><label|bib-relatquantmech>C.<nbsp>Rovelli, ``Relational
       quantum mechanics,'' <with|font-shape|italic|Int. J. of Theor. Phys.>,
       vol.<nbsp>35, 1996.
 
-      <bibitem*|21><label|bib-quantdecoherence>M.<nbsp>Schlosshauer,
+      <bibitem*|30><label|bib-quantdecoherence>M.<nbsp>Schlosshauer,
       ``Decoherence, the measurement problem, and interpretations of quantum
       mechanics,'' <with|font-shape|italic|Rev. Mod. Phys.>, vol.<nbsp>76,
       pp.<nbsp>1267--1305, 2004.
 
-      <bibitem*|22><label|bib-jacobssteck>K.<nbsp>Jacobs and D.<nbsp>A.
+      <bibitem*|31><label|bib-jacobssteck>K.<nbsp>Jacobs and D.<nbsp>A.
       Steck, ``A straightforward introduction to continuous quantum
       measurement,'' <with|font-shape|italic|Contemporary Physics>,
       vol.<nbsp>quant-ph/0611067, 2006.
 
-      <bibitem*|23><label|bib-darksideofthemoon>B.<nbsp>Greene,
+      <bibitem*|32><label|bib-darksideofthemoon>B.<nbsp>Greene,
       <with|font-shape|italic|The fabric of the cosmos>, ch.<nbsp>4,
       p.<nbsp>93. <newblock>New York: Vintage, 2005.
 
-      <bibitem*|24><label|bib-connes>A.<nbsp>Connes,
+      <bibitem*|33><label|bib-connes>A.<nbsp>Connes,
       <with|font-shape|italic|Noncommutative Geometry>. <newblock>San Diego:
       Academic Press, 1994.
 
-      <bibitem*|25><label|bib-noncomm>C.<nbsp>M. P. T.-S.
+      <bibitem*|34><label|bib-noncomm>C.<nbsp>M. P. T.-S.
       A.P.<nbsp>Balachandran, T.R.<nbsp>Govindarajan, ``Unitary quantum
       physics with time-space noncommutativity,''
       <with|font-shape|italic|JHEP>, vol.<nbsp>0410, p.<nbsp>072, 2004.
 
-      <bibitem*|26><label|bib-nonunit>T.<nbsp>M. Jaume<nbsp>Gomis,
+      <bibitem*|35><label|bib-nonunit>T.<nbsp>M. Jaume<nbsp>Gomis,
       ``Space-time noncommutative field theories and unitarity,''
       <with|font-shape|italic|Nucl. Phys.>, vol.<nbsp>B591,
       pp.<nbsp>265--276, 2000.
 
-      <bibitem*|27><label|bib-aspect>A.<nbsp>Aspect, ``Three experimental
+      <bibitem*|36><label|bib-aspect>A.<nbsp>Aspect, ``Three experimental
       tests of bell inequalities by the measurement of polarization
       correlations between photons,'' <with|font-shape|italic|PhD Thesis>,
       1983.
@@ -2275,35 +2323,44 @@
     <associate|auto-88|<tuple|6|?>>
     <associate|auto-89|<tuple|<with|mode|<quote|math>|\<bullet\>>|?>>
     <associate|auto-9|<tuple|5|4>>
-    <associate|bib-aspect|<tuple|27|23>>
-    <associate|bib-basdevant|<tuple|16|23>>
-    <associate|bib-cohen|<tuple|17|23>>
-    <associate|bib-connes|<tuple|24|23>>
-    <associate|bib-cosmocst|<tuple|7|24>>
-    <associate|bib-darkmatter|<tuple|9|24>>
-    <associate|bib-darksideofthemoon|<tuple|23|23>>
-    <associate|bib-epr|<tuple|18|23>>
-    <associate|bib-fractalspacetime|<tuple|15|24>>
-    <associate|bib-freefalling|<tuple|11|23>>
+    <associate|bib-aspect|<tuple|36|24>>
+    <associate|bib-baez-2005-73|<tuple|7|?>>
+    <associate|bib-basdevant|<tuple|25|23>>
+    <associate|bib-cohen|<tuple|26|23>>
+    <associate|bib-connes|<tuple|33|24>>
+    <associate|bib-cosmocst|<tuple|8|23>>
+    <associate|bib-darkmatter|<tuple|11|23>>
+    <associate|bib-darksideofthemoon|<tuple|32|24>>
+    <associate|bib-distpar|<tuple|16|?>>
+    <associate|bib-epr|<tuple|27|23>>
+    <associate|bib-fractalspacetime|<tuple|24|23>>
+    <associate|bib-freefalling|<tuple|13|23>>
     <associate|bib-gausscoordinates|<tuple|4|23>>
-    <associate|bib-jacobssteck|<tuple|22|23>>
+    <associate|bib-jacobssteck|<tuple|31|24>>
     <associate|bib-justifyrelativity|<tuple|6|23>>
     <associate|bib-langevin|<tuple|5|23>>
-    <associate|bib-liftsandtopologies|<tuple|12|24>>
+    <associate|bib-liftsandtopologies|<tuple|14|23>>
     <associate|bib-malgebras|<tuple|1|23>>
-    <associate|bib-noncomm|<tuple|25|23>>
-    <associate|bib-nonunit|<tuple|26|23>>
-    <associate|bib-pioneer|<tuple|10|23>>
-    <associate|bib-pondicherry|<tuple|19|24>>
+    <associate|bib-noncomm|<tuple|34|24>>
+    <associate|bib-nonunit|<tuple|35|24>>
+    <associate|bib-pioneer|<tuple|12|23>>
+    <associate|bib-pondicherry|<tuple|28|23>>
     <associate|bib-qmforce|<tuple|8|21>>
-    <associate|bib-quantdecoherence|<tuple|21|24>>
-    <associate|bib-relaq|<tuple|8|23>>
+    <associate|bib-quantdecoherence|<tuple|30|23>>
+    <associate|bib-relaq|<tuple|9|23>>
     <associate|bib-relativity|<tuple|8|9>>
-    <associate|bib-relatquantmech|<tuple|20|24>>
-    <associate|bib-renormalization|<tuple|13|23>>
-    <associate|bib-scalerelat|<tuple|14|24>>
+    <associate|bib-relatquantmech|<tuple|29|23>>
+    <associate|bib-renormalization|<tuple|22|23>>
+    <associate|bib-scalerelat|<tuple|23|23>>
+    <associate|bib-shapiro|<tuple|10|?>>
     <associate|bib-spacemsmt|<tuple|3|23>>
     <associate|bib-timemsmt|<tuple|2|23>>
+    <associate|bib-uft25|<tuple|15|?>>
+    <associate|bib-uft28|<tuple|17|?>>
+    <associate|bib-uft29a|<tuple|18|?>>
+    <associate|bib-uft29c|<tuple|20|?>>
+    <associate|bib-uft29h|<tuple|19|?>>
+    <associate|bib-uft30|<tuple|21|?>>
     <associate|eq1|<tuple|2|?>>
     <associate|eq:christoffel|<tuple|23|15>>
     <associate|eq:commut|<tuple|10|5>>
@@ -2382,9 +2439,13 @@
 
       justifyrelativity
 
+      baez-2005-73
+
       cosmocst
 
       relaq
+
+      shapiro
 
       darkmatter
 
@@ -2393,6 +2454,20 @@
       freefalling
 
       liftsandtopologies
+
+      uft25
+
+      distpar
+
+      uft28
+
+      uft29a
+
+      uft29h
+
+      uft29c
+
+      uft30
 
       renormalization
 
