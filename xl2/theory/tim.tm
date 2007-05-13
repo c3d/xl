@@ -5,7 +5,7 @@
 <\body>
   <assign|by-text|> <assign|name|<macro|x|<arg|x>>> <doc-data|<doc-title|A
   Theory of Incomplete Measurements<with|color|grey|<with|color|red| - Draft
-  26>>>||<\doc-author-data|<author-name|Christophe de
+  27>>>||<\doc-author-data|<author-name|Christophe de
   Dinechin>|<\author-address>
     Sophia Antipolis, France
   </author-address>>
@@ -106,8 +106,8 @@
   use of curved space-time representations in general relativity is justified
   because we do not know how to build an Euclidean geometry out of physical
   measurements (section <reference|noneuclidean>). We will distinguish among
-  the equations of general relativity those that are of geometric nature, and
-  those that directly relate to measurements (section
+  the equations of general relativity those that originate in mathematics or
+  geometry, and those that derive from physical observations (section
   <reference|generalrelativity>). Finally, we will show that the relatively
   recent idea of scale relativity may be justified when we change
   measurements to ``zoom in'' or ``zoom out'' (section
@@ -2272,7 +2272,7 @@
     <associate|auto-41|<tuple|27|13>>
     <associate|auto-42|<tuple|28|13>>
     <associate|auto-43|<tuple|29|13>>
-    <associate|auto-44|<tuple|30|14>>
+    <associate|auto-44|<tuple|30|13>>
     <associate|auto-45|<tuple|31|14>>
     <associate|auto-46|<tuple|32|14>>
     <associate|auto-47|<tuple|33|14>>
@@ -2280,7 +2280,7 @@
     <associate|auto-49|<tuple|34|15>>
     <associate|auto-5|<tuple|2.2|3>>
     <associate|auto-50|<tuple|35|15>>
-    <associate|auto-51|<tuple|36|15>>
+    <associate|auto-51|<tuple|36|16>>
     <associate|auto-52|<tuple|4|16>>
     <associate|auto-53|<tuple|4.1|16>>
     <associate|auto-54|<tuple|37|16>>
@@ -2324,16 +2324,16 @@
     <associate|auto-89|<tuple|<with|mode|<quote|math>|\<bullet\>>|?>>
     <associate|auto-9|<tuple|5|4>>
     <associate|bib-aspect|<tuple|36|24>>
-    <associate|bib-baez-2005-73|<tuple|7|?>>
-    <associate|bib-basdevant|<tuple|25|23>>
-    <associate|bib-cohen|<tuple|26|23>>
+    <associate|bib-baez-2005-73|<tuple|7|23>>
+    <associate|bib-basdevant|<tuple|25|24>>
+    <associate|bib-cohen|<tuple|26|24>>
     <associate|bib-connes|<tuple|33|24>>
     <associate|bib-cosmocst|<tuple|8|23>>
     <associate|bib-darkmatter|<tuple|11|23>>
     <associate|bib-darksideofthemoon|<tuple|32|24>>
-    <associate|bib-distpar|<tuple|16|?>>
-    <associate|bib-epr|<tuple|27|23>>
-    <associate|bib-fractalspacetime|<tuple|24|23>>
+    <associate|bib-distpar|<tuple|16|23>>
+    <associate|bib-epr|<tuple|27|24>>
+    <associate|bib-fractalspacetime|<tuple|24|24>>
     <associate|bib-freefalling|<tuple|13|23>>
     <associate|bib-gausscoordinates|<tuple|4|23>>
     <associate|bib-jacobssteck|<tuple|31|24>>
@@ -2344,23 +2344,23 @@
     <associate|bib-noncomm|<tuple|34|24>>
     <associate|bib-nonunit|<tuple|35|24>>
     <associate|bib-pioneer|<tuple|12|23>>
-    <associate|bib-pondicherry|<tuple|28|23>>
+    <associate|bib-pondicherry|<tuple|28|24>>
     <associate|bib-qmforce|<tuple|8|21>>
-    <associate|bib-quantdecoherence|<tuple|30|23>>
+    <associate|bib-quantdecoherence|<tuple|30|24>>
     <associate|bib-relaq|<tuple|9|23>>
     <associate|bib-relativity|<tuple|8|9>>
-    <associate|bib-relatquantmech|<tuple|29|23>>
-    <associate|bib-renormalization|<tuple|22|23>>
-    <associate|bib-scalerelat|<tuple|23|23>>
-    <associate|bib-shapiro|<tuple|10|?>>
+    <associate|bib-relatquantmech|<tuple|29|24>>
+    <associate|bib-renormalization|<tuple|22|24>>
+    <associate|bib-scalerelat|<tuple|23|24>>
+    <associate|bib-shapiro|<tuple|10|23>>
     <associate|bib-spacemsmt|<tuple|3|23>>
     <associate|bib-timemsmt|<tuple|2|23>>
-    <associate|bib-uft25|<tuple|15|?>>
-    <associate|bib-uft28|<tuple|17|?>>
-    <associate|bib-uft29a|<tuple|18|?>>
-    <associate|bib-uft29c|<tuple|20|?>>
-    <associate|bib-uft29h|<tuple|19|?>>
-    <associate|bib-uft30|<tuple|21|?>>
+    <associate|bib-uft25|<tuple|15|23>>
+    <associate|bib-uft28|<tuple|17|23>>
+    <associate|bib-uft29a|<tuple|18|23>>
+    <associate|bib-uft29c|<tuple|20|24>>
+    <associate|bib-uft29h|<tuple|19|23>>
+    <associate|bib-uft30|<tuple|21|24>>
     <associate|eq1|<tuple|2|?>>
     <associate|eq:christoffel|<tuple|23|15>>
     <associate|eq:commut|<tuple|10|5>>
@@ -2371,7 +2371,7 @@
     <associate|eq:cossin2|<tuple|21|9>>
     <associate|eq:display|<tuple|1|3>>
     <associate|eq:eigen|<tuple|13|6>>
-    <associate|eq:einsteintensor|<tuple|23|14>>
+    <associate|eq:einsteintensor|<tuple|23|13>>
     <associate|eq:elmmove|<tuple|41|?>>
     <associate|eq:expected|<tuple|28|17>>
     <associate|eq:field|<tuple|30|21>>
