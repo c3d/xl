@@ -1,4 +1,4 @@
-<TeXmacs|1.0.6.6>
+<TeXmacs|1.0.6>
 
 <style|<tuple|article|maxima>>
 
@@ -6,7 +6,7 @@
   <assign|by-text|> <assign|name|<macro|x|<arg|x>>> <doc-data|<doc-title|A
   Theory of Incomplete Measurements>||<\doc-author-data|<author-name|Christophe
   de Dinechin>|<\author-address>
-    Sophia Antipolis, France
+    Hewlett-Packard, Sophia Antipolis, France
   </author-address>>
     \;
   </doc-author-data|<\author-address>
@@ -69,12 +69,12 @@
   theories, namely the very meaning given to variables like
   <with|mode|math|x> in the equations.
 
-  <paragraph|Overview of the article>In the first section of this article, we
-  will propose a definition of measurements (section <reference|postulates>),
-  introduce a notation allowing us to reason about this and other physics
-  problem without constraining the mathematics (section
-  <reference|formalism>), and illustrate how the formalism can be used to
-  discuss simple problems (section <reference|reasoning>).
+  <paragraph|Overview>In the first section of this article, we will propose a
+  definition of measurements (section <reference|postulates>), introduce a
+  notation allowing us to reason about this and other physics problem without
+  constraining the mathematics (section <reference|formalism>), and
+  illustrate how the formalism can be used to discuss simple problems
+  (section <reference|reasoning>).
 
   The next section will focus on general relativity, beginning with a
   definition of space and time based on measurements (section
@@ -446,7 +446,7 @@
   ``identical'' on what we know about <with|mode|math|\<frak-F\>> or
   <with|mode|math|A>, it is actually possible for distinct physical systems
   to be truly identical<\footnote>
-    Physics text often use the word <em|indistinguishable> in that case.
+    Physics texts often use the word <em|indistinguishable> in that case.
   </footnote> in that sense.
 
   <paragraph|Commutativity>Consider now two independent measurements
@@ -598,7 +598,7 @@
 
   <paragraph|Symmetry between all measurements>In the TIM, no measurement,
   not even space or time, is given any particular pre-eminence over the
-  others. This is in constrast with the most common formulations of both
+  others. This is in contrast with the most common formulations of both
   general relativity and quantum mechanics, where space and time measurements
   are generally given a very special role, space and time being the
   ``background'' where other elements of the theory are defined. Preserving
@@ -819,9 +819,9 @@
   the universe using a particular choice of coordinates.
 
   <paragraph|Change of coordinates>The choice of coordinates
-  <with|mode|math|X<rsub|i>> is not unique. As suggested in
-  section<space|1spc><reference|Remarks>, we must now consider two different
-  kinds of coordinate changes:
+  <with|mode|math|X<rsub|i>> is not unique. As suggested in section
+  <reference|Remarks>, we must now consider two different kinds of coordinate
+  changes:
 
   <\itemize>
     <item>Coordinate changes where quasi-identical physical processes are
@@ -876,18 +876,18 @@
   approximation is perfectly legitimate in practice even for differentiation,
   because the number of repetitions of the fundamental processes
   <with|mode|math|\<delta\>X<rsub|i>> is usually chosen to be very large (for
-  instance, there is an extremely large number of atoms in the typical
-  rubberband), so that the resolution <with|mode|math|\<delta\>x<rsub|i>> is
-  very small relative to <with|mode|math|x<rsub|i>>. In this ``smooth''
-  limit, there is no practical numerical difference between the limit
+  instance, there is an extremely large number of atoms in the typical rubber
+  band), so that the resolution <with|mode|math|\<delta\>x<rsub|i>> is very
+  small relative to <with|mode|math|x<rsub|i>>. In this ``smooth'' limit,
+  there is no practical numerical difference between the limit
   <with|mode|math|<frac|\<mathd\>f|\<mathd\>x>(x)> and an approximation like
   <with|mode|math|<frac|f(x+n*\<delta\>x)-f(x)|n*\<delta\>x>> when
   <with|mode|math|n> is sufficiently small.
 
   <paragraph|From physical to mathematical rotation>A similar, but more
-  problem occurs when we write relations between the results of various
-  measurement processes, because the simplest form of these relations may
-  involve continuous mathematics. This is the case in particular for the
+  subtle problem occurs when we write relations between the results of
+  various measurement processes, because the simplest form of these relations
+  may involve continuous mathematics. This is the case in particular for the
   mathematical rotations that we associate with physical rotations.
 
   We observe experimentally that the relations between measurements of
@@ -908,33 +908,30 @@
   extensions. This structure will allow us to make predictions at an infinite
   resolution, and from there, predictions at the actual resolution.
 
-  For example, if your only measurement apparatus has a resolution of
-  1<space|1spc>cm, and if you rotate an object of length 10<space|1spc>cm by
-  45<space|1spc>degrees, the predicted mathematical length based on the
-  continuous extension above will be <with|mode|math|10*cos(45)=10*<frac|<sqrt|2>|2>\<simeq\>7.07>.
-  It is however unreasonable to claim that your measurement apparatus will
-  give you the result 7.07<space|1spc>cm (or, worse yet, the exact irrational
-  value), since its resolution is only 1<space|1spc>cm. We may have taken the
-  bad habit of saying ``it will measure between 7 and 8<space|1spc>cm''
-  because our eye has a much higher resolution than the graduations on
-  typical measurement tools like pocket rulers. But in reality, the result
-  returned by a physical measurement with resolution 1<space|1spc>cm should
-  be 7<space|1spc>cm or 8<space|1spc>cm depending on the instrument.
+  For example, if your only measurement apparatus has a resolution of 1 cm,
+  and if you rotate an object of length 10 cm by 45 degrees, the predicted
+  mathematical length based on the continuous extension above will be
+  <with|mode|math|10*cos(45)=10*<frac|<sqrt|2>|2>\<simeq\>7.07>. It is
+  however unreasonable to claim that your measurement apparatus will give you
+  the result 7.07 cm (or, worse yet, the exact irrational value), since its
+  resolution is only 1 cm. We may have taken the bad habit of saying ``it
+  will measure between 7 and 8 cm'' because our eye has a much higher
+  resolution than the graduations on typical measurement tools like pocket
+  rulers. But in reality, the result returned by a physical measurement with
+  resolution 1 cm should be 7 cm or 8 cm depending on the instrument.
 
   <paragraph|Problem solved by special relativity>The original presentation
   of special relativity presented the theory using concepts such as inertial
-  reference frames<cite|eisntein1905>. These concepts are slightly
-  complicated to translate in terms of measurements. On the other hand, the
-  constancy of the speed of light is much easier to express. Historically,
-  this was also the fundamental issue that special relativity tried to
-  address, both from an experimental point of view <cite|michelsonmorley> and
-  from a theoretical one <cite|poincare>. The key problem at the time was to
-  justify why a constant (<with|mode|math|c=<frac|1|<sqrt|\<mu\><rsub|0>\<epsilon\><rsub|0>>>>)
-  with the dimension of a speed would show up in Maxwell's equations
-  <cite|maxwell>. This was problematic because this value, being a constant,
-  did not seem to depend on the observer like other speeds did.
+  reference frames. These concepts are slightly complicated to translate in
+  terms of measurements. On the other hand, the constancy of the speed of
+  light is much easier to express. Historically, this was also the
+  fundamental issue that special relativity tried to address, both from an
+  experimental point of view (Michelson-Morley experiment) and from a
+  theoretical one (justifying why speed of light in Maxwell's equations was
+  <with|mode|math|c=<frac|1|<sqrt|\<mu\><rsub|0>\<epsilon\><rsub|0>>>>, and
+  therefore independent from the speed of the observer).
 
-  As we now know, the solution to this problem reveals that space-time has a
+  As we now know, the solution to this problem revealed that space-time has a
   Minkowski structure, where the distance is written using an equation like
   <with|mode|math|\<mathd\>s<rsup|2>=c<rsup|2>*\<mathd\>t<rsup|2>-\<mathd\>x<rsup|2>-\<mathd\>y<rsup|2>-\<mathd\>z<rsup|2>>
   and is identical for all observers in a well-chosen classes of observer
@@ -946,7 +943,7 @@
   <paragraph|Euclidean space>Let us start with the observation that, at least
   for well-chosen measurements of distance (in the same sense as we talked
   about a well-chosen class of observers), we can give our measurements of
-  spatial distance the structure of a 3-dimensional Euclidean group. The
+  spatial distance the structure of a 2-dimensional Euclidean group. The
   distance can be written as <with|mode|math|\<mathd\>s<rsup|2>=\<mathd\>x<rsup|2>+\<mathd\>y<rsup|2>>.
   As explained above, this is really a continuous extension of discrete
   observations approximately verifying Pythagoras' theorem. The mathematics
@@ -956,15 +953,15 @@
   trajectory, we perform the measurements of space-time coordinates relative
   to the individual systems. In <eqref|eq:spacevol>, this reference system
   was denoted as <with|mode|math|\<frak-F\><rsub|0>>. To convert the
-  coordinates <with|mode|math|x,y,z> as measured from system
+  coordinates <with|mode|math|x,y> as measured from system
   <with|mode|math|\<frak-F\><rsub|0>> to the coordinates
-  <with|mode|math|x<rprime|'>,y<rprime|'>,z<rprime|'>> as seen from system
+  <with|mode|math|x<rprime|'>,y<rprime|'>> as seen from system
   <with|mode|math|\<frak-F\><rprime|'><rsub|0>>, we must consider the
   translation and rotation required to bring one tangent referential system
-  to another, as shown in figure <reference|fig:rotation>.
+  to another.
 
   <\with|par-mode|center>
-    <small-figure|<with|gr-mode|<tuple|edit|text-at>|gr-frame|<tuple|scale|1cm|<tuple|0.100001gw|0.199999gh>>|gr-geometry|<tuple|geometry|7cm|5cm|center>|gr-grid|<tuple|cartesian|<point|0|0>|1>|gr-grid-old|<tuple|cartesian|<point|0|0>|1>|gr-edit-grid-aspect|<tuple|<tuple|axes|none>|<tuple|1|none>|<tuple|10|none>>|gr-edit-grid|<tuple|cartesian|<point|0|0>|1>|gr-edit-grid-old|<tuple|cartesian|<point|0|0>|1>|gr-line-arrows|none|gr-line-width|1ln|gr-fill-color|default|gr-color|orange|gr-dash-style|<tuple|1|0>|<graphics|<spline|<point|-1.3|0.9>|<point|0.1|2.4>|<point|2.1|2.1>|<point|4|1.3>|<point|5.4|2.2>>|<with|color|red|line-width|2ln|line-arrows|<tuple|<with|dash-style|none|<line|<tuple|-10ln|6ln>|<tuple|0ln|0ln>|<tuple|-10ln|-6ln>>>>|fill-color|red|<line|<point|0|0>|<point|1|0>>>|<with|color|red|line-width|2ln|line-arrows|<tuple|<with|dash-style|none|<line|<tuple|-10ln|6ln>|<tuple|0ln|0ln>|<tuple|-10ln|-6ln>>>>|fill-color|red|<line|<point|0|0>|<point|0|1>>>|<text-at|<with|mode|math|<with|color|red|x>>|<point|-0.3|0.4>>|<text-at|<with|mode|math|<with|color|red|y>>|<point|0.4|-0.3>>|<text-at|<with|mode|math|<with|color|blue|y<rprime|'>>><with|mode|math|<rprime|>>|<point|2.1|1.6>>|<text-at|<with|color|blue|<with|mode|math|x<rprime|'>>>|<point|1.9|2.7>>|<with|line-width|2ln|fill-color|red|<line|<point|1.5|2.2>|<point|3.1|2.2>>>|<with|line-width|2ln|fill-color|red|<arc|<point|2.5|1.9>|<point|2.6|2.2>|<point|2.6|2.3>>>|<text-at|<with|mode|math|\<theta\>>|<point|2.7|1.9>>|<text-at|<with|mode|math|\<frak-F\><rprime|'>>|<point|4.8|2.2>>|<text-at|<with|mode|math|\<frak-F\>>|<point|5.1|-0.5>>|<with|line-width|2ln|fill-color|red|<line|<point|-1.3|0>|<point|5.3|0>>>|<with|color|red|line-width|2ln|fill-color|red|<line|<point|0|0>|<point|1|0>>>|<with|color|orange|dash-style|<tuple|1|0>|<line|<point|2|2.4>|<point|2|-0.4>>>|<with|color|orange|dash-style|<tuple|1|0>|<line|<point|2.2|2.2>|<point|-0.8|2.2>>>|<text-at|<with|mode|math|y<rsub|0>>|<point|1.9|-0.4>>|<text-at|<with|mode|math|x<rsub|0>>|<point|-0.9|2.2>>|<with|color|blue|line-width|2ln|line-arrows|<tuple|<with|dash-style|none|<line|<tuple|-10ln|6ln>|<tuple|0ln|0ln>|<tuple|-10ln|-6ln>>>>|fill-color|red|<line|<point|2|2.2>|<point|2.8|1.6>>>|<with|color|blue|line-width|2ln|line-arrows|<tuple|<with|dash-style|none|<line|<tuple|-10ln|6ln>|<tuple|0ln|0ln>|<tuple|-10ln|-6ln>>>>|fill-color|red|<line|<point|2|2.2>|<point|2.6|3>>>>>|<label|fig:rotation>Change
+    <small-figure|<with|gr-mode|<tuple|edit|text-at>|gr-frame|<tuple|scale|1cm|<tuple|0.199999gw|0.199999gh>>|gr-geometry|<tuple|geometry|7cm|5cm|center>|gr-grid|<tuple|cartesian|<point|0|0>|1>|gr-grid-old|<tuple|cartesian|<point|0|0>|1>|gr-edit-grid-aspect|<tuple|<tuple|axes|none>|<tuple|1|none>|<tuple|10|none>>|gr-edit-grid|<tuple|cartesian|<point|0|0>|1>|gr-edit-grid-old|<tuple|cartesian|<point|0|0>|1>|gr-line-arrows|none|gr-line-width|1ln|gr-fill-color|default|gr-color|orange|gr-dash-style|<tuple|1|0>|<graphics|<spline|<point|-1.3|0.9>|<point|0.1|2.4>|<point|2.1|2.1>|<point|4|1.3>|<point|5.4|2.2>>|<with|color|red|line-width|2ln|line-arrows|<tuple|<with|dash-style|none|<line|<tuple|-10ln|6ln>|<tuple|0ln|0ln>|<tuple|-10ln|-6ln>>>>|fill-color|red|<line|<point|0|0>|<point|1|0>>>|<with|color|red|line-width|2ln|line-arrows|<tuple|<with|dash-style|none|<line|<tuple|-10ln|6ln>|<tuple|0ln|0ln>|<tuple|-10ln|-6ln>>>>|fill-color|red|<line|<point|0|0>|<point|0|1>>>|<text-at|<with|mode|math|<with|color|red|x>>|<point|-0.3|0.4>>|<text-at|<with|mode|math|<with|color|red|y>>|<point|0.4|-0.3>>|<text-at|<with|mode|math|<with|color|blue|y<rprime|'>>><with|mode|math|<rprime|>>|<point|2.1|1.6>>|<text-at|<with|color|blue|<with|mode|math|x<rprime|'>>>|<point|1.9|2.7>>|<with|line-width|2ln|fill-color|red|<line|<point|1.5|2.2>|<point|3.1|2.2>>>|<with|line-width|2ln|fill-color|red|<arc|<point|2.5|1.9>|<point|2.6|2.2>|<point|2.6|2.3>>>|<text-at|<with|mode|math|\<theta\>>|<point|2.7|1.9>>|<text-at|<with|mode|math|\<frak-F\><rprime|'>>|<point|4.8|2.2>>|<text-at|<with|mode|math|\<frak-F\>>|<point|5.1|-0.5>>|<with|line-width|2ln|fill-color|red|<line|<point|-1.3|0>|<point|5.3|0>>>|<with|color|red|line-width|2ln|fill-color|red|<line|<point|0|0>|<point|1|0>>>|<with|color|orange|dash-style|<tuple|1|0>|<line|<point|2|2.4>|<point|2|-0.4>>>|<with|color|orange|dash-style|<tuple|1|0>|<line|<point|2.2|2.2>|<point|-0.8|2.2>>>|<text-at|<with|mode|math|y<rsub|0>>|<point|1.9|-0.4>>|<text-at|<with|mode|math|x<rsub|0>>|<point|-0.9|2.2>>|<with|color|blue|line-width|2ln|line-arrows|<tuple|<with|dash-style|none|<line|<tuple|-10ln|6ln>|<tuple|0ln|0ln>|<tuple|-10ln|-6ln>>>>|fill-color|red|<line|<point|2|2.2>|<point|2.8|1.6>>>|<with|color|blue|line-width|2ln|line-arrows|<tuple|<with|dash-style|none|<line|<tuple|-10ln|6ln>|<tuple|0ln|0ln>|<tuple|-10ln|-6ln>>>>|fill-color|red|<line|<point|2|2.2>|<point|2.6|3>>>>>|<label|fig:rotation>Change
     of coordinates>
   </with>
 
@@ -1086,18 +1083,18 @@
   This simplification is particularly noticeable for special-relativity
   effects that involve some acceleration. Those are often considered tricky
   to deal with in the more traditional formulation of special relativity. For
-  instance, the so-called ``twins paradox''<cite|langevin> is illustrated on
-  figure <reference|fig:twins>. The blue straight arrow along the horizontal
-  axis represents the trajectory of a twin who remains on earth. The red
-  curve represents the trajectory of a twin who travels in space at high
-  speed. For space-space rotations, as shown on the figure, the red curve is
-  always longer than the blue line. It is easy to verify that the elongation
-  factor takes the form of <with|mode|math|<big|int><frac|1|cos \<theta\>>>
-  along the curve, which is always greater than 1 when <with|mode|math|cos
-  \<theta\>\<leqslant\>1>. On the contrary, if <with|mode|math|cos
-  \<theta\>\<geqslant\>1>, then the red curve is always shorter than the blue
-  curve: less time elapsed for the moving twin than for the twin who remained
-  on earth.
+  instance, the so-called ``Langevin's twins paradox''<cite|langevin> is
+  illustrated on figure <reference|fig:twins>. The straight arrow along the
+  horizontal axis represents the trajectory of a twin who remains on earth.
+  The curve represents the trajectory of a twin who travels in space at high
+  speed. For space-space rotations, as shown on the figure, the curve is
+  always longer than the straight line. It is easy to verify that the
+  elongation factor takes the form of <with|mode|math|<big|int><frac|1|cos
+  \<theta\>>> along the curve, which is always greater than 1 when
+  <with|mode|math|cos \<theta\>\<leqslant\>1>. On the contrary, if
+  <with|mode|math|cos \<theta\>\<geqslant\>1>, then the curve is always
+  shorter than the straight line: less time elapsed for the moving twin than
+  for the twin who remained on earth.
 
   <\with|par-mode|center>
     <small-figure|<with|gr-mode|<tuple|group-edit|props>|gr-frame|<tuple|scale|1cm|<tuple|0.100003gw|0.39999gh>>|gr-geometry|<tuple|geometry|7cm|3cm|center>|gr-grid|<tuple|cartesian|<point|0|0>|1>|gr-grid-old|<tuple|cartesian|<point|0|0>|1>|gr-edit-grid-aspect|<tuple|<tuple|axes|none>|<tuple|1|none>|<tuple|10|none>>|gr-edit-grid|<tuple|cartesian|<point|0|0>|1>|gr-edit-grid-old|<tuple|cartesian|<point|0|0>|1>|gr-line-width|3|gr-line-arrows|<tuple|<with|dash-style|none|<line|<tuple|-10ln|6ln>|<tuple|0ln|0ln>|<tuple|-10ln|-6ln>>>>|gr-color|red|gr-dash-style|<tuple|1|0>|<graphics|<with|color|red|line-width|2ln|line-arrows|<tuple|<with|dash-style|<quote|none>|<line|<tuple|-10ln|6ln>|<tuple|0ln|0ln>|<tuple|-10ln|-6ln>>>>|<spline|<point|0|0>|<point|1|0.1>|<point|2|0.5>|<point|2.6|1>|<point|3.3|1.1>|<point|3.9|0.5>|<point|4.4|-0.3>|<point|4.9|-0.5>|<point|5.2|-0.3>|<point|5.5|-0.1>|<point|5.7|0>|<point|6|0>>>|<with|color|blue|line-width|2ln|line-arrows|<tuple|<with|dash-style|<quote|none>|<line|<tuple|-10ln|6ln>|<tuple|0ln|0ln>|<tuple|-10ln|-6ln>>>>|<line|<point|0|0>|<point|6.2|0>>>>>|<label|fig:twins>Twins
@@ -1126,11 +1123,16 @@
 
   The traditional formulation of electromagnetism is written using a
   space-time background, on which electromagnetic fields are written. In this
-  view, space and time exist even if there is no electomagnetic field or
+  view, space and time exist even if there is no electromagnetic field or
   interaction. However, the remarks made above suggests that this hypothesis
   may be incorrect. The properties that we have traditionally attributed to
   space and time might express relations defined primarily by electromagnetic
-  interactions.
+  interactions<\footnote>
+    It would be particularly ironic, if this hypothesis proves to be correct,
+    that Einstein's quest for a theory unifying gravitation and
+    electromagnetism was, in a sense, already fulfilled with his own general
+    relativity.
+  </footnote>.
 
   <subsection|<label|noneuclidean>Non-Euclidean Geometry>
 
@@ -1154,25 +1156,23 @@
 
   The fact that displacements commute locally does not imply that they still
   commute after being repeated a large number of times<\footnote>
-    This statment may seem mathematically contradictory, if one forgets that
+    This statement may seem mathematically contradictory, if one forgets that
     the TIM ``equality'' is based on what we know and can physically measure.
     It is experimentally possible for two processes to be indistinguishable
     when repeated a small number of times, but to diverge at larger scale.
   </footnote>. As a matter of fact, at a large enough scale, we observe that
   physical displacements through space-time do not generally commute.
 
-  To illustrate this, consider mobiles subjected to gravitation forces
-  keeping them at the surface of our planet. In a room, moving one meter
-  forward followed by one meter sideways brings you practically at the same
-  point as moving one meter sideways followed by one meter forward, as
-  illustrated on figure <reference|fig:commuting>.
-
   <\with|par-mode|center>
     <small-figure|<with|gr-mode|<tuple|group-edit|move>|gr-frame|<tuple|scale|1cm|<tuple|0.299998gw|0.299998gh>>|gr-geometry|<tuple|geometry|5cm|5cm|center>|gr-grid|<tuple|cartesian|<tuple|0|0>|1>|gr-grid-old|<tuple|cartesian|<tuple|0|0>|1>|gr-grid-aspect|<tuple|<tuple|axes|#808080>|<tuple|1|#c0c0c0>|<tuple|6|#e0e0ff>>|gr-grid-aspect-props|<tuple|<tuple|axes|#808080>|<tuple|1|#c0c0c0>|<tuple|6|#e0e0ff>>|gr-line-width|2ln|gr-line-arrows|<tuple|<with|dash-style|none|<line|<tuple|-10ln|6ln>|<tuple|0ln|0ln>|<tuple|-10ln|-6ln>>>>|gr-color|green|gr-edit-grid-aspect|<tuple|<tuple|axes|none>|<tuple|1|none>|<tuple|6|none>>|gr-edit-grid|<tuple|cartesian|<tuple|0|0>|1>|gr-edit-grid-old|<tuple|cartesian|<tuple|0|0>|1>|<graphics|<text-at|<with|mode|math|\<delta\>X>|<point|0.763014|-0.376207>>|<with|color|magenta|line-width|2ln|line-arrows|<tuple|<with|dash-style|none|<line|<tuple|-10ln|6ln>|<tuple|0ln|0ln>|<tuple|-10ln|-6ln>>>>>|<with|color|green|line-width|2ln|line-arrows|<tuple|<with|dash-style|none|<line|<tuple|-10ln|6ln>|<tuple|0ln|0ln>|<tuple|-10ln|-6ln>>>>|<line|<point|2|0>|<point|2|2>>>|<with|color|red|line-width|2ln|line-arrows|<tuple|<with|dash-style|none|<line|<tuple|-10ln|6ln>|<tuple|0ln|0ln>|<tuple|-10ln|-6ln>>>>|<line|<point|2|2>|<point|0|2>>>|<with|color|blue|line-width|2ln|line-arrows|<tuple|<with|dash-style|none|<line|<tuple|-10ln|6ln>|<tuple|0ln|0ln>|<tuple|-10ln|-6ln>>>>|<line|<point|0|0>|<point|2.01186|0.00479561>>>|<with|color|magenta|line-width|2ln|line-arrows|<tuple|<with|dash-style|none|<line|<tuple|-10ln|6ln>|<tuple|0ln|0ln>|<tuple|-10ln|-6ln>>>>|<line|<point|0|2>|<point|0|0>>>|<with|text-at-halign|right|<text-at|<with|mode|math|\<delta\>Y>|<point|2.46418|0.822473>>>|<text-at|<with|mode|math|\<delta\>X<rsup|-1>>|<point|0.762838|2.123963>>|<text-at|<with|mode|math|\<delta\>Y<rsup|-1>>|<point|-0.903653|0.845957>>>>|<label|fig:commuting>Commuting
     displacements>\ 
   </with>
 
-  The displacement in figure <reference|fig:commuting> is is practically
+  To illustrate this, consider mobiles subjected to gravitation forces
+  keeping them at the surface of our planet. In a room, moving one meter
+  forward followed by one meter sideways brings you practically at the same
+  point as moving one meter sideways followed by one meter forward. The
+  displacement in figure <reference|fig:commuting> is is practically
   indistinguishable from ``returning to the same point''. Considering for
   simplicity that Earth has a radius of roughly 6000<space|0.2spc>km, the
   angle <with|mode|math|\<alpha\>> seen from the center of Earth for a
@@ -1197,8 +1197,8 @@
     displacements>
   </with>
 
-  Qualitatively, the relationship <with|mode|math|X> and <with|mode|math|Y>
-  commute is therefore very different between the two cases. However, from
+  Qualitatively, the relationship ``<with|mode|math|X> and <with|mode|math|Y>
+  commute'' is therefore very different between the two cases. However, from
   the local point of view of the mobile, there is no difference in the local
   movements between figure <reference|fig:commuting> and figure
   <reference|fig:coordinates>. In both cases, we are moving for example ``N
@@ -1225,8 +1225,11 @@
   physical experiments show two or more light rays starting at the same time
   from the same point and reaching the same point at the same time. A simple
   optical lens shows this property, but even in the vacuum, the property
-  appears at large scale (gravitational lensing, Shapiro delay). It also
-  appears in the presence of obstacles (Young's slits experiments).
+  appears at large scale (gravitational lensing<cite|gravlens>, Shapiro
+  delay<cite|shapiro>). It also show up in tabletop experiments, for example
+  in the presence of obstacles (Young's slits experiments). The propagation
+  of light is therefore not a very solid foundation to build an Euclidean
+  geometry on.
 
   A similar problem exists for other definitions of straight lines (or
   geodesics). For instance, one could define geodesics as the paths followed
@@ -1257,9 +1260,9 @@
   time<cite|justifyrelativity>. But that observation alone is not sufficient
   to prove that space-time itself is curved, just like the existence of
   spheres in space does not prove that space is curved. Indeed, the
-  hyper-surface selected for his example was defined by the path in
+  hyper-surface selected for Einstein's example was defined by the path in
   space-time of the points along the radius of a rotating galaxy. This
-  hypersurface is analogous in space-time to an helicoid in space, and an
+  hyper-surface is analogous in space-time to an helicoid in space, and an
   helicoid is not an Euclidean surface. It is unclear how much thought
   Einstein really gave to this particular example, one among many in the
   book.
@@ -1274,8 +1277,8 @@
   A reminder of the traditional formulation of general
   relativity<cite|baez-2005-73> is useful to see how the TIM may impact it.
   In the following equations, we will use Einstein's convention of summing
-  terms with identical lower and upper indices, and we will therefore avoid
-  any reference to repeated processes using the notation
+  terms with identical lower and upper indices. We will therefore avoid
+  references to repeated processes using the notation
   <with|mode|math|P<rsup|n>> to avoid confusion.
 
   <paragraph|Mathematical tools>Many of the formulas in general relativity
@@ -1331,41 +1334,158 @@
   in the TIM. More precisely, all these relations can be considered as
   holding as long as we can write the metric for 4-coordinates as shown in
   <eqref|eq:gauss>, just like the coordinate transformations in special
-  relativity held as long as the Minkowski metric did.
+  relativity held as long as the Minkowski metric did<\footnote>
+    Obviously, more physical measurements will verify a general Gaussian
+    metric than a Minkowski metric.
+  </footnote>.
 
-  <paragraph|Physical values>If we only care about gravitation and ignore
-  other forces, there are three entities in general relativity that are
-  directly related to physical measurements: the space-time metric, related
-  to space and time measurements, the stress-energy tensor, related to mass,
-  energy or momentum measurements, and a ``cosmological constant''
-  <with|mode|math|\<Lambda\>> that relates to the shape of the universe
-  observed at large scale. These are the quantities for which a
-  measurement-based analysis is required.
+  <paragraph|Physical values>In contrast with mathematical tools, if we focus
+  on gravitation, ignoring other forces, there are two general relativity
+  quantities that relate directly to physical measurements. The space-time
+  metric <with|mode|math|g<rsub|\<mu\>\<nu\>>> relates to space and time
+  measurements. The stress-energy tensor <with|mode|math|T<rsub|\<mu\>\<nu\>>>
+  relates to mass, energy or momentum measurements. These two entities
+  definitely require a TIM analysis.
 
-  <paragraph|Metric>The metric <with|mode|math|g<rsub|\<mu\>\<nu\>>> as
-  defined above relates a choice of distance
-  <with|mode|math|\<mathd\>s<rsup|2>> to small variations
+  Another quantity appears in the equations, at least for some formulations.
+  The cosmological constant <with|mode|math|\<Lambda\>> relates to the shape
+  of the universe at large scale. The status of the cosmological constant is
+  slightly more difficult, since it does not represent an intuitive
+  measurement from our everyday life. Measuring it is much more
+  difficult<cite|kochanek-1996-466>, and mechanisms are still being proposed
+  to explain its emergence and evolution over time<cite|branchina-2007>.
+  Arguments have even been presented that a cosmological constant makes our
+  own existence improbable<cite|cosmocst>. This makes a non-speculative
+  discussion of this particular quantity significantly more difficult.
+
+  <paragraph|Metric and experimental choice>The Gaussian metric
+  <with|mode|math|g<rsub|\<mu\>\<nu\>>> as defined above relates a choice of
+  distance <with|mode|math|\<mathd\>s<rsup|2>> to small variations
   <with|mode|math|\<mathd\>x<rsub|\<mu\>>> of the individual space or time
-  measurements <with|mode|math|x<rsub|\<mu\>>>, which we can assume to be
-  defined as a result of a particular choice of coordinate measurements
-  <with|mode|math|X<rsub|i>>. Provided the measurements give definite, non
-  probabilistic results, there is no particular problem computing the
-  Gaussian metric associated with a chosen set of measurements.
+  measurements <with|mode|math|x<rsub|\<mu\>>>, which result of a particular
+  choice of coordinate measurements <with|mode|math|X<rsub|i>>. Provided the
+  measurements give definite, non probabilistic results, there is no
+  particular problem computing a specific metric from space and time
+  measurements, i.e. the factors <with|mode|math|g<rsub|\<mu\>\<nu\>>> from
+  the individual <with|mode|math|x<rsub|\<mu\>>>.
 
   There is, however, a problem in choosing which physical processes are
-  equivalent to a space-time metric in general relativity. Clearly, mass
-  measurements do not apply. But what about choosing between measurements
-  made with a metal rod and measurements made by measuring the trip time of a
-  laser beam? What if the metal rod becomes really hot? What if the laser
-  beam has to travel through water?
+  equivalent to a space-time metric in general relativity. Clearly, we know
+  intuitively that mass or electric charge measurements are in general not
+  ideal methods to measure a spatial or time coordinate. But it is difficult
+  to explain exactly why. Given an arbitrary measurement system, how do you
+  recognize that it is measuring a distance or a metric?
 
-  For the present theory, following remarks made about special relativity,
-  and based on the kind of verifications already performed for general
-  relativity, we will postulate that the only measurements for which the
-  field equation of general relativity is valid use metric measurements that
-  are practically equivalent to the propagation of electromagnetic waves in a
-  vacuum. Other measurements, like solid rods, can be considered equivalent
-  to the extent that they are primarily defined by such propagation.
+  Furthermore, when choosing between different measurements that we would
+  intuitively consider as space or time measurements, picking the best one is
+  not always immediately obvious. Imagine that we must choose between
+  measurements made with a metal rod and measurements made by measuring the
+  trip time of a laser beam. What if the metal rod becomes really hot,
+  causing it to change dimensions or even melt? What if the laser beam has to
+  travel through water, where the high refractive index with alter both the
+  path and trip time of the light? External factors influence the physical
+  measurements, but not in the same way.
+
+  In the context of the TIM, we need to identify precisely which specific
+  physical measurements the theory of general relativity actually talks
+  about. Following the remarks made about special relativity, and based on
+  the kind of verifications already performed for general relativity, it is
+  reasonable to postulate that the only measurements for which the field
+  equation of general relativity is valid use metric measurements that are
+  practically equivalent to the propagation of electromagnetic waves in a
+  vacuum. Other measurements can be considered equivalent to the extent that
+  they are primarily defined by such propagation. For instance, solid rods
+  are held together primarily by electromagnetic interactions between atoms,
+  and we know that solid matter is made primarily from empty space.
+
+  <paragraph|Stress-energy tensor>The stress-energy tensor <with|mode|math|T>
+  is a rank (0,2) tensor that indicates how energy and momentum flow.
+  Specifically, <with|mode|math|T(u,v)> is the flow along direction
+  <with|mode|math|u> of momentum along direction <with|mode|math|v>, where
+  energy is represented by the momentum along the time dimension, and the
+  flow along the direction of time represents a density.
+
+  Like for the metric, we have a problem defining precisely what measurement
+  is valid to measure <with|mode|math|T>. At first sight, a measurement of
+  mass at rest with respect to the measurement apparatus seems relatively
+  easy enough to define: we put the mass on a scale. But this simple
+  definition relies on the reaction of the mass to the pull of gravitation.
+
+  A more general choice is to define it as a linearization of the property of
+  individual particles using <eqref|eq:linearity>, where the
+  <with|mode|math|m<rsub|i>> are chosen to balance out the reaction to an
+  arbitrary force of a body made only of particles <with|mode|math|i> and of
+  a body made only of particles <with|mode|math|j>. In other words, we define
+  system <with|mode|math|\<alpha\>> as being twice as massive as system
+  <with|mode|math|\<beta\>> because system <with|mode|math|\<alpha\>> reacts
+  to an external force like two systems <with|mode|math|\<beta\>> put
+  together.
+
+  But this definition remains problematic, because it does itself rely on
+  acceleration, and acceleration itself is defined based on space and time
+  measurements. It would be more satisfying if we could avoid such an
+  implicitly recursive definition of the mass.
+
+  This may not be entirely possible. For a single particle whose position is
+  being measured using the ``radar method'', the Schwarzschild metric can be
+  interpreted as the appearance of a mass-dependent proper time delay
+  <with|mode|math|\<chi\>=4*G*m/c<rsup|3>> between the absorption and the
+  re-emission of a photon by the particle<cite|relaq>. While it remains
+  unclear how this mechanism would extend to multiple particles, it seems to
+  suggest that mass can be identified to a proper time delay in some
+  fundamental interaction, and therefore cannot necessarily be defined in a
+  way that does not depend on measurements of time.
+
+  <paragraph|Cosmological constant>The cosmological constant
+  <with|mode|math|\<Lambda\>> appears in the most general formulation of the
+  Einstein tensor, as defined by <eqref|eq:einsteintensor>.
+
+  <\equation>
+    <label|eq:einsteintensor>G<rsub|\<mu\>\<nu\>>=R<rsub|\<mu\>\<nu\>>-<frac|1|2>*R**g<rsub|\<mu\>\<nu\>>-\<Lambda\>g<rsub|\<mu\>\<nu\>>
+  </equation>
+
+  The value of the cosmological constant can only be deduced from the
+  observations at large scale of the universe. There is no strong reason at
+  this point to believe that all choices of coordinates
+  <with|mode|math|X<rsub|i>> would result in the same observed cosmological
+  constant. We can speculate that <with|mode|math|\<Lambda\>> is a parameter
+  that depends on the choice of physical measurement defining the
+  coordinates. It may for example be an emergent property derived from time
+  evolution of the stress-energy tensor<cite|branchina-2007>.
+
+  <paragraph|Field equation>The law of gravitation in general relativity
+  relates the stress-energy tensor <with|mode|math|T> to the Einstein tensor
+  <with|mode|math|G> as in <eqref|eq:grfield>, where we choose
+  <with|mode|math|\<kappa\>=<frac|8*\<pi\>*k<rsub|G>|c<rsup|2>>> to match
+  observations, <with|mode|math|k<rsub|G>> being Newton's gravitational
+  constant.
+
+  <\equation>
+    <label|eq:grfield>G=\<kappa\>T
+  </equation>
+
+  \ As noted earlier, we have some choice for the measurements we use for
+  space/time coordinates, and even if they agree to a very good extent
+  locally, they may not agree at a large scale. If we have two possible
+  choices for <with|mode|math|X> that lead to different values for
+  <with|mode|math|G> at very large scales, the value
+  <with|mode|math|\<kappa\>*T> cannot possibly be equal to both.
+
+  We may have already observed this effect. The problem of the ``dark
+  matter''<cite|darkmatter> or the anomalous acceleration of the Pioneer
+  spacecraft<cite|pioneer> may be some of the first indications of a
+  divergence at large scale between the measurements we chose for space and
+  time compared to the measurements we chose for energy or mass<\footnote>
+    Observations of cosmic events, such as the galactic collision in the
+    ``Bullet cluster'', have been widely publicized as demonstrating the
+    existence of dark matter<cite|clowe-2006>. However, they are based on
+    very indirect reconstruction of the gravitational field, by means of
+    statistical analysis (weak gravitational lensing). Our own atmosphere
+    shows a significant tendency to create artifacts in the propagation of
+    light. We must keep in mind the possibility that gases or dust that
+    result from galactic collision would also cause various distortions of
+    light. In any case, dark matter at this point is not a settled topic.
+  </footnote>.
 
   <paragraph|Existence of a Minkowskian metric>In general relativity, the
   equivalence principle of gravitation and inertial acceleration is expressed
@@ -1419,100 +1539,24 @@
   at short scale, there is no linear dependency on time of the chosen local
   Minkowskian space coordinates <with|mode|math|x<rsub|i>> for
   <with|mode|math|i=1,2,3>. This yields the local geodesic equation
-  <with|mode|math|D*u<rsub|\<mu\>>=0>. As demonstrated in ``classical''
-  general relativity, the geodesic equation in arbitrary coordinates
-  transforms into <with|mode|math|<frac|\<mathd\><rsup|2>x<rsup|\<mu\>>|\<mathd\>s<rsup|2>>+\<Gamma\><rsup|\<mu\>><rsub|\<nu\>\<rho\>><frac|\<mathd\>x<rsup|\<nu\>>|\<mathd\>s><frac|\<mathd\>x<rsup|\<rho\>>|\<mathd\>s>=0>,
-  since the reasoning leading to that other formulation is purely
-  mathematical.
+  <with|mode|math|D*u<rsub|\<mu\>>=0>.
 
-  <paragraph|Cosmological constant>The Einstein tensor is defined by
-  <eqref|eq:einsteintensor>, where <with|mode|math|\<Lambda\>> is a constant,
-  called the ``cosmological constant''.
+  The reasoning leading from the local formulation to the formulation of the
+  geodesic equation in arbitrary coordinates,
+  <with|mode|math|<frac|\<mathd\><rsup|2>x<rsup|\<mu\>>|\<mathd\>s<rsup|2>>+\<Gamma\><rsup|\<mu\>><rsub|\<nu\>\<rho\>><frac|\<mathd\>x<rsup|\<nu\>>|\<mathd\>s><frac|\<mathd\>x<rsup|\<rho\>>|\<mathd\>s>=0>,
+  is purely mathematical, and consequently applies in the context of the TIM
+  as well.
 
-  <\equation>
-    <label|eq:einsteintensor>G<rsub|\<mu\>\<nu\>>=R<rsub|\<mu\>\<nu\>>-<frac|1|2>*R**g<rsub|\<mu\>\<nu\>>-\<Lambda\>g<rsub|\<mu\>\<nu\>>
-  </equation>
+  <paragraph|Electromagnetism and ``forces''>For gravitation, general
+  relativity does away with the notion of ``force'', since the movement of a
+  body follows a geodesic. This is not a general case, however, since the
+  same treatment does not apply to other known forces.
 
-  The value of the cosmological constant can be deduced from the observations
-  at large scale of the universe. There is no strong reason at this point to
-  believe that all choices of coordinates <with|mode|math|X<rsub|i>> would
-  result in the same observed cosmological constant. We can speculate that
-  <with|mode|math|\<Lambda\>> is to some extent a free parameter that relates
-  to the choice of physical measurement defining the coordinates and thus the
-  metric. This suggestion might help resolve the logical problems that can be
-  identified with a more conservative approach<cite|cosmocst>.
-
-  <paragraph|Stress-energy tensor>The stress-energy tensor <with|mode|math|T>
-  is a rank (0,2) tensor that indicates how energy and momentum flow.
-  Specifically, <with|mode|math|T(u,v)> is the flow along direction
-  <with|mode|math|u> of momentum along direction <with|mode|math|v>, where
-  energy is represented by the momentum along the time dimension, and the
-  flow along the direction of time represents a density.
-
-  Like for the metric, we have a problem defining precisely what measurement
-  is valid to measure <with|mode|math|T>. At first sight, a measurement of
-  mass at rest with respect to the measurement apparatus seems relatively
-  easy to define: we put the mass on a scale. But this simple definition
-  relies on the reaction of the mass to the pull of gravitation.
-
-  It seems that a better choice is to define it as a linearization of the
-  property of individual particles using <eqref|eq:linearity>, where the
-  <with|mode|math|m<rsub|i>> are chosen to balance out the reaction to a
-  force of a body made only of particles <with|mode|math|i> and of a body
-  made only of particles <with|mode|math|j>. In other words, we define system
-  <with|mode|math|\<alpha\>> as being twice as massive as system
-  <with|mode|math|\<beta\>> because system <with|mode|math|\<alpha\>> reacts
-  to an external force like two systems <with|mode|math|\<beta\>> put
-  together.
-
-  But this definition remains problematic, because it does itself rely on
-  acceleration. In other words, it also relies on a definition of time and
-  space. It would be more satisfying if we could avoid such an implicitly
-  recursive definition of the mass.
-
-  Charles Francis has implicitly proposed such a definition<cite|relaq> by
-  showing how, for a single particle, the Schwarzschild metric can be derived
-  from an intrinsic mass-dependent proper time delay
-  <with|mode|math|\<chi\>=4*G*m/c<rsup|3>> between the absorption and the
-  re-emission of a photon by the particle. With this construction, a mass is
-  simply identified to a proper time delay in a fundamental interaction,
-  which numerically matches the Shapiro delay<cite|shapiro> but can be
-  interpreted as a cause of curvature instead of its effect. It is unclear,
-  however, how this proposed model extends correctly to multiple masses.
-
-  <paragraph|Field equation>The law of gravitation in general relativity
-  relates the stress-energy tensor <with|mode|math|T> to the Einstein tensor
-  <with|mode|math|G> as in <eqref|eq:grfield>, where we choose
-  <with|mode|math|\<kappa\>=<frac|8*\<pi\>*k<rsub|G>|c<rsup|2>>> to match
-  observations, and <with|mode|math|k<rsub|G>> is Newton's gravitational
-  constant.
-
-  <\equation>
-    <label|eq:grfield>G=\<kappa\>T
-  </equation>
-
-  \ This relation is the fundamental law in general relativity. The
-  discussion on fundamental laws is outside the scope of this article. For
-  the moment, it is sufficient to note that we can apply this law to the
-  results of space-time and stress-energy measurements.
-
-  But this raises an issue. As noted earlier, we have some choice for the
-  measurements we use for space/time coordinates, and even if they agree to a
-  very good extent locally, they may not agree at a large scale. If we have
-  two possible choices for <with|mode|math|X> that lead to different values
-  for <with|mode|math|G> at very large scales, the value
-  <with|mode|math|\<kappa\>*T> cannot possibly be equal to both.
-
-  We may have already observed this effect. The problem of the ``dark
-  matter''<cite|darkmatter> or the anomalous slowdown of the Pioneer
-  spacecraft<cite|pioneer> may be the first indications of a divergence at
-  large scale between the measurements we chose for space and time compared
-  to the measurements we chose for energy or mass.
-
-  <paragraph|Electromagnetism>In general relativity, the electromagnetic
-  field tensor <with|mode|math|F<rsup|\<mu\>\<nu\>>> and the 4-vector
-  electromagnetic current <with|mode|math|J<rsup|\<nu\>>> are related by the
-  equation <with|mode|math|D<rsub|\<mu\>>F<rsup|\<mu\>\<nu\>>=<frac|4*\<pi\>|c>J<rsup|\<nu\>>>.
+  For instance, the treatment of electromagnetism in general relativity
+  introduces additional quantities, specifically, the electromagnetic field
+  tensor <with|mode|math|F<rsup|\<mu\>\<nu\>>> and the 4-vector
+  electromagnetic current <with|mode|math|J<rsup|\<nu\>>>. These two tensors
+  are related by the equation <with|mode|math|D<rsub|\<mu\>>F<rsup|\<mu\>\<nu\>>=<frac|4*\<pi\>|c>J<rsup|\<nu\>>>.
   The current <with|mode|math|J<rsup|\<nu\>>> is a conserved quantity, so it
   verifies <with|mode|math|\<partial\><rsup|\<lambda\>>F<rsup|\<mu\>\<nu\>>+\<partial\><rsup|\<mu\>>F<rsup|\<nu\>\<lambda\>>+\<partial\><rsup|\<nu\>>F<rsup|\<lambda\>\<mu\>>=0>.
   The effect on a charged object is then given by the impact on the
@@ -1524,25 +1568,40 @@
     <label|eq:grelmmove>D<rsub|t>P<rsup|\<mu\>>=<frac|q|m>P<rsub|\<nu\>>F<rsup|\<mu\>\<nu\>>
   </equation>
 
-  The laws of electromagnetism in general relativity are not obviously
+  These laws of electromagnetism in general relativity are not obviously
   related to space-time curvature. In particular, <eqref|eq:grelmmove> is
   nothing less than the introduction of a ``force'' in general relativity.
-  General relativity does not do away with forces, even it gives an
-  interpretation of gravitation that is based on geometric
-  considerations<cite|freefalling|liftsandtopologies>. The movement predicted
-  by <eqref|eq:grelmmove> cannot be reduced to any curvature of space-time,
-  because it depends on the charge of the particle. A single space-time
-  curvature cannot explain why one particle would turn left while another
-  with exactly the same properties but the charge would turn right. Today,
-  the numerous attempts to give a geometric formulation of multiple forces
-  using for example torsion <cite|uft25|distpar|uft28|uft29a|uft29h|uft29c|uft30>
-  are generally regarded as unsuccessful.
+  General relativity does not do away with forces, even if it is generally
+  seen as giving an interpretation of gravitation that is based on purely
+  geometric considerations<cite|freefalling|liftsandtopologies>. The movement
+  predicted by <eqref|eq:grelmmove> cannot be reduced to any curvature of
+  space-time, because it depends on the charge of the particle. A single
+  space-time curvature cannot explain why one particle would turn left while
+  another with exactly the same properties but the charge would turn right.
+  Today, Einstein's many attempts at giving a geometric formulation of
+  multiple forces using for example torsion<cite|uft25|uft28|uft30> are
+  generally regarded as unsuccessful.
 
-  General relativity did not dispense with the notion of ``force'' entirely.
-  While it showed that specific geometric properties are equivalent to a
-  force, all forces are not necessarily of geometric nature or origin.
+  General relativity therefore did not dispense with the notion of ``force''
+  entirely. While it showed that specific geometric properties are equivalent
+  to a force, all forces are not necessarily of geometric nature or origin.
+  This seems at odds with Einstein's formulation of first principles like the
+  principle of general relativity. But this is exactly the conclusion one
+  would expect based on the measurement relativity principle, because
+  geometry gives a preferred role to space and time coordinates, which the
+  measurement relativity principle precludes.
 
   <subsection|<label|scalerelativity>Scale Relativity>
+
+  General relativity is really constructed on a number of symmetries which
+  are taken as axioms. One of these axioms, which we already discussed, is
+  continuous differentiability of space and time coordinates. In that model,
+  you can zoom on a system as much as you want, and still expect space-time
+  to look similar. This is not a property we observe with measurements,
+  however. We know that we can cut a pocket ruler in two halves, and then
+  again, and then again. But we cannot do that beyond some microscopic scale,
+  because the laws of physics change. You need a minimum number of atoms for
+  your ruler to be a fixed-size solid.
 
   <paragraph|Zoom>As we change scale, or <dfn|zoom>, we may need to change
   the choice of space and time measurement for practical reasons. We
@@ -1560,17 +1619,22 @@
     <label|eq:samespace>\|X<rsub|i/\<lambda\>>*\<frak-F\>\|=\|X<rsub|i/\<mu\>>*\<frak-F\>\|
   </equation>
 
-  The set of systems where <eqref|eq:samespace> is verified is called the
-  <dfn|overlapping range> between <with|mode|math|X<rsub|i/\<lambda\>>> and
-  <with|mode|math|X<rsub|i/\<mu\>>>. Using <eqref|eq:spacedef>, we obtain
-  <eqref|eq:spaceidentity> which indicates that on the overlapping range, the
-  two measurements are related by a linear relation.
+  Using <eqref|eq:spacedef>, we obtain <eqref|eq:spaceidentity> which
+  indicates that the two measurements are related by a linear relation.
 
   <\equation>
     <label|eq:spaceidentity>x<rsub|i>=k<rsub|i/\<lambda\>>\<delta\>x<rsub|i/\<lambda\>>=k<rsub|i/\<mu\>>\<delta\>x<rsub|i/\<mu\>>
   </equation>
 
-  In general, <eqref|eq:spaceidentity> does not necessarily hold at all
+  As discussed earlier, these identities are really based on what we know.
+  They do not imply an identity of the physical processes themselves. There
+  may be cases where <with|mode|math|X<rsub|i/\<lambda\>>> and
+  <with|mode|math|X<rsub|i/\<mu\>>> do not return the same result. The set of
+  systems where <eqref|eq:samespace> is verified is called the
+  <dfn|overlapping range> between <with|mode|math|X<rsub|i/\<lambda\>>> and
+  <with|mode|math|X<rsub|i/\<mu\>>>.
+
+  In particular, <eqref|eq:spaceidentity> does not necessarily hold at all
   scale, in particular for all possible values of
   <with|mode|math|k<rsub|i/\<lambda\>>> and
   <with|mode|math|k<rsub|i/\<mu\>>>. In other words, just because two
@@ -1601,29 +1665,36 @@
   <with|mode|math|\<frak-F\>> often implies that the laws themselves must
   remain identical under a change of measurements. This is certainly true for
   ``simple enough'' laws, such as laws relating polynomial functions of the
-  coordinates.
+  coordinates, since it is sufficient in that case to supply a finite number
+  of points to completely define the law.
 
   On the other hand, distant laws of physics, for example laws based on
   values measured at ``infinity'', are not guaranteed to remain identical
-  under a change of space-time measurements. The measurements may match only
-  locally, but not at a large enough scale.
+  under a change of space-time measurements. The measurements may match
+  locally, yet diverge large enough scale.
 
   These remarks can be seen as a physical justification for
   <dfn|renormalization>, a common technique when searching for quantized
   versions of field theories<cite|renormalization>. Renormalization assumes
   that the laws of physics remain identical when zooming out, after one has
   eliminated degrees of freedom that are no longer relevant at the scale
-  being considered. When renormalizing, integrals to infinity often diverge
-  and must be replaced with actual measured values, whereas the local laws of
-  physics remain identical.
+  being considered. When renormalizing, integrals to infinity or around poles
+  often diverge and must be replaced with actual measured values, whereas the
+  local laws of physics remain identical. The reason we need to perform this
+  replacement is really that we gave more credit to a mathematical formula
+  than we should have.
 
-  An important practical consequence is that we can consider local laws as
-  valid at any scale, but that distant laws may depend at large scale on
+  There is an important practical consequence of the reasoning above. While
+  we can consider local laws as valid at any scale, irrespective of the
+  physical process being used, distant laws may depend at large scale on
   which physical measurement was used.
 
   <paragraph|Scale invariance>Change of coordinate measurements corresponding
   to a zoom introduces a new coordinate, the resolution
-  <with|mode|math|\<lambda\>> at which the measurement is being done.
+  <with|mode|math|\<lambda\>> at which the measurement is being done. This
+  coordinate is visible in the notation <with|mode|math|X<rsub|i/\<lambda\>>>.
+  The resolution may not be sufficient to uniquely define the physical
+  process we are referring to, but it is necessary.
 
   The consequences on the structure of space-time of an explicit resolution
   coordinates were studied in details by Laurent Nottale. In particular, he
@@ -1631,25 +1702,46 @@
   nature that is invariant under change of scale<cite|scalerelat>. This scale
   plays for zooming a role similar to <with|mode|math|c> for velocity, and
   similarly requires a non-Galilean reformulation of the law describing the
-  combination of two changes of scale.
+  combination of two changes of scale. This leads to an interpretation of
+  space-time as having fractal properties<cite|fractalspacetime>. A number of
+  interesting results and predictions were made based on this theory,
+  including predictions on the location of planets in solar systems, or finer
+  computations of the coupling constants.
 
-  This leads to an interpretation of space-time as having fractal
-  properties<cite|fractalspacetime>. A number of interesting results and
-  predictions were made based on this theory, including predictions on the
-  location of planets in solar systems, or finer computations of the coupling
-  constants.
+  <paragraph|Existence of a constant scale>As discussed above, local laws of
+  physics must be invariant through renormalization after zoom (or change of
+  resolution). A constant with the dimension of a scale, Planck's length
+  <with|mode|math|l<rsub|p>=<sqrt|<frac|\<hbar\>G|c<rsup|3>>>>, can be
+  extracted from such local laws, most notably Schroedinger's equation (a
+  local law where <with|mode|math|\<hbar\>> appears).
 
-  Local laws of physics must be invariant through renormalization after zoom.
-  Since Planck's scale can be extracted from such local laws, most notably
-  Schroedinger's equation, Nottale's hypothesis appears necessary, much like
-  the appearance of an arbitrary constant <with|mode|math|c> in Maxwell's
-  equations made coordinate changes following the Lorentz transform
-  necessary.
+  When we discussed special relativity, we observed that the appearance of a
+  constant <with|mode|math|c> in Maxwell's equations was problematic, because
+  this constant, despite having the dimension of a speed, did not transform
+  like other speeds. This made it necessary to introduce a new form of
+  symmetry, the Lorentz transformation, that would preserve
+  <with|mode|math|c>.
+
+  We face the same problem with <with|mode|math|l<rsub|p>>: this constant has
+  the dimension of a length, yet it does not appear to transform like other
+  scales. This seems to suggest that unlike what is generally
+  stated<cite|tegmark-2007>, there is indeed a preferred length scale in the
+  universe. If this is true, then Nottale's hypothesis appears necessary, and
+  validates the reasoning leading to a ``non-Galilean'' law for combining
+  scales.
 
   <section|Quantum Mechanics>
 
-  The formalism of the theory of incomplete measurements is also sufficient
-  to reconstruct most of quantum mechanics.
+  The TIM formalism also gives us insight into the traditional formulation of
+  quantum mechanics. Actually, the impact on quantum mechanics is probably
+  much more profound than the impact on general relativity. We will
+  demonstrate that we can derive many of the ``axioms'' of quantum mechanics
+  from our original postulates, including the mathematical formulation of the
+  wave function <with|mode|math|\<psi\>>. This leads to a novel
+  interpretation, which is arguably simpler than the traditional
+  interpretations known as ``Copenhagen'' or ``Many Worlds''. More
+  importantly, it suggests a discrete (as opposed to continuous)
+  normalization condition for <with|mode|math|\<psi\>>.
 
   <subsection|<label|predictions>Predictions and Probabilities>
 
@@ -1661,15 +1753,18 @@
 
   <paragraph|N-valued measurement>The simplest most-general form of
   measurement symbolic result is a set with <with|mode|math|n> different
-  values <with|mode|math|m<rsub|1>,\<ldots\>,m<rsub|n>>. We do not need to
-  consider continuous measurements, for they are physically unrealistic, in
-  the sense that the graduation itself cannot be continuous. For such a
-  measurement <with|mode|math|M>, a prediction on the measurement result
-  <with|mode|math|m> is represented by a vector of probabilities
-  <with|mode|math|(u<rsub|i><rsup|>)> where <with|mode|math|u<rsub|i><rsup|>>
-  is the probability to measure <with|mode|math|m<rsub|i>>. Such a vector can
-  therefore represent the state of any system <with|mode|math|\<frak-F\>> as
-  far as the measurement <with|mode|math|M> is concerned.
+  values <with|mode|math|m<rsub|1>,\<ldots\>,m<rsub|n>>. From a physical
+  point of view, we do not need to consider continuous measurements, because
+  they are physically unrealistic, in the sense that the graduation itself
+  cannot be continuous.
+
+  For such a measurement <with|mode|math|M>, a <em|prediction> on the
+  measurement result <with|mode|math|m> is represented by a vector of
+  probabilities <with|mode|math|(u<rsub|i><rsup|>)> where
+  <with|mode|math|u<rsub|i><rsup|>> is the probability to measure
+  <with|mode|math|m<rsub|i>>. Such a vector can therefore represent the state
+  of any system <with|mode|math|\<frak-F\>> as far as the measurement
+  <with|mode|math|M> is concerned.
 
   <paragraph|Ket representation>Since <with|mode|math|u<rsub|i>> represents
   probabilities, two conditions must be met:
@@ -1681,12 +1776,14 @@
   sufficient to guarantee both conditions on the <with|mode|math|u<rsub|i>>,
   so the <with|mode|math|\<psi\><rsub|i>> can be seen as forming a unit
   vector in <with|mode|math|\<bbb-R\><rsup|n>>, i.e. they belong the the unit
-  sphere <with|mode|math|\<bbb-S\><rsup|n-1>>. Using Dirac's bra-ket
-  notation, we can write the vector as <with|mode|math|\|\<psi\>\<rangle\>>
-  and the probability condition as <with|mode|math|\<langle\>\<psi\>\|\<psi\>\<rangle\>=1>.
-  One particular vector state written as <with|mode|math|\|k\<rangle\>>
-  correspond to a certainty that the measurement will return the symbolic
-  value <with|mode|math|m<rsub|k>>. Its component representation verifies
+  sphere <with|mode|math|\<bbb-S\><rsup|n-1>>.
+
+  Using Dirac's bra-ket notation, we can write the vector as
+  <with|mode|math|\|\<psi\>\<rangle\>> and the probability condition as
+  <with|mode|math|\<langle\>\<psi\>\|\<psi\>\<rangle\>=1>. One particular
+  vector state written as <with|mode|math|\|k\<rangle\>> correspond to a
+  certainty that the measurement will return the symbolic value
+  <with|mode|math|m<rsub|k>>. Its component representation verifies
   <with|mode|math|\<psi\><rsub|i><rsup|2>=\<delta\><rsub|i k>>. Based on the
   definition of the <with|mode|math|\<psi\><rsub|i><rsup|2>>, the probability
   to find the result <with|mode|math|\|k\<rangle\>> when the system is in a
@@ -1706,24 +1803,24 @@
   <with|mode|math|M> is to transform the probability distribution as
   <with|mode|math|\|\<psi\>\<rangle\>=<wide|P|^>\|\<psi\><rsub|0>\<rangle\>>,
   where <with|mode|math|<wide|P|^>> is some arbitrary operator in
-  <with|mode|math|\<bbb-S\><rsup|n-1>>. There is no reason for the operator
-  associated to an arbitrary physical process to be linear. For instance, one
-  might consider a physical process ensuring that the next measurement result
-  for <with|mode|math|M> will be <with|mode|math|m<rsub|k>>. Such a process
-  would transform any probability state <with|mode|math|\|\<psi\>\<rangle\>>
-  into a state <with|mode|math|\|k\<rangle\>>.
+  <with|mode|math|\<bbb-S\><rsup|n-1>> that transforms the probabilities in a
+  way that matches what we know of the effect of the physical process
+  <with|mode|math|P>.
 
-  In general, <with|mode|math|<wide|P|^>> is not even an injective function,
-  since for a measurement <with|mode|math|><with|mode|math|M>, the operator
+  There is no reason for the operator associated to an arbitrary physical
+  process to be linear. For instance, one might consider a physical process
+  ensuring that the next measurement result for <with|mode|math|M> will be
+  <with|mode|math|m<rsub|k>>. Such a process would transform any probability
+  state <with|mode|math|\|\<psi\>\<rangle\>> into a state
+  <with|mode|math|\|k\<rangle\>>. In general, <with|mode|math|<wide|P|^>> is
+  not even an injective function. For a measurement
+  <with|mode|math|><with|mode|math|M>, the operator
   <with|mode|math|<wide|M|^>> maps a probability state
   <with|mode|math|\|\<psi\>\<rangle\>> to a random state
   <with|mode|math|\|k\<rangle\>> with probability
   <with|mode|math|><with|mode|math|\<langle\>k\|\<psi\>\<rangle\><rsup|2>>.
-  We can define the non-injective ``random'' operator
-  <with|mode|math|<wide|R<rsub|n><rsub|>|^>> that performs this same
-  operation. All perfectly definite measurements, i.e. all measurements for
-  which there is no uncertainty at the end of the measurement, verify
-  <with|mode|math|<wide|M|^>=<wide|R<rsub|n>|^>>.
+  Therefore, this operator gives different (random) results for the same
+  input.
 
   <paragraph|Indistinguishable processes>If <with|mode|math|P<rsub|1>> and
   <with|mode|math|P<rsub|2>> are indistinguishable processes as far as
@@ -1735,10 +1832,8 @@
   probability state <with|mode|math|\|\<psi\>\<rangle\>>, we get
   <with|mode|math|\<forall\>\<psi\>, <wide|P<rsub|1>|^>\|\<psi\>\<rangle\>=<wide|P<rsub|2>|^>\|\<psi\>\<rangle\>>,
   which means that <with|mode|math|<wide|P<rsub|1>|^>=<wide|P<rsub|2>|^>>.
-  Consequently, processes that are indistinguishable with respect to
-  <with|mode|math|M> are associated with the same operator on
-  <with|mode|math|\<bbb-S\><rsup|n-1>>. Identical processes are
-  indistinguishable for all measurements.
+  Processes that are indistinguishable with respect to <with|mode|math|M> are
+  associated with the same operator on <with|mode|math|\<bbb-S\><rsup|n-1>>.
 
   <paragraph|Measurements>If the physical process <with|mode|math|P> is the
   measurement <with|mode|math|M> itself, the probability vector
@@ -1803,8 +1898,10 @@
   <with|mode|math|\|k<rsub|1>,\<ldots\>,k<rsub|n>\<rangle\>>.
 
   By definition of the <with|mode|math|k<rsub|i>> in relationship to the
-  physical processes <with|mode|math|P<rsub|i>>, the operator
-  <with|mode|math|<wide|P<rsub|i>|^>> transforms the vector
+  physical processes <with|mode|math|P<rsub|i>> in <eqref|eq:linearity>,
+  <with|mode|math|k<rsub|i>> is a count of how many times the process
+  <with|mode|math|P<rsub|i>> was applied. Thus, operator
+  <with|mode|math|<wide|P<rsub|i>|^>> must transform the vector
   <with|mode|math|\|k<rsub|1>,\<ldots\>,k<rsub|i>,\<ldots\>,k<rsub|n>\<rangle\>>
   into the vector <with|mode|math|\|k<rsub|1>,\<ldots\>,k<rsub|i>+1,\<ldots\>,k<rsub|n>\<rangle\>>.
   Since the probability vectors form a basis of the probability state, we can
@@ -1836,9 +1933,10 @@
   by an identity matrix. Note that <eqref|eq:focused> implies that the effect
   of the rest of the universe can be ignored.
 
-  Not all physical processes are independent from <with|mode|math|M<rsub|1>>
-  and <with|mode|math|M<rsub|2>>, however. Such physical processes may create
-  ``entangled'' states in the tensor space.
+  However, not all physical processes are independent from
+  <with|mode|math|M<rsub|1>> and <with|mode|math|M<rsub|2>>. Using exactly
+  the same reasoning as in traditional quantum mechanics, such physical
+  processes may create ``entangled'' states in the tensor space.
 
   <subsection|<label|analogy>Formal Analogy>
 
@@ -1848,7 +1946,7 @@
   vector>'', and ``<em|observable>'' with ``<em|measurement operator>''.
 
   Many formulation of quantum mechanics exist. We will use the following
-  principles<cite|basdevant|cohen> to illustrate the parallel with the
+  principles<cite|cohen|basdevant> to illustrate the parallel with the
   formalism presented here:
 
   <\enumerate>
@@ -2019,11 +2117,10 @@
   various measurements, it is not unreasonable to assume that it is linear
   with respect to <with|mode|math|M<rsub|exist>> as well.
 
-  We will therefore <em|postulate> that <with|mode|math|<wide|\<delta\>T|^>>
-  is a linear operator with respect to <with|mode|math|M<rsub|exist>>. In
-  that case, the most general linear transform on
-  <with|mode|math|\<bbb-S\><rsup|1>> is a rotation by angle
-  <with|mode|math|\<delta\>\<theta\>>. Since the local laws of physics,
+  If we <em|postulate> that <with|mode|math|<wide|\<delta\>T|^>> is a linear
+  operator with respect to <with|mode|math|M<rsub|exist>>, the most general
+  linear transform on <with|mode|math|\<bbb-S\><rsup|1>> is a rotation by
+  angle <with|mode|math|\<delta\>\<theta\>>. Since the local laws of physics,
   including evolution through local time, should not change if we change the
   choice of <with|mode|math|\<delta\>T>, an application of
   <eqref|eq:spaceidentity> below when changing the choice of
@@ -2050,8 +2147,8 @@
 
   <subsection|<label|interpretation>Interpretation>
 
-  Implications of this parallel between quantum mechanics and measurements
-  are discussed below.
+  Implications of this parallel between quantum mechanics and the TIM are
+  discussed below.
 
   <paragraph|Disentanglement>In quantum mechanics, combining two systems is
   done by considering the tensor product of the spaces describing each
@@ -2071,18 +2168,20 @@
   self-adjoint operator on a Hilbert space. Quantum measurement results are
   real numbers because observables only have real eigenvalues.
 
-  In the theory of incomplete measurements, measurement results for any
-  physical measurement are always discrete, because we do not know how to
-  make measurements that are truly continuous. However, if the symbolic
-  values for each measurement value are real numbers, one can build a linear
-  operator <with|mode|math|<wide|M|\<check\>>> that has the possible
-  measurement values as real eigenvalues.
+  In the TIM, measurement results for any physical measurement are always
+  discrete, because we do not know how to make measurements that are truly
+  continuous. However, if the symbolic values for each measurement value are
+  real numbers, one can build a linear operator
+  <with|mode|math|<wide|M|\<check\>>> that has the possible measurement
+  values as real eigenvalues.
 
   <paragraph|Wave-function Collapse>Since quantum mechanics is linear and
   reversible, it is difficult to explain why the wave-function should
   collapse. The need for this rule is widely considered as a problem, and
-  many suggestions have been made to try and explain
-  it<cite|epr|pondicherry|relatquantmech>.
+  many suggestions have been made to try and explain it using a wide number
+  of approaches<cite|epr|relatquantmech|pondicherry>, some even referring to
+  concepts like ``conscious observers'' that are extremely difficult to
+  define precisely.
 
   In the present formalism, the wave-function collapses because the
   measurement system is designed to produce a repeatable numerical result.
@@ -2090,17 +2189,24 @@
   measurement process itself, and is a consequence of the non-linearity of
   <with|mode|math|<wide|M|^>>. It is possible to consider <dfn|incomplete>
   measurements where the resulting measurement probability
-  <with|mode|math|\|\<psi\>\<rangle\>> is only partially collapsed. These
-  states would correspond to measurements containing a dose of uncertainty,
-  like <with|mode|math|2.56V\<pm\>0.2%>.
+  <with|mode|math|\|\<psi\>\<rangle\>> is only partially collapsed, for
+  example to represent measurements containing a dose of uncertainty, like
+  <with|mode|math|2.56V\<pm\>0.2%>.
 
-  While the present theory does not need an additional postulate than ``there
-  are measurements'' to predict the collapse of the wave-function, it
-  ultimately does not answer the question ``but then, why are there
-  measurements?''. In a sense, the question has only been rewritten. In the
-  context of the present theory, quantum decoherence<cite|quantdecoherence>
-  for example is a useful analysis of how measurements might appear as a
-  consequence of more fundamental processes.
+  There may still be a minor reference to a conscious observer, but it
+  happens before the experiment. Someone performs a <em|choice> of
+  experimental setup, a selection of valid measurement processes among all
+  possible physical processes. On the other hand, we do not need to
+  hypothesize that something happens just because a conscious observer
+  <em|looks at> the experiments.
+
+  While the present theory does not need a explicit postulate to predict the
+  collapse of the wave-function, it ultimately does not answer the question
+  ``<em|why are there measurements?>''. In a sense, the question has only
+  been rewritten. In the context of the present theory, quantum
+  decoherence<cite|quantdecoherence> for example is a useful mathematical
+  analysis of how measurements might appear as a consequence of more
+  fundamental processes.
 
   <paragraph|Superposition>In quantum mechanics, any linear combination of
   valid states is a valid state. In particular, linear combinations of
@@ -2134,30 +2240,37 @@
   precision.
 
   In practice, measurements are not always exact nor
-  instantaneous<cite|jacobssteck>. The result itself may be probabilistic,
-  something that is expressed in a measurement result like
-  <with|mode|math|2.45V\<pm\>0.1V>. The formalism presented here allows the
+  instantaneous<cite|jacobssteck>. The result itself may be probabilistic or
+  contain a dose of uncertainty. The formalism presented here allows the
   state after a measurement result to be itself a probability vector. There
-  is no instantaneous collapse either. As the measurement progresses, the
-  distribution becomes narrower, and the set of compatible universe states
-  predicted by <eqref|eq:predict> becomes smaller. At least for some
+  is no need for an ``instantaneous collapse'' either. As the measurement
+  progresses, the distribution of probabilities becomes narrower, and the set
+  of compatible universe states becomes smaller. At least for some
   measurements, the fully collapsed wave-function and the infinitely precise
-  measurement may only be idealized limits.
+  measurement need only be idealized limits.
 
   <paragraph|Measurement limits>Many quantum physics textbooks state
   confidently that the probability of finding the particle being observed on
   the other side of the moon<cite|darksideofthemoon> is infinitesimal, but
-  not null, because the wave-function vanishes quickly with distance but
+  not null. This is a logical consequence of the fact that, in the majority
+  of cases, the mathematical wave-function vanishes quickly with distance but
   never reaches zero.
 
   In the formalism presented here, only results that can actually be
   generated by the measurement are acceptable. If your measurement apparatus
   is a photographic plate measuring 10x10 centimeters, the chances that it
   will report that it found the photon somewhere on the moon (or anywhere
-  outside the plate, for that matter) is <em|exactly> zero. Note that the
-  point is not that the probability for the photon to miss the plate is zero,
-  only that we cannot talk about the probability to detect the photon at a
-  specific location where there is no detection instrument.
+  outside the plate, for that matter) is <em|exactly> zero. The point is not
+  that the probability for the photon to miss the plate is zero, only that we
+  cannot talk about the probability to detect the photon at a specific
+  location where there is no detection instrument.
+
+  This may seem like a ridiculously small point, but it actually is the
+  primary experimental proof of the validity of the TIM. Quantum mechanics,
+  as applied using the traditional formalism, routinely predicts precise
+  measurement results even outside of the known limits of the measurement
+  apparatus. The TIM, in contrast, only predicts probabilities for the
+  physically possible outcomes.
 
   <paragraph|Linearity>The mathematics of quantum mechanics uses linear
   algebra on the system states, as represented by wave-functions or kets.
@@ -2182,7 +2295,9 @@
   non-commutativity is established, the quantitative mathematical treatment
   given to the probability state <with|mode|math|\|\<psi\>\<rangle\>> on the
   tensor product space is identical to the mathematical treatment given in
-  quantum mechanics to the ket <with|mode|math|\|\<psi\>\<rangle\>>.
+  quantum mechanics to the ket <with|mode|math|\|\<psi\>\<rangle\>>. The very
+  rich set of results obtained by studying commutation relations is therefore
+  preserved.
 
   <paragraph|Quantum space-time>In the traditional approach of quantum
   mechanics, the space and time operators commute with one another, because
@@ -2191,33 +2306,33 @@
   defines Euclidean space-time coordinates, and this is clearly a source of
   conflict both with physical observation and with general relativity.
 
-  Research in the field of non-commutative geometry<cite|connes> is one of
-  the promising paths towards a quantum theory of gravity. However, most
-  applications to physics remain firmly grounded in
-  mathematics<cite|noncomm>. The present work shows a relatively simple
-  physical interpretation for this work, and suggests that surprising aspects
-  of it should not be too quickly discarded as mathematically absurd.
+  Research in the field of non-commutative geometry<cite|connes> has long
+  been seen as one of the promising paths towards a quantum theory of
+  gravity. However, most applications to physics remain firmly grounded in
+  mathematics<cite|noncomm> more than in considerations of what the
+  mathematical symbols represent. The present work shows a relatively simple
+  physical interpretation for this work. More importantly, it suggests that
+  surprising aspects of it should not be too quickly discarded as
+  mathematically absurd.
 
   For example, one particular issue with respect to a traditional or
   perturbative treatment of space-time non-commutativity is the appearance of
   non-unitarity in the S-matrix<cite|nonunit>. Non-unitarity, if interpreted
   as the sum of all probabilities no longer being 1, raises a serious problem
-  from a quantum mechanics point of view.
-
-  But if we accept that non-commutativity must be possible, then this
-  indicates that the S-matrix lost its physical significance. This is not
-  surprising considering that an S-matrix relates the state of the system to
-  states ``at infinity'', and those depend on the large-scale space-time
-  structure. By analogy, if one is computing the probability to find a mobile
-  running on the surface of earth, summing probabilities on a tangent plane
-  will yield incorrect results.
+  from a quantum mechanics point of view. But if we accept that
+  non-commutativity must be possible, then this indicates that the S-matrix
+  lost its physical significance. This is not surprising considering that an
+  S-matrix relates the state of the system to states ``at infinity'', and
+  those depend on the large-scale space-time structure. By analogy, if one is
+  computing the probability to find a mobile running on the surface of earth,
+  summing probabilities on a tangent plane will yield incorrect results.
 
   <paragraph|Hidden Variables>The well known theorem of Bell gave a
   verifiable method for determining if quantum mechanics can be explained by
   hidden variables. While the various kinds of hidden variable theories
-  (local, non-local, stochastic) make a final conclusion harder to reach, to
-  this day, experiments conducted by Alain Aspect <cite|aspect> and others
-  would tend to disprove hidden variable theories.
+  (local, non-local, stochastic) make a definitive conclusion on this topic
+  harder to reach, to this day, experiments conducted by Alain Aspect
+  <cite|aspect> and others would tend to disprove hidden variable theories.
 
   The interpretation of quantum theory given here does not rely on hidden
   variables. The reasoning is based entirely on the existence of
@@ -2243,21 +2358,26 @@
   did not present any ``fundamental equation'', i.e. something equivalent to
   the field equation in general relativity or to Schroedinger's equation in
   quantum mechanics. An equation like <eqref|eq:timevol> is clearly not
-  specific enough to make predictions.
+  specific enough to make predictions. As a result, the TIM principles alone
+  are not sufficient to make predictions, and additional relations must be
+  written.
 
-  For the moment, we can simply ``borrow'' the existing fundamental equations
-  from the respective theories, with an understanding that these may be
-  approximations corresponding to a particular choice of physical
-  measurement. This way, we can leverage the numerous advances made during
-  the past century, including the many forms of Lagrange equations and the
-  gauge invariance arguments that have proven so successful in predicting
-  particle interactions. In that sense, the present theory is ``backwards''
-  from most recent research: whereas recent work is often about suggesting a
-  new fundamental equation, the theory presented here replaced practically
-  everything but the fundamental equations.
+  For the moment, we have simply ``borrowed'' the existing fundamental
+  equations from the respective theories, with an understanding that these
+  may be approximations corresponding to a particular choice of physical
+  measurement. This way, we were able to indirectly leverage the numerous
+  advances made during the past century, including the many forms of Lagrange
+  equations and the gauge invariance arguments that have proven so successful
+  in predicting particle interactions.
 
-  <paragraph|Characteristics of the theory>With these borrowed fundamental
-  equations, the theory presented here has the following characteristics:
+  In that sense, the present theory is ``backwards'' from most recent
+  research: whereas recent work is often about suggesting a new fundamental
+  equation, generally by means of a new formulation of the Lagrangian or
+  action, the theory presented here replaces practically everything but the
+  fundamental equations.
+
+  <paragraph|Characteristics of the theory>The TIM has the following
+  characteristics:
 
   <\itemize>
     <item>All measurements are treated identically, including time and space
@@ -2269,36 +2389,37 @@
     to be complete, or whether the uncertainty itself is believed to be
     fundamental.
 
-    <item>At small scale, where measurements results can as far as we know
-    only be predicted statistically, the theory is formally almost identical
-    to quantum mechanics, and therefore incorporates its predictions by
-    reference. In particular, the theory predicts the mathematical shape of
-    the quantum mechanics wave-function under a reasonable set of conditions.
-    Quantum mechanics is seen as an approximation that considers only linear
-    operators and ignores the effects of non-commutativity of displacements
-    along space and time. The theory presented here can be understood as
-    providing yet another interpretation of quantum mechanics.
+    <item>When measurements results can as far as we know only be predicted
+    statistically, the theory is formally almost identical to quantum
+    mechanics, and therefore incorporates its predictions by reference. In
+    particular, the theory predicts the mathematical shape of the quantum
+    mechanics wave-function under a reasonable set of conditions. Quantum
+    mechanics is seen as an approximation, where non-linearity, divergence at
+    large scale or non-commutativity of space and time operators are ignored.
+    The theory TIM also offers yet another interpretation of quantum
+    mechanics.
 
-    <item>At large scale, the effects of non-commutativity become dominant,
-    but measurements return quasi-deterministic results, so that measurement
-    values can be approximated by continuously differentiable functions. In
-    that case, the present formalism becomes formally identical to general
-    relativity, and therefore incorporates its predictions by reference.
-    General relativity is seen as an approximation where measurements are
-    considered continuously differentiable.
+    <item>At large scale, the effects of space and time non-commutativity
+    become dominant, but measurements return quasi-deterministic results, so
+    that measurement values can be approximated by continuously
+    differentiable functions. In that case, the present formalism becomes
+    formally identical to general relativity, and therefore incorporates its
+    predictions by reference. General relativity is also seen as an
+    approximation, where measurements can be identified to their continuous
+    approximation.
 
     <item>The transition between different time and space measurements
     introduces an explicit factor <with|mode|math|\<lambda\>>, which is
-    assimilated to the scale factor formally introduced in the theory of
-    scale relativity. It is therefore expected that the present theory
-    incorporates scale relativity results by reference, and explains them
-    from a physical perspective.
+    assimilated to the scale factor formally introduced in Nottale's theory
+    of scale relativity. It is therefore expected that the present theory
+    also incorporates scale relativity results by reference, and offers a
+    physical justification.
   </itemize>
 
   <paragraph|Future work>Obviously, simply borrowing fundamental equations
-  and incorporating them in the present theory is not very satisfying. For
-  this reason, finding a fundamental equation should now be the most active
-  topic of research.
+  and incorporating them in the present theory is not entirely satisfying.
+  For this reason, finding a fundamental equation, ideally derived from TIM
+  principles alone, should now be the most active topic of research.
 
   In that respect, we can already make a number of preliminary observations.
   First, we can note that all theories of physics accepted so far have at
@@ -2333,15 +2454,173 @@
   these two aspects, and therefore there seems to be a relation between the
   wave-particle duality and the local-distant duality.
 
+  The ``large scale'' aspects, which ``summarize'' the rest of the universe,
+  are by construction containing many more degrees of freedom than the
+  ``local'' aspects. It is therefore reasonable to expect that a statistical
+  analysis is necessary to be able to derive both local and distant
+  formulations from the same principle. Another observation gives us
+  confidence in this approach. The fundamental law, both for quantum
+  mechanics and for general relativity, centers around energy. We know since
+  Boltzmann that there is a correlation between the number of degrees of
+  freedom and entropy. We also know that for a macroscopic adiabatic (closed)
+  system, there is a direct relation between entropy, energy and temperature
+  (<with|mode|math|\<mathd\>U=T*\<mathd\>S>). It is therefore not
+  unreasonable to speculate that a future ``fundamental equation'' can be
+  derived from a formulation of time and energy in terms of statistical
+  selection.
+
   <section*|Acknowledgments>
 
   This paper is dedicated to my parents who taught me practically everything
-  I know about the universe. Special thanks go to my wife Christine and our
-  children, who patiently accommodated the long hours thinking, writing, and
-  then starting all over again.
+  I know about the universe, including standing up in quasi-equilibrium
+  against all statistical odds (a process commonly referred to as
+  ``walking''), and in particular to my father, Gabriel de Dinechin, who made
+  helpful comments on this work despite his very severe condition.
+
+  Special thanks go to my wife Christine and our children, who patiently
+  accommodated the long hours spent on this article. I also want to thank
+  Jerome, Florent and Yves de Dinechin, \ Claude Cohen-Tannoudji, Carlo
+  Rovelli, Charles Francis, and George Batrouni for the comments they gave me
+  on this paper at various stages of its completion.
+
+  My employer, Hewlett-Packard, did not directly commission this work, and
+  had no direct role in its creation. However, writing this article would not
+  have been possible without their indirect funding of my spare time
+  activities.
 
   <\bibliography|bib|elsart-num|tim.bib>
-    \;
+    <\bib-list|10>
+      <bibitem*|1><label|bib-heisenberg>W.<nbsp>Heisenberg, Über den
+      anschaulichen inhalt der quantentheoretischen kinematik und mechanik,
+      Zeitschrift für Physik 43 (1927) 172--198.\ 
+
+      <bibitem*|2><label|bib-cohen>F.<nbsp>L. Claude Cohen-Tannoudji,
+      Bernard<nbsp>Diu, Mecanique Quantique I, Hermann, Paris.
+
+      <bibitem*|3><label|bib-basdevant>J.-L. Basdevant, Mecanique Quantique,
+      cours de l'Ecole Polytechnique, Ellipse, Paris.
+
+      <bibitem*|4><label|bib-relativity>A.<nbsp>Einstein, Über die spezielle
+      und allgemeine Relativitätstheorie, Springer-Verlag, Berlin.
+
+      <bibitem*|5><label|bib-baez-2005-73>J.<nbsp>C. Baez, E.<nbsp>F. Bunn,
+      The meaning of einstein's equation, Amer.Jour.Phys. 73 (2005) 644.\ 
+
+      <bibitem*|6><label|bib-timemsmt>B.<nbsp>G. Claude<nbsp>Audoin, Les
+      fondements de la mesure du temps, Masson, Paris.
+
+      <bibitem*|7><label|bib-spacemsmt>E.<nbsp>O. et<nbsp>al, Process in
+      absolute distance measurement using a dye laser, Nanotechnology.
+
+      <bibitem*|8><label|bib-gausscoordinates>A.<nbsp>Einstein, Über die
+      spezielle und allgemeine Relativitätstheorie, Springer-Verlag, Berlin,
+      Ch.<nbsp>25.
+
+      <bibitem*|9><label|bib-langevin>P.<nbsp>Langevin, L'evolution de
+      l'espace et du temps, Scientia X.
+
+      <bibitem*|10><label|bib-gravlens>O.<nbsp>Chwolson, Über eine mögliche
+      Form fiktiver Doppelsterne, Astronomische Nachrichten 221 (1924) 329.
+
+      <bibitem*|11><label|bib-shapiro>I.<nbsp>I. Shapiro, Fourth test of
+      general relativity, Phys. Rev. 13 (1964) 789--791.
+
+      <bibitem*|12><label|bib-justifyrelativity>A.<nbsp>Einstein, Über die
+      spezielle und allgemeine Relativitätstheorie, Springer-Verlag, Berlin,
+      Ch.<nbsp>23.
+
+      <bibitem*|13><label|bib-kochanek-1996-466>C.<nbsp>S. Kochanek, Is there
+      a cosmological constant?, The Astrophysical Journal 466 (1996) 638.\ 
+
+      <bibitem*|14><label|bib-branchina-2007>V.<nbsp>Branchina,
+      D.<nbsp>Zappala, Time evolution of t(mu,nu) and the cosmological
+      constant problem, arXiv.org:0705.2299.
+
+      <bibitem*|15><label|bib-cosmocst>L.<nbsp>S. Lisa<nbsp>Dyson,
+      Matthew<nbsp>Kleban, Disturbing implications of a cosmological
+      constant, JHEP 0210.\ 
+
+      <bibitem*|16><label|bib-relaq>C.<nbsp>Francis, A relational quantum
+      theory incorporating gravity, gr-qc/0508077.
+
+      <bibitem*|17><label|bib-darkmatter>F.<nbsp>Zwicky, Die rotverschiebung
+      von extragalaktischen nebeln, Helvetica Physica Acta 6 (1933) 110--127.
+
+      <bibitem*|18><label|bib-pioneer>J.<nbsp>A. et<nbsp>al, Study of the
+      anomalous acceleration of pioneer 10 and 11, Phys. Rev. D 65.
+
+      <bibitem*|19><label|bib-clowe-2006>D.<nbsp>Clowe, M.<nbsp>Bradac,
+      A.<nbsp>H. Gonzalez, M.<nbsp>Markevitch, S.<nbsp>W. Randall,
+      C.<nbsp>Jones, D.<nbsp>Zaritsky, A direct empirical proof of the
+      existence of dark matter, astro-ph/0608407.
+
+      <bibitem*|20><label|bib-freefalling>L.<nbsp>Fabbri, Free falling
+      electric charge in a static homogeneous gravitational field, Annales de
+      la Fondation Louis de Broglie vol 30 no 1 (2005) 87--95.
+
+      <bibitem*|21><label|bib-liftsandtopologies>G.<nbsp>Segre, Einstein's
+      lifts and topologies: topological investigations on the principle of
+      equivalence.\ 
+
+      <bibitem*|22><label|bib-uft25>A.<nbsp>Einstein, Unified field theory of
+      gravitation and electricity, Session report (July 25h, 1928) 414--419.
+
+      <bibitem*|23><label|bib-uft28>A.<nbsp>Einstein, New possibility for a
+      unified field theory of gravitation and electricity, Session report
+      (June 14th, 1928) 224--227.
+
+      <bibitem*|24><label|bib-uft30>A.<nbsp>Einstein, Unified field theory
+      based on riemannian metrics and distant parallelism, Math. Annal. 102
+      (1930) 685--697.
+
+      <bibitem*|25><label|bib-renormalization>B.<nbsp>Delamotte, A hint of
+      renormalization, Am.J.Phys. 72 (2004) 170--184.
+
+      <bibitem*|26><label|bib-scalerelat>L.<nbsp>Nottale, The theory of scale
+      relativity, Int. J. Mod. Phys. A7 (1992) 4899--4936.
+
+      <bibitem*|27><label|bib-fractalspacetime>L.<nbsp>Nottale, Fractal Space
+      Time and Microphysics, World Scientific, Singapore, 1993.
+
+      <bibitem*|28><label|bib-tegmark-2007>M.<nbsp>Tegmark, The mathematical
+      universe, arXiv.org:0704.0646.\ 
+
+      <bibitem*|29><label|bib-epr>B.<nbsp>P. Albert<nbsp>Einstein,
+      N.<nbsp>Rosen, Can quantum-mechanical description of physical reality
+      be considered complete?, Phys. Rev. 47 (1935) 777.
+
+      <bibitem*|30><label|bib-relatquantmech>C.<nbsp>Rovelli, Relational
+      quantum mechanics, Int. J. of Theor. Phys. 35.
+
+      <bibitem*|31><label|bib-pondicherry>U.<nbsp>Mohrhoff, The pondicherry
+      interpretation of quantum mechanics, Am.J.Phys 68 (2000) 728--745.
+
+      <bibitem*|32><label|bib-quantdecoherence>M.<nbsp>Schlosshauer,
+      Decoherence, the measurement problem, and interpretations of quantum
+      mechanics, Rev. Mod. Phys. 76 (2004) 1267--1305.
+
+      <bibitem*|33><label|bib-jacobssteck>K.<nbsp>Jacobs, D.<nbsp>A. Steck, A
+      straightforward introduction to continuous quantum measurement,
+      Contemporary Physics quant-ph/0611067.
+
+      <bibitem*|34><label|bib-darksideofthemoon>B.<nbsp>Greene, The fabric of
+      the cosmos, Vintage, New York, 2005, Ch.<nbsp>4, p.<nbsp>93.
+
+      <bibitem*|35><label|bib-connes>A.<nbsp>Connes, Noncommutative Geometry,
+      Academic Press, San Diego, 1994.
+
+      <bibitem*|36><label|bib-noncomm>C.<nbsp>M. P. T.-S.
+      A.P.<nbsp>Balachandran, T.R.<nbsp>Govindarajan, Unitary quantum physics
+      with time-space noncommutativity, JHEP 0410 (2004) 072.
+
+      <bibitem*|37><label|bib-nonunit>T.<nbsp>M. Jaume<nbsp>Gomis, Space-time
+      noncommutative field theories and unitarity, Nucl. Phys. B591 (2000)
+      265--276.
+
+      <bibitem*|38><label|bib-aspect>A.<nbsp>Aspect, Three experimental tests
+      of bell inequalities by the measurement of polarization correlations
+      between photons, PhD Thesis.
+    </bib-list>
   </bibliography>
 </body>
 
@@ -2354,196 +2633,208 @@
 
 <\references>
   <\collection>
-    <associate|Remarks|<tuple|2.4|?>>
-    <associate|analogy|<tuple|4.2|19>>
+    <associate||<\tuple>
+      6
+    </tuple|30>>
+    <associate|Remarks|<tuple|2.4|7>>
+    <associate|analogy|<tuple|4.2|22>>
     <associate|auto-1|<tuple|1|1>>
     <associate|auto-10|<tuple|6|4>>
     <associate|auto-11|<tuple|7|4>>
-    <associate|auto-12|<tuple|2.3|4>>
+    <associate|auto-12|<tuple|2.3|5>>
     <associate|auto-13|<tuple|8|5>>
     <associate|auto-14|<tuple|9|5>>
     <associate|auto-15|<tuple|10|5>>
-    <associate|auto-16|<tuple|11|5>>
+    <associate|auto-16|<tuple|11|6>>
     <associate|auto-17|<tuple|12|6>>
-    <associate|auto-18|<tuple|2.4|6>>
+    <associate|auto-18|<tuple|2.4|7>>
     <associate|auto-19|<tuple|13|7>>
     <associate|auto-2|<tuple|1|1>>
     <associate|auto-20|<tuple|14|7>>
     <associate|auto-21|<tuple|15|7>>
     <associate|auto-22|<tuple|16|7>>
-    <associate|auto-23|<tuple|17|7>>
-    <associate|auto-24|<tuple|3|7>>
+    <associate|auto-23|<tuple|17|8>>
+    <associate|auto-24|<tuple|3|8>>
     <associate|auto-25|<tuple|3.1|8>>
     <associate|auto-26|<tuple|18|8>>
     <associate|auto-27|<tuple|19|9>>
     <associate|auto-28|<tuple|20|9>>
-    <associate|auto-29|<tuple|21|9>>
+    <associate|auto-29|<tuple|21|10>>
     <associate|auto-3|<tuple|2|2>>
-    <associate|auto-30|<tuple|3.2|9>>
-    <associate|auto-31|<tuple|22|9>>
+    <associate|auto-30|<tuple|3.2|10>>
+    <associate|auto-31|<tuple|22|10>>
     <associate|auto-32|<tuple|23|10>>
-    <associate|auto-33|<tuple|24|10>>
+    <associate|auto-33|<tuple|24|11>>
     <associate|auto-34|<tuple|25|11>>
     <associate|auto-35|<tuple|1|11>>
-    <associate|auto-36|<tuple|26|11>>
-    <associate|auto-37|<tuple|27|12>>
-    <associate|auto-38|<tuple|2|12>>
-    <associate|auto-39|<tuple|28|12>>
+    <associate|auto-36|<tuple|26|12>>
+    <associate|auto-37|<tuple|27|13>>
+    <associate|auto-38|<tuple|2|13>>
+    <associate|auto-39|<tuple|28|13>>
     <associate|auto-4|<tuple|2.1|2>>
-    <associate|auto-40|<tuple|3.3|12>>
-    <associate|auto-41|<tuple|29|13>>
-    <associate|auto-42|<tuple|3|13>>
-    <associate|auto-43|<tuple|4|13>>
-    <associate|auto-44|<tuple|30|13>>
-    <associate|auto-45|<tuple|31|14>>
-    <associate|auto-46|<tuple|3.4|14>>
-    <associate|auto-47|<tuple|32|14>>
-    <associate|auto-48|<tuple|33|15>>
-    <associate|auto-49|<tuple|34|15>>
+    <associate|auto-40|<tuple|3.3|13>>
+    <associate|auto-41|<tuple|29|14>>
+    <associate|auto-42|<tuple|3|14>>
+    <associate|auto-43|<tuple|4|14>>
+    <associate|auto-44|<tuple|30|15>>
+    <associate|auto-45|<tuple|31|15>>
+    <associate|auto-46|<tuple|3.4|15>>
+    <associate|auto-47|<tuple|32|16>>
+    <associate|auto-48|<tuple|33|16>>
+    <associate|auto-49|<tuple|34|16>>
     <associate|auto-5|<tuple|2.2|3>>
-    <associate|auto-50|<tuple|35|15>>
-    <associate|auto-51|<tuple|36|15>>
-    <associate|auto-52|<tuple|37|16>>
-    <associate|auto-53|<tuple|38|16>>
-    <associate|auto-54|<tuple|39|16>>
-    <associate|auto-55|<tuple|40|17>>
-    <associate|auto-56|<tuple|3.5|17>>
-    <associate|auto-57|<tuple|41|17>>
-    <associate|auto-58|<tuple|42|17>>
-    <associate|auto-59|<tuple|43|17>>
+    <associate|auto-50|<tuple|35|17>>
+    <associate|auto-51|<tuple|36|17>>
+    <associate|auto-52|<tuple|37|17>>
+    <associate|auto-53|<tuple|38|18>>
+    <associate|auto-54|<tuple|39|18>>
+    <associate|auto-55|<tuple|40|18>>
+    <associate|auto-56|<tuple|3.5|19>>
+    <associate|auto-57|<tuple|41|19>>
+    <associate|auto-58|<tuple|42|20>>
+    <associate|auto-59|<tuple|43|20>>
     <associate|auto-6|<tuple|2|3>>
-    <associate|auto-60|<tuple|4|17>>
-    <associate|auto-61|<tuple|4.1|18>>
-    <associate|auto-62|<tuple|44|18>>
-    <associate|auto-63|<tuple|45|18>>
-    <associate|auto-64|<tuple|46|18>>
-    <associate|auto-65|<tuple|47|18>>
-    <associate|auto-66|<tuple|48|19>>
-    <associate|auto-67|<tuple|49|19>>
-    <associate|auto-68|<tuple|50|20>>
-    <associate|auto-69|<tuple|51|20>>
+    <associate|auto-60|<tuple|44|20>>
+    <associate|auto-61|<tuple|4|20>>
+    <associate|auto-62|<tuple|4.1|21>>
+    <associate|auto-63|<tuple|45|21>>
+    <associate|auto-64|<tuple|46|21>>
+    <associate|auto-65|<tuple|47|21>>
+    <associate|auto-66|<tuple|48|21>>
+    <associate|auto-67|<tuple|49|21>>
+    <associate|auto-68|<tuple|50|21>>
+    <associate|auto-69|<tuple|51|22>>
     <associate|auto-7|<tuple|3|3>>
-    <associate|auto-70|<tuple|4.2|20>>
-    <associate|auto-71|<tuple|52|21>>
-    <associate|auto-72|<tuple|53|21>>
-    <associate|auto-73|<tuple|54|21>>
-    <associate|auto-74|<tuple|4.3|21>>
-    <associate|auto-75|<tuple|55|21>>
-    <associate|auto-76|<tuple|56|22>>
-    <associate|auto-77|<tuple|57|22>>
-    <associate|auto-78|<tuple|58|22>>
-    <associate|auto-79|<tuple|59|22>>
+    <associate|auto-70|<tuple|52|22>>
+    <associate|auto-71|<tuple|4.2|22>>
+    <associate|auto-72|<tuple|53|23>>
+    <associate|auto-73|<tuple|54|23>>
+    <associate|auto-74|<tuple|55|24>>
+    <associate|auto-75|<tuple|4.3|24>>
+    <associate|auto-76|<tuple|56|24>>
+    <associate|auto-77|<tuple|57|24>>
+    <associate|auto-78|<tuple|58|25>>
+    <associate|auto-79|<tuple|59|25>>
     <associate|auto-8|<tuple|4|4>>
-    <associate|auto-80|<tuple|60|22>>
-    <associate|auto-81|<tuple|61|23>>
-    <associate|auto-82|<tuple|62|23>>
-    <associate|auto-83|<tuple|63|23>>
-    <associate|auto-84|<tuple|64|23>>
-    <associate|auto-85|<tuple|5|24>>
-    <associate|auto-86|<tuple|65|24>>
-    <associate|auto-87|<tuple|66|24>>
-    <associate|auto-88|<tuple|67|?>>
-    <associate|auto-89|<tuple|<with|mode|<quote|math>|\<bullet\>>|?>>
+    <associate|auto-80|<tuple|60|25>>
+    <associate|auto-81|<tuple|61|25>>
+    <associate|auto-82|<tuple|62|26>>
+    <associate|auto-83|<tuple|63|26>>
+    <associate|auto-84|<tuple|64|26>>
+    <associate|auto-85|<tuple|65|26>>
+    <associate|auto-86|<tuple|5|27>>
+    <associate|auto-87|<tuple|66|27>>
+    <associate|auto-88|<tuple|67|27>>
+    <associate|auto-89|<tuple|68|28>>
     <associate|auto-9|<tuple|5|4>>
-    <associate|auto-90|<tuple|<with|mode|<quote|math>|\<bullet\>>|?>>
-    <associate|bib-aspect|<tuple|37|25>>
-    <associate|bib-baez-2005-73|<tuple|5|24>>
-    <associate|bib-basdevant|<tuple|3|24>>
-    <associate|bib-cohen|<tuple|2|24>>
-    <associate|bib-connes|<tuple|34|25>>
-    <associate|bib-cosmocst|<tuple|11|25>>
-    <associate|bib-darkmatter|<tuple|14|25>>
-    <associate|bib-darksideofthemoon|<tuple|33|25>>
-    <associate|bib-distpar|<tuple|19|25>>
-    <associate|bib-epr|<tuple|28|25>>
-    <associate|bib-fractalspacetime|<tuple|27|25>>
-    <associate|bib-freefalling|<tuple|16|25>>
-    <associate|bib-gausscoordinates|<tuple|8|25>>
-    <associate|bib-heisenberg|<tuple|1|24>>
-    <associate|bib-jacobssteck|<tuple|32|25>>
-    <associate|bib-justifyrelativity|<tuple|10|25>>
-    <associate|bib-langevin|<tuple|9|25>>
-    <associate|bib-liftsandtopologies|<tuple|17|25>>
+    <associate|auto-90|<tuple|<with|mode|<quote|math>|\<bullet\>>|28>>
+    <associate|auto-91|<tuple|<with|mode|<quote|math>|\<bullet\>>|28>>
+    <associate|bib-aspect|<tuple|38|29>>
+    <associate|bib-baez-2005-73|<tuple|5|29>>
+    <associate|bib-basdevant|<tuple|3|29>>
+    <associate|bib-branchina-2007|<tuple|14|29>>
+    <associate|bib-clowe-2006|<tuple|19|29>>
+    <associate|bib-cohen|<tuple|2|29>>
+    <associate|bib-connes|<tuple|35|29>>
+    <associate|bib-cosmocst|<tuple|15|29>>
+    <associate|bib-darkmatter|<tuple|17|29>>
+    <associate|bib-darksideofthemoon|<tuple|34|29>>
+    <associate|bib-distpar|<tuple|23|25>>
+    <associate|bib-epr|<tuple|29|29>>
+    <associate|bib-fractalspacetime|<tuple|27|29>>
+    <associate|bib-freefalling|<tuple|20|29>>
+    <associate|bib-gausscoordinates|<tuple|8|29>>
+    <associate|bib-gravlens|<tuple|10|29>>
+    <associate|bib-heisenberg|<tuple|1|28>>
+    <associate|bib-jacobssteck|<tuple|33|29>>
+    <associate|bib-justifyrelativity|<tuple|12|29>>
+    <associate|bib-kochanek-1996-466|<tuple|13|29>>
+    <associate|bib-langevin|<tuple|9|29>>
+    <associate|bib-liftsandtopologies|<tuple|21|29>>
     <associate|bib-malgebras|<tuple|1|23>>
-    <associate|bib-noncomm|<tuple|35|25>>
-    <associate|bib-nonunit|<tuple|36|25>>
-    <associate|bib-pioneer|<tuple|15|25>>
-    <associate|bib-pondicherry|<tuple|29|25>>
+    <associate|bib-noncomm|<tuple|36|29>>
+    <associate|bib-nonunit|<tuple|37|29>>
+    <associate|bib-pioneer|<tuple|18|29>>
+    <associate|bib-pondicherry|<tuple|31|29>>
     <associate|bib-qmforce|<tuple|8|21>>
-    <associate|bib-quantdecoherence|<tuple|31|25>>
-    <associate|bib-relaq|<tuple|12|25>>
-    <associate|bib-relativity|<tuple|4|24>>
-    <associate|bib-relatquantmech|<tuple|30|25>>
-    <associate|bib-renormalization|<tuple|25|25>>
-    <associate|bib-scalerelat|<tuple|26|25>>
-    <associate|bib-shapiro|<tuple|13|25>>
-    <associate|bib-spacemsmt|<tuple|7|24>>
-    <associate|bib-timemsmt|<tuple|6|24>>
-    <associate|bib-uft25|<tuple|18|25>>
-    <associate|bib-uft28|<tuple|20|25>>
-    <associate|bib-uft29a|<tuple|21|25>>
-    <associate|bib-uft29c|<tuple|23|25>>
-    <associate|bib-uft29h|<tuple|22|25>>
-    <associate|bib-uft30|<tuple|24|25>>
+    <associate|bib-quantdecoherence|<tuple|32|29>>
+    <associate|bib-relaq|<tuple|16|29>>
+    <associate|bib-relativity|<tuple|4|29>>
+    <associate|bib-relatquantmech|<tuple|30|29>>
+    <associate|bib-renormalization|<tuple|25|29>>
+    <associate|bib-scalerelat|<tuple|26|29>>
+    <associate|bib-shapiro|<tuple|11|29>>
+    <associate|bib-spacemsmt|<tuple|7|29>>
+    <associate|bib-tegmark-2007|<tuple|28|29>>
+    <associate|bib-timemsmt|<tuple|6|29>>
+    <associate|bib-uft25|<tuple|22|29>>
+    <associate|bib-uft28|<tuple|23|29>>
+    <associate|bib-uft29a|<tuple|25|25>>
+    <associate|bib-uft29c|<tuple|27|25>>
+    <associate|bib-uft29h|<tuple|26|25>>
+    <associate|bib-uft30|<tuple|24|29>>
     <associate|eq1|<tuple|2|?>>
     <associate|eq:christoffel|<tuple|23|15>>
-    <associate|eq:commut|<tuple|9|5>>
-    <associate|eq:commutx|<tuple|7|5>>
-    <associate|eq:commuty|<tuple|8|5>>
-    <associate|eq:coordrot|<tuple|17|10>>
-    <associate|eq:cossin|<tuple|18|10>>
-    <associate|eq:cossin2|<tuple|19|10>>
+    <associate|eq:commut|<tuple|9|6>>
+    <associate|eq:commutx|<tuple|7|6>>
+    <associate|eq:commuty|<tuple|8|6>>
+    <associate|eq:coordrot|<tuple|17|12>>
+    <associate|eq:cossin|<tuple|18|12>>
+    <associate|eq:cossin2|<tuple|19|12>>
     <associate|eq:display|<tuple|1|3>>
     <associate|eq:eigen|<tuple|12|6>>
-    <associate|eq:einsteintensor|<tuple|23|15>>
+    <associate|eq:einsteintensor|<tuple|23|17>>
     <associate|eq:elmmove|<tuple|41|?>>
-    <associate|eq:expected|<tuple|28|18>>
+    <associate|eq:expected|<tuple|28|22>>
     <associate|eq:field|<tuple|30|21>>
     <associate|eq:focused|<tuple|3|4>>
     <associate|eq:gad|<tuple|4|?>>
-    <associate|eq:gauss|<tuple|22|13>>
+    <associate|eq:gauss|<tuple|22|16>>
     <associate|eq:grad|<tuple|4|4>>
     <associate|eq:graduation|<tuple|4|?>>
     <associate|eq:grcurrent|<tuple|25|16>>
     <associate|eq:grelm|<tuple|25|16>>
-    <associate|eq:grelmmove|<tuple|25|16>>
-    <associate|eq:grfield|<tuple|24|15>>
+    <associate|eq:grelmmove|<tuple|25|18>>
+    <associate|eq:grfield|<tuple|24|17>>
     <associate|eq:identity|<tuple|6|5>>
     <associate|eq:inverse|<tuple|5|5>>
     <associate|eq:linear|<tuple|10|6>>
     <associate|eq:linear2|<tuple|12|3>>
     <associate|eq:linearity|<tuple|11|6>>
-    <associate|eq:linprob|<tuple|29|18>>
-    <associate|eq:lorentz|<tuple|21|?>>
+    <associate|eq:linprob|<tuple|29|22>>
+    <associate|eq:lorentz|<tuple|21|12>>
     <associate|eq:measurement|<tuple|13|?>>
     <associate|eq:possible|<tuple|1|?>>
     <associate|eq:predict|<tuple|5|4>>
-    <associate|eq:relatcos|<tuple|20|?>>
+    <associate|eq:relatcos|<tuple|20|12>>
     <associate|eq:repeat|<tuple|2|4>>
     <associate|eq:riemanntensor|<tuple|23|15>>
-    <associate|eq:samespace|<tuple|26|16>>
+    <associate|eq:samespace|<tuple|26|19>>
     <associate|eq:sametime|<tuple|15|9>>
-    <associate|eq:spacedef|<tuple|14|8>>
-    <associate|eq:spaceidentity|<tuple|27|16>>
+    <associate|eq:spacedef|<tuple|14|9>>
+    <associate|eq:spaceidentity|<tuple|27|19>>
     <associate|eq:spacetimevol|<tuple|16|9>>
-    <associate|eq:spacevol|<tuple|15|8>>
+    <associate|eq:spacevol|<tuple|15|9>>
     <associate|eq:timaccel|<tuple|31|22>>
     <associate|eq:time|<tuple|14|?>>
     <associate|eq:timedef|<tuple|12|8>>
-    <associate|eq:timevol|<tuple|13|8>>
-    <associate|fig:commuting|<tuple|3|12>>
-    <associate|fig:coordinates|<tuple|4|12>>
+    <associate|eq:timevol|<tuple|13|9>>
+    <associate|fig:commuting|<tuple|3|14>>
+    <associate|fig:coordinates|<tuple|4|14>>
     <associate|fig:fneq|<tuple|1|?>>
     <associate|fig:functions|<tuple|1|?>>
-    <associate|fig:rotation|<tuple|1|10>>
-    <associate|fig:twins|<tuple|2|11>>
+    <associate|fig:rotation|<tuple|1|11>>
+    <associate|fig:twins|<tuple|2|13>>
     <associate|footnote-1|<tuple|1|3>>
+    <associate|footnote-10|<tuple|10|18>>
     <associate|footnote-2|<tuple|2|3>>
     <associate|footnote-3|<tuple|3|4>>
-    <associate|footnote-4|<tuple|4|5>>
-    <associate|footnote-5|<tuple|5|?>>
-    <associate|footnote-6|<tuple|6|?>>
-    <associate|footnote-7|<tuple|7|?>>
+    <associate|footnote-4|<tuple|4|6>>
+    <associate|footnote-5|<tuple|5|9>>
+    <associate|footnote-6|<tuple|6|10>>
+    <associate|footnote-7|<tuple|7|13>>
+    <associate|footnote-8|<tuple|8|14>>
+    <associate|footnote-9|<tuple|9|16>>
     <associate|footnr-1|<tuple|1|?>>
     <associate|footnr-2|<tuple|2|?>>
     <associate|footnr-3|<tuple|3|?>>
@@ -2553,15 +2844,15 @@
     <associate|footnr-7|<tuple|7|?>>
     <associate|formalism|<tuple|2.2|3>>
     <associate|fundamental|<tuple|5|19>>
-    <associate|generalrelativity|<tuple|3.4|13>>
-    <associate|interpretation|<tuple|4.3|21>>
-    <associate|noneuclidean|<tuple|3.3|12>>
+    <associate|generalrelativity|<tuple|3.4|15>>
+    <associate|interpretation|<tuple|4.3|24>>
+    <associate|noneuclidean|<tuple|3.3|13>>
     <associate|postulates|<tuple|2.1|2>>
-    <associate|predictions|<tuple|4.1|17>>
-    <associate|reasoning|<tuple|2.3|4>>
-    <associate|scalerelativity|<tuple|3.5|16>>
-    <associate|spacetime|<tuple|3.1|7>>
-    <associate|specialrelativity|<tuple|3.2|9>>
+    <associate|predictions|<tuple|4.1|21>>
+    <associate|reasoning|<tuple|2.3|5>>
+    <associate|scalerelativity|<tuple|3.5|19>>
+    <associate|spacetime|<tuple|3.1|8>>
+    <associate|specialrelativity|<tuple|3.2|10>>
   </collection>
 </references>
 
@@ -2584,29 +2875,31 @@
 
       gausscoordinates
 
-      eisntein1905
-
-      michelsonmorley
-
-      poincare
-
-      maxwell
-
       langevin
+
+      gravlens
+
+      shapiro
 
       justifyrelativity
 
       baez-2005-73
 
+      kochanek-1996-466
+
+      branchina-2007
+
       cosmocst
 
       relaq
 
-      shapiro
+      branchina-2007
 
       darkmatter
 
       pioneer
+
+      clowe-2006
 
       freefalling
 
@@ -2614,15 +2907,7 @@
 
       uft25
 
-      distpar
-
       uft28
-
-      uft29a
-
-      uft29h
-
-      uft29c
 
       uft30
 
@@ -2632,15 +2917,17 @@
 
       fractalspacetime
 
-      basdevant
+      tegmark-2007
 
       cohen
 
+      basdevant
+
       epr
 
-      pondicherry
-
       relatquantmech
+
+      pondicherry
 
       quantdecoherence
 
@@ -2673,7 +2960,7 @@
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-1><vspace|0.5fn>
 
-      <with|par-left|<quote|6fn>|Overview of the article
+      <with|par-left|<quote|6fn>|Overview
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-2><vspace|0.15fn>>
 
@@ -2811,7 +3098,7 @@
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-37><vspace|0.15fn>>
 
-      <with|par-left|<quote|6fn>|Is light creating space-time?
+      <with|par-left|<quote|6fn>|Space-time and electromagnetism
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-39><vspace|0.15fn>>
 
@@ -2843,30 +3130,31 @@
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-48><vspace|0.15fn>>
 
-      <with|par-left|<quote|6fn>|Metric <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <with|par-left|<quote|6fn>|Metric and experimental choice
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-49><vspace|0.15fn>>
-
-      <with|par-left|<quote|6fn>|Existence of a Minkowskian metric
-      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-50><vspace|0.15fn>>
-
-      <with|par-left|<quote|6fn>|Geodesics
-      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-51><vspace|0.15fn>>
-
-      <with|par-left|<quote|6fn>|Cosmological constant
-      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-52><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Stress-energy tensor
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-53><vspace|0.15fn>>
+      <no-break><pageref|auto-50><vspace|0.15fn>>
+
+      <with|par-left|<quote|6fn>|Cosmological constant
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-51><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Field equation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-52><vspace|0.15fn>>
+
+      <with|par-left|<quote|6fn>|Existence of a Minkowskian metric
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-53><vspace|0.15fn>>
+
+      <with|par-left|<quote|6fn>|Geodesics
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-54><vspace|0.15fn>>
 
-      <with|par-left|<quote|6fn>|Electromagnetism
+      <with|par-left|<quote|6fn>|Electromagnetism and ``forces''
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-55><vspace|0.15fn>>
 
@@ -2885,129 +3173,133 @@
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-59><vspace|0.15fn>>
 
+      <with|par-left|<quote|6fn>|Existence of a constant scale
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-60><vspace|0.15fn>>
+
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|4<space|2spc>Quantum
       Mechanics> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-60><vspace|0.5fn>
+      <no-break><pageref|auto-61><vspace|0.5fn>
 
       <with|par-left|<quote|1.5fn>|4.1<space|2spc><label|predictions>Predictions
       and Probabilities <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-61>>
+      <no-break><pageref|auto-62>>
 
       <with|par-left|<quote|6fn>|N-valued measurement
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-62><vspace|0.15fn>>
+      <no-break><pageref|auto-63><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Ket representation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-63><vspace|0.15fn>>
+      <no-break><pageref|auto-64><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Physical processes
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-64><vspace|0.15fn>>
+      <no-break><pageref|auto-65><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Indistinguishable processes
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-65><vspace|0.15fn>>
+      <no-break><pageref|auto-66><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Measurements
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-66><vspace|0.15fn>>
+      <no-break><pageref|auto-67><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Linearized operator
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-67><vspace|0.15fn>>
+      <no-break><pageref|auto-68><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Linear approximation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-68><vspace|0.15fn>>
+      <no-break><pageref|auto-69><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Combined system
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-69><vspace|0.15fn>>
+      <no-break><pageref|auto-70><vspace|0.15fn>>
 
       <with|par-left|<quote|1.5fn>|4.2<space|2spc><label|analogy>Formal
       Analogy <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-70>>
+      <no-break><pageref|auto-71>>
 
       <with|par-left|<quote|6fn>|Trajectory measurement
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-71><vspace|0.15fn>>
+      <no-break><pageref|auto-72><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Normalization of the wave-function
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-72><vspace|0.15fn>>
+      <no-break><pageref|auto-73><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Planar wave-function in ``empty space''
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-73><vspace|0.15fn>>
+      <no-break><pageref|auto-74><vspace|0.15fn>>
 
       <with|par-left|<quote|1.5fn>|4.3<space|2spc><label|interpretation>Interpretation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-74>>
+      <no-break><pageref|auto-75>>
 
       <with|par-left|<quote|6fn>|Disentanglement
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-75><vspace|0.15fn>>
+      <no-break><pageref|auto-76><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Real eigenvalues
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-76><vspace|0.15fn>>
+      <no-break><pageref|auto-77><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Wave-function Collapse
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-77><vspace|0.15fn>>
+      <no-break><pageref|auto-78><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Superposition
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-78><vspace|0.15fn>>
+      <no-break><pageref|auto-79><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Incomplete measurements
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-79><vspace|0.15fn>>
+      <no-break><pageref|auto-80><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Measurement limits
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-80><vspace|0.15fn>>
+      <no-break><pageref|auto-81><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Linearity
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-81><vspace|0.15fn>>
+      <no-break><pageref|auto-82><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Commutation of Observables
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-82><vspace|0.15fn>>
+      <no-break><pageref|auto-83><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Quantum space-time
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-83><vspace|0.15fn>>
+      <no-break><pageref|auto-84><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Hidden Variables
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-84><vspace|0.15fn>>
+      <no-break><pageref|auto-85><vspace|0.15fn>>
 
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|5<space|2spc>Conclusion
       and Further work> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-85><vspace|0.5fn>
+      <no-break><pageref|auto-86><vspace|0.5fn>
 
       <with|par-left|<quote|6fn>|Fundamental equations
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-86><vspace|0.15fn>>
+      <no-break><pageref|auto-87><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Characteristics of the theory
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-87><vspace|0.15fn>>
+      <no-break><pageref|auto-88><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Future work
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-88><vspace|0.15fn>>
+      <no-break><pageref|auto-89><vspace|0.15fn>>
 
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|Acknowledgments>
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-89><vspace|0.5fn>
+      <no-break><pageref|auto-90><vspace|0.5fn>
 
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|Bibliography>
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-90><vspace|0.5fn>
+      <no-break><pageref|auto-91><vspace|0.5fn>
     </associate>
   </collection>
 </auxiliary>
