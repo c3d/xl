@@ -120,7 +120,13 @@
   <\enumerate-numeric>
     <item>a valid physical process,
 
-    <item>impacting two fragments of the universe chosen in advance,
+    <item>impacting two fragments<\footnote>
+      The term <em|fragment> is used here to indicate that we do not assume
+      any specific partitioning of the universe along any particular
+      variable. Except for this distinction, it is otherwise essentially used
+      in the same sense as <em|system> or <em|region of space-time> have been
+      used in many physics texts.
+    </footnote> of the universe chosen in advance,
 
     <item>in a repeatable way,
 
@@ -186,19 +192,12 @@
   notation that facilitates a precise description of complex statements about
   the universe.<assign|eqref|<macro|rfid|<eq|<reference|<arg|rfid>>>>>
 
-  <paragraph|Possible>Let us denote <with|mode|math|\<frak-F\>> the
-  fragment<\footnote>
-    The term <em|fragment> is used here to indicate that we do not assume any
-    specific partitioning of the universe along any particular variable.
-    Except for this distinction, it is otherwise essentially used in the same
-    sense as <em|system> or <em|region of space-time> have been used in many
-    physics texts.
-  </footnote> of the universe <with|mode|math|\<frak-U\>> on which a
-  measurement <with|mode|math|M> is being performed (the measurement
-  apparatus input), <with|mode|math|\<frak-D\>> the display fragment where
-  the result shows up (the measurement apparatus output), and
-  <with|mode|math|P> an arbitrary physical process that is not necessarily a
-  measurement.
+  <paragraph|Possible>Let us denote <with|mode|math|\<frak-F\>> the fragment
+  of the universe <with|mode|math|\<frak-U\>> on which a measurement
+  <with|mode|math|M> is being performed (the measurement apparatus input),
+  <with|mode|math|\<frak-D\>> the display fragment where the result shows up
+  (the measurement apparatus output), and <with|mode|math|P> an arbitrary
+  physical process that is not necessarily a measurement.
 
   We can define the notation <with|mode|math|P*\<frak-F\>> as the application
   of process <with|mode|math|P> to universe fragment
@@ -338,7 +337,7 @@
   also be possible to give a numerical or symbolic interpretation
   <with|mode|math|m> to the changes that are caused by the physical process
   <with|mode|math|M> to the display <with|mode|math|\<frak-D\>>. We can use a
-  ``<dfn|graduation equation>'' like <eqref|eq:graduation> to show how a
+  ``<dfn|graduation equation>'' like <eqref|eq:grad> to show how a
   particular state of the display fragment <with|mode|math|\<frak-D\>> is
   interpreted numerically.
 
@@ -354,7 +353,7 @@
   measurement postulate.
 
   Graduations are somewhat arbitrary. They integrate the frequently used
-  notion of measurement <dfn|unit>. A graduation like <eqref|eq:graduation>
+  notion of measurement <dfn|unit>. A graduation like <eqref|eq:grad>
   relates the possible states of <with|mode|math|\<frak-D\>> to the possible
   values of <with|mode|math|m>. We do not specify the mathematical
   formulation of <with|mode|math|m>, and specifically, <with|mode|math|m>
@@ -367,10 +366,10 @@
 
   <subsection|<label|reasoning>Formal reasoning>
 
-  If we stay within physically reasonable constraints, we can use the
-  equations above to do some reasoning about the results of a measurement. In
-  this section, we will give a few examples, not with the intent to be
-  exhaustive, but for illustration purpose.
+  If we stay within physically reasonable limits, we can use the equations
+  above to do some reasoning about the results of a measurement. In this
+  section, we will give a few examples, not with the intent to be exhaustive,
+  but for illustration purpose.
 
   <paragraph|Repeatable Process>In many cases, a same process
   <with|mode|math|P> can be repeated a large number of times. If we apply the
@@ -641,9 +640,9 @@
   for a finite number of values.
 
   <paragraph|Relativity of Measurements>Special relativity asked us to give
-  up the notion of ``absolute speed''. General relativity asked us to more
-  generally give up the notion of ``absolute coordinates''. It may be time to
-  more generally give up the notion of ``absolute measurement''.
+  up the notion of ``absolute speed'', general relativity the notion of
+  ``absolute coordinates''. It may be time to more generally give up the
+  notion of ``absolute measurement''.
 
   If we must abandon the assumption that the precise physical process for a
   given measurement has no bearing on the mathematical properties associated
@@ -876,10 +875,10 @@
   approximation is perfectly legitimate in practice even for differentiation,
   because the number of repetitions of the fundamental processes
   <with|mode|math|\<delta\>X<rsub|i>> is usually chosen to be very large (for
-  instance, there is an extremely large number of atoms in the typical rubber
-  band), so that the resolution <with|mode|math|\<delta\>x<rsub|i>> is very
-  small relative to <with|mode|math|x<rsub|i>>. In this ``smooth'' limit,
-  there is no practical numerical difference between the limit
+  instance, there is an extremely large number of atoms in the typical tape
+  measure), so that the resolution <with|mode|math|\<delta\>x<rsub|i>> is
+  very small relative to <with|mode|math|x<rsub|i>>. In this ``smooth''
+  limit, there is no practical numerical difference between the limit
   <with|mode|math|<frac|\<mathd\>f|\<mathd\>x>(x)> and an approximation like
   <with|mode|math|<frac|f(x+n*\<delta\>x)-f(x)|n*\<delta\>x>> when
   <with|mode|math|n> is sufficiently small.
@@ -921,7 +920,7 @@
   resolution 1 cm should be 7 cm or 8 cm depending on the instrument.
 
   <paragraph|Problem solved by special relativity>The original presentation
-  of special relativity presented the theory using concepts such as inertial
+  of special relativity introduced the theory using concepts such as inertial
   reference frames. These concepts are slightly complicated to translate in
   terms of measurements. On the other hand, the constancy of the speed of
   light is much easier to express. Historically, this was also the
@@ -943,8 +942,9 @@
   <paragraph|Euclidean space>Let us start with the observation that, at least
   for well-chosen measurements of distance (in the same sense as we talked
   about a well-chosen class of observers), we can give our measurements of
-  spatial distance the structure of a 2-dimensional Euclidean group. The
-  distance can be written as <with|mode|math|\<mathd\>s<rsup|2>=\<mathd\>x<rsup|2>+\<mathd\>y<rsup|2>>.
+  spatial distance on a physical plane the structure of a 2-dimensional
+  Euclidean group. The distance can be written as
+  <with|mode|math|\<mathd\>s<rsup|2>=\<mathd\>x<rsup|2>+\<mathd\>y<rsup|2>>.
   As explained above, this is really a continuous extension of discrete
   observations approximately verifying Pythagoras' theorem. The mathematics
   corresponding to this particular mathematical structure are well known.
@@ -1031,13 +1031,14 @@
   special relativity was that the same reasoning holds when considering a
   coordinate change involving both a space and a time coordinate, with a
   significant difference: the numerical distance <with|mode|math|s> that is
-  preserved verifies <with|mode|math|\<mathd\>s<rsup|2>=c<rsup|2>\<mathd\>t<rsup|2>-\<mathd\>x<rsup|2>>
+  preserved verifies a Minkowski metric <with|mode|math|\<mathd\>s<rsup|2>=c<rsup|2>\<mathd\>t<rsup|2>-\<mathd\>x<rsup|2>>
+  or <with|mode|math|\<mathd\>s<rsup|2>=\<mathd\>x<rsup|2>-c<rsup|2>*\<mathd\>t<rsup|2>>
   instead of the definite positive Gaussian metric
   <with|mode|math|\<mathd\>s<rsup|2>=\<mathd\>x<rsup|2>+\<mathd\>y<rsup|2>>
   that is preserved between space coordinates.
 
   There are interesting consequences to a distance written as
-  <with|mode|math|\<mathd\>s<rsup|2>=c<rsup|2>\<mathd\>t<rsup|2>-\<mathd\>x<rsup|2>>.
+  <with|mode|math|\<mathd\>s<rsup|2>=\<mathd\>x<rsup|2>-c<rsup|2>\<mathd\>t<rsup|2>>.
   Compared to the Euclidean metric, it can be seen as a transformation
   <with|mode|math|y\<rightarrow\>i*c*t> where <with|mode|math|i<rsup|2>=-1>,
   a transformation known as <em|Wick rotation>. Whereas for classical
@@ -1062,7 +1063,7 @@
 
   The value of this reasoning is not in the mathematics, which is well known,
   but in the possibility to do it under the conditions imposed by the TIM. As
-  long as the Minkowski metric condition <with|mode|math|\<mathd\>s<rsup|2>=c<rsup|2>\<mathd\>t<rsup|2>-\<mathd\>x<rsup|2>>
+  long as the Minkowski metric condition <with|mode|math|\<mathd\>s<rsup|2>=\<mathd\>x<rsup|2>-c<rsup|2>\<mathd\>t<rsup|2><rsup|>>
   holds between the measurements we chose, the Lorentz transformation and,
   consequently, the known effects of special relativity remain valid.
 
@@ -1109,7 +1110,7 @@
   <with|mode|math|x> and <with|mode|math|y>, shouldn't we also infer the
   existence of a single physical process behind measures of
   <with|mode|math|x> and <with|mode|math|t> from the Minkowski metric
-  relation <with|mode|math|\<mathd\>s<rsup|2>=c<rsup|2>*\<mathd\>t<rsup|2>-\<mathd\>x<rsup|2>>?
+  relation <with|mode|math|\<mathd\>s<rsup|2>=\<mathd\>x<rsup|2>-c<rsup|2>*\<mathd\>t<rsup|2><rsup|>>?
 
   What process can this be? The presence of <with|mode|math|c> in the metric
   formula suggests that this should be related to the propagation of
@@ -1396,7 +1397,7 @@
   vacuum. Other measurements can be considered equivalent to the extent that
   they are primarily defined by such propagation. For instance, solid rods
   are held together primarily by electromagnetic interactions between atoms,
-  and we know that solid matter is made primarily from empty space.
+  and we know that solid matter is made primarily of empty space.
 
   <paragraph|Stress-energy tensor>The stress-energy tensor <with|mode|math|T>
   is a rank (0,2) tensor that indicates how energy and momentum flow.
@@ -1475,17 +1476,18 @@
   matter''<cite|darkmatter> or the anomalous acceleration of the Pioneer
   spacecraft<cite|pioneer> may be some of the first indications of a
   divergence at large scale between the measurements we chose for space and
-  time compared to the measurements we chose for energy or mass<\footnote>
-    Observations of cosmic events, such as the galactic collision in the
-    ``Bullet cluster'', have been widely publicized as demonstrating the
-    existence of dark matter<cite|clowe-2006>. However, they are based on
-    very indirect reconstruction of the gravitational field, by means of
-    statistical analysis (weak gravitational lensing). Our own atmosphere
-    shows a significant tendency to create artifacts in the propagation of
-    light. We must keep in mind the possibility that gases or dust that
-    result from galactic collision would also cause various distortions of
-    light. In any case, dark matter at this point is not a settled topic.
-  </footnote>.
+  time compared to the measurements we chose for energy or mass.
+
+  Observations of cosmic events, such as the galactic collision in the
+  ``Bullet cluster'', have been widely publicized as demonstrating the
+  existence of dark matter<cite|clowe-2006>. However, they are based on very
+  indirect reconstruction of the gravitational field, by means of statistical
+  analysis (weak gravitational lensing). Our own atmosphere shows a
+  significant tendency to create artifacts in the propagation of light. We
+  must keep in mind the possibility that gases or dust that result from
+  galactic collision would also cause various distortions of light. In any
+  case, dark matter at this point is not a settled
+  topic<cite|inhomogeneities>.
 
   <paragraph|Existence of a Minkowskian metric>In general relativity, the
   equivalence principle of gravitation and inertial acceleration is expressed
@@ -1508,10 +1510,11 @@
   </enumerate>
 
   This implies the existence of a local Minkowski metric. Since the
-  <with|mode|math|\<delta\>X<rsub|i>> are repeatable, the corresponding
-  measurements <with|mode|math|x<rsub|i>> obey the linear approximation. It
-  is possible to associate a metric <with|mode|math|g<rsub|\<mu\>\<nu\>>> to
-  the <with|mode|math|x<rsub|i>>. The hypothesis that the
+  <with|mode|math|\<delta\>X<rsub|i>> are repeatable and indistinguishable by
+  measurement <with|mode|math|X>, the corresponding measurements
+  <with|mode|math|x<rsub|i>> obey the linear approximation. It is possible to
+  associate a metric <with|mode|math|g<rsub|\<mu\>\<nu\>>> to the
+  <with|mode|math|x<rsub|i>>. The hypothesis that the
   <with|mode|math|\<delta\>X<rsub|i>> are independent implies that the metric
   is diagonal. By scaling of the various <with|mode|math|x<rsub|i>>, we can
   select a metric which has only <with|mode|math|+1>, <with|mode|math|-1> on
@@ -1635,9 +1638,8 @@
   <with|mode|math|X<rsub|i/\<mu\>>>.
 
   In particular, <eqref|eq:spaceidentity> does not necessarily hold at all
-  scale, in particular for all possible values of
-  <with|mode|math|k<rsub|i/\<lambda\>>> and
-  <with|mode|math|k<rsub|i/\<mu\>>>. In other words, just because two
+  scale, i.e. for all possible values of <with|mode|math|k<rsub|i/\<lambda\>>>
+  and <with|mode|math|k<rsub|i/\<mu\>>>. In other words, just because two
   measurements are equal on a given range of scales does not imply that they
   are equal at any scale. One may remember the example of the movement of a
   mobile on the surface of a planet, where the tangent coordinates as
@@ -1671,7 +1673,7 @@
   On the other hand, distant laws of physics, for example laws based on
   values measured at ``infinity'', are not guaranteed to remain identical
   under a change of space-time measurements. The measurements may match
-  locally, yet diverge large enough scale.
+  locally, yet diverge at large enough scale.
 
   These remarks can be seen as a physical justification for
   <dfn|renormalization>, a common technique when searching for quantized
@@ -1686,8 +1688,8 @@
 
   There is an important practical consequence of the reasoning above. While
   we can consider local laws as valid at any scale, irrespective of the
-  physical process being used, distant laws may depend at large scale on
-  which physical measurement was used.
+  physical process being used, distant laws may depend at small or large
+  scale on which physical measurement was used.
 
   <paragraph|Scale invariance>Change of coordinate measurements corresponding
   to a zoom introduces a new coordinate, the resolution
@@ -1835,11 +1837,11 @@
   Processes that are indistinguishable with respect to <with|mode|math|M> are
   associated with the same operator on <with|mode|math|\<bbb-S\><rsup|n-1>>.
 
-  <paragraph|Measurements>If the physical process <with|mode|math|P> is the
-  measurement <with|mode|math|M> itself, the probability vector
-  <with|mode|math|<wide|M|^>\|\<psi\>\<rangle\>> indicates a certainty for
-  the measured value <with|mode|math|m<rsub|k>> and an impossibility for the
-  others, so <with|mode|math|<wide|M|^>\|\<psi\>\<rangle\>=\|k\<rangle\>>.
+  <paragraph|Measurements and Eigenvalues>If the physical process
+  <with|mode|math|P> is the measurement <with|mode|math|M> itself, the
+  probability vector <with|mode|math|<wide|M|^>\|\<psi\>\<rangle\>> indicates
+  a certainty for the measured value <with|mode|math|m<rsub|k>> and an
+  impossibility for the others, so <with|mode|math|<wide|M|^>\|\<psi\>\<rangle\>=\|k\<rangle\>>.
   The repeatability condition <with|mode|math|\|M*M*\<frak-F\>\|=\|M*\<frak-F\>\|>
   implies that once the measurement result <with|mode|math|m<rsub|k>> is
   obtained, the measurement will continue to yield the result
@@ -1915,6 +1917,9 @@
   <\equation>
     <label|eq:linprob><wide|P<rsub|i>|^>\|k<rsub|1>,\<ldots\>,k<rsub|i>,\<ldots\>,k<rsub|n>\<rangle\>=\|k<rsub|1>,\<ldots\>,k<rsub|i>+1,\<ldots\>,k<rsub|n>\<rangle\>
   </equation>
+
+  Note that this is the shape of a <em|creation operator> in quantum field
+  theories.
 
   <paragraph|Combined system>If we want to evaluate two distinct measurement
   processes <with|mode|math|M<rsub|1>> giving <with|mode|math|n<rsub|1>>
@@ -2240,14 +2245,14 @@
   precision.
 
   In practice, measurements are not always exact nor
-  instantaneous<cite|jacobssteck>. The result itself may be probabilistic or
-  contain a dose of uncertainty. The formalism presented here allows the
-  state after a measurement result to be itself a probability vector. There
-  is no need for an ``instantaneous collapse'' either. As the measurement
-  progresses, the distribution of probabilities becomes narrower, and the set
-  of compatible universe states becomes smaller. At least for some
-  measurements, the fully collapsed wave-function and the infinitely precise
-  measurement need only be idealized limits.
+  instantaneous<cite|jacobssteck|progressive-decoherence>. The result itself
+  may be probabilistic or contain a dose of uncertainty. The formalism
+  presented here allows the state after a measurement result to be itself a
+  probability vector. There is no need for an ``instantaneous collapse''
+  either. As the measurement progresses, the distribution of probabilities
+  becomes narrower, and the set of compatible universe states becomes
+  smaller. At least for some measurements, the fully collapsed wave-function
+  and the infinitely precise measurement need only be idealized limits.
 
   <paragraph|Measurement limits>Many quantum physics textbooks state
   confidently that the probability of finding the particle being observed on
@@ -2336,7 +2341,7 @@
 
   The interpretation of quantum theory given here does not rely on hidden
   variables. The reasoning is based entirely on the existence of
-  probabilities based on what we know, and this is the meaning we gave to
+  probabilities based on what we know, and this is one meaning we gave to
   <em|incomplete>. But it does not imply that we can know more than what
   measurements give us. The existence of randomness in the most precise
   description we can make of the universe remains possible. Thus, even if the
@@ -2346,7 +2351,7 @@
   <section|Conclusion and Further work>
 
   We have presented a formalism to discuss physical experiments without
-  implicitly assuming a specific measurement process. This allowed us to
+  implicitly assuming a specific mathematical structure. This allowed us to
   propose a definition of measurements, and based on formal reasoning, to
   reconstruct many important aspects of both general relativity and quantum
   mechanics, while suggesting a number of limitations in these theories which
@@ -2396,8 +2401,7 @@
     mechanics wave-function under a reasonable set of conditions. Quantum
     mechanics is seen as an approximation, where non-linearity, divergence at
     large scale or non-commutativity of space and time operators are ignored.
-    The theory TIM also offers yet another interpretation of quantum
-    mechanics.
+    The TIM also offers yet another interpretation of quantum mechanics.
 
     <item>At large scale, the effects of space and time non-commutativity
     become dominant, but measurements return quasi-deterministic results, so
@@ -2409,11 +2413,11 @@
     approximation.
 
     <item>The transition between different time and space measurements
-    introduces an explicit factor <with|mode|math|\<lambda\>>, which is
-    assimilated to the scale factor formally introduced in Nottale's theory
-    of scale relativity. It is therefore expected that the present theory
-    also incorporates scale relativity results by reference, and offers a
-    physical justification.
+    introduces an explicit resolution factor <with|mode|math|\<lambda\>>,
+    which is assimilated to the scale factor formally introduced in Nottale's
+    theory of scale relativity. It is therefore expected that the present
+    theory also incorporates scale relativity results by reference, and
+    offers a physical justification.
   </itemize>
 
   <paragraph|Future work>Obviously, simply borrowing fundamental equations
@@ -2463,7 +2467,7 @@
   mechanics and for general relativity, centers around energy. We know since
   Boltzmann that there is a correlation between the number of degrees of
   freedom and entropy. We also know that for a macroscopic adiabatic (closed)
-  system, there is a direct relation between entropy, energy and temperature
+  system, there is a direct relation between entropy and energy
   (<with|mode|math|\<mathd\>U=T*\<mathd\>S>). It is therefore not
   unreasonable to speculate that a future ``fundamental equation'' can be
   derived from a formulation of time and energy in terms of statistical
@@ -2471,17 +2475,15 @@
 
   <section*|Acknowledgments>
 
-  This paper is dedicated to my parents who taught me practically everything
-  I know about the universe, including standing up in quasi-equilibrium
-  against all statistical odds (a process commonly referred to as
-  ``walking''), and in particular to my father, Gabriel de Dinechin, who made
-  helpful comments on this work despite his very severe condition.
+  This paper is dedicated to my father, Gabriel de Dinechin (1935-2007).
 
-  Special thanks go to my wife Christine and our children, who patiently
-  accommodated the long hours spent on this article. I also want to thank
-  Jerome, Florent and Yves de Dinechin, \ Claude Cohen-Tannoudji, Carlo
-  Rovelli, Charles Francis, and George Batrouni for the comments they gave me
-  on this paper at various stages of its completion.
+  It is a pleasure to thank Michel Anslot, George Batrouni, Florent, Jérôme
+  and Yves de Dinechin, Jérôme Forrissier, Charles Francis, Marc Lamberton
+  and Lionel Schaffauser for the insightful discussions. Special thanks go to
+  my wife Christine and our children for their patience. Additional thanks go
+  to Brian Josephson for helpful suggestions regarding publication, and to
+  Claude Cohen-Tannoudji, Brian Greene, Carlo Rovelli and Cécile Sykes for
+  their e-mail answers.
 
   My employer, Hewlett-Packard, did not directly commission this work, and
   had no direct role in its creation. However, writing this article would not
@@ -2554,70 +2556,78 @@
       C.<nbsp>Jones, D.<nbsp>Zaritsky, A direct empirical proof of the
       existence of dark matter, astro-ph/0608407.
 
-      <bibitem*|20><label|bib-freefalling>L.<nbsp>Fabbri, Free falling
+      <bibitem*|20><label|bib-inhomogeneities>M.-N. Célérier, The accelerated
+      expansion of the universe challenged by an effect of inhomogeneities. a
+      review, astro-ph/0702416v1.
+
+      <bibitem*|21><label|bib-freefalling>L.<nbsp>Fabbri, Free falling
       electric charge in a static homogeneous gravitational field, Annales de
       la Fondation Louis de Broglie vol 30 no 1 (2005) 87--95.
 
-      <bibitem*|21><label|bib-liftsandtopologies>G.<nbsp>Segre, Einstein's
+      <bibitem*|22><label|bib-liftsandtopologies>G.<nbsp>Segre, Einstein's
       lifts and topologies: topological investigations on the principle of
       equivalence.\ 
 
-      <bibitem*|22><label|bib-uft25>A.<nbsp>Einstein, Unified field theory of
+      <bibitem*|23><label|bib-uft25>A.<nbsp>Einstein, Unified field theory of
       gravitation and electricity, Session report (July 25h, 1928) 414--419.
 
-      <bibitem*|23><label|bib-uft28>A.<nbsp>Einstein, New possibility for a
+      <bibitem*|24><label|bib-uft28>A.<nbsp>Einstein, New possibility for a
       unified field theory of gravitation and electricity, Session report
       (June 14th, 1928) 224--227.
 
-      <bibitem*|24><label|bib-uft30>A.<nbsp>Einstein, Unified field theory
+      <bibitem*|25><label|bib-uft30>A.<nbsp>Einstein, Unified field theory
       based on riemannian metrics and distant parallelism, Math. Annal. 102
       (1930) 685--697.
 
-      <bibitem*|25><label|bib-renormalization>B.<nbsp>Delamotte, A hint of
+      <bibitem*|26><label|bib-renormalization>B.<nbsp>Delamotte, A hint of
       renormalization, Am.J.Phys. 72 (2004) 170--184.
 
-      <bibitem*|26><label|bib-scalerelat>L.<nbsp>Nottale, The theory of scale
+      <bibitem*|27><label|bib-scalerelat>L.<nbsp>Nottale, The theory of scale
       relativity, Int. J. Mod. Phys. A7 (1992) 4899--4936.
 
-      <bibitem*|27><label|bib-fractalspacetime>L.<nbsp>Nottale, Fractal Space
+      <bibitem*|28><label|bib-fractalspacetime>L.<nbsp>Nottale, Fractal Space
       Time and Microphysics, World Scientific, Singapore, 1993.
 
-      <bibitem*|28><label|bib-tegmark-2007>M.<nbsp>Tegmark, The mathematical
+      <bibitem*|29><label|bib-tegmark-2007>M.<nbsp>Tegmark, The mathematical
       universe, arXiv.org:0704.0646.\ 
 
-      <bibitem*|29><label|bib-epr>B.<nbsp>P. Albert<nbsp>Einstein,
+      <bibitem*|30><label|bib-epr>B.<nbsp>P. Albert<nbsp>Einstein,
       N.<nbsp>Rosen, Can quantum-mechanical description of physical reality
       be considered complete?, Phys. Rev. 47 (1935) 777.
 
-      <bibitem*|30><label|bib-relatquantmech>C.<nbsp>Rovelli, Relational
+      <bibitem*|31><label|bib-relatquantmech>C.<nbsp>Rovelli, Relational
       quantum mechanics, Int. J. of Theor. Phys. 35.
 
-      <bibitem*|31><label|bib-pondicherry>U.<nbsp>Mohrhoff, The pondicherry
+      <bibitem*|32><label|bib-pondicherry>U.<nbsp>Mohrhoff, The pondicherry
       interpretation of quantum mechanics, Am.J.Phys 68 (2000) 728--745.
 
-      <bibitem*|32><label|bib-quantdecoherence>M.<nbsp>Schlosshauer,
+      <bibitem*|33><label|bib-quantdecoherence>M.<nbsp>Schlosshauer,
       Decoherence, the measurement problem, and interpretations of quantum
       mechanics, Rev. Mod. Phys. 76 (2004) 1267--1305.
 
-      <bibitem*|33><label|bib-jacobssteck>K.<nbsp>Jacobs, D.<nbsp>A. Steck, A
+      <bibitem*|34><label|bib-jacobssteck>K.<nbsp>Jacobs, D.<nbsp>A. Steck, A
       straightforward introduction to continuous quantum measurement,
       Contemporary Physics quant-ph/0611067.
 
-      <bibitem*|34><label|bib-darksideofthemoon>B.<nbsp>Greene, The fabric of
+      <bibitem*|35><label|bib-progressive-decoherence>M.<nbsp>G.
+      G.<nbsp>Brida, M.<nbsp>Genovese, A conclusive experiment to throw more
+      light on "light", quant-ph/0404013v1.
+
+      <bibitem*|36><label|bib-darksideofthemoon>B.<nbsp>Greene, The fabric of
       the cosmos, Vintage, New York, 2005, Ch.<nbsp>4, p.<nbsp>93.
 
-      <bibitem*|35><label|bib-connes>A.<nbsp>Connes, Noncommutative Geometry,
+      <bibitem*|37><label|bib-connes>A.<nbsp>Connes, Noncommutative Geometry,
       Academic Press, San Diego, 1994.
 
-      <bibitem*|36><label|bib-noncomm>C.<nbsp>M. P. T.-S.
+      <bibitem*|38><label|bib-noncomm>C.<nbsp>M. P. T.-S.
       A.P.<nbsp>Balachandran, T.R.<nbsp>Govindarajan, Unitary quantum physics
       with time-space noncommutativity, JHEP 0410 (2004) 072.
 
-      <bibitem*|37><label|bib-nonunit>T.<nbsp>M. Jaume<nbsp>Gomis, Space-time
+      <bibitem*|39><label|bib-nonunit>T.<nbsp>M. Jaume<nbsp>Gomis, Space-time
       noncommutative field theories and unitarity, Nucl. Phys. B591 (2000)
       265--276.
 
-      <bibitem*|38><label|bib-aspect>A.<nbsp>Aspect, Three experimental tests
+      <bibitem*|40><label|bib-aspect>A.<nbsp>Aspect, Three experimental tests
       of bell inequalities by the measurement of polarization correlations
       between photons, PhD Thesis.
     </bib-list>
@@ -2636,160 +2646,162 @@
     <associate||<\tuple>
       6
     </tuple|30>>
-    <associate|Remarks|<tuple|2.4|7>>
+    <associate|Remarks|<tuple|2.4|6>>
     <associate|analogy|<tuple|4.2|22>>
     <associate|auto-1|<tuple|1|1>>
     <associate|auto-10|<tuple|6|4>>
     <associate|auto-11|<tuple|7|4>>
-    <associate|auto-12|<tuple|2.3|5>>
+    <associate|auto-12|<tuple|2.3|4>>
     <associate|auto-13|<tuple|8|5>>
     <associate|auto-14|<tuple|9|5>>
     <associate|auto-15|<tuple|10|5>>
-    <associate|auto-16|<tuple|11|6>>
+    <associate|auto-16|<tuple|11|5>>
     <associate|auto-17|<tuple|12|6>>
-    <associate|auto-18|<tuple|2.4|7>>
+    <associate|auto-18|<tuple|2.4|6>>
     <associate|auto-19|<tuple|13|7>>
     <associate|auto-2|<tuple|1|1>>
     <associate|auto-20|<tuple|14|7>>
     <associate|auto-21|<tuple|15|7>>
     <associate|auto-22|<tuple|16|7>>
-    <associate|auto-23|<tuple|17|8>>
-    <associate|auto-24|<tuple|3|8>>
+    <associate|auto-23|<tuple|17|7>>
+    <associate|auto-24|<tuple|3|7>>
     <associate|auto-25|<tuple|3.1|8>>
     <associate|auto-26|<tuple|18|8>>
-    <associate|auto-27|<tuple|19|9>>
+    <associate|auto-27|<tuple|19|8>>
     <associate|auto-28|<tuple|20|9>>
-    <associate|auto-29|<tuple|21|10>>
+    <associate|auto-29|<tuple|21|9>>
     <associate|auto-3|<tuple|2|2>>
-    <associate|auto-30|<tuple|3.2|10>>
-    <associate|auto-31|<tuple|22|10>>
+    <associate|auto-30|<tuple|3.2|9>>
+    <associate|auto-31|<tuple|22|9>>
     <associate|auto-32|<tuple|23|10>>
-    <associate|auto-33|<tuple|24|11>>
-    <associate|auto-34|<tuple|25|11>>
+    <associate|auto-33|<tuple|24|10>>
+    <associate|auto-34|<tuple|25|10>>
     <associate|auto-35|<tuple|1|11>>
     <associate|auto-36|<tuple|26|12>>
-    <associate|auto-37|<tuple|27|13>>
-    <associate|auto-38|<tuple|2|13>>
-    <associate|auto-39|<tuple|28|13>>
+    <associate|auto-37|<tuple|27|12>>
+    <associate|auto-38|<tuple|2|12>>
+    <associate|auto-39|<tuple|28|12>>
     <associate|auto-4|<tuple|2.1|2>>
     <associate|auto-40|<tuple|3.3|13>>
-    <associate|auto-41|<tuple|29|14>>
-    <associate|auto-42|<tuple|3|14>>
+    <associate|auto-41|<tuple|29|13>>
+    <associate|auto-42|<tuple|3|13>>
     <associate|auto-43|<tuple|4|14>>
-    <associate|auto-44|<tuple|30|15>>
-    <associate|auto-45|<tuple|31|15>>
+    <associate|auto-44|<tuple|30|14>>
+    <associate|auto-45|<tuple|31|14>>
     <associate|auto-46|<tuple|3.4|15>>
-    <associate|auto-47|<tuple|32|16>>
+    <associate|auto-47|<tuple|32|15>>
     <associate|auto-48|<tuple|33|16>>
     <associate|auto-49|<tuple|34|16>>
     <associate|auto-5|<tuple|2.2|3>>
-    <associate|auto-50|<tuple|35|17>>
+    <associate|auto-50|<tuple|35|16>>
     <associate|auto-51|<tuple|36|17>>
     <associate|auto-52|<tuple|37|17>>
-    <associate|auto-53|<tuple|38|18>>
+    <associate|auto-53|<tuple|38|17>>
     <associate|auto-54|<tuple|39|18>>
     <associate|auto-55|<tuple|40|18>>
-    <associate|auto-56|<tuple|3.5|19>>
+    <associate|auto-56|<tuple|3.5|18>>
     <associate|auto-57|<tuple|41|19>>
-    <associate|auto-58|<tuple|42|20>>
-    <associate|auto-59|<tuple|43|20>>
+    <associate|auto-58|<tuple|42|19>>
+    <associate|auto-59|<tuple|43|19>>
     <associate|auto-6|<tuple|2|3>>
     <associate|auto-60|<tuple|44|20>>
     <associate|auto-61|<tuple|4|20>>
-    <associate|auto-62|<tuple|4.1|21>>
-    <associate|auto-63|<tuple|45|21>>
-    <associate|auto-64|<tuple|46|21>>
+    <associate|auto-62|<tuple|4.1|20>>
+    <associate|auto-63|<tuple|45|20>>
+    <associate|auto-64|<tuple|46|20>>
     <associate|auto-65|<tuple|47|21>>
     <associate|auto-66|<tuple|48|21>>
     <associate|auto-67|<tuple|49|21>>
     <associate|auto-68|<tuple|50|21>>
-    <associate|auto-69|<tuple|51|22>>
+    <associate|auto-69|<tuple|51|21>>
     <associate|auto-7|<tuple|3|3>>
     <associate|auto-70|<tuple|52|22>>
     <associate|auto-71|<tuple|4.2|22>>
     <associate|auto-72|<tuple|53|23>>
     <associate|auto-73|<tuple|54|23>>
-    <associate|auto-74|<tuple|55|24>>
+    <associate|auto-74|<tuple|55|23>>
     <associate|auto-75|<tuple|4.3|24>>
     <associate|auto-76|<tuple|56|24>>
     <associate|auto-77|<tuple|57|24>>
-    <associate|auto-78|<tuple|58|25>>
-    <associate|auto-79|<tuple|59|25>>
+    <associate|auto-78|<tuple|58|24>>
+    <associate|auto-79|<tuple|59|24>>
     <associate|auto-8|<tuple|4|4>>
     <associate|auto-80|<tuple|60|25>>
     <associate|auto-81|<tuple|61|25>>
-    <associate|auto-82|<tuple|62|26>>
-    <associate|auto-83|<tuple|63|26>>
+    <associate|auto-82|<tuple|62|25>>
+    <associate|auto-83|<tuple|63|25>>
     <associate|auto-84|<tuple|64|26>>
     <associate|auto-85|<tuple|65|26>>
-    <associate|auto-86|<tuple|5|27>>
-    <associate|auto-87|<tuple|66|27>>
+    <associate|auto-86|<tuple|5|26>>
+    <associate|auto-87|<tuple|66|26>>
     <associate|auto-88|<tuple|67|27>>
-    <associate|auto-89|<tuple|68|28>>
+    <associate|auto-89|<tuple|68|27>>
     <associate|auto-9|<tuple|5|4>>
     <associate|auto-90|<tuple|<with|mode|<quote|math>|\<bullet\>>|28>>
     <associate|auto-91|<tuple|<with|mode|<quote|math>|\<bullet\>>|28>>
-    <associate|bib-aspect|<tuple|38|29>>
-    <associate|bib-baez-2005-73|<tuple|5|29>>
-    <associate|bib-basdevant|<tuple|3|29>>
-    <associate|bib-branchina-2007|<tuple|14|29>>
-    <associate|bib-clowe-2006|<tuple|19|29>>
-    <associate|bib-cohen|<tuple|2|29>>
-    <associate|bib-connes|<tuple|35|29>>
-    <associate|bib-cosmocst|<tuple|15|29>>
-    <associate|bib-darkmatter|<tuple|17|29>>
-    <associate|bib-darksideofthemoon|<tuple|34|29>>
+    <associate|bib-aspect|<tuple|40|29>>
+    <associate|bib-baez-2005-73|<tuple|5|28>>
+    <associate|bib-basdevant|<tuple|3|28>>
+    <associate|bib-branchina-2007|<tuple|14|28>>
+    <associate|bib-clowe-2006|<tuple|19|28>>
+    <associate|bib-cohen|<tuple|2|28>>
+    <associate|bib-connes|<tuple|37|29>>
+    <associate|bib-cosmocst|<tuple|15|28>>
+    <associate|bib-darkmatter|<tuple|17|28>>
+    <associate|bib-darksideofthemoon|<tuple|36|29>>
     <associate|bib-distpar|<tuple|23|25>>
-    <associate|bib-epr|<tuple|29|29>>
-    <associate|bib-fractalspacetime|<tuple|27|29>>
-    <associate|bib-freefalling|<tuple|20|29>>
-    <associate|bib-gausscoordinates|<tuple|8|29>>
-    <associate|bib-gravlens|<tuple|10|29>>
+    <associate|bib-epr|<tuple|30|29>>
+    <associate|bib-fractalspacetime|<tuple|28|29>>
+    <associate|bib-freefalling|<tuple|21|29>>
+    <associate|bib-gausscoordinates|<tuple|8|28>>
+    <associate|bib-gravlens|<tuple|10|28>>
     <associate|bib-heisenberg|<tuple|1|28>>
-    <associate|bib-jacobssteck|<tuple|33|29>>
-    <associate|bib-justifyrelativity|<tuple|12|29>>
-    <associate|bib-kochanek-1996-466|<tuple|13|29>>
-    <associate|bib-langevin|<tuple|9|29>>
-    <associate|bib-liftsandtopologies|<tuple|21|29>>
+    <associate|bib-inhomogeneities|<tuple|20|28>>
+    <associate|bib-jacobssteck|<tuple|34|29>>
+    <associate|bib-justifyrelativity|<tuple|12|28>>
+    <associate|bib-kochanek-1996-466|<tuple|13|28>>
+    <associate|bib-langevin|<tuple|9|28>>
+    <associate|bib-liftsandtopologies|<tuple|22|29>>
     <associate|bib-malgebras|<tuple|1|23>>
-    <associate|bib-noncomm|<tuple|36|29>>
-    <associate|bib-nonunit|<tuple|37|29>>
-    <associate|bib-pioneer|<tuple|18|29>>
-    <associate|bib-pondicherry|<tuple|31|29>>
+    <associate|bib-noncomm|<tuple|38|29>>
+    <associate|bib-nonunit|<tuple|39|29>>
+    <associate|bib-pioneer|<tuple|18|28>>
+    <associate|bib-pondicherry|<tuple|32|29>>
+    <associate|bib-progressive-decoherence|<tuple|35|29>>
     <associate|bib-qmforce|<tuple|8|21>>
-    <associate|bib-quantdecoherence|<tuple|32|29>>
-    <associate|bib-relaq|<tuple|16|29>>
-    <associate|bib-relativity|<tuple|4|29>>
-    <associate|bib-relatquantmech|<tuple|30|29>>
-    <associate|bib-renormalization|<tuple|25|29>>
-    <associate|bib-scalerelat|<tuple|26|29>>
-    <associate|bib-shapiro|<tuple|11|29>>
-    <associate|bib-spacemsmt|<tuple|7|29>>
-    <associate|bib-tegmark-2007|<tuple|28|29>>
-    <associate|bib-timemsmt|<tuple|6|29>>
-    <associate|bib-uft25|<tuple|22|29>>
-    <associate|bib-uft28|<tuple|23|29>>
+    <associate|bib-quantdecoherence|<tuple|33|29>>
+    <associate|bib-relaq|<tuple|16|28>>
+    <associate|bib-relativity|<tuple|4|28>>
+    <associate|bib-relatquantmech|<tuple|31|29>>
+    <associate|bib-renormalization|<tuple|26|29>>
+    <associate|bib-scalerelat|<tuple|27|29>>
+    <associate|bib-shapiro|<tuple|11|28>>
+    <associate|bib-spacemsmt|<tuple|7|28>>
+    <associate|bib-tegmark-2007|<tuple|29|29>>
+    <associate|bib-timemsmt|<tuple|6|28>>
+    <associate|bib-uft25|<tuple|23|29>>
+    <associate|bib-uft28|<tuple|24|29>>
     <associate|bib-uft29a|<tuple|25|25>>
     <associate|bib-uft29c|<tuple|27|25>>
     <associate|bib-uft29h|<tuple|26|25>>
-    <associate|bib-uft30|<tuple|24|29>>
+    <associate|bib-uft30|<tuple|25|29>>
     <associate|eq1|<tuple|2|?>>
     <associate|eq:christoffel|<tuple|23|15>>
-    <associate|eq:commut|<tuple|9|6>>
-    <associate|eq:commutx|<tuple|7|6>>
-    <associate|eq:commuty|<tuple|8|6>>
-    <associate|eq:coordrot|<tuple|17|12>>
-    <associate|eq:cossin|<tuple|18|12>>
-    <associate|eq:cossin2|<tuple|19|12>>
+    <associate|eq:commut|<tuple|9|5>>
+    <associate|eq:commutx|<tuple|7|5>>
+    <associate|eq:commuty|<tuple|8|5>>
+    <associate|eq:coordrot|<tuple|17|11>>
+    <associate|eq:cossin|<tuple|18|11>>
+    <associate|eq:cossin2|<tuple|19|11>>
     <associate|eq:display|<tuple|1|3>>
     <associate|eq:eigen|<tuple|12|6>>
     <associate|eq:einsteintensor|<tuple|23|17>>
     <associate|eq:elmmove|<tuple|41|?>>
-    <associate|eq:expected|<tuple|28|22>>
+    <associate|eq:expected|<tuple|28|21>>
     <associate|eq:field|<tuple|30|21>>
     <associate|eq:focused|<tuple|3|4>>
     <associate|eq:gad|<tuple|4|?>>
-    <associate|eq:gauss|<tuple|22|16>>
+    <associate|eq:gauss|<tuple|22|15>>
     <associate|eq:grad|<tuple|4|4>>
     <associate|eq:graduation|<tuple|4|?>>
     <associate|eq:grcurrent|<tuple|25|16>>
@@ -2801,7 +2813,7 @@
     <associate|eq:linear|<tuple|10|6>>
     <associate|eq:linear2|<tuple|12|3>>
     <associate|eq:linearity|<tuple|11|6>>
-    <associate|eq:linprob|<tuple|29|22>>
+    <associate|eq:linprob|<tuple|29|21>>
     <associate|eq:lorentz|<tuple|21|12>>
     <associate|eq:measurement|<tuple|13|?>>
     <associate|eq:possible|<tuple|1|?>>
@@ -2811,30 +2823,30 @@
     <associate|eq:riemanntensor|<tuple|23|15>>
     <associate|eq:samespace|<tuple|26|19>>
     <associate|eq:sametime|<tuple|15|9>>
-    <associate|eq:spacedef|<tuple|14|9>>
+    <associate|eq:spacedef|<tuple|14|8>>
     <associate|eq:spaceidentity|<tuple|27|19>>
     <associate|eq:spacetimevol|<tuple|16|9>>
     <associate|eq:spacevol|<tuple|15|9>>
     <associate|eq:timaccel|<tuple|31|22>>
     <associate|eq:time|<tuple|14|?>>
     <associate|eq:timedef|<tuple|12|8>>
-    <associate|eq:timevol|<tuple|13|9>>
-    <associate|fig:commuting|<tuple|3|14>>
+    <associate|eq:timevol|<tuple|13|8>>
+    <associate|fig:commuting|<tuple|3|13>>
     <associate|fig:coordinates|<tuple|4|14>>
     <associate|fig:fneq|<tuple|1|?>>
     <associate|fig:functions|<tuple|1|?>>
     <associate|fig:rotation|<tuple|1|11>>
-    <associate|fig:twins|<tuple|2|13>>
-    <associate|footnote-1|<tuple|1|3>>
+    <associate|fig:twins|<tuple|2|12>>
+    <associate|footnote-1|<tuple|1|2>>
     <associate|footnote-10|<tuple|10|18>>
     <associate|footnote-2|<tuple|2|3>>
     <associate|footnote-3|<tuple|3|4>>
-    <associate|footnote-4|<tuple|4|6>>
+    <associate|footnote-4|<tuple|4|5>>
     <associate|footnote-5|<tuple|5|9>>
     <associate|footnote-6|<tuple|6|10>>
     <associate|footnote-7|<tuple|7|13>>
-    <associate|footnote-8|<tuple|8|14>>
-    <associate|footnote-9|<tuple|9|16>>
+    <associate|footnote-8|<tuple|8|13>>
+    <associate|footnote-9|<tuple|9|15>>
     <associate|footnr-1|<tuple|1|?>>
     <associate|footnr-2|<tuple|2|?>>
     <associate|footnr-3|<tuple|3|?>>
@@ -2848,11 +2860,11 @@
     <associate|interpretation|<tuple|4.3|24>>
     <associate|noneuclidean|<tuple|3.3|13>>
     <associate|postulates|<tuple|2.1|2>>
-    <associate|predictions|<tuple|4.1|21>>
-    <associate|reasoning|<tuple|2.3|5>>
-    <associate|scalerelativity|<tuple|3.5|19>>
+    <associate|predictions|<tuple|4.1|20>>
+    <associate|reasoning|<tuple|2.3|4>>
+    <associate|scalerelativity|<tuple|3.5|18>>
     <associate|spacetime|<tuple|3.1|8>>
-    <associate|specialrelativity|<tuple|3.2|10>>
+    <associate|specialrelativity|<tuple|3.2|9>>
   </collection>
 </references>
 
@@ -2901,6 +2913,8 @@
 
       clowe-2006
 
+      inhomogeneities
+
       freefalling
 
       liftsandtopologies
@@ -2932,6 +2946,8 @@
       quantdecoherence
 
       jacobssteck
+
+      progressive-decoherence
 
       darksideofthemoon
 
@@ -3201,7 +3217,7 @@
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-66><vspace|0.15fn>>
 
-      <with|par-left|<quote|6fn>|Measurements
+      <with|par-left|<quote|6fn>|Measurements and Eigenvalues
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-67><vspace|0.15fn>>
 
