@@ -337,9 +337,9 @@
   also be possible to give a numerical or symbolic interpretation
   <with|mode|math|m> to the changes that are caused by the physical process
   <with|mode|math|M> to the display <with|mode|math|\<frak-D\>>. We can use a
-  ``<dfn|graduation equation>'' like <eqref|eq:grad> to show how a
-  particular state of the display fragment <with|mode|math|\<frak-D\>> is
-  interpreted numerically.
+  ``<dfn|graduation equation>'' like <eqref|eq:grad> to show how a particular
+  state of the display fragment <with|mode|math|\<frak-D\>> is interpreted
+  numerically.
 
   <\equation>
     <label|eq:grad>\|M*\<frak-D\><mid|\|>=m
@@ -353,12 +353,12 @@
   measurement postulate.
 
   Graduations are somewhat arbitrary. They integrate the frequently used
-  notion of measurement <dfn|unit>. A graduation like <eqref|eq:grad>
-  relates the possible states of <with|mode|math|\<frak-D\>> to the possible
-  values of <with|mode|math|m>. We do not specify the mathematical
-  formulation of <with|mode|math|m>, and specifically, <with|mode|math|m>
-  does not need to be a real number, or even a number at all. For example,
-  <eqref|eq:grad> could relate an unknown or partially known state of
+  notion of measurement <dfn|unit>. A graduation like <eqref|eq:grad> relates
+  the possible states of <with|mode|math|\<frak-D\>> to the possible values
+  of <with|mode|math|m>. We do not specify the mathematical formulation of
+  <with|mode|math|m>, and specifically, <with|mode|math|m> does not need to
+  be a real number, or even a number at all. For example, <eqref|eq:grad>
+  could relate an unknown or partially known state of
   <with|mode|math|\<frak-D\>> to a probability distribution
   <with|mode|math|m>. However, in <eqref|eq:grad> unlike in earlier
   equations, the equal sign is used in the more traditional meaning of
@@ -1138,7 +1138,7 @@
   <subsection|<label|noneuclidean>Non-Euclidean Geometry>
 
   The reasoning in the previous section was articulated around observed
-  properties suggesting an locally Euclidean or Minkowskian geometry. One of
+  properties suggesting a locally Euclidean or Minkowskian geometry. One of
   the fundamental innovations of general relativity was to formalize the more
   general case where the propositions of Euclidean geometry do not
   necessarily hold. We will now see that the need for this non-Euclidean
@@ -1960,7 +1960,7 @@
     <with|mode|math|\<cal-E\>>
 
     <item>Every measurable physical value <with|mode|math|\<cal-A\>> is
-    described by an linear operator <with|mode|math|A> on
+    described by a linear operator <with|mode|math|A> on
     <with|mode|math|\<cal-E\>>; this operator is an observable, i.e. a
     self-adjoint operator on <with|mode|math|\<cal-E\>>.
 
@@ -2061,21 +2061,22 @@
   give the result <verbatim|not-found>. This means that the sum of the
   probability vectors corresponding to <verbatim|found> over all the space
   where we test existence must be at most 1, and exactly 1 if the measured
-  entity cannot escape the measurement apparatus. This probability condition
-  then writes as <with|mode|math|<big|sum><rsub|x<rsub|i>>Re(\<psi\>(x<rsub|i>))<rsup|2>=1>.
+  entity cannot escape the measurement apparatus.
 
-  We can define a wave-function <with|mode|math|\<Psi\>> with amplitude
-  <with|mode|math|\<\|\|\>\<Psi\>(x<rsub|i>)\<\|\|\><rsup|2>=Re(\<psi\>(x<rsub|i>))<rsup|2>>
-  and with the same phases as <with|mode|math|\<psi\>(x<rsub|i>)>. The first
-  condition corresponds to the normalization condition for the wave-function
-  <with|mode|math|\<Psi\>> in traditional quantum mechanics, i.e.
-  <with|mode|math|\<langle\>\<Psi\>\|\<Psi\>\<rangle\>=1>. The second
-  condition, preserving the same phase as
-  <with|mode|math|\<psi\>(x<rsub|i>)>, keeps the vectors
+  We can define a function <with|mode|math|\<Psi\>> with the same phase as
+  <with|mode|math|\<psi\>> but normalized:
+  <with|mode|math|\<Psi\>(x<rsub|i>)=<frac|\<psi\>(x<rsub|i>)|<sqrt|<big|sum><rsub|x<rsub|i>>Re(\<psi\>(x<rsub|i>))<rsup|2>>>>.
+  The normalization of <with|mode|math|\<Psi\>> guarantees the standard
+  normalization condition for the wave-function in quantum mechanics, i.e.
+  <with|mode|math|\<langle\>\<Psi\>\|\<Psi\>\<rangle\>=1>. Preserving the
+  same phase as <with|mode|math|\<psi\>(x<rsub|i>)> keeps
   <with|mode|math|\<Psi\>(x<rsub|i>)> and <with|mode|math|\<psi\>(x<rsub|i>)>
-  aligned in the complex plane. Therefore, it ensures that the linear
-  operators for which <with|mode|math|\<psi\>(x<rsub|i>)> is an eigenvector
-  also have <with|mode|math|\<Psi\>(x<rsub|i>)> as an eigenvector.
+  aligned in the complex plane. Therefore, it ensures that any operator
+  <with|mode|math|<wide|M|\<check\>>> for which
+  <with|mode|math|\<psi\>(x<rsub|i>)> is an eigenvector also has
+  <with|mode|math|\<Psi\>(x<rsub|i>)> as an eigenvector, with the same
+  eigenvalue. Conseqently, this also preserves the expected value of
+  <with|mode|math|<wide|M|\<check\>>> at point <with|mode|math|(x<rsub|i>)>.
 
   However, in the reasoning above, <with|mode|math|\<Psi\>> would not be
   normalized by summing over all of space-time, but only over the points of
@@ -2092,10 +2093,10 @@
   normalization condition for a photon has to be understood as covering
   points in space-time that are not simultaneous, since the detection, if it
   happens at the border of the plate, will happen one second later than if it
-  happens in the center. The wave-function <with|mode|math|\<Psi\>> does not
-  collapse ``instantaneously'' as in quantum mechanics, it instead collapses
-  on a light cone centered on the ``last known position'' of the photon, i.e.
-  the last universe fragment <with|mode|math|\<frak-F\>> where
+  happens in the center. The ``wave-function'' <with|mode|math|\<Psi\>> does
+  not collapse ``instantaneously'' as in quantum mechanics, it instead
+  collapses on a light cone centered on the ``last known position'' of the
+  photon, i.e. the last universe fragment <with|mode|math|\<frak-F\>> where
   <with|mode|math|M<rsub|exist>> returned <verbatim|found>. Seen from a point
   where the measurement actually finds <verbatim|found>, the collapse
   therefore may contain points that are both in the future and in the past.
@@ -2103,8 +2104,12 @@
   in the future, while the points that are closer from the last known
   position have already collapsed.
 
-  <paragraph|Planar wave-function in ``empty space''>If we consider an
-  evolution along individual local-time displacements
+  <paragraph|Planar wave-function in ``empty space''>In order to validate the
+  analogy of our function <with|mode|math|\<Psi\>> with a wave-function, we
+  need to check that it evolves in a similar way. For simplicity, we will
+  only consider a simple argument regarding its evolution in a vacuum.
+
+  If we consider an evolution along individual local-time displacements
   <with|mode|math|\<delta\>T> of a particle, if the
   <with|mode|math|\<delta\>T> are indistinguishable with respect to
   <with|mode|math|M<rsub|exist>>, then any two
@@ -2221,9 +2226,9 @@
   juxtaposition in space of physically acceptable processes is a physically
   acceptable process. There are physical processes that are not measurements
   and do not obey <eqref|eq:repeat> <with|mode|math|M*M*\<frak-F\>=M*\<frak-F\>
-  >. They do not need to turn any universe fragment into an ``eigenstates''
-  of the measurement. Consequently, it is safer to assume that any
-  probability state <with|mode|math|\|\<psi\>\<rangle\>> in
+  >. They do not need to turn any universe fragment into an ``eigenstate'' of
+  the measurement. Consequently, it is safer to assume that any probability
+  state <with|mode|math|\|\<psi\>\<rangle\>> in
   <with|mode|math|\<bbb-S\><rsup|n-1>> may represent a physically acceptable
   prediction for <with|mode|math|M> applied to some hypothetical state
   <with|mode|math|\<frak-F\>>.
@@ -2248,7 +2253,7 @@
   instantaneous<cite|jacobssteck|progressive-decoherence>. The result itself
   may be probabilistic or contain a dose of uncertainty. The formalism
   presented here allows the state after a measurement result to be itself a
-  probability vector. There is no need for an ``instantaneous collapse''
+  probability vector. There is no need for any ``instantaneous collapse''
   either. As the measurement progresses, the distribution of probabilities
   becomes narrower, and the set of compatible universe states becomes
   smaller. At least for some measurements, the fully collapsed wave-function
@@ -2326,7 +2331,7 @@
   as the sum of all probabilities no longer being 1, raises a serious problem
   from a quantum mechanics point of view. But if we accept that
   non-commutativity must be possible, then this indicates that the S-matrix
-  lost its physical significance. This is not surprising considering that an
+  lost its physical significance. This is not surprising considering that a
   S-matrix relates the state of the system to states ``at infinity'', and
   those depend on the large-scale space-time structure. By analogy, if one is
   computing the probability to find a mobile running on the surface of earth,
