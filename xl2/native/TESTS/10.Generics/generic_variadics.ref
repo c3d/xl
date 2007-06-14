@@ -1,17 +1,17 @@
 MyMax one 4
-MyMax more 3 and 4is 4
-MyMax more 2 and 4is 4
-MyMax more 1 and 4is 4
+MyMax more 3 and 4 is 4
+MyMax more 2 and 4 is 4
+MyMax more 1 and 4 is 4
 MyMax one 3
-MyMax more 2 and 3is 3
-MyMax more 1 and 3is 3
-MyMax one Not yet implemented
-MyMax more Not yet implemented and Not yet implementedis Not yet implemented
-MyMax more Not yet implemented and Not yet implementedis Not yet implemented
-MyMax one Not yet implemented
-MyMax more Not yet implemented and Not yet implementedis Not yet implemented
-MyMax more Not yet implemented and Not yet implementedis Not yet implemented
+MyMax more 2 and 3 is 3
+MyMax more 1 and 3 is 3
+MyMax one 8.43
+MyMax more 7.9 and 8.43 is 8.43
+MyMax more 1.5 and 8.43 is 8.43
+MyMax one 0.1
+MyMax more 0 and 0.1 is 0.1
+MyMax more 0 and 0.1 is 0.1
 K=4
 L=3
-M=Not yet implemented
-Z=Not yet implemented
+M=8.43
+Z=0.1

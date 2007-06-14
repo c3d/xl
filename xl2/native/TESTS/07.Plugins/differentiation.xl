@@ -23,7 +23,9 @@
 // * Date       : $Date$
 // ****************************************************************************
 // We use the error messages to check the shape of the differentiated expr
-// EXIT=2
+
+function exp(X : real) return real is C.exp
+function ImplicitReal(I : integer) return real written I is XL.BYTECODE.int_to_real
 
 procedure MainTest is
     X : real := 0.3

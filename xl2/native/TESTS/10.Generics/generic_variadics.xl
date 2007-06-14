@@ -12,7 +12,7 @@ function MyMax (X : ordered; ...) return ordered is
     Write "MyMax more ", X, " and ", result
     if result < X then
         result := X
-    WriteLn "is ", result
+    WriteLn " is ", result
 
 K : integer := MyMax(1, 2, 3, 4)
 L : integer := MyMax(1, 2, 3)

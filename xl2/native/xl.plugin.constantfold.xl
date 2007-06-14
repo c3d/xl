@@ -41,6 +41,7 @@ module XL.PLUGIN.CONSTANTFOLD is
     //    so it adds one to the relative score of when clauses.
     //    So we use 'where true' to disambiguate otherwise equivalent clauses
 
+        // Case where the constants are integers
         when ('X' + 0) then
             changed := true
             return ConstantFold(X)
@@ -88,6 +89,38 @@ module XL.PLUGIN.CONSTANTFOLD is
             changed := true
             return parse_tree (0)
         when (-1 * 'X') then
+            changed := true
+            return ConstantFold(parse_tree(-'X'))
+
+        // Case where the constants are reals
+        when ('X' + 0.0) then
+            changed := true
+            return ConstantFold(X)
+        when (0.0 + 'X') where true then // Disambiguate
+            changed := true
+            return ConstantFold(X)
+        when ('X' - 0.0) where true then // Disambiguate
+            changed := true
+            return ConstantFold(X)
+        when ('X' * 1.0) then
+            changed := true
+            return ConstantFold(X)
+        when (1.0 * 'X') where true then // Disambiguate
+            changed := true
+            return ConstantFold(X)
+        when ('X' * 0.0) then
+            changed := true
+            return parse_tree(0.0)
+        when (0.0 * 'X') where true then // Disambiguate
+            changed := true
+            return parse_tree(0.0)
+        when ('X' / 1.0) then
+            changed := true
+            return ConstantFold(X)
+        when (-0.0) then
+            changed := true
+            return parse_tree (0.0)
+        when (-1.0 * 'X') then
             changed := true
             return ConstantFold(parse_tree(-'X'))
 

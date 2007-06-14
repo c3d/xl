@@ -64,6 +64,11 @@ module XL.SEMANTICS.PRAGMAS is
         result := SYM.LookupRewrite(XLT.context, name, input)
         trace[pragmas] "Pragma " + name + ".", phase,
                        "(", input, ")=(", result, ")"
+        final : PT.tree := PT.Attached(result, "PRAGMA_RESULT")
+        if final <> nil then
+            result := final
+        else
+            result := SYM.LookupRewrite(XLT.context, phase, result)
 
 
     translation XLDeclarations

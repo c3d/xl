@@ -2,15 +2,15 @@ MakeIt (generic)
 MakeIt (generic) 
 MakeIt (integer) 1
 MakeIt (integer) 2
-MakeIt (real) Not yet implemented
+MakeIt (real) 1.5
 MakeIt (integer) 3
-MakeIt (real) Not yet implemented
+MakeIt (real) 6.3
 Zero=1
 Glop=3
-Glap=Not yet implemented
+Glap=6.3
 MakeIt (integer) 1
-MakeIt (real) Not yet implemented
+MakeIt (real) 2.3
 MakeIt (generic) 
 Bingo=1
-Bonga=Not yet implemented
+Bonga=2.3
 Blatoid=0:0

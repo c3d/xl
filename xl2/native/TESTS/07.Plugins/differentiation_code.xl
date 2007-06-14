@@ -1,0 +1,11 @@
+import IO = XL.UI.CONSOLE
+
+function Sin(X : real) return real is C.sin
+function Cos(X : real) return real is C.cos
+function ImplicitReal(X : integer) return real written X is XL.BYTECODE.int_to_real
+
+function F(X : real) return real is
+    return {differentiation} d(sin(X) + cos (2*X))/dX
+
+for X in 0..3.5 step 0.1 loop
+   IO.WriteLn "X=", X, " F=", F(X)

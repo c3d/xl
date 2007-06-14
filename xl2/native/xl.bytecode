@@ -224,3 +224,4 @@ xl_assert        "fprintf(stderr, ""%s:%d: Assertion failure: %s\n"","
                  "        $2, $3, $1);"
                  "abort();"
 
+put_real        "fprintf($1, ""%g"", $2);"

@@ -1,5 +1,5 @@
 function Foo (X : integer) return real is 
-    result := X + 1
+    result := real (X + 1)
 <HTML><BODY>
 <FONT color="#000080"><B>function</B></FONT>&nbsp;Baz&nbsp;(A&nbsp;:&nbsp;<FONT color="#008080"><B>real</B></FONT>)&nbsp;return&nbsp;<FONT color="#008080"><B>real</B></FONT>&nbsp;is&nbsp;<BR>&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;<FONT COLOR="#707070">(</FONT>A&nbsp;+&nbsp;A<FONT COLOR="#707070">)</FONT><BR>
 </BODY></HTML>

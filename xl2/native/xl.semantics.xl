@@ -142,5 +142,5 @@ module XL.SEMANTICS is
                 result := parse_tree(@nop)
             else if result = thing then
                 result := parse_tree({tentative} 'result')
-
+                PT.AttachTree result, "PRAGMA_RESULT", result
 

@@ -35,8 +35,4 @@ procedure Main is
     IO.WriteLn "Hello World"
 {erp}
 
-Note: Top-level instructions are not implemented yet. At this stage,
-code must be placed in a top-level procedure, and that procedure must
-be called {tt "Main"}.
-
 

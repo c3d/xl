@@ -27,7 +27,7 @@
 // CMD=%x -parse %f -sem
 
 {listing} function Foo(X : integer) return real is
-    result := X + 1
+    result := real(X + 1)
 
 procedure Bar is
     X : real := Foo(0)

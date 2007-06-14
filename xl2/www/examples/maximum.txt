@@ -37,8 +37,8 @@ to take an {concept "variadics" "arbitrary number of arguments"}:
 
 {pre}function Max(X : ordered) return ordered is
     return X
-function Max(X : ordered; other) return ordered is
-    result := Max(other)
+function Max(X : ordered; ...) return ordered is
+    result := Max(...)
     if result &lt; X then
         result := X
 {erp}
@@ -54,8 +54,8 @@ It is possible to add other partial definitions of {tt "Max"} so that
 elements of the argument list can be containers themselves. For
 instance:
 
-{pre}function Max(C : container of ordered; other) return ordered is
-    result := Max(other)
+{pre}function Max(C : container of ordered; ...) return ordered is
+    result := Max(...)
     X : ordered
     for X in C loop
         result := Max(X, result)
@@ -73,7 +73,3 @@ An interesting exercise left for the reader is to compare the
 {@concept}  in other languages, in particular using
 {@cp} {@metrics}.
 
-
-Note: At this point, generic validation is not implemented in the XL
-version of the XL compiler, though it works in some cases
-{mcvs "instantiation/generic_validation.xl" "in the C++ version"}

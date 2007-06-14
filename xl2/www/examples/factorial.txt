@@ -15,7 +15,7 @@ This function makes use of a {example "written"} form to implement
 form {tt "N!"}. In other words, the expression {tt "(N-1)!"} is
 equivalent to {tt "Factorial(N-1)"}.
 
-The function above is takes an {tt "integer"} argument and returns an
+The function above takes an {tt "integer"} argument and returns an
 integer. In practice, this type is an implementation-defined built-in
 data type with a limited number of bits. So factorial of relatively
 small numbers will be too large for the type. This is an example of
@@ -76,7 +76,6 @@ more resources. An iterative version of the code above can be written
 as:
 
 {pre}function Factorial(N : integer) return number written N! is
-    I : integer
     result := 1
     for I in 1..N loop
         result *= I

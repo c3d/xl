@@ -72,11 +72,13 @@ module XL.TEXT_IO is
         N := PutCharInFile(N + integer('0'), F)
 
 
+    to PutRealInFile(F : file; X : real) is XL.BYTECODE.put_real
+
     to Write(F : file; N : real) is
     // ------------------------------------------------------------------------
     //   Writing a real number 
     // ------------------------------------------------------------------------
-        Write F, "Not yet implemented"
+        PutRealInFile F, N
 
 
     function PutStringInFile (S : text; F : file) return integer is C.fputs
