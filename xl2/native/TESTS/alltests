@@ -45,7 +45,7 @@ fi
 if [ ! -z "$1" ]; then PATTERN='*'"$1"'*'; shift; fi
 
 export TESTDIR XL SUCCESS FAILURE PASS UPDATE
-export CCOPTS=-Agcc
+export CCOPTS="-Agcc"
 
 # Make sure the proper files are linked in place
 ln -sf ../xl.bytecode .
@@ -87,7 +87,7 @@ do
     # Defaults if not set by the test
     if [ -z "$CMD" ]; then
         CMD="$XL $INC $OPT $TESTNAME";
-        [ -z "$COMPILE" ] && { COMPILE="cc -I. $BASE.c"; }
+        [ -z "$COMPILE" ] && { COMPILE="cc -I. $BASE.c -lm"; }
         [ -z "$RUN" ] && { RUN="./a.out"; }
     fi
 
