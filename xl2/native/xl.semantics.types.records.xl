@@ -226,8 +226,10 @@ module XL.SEMANTICS.TYPES.RECORDS is
     // ------------------------------------------------------------------------
     //   Index a record element
     // ------------------------------------------------------------------------
-        symbols : SYM.symbol_table
-        list : PT.tree_list
+        symbols     : SYM.symbol_table
+        list        : PT.tree_list
+        insts       : PT.tree_list
+        selected    : PT.tree
 
         RecordDeclarations Record, Field, "TYPE", list, symbols
 
@@ -240,9 +242,28 @@ module XL.SEMANTICS.TYPES.RECORDS is
             ERR.Error "Type name '$1' is ambiguous", Field
             ERR.Error "A first candidate is '$1", list[0]
             ERR.Error "A second candidate is '$1", list[1]
+        selected := list[0]
+
+        // Find if there is an instantiation by that name locally
+        SYM.Lookup XLT.context, "TYPE", Field.value, insts, SYM.lookupAll
+        if size(insts) > 0 then
+            found : integer := 0
+            I     : integer
+            isel  : PT.tree := nil
+            for I in 0..size(insts)-1 loop
+                instarg : PT.tree := PT.Attached(insts[i], "INSTARG")
+                if instarg = selected then
+                    found += 1
+                    isel := insts[i]
+            if found > 1 then
+                ERR.Error "Instantiated type name '$1' is ambiguous", Field
+                ERR.Error "A first candidate is '$1", insts[0]
+                ERR.Error "A second candidate is '$1", insts[1]
+            if isel <> nil then
+                selected := isel
 
         // Find corresponding declaration
-        decl : declaration := DCL.GetDeclaration(list[0])
+        decl : declaration := DCL.GetDeclaration(selected)
         if decl = nil then
             ERR.Error "Internal: Record field '$1' has no decl", Field
             return parse_tree(@error)
@@ -332,8 +353,10 @@ module XL.SEMANTICS.TYPES.RECORDS is
     // ------------------------------------------------------------------------
     //   Index a record element
     // ------------------------------------------------------------------------
-        symbols : SYM.symbol_table
-        list : PT.tree_list
+        symbols  : SYM.symbol_table
+        list     : PT.tree_list
+        insts    : PT.tree_list
+        selected : PT.tree
 
         RecordDeclarations Record, Field, "DECL", list, symbols
 
@@ -346,9 +369,28 @@ module XL.SEMANTICS.TYPES.RECORDS is
             ERR.Error "Field '$1' is ambiguous", Field
             ERR.Error "A first candidate is '$1", list[0]
             ERR.Error "A second candidate is '$1", list[1]
+        selected := list[0]
+
+        // Find if there is an instantiation by that name locally
+        SYM.Lookup XLT.context, "DECL", Field.value, insts, SYM.lookupAll
+        if size(insts) > 0 then
+            found : integer := 0
+            I     : integer
+            isel  : PT.tree := nil
+            for I in 0..size(insts)-1 loop
+                instarg : PT.tree := PT.Attached(insts[i], "INSTARG")
+                if instarg = selected then
+                    found += 1
+                    isel := insts[i]
+            if found > 1 then
+                ERR.Error "Instantiated name '$1' is ambiguous", Field
+                ERR.Error "A first candidate is '$1", insts[0]
+                ERR.Error "A second candidate is '$1", insts[1]
+            if isel <> nil then
+                selected := isel
 
         // Find corresponding declaration
-        decl : declaration := DCL.GetDeclaration(list[0])
+        decl : declaration := DCL.GetDeclaration(selected)
         if decl = nil then
             ERR.Error "Internal: Record field '$1' has no decl", Field
             return parse_tree(@error)

@@ -237,6 +237,11 @@ module XL_BUILTINS with
          result.First := First
          result.Last := Last
 
+    //to Copy(out TgtRng: range; in SrcRng : range) written TgtRng := SrcRng is
+    //    TgtRng.First := SrcRng.First
+    //    TgtRng.Last := SrcRng.Last
+
+
 
     // ========================================================================
     // 
