@@ -1,3 +1,18 @@
 11.Preprocessor/macro_recursive.xl:3: Too many macro recursions at 'sin (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos (A) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )'
 | xl.replace (sin 'X') with (sin (cos('X')))
 |________________________________^
+./xl_builtins.xs:240: Error instantiating 'Copy'
+|     to Copy(out TgtRng: range; in SrcRng : range) written TgtRng := SrcRng is
+|___________^
+./xl_builtins.xs:241: No translation found for 'TgtRng . First := SrcRng . First'
+|         TgtRng.First := SrcRng.First
+|_______________________^
+./xl_builtins.xs:241: No translation found for 'SrcRng . First'
+|         TgtRng.First := SrcRng.First
+|_______________________________^
+./xl_builtins.xs:242: No translation found for 'TgtRng . Last := SrcRng . Last'
+|         TgtRng.Last := SrcRng.Last
+|______________________^
+./xl_builtins.xs:242: No translation found for 'SrcRng . Last'
+|         TgtRng.Last := SrcRng.Last
+|______________________________^

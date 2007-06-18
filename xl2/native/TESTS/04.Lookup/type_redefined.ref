@@ -13,6 +13,15 @@
 04.Lookup/type_redefined.xl:37: No translation found for 'result := integer ( )'
 |    type integer
 |___^
+./xl_builtins.xs:233: Generic parameter type 'range' 
+|     type range is record with
+|______________^
+./xl_builtins.xs:34: cannot be both 'integer'
+|     type integer                                                                                is XL.BYTECODE.xlint
+|________________^
+04.Lookup/type_redefined.xl:29: and 'integer' in the same instance
+| type integer
+|____________^
 04.Lookup/type_redefined.xl:37: The type 'integer' can't be defined here
 |    type integer
 |_______________^
@@ -22,3 +31,12 @@
 04.Lookup/type_redefined.xl:38: No translation found for 'L := integer ( )'
 |    L : integer
 |____^
+./xl_builtins.xs:233: Generic parameter type 'range' 
+|     type range is record with
+|______________^
+./xl_builtins.xs:34: cannot be both 'integer'
+|     type integer                                                                                is XL.BYTECODE.xlint
+|________________^
+04.Lookup/type_redefined.xl:29: and 'integer' in the same instance
+| type integer
+|____________^
