@@ -549,8 +549,9 @@ module XL.SEMANTICS.GENERICS is
         instantiations -= 1
 
 
-    function Validate(GenType   : GEN.generic_type;
-                      ActType   : TY.any_type) return boolean is
+    function Validate(GenType      : GEN.generic_type;
+                      ActType      : TY.any_type;
+                      in out Gargs : generic_map) return boolean is
     // ------------------------------------------------------------------------
     //    Check if ActType is a valid instance of GenType
     // ------------------------------------------------------------------------
@@ -721,7 +722,7 @@ module XL.SEMANTICS.GENERICS is
                             // Check if we can validate the type
                             // e.g. if T is 'ordered' and we test F(integer),
                             // test that 'integer' is an 'ordered'
-                            if not Validate (gtp, ArgType) then
+                            if not Validate (gtp, ArgType, Gargs) then
                                 return false
                             Gargs[N] := ArgTypeSrc
                         else if Gargs[N] <> ArgTypeSrc then
@@ -753,7 +754,8 @@ module XL.SEMANTICS.GENERICS is
                                 if TY.SameType (subType, ParmType) then
                                     N : PT.tree := subParm.name
                                     if Gargs[N] = nil then
-                                        if not Validate (subType, ArgType) then
+                                        if not Validate (subType, ArgType,
+                                                         Gargs) then
                                             return false
                                         Gargs[N] := ArgTypeSrc
                                     else if Gargs[N] <> ArgTypeSrc then

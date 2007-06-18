@@ -153,7 +153,11 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             args[param_name] := semArg
             if not skip then
                 if Gtype <> nil then
-                    if not GN.Deduce (Gtype, decl, semArg, Gargs) then
+                    ERR.PushErrorContext()
+                    ok : boolean := GN.Deduce (Gtype, decl, semArg, Gargs)
+                    if ERR.PopErrorContext() then
+                        ok := false
+                    if not ok then
                         return 0
                 else
                     if not DCL.Assignable(decl, semArg) then
