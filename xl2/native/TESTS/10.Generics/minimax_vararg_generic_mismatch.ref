@@ -7,12 +7,6 @@
 10.Generics/minimax_vararg_generic_mismatch.xl:12: No translation found for 'result := Max ( ... )'
 |     result := Max(...)
 |_____________^
-./xl_builtins.xs:233: Generic parameter type 'range' 
-|     type range is record with
-|______________^
-./xl_builtins.xs:36: cannot be both 'real'
+./xl_builtins.xs:36: 'real' is not an instance of 'range'
 |     type real                                                                                   is XL.BYTECODE.xlreal
 |_____________^
-./xl_builtins.xs:34: and 'integer' in the same instance
-|     type integer                                                                                is XL.BYTECODE.xlint
-|________________^

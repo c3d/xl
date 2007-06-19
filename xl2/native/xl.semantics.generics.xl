@@ -599,12 +599,9 @@ module XL.SEMANTICS.GENERICS is
                 // OK, it looks like a match
                 return true
 
-            else if size(GenType.parameters) then
-                ERR.Error "'$1' is not an instance of '$2'",
-                          InstTypeSrc, TY.Source(GenType)
-                return false
-
-        return true
+        ERR.Error "'$1' is not an instance of '$2'",
+                  InstTypeSrc, TY.Source(GenType)
+        return false
 
 
     function Validate(GenType      : GEN.generic_type;
@@ -710,11 +707,13 @@ module XL.SEMANTICS.GENERICS is
             // Check if the argument type is an instance of the parameter type
             // e.g. the actual type has to be complex[something]
             ArgType  : TY.any_type := TY.NonConstedType (TY.GetType(Arg))
-            if not IsInstanceOf(GenParmType, ArgType, Gargs) then
-                return false
+            ArgTypeSrc : PT.tree := TY.Source (ArgType)
+            InstanceOf  : PT.tree := PT.Attached(ArgTypeSrc, "INSTANCEOF")
+            if InstanceOf <> nil then
+                if not IsInstanceOf(GenParmType, ArgType, Gargs) then
+                    return false
 
             // Check consistency with deductions, or deduce if not found
-            ArgTypeSrc : PT.tree := TY.Source (ArgType)
             NG         : integer := size (FunGenType.parameters)
             G          : integer
             for G in 0..NG-1 loop
