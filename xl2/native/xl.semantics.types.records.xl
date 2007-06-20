@@ -448,6 +448,8 @@ module XL.SEMANTICS.TYPES.RECORDS is
         XLT.context := newsyms
         XLT.global_context := newsyms
 
+        trace[defaultfns] "In ", newsyms, "-", context, " entering: ", source
+
         // Try to evaluate the tentative function
         ERR.PushErrorContext()
         result := XLT.XLDeclarations(source)
@@ -455,12 +457,15 @@ module XL.SEMANTICS.TYPES.RECORDS is
         XLT.context := context
         XLT.global_context := globals
         if ERR.PopErrorContext() then
+            trace[defaultfns] "Error: ", ERR.GetLastErrorsText()
             SYM.SetProperty XLT.main_context, "MAIN_INIT", init
             SYM.SetProperty XLT.main_context, "MAIN_TERM", term
             SYM.SetProperty XLT.main_context, "MAIN_DECL", decl
             SYM.SetProperty XLT.main_context, "MAIN_BODY", body
             SYM.SetProperty XLT.main_context, "MAIN_LOCALS", locals
             return nil
+
+        trace[defaultfns] "Code: ", result
 
         // If evaluation was successful, then add the context as a lateral
         SYM.AddUsing XLT.global_context, nil, newsyms
