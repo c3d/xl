@@ -5,16 +5,6 @@
 '
 | module SIMPLE_MODULE.NESTED_1.NESTED_2 is
 |____________________^
-[Compiler generated] No valid function found for 'delete'
-./xl_builtins.xs:26: 'XL_BUILTINS' is not an instance of 'range'
+./xl_builtins.xs:26: No translation found for 'delete xlbuiltins_470'
 | module XL_BUILTINS with
 |__________________^
-./xl_builtins.xs:233: 'delete (this : range)' could not be selected because
-|     type range is record with
-|______________^
-./xl_builtins.xs:26: the type 'XL_BUILTINS' of 'xlbuiltins_470' doesn't match 'range'
-| module XL_BUILTINS with
-|__________________^
-./xl_builtins.xs:233: for parameter 'this'
-|     type range is record with
-|______________^
