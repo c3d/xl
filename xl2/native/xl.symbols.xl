@@ -735,5 +735,8 @@ module XL.SYMBOLS is
         ue : using_entry
         for ue in S.usings loop
             IO.WriteLn indt, "Usng ",ue.scope," p symbols(",ue.symbols, ")"
+        impl : symbol_table
+        for impl in S.implicit loop
+            IO.WriteLn indt, "Impl p symbols(", impl, ")"
         if S.enclosing <> nil then
             IO.WriteLn "Parent: p symbols(", S.enclosing, ")"
