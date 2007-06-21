@@ -198,7 +198,6 @@ module XL.TRANSLATOR is
                 trace[modules] "Using interface symbols ", ifaceSyms,
                                " for ", ModName
                 SYM.AddUsing context, nil, ifaceSyms
-                SYM.AddUsing context, nil, SYM.Enclosing(ifaceSyms)
                 CopyScopeProperties context, ifaceSyms 
 
         if scope = scopeMain or scope = scopeModule or scope = scopeGlobal then
