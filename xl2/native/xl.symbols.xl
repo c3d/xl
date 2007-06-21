@@ -55,6 +55,10 @@ module XL.SYMBOLS is
         implicit        : string of symbol_table
 
 
+    type symbol_table_depths is map[symbol_table, integer]
+    type symbol_table_scopes is map[symbol_table, PT.tree]
+
+
     function NewSymbolTable (enclosing : symbol_table) return symbol_table is
     // ------------------------------------------------------------------------
     //    Create a symbol table
@@ -176,26 +180,36 @@ module XL.SYMBOLS is
         table.names[name] += value
 
 
-    procedure GetUsings (table : symbol_table;
-                         in out usingMap  : map[symbol_table, boolean];
-                         in out usingList : using_entries) is
+    procedure Collect(table         : symbol_table;
+                      in out depths : symbol_table_depths;
+                      in out scopes : symbol_table_scopes;
+                      mode          : lookup_kind;
+                      depth         : integer := 1) is
     // ------------------------------------------------------------------------
-    //   Get all usings recursively
+    //   Collect all tables referenced by the current one, with their depth
     // ------------------------------------------------------------------------
-        if count(usingMap, table) = 0 then
-            entry : using_entry
-            usingMap[table] := true
-            for entry in table.usings loop
-                usingList += entry
-                GetUsings entry.symbols, usingMap, usingList
+        current_depth : integer := depths[table]
 
-
-    function AllUsings (table : symbol_table) return using_entries is
-    // ------------------------------------------------------------------------
-    //    Return all usings, including recursive ones
-    // ------------------------------------------------------------------------
-        usingMap : map[symbol_table, boolean]
-        GetUsings table, usingMap, result
+        if current_depth > depth then
+            depths[table] := depth
+            scopes[table] := nil
+        else if current_depth = 0 then
+            depths[table] := depth
+            scopes[table] := nil
+            if mode <> lookupLocalOnly then
+                if mode <> lookupDirect then
+                    entry : using_entry
+                    for entry in table.usings loop
+                        Collect entry.symbols, depths, scopes, mode, depth+256
+                        if entry.scope <> nil then
+                            if scopes[entry.symbols] = nil then
+                                scopes[entry.symbols] := entry.scope
+                if mode <> lookupLocalUsing then
+                    impl : symbol_table
+                    for impl in table.implicit loop
+                        Collect impl, depths, scopes, mode, depth+512
+                    if table.enclosing <> nil then
+                        Collect table.enclosing, depths, scopes, mode, depth+1
 
 
     procedure Lookup (table         : symbol_table;
@@ -208,8 +222,7 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
 
         scope : map[PT.tree, integer]
-        depth : integer := 0
-        Lookup table, category, name, values, scope, depth, mode
+        Lookup table, category, name, values, scope, 0, mode
 
 
     procedure Lookup (table         : symbol_table;
@@ -217,66 +230,54 @@ module XL.SYMBOLS is
                       name          : text;
                       in out values : tree_list;
                       in out scopes : map[PT.tree, integer];
-                      in out depth  : integer;
+                      baseDepth     : integer;
                       mode          : lookup_kind) is
     // ------------------------------------------------------------------------
     //    Lookup and store the depth of each symbol
     // ------------------------------------------------------------------------
 
-        entry    : using_entry
+        symdepths     : symbol_table_depths
+        symscopes     : symbol_table_scopes
+        clearscopes   : map[PT.tree, integer]
+        clearvalues   : tree_list
 
         name := category + ":" + PT.XLNormalize(name)
 
         trace [lookup] "Lookup: ", name, " from ", table
-        while table <> nil loop
-            // Lookup in main map
-            depth += 1
+
+        Collect table, symdepths, symscopes, mode
+
+        for table in symdepths loop
+            depth : integer := symdepths[table] + baseDepth
+            scope : PT.tree := symscopes[table]
+
             if count(table.names, name) > 0 then
-                trace [lookup] "  in ", table,
+                trace [lookup] " in ", table,
+                               " depth ", depth, " scope ", scope,
                                " got ", size(table.names[name])
                 list : PT.tree_list := table.names[name]
                 item : PT.tree
+
+                // In innermost mode, only find the closest symbol
+                if mode = lookupInnermost and size(values) > 0 then
+                    best : integer := scopes[values[0]]
+                    if depth > best then
+                        list := clearvalues
+                    else if depth < best then
+                        values := clearvalues
+                        scopes := clearscopes
+
+                // Loop on symbols found here
                 for item in list loop
                     if scopes[item] = 0 then
-                        values += item
+                        scoped : PT.tree := item
+                        if scope <> nil then
+                            scoped := parse_tree('scope'.'item')
+                            scoped.info := item.info
+                            scoped.position := item.position
+                        values += scoped
                         scopes[item] := depth
-                exit if mode = lookupInnermost
-
-            exit if mode = lookupLocalOnly
-
-            // Lookup in lateral maps
-            depth += 1
-            if mode <> lookupDirect then
-                usings : using_entries := AllUsings(table)
-                for entry in usings loop
-                    subtable : symbol_table := entry.symbols
-                    if count(subtable.names, name) > 0 then
-                        scope   : PT.tree := entry.scope
-                        subtree : PT.tree
-                        trace[lookup] "  in lateral ", subtable,
-                                      " got ", size(subtable.names[name])
-                        for subtree in subtable.names[name] loop
-                            if scopes[subtree] = 0 then
-                                scoped : PT.tree := subtree
-                                if scope <> nil then
-                                    scoped := parse_tree('scope'.'subtree')
-                                    scoped.info := subtree.info
-                                    scoped.position := subtree.position
-                                values += scoped
-                                scopes[subtree] := depth
-                                scopes[scoped] := depth
-
-            exit if mode = lookupInnermost and size(values) > 0
-            exit if mode = lookupLocalUsing
-
-            // Lookup in implicit tables
-            if mode <> lookupDirect then
-                impl : symbol_table
-                for impl in table.implicit loop
-                    implDepth : integer := depth    // REVISIT?
-                    Lookup impl, category, name, values, scopes, implDepth, mode
-
-            table := table.enclosing
+                        scopes[scoped] := depth
 
 
     function LookupOne (table         : symbol_table;
@@ -354,8 +355,6 @@ module XL.SYMBOLS is
     //    Find the best rewrite and apply it
     // ------------------------------------------------------------------------
         TName      : text := Name
-        Name += "."
-        Wild       : text := Name
         R          : rewrite
         score      : integer := 0
         best       : integer := 0
@@ -363,21 +362,23 @@ module XL.SYMBOLS is
         bestA      : PT.tree_map
         bestS      : PT.tree
         ambig      : rewrite := nil
-        depth      : integer := 0
-        index      : integer := 0
         key        : text := "TRANSFORMS"
         track      : boolean := count(test_tree.info, key) > 0
         info       : PT.info := nil
-        entry      : using_entry
         List       : rewrite_list
-        depths     : string of integer
+        Depths     : map[rewrite, integer]
+        symdepths  : symbol_table_depths
+        symscopes  : symbol_table_scopes
+        Wild       : text
 
         if track then
             IO.WriteLn "Rewrite: ", TName, "(", test_tree, ")"
             info := test_tree.info[key]
 
-        Name += TreeName(test_tree)
+        Name += "."
+        Wild := Name
         Wild += "*"
+        Name += TreeName(test_tree)
         result := test_tree
 
         trace [rewrite] "Rewrite ", TName, "(", test_tree, ")"
@@ -386,63 +387,35 @@ module XL.SYMBOLS is
         // but this may involve some semantics (instantiation) that modifies
         // the maps being looped on, which is not good for the iterators
         cnt := 0
-        while table <> nil loop
-            if count(table.rewrites, Name) > 0 then
-                List += table.rewrites[Name]
-            if count (table.rewrites, Wild) > 0 then
-                List += table.rewrites[Wild]
-            depths += size(List)
+        Collect table, symdepths, symscopes, lookupAll
+        for table in symdepths loop
+            depth   : integer := symdepths[table]
+            sublist : rewrite_list
 
-            if track then
-                IO.WriteLn "Table ", table, ": ", size (List), " rewrites"
+            if count(table.rewrites, name) > 0 then
+                sublist += table.rewrites[name]
+            if count(table.rewrites, Wild) > 0 then
+                sublist += table.rewrites[Wild]
 
-            // Add lateral maps
-            depth += 1
-            usings : using_entries := AllUsings(table)
-            for entry in usings loop
-                subtable : symbol_table := entry.symbols
-                if count(subtable.rewrites, Name) > 0 then
-                    List += subtable.rewrites[Name]
-                if count (subtable.rewrites, Wild) > 0 then
-                    List += subtable.rewrites[Wild]
+            if size(sublist) > 0 then
                 if track then
-                    IO.WriteLn "Subtable ", subtable, ": ",
-                               size (List), " rewrites"
-            depths += size(List)
-
-            // Add implicit maps
-            depth += 1
-            imptable : symbol_table
-            for imptable in table.implicit loop
-                if count(imptable.rewrites, Name) > 0 then
-                    List += imptable.rewrites[Name]
-                if count (imptable.rewrites, Wild) > 0 then
-                    List += imptable.rewrites[Wild]
-
-                if track then
-                    IO.WriteLn "Implicit ", imptable, ": ",
-                               size (List), " rewrites"
-            depths += size(List)
-
-            // Loop to enclosing map
-            table := table.enclosing
-            depth += 1
+                    IO.WriteLn " in ", table, " dpth ", depth,
+                               " rewr ", size(table.rewrites[name])
+                item : rewrite
+                for item in sublist loop
+                    List += item
+                    Depths[item] := depth
 
         // Then sort candidates
-        depths += size(List)
-        depth := 0
-        index := 0
         for R in List loop
-            index += 1
-            while depth < size(depths) and index > depths[depth] loop
-                depth += 1
+            depth : integer := Depths[R]
             args  : PT.tree_map
             score := PT.Matches(test_tree, R.reference_form, args)
             if track then
                 IO.Write "Matching (", R.reference_form, ") = ", score,
                          " depth ", depth, " "
             if score > 0 then
-                score := 16#100 * score - depth
+                score := 16#10000 * score - depth
                 if R.score_adjust <> nil then
                     score := R.score_adjust (test_tree, R, args,
                                              depth, score)

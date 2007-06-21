@@ -1059,6 +1059,30 @@ module XL.SEMANTICS.GENERICS is
                 return nil
 
 
+
+    function GenericIndex(GenType : PT.tree; Arg : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Check if 'complex.value' is the name of a generic parameter
+    // ------------------------------------------------------------------------
+
+        if InParameterDeclaration() then
+            if IsGenericName(GenType, "TYPE") then
+                ParmName : Arg as PT.name_tree
+                decl : DCL.declaration := GenericDeclaration(GenType, "TYPE")
+                gt   : TY.GetDefinedType(decl.name) as GEN.generic_type
+                if gt = nil then
+                    ERR.Error "Internal: No generic type for '$1'",decl.name
+                else
+                    // Check if there is an instantiation of that guy
+                    result := GenericInstance(GenType, ParmName, decl)
+                    if result <> nil then
+                        return result
+
+                    GEN.AddGenericDependency gt
+                return GenericParameter(GenType, ParmName)
+        return nil
+
+
     translation XLEvaluateType
     // ------------------------------------------------------------------------
     //   Translation of instantiations
@@ -1068,25 +1092,6 @@ module XL.SEMANTICS.GENERICS is
             return InstantiateType (Name, Args)
         when ('Name'[]) where IsGenericName (Name, "TYPE") then
             return InstantiateType (Name, nil)
-
-        // Generic dependency in parameter list
-        when ('GenType'.'Arg') where (Arg.kind = PT.xlNAME and
-                                      InParameterDeclaration() and
-                                      IsGenericName(GenType, "TYPE")) then
-            ParmName : Arg as PT.name_tree
-            decl : DCL.declaration := GenericDeclaration(GenType, "TYPE")
-            gt   : TY.GetDefinedType(decl.name) as GEN.generic_type
-            if gt = nil then
-                ERR.Error "Internal: No generic type for '$1'", decl.name
-            else
-                // Check if there is an instantiation of that guy
-                result := GenericInstance(GenType, ParmName, decl)
-                if result <> nil then
-                    return result
-
-                GEN.AddGenericDependency gt
-            return GenericParameter(GenType, ParmName)
-
         when (any.'T') then
             coi : SYM.symbol_table := ContextOfInstantiation()
             if coi = nil then

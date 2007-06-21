@@ -30,6 +30,7 @@ import CGM = XL.CODE_GENERATOR.MACHINE
 import SYM = XL.SYMBOLS
 import XLT = XL.TRANSLATOR
 import GEN = XL.SEMANTICS.TYPES.GENERICS
+import GN = XL.SEMANTICS.GENERICS
 
 
 module XL.SEMANTICS.TYPES.RECORDS is
@@ -286,10 +287,13 @@ module XL.SEMANTICS.TYPES.RECORDS is
         when ('Base' with 'Fields') where TY.IsTypeName(Base) then
             return EnterType (input, Base, Fields)
 
-        when ('Record'.'Field') where (IsRecord(Record) and
-                                       Field.kind = PT.xlNAME) then
-            FieldName : Field as PT.name_tree
-            return IndexType(Record, FieldName)
+        when ('Record'.'Field') where (Field.kind = PT.xlNAME) then
+
+            result := GN.GenericIndex(Record, Field)
+            if result = nil and IsRecord(Record) then
+                FieldName : Field as PT.name_tree
+                result := IndexType(Record, FieldName)
+            return result
 
 
 

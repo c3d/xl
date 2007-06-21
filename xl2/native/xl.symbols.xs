@@ -106,12 +106,12 @@ module XL.SYMBOLS with
                       name          : text;
                       in out values : tree_list;
                       in out scopes : map[PT.tree, integer];
-                      in out depth  : integer;
+                      depth         : integer;
                       mode          : lookup_kind := lookupAll)
     function LookupOne (table       : symbol_table;
                         category    : text;
                         name        : text;
-                        mode        : lookup_kind := lookupAll) return PT.tree
+                        mode        : lookup_kind := lookupInnermost) return PT.tree
 
 
 
