@@ -570,7 +570,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 thisName : PT.tree := PT.Clone(F.name)
                 thatName : PT.tree := PT.Clone(F.name)
                 copyCall : PT.tree := parse_tree
-                    this.'thisName' := that.'thatName'
+                    {transforms} this.'thisName' := that.'thatName'
                 result := XLT.Append(result, copyCall)
 
         // If we found any, then generate a 'copy' procedure here

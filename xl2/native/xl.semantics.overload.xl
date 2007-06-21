@@ -217,7 +217,7 @@ module XL.SEMANTICS.OVERLOAD is
                 if Ftype = nil and Gtype <> nil then
                     GFType : Gtype.base as FT.function_type
                     Ftype := GFType
-                    Score *= 16#100
+                    Score *= 100
 
                 // Check that we actually have a function
                 if Ftype = nil then
@@ -242,7 +242,7 @@ module XL.SEMANTICS.OVERLOAD is
                 // Check number of parameters.
                 NP : integer := size(Ftype.parameters)
                 if Ftype.variadic then
-                    Score *= 16#100
+                    Score *= 100
                 else if NA > NP then
                     ERR.Error "'$1' could not be selected because", C
                     ERR.Error "there are too many arguments for '$1'", Name

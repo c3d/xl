@@ -200,14 +200,14 @@ module XL.SYMBOLS is
                 if mode <> lookupDirect then
                     entry : using_entry
                     for entry in table.usings loop
-                        Collect entry.symbols, depths, scopes, mode, depth+256
+                        Collect entry.symbols, depths, scopes, mode, depth+100
                         if entry.scope <> nil then
                             if scopes[entry.symbols] = nil then
                                 scopes[entry.symbols] := entry.scope
                 if mode <> lookupLocalUsing then
                     impl : symbol_table
                     for impl in table.implicit loop
-                        Collect impl, depths, scopes, mode, depth+512
+                        Collect impl, depths, scopes, mode, depth+1000
                     if table.enclosing <> nil then
                         Collect table.enclosing, depths, scopes, mode, depth+1
 
@@ -397,10 +397,11 @@ module XL.SYMBOLS is
             if count(table.rewrites, Wild) > 0 then
                 sublist += table.rewrites[Wild]
 
+            if track then
+                IO.WriteLn " in ", table, " depth ", depth,
+                           " rewrites ", size(sublist)
+
             if size(sublist) > 0 then
-                if track then
-                    IO.WriteLn " in ", table, " dpth ", depth,
-                               " rewr ", size(table.rewrites[name])
                 item : rewrite
                 for item in sublist loop
                     List += item
@@ -415,7 +416,7 @@ module XL.SYMBOLS is
                 IO.Write "Matching (", R.reference_form, ") = ", score,
                          " depth ", depth, " "
             if score > 0 then
-                score := 16#10000 * score - depth
+                score := 10000 * score - depth
                 if R.score_adjust <> nil then
                     score := R.score_adjust (test_tree, R, args,
                                              depth, score)

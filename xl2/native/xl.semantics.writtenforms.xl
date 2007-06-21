@@ -105,7 +105,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         Gargs      : GN.generic_map
 
         if Ftype <> nil or Gtype = nil then
-            base_score *= 16#100
+            base_score *= 100
 
         // Check whether this is an iterator / we are looking for one
         inIterator: boolean := PT.FindInfo(test, "ITERATOR_EXPR") <> nil
