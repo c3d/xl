@@ -421,6 +421,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
             ERR.Error "The type of '$1' is not a record type", Record
         else
             SYM.AddUsing XLT.context, Value, rtp.symbols
+            SYM.AddUsing XLT.context, Value, SYM.Enclosing(rtp.symbols)
         if Code = nil then
             Code := parse_tree(@nop)
         return Code
@@ -448,7 +449,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         XLT.context := newsyms
         XLT.global_context := newsyms
 
-        trace[defaultfns] "In ", newsyms, "-", context, " entering: ", source
+        trace[defaultfns] "In ", newsyms, "-", globals, " entering: ", source
 
         // Try to evaluate the tentative function
         ERR.PushErrorContext()
@@ -468,7 +469,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         trace[defaultfns] "Code: ", result
 
         // If evaluation was successful, then add the context as a lateral
-        SYM.AddUsing XLT.global_context, nil, newsyms
+        SYM.AddUsing globals, nil, newsyms
 
 
     function EnterDefaultConstructor(recName : PT.name_tree;

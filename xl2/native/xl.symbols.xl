@@ -439,12 +439,15 @@ module XL.SYMBOLS is
             args  : PT.tree_map
             score := PT.Matches(test_tree, R.reference_form, args)
             if track then
-                IO.WriteLn "Matching (", R.reference_form, ") = ", score
+                IO.Write "Matching (", R.reference_form, ") = ", score,
+                         " depth ", depth, " "
             if score > 0 then
                 score := 16#100 * score - depth
                 if R.score_adjust <> nil then
                     score := R.score_adjust (test_tree, R, args,
                                              depth, score)
+                    if track then
+                        IO.WriteLn " adjusted = ", score
                 if score > 0 then
                     if score > best then
                         if track then
@@ -740,7 +743,7 @@ module XL.SYMBOLS is
                 IO.Write PT.name_tree(T), " "
             IO.WriteLn ""
         for name in S.rewrites loop
-            IO.Write indt, "Rewr ", name, ": ", size(S.rewrites[name])
+            IO.Write indt, "Rewr ", name, " (", size(S.rewrites[name]), "): "
             R : rewrite
             for R in S.rewrites[name] loop
                 IO.Write R, " "
