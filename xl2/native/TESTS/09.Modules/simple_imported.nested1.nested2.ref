@@ -10,7 +10,7 @@
 ./xl_builtins.xs:233: 'delete (this : range)' could not be selected because
 |     type range is record with
 |______________^
-./xl_builtins.xs:26: the type 'XL_BUILTINS' of 'xlbuiltins_475' doesn't match 'range'
+./xl_builtins.xs:26: the type 'XL_BUILTINS' of 'xlbuiltins_470' doesn't match 'range'
 | module XL_BUILTINS with
 |__________________^
 ./xl_builtins.xs:233: for parameter 'this'
