@@ -448,7 +448,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         body    : PT.tree := SYM.ScopeItems(XLT.main_context, "MAIN_BODY")
 
         // Create new symbol table
-        newsyms : SYM.symbol_table := SYM.NewSymbolTable(globals)
+        newsyms : SYM.symbol_table := SYM.NewSymbolTable(context)
         XLT.context := newsyms
         XLT.global_context := newsyms
 
@@ -472,7 +472,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         trace[defaultfns] "Code: ", result
 
         // If evaluation was successful, then add the context as a lateral
-        SYM.AddUsing globals, nil, newsyms
+        SYM.AddUsing context, nil, newsyms
 
 
     function EnterDefaultConstructor(recName : PT.name_tree;
