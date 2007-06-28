@@ -51,6 +51,7 @@ module XL.SEMANTICS.MACROS is
     //    Start with a '.' path
     // ------------------------------------------------------------------------
         include_path += text "."
+        include_path += XLT.RuntimePath(".")
 
 
     procedure AddPath (path : text) is
@@ -61,6 +62,20 @@ module XL.SEMANTICS.MACROS is
         new_path += path
         new_path += include_path
         include_path := new_path
+
+
+    procedure ReplacePath(oldPath : text; newPath : text) is
+    // ------------------------------------------------------------------------
+    //    Remove the given path if among the module paths
+    // ------------------------------------------------------------------------
+        new_paths : string of text
+        path      : text
+        for path in include_path loop
+            if path = oldPath then
+                new_paths += newPath
+            else
+                new_paths += path
+        include_path := new_paths
 
 
     function CreateWildcards(form : PT.tree) return PT.tree is

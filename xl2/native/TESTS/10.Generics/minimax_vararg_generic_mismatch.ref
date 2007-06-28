@@ -7,6 +7,6 @@
 10.Generics/minimax_vararg_generic_mismatch.xl:12: No translation found for 'result := Max ( ... )'
 |     result := Max(...)
 |_____________^
-./xl_builtins.xs:36: 'real' is not an instance of 'range'
+library/runtime/default/./xl_builtins.xs:36: 'real' is not an instance of 'range'
 |     type real                                                                                   is XL.BYTECODE.xlreal
 |_____________^

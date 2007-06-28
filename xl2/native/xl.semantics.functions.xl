@@ -166,23 +166,55 @@ module XL.SEMANTICS.FUNCTIONS is
         SYM.SetProperty XLT.global_context, "DECL", savedGlobals
 
 
-    function EnterCFunction(input : PT.tree;
-                            Interface : PT.tree;
-                            CName : PT.tree) return PT.tree is
+    function IsRuntime(runtime : PT.tree) return boolean is
     // ------------------------------------------------------------------------
-    //    Enter a function declared in C
+    //    Check if a function uses the name of a runtime (e.g. C)
+    // ------------------------------------------------------------------------
+        name : runtime as PT.name_tree
+        if name <> nil then
+            runtimeName : text := name.value
+            native_bytecode : text := "native_" + runtimeName
+            return CG.HasFormat(native_bytecode)
+        return false
+
+
+    function RuntimeCode(runtime : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Check if a function uses the name of a runtime (e.g. C)
+    // ------------------------------------------------------------------------
+        runtimeName : text
+        if runtime = nil then
+            runtimeName := CG.Format("RUNTIME")
+        else
+            name : runtime as PT.name_tree
+            if name = nil then
+                return nil
+            runtimeName := name.value
+        native_bytecode : text := "native_" + runtimeName
+        if CG.HasFormat(native_bytecode) then
+            ntree : PT.name_tree := PT.NewName(native_bytecode, runtime.position)
+            return parse_tree(@ 'ntree')
+        return nil
+
+
+    function EnterNativeFunction(input : PT.tree;
+                                 Interface : PT.tree;
+                                 Runtime : PT.tree;
+                                 CName : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Enter a function declared in the native runtime
     // ------------------------------------------------------------------------
         PT.AttachTree Interface, "MNAME", CName
-        PT.AttachTree Interface, "EXTERN", parse_tree(@externc)
+        PT.AttachTree Interface, "EXTERN", RuntimeCode(Runtime)
         Interface := EnterFunction(Interface)
         f : function := GetFunction(Interface)
         assert f <> nil
         if f.initializer <> nil then
-            ERR.Error "C function '$1' was given initializer '$2'",
+            ERR.Error "Native function '$1' was given initializer '$2'",
                       CName, f.initializer
             result := input
         else if CName.kind <> PT.xlNAME then
-            ERR.Error "'$1' is not a valid C function name", CName
+            ERR.Error "'$1' is not a valid native function name", CName
             result := input
         else
             BN : CName as PT.name_tree
@@ -267,13 +299,24 @@ module XL.SEMANTICS.FUNCTIONS is
                 xl.bytecode.'BuiltinName'
         then
             return EnterBuiltinFunction(input, Interface, BuiltinName)
-        when ('Interface' is C.'CName') then
-            return EnterCFunction(input, Interface, CName)
+
+        when ('Interface' is XL.RUNTIME.'CName') then
+            return EnterNativeFunction(input, Interface, nil, CName)
         when
             'Interface' is
-                C.'CName'
+                XL.RUNTIME.'CName'
         then
-            return EnterCFunction(input, Interface, CName)
+            return EnterNativeFunction(input, Interface, nil, CName)
+
+        when ('Interface' is 'RT'.'CName') where IsRuntime(RT) <> nil then
+            return EnterNativeFunction(input, Interface, RT, CName)
+        when
+            'Interface' is
+                'RT'.'CName'
+        where
+            IsRuntime(RT) <> nil
+        then
+            return EnterNativeFunction(input, Interface, RT, CName)
 
         // Definition of a function
         when ('Interface' is nil) then

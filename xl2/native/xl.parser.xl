@@ -28,6 +28,7 @@ import SC = XL.SCANNER
 import ASCII = XL.TEXT_IO.ENCODING.ASCII
 import ERR = XL.ERRORS
 import POS = XL.SCANNER.POSITION
+import XLT = XL.TRANSLATOR
 
 module XL.PARSER is
 
@@ -37,6 +38,8 @@ module XL.PARSER is
     // ------------------------------------------------------------------------
         S : SC.scanner := SC.Open(name)
         result.scanner := S
+        if syntax = "" then
+            syntax := XLT.RuntimePath("xl.syntax")
         ReadSyntaxFile result, syntax
         SC.SetPosition result.scanner, POS.OpenFile name
         S.blocks := result.blocks

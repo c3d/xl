@@ -37,6 +37,8 @@ import CG = XL.CODE_GENERATOR
 import SYM = XL.SYMBOLS
 import ERR = XL.ERRORS
 import MDL = XL.SEMANTICS.MODULES
+import PPR = XL.SEMANTICS.MACROS
+import RD = XL.RENDERER
 
 
 module XL.TRANSLATOR is
@@ -69,6 +71,27 @@ module XL.TRANSLATOR is
     //    Initialization of the semantics module
     // ------------------------------------------------------------------------
         InitializeTranslator
+
+
+    function RuntimePath(fileName : text) return text is
+    // ------------------------------------------------------------------------
+    //   Return the runtime path associated with a given file
+    // ------------------------------------------------------------------------
+        return text("library/runtime/") + runtime + text("/") + fileName
+
+
+    procedure ChangeRuntime(newRuntime : text) is
+    // ------------------------------------------------------------------------
+    //   Switch to the given runtime path
+    // ------------------------------------------------------------------------
+        oldPath : text := RuntimePath(".")
+        runtime := newRuntime
+        newPath : text := RuntimePath(".")
+        MDL.ReplacePath oldPath, newPath
+        PPR.ReplacePath oldPath, newPath
+        RD.Close RD.DefaultRenderer
+        RD.DefaultRenderer := RD.Open(RuntimePath("xl.stylesheet"))
+        CG.InitializeBytecodeMap()
 
 
     procedure Compile(input : PT.tree) is

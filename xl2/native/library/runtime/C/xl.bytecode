@@ -19,9 +19,11 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 299 $
+// * Date       : $Date: 2007-06-14 22:36:13 +0200 (Thu, 14 Jun 2007) $
 // ****************************************************************************
+
+RUNTIME         "C"
 
 xcinit          "#define XLINIT 1"
                 "#include ""xl_lib.h"""
@@ -99,7 +101,7 @@ fn_body_begin   ""
 fn_body         "{"
 fn_body_end     "}"
 
-externc         ""
+native_C        ""
 
 record_begin    "typedef struct $1 {"
 record_field    "  $2 $3; /* RecF */"

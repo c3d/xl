@@ -43,20 +43,20 @@ module XL.PLUGIN.LISTING is
            'Anything'
         then
            pragma : PT.tree := SYM.GetProperty(XLT.context, "PRAGMA")
-           format : text := "xl.stylesheet"
-           syntax : text := "xl.syntax"
+           format : text := XLT.RuntimePath("xl.stylesheet")
+           syntax : text := XLT.RuntimePath("xl.syntax")
            translate pragma
                when ('Base' 'Style' 'Stx') where (Style.kind = PT.xlTEXT and
                                                   Stx.kind = PT.xlTEXT) then
                    style_name : Style as PT.text_tree
                    syntax_name : Stx as PT.text_tree
-                   format := style_name.value + ".stylesheet"
-                   syntax := syntax_name.value + ".syntax"
+                   format := XLT.RuntimePath(style_name.value + ".stylesheet")
+                   syntax := XLT.RuntimePath(syntax_name.value + ".syntax")
                    Base := Base
 
                when ('Base' 'Style') where Style.kind = PT.xlTEXT then
                    style_name : Style as PT.text_tree
-                   format := style_name.value + ".stylesheet"
+                   format := XLT.RuntimePath(style_name.value + ".stylesheet")
                    Base := Base
 
            R : RD.renderer := RD.Open(format, syntax)

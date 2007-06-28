@@ -53,8 +53,7 @@ module XL.RENDERER with
          priority           : integer
     type renderer is access to renderer_data
 
-    function  Open(format : text := "xl.stylesheet";
-                   syntax : text := "xl.syntax") return renderer
+    function  Open(format : text := ""; syntax : text := "") return renderer
     procedure Close(toClose : renderer)
 
     procedure RenderTo(output : renderer; stream : IO.output_file)

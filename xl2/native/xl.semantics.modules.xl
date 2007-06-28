@@ -46,6 +46,7 @@ module XL.SEMANTICS.MODULES is
     //    Start with a '.' path
     // ------------------------------------------------------------------------
         modules_path += text "."
+        modules_path += XLT.RuntimePath(".")
         modules_path += text "library"
 
 
@@ -57,6 +58,20 @@ module XL.SEMANTICS.MODULES is
         new_path += path
         new_path += modules_path
         modules_path := new_path
+
+
+    procedure ReplacePath(oldPath : text; newPath : text) is
+    // ------------------------------------------------------------------------
+    //    Remove the given path if among the module paths
+    // ------------------------------------------------------------------------
+        new_paths : string of text
+        path      : text
+        for path in modules_path loop
+            if path = oldPath then
+                new_paths += newPath
+            else
+                new_paths += path
+        modules_path := new_paths
 
 
     function GetSymbols (Value    : PT.tree) return SYM.symbol_table is

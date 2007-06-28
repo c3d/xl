@@ -101,7 +101,7 @@ module XL.PARSER with
     type parser is access to parser_data
 
     // Creating a parser
-    function Open(name : text; syntax : text := "xl.syntax") return parser
+    function Open(name : text; syntax : text := "") return parser
     procedure Close(P : parser)
     function IsValid (P : parser) return boolean
     procedure ReadSyntaxFile (P : PR.parser; syntax : text)

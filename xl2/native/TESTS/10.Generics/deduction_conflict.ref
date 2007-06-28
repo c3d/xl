@@ -7,10 +7,10 @@
 10.Generics/deduction_conflict.xl:4: Generic parameter type 'something' 
 | generic type something
 |______________________^
-./xl_builtins.xs:34: cannot be both 'integer'
+library/runtime/default/./xl_builtins.xs:34: cannot be both 'integer'
 |     type integer                                                                                is XL.BYTECODE.xlint
 |________________^
-./xl_builtins.xs:36: and 'real' in the same instance
+library/runtime/default/./xl_builtins.xs:36: and 'real' in the same instance
 |     type real                                                                                   is XL.BYTECODE.xlreal
 |_____________^
 10.Generics/deduction_conflict.xl:6: 'Pang (A : something ; B : something) return boolean' could not be selected because

@@ -44,6 +44,7 @@ module XL.SEMANTICS.MACROS with
 
 
     procedure AddPath (path : text)
+    procedure ReplacePath (oldPath : text; newPath : text)
     procedure EnterMacro (kind : text; from : PT.tree; to : PT.tree)
     function Preprocess (input : PT.tree) return PT.tree
     function Include (filename : PT.tree) return PT.tree

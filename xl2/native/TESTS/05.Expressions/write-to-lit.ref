@@ -1,6 +1,6 @@
 05.Expressions/write-to-lit.xl:33: No translation found for '0 := B'
 |     0 := B
 |________^
-./xl_builtins.xs:34: 'integer' is not an instance of 'range'
+library/runtime/default/./xl_builtins.xs:34: 'integer' is not an instance of 'range'
 |     type integer                                                                                is XL.BYTECODE.xlint
 |________________^

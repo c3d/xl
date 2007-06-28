@@ -75,7 +75,9 @@ procedure Main is
     compile    : boolean := true
     transcode  : boolean := true
 
-    RD.DefaultRenderer := RD.Open("xl.stylesheet")
+    RD.DefaultRenderer := RD.Open(XLT.RuntimePath("xl.stylesheet"))
+    CG.InitializeBytecodeMap()
+
 
     for I in 1..Max-1 loop
         name : text := CS.arguments[i]
@@ -90,8 +92,11 @@ procedure Main is
         else if name = "-style" then
             if I + 1 <= Max - 1 then
                I += 1
+               styleName : text := CS.arguments[I]
+               styleFile : text := XLT.RuntimePath(styleName + ".stylesheet")
                RD.Close RD.DefaultRenderer
-               RD.DefaultRenderer := RD.Open(CS.arguments[I] + ".stylesheet")
+               RD.DefaultRenderer := RD.Open(styleFile,
+                                             XLT.RuntimePath("xl.syntax"))
         else if name = "-parse" then
             compile := false
             transcode := false
@@ -121,6 +126,10 @@ procedure Main is
                 I += 1
                 MDL.AddPath CS.arguments[I]
                 PPR.AddPath CS.arguments[I]
+        else if name = "-r" then
+            if I + 1 <= Max - 1 then
+                I += 1
+                XLT.ChangeRuntime CS.arguments[I]
         else if name = "-g" then
             CG.debug := true
         else if name = "-v" then

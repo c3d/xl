@@ -30,6 +30,7 @@ import POS = XL.SCANNER.POSITION
 import IO = XL.TEXT_IO
 import ASCII = XL.TEXT_IO.ENCODING.ASCII
 import ERR = XL.ERRORS
+import XLT = XL.TRANSLATOR
 
 module XL.CODE_GENERATOR is
 
@@ -130,16 +131,17 @@ module XL.CODE_GENERATOR is
     // ------------------------------------------------------------------------
     //   Read the xl.bytecode file to get the map formats
     // ------------------------------------------------------------------------
-        S      : SC.scanner := SC.Open "xl.bytecode"
+        S      : SC.scanner := SC.Open (XLT.RuntimePath("xl.bytecode"))
+        empty  : map[text, text]
 
         if not IO.valid S.input then
            ERR.Error "Unable to load xl.bytecode", -1
-           ERR.Error "For now, it must be in the current directory.", -1
-
+           return
         tok    : SC.token
         symbol : text
         had_nl : boolean := false
 
+        bytecode_formats := empty
         loop
             tok := SC.NextToken S
             exit if tok = SC.tokEOF or tok = SC.tokERROR
@@ -165,6 +167,21 @@ module XL.CODE_GENERATOR is
                 ERR.Error "Invalid formats in xl.bytecode", -1
 
         SC.Close S
+        XLT.runtime_name := bytecode_formats["runtime"]
+
+
+    function HasFormat(input : text) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if a given bytecode format exists
+    // ------------------------------------------------------------------------
+        return count(bytecode_formats, XLNormalize(input)) > 0
+
+
+    function Format(input : text) return text is
+    // ------------------------------------------------------------------------
+    //    Return a given bytecode format
+    // ------------------------------------------------------------------------
+        return bytecode_formats[XLNormalize(input)]
 
 
     procedure EmitSemanticsPlugins is
@@ -1298,7 +1315,7 @@ module XL.CODE_GENERATOR is
             Path      : text := PathList[I]
             Candidate : text := Path + "/" + filename
 
-            result := PR.Open(Candidate)
+            result := PR.Open(Candidate, XLT.RuntimePath("xl.syntax"))
 
             CurrentScanner : SC.scanner := result.scanner
             exit if IO.valid CurrentScanner.input

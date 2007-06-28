@@ -30,6 +30,9 @@ module XL.CODE_GENERATOR with
 
     procedure Transcode (input : BC.bytecode; file : IO.output_file)
     procedure Generate  (input : BC.bytecode; file : IO.output_file)
+    function HasFormat(input : text) return boolean
+    function Format(input : text) return text
+    procedure InitializeBytecodeMap()
     semantics_translations_init : text
     initializations             : text
     terminations                : text

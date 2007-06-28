@@ -46,10 +46,15 @@ module XL.TRANSLATOR with
     top_context       : SYM.symbol_table := nil
     full_compile      : boolean := false
     verbose           : boolean := false
+    runtime           : text := "default"
+    runtime_name      : text := ""
 
     nop               : BC.bytecode
 
     procedure InitializeTranslator
+
+    procedure ChangeRuntime(newRuntime : text)
+    function RuntimePath(fileName : text) return text
 
     // Invokation of Semantics on scopes
     // In XL, all symbols in a scope are visible within that scope

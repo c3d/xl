@@ -19,22 +19,22 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 1.3 $
+// * Date       : $Date: 2004/09/09 21:05:57 $
 // ****************************************************************************
 
 // Display in lispish notation
-infix  = "(infix " self indent nl left nl right unindent ")"
-prefix = "(prefix" indent nl left nl right unindent ")"
-block  = "(block" opening " " closing indent nl child unindent ")"
+infix  = "(infix " self ")"
+prefix = "(prefix)"
+block  = "(block" opening " " closing")"
 
 cr     = "<CR>"
 nl     = newline indents
 indent = indent nl
 unindent = unindent nl
 indents = " "
-"block I+ I-" = "(block indent" indent nl child unindent ")"
-"block  ( ) " = "(implicit ()" indent nl child unindent ")"
+"block I+ I-" = "(block indent)"
+"block  ( ) " = "(implicit ())"
 
 begin = newline
 end = newline newline

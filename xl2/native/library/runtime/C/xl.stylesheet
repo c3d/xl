@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 155 $
+// * Date       : $Date: 2005-12-01 08:37:13 +0100 (Thu, 01 Dec 2005) $
 // ****************************************************************************
 
 // Nothing really special here...
@@ -32,7 +32,6 @@ cr     = newline indents
 indent = indent cr
 unindent = unindent cr
 indents = "    "
-"block I+ I-" = child
-"block  ( ) " = child
-"?wildcard?" = self
-"prefix @" = right
+"block I+ I-" = indent cr child unindent cr
+"block  ( ) " = "(" child ")"
+"?wildcard?" = "'" self "'"

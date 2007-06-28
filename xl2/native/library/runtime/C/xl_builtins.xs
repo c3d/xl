@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 305 $
+// * Date       : $Date: 2007-06-20 08:51:09 +0200 (Wed, 20 Jun 2007) $
 // ****************************************************************************
 
 module XL_BUILTINS with

@@ -29,6 +29,8 @@ import IO = XL.TEXT_IO
 import SC = XL.SCANNER
 import ERR = XL.ERRORS
 import ASCII = XL.TEXT_IO.ENCODING.ASCII
+import XLT = XL.TRANSLATOR
+
 
 module XL.RENDERER is
 // ----------------------------------------------------------------------------
@@ -181,11 +183,15 @@ module XL.RENDERER is
             EnterFormats formats, R
 
 
-    function  Open(format : text; syntax : text) return renderer is
+    function Open(format : text; syntax : text) return renderer is
     // ------------------------------------------------------------------------
     //    Create a renderer with the default output stream
     // ------------------------------------------------------------------------
         result.output := IO.standard_output
+        if format = "" then
+            format := XLT.RuntimePath("xl.stylesheet")
+        if syntax = "" then
+            syntax := XLT.RuntimePath("xl.syntax")
         ReadSyntaxFile result, syntax
         ReadRenderingFile result, format
 

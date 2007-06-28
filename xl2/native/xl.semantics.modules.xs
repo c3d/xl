@@ -29,6 +29,7 @@ module XL.SEMANTICS.MODULES with
 
     modules_path : string of text
     procedure AddPath (path : text)
+    procedure ReplacePath (oldPath : text; newPath : text)
     function AddBuiltins(Input : PT.tree) return PT.tree
     function InXlBuiltinsModule() return boolean 
     function GetSymbols (value : PT.tree) return SYM.symbol_table

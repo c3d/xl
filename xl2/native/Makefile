@@ -118,7 +118,7 @@ regression: ALWAYS
 	cd TESTS; time ./alltests
 ALWAYS:
 
-prebuild: xl_lib.h xl.syntax
+prebuild: xl_lib.h xl.syntax # These are used for the native build
 xl_lib.h:
 	ln -sf ../xl_lib.h .
 xl.syntax:

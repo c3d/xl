@@ -13,7 +13,7 @@
 04.Lookup/type_redefined.xl:37: No translation found for 'result := integer ( )'
 |    type integer
 |___^
-./xl_builtins.xs:34: 'integer' is not an instance of 'range'
+library/runtime/default/./xl_builtins.xs:34: 'integer' is not an instance of 'range'
 |     type integer                                                                                is XL.BYTECODE.xlint
 |________________^
 04.Lookup/type_redefined.xl:37: The type 'integer' can't be defined here
@@ -25,6 +25,6 @@
 04.Lookup/type_redefined.xl:38: No translation found for 'L := integer ( )'
 |    L : integer
 |____^
-./xl_builtins.xs:34: 'integer' is not an instance of 'range'
+library/runtime/default/./xl_builtins.xs:34: 'integer' is not an instance of 'range'
 |     type integer                                                                                is XL.BYTECODE.xlint
 |________________^
