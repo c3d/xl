@@ -1,0 +1,256 @@
+// ****************************************************************************
+//  xl.bytecode                     (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Bytecode format strings
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU Genral Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision: 299 $
+// * Date       : $Date: 2007-06-14 22:36:13 +0200 (Thu, 14 Jun 2007) $
+// ****************************************************************************
+
+RUNTIME         "Java"
+
+xcinit          "*** CANNOT USE XL2C FOR JAVA ***"
+xcterm          "*** CANNOT USE XL2C FOR JAVA ***"
+
+init            "$= xlint8      char"
+                "$= xlint16     short"
+                "$= xlint32     int"
+                "$= xlint64     long"
+                "$= xluint8     unsigned char"
+                "$= xluint16    unsigned short"
+                "$= xluint32    unsigned int"
+                "$= xluint64    unsigned long"
+                "$= xlreal32    float"
+                "$= xlreal64    double"
+                "$= xlint       int"
+                "$= xluint      unsigned"
+                "$= xlreal      double"
+                "$= xlbool      boolean"
+                "$= xlchar      char"
+                "$= xltext      String"
+
+                "class xlrecord{}"
+                "class xlmodule{}"
+                "class xlfile{}"
+                "class xlptr{}"
+
+                "class XLProgram"
+                "{"
+
+                "public static char make_char() { return (char) 0; }"
+                "public static short make_short() { return (short) 0; }"
+                "public static int make_int() { return 0; }"
+                "public static long make_long() { return (long) 0; }"
+                "public static float make_float() { return (float) 0; }"
+                "public static double make_double() { return (double) 0; }"
+                "public static boolean make_boolean() { return false; }"
+
+                "public static xlmodule make_xlmodule() { return null; }"
+                "public static xlrecord make_xlrecord() { return null; }"
+                "public static xlfile make_xlfile() { return null; }"
+                "public static xlptr make_xlptr() { return null; }"
+
+term            "}/*end*/"
+
+stdin           "$1 = null;"
+stdout          "$1 = null;"
+stderr          "$1 = null;"
+OpenFile        "$1 = new xlfile();"
+CloseFile       "$1 = null;"
+PutChar         "System.out.print("""" + (char) $1);"
+PutReal         "System.out.print("""" + $1);"
+PutString       "System.out.print($1);"
+
+
+nop             ""
+decl            ""
+type            "/* Type */"
+error           "/* ERROR */"
+value           "/* Value: $1 */"
+write           "/* Write: $1 */"
+
+type_decl       "public static class $1 {}"
+
+ref_decl        "/* $1 $2; Ref */"
+temp_decl       "$1 $2 = make_$1(); /* Temp */"
+local_decl      "$1 $2 = make_$1(); /* Local */"
+result_decl     "$1 $2 = make_$1(); /* Result */"
+parm_decl       "/* $1 $2; Parm */"
+global_decl     "public static $1 $2 = make_$1(); /* Global */"
+field_decl      "$1 $2; /* Field */"
+
+fn_ret0         "public static void "
+fn_ret1         "public static $1 "
+fn_retN_begin   "public static class Ret_$1 {${"
+fn_retN_decl    "$1 $2;"
+fn_retN_end     "$}} /* $1 */"
+fn_retN         "public static Ret_$1 "
+fn_name         "$1 "
+fn_ptr_name     "$1 $=$1 int "
+fn_begin_parms  "(${ "
+fn_parm         "$[, ]$1 $2 "
+fn_end_parms    "$}) "
+
+fn_decl_begin   "/* FNDECL: "
+fn_decl_end     "; */"
+fn_ptr_begin   "/* FNTYPE:  "
+fn_ptr_end     "*/"
+
+fn_body_begin   ""
+fn_body         "{"
+fn_entry        "int goto_target = 0;"
+                "boolean running = true;"
+                "while(running) switch(goto_target) {"
+                "case 0:"
+fn_exit         "case -1: running = false; /* exit label */"
+                "} /* while(running) */"
+fn_body_end     "}"
+
+native_Java     ""
+if_rename       "/* if */"
+while_rename    "/* while */"
+case_rename     "/* case */"
+caseexit_rename "/* case exit */"
+
+record_begin    "public static class $1 {"
+record_field    "public $2 $3 = make_$2(); /* RecF */"
+record_end      "} /* $1 */"
+                "public static $1 make_$1() { return new $1(); }"
+
+field           "$= $1 ($2.$3)"
+
+call_begin      ""
+call_ret1_decl  "$1 $2; /* Ret */"
+call_retN_decl  "Ret_$1 $2;"
+call_ret1       "$2 = "
+call_retN       "$2 = "
+call_args_begin "$1 (${ "
+call_arg        "$[, ]$2 "
+call_args_end   ")$};"
+call_outtype    ""
+call_outarg1    "$1 = $2;"
+call_outargN    "$1 = $2.$3;"
+call_end        ""
+
+entry_ret1_decl "$1 $2 = new $1(); /* Out=Ret */"
+entry_retN_decl "Ret_$1 RetVal_$1 = new Ret_$1();"
+entry_retN_loc  "$1 $2;"
+exit_ret1       "return $1;"
+exit_retN_set   "RetVal_$1.$2 = $3;"
+exit_retN       "return RetVal_$1;"
+
+goto_exit       "goto_target = -1; continue;"
+
+if              "if($1) { goto_target = $2*5; continue; }"
+ifnot           "if(!($1)) { goto_target = $2*5; continue; }"
+ifskip          "goto_target = $1*5+1; continue;"
+ifelse          "case $1*5: do{} while(false); /* else */"
+ifend           "case $1*5+1: do{} while(false); /* end if */"
+
+case_begin      "switch($2) {"
+case_entry      "case $2:"
+case_exit       "break;"
+case_def_entry  "default:"
+case_def_exit   "break;"
+case_end        "}"
+
+loopentry       "case $1*5: do {} while(false); /* loop entry */"
+loopagain       "goto_target = $1*5; continue;"
+loopskip        "goto_target = $1*5+2; continue;"
+loopend         "case $1*5+2: do{} while(false); /* Loop end */"
+loopif          "if ($1) { goto_target = $2*5; continue; }"
+loopifnot       "if (!($1)) { goto_target = $2*5; continue; }"
+loopexit        "case $1*5+1: do{} while(false); /* loopexit */"
+exitloop        "goto_target = $1*5+1; continue; /* loopexit */"
+
+main_begin      "public static void main(String args[])"
+                "{"
+main_entry      "    /* Main */"
+                "    int goto_target = 0;"
+                "    boolean running = true;"
+                "    while(running) switch(goto_target) {"
+                "    case 0:"
+main_end        "    /* End of main */"
+                "    case -1: running = false; /* exit label */"
+                "    } /* while(running) */"
+                "}"
+
+xltest          "System.out.println($1);"
+
+
+zero_int        "$1 = 0;"
+copy_int        "$1 = $2;"
+adds_int        "$1 = $1 + $2;"
+subs_int        "$1 = $1 - $2;"
+muls_int        "$1 = $1 * $2;"
+divs_int        "$1 = $1 / $2;"
+add_int         "$1 = $2 + $3;"
+sub_int         "$1 = $2 - $3;"
+mul_int         "$1 = $2 * $3;"
+div_int         "$1 = $2 / $3;"
+mod_int         "$1 = $2 % $3;"
+equ_int         "$1 = $2 == $3;"
+lt_int          "$1 = $2 < $3;"
+gt_int          "$1 = $2 > $3;"
+le_int          "$1 = $2 <= $3;"
+ge_int          "$1 = $2 >= $3;"
+ne_int          "$1 = $2 != $3;"
+neg_int         "$1 = -$2;"
+
+zero_real        "$1 = 0.0;"
+copy_real        "$1 = $2;"
+adds_real        "$1 = $1 + $2;"
+subs_real        "$1 = $1 - $2;"
+muls_real        "$1 = $1 * $2;"
+divs_real        "$1 = $1 / $2;"
+add_real         "$1 = $2 + $3;"
+sub_real         "$1 = $2 - $3;"
+mul_real         "$1 = $2 * $3;"
+div_real         "$1 = $2 / $3;"
+equ_real         "$1 = $2 == $3;"
+lt_real          "$1 = $2 < $3;"
+gt_real          "$1 = $2 > $3;"
+le_real          "$1 = $2 <= $3;"
+ge_real          "$1 = $2 >= $3;"
+ne_real          "$1 = $2 != $3;"
+neg_real         "$1 = -$2;"
+
+zero_bool        "$1 = false;"
+copy_bool        "$1 = $2;"
+not_bool         "$1 = !$2;"
+and_bool         "$1 = $2 && $3;"
+or_bool          "$1 = $2 && $3;"
+xor_bool         "$1 = !$2 != !$3;"
+
+zero_char        "$1 = 0;"
+int_to_char      "$1 = (char) $2;"
+char_to_int      "$1 = (int) $2;"
+int_to_real      "$1 = (double) $2;"
+real_to_int      "$1 = (int) $2;"
+
+zero_ptr         "$1 = null;"
+copy_ptr         "$1 = $2;"
+
+array_type       "public static class $1 { $3 values[$2]; }"
+
+xl_assert        "System.out.println($2 + "":"" + $3 + "": "
+                 "                   ""Assertion failure: "" + $1);"
+                 "abort();"
+
+put_real        "System.out.print("""" + $2);"

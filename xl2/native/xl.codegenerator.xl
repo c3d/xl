@@ -239,8 +239,8 @@ module XL.CODE_GENERATOR is
         InitializeRenames
         InitializeBytecodeMap
 
-        IO.writeln bytecode_formats["xcinit"]
-        IO.writeln bytecode_formats["init"]
+        XL2C_Asm parse_tree(xcinit), nil, nil, nil, nil
+        XL2C_Asm parse_tree(init), nil, nil, nil, nil
 
         XL2C input
         XL2C_PendingImports
@@ -248,8 +248,8 @@ module XL.CODE_GENERATOR is
         EmitSemanticsPlugins
         EmitXLInitAndTerm
 
-        IO.writeln bytecode_formats["term"]
-        IO.writeln bytecode_formats["xcterm"]
+        XL2C_Asm parse_tree(term), nil, nil, nil, nil
+        XL2C_Asm parse_tree(xcterm), nil, nil, nil, nil
 
         IO.standard_output := old_stdout
 
@@ -310,9 +310,9 @@ module XL.CODE_GENERATOR is
 
         InitializeBytecodeMap
 
-        IO.writeln bytecode_formats["init"]
+        XL2C_Asm parse_tree(init), nil, nil, nil, nil
         Generate input
-        IO.writeln bytecode_formats["term"]
+        XL2C_Asm parse_tree(term), nil, nil, nil, nil
 
         IO.standard_output := old_stdout
 
@@ -361,7 +361,6 @@ module XL.CODE_GENERATOR is
                 result += C
 
 
-    disable_semicolon : boolean := false
     separator_stack : string of boolean
     function XL2C_AsmText (arg : PT.tree) return text is
     // ------------------------------------------------------------------------
@@ -408,6 +407,10 @@ module XL.CODE_GENERATOR is
         noNewLine : boolean := true
         skipMode  : boolean := false
         copyMode  : boolean := false
+        keyMode   : boolean := false
+        key       : text := ""
+        saveFmt   : text := ""
+        CR        : character := ASCII.CR[0]
 
         // Get message and perform substitution
         Max := length format
@@ -421,6 +424,13 @@ module XL.CODE_GENERATOR is
                     copyMode := false
                 else
                     fmt += C
+            else if keyMode and C = ' ' then
+                if fmt <> "" then
+                    key := fmt
+                    fmt := ""
+                    keyMode := false
+                    while I+1 < Max-1 and format[I+1] = ' ' loop
+                        I += 1
             else if C = '$' then
                 if hadDollar then
                     fmt += "$"
@@ -434,7 +444,11 @@ module XL.CODE_GENERATOR is
                         ERR.Error "Missing bytecode argument in '$1' ($2>=$3)",
                             name,PT.NewInteger(idx),PT.NewInteger(size(args))
                     else
-                        fmt += args[integer(C) - integer('1')]
+                        arg    : text := args[integer(C) - integer('1')]
+                        argKey : text := text("$") + arg
+                        if count(bytecode_formats, argKey) > 0 then
+                            arg := bytecode_formats[argKey]
+                        fmt += arg
                 else if C = '{' then
                     separator_stack += false
                 else if C = '}' then
@@ -447,19 +461,46 @@ module XL.CODE_GENERATOR is
                         skipMode := true
                         pop_back separator_stack
                         separator_stack += true
+                else if C = '=' then
+                    if key <> "" then
+                        key := text("$") + key
+                        bytecode_formats[key] := fmt
+                        fmt := saveFmt
+                    keyMode := true
+                    key := ""
+                    saveFmt := fmt
+                    fmt := ""
+                else if C = ';' then
+                    if key <> "" then
+                        key := text("$") + key
+                        bytecode_formats[key] := fmt
+                        fmt := saveFmt
+                    keyMode := false
+                    key := ""
                 else
                     ERR.Error "Invalid format for '$1'", name
                 hadDollar := false
+            else if C = CR and key <> "" then
+                key := text("$") + key
+                bytecode_formats[key] := fmt
+                fmt := saveFmt
+                keyMode := false
+                key := ""
             else
                 fmt += C
             noNewLine := C = ' '
+
+        // Check if we were defining a key
+        if key <> "" then
+            key := text("$") + key
+            bytecode_formats[key] := fmt
+            fmt := saveFmt
 
         // Output result
         if noNewLine then
             IO.Write fmt
         else
             IO.WriteLn fmt
-        disable_semicolon := true
 
 
     last_position : integer := -1
@@ -483,8 +524,7 @@ module XL.CODE_GENERATOR is
             name : input as PT.name_tree
             if name.value <> "return" then
                 IO.write "()"
-        if not disable_semicolon then
-            IO.writeln ";"
+        IO.writeln ";"
 
 
     procedure XL2C_Body (input : BC.bytecode; in_fn : boolean) is

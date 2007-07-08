@@ -206,7 +206,7 @@ module XL.CODE_GENERATOR.MACHINE is
                         @fn_retN_decl 'ParmType' 'ParmName'
             retDecl := parse_tree
                 'retDecl'
-                @fn_retN_end
+                @fn_retN_end 'BaseName'
             XLT.AddGlobalDecl retDecl
             result := XLT.Append(result, parse_tree(@fn_retN 'BaseName'))
 
@@ -303,7 +303,7 @@ module XL.CODE_GENERATOR.MACHINE is
 
         Body := parse_tree
             'Body'
-            @exit_label 'mname'
+            @fn_exit 'mname'
 
         // Copy post-conditions
         for condition in f.postconditions loop

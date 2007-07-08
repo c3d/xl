@@ -150,8 +150,8 @@ module XL.TRANSLATOR is
         result := Append(decls, input)
         result := Append(result, parse_tree(@main_begin))
         result := Append(result, locals)
+        result := Append(result, parse_tree(@main_entry))
         result := Append(result, inits)
-        result := Append(result, parse_tree(@main_invoke))
         result := Append(result, terms)
         result := Append(result, parse_tree(@main_end))
 

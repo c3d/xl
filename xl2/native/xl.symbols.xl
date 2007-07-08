@@ -25,6 +25,7 @@
 
 import PT = XL.PARSER.TREE
 import ERR = XL.ERRORS
+import CG = XL.CODEGENERATOR
 
 
 module XL.SYMBOLS is
@@ -699,6 +700,8 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
         unique_id += 1
         base += "_"  // Invalid in XL names, but valid in most back-ends
+        if CG.HasFormat(base + "rename") then
+            base := CG.Format(base + "rename")
         base += text(unique_id)
         return PT.NewName (base, pos)
 

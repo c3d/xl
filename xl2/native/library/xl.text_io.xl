@@ -6,7 +6,7 @@
 //   File Description:
 // 
 //     Implementation of text I/O
-//     This is roughly equivalent to the file portion of C stdio.h
+//     This uses runtime-dependent primitives that are defined in the bytecode
 // 
 // 
 // 
@@ -27,12 +27,14 @@ module XL.TEXT_IO is
 
     type file is XL.BYTECODE.xlfile
 
-    function File (Name, Mode : text) return file is C.fopen
-    function FileClose(F : file) return integer is C.fclose
-    procedure Delete (F : file) is
-        dummy : integer := FileClose(F)
+    function File (Name, Mode : text) return file is XL.BYTECODE.OpenFile
+    procedure Delete (F : file) is XL.BYTECODE.CloseFile
     to Copy(out Tgt : file;
             in  Src : file) written Tgt := Src is XL.BYTECODE.copy_ptr
+    to PutCharInFile(C : integer; F : file) is XL.BYTECODE.PutChar
+    to PutRealInFile(X : real; F : file) is XL.BYTECODE.PutReal
+    to PutStringInFile (S : text; F : file) is XL.BYTECODE.PutString
+
 
 
     // ========================================================================
@@ -48,13 +50,11 @@ module XL.TEXT_IO is
         return
 
 
-    function PutCharInFile(C : integer; F : file) return integer is C.fputc
-
     to Write(F : file; C : character) is
     // ------------------------------------------------------------------------
     //    Write a single character
     // ------------------------------------------------------------------------
-        dummy : integer := PutCharInFile (integer(C), F)
+        PutCharInFile integer(C), F
 
 
     to Write(F : file; N : integer) is
@@ -62,32 +62,28 @@ module XL.TEXT_IO is
     //    Writing an integer
     // ------------------------------------------------------------------------
         if N < 0 then
-            dummy : integer := PutCharInFile (integer('-'), F)
+            PutCharInFile integer('-'), F
             N := - N
 
         base    : integer := 10
         if N / base <> 0 then
             Write F, N/base
         N := N mod base
-        N := PutCharInFile(N + integer('0'), F)
+        PutCharInFile N + integer('0'), F
 
-
-    to PutRealInFile(F : file; X : real) is XL.BYTECODE.put_real
 
     to Write(F : file; N : real) is
     // ------------------------------------------------------------------------
     //   Writing a real number 
     // ------------------------------------------------------------------------
-        PutRealInFile F, N
+        PutRealInFile N, F
 
-
-    function PutStringInFile (S : text; F : file) return integer is C.fputs
 
     to Write(F : file; S : text) is
     // ------------------------------------------------------------------------
     //    Writing a text
     // ------------------------------------------------------------------------
-        dummy : integer := PutStringInFile (S, F)
+        PutStringInFile S, F
 
 
     to Write(F : file; W : writable; ...) is

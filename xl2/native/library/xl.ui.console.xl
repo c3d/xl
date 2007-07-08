@@ -25,13 +25,15 @@
 
 module XL.UI.CONSOLE is
 
-    function GetStdFile (index : integer) return IO.file is XL.BYTECODE.stdfile
+    function GetStdIn () return IO.file is XL.BYTECODE.stdin
+    function GetStdOut () return IO.file is XL.BYTECODE.stdout
+    function GetStdErr () return IO.file is XL.BYTECODE.stderr
     to Copy(out Tgt : IO.file;
             in  Src : IO.file) written Tgt := Src is XL.BYTECODE.copy_ptr
 
-    StandardInput  : IO.file := GetStdFile(0)
-    StandardOutput : IO.file := GetStdFile(1)
-    StandardError  : IO.file := GetStdFile(2)
+    StandardInput  : IO.file := GetStdIn()
+    StandardOutput : IO.file := GetStdOut()
+    StandardError  : IO.file := GetStdErr()
 
 
     to Write (...) is
