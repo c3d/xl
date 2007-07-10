@@ -64,6 +64,7 @@ CloseFile       "fclose($1);"
 PutChar         "fputc($1, $2);"
 PutReal         "fprintf($2, ""%g"", $1);"
 PutString       "fputs($1, $2);"
+PutNewLine      "fputc('\n', $1);"
 
 nop             ""
 decl            ""
@@ -137,9 +138,13 @@ goto_exit       "goto exit_$1;"
 
 if              "if($1) goto else_$2;"
 ifnot           "if(!($1)) goto else_$2;"
-ifskip          "goto endif_$1;"
 ifelse          "else_$1: 0;"
 ifend           "endif_$1: 0;"
+ifendelse       "else_$1: 0;"
+
+cases           ""
+caseskip        "goto end_$1;"
+casesend        "end_$1: 0;"
 
 case_begin      "switch($2) {"
 case_entry      "case $2:"

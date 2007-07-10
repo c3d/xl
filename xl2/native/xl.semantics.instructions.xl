@@ -140,7 +140,6 @@ module XL.SEMANTICS.INSTRUCTIONS is
                 result := parse_tree
                     @ifnot 'Test' 'label'
                     'TrueCase'
-                    @ifskip 'label'
                     @ifelse 'label'
                     'FalseCase'
                     @ifend 'label'
@@ -148,13 +147,13 @@ module XL.SEMANTICS.INSTRUCTIONS is
                 result := parse_tree
                     @ifnot 'Test' 'label'
                     'TrueCase'
-                    @ifelse 'label'
+                    @ifendelse 'label'
         else if FalseCase <> nil then
             FalseCase := XLT.ScopeSemantics(FalseCase, XLT.scopeLocal)
             result := parse_tree
                 @if 'Test' 'label'
                 'FalseCase'
-                @ifelse 'label'
+                @ifendelse 'label'
         else
             // Degenerate case...
             result := parse_tree(@nop)
@@ -299,12 +298,13 @@ module XL.SEMANTICS.INSTRUCTIONS is
                 else
                     Case2 := nil
                 return XLT.Append(Case1, Case2)
+            // REVISIT: Why do we need 'default', when 'true' does it?
             when
                 default : 'Statement'
             then
                 result := XLT.ScopeSemantics(Statement, XLT.scopeLocal)
                 result := XLT.Append(result,
-                                     parse_tree(@ifskip 'exitL'))
+                                     parse_tree(@caseskip 'exitL'))
                 PT.AttachTree result, "TRUE_CASE", result
                 return result
             when
@@ -320,7 +320,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
                     if CST.IsTrue(TestConstant) then
                         result := XLT.ScopeSemantics(Statement, XLT.scopeLocal)
                         result := XLT.Append(result,
-                                             parse_tree(@ifskip 'exitL'))
+                                             parse_tree(@caseskip 'exitL'))
                         PT.AttachTree result, "TRUE_CASE", result
                         return result
                     else if CST.IsFalse(TestConstant) then
@@ -342,8 +342,8 @@ module XL.SEMANTICS.INSTRUCTIONS is
                 result := parse_tree
                     @ifnot 'Test' 'label'
                     'Statement'
-                    @ifskip 'exitL'
-                    @ifelse 'label'
+                    @caseskip 'exitL'
+                    @ifendelse 'label'
                 return XLT.Append(prefix, result)
 
         ERR.Error "'$1' is not a valid case", Cases
@@ -356,7 +356,8 @@ module XL.SEMANTICS.INSTRUCTIONS is
     // ------------------------------------------------------------------------
         exitL  : PT.name_tree := SYM.Temporary("case_exit", Cases.position)
         result := DoCase(Cases, exitL)
-        result := XLT.Append(result, parse_tree(@ifend 'exitL'))
+        result := XLT.Append(parse_tree(@cases 'exitL'), result)
+        result := XLT.Append(result, parse_tree(@casesend 'exitL'))
 
 
     procedure SplitCases (Cases         : PT.tree;

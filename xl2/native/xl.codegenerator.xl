@@ -411,6 +411,7 @@ module XL.CODE_GENERATOR is
         key       : text := ""
         saveFmt   : text := ""
         CR        : character := ASCII.CR[0]
+        lastWasCR : boolean := false
 
         // Get message and perform substitution
         Max := length format
@@ -445,9 +446,10 @@ module XL.CODE_GENERATOR is
                             name,PT.NewInteger(idx),PT.NewInteger(size(args))
                     else
                         arg    : text := args[integer(C) - integer('1')]
-                        argKey : text := text("$") + arg
-                        if count(bytecode_formats, argKey) > 0 then
-                            arg := bytecode_formats[argKey]
+                        if not keyMode then
+                            argKey : text := text("$") + arg
+                            if count(bytecode_formats, argKey) > 0 then
+                                arg := bytecode_formats[argKey]
                         fmt += arg
                 else if C = '{' then
                     separator_stack += false
@@ -464,6 +466,8 @@ module XL.CODE_GENERATOR is
                 else if C = '=' then
                     if key <> "" then
                         key := text("$") + key
+                        if lastWasCR then
+                            fmt := fmt[0..length(fmt)-2]
                         bytecode_formats[key] := fmt
                         fmt := saveFmt
                     keyMode := true
@@ -480,21 +484,17 @@ module XL.CODE_GENERATOR is
                 else
                     ERR.Error "Invalid format for '$1'", name
                 hadDollar := false
-            else if C = CR and key <> "" then
-                key := text("$") + key
-                bytecode_formats[key] := fmt
-                fmt := saveFmt
-                keyMode := false
-                key := ""
             else
                 fmt += C
-            noNewLine := C = ' '
+                lastWasCR := C = CR
+                noNewLine := C = ' '
 
         // Check if we were defining a key
         if key <> "" then
             key := text("$") + key
             bytecode_formats[key] := fmt
             fmt := saveFmt
+            noNewLine := fmt = ""
 
         // Output result
         if noNewLine then

@@ -34,6 +34,7 @@ module XL.TEXT_IO is
     to PutCharInFile(C : integer; F : file) is XL.BYTECODE.PutChar
     to PutRealInFile(X : real; F : file) is XL.BYTECODE.PutReal
     to PutStringInFile (S : text; F : file) is XL.BYTECODE.PutString
+    to PutNewLineInFile(F : file) is XL.BYTECODE.PutNewLine
 
 
 
@@ -99,4 +100,4 @@ module XL.TEXT_IO is
     //   Write elements with CR at end
     // ------------------------------------------------------------------------
         Write F, ...
-        Write F, character(10)
+        PutNewLineInFile F
