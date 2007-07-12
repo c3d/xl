@@ -361,6 +361,19 @@ module XL.SEMANTICS.TYPES.RECORDS is
         list     : PT.tree_list
         insts    : PT.tree_list
         selected : PT.tree
+        hasDeref : boolean := true
+        maxDeref : integer := 30
+
+        // First look for "dereference" functions
+        while hasDeref loop
+            DerefCall : PT.tree := parse_tree(dereference 'Record')
+            DerefCall := XLT.TentativeSemantics(DerefCall)
+            hasDeref := DerefCall <> nil
+            if hasDeref then
+                maxDeref := maxDeref - 1
+                if maxDeref <= 0 then
+                    hasDeref := false
+                Record := DerefCall
 
         RecordDeclarations Record, Field, "DECL", list, symbols
 
@@ -441,11 +454,6 @@ module XL.SEMANTICS.TYPES.RECORDS is
         // Save existing context, including global decls
         context : SYM.symbol_table := XLT.context
         globals : SYM.symbol_table := XLT.global_context
-        init    : PT.tree := SYM.ScopeItems(XLT.main_context, "MAIN_INIT")
-        term    : PT.tree := SYM.ScopeItems(XLT.main_context, "MAIN_TERM")
-        decl    : PT.tree := SYM.ScopeItems(XLT.main_context, "MAIN_DECL")
-        locals  : PT.tree := SYM.ScopeItems(XLT.main_context, "MAIN_LOCALS")
-        body    : PT.tree := SYM.ScopeItems(XLT.main_context, "MAIN_BODY")
 
         // Create new symbol table
         newsyms : SYM.symbol_table := SYM.NewSymbolTable(context)
@@ -455,18 +463,14 @@ module XL.SEMANTICS.TYPES.RECORDS is
         trace[defaultfns] "In ", newsyms, "-", globals, " entering: ", source
 
         // Try to evaluate the tentative function
-        ERR.PushErrorContext()
+        tentative : XLT.tentative_translation := XLT.BeginTentative()
         result := XLT.XLDeclarations(source)
         result := XLT.XLSemantics(result)
+        hadError : boolean := XLT.EndTentative(tentative)
         XLT.context := context
         XLT.global_context := globals
-        if ERR.PopErrorContext() then
+        if hadError then
             trace[defaultfns] "Error: ", ERR.GetLastErrorsText()
-            SYM.SetProperty XLT.main_context, "MAIN_INIT", init
-            SYM.SetProperty XLT.main_context, "MAIN_TERM", term
-            SYM.SetProperty XLT.main_context, "MAIN_DECL", decl
-            SYM.SetProperty XLT.main_context, "MAIN_BODY", body
-            SYM.SetProperty XLT.main_context, "MAIN_LOCALS", locals
             return nil
 
         trace[defaultfns] "Code: ", result
@@ -544,8 +548,8 @@ module XL.SEMANTICS.TYPES.RECORDS is
             if not TY.SameType (F.type, TY.type_of_records) then
                 fname : PT.tree := PT.Clone(F.name)
                 dtorCall : PT.tree := parse_tree
-                    {tentative} delete this.'fname'
-                result := XLT.Append(result, dtorCall)
+                    delete this.'fname'
+                result := XLT.Append(result, XLT.TentativeSemantics(dtorCall))
 
         // If we found any, then generate a 'delete' procedure here
         if result <> nil then

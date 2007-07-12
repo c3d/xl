@@ -135,12 +135,11 @@ module XL.SEMANTICS is
     //   This is used for default constructors and destructors
 
         when ('thing') then
-            ERR.PushErrorContext ()
+            tentative : XLT.tentative_translation := XLT.BeginTentative()
             phase : text := SYM.GetText(XLT.context, "PHASE")
             result := SYM.LookupRewrite(XLT.context, phase, thing)
-            if ERR.PopErrorContext() then
+            if XLT.EndTentative(tentative) then
                 result := parse_tree(@nop)
             else if result = thing then
                 result := parse_tree({tentative} 'result')
                 PT.AttachTree result, "PRAGMA_RESULT", result
-

@@ -488,7 +488,7 @@ module XL.SEMANTICS.GENERICS is
         Source.position := SourcePosition
 
         // Process the instantiated declaration
-        ERR.PushErrorContext()
+        tentative : XLT.tentative_translation := XLT.BeginTentative()
 
         Init : PT.tree := PT.Clone(Decl.initializer)
         trace[inst] "GenDecl ", Name, " : ", Type, " is ", Init
@@ -511,6 +511,10 @@ module XL.SEMANTICS.GENERICS is
                 for I in 0..NP-1 loop
                     P : DCL.declaration := gtp.parameters[I]
                     A : PT.tree := Args[P.name]
+                    if TY.IsTypeType(P.type) then
+                        typeArg : TY.any_type := TY.EvaluateType(A)
+                        if typeArg <> nil and typeArg.machine_name <> nil then
+                            A := typeArg.machine_name
                     instCode := parse_tree('instCode' 'A')
                 instCode := parse_tree(@ 'instCode' 'instName')
                 tp : TY.any_type := TY.NewType(instName)
@@ -538,7 +542,7 @@ module XL.SEMANTICS.GENERICS is
                 TY.SetDefinedType Source, tp
 
         // Cache the result for next time
-        if ERR.PopErrorContext() then
+        if XLT.EndTentative(tentative) then
             errors : text := ERR.GetLastErrorsText()
             errorText : PT.text_tree := PT.NewText(errors,'"',result.position)
             result := parse_tree(@error 'errorText')
@@ -661,13 +665,13 @@ module XL.SEMANTICS.GENERICS is
         trace[inst] "Validation entered decl ", Decl
 
         // Check the validation
-        ERR.PushErrorContext()
         XLT.context := instContext
+        tentative : XLT.tentative_translation := XLT.BeginTentative()
         valid : PT.tree := PT.Clone(GenType.validation)
         trace[inst] "Validation: ", valid
         valid := XLT.XLDeclarations(valid)
         valid := XLT.XLSemantics(valid)
-        if ERR.PopErrorContext() then
+        if XLT.EndTentative(tentative) then
             trace[inst] "Errors during validation, result=", valid
             ERR.Error "Generic validation failed for '$1'", IName
             ERR.DisplayLastErrors()
@@ -826,9 +830,9 @@ module XL.SEMANTICS.GENERICS is
                                 result := false
                             exit if not result
                     if result then
-                        ERR.PushErrorContext()
+                        tnt : XLT.tentative_translation := XLT.BeginTentative()
                         Arg := Instantiate(Parm, subArgs, nil, nil)
-                        result := not ERR.PopErrorContext()
+                        result := not XLT.EndTentative(tnt)
                         if result then
                             Gargs[Parm.name] := Arg
 
@@ -852,11 +856,9 @@ module XL.SEMANTICS.GENERICS is
         Scope      : PT.tree
 
         // Save errors for later display
-        ERR.PushErrorContext()
-
+        tnt : XLT.tentative_translation := XLT.BeginTentative()
         LookupInstantiation Name, Args, "TYPE", Decl, ActualArgs, Scope
-
-        if ERR.PopErrorContext() then
+        if XLT.EndTentative(tnt) then
             ERR.Error "Unable to instantiate '$1', because", Name
             ERR.DisplayLastErrors()
             return parse_tree(@error)
@@ -875,11 +877,9 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
 
         // Save errors for later display
-        ERR.PushErrorContext()
-
+        tnt : XLT.tentative_translation := XLT.BeginTentative()
         result := Instantiate(Decl, Args, nil, nil)
-
-        if ERR.PopErrorContext() then
+        if XLT.EndTentative(tnt) then
             ERR.Error "Unable to instantiate '$1', because", Decl.Name
             ERR.DisplayLastErrors()
 
@@ -893,11 +893,9 @@ module XL.SEMANTICS.GENERICS is
     //   Instantiate a specific function
     // ------------------------------------------------------------------------
 
-        ERR.PushErrorContext()
-
+        tnt : XLT.tentative_translation := XLT.BeginTentative()
         result := Instantiate (Decl, Args, Variadics, BaseRecord)
-
-        if ERR.PopErrorContext() then
+        if XLT.EndTentative(tnt) then
             if Variadics <> nil then
                 ERR.Error "Error instantiating '$1' with '...' set to '$2'",
                           Source, Variadics

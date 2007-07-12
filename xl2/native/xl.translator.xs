@@ -75,6 +75,13 @@ module XL.TRANSLATOR with
                                  scope   : scope_kind;
                                  modname : PT.tree) return BC.bytecode
 
+    // Tentative translation of a specific compiler phase
+    type tentative_translation_data
+    type tentative_translation is access to tentative_translation_data
+    function BeginTentative() return tentative_translation
+    function EndTentative(what : tentative_translation) return boolean
+    function TentativeSemantics(what : PT.tree) return PT.tree
+
     // Recursive implementation of something
     type recurse_fn is function(input : PT.tree) return BC.bytecode
     function Recurse(input : PT.tree;
