@@ -515,6 +515,8 @@ module XL.SEMANTICS.GENERICS is
                         typeArg : TY.any_type := TY.EvaluateType(A)
                         if typeArg <> nil and typeArg.machine_name <> nil then
                             A := typeArg.machine_name
+                    else
+                        A := XLT.XLSemantics(A)
                     instCode := parse_tree('instCode' 'A')
                 instCode := parse_tree(@ 'instCode' 'instName')
                 tp : TY.any_type := TY.NewType(instName)
@@ -524,10 +526,13 @@ module XL.SEMANTICS.GENERICS is
                 TY.SetDefinedType instName, tp
                 XLT.AddGlobalDecl instCode
                 result := instName
+            else
+                // For functions, we instantiate the bytecode normally,
+                // which assumes that it can take any valid argument of the type
+                result := FN.EnterBuiltinFunction(Name, Type, Decl.machine_name)
         else
             if Init = nil then
                 ERR.Error "Generic '$1' has no initializer", Name
-            PT.AttachTree Name, "INSTANCEOF", Decl.Name
             result := DCL.EnterDeclaration (Name, Type, Init, true)
             result := XLT.XLSemantics(result)
             if Decl.is_global then
@@ -537,9 +542,12 @@ module XL.SEMANTICS.GENERICS is
                     PT.SetInfo result, "FN", f
             tp : TY.any_type := TY.GetDefinedType(result)
             if tp <> nil then
-                PT.AttachTree Source, "INSTANCEOF", Decl.Name
                 tp.name := Source
                 TY.SetDefinedType Source, tp
+
+        assert result <> nil
+        PT.AttachTree Name, "INSTANCEOF", Decl.Name
+        PT.AttachTree Source, "INSTANCEOF", Decl.Name
 
         // Cache the result for next time
         if XLT.EndTentative(tentative) then

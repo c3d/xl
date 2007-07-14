@@ -2,3 +2,4 @@ use XL.POINTER
 
 P : pointer to integer
 
+P := nil

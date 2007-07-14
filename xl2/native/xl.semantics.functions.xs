@@ -59,3 +59,6 @@ module XL.SEMANTICS.FUNCTIONS with
                             FnType  : any_type;
                             Init    : PT.tree;
                             Iface   : PT.tree) return PT.tree
+    function EnterBuiltinFunction(input : PT.tree;
+                                  Interface : PT.tree;
+                                  BuiltinName : PT.tree) return PT.tree

@@ -35,19 +35,7 @@ ONE_FAILED=
 PATTERN='[A-Za-z]*'
 UPDATE=
 NOCACHE=
-
-RUNTIME_EXT_C="c"
-RUNTIME_COMPILE_C='cc -I. -lm';
-RUNTIME_RUN_C="./a.out"
-RUNTIME_EXT_Java="java"
-#RUNTIME_COMPILE_Java='gcj -I. --main=XLProgram';
-RUNTIME_COMPILE_Java='javac';
-RUNTIME_RUN_Java="./a.out"
-
 RUNTIME=default
-RUNTIME_EXT_default="$RUNTIME_EXT_C"
-RUNTIME_COMPILE_default="$RUNTIME_COMPILE_C"
-RUNTIME_RUN_default="$RUNTIME_RUN_C"
 
 if [ "$1" == '-c++' -o "$1" == "-c" ]; then NOCACHE=1; shift; fi
 if [ "$1" == "-update" -o "$1" == "-u" ]; then
@@ -83,6 +71,7 @@ do
 
     # Setup useful variables - These can be set in the test files
     BASE=${TESTNAME/\.xl}                           # Basename
+    DIR="$(dirname $TEST)"                          # Directory
     REF=$BASE.ref                                   # Reference file
     LOG=$BASE.log                                   # Log file
     CMD=                                            # Command to execute
@@ -90,7 +79,7 @@ do
     RUN=                                            # What to run afterwards
     COMPILE=                                        # Compile command
     OPT=                                            # XL compiler options
-    INC="-I $(dirname $TEST) -I $TESTDIR/library"   # XL include directory
+    INC="-I $DIR -I $TESTDIR/library"               # XL include directory
     EXT=                                            # Extension for output
     CACHED=
 
@@ -98,12 +87,12 @@ do
     eval $(./alltests.awk $TESTNAME)
 
     # Defaults if not set by the test
+    eval $(grep TO_REMOVE alltests_$RUNTIME)
     if [ -z "$CMD" ]; then
         CMD="$XL -r $RUNTIME $INC $OPT $TESTNAME";
-        [ -z "$EXT" ] && { eval "EXT=\"\${RUNTIME_EXT_$RUNTIME}\""; }
-        [ -z "$COMPILE" ] && { eval "COMPILE=\"\${RUNTIME_COMPILE_$RUNTIME} $BASE.$EXT\" "; }
-        [ -z "$RUN" ] && { eval "RUN=\"\${RUNTIME_RUN_$RUNTIME}\""; }
-
+        [ -z "$EXT" ] && { eval $(grep EXT alltests_$RUNTIME); }
+        [ -z "$COMPILE" ] && { eval $(grep COMPILE alltests_$RUNTIME); }
+        [ -z "$RUN" ] && { eval $(grep RUN alltests_$RUNTIME); }
     fi
 
     # Run the XL compiler on the test
@@ -117,8 +106,8 @@ do
             # If we have a cached version, check if it stayed identical
             # If so, we can skip 'compile' and 'run', unless forced
             if [ -z "$NOCACHE" ]; then
-                if [ -f "$BASE.$EXT" -a -f "$REF" ]; then
-                    if diff $LOG $BASE.$EXT > /dev/null 2>&1; then
+                if [ -f "$BASE$EXT" -a -f "$REF" ]; then
+                    if diff $LOG $BASE$EXT > /dev/null 2>&1; then
                         # In that case, use the reference, don't run
                         echo > $LOG
                         cp $REF $LOG
@@ -132,13 +121,13 @@ do
             # Compile the C++ code if needed
             if [ ! -z "$COMPILE" ]; then
                 echo -n Compile...
-                rm -f ./a.out
-                mv -f $LOG $BASE.$EXT
+                rm -f $TO_REMOVE
+                mv -f $LOG $BASE$EXT
                 $COMPILE > $LOG 2>&1
                 RC=$?
                 if [ $RC -ne $EXIT ]; then
-                    cat $BASE.$EXT >> $LOG
-                    rm $BASE.$EXT
+                    cat $BASE$EXT >> $LOG
+                    rm $BASE$EXT
                 fi
             fi
 
@@ -168,7 +157,7 @@ do
             THIS_FAILED="Output mismatch"
             diff $REF $LOG > $LOG.diff
             mv $LOG.diff $LOG
-            rm -f $BASE.$EXT
+            rm -f $BASE$EXT
         else
             THIS_FAILED="Missing reference"
         fi
@@ -194,7 +183,7 @@ do
         echo '*** FAILURE ('$THIS_FAILED') ***'
         ONE_FAILED=1
     fi
-    rm -f ./a.out
+    rm -f $TO_REMOVE
 done
 done
 

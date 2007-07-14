@@ -713,6 +713,7 @@ module XL.SEMANTICS.DECLARATIONS is
                 result := XLT.XLSemantics(result)
 
 
+    in_destruction : map[PT.name_tree, integer]
     function CallDestructor (entry : PT.tree) return PT.tree is
     // ------------------------------------------------------------------------
     //   Call the destructor for a given name
@@ -721,9 +722,14 @@ module XL.SEMANTICS.DECLARATIONS is
         if entry.kind = PT.xlNAME and decl <> nil then
             if decl.is_local or decl.is_global then
                 mname : PT.name_tree := decl.machine_name
+                if count(in_destruction, mname) > 0 then
+                    ERR.Error "Recursive 'delete' call for $1", mname
+                    return nil
                 dtorCall : PT.tree := parse_tree(delete 'mname')
                 ERR.PushErrorContext()
+                in_destruction[mname] = 1
                 dtorCall := XLT.XLSemantics(dtorCall)
+                erase in_destruction, mname
                 if not ERR.PopErrorContext() then
                     return dtorCall
         return nil

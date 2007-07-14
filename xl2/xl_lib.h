@@ -96,6 +96,13 @@ inline int count(const std::map<T,U> &m, const T &v)
 }
 
 
+template <class T, class U>
+inline int erase(std::map<T,U> &m, const T &v)
+{
+    return m.erase(v);
+}
+
+
 template<class T>
 inline T & back(std::vector<T> &v)
 {

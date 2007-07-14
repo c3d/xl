@@ -17,7 +17,7 @@ function MyMax (X : ordered; ...) return ordered is
 K : integer := MyMax(1, 2, 3, 4)
 L : integer := MyMax(1, 2, 3)
 M : real := MyMax (1.5, 7.9, 8.43)
-Z : real := MyMax(0.0, 0.0, 0.1)
+Z : real := MyMax(0.1, 0.1, 0.2)
 
 WriteLn "K=", K
 WriteLn "L=", L

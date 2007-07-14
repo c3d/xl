@@ -175,8 +175,8 @@ loopentry       "loop_$1:"
 loopagain       "continue loop_$1;"
 loopif          "} while ($1);"
 loopifnot       "} while (!($1));"
-loopend         "} /* loop end $1 */"
-loopexit        "} /* loop exit $1 */"
+loopend         "} /* end loop_$1 */"
+loopexit        "} /* exit loop_$1 */"
 exitloop        "break loop_$1;"
 
 main_begin      "public static void main(String args[])"
@@ -241,10 +241,10 @@ real_to_int      "$1 = (int) $2;"
 zero_ptr         "$1 = null;"
 copy_ptr         "$1 = $2;"
 
-array_type       "public static class $1 { $3 values[$2]; }"
+array_type       "public static class $3 { $1 values[] = new $1[$2]; }"
+                 "public static $3 make_$3() { return new $3(); }"
 
 xl_assert        "System.out.println($2 + "":"" + $3 + "": "
                  "                   ""Assertion failure: "" + $1);"
                  "abort();"
 
-put_real        "System.out.print("""" + $2);"

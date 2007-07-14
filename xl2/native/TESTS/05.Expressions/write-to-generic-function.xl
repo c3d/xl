@@ -1,0 +1,8 @@
+// EXIT=2
+generic [type WWW]
+function TestInOut(in out Z : WWW) return WWW is
+    return Z + 1
+
+if TestInOut(0) = 1 then
+    failed : integer := 1
+

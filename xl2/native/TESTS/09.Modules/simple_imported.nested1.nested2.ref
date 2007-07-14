@@ -3,6 +3,6 @@
 '
 | module SIMPLE_IMPORTED.NESTED_1.NESTED_2 is
 |______________________^
-library/runtime/default/./xl_builtins.xs:26: No translation found for 'delete xlbuiltins_470'
+library/runtime/default/./xl_builtins.xs:26: No translation found for 'delete xlbuiltins_466'
 | module XL_BUILTINS with
 |__________________^
