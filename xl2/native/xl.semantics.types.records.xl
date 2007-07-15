@@ -319,15 +319,31 @@ module XL.SEMANTICS.TYPES.RECORDS is
         return rtp
 
 
-    function IsRecord (Record : PT.tree) return boolean is
+    function IsRecord (RecordExpr : PT.tree) return boolean is
     // ------------------------------------------------------------------------
     //   Return true if something is a record
     // ------------------------------------------------------------------------
+        Record   : PT.tree := RecordExpr
+        hasDeref : boolean := true
+        maxDeref : integer := 30
+
+        // First look for "dereference" functions
+        while hasDeref loop
+            DerefCall : PT.tree := parse_tree(dereference 'Record')
+            DerefCall := XLT.TentativeSemantics(DerefCall)
+            hasDeref := DerefCall <> nil
+            if hasDeref then
+                maxDeref := maxDeref - 1
+                if maxDeref <= 0 then
+                    hasDeref := false
+                Record := DerefCall
+
         ERR.PushErrorContext()
         result := GetRecordType (Record) <> nil
         if ERR.PopErrorContext() then
             result := false
-            
+        else
+            PT.AttachTree RecordExpr, "DEREF", Record            
 
 
     procedure RecordDeclarations(Record   : PT.tree;
@@ -360,20 +376,9 @@ module XL.SEMANTICS.TYPES.RECORDS is
         symbols  : SYM.symbol_table
         list     : PT.tree_list
         insts    : PT.tree_list
-        selected : PT.tree
-        hasDeref : boolean := true
-        maxDeref : integer := 30
-
-        // First look for "dereference" functions
-        while hasDeref loop
-            DerefCall : PT.tree := parse_tree(dereference 'Record')
-            DerefCall := XLT.TentativeSemantics(DerefCall)
-            hasDeref := DerefCall <> nil
-            if hasDeref then
-                maxDeref := maxDeref - 1
-                if maxDeref <= 0 then
-                    hasDeref := false
-                Record := DerefCall
+        selected : PT.tree := PT.Attached(Record, "DEREF")
+        if selected <> nil then
+            Record := selected
 
         RecordDeclarations Record, Field, "DECL", list, symbols
 
