@@ -677,9 +677,9 @@ module XL.SEMANTICS.TYPES is
     // ------------------------------------------------------------------------
     //   Try to convert to target type, return nil on errors
     // ------------------------------------------------------------------------
-        ERR.PushErrorContext()
+        tentative: XLT.tentative_translation := XLT.BeginTentative()
         result := Convert(expr, toType)
-        if ERR.PopErrorContext() then
+        if XLT.EndTentative(tentative) then
             return nil
 
 
