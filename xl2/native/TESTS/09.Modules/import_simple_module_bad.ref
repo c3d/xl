@@ -1,6 +1,10 @@
-09.Modules/import_simple_module_bad.xl:32: No translation found for 'Test_Call := FooZoo (0)'
+09.Modules/import_simple_module_bad.xl:32: No translation for 'Test_Call := FooZoo (0)'
 | Test_Call : integer := FooZoo(0)
 |______________________________^
-09.Modules/import_simple_module_bad.xl:32: No translation found for 'FooZoo (0)'
+09.Modules/import_simple_module_bad.xl:29: Candidate form 'T' := 'S' cannot be selected
+| function Copy (out T : integer; in S : integer) written T := S is
+|____________________________________________________________^
+09.Modules/import_simple_module_bad.xl:32: No translation for 'FooZoo (0)'
 | Test_Call : integer := FooZoo(0)
 |______________________________^
+[Compiler generated] Candidate form 'functionname' ('functionargs') cannot be selected

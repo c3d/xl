@@ -1,6 +1,9 @@
-05.Expressions/write-to-lit.xl:33: No translation found for '0 := B'
+05.Expressions/write-to-lit.xl:33: No translation for '0 := B'
 |     0 := B
 |________^
-library/runtime/default/./xl_builtins.xs:34: 'integer' is not an instance of 'range'
-|     type integer                                                                                is XL.BYTECODE.xlint
-|________________^
+05.Expressions/write-to-lit.xl:27: Candidate form 'Tgt' := 'Src' cannot be selected
+| to Copy(out Tgt : integer; in Src : integer) written Tgt := Src
+|___________________________________________________________^
+05.Expressions/write-to-lit.xl:33: Cannot convert '0' to from 'constant integer' to 'integer'
+|     0 := B
+|_____^

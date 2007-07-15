@@ -346,22 +346,23 @@ module XL.SYMBOLS is
                         " into ", table
 
 
-    function  LookupRewrite (table         : symbol_table;
-                             Name          : text;
-                             test_tree     : PT.tree;
-                             out cnt       : integer;
-                             report_misses : boolean;
-                             report_ambig  : boolean) return PT.tree is
+    function  LookupRewrite (table     : symbol_table;
+                             kind      : text;
+                             test_tree : PT.tree;
+                             out cnt   : integer;
+                             report    : boolean) return PT.tree is
     // ------------------------------------------------------------------------
     //    Find the best rewrite and apply it
     // ------------------------------------------------------------------------
-        TName      : text := Name
+        Name       : text := kind
         R          : rewrite
         score      : integer := 0
         best       : integer := 0
         bestR      : rewrite := nil
         bestA      : PT.tree_map
         bestS      : PT.tree
+        bestShape  : integer := 0
+        bestRef    : PT.tree := nil
         ambig      : rewrite := nil
         key        : text := "TRANSFORMS"
         track      : boolean := count(test_tree.info, key) > 0
@@ -371,9 +372,10 @@ module XL.SYMBOLS is
         symdepths  : symbol_table_depths
         symscopes  : symbol_table_scopes
         Wild       : text
+        tbl        : symbol_table
 
         if track then
-            IO.WriteLn "Rewrite: ", TName, "(", test_tree, ")"
+            IO.WriteLn "Rewrite: ", kind, "(", test_tree, ")"
             info := test_tree.info[key]
 
         Name += "."
@@ -382,24 +384,24 @@ module XL.SYMBOLS is
         Name += TreeName(test_tree)
         result := test_tree
 
-        trace [rewrite] "Rewrite ", TName, "(", test_tree, ")"
+        trace [rewrite] "Rewrite ", kind, "(", test_tree, ")"
 
         // First find all candidates. We used to evaluate scores here too,
         // but this may involve some semantics (instantiation) that modifies
         // the maps being looped on, which is not good for the iterators
         cnt := 0
         Collect table, symdepths, symscopes, lookupAll
-        for table in symdepths loop
-            depth   : integer := symdepths[table]
+        for tbl in symdepths loop
+            depth   : integer := symdepths[tbl]
             sublist : rewrite_list
 
-            if count(table.rewrites, name) > 0 then
-                sublist += table.rewrites[name]
-            if count(table.rewrites, Wild) > 0 then
-                sublist += table.rewrites[Wild]
+            if count(tbl.rewrites, name) > 0 then
+                sublist += tbl.rewrites[name]
+            if count(tbl.rewrites, Wild) > 0 then
+                sublist += tbl.rewrites[Wild]
 
             if track then
-                IO.WriteLn " in ", table, " depth ", depth,
+                IO.WriteLn " in ", tbl, " depth ", depth,
                            " rewrites ", size(sublist)
 
             if size(sublist) > 0 then
@@ -410,14 +412,23 @@ module XL.SYMBOLS is
 
         // Then sort candidates
         for R in List loop
-            depth : integer := Depths[R]
-            args  : PT.tree_map
-            score := PT.Matches(test_tree, R.reference_form, args)
+            depth      : integer := Depths[R]
+            args       : PT.tree_map
+            ref        : PT.tree := R.reference_form
+            dropErrors : boolean := false
+            score := PT.Matches(test_tree, ref, args)
             if track then
-                IO.Write "Matching (", R.reference_form, ") = ", score,
-                         " depth ", depth, " "
+                IO.Write "Matching (", ref, ") = ", score, " depth ", depth, " "
             if score > 0 then
                 score := 10000 * score - depth
+                if bestShape < score then
+                    bestShape := score
+                if bestShape > score or ref.kind = PT.xlWILDCARD then
+                    dropErrors := true
+                    ERR.PreserveLastErrors(1)
+                else
+                    bestRef := ref
+
                 if R.score_adjust <> nil then
                     score := R.score_adjust (test_tree, R, args,
                                              depth, score)
@@ -438,6 +449,8 @@ module XL.SYMBOLS is
                             IO.WriteLn "Ambiguity"
                         ambig := R
                         cnt += 1
+                if dropErrors then
+                    ERR.PreserveLastErrors(-1)
 
         if bestR <> nil then
             if ambig = nil then
@@ -445,18 +458,25 @@ module XL.SYMBOLS is
                 PT.NOPOS := test_tree.position
                 result := bestR.translator(test_tree, bestS, bestR, bestA)
                 PT.NOPOS := old_pos
-            else if report_ambig then
+            else if report then
                 ERR.Error "The form '$1' is ambiguous", test_tree
-                ERR.Error "A first possible match is '$1'",
+                ERR.Error "A first possible match is $1",
                           bestR.reference_form
-                ERR.Error "A second possible match is '$1'",
+                ERR.Error "A second possible match is $1",
                           ambig.reference_form
-        else if report_misses then
-            ERR.Error "No match for '$1'", test_tree
+        else if report and count(report_misses, kind) > 0 then
+            if bestRef = nil then
+                ERR.Error "No translation for '$1' (no matching form)",
+                          test_tree
+            else
+                ERR.Error "No translation for '$1'", test_tree
+                ERR.Error "Candidate form $1 cannot be selected", bestRef
+                ERR.DisplayLastErrors()
+            result := parse_tree(@error)
 
-        trace[rewrite] "Rewritten: ", TName, "(", test_tree, ")=", result
+        trace[rewrite] "Rewritten: ", kind, "(", test_tree, ")=", result
         if track then
-            IO.WriteLn "Rewritten: ", TName, "(", test_tree, ")=", result
+            IO.WriteLn "Rewritten: ", kind, "(", test_tree, ")=", result
             result.info[key] := info
 
 
@@ -467,7 +487,7 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
     //   Lookup the tree, assuming we do error handling in caller
     // ------------------------------------------------------------------------
-        result := LookupRewrite (table, kind, tree, count, false, false)
+        result := LookupRewrite (table, kind, tree, count, false)
 
 
     function  LookupRewrite (table     : symbol_table;
@@ -476,8 +496,8 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
     //    Lookup, assuming we find exactly one result
     // ------------------------------------------------------------------------
-        count : integer := 0
-        result := LookupRewrite (table, kind, tree, count, false, true)
+        count  : integer := 0
+        result := LookupRewrite (table, kind, tree, count, true)
 
 
     function  RewritesCount  (table     : symbol_table;
@@ -486,7 +506,7 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
     //    Count the number of matches we find
     // ------------------------------------------------------------------------
-        tree := LookupRewrite (table, kind, tree, result, false, false)
+        tree := LookupRewrite (table, kind, tree, result, false)
 
 
     function RewriteAsTranslator  (input       : PT.tree;

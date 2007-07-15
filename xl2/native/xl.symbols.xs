@@ -84,12 +84,13 @@ module XL.SYMBOLS with
     // ------------------------------------------------------------------------
     //    Kind of lookup we care for
     // ------------------------------------------------------------------------
-
         lookupLocalOnly,        // Don't recurse at all
         lookupLocalUsing,       // Local scope and using
         lookupInnermost,        // Closest scope where something is found
         lookupDirect,           // Do not look in using maps
         lookupAll               // Return all results
+
+    report_misses : map[text, boolean]
 
 
     procedure Enter (table          : symbol_table;
@@ -154,8 +155,7 @@ module XL.SYMBOLS with
                              Name          : text;
                              test_tree     : PT.tree;
                              out count     : integer;
-                             report_misses : boolean;
-                             report_ambig  : boolean) return PT.tree;
+                             report        : boolean) return PT.tree;
 
     // Lookup helpers
     function  LookupRewrite (table     : symbol_table;

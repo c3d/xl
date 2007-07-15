@@ -31,7 +31,9 @@ module XL.ERRORS with
     procedure PushErrorContext()
     function PopErrorContext() return boolean
     procedure DisplayLastErrors()
-    function GetLastErrorsText() return text
+    function LastErrorsText() return text
+    function PendingErrors() return integer
+    function PreserveLastErrors(offset : integer) return integer
 
     // Signaling an error
     procedure Error (E : text; pos : integer; args : string of text)

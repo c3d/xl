@@ -10,21 +10,21 @@
 04.Lookup/type_redefined.xl:29: because a type named 'integer' already exists
 | type integer
 |____________^
-04.Lookup/type_redefined.xl:37: No translation found for 'result := integer ( )'
+04.Lookup/type_redefined.xl:37: No translation for 'result := integer ( )'
 |    type integer
 |___^
-library/runtime/default/./xl_builtins.xs:34: 'integer' is not an instance of 'range'
-|     type integer                                                                                is XL.BYTECODE.xlint
-|________________^
+library/runtime/default/./xl_builtins.xs:183: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
 04.Lookup/type_redefined.xl:37: The type 'integer' can't be defined here
 |    type integer
 |_______________^
 04.Lookup/type_redefined.xl:29: because a type named 'integer' already exists
 | type integer
 |____________^
-04.Lookup/type_redefined.xl:38: No translation found for 'L := integer ( )'
+04.Lookup/type_redefined.xl:38: No translation for 'L := integer ( )'
 |    L : integer
 |____^
-library/runtime/default/./xl_builtins.xs:34: 'integer' is not an instance of 'range'
-|     type integer                                                                                is XL.BYTECODE.xlint
-|________________^
+library/runtime/default/./xl_builtins.xs:183: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^

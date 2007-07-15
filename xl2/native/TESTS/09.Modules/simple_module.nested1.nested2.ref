@@ -1,10 +1,12 @@
-09.Modules/simple_module.nested1.nested2.xl:27: No translation found for 'module SIMPLE_MODULE . NESTED_1 . NESTED_2 is 
+09.Modules/simple_module.nested1.nested2.xl:27: No translation for 'module SIMPLE_MODULE . NESTED_1 . NESTED_2 is 
     function (HasKlaxon (volume : real) return boolean is 
         return (volume < 0.3)
     )
 '
 | module SIMPLE_MODULE.NESTED_1.NESTED_2 is
 |____________________^
-library/runtime/default/./xl_builtins.xs:26: No translation found for 'delete xlbuiltins_466'
+[Compiler generated] Candidate form 'functionname' 'functionargs' cannot be selected
+library/runtime/default/./xl_builtins.xs:26: No translation for 'delete xlbuiltins_466'
 | module XL_BUILTINS with
 |__________________^
+[Compiler generated] Candidate form 'functionname' 'functionargs' cannot be selected

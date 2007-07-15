@@ -71,6 +71,7 @@ module XL.TRANSLATOR is
     //    Initialization of the semantics module
     // ------------------------------------------------------------------------
         InitializeTranslator
+        SYM.report_misses["xlsemantics"] := true
 
 
     function RuntimePath(fileName : text) return text is

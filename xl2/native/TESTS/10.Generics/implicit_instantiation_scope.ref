@@ -1,6 +1,9 @@
-10.Generics/implicit_instantiation_scope.xl:7: No translation found for 'X := Ajouter (3 , 4)'
+10.Generics/implicit_instantiation_scope.xl:7: No translation for 'X := Ajouter (3 , 4)'
 | X : text := Ajouter (3, 4)
 |_____________________^
+library/runtime/default/./xl_builtins.xs:183: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
 10.Generics/implicit_instantiation_scope.xl:7: Error instantiating 'Ajouter'
 | X : text := Ajouter (3, 4)
 |___________________^

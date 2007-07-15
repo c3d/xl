@@ -551,7 +551,7 @@ module XL.SEMANTICS.GENERICS is
 
         // Cache the result for next time
         if XLT.EndTentative(tentative) then
-            errors : text := ERR.GetLastErrorsText()
+            errors : text := ERR.LastErrorsText()
             errorText : PT.text_tree := PT.NewText(errors,'"',result.position)
             result := parse_tree(@error 'errorText')
             ERR.DisplayLastErrors()
@@ -611,8 +611,8 @@ module XL.SEMANTICS.GENERICS is
                 // OK, it looks like a match
                 return true
 
-        ERR.Error "'$1' is not an instance of '$2'",
-                  InstTypeSrc, TY.Source(GenType)
+        ERR.Error "Candidate instance type '$1'", InstTypeSrc
+        ERR.Error "is not an instance of '$1'", TY.Source(GenType)
         return false
 
 
@@ -718,11 +718,15 @@ module XL.SEMANTICS.GENERICS is
 
             // Check if the argument type is an instance of the parameter type
             // e.g. the actual type has to be complex[something]
-            ArgType  : TY.any_type := TY.NonConstedType (TY.GetType(Arg))
+            ArgType  : TY.any_type := TY.GetType(Arg)
+            if not FunParm.is_output then
+                ArgType := TY.NonConstedType (ArgType)
             ArgTypeSrc : PT.tree := TY.Source (ArgType)
             InstanceOf  : PT.tree := PT.Attached(ArgTypeSrc, "INSTANCEOF")
             if InstanceOf <> nil then
                 if not IsInstanceOf(GenParmType, ArgType, Gargs) then
+                    ERR.Error "while attempting to deduce '$1'", FunParm.name
+                    ERR.Error "from '$1'", Arg
                     return false
 
             // Check consistency with deductions, or deduce if not found
@@ -773,13 +777,13 @@ module XL.SEMANTICS.GENERICS is
                             subParm : DCL.declaration := gtp.parameters[P]
 
                             if TY.IsTypeType (subParm.type) then
+                                N : PT.tree := subParm.name
                                 subType1 : TY.any_type
-                                subType1 := TY.GetDefinedType (subParm.name)
+                                subType1 := TY.GetDefinedType(N)
                                 subType : subType1 as GEN.generic_type
                                 assert subType <> nil
 
                                 if TY.SameType (subType, ParmType) then
-                                    N : PT.tree := subParm.name
                                     if Gargs[N] = nil then
                                         if not Validate (subType, ArgType,
                                                          Gargs) then

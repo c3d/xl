@@ -44,6 +44,7 @@ module XL.ERRORS is
     type error_stack_level is string of error_stack_element
     error_stack         : string of error_stack_level
     last_errors         : error_stack_level
+    last_errors_to_keep : integer := 0
 
 
     procedure PushErrorContext() is
@@ -52,15 +53,29 @@ module XL.ERRORS is
     // ------------------------------------------------------------------------
         level : error_stack_level
         error_stack += level
+        if last_errors_to_keep > 0 then
+            last_errors_to_keep += 1
 
 
     function PopErrorContext() return boolean is
     // ------------------------------------------------------------------------
     //   Pop last string stream for errors
     // ------------------------------------------------------------------------
-        last_errors := back(error_stack)
+        last : error_stack_level := back(error_stack)
+        if last_errors_to_keep > 0 then
+            last_errors_to_keep -= 1
+        else
+            last_errors := last
         pop_back error_stack
-        return size(last_errors) > 0
+        return size(last) > 0
+
+
+    function PreserveLastErrors(offset : integer) return integer is
+    // ------------------------------------------------------------------------
+    //   Make sure that we do not overwrite a useful last_errors
+    // ------------------------------------------------------------------------
+        last_errors_to_keep += offset
+        return last_errors_to_keep
 
 
     procedure DisplayLastErrors() is
@@ -75,13 +90,22 @@ module XL.ERRORS is
                 Error E.message, E.position
 
 
-    function GetLastErrorsText() return text is
+    function LastErrorsText() return text is
     // ------------------------------------------------------------------------
-    //   Display the last errors
+    //   Return the text for the very last errors
     // ------------------------------------------------------------------------
         if size(last_errors) > 0 then
             E : error_stack_element := last_errors[0]
             result := E.message
+
+
+    function PendingErrors() return integer is
+    // ------------------------------------------------------------------------
+    //    Return the number of errors at the current level
+    // ------------------------------------------------------------------------
+        if size(error_stack) > 0 then
+            return size(back(error_stack))
+        return error_count
 
 
     procedure Error (E : text; pos : integer; args : string of text) is

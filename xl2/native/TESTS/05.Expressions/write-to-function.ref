@@ -1,6 +1,6 @@
-05.Expressions/write-to-function.xl:35: No translation found for 'F (0) := B'
+05.Expressions/write-to-function.xl:35: No translation for 'F (0) := B'
 |     F(0) := B
 |___________^
-library/runtime/default/./xl_builtins.xs:34: 'integer' is not an instance of 'range'
-|     type integer                                                                                is XL.BYTECODE.xlint
-|________________^
+05.Expressions/write-to-function.xl:27: Candidate form 'Tgt' := 'Src' cannot be selected
+| to Copy(out Tgt : integer; in Src : integer) written Tgt := Src
+|___________________________________________________________^

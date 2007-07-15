@@ -470,7 +470,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         XLT.context := context
         XLT.global_context := globals
         if hadError then
-            trace[defaultfns] "Error: ", ERR.GetLastErrorsText()
+            trace[defaultfns] "Error: ", ERR.LastErrorsText()
             return nil
 
         trace[defaultfns] "Code: ", result

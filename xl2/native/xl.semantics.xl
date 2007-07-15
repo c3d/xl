@@ -71,6 +71,9 @@ module XL.SEMANTICS is
             return input
 
 
+    semantics_error : boolean := false
+
+
     translation XLSemantics
     // ------------------------------------------------------------------------
     //   Some basic semantics (goes into XL.TRANSLATOR.Semantics )
@@ -110,16 +113,6 @@ module XL.SEMANTICS is
             block : Thing as PT.block_tree
             block.child := XLT.ScopeSemantics (block.child, XLT.scopeLocal)
             return block
-
-        // Catch-all rule in case we did not find something
-        when
-            'Thing'
-        then
-            if XLT.full_compile then
-                ERR.Error "No translation found for '$1'", Thing
-                ERR.DisplayLastErrors()
-                return parse_tree(@error)
-            return input
 
         // When semantics have been done already, don't do it again
         when

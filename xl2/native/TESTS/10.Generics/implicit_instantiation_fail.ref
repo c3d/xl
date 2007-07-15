@@ -1,6 +1,9 @@
-10.Generics/implicit_instantiation_fail.xl:7: No translation found for 'C := Ajouter (3 , "ABC" )'
+10.Generics/implicit_instantiation_fail.xl:7: No translation for 'C := Ajouter (3 , "ABC" )'
 | C : text := Ajouter (3, "ABC")
 |_____________________^
+library/runtime/default/./xl_builtins.xs:183: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
 10.Generics/implicit_instantiation_fail.xl:7: No valid function found for 'Ajouter'
 | C : text := Ajouter (3, "ABC")
 |___________________^

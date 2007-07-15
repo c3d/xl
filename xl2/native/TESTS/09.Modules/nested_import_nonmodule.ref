@@ -13,18 +13,20 @@ library/runtime/default/./xl_builtins.xs:34: Its type is 'integer'
 09.Modules/nested_import_nonmodule.xl:27: Imported file did not define 'SIMPLE_IMPORTED . NESTED1'
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |_______________________^
-09.Modules/nested_import_nonmodule.xl:27: No translation found for 'SIMPLE_IMPORTED . NESTED1'
+09.Modules/nested_import_nonmodule.xl:27: No translation for 'SIMPLE_IMPORTED . NESTED1'
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |_______________________^
+[Compiler generated] Candidate form 'record' . 'field' cannot be selected
 09.Modules/nested_import_nonmodule.xl:27: 'SIMPLE_IMPORTED . NESTED1' has no symbol table
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |_______________________^
 09.Modules/nested_import_nonmodule.xl:27: Its type is 
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |______________________^
-09.Modules/nested_import_nonmodule.xl:27: No translation found for 'SIMPLE_IMPORTED . NESTED1'
+09.Modules/nested_import_nonmodule.xl:27: No translation for 'SIMPLE_IMPORTED . NESTED1'
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |_______________________^
+[Compiler generated] Candidate form 'record' . 'field' cannot be selected
 09.Modules/nested_import_nonmodule.xl:27: Did not find symbols in 'SIMPLE_IMPORTED . NESTED1'
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |_______________________^
@@ -40,19 +42,47 @@ library/runtime/default/./xl_builtins.xs:34: Its type is 'integer'
 09.Modules/nested_import_nonmodule.xl:27: but is used as a submodule of 'SIMPLE_IMPORTED . NESTED1'
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |_______________________^
-[Compiler generated] No translation found for 'invalid_submodule_486 := Simple_imported . Nested_1 . nested2 . HasKlaxon (0.54)'
-09.Modules/nested_import_nonmodule.xl:29: No translation found for 'Simple_imported . Nested_1'
+[Compiler generated] No translation for 'invalid_submodule_486 := Simple_imported . Nested_1 . nested2 . HasKlaxon (0.54)'
+library/runtime/default/./xl_builtins.xs:183: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+09.Modules/nested_import_nonmodule.xl:29: No translation for 'Simple_imported . Nested_1'
 | Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
 |____________________________________________^
-09.Modules/nested_import_nonmodule.xl:29: No translation found for 'Simple_imported . Nested_1 . nested2'
-| Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
-|_____________________________________________________^
-09.Modules/nested_import_nonmodule.xl:29: No translation found for 'Simple_imported . Nested_1'
+[Compiler generated] Candidate form 'record' . 'field' cannot be selected
+09.Modules/nested_import_nonmodule.xl:29: No translation for 'Simple_imported . Nested_1'
 | Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
 |____________________________________________^
-09.Modules/nested_import_nonmodule.xl:29: No translation found for 'Simple_imported . Nested_1 . nested2'
+[Compiler generated] Candidate form 'record' . 'field' cannot be selected
+09.Modules/nested_import_nonmodule.xl:29: No translation for 'Simple_imported . Nested_1 . nested2'
 | Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
 |_____________________________________________________^
-09.Modules/nested_import_nonmodule.xl:29: No translation found for 'Simple_imported . Nested_1 . nested2 . HasKlaxon (0.54)'
+[Compiler generated] Candidate form 'record' . 'field' cannot be selected
+09.Modules/nested_import_nonmodule.xl:29: No translation for 'Simple_imported . Nested_1'
+| Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
+|____________________________________________^
+[Compiler generated] Candidate form 'record' . 'field' cannot be selected
+09.Modules/nested_import_nonmodule.xl:29: No translation for 'Simple_imported . Nested_1'
+| Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
+|____________________________________________^
+[Compiler generated] Candidate form 'record' . 'field' cannot be selected
+09.Modules/nested_import_nonmodule.xl:29: No translation for 'Simple_imported . Nested_1'
+| Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
+|____________________________________________^
+[Compiler generated] Candidate form 'record' . 'field' cannot be selected
+09.Modules/nested_import_nonmodule.xl:29: No translation for 'Simple_imported . Nested_1 . nested2'
+| Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
+|_____________________________________________________^
+[Compiler generated] Candidate form 'record' . 'field' cannot be selected
+09.Modules/nested_import_nonmodule.xl:29: No translation for 'Simple_imported . Nested_1'
+| Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
+|____________________________________________^
+[Compiler generated] Candidate form 'record' . 'field' cannot be selected
+09.Modules/nested_import_nonmodule.xl:29: No translation for 'Simple_imported . Nested_1 . nested2 . HasKlaxon (0.54)'
 | Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
 |_______________________________________________________________________^
+[Compiler generated] Candidate form 'functionname' ('functionargs') cannot be selected
+09.Modules/nested_import_nonmodule.xl:29: No translation for 'Simple_imported . Nested_1'
+| Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
+|____________________________________________^
+[Compiler generated] Candidate form 'record' . 'field' cannot be selected

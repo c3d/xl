@@ -10,27 +10,43 @@
 ' is not a type
 | type DataBlob is not_a_record with
 |__________________________________^
-08.Aggregates/non_record.xl:37: No translation found for 'I := Z . X'
+08.Aggregates/non_record.xl:37: No translation for 'I := Z . X'
 |     I : integer := Z.X
 |_____________________^
-08.Aggregates/non_record.xl:37: No translation found for 'Z . X'
+08.Aggregates/non_record.xl:28: Candidate form 'Tgt' := 'Src' cannot be selected
+| procedure Copy(out Tgt : integer; in Src : integer) written Tgt := Src is XL.BYTECODE.COPY_INT
+|__________________________________________________________________^
+08.Aggregates/non_record.xl:37: No translation for 'Z . X'
 |     I : integer := Z.X
 |_____________________^
-08.Aggregates/non_record.xl:39: No translation found for 'I := Z . X'
+[Compiler generated] Candidate form 'record' . 'field' cannot be selected
+08.Aggregates/non_record.xl:39: No translation for 'I := Z . X'
 |     I := Z.X
 |________^
-08.Aggregates/non_record.xl:39: No translation found for 'Z . X'
+08.Aggregates/non_record.xl:28: Candidate form 'Tgt' := 'Src' cannot be selected
+| procedure Copy(out Tgt : integer; in Src : integer) written Tgt := Src is XL.BYTECODE.COPY_INT
+|__________________________________________________________________^
+08.Aggregates/non_record.xl:39: No translation for 'Z . X'
 |     I := Z.X
 |___________^
-08.Aggregates/non_record.xl:40: No translation found for 'result := Z . X'
+[Compiler generated] Candidate form 'record' . 'field' cannot be selected
+08.Aggregates/non_record.xl:40: No translation for 'result := Z . X'
 |     return Z.X
 |_____________^
-08.Aggregates/non_record.xl:40: No translation found for 'Z . X'
+08.Aggregates/non_record.xl:28: Candidate form 'Tgt' := 'Src' cannot be selected
+| procedure Copy(out Tgt : integer; in Src : integer) written Tgt := Src is XL.BYTECODE.COPY_INT
+|__________________________________________________________________^
+08.Aggregates/non_record.xl:40: No translation for 'Z . X'
 |     return Z.X
 |_____________^
-08.Aggregates/non_record.xl:43: No translation found for 'K := Z . X'
+[Compiler generated] Candidate form 'record' . 'field' cannot be selected
+08.Aggregates/non_record.xl:43: No translation for 'K := Z . X'
 | K : integer := Z.X
 |_________________^
-08.Aggregates/non_record.xl:43: No translation found for 'Z . X'
+08.Aggregates/non_record.xl:28: Candidate form 'Tgt' := 'Src' cannot be selected
+| procedure Copy(out Tgt : integer; in Src : integer) written Tgt := Src is XL.BYTECODE.COPY_INT
+|__________________________________________________________________^
+08.Aggregates/non_record.xl:43: No translation for 'Z . X'
 | K : integer := Z.X
 |_________________^
+[Compiler generated] Candidate form 'record' . 'field' cannot be selected
