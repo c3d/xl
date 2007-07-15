@@ -155,8 +155,6 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                 if Gtype <> nil then
                     ERR.PushErrorContext()
                     ok : boolean := GN.Deduce (Gtype, decl, semArg, Gargs)
-                    if not ok then
-                        ERR.Error "for written form $1", info.reference_form
                     if ERR.PopErrorContext() then
                         ok := false
                     if not ok then
@@ -392,10 +390,9 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                 ERR.PushErrorContext()
                 semArg := TY.EvaluateTypeAsTree(value)
                 errors : boolean := ERR.PopErrorContext()
-                PT.AttachTree value, key, semArg
                 if errors then
-                    ERR.DisplayLastErrors()
-
+                    return 0
+                PT.AttachTree value, key, semArg
 
             // Look at the generic declaration
             gd : DCL.declaration := written.args_map[param_name]
