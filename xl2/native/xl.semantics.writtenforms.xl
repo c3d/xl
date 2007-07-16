@@ -172,6 +172,11 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                         args[param_name] := semArg
                         base_score -= 1
 
+        // Check if there are non-deduced generic arguments
+        if Gtype <> nil then
+            if not GN.FinalizeDeductions(Gtype, Gargs) then
+                return 0
+
         written.generic_args := Gargs
         return base_score
 

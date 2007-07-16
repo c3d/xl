@@ -11,7 +11,7 @@
 {inside "top" "Inside XL"}<br>
 
 <P><B>In depth</B><BR>
-<A href="http://svn.sourceforge.net/viewcvs.cgi/xlr/trunk/xl2/">Browse SVN</A><br>
+<A href="http://xlr.svn.sourceforge.net/viewcvs.cgi/xlr/trunk/xl2/">Browse SVN</A><br>
 <A href="http://xlr.cvs.sourceforge.net/xlr/xl2/">Browse CVS (deprecated)</A><br>
 <A href="http://sourceforge.net/projects/xlr">SourceForge Info</A><br>
 <A href="mailto:{email}">Contact</A><br>
