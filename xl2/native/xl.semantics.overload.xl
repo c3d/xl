@@ -329,7 +329,6 @@ module XL.SEMANTICS.OVERLOAD is
                     if not GN.FinalizeDeductions(Gtype, Gargs) then
                         Matching := false
                         trace [overload] "FAIL: Cannot finalize deductions"
-                        exit if not Matching
 
                 // If not matching, lookup next
                 if not Matching then
