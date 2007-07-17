@@ -265,22 +265,28 @@ module XL.SEMANTICS.OVERLOAD is
                 for D in Ftype.parameters loop
                     if A < NA then
                         Arg := SemArgs[A]
-                        trace [overload] "Testing argument ", Arg
+                        trace [overload] "Trying to deduce arg ", Arg
                         if PT.Attached(Arg, "TODEDUCE") <> nil then
                             toType : PT.tree := TY.Source(D.type)
                             trace[overload] "Return type to deduce: ", toType
-                            tnt : XLT.attempt := XLT.BeginAttempt()
-                            TY.PushTargetType toType
-                            Arg := XLT.XLSemantics(Arg)
-                            TY.PopTargetType()
-                            if XLT.EndAttempt(tnt) then
-                                Matching := false
-                                ERR.Error "'$1' could not be selected because",
-                                          C
-                                ERR.Error "there was an error deducing '$1'",
-                                          SemArgs[A]
-                                ERR.DisplayLastErrors()
-                                exit if not Matching
+
+                            dt  : TY.any_type := D.type
+                            dgt : dt as GEN.generic_type
+                            if dgt <> nil then
+                                trace[overload] "Type is generic, deferring"
+                                A += 1
+                                restart
+                            else
+                                tnt : XLT.attempt := XLT.BeginAttempt()
+                                TY.PushTargetType toType
+                                Arg := XLT.XLSemantics(Arg)
+                                TY.PopTargetType()
+                                if XLT.EndAttempt(tnt) then
+                                    Matching := false
+                                    ERR.Error "For candidate '$1'", C
+                                    ERR.Error "error deducing '$1'", SemArgs[A]
+                                    ERR.DisplayLastErrors()
+                                    exit if not Matching
 
                         if ToBeDef[A] then
                             if D.is_variable then
@@ -320,7 +326,8 @@ module XL.SEMANTICS.OVERLOAD is
                                 SemArgs[A] := Arg
                                 Score += 1 // Make it worse
                     if not Matching then
-                        trace [overload] "FAIL: Type mismatch for ", D.name
+                        trace [overload] "FAIL: Type mismatch for ",
+                                         PT.tree(D.name)
                         trace [overload] "      Expected ", TY.Source(D.type)
                         trace [overload] "      Got ", AType.name
                         ERR.Error "'$1' could not be selected because", C
@@ -359,6 +366,43 @@ module XL.SEMANTICS.OVERLOAD is
                                       TY.Source(Gtype)
                             Matching := false
                             trace [overload] "FAIL: Cannot finalize deductions"
+
+                    // This is the case for Copy P, Pointer(3). Now we have
+                    // finalized deductions for P successfully, so we know
+                    // that P = pointer[znort], and consequently we can
+                    // use that information to deduce Pointer.
+                    A := 0
+                    for D in Ftype.parameters loop
+                        exit if not Matching
+                        if A < NA then
+                            Arg := SemArgs[A]
+                            if PT.Attached(Arg, "TODEDUCE") <> nil then
+                                trace[deduce] "For overload ", C
+                                trace[deduce] "will try deducing ", Arg
+                                trace[deduce] "from type ", TY.Source(D.type),
+                                              " of parameter ", PT.tree(D.name)
+
+                                dt  : TY.any_type := D.type
+                                dgt : dt as GEN.generic_type
+                                if dgt <> nil then
+                                    inst : PT.tree := TY.Source(dgt)
+                                    inst := GN.InstantiateType(inst, Gargs)
+                                    trace[deduce] "instantiated as ", inst
+                                    dt := TY.GetDefinedType(inst)
+                                    trace[deduce] "of type ", TY.Source(dt)
+
+                                tnt : XLT.attempt := XLT.BeginAttempt()
+                                TY.PushTargetType TY.Source(dt)
+                                Arg := XLT.XLSemantics(Arg)
+                                TY.PopTargetType()
+                                if XLT.EndAttempt(tnt) then
+                                    // Oh well, all this effort to fail now...
+                                    trace[deduce] "Err: ", ERR.LastErrorsText()
+                                    Matching := false
+                                else
+                                    trace[deduce] "OK: ", Arg
+                                    SemArgs[A] := Arg
+                        A += 1
 
                 // If not matching, lookup next
                 if not Matching then

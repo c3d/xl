@@ -12,10 +12,11 @@ Ptr := nil
 WriteLn "Null pointer is ", Integer(Ptr)
 
 Ptr := Pointer(16#FF_000A)
-
 WriteLn "Fixed address pointer is ", Integer(Ptr)
 
-Ptr := Address(Val)
+Copy Ptr, Pointer(16#FF_000B)
+WriteLn "Fixed address pointer #2 is ", Integer(Ptr)
 
+Ptr := Address(Val)
 WriteLn "Variable pointer delta is ", Integer(Ptr) - Integer(&Val)
 
