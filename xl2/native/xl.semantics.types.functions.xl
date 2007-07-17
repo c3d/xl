@@ -208,6 +208,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         XLT.context := SYM.NewSymbolTable (XLT.context)
         SYM.SetInteger XLT.context, "FNPARM", 1
 
+        ftp.result_decl := nil
         if ReturnType <> nil then
             ftp.base := TY.EvaluateType (ReturnType)
             if ftp.base = nil then
@@ -218,6 +219,10 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
             if GEN.IsGenericType(retType) then
                 GEN.AddGenericDependency retType
             ftp.name := parse_tree(function ('Parms') return 'ReturnType')
+            retName : PT.name_tree := PT.NewName("result", ReturnType.position)
+            retDecl : DCL.declaration := DCL.Declare(retName, retType)
+            retDecl.is_output := true
+            ftp.result_decl := retDecl
         else if iterator_tp then
             ftp.base := nil
             ftp.name := parse_tree(iterator('Parms'))

@@ -368,7 +368,7 @@ module XL.TRANSLATOR is
          return input
 
 
-    type tentative_translation_data is record with
+    type attempt_data is record with
     // ------------------------------------------------------------------------
     //   Description of what we preserve / restore for a tentative evaluation
     // ------------------------------------------------------------------------
@@ -382,7 +382,7 @@ module XL.TRANSLATOR is
         main_term       : PT.tree
 
 
-    function BeginTentative() return tentative_translation is
+    function BeginAttempt() return attempt is
     // ------------------------------------------------------------------------
     //   Begin a tentative translation of the tree
     // ------------------------------------------------------------------------
@@ -397,7 +397,7 @@ module XL.TRANSLATOR is
         ERR.PushErrorContext()
 
 
-    function EndTentative(what : tentative_translation) return boolean is
+    function EndAttempt(what : attempt) return boolean is
     // ------------------------------------------------------------------------
     //   End the tentative translation of a tree, return true if error
     // ------------------------------------------------------------------------
@@ -417,7 +417,7 @@ module XL.TRANSLATOR is
     // ------------------------------------------------------------------------
     //   Run semantics on the tree, return nil if error
     // ------------------------------------------------------------------------
-        tentative : tentative_translation := XLT.BeginTentative()
+        tnt : attempt := XLT.BeginAttempt()
         result := XLT.XLSemantics(what)
-        if EndTentative(tentative) then
+        if EndAttempt(tnt) then
             result := nil

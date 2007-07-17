@@ -488,7 +488,7 @@ module XL.SEMANTICS.GENERICS is
         Source.position := SourcePosition
 
         // Process the instantiated declaration
-        tentative : XLT.tentative_translation := XLT.BeginTentative()
+        tnt : XLT.attempt := XLT.BeginAttempt()
 
         Init : PT.tree := PT.Clone(Decl.initializer)
         trace[inst] "GenDecl ", Name, " : ", Type, " is ", Init
@@ -524,6 +524,7 @@ module XL.SEMANTICS.GENERICS is
                 tp.name := Source
                 TY.SetDefinedType instCode, tp
                 TY.SetDefinedType instName, tp
+                TY.SetDefinedType Source, tp
                 XLT.AddGlobalDecl instCode
                 result := instName
             else
@@ -550,7 +551,7 @@ module XL.SEMANTICS.GENERICS is
         PT.AttachTree Source, "INSTANCEOF", Decl.Name
 
         // Cache the result for next time
-        if XLT.EndTentative(tentative) then
+        if XLT.EndAttempt(tnt) then
             errors : text := ERR.LastErrorsText()
             errorText : PT.text_tree := PT.NewText(errors,'"',result.position)
             result := parse_tree(@error 'errorText')
@@ -674,12 +675,12 @@ module XL.SEMANTICS.GENERICS is
 
         // Check the validation
         XLT.context := instContext
-        tentative : XLT.tentative_translation := XLT.BeginTentative()
+        tnt : XLT.attempt := XLT.BeginAttempt()
         valid : PT.tree := PT.Clone(GenType.validation)
         trace[inst] "Validation: ", valid
         valid := XLT.XLDeclarations(valid)
         valid := XLT.XLSemantics(valid)
-        if XLT.EndTentative(tentative) then
+        if XLT.EndAttempt(tnt) then
             trace[inst] "Errors during validation, result=", valid
             ERR.Error "Generic validation failed for '$1'", IName
             ERR.DisplayLastErrors()
@@ -715,6 +716,11 @@ module XL.SEMANTICS.GENERICS is
         // we deduce complex -> complex[integer]
         GenParmType : ParmType as GEN.generic_type
         if GenParmType <> nil then
+
+            // If the argument being passed is itself being deduce, assume
+            // that it's OK for now, rely on other arg checks to fail
+            if PT.Attached(Arg, "TODEDUCE") <> nil then
+                return true
 
             // Check if the argument type is an instance of the parameter type
             // e.g. the actual type has to be complex[something]
@@ -819,16 +825,21 @@ module XL.SEMANTICS.GENERICS is
         NP  : integer := size(FunType.parameters)
         P   : integer
         result := true
+
+        trace[deduce] "Finalize deductions for ", TY.Source(FunType)
+
         for P in 0..NP-1 loop
             Parm : DCL.declaration := FunType.parameters[P]
             Arg  : PT.tree := Gargs[Parm.name]
 
+            trace[deduce] "Parameter ", PT.tree(Parm.Name), " is ", Arg
             if Arg = nil then
                 if TY.IsTypeType(Parm.type) then
                     // Get the 'array' generic type
                     subT    : TY.GetDefinedType(Parm.name) as GEN.generic_type
                     subArgs : generic_map
                     if subT <> nil then
+                        trace[deduce] "Trying to deduce ", TY.Source(subT)
                         NsubP : integer := size(subT.parameters)
                         subP  : integer
                         for subP in 0..NsubP-1 loop
@@ -838,23 +849,33 @@ module XL.SEMANTICS.GENERICS is
                                 subArg := subParm.initializer
                             if subArg <> nil then
                                 subArgs[subParm.name] := subArg
+                                trace[deduce] "  Sub parameter ",
+                                    PT.tree(subParm.name), " is ", subArg
                             else
+                                trace[deduce] "  Sub parameter ",
+                                    PT.tree(subParm.name), " is not defined"
                                 result := false
                             exit if not result
                     if result then
-                        tnt : XLT.tentative_translation := XLT.BeginTentative()
+                        trace[deduce] "Instantiating ", PT.tree(Parm)
+                        tnt : XLT.attempt := XLT.BeginAttempt()
                         Arg := Instantiate(Parm, subArgs, nil, nil)
-                        result := not XLT.EndTentative(tnt)
+                        result := not XLT.EndAttempt(tnt)
                         if result then
+                            trace[deduce] "Instantiated as ", Arg
                             Gargs[Parm.name] := Arg
 
             if Arg = nil then
                 Arg := Parm.initializer
                 if Arg = nil then
+                    trace[deduce] "Parameter ", PT.tree(Parm.Name), " not set"
                     result := false
 
             if not result then
+                trace[deduce] "Deductions for ", TY.Source(FunType), " failed"
                 return false
+
+        trace[deduce] "Deductions for ", TY.Source(FunType), " succeeded"
 
 
     function CanDeduceReturnType (FunType      : GEN.generic_type;
@@ -866,17 +887,22 @@ module XL.SEMANTICS.GENERICS is
         if fun <> nil then
             ret : fun.base as GEN.generic_type
             if ret <> nil then
+                trace [deduce] "Deducing return type ", TY.Source(ret)
                 tgtTree : PT.tree := TY.TargetType()
+                trace [deduce] "Target return type ", tgtTree
                 if tgtTree <> nil then
                     // Expected return type known: try to deduce
                     tgt : TY.any_type := TY.GetDefinedType(tgtTree)
                     if tgt = nil then
                         return false
-                    res : PT.name_tree := PT.NewName("result")
-                    RetDecl : DCL.declaration := DCL.Declare(res, ret)
-                    arg : PT.tree := PT.NewName("arg")
-                    TY.SetType arg, tgt
-                    return Deduce(FunType, RetDecl, arg, Gargs)
+                    RetDecl : DCL.declaration := fun.result_decl
+                    if RetDecl <> nil then
+                        arg : PT.tree := PT.NewName("arg")
+                        TY.SetType arg, tgt
+                        if Deduce(FunType, RetDecl, arg, Gargs) then
+                            if FinalizeDeductions(FunType, Gargs) then
+                                return true
+                    return false
 
             if SYM.GetInteger(XLT.context, "CALLDEPTH") > 0 then
                 // Expected return type not known yet, need to defer
@@ -896,9 +922,9 @@ module XL.SEMANTICS.GENERICS is
         Scope      : PT.tree
 
         // Save errors for later display
-        tnt : XLT.tentative_translation := XLT.BeginTentative()
+        tnt : XLT.attempt := XLT.BeginAttempt()
         LookupInstantiation Name, Args, "TYPE", Decl, ActualArgs, Scope
-        if XLT.EndTentative(tnt) then
+        if XLT.EndAttempt(tnt) then
             ERR.Error "Unable to instantiate '$1', because", Name
             ERR.DisplayLastErrors()
             return parse_tree(@error)
@@ -917,9 +943,26 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
 
         // Save errors for later display
-        tnt : XLT.tentative_translation := XLT.BeginTentative()
+        tnt : XLT.attempt := XLT.BeginAttempt()
         result := Instantiate(Decl, Args, nil, nil)
-        if XLT.EndTentative(tnt) then
+        if XLT.EndAttempt(tnt) then
+            ERR.Error "Unable to instantiate '$1', because", Decl.Name
+            ERR.DisplayLastErrors()
+
+
+    function InstantiateType (Name : PT.tree;
+                              Args : generic_map) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Instantiate a specific type
+    // ------------------------------------------------------------------------
+
+        decl : DCL.declaration := DCL.GetDeclaration(Name)
+        assert decl <> nil
+
+        // Save errors for later display
+        tnt : XLT.attempt := XLT.BeginAttempt()
+        result := Instantiate(decl, Args, nil, nil)
+        if XLT.EndAttempt(tnt) then
             ERR.Error "Unable to instantiate '$1', because", Decl.Name
             ERR.DisplayLastErrors()
 
@@ -933,9 +976,9 @@ module XL.SEMANTICS.GENERICS is
     //   Instantiate a specific function
     // ------------------------------------------------------------------------
 
-        tnt : XLT.tentative_translation := XLT.BeginTentative()
+        tnt : XLT.attempt := XLT.BeginAttempt()
         result := Instantiate (Decl, Args, Variadics, BaseRecord)
-        if XLT.EndTentative(tnt) then
+        if XLT.EndAttempt(tnt) then
             if Variadics <> nil then
                 ERR.Error "Error instantiating '$1' with '...' set to '$2'",
                           Source, Variadics

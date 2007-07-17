@@ -661,7 +661,7 @@ module XL.SEMANTICS.TYPES is
                 return result
 
         // Otherwise, barf
-        ERR.Error "Cannot convert '$1' to from '$2' to '$3'",
+        ERR.Error "Cannot convert '$1' from '$2' to '$3'",
                   expr, TY.Source(exprType), TY.Source(toType)
         return expr
 
@@ -677,9 +677,9 @@ module XL.SEMANTICS.TYPES is
     // ------------------------------------------------------------------------
     //   Try to convert to target type, return nil on errors
     // ------------------------------------------------------------------------
-        tentative: XLT.tentative_translation := XLT.BeginTentative()
+        tnt : XLT.attempt := XLT.BeginAttempt()
         result := Convert(expr, toType)
-        if XLT.EndTentative(tentative) then
+        if XLT.EndAttempt(tnt) then
             return nil
 
 
@@ -792,6 +792,7 @@ module XL.SEMANTICS.TYPES is
     // ------------------------------------------------------------------------
     //    Add a target type
     // ------------------------------------------------------------------------
+        trace[deduce] "Push target type ", type
         target_types += type
 
 
@@ -808,6 +809,5 @@ module XL.SEMANTICS.TYPES is
     // ------------------------------------------------------------------------
     //   Remove the last target type
     // ------------------------------------------------------------------------
+        trace[deduce] "Pop target type ", back(target_types)
         pop_back target_types
-
-

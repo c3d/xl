@@ -76,10 +76,10 @@ module XL.TRANSLATOR with
                                  modname : PT.tree) return BC.bytecode
 
     // Tentative translation of a specific compiler phase
-    type tentative_translation_data
-    type tentative_translation is access to tentative_translation_data
-    function BeginTentative() return tentative_translation
-    function EndTentative(what : tentative_translation) return boolean
+    type attempt_data
+    type attempt is access to attempt_data
+    function BeginAttempt() return attempt
+    function EndAttempt(what : attempt) return boolean
     function TentativeSemantics(what : PT.tree) return PT.tree
 
     // Recursive implementation of something

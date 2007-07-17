@@ -468,10 +468,10 @@ module XL.SEMANTICS.TYPES.RECORDS is
         trace[defaultfns] "In ", newsyms, "-", globals, " entering: ", source
 
         // Try to evaluate the tentative function
-        tentative : XLT.tentative_translation := XLT.BeginTentative()
+        tnt : XLT.attempt := XLT.BeginAttempt()
         result := XLT.XLDeclarations(source)
         result := XLT.XLSemantics(result)
-        hadError : boolean := XLT.EndTentative(tentative)
+        hadError : boolean := XLT.EndAttempt(tnt)
         XLT.context := context
         XLT.global_context := globals
         if hadError then

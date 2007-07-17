@@ -449,14 +449,12 @@ module XL.SEMANTICS.FUNCTIONS is
         // If there is a return type, create a 'result' variable
         retType : TY.any_type := ftype.base
         if retType <> nil then
-            retName : PT.name_tree := PT.NewName("result", Body.position)
-            decl    : DCL.declaration := DCL.Declare(retName, retType)
+            decl    : DCL.declaration := ftype.result_decl
             if decl <> nil then
                 DType : TY.any_type := decl.type
                 MName : PT.name_tree := decl.machine_name
                 MType : PT.name_tree := DType.machine_name
                 f.result_machine_name := MName
-                decl.is_output := true
                 preCode := parse_tree(@result_decl 'MType' 'MName')
 
         // For generic functions, just skip body semantics and the like

@@ -47,6 +47,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS with
     //    value returned by the function will be
 
         parameters      : declaration_list
+        result_decl     : declaration
         symbols         : SYM.symbol_table
         outputs_count   : integer
         inputs_count    : integer

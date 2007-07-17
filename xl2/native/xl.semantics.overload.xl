@@ -143,7 +143,9 @@ module XL.SEMANTICS.OVERLOAD is
                     ToBeDefined := true
                     trace[overload] "Arg ", Dval, " is to be defined"
             if not ToBeDefined then
+                TY.PushTargetType nil
                 Arg := XLT.XLSemantics (Arg)
+                TY.PopTargetType()
             ActArgs += Arg
             ToBeDef += ToBeDefined
             trace [overload] "Args->", Arg
@@ -259,6 +261,22 @@ module XL.SEMANTICS.OVERLOAD is
                     if A < NA then
                         Arg := SemArgs[A]
                         trace [overload] "Testing argument ", Arg
+                        if PT.Attached(Arg, "TODEDUCE") <> nil then
+                            toType : PT.tree := TY.Source(D.type)
+                            trace[overload] "Return type to deduce: ", toType
+                            tnt : XLT.attempt := XLT.BeginAttempt()
+                            TY.PushTargetType toType
+                            Arg := XLT.XLSemantics(Arg)
+                            TY.PopTargetType()
+                            if XLT.EndAttempt(tnt) then
+                                Matching := false
+                                ERR.Error "'$1' could not be selected because",
+                                          C
+                                ERR.Error "there was an error deducing '$1'",
+                                          SemArgs[A]
+                                ERR.DisplayLastErrors()
+                                exit if not Matching
+
                         if ToBeDef[A] then
                             if D.is_variable then
                                 Dname : Arg as PT.name_tree
@@ -392,15 +410,22 @@ module XL.SEMANTICS.OVERLOAD is
                 if bestGargs[nil] <> nil then
                     // Target type not set in that context yet, back up
                     assert TY.TargetType() = nil
-                    return parse_tree(@@deduce 'Input')
+                    assert callDepth > 0
+                    CGM.ExitCall callDepth, result
+                    PT.AttachTree Input, "TODEDUCE", Input
+                    return Input
                 result := GN.InstantiateFunction(NameTree, bestF,
                                                  bestGArgs, bestVargs,
                                                  BaseRecord)
+                trace [overload] "INST: Instantiated as ", result
                 bestF := FN.GetFunction(result)
                 if bestF = nil then
                     // Instantiation error
                     CGM.ExitCall callDepth, result
                     return result
+                trace [overload] "INST: new name ", PT.tree(bestF.name),
+                             "=", PT.tree(bestF.machine_name)
+                trace [overload] "INST: new type ", TY.Source(bestF.type)
 
             // If there are parameters to declare, declare them now
             ctors        : PT.tree

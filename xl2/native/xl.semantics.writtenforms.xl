@@ -133,19 +133,43 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                             semArg := value
                             skip := true
                 if semArg = nil then
-                    ERR.PushErrorContext()
+                    tnt : XLT.attempt := XLT.BeginAttempt()
                     callDepth : integer := CGM.EnterCall()
+                    TY.PushTargetType nil
                     semArg := XLT.XLSemantics(value)
+                    TY.PopTargetType()
                     CGM.ExitCall callDepth, tempDt
-                    if ERR.PopErrorContext() then
+                    if XLT.EndAttempt(tnt) then
                         errors : text := ERR.LastErrorsText()
                         E : PT.tree := PT.NewText(errors, '"', value.position)
                         semArg := parse_tree(@error 'E')
                         PT.AttachTree value, key, semArg
                         return 0
-                    PT.AttachTree value, key, semArg
-                    if tempDT <> nil then
-                        PT.AttachTree semArg, keyD, tempDt
+                    if PT.Attached(semArg, "TODEDUCE") = nil then
+                        PT.AttachTree value, key, semArg
+                        if tempDT <> nil then
+                            PT.AttachTree semArg, keyD, tempDt
+                    else
+                        trace[deduce] "For ", PT.tree(info.reference_form)
+                        trace[deduce] "will try deducing return of ", value
+                        trace[deduce] "from type ", TY.Source(decl.type),
+                                      " of parameter ", PT.tree(decl.name)
+
+                        dt  : TY.any_type := decl.type
+                        dgt : dt as GEN.generic_type
+                        if dgt <> nil then
+                            trace[deduce] "Type is generic, deferring"
+                        else
+                            tnt : XLT.attempt := XLT.BeginAttempt()
+                            callDepth : integer := CGM.EnterCall()
+                            TY.PushTargetType TY.Source(dt)
+                            semArg := XLT.XLSemantics(value)
+                            TY.PopTargetType()
+                            CGM.ExitCall callDepth, tempDt
+                            if XLT.EndAttempt(tnt) then
+                                trace[deduce] "Failed: ", ERR.LastErrorsText()
+                                return 0
+                        
             translate semArg
                 when (@error 'Error') then
                     return 0
@@ -179,6 +203,42 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                     base_score /= 2
                 else
                     return 0
+
+            // This is the case for P := Pointer(3). Now we have
+            // finalized deductions for P successfully, so we know
+            // that P = pointer[znort], and consequently we can
+            // use that information to deduce the return type of Pointer.
+            for param_name in args loop
+                value  : PT.tree := args[param_name]
+                if PT.Attached(value, "TODEDUCE") <> nil then
+                    decl   : DCL.declaration := written.args_map[param_name]
+                    tempDt : PT.tree // Temporary destructors
+
+                    trace[deduce] "For ", PT.tree(info.reference_form)
+                    trace[deduce] "will try deducing return of ", value
+                    trace[deduce] "from gen type ", TY.Source(decl.type),
+                                  " of parameter ", PT.tree(decl.name)
+
+                    dt  : TY.any_type := decl.type
+                    dgt : dt as GEN.generic_type
+                    if dgt <> nil then
+                        inst : PT.tree := TY.Source(dgt)
+                        inst := GN.InstantiateType(inst, Gargs)
+                        trace[deduce] "instantiated as ", inst
+                        dt := TY.GetDefinedType(inst)
+                        trace[deduce] "of type ", TY.Source(dt)
+
+                    tnt : XLT.attempt := XLT.BeginAttempt()
+                    callDepth : integer := CGM.EnterCall()
+                    TY.PushTargetType TY.Source(dt)
+                    value := XLT.XLSemantics(value)
+                    args[paramName] := value
+                    TY.PopTargetType()
+                    CGM.ExitCall callDepth, tempDt
+                    if XLT.EndAttempt(tnt) then
+                        // Oh well, all this effort to fail now...
+                        trace[deduce] "Failed: ", ERR.LastErrorsText()
+                        return 0
 
         written.generic_args := Gargs
         return base_score
