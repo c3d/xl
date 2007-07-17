@@ -850,12 +850,40 @@ module XL.SEMANTICS.GENERICS is
 
             if Arg = nil then
                 Arg := Parm.initializer
-                if Arg <> nil then
-                    result := true
+                if Arg = nil then
+                    result := false
 
             if not result then
-                ERR.Error "Unable to deduce '$1'", Parm.name
                 return false
+
+
+    function CanDeduceReturnType (FunType      : GEN.generic_type;
+                                  in out Gargs : generic_map) return boolean is
+    // ------------------------------------------------------------------------
+    //    Check if we can deduce the return type
+    // ------------------------------------------------------------------------
+        fun : FunType.base as FN.function_type
+        if fun <> nil then
+            ret : fun.base as GEN.generic_type
+            if ret <> nil then
+                tgtTree : PT.tree := TY.TargetType()
+                if tgtTree <> nil then
+                    // Expected return type known: try to deduce
+                    tgt : TY.any_type := TY.GetDefinedType(tgtTree)
+                    if tgt = nil then
+                        return false
+                    res : PT.name_tree := PT.NewName("result")
+                    RetDecl : DCL.declaration := DCL.Declare(res, ret)
+                    arg : PT.tree := PT.NewName("arg")
+                    TY.SetType arg, tgt
+                    return Deduce(FunType, RetDecl, arg, Gargs)
+
+            if SYM.GetInteger(XLT.context, "CALLDEPTH") > 0 then
+                // Expected return type not known yet, need to defer
+                Gargs[nil] := TY.Source(ret)
+                return true
+
+        return false        
 
 
     function InstantiateType (Name : PT.tree;

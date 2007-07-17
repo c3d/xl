@@ -327,8 +327,15 @@ module XL.SEMANTICS.OVERLOAD is
                 // Check if there are non-deduced generic arguments
                 if Gtype <> nil then
                     if not GN.FinalizeDeductions(Gtype, Gargs) then
-                        Matching := false
-                        trace [overload] "FAIL: Cannot finalize deductions"
+                        if GN.CanDeduceReturnType(Gtype, Gargs) then
+                            Score /= 2
+                            trace [overload] "WARN: Must deduce return type"
+                        else
+                            ERR.Error "'$1' could not be selected because", C
+                            ERR.Error "the generic type '$1' cannot be deduced",
+                                      TY.Source(Gtype)
+                            Matching := false
+                            trace [overload] "FAIL: Cannot finalize deductions"
 
                 // If not matching, lookup next
                 if not Matching then
@@ -382,6 +389,10 @@ module XL.SEMANTICS.OVERLOAD is
                              "=", PT.tree(bestF.machine_name)
 
             if bestGtype <> nil or bestVargs <> nil then
+                if bestGargs[nil] <> nil then
+                    // Target type not set in that context yet, back up
+                    assert TY.TargetType() = nil
+                    return parse_tree(@@deduce 'Input')
                 result := GN.InstantiateFunction(NameTree, bestF,
                                                  bestGArgs, bestVargs,
                                                  BaseRecord)

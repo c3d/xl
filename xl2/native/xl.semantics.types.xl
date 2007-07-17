@@ -783,3 +783,31 @@ module XL.SEMANTICS.TYPES is
             T.kind = PT.xlNAME
         then
             return EvaluateTypeAsTree(T)
+
+
+
+    target_types : string of PT.tree
+
+    procedure PushTargetType(type : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Add a target type
+    // ------------------------------------------------------------------------
+        target_types += type
+
+
+    function TargetType() return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Return current target type if any
+    // ------------------------------------------------------------------------
+        if size(target_types) > 0 then
+            return back(target_types)
+        return nil
+
+
+    procedure PopTargetType() is
+    // ------------------------------------------------------------------------
+    //   Remove the last target type
+    // ------------------------------------------------------------------------
+        pop_back target_types
+
+

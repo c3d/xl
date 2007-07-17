@@ -84,6 +84,12 @@ module XL.SEMANTICS.TYPES with
     function Convert(expr : PT.tree; toType : PT.tree) return PT.tree
     function TryConvert(expr : PT.tree; toType : any_type) return PT.tree
 
+    // Define the target type during overloading / written forms
+    procedure PushTargetType(type : PT.tree)
+    function TargetType() return PT.tree
+    procedure PopTargetType()
+
+
     // The built-in types
     integer_type                : PT.tree := nil
     real_type                   : PT.tree := nil
