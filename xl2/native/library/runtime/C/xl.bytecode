@@ -235,6 +235,8 @@ new_ptr          "$1 = malloc(sizeof(*$1));"
 free_ptr         "if ($1) free($1);"
 int_to_ptr       "$1 = (xlptr) $2;"
 ptr_to_int       "$1 = (xlint) $2;"
+uint_to_ptr      "$1 = (xlptr) $2;"
+ptr_to_uint      "$1 = (xluint) $2;"
 
 array_type       "typedef $1 $3[$2];"
 pointer_type     "typedef $1 *$2;"

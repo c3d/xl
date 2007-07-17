@@ -1,0 +1,21 @@
+use XL.POINTER
+use XL.POINTER.ADDRESS
+use XL.POINTER.MACHINE_ADDRESS
+use XL.UI.CONSOLE
+
+Ptr : pointer to integer 
+Ptr2 : pointer to integer 
+Val : integer
+
+Ptr := nil
+
+WriteLn "Null pointer is ", Integer(Ptr)
+
+Ptr := Pointer(16#FF_000A)
+
+WriteLn "Fixed address pointer is ", Integer(Ptr)
+
+Ptr := Address(Val)
+
+WriteLn "Variable pointer delta is ", Integer(Ptr) - Integer(&Val)
+

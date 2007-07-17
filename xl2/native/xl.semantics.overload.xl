@@ -79,6 +79,11 @@ module XL.SEMANTICS.OVERLOAD is
     //    Resolve the function name from its args
     // ------------------------------------------------------------------------
 
+        // Accelerate if this is "Pointer(3)" and we cannot deduce yet
+        if TY.TargetType() = nil and PT.Attached(Input, "TODEDUCE") then
+            trace[overload] "Overload: cannot yet deduce ", Input
+            return Input
+
         context         : SYM.symbol_table := XLT.context
         symbols         : SYM.symbol_table := context
         list            : PT.tree_list

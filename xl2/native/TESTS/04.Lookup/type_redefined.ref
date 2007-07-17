@@ -10,9 +10,9 @@
 04.Lookup/type_redefined.xl:29: because a type named 'integer' already exists
 | type integer
 |____________^
-04.Lookup/type_redefined.xl:37: No translation for 'result := integer ( )'
-|    type integer
-|___^
+04.Lookup/type_redefined.xl:36: No translation for 'result := integer ( )'
+| function Foo (K : integer) return integer is
+|_________________________________________^
 library/runtime/default/./xl_builtins.xs:183: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^

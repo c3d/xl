@@ -14,22 +14,22 @@ Constructed 782
 Destroyed 782
 On entry:
  InVar=778
- OutVar=782
+ OutVar=781
  InOutVar=780
- Result=781
+ Result=782
 On exit:
  InVar=778
- OutVar=1564
+ OutVar=1562
  InOutVar=2340
- Result=781
+ Result=782
 Destroyed 779
-F=781
-Destroyed 781
+F=782
+Destroyed 782
 Global variables after call to F:
  Global=778
- General=1564
+ General=1562
  Universal=2340
 Destroyed 782
-Destroyed 1564
+Destroyed 1562
 Destroyed 778
 Destroyed 2340
