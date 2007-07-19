@@ -182,7 +182,7 @@ module XL.SEMANTICS.DECLARATIONS is
         if out_flag and TY.IsConstant(decl.type) then
             ERR.Error "Output parameter '$1' cannot have constant type '$2'",
                       Name, Type
-        if in_flag and TY.IsVariable(decl.type) then
+        if in_flag and not out_flag and TY.IsVariable(decl.type) then
             ERR.Error "Input parameter '$1' cannot have variable type '$2'",
                       Name, Type
         if Value <> nil then

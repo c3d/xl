@@ -364,7 +364,7 @@ module XL.SEMANTICS.TYPES.GENERICS is
             return
 
         // Otherwise, this should be a generic type
-        gtp : tp as generic_type
+        gtp : TY.NonConstedType(tp) as generic_type
         if gtp = nil then
             ERR.Error "Internal: Dependency '$1' is not a generic type",
                       TY.Source(tp)

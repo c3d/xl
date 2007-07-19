@@ -158,7 +158,7 @@ module XL.SEMANTICS.TYPES is
         ktype : constvar_type
         bname : PT.tree := base.name
         ktype.base := base
-        ktype.machine_name := PT.NewName(ksig, mtype.position)
+        ktype.machine_name := mtype
         ktype.interface_match := SourceTypeMatch
         if cst then
             ktype.name := parse_tree(constant 'bname')
