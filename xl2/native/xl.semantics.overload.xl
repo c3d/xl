@@ -169,6 +169,7 @@ module XL.SEMANTICS.OVERLOAD is
         if ERR.PopErrorContext() then
             ERR.Error "Unable to evaluate arguments to '$1'", NameTree
             ERR.DisplayLastErrors()
+            CGM.ExitCall callDepth, result
             return parse_tree(@error)
         ERR.PushErrorContext()
 
