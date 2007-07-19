@@ -728,12 +728,6 @@ module XL.SEMANTICS.GENERICS is
             if not FunParm.is_output then
                 ArgType := TY.NonConstedType (ArgType)
             ArgTypeSrc : PT.tree := TY.Source (ArgType)
-            InstanceOf  : PT.tree := PT.Attached(ArgTypeSrc, "INSTANCEOF")
-            if InstanceOf <> nil then
-                if not IsInstanceOf(GenParmType, ArgType, Gargs) then
-                    ERR.Error "while attempting to deduce '$1'", FunParm.name
-                    ERR.Error "from '$1'", Arg
-                    return false
 
             // Check consistency with deductions, or deduce if not found
             NG         : integer := size (FunGenType.parameters)
