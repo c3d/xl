@@ -129,6 +129,12 @@ has to live with. The status of this compiler is shown below:
 </TR>
 
 <TR>
+<TD>{inside "statements" "Enumerations and sets"}</TD>
+<TD>Enumerations and sets ("flags")</TD>
+<TD align="center" bgcolor="#FF0000">To-Do</TD>
+</TR>
+
+<TR>
 <TD>{inside "generics" "Generic declarations"}</TD>
 <TD>{concept "generics" "Parameterized types and functions"}</TD>
 <TD align="center" bgcolor="#00FF00">Done</TD>

@@ -1,9 +1,9 @@
 10.Generics/validation_failure.xl:14: No translation for 'Q := F (P)'
 | Q : complex := F(P)
 |_________________^
-10.Generics/validation_failure.xl:10: Candidate form 'this' := 'that' cannot be selected
-| type complex is record with
-|____________^
+library/runtime/default/./xl_builtins.xs:183: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
 10.Generics/validation_failure.xl:14: No valid function found for 'F'
 | Q : complex := F(P)
 |________________^

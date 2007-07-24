@@ -22,10 +22,10 @@
 
 module XL.POINTER with
 
-    generic [type T]
-    type pointer written pointer to T is XL.BYTECODE.pointer_type
+    generic [type item]
+    type pointer written pointer to item is XL.BYTECODE.pointer_type
 
-    function Dereference (P : pointer) return variable pointer.T written *P                      is XL.BYTECODE.deref_ptr
+    function Dereference (P : pointer) return variable pointer.item written *P          is XL.BYTECODE.deref_ptr
     function Pointer() return pointer                                                   is XL.BYTECODE.zero_ptr
     to Copy(out Tgt : pointer; Src : pointer) written Tgt := Src                        is XL.BYTECODE.copy_ptr
     to Zero(out Tgt : pointer) written Tgt := nil                                       is XL.BYTECODE.zero_ptr

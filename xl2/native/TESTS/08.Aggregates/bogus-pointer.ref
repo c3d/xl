@@ -21,7 +21,7 @@ TESTS/library/xl.pointer.xs:31: Candidate form 'Tgt' := nil cannot be selected
 |_____________________________________________^
 [Compiler generated] Candidate instance type '<undefined type>_597'
 TESTS/library/xl.pointer.xs:26: is not an instance of 'pointer'
-|     type pointer written pointer to T is XL.BYTECODE.pointer_type
+|     type pointer written pointer to item is XL.BYTECODE.pointer_type
 |________________^
 08.Aggregates/bogus-pointer.xl:15: No translation for 'PC . re := 0'
 | PC.re := 0.0
@@ -33,5 +33,5 @@ library/runtime/default/./xl_builtins.xs:36: Candidate instance type 'real'
 |     type real                                                                                   is XL.BYTECODE.xlreal
 |_____________^
 TESTS/library/xl.pointer.xs:26: is not an instance of 'pointer'
-|     type pointer written pointer to T is XL.BYTECODE.pointer_type
+|     type pointer written pointer to item is XL.BYTECODE.pointer_type
 |________________^

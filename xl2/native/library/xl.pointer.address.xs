@@ -24,5 +24,5 @@ use XL.POINTER
 
 module XL.POINTER.ADDRESS with
 
-    function Address(in out item : pointer.T) return pointer written &item              is XL.BYTECODE.address_ptr
+    function Address(in out item : pointer.item) return pointer written &item           is XL.BYTECODE.address_ptr
 

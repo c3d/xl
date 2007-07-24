@@ -230,16 +230,12 @@ module XL_BUILTINS with
     // ========================================================================
 
     generic [type ordered_type]
-    type range is record with
+    type range written range of ordered_type is record with
         First, Last : ordered_type
 
     function Range (First, Last : ordered) return range[ordered] written First..Last is
          result.First := First
          result.Last := Last
-
-    //to Copy(out TgtRng: range; in SrcRng : range) written TgtRng := SrcRng is
-    //    TgtRng.First := SrcRng.First
-    //    TgtRng.Last := SrcRng.Last
 
 
 
