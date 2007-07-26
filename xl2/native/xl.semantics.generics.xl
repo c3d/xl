@@ -727,6 +727,8 @@ module XL.SEMANTICS.GENERICS is
             ArgType  : TY.any_type := TY.GetType(Arg)
             if not FunParm.is_output then
                 ArgType := TY.NonConstedType (ArgType)
+            else
+                ArgType := TY.NonVariableType (ArgType)
             ArgTypeSrc : PT.tree := TY.Source (ArgType)
 
             // Check consistency with deductions, or deduce if not found

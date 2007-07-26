@@ -170,8 +170,7 @@ module XL.CONSTANTS is
         // Parentheses
         when (('Expression')) then
             result := EvaluateConstant(Expression)
-            if (result.kind = PT.xlINFIX or
-                result.kind = PT.xlPREFIX) then
+            if result.kind = PT.xlINFIX or result.kind = PT.xlPREFIX then
                 result := parse_tree(('result'))
             return result
 

@@ -31,3 +31,13 @@ WriteLn "Ptr2=", Integer(Ptr2)
 WriteLn "Ptr3=", Integer(Ptr3)
 WriteLn "Ptr4=", Integer(Ptr4)
 
+*(&Ptr1) := Ptr2
+*(&Ptr2) := Ptr3
+*(&Ptr3) := Ptr4
+*(&Ptr4) := Ptr1
+
+WriteLn "Ptr1=", Integer(Ptr1)
+WriteLn "Ptr2=", Integer(Ptr2)
+WriteLn "Ptr3=", Integer(Ptr3)
+WriteLn "Ptr4=", Integer(Ptr4)
+

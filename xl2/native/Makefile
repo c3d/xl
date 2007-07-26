@@ -66,6 +66,8 @@ OTHER_SOURCES=					\
 	xl.semantics.types.functions.xl		\
 	xl.semantics.types.records.xs		\
 	xl.semantics.types.records.xl		\
+	xl.semantics.types.enumerations.xs	\
+	xl.semantics.types.enumerations.xl	\
 	xl.semantics.types.generics.xs		\
 	xl.semantics.types.generics.xl		\
 	xl.semantics.writtenforms.xs		\

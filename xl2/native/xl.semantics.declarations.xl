@@ -225,7 +225,7 @@ module XL.SEMANTICS.DECLARATIONS is
 
 
     function Declare(Name : PT.name_tree;
-                     tp: TY.any_type) return declaration is
+                     tp   : TY.any_type) return declaration is
     // ------------------------------------------------------------------------
     //   Declare a name with the given type
     // ------------------------------------------------------------------------
@@ -373,6 +373,7 @@ module XL.SEMANTICS.DECLARATIONS is
             if IsConstant(SrcType) then
                 return false
             // Output types must match exactly
+            SrcType := TY.NonVariableType(SrcType)
             return TY.SameType(SrcType, Tgt.type)
 
         // If decl and value types are identical, it's assignable

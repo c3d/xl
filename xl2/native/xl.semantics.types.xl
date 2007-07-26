@@ -31,6 +31,7 @@ import CST = XL.CONSTANTS
 import DCL = XL.SEMANTICS.DECLARATIONS
 import GEN = XL.SEMANTICS.TYPES.GENERICS
 import REC = XL.SEMANTICS.TYPES.RECORDS
+import EN = XL.SEMANTICS.TYPES.ENUMERATIONS
 
 
 module XL.SEMANTICS.TYPES is
@@ -250,6 +251,17 @@ module XL.SEMANTICS.TYPES is
         return tp
 
 
+    function NonVariableType(tp : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //   Return the non-variable version of the type
+    // ------------------------------------------------------------------------
+        ktp : tp as const_var_type
+        if ktp <> nil then
+            if not ktp.is_constant then
+                return ktp.base
+        return tp
+
+
     function MachineName (tp: any_type ) return PT.name_tree is
     // ------------------------------------------------------------------------
     //   Return the machine name, create one if necessary
@@ -438,6 +450,8 @@ module XL.SEMANTICS.TYPES is
             EnterSignature sig, tp
             SetDefinedType NameTree, tp
 
+        declared : DCL.declaration := DCL.GetDeclaration(result)
+
         // Check if this is record type, and if so enter default ctors/dtors
         rtp : GEN.NonGenericType(tp) as REC.record_type
         if rtp <> nil then
@@ -445,11 +459,19 @@ module XL.SEMANTICS.TYPES is
             if (N <> nil and
                 PT.Attached(N, "INSTANCEOF") = nil and
                 PT.Attached(N, "INSTARG") = nil) then
-                declared : DCL.declaration := DCL.GetDeclaration(result)
-                result := XLT.Append(result,REC.EnterDefaultConstructor(N,rtp))
-                result := XLT.Append(result,REC.EnterFieldConstructor(N,rtp))
-                result := XLT.Append(result, REC.EnterDestructor(N,rtp))
-                result := XLT.Append(result, REC.EnterCopy(N,rtp))
+                result := XLT.Append(result, REC.EnterDefaults(N, rtp))
+                SetDefinedType result, tp
+                if declared <> nil then
+                    DCL.SetDeclaration result, declared
+
+        // Same for enumeration types
+        etp : GEN.NonGenericType(tp) as EN.enumeration_type
+        if etp <> nil then
+            N : Name as PT.name_tree
+            if (N <> nil and
+                PT.Attached(N, "INSTANCEOF") = nil and
+                PT.Attached(N, "INSTARG") = nil) then
+                result := XLT.Append(result,EN.EnterDefaults (N, etp))
                 SetDefinedType result, tp
                 if declared <> nil then
                     DCL.SetDeclaration result, declared
@@ -559,11 +581,6 @@ module XL.SEMANTICS.TYPES is
                 ERR.Error "The type '$1' is undefined", tname
         else
             ERR.Error "The type '$1' is unknown", tname
-
-        // If we did not find it, enter it to avoid cascade errors
-        if result = nil then
-            NewType : PT.tree := EnterType(tname, nil)
-            result := GetDefinedType(NewType)
 
 
     function IsTypeName(type_expr : PT.tree) return boolean is
@@ -759,7 +776,7 @@ module XL.SEMANTICS.TYPES is
         then
             tp: any_type := EvaluateType(T)
             tp := ConstantType(tp)
-            tp.name := input
+            // tp.name := input
             SetDefinedType input, tp
             return input
 
@@ -768,7 +785,7 @@ module XL.SEMANTICS.TYPES is
         then
             tp: any_type := EvaluateType(T)
             tp := VariableType(tp)
-            tp.name := input
+            // tp.name := input
             SetDefinedType input, tp
             return input
 

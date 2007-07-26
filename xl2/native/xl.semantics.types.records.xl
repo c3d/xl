@@ -30,6 +30,7 @@ import CGM = XL.CODE_GENERATOR.MACHINE
 import SYM = XL.SYMBOLS
 import XLT = XL.TRANSLATOR
 import GEN = XL.SEMANTICS.TYPES.GENERICS
+import EN = XL.SEMANTICS.TYPES.ENUMERATIONS
 import GN = XL.SEMANTICS.GENERICS
 
 
@@ -282,7 +283,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
     translation XLEvaluateType
     // ------------------------------------------------------------------------
-    //    Translation of function types
+    //    Translation of record types and record-indexed types
     // ------------------------------------------------------------------------
         when ('Base' with 'Fields') where TY.IsTypeName(Base) then
             return EnterType (input, Base, Fields)
@@ -312,6 +313,8 @@ module XL.SEMANTICS.TYPES.RECORDS is
         tp : TY.any_type := TY.GetType(Record)
         if tp = nil then
             Record := XLT.XLSemantics(Record)
+            if Record = nil then
+                return nil
             tp := TY.GetType(Record)
 
         // Evaluate expression type
@@ -343,7 +346,8 @@ module XL.SEMANTICS.TYPES.RECORDS is
         if ERR.PopErrorContext() then
             result := false
         else
-            PT.AttachTree RecordExpr, "DEREF", Record            
+            PT.AttachTree RecordExpr, "DEREF", Record
+        trace[enum] "IsRecord ", RecordExpr, "=", integer(result)
 
 
     procedure RecordDeclarations(Record   : PT.tree;
@@ -588,6 +592,17 @@ module XL.SEMANTICS.TYPES.RECORDS is
                                 that : 'recName') written this := that is
                     'result'
             result := EnterDefaultFunction(result)
+
+
+    function EnterDefaults(N : PT.name_tree;
+                           rtp : record_type) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Enter all the default functions for records
+    // ------------------------------------------------------------------------
+        result := XLT.Append(result, EnterDefaultConstructor(N, rtp))
+        result := XLT.Append(result, EnterFieldConstructor(N, rtp))
+        result := XLT.Append(result, EnterDestructor(N, rtp))
+        result := XLT.Append(result, EnterCopy(N, rtp))
 
 
     translation XLSemantics

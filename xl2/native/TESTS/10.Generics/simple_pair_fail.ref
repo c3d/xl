@@ -4,6 +4,18 @@
 10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
 |     Second : nonexistent_item
 |_____________________________^
+10.Generics/simple_pair_fail.xl:6: 'Second' has no type
+|     Second : nonexistent_item
+|__________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: 'Second' has no type
+|     Second : nonexistent_item
+|__________^
 10.Generics/simple_pair_fail.xl:8: Expression 'Pair [integer]' has no type
 | type kazoo is Pair[integer]
 |___________________^
@@ -13,6 +25,12 @@
 10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
 |     Second : nonexistent_item
 |_____________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: 'Second' has no type
+|     Second : nonexistent_item
+|__________^
 10.Generics/simple_pair_fail.xl:9: Expression 'Pair [real]' has no type
 | type kazaa is Pair[real]
 |___________________^
@@ -22,6 +40,12 @@
 10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
 |     Second : nonexistent_item
 |_____________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: 'Second' has no type
+|     Second : nonexistent_item
+|__________^
 10.Generics/simple_pair_fail.xl:10: Expression 'Pair [kazaa]' has no type
 | type koza is Pair[kazaa]
 |__________________^
@@ -37,6 +61,12 @@
 10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
 |     Second : nonexistent_item
 |_____________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: 'Second' has no type
+|     Second : nonexistent_item
+|__________^
 10.Generics/simple_pair_fail.xl:11: Expression 'Pair [boo_lean]' has no type
 | type kzoo is Pair[Pair[boo_lean]]
 |_______________________^
