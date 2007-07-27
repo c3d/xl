@@ -1,13 +1,13 @@
 09.Modules/nested_import_nonmodule.xl:27: 'SIMPLE_IMPORTED' has no symbol table
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |______________________^
-library/runtime/default/./xl_builtins.xs:34: Its type is 
+library/runtime/default/./xl_builtins.xs:36: Its type is 
 |     type integer                                                                                is XL.BYTECODE.xlint
 |________________^
 09.Modules/nested_import_nonmodule.xl:27: Did not find symbols in 'SIMPLE_IMPORTED'
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |______________________^
-library/runtime/default/./xl_builtins.xs:34: Its type is 'integer'
+library/runtime/default/./xl_builtins.xs:36: Its type is 'integer'
 |     type integer                                                                                is XL.BYTECODE.xlint
 |________________^
 09.Modules/nested_import_nonmodule.xl:27: Imported file did not define 'SIMPLE_IMPORTED . NESTED1'
@@ -42,8 +42,8 @@ library/runtime/default/./xl_builtins.xs:34: Its type is 'integer'
 09.Modules/nested_import_nonmodule.xl:27: but is used as a submodule of 'SIMPLE_IMPORTED . NESTED1'
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |_______________________^
-[Compiler generated] No translation for 'invalid_submodule_582 := Simple_imported . Nested_1 . nested2 . HasKlaxon (0.54)'
-library/runtime/default/./xl_builtins.xs:183: Candidate form 'Tgt' := 'Src' cannot be selected
+[Compiler generated] No translation for 'invalid_submodule_605 := Simple_imported . Nested_1 . nested2 . HasKlaxon (0.54)'
+library/runtime/default/./xl_builtins.xs:186: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
 09.Modules/nested_import_nonmodule.xl:29: No translation for 'Simple_imported . Nested_1'

@@ -1,7 +1,7 @@
 10.Generics/implicit_instantiation_fail.xl:7: No translation for 'C := Ajouter (3 , "ABC" )'
 | C : text := Ajouter (3, "ABC")
 |_____________________^
-library/runtime/default/./xl_builtins.xs:183: Candidate form 'Tgt' := 'Src' cannot be selected
+library/runtime/default/./xl_builtins.xs:186: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
 10.Generics/implicit_instantiation_fail.xl:7: No valid function found for 'Ajouter'
@@ -10,10 +10,10 @@ library/runtime/default/./xl_builtins.xs:183: Candidate form 'Tgt' := 'Src' cann
 10.Generics/implicit_instantiation_fail.xl:3: Generic parameter type 'item' 
 | generic [type item]
 |__________________^
-library/runtime/default/./xl_builtins.xs:34: cannot be both 'integer'
+library/runtime/default/./xl_builtins.xs:36: cannot be both 'integer'
 |     type integer                                                                                is XL.BYTECODE.xlint
 |________________^
-library/runtime/default/./xl_builtins.xs:39: and 'text' in the same instance
+library/runtime/default/./xl_builtins.xs:40: and 'text' in the same instance
 |     type text                                                                                   is XL.BYTECODE.xltext
 |_____________^
 10.Generics/implicit_instantiation_fail.xl:4: 'Ajouter (X , Y : item) return item' could not be selected because
