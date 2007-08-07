@@ -1,11 +1,11 @@
 // ****************************************************************************
-//   (C) Copyright 2000-2007 Hewlett-Packard Development Company, L.P.
-//   HPVM: $RCSfile$ $Revision$ - HP CONFIDENTIAL
+//  xl.pointer.xs                   (C) 1992-2007 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//    Implementation of basic pointer functionality
+//     Implementation of basic pointer functionality
 // 
 // 
 // 
@@ -15,9 +15,12 @@
 // 
 // 
 // ****************************************************************************
-// This document is property of Hewlett-Packard DC. It must not be
-// copied, reproduced or disclosed outside Hewlett-Packard without prior
-// written approval.
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
 // ****************************************************************************
 
 module XL.POINTER with
