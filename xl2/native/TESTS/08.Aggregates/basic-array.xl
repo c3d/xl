@@ -6,6 +6,10 @@ MyArray : array[5] of integer
 to Dump(A : array[5] of integer) is
     for I in 0..4 loop
         WriteLn "A[", I, "]=", A[I]
+    for I in range(A) loop
+        WriteLn "A2[", I, "]=", A[I]
+    for I in A.range loop
+        WriteLn "A3[", I, "]=", A[I]
 
 for I in 0..4 loop
     MyArray[I] := I

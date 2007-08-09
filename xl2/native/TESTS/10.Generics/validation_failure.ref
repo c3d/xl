@@ -22,7 +22,7 @@
 library/runtime/default/./xl_builtins.xs:188: Candidate form 'X' < 'Y' cannot be selected
 |     function LessThan(X, Y : character) return boolean          written X<Y                     is XL.BYTECODE.lt_char
 |__________________________________________________________________________^
-10.Generics/validation_failure.xl:4: Cannot convert 'a_642' from 'record with 
+10.Generics/validation_failure.xl:4: Cannot convert 'a_653' from 'record with 
     re , im : real
 ' to 'character'
 |     A, B : ordered
