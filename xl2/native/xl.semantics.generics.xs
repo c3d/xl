@@ -62,7 +62,9 @@ module XL.SEMANTICS.GENERICS with
     procedure SetContextOfInstantiation (instContext : SYM.symbol_table;
                                          oldContext  : SYM.symbol_table)
     function ContextOfInstantiation () return SYM.symbol_table
-
+    procedure SetInstanceContext(source      : PT.tree;
+                                 instContext : SYM.symbol_table)
+    function GetInstanceContext(source : PT.tree) return SYM.symbol_table
 
     function IsGenericName(Name : PT.tree; kind : text) return boolean
     function GenericIndex(GenType : PT.tree; Arg : PT.tree) return PT.tree

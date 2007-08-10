@@ -223,6 +223,106 @@ module XL.SEMANTICS.TYPES.RECORDS is
         XLT.context := oldContext
 
 
+    // ========================================================================
+    // 
+    //   Properties of record types
+    // 
+    // ========================================================================
+
+    function GetRecordBaseType(Record : PT.tree) return TY.any_type is
+    // ------------------------------------------------------------------------
+    //    Return the type of an expression
+    // ------------------------------------------------------------------------
+
+        // Evaluate record expression if type is not known
+        tp : TY.any_type := TY.GetType(Record)
+        if tp = nil then
+            Record := XLT.XLSemantics(Record)
+            if Record = nil then
+                return nil
+            tp := TY.GetType(Record)
+
+        // Evaluate expression type
+        rtp : TY.any_type := TY.NonConstedType(GEN.NonGenericType(tp))
+        return rtp
+
+
+    function GetRecordType(Record : PT.tree) return record_type is
+    // ------------------------------------------------------------------------
+    //    Return the type if it is a record type
+    // ------------------------------------------------------------------------
+        rtp : GetRecordBaseType(Record) as record_type
+        return rtp
+
+
+    function IsRecord (RecordExpr : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if something is a record
+    // ------------------------------------------------------------------------
+        Record   : PT.tree := RecordExpr
+        hasDeref : boolean := true
+        maxDeref : integer := 30
+
+        // First look for "dereference" functions
+        while hasDeref loop
+            DerefCall : PT.tree := parse_tree(dereference 'Record')
+            DerefCall := XLT.TentativeSemantics(DerefCall)
+            hasDeref := DerefCall <> nil
+            if hasDeref then
+                maxDeref := maxDeref - 1
+                if maxDeref <= 0 then
+                    hasDeref := false
+                Record := DerefCall
+
+        ERR.PushErrorContext()
+        result := GetRecordType (Record) <> nil
+        if ERR.PopErrorContext() then
+            result := false
+
+        // Check the case where RecordExpr is a generic instance (A.size)
+        if not result then
+            tp : TY.any_type := GetRecordBaseType(Record)
+            if tp <> nil then
+                instance : PT.tree := TY.Source(tp)
+                symbols  : SYM.symbol_table := GN.GetInstanceContext(instance)
+                if symbols <> nil then
+                    // This is another case we will deal with in 'Index'
+                    result := true
+
+        if result and RecordExpr <> Record then
+            PT.AttachTree RecordExpr, "DEREF", Record
+        trace[enum] "IsRecord ", RecordExpr, "=", integer(result)
+
+
+    procedure RecordDeclarations(Record   : PT.tree;
+                                 Field    : PT.name_tree;
+                                 kind     : text;
+                                 out defs : PT.tree_list;
+                                 out syms : SYM.symbol_table) is
+    // ------------------------------------------------------------------------
+    //   Find the field definitions in a given record
+    // ------------------------------------------------------------------------
+
+        // Evaluate record expression
+        tp : record_type := GetRecordType(Record)
+
+        // Evaluate expression type
+        if tp = nil then
+            syms := nil
+            return
+
+        // Lookup field
+        syms := tp.symbols
+        SYM.Lookup syms, kind, Field.value, defs, SYM.lookupLocalOnly
+
+
+
+    // ========================================================================
+    // 
+    //   Type evaluation
+    // 
+    // ========================================================================
+
     function IndexType(Record : PT.tree;
                        Field  : PT.name_tree) return BC.bytecode is
     // ------------------------------------------------------------------------
@@ -230,39 +330,47 @@ module XL.SEMANTICS.TYPES.RECORDS is
     // ------------------------------------------------------------------------
         symbols     : SYM.symbol_table
         list        : PT.tree_list
-        insts       : PT.tree_list
-        selected    : PT.tree
+        selected    : PT.tree := PT.Attached(Record, "DEREF")
+        instParm    : PT.tree := nil
+        if selected <> nil then
+            Record := selected
 
         RecordDeclarations Record, Field, "TYPE", list, symbols
 
-        if symbols = nil then
-            ERR.Error "No type for record '$1'", Record
-        if size(list) = 0 then
-            ERR.Error "Field '$1' doesn't exist", Field
-            return parse_tree(@error)
+        // Try to evaluate something like 'A.item' where A is an array
+        tp : TY.any_type := GetRecordBaseType(Record)
+        if tp <> nil then
+            instance : PT.tree := TY.Source(tp)
+            instContext : SYM.symbol_table := GN.GetInstanceContext(instance)
+            if instContext <> nil then
+                insts    : PT.tree_list
+                SYM.Lookup instContext, "TYPE", Field.value,
+                           insts, SYM.lookupLocalOnly
+                if size(insts) > 0 then
+                    instParm := insts[0]
+                    if size(insts) > 1 then
+                        ERR.Error "Instantiated name '$1' is ambiguous", Field
+                        ERR.Error "A first candidate is '$1", insts[0]
+                        ERR.Error "A second candidate is '$1", insts[1]
+
+        // Otherwise, normal case
         if size(list) > 1 then
             ERR.Error "Type name '$1' is ambiguous", Field
             ERR.Error "A first candidate is '$1", list[0]
             ERR.Error "A second candidate is '$1", list[1]
-        selected := list[0]
-
-        // Find if there is an instantiation by that name locally
-        SYM.Lookup XLT.context, "TYPE", Field.value, insts, SYM.lookupAll
-        if size(insts) > 0 then
-            found : integer := 0
-            I     : integer
-            isel  : PT.tree := nil
-            for I in 0..size(insts)-1 loop
-                instarg : PT.tree := PT.Attached(insts[i], "INSTARG")
-                if instarg = selected then
-                    found += 1
-                    isel := insts[i]
-            if found > 1 then
-                ERR.Error "Instantiated type name '$1' is ambiguous", Field
-                ERR.Error "A first candidate is '$1", insts[0]
-                ERR.Error "A second candidate is '$1", insts[1]
-            if isel <> nil then
-                selected := isel
+        if instParm = nil then
+            if symbols = nil then
+                ERR.Error "No type for record '$1'", Record
+            if size(list) = 0 then
+                ERR.Error "Field '$1' doesn't exist", Field
+                return parse_tree(@error)
+            selected := list[0]
+        else if size(list) > 0 then
+            ERR.Error "Ambiguous type index for $1", Field
+            ERR.Error "A first interpretation is parameter $1", instParm
+            ERR.Error "A second interpretation is field $1", list[0]
+        else
+            selected := instParm
 
         // Find corresponding declaration
         decl : declaration := DCL.GetDeclaration(selected)
@@ -304,74 +412,6 @@ module XL.SEMANTICS.TYPES.RECORDS is
     //
     // ========================================================================
 
-    function GetRecordType(Record : PT.tree) return record_type is
-    // ------------------------------------------------------------------------
-    //    Return the record type, or nil if non-record
-    // ------------------------------------------------------------------------
-
-        // Evaluate record expression if type is not known
-        tp : TY.any_type := TY.GetType(Record)
-        if tp = nil then
-            Record := XLT.XLSemantics(Record)
-            if Record = nil then
-                return nil
-            tp := TY.GetType(Record)
-
-        // Evaluate expression type
-        rtp : TY.NonConstedType(GEN.NonGenericType(tp)) as record_type
-        return rtp
-
-
-    function IsRecord (RecordExpr : PT.tree) return boolean is
-    // ------------------------------------------------------------------------
-    //   Return true if something is a record
-    // ------------------------------------------------------------------------
-        Record   : PT.tree := RecordExpr
-        hasDeref : boolean := true
-        maxDeref : integer := 30
-
-        // First look for "dereference" functions
-        while hasDeref loop
-            DerefCall : PT.tree := parse_tree(dereference 'Record')
-            DerefCall := XLT.TentativeSemantics(DerefCall)
-            hasDeref := DerefCall <> nil
-            if hasDeref then
-                maxDeref := maxDeref - 1
-                if maxDeref <= 0 then
-                    hasDeref := false
-                Record := DerefCall
-
-        ERR.PushErrorContext()
-        result := GetRecordType (Record) <> nil
-        if ERR.PopErrorContext() then
-            result := false
-        else
-            PT.AttachTree RecordExpr, "DEREF", Record
-        trace[enum] "IsRecord ", RecordExpr, "=", integer(result)
-
-
-    procedure RecordDeclarations(Record   : PT.tree;
-                                 Field    : PT.name_tree;
-                                 kind     : text;
-                                 out defs : PT.tree_list;
-                                 out syms : SYM.symbol_table) is
-    // ------------------------------------------------------------------------
-    //   Find the field definitions in a given record
-    // ------------------------------------------------------------------------
-
-        // Evaluate record expression
-        tp : record_type := GetRecordType(Record)
-
-        // Evaluate expression type
-        if tp = nil then
-            syms := nil
-            return
-
-        // Lookup field
-        syms := tp.symbols
-        SYM.Lookup syms, kind, Field.value, defs, SYM.lookupLocalOnly
-
-
     function Index(Record : PT.tree;
                    Field  : PT.name_tree) return BC.bytecode is
     // ------------------------------------------------------------------------
@@ -379,47 +419,58 @@ module XL.SEMANTICS.TYPES.RECORDS is
     // ------------------------------------------------------------------------
         symbols  : SYM.symbol_table
         list     : PT.tree_list
-        insts    : PT.tree_list
         selected : PT.tree := PT.Attached(Record, "DEREF")
+        instParm : PT.tree := nil
         if selected <> nil then
             Record := selected
 
         RecordDeclarations Record, Field, "DECL", list, symbols
 
-        if symbols = nil then
-            ERR.Error "No type for record '$1'", Record
-        if size(list) = 0 then
-            ERR.Error "Field '$1' doesn't exist", Field
-            return parse_tree(@error)
+        // Find if there is an instantiation by that name locally
+        tp : TY.any_type := GetRecordBaseType(Record)
+        if tp <> nil then
+            instance : PT.tree := TY.Source(tp)
+            instContext : SYM.symbol_table := GN.GetInstanceContext(instance)
+            if instContext <> nil then
+                insts    : PT.tree_list
+                SYM.Lookup instContext, "DECL", Field.value,
+                           insts, SYM.lookupLocalOnly
+                if size(insts) > 0 then
+                    instParm := insts[0]
+                    if size(insts) > 1 then
+                        ERR.Error "Instantiated name '$1' is ambiguous", Field
+                        ERR.Error "A first candidate is '$1", insts[0]
+                        ERR.Error "A second candidate is '$1", insts[1]
+
+        // Otherwise, normal case
         if size(list) > 1 then
             ERR.Error "Field '$1' is ambiguous", Field
             ERR.Error "A first candidate is '$1", list[0]
             ERR.Error "A second candidate is '$1", list[1]
-        selected := list[0]
-
-        // Find if there is an instantiation by that name locally
-        SYM.Lookup XLT.context, "DECL", Field.value, insts, SYM.lookupAll
-        if size(insts) > 0 then
-            found : integer := 0
-            I     : integer
-            isel  : PT.tree := nil
-            for I in 0..size(insts)-1 loop
-                instarg : PT.tree := PT.Attached(insts[i], "INSTARG")
-                if instarg = selected then
-                    found += 1
-                    isel := insts[i]
-            if found > 1 then
-                ERR.Error "Instantiated name '$1' is ambiguous", Field
-                ERR.Error "A first candidate is '$1", insts[0]
-                ERR.Error "A second candidate is '$1", insts[1]
-            if isel <> nil then
-                selected := isel
+        if instParm = nil then
+            if symbols = nil then
+                ERR.Error "No type for record '$1'", Record
+            if size(list) = 0 then
+                ERR.Error "Field '$1' doesn't exist", Field
+                return parse_tree(@error)
+            selected := list[0]
+        else if size(list) > 0 then
+            ERR.Error "Ambiguous index for $1", Field
+            ERR.Error "A first interpretation is parameter $1", instParm
+            ERR.Error "A second interpretation is field $1", list[0]
+        else
+            selected := instParm
 
         // Find corresponding declaration
         decl : declaration := DCL.GetDeclaration(selected)
         if decl = nil then
             ERR.Error "Internal: Record field '$1' has no decl", Field
             return parse_tree(@error)
+        if instParm <> nil then
+            if decl.initializer = nil then
+                ERR.Error "Internal: No initializer for generic '$1'", instParm
+            else
+                return XLT.XLSemantics(decl.initializer)
 
         // Find machine name of field
         dtype  : TY.any_type  := decl.type

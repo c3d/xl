@@ -316,6 +316,23 @@ module XL_BUILTINS with
             yield
             Counter += Incr
 
+    iterator RangeIterator (
+            var out Counter : integer
+            interval : range) written Counter in interval is
+        Counter := interval.first
+        while Counter <= interval.last loop
+            yield
+            Counter += 1
+
+    iterator RangeIncrementingIterator (
+            var out Counter : integer
+            interval : range;
+            incr : range.ordered_type) written Counter in interval step incr is
+        Counter := interval.first
+        while Counter <= interval.last loop
+            yield
+            Counter += incr
+
 
     // ========================================================================
     // 

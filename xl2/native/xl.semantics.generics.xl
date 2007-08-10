@@ -343,6 +343,26 @@ module XL.SEMANTICS.GENERICS is
         return SYM.ContextProperty(XLT.context, "COINST", true)
 
 
+    procedure SetInstanceContext(source      : PT.tree;
+                                 instContext : SYM.symbol_table) is
+    // ------------------------------------------------------------------------
+    //   Record the context where we stored instantiated parameters decls
+    // ------------------------------------------------------------------------
+        ci : context_info
+        ci.context := instContext
+        PT.SetInfo source, "INSTCONTEXT", ci
+
+
+    function GetInstanceContext(source : PT.tree) return SYM.symbol_table is
+    // ------------------------------------------------------------------------
+    //    Return the context stored above, if any
+    // ------------------------------------------------------------------------
+        ci : PT.FindInfo(source, "INSTCONTEXT") as context_info
+        if ci <> nil then
+            return ci.context
+        return nil
+
+
     function InstantiatedTypeMatch(iface: TY.any_type;
                                    body : TY.any_type) return boolean is
     // ------------------------------------------------------------------------
@@ -486,6 +506,7 @@ module XL.SEMANTICS.GENERICS is
         // Build the source representation for error messages
         Source := parse_tree('Name' [ 'Source' ])
         Source.position := SourcePosition
+        SetInstanceContext Source, instContext
 
         // Process the instantiated declaration
         tnt : XLT.attempt := XLT.BeginAttempt()
