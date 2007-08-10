@@ -284,7 +284,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
             tp : TY.any_type := GetRecordBaseType(Record)
             if tp <> nil then
                 instance : PT.tree := TY.Source(tp)
-                symbols  : SYM.symbol_table := GN.GetInstanceContext(instance)
+                symbols  : SYM.symbol_table := GN.InstanceContext(instance)
                 if symbols <> nil then
                     // This is another case we will deal with in 'Index'
                     result := true
@@ -330,8 +330,10 @@ module XL.SEMANTICS.TYPES.RECORDS is
     // ------------------------------------------------------------------------
         symbols     : SYM.symbol_table
         list        : PT.tree_list
-        selected    : PT.tree := PT.Attached(Record, "DEREF")
         instParm    : PT.tree := nil
+        ic          : SYM.symbol_table := GN.InstantiationContext()
+
+        selected    : PT.tree := PT.Attached(Record, "DEREF")
         if selected <> nil then
             Record := selected
 
@@ -341,7 +343,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         tp : TY.any_type := GetRecordBaseType(Record)
         if tp <> nil then
             instance : PT.tree := TY.Source(tp)
-            instContext : SYM.symbol_table := GN.GetInstanceContext(instance)
+            instContext : SYM.symbol_table := GN.InstanceContext(instance)
             if instContext <> nil then
                 insts    : PT.tree_list
                 SYM.Lookup instContext, "TYPE", Field.value,
@@ -366,17 +368,30 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 return parse_tree(@error)
             selected := list[0]
         else if size(list) > 0 then
-            ERR.Error "Ambiguous type index for $1", Field
-            ERR.Error "A first interpretation is parameter $1", instParm
-            ERR.Error "A second interpretation is field $1", list[0]
+            ERR.Error "Ambiguous type index for '$1'", Field
+            ERR.Error "A first interpretation is parameter '$1'", instParm
+            ERR.Error "A second interpretation is field '$1'", list[0]
         else
             selected := instParm
+
+        // Lookup instance if instantiating 'IO.writable'
+        // (here, IO itself is not generic, but writable is)
+        if ic <> nil then
+            insts : PT.tree_list
+            SYM.Lookup ic, "TYPE", Field.value, insts, SYM.lookupLocalOnly
+            if size(insts) > 0 then
+                selected := insts[0]
+                if size(insts) > 1 then
+                    ERR.Error "Ambiguous generic type '$1'", Field
+                    ERR.Error "A first interpretation is '$1'", insts[0]
+                    ERR.Error "A second interpretation is '$1'", insts[1]
 
         // Find corresponding declaration
         decl : declaration := DCL.GetDeclaration(selected)
         if decl = nil then
             ERR.Error "Internal: Record field '$1' has no decl", Field
             return parse_tree(@error)
+
 
         // Find machine name of field
         dname  : PT.tree := decl.name
@@ -430,7 +445,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         tp : TY.any_type := GetRecordBaseType(Record)
         if tp <> nil then
             instance : PT.tree := TY.Source(tp)
-            instContext : SYM.symbol_table := GN.GetInstanceContext(instance)
+            instContext : SYM.symbol_table := GN.InstanceContext(instance)
             if instContext <> nil then
                 insts    : PT.tree_list
                 SYM.Lookup instContext, "DECL", Field.value,

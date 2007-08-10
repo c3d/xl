@@ -343,6 +343,20 @@ module XL.SEMANTICS.GENERICS is
         return SYM.ContextProperty(XLT.context, "COINST", true)
 
 
+    procedure DeclareInstantiationContext (instContext : SYM.symbol_table) is
+    // ------------------------------------------------------------------------
+    //   Declare the context where we store instantiations
+    // ------------------------------------------------------------------------
+        SYM.SetContextProperty instContext, "INSTANTIATION", instContext
+
+
+    function InstantiationContext () return SYM.symbol_table is
+    // ------------------------------------------------------------------------
+    //   Return the context where we store instantiations
+    // ------------------------------------------------------------------------
+        return SYM.ContextProperty(XLT.context, "INSTANTIATION", true)
+    
+
     procedure SetInstanceContext(source      : PT.tree;
                                  instContext : SYM.symbol_table) is
     // ------------------------------------------------------------------------
@@ -353,7 +367,7 @@ module XL.SEMANTICS.GENERICS is
         PT.SetInfo source, "INSTCONTEXT", ci
 
 
-    function GetInstanceContext(source : PT.tree) return SYM.symbol_table is
+    function InstanceContext(source : PT.tree) return SYM.symbol_table is
     // ------------------------------------------------------------------------
     //    Return the context stored above, if any
     // ------------------------------------------------------------------------
@@ -456,6 +470,7 @@ module XL.SEMANTICS.GENERICS is
 
         // Record where to find the context of instantiation (oldContext)
         SetContextOfInstantiation instContext, oldContext
+        DeclareInstantiationContext instContext
 
         // Insert declarations in the instantiation context
         Source : PT.tree := nil
