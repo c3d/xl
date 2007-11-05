@@ -112,9 +112,9 @@ module XL.SEMANTICS.FUNCTIONS is
         // Declare the bytecode for the function declaration
         MachineIface  : PT.Tree := f.machine_interface
         MachineDecl   : PT.Tree := parse_tree
-            @fn_decl_begin
+            @fn_decl_begin 'MName'
             'MachineIface'
-            @fn_decl_end
+            @fn_decl_end 'MName'
 
         // Indicate that this is a function and a declaration
         SetFunction Iface, f

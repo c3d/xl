@@ -169,6 +169,7 @@ module XL.CODE_GENERATOR.MACHINE is
         ParmDType: TY.any_type
         ParmType : PT.tree
         ParmName : PT.tree
+        retDecl  : PT.tree
 
         // If there is a return type, add a 'result' output parameter
         if RetType <> nil then
@@ -189,7 +190,7 @@ module XL.CODE_GENERATOR.MACHINE is
                         result := parse_tree(@fn_ret1 'ParmType')
         else
             // Emit return type declaration early
-            retDecl : PT.tree := parse_tree(@fn_retN_begin 'BaseName')
+            retDecl := parse_tree(@fn_retN_begin 'BaseName')
             if RetType <> nil then
                 ParmType := RetType.machine_name
                 resName : PT.tree := PT.NewName("result",BaseName.position)
@@ -214,7 +215,13 @@ module XL.CODE_GENERATOR.MACHINE is
         result := parse_tree
             'result'
             'DeclName'
-            @fn_begin_parms
+            @fn_begin_parms 'BaseName'
+
+        // Pointer to return struct if any (mandatory for LLVM at this point)
+        if retDecl <> nil then
+            result := parse_tree
+                'result'
+                @fn_retN_ptr 'BaseName'
 
         // Input parameters
         for Parm in Parms loop
@@ -229,7 +236,7 @@ module XL.CODE_GENERATOR.MACHINE is
         // Close declaration
         result := parse_tree
             'result'
-            @fn_end_parms
+            @fn_end_parms 'BaseName'
 
 
     function Entry (f : FN.function) return BC.bytecode is
@@ -264,9 +271,9 @@ module XL.CODE_GENERATOR.MACHINE is
 
         T : BC.bytecode := MakeEntry(PName, MName, RetType, Parms, icnt, ocnt)
         T := parse_tree
-            @fn_ptr_begin
+            @fn_ptr_begin 'MName'
             'T'
-            @fn_ptr_end
+            @fn_ptr_end 'MName'
         XLT.AddGlobalDecl T
 
         return MName
@@ -487,6 +494,12 @@ module XL.CODE_GENERATOR.MACHINE is
             result := parse_tree
                 'result'
                 @call_args_begin 'mname'
+
+            // Pass return value parameter if needed
+            if ocnt > 1 then
+                result := parse_tree
+                    'result'
+                    @call_arg_retN 'mname' 'outputsName'
 
             // Pass input parameters
             for argIndex in 0..argCount-1 loop
