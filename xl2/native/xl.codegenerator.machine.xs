@@ -78,3 +78,4 @@ module XL.CODE_GENERATOR.MACHINE with
     // Declare other types
     function DeclareType(tp   : TY.any_type;
                          Name : PT.name_tree) return PT.name_tree
+

@@ -163,6 +163,8 @@ caseskip        "break case_$1;"
 casesend        "} while (false);"
 
 case_begin      "switch($2) {"
+case_label      ""
+case_code       ""
 case_entry      "case $2:"
 case_exit       "break;"
 case_def_entry  "default:"

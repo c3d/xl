@@ -156,12 +156,12 @@ module XL.CODE_GENERATOR.MACHINE is
     //
     // ========================================================================
 
-    function MakeEntry (DeclName : PT.tree;
-                        BaseName : PT.name_tree;
-                        RetType  : TY.any_type;
-                        Parms    : FT.declaration_list;
-                        icnt     : integer;
-                        ocnt     : integer) return BC.bytecode is
+    function MakeMachineEntry (DeclName : PT.tree;
+                               BaseName : PT.name_tree;
+                               RetType  : TY.any_type;
+                               Parms    : FT.declaration_list;
+                               icnt     : integer;
+                               ocnt     : integer) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Return a machine-level function declaration from a function or ptr
     // ------------------------------------------------------------------------
@@ -237,6 +237,19 @@ module XL.CODE_GENERATOR.MACHINE is
         result := parse_tree
             'result'
             @fn_end_parms 'BaseName'
+
+
+    function MakeEntry (DeclName : PT.tree;
+                        BaseName : PT.name_tree;
+                        RetType  : TY.any_type;
+                        Parms    : FT.declaration_list;
+                        icnt     : integer;
+                        ocnt     : integer) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Expand all types to primitive machine types and make machine entry
+    // ------------------------------------------------------------------------
+        return MakeMachineEntry(DeclName, BaseName, RetType,
+                                Parms, icnt, ocnt)
 
 
     function Entry (f : FN.function) return BC.bytecode is
@@ -332,11 +345,11 @@ module XL.CODE_GENERATOR.MACHINE is
                         retName := decl.machine_name
                         if not decl.is_input then
                             Body := parse_tree
-                                @entry_ret1_decl 'mtype' 'retName'
+                                @entry_ret1_decl 'mtype' 'retName' 'mname'
                                 'Body'
             Body := parse_tree
                 'Body'
-                @exit_ret1 'retName'
+                @exit_ret1 'retName' 'mname'
 
         else if ocnt > 1 then
             Body := parse_tree
@@ -356,7 +369,7 @@ module XL.CODE_GENERATOR.MACHINE is
                     retName := decl.machine_name
                     if not decl.is_input then
                         Body := parse_tree
-                            @entry_retN_loc 'mtype' 'retName'
+                            @entry_retN_loc 'mtype' 'retName' 'mname'
                             'Body'
                     Body := parse_tree
                         'Body'
@@ -371,6 +384,7 @@ module XL.CODE_GENERATOR.MACHINE is
             @fn_body 'mname'
             'Body'
             @fn_body_end 'mname'
+
 
 
     // ========================================================================
@@ -639,6 +653,7 @@ module XL.CODE_GENERATOR.MACHINE is
         MDecl := parse_tree
             'MDecl'
             @record_end 'MName'
+        PT.AttachTree MName, "MACHINEDECL", MDecl
 
         XLT.AddGlobalDecl MDecl
         return MName

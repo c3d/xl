@@ -427,8 +427,19 @@ module XL.SEMANTICS.INSTRUCTIONS is
             'prefix'
             @case_begin 'label' 'IndexVal'
 
-        // Generate all the entries
+        // Generate all the labels (LLVM for instance requires this)
         E : integer
+        for E in 0..size(values)-1 loop
+            Eval  : PT.tree := values[E]
+            Entry : PT.tree := PT.NewInteger(E, Eval.position)
+            result := parse_tree
+                'result'
+                @case_label 'label' 'Entry'
+        result := parse_tree
+            'result'
+            @case_code 'label'
+
+        // Generate all the entries
         for E in 0..size(values)-1 loop
             Eval  : PT.tree := values[E]
             Entry : PT.tree := PT.NewInteger(E, Eval.position)
