@@ -11,7 +11,7 @@ iterator IntegerIterator(var It : integer;
 
 
 for I in 1..5 loop
-    for J in 1..5 loop
+    for J in 1..I loop
         WriteLn "I=", I, " and J=", J
 
 // Define a more complex iterator with local state

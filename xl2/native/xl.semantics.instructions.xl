@@ -118,7 +118,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
             else if CST.IsFalse(TestConstant) then
                 CGM.ExitCall callDepth, result
                 if FalseCase <> nil then
-                    result := XLT.ScopeSemantics(TrueCase, XLT.scopeLocal)
+                    result := XLT.ScopeSemantics(FalseCase, XLT.scopeLocal)
                 else
                     result := parse_tree(@nop)
                 return result 
