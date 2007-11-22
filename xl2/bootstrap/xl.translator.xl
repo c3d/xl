@@ -518,7 +518,7 @@ module XL.TRANSLATOR is
                     XL2C_SemanticsTranslation N, What
 
             when
-                initialization
+                initially
                     'What'
             then
                 XL2C_EarlyInit What

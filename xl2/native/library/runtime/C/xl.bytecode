@@ -166,6 +166,11 @@ loopifnot       "if (!($1)) goto loopentry_$2;"
 loopexit        "loopexit_$1: 0;"
 exitloop        "goto loopexit_$1;"
 
+try_entry       "/* Recovery label: $1 */"
+try_recovery    "goto success_$1;"
+                "catch_$1: 0;"
+try_exit        "success_$1: 0;"
+
 main_begin      "int main(int Argc, char **Argv)"
                 "{"
 main_entry      "    /* Main */"

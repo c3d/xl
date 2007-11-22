@@ -465,6 +465,33 @@ module XL.SEMANTICS.INSTRUCTIONS is
             @case_end 'label'
 
 
+    function DoInitially(Block : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Add initialization code
+    // ------------------------------------------------------------------------
+        Block := XLT.ScopeSemantics(Block, XLT.scopeLocal)
+        XLT.AddScopeInit XLT.context, Block
+        return parse_tree(@nop)
+
+
+    function DoFinally(Block : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Add finalization code
+    // ------------------------------------------------------------------------
+        Block := XLT.ScopeSemantics(Block, XLT.scopeLocal)
+        XLT.AddScopeTerm XLT.context, Block
+        return parse_tree(@nop)
+
+
+    function DoRecovery(Block : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Add error recovery code - REVISIT
+    // ------------------------------------------------------------------------
+        Block := XLT.ScopeSemantics(Block, XLT.scopeLocal)
+        XLT.AddScopeRecovery XLT.context, Block
+        return parse_tree(@nop)
+
+
     translation XLSemantics
     // ------------------------------------------------------------------------
     //   Translation forms
@@ -569,3 +596,24 @@ module XL.SEMANTICS.INSTRUCTIONS is
         then
             return DoCaseValue(Value, Cases)
 
+
+        when
+            initially 'Block'
+        where
+            Block.kind = PT.xlBlock
+        then
+            return DoInitially(Block)
+        when
+            finally 'Block'
+        where
+            Block.kind = PT.xlBlock
+        then
+            return DoFinally(Block)
+        when
+            recovery 'Block'
+        where
+            Block.kind = PT.xlBlock
+        then
+            return DoRecovery(Block)
+
+            

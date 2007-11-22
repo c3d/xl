@@ -1,0 +1,25 @@
+use XL.UI.CONSOLE
+
+WriteLn "Hello World"
+
+initially
+    WriteLn "Initially"
+
+finally
+    WriteLn "Finally"
+
+recovery
+    WriteLn "Ooops, some error happened"
+
+WriteLn "Done"
+
+to DoSomething is
+    WriteLn "I'm doing something"
+    initially
+        WriteLn "Preparing to do something"
+    finally
+        WriteLn "Did something"
+    recovery
+        WriteLn "Ooops, some error happened"
+
+DoSomething

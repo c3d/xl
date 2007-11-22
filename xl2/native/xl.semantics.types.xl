@@ -523,7 +523,7 @@ module XL.SEMANTICS.TYPES is
             module_type    := EnterBuiltinType ("module", "xlmodule")
 
 
-    initialization
+    initially
     // ------------------------------------------------------------------------
     //    Initialize the various built-in types
     // ------------------------------------------------------------------------

@@ -95,6 +95,7 @@ module XL.TRANSLATOR with
     procedure AddScopeDecl(table: SYM.symbol_table; decl : PT.tree)
     procedure AddScopeInit(table: SYM.symbol_table; init : PT.tree)
     procedure AddScopeTerm(table: SYM.symbol_table; term : PT.tree)
+    procedure AddScopeRecovery(table: SYM.symbol_table; term : PT.tree)
     procedure AddGlobalDecl(decl : PT.tree)
     procedure AddGlobalInit(init : PT.tree)
     procedure AddGlobalTerm(term : PT.tree)
