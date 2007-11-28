@@ -34,9 +34,9 @@ procedure Main is
     W, T0, T : real
 
     B : real := -A + B
-    {differentiation} A : real := dexp(-2*X)/dX
-    A2 : real :=  dexp(2*X)/dX + d(exp(2*X))/dX
-    Y : real := d(exp(-2*W*(T-T0)) * sin(2*W*(T-T0)))/dT
+    {differentiation} A : real := d/dx(exp(-2*x))
+    A2 : real :=  d/dx(exp(2*x)) + d/dx(exp(2*x))
+    Y : real := d/dT(exp(-2*W*(T-T0)) * sin(2*W*(T-T0)))
     Z : real := {constantfold} sin(X) - sin(1*X)
     IO.WriteLn Y
 

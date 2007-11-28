@@ -4,8 +4,8 @@ to Copy (Target : real ; Source : real) return real written Target := Source
 procedure Main is 
     W , T0 , T : real 
     B : real := B - A 
-    {differentiation} A : real := - (2 * exp (- (2 * X))) 
-    A2 : real := 2 * exp (2 * X) + 2 * exp (2 * X) 
+    {differentiation} A : real := - (2 * exp (- (2 * x))) 
+    A2 : real := 2 * exp (2 * x) + 2 * exp (2 * x) 
     Y : real := exp (- (2 * W * (T - T0))) * (2 * W * cos (2 * W * (T - T0))) - 2 * W * exp (- (2 * W * (T - T0))) * sin (2 * W * (T - T0)) 
     Z : real := {constantfold} 0 
     IO . WriteLn Y

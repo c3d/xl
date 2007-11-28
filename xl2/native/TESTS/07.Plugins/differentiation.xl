@@ -30,5 +30,5 @@ function ImplicitReal(I : integer) return real written I is XL.BYTECODE.int_to_r
 procedure MainTest is
     X : real := 0.3
     B : real := -A + B
-    {differentiation} A : real := dexp(-2*X)/dX
+    {differentiation} A : real := d/dx(exp(-2*x))
     Z : real := {constantfold} f(X) - f(1*X) // Valid even without an 'f'

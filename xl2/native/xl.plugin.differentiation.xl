@@ -164,7 +164,7 @@ module XL.PLUGIN.DIFFERENTIATION is
     // ------------------------------------------------------------------------
 
         when
-            'dFn' ('dExpr') / 'dVar'
+            'dFn' / 'dVar' ('dExpr')
         where
             (dFn.kind = PT.xlNAME and dVar.kind = PT.xlNAME and
              IsDName(dFn, 1) and IsDName(dVar))
