@@ -45,6 +45,13 @@ module XL.SEMANTICS.TYPES is
     // ------------------------------------------------------------------------
 
 
+    types_with_rtti : PT.tree_list
+    // ------------------------------------------------------------------------
+    //   List of the types that need runtime type information
+    // ------------------------------------------------------------------------
+
+
+
     procedure SetType(tree : PT.tree; type : any_type) is
     // ------------------------------------------------------------------------
     //   Record the type associated with a tree, if any
@@ -292,6 +299,23 @@ module XL.SEMANTICS.TYPES is
             if typeDecl <> nil then
                 return typeDecl.name
         return nil
+
+
+    procedure MarkForRuntimeReference(tp : any_type) is
+    // ------------------------------------------------------------------------
+    //   Mark a given type to indicate we need the runtime type information
+    // ------------------------------------------------------------------------
+        mname : PT.tree := tp.machine_name
+        if tp = nil then
+            ERR.Error "Internal: '$1' has no type yet", TY.Source(tp)
+            return
+        rtti : PT.tree := PT.Attached(mname, "RTTI")
+        if rtti = nil then
+            rtti := PT.NewInteger(size(types_with_rtti) + 1, mname.position)
+            PT.AttachTree mname, "RTTI", rtti
+            types_with_rtti += mname
+            XLT.AddGlobalDecl parse_tree
+                @type_info 'mname' 'rtti'
 
 
     function EnterTypeSym (Name : PT.tree; Value : PT.tree) return PT.tree is

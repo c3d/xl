@@ -62,6 +62,7 @@ module XL.SEMANTICS.TYPES with
     function MachineName(tp: any_type) return PT.name_tree
     function Source(tp : any_type) return PT.tree
     function SourceName(tp : any_type) return PT.name_tree
+    procedure MarkForRuntimeReference(tp : any_type)
 
     // Evaluate a type expression
     function EvaluateType (type_expr : PT.tree) return any_type

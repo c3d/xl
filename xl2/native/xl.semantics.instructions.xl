@@ -551,6 +551,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
             excTy : TY.any_type := TY.GetDefinedType(exc)
             if excTy <> nil then
                 excN : PT.tree := excTy.machine_name
+                TY.MarkForRuntimeReference excTy
                 result := parse_tree
                     'result'
                     @unwind_land 'unwind' 'excN'
@@ -561,6 +562,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
 
         result := parse_tree
             'result'
+            @unwind_caught 'unwind'
             @unwind_end 'unwind'
 
         SYM.SetProperty XLT.context, "UNWIND", oldUnwind

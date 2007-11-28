@@ -183,6 +183,8 @@ loopend         "} /* end loop_$1 */"
 loopexit        "} /* exit loop_$1 */"
 exitloop        "break loop_$1;"
 
+type_info       "static public const int $1_id = $2;"
+
 unwind_decl     ""
 unwind_entry    "try { /* $1 */"
 unwind_exit     "}"
