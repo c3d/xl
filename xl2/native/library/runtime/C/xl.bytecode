@@ -142,7 +142,8 @@ goto_exit       "goto exit_$1;"
 
 if              "if($1) goto else_$2;"
 ifnot           "if(!($1)) goto else_$2;"
-ifelse          "else_$1: 0;"
+ifelse          "goto endif_$1;"
+                "else_$1: 0;"
 ifend           "endif_$1: 0;"
 ifendelse       "else_$1: 0;"
 
@@ -167,6 +168,11 @@ loopif          "if ($1) goto loopentry_$2;"
 loopifnot       "if (!($1)) goto loopentry_$2;"
 loopexit        "loopexit_$1: 0;"
 exitloop        "goto loopexit_$1;"
+
+once_decl       "static int $1_Once = 0; // Single-threaded"
+once_begin      "if ($1_Once) goto $1_endOnce;"
+                "$1_Once = 1;"
+once_end        "$1_endOnce: 0;"
 
 unwind_decl     "jmp_buf $1_save;"
                 "int $1_exc;"

@@ -1,0 +1,14 @@
+Hello, I=10
+For I=0 result=0
+Goodbye, I=0
+For I=1 result=1
+For I=2 result=3
+For I=3 result=6
+For I=4 result=10
+For I=5 result=15
+For I=6 result=21
+For I=7 result=28
+For I=8 result=36
+For I=9 result=45
+For I=10 result=55
+Testing: Value=55

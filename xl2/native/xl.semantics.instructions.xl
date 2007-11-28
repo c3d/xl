@@ -483,6 +483,19 @@ module XL.SEMANTICS.INSTRUCTIONS is
         return parse_tree(@nop)
 
 
+    function DoOnce(Block : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Add finalization code
+    // ------------------------------------------------------------------------
+        label : PT.tree := SYM.Temporary("once")
+        Block := XLT.ScopeSemantics(Block, XLT.scopeLocal)
+        XLT.AddScopeDecl XLT.context, parse_tree(@once_decl 'label')
+        return parse_tree
+            @once_begin 'label'
+            'Block'
+            @once_end 'label'
+
+
     procedure SplitCatchBlock (catchBlock       : PT.tree;
                                in out excList   : PT.tree_list;
                                in out catchList : PT.tree_list) is
@@ -685,6 +698,12 @@ module XL.SEMANTICS.INSTRUCTIONS is
             Block.kind = PT.xlBlock
         then
             return DoFinally(Block)
+        when
+            once 'Block'
+        where
+            Block.kind = PT.xlBlock
+        then
+            return DoOnce(Block)
         when
             try 'tryBlock'
             catch 'catchBlock'
