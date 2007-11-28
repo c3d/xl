@@ -8,9 +8,6 @@ initially
 finally
     WriteLn "Finally"
 
-recovery
-    WriteLn "Ooops, some error happened"
-
 WriteLn "Done"
 
 to DoSomething is
@@ -19,7 +16,5 @@ to DoSomething is
         WriteLn "Preparing to do something"
     finally
         WriteLn "Did something"
-    recovery
-        WriteLn "Ooops, some error happened"
 
 DoSomething

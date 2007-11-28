@@ -183,9 +183,13 @@ loopend         "} /* end loop_$1 */"
 loopexit        "} /* exit loop_$1 */"
 exitloop        "break loop_$1;"
 
-try_entry       "try {/* Recovery label: $1 */"
-try_recovery    "} finally { /* Recovery $1 */"
-try_exit        "} /* End of recovery $1 */"
+unwind_decl     ""
+unwind_entry    "try { /* $1 */"
+unwind_exit     "}"
+unwind_catch    "catch (XLexception exception) {"
+unwind_caught   "}"
+unwind_end      ""
+
 
 main_begin      "public static void main(String args[])"
                 "{"

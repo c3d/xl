@@ -277,7 +277,6 @@ module XL.TRANSLATOR is
         // TERM are the terminations for the scope
         init : PT.tree := SYM.ScopeItems(context, "INIT")
         term : PT.tree := SYM.ScopeItems(context, "TERM")
-        recovery : PT.tree := SYM.ScopeItems(context, "RECOVERY")
         if init <> nil then
             init := XLSemantics(init)
         if term <> nil then
@@ -305,14 +304,6 @@ module XL.TRANSLATOR is
         else // Some local scope
             result := Append(init, result)
             result := Append(result, term)
-            if recovery <> nil then
-                recLabel : PT.tree := SYM.Temporary("recovery")
-                result := parse_tree
-                    @try_entry 'recLabel'
-                    'result'
-                    @try_recovery 'recLabel'
-                    'recovery'
-                    @try_exit 'recLabel'
             result := Append(decl, result)
 
 
@@ -335,13 +326,6 @@ module XL.TRANSLATOR is
     //   Add a termination to the TERM section
     // ------------------------------------------------------------------------
         SYM.PushScopeItem table, "TERM", term
-
-
-    procedure AddScopeRecovery(table: SYM.symbol_table; term : PT.tree) is
-    // ------------------------------------------------------------------------
-    //   Add recovery code to the RECOVERY section
-    // ------------------------------------------------------------------------
-        SYM.PushScopeItem table, "RECOVERY", term
 
 
     procedure AddGlobalDecl(decl : PT.tree) is

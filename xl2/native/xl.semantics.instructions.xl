@@ -483,13 +483,89 @@ module XL.SEMANTICS.INSTRUCTIONS is
         return parse_tree(@nop)
 
 
-    function DoRecovery(Block : PT.tree) return BC.bytecode is
+    procedure SplitCatchBlock (catchBlock       : PT.tree;
+                               in out excList   : PT.tree_list;
+                               in out catchList : PT.tree_list) is
     // ------------------------------------------------------------------------
-    //    Add error recovery code - REVISIT
+    //   Split a catch block into individual exception clauses
     // ------------------------------------------------------------------------
-        Block := XLT.ScopeSemantics(Block, XLT.scopeLocal)
-        XLT.AddScopeRecovery XLT.context, Block
-        return parse_tree(@nop)
+        asBlock : catchBlock as PT.block_tree
+        if asBlock <> nil then
+            catchBlock := asBlock.child
+
+        translate catchBlock
+            when
+                'excType' : 'instrBlock'
+            then
+                excList += excType
+                catchList += instrBlock
+            when
+                'first'
+                'second'
+            then
+                SplitCatchBlock first, excList, catchList
+                SplitCatchBlock second, excList, catchList
+            else
+                ERR.Error "'$1' is not a valid exception clause", catchBlock
+
+
+    function DoTryCatch(tryBlock : PT.tree;
+                        catchBlock: PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Add try-catch block
+    // ------------------------------------------------------------------------
+        excList   : PT.tree_list
+        catchList : PT.tree_list
+        unwind    : PT.tree := SYM.Temporary("unwind")
+        oldUnwind : PT.tree := SYM.GetProperty(XLT.context, "UNWIND")
+        E         : integer
+
+        XLT.AddScopeDecl XLT.context, parse_tree(@unwind_decl 'unwind')
+        SYM.SetProperty XLT.context, "UNWIND", unwind
+
+        tryBlock := XLT.ScopeSemantics(tryBlock, XLT.scopeLocal)
+        SplitCatchBlock catchBlock, excList, catchList
+
+        result := parse_tree
+            @unwind_entry 'unwind'
+            'tryBlock'
+            @unwind_exit 'unwind'
+            @unwind_catch 'unwind'
+
+        for E in 0..size(excList)-1 loop
+            blk : PT.tree := XLT.ScopeSemantics(catchList[E], XLT.scopeLocal)
+            exc : PT.tree := XLT.XLEvaluateType(excList[E])
+            excTy : TY.any_type := TY.GetDefinedType(exc)
+            if excTy <> nil then
+                excN : PT.tree := excTy.machine_name
+                result := parse_tree
+                    'result'
+                    @unwind_land 'unwind' 'excN'
+                    'blk'
+                    @unwind_resume 'unwind' 'excN'
+            else
+                ERR.Error "No machine type for '$1'", excList[E]
+
+        result := parse_tree
+            'result'
+            @unwind_end 'unwind'
+
+        SYM.SetProperty XLT.context, "UNWIND", oldUnwind
+
+
+    function DoRaise(exception : PT.tree;
+                     input     : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Implement the raise instruction
+    // ------------------------------------------------------------------------
+        if exception <> nil then
+            exception := XLT.XLSemantics(exception)
+            return parse_tree(@unwind_raise 'exception')
+        oldUnwind : PT.tree := SYM.GetProperty(XLT.context, "UNWIND")
+        if oldUnwind = nil then
+            ERR.Error "Cannot '$1' without an exception context", input
+            return parse_tree(@error)
+        return parse_tree(@unwind_reraise 'oldUnwind')
 
 
     translation XLSemantics
@@ -610,10 +686,17 @@ module XL.SEMANTICS.INSTRUCTIONS is
         then
             return DoFinally(Block)
         when
-            recovery 'Block'
+            try 'tryBlock'
+            catch 'catchBlock'
         where
-            Block.kind = PT.xlBlock
+            tryBlock.kind = PT.xlBlock and catchBlock.kind = PT.xlBlock
         then
-            return DoRecovery(Block)
-
-            
+            return DoTryCatch(tryBlock, catchBlock)
+        when
+            raise 'exception'
+        then
+            return DoRaise(exception, input)
+        when
+            raise
+        then
+            return DoRaise(nil, input)
