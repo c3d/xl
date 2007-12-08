@@ -51,7 +51,6 @@ module XL.SEMANTICS.TYPES is
     // ------------------------------------------------------------------------
 
 
-
     procedure SetType(tree : PT.tree; type : any_type) is
     // ------------------------------------------------------------------------
     //   Record the type associated with a tree, if any

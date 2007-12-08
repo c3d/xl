@@ -98,6 +98,9 @@ module XL.SEMANTICS.DECLARATIONS is
                     Names := Nm
                     prefixen := Names.kind <> PT.xlNAME
 
+        isparm : boolean := SYM.GetInteger(XLT.context, "FNPARM") <> 0
+        isgen  : PT.tree := SYM.GetProperty(XLT.context, "GENERIC", true)
+
         // Check if we are at the top-level of a module
         modname := SYM.GetProperty (XLT.context, "MODULE")
         if modname <> nil then
@@ -154,8 +157,6 @@ module XL.SEMANTICS.DECLARATIONS is
 
         // Check if this is an uninstantiated generic type
         if decl_gen_type <> nil then
-            isparm : boolean := SYM.GetInteger(XLT.context, "FNPARM") <> 0
-            isgen  : PT.tree := SYM.GetProperty(XLT.context, "GENERIC", true)
             if not isparm and isgen = nil then
                 Type := GN.InstantiateType(Type, nil)
                 decl_type := TY.EvaluateType(Type)
@@ -370,7 +371,7 @@ module XL.SEMANTICS.DECLARATIONS is
 
         // Cannot assign a constant to an output
         if Tgt.is_output then
-            if IsConstant(SrcType) then
+            if TY.IsConstant(SrcType) then
                 return false
             // Output types must match exactly
             SrcType := TY.NonVariableType(SrcType)
@@ -381,10 +382,9 @@ module XL.SEMANTICS.DECLARATIONS is
             return true
 
         // If the value is 'constant', we can strip that for an input
-        if IsConstant(SrcType) then
-            NonConst : TY.any_type := TY.NonConstedType(SrcType)
-            if TY.SameType(NonConst, TGT.type) then
-                return true
+        NonConst : TY.any_type := TY.NonConstedType(SrcType)
+        if TY.SameType(NonConst, TGT.type) then
+            return true
 
         // Otherwise, we don't match
         return false
