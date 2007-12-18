@@ -28,6 +28,7 @@ import PT = XL.PARSER.TREE
 import DCL = XL.SEMANTICS.DECLARATIONS
 import CGM = XL.CODE_GENERATOR.MACHINE
 import GEN = XL.SEMANTICS.TYPES.GENERICS
+import REC = XL.SEMANTICS.TYPES.RECORDS
 
 
 module XL.SEMANTICS.TYPES.FUNCTIONS is
@@ -289,7 +290,6 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         MType : PT.name_tree := tp.machine_name
         TY.EnterSignature MType.value, tp
         TY.SetDefinedType Source, tp
-
         return Source
 
 
@@ -304,8 +304,27 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         MType : PT.name_tree := tp.machine_name
         TY.EnterSignature MType.value, tp
         TY.SetDefinedType Source, tp
-
         return Source
+
+
+    function EnterFunctionCopy(fnName : PT.name_tree;
+                               tp : any_type) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Enter a copy subroutine copying a pointer to the function
+    // ------------------------------------------------------------------------
+        result := parse_tree
+            procedure copy (out this:'fnName';
+                            that : 'fnName') written this := that is
+                XL.BYTECODE.fnptr_copy
+        result := REC.EnterDefaultFunction(result)
+
+
+    function EnterDefaults(fnName : PT.name_tree;
+                           ftp    : any_type) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Enter the defaults 
+    // ------------------------------------------------------------------------
+        result := XLT.Append(result, EnterFunctionCopy(fnName, ftp))
 
 
     translation XLEvaluateType

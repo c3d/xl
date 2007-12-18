@@ -67,3 +67,5 @@ module XL.SEMANTICS.TYPES.FUNCTIONS with
     function EnterFnType (Source  : PT.tree;
                           Parms   : PT.tree;
                           Ret     : PT.tree) return PT.tree
+    function EnterDefaults(fnName : PT.name_tree;
+                           ftp    : any_type) return BC.bytecode

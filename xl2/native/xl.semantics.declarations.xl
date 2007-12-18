@@ -54,6 +54,7 @@ module XL.SEMANTICS.DECLARATIONS is
         out_flag   : boolean := false
         var_flag   : boolean := false
         prefixen   : boolean := Names.kind <> PT.xlNAME
+        isFunction : boolean := false
         modname    : PT.tree := nil
 
         // Check all declaration prefixes, like 'in X : integer'
@@ -150,31 +151,41 @@ module XL.SEMANTICS.DECLARATIONS is
         if decl_gen_type <> nil then
             decl_base_type := decl_gen_type.base
         decl_fn_type : decl_base_type as FT.function_type
+        decl : declaration
         if decl_fn_type <> nil then
             if decl_fn_type.iterator then
-                return ITER.EnterIterator(Name, decl_fn_type, Value, Name)
-            return FN.EnterFunction (Name, decl_fn_type, Value, Name)
+                result := ITER.EnterIterator(Name, decl_fn_type, Value, Name)
+            else
+                result := FN.EnterFunction (Name, decl_fn_type, Value, Name)
+            decl := GetDeclaration(result)
+            isFunction := true
+            
 
-        // Check if this is an uninstantiated generic type
-        if decl_gen_type <> nil then
-            if not isparm and isgen = nil then
-                Type := GN.InstantiateType(Type, nil)
-                decl_type := TY.EvaluateType(Type)
-                gtype2 : decl_type as GEN.generic_type
-                if gtype2 <> nil then
-                    ERR.Error "Type '$1' is generic", Type
- 
-        // Check if there is already an entity by that name
-        original : PT.tree := SYM.LookupOne(XLT.context, "DECL",
-                                            Name.value, SYM.lookupDirect)
-        if original <> nil then
-            ERR.Error "Redeclaration of '$1' ", Name
-            ERR.Error "Previous declaration of '$1' here", original
-            // We go through since this is better at avoiding cascade errors
+        // Tests that do not apply to functions or iterators
+        if not isFunction then
 
-        // Build the declaration
-        decl : declaration := Declare(Name, TY.EvaluateType(Type))
-        decl.initializer        := Value
+            // Check if this is an uninstantiated generic type
+            if decl_gen_type <> nil then
+                if not isparm and isgen = nil then
+                    Type := GN.InstantiateType(Type, nil)
+                    decl_type := TY.EvaluateType(Type)
+                    gtype2 : decl_type as GEN.generic_type
+                    if gtype2 <> nil then
+                        ERR.Error "Type '$1' is generic", Type
+
+            // Check if there is already an entity by that name
+            original : PT.tree := SYM.LookupOne(XLT.context, "DECL",
+                                                Name.value, SYM.lookupDirect)
+            if original <> nil then
+                ERR.Error "Redeclaration of '$1' ", Name
+                ERR.Error "Previous declaration of '$1' here", original
+                // We go through since this is better at avoiding cascade errors
+
+            // Build the declaration
+            decl := Declare(Name, TY.EvaluateType(Type))
+            decl.initializer        := Value
+
+        // Parameter checking
         decl.is_input           := in_flag
         decl.is_output          := out_flag
         decl.is_variable        := var_flag
@@ -203,25 +214,26 @@ module XL.SEMANTICS.DECLARATIONS is
             decl.is_input := true
 
         // Evaluate the initialization value
-        if Value <> nil then
-            if not IsDefinition then
-                // Return initialization
-                if decl.is_local or decl.is_global then
-                    result := parse_tree ('Name' := 'Value')
-                    PT.AttachTree result, "CTORCALL", result
-            else
-                // Definition will be processed at semantics time
-                result := parse_tree(@@def 'Name' 'Value')
-        else if decl.is_local or decl.is_global then
-            result := DCL.CallConstructor(decl)
-
+        if not isFunction then
+            if Value <> nil then
+                if not IsDefinition then
+                    // Return initialization
+                    if decl.is_local or decl.is_global then
+                        result := parse_tree ('Name' := 'Value')
+                        PT.AttachTree result, "CTORCALL", result
+                else
+                    // Definition will be processed at semantics time
+                    result := parse_tree(@@def 'Name' 'Value')
+            else if decl.is_local or decl.is_global then
+                result := DCL.CallConstructor(decl)
 
         // Make sure we have a result to attach the decl to
         if result = nil then
             result := parse_tree(@decl)
 
         // Attach the declaration to the result
-        SetDeclaration result, decl
+        if not isFunction then
+            SetDeclaration result, decl
         return result
 
 

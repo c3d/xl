@@ -92,6 +92,8 @@ module XL.SEMANTICS.OVERLOAD is
         callDepth       : integer := CGM.EnterCall()
 
         trace [overload] "Overload resolution: name=", NameTree, " args=", Args
+        if TY.TargetType() <> nil then
+            trace [overload] "Target type=", TY.TargetType()
 
         if NameTree.kind <> PT.xlNAME then
             translate NameTree
