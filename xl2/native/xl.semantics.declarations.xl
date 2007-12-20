@@ -379,8 +379,14 @@ module XL.SEMANTICS.DECLARATIONS is
     // ------------------------------------------------------------------------
     //   Return true of target can receive source value
     // ------------------------------------------------------------------------
-        SrcType : TY.any_type := TY.GetType(Src)
+        return Assignable(Tgt, TY.GetType(Src))
 
+
+    function Assignable(Tgt: declaration;
+                        SrcType: TY.any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if target can receive source type
+    // ------------------------------------------------------------------------
         // Cannot assign a constant to an output
         if Tgt.is_output then
             if TY.IsConstant(SrcType) then

@@ -38,7 +38,6 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
 //    A function type appears in a declaration like
 //    Z : function (X : integer) return integer
 
-
     procedure MakeParameterList (Parms      : PT.tree;
                                  in out ftp : function_type) is
     // ------------------------------------------------------------------------
@@ -144,6 +143,9 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         if parmCount <> size(bodyF.parameters) then
             ERR.Error "Incorrect number of parameters for '$1'",
                       TY.Source(body)
+            return false
+        if ifaceF.variadic <> bodyF.variadic then
+            ERR.Error "Incorrect variadicity for '$1'", TY.Source(body)
             return false
         i : integer
         for i in 0..parmCount-1 loop

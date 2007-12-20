@@ -33,6 +33,7 @@ import GEN = XL.SEMANTICS.TYPES.GENERICS
 import REC = XL.SEMANTICS.TYPES.RECORDS
 import FT = XL.SEMANTICS.TYPES.FUNCTIONS
 import EN = XL.SEMANTICS.TYPES.ENUMERATIONS
+import OVL = XL.SEMANTICS.OVERLOAD
 
 
 module XL.SEMANTICS.TYPES is
@@ -670,6 +671,17 @@ module XL.SEMANTICS.TYPES is
         result := t = type_of_modules
 
 
+    invalid_type_counter : integer := 0
+    function InvalidType (reason : text) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return an invalid type for error reporting reasons
+    // ------------------------------------------------------------------------
+        invalid_type_counter += 1
+        reason := "<" + reason + text(invalid_type_counter) + ">"
+        I : PT.tree := EnterBuiltinType (reason, reason)
+        return GetDefinedType(I)
+
+
     function InterfaceMatch (iface: any_type; body: any_type) return boolean is
     // ------------------------------------------------------------------------
     //   Return true if the interface and body of types match
@@ -689,6 +701,10 @@ module XL.SEMANTICS.TYPES is
         // Check that we have types
         exprType : any_type := GetType(expr)
         if exprType = nil then
+            translate expr
+                when (@@overload 'FunName' 'overloadSet') then
+                    toSource : PT.tree := TY.Source(toType)
+                    return OVL.ResolveOverload(FunName, overloadSet, toSource)
             ERR.Error "Expression '$1' has no type", expr
             return expr
         if toType = nil then

@@ -81,6 +81,9 @@ module XL.SEMANTICS.TYPES with
     function IsTypeType (t : any_type) return boolean
     function IsModuleType (t : any_type) return boolean
 
+    // Create a unique invalid type for error reporting
+    function InvalidType (reason : text) return any_type
+
     // Convert to a given type
     function Convert(expr : PT.tree; toType : any_type) return PT.tree
     function Convert(expr : PT.tree; toType : PT.tree) return PT.tree

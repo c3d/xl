@@ -72,12 +72,17 @@ module XL.SEMANTICS.OVERLOAD is
                     List += Args
 
 
-    function Resolve(NameTree : PT.tree;
-                     Args : PT.tree;
-                     Input: PT.tree) return BC.bytecode is
+    function Resolve(NameTree  : PT.tree;
+                     Args      : PT.tree;
+                     Input     : PT.tree;
+                     forceCall : boolean) return BC.bytecode is
     // ------------------------------------------------------------------------
-    //    Resolve the function name from its args
+    //  Resolve the function name from its args
     // ------------------------------------------------------------------------
+    //  When the arguments are nil, we return an overload set that can then
+    //  be used by a higher-level overload resolution or written form
+    //  and converted to the target type. This is used for Bar := Foo, where
+    //  Bar and Foo are functions
 
         // Accelerate if this is "Pointer(3)" and we cannot deduce yet
         if TY.TargetType() = nil and PT.Attached(Input, "TODEDUCE") then
@@ -90,6 +95,9 @@ module XL.SEMANTICS.OVERLOAD is
         BaseRecord      : PT.tree
         anyLookup       : boolean := false
         callDepth       : integer := CGM.EnterCall()
+        returnOverload  : boolean := not forceCall and Args = nil
+        overloadSet     : PT.tree := nil
+        
 
         trace [overload] "Overload resolution: name=", NameTree, " args=", Args
         if TY.TargetType() <> nil then
@@ -136,6 +144,14 @@ module XL.SEMANTICS.OVERLOAD is
         recurse   : boolean := BaseRecord = nil
         inIterator: boolean := FindInfo(Input, "ITERATOR_EXPR") <> nil
 
+        // Additional conditions where we should directly resolve:
+        // callDepth=0 corresponds to a top-level WriteLn call (not a function)
+        // inIterator is because I can't imagine a case where "for foo loop"
+        // would not mean that "foo" parameters would be evaluated
+        if callDepth = 0 or inIterator then
+            returnOverload := false
+            forceCall := true
+
         // Save errors for later display
         ERR.PushErrorContext()
 
@@ -146,7 +162,9 @@ module XL.SEMANTICS.OVERLOAD is
                 DName : Arg as PT.name_tree
                 Dval  : text := Dname.value
                 Orig  : PT.tree := SYM.LookupOne(context, "DECL", Dval)
-                if Orig = nil then
+                OrigF : PT.tree := SYM.LookupOne(context, "FN", Dval)
+                OrigT : PT.tree := SYM.LookupOne(context, "TYPE", Dval)
+                if Orig = nil and OrigF = nil and OrigT = nil then
                     ToBeDefined := true
                     trace[overload] "Arg ", Dval, " is to be defined"
             if not ToBeDefined then
@@ -215,6 +233,14 @@ module XL.SEMANTICS.OVERLOAD is
                         ERR.Error "Internal: No function info for '$1'", C
                         trace [overload] "FAIL: No function info"
                         restart
+
+                // If we are simply building an overload set, do it here
+                if returnOverload then
+                    if overloadSet <> nil then
+                        overloadSet := parse_tree('overloadSet' 'C')
+                    else
+                        overloadSet := C
+                    restart
 
                 // Check if it is a generic function
                 Ftype : F.type as FT.function_type
@@ -313,11 +339,15 @@ module XL.SEMANTICS.OVERLOAD is
                             SemArgs += XLT.XLSemantics (Arg)
                             trace [overload] "Testing default argument ", Arg
                         exit if not Matching
+                    assert Arg <> nil
                     AType : TY.any_type := TY.GetType(Arg)
                     if Gtype <> nil then
                         Matching := GN.Deduce (Gtype, D, Arg, Gargs)
                     else
-                        Matching := DCL.Assignable(D, Arg)
+                        if AType <> nil then
+                            Matching := DCL.Assignable(D, Arg)
+                        else
+                            Matching := false
                         if not Matching then
                             // Try implicit conversions
                             Arg := TY.TryConvert(Arg, D.type)
@@ -329,6 +359,8 @@ module XL.SEMANTICS.OVERLOAD is
                                 SemArgs[A] := Arg
                                 Score += 1 // Make it worse
                     if not Matching then
+                        if AType = nil then
+                            AType := TY.InvalidType("unknown in overload")
                         trace [overload] "FAIL: Type mismatch for ",
                                          PT.tree(D.name)
                         trace [overload] "      Expected ", TY.Source(D.type)
@@ -449,6 +481,15 @@ module XL.SEMANTICS.OVERLOAD is
 
         // Report results
         candidate_errors : boolean := ERR.PopErrorContext()
+
+        // If we are returning the overload set, simply do it
+        if returnOverload then
+            result := parse_tree(@@overload 'NameTree' 'overloadSet')
+            CGM.ExitCall callDepth, result
+            TY.SetType result, TY.InvalidType("overload set")
+            return result            
+
+        // Otherwise, check which one we would call
         if best <> nil then
             if ambig <> nil then
                 ERR.Error "The call to '$1' is ambiguous", NameTree
@@ -534,6 +575,282 @@ module XL.SEMANTICS.OVERLOAD is
         CGM.ExitCall callDepth, result
 
 
+    procedure OverloadSetToList(overloadSet : PT.tree;
+                                in out List : PT.tree_list) is
+    // ------------------------------------------------------------------------
+    //   Convert an overload set to the individual function names
+    // ------------------------------------------------------------------------
+        if overloadSet <> nil then
+            translate overloadSet
+                when
+                    'A' 'B'
+                then
+                    OverloadSetToList A, List
+                    OverloadSetToList B, List
+
+                else
+                    List += overloadSet
+
+
+    function ResolveOverload(NameTree    : PT.tree;
+                             overloadSet : PT.tree;
+                             toTypeExpr  : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //  Find which element of the overload set can match 'toType', if any
+    // ------------------------------------------------------------------------
+    //  When we write "Foo := Bar", where Foo and Bar are functions,
+    //  the evaluation of "Bar" returns an overload set for all candidates.
+    //  We then try to convert this overload set to a target type, and each
+    //  time pick up whatever candidate is the most appropriate
+
+        trace[overload] "Overload set ", overloadSet, " => ", toTypeExpr
+
+        // Accelerate if this is "nil()" and we cannot deduce yet
+        if TY.TargetType() = nil and PT.Attached(NameTree, "TODEDUCE") then
+            trace[overload] "Overload set: cannot yet deduce ", NameTree
+            return NameTree
+
+        // Check the target type.
+        toType : TY.any_type := TY.GetDefinedType(toTypeExpr)
+        if toType = nil then
+            ERR.Error "Overload target type '$1' has no type", toTypeExpr
+            ERR.Error "Trying to resolve '$1'", NameTree
+            return NameTree
+
+        // If it is a function type, we will try to find the matching function
+        toFnType : toType as FT.function_type
+
+        // Turn the overload set into a more usable tree list
+        candidates : PT.tree_list
+        OverloadSetToList overloadSet, candidates
+
+        // Scoring
+        BaseRecord : PT.tree
+        SemArgs    : PT.tree_list
+        ActArgs    : PT.tree_list
+        best       : PT.tree
+        bestScore  : integer
+        bestF      : FN.function
+        bestArgs   : PT.tree_list
+        bestGArgs  : GN.generic_map
+        bestGtype  : GEN.generic_type
+        bestVArgs  : PT.tree
+        ambig      : PT.tree
+        depth      : integer := 0
+        callDepth  : integer := CGM.EnterCall()
+        A          : integer
+
+        // Save errors for later display
+        ERR.PushErrorContext()
+
+        // Loop on candidates to check compatibility
+        C : PT.tree
+        for C in candidates loop
+            trace [overload] "Conversion: Testing ", C
+
+            // Retrieve function information, ignore non functions
+            Scope : PT.tree := nil
+            F : FN.function := FN.GetFunction(C)
+            if F = nil then
+                // We can get a record-prefixed value from a lateral map
+                translate C
+                    when ('Record'.'Fcall') then
+                        F := FN.GetFunction(Fcall)
+                        Scope := Record
+
+                if F = nil then
+                    ERR.Error "Internal: No function info for '$1'", C
+                    trace [overload] "FAIL: No function info"
+                    restart
+
+            // Check if it is a generic function
+            Ftype : F.type as FT.function_type
+            Gtype : F.type as GEN.generic_type
+            Gargs : GN.generic_map
+            Vargs : PT.tree
+            Score : integer := depth
+
+            if Ftype = nil and Gtype <> nil then
+                GFType : Gtype.base as FT.function_type
+                Ftype := GFType
+                Score *= 100
+
+            // Check that we actually have a function
+            if Ftype = nil then
+                NFtype : TY.any_type := F.type
+                ERR.Error "'$1' could not be selected because", C
+                ERR.Error "it has non-function type '$1'", TY.Source(NFtype)
+                trace[overload] "FAIL: Non-function ",
+                                PT.tree(TY.Source(NFtype)),
+                                " internal ", NFtype.machine_name
+                restart
+
+            // Check number of parameters.
+            NP : integer := size(Ftype.parameters)
+            if Ftype.variadic then
+                Score *= 100
+            if toFnType <> nil then
+                if NP <> size(toFnType.parameters) then
+                    ERR.Error "'$1' could not be selected because of the", C
+                    ERR.Error "different parameter count in '$1'", toTypeExpr
+                    trace[overload] "FAIL: Parameter count mismatch"
+                    restart
+                if FType.variadic <> toFnType.variadic then
+                    ERR.Error "'$1' could not be selected because of", C
+                    ERR.Error "different variadicity in '$1'", toTypeExpr
+                    trace[overload] "FAIL: Variadicity mismatch"
+                    restart
+                    
+
+            // Check type of parameters
+            D        : DCL.declaration
+            Matching : boolean := true
+            A := 0
+            for D in Ftype.parameters loop
+                if toFnType <> nil then
+                    toD : DCL.Declaration := toFnType.parameters[A]
+                    Matching := DCL.Assignable(D, toD.type)
+                    exit if not Matching
+                else
+                    Arg : PT.tree := D.initializer
+                    if Arg = nil then
+                        ERR.Error "'$1' could not be selected because", C
+                        ERR.Error "there is no value for '$1'", D.name
+                        Matching := false
+                        trace [overload] "No default argument "
+                    else
+                        SemArgs += XLT.XLSemantics (Arg)
+                        trace [overload] "Testing default argument ", Arg
+                    exit if not Matching
+
+                    AType : TY.any_type := TY.GetType(Arg)
+                    if Gtype <> nil then
+                        Matching := GN.Deduce (Gtype, D, Arg, Gargs)
+                    else
+                        Matching := DCL.Assignable(D, Arg)
+                        if not Matching then
+                            // Try implicit conversions
+                            Arg := TY.TryConvert(Arg, D.type)
+                            Matching := Arg <> nil and DCL.Assignable(D, Arg)
+                            if Matching then
+                                trace[overload] "Implicit conversion to ",
+                                                TY.Source(D.type)
+                                trace[overload] "Expr=", Arg
+                                SemArgs[A] := Arg
+                                Score += 1 // Make it worse
+                    if not Matching then
+                        trace [overload] "FAIL: Type mismatch for ",
+                                         PT.tree(D.name)
+                        trace [overload] "      Expected ", TY.Source(D.type)
+                        trace [overload] "      Got ", AType.name
+                        ERR.Error "'$1' could not be selected because", C
+                        ERR.Error "the type '$3' of '$1' doesn't match '$2'",
+                                    D.initializer,
+                                    TY.Source(D.type), TY.Source(AType)
+                        ERR.Error "for parameter '$1'", D.name
+                        exit if not Matching
+                    A += 1
+            if not Matching then
+                restart
+
+            // Check if there are non-deduced generic arguments
+            if Gtype <> nil then
+                if not GN.FinalizeDeductions(Gtype, Gargs) then
+                    if GN.CanDeduceReturnType(Gtype, Gargs) then
+                        Score /= 2
+                        trace [overload] "WARN: Must deduce return type"
+                    else
+                        ERR.Error "'$1' could not be selected because", C
+                        ERR.Error "the generic type '$1' cannot be deduced",
+                                  TY.Source(Gtype)
+                        Matching := false
+                        trace [overload] "FAIL: Cannot finalize deductions"
+
+            // If not matching, lookup next
+            if not Matching then
+                restart
+
+            trace [overload] "PASS: The candidate matches"
+
+            // Compare scores and results
+            if best = nil then
+                trace [overload] "BEST: Best score ", Score
+                best := C
+                bestScore := Score
+                bestF := F
+                bestArgs := SemArgs
+                bestGArgs := Gargs
+                bestGtype := Gtype
+                bestVargs := Vargs
+                BaseRecord := Scope
+            else if Score < bestScore then
+                trace [overload] "BEST: New best score ", Score
+                best := C
+                bestScore := Score
+                bestF := F
+                bestArgs := SemArgs
+                bestGArgs := Gargs
+                bestGtype := Gtype
+                bestVargs := Vargs
+                BaseRecord := Scope
+            else if Score = bestScore and F <> bestF then
+                ambig := C
+                trace [overload] "AMBIGUOUS: Score ", Score
+                trace [overload] "           Other: ", best
+
+        // Report results
+        candidate_errors : boolean := ERR.PopErrorContext()
+
+        // Otherwise, check which one we would call
+        if best <> nil then
+            if ambig <> nil then
+                ERR.Error "The reference to '$1' is ambiguous", NameTree
+                ERR.Error "A first candidate is '$1'", best
+                ERR.Error "A second candidate is '$1'", ambig
+
+            trace [overload] "FOUND: Calling ", PT.tree(bestF.name),
+                             "=", PT.tree(bestF.machine_name)
+
+            if bestGtype <> nil or bestVargs <> nil then
+                if bestGargs[nil] <> nil then
+                    // Target type not set in that context yet, back up
+                    assert TY.TargetType() = nil
+                    assert callDepth > 0
+                    CGM.ExitCall callDepth, result
+                    PT.AttachTree NameTree, "TODEDUCE", NameTree
+                    return NameTree
+                result := GN.InstantiateFunction(NameTree, bestF,
+                                                 bestGArgs, bestVargs,
+                                                 BaseRecord)
+                trace [overload] "INST: Instantiated as ", result
+                bestF := FN.GetFunction(result)
+                if bestF = nil then
+                    // Instantiation error
+                    CGM.ExitCall callDepth, result
+                    return result
+                trace [overload] "INST: new name ", PT.tree(bestF.name),
+                             "=", PT.tree(bestF.machine_name)
+                trace [overload] "INST: new type ", TY.Source(bestF.type)
+
+            if toFnType <> nil then
+                result := best
+            else if BaseRecord <> nil then
+                result := CGM.RecordFunctionCall (BaseRecord, bestF,
+                                                  bestArgs, nil, nil)
+            else
+                result := CGM.FunctionCall (bestF, bestArgs, nil, nil)
+
+        else
+            ERR.Error "No valid function found for '$1'", NameTree
+            if candidate_errors then
+                ERR.DisplayLastErrors()
+            CGM.ExitCall callDepth, result
+            return parse_tree(@error)
+
+        // Destroy temporaries if necessary
+        CGM.ExitCall callDepth, result
+
+
     function IsFunction(T : PT.tree) return boolean is
     // ------------------------------------------------------------------------
     //   Return true if a name indicates a function
@@ -595,21 +912,21 @@ module XL.SEMANTICS.OVERLOAD is
         where
             IsFunction (FunctionName)
         then
-            return Resolve(FunctionName, FunctionArgs, input)
+            return Resolve(FunctionName, FunctionArgs, input, true)
 
         when
             'FunctionName' ()
         where
             IsFunction (FunctionName)
         then
-            return Resolve(FunctionName, nil, input)
+            return Resolve(FunctionName, nil, input, true)
 
         when
             'FunctionName' 'FunctionArgs'
         where
             IsFunction (FunctionName)
         then
-            return Resolve(FunctionName, FunctionArgs, input)
+            return Resolve(FunctionName, FunctionArgs, input, true)
 
         when
             'FunctionName'
@@ -622,6 +939,6 @@ module XL.SEMANTICS.OVERLOAD is
             if not ERR.PopErrorContext() then
                 return result
 
-            // Otherwise, try to find the function
-            return Resolve(FunctionName, nil, input)
+            // Otherwise, try to find the function, but return overload set
+            return Resolve(FunctionName, nil, input, false)
 
