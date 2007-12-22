@@ -61,14 +61,14 @@
   '("generic" "is" "import" "using" "use"
     "in" "out" "variable" "constant" "var" "const"
     "return" "other" "require" "ensure" "written" "yield"
-    "try" "catch" "retry" "raise"
+    "try" "catch" "retry" "raise" "transform" "into" "include"
     "while" "until" "for" "do" "loop" "exit" "restart"
     "translate" "when" "where" "with" "case"
     "if" "then" "else" "not" "and" "or" "xor" "nil")
   "List of words highlighted as 'keywords' in XL mode")
 
 (defvar xl-warnings
-  '("raise")
+  '("raise" "compile_error")
   "List of words prefixing a 'warnings' in XL mode")
 
 (defvar xl-types
@@ -84,11 +84,11 @@
   "List of words declaring types in XL mode")
 
 (defvar xl-module-declarators
-  '("module" "record")
+  '("module" "record" "include")
   "List of words declaring modules or records in XL mode")
 
 (defvar xl-outdent-words
-  '("else")
+  '("else" "into")
   "List of words declaring modules or records in XL mode")
 
 (defvar xl-quotes
@@ -142,8 +142,9 @@
     ;; Warnings (raise X)
     (,(rx (and word-start
                (group (eval (cons 'or xl-warnings)))
-               (1+ space) (group (and (1+ word)
-                                      (0+ (and "." (1+ word)))))))
+               (1+ space) (group (1+ (or (1+ word)
+					 (eval (xl-separators-regexp xl-quotes))
+					 (1+ (char digit ".eE_")))))))
      (1 font-lock-keyword-face) (2 font-lock-warning-face))
     
     ;; Constants

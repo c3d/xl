@@ -84,8 +84,8 @@ module XL.SEMANTICS.FUNCTIONS is
     // ------------------------------------------------------------------------
 
         Name        : Names as PT.name_tree
-        MName       : PT.Attached (Iface, "MNAME") as PT.name_tree
-        PreCoating  : PT.Attached (Iface, "EXTERN") as PT.tree
+        MName       : SYM.GetProperty(XLT.context, "MNAME") as PT.name_tree
+        PreCoating  : SYM.GetProperty (XLT.context, "EXTERN") as PT.tree
 
         // Create the function
         f : function
@@ -208,8 +208,10 @@ module XL.SEMANTICS.FUNCTIONS is
             textually : CName as PT.text_tree
             CName := PT.NewName (textually.value, CName.position)
 
-        PT.AttachTree Interface, "MNAME", CName
-        PT.AttachTree Interface, "EXTERN", RuntimeCode(Runtime)
+        assert SYM.GetProperty (XLT.context, "MNAME") = nil
+        assert SYM.GetProperty (XLT.context, "EXTERN") = nil
+        SYM.SetProperty XLT.context, "MNAME", CName
+        SYM.SetProperty XLT.context, "EXTERN", RuntimeCode(Runtime)
         Interface := EnterFunction(Interface)
         f : function := GetFunction(Interface)
         assert f <> nil
@@ -224,6 +226,8 @@ module XL.SEMANTICS.FUNCTIONS is
             BN : CName as PT.name_tree
             assert f.machine_name = BN
             result := Interface
+        SYM.SetProperty XLT.context, "MNAME", nil
+        SYM.SetProperty XLT.context, "EXTERN", nil
 
 
     function EnterFunctionBody(input : PT.tree;

@@ -1,0 +1,17 @@
+use XL.ARRAY.BASIC
+
+generic type numeric where
+    x, y : numeric
+    x := x + y
+    x := x - y
+    x := x * y
+    x := x / y
+
+function sum (A : array) return array.item is
+    for I in Range(A) loop
+        Add result, A[I]
+
+
+X : array[5] of integer
+
+Y : integer := sum(X)

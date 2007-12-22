@@ -2,7 +2,7 @@ INFIX
         11      NEWLINE
         21      ;
         30      loop
-        35      else
+        35      else into
         40      then where
         50      :
         100     STATEMENT
@@ -26,7 +26,7 @@ INFIX
 PREFIX
         30      generic
         120     exit loop
-        125     case if return while until when yield
+        125     case if return while until when yield transform
         320     not in out constant variable const var
         340     @ 
         380     ! ~

@@ -226,6 +226,14 @@ module XL.SEMANTICS.MACROS is
         XLT.context := old
 
 
+    function IsIncludeName(filename : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if the parameter is a valid include file
+    // ------------------------------------------------------------------------
+        filename := CST.EvaluateConstant(filename)
+        return fileName.kind = PT.xlTEXT
+
+
     function Include (filename : PT.tree) return PT.tree is
     // ------------------------------------------------------------------------
     //    Parse the file, and return the parsed file
@@ -297,14 +305,28 @@ module XL.SEMANTICS.MACROS is
             recursions -= 1
 
 
-    procedure EmitError (Message : PT.tree;
-                         Arg1    : PT.tree := nil;
-                         Arg2    : PT.tree := nil;
-                         Arg3    : PT.tree := nil) is
+    procedure EmitError (Message : PT.tree) is
     // ------------------------------------------------------------------------
     //   Make the compiler emit an error message (from xl.error)
     // ------------------------------------------------------------------------
         MsgTxt : text
+        Arg1, Arg2, Arg3 : PT.tree
+        if Message.kind = PT.xlBLOCK then
+            asBlock : Message as PT.block_tree
+            Message := asBlock.child
+        translate Message
+            when ('M', 'X', 'Y', 'Z') then
+                Message := M
+                Arg1 := X
+                Arg2 := Y
+                Arg3 := Z
+            when ('M', 'X', 'Y') then
+                Message := M
+                Arg1 := X
+                Arg2 := Y
+            when ('M', 'X') then
+                Message := M
+                Arg1 := X
         Message := CST.EvaluateConstant (Message)
         if Message.kind = PT.xlTEXT then
             Msg : Message as PT.text_tree
@@ -319,23 +341,17 @@ module XL.SEMANTICS.MACROS is
     //   The scoped translations done by the macro system at declaration time
     // ------------------------------------------------------------------------
         when
-            xl.replace 'Phase' ('MatchExpr') with ('ReplExpr')
+            transform 'Phase' 'Match' into 'Repl'
         where
-            Phase.kind = PT.xlNAME
+            Phase.kind = PT.xlNAME and
+            Match.kind = PT.xlBLOCK and
+            Repl.kind = PT.xlBLOCK
         then
+            MatchBlock : Match as PT.block_tree
+            ReplBlock : Repl as PT.block_tree
             PhaseTree : Phase as PT.name_tree
             PhaseName : text := PT.XLNormalize(PhaseTree.value)
-            EnterMacro PhaseName, MatchExpr, ReplExpr
-            return parse_tree(@nop)
-        when
-            xl.replace 'Phase' ('MatchExpr') with 
-                'ReplExpr'
-        where
-            Phase.kind = PT.xlNAME
-        then
-            PhaseTree : Phase as PT.name_tree
-            PhaseName : text := PT.XLNormalize(PhaseTree.value)
-            EnterMacro PhaseName, MatchExpr, ReplExpr
+            EnterMacro PhaseName, MatchBlock.child, ReplBlock.child
             return parse_tree(@nop)
 
 
@@ -344,24 +360,17 @@ module XL.SEMANTICS.MACROS is
     //   The non-scoped translations done during preprocessing
     // ------------------------------------------------------------------------
         when
-            xl.replace ('MatchExpr') with ('ReplExpr')
+            transform 'Match' into 'Repl'
+        where
+            Match.kind = PT.xlBLOCK and Repl.kind = PT.xlBLOCK
         then
-            EnterMacro "xlmacros", MatchExpr, ReplExpr
+            MatchBlock : Match as PT.block_tree
+            ReplBlock : Repl as PT.block_tree
+            EnterMacro "xlmacros", MatchBlock.child, ReplBlock.child
             return parse_tree(@nop)
+
         when
-            xl.replace ('MatchExpr') with
-                'ReplExpr'
-        then
-            EnterMacro "xlmacros", MatchExpr, ReplExpr
-            return parse_tree(@nop)
-        when (xl.set 'Variable' = 'Value') where Variable.kind = PT.xlNAME then
-            VarName : Variable as PT.name_tree
-            VarValue : PT.tree := CST.EvaluateConstant(Value)
-            trace[macro] "Setting ", Variable, " to ", Value, " = ", VarValue
-            CST.EnterNamedConstant VarName, VarValue
-            return parse_tree(@nop)
-        when
-            xl.set 'Variable' = 'Value'
+            transform 'Variable' := 'Value'
         where
             Variable.kind = PT.xlNAME
         then
@@ -370,11 +379,15 @@ module XL.SEMANTICS.MACROS is
             trace[macro] "Setting ", Variable, " to ", Value, " = ", VarValue
             CST.EnterNamedConstant VarName, VarValue
             return parse_tree(@nop)
+
         when
-            xl.include 'File'
+            include 'File'
+        where
+            IsIncludeName(File)
         then
             return Include (File)
-        when (xl.value('Expression')) then
+
+        when (xl.value 'Expression') then
             // Constant evaluation of an expression
             count : integer := 0
             trace[macro] "Constant ", Expression
@@ -391,47 +404,44 @@ module XL.SEMANTICS.MACROS is
                 trace[macro] "Reprocessed as ", Expression
                 result := CST.EvaluateConstant (Expression)
             trace[macro] "Constant value ", result
-        when (xl.position ('Expression')) then
+
+        when (xl.position 'Expression') then
             // Return the position of the expression (not that useful)
             return PT.NewInteger (Expression.position, input.position)
-        when (xl.file ('Expression')) then
+
+        when (xl.file 'Expression') then
             // Return the file where a given expression was seen
             file   : text
             offset : integer
             POS.PositionToFile Expression.position, file, offset
             return PT.NewText (file, '"', input.position)
-        when (xl.line ('Expression')) then
+
+        when (xl.line 'Expression') then
             // Return the line where a given expression was seen
             file, source : text
             line, column : integer
             POS.PositionToLine Expression.position, file, line, column, source
             return PT.NewInteger (line, input.position)
-        when (xl.column ('Expression')) then
+
+        when (xl.column 'Expression') then
             // Return the line where a given expression was seen
             file, source : text
             line, column : integer
             POS.PositionToLine Expression.position, file, line, column, source
             return PT.NewInteger (column, input.position)
-        when (xl.source_text ('Expression')) then
+
+        when (xl.source_text 'Expression') then
             // Return the line where a given expression was seen
             file, source : text
             line, column : integer
             POS.PositionToLine Expression.position, file, line, column, source
             return PT.NewText (source, '"', input.position)
-        when (xl.text('Expression')) then
+
+        when (xl.text 'Expression') then
             // Turn an expression into the equivalent text
             return PT.NewText (text(Expression), '"', input.position)
-        when (xl.error('Message')) then
-            EmitError Message, input
+
+        when (xl.error 'Message') then
+            EmitError Message
             return parse_tree (@nop)
-        when (xl.error('Message', 'Arg1')) then
-            EmitError Message, Arg1
-            return parse_tree (@nop)
-        when (xl.error('Message', 'Arg1', 'Arg2')) then
-            EmitError Message, Arg1, Arg2
-            return parse_tree (@nop)
-        when (xl.error('Message', 'Arg1', 'Arg2', 'Arg3')) then
-            EmitError Message, Arg1, Arg2, Arg3
-            return parse_tree (@nop)
-            
 

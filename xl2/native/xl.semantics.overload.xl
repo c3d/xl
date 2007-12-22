@@ -292,6 +292,12 @@ module XL.SEMANTICS.OVERLOAD is
                 Didx     : string of integer
                 A := 0
                 for D in Ftype.parameters loop
+                    // F(A, B) is better than F(A, B, C) where C has a default
+                    // A += B is better than A+B for Add A, B
+                    if D.is_output then
+                        Score += 1
+                    else
+                        Score += 2
                     if A < NA then
                         Arg := SemArgs[A]
                         trace [overload] "Trying to deduce arg ", Arg

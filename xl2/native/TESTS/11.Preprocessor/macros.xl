@@ -1,15 +1,15 @@
 // Test that the macro system sort of works
 use XL.UI.CONSOLE
 
-xl.replace (DEFAULT) with (4)
+transform (DEFAULT) into (4)
 
-xl.replace XLDeclarations(let 'X') with ('X' : integer := DEFAULT)
+transform XLDeclarations(let 'X') into ('X' : integer := DEFAULT)
 
 let K
 let L
 let O
 
-xl.replace ('K' + 'K') with ('K' * 2)
+transform ('K' + 'K') into ('K' * 2)
 
 S : integer := 17
 T : integer := (S+S) + (S+S)

@@ -654,7 +654,7 @@ module XL.SYMBOLS is
     type context_info is access to context_info_data
 
 
-    procedure SetContextProperty (into        : symbol_table;
+    procedure SetContextProperty (table       : symbol_table;
                                   name        : text;
                                   value       : symbol_table) is
     // ------------------------------------------------------------------------
@@ -664,7 +664,7 @@ module XL.SYMBOLS is
         coinf : context_info
         coinf.context := value
         PT.SetInfo prop, name, coinf
-        SetProperty into, name, prop
+        SetProperty table, name, prop
 
 
     function ContextProperty (ctxt    : symbol_table;

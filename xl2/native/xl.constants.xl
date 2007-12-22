@@ -171,7 +171,10 @@ module XL.CONSTANTS is
         when (('Expression')) then
             result := EvaluateConstant(Expression)
             if result.kind = PT.xlINFIX or result.kind = PT.xlPREFIX then
-                result := parse_tree(('result'))
+                if result = Expression then
+                    result := input
+                else
+                    result := parse_tree(('result'))
             return result
 
         // INTEGERS

@@ -1,5 +1,5 @@
 // Test that we can include another file
-xl.include "macros.xl"
+include "macros.xl"
 
 WriteLn "S=", S
 WriteLn "T=", T

@@ -327,18 +327,17 @@ module XL_BUILTINS with
     procedure xl_assertion_failure(msg : text; file : text; line : integer) is           XL.BYTECODE.xl_assert
 
     // Evaluate the expression, expand the condition as text
-    xl.replace (assert 'cond') with
-        xl_assert_implementation(xl.value('cond'), xl.text('cond'), 'cond')
+    transform (assert 'cond') into
+        xl_assert_implementation(xl.value 'cond', xl.text 'cond', 'cond')
 
     // Check the constant cases for static asserts
-    xl.replace (xl_assert_implementation(true, 'message', 'source')) with
+    transform (xl_assert_implementation(true, 'message', 'source')) into
         @nop
 
-    xl.replace (xl_assert_implementation(false, 'message', 'source')) with
+    transform (xl_assert_implementation(false, 'message', 'source')) into
         xl.error ("Assertion '$1' is false at compile time", 'source')
 
     // Otherwise, expand to a runtime test
-    xl.replace (xl_assert_implementation('cond', 'msg', 'src')) with
-        if not ('cond') then
-            xl_assertion_failure ('msg', xl.file('src'), xl.line('src'))
-
+    transform (xl_assert_implementation('cond', 'msg', 'src')) into
+        if not 'cond' then
+            xl_assertion_failure 'msg', xl.file 'src', xl.line 'src'

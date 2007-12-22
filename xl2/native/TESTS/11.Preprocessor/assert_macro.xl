@@ -3,20 +3,20 @@
 use XL.UI.CONSOLE
 
 // Evaluate the expression, expand the condition as text
-xl.replace (my_assert('cond')) with
-    my_assert_implementation(xl.value('cond'), xl.text('cond'), 'cond')
+transform (my_assert 'cond') into
+    my_assert_implementation(xl.value 'cond', xl.text 'cond', 'cond')
 
 // Check the constant cases for static asserts
-xl.replace (my_assert_implementation(true, 'message', 'source')) with
+transform (my_assert_implementation(true, 'message', 'source')) into
     @nop
 
-xl.replace (my_assert_implementation(false, 'message', 'source')) with
-    xl.error ("Assertion '$1' is false at compile time", 'source')
+transform (my_assert_implementation(false, 'message', 'source')) into
+    xl.error "Assertion '$1' is false at compile time", 'source'
 
 // Otherwise, expand to a runtime test
-xl.replace (my_assert_implementation('cond', 'msg', 'src')) with
-    if not ('cond') then
-        my_assertion_failure ('msg', xl.file('src'), xl.line('src'))
+transform (my_assert_implementation('cond', 'msg', 'src')) into
+    if not 'cond' then
+        my_assertion_failure 'msg', xl.file 'src', xl.line 'src'
 
 // Tests
 procedure my_assertion_failure(msg : text; file : text; line : integer) is
@@ -24,7 +24,7 @@ procedure my_assertion_failure(msg : text; file : text; line : integer) is
 
 procedure test_it(X : integer; Y : integer) is
     my_assert (2 + 1 < 4)
-    my_assert (X + Y < 34)
+    my_assert X + Y < 34
 
 test_it 3, 4
 test_it 34, 34

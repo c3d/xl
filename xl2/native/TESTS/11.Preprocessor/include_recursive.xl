@@ -1,3 +1,3 @@
 // Test that infinite recursion is bad
 // EXIT=2
-xl.include "include_recursive.xl"
+include "include_recursive.xl"
