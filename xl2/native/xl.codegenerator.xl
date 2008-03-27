@@ -924,13 +924,21 @@ module XL.CODE_GENERATOR is
             when
                 'A' : 'B'
             then
-                XL2C B
-                IO.write " "
-                XL2C A
-                if in_function then
-                    IO.Write " = XLDefaultInit < "
-                    XL2C B
-                    IO.Write " > :: value()"
+                translate A
+                    when
+                        'X','Y'
+                    then
+                        XL2C parse_tree('X' : 'B')
+                        IO.WriteLn ";"
+                        XL2C parse_tree('Y' : 'B')
+                    else
+                        XL2C B
+                        IO.write " "
+                        XL2C A
+                        if in_function then
+                            IO.Write " = XLDefaultInit < "
+                            XL2C B
+                            IO.Write " > :: value()"
 
             when
                 import 'Shortcut' = 'ModName'

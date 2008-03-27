@@ -601,13 +601,26 @@ module XL.TRANSLATOR is
             when
                 'A' : 'B'
             then
+                next : PT.tree
                 XL2C B
                 IO.write " "
-                XL2C A
-                if in_function then
-                    IO.Write " = XLDefaultInit < "
-                    XL2C B
-                    IO.Write " > :: value()"
+                while A <> nil loop
+                    next := nil
+                    translate A
+                        when
+                            'X','Y'
+                        then
+                            next := X
+                            A := Y
+
+                    XL2C A
+                    if in_function then
+                        IO.Write " = XLDefaultInit < "
+                        XL2C B
+                        IO.Write " > :: value()"
+                    A := next
+                    if A <> nil then
+                        IO.Write ", "
 
             when
                 import 'Shortcut' = 'ModName'
