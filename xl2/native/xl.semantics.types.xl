@@ -677,7 +677,7 @@ module XL.SEMANTICS.TYPES is
     //    Return an invalid type for error reporting reasons
     // ------------------------------------------------------------------------
         invalid_type_counter += 1
-        reason := "<" + reason + text(invalid_type_counter) + ">"
+        reason := "<" + reason + " " + text(invalid_type_counter) + ">"
         I : PT.tree := EnterBuiltinType (reason, reason)
         return GetDefinedType(I)
 

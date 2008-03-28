@@ -1,0 +1,69 @@
+use XL.ARRAY.BASIC
+use XL.UI.CONSOLE
+use XL.POINTER
+use XL.POINTER.ADDRESS
+
+use XL.SIZED_INTEGERS
+
+generic type numeric where
+    x, y : numeric
+    x := x + y
+    x := x - y
+    x := x * y
+    x := x / y
+
+function sum (A : array) return array.item is
+    for I in Range(A) loop
+        result += A[I]
+
+
+intArray : array[5] of integer
+
+for I in Range(intArray) loop
+    intArray[I] := I + 3
+    WriteLn "intArray[", I, "]=", intArray[I]
+
+totalOfInts : integer := sum(intArray)
+
+WriteLn "Sum is ", totalOfInts
+
+
+realArray : array[12] of real
+
+for I in Range(realArray) loop
+    realArray[I] := 3.2 / (real(I) - 2.7)
+    WriteLn "realArray[", I, "]=", realArray[I]
+
+totalOfReals : real := sum(realArray)
+
+WriteLn "Sum is ", totalOfReals
+
+type vec4 is record with
+    glop, glap, glip, flop : real
+
+Counter : integer := 44
+
+function Add (in out X : vec4; Y : vec4) return vec4 written X += Y is
+    X.glop += Y.glop
+    X.glap += Y.glap
+    X.glip += Y.glip
+    X.flop += Y.flop
+    WriteLn "Zonozozo ", Counter
+    Counter += 1
+
+type timeval is record with
+    tv_sec : integer32
+    tv_usec : integer32
+
+function  gettime ( T : pointer to timeval; Z : pointer to integer) return integer written T <<-->> Z is C.gettimeofday
+
+v4 : vec4
+v4a : array[32] of vec4
+
+v4 := sum(v4a)
+
+TVal : timeval
+Zero : pointer to integer := nil
+result_of_gettimeofday : integer := &TVal <<-->> Zero
+
+WriteLn "gettimeofday (why did I bother?) got ", result_of_gettimeofday
