@@ -249,6 +249,8 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
 
         // Assign type to the tree
         TY.SetType Source, ftp
+        TY.SetDefinedType Source, ftp
+        TY.SetDefinedType ftp.name, ftp
 
         // Generate a machine type in case we want to put it in a record
         if GEN.IsGenericContext() then
@@ -291,7 +293,6 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         tp : any_type := NewFnType(Source, Parms, Ret)
         MType : PT.name_tree := tp.machine_name
         TY.EnterSignature MType.value, tp
-        TY.SetDefinedType Source, tp
         return Source
 
 
@@ -305,7 +306,6 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         tp : any_type := NewIteratorType(Source, Parms)
         MType : PT.name_tree := tp.machine_name
         TY.EnterSignature MType.value, tp
-        TY.SetDefinedType Source, tp
         return Source
 
 

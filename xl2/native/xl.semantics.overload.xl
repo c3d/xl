@@ -237,7 +237,9 @@ module XL.SEMANTICS.OVERLOAD is
                 // If we are simply building an overload set, do it here
                 if returnOverload then
                     if overloadSet <> nil then
-                        overloadSet := parse_tree('overloadSet' 'C')
+                        overloadSet := parse_tree
+                            'overloadSet'
+                            'C'
                     else
                         overloadSet := C
                     restart
@@ -589,7 +591,8 @@ module XL.SEMANTICS.OVERLOAD is
         if overloadSet <> nil then
             translate overloadSet
                 when
-                    'A' 'B'
+                    'A'
+                    'B'
                 then
                     OverloadSetToList A, List
                     OverloadSetToList B, List
@@ -629,6 +632,8 @@ module XL.SEMANTICS.OVERLOAD is
         // Turn the overload set into a more usable tree list
         candidates : PT.tree_list
         OverloadSetToList overloadSet, candidates
+        trace[overload] "Overload set: ", overloadSet
+        trace[overload] "  size is ", size(candidates)
 
         // Scoring
         BaseRecord : PT.tree

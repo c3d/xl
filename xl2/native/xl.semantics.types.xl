@@ -701,12 +701,14 @@ module XL.SEMANTICS.TYPES is
         // Check that we have types
         exprType : any_type := GetType(expr)
         if exprType = nil then
-            translate expr
-                when (@@overload 'FunName' 'overloadSet') then
-                    toSource : PT.tree := TY.Source(toType)
-                    return OVL.ResolveOverload(FunName, overloadSet, toSource)
             ERR.Error "Expression '$1' has no type", expr
             return expr
+        translate expr
+            when (@@overload 'FunName' 'overloadSet') then
+                toSource : PT.tree := TY.Source(toType)
+                trace[overload] "Convert ", expr, " to ", TY.Source(toType)
+                return OVL.ResolveOverload(FunName, overloadSet, toSource)
+
         if toType = nil then
             ERR.Error "Cannot convert '$1' to null type", expr
             return expr
