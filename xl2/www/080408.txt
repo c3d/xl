@@ -1,0 +1,28 @@
+<!--Function pointers-->
+
+Added support for function pointers in {svnrev 370}. The real problem
+was support for overloading, as illustrated in
+{svn "TESTS/06.Functions/pointer.xl" "this test"}, reproduced below:
+
+<blockquote>
+<pre>procedure Foo (X : integer) is
+    WriteLn "Foo ", X
+
+procedure Foo (X : real) is
+    WriteLn "Foo (real) ", X
+
+procedure Bar (X : integer) is
+    WriteLn "Bar ", X
+
+type proc_ptr is procedure (X : integer)
+
+to Invoke (callback : proc_ptr) is
+   callback 3
+
+Invoke Foo
+Invoke Bar</pre>
+</blockquote>
+
+In that example, the problem is with <tt>Invoke Foo</tt>, which needs
+to be able to decide which <tt>Foo<tt> is to be selected
+(the first one in that case).

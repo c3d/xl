@@ -9,12 +9,12 @@ procedure Foo (X : real) is
 procedure Bar (X : integer) is
     WriteLn "Bar ", X
 
-type zglop is procedure (X : integer)
+type proc_ptr is procedure (X : integer)
 
-to Zbronkx (TUN : zglop) is
-   TUN 3
+to Invoke (callback : proc_ptr) is
+   callback 3
 
-Zbronkx Foo
-Zbronkx Bar
+Invoke Foo
+Invoke Bar
 
 

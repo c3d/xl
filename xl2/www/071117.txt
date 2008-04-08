@@ -1,0 +1,11 @@
+<!--Updated Concept Programming Slides-->
+
+Based on feedback from many people (most notably Daveed Vandevoorde and Lionel Schaffhauser), I posted a new <a href="http://xlr.sourceforge.net/Concept%20Programming%20Presentation.pdf">presentation</a> about Concept Programming. This should make the ideas much easier to grasp.
+
+During the discussion, Daveed Vandevoorde pointed me to a very interesting paper about <a href="http://research.microsoft.com/~simonpj/papers/stm/stm.pdf">memory transactional models</a>, which he used as an argument in favor of functional programming. Recommended reading, even if I don't think that this is a point for functional programming at all myself.
+
+Lionel Schaffhauser pointed out a number of presentation-related issues, which prompted me to change the order of the slides and add a whole section about the "Maximum" example.
+
+As a reminder, there is also an older presentation <a href="http://xlr.sf.net/cpxl.mov">about XL itself</a>.
+
+<a href="http://grenouille-bouillie.blogspot.com/2007/11/concept-programming-redux.html">Blog post about this presentation</a>.

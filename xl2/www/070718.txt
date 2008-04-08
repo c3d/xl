@@ -1,0 +1,37 @@
+<!--Return-type generic deductions-->
+
+While writing code for pointer modules, and specifically
+{svn "library/xl.pointer.machine_address.xs" "XL.POINTER.MACHINE_ADDRESS"},
+it occured to me that I had a problem with the following code:
+
+{pre}function Pointer(addr : integer) return pointer is XL.BYTECODE.int_to_ptr
+{erp}
+
+The problem is that the intended usage, as illustrated in
+{svn "TESTS/08.Aggregates/fixed-address-pointers.xl" "this example"},
+would be something like:
+
+{pre}Machine_Register : pointer to unsigned := Pointer(16#FF_FC0A){erp}
+
+The problem with this is that none of the arguments to {tt "Pointer"}
+helps figuring out what particular generic parameters for the the
+return type are (i.e. in this case, {tt "pointer to integer"}, or 
+{tt "pointer to real"}, or something else).
+
+I tried to wiggle out of this, because I know that C++ (the only
+mainstream language that massively implements automatic deduction in
+templates, since Ada for example requires explicit instantiation) does
+not implement return type deductions. There are good reasons for that:
+defining precisely how it works is hard. Ada does have return-type
+overloading, which is a somewhat similar problem, and it is known to
+be expensive.
+
+But ultimately, I had to concede, on
+{concept "cp" "concept programming grounds"}
+that there was simply no good alternative. So I ended up hacking
+together what seems to be the simplest, least expensive semantics
+allowing these particular examples to work. By "simplest and least
+expensive", I mean in particular that it works only at one level, and
+only if other parameters of the written form or function call
+entirely define the generic type being returned. But apparently, it
+now {svn "TESTS/08.Aggregates/fixed-address-pointers.xl" "works to some extent"}.
