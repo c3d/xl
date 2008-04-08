@@ -1,0 +1,17 @@
+use XL.UI.CONSOLE
+
+procedure Foo (X : integer) is
+    WriteLn "Foo ", X
+
+procedure Bar (X : integer) is
+    WriteLn "Bar ", X
+
+type zglop is procedure (X : integer)
+
+to Zbronkx (TUN : zglop) is
+   TUN 3
+
+Zbronkx Foo
+Zbronkx Bar
+
+

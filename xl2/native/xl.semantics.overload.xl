@@ -819,7 +819,7 @@ module XL.SEMANTICS.OVERLOAD is
                 ERR.Error "A first candidate is '$1'", best
                 ERR.Error "A second candidate is '$1'", ambig
 
-            trace [overload] "FOUND: Calling ", PT.tree(bestF.name),
+            trace [overload] "FOUND: Resolved to ", PT.tree(bestF.name),
                              "=", PT.tree(bestF.machine_name)
 
             if bestGtype <> nil or bestVargs <> nil then
@@ -844,12 +844,15 @@ module XL.SEMANTICS.OVERLOAD is
                 trace [overload] "INST: new type ", TY.Source(bestF.type)
 
             if toFnType <> nil then
-                result := best
+                result := PT.Clone(bestF.machine_name)
+                TY.SetType result, toFnType
             else if BaseRecord <> nil then
                 result := CGM.RecordFunctionCall (BaseRecord, bestF,
                                                   bestArgs, nil, nil)
+                ERR.Error "ResolveOverload '$1' not implemented", result
             else
                 result := CGM.FunctionCall (bestF, bestArgs, nil, nil)
+                ERR.Error "ResolveOverload '$1' not implemented 2", result
 
         else
             ERR.Error "No valid function found for '$1'", NameTree
