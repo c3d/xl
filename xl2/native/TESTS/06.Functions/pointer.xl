@@ -3,6 +3,9 @@ use XL.UI.CONSOLE
 procedure Foo (X : integer) is
     WriteLn "Foo ", X
 
+procedure Foo (X : real) is
+    WriteLn "Foo (real) ", X
+
 procedure Bar (X : integer) is
     WriteLn "Bar ", X
 
