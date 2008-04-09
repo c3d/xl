@@ -450,6 +450,9 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 insts    : PT.tree_list
                 SYM.Lookup instContext, "DECL", Field.value,
                            insts, SYM.lookupLocalOnly
+                if size(insts) = 0 then
+                    SYM.Lookup instContext, "FN", Field.value,
+                               insts, SYM.lookupLocalOnly
                 if size(insts) > 0 then
                     instParm := insts[0]
                     if size(insts) > 1 then
@@ -458,6 +461,9 @@ module XL.SEMANTICS.TYPES.RECORDS is
                         ERR.Error "A second candidate is '$1", insts[1]
 
         // Otherwise, normal case
+        if size(list) = 0 then
+            RecordDeclarations Record, Field, "FN", list, symbols
+
         if size(list) > 1 then
             ERR.Error "Field '$1' is ambiguous", Field
             ERR.Error "A first candidate is '$1", list[0]

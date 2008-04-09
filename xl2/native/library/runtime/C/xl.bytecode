@@ -109,6 +109,8 @@ fn_entry        ""
 fn_exit         "exit_$1: 0;"
 fn_body_end     "}"
 
+fn_ptr_copy     "$1 = $2;"
+
 native_C        ""
 
 record_begin    "typedef struct $1 {"
