@@ -3,11 +3,11 @@ INFIX
         21      ;
         30      loop
         35      else into
-        40      then where
+        40      then where require ensure
         50      :
         100     STATEMENT
         110     is as  while until
-        120     with written require ensure
+        120     with written
         200     DEFAULT
         210     ,
         221     := += -= *= /= ^= |= &=

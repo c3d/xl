@@ -102,7 +102,9 @@ include $(BROOT)Makefile.config
 qtest: debug regression
 otest: opt regression
 
-test: debug regression native native_test native_stability_test
+test: debug regression				\
+      native native_test native_regression	\
+      native_stability_test
 	echo ------ Differences: -----------------------------------------
 	diff $(OBJROOT)nnxl_test/native/compiler.xl.C \
 	     $(OBJROOT)nnxl_stability/native/compiler.xl.C
@@ -114,6 +116,8 @@ native:
 	$(MAKE) PRODUCT=nnxl$(EXE) XL="./nxl$(EXE)" XLOPTS="-bootstrap" OBJROOT="$(OBJROOT)nnxl"
 native_test: 
 	$(MAKE) PRODUCT=nnnxl$(EXE) XL="./nnxl$(EXE)" XLOPTS="-bootstrap" OBJROOT="$(OBJROOT)nnxl_test"
+native_regression:
+	cd TESTS; time ./alltests -xl "../nnxl$(EXE)"
 native_stability_test: 
 	$(MAKE) PRODUCT=nnnnxl$(EXE) XL="./nnnxl$(EXE)" XLOPTS="-bootstrap" OBJROOT="$(OBJROOT)nnxl_stability"
 regression: ALWAYS

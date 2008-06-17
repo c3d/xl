@@ -595,52 +595,6 @@ module XL.SEMANTICS.TYPES.GENERICS is
         when ('Decl' written 'WrittenForm') then
             return EnterGenericWrittenForm(Decl, WrittenForm)
 
-        // Alternate multi-line forms at end of file
-        when
-            'Decl'
-            is 'Initializer'
-        then
-            return EnterGenericInitializer (Decl, Initializer)
-        when
-            'Decl'
-            where 'Validation'
-        then
-            return EnterGenericValidation (Decl, Validation)
-        when
-            'Decl'
-            written 'WrittenForm'
-        then
-            return EnterGenericWrittenForm (Decl, WrittenForm)
-
-        // Alternate multi-line forms not at end of file
-        when
-            'Decl'
-            is 'Initializer'
-            'Rest'
-        then
-            Decl := parse_tree
-                'Decl' is 'Initializer'
-                'Rest'
-            return XLT.XLEnterGeneric (Decl)
-        when
-            'Decl'
-            where 'Validation'
-            'Rest'
-        then
-            Decl := parse_tree
-                'Decl' where 'Validation'
-                'Rest'
-            return XLT.XLEnterGeneric (Decl)
-        when
-            'Decl'
-            written 'WrittenForm'
-            'Rest'
-        then
-            Decl := parse_tree
-                'Decl' written 'WrittenForm'
-                'Rest'
-            return XLT.XLEnterGeneric (Decl)
-
         // Priority inversions for type declarations
         when
             type 'Decl' written 'WrittenForm'

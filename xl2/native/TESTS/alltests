@@ -37,6 +37,7 @@ UPDATE=
 NOCACHE=
 RUNTIME=default
 
+if [ "$1" == '-xl' ]; then XL="$2"; shift; shift; fi
 if [ "$1" == '-c++' -o "$1" == "-c" ]; then NOCACHE=1; shift; fi
 if [ "$1" == "-update" -o "$1" == "-u" ]; then
    shift; UPDATE='*'$1'*'; PATTERN="$UPDATE"; shift;
