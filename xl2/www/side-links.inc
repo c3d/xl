@@ -9,6 +9,7 @@
 {concept "top" "Conceptual overview"}<br>
 {example "top" "XL examples"}<br>
 {inside "top" "Inside XL"}<br>
+<a href="http://xlr.sourceforge.net/Concept%20Programming%20Presentation.pdf">Concept Programming</a>
 
 <P><B>In depth</B><BR>
 <A href="http://xlr.svn.sourceforge.net/viewcvs.cgi/xlr/trunk/xl2/">Browse SVN</A><br>

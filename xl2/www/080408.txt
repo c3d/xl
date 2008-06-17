@@ -24,5 +24,5 @@ Invoke Bar</pre>
 </blockquote>
 
 In that example, the problem is with <tt>Invoke Foo</tt>, which needs
-to be able to decide which <tt>Foo<tt> is to be selected
+to be able to decide which <tt>Foo</tt> is to be selected
 (the first one in that case).
