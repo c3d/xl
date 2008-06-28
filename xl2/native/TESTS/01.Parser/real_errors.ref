@@ -7,9 +7,6 @@
 01.Parser/real_errors.xl:43: Invalid base (should be 2..36)
 | 37#A.0
 |___^
-01.Parser/real_errors.xl:47: Digit is invalid for the base
-| 15#10F.FE
-|______^
 
 (infix <CR>
  1.23457e+18
@@ -46,6 +43,10 @@
            (infix .
             2
             3)
-           255.992)))))))))))
+           (prefix
+            15
+            (infix .
+             F
+             FE)))))))))))))
 
 

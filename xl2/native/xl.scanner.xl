@@ -207,13 +207,6 @@ module XL.SCANNER is
                     if S.integer_value < 0 and overflowed = 0 then
                         overflowed := S.position
 
-                    // If this looks like a digit, but outside the base, error
-                    if C <> 'e' and C <> 'E' then
-                        if digit <> 999 and digit >= S.base then
-                            ERR.Error "Digit is invalid for the base",
-                                      S.position
-                            S.base := digit + 1
-
                     // Skip a single underscore
                     if C = '_' then
                         IgnoreChar S, C
@@ -237,6 +230,8 @@ module XL.SCANNER is
                         S.real_value := 0.0
                         based_number := true
                         digit := DigitValue C
+                    else
+                        exit if digit >= S.base
 
                 exit if not based_number or not IO.valid S.input
 
