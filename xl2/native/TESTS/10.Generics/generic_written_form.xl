@@ -10,9 +10,7 @@ K : pair of integer
 
 
 generic [type item]
-type poor
-written poor of item
-is record with
+type poor written poor of item is record with
     zap : item
     zop : item
 
