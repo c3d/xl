@@ -111,7 +111,6 @@ module XL.SEMANTICS.OVERLOAD is
                     FN : Field as PT.name_tree
                     // Check if we are looking for 'complex.value'
                     gt : GN.GenericIndex(Record, Field) as PT.name_tree
-                    trace[ddd] "Looking for ", PT.tree(gt), " in ", Record
                     if gt <> nil then
                         NameTree := gt
                     else
@@ -900,7 +899,6 @@ module XL.SEMANTICS.OVERLOAD is
                     FN : Field as PT.name_tree
                     // Check if we are looking for 'complex.value'
                     gt : GN.GenericIndex(Record, Field) as PT.name_tree
-                    trace[ddd] "Found ", PT.tree(gt), " for ", Record, ".", Field
                     if gt <> nil then
                         return IsFunction(gt)
                     REC.RecordDeclarations Record, FN, "FN", list, syms
