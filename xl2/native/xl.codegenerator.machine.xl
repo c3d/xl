@@ -79,19 +79,6 @@ module XL.CODE_GENERATOR.MACHINE is
         result.info := mname.info
 
 
-    function MakeWritable(computation : BC.bytecode;
-                          write       : BC.bytecode;
-                          mname       : PT.name_tree) return BC.bytecode is
-    // ------------------------------------------------------------------------
-    //    Create an expression from consistutive parts
-    // ------------------------------------------------------------------------
-        result := parse_tree
-            'computation'
-            @write 'write'
-            @value 'mname'
-        result.info := mname.info
-
-
     procedure SplitExpression(in out arg  : PT.tree;
                               in out code : PT.tree) is
     // ------------------------------------------------------------------------
@@ -106,47 +93,10 @@ module XL.CODE_GENERATOR.MACHINE is
 
             when
                 'ValueGenerator'
-                @write 'WriteOp'
                 @value 'ValueName'
             then
                 code := XLT.Append(code, ValueGenerator)
                 arg := ValueName
-            when
-                'ValueGenerator'
-                @value 'ValueName'
-            then
-                code := XLT.Append(code, ValueGenerator)
-                arg := ValueName
-
-
-    procedure SplitWrite(in out arg      : PT.tree;
-                         in out code     : PT.tree;
-                         in out write_op : PT.tree) is
-    // ------------------------------------------------------------------------
-    //   Split the evaluation of an argument if it is a writable value
-    // ------------------------------------------------------------------------
-        translate arg
-            when
-                ('Value')
-            then
-                SplitExpression Value, code
-                arg := Value
-
-            when
-                'ValueGenerator'
-                @write 'WriteOperation'
-                @value 'ValueName'
-            then
-                code := XLT.Append(code, ValueGenerator)
-                arg := ValueName
-                write_op := WriteOperation
-            when
-                'ValueGenerator'
-                @value 'ValueName'
-            then
-                code := XLT.Append(code, ValueGenerator)
-                arg := ValueName
-                write_op := nil
 
 
 
