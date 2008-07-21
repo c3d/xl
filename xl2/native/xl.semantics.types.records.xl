@@ -583,7 +583,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
             PT.AttachTree rtp.machine_name, "CTORCODE", result
             result := parse_tree
                 function 'recName' () return 'recName' is
-                    @nop // CTORCODE to be inserted on 'result'
+                    @info DefaultCtor // CTORCODE to be inserted on 'result'
             result := EnterDefaultFunction(result)
 
 
@@ -612,6 +612,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         if result <> nil then
             result := parse_tree
                 function 'recName'('Parms') return 'recName' is
+                    @info DefaultFieldConstructor
                     'result'
             result := EnterDefaultFunction(result)
 
@@ -637,6 +638,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         if result <> nil then
             result := parse_tree
                 procedure delete (this : 'recName') is
+                    @info DefaultDestructor
                     'result'
             result := EnterDefaultFunction(result)
 
@@ -664,6 +666,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
             result := parse_tree
                 procedure copy (out this:'recName';
                                 that : 'recName') written this := that is
+                    @info DefaultCopy
                     'result'
             result := EnterDefaultFunction(result)
 
