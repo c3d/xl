@@ -115,25 +115,6 @@ module XL.CODE_GENERATOR.MACHINE is
                 arg := ValueName
 
 
-    procedure SetExpressionTarget(in out value  : PT.tree;
-                                  mname         : PT.tree) is
-    // ------------------------------------------------------------------------
-    //   Target the result of an expression directly into given machine name
-    // ------------------------------------------------------------------------
-        translate value
-            when
-                'ValueGenerator'
-                @value 'ValueName'
-            then
-                copy : PT.tree := parse_tree(@copy 'mname' 'ValueName')
-                info : PT.infos := value.info
-                value := parse_tree
-                    'value'
-                    'copy'
-                    @value 'mname'
-                value.info := info
-
-
 
     // ========================================================================
     //
