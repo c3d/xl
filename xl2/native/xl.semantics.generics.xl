@@ -410,7 +410,8 @@ module XL.SEMANTICS.GENERICS is
         mn        : PT.name_tree := Decl.machine_name
         isPartial : boolean := false
         if mn = nil then
-            mn := SYM.Temporary("<generic>")
+            mn := Decl.name
+            mn := SYM.Temporary("<generic>" + PT.XLNormalize(mn.value))
             Decl.machine_name := mn
         key : text := mn.value
         key += "["
@@ -593,6 +594,7 @@ module XL.SEMANTICS.GENERICS is
             result := parse_tree(@error 'errorText')
             ERR.DisplayLastErrors()
         SYM.Enter XLT.global_context, "INSTANCE", key, result
+        trace[inst] "Entered ", key
         XLT.context := oldContext
         XLT.function_context := fnContext
         instantiations -= 1
