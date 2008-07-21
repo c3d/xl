@@ -25,7 +25,6 @@
 
 module XL.MATH.COMPLEX is
 
-
     function Complex (re,im : complex.value) return complex written re + im i is
         result.re := re
         result.im := im
