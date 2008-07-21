@@ -1,0 +1,38 @@
+// ****************************************************************************
+//  xl.stylesheet                   (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Default renderer for XL
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision: 71 $
+// * Date       : $Date: 2004-09-09 23:06:49 +0200 (Thu, 09 Sep 2004) $
+// ****************************************************************************
+
+// Nothing really special here...
+infix  = separator left space self space right separator
+prefix = separator left space right separator
+block  = separator opening separator child separator closing separator
+
+cr     = newline indents
+indent = indent cr
+unindent = unindent cr
+indents = "    "
+"block I+ I-" = child
+"block  ( ) " = child
+"?wildcard?" = self
+"prefix @" = right
