@@ -586,7 +586,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
             PT.AttachTree rtp.machine_name, "CTORCODE", result
             result := parse_tree
                 function 'recName' () return 'recName' is
-                    @nop // CTORCODE to be inserted on 'result'
+                    @info DefaultCtor // CTORCODE to be inserted on 'result'
             result := EnterDefaultFunction(result)
 
 
