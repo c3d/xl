@@ -595,6 +595,7 @@ module XL.SEMANTICS.GENERICS is
             ERR.DisplayLastErrors()
         SYM.Enter XLT.global_context, "INSTANCE", key, result
         trace[inst] "Entered ", key
+
         XLT.context := oldContext
         XLT.function_context := fnContext
         instantiations -= 1
