@@ -7,7 +7,7 @@ generic [type item] type test is record with
 
 function test (n : test.item) return test is
    result.a := n
-   result.b := test.value(0)
+   result.b := test.item(0)
 
 K : test(3)
 L : test(3.5)
