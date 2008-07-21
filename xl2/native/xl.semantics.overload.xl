@@ -871,6 +871,10 @@ module XL.SEMANTICS.OVERLOAD is
     // ------------------------------------------------------------------------
         if T.kind <> PT.xlNAME then
             translate T
+                when
+                    @ 'Anything'
+                then
+                    return false
                 when (any.'Name') then
                     coi : SYM.symbol_table := GN.ContextOfInstantiation()
                     if coi = nil then
