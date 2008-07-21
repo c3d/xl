@@ -5,7 +5,7 @@ generic [type item] type test is record with
   a : item
   b : item
 
-function test (n : test.value) return test is
+function test (n : test.item) return test is
    result.a := n
    result.b := test.value(0)
 
