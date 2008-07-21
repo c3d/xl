@@ -874,6 +874,10 @@ module XL.SEMANTICS.OVERLOAD is
                     @ 'Anything'
                 then
                     return false
+                when
+                    @@ 'Anything'
+                then
+                    return false
                 when (any.'Name') then
                     coi : SYM.symbol_table := GN.ContextOfInstantiation()
                     if coi = nil then
