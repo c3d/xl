@@ -30,11 +30,6 @@ L := complex(4.2, 7.8)
 M := complex(2, 4)
 ShowNumbers "After functional initializers"
 
-K := K * K
-L := L * L
-M := M * M
-ShowNumbers "After Multiplications"
-
 // Check initializers with complex notation
 K := 3.14 + 15.92i
 L := 2.21 + 3.02i
@@ -85,4 +80,3 @@ Copy K, Add(K,K)
 Copy L, Add(L, L)
 Copy M, Subtract(M, Add(M, M))
 ShowNumbers "After function-style calls"
-

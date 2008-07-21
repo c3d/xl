@@ -583,12 +583,10 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
         // If we found any, then generate a constructor here
         if result <> nil then
-            trace[ctors] "CtorCode for ", PT.tree(rtp.machine_name), " is ",
-                         result
             PT.AttachTree rtp.machine_name, "CTORCODE", result
             result := parse_tree
                 function 'recName' () return 'recName' is
-                    @info DefaultCtor // CTORCODE to be inserted on 'result'
+                    @nop // CTORCODE to be inserted on 'result'
             result := EnterDefaultFunction(result)
 
 

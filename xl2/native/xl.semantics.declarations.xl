@@ -700,14 +700,10 @@ module XL.SEMANTICS.DECLARATIONS is
     // ------------------------------------------------------------------------
     //    Evaluate 'Value' directly with result 'MName'
     // ------------------------------------------------------------------------
-
-        trace[ctors] "Construct ", MName, " type ", DType, " val ", Value
-
-        TY.PushTargetType DType
         PT.AttachTree Value, "CTORCALL", MName
+        TY.PushTargetType DType
         result := XLT.XLSemantics (Value)
         TY.PopTargetType()
-
         if PT.Attached(Value, "CTORCALL") <> nil then
             PT.AttachTree Value, "CTORCAL", nil
             CGM.SetExpressionTarget result, MName
@@ -746,16 +742,13 @@ module XL.SEMANTICS.DECLARATIONS is
         dtype : TY.any_type := decl.type
         assert dtype <> nil
         tname : TY.SourceName(dtype) as PT.name_tree
-        trace[ctors] "CallConstructor ",
-                     PT.tree(decl.name), " : ", PT.tree(tname)
         if tname <> nil then
             list : PT.tree_list
             SYM.Lookup XLT.context, "FN", tname.value, list, SYM.lookupAll
             if size(list) > 0 then
                 dname : PT.name_tree := decl.machine_name
-                dtsrc : PT.tree := TY.Source(dtype)
                 result := parse_tree('tname' ())
-                result := parse_tree(@@ctor 'dtsrc' 'dname' 'result')
+                result := parse_tree(@@ctor 'tname' 'dname' 'result')
                 result := XLT.XLSemantics(result)
 
 
@@ -769,12 +762,8 @@ module XL.SEMANTICS.DECLARATIONS is
 
         tp : TY.any_type := decl.type
         mname : PT.tree := tp.machine_name
-        trace[ctors] "ConstructorCode ",
-                     PT.tree(decl.name), " : ", PT.tree(TY.SourceName(tp))
-        trace[ctors] "  MName=", PT.tree(mname), " at ", mname
         if mname <> nil then
             result := PT.Attached(mname, "CTORCODE")
-            trace[ctors] "  Code=", result
             if result <> nil then
                 result := PT.Clone(result)
                 result.position := mname.position
