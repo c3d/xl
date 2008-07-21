@@ -254,7 +254,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
 
         // Generate a machine type in case we want to put it in a record
         if GEN.IsGenericContext() then
-            ftp.machine_name := SYM.Temporary("<generic function type>")
+            ftp.machine_name := SYM.Temporary("<generic-function-type>")
             result := GEN.MakeGeneric (ftp)
         else
             MType : PT.name_tree := CGM.EntryPointer(ftp)
