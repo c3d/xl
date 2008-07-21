@@ -58,9 +58,17 @@ library/runtime/default/./xl_builtins.xs:186: Candidate form 'Tgt' := 'Src' cann
 | Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
 |____________________________________________^
 [Compiler generated] Candidate form 'record' . 'field' cannot be selected
+09.Modules/nested_import_nonmodule.xl:29: No translation for 'Simple_imported . Nested_1'
+| Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
+|____________________________________________^
+[Compiler generated] Candidate form 'record' . 'field' cannot be selected
 09.Modules/nested_import_nonmodule.xl:29: No translation for 'Simple_imported . Nested_1 . nested2'
 | Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
 |_____________________________________________________^
+[Compiler generated] Candidate form 'record' . 'field' cannot be selected
+09.Modules/nested_import_nonmodule.xl:29: No translation for 'Simple_imported . Nested_1'
+| Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)
+|____________________________________________^
 [Compiler generated] Candidate form 'record' . 'field' cannot be selected
 09.Modules/nested_import_nonmodule.xl:29: No translation for 'Simple_imported . Nested_1'
 | Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)

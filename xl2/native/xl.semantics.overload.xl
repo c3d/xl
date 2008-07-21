@@ -109,9 +109,14 @@ module XL.SEMANTICS.OVERLOAD is
                     anyLookup := true
                 when ('Record'.'Field') where Field.kind = PT.xlNAME then
                     FN : Field as PT.name_tree
-                    REC.RecordDeclarations Record, FN, "FN", list, symbols
-                    BaseRecord := XLT.XLSemantics(Record)
-                    NameTree := Field
+                    // Check if we are looking for 'complex.value'
+                    gt : GN.GenericIndex(Record, Field) as PT.name_tree
+                    if gt <> nil then
+                        NameTree := gt
+                    else
+                        REC.RecordDeclarations Record, FN, "FN", list, symbols
+                        BaseRecord := XLT.XLSemantics(Record)
+                        NameTree := Field
                 else
                     ERR.Error "Internal: Non-name functor '$1'", NameTree
                     CGM.ExitCall callDepth, result
@@ -511,7 +516,6 @@ module XL.SEMANTICS.OVERLOAD is
                 if bestGargs[nil] <> nil then
                     // Target type not set in that context yet, back up
                     assert TY.TargetType() = nil
-                    assert callDepth > 0
                     CGM.ExitCall callDepth, result
                     PT.AttachTree Input, "TODEDUCE", Input
                     return Input
@@ -874,6 +878,14 @@ module XL.SEMANTICS.OVERLOAD is
     // ------------------------------------------------------------------------
         if T.kind <> PT.xlNAME then
             translate T
+                when
+                    @ 'Anything'
+                then
+                    return false
+                when
+                    @@ 'Anything'
+                then
+                    return false
                 when (any.'Name') then
                     coi : SYM.symbol_table := GN.ContextOfInstantiation()
                     if coi = nil then
@@ -887,6 +899,10 @@ module XL.SEMANTICS.OVERLOAD is
                     list : PT.tree_list
                     syms : SYM.symbol_table
                     FN : Field as PT.name_tree
+                    // Check if we are looking for 'complex.value'
+                    gt : GN.GenericIndex(Record, Field) as PT.name_tree
+                    if gt <> nil then
+                        return IsFunction(gt)
                     REC.RecordDeclarations Record, FN, "FN", list, syms
                     return syms <> nil and size(list) > 0
             return false
