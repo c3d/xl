@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision: 370 $
-// * Date       : $Date: 2008-04-08 02:08:47 -0400 (Tue, 08 Apr 2008) $
+// * Revision   : $Revision$
+// * Date       : $Date$
 // ****************************************************************************
 
 import PT = XL.PARSER.TREE
@@ -97,7 +97,7 @@ module XL.SEMANTICS.OVERLOAD is
         callDepth       : integer := CGM.EnterCall()
         returnOverload  : boolean := not forceCall and Args = nil
         overloadSet     : PT.tree := nil
-        ctorTarget      : PT.tree := PT.Attached(input, "CTORCALL")
+        
 
         trace [overload] "Overload resolution: name=", NameTree, " args=", Args
         if TY.TargetType() <> nil then
@@ -532,7 +532,7 @@ module XL.SEMANTICS.OVERLOAD is
             ctors        : PT.tree
             declaredHere : map[DCL.declaration, boolean]
             ftp          : bestF.type as FT.function_type
-            if callDepth = 0 and ftp.base <> nil and ctorTarget = nil then
+            if callDepth = 0 and ftp.base <> nil then
                 ERR.Error "The value returned by '$1' is ignored", NameTree
             if size(bestDNames) > 0 then
                 ToDeclCount : integer := size(bestDNames)
@@ -568,13 +568,10 @@ module XL.SEMANTICS.OVERLOAD is
                                               bestArgs, ctors, dtors)
             else if BaseRecord <> nil then
                 result := CGM.RecordFunctionCall (BaseRecord, bestF,
-                                                  bestArgs, ctorTarget,
-                                                  ctors, dtors)
+                                                  bestArgs, ctors, dtors)
             else
-                result := CGM.FunctionCall (bestF, bestArgs, ctorTarget,
-                                            ctors, dtors)
-            if ctorTarget <> nil then
-                PT.AttachTree Input, "CTORCALL", nil
+                result := CGM.FunctionCall (bestF, bestArgs, ctors, dtors)
+
         else
             ERR.Error "No valid function found for '$1'", NameTree
             if candidate_errors then
@@ -851,10 +848,10 @@ module XL.SEMANTICS.OVERLOAD is
                 TY.SetType result, toFnType
             else if BaseRecord <> nil then
                 result := CGM.RecordFunctionCall (BaseRecord, bestF,
-                                                  bestArgs, nil, nil, nil)
+                                                  bestArgs, nil, nil)
                 ERR.Error "ResolveOverload '$1' not implemented", result
             else
-                result := CGM.FunctionCall (bestF, bestArgs, nil, nil, nil)
+                result := CGM.FunctionCall (bestF, bestArgs, nil, nil)
                 ERR.Error "ResolveOverload '$1' not implemented 2", result
 
         else
@@ -874,6 +871,10 @@ module XL.SEMANTICS.OVERLOAD is
     // ------------------------------------------------------------------------
         if T.kind <> PT.xlNAME then
             translate T
+                when
+                    @ 'Anything'
+                then
+                    return false
                 when (any.'Name') then
                     coi : SYM.symbol_table := GN.ContextOfInstantiation()
                     if coi = nil then
