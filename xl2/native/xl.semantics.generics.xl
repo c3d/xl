@@ -803,7 +803,8 @@ module XL.SEMANTICS.GENERICS is
                         else if Gargs[N] <> ArgTypeSrc then
                             ERR.Error "Generic parameter type '$1' ", N
                             ERR.Error "cannot be both '$1'", Gargs[N]
-                            ERR.Error "and '$1' in the same instance",ArgTypeSrc
+                            ERR.Error "and '$1' in the same instance",
+                                      ArgTypeSrc
                             trace [deduce] "Conflict for ", N, "=", ArgTypeSrc
                             trace [deduce] "We had ", N, "=", Gargs[N]
                             return false
@@ -879,10 +880,9 @@ module XL.SEMANTICS.GENERICS is
         // Check if this is a function and if its return type is known
         if fun <> nil then
             ret : fun.base as GEN.generic_type
-            callDepth : integer := SYM.GetInteger(XLT.context, "CALLDEPTH")
-            tgtTree : PT.tree := TY.TargetType()
             funRet := ret
-            defer :=  callDepth > 0 and tgtTree = nil
+            if funRet = nil then
+                defer := SYM.GetInteger(XLT.context, "CALLDEPTH") > 0
 
         // Loop over generic parameters for the function
         for P in 0..NP-1 loop

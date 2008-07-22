@@ -700,10 +700,14 @@ module XL.SEMANTICS.DECLARATIONS is
     // ------------------------------------------------------------------------
     //    Evaluate 'Value' directly with result 'MName'
     // ------------------------------------------------------------------------
-        PT.AttachTree Value, "CTORCALL", MName
+
+        trace[ddd] "Construct ", MName, " type ", DType, " val ", Value
+
         TY.PushTargetType DType
+        PT.AttachTree Value, "CTORCALL", MName
         result := XLT.XLSemantics (Value)
         TY.PopTargetType()
+
         if PT.Attached(Value, "CTORCALL") <> nil then
             PT.AttachTree Value, "CTORCAL", nil
             CGM.SetExpressionTarget result, MName
@@ -747,8 +751,9 @@ module XL.SEMANTICS.DECLARATIONS is
             SYM.Lookup XLT.context, "FN", tname.value, list, SYM.lookupAll
             if size(list) > 0 then
                 dname : PT.name_tree := decl.machine_name
+                dtsrc : PT.tree := TY.Source(dtype)
                 result := parse_tree('tname' ())
-                result := parse_tree(@@ctor 'tname' 'dname' 'result')
+                result := parse_tree(@@ctor 'dtsrc' 'dname' 'result')
                 result := XLT.XLSemantics(result)
 
 
