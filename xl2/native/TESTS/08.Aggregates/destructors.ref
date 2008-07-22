@@ -2,7 +2,6 @@ I=1 and J=1
 Destructor for 2
 Destructor for 1
 Destructor for 1
-Destructor for 0
 Destructor for 2
 Destructor for 2
 I=2 and J=1
@@ -11,7 +10,6 @@ I=2 and J=2
 Destructor for 3
 Destructor for 2
 Destructor for 1
-Destructor for 0
 Destructor for 3
 Destructor for 3
 I=3 and J=1
@@ -22,7 +20,6 @@ I=3 and J=3
 Destructor for 4
 Destructor for 3
 Destructor for 1
-Destructor for 0
 Destructor for 4
 Destructor for 4
 I=4 and J=1
@@ -35,7 +32,6 @@ I=4 and J=4
 Destructor for 5
 Destructor for 4
 Destructor for 1
-Destructor for 0
 Destructor for 5
 Destructor for 5
 I=5 and J=1
@@ -50,12 +46,10 @@ I=5 and J=5
 Destructor for 6
 Destructor for 5
 Destructor for 1
-Destructor for 0
 Destructor for 6
 Destructor for 6
 Destructor for 5
 Destructor for 1
-Destructor for 0
 Entering For loop, It=3
 Entering body, It=3
 TeaForTwo I=3
@@ -102,8 +96,6 @@ Destructor for 5
 Destructor for 9
 Destructor for 3
 Destructor for 7
-Destructor for 0
-Destructor for 0
 Final A=6 and B=10
 Destructor for 9
 Destructor for 9
@@ -151,7 +143,6 @@ Destructor for 9
 Destructor for 9
 Destructor for 9
 Destructor for 12
-Destructor for 0
 Destructor for 6
 Destructor for 10
 Destructor for 10

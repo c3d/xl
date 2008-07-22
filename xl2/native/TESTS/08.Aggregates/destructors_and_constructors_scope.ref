@@ -1,17 +1,12 @@
 Constructed 778
-Destroyed 778
 Constructed 779
-Destroyed 779
 Constructed 780
-Destroyed 780
 Global variables:
  Global=778
  General=779
  Universal=780
 Constructed 781
-Destroyed 781
 Constructed 782
-Destroyed 782
 On entry:
  InVar=778
  OutVar=781
