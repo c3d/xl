@@ -31,7 +31,7 @@ module XL.MATH.COMPLEX with
         im : value
 
     function Complex (re, im : complex.value) return complex written re + im i
-    function Complex (re : complex.value) return complex written re
+    function Complex (re : complex.value) return complex
     function Imaginary (im : complex.value) return complex written im i
     to Copy(out Target : complex; Source : complex) written Target := Source
 
@@ -40,3 +40,10 @@ module XL.MATH.COMPLEX with
     function Multiply (X, Y : complex) return complex written X*Y
     function Divide (X, Y : complex) return complex written X/Y
 
+    // Optimized notations with a number and a complex
+    function Copy(out Target : complex;
+                  Source     : complex.value) written Target := Source
+    function Multiply (X : complex;
+                       Y : complex.value) return complex written X*Y written Y*X
+    function Divide (X : complex;
+                     Y : complex.value) return complex written X/Y
