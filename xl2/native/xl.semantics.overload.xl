@@ -97,7 +97,7 @@ module XL.SEMANTICS.OVERLOAD is
         callDepth       : integer := CGM.EnterCall()
         returnOverload  : boolean := not forceCall and Args = nil
         overloadSet     : PT.tree := nil
-        
+        ctorTarget      : PT.tree := PT.Attached(input, "CTORCALL")
 
         trace [overload] "Overload resolution: name=", NameTree, " args=", Args
         if TY.TargetType() <> nil then
@@ -220,7 +220,7 @@ module XL.SEMANTICS.OVERLOAD is
             C : PT.tree
             for C in candidates loop
 
-                trace [overload] "Testing ", C
+                trace [overload] "Testing ", C, " depth ", itemDepth[C]
                 SemArgs := ActArgs
 
                 // Retrieve function information, ignore non functions
@@ -405,15 +405,11 @@ module XL.SEMANTICS.OVERLOAD is
                 // Check if there are non-deduced generic arguments
                 if Gtype <> nil then
                     if not GN.FinalizeDeductions(Gtype, Gargs) then
-                        if GN.CanDeduceReturnType(Gtype, Gargs) then
-                            Score /= 2
-                            trace [overload] "WARN: Must deduce return type"
-                        else
-                            ERR.Error "'$1' could not be selected because", C
-                            ERR.Error "the generic type '$1' cannot be deduced",
-                                      TY.Source(Gtype)
-                            Matching := false
-                            trace [overload] "FAIL: Cannot finalize deductions"
+                        ERR.Error "'$1' could not be selected because", C
+                        ERR.Error "the generic type '$1' cannot be deduced",
+                                  TY.Source(Gtype)
+                        Matching := false
+                        trace [overload] "FAIL: Cannot finalize deductions"
 
                     // This is the case for Copy P, Pointer(3). Now we have
                     // finalized deductions for P successfully, so we know
@@ -506,7 +502,7 @@ module XL.SEMANTICS.OVERLOAD is
         if best <> nil then
             if ambig <> nil then
                 ERR.Error "The call to '$1' is ambiguous", NameTree
-                ERR.Error "A first candidate is '$1'", best
+                ERR.Error "A first candidate is '$1'", bestF.name
                 ERR.Error "A second candidate is '$1'", ambig
 
             trace [overload] "FOUND: Calling ", PT.tree(bestF.name),
@@ -536,7 +532,7 @@ module XL.SEMANTICS.OVERLOAD is
             ctors        : PT.tree
             declaredHere : map[DCL.declaration, boolean]
             ftp          : bestF.type as FT.function_type
-            if callDepth = 0 and ftp.base <> nil then
+            if callDepth = 0 and ftp.base <> nil and ctorTarget = nil then
                 ERR.Error "The value returned by '$1' is ignored", NameTree
             if size(bestDNames) > 0 then
                 ToDeclCount : integer := size(bestDNames)
@@ -572,10 +568,13 @@ module XL.SEMANTICS.OVERLOAD is
                                               bestArgs, ctors, dtors)
             else if BaseRecord <> nil then
                 result := CGM.RecordFunctionCall (BaseRecord, bestF,
-                                                  bestArgs, ctors, dtors)
+                                                  bestArgs, ctorTarget,
+                                                  ctors, dtors)
             else
-                result := CGM.FunctionCall (bestF, bestArgs, ctors, dtors)
-
+                result := CGM.FunctionCall (bestF, bestArgs, ctorTarget,
+                                            ctors, dtors)
+            if ctorTarget <> nil then
+                PT.AttachTree Input, "CTORCALL", nil
         else
             ERR.Error "No valid function found for '$1'", NameTree
             if candidate_errors then
@@ -771,15 +770,11 @@ module XL.SEMANTICS.OVERLOAD is
             // Check if there are non-deduced generic arguments
             if Gtype <> nil then
                 if not GN.FinalizeDeductions(Gtype, Gargs) then
-                    if GN.CanDeduceReturnType(Gtype, Gargs) then
-                        Score /= 2
-                        trace [overload] "WARN: Must deduce return type"
-                    else
-                        ERR.Error "'$1' could not be selected because", C
-                        ERR.Error "the generic type '$1' cannot be deduced",
-                                  TY.Source(Gtype)
-                        Matching := false
-                        trace [overload] "FAIL: Cannot finalize deductions"
+                    ERR.Error "'$1' could not be selected because", C
+                    ERR.Error "the generic type '$1' cannot be deduced",
+                              TY.Source(Gtype)
+                    Matching := false
+                    trace [overload] "FAIL: Cannot finalize deductions"
 
             // If not matching, lookup next
             if not Matching then
@@ -820,7 +815,7 @@ module XL.SEMANTICS.OVERLOAD is
         if best <> nil then
             if ambig <> nil then
                 ERR.Error "The reference to '$1' is ambiguous", NameTree
-                ERR.Error "A first candidate is '$1'", best
+                ERR.Error "A first candidate is '$1'", bestF.name
                 ERR.Error "A second candidate is '$1'", ambig
 
             trace [overload] "FOUND: Resolved to ", PT.tree(bestF.name),
@@ -852,10 +847,10 @@ module XL.SEMANTICS.OVERLOAD is
                 TY.SetType result, toFnType
             else if BaseRecord <> nil then
                 result := CGM.RecordFunctionCall (BaseRecord, bestF,
-                                                  bestArgs, nil, nil)
+                                                  bestArgs, nil, nil, nil)
                 ERR.Error "ResolveOverload '$1' not implemented", result
             else
-                result := CGM.FunctionCall (bestF, bestArgs, nil, nil)
+                result := CGM.FunctionCall (bestF, bestArgs, nil, nil, nil)
                 ERR.Error "ResolveOverload '$1' not implemented 2", result
 
         else

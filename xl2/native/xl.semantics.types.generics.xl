@@ -290,9 +290,11 @@ module XL.SEMANTICS.TYPES.GENERICS is
                 return existing
 
         // Make a generic type out of the context and the input type
+        mn : tp.name as PT.name_tree
+        mt : text := PT.XLNormalize(mn.value)
         gc : generic_type
         gc.base := tp
-        gc.machine_name := SYM.Temporary ("<generic type>")
+        gc.machine_name := SYM.Temporary ("<generic-type>" + mt)
         gc.interface_match := GenericTypeMatch
         gc.name := tp.name
         gc.context := gi.context

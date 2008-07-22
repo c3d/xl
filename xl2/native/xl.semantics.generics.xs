@@ -80,4 +80,6 @@ module XL.SEMANTICS.GENERICS with
                                  in out Gargs : generic_map) return boolean
 
     function CanDeduceReturnType (FunType      : GEN.generic_type;
+                                  fun          : FN.function_type;
+                                  ret          : GEN.generic_type;
                                   in out Gargs : generic_map) return boolean

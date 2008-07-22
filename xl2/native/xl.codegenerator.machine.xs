@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision: 351 $
-// * Date       : $Date: 2007-11-18 22:05:37 +0100 (Sun, 18 Nov 2007) $
+// * Revision   : $Revision$
+// * Date       : $Date$
 // ****************************************************************************
 
 import TY = XL.SEMANTICS.TYPES

@@ -248,7 +248,7 @@ module XL.SEMANTICS.GENERICS is
         if best <> nil then
             if ambig <> nil then
                 ERR.Error "The instantiation of '$1' is ambiguous", NameTree
-                ERR.Error "A first candidate is '$1'", best
+                ERR.Error "A first candidate is '$1'", bestD.name
                 ERR.Error "A second candidate is '$1'", ambig
 
             trace [inst] "FOUND: Instantiating ", PT.tree(bestD.name)
@@ -410,7 +410,8 @@ module XL.SEMANTICS.GENERICS is
         mn        : PT.name_tree := Decl.machine_name
         isPartial : boolean := false
         if mn = nil then
-            mn := SYM.Temporary("<generic>")
+            mn := Decl.name
+            mn := SYM.Temporary("<generic>" + PT.XLNormalize(mn.value))
             Decl.machine_name := mn
         key : text := mn.value
         key += "["
@@ -593,6 +594,8 @@ module XL.SEMANTICS.GENERICS is
             result := parse_tree(@error 'errorText')
             ERR.DisplayLastErrors()
         SYM.Enter XLT.global_context, "INSTANCE", key, result
+        trace[inst] "Entered ", key
+
         XLT.context := oldContext
         XLT.function_context := fnContext
         instantiations -= 1
@@ -745,6 +748,7 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
 
         ParmType : TY.any_type := FunParm.type
+        trace[deduce] "Deduce using ", PT.tree(FunParm.name), " = ", Arg
 
         // If the function parameter has a generic type, we try to deduce
         // the generic type parameters.
@@ -753,9 +757,10 @@ module XL.SEMANTICS.GENERICS is
         GenParmType : ParmType as GEN.generic_type
         if GenParmType <> nil then
 
-            // If the argument being passed is itself being deduce, assume
+            // If the argument being passed is itself being deduced, assume
             // that it's OK for now, rely on other arg checks to fail
             if PT.Attached(Arg, "TODEDUCE") <> nil then
+                trace [deduce] "Argument is being deduced"
                 return true
 
             // Check if the argument type is an instance of the parameter type
@@ -793,12 +798,15 @@ module XL.SEMANTICS.GENERICS is
                             // test that 'integer' is an 'ordered'
                             if not Validate (gtp, ArgType, Gargs) then
                                 return false
+                            trace [deduce] "Deduced ", N, " -> ", ArgTypeSrc
                             Gargs[N] := ArgTypeSrc
                         else if Gargs[N] <> ArgTypeSrc then
                             ERR.Error "Generic parameter type '$1' ", N
                             ERR.Error "cannot be both '$1'", Gargs[N]
                             ERR.Error "and '$1' in the same instance",
                                       ArgTypeSrc
+                            trace [deduce] "Conflict for ", N, "=", ArgTypeSrc
+                            trace [deduce] "We had ", N, "=", Gargs[N]
                             return false
                         return true
 
@@ -826,11 +834,16 @@ module XL.SEMANTICS.GENERICS is
                                         if not Validate (subType, ArgType,
                                                          Gargs) then
                                             return false
+                                        trace [deduce] "Deduced ind ", N,
+                                                        " -> ", ArgTypeSrc
                                         Gargs[N] := ArgTypeSrc
                                     else if Gargs[N] <> ArgTypeSrc then
                                         ERR.Error "Generic subtype '$1'", N
                                         ERR.Error "can't be both '$1' and '$2'",
                                                   Gargs[N], ArgTypeSrc
+                                        trace[deduce] "Conflict ind ", N, ":"
+                                        trace[deduce] "Had ", Gargs[N], " now",
+                                                      ArgTypeSrc
                                         return false
                                     return true
 
@@ -854,12 +867,25 @@ module XL.SEMANTICS.GENERICS is
     //   but we supply only array.element. We need to instantiate
     //   array[element] as its generic argument
 
-        NP  : integer := size(FunType.parameters)
-        P   : integer
-        result := true
+        NP     : integer := size(FunType.parameters)
+        P      : integer
+        fun    : FunType.base as FN.function_type
+        funRet : GEN.generic_type
+        defer  : boolean := false
+        retest : boolean := false
 
         trace[deduce] "Finalize deductions for ", TY.Source(FunType)
+        result := true
 
+        // Check if this is a function and if its return type is known
+        if fun <> nil then
+            ret : fun.base as GEN.generic_type
+            callDepth : integer := SYM.GetInteger(XLT.context, "CALLDEPTH")
+            tgtTree : PT.tree := TY.TargetType()
+            funRet := ret
+            defer :=  callDepth > 0 and tgtTree = nil
+
+        // Loop over generic parameters for the function
         for P in 0..NP-1 loop
             Parm : DCL.declaration := FunType.parameters[P]
             Arg  : PT.tree := Gargs[Parm.name]
@@ -867,6 +893,13 @@ module XL.SEMANTICS.GENERICS is
             trace[deduce] "Parameter ", PT.tree(Parm.Name), " is ", Arg
             if Arg = nil then
                 if TY.IsTypeType(Parm.type) then
+
+                    // Try to deduce the entire type from the return type
+                    if funRet <> nil then
+                        if CanDeduceReturnType(FunType,fun,funRet,Gargs) then
+                            defer := false
+                        funRet := nil // Do it only once
+
                     // Get the 'array' generic type
                     subT    : TY.GetDefinedType(Parm.name) as GEN.generic_type
                     subArgs : generic_map
@@ -877,7 +910,7 @@ module XL.SEMANTICS.GENERICS is
                         for subP in 0..NsubP-1 loop
                             subParm : DCL.declaration := subT.parameters[subP]
                             subArg  : PT.tree := Gargs[subParm.name]
-                            if subArg = nil then
+                            if subArg = nil and not defer then
                                 subArg := subParm.initializer
                             if subArg <> nil then
                                 subArgs[subParm.name] := subArg
@@ -898,26 +931,35 @@ module XL.SEMANTICS.GENERICS is
                             Gargs[Parm.name] := Arg
 
             if Arg = nil then
-                Arg := Parm.initializer
+                if not defer then
+                    Arg := Parm.initializer
                 if Arg = nil then
                     trace[deduce] "Parameter ", PT.tree(Parm.Name), " not set"
                     result := false
 
             if not result then
-                trace[deduce] "Deductions for ", TY.Source(FunType), " failed"
-                return false
+                if defer then
+                    result := true
+                    retest := true
+                else
+                    trace[deduce] "Failed for ", TY.Source(FunType)
+                    return false
+
+        if retest then
+            trace[deduce] "Deductions for ", TY.Source(FunType), " deferred"
+            GArgs[nil] := TY.Source(fun.base)
 
         trace[deduce] "Deductions for ", TY.Source(FunType), " succeeded"
 
 
     function CanDeduceReturnType (FunType      : GEN.generic_type;
+                                  fun          : FN.function_type;
+                                  ret          : GEN.generic_type;
                                   in out Gargs : generic_map) return boolean is
     // ------------------------------------------------------------------------
     //    Check if we can deduce the return type
     // ------------------------------------------------------------------------
-        fun : FunType.base as FN.function_type
         if fun <> nil then
-            ret : fun.base as GEN.generic_type
             if ret <> nil then
                 trace [deduce] "Deducing return type ", TY.Source(ret)
                 tgtTree : PT.tree := TY.TargetType()
@@ -931,15 +973,7 @@ module XL.SEMANTICS.GENERICS is
                     if RetDecl <> nil then
                         arg : PT.tree := PT.NewName("arg")
                         TY.SetType arg, tgt
-                        if Deduce(FunType, RetDecl, arg, Gargs) then
-                            if FinalizeDeductions(FunType, Gargs) then
-                                return true
-                    return false
-
-            if SYM.GetInteger(XLT.context, "CALLDEPTH") > 0 then
-                // Expected return type not known yet, need to defer
-                Gargs[nil] := TY.Source(ret)
-                return true
+                        return Deduce(FunType, RetDecl, arg, Gargs)
 
         return false        
 
