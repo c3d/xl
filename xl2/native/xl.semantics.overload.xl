@@ -516,7 +516,6 @@ module XL.SEMANTICS.OVERLOAD is
                 if bestGargs[nil] <> nil then
                     // Target type not set in that context yet, back up
                     assert TY.TargetType() = nil
-                    assert callDepth > 0
                     CGM.ExitCall callDepth, result
                     PT.AttachTree Input, "TODEDUCE", Input
                     return Input
