@@ -880,9 +880,10 @@ module XL.SEMANTICS.GENERICS is
         // Check if this is a function and if its return type is known
         if fun <> nil then
             ret : fun.base as GEN.generic_type
+            callDepth : integer := SYM.GetInteger(XLT.context, "CALLDEPTH")
+            tgtTree : PT.tree := TY.TargetType()
             funRet := ret
-            if funRet = nil then
-                defer := SYM.GetInteger(XLT.context, "CALLDEPTH") > 0
+            defer :=  callDepth > 0 and tgtTree = nil
 
         // Loop over generic parameters for the function
         for P in 0..NP-1 loop
