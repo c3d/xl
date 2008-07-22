@@ -73,7 +73,7 @@ decl            ""
 type            "/* Type */"
 error           "/* ERROR */"
 value           "/* Value: $1 */"
-write           "/* Write: $1 */"
+copy            "$1 = $2;"
 
 type_decl       "typedef struct $1_data *$2;"
 

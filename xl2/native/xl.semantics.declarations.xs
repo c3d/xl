@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 361 $
+// * Date       : $Date: 2007-12-20 10:07:49 +0100 (Thu, 20 Dec 2007) $
 // ****************************************************************************
 
 import PT = XL.PARSER.TREE
@@ -51,6 +51,7 @@ module XL.SEMANTICS.DECLARATIONS with
     function MatchInterface(iface : declarations;
                             body  : SYM.symbol_table) return boolean
     function CallConstructor (decl : declaration) return PT.tree
+    function ConstructorCode (decl : declaration) return PT.tree
     function CallDestructor (name : PT.tree) return PT.tree
     procedure CallDestructors (table : SYM.symbol_table)
     function ScopeDestructors (inner : SYM.symbol_table;

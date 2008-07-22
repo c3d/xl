@@ -10,21 +10,9 @@
 04.Lookup/type_redefined.xl:29: because a type named 'integer' already exists
 | type integer
 |____________^
-04.Lookup/type_redefined.xl:36: No translation for 'result := integer ( )'
-| function Foo (K : integer) return integer is
-|_________________________________________^
-04.Lookup/type_redefined.xl:32: Candidate form 'this' := 'that' cannot be selected
-| type K is function (U : integer) return real
-|______^
 04.Lookup/type_redefined.xl:37: The type 'integer' can't be defined here
 |    type integer
 |_______________^
 04.Lookup/type_redefined.xl:29: because a type named 'integer' already exists
 | type integer
 |____________^
-04.Lookup/type_redefined.xl:38: No translation for 'L := integer ( )'
-|    L : integer
-|____^
-04.Lookup/type_redefined.xl:32: Candidate form 'this' := 'that' cannot be selected
-| type K is function (U : integer) return real
-|______^

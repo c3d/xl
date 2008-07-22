@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 259 $
+// * Date       : $Date: 2006-06-13 08:33:20 +0200 (Tue, 13 Jun 2006) $
 // ****************************************************************************
 
 module XL.MATH.COMPLEX with
@@ -30,8 +30,9 @@ module XL.MATH.COMPLEX with
         re : value
         im : value
 
-    function Complex (re, im : complex.value) return complex
-    function Complex (re : complex.value) return complex
+    function Complex (re, im : complex.value) return complex written re + im i
+    function Complex (re : complex.value) return complex written re
+    function Imaginary (im : complex.value) return complex written im i
     to Copy(out Target : complex; Source : complex) written Target := Source
 
     function Add (X, Y : complex) return complex written X+Y

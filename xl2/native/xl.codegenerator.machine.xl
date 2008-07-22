@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 351 $
+// * Date       : $Date: 2007-11-18 22:05:37 +0100 (Sun, 18 Nov 2007) $
 // ****************************************************************************
 
 import BC = XL.BYTECODE
@@ -97,6 +97,23 @@ module XL.CODE_GENERATOR.MACHINE is
             then
                 code := XLT.Append(code, ValueGenerator)
                 arg := ValueName
+
+
+    procedure SetExpressionTarget(in out value  : PT.tree;
+                                  mname         : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Target the result of an expression directly into given machine name
+    // ------------------------------------------------------------------------
+        translate value
+            when
+                'ValueGenerator'
+                @value 'ValueName'
+            then
+                copy : PT.tree := parse_tree(@copy 'mname' 'ValueName')
+                value := parse_tree
+                    'value'
+                    'copy'
+                    @value 'mname'
 
 
 
@@ -343,10 +360,11 @@ module XL.CODE_GENERATOR.MACHINE is
     //
     // ========================================================================
 
-    function FunctionCall (toCall   : FN.function;
-                           margs    : machine_args;
-                           ctors    : PT.tree;
-                           dtors    : PT.tree) return BC.bytecode is
+    function FunctionCall (toCall  : FN.function;
+                           margs   : machine_args;
+                           target  : PT.tree;
+                           ctors   : PT.tree;
+                           dtors   : PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
     //    Generate a low-level function call
     // ------------------------------------------------------------------------
@@ -369,7 +387,7 @@ module XL.CODE_GENERATOR.MACHINE is
         argCount     : integer := size(margs)
         parmCount    : integer := size(parms)
         retType      : TY.any_type := FnType.base
-        retValueName : PT.name_tree := nil
+        retValueName : target as PT.name_tree
         retValueType : PT.name_tree := nil
         outputsName  : PT.name_tree := nil
         prefixCode   : PT.tree := nil
@@ -384,11 +402,12 @@ module XL.CODE_GENERATOR.MACHINE is
         // If the callee has a return value, then we are going to emit @value
         // Create a local temporary holding the returned value
         if retType <> nil then
-            retValueName := SYM.Temporary("ret")
             retValueType := retType.machine_name
-            retDecl : PT.tree :=
-                parse_tree(@temp_decl 'retValueType' 'retValueName')
-            XLT.AddScopeDecl XLT.function_context, retDecl
+            if retValueName = nil then
+                retValueName := SYM.Temporary("ret")
+                retDecl : PT.tree :=
+                    parse_tree(@temp_decl 'retValueType' 'retValueName')
+                XLT.AddScopeDecl XLT.function_context, retDecl
 
         // Evaluate all arguments, simplify them to single values
         for argIndex in 0..argCount-1 loop
@@ -520,21 +539,22 @@ module XL.CODE_GENERATOR.MACHINE is
             result := MakeExpression(result, retValueName)
             if not TY.IsVariable(retType) then
                 retType := TY.ConstantType(retType)
-            TY.SetType retValueName, retType
-            TY.SetType result, retType
-
-            // Post a temporary destructor for the temp we just created
-            if retValueType <> nil then
-                dtor : PT.tree := parse_tree(delete 'retValueName')
-                ERR.PushErrorContext()
-                dtor := XLT.XLSemantics(dtor)
-                if not ERR.PopErrorContext() then
-                    AddCallDtors dtor
+            if target = nil then
+                TY.SetType result, retType
+                TY.SetType retValueName, retType
+                // Post a temporary destructor for the temp we just created
+                if retValueType <> nil then
+                    dtor : PT.tree := parse_tree(delete 'retValueName')
+                    ERR.PushErrorContext()
+                    dtor := XLT.XLSemantics(dtor)
+                    if not ERR.PopErrorContext() then
+                        AddCallDtors dtor
 
 
     function RecordFunctionCall (Record   : PT.tree;
                                  toCall   : FN.function;
                                  margs    : machine_args;
+                                 target  : PT.tree;
                                  ctors    : PT.tree;
                                  dtors    : PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
@@ -542,7 +562,7 @@ module XL.CODE_GENERATOR.MACHINE is
     // ------------------------------------------------------------------------
 
         // TODO: For now, ignore the record
-        return FunctionCall(toCall, margs, ctors, dtors)
+        return FunctionCall(toCall, margs, target, ctors, dtors)
 
 
     function EnterCall() return integer is

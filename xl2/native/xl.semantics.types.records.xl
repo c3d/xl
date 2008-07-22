@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 373 $
+// * Date       : $Date: 2008-04-09 07:23:58 -0400 (Wed, 09 Apr 2008) $
 // ****************************************************************************
 
 import TY = XL.SEMANTICS.TYPES
@@ -580,9 +580,10 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
         // If we found any, then generate a constructor here
         if result <> nil then
+            PT.AttachTree rtp.machine_name, "CTORCODE", result
             result := parse_tree
                 function 'recName' () return 'recName' is
-                    'result'
+                    @nop // CTORCODE to be inserted on 'result'
             result := EnterDefaultFunction(result)
 
 
@@ -659,6 +660,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
         // If we found any, then generate a 'copy' procedure here
         if result <> nil then
+            PT.AttachTree result, "DEFAULTCOPY", result
             result := parse_tree
                 procedure copy (out this:'recName';
                                 that : 'recName') written this := that is
