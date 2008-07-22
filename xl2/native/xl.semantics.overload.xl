@@ -109,9 +109,15 @@ module XL.SEMANTICS.OVERLOAD is
                     anyLookup := true
                 when ('Record'.'Field') where Field.kind = PT.xlNAME then
                     FN : Field as PT.name_tree
-                    REC.RecordDeclarations Record, FN, "FN", list, symbols
-                    BaseRecord := XLT.XLSemantics(Record)
-                    NameTree := Field
+                    // Check if we are looking for 'complex.value'
+                    gt : GN.GenericIndex(Record, Field) as PT.name_tree
+                    trace[ddd] "Looking for ", PT.tree(gt), " in ", Record
+                    if gt <> nil then
+                        NameTree := gt
+                    else
+                        REC.RecordDeclarations Record, FN, "FN", list, symbols
+                        BaseRecord := XLT.XLSemantics(Record)
+                        NameTree := Field
                 else
                     ERR.Error "Internal: Non-name functor '$1'", NameTree
                     CGM.ExitCall callDepth, result
@@ -892,6 +898,11 @@ module XL.SEMANTICS.OVERLOAD is
                     list : PT.tree_list
                     syms : SYM.symbol_table
                     FN : Field as PT.name_tree
+                    // Check if we are looking for 'complex.value'
+                    gt : GN.GenericIndex(Record, Field) as PT.name_tree
+                    trace[ddd] "Found ", PT.tree(gt), " for ", Record, ".", Field
+                    if gt <> nil then
+                        return IsFunction(gt)
                     REC.RecordDeclarations Record, FN, "FN", list, syms
                     return syms <> nil and size(list) > 0
             return false
