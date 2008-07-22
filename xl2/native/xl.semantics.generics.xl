@@ -248,7 +248,7 @@ module XL.SEMANTICS.GENERICS is
         if best <> nil then
             if ambig <> nil then
                 ERR.Error "The instantiation of '$1' is ambiguous", NameTree
-                ERR.Error "A first candidate is '$1'", best
+                ERR.Error "A first candidate is '$1'", bestD.name
                 ERR.Error "A second candidate is '$1'", ambig
 
             trace [inst] "FOUND: Instantiating ", PT.tree(bestD.name)
