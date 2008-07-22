@@ -476,17 +476,18 @@ module XL.SEMANTICS.FUNCTIONS is
                 SYM.LocalSymbols XLT.context, entries
                 SYM.LocalSymbols ftype.symbols, entries
                 for entry in entries loop
+                    trace[ctors] "  Parm ", entry
                     decl : DCL.declaration := DCL.GetDeclaration(entry)
                     if entry.kind = PT.xlNAME and decl <> nil then
+                        trace[ctors] "  Decl ", PT.tree(decl.machine_name)
                         if decl.is_output and not decl.is_input then
                             callCtor : boolean := true
+                            // If this is 'result' of a ctor,
+                            // field-initialize it to avoid recursion
                             if decl.machine_name = f.result_machine_name then
-                                rtName : TY.SourceName(retType) as PT.name_tree
-                                if rtName <> nil then
-                                    fName  : PT.name_tree := f.name
-                                    if PT.XLNormalize (rtName.value) =
-                                       PT.XLNormalize (fName.value) then
-                                        callCtor := false
+                                if IsConstructor(f) then
+                                    callCtor := false
+                            trace[ctors] "  callCtor ", callCtor
                             if callCtor then
                                 ctor : PT.tree := DCL.CallConstructor(decl)
                                 preCode := XLT.Append(preCode, ctor)
