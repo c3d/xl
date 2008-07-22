@@ -220,7 +220,7 @@ module XL.SEMANTICS.OVERLOAD is
             C : PT.tree
             for C in candidates loop
 
-                trace [overload] "Testing ", C
+                trace [overload] "Testing ", C, " depth ", itemDepth[C]
                 SemArgs := ActArgs
 
                 // Retrieve function information, ignore non functions
