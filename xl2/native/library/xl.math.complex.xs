@@ -31,7 +31,7 @@ module XL.MATH.COMPLEX with
         im : value
 
     function Complex (re, im : complex.value) return complex written re + im i
-    function Complex (re : complex.value) return complex written re
+    function Complex (re : complex.value) return complex
     function Imaginary (im : complex.value) return complex written im i
     to Copy(out Target : complex; Source : complex) written Target := Source
 
