@@ -506,7 +506,7 @@ module XL.SEMANTICS.OVERLOAD is
         if best <> nil then
             if ambig <> nil then
                 ERR.Error "The call to '$1' is ambiguous", NameTree
-                ERR.Error "A first candidate is '$1'", best
+                ERR.Error "A first candidate is '$1'", bestF.name
                 ERR.Error "A second candidate is '$1'", ambig
 
             trace [overload] "FOUND: Calling ", PT.tree(bestF.name),
@@ -820,7 +820,7 @@ module XL.SEMANTICS.OVERLOAD is
         if best <> nil then
             if ambig <> nil then
                 ERR.Error "The reference to '$1' is ambiguous", NameTree
-                ERR.Error "A first candidate is '$1'", best
+                ERR.Error "A first candidate is '$1'", bestF.name
                 ERR.Error "A second candidate is '$1'", ambig
 
             trace [overload] "FOUND: Resolved to ", PT.tree(bestF.name),
