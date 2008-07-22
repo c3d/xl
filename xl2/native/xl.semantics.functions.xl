@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 362 $
+// * Date       : $Date: 2007-12-22 21:50:23 +0100 (Sat, 22 Dec 2007) $
 // ****************************************************************************
 
 import DCL = XL.SEMANTICS.DECLARATIONS
