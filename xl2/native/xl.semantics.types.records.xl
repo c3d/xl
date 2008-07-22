@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 373 $
+// * Date       : $Date: 2008-04-09 07:23:58 -0400 (Wed, 09 Apr 2008) $
 // ****************************************************************************
 
 import TY = XL.SEMANTICS.TYPES
@@ -532,32 +532,35 @@ module XL.SEMANTICS.TYPES.RECORDS is
     //    - It makes it possible to override it in the local scope
     //    - It is easier to destroy if there is any error
 
-        // Save existing context, including global decls
-        context : SYM.symbol_table := XLT.context
-        globals : SYM.symbol_table := XLT.global_context
+        // Don't generate defaults while instantiation, they exist
+        // for the generic type already
+        instctx : SYM.symbol_table := GN.InstantiationContext()
+        if instctx = nil then
+            // Save existing context, including global decls, and
+            // create new symbol table
+            context : SYM.symbol_table := XLT.context
+            globals : SYM.symbol_table := XLT.global_context
+            newsyms : SYM.symbol_table := SYM.NewSymbolTable(context)
+            XLT.context := newsyms
+            XLT.global_context := newsyms
 
-        // Create new symbol table
-        newsyms : SYM.symbol_table := SYM.NewSymbolTable(context)
-        XLT.context := newsyms
-        XLT.global_context := newsyms
+            trace[defaultfns] "In ", newsyms, "-", globals, " enter: ", source
 
-        trace[defaultfns] "In ", newsyms, "-", globals, " entering: ", source
+            // Try to evaluate the tentative function
+            tnt : XLT.attempt := XLT.BeginAttempt()
+            result := XLT.XLDeclarations(source)
+            result := XLT.XLSemantics(result)
+            hadError : boolean := XLT.EndAttempt(tnt)
+            XLT.context := context
+            XLT.global_context := globals
+            if hadError then
+                trace[defaultfns] "Error: ", ERR.LastErrorsText()
+                return nil
 
-        // Try to evaluate the tentative function
-        tnt : XLT.attempt := XLT.BeginAttempt()
-        result := XLT.XLDeclarations(source)
-        result := XLT.XLSemantics(result)
-        hadError : boolean := XLT.EndAttempt(tnt)
-        XLT.context := context
-        XLT.global_context := globals
-        if hadError then
-            trace[defaultfns] "Error: ", ERR.LastErrorsText()
-            return nil
+            trace[defaultfns] "Code: ", result
 
-        trace[defaultfns] "Code: ", result
-
-        // If evaluation was successful, then add the context as a lateral
-        SYM.AddUsing context, nil, newsyms
+            // If evaluation was successful, then add the context as a lateral
+            SYM.AddUsing context, nil, newsyms
 
 
     function EnterDefaultConstructor(recName : PT.name_tree;
@@ -580,9 +583,10 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
         // If we found any, then generate a constructor here
         if result <> nil then
+            PT.AttachTree rtp.machine_name, "CTORCODE", result
             result := parse_tree
                 function 'recName' () return 'recName' is
-                    'result'
+                    @info DefaultCtor // CTORCODE to be inserted on 'result'
             result := EnterDefaultFunction(result)
 
 
@@ -611,6 +615,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         if result <> nil then
             result := parse_tree
                 function 'recName'('Parms') return 'recName' is
+                    @info DefaultFieldConstructor
                     'result'
             result := EnterDefaultFunction(result)
 
@@ -636,6 +641,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         if result <> nil then
             result := parse_tree
                 procedure delete (this : 'recName') is
+                    @info DefaultDestructor
                     'result'
             result := EnterDefaultFunction(result)
 
@@ -659,9 +665,11 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
         // If we found any, then generate a 'copy' procedure here
         if result <> nil then
+            PT.AttachTree result, "DEFAULTCOPY", result
             result := parse_tree
                 procedure copy (out this:'recName';
                                 that : 'recName') written this := that is
+                    @info DefaultCopy
                     'result'
             result := EnterDefaultFunction(result)
 

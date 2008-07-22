@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 361 $
+// * Date       : $Date: 2007-12-20 10:07:49 +0100 (Thu, 20 Dec 2007) $
 // ****************************************************************************
 
 import PT = XL.PARSER.TREE
@@ -62,6 +62,7 @@ module XL.SEMANTICS.TYPES with
     function MachineName(tp: any_type) return PT.name_tree
     function Source(tp : any_type) return PT.tree
     function SourceName(tp : any_type) return PT.name_tree
+    procedure Set
     procedure MarkForRuntimeReference(tp : any_type)
 
     // Evaluate a type expression

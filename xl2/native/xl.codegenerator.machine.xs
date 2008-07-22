@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 351 $
+// * Date       : $Date: 2007-11-18 22:05:37 +0100 (Sun, 18 Nov 2007) $
 // ****************************************************************************
 
 import TY = XL.SEMANTICS.TYPES
@@ -45,6 +45,8 @@ module XL.CODE_GENERATOR.MACHINE with
                             mname       : PT.name_tree) return BC.bytecode
     procedure SplitExpression(in out value  : PT.tree;
                               in out code   : PT.tree)
+    procedure SetExpressionTarget(in out value  : PT.tree;
+                                  mname         : PT.tree)
 
     // Interface for function declarations
     function Entry (f : FN.function) return BC.bytecode
@@ -55,13 +57,15 @@ module XL.CODE_GENERATOR.MACHINE with
 
     // Interface for function calls
     type machine_args is string of PT.tree
-    function FunctionCall (toCall   : FN.function;
-                           margs    : machine_args;
-                           ctors    : PT.tree;
-                           dtors    : PT.tree) return BC.bytecode
+    function FunctionCall (toCall  : FN.function;
+                           margs   : machine_args;
+                           target  : PT.tree;
+                           ctors   : PT.tree;
+                           dtors   : PT.tree) return BC.bytecode
     function RecordFunctionCall (Record : PT.tree;
                                  toCall   : FN.function;
                                  margs    : machine_args;
+                                 target  : PT.tree;
                                  ctors    : PT.tree;
                                  dtors    : PT.tree) return BC.bytecode
     function EnterCall() return integer

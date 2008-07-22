@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 331 $
+// * Date       : $Date: 2007-07-17 18:08:23 +0200 (Tue, 17 Jul 2007) $
 // ****************************************************************************
 
 import XLT = XL.TRANSLATOR
@@ -199,10 +199,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         // Check if there are non-deduced generic arguments
         if Gtype <> nil then
             if not GN.FinalizeDeductions(Gtype, Gargs) then
-                if GN.CanDeduceReturnType(Gtype, Gargs) then
-                    base_score /= 2
-                else
-                    return 0
+                return 0
 
             // This is the case for P := Pointer(3). Now we have
             // finalized deductions for P successfully, so we know
@@ -262,6 +259,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         Dnames    : PT.tree_list
         Didx      : string of integer
         callDepth : integer := CGM.EnterCall()
+        ctorTarget: PT.tree := PT.Attached(input, "CTORCALL")
 
         // Check for generic functions
         if gentype <> nil then
@@ -320,13 +318,12 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         // (the value will be constructed in the callee)
         // Avoid doing that if this is 'Copy' as called by ctor calls...
         dtors : PT.tree
-        if PT.Attached (input, "CTORCALL") = nil then
-            for a in 0..size(ftype.parameters)-1 loop
-                parm : DCL.declaration := ftype.parameters[a]
-                if parm.is_output and not parm.is_input then
-                    if not declaredHere[parm] then
-                        dtorCall : PT.tree := DCL.CallDestructor(margs[a])
-                        dtors := XLT.Append(dtors, dtorCall)
+        for a in 0..size(ftype.parameters)-1 loop
+            parm : DCL.declaration := ftype.parameters[a]
+            if parm.is_output and not parm.is_input then
+                if not declaredHere[parm] then
+                    dtorCall : PT.tree := DCL.CallDestructor(margs[a])
+                    dtors := XLT.Append(dtors, dtorCall)
 
         // Check if this is an iterator call
         iterator : fninfo as ITER.iterator
@@ -334,10 +331,11 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             result := ITER.InvokeIterator(input, scope, iterator,
                                           margs, ctors, dtors)
         else if scope = nil then
-            result := CGM.FunctionCall (fninfo, margs, ctors, dtors)
+            result := CGM.FunctionCall (fninfo, margs, ctorTarget, ctors, dtors)
         else
             scope := XLT.XLSemantics(scope)
-            result := CGM.RecordFunctionCall(scope,fninfo, margs,ctors,dtors)
+            result := CGM.RecordFunctionCall(scope,fninfo, margs, ctorTarget,
+                                             ctors,dtors)
 
         // Destroy temporaries if necessary
         CGM.ExitCall callDepth, result

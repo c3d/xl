@@ -1,7 +1,76 @@
 use XL.MATH.COMPLEX
+use XL.UI.CONSOLE
 
-K : complex[real] // Todo : remove real
+K : complex[real]
+L : complex
+M : complex [integer]
 
+to ShowNumbers(msg : text) is
+    WriteLn msg
+    WriteLn "K=(", K.re, ";", K.im, ")"
+    WriteLn "L=(", L.re, ";", L.im, ")"
+    WriteLn "M=(", M.re, ";", M.im, ")"
+
+
+// Check direct assignments to the fields
+K.re := 3.6; K.im := 5.7
+L.re := 2.2; L.im := 8.4
+M.re := 3; M.im := 4
+ShowNumbers "Initial state"
+
+// Check additions
 K := K + K
+L := L + L
+M := M + M
+ShowNumbers "After adding"
+
+// Check initializers with functional notation
+K := complex(2.02, 3.5)
+L := complex(4.2, 7.8)
+M := complex(2, 4)
+ShowNumbers "After functional initializers"
+
+K := K * K
+L := L * L
+M := M * M
+ShowNumbers "After Multiplications"
+
+// Check initializers with complex notation
+K := 3.14 + 15.92i
+L := 2.21 + 3.02i
+M := 3 + 2i
+ShowNumbers "After notational initializers"
+
+K := K - K
+L := L - L
+M := M - M
+ShowNumbers "After subtraction"
+
+// Check initializers with explicit real conversion
+K := complex(15.92)
+L := complex(3.02)
+M := complex(2)
+ShowNumbers "After real initializers"
+
+K := K / K
+L := L / L
+M := M / M
+ShowNumbers "After Divide"
+
+// TODO: Check initializers with implicit real conversion
+// K := 15.92
+// L := 3.02
+// M := 2
+ShowNumbers "After implicit real initializers"
+
+// Check initializers with imaginary notation
+K := 15.92i
+L := 3.02i
+M := 2i
+ShowNumbers "After imaginary initializers"
+
 
 Copy K, Add(K,K)
+Copy L, Add(L, L)
+
+

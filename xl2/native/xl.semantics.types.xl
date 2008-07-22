@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 368 $
+// * Date       : $Date: 2008-03-28 22:46:28 +0100 (Fri, 28 Mar 2008) $
 // ****************************************************************************
 
 import PT = XL.PARSER.TREE
@@ -483,38 +483,42 @@ module XL.SEMANTICS.TYPES is
             SetDefinedType NameTree, tp
 
         declared : DCL.declaration := DCL.GetDeclaration(result)
+        if declared <> nil and Value <> nil then
+            formerDecl : DCL.declaration := DCL.GetDeclaration(Value)
+            if formerDecl = nil then
+                DCL.SetDeclaration Value, declared
 
         // Check if we need to enter default ctors, dtors and copy functions
         N : Name as PT.name_tree
         ngtp : any_type := GEN.NonGenericType(tp)
 
-        if (N <> nil and
-            PT.Attached(N, "INSTANCEOF") = nil and
-            PT.Attached(N, "INSTARG") = nil) then
+        if N <> nil then
+            if (PT.Attached(N, "INSTANCEOF") = nil and
+                PT.Attached(N, "INSTARG") = nil) then
 
-           // Check if this is record type
-           rtp : ngtp as REC.record_type
-           if rtp <> nil then
-                result := XLT.Append(result, REC.EnterDefaults(N, rtp))
-                SetDefinedType result, tp
-                if declared <> nil then
-                    DCL.SetDeclaration result, declared
+               // Check if this is record type
+               rtp : ngtp as REC.record_type
+               if rtp <> nil then
+                    result := XLT.Append(result, REC.EnterDefaults(N, rtp))
+                    SetDefinedType result, tp
+                    if declared <> nil then
+                        DCL.SetDeclaration result, declared
 
-           // Same for enumeration types
-           etp : ngtp as EN.enumeration_type
-           if etp <> nil then
-                result := XLT.Append(result,EN.EnterDefaults (N, etp))
-                SetDefinedType result, tp
-                if declared <> nil then
-                    DCL.SetDeclaration result, declared
+               // Same for enumeration types
+               etp : ngtp as EN.enumeration_type
+               if etp <> nil then
+                    result := XLT.Append(result,EN.EnterDefaults (N, etp))
+                    SetDefinedType result, tp
+                    if declared <> nil then
+                        DCL.SetDeclaration result, declared
 
-           // Same for function types
-           ftp : ngtp as FT.function_type
-           if ftp <> nil then
-                result := XLT.Append(result,FT.EnterDefaults (N, ftp))
-                SetDefinedType result, tp
-                if declared <> nil then
-                    DCL.SetDeclaration result, declared
+               // Same for function types
+               ftp : ngtp as FT.function_type
+               if ftp <> nil then
+                    result := XLT.Append(result,FT.EnterDefaults (N, ftp))
+                    SetDefinedType result, tp
+                    if declared <> nil then
+                        DCL.SetDeclaration result, declared
 
 
     function TypeTypeMatch (iface : any_type;

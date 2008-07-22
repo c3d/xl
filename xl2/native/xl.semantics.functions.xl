@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 362 $
+// * Date       : $Date: 2007-12-22 21:50:23 +0100 (Sat, 22 Dec 2007) $
 // ****************************************************************************
 
 import DCL = XL.SEMANTICS.DECLARATIONS
@@ -466,25 +466,30 @@ module XL.SEMANTICS.FUNCTIONS is
 
             // Insert constructors for out parameters, except 'result'
             // if the function is itself a constructor for the result type
-            entries : PT.tree_list
-            entry   : PT.tree
-            SYM.LocalSymbols XLT.context, entries
-            SYM.LocalSymbols ftype.symbols, entries
-            for entry in entries loop
-                decl : DCL.declaration := DCL.GetDeclaration(entry)
-                if entry.kind = PT.xlNAME and decl <> nil then
-                    if decl.is_output and not decl.is_input then
-                        needCtor : boolean := true
-                        if decl.machine_name = f.result_machine_name then
-                            rtName : TY.Source(retType) as PT.name_tree
-                            if rtName <> nil then
-                                fName  : PT.name_tree := f.name
-                                if PT.XLNormalize (rtName.value) =
-                                   PT.XLNormalize (fName.value) then
-                                    needCtor := false
-                        if needCtor then
-                            ctor : PT.tree := DCL.CallConstructor(decl)
-                            preCode := XLT.Append(preCode, ctor)
+            bbl : body as PT.block_tree
+            if bbl <> nil and PT.Attached(bbl.child, "DEFAULTCOPY") = nil then
+                entries : PT.tree_list
+                entry   : PT.tree
+                SYM.LocalSymbols XLT.context, entries
+                SYM.LocalSymbols ftype.symbols, entries
+                for entry in entries loop
+                    decl : DCL.declaration := DCL.GetDeclaration(entry)
+                    if entry.kind = PT.xlNAME and decl <> nil then
+                        if decl.is_output and not decl.is_input then
+                            callCtor : boolean := true
+                            if decl.machine_name = f.result_machine_name then
+                                rtName : TY.SourceName(retType) as PT.name_tree
+                                if rtName <> nil then
+                                    fName  : PT.name_tree := f.name
+                                    if PT.XLNormalize (rtName.value) =
+                                       PT.XLNormalize (fName.value) then
+                                        callCtor := false
+                            if callCtor then
+                                ctor : PT.tree := DCL.CallConstructor(decl)
+                                preCode := XLT.Append(preCode, ctor)
+                            else
+                                ctor : PT.tree := DCL.ConstructorCode(decl)
+                                preCode := XLT.Append(preCode, ctor)
 
             // Compute preconditions
             preCond : PT.tree

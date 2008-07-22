@@ -19,20 +19,23 @@
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 259 $
+// * Date       : $Date: 2006-06-13 08:33:20 +0200 (Tue, 13 Jun 2006) $
 // ****************************************************************************
 
 module XL.MATH.COMPLEX is
 
-
-    function Complex (re, im : complex.value) return complex is
+    function Complex (re,im : complex.value) return complex written re + im i is
         result.re := re
         result.im := im
 
-    function Complex (re : complex.value) return complex is
+    function Complex (re : complex.value) return complex written re is
         result.re := re
-        result.im := 0.0
+        // result.im := 0.0
+
+    function Imaginary (im : complex.value) return complex written im i is
+        // result.re := 0.0
+        result.im := im
 
     to Copy(out Target : complex; Source : complex) written Target := Source is
         Target.Re := Source.Re

@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 361 $
+// * Date       : $Date: 2007-12-20 10:07:49 +0100 (Thu, 20 Dec 2007) $
 // ****************************************************************************
 
 import XLT = XL.TRANSLATOR
@@ -694,6 +694,25 @@ module XL.SEMANTICS.DECLARATIONS is
         SetDeclaration result, decl
 
 
+    function Construct(DType : PT.tree;
+                       MName : PT.tree;
+                       Value : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Evaluate 'Value' directly with result 'MName'
+    // ------------------------------------------------------------------------
+
+        trace[ctors] "Construct ", MName, " type ", DType, " val ", Value
+
+        TY.PushTargetType DType
+        PT.AttachTree Value, "CTORCALL", MName
+        result := XLT.XLSemantics (Value)
+        TY.PopTargetType()
+
+        if PT.Attached(Value, "CTORCALL") <> nil then
+            PT.AttachTree Value, "CTORCAL", nil
+            CGM.SetExpressionTarget result, MName
+
+
     translation XLSemantics
     // ------------------------------------------------------------------------
     //    Basic name lookup
@@ -710,6 +729,11 @@ module XL.SEMANTICS.DECLARATIONS is
         then
             return Define (Name, Value)
 
+        when
+            @@ctor 'DType' 'MName' 'Value'
+        then
+            return Construct (DType, MName, Value)
+
 
     function CallConstructor (decl : declaration) return PT.tree is
     // ------------------------------------------------------------------------
@@ -719,16 +743,35 @@ module XL.SEMANTICS.DECLARATIONS is
     //   If there is any function that matches the type name, then
     //   the type is constructed, and we try to call a function with no args
 
-        assert decl.type
-        tname : TY.Source(decl.type) as PT.name_tree
+        dtype : TY.any_type := decl.type
+        assert dtype <> nil
+        tname : TY.SourceName(dtype) as PT.name_tree
         if tname <> nil then
             list : PT.tree_list
             SYM.Lookup XLT.context, "FN", tname.value, list, SYM.lookupAll
             if size(list) > 0 then
-                dname : PT.name_tree := decl.name
-                result := parse_tree('dname' := 'tname' ())
-                PT.AttachTree result, "CTORCALL", result // Avoid dtor calls
-                result.position := dname.position
+                dname : PT.name_tree := decl.machine_name
+                dtsrc : PT.tree := TY.Source(dtype)
+                result := parse_tree('tname' ())
+                result := parse_tree(@@ctor 'dtsrc' 'dname' 'result')
+                result := XLT.XLSemantics(result)
+
+
+    function ConstructorCode (decl : declaration) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Inline the default construction code for 'result'
+    // ------------------------------------------------------------------------
+    //   This function is called only if there is no initializer
+    //   If there is any function that matches the type name, then
+    //   the type is constructed, and we try to call a function with no args
+
+        tp : TY.any_type := decl.type
+        mname : PT.tree := tp.machine_name
+        if mname <> nil then
+            result := PT.Attached(mname, "CTORCODE")
+            if result <> nil then
+                result := PT.Clone(result)
+                result.position := mname.position
                 result := XLT.XLSemantics(result)
 
 
