@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 331 $
+// * Date       : $Date: 2007-07-17 18:08:23 +0200 (Tue, 17 Jul 2007) $
 // ****************************************************************************
 
 import XLT = XL.TRANSLATOR
