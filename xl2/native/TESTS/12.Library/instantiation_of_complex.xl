@@ -30,6 +30,11 @@ L := complex(4.2, 7.8)
 M := complex(2, 4)
 ShowNumbers "After functional initializers"
 
+K := K * K
+L := L * L
+M := M * M
+ShowNumbers "After Multiplications"
+
 // Check initializers with complex notation
 K := 3.14 + 15.92i
 L := 2.21 + 3.02i
@@ -52,17 +57,11 @@ L := L / L
 M := M / M
 ShowNumbers "After Divide"
 
-// Check initializers with implicit real conversion
-K := 15.92
-L := 3.02
-M := 2
+// TODO: Check initializers with implicit real conversion
+// K := 15.92
+// L := 3.02
+// M := 2
 ShowNumbers "After implicit real initializers"
-
-// Check scaling
-K := K * 2.0
-L := 3.1 * K
-M := 2 * M
-ShowNumbers "After multiplication by a real"
 
 // Check initializers with imaginary notation
 K := 15.92i
