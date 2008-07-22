@@ -249,10 +249,12 @@ module XL.SYMBOLS is
         Collect table, symdepths, symscopes, mode
 
         for table in symdepths loop
-            depth : integer := symdepths[table] + baseDepth
             scope : PT.tree := symscopes[table]
+            depth : integer := symdepths[table] + baseDepth
 
             if count(table.names, name) > 0 then
+                if scope <> nil then
+                    depth += 1
                 trace [lookup] " in ", table,
                                " depth ", depth, " scope ", scope,
                                " got ", size(table.names[name])
