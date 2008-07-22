@@ -1,14 +1,8 @@
 <!--Vacations, Git, Constructors... -->
 
-I had a long week of vacation, which we spent mostly around
-home. Living in the French Riviera has its perks, like beautiful
-places to visit during vacation... The only bad news is that I hurt my
-knee during a hike, and I've been stuck at home for a week, with
-another week at least of restricted movement.
-
-Anyway, vacation was a good time for doing some XL development, and I
-started attacking a couple rather tough nuts, bugs that had annoyed me
-for a while.
+I had a long week of vacation, which we spent mostly around home. That
+was a good time for doing some XL development, and I started attacking
+a couple rather tough nuts, bugs that had annoyed me for a while.
 
 Two of them made it difficult to implement complex numbers the way I
 wanted. The problem was, put simply, how to initialize a field to
@@ -47,8 +41,7 @@ to explicitly call a constructor, something like:
 
 Now, it's an explicit call to a constructor, and there is no problem
 with {tt "real(0)"}. There are cases where this second solution is the
-only one (e.g. the default constructor doesn't work for you). The test
-for this is {svn "TESTS/10.Generics/value_type_constructor.xl" "here"}.
+only one (e.g. the default constructor doesn't work for you).
 
 That was actually a pretty large change set. I embarked into doing
 that, but decided that I would do that in the GIT to avoid corrupting
@@ -58,23 +51,17 @@ For an introduction on how to use the GIT with SVN, see
 {link "http://tsunanet.blogspot.com/2007/07/learning-git-svn-in-5min.html"}.
 The GIT works pretty well for that, and I was really happy...
 
-
-
 ... Until the point where I wanted to commit to Subversion. I used
 {tt "git svn dcommit"} as the blog says. Things started rather well, see
 revisions after {svnrev 381}... The problem is that I had made a
 mistake initially, and added some LLVM code that was not ready for
 prime time. The GIT somehow tried to check-in into SVN a {tt ".svn"}
-directory, wrecking havoc. {tt "git svn dcommit"} stopped with an error,
-the SVN state was bad (would not even compile), yuck yuck yuck...
+directory, wrecking havoc. It took me a good 45 minutes to sort out
+the mess on both sides, but I think that I'm back on track. I lost a
+lot of the history on the SVN side, though, having one big massive
+check-in at the end with the end result instead of the individual
+steps.
 
-It took me a good 45 minutes to sort out the mess on both sides,
-taking more than I had planned to use during my lunch break, but I
-think that I'm back on track. I lost a lot of the history on the SVN
-side, though, having one big massive check-in at the end with the end
-result instead of the individual steps.
-
-The constructor work is not entirely there, but at least it's in a
-stable state. There are further fixes and other GIT branches that I
-want to commit at some point, but I will first revisit everything to check that
-it's safe...
+There is other work that I did during that vacation time that I want
+to commit to Subversion too, but I will first revisit it to check that
+it's safe, i.e. that I did not commit .svn files anywhere...
