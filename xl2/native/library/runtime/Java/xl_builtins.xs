@@ -31,13 +31,16 @@ module XL_BUILTINS with
     // 
     // ========================================================================
 
+    type boolean {xl.bytecode xlbool} is enumeration (false, true)
+
     type integer                                                                                is XL.BYTECODE.xlint
     type unsigned                                                                               is XL.BYTECODE.xluint
     type real                                                                                   is XL.BYTECODE.xlreal
-    type boolean                                                                                is XL.BYTECODE.xlbool
     type character                                                                              is XL.BYTECODE.xlchar
     type text                                                                                   is XL.BYTECODE.xltext
     type record                                                                                 is XL.BYTECODE.xlrecord
+
+
 
     // The following is defined in the compiler for this module
     // type module is XL.BYTECODE.xlmodule
@@ -230,16 +233,12 @@ module XL_BUILTINS with
     // ========================================================================
 
     generic [type ordered_type]
-    type range is record with
+    type range written range of ordered_type is record with
         First, Last : ordered_type
 
     function Range (First, Last : ordered) return range[ordered] written First..Last is
          result.First := First
          result.Last := Last
-
-    //to Copy(out TgtRng: range; in SrcRng : range) written TgtRng := SrcRng is
-    //    TgtRng.First := SrcRng.First
-    //    TgtRng.Last := SrcRng.Last
 
 
 
@@ -317,6 +316,23 @@ module XL_BUILTINS with
             yield
             Counter += Incr
 
+    iterator RangeIterator (
+            var out Counter : integer
+            interval : range) written Counter in interval is
+        Counter := interval.first
+        while Counter <= interval.last loop
+            yield
+            Counter += 1
+
+    iterator RangeIncrementingIterator (
+            var out Counter : integer
+            interval : range;
+            incr : range.ordered_type) written Counter in interval step incr is
+        Counter := interval.first
+        while Counter <= interval.last loop
+            yield
+            Counter += incr
+
 
     // ========================================================================
     // 
@@ -341,3 +357,4 @@ module XL_BUILTINS with
     transform (xl_assert_implementation('cond', 'msg', 'src')) into
         if not 'cond' then
             xl_assertion_failure 'msg', xl.file 'src', xl.line 'src'
+
