@@ -189,7 +189,7 @@ module XL.SEMANTICS.GENERICS is
                             ERR.Error "'$1' could not be selected because", C
                             ERR.Error "'$1' is not a type",Arg,D.name
                             ERR.Error "for parameter '$1'", D.name
-                        Arg := AType.machine_name
+                        Arg := TY.Source(AType)
                     else
                         // Non-type argument
                         Arg := XLT.XLSemantics (Arg)
@@ -770,7 +770,7 @@ module XL.SEMANTICS.GENERICS is
                 ArgType := TY.NonConstedType (ArgType)
             else
                 ArgType := TY.NonVariableType (ArgType)
-            ArgTypeSrc : PT.tree := TY.Source (ArgType)
+            ArgTypeSrc  : PT.tree := TY.Source(ArgType)
 
             // Check consistency with deductions, or deduce if not found
             NG         : integer := size (FunGenType.parameters)
@@ -803,8 +803,7 @@ module XL.SEMANTICS.GENERICS is
                         else if Gargs[N] <> ArgTypeSrc then
                             ERR.Error "Generic parameter type '$1' ", N
                             ERR.Error "cannot be both '$1'", Gargs[N]
-                            ERR.Error "and '$1' in the same instance",
-                                      ArgTypeSrc
+                            ERR.Error "and '$1' in the same instance",ArgTypeSrc
                             trace [deduce] "Conflict for ", N, "=", ArgTypeSrc
                             trace [deduce] "We had ", N, "=", Gargs[N]
                             return false
