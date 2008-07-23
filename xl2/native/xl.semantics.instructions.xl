@@ -489,7 +489,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
     // ------------------------------------------------------------------------
         label : PT.tree := SYM.Temporary("once")
         Block := XLT.ScopeSemantics(Block, XLT.scopeLocal)
-        XLT.AddScopeDecl XLT.context, parse_tree(@once_decl 'label')
+        XLT.AddGlobalDecl parse_tree(@once_decl 'label')
         return parse_tree
             @once_begin 'label'
             'Block'
