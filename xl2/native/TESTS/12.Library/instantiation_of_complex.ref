@@ -31,10 +31,22 @@ K=(1;0)
 L=(1;0)
 M=(1;0)
 After implicit real initializers
-K=(1;0)
-L=(1;0)
-M=(1;0)
+K=(15.92;0)
+L=(3.02;0)
+M=(2;0)
+After multiplication by a real
+K=(31.84;0)
+L=(98.704;0)
+M=(4;0)
 After imaginary initializers
 K=(0;15.92)
 L=(0;3.02)
-M=(0;2)
+M=(0;26)
+After divide by a real
+K=(0;4.42222)
+L=(0;1.37273)
+M=(0;8)
+After function-style calls
+K=(0;8.84444)
+L=(0;2.74545)
+M=(0;-8)
