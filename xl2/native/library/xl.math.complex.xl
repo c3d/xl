@@ -31,10 +31,8 @@ module XL.MATH.COMPLEX is
 
     function Complex (re : complex.value) return complex written re is
         result.re := re
-        // result.im := 0.0
 
     function Imaginary (im : complex.value) return complex written im i is
-        // result.re := 0.0
         result.im := im
 
     to Copy(out Target : complex; Source : complex) written Target := Source is
@@ -57,4 +55,19 @@ module XL.MATH.COMPLEX is
         Denom : var := Y.Re * Y.Re + Y.Im * Y.Im
         result.Re := (X.Re * Y.Re + X.Im * Y.Im) / Denom
         result.Im := (X.Im * Y.Re - X.Re * Y.Im) / Denom
+
+    // Optimized notations with a number and a complex
+    function Copy(out Target : complex;
+                  Source     : complex.value) written Target := Source is
+        Target.re := Source
+
+    function Multiply (X : complex;
+                       Y : complex.value) return complex written X*Y written Y*X is
+        result.Re := X.re * Y
+        result.Im := X.Im * Y
+
+    function Divide (X : complex;
+                     Y : complex.value) return complex written X/Y is
+        result.Re := X.Re / Y
+        result.Im := X.Im / Y
 
