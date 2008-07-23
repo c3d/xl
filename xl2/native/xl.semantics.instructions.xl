@@ -173,10 +173,9 @@ module XL.SEMANTICS.INSTRUCTIONS is
 
         Body := XLT.ScopeSemantics (Body, XLT.scopeLocal)
         result := parse_tree
-            @loopentry 'label'
+            @loop_begin 'label'
             'Body'
-            @loopagain 'label'
-            @loopexit 'label'
+            @loop_end 'label'
         SYM.SetProperty XLT.context, "LOOP", oldLoop
 
 
@@ -190,7 +189,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
 
         // Label base for that loop
         label     : PT.name_tree := SYM.Temporary("while")
-        prefix    : PT.tree := nil
+        TestCode  : PT.tree := nil
         callDepth : integer := CGM.EnterCall()
 
         // Check if this is a compile-time case
@@ -212,8 +211,9 @@ module XL.SEMANTICS.INSTRUCTIONS is
                 SYM.SetProperty XLT.context, "LOOP", label
                 result := XLT.ScopeSemantics(Body, XLT.scopeLocal)
                 result := parse_tree
+                    @non_loop_begin 'label'
                     'result'
-                    @loopexit 'label'
+                    @non_loop_end 'label'
                 SYM.SetProperty XLT.context, "LOOP", oldLoop
                 return result
             else
@@ -226,35 +226,43 @@ module XL.SEMANTICS.INSTRUCTIONS is
         // Convert test to boolean and evaluate condition
         Test := XLT.XLSemantics(Test)
         Test := TY.Convert (Test, TY.const_boolean_type)
-        CGM.SplitExpression Test, prefix
-        CGM.ExitCall callDepth, prefix // REVISIT: Wrong if boolean has dtor
+        CGM.SplitExpression Test, TestCode
+        CGM.ExitCall callDepth, TestCode // REVISIT: Wrong if boolean has dtor
 
         // Perform semantics on the body
         Body := XLT.ScopeSemantics(Body, XLT.scopeLocal)
 
         // Check which test we use
-        CondTest : PT.tree
         if loopWhile then
-            CondTest := parse_tree(loopif)
+            if testAtEnd then
+                result := parse_tree
+                    @do_while_begin 'label' 'Test'
+                    'Body'
+                    @do_while_test 'label' 'Test'
+                    'TestCode'
+                    @do_while_end 'label' 'Test'
+            else
+                result := parse_tree
+                    @while_begin 'label' 'Test'
+                    'TestCode'
+                    @while_test 'label' 'Test'
+                    'Body'
+                    @while_end 'label' 'Test'
         else
-            CondTest := parse_tree(loopifnot)
-
-        // Generate the body of the loop
-        result := parse_tree
-            @loopentry 'label'
-            'Body'
-            @loopend 'label'
-        result := XLT.Append(result, prefix)
-        result := parse_tree
-            'result'
-            @ 'CondTest' 'Test' 'label'
-            @loopexit 'label'
-
-        // If we test at beginning of loop, skip to test
-        if not testAtEnd then
-            result := parse_tree
-                @loopskip 'label'
-                'result'
+            if testAtEnd then
+                result := parse_tree
+                    @do_until_begin 'label' 'Test'
+                    'Body'
+                    @do_until_test 'label' 'Test'
+                    'TestCode'
+                    @do_until_end 'label' 'Test'
+            else
+                result := parse_tree
+                    @until_begin 'label' 'Test'
+                    'TestCode'
+                    @until_test 'label' 'Test'
+                    'Body'
+                    @until_end 'label' 'Test'
 
         SYM.SetProperty XLT.context, "LOOP", oldLoop
 

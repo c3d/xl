@@ -163,14 +163,34 @@ case_def_entry  "default:"
 case_def_exit   "break;"
 case_end        "}"
 
-loopentry       "loopentry_$1: 0;"
-loopagain       "goto loopentry_$1;"
-loopskip        "goto loopend_$1;"
-loopend         "loopend_$1: 0;"
-loopif          "if ($1) goto loopentry_$2;"
-loopifnot       "if (!($1)) goto loopentry_$2;"
-loopexit        "loopexit_$1: 0;"
-exitloop        "goto loopexit_$1;"
+exit_loop       "goto loopexit_$1;"
+
+loop_begin      "loop_$1:"
+loop_end        "goto loop_$1;"
+                "loopexit_$1: 0;"
+
+non_loop_begin  ""
+non_loop_end    "loopexit_$1: 0;"
+
+do_while_begin  "loop_$1:"
+do_while_test   "/* Test code for $1 in $2 */"
+do_while_end    "if ($2) goto loop_$1;"
+                "loopexit_$1: 0;"
+
+do_until_begin  "loop_$1:"
+do_until_test   "/* Test code for $1 in $2 */"
+do_until_end    "if (!$2) goto loop_$1;"
+                "loopexit_$1: 0;"
+
+while_begin     "loop_$1:"
+while_test      "if (!$2) goto loopexit_$1;"
+while_end       "goto loop_$1;"
+                "loopexit_$1: 0;"
+
+until_begin     "loop_$1:"
+until_test      "if ($2) goto loopexit_$1;"
+until_end       "goto loop_$1;"
+                "loopexit_$1: 0;"
 
 once_decl       "static int $1_Once = 0; // Single-threaded"
 once_begin      "if ($1_Once) goto $1_endOnce;"
