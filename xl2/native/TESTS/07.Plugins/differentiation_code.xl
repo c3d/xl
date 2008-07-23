@@ -1,7 +1,7 @@
 import IO = XL.UI.CONSOLE
 
-function Sin(X : real) return real is C.sin
-function Cos(X : real) return real is C.cos
+function Sin(X : real) return real is XL.RUNTIME.sin
+function Cos(X : real) return real is XL.RUNTIME.cos
 function ImplicitReal(X : integer) return real written X is XL.BYTECODE.int_to_real
 
 function F(X : real) return real is

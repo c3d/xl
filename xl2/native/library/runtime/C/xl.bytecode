@@ -64,7 +64,7 @@ stderr          "$1 = stderr;"
 OpenFile        "$1 = fopen($2, $3);"
 CloseFile       "fclose($1);"
 PutChar         "fputc($1, $2);"
-PutReal         "fprintf($2, ""%g"", $1);"
+PutReal         "fprintf($2, ""%#10.4g"", $1);"
 PutString       "fputs($1, $2);"
 PutNewLine      "fputc('\n', $1);"
 
