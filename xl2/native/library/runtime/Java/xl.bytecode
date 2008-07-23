@@ -85,6 +85,8 @@ type            "/* Type */"
 error           "/* ERROR */"
 value           "/* Value: $1 */"
 write           "/* Write: $1 */"
+copy            "$1 = $2;"
+info            "/* $1 */"
 
 type_decl       "public static class $1 {}"
 
