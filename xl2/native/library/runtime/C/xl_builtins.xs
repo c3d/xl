@@ -31,7 +31,7 @@ module XL_BUILTINS with
     // 
     // ========================================================================
 
-    type boolean {xl.bytecode xlbool} is enumeration (false, true)
+    type boolean                                                                                is enumeration (false, true) as XL.BYTECODE.xlbool 
 
     type integer                                                                                is XL.BYTECODE.xlint
     type unsigned                                                                               is XL.BYTECODE.xluint
