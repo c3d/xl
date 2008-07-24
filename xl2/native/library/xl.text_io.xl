@@ -91,13 +91,13 @@ module XL.TEXT_IO is
     // ------------------------------------------------------------------------
     //   Write a writable and something else to a file
     // ------------------------------------------------------------------------
-        Write F, W
-        Write F, ...
+        any.Write F, W
+        any.Write F, ...
 
 
     to WriteLn(F : file; ...) is
     // ------------------------------------------------------------------------
     //   Write elements with CR at end
     // ------------------------------------------------------------------------
-        Write F, ...
+        any.Write F, ...
         PutNewLineInFile F
