@@ -205,10 +205,10 @@ module XL.SYMBOLS is
                         if entry.scope <> nil then
                             if scopes[entry.symbols] = nil then
                                 scopes[entry.symbols] := entry.scope
-                if mode <> lookupLocalUsing then
                     impl : symbol_table
                     for impl in table.implicit loop
                         Collect impl, depths, scopes, mode, depth+1000
+                if mode <> lookupLocalUsing then
                     if table.enclosing <> nil then
                         Collect table.enclosing, depths, scopes, mode, depth+1
 
@@ -244,7 +244,7 @@ module XL.SYMBOLS is
 
         name := category + ":" + PT.XLNormalize(name)
 
-        trace [lookup] "Lookup: ", name, " from ", table
+        trace [lookup] "Lookup: ", name, " from ", table, " mode ", mode
 
         Collect table, symdepths, symscopes, mode
 

@@ -1,0 +1,13 @@
+// Any lookup
+// EXIT=2
+use XL.UI.CONSOLE
+
+generic [type item]
+procedure AnyLookupTest (A : item) is
+    Invoke A
+
+module GLOP is
+    to Invoke (A : integer) is
+        WriteLn "Called the hidden Invoke with A=", A
+
+    AnyLookupTest 3
