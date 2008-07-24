@@ -274,15 +274,10 @@ module XL_BUILTINS with
 
     // Convert to character
     function character(Value : integer) return character                                        is XL.BYTECODE.int_to_char
-    function character(Value : character) return character                                      is XL.BYTECODE.char_to_char
-    function character(Value : boolean) return character                                        is XL.BYTECODE.bool_to_char
-    function character(Value : real) return character                                           is XL.BYTECODE.real_to_char
 
     // Convert to boolean
     function boolean(Value : integer) return boolean                                            is XL.BYTECODE.int_to_bool
     function boolean(Value : unsigned) return boolean                                           is XL.BYTECODE.uint_to_bool
-    function boolean(Value : character) return boolean                                          is XL.BYTECODE.char_to_bool
-    function boolean(Value : boolean) return boolean                                            is XL.BYTECODE.bool_to_bool
 
 
 
