@@ -137,9 +137,12 @@ module XL.CODE_GENERATOR is
         if not IO.valid S.input then
            ERR.Error "Unable to load xl.bytecode", -1
            return
-        tok    : SC.token
-        symbol : text
-        had_nl : boolean := false
+        tok       : SC.token
+        symbol    : text
+        existing  : text
+        copy      : text
+        had_nl    : boolean := false
+        copy_mode : boolean := false
 
         bytecode_formats := empty
         loop
@@ -150,9 +153,22 @@ module XL.CODE_GENERATOR is
                 name : text := XLNormalize(S.string_value)
                 if name = "//" then
                     SC.Comment S, ASCII.CR
-                else
-                    had_nl := false
+                else if name = "->" then
+                    copy_mode := true
+                else if had_nl then
                     symbol := name
+                    had_nl := false
+                else if copy_mode then
+                    for existing in bytecode_formats loop
+                        eLen : integer := length(existing)
+                        sLen : integer := length(symbol)
+                        if eLen > sLen then
+                            if existing[eLen - sLen..eLen-1] = symbol then
+                                copy := existing[0..eLen - sLen - 1] + name
+                                bytecode_formats[copy] +=
+                                    bytecode_formats[existing]
+                else
+                    bytecode_formats[symbol] += bytecode_formats[name]
             else if tok = SC.tokTEXT then
                 format : text := S.string_value
                 if had_nl then
@@ -163,6 +179,7 @@ module XL.CODE_GENERATOR is
                      tok = SC.tokINDENT or
                      tok = SC.tokUNINDENT) then
                 had_nl := true
+                copy_mode := false
             else
                 ERR.Error "Invalid formats in xl.bytecode", -1
 
