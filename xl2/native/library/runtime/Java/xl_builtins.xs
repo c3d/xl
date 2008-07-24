@@ -257,27 +257,27 @@ module XL_BUILTINS with
     // ========================================================================
 
     // Convert to integer
-    function integer(Value : integer) return integer                                            is XL.BYTECODE.int_to_int
-    function integer(Value : unsigned) return integer                                           is XL.BYTECODE.uint_to_int
-    function integer(Value : character) return integer                                          is XL.BYTECODE.char_to_int
-    function integer(Value : boolean) return integer                                            is XL.BYTECODE.bool_to_int
-    function integer(Value : real) return integer                                               is XL.BYTECODE.real_to_int
+    function integer(Value : integer) return integer                                            is XL.BYTECODE.int_from_int
+    function integer(Value : unsigned) return integer                                           is XL.BYTECODE.int_from_uint
+    function integer(Value : character) return integer                                          is XL.BYTECODE.int_from_char
+    function integer(Value : boolean) return integer                                            is XL.BYTECODE.int_from_bool
+    function integer(Value : real) return integer                                               is XL.BYTECODE.int_from_real
 
     // Convert to unsigned
-    function unsigned(Value : integer) return unsigned                                          is XL.BYTECODE.int_to_uint
-    function unsigned(Value : unsigned) return unsigned                                         is XL.BYTECODE.uint_to_uint
+    function unsigned(Value : integer) return unsigned                                          is XL.BYTECODE.uint_from_int
+    function unsigned(Value : unsigned) return unsigned                                         is XL.BYTECODE.uint_from_uint
 
     // Convert to real
-    function real(Value : integer) return real                                                  is XL.BYTECODE.int_to_real
-    function real(Value : unsigned) return real                                                 is XL.BYTECODE.uint_to_real
-    function real(Value : real) return real                                                     is XL.BYTECODE.real_to_real
+    function real(Value : integer) return real                                                  is XL.BYTECODE.real_from_int
+    function real(Value : unsigned) return real                                                 is XL.BYTECODE.real_from_uint
+    function real(Value : real) return real                                                     is XL.BYTECODE.real_from_real
 
     // Convert to character
-    function character(Value : integer) return character                                        is XL.BYTECODE.int_to_char
+    function character(Value : integer) return character                                        is XL.BYTECODE.char_from_int
 
     // Convert to boolean
-    function boolean(Value : integer) return boolean                                            is XL.BYTECODE.int_to_bool
-    function boolean(Value : unsigned) return boolean                                           is XL.BYTECODE.uint_to_bool
+    function boolean(Value : integer) return boolean                                            is XL.BYTECODE.bool_from_int
+    function boolean(Value : unsigned) return boolean                                           is XL.BYTECODE.bool_from_uint
 
 
 
