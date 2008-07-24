@@ -107,6 +107,7 @@ module XL.SEMANTICS.OVERLOAD is
             translate NameTree
                 when (any.'Name') then
                     anyLookup := true
+                    NameTree := Name
                 when ('Record'.'Field') where Field.kind = PT.xlNAME then
                     FN : Field as PT.name_tree
                     // Check if we are looking for 'complex.value'
@@ -122,6 +123,9 @@ module XL.SEMANTICS.OVERLOAD is
                     CGM.ExitCall callDepth, result
                     return parse_tree(@error)
         Name : NameTree as PT.name_tree
+        if Name = nil then
+            ERR.Error "Cannot call non-name '$1'", NameTree
+            return Input
 
         // Convert arguments to a list for easier checking
         ArgList : PT.tree_list
@@ -188,6 +192,7 @@ module XL.SEMANTICS.OVERLOAD is
                           NameTree
                 anyLookup := false
             else
+                trace[overload] "Adding implicit ", coi, " to ", symbols
                 SYM.AddImplicit symbols, coi
 
         // If there were errors while evaluating arguments, don't go further
