@@ -150,8 +150,14 @@ module XL.SEMANTICS.TYPES.ENUMERATIONS is
         mname : PT.name_tree := SYM.Temporary("enum", Source.position)
         etp.machine_name := mname
 
+        // Check if we have set a representation type
+        repType : PT.tree := PT.Attached(Source, "BYTECODE")
+
         // Associate the machine name to the representation type
-        XLT.AddGlobalDecl parse_tree(@enum_type 'mname')
+        if repType = nil then
+            XLT.AddGlobalDecl parse_tree(@enum_type 'mname')
+        else
+            XLT.AddGlobalDecl parse_tree(@enum_type_rep 'mname' 'repType')
 
         // Elaborate the names
         if Names <> nil then

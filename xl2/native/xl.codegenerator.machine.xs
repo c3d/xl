@@ -40,6 +40,9 @@ module XL.CODE_GENERATOR.MACHINE with
     function Name (Name : PT.name_tree;
                    Type : TY.any_type) return PT.name_tree
 
+    // Checking that target has bytecode format
+    function HasBytecode(input : PT.tree) return boolean
+
     // Expression code
     function MakeExpression(computation : BC.bytecode;
                             mname       : PT.name_tree) return BC.bytecode

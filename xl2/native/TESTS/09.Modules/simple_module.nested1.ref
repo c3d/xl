@@ -4,7 +4,7 @@
 | module SIMPLE_MODULE.NESTED_1 is
 |____________________^
 [Compiler generated] Candidate form 'functionname' 'functionargs' cannot be selected
-library/runtime/default/./xl_builtins.xs:26: No translation for 'delete xlbuiltins_595'
+library/runtime/default/./xl_builtins.xs:26: No translation for 'delete xlbuiltins_575'
 | module XL_BUILTINS with
 |__________________^
 [Compiler generated] Candidate form 'functionname' 'functionargs' cannot be selected

@@ -31,6 +31,7 @@ import TY = XL.SEMANTICS.TYPES
 import FT = XL.SEMANTICS.TYPES.FUNCTIONS
 import GEN = XL.SEMANTICS.TYPES.GENERICS
 import XLT = XL.TRANSLATOR
+import CG = XL.CODE_GENERATOR
 
 
 module XL.CODE_GENERATOR.MACHINE is
@@ -59,6 +60,21 @@ module XL.CODE_GENERATOR.MACHINE is
 
         // Make name unique by postfixing it with an index
         return SYM.Temporary(base, Name.position)
+
+
+    function HasBytecode(name : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if a given bytecode format exists
+    // ------------------------------------------------------------------------
+        Tname  : name as PT.name_tree
+        if Tname = nil then
+            ERR.Error "'$1' is not a valid bytecode name", name
+            return false
+        symbol : text := XLNormalize(Tname.value)
+        if not CG.HasFormat(symbol) then
+            ERR.Error "The bytecode '$1' is invalid", name
+            return false
+        return true
 
 
 

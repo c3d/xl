@@ -5,13 +5,13 @@ MyMax more 1 and 4 is 4
 MyMax one 3
 MyMax more 2 and 3 is 3
 MyMax more 1 and 3 is 3
-MyMax one 8.43
-MyMax more 7.9 and 8.43 is 8.43
-MyMax more 1.5 and 8.43 is 8.43
-MyMax one 0.2
-MyMax more 0.1 and 0.2 is 0.2
-MyMax more 0.1 and 0.2 is 0.2
+MyMax one      8.430
+MyMax more      7.900 and      8.430 is      8.430
+MyMax more      1.500 and      8.430 is      8.430
+MyMax one     0.2000
+MyMax more     0.1000 and     0.2000 is     0.2000
+MyMax more     0.1000 and     0.2000 is     0.2000
 K=4
 L=3
-M=8.43
-Z=0.2
+M=     8.430
+Z=    0.2000
