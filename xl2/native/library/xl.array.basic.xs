@@ -32,3 +32,11 @@ module XL.ARRAY.BASIC with
 
     function Range(A : array) return range of integer written A.range is
         return 0..A.size-1
+
+    function Array() return array is
+        for I in result.range loop
+            result[I] := array.item()
+
+    to Delete (A : array) is
+        for I in A.range loop
+            any.delete A[I]

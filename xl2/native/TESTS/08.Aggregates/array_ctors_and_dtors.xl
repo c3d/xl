@@ -1,0 +1,14 @@
+// Check that we correctly invoke array constructors and destructors
+// The logic here is that to create the array, we have to create
+// three real and then delete them, so that the constructors and destructors
+// should be called three times each.
+use XL.UI.CONSOLE
+use XL.ARRAY.BASIC
+
+function Real() return real is
+   WriteLn "Real default constructor"
+
+to Delete (R : real) is
+    WriteLn "Real destructor"
+
+A : array[3] of real
