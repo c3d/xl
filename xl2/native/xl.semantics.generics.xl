@@ -702,6 +702,8 @@ module XL.SEMANTICS.GENERICS is
         XLT.global_context := instContext
 
         // Make the instantiation context visible for validation
+        SetContextOfInstantiation instContext, oldContext
+        DeclareInstantiationContext instContext
         SYM.AddUsing instContext, nil, oldContext
         XLT.CopyScopeProperties instContext, oldContext
 
