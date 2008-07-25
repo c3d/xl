@@ -201,13 +201,13 @@ module XL.SYMBOLS is
                 if mode <> lookupDirect then
                     entry : using_entry
                     for entry in table.usings loop
-                        Collect entry.symbols, depths, scopes, mode, depth+100
+                        Collect entry.symbols,depths,scopes,lookupAll,depth+100
                         if entry.scope <> nil then
                             if scopes[entry.symbols] = nil then
                                 scopes[entry.symbols] := entry.scope
                     impl : symbol_table
                     for impl in table.implicit loop
-                        Collect impl, depths, scopes, mode, depth+1000
+                        Collect impl, depths, scopes, lookupAll, depth+100
                 if mode <> lookupLocalUsing then
                     if table.enclosing <> nil then
                         Collect table.enclosing, depths, scopes, mode, depth+1

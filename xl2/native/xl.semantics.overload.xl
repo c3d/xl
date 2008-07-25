@@ -91,7 +91,7 @@ module XL.SEMANTICS.OVERLOAD is
 
         context         : SYM.symbol_table := XLT.context
         symbols         : SYM.symbol_table := context
-        list            : PT.tree_list
+        candidates      : PT.tree_list
         BaseRecord      : PT.tree
         anyLookup       : boolean := false
         callDepth       : integer := CGM.EnterCall()
@@ -115,7 +115,7 @@ module XL.SEMANTICS.OVERLOAD is
                     if gt <> nil then
                         NameTree := gt
                     else
-                        REC.RecordDeclarations Record, FN, "FN", list, symbols
+                        REC.RecordDeclarations Record,FN,"FN",candidates,symbols
                         BaseRecord := XLT.XLSemantics(Record)
                         NameTree := Field
                 else
@@ -149,7 +149,6 @@ module XL.SEMANTICS.OVERLOAD is
         bestDidx  : string of integer
         ambig     : PT.tree
         depth     : integer := 0
-        table     : SYM.symbol_table := symbols
         recurse   : boolean := BaseRecord = nil
         inIterator: boolean := FindInfo(Input, "ITERATOR_EXPR") <> nil
 
@@ -203,291 +202,282 @@ module XL.SEMANTICS.OVERLOAD is
             return parse_tree(@error)
         ERR.PushErrorContext()
 
-        // Loop on all levels
-        while table <> nil loop
-            depth += 2
-            localDepth : integer := depth
-            itemDepth  : map[PT.tree, integer]
+        // Lookup symbols at all relevant levels
+        itemDepth  : map[PT.tree, integer]
 
-            // Find all candidates at this level
-            candidates : SYM.tree_list
-            if recurse then
-                SYM.Lookup table, "FN", Name.value, candidates,
-                           itemDepth, localDepth, SYM.lookupLocalUsing
-                table := SYM.Enclosing(table)
-            else
-                candidates := list
-                table := nil
-            trace [overload] "In table ", table,
-                             " found ", size(candidates), " candidates"
+        // Find all candidates at this level
+        if recurse then
+            SYM.Lookup symbols, "FN", Name.value, candidates, itemDepth, 0
+        trace [overload] "In table ", symbols,
+                         " found ", size(candidates), " candidates"
 
-            // Loop on candidates to check compatibility
-            C : PT.tree
-            for C in candidates loop
+        // Loop on candidates to check compatibility
+        C : PT.tree
+        for C in candidates loop
 
-                trace [overload] "Testing ", C, " depth ", itemDepth[C]
-                SemArgs := ActArgs
+            trace [overload] "Testing ", C, " depth ", itemDepth[C]
+            SemArgs := ActArgs
 
-                // Retrieve function information, ignore non functions
-                Scope : PT.tree := nil
-                F : FN.function := FN.GetFunction(C)
+            // Retrieve function information, ignore non functions
+            Scope : PT.tree := nil
+            F : FN.function := FN.GetFunction(C)
+            if F = nil then
+                // We can get a record-prefixed value from a lateral map
+                if recurse then
+                    translate C
+                        when ('Record'.'Fcall') then
+                            F := FN.GetFunction(Fcall)
+                            Scope := Record
+
                 if F = nil then
-                    // We can get a record-prefixed value from a lateral map
-                    if recurse then
-                        translate C
-                            when ('Record'.'Fcall') then
-                                F := FN.GetFunction(Fcall)
-                                Scope := Record
+                    ERR.Error "Internal: No function info for '$1'", C
+                    trace [overload] "FAIL: No function info"
+                    restart
 
-                    if F = nil then
-                        ERR.Error "Internal: No function info for '$1'", C
-                        trace [overload] "FAIL: No function info"
-                        restart
+            // If we are simply building an overload set, do it here
+            if returnOverload then
+                if overloadSet <> nil then
+                    overloadSet := parse_tree
+                        'overloadSet'
+                        'C'
+                else
+                    overloadSet := C
+                restart
 
-                // If we are simply building an overload set, do it here
-                if returnOverload then
-                    if overloadSet <> nil then
-                        overloadSet := parse_tree
-                            'overloadSet'
-                            'C'
+            // Check if it is a generic function
+            Ftype : F.type as FT.function_type
+            Gtype : F.type as GEN.generic_type
+            Gargs : GN.generic_map
+            Vargs : PT.tree
+            Score : integer := depth
+            if recurse then Score := itemDepth[C]
+            assert Score >= depth
+            if Ftype = nil and Gtype <> nil then
+                GFType : Gtype.base as FT.function_type
+                Ftype := GFType
+                Score *= 100
+
+            // Check that we actually have a function
+            if Ftype = nil then
+                NFtype : TY.any_type := F.type
+                ERR.Error "'$1' could not be selected because", C
+                ERR.Error "it has non-function type '$1'", TY.Source(NFtype)
+                trace[overload] "FAIL: Non-function ",
+                                PT.tree(TY.Source(NFtype)),
+                                " internal ", NFtype.machine_name
+                restart
+
+            // Check if it's an iterator, and if that matches usage
+            iterator : F as ITER.iterator
+            if (iterator <> nil) <> inIterator then
+                if inIterator then
+                    ERR.Error "'$1' is not an iterator", C
+                else
+                    ERR.Error "'$1' is not an iterator", C
+                trace[overload] "FAIL: iterator mismatch ", C
+                restart
+
+            // Check number of parameters.
+            NP : integer := size(Ftype.parameters)
+            if Ftype.variadic then
+                Score *= 100
+            else if NA > NP then
+                ERR.Error "'$1' could not be selected because", C
+                ERR.Error "there are too many arguments for '$1'", Name
+                trace [overload] "FAIL: Too many arguments ",NA,">",NP
+                restart
+
+            // Check type of parameters
+            D        : DCL.declaration
+            Matching : boolean := true
+            DNames   : string of PT.name_tree
+            Didx     : string of integer
+            A := 0
+            for D in Ftype.parameters loop
+                // F(A, B) is better than F(A, B, C) where C has a default
+                // A += B is better than A+B for Add A, B
+                if D.is_output then
+                    Score += 1
+                else
+                    Score += 2
+                if A < NA then
+                    Arg := SemArgs[A]
+                    trace [overload] "Trying to deduce arg ", Arg
+                    if PT.Attached(Arg, "TODEDUCE") <> nil then
+                        toType : PT.tree := TY.Source(D.type)
+                        trace[overload] "Return type to deduce: ", toType
+
+                        dt  : TY.any_type := D.type
+                        dgt : dt as GEN.generic_type
+                        if dgt <> nil then
+                            trace[overload] "Type is generic, deferring"
+                            A += 1
+                            restart
+                        else
+                            tnt : XLT.attempt := XLT.BeginAttempt()
+                            TY.PushTargetType toType
+                            Arg := XLT.XLSemantics(Arg)
+                            TY.PopTargetType()
+                            if XLT.EndAttempt(tnt) then
+                                Matching := false
+                                ERR.Error "For candidate '$1'", C
+                                ERR.Error "error deducing '$1'", SemArgs[A]
+                                ERR.DisplayLastErrors()
+                                exit if not Matching
+
+                    if ToBeDef[A] then
+                        if D.is_variable then
+                            Dname : Arg as PT.name_tree
+                            trace [overload] "Tentative undeclared ", Arg
+                            DNames += Dname
+                            Didx += A
+                            A += 1
+                            restart
+                        else
+                            trace[overload] "FAIL: Cannot declare ", Arg
+                            trace[overload] "      non-out ", D.name
+                else
+                    Arg := D.initializer
+                    if Arg = nil then
+                        ERR.Error "'$1' could not be selected because", C
+                        ERR.Error "there is no value for '$1'", D.name
+                        Matching := false
+                        trace [overload] "No default argument "
                     else
-                        overloadSet := C
-                    restart
-
-                // Check if it is a generic function
-                Ftype : F.type as FT.function_type
-                Gtype : F.type as GEN.generic_type
-                Gargs : GN.generic_map
-                Vargs : PT.tree
-                Score : integer := depth
-                if recurse then Score := itemDepth[C]
-                assert Score >= depth
-                if Ftype = nil and Gtype <> nil then
-                    GFType : Gtype.base as FT.function_type
-                    Ftype := GFType
-                    Score *= 100
-
-                // Check that we actually have a function
-                if Ftype = nil then
-                    NFtype : TY.any_type := F.type
-                    ERR.Error "'$1' could not be selected because", C
-                    ERR.Error "it has non-function type '$1'", TY.Source(NFtype)
-                    trace[overload] "FAIL: Non-function ",
-                                    PT.tree(TY.Source(NFtype)),
-                                    " internal ", NFtype.machine_name
-                    restart
-
-                // Check if it's an iterator, and if that matches usage
-                iterator : F as ITER.iterator
-                if (iterator <> nil) <> inIterator then
-                    if inIterator then
-                        ERR.Error "'$1' is not an iterator", C
+                        SemArgs += XLT.XLSemantics (Arg)
+                        trace [overload] "Testing default argument ", Arg
+                    exit if not Matching
+                assert Arg <> nil
+                AType : TY.any_type := TY.GetType(Arg)
+                if Gtype <> nil then
+                    Matching := GN.Deduce (Gtype, D, Arg, Gargs)
+                else
+                    if AType <> nil then
+                        Matching := DCL.Assignable(D, Arg)
                     else
-                        ERR.Error "'$1' is not an iterator", C
-                    trace[overload] "FAIL: iterator mismatch ", C
-                    restart
-
-                // Check number of parameters.
-                NP : integer := size(Ftype.parameters)
-                if Ftype.variadic then
-                    Score *= 100
-                else if NA > NP then
+                        Matching := false
+                    if not Matching then
+                        // Try implicit conversions
+                        Arg := TY.TryConvert(Arg, D.type)
+                        Matching := Arg <> nil and DCL.Assignable(D, Arg)
+                        if Matching then
+                            trace[overload] "Implicit conversion to ",
+                                            TY.Source(D.type)
+                            trace[overload] "Expr=", Arg
+                            SemArgs[A] := Arg
+                            Score += 1 // Make it worse
+                if not Matching then
+                    if AType = nil then
+                        AType := TY.InvalidType("unknown in overload")
+                    trace [overload] "FAIL: Type mismatch for ",
+                                     PT.tree(D.name)
+                    trace [overload] "      Expected ", TY.Source(D.type)
+                    trace [overload] "      Got ", AType.name
                     ERR.Error "'$1' could not be selected because", C
-                    ERR.Error "there are too many arguments for '$1'", Name
-                    trace [overload] "FAIL: Too many arguments ",NA,">",NP
-                    restart
+                    ERR.Error "the type '$3' of '$1' doesn't match '$2'",
+                                ArgList[A],
+                                TY.Source(D.type), TY.Source(AType)
+                    ERR.Error "for parameter '$1'", D.name
+                    exit if not Matching
+                A += 1
+            if not Matching then
+                restart
 
-                // Check type of parameters
-                D        : DCL.declaration
-                Matching : boolean := true
-                DNames   : string of PT.name_tree
-                Didx     : string of integer
+            // Check if this is a variadic and there are args left
+            Vargs := nil
+            if A < NA then
+                assert Ftype.variadic
+                Vargs := SemArgs[A]
+                A += 1
+                while A < NA loop
+                    Arg := SemArgs[A]
+                    Vargs := parse_tree ('Vargs', 'Arg')
+                    A += 1
+                trace[overload] "INFO: Variadics ", Vargs
+            else if Ftype.variadic then
+                Vargs := parse_tree()
+
+            // Check if there are non-deduced generic arguments
+            if Gtype <> nil then
+                if not GN.FinalizeDeductions(Gtype, Gargs) then
+                    ERR.Error "'$1' could not be selected because", C
+                    ERR.Error "the generic type '$1' cannot be deduced",
+                              TY.Source(Gtype)
+                    Matching := false
+                    trace [overload] "FAIL: Cannot finalize deductions"
+
+                // This is the case for Copy P, Pointer(3). Now we have
+                // finalized deductions for P successfully, so we know
+                // that P = pointer[znort], and consequently we can
+                // use that information to deduce Pointer.
                 A := 0
                 for D in Ftype.parameters loop
-                    // F(A, B) is better than F(A, B, C) where C has a default
-                    // A += B is better than A+B for Add A, B
-                    if D.is_output then
-                        Score += 1
-                    else
-                        Score += 2
+                    exit if not Matching
                     if A < NA then
                         Arg := SemArgs[A]
-                        trace [overload] "Trying to deduce arg ", Arg
                         if PT.Attached(Arg, "TODEDUCE") <> nil then
-                            toType : PT.tree := TY.Source(D.type)
-                            trace[overload] "Return type to deduce: ", toType
+                            trace[deduce] "For overload ", C
+                            trace[deduce] "will try deducing ", Arg
+                            trace[deduce] "from type ", TY.Source(D.type),
+                                          " of parameter ", PT.tree(D.name)
 
                             dt  : TY.any_type := D.type
                             dgt : dt as GEN.generic_type
                             if dgt <> nil then
-                                trace[overload] "Type is generic, deferring"
-                                A += 1
-                                restart
-                            else
-                                tnt : XLT.attempt := XLT.BeginAttempt()
-                                TY.PushTargetType toType
-                                Arg := XLT.XLSemantics(Arg)
-                                TY.PopTargetType()
-                                if XLT.EndAttempt(tnt) then
-                                    Matching := false
-                                    ERR.Error "For candidate '$1'", C
-                                    ERR.Error "error deducing '$1'", SemArgs[A]
-                                    ERR.DisplayLastErrors()
-                                    exit if not Matching
+                                inst : PT.tree := TY.Source(dgt)
+                                inst := GN.InstantiateType(inst, Gargs)
+                                trace[deduce] "instantiated as ", inst
+                                dt := TY.GetDefinedType(inst)
+                                trace[deduce] "of type ", TY.Source(dt)
 
-                        if ToBeDef[A] then
-                            if D.is_variable then
-                                Dname : Arg as PT.name_tree
-                                trace [overload] "Tentative undeclared ", Arg
-                                DNames += Dname
-                                Didx += A
-                                A += 1
-                                restart
+                            tnt : XLT.attempt := XLT.BeginAttempt()
+                            TY.PushTargetType TY.Source(dt)
+                            Arg := XLT.XLSemantics(Arg)
+                            TY.PopTargetType()
+                            if XLT.EndAttempt(tnt) then
+                                // Oh well, all this effort to fail now...
+                                trace[deduce] "Err: ", ERR.LastErrorsText()
+                                Matching := false
                             else
-                                trace[overload] "FAIL: Cannot declare ", Arg
-                                trace[overload] "      non-out ", D.name
-                    else
-                        Arg := D.initializer
-                        if Arg = nil then
-                            ERR.Error "'$1' could not be selected because", C
-                            ERR.Error "there is no value for '$1'", D.name
-                            Matching := false
-                            trace [overload] "No default argument "
-                        else
-                            SemArgs += XLT.XLSemantics (Arg)
-                            trace [overload] "Testing default argument ", Arg
-                        exit if not Matching
-                    assert Arg <> nil
-                    AType : TY.any_type := TY.GetType(Arg)
-                    if Gtype <> nil then
-                        Matching := GN.Deduce (Gtype, D, Arg, Gargs)
-                    else
-                        if AType <> nil then
-                            Matching := DCL.Assignable(D, Arg)
-                        else
-                            Matching := false
-                        if not Matching then
-                            // Try implicit conversions
-                            Arg := TY.TryConvert(Arg, D.type)
-                            Matching := Arg <> nil and DCL.Assignable(D, Arg)
-                            if Matching then
-                                trace[overload] "Implicit conversion to ",
-                                                TY.Source(D.type)
-                                trace[overload] "Expr=", Arg
+                                trace[deduce] "OK: ", Arg
                                 SemArgs[A] := Arg
-                                Score += 1 // Make it worse
-                    if not Matching then
-                        if AType = nil then
-                            AType := TY.InvalidType("unknown in overload")
-                        trace [overload] "FAIL: Type mismatch for ",
-                                         PT.tree(D.name)
-                        trace [overload] "      Expected ", TY.Source(D.type)
-                        trace [overload] "      Got ", AType.name
-                        ERR.Error "'$1' could not be selected because", C
-                        ERR.Error "the type '$3' of '$1' doesn't match '$2'",
-                                    ArgList[A],
-                                    TY.Source(D.type), TY.Source(AType)
-                        ERR.Error "for parameter '$1'", D.name
-                        exit if not Matching
                     A += 1
-                if not Matching then
-                    restart
 
-                // Check if this is a variadic and there are args left
-                Vargs := nil
-                if A < NA then
-                    assert Ftype.variadic
-                    Vargs := SemArgs[A]
-                    A += 1
-                    while A < NA loop
-                        Arg := SemArgs[A]
-                        Vargs := parse_tree ('Vargs', 'Arg')
-                        A += 1
-                    trace[overload] "INFO: Variadics ", Vargs
-                else if Ftype.variadic then
-                    Vargs := parse_tree()
+            // If not matching, lookup next
+            if not Matching then
+                restart
 
-                // Check if there are non-deduced generic arguments
-                if Gtype <> nil then
-                    if not GN.FinalizeDeductions(Gtype, Gargs) then
-                        ERR.Error "'$1' could not be selected because", C
-                        ERR.Error "the generic type '$1' cannot be deduced",
-                                  TY.Source(Gtype)
-                        Matching := false
-                        trace [overload] "FAIL: Cannot finalize deductions"
+            trace [overload] "PASS: The candidate matches"
 
-                    // This is the case for Copy P, Pointer(3). Now we have
-                    // finalized deductions for P successfully, so we know
-                    // that P = pointer[znort], and consequently we can
-                    // use that information to deduce Pointer.
-                    A := 0
-                    for D in Ftype.parameters loop
-                        exit if not Matching
-                        if A < NA then
-                            Arg := SemArgs[A]
-                            if PT.Attached(Arg, "TODEDUCE") <> nil then
-                                trace[deduce] "For overload ", C
-                                trace[deduce] "will try deducing ", Arg
-                                trace[deduce] "from type ", TY.Source(D.type),
-                                              " of parameter ", PT.tree(D.name)
-
-                                dt  : TY.any_type := D.type
-                                dgt : dt as GEN.generic_type
-                                if dgt <> nil then
-                                    inst : PT.tree := TY.Source(dgt)
-                                    inst := GN.InstantiateType(inst, Gargs)
-                                    trace[deduce] "instantiated as ", inst
-                                    dt := TY.GetDefinedType(inst)
-                                    trace[deduce] "of type ", TY.Source(dt)
-
-                                tnt : XLT.attempt := XLT.BeginAttempt()
-                                TY.PushTargetType TY.Source(dt)
-                                Arg := XLT.XLSemantics(Arg)
-                                TY.PopTargetType()
-                                if XLT.EndAttempt(tnt) then
-                                    // Oh well, all this effort to fail now...
-                                    trace[deduce] "Err: ", ERR.LastErrorsText()
-                                    Matching := false
-                                else
-                                    trace[deduce] "OK: ", Arg
-                                    SemArgs[A] := Arg
-                        A += 1
-
-                // If not matching, lookup next
-                if not Matching then
-                    restart
-
-                trace [overload] "PASS: The candidate matches"
-
-                // Compare scores and results
-                if best = nil then
-                    trace [overload] "BEST: Best score ", Score
-                    best := C
-                    bestScore := Score
-                    bestF := F
-                    bestArgs := SemArgs
-                    bestGArgs := Gargs
-                    bestGtype := Gtype
-                    bestVargs := Vargs
-                    bestDNames := DNames
-                    bestDidx := Didx
-                    if recurse then BaseRecord := Scope
-                else if Score < bestScore then
-                    trace [overload] "BEST: New best score ", Score
-                    best := C
-                    bestScore := Score
-                    bestF := F
-                    bestArgs := SemArgs
-                    bestGArgs := Gargs
-                    bestGtype := Gtype
-                    bestVargs := Vargs
-                    bestDNames := DNames
-                    bestDidx := Didx
-                    if recurse then BaseRecord := Scope
-                else if Score = bestScore and F <> bestF then
-                    ambig := C
-                    trace [overload] "AMBIGUOUS: Score ", Score
-                    trace [overload] "           Other: ", best
+            // Compare scores and results
+            if best = nil then
+                trace [overload] "BEST: Best score ", Score
+                best := C
+                bestScore := Score
+                bestF := F
+                bestArgs := SemArgs
+                bestGArgs := Gargs
+                bestGtype := Gtype
+                bestVargs := Vargs
+                bestDNames := DNames
+                bestDidx := Didx
+                if recurse then BaseRecord := Scope
+            else if Score < bestScore then
+                trace [overload] "BEST: New best score ", Score
+                best := C
+                bestScore := Score
+                bestF := F
+                bestArgs := SemArgs
+                bestGArgs := Gargs
+                bestGtype := Gtype
+                bestVargs := Vargs
+                bestDNames := DNames
+                bestDidx := Didx
+                if recurse then BaseRecord := Scope
+            else if Score = bestScore and F <> bestF then
+                ambig := C
+                trace [overload] "AMBIGUOUS: Score ", Score
+                trace [overload] "           Other: ", best
 
         // Remove 'any' context if we added it
         if anyLookup then
