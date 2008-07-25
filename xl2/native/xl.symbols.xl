@@ -201,16 +201,16 @@ module XL.SYMBOLS is
                 if mode <> lookupDirect then
                     entry : using_entry
                     for entry in table.usings loop
-                        Collect entry.symbols,depths,scopes,lookupAll,depth+100
+                        Collect entry.symbols,depths,scopes,mode,depth+100
                         if entry.scope <> nil then
                             if scopes[entry.symbols] = nil then
                                 scopes[entry.symbols] := entry.scope
                     impl : symbol_table
                     for impl in table.implicit loop
-                        Collect impl, depths, scopes, lookupAll, depth+100
+                        Collect impl, depths, scopes, mode, depth+100
                 if mode <> lookupLocalUsing then
                     if table.enclosing <> nil then
-                        Collect table.enclosing, depths, scopes, mode, depth+1
+                        Collect table.enclosing, depths, scopes, mode, depth+2
 
 
     procedure Lookup (table         : symbol_table;
@@ -278,9 +278,9 @@ module XL.SYMBOLS is
                             scoped := parse_tree('scope'.'item')
                             scoped.info := item.info
                             scoped.position := item.position
+                            scopes[scoped] := depth
                         values += scoped
                         scopes[item] := depth
-                        scopes[scoped] := depth
 
 
     function LookupOne (table         : symbol_table;
