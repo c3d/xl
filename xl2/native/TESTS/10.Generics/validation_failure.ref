@@ -13,16 +13,16 @@
 10.Generics/validation_failure.xl:5: No translation for 'Test := A < B'
 |     Test : boolean := A < B
 |_________________________^
-10.Generics/validation_failure.xl:14: Candidate form 'this' := 'that' cannot be selected
-| Q : complex := F(P)
-|_________________^
+10.Generics/validation_failure.xl:10: Candidate form 'this' := 'that' cannot be selected
+| type complex is record with
+|____________^
 10.Generics/validation_failure.xl:5: No translation for 'A < B'
 |     Test : boolean := A < B
 |_________________________^
 library/runtime/default/./xl_builtins.xs:189: Candidate form 'X' < 'Y' cannot be selected
 |     function LessThan(X, Y : character) return boolean          written X<Y                     is XL.BYTECODE.lt_char
 |__________________________________________________________________________^
-10.Generics/validation_failure.xl:4: Cannot convert 'a_638' from 'record with 
+10.Generics/validation_failure.xl:4: Cannot convert 'a_620' from 'record with 
     re , im : real
 ' to 'character'
 |     A, B : ordered
