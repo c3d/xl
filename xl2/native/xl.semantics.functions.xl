@@ -463,8 +463,8 @@ module XL.SEMANTICS.FUNCTIONS is
                 preCode := parse_tree(@result_decl 'MType' 'MName')
 
         // For generic functions, just skip body semantics and the like
-        trace[ctors] "Check constructors for ", PT.tree(f.machine_name)
-        trace[ctors] " source ", PT.tree(f.name),
+        trace[ctors] "Check constructors for ", PT.tree(f.machine_name),
+                     " source ", PT.tree(f.name),
                      " result ", PT.tree(f.result_machine_name)
         if not GEN.IsGenericDeclaration(f) then
 
