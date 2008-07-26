@@ -463,10 +463,10 @@ module XL.SEMANTICS.FUNCTIONS is
                 preCode := parse_tree(@result_decl 'MType' 'MName')
 
         // For generic functions, just skip body semantics and the like
-        trace[ctors] "Check constructors for ", PT.tree(f.machine_name),
-                     " source ", PT.tree(f.name),
-                     " result ", PT.tree(f.result_machine_name)
         if not GEN.IsGenericDeclaration(f) then
+            trace[+ctors] "Check constructors for ", PT.tree(f.machine_name),
+                         " source ", PT.tree(f.name),
+                         " result ", PT.tree(f.result_machine_name)
 
             // Insert constructors for out parameters, except 'result'
             // if the function is itself a constructor for the result type
@@ -477,10 +477,10 @@ module XL.SEMANTICS.FUNCTIONS is
                 SYM.LocalSymbols XLT.context, entries
                 SYM.LocalSymbols ftype.symbols, entries
                 for entry in entries loop
-                    trace[ctors] "  Parm ", entry
+                    trace[ctors] "Parm ", entry
                     decl : DCL.declaration := DCL.GetDeclaration(entry)
                     if entry.kind = PT.xlNAME and decl <> nil then
-                        trace[ctors] "  Decl ", PT.tree(decl.machine_name)
+                        trace[ctors] "Decl ", PT.tree(decl.machine_name)
                         if decl.is_output and not decl.is_input then
                             callCtor : boolean := true
                             // If this is 'result' of a ctor,
@@ -488,13 +488,14 @@ module XL.SEMANTICS.FUNCTIONS is
                             if decl.machine_name = f.result_machine_name then
                                 if IsConstructor(f) then
                                     callCtor := false
-                            trace[ctors] "  callCtor ", callCtor
+                            trace[ctors] "callCtor=", callCtor
                             if callCtor then
                                 ctor : PT.tree := DCL.CallConstructor(decl)
                                 preCode := XLT.Append(preCode, ctor)
                             else
                                 ctor : PT.tree := DCL.ConstructorCode(decl)
                                 preCode := XLT.Append(preCode, ctor)
+            trace[-ctors] "Constructor preCode=", preCode
 
             // Compute preconditions
             preCond : PT.tree
