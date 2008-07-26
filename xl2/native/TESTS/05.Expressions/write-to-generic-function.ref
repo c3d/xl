@@ -1,7 +1,7 @@
 05.Expressions/write-to-generic-function.xl:8: No translation for 'TestInOut (0) = 1'
 | if TestInOut(0) = 1 then
 |_________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'X' = 'Y' cannot be selected
+library/runtime/default/./xl_builtins.xs:188: Candidate form 'X' = 'Y' cannot be selected
 |     function Equal(X, Y : character) return boolean             written X=Y                     is XL.BYTECODE.equ_char
 |__________________________________________________________________________^
 05.Expressions/write-to-generic-function.xl:8: Error instantiating 'TestInOut'
@@ -13,6 +13,6 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'X' = 'Y' cannot be
 05.Expressions/write-to-generic-function.xl:4: No translation for 'result := Z + 1'
 |     return Z + 1
 |______________^
-library/runtime/default/./xl_builtins.xs:186: Candidate form 'Tgt' := 'Src' cannot be selected
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^

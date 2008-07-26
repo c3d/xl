@@ -68,6 +68,7 @@ module XL_BUILTINS with
     function Modulo(X, Y : integer) return integer              written X mod Y                 is XL.BYTECODE.mod_int
     function Remainder(X, Y : integer) return integer           written X rem Y                 is XL.BYTECODE.rem_int
     function Power(X : integer; Y : unsigned) return integer    written X^Y                     is XL.BYTECODE.power_int
+    function Power(X : integer; Y : integer) return integer     written X^Y                     is XL.BYTECODE.power_int
     function Equal(X, Y : integer) return boolean               written X=Y                     is XL.BYTECODE.equ_int
     function LessThan(X, Y : integer) return boolean            written X<Y                     is XL.BYTECODE.lt_int
     function LessOrEqual(X, Y : integer) return boolean         written X<=Y                    is XL.BYTECODE.le_int
@@ -132,8 +133,8 @@ module XL_BUILTINS with
     function Divide(X, Y : real) return real                    written X/Y                     is XL.BYTECODE.div_real
     function Modulo(X, Y : real) return real                    written X mod Y                 is XL.BYTECODE.mod_real
     function Remainder(X, Y : real) return real                 written X rem Y                 is XL.BYTECODE.rem_real
-    function Power(X: real; Y : unsigned) return real           written X^Y                     is XL.BYTECODE.power_real_uint
-    function Power(X: real; Y : integer) return real            written X^Y                     is XL.BYTECODE.power_real_int
+    function Power(X: real; Y : unsigned) return real           written X^Y                     is XL.BYTECODE.power_uint_real
+    function Power(X: real; Y : integer) return real            written X^Y                     is XL.BYTECODE.power_int_real
     function Power(X: real; Y : real) return real               written X^Y                     is XL.BYTECODE.power_real_real
     function Equal(X, Y : real) return boolean                  written X=Y                     is XL.BYTECODE.equ_real
     function LessThan(X, Y : real) return boolean               written X<Y                     is XL.BYTECODE.lt_real
