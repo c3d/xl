@@ -745,7 +745,7 @@ module XL.SEMANTICS.DECLARATIONS is
 
         dtype : TY.any_type := decl.type
         assert dtype <> nil
-        tname : TY.SourceName(dtype) as PT.name_tree
+        tname : GN.GenericName(dtype) as PT.name_tree
         trace[ctors] "CallConstructor ",
                      PT.tree(decl.name), " : ", PT.tree(tname)
         if tname <> nil then
