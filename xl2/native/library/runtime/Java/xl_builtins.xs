@@ -31,13 +31,16 @@ module XL_BUILTINS with
     // 
     // ========================================================================
 
+    type boolean                                                                                is enumeration (false, true) as XL.BYTECODE.xlbool 
+
     type integer                                                                                is XL.BYTECODE.xlint
     type unsigned                                                                               is XL.BYTECODE.xluint
     type real                                                                                   is XL.BYTECODE.xlreal
-    type boolean                                                                                is XL.BYTECODE.xlbool
     type character                                                                              is XL.BYTECODE.xlchar
     type text                                                                                   is XL.BYTECODE.xltext
     type record                                                                                 is XL.BYTECODE.xlrecord
+
+
 
     // The following is defined in the compiler for this module
     // type module is XL.BYTECODE.xlmodule
@@ -230,16 +233,12 @@ module XL_BUILTINS with
     // ========================================================================
 
     generic [type ordered_type]
-    type range is record with
+    type range written range of ordered_type is record with
         First, Last : ordered_type
 
     function Range (First, Last : ordered) return range[ordered] written First..Last is
          result.First := First
          result.Last := Last
-
-    //to Copy(out TgtRng: range; in SrcRng : range) written TgtRng := SrcRng is
-    //    TgtRng.First := SrcRng.First
-    //    TgtRng.Last := SrcRng.Last
 
 
 
@@ -258,32 +257,27 @@ module XL_BUILTINS with
     // ========================================================================
 
     // Convert to integer
-    function integer(Value : integer) return integer                                            is XL.BYTECODE.int_to_int
-    function integer(Value : unsigned) return integer                                           is XL.BYTECODE.uint_to_int
-    function integer(Value : character) return integer                                          is XL.BYTECODE.char_to_int
-    function integer(Value : boolean) return integer                                            is XL.BYTECODE.bool_to_int
-    function integer(Value : real) return integer                                               is XL.BYTECODE.real_to_int
+    function integer(Value : integer) return integer                                            is XL.BYTECODE.int_from_int
+    function integer(Value : unsigned) return integer                                           is XL.BYTECODE.int_from_uint
+    function integer(Value : character) return integer                                          is XL.BYTECODE.int_from_char
+    function integer(Value : boolean) return integer                                            is XL.BYTECODE.int_from_bool
+    function integer(Value : real) return integer                                               is XL.BYTECODE.int_from_real
 
     // Convert to unsigned
-    function unsigned(Value : integer) return unsigned                                          is XL.BYTECODE.int_to_uint
-    function unsigned(Value : unsigned) return unsigned                                         is XL.BYTECODE.uint_to_uint
+    function unsigned(Value : integer) return unsigned                                          is XL.BYTECODE.uint_from_int
+    function unsigned(Value : unsigned) return unsigned                                         is XL.BYTECODE.uint_from_uint
 
     // Convert to real
-    function real(Value : integer) return real                                                  is XL.BYTECODE.int_to_real
-    function real(Value : unsigned) return real                                                 is XL.BYTECODE.uint_to_real
-    function real(Value : real) return real                                                     is XL.BYTECODE.real_to_real
+    function real(Value : integer) return real                                                  is XL.BYTECODE.real_from_int
+    function real(Value : unsigned) return real                                                 is XL.BYTECODE.real_from_uint
+    function real(Value : real) return real                                                     is XL.BYTECODE.real_from_real
 
     // Convert to character
-    function character(Value : integer) return character                                        is XL.BYTECODE.int_to_char
-    function character(Value : character) return character                                      is XL.BYTECODE.char_to_char
-    function character(Value : boolean) return character                                        is XL.BYTECODE.bool_to_char
-    function character(Value : real) return character                                           is XL.BYTECODE.real_to_char
+    function character(Value : integer) return character                                        is XL.BYTECODE.char_from_int
 
     // Convert to boolean
-    function boolean(Value : integer) return boolean                                            is XL.BYTECODE.int_to_bool
-    function boolean(Value : unsigned) return boolean                                           is XL.BYTECODE.uint_to_bool
-    function boolean(Value : character) return boolean                                          is XL.BYTECODE.char_to_bool
-    function boolean(Value : boolean) return boolean                                            is XL.BYTECODE.bool_to_bool
+    function boolean(Value : integer) return boolean                                            is XL.BYTECODE.bool_from_int
+    function boolean(Value : unsigned) return boolean                                           is XL.BYTECODE.bool_from_uint
 
 
 
@@ -317,6 +311,23 @@ module XL_BUILTINS with
             yield
             Counter += Incr
 
+    iterator RangeIterator (
+            var out Counter : integer
+            interval : range) written Counter in interval is
+        Counter := interval.first
+        while Counter <= interval.last loop
+            yield
+            Counter += 1
+
+    iterator RangeIncrementingIterator (
+            var out Counter : integer
+            interval : range;
+            incr : range.ordered_type) written Counter in interval step incr is
+        Counter := interval.first
+        while Counter <= interval.last loop
+            yield
+            Counter += incr
+
 
     // ========================================================================
     // 
@@ -341,3 +352,4 @@ module XL_BUILTINS with
     transform (xl_assert_implementation('cond', 'msg', 'src')) into
         if not 'cond' then
             xl_assertion_failure 'msg', xl.file 'src', xl.line 'src'
+

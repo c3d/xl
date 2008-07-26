@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 368 $
+// * Date       : $Date: 2008-03-28 22:46:28 +0100 (Fri, 28 Mar 2008) $
 // ****************************************************************************
 
 import PT = XL.PARSER.TREE
@@ -450,6 +450,7 @@ module XL.SEMANTICS.TYPES is
 
         decl : DCL.Declaration := DCL.GetDeclaration(result)
         decl.is_builtin := true
+        decl.machine_name := MachineName
         if result <> Name then
             DCL.SetDeclaration Name, decl
 
@@ -794,12 +795,13 @@ module XL.SEMANTICS.TYPES is
             return EnterBytecodeType (TName, MName, nil)
 
         when
-            type 'Name' {xl.bytecode 'MachineName'} is 'Value'
+            type 'Name' is 'Value' as XL.BYTECODE.'MachineName'
         where
             Name.kind = PT.xlNAME and MachineName.kind = PT.xlNAME
         then
             TName : Name as PT.name_tree
             MName : MachineName as PT.name_tree
+            PT.AttachTree Value, "BYTECODE", MachineName
             result := EnterType (Name, Value)
             tp : any_type := GetDefinedType(TName)
             Name := EnterBytecodeType (TName, MName, tp)

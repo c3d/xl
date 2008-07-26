@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 370 $
+// * Date       : $Date: 2008-04-08 02:08:47 -0400 (Tue, 08 Apr 2008) $
 // ****************************************************************************
 
 import PT = XL.PARSER.TREE

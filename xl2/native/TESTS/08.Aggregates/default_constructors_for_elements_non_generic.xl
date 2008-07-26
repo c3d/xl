@@ -1,0 +1,15 @@
+use XL.UI.CONSOLE
+
+function Integer () return integer is
+    return 42
+
+type trucmachin is record with
+   A, B, C : integer
+
+function TrucMachin (A : integer) return truc_machin is
+    result.A := A
+    // We want B and C to be constructed with defaults here
+
+TM : TrucMachin(32)
+
+WriteLn "TM=(", TM.A, " ; ", TM.B, " ; ", TM.C, ")"

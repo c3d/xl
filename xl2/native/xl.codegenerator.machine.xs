@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 351 $
+// * Date       : $Date: 2007-11-18 22:05:37 +0100 (Sun, 18 Nov 2007) $
 // ****************************************************************************
 
 import TY = XL.SEMANTICS.TYPES
@@ -39,6 +39,9 @@ module XL.CODE_GENERATOR.MACHINE with
     // Computing machine names ("mangled" names in C++ parlance)
     function Name (Name : PT.name_tree;
                    Type : TY.any_type) return PT.name_tree
+
+    // Checking that target has bytecode format
+    function HasBytecode(input : PT.tree) return boolean
 
     // Expression code
     function MakeExpression(computation : BC.bytecode;

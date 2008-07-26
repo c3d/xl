@@ -62,3 +62,4 @@ module XL.SEMANTICS.FUNCTIONS with
     function EnterBuiltinFunction(input : PT.tree;
                                   Interface : PT.tree;
                                   BuiltinName : PT.tree) return PT.tree
+    function IsConstructor (F : function) return boolean

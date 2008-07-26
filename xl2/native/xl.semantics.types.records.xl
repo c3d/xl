@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 373 $
+// * Date       : $Date: 2008-04-09 07:23:58 -0400 (Wed, 09 Apr 2008) $
 // ****************************************************************************
 
 import TY = XL.SEMANTICS.TYPES
@@ -583,6 +583,8 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
         // If we found any, then generate a constructor here
         if result <> nil then
+            trace[ctors] "CtorCode for ", PT.tree(rtp.machine_name), " is ",
+                         result
             PT.AttachTree rtp.machine_name, "CTORCODE", result
             result := parse_tree
                 function 'recName' () return 'recName' is

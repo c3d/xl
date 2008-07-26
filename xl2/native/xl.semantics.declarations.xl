@@ -19,8 +19,8 @@
 // See http://www.gnu.org/copyleft/gpl.html for details
 // ****************************************************************************
 // * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// * Revision   : $Revision: 361 $
+// * Date       : $Date: 2007-12-20 10:07:49 +0100 (Thu, 20 Dec 2007) $
 // ****************************************************************************
 
 import XLT = XL.TRANSLATOR
@@ -746,6 +746,8 @@ module XL.SEMANTICS.DECLARATIONS is
         dtype : TY.any_type := decl.type
         assert dtype <> nil
         tname : TY.SourceName(dtype) as PT.name_tree
+        trace[ctors] "CallConstructor ",
+                     PT.tree(decl.name), " : ", PT.tree(tname)
         if tname <> nil then
             list : PT.tree_list
             SYM.Lookup XLT.context, "FN", tname.value, list, SYM.lookupAll
@@ -767,8 +769,12 @@ module XL.SEMANTICS.DECLARATIONS is
 
         tp : TY.any_type := decl.type
         mname : PT.tree := tp.machine_name
+        trace[ctors] "ConstructorCode ",
+                     PT.tree(decl.name), " : ", PT.tree(TY.SourceName(tp))
+        trace[ctors] "  MName=", PT.tree(mname), " at ", mname
         if mname <> nil then
             result := PT.Attached(mname, "CTORCODE")
+            trace[ctors] "  Code=", result
             if result <> nil then
                 result := PT.Clone(result)
                 result.position := mname.position
