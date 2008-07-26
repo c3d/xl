@@ -574,7 +574,7 @@ module XL.SEMANTICS.GENERICS is
             result := Source
             itp : GEN.instantiated_type
             itp.base := gtp
-            itp.machine_name := nil
+            itp.machine_name := SYM.Temporary("Partial_" + key)
             itp.interface_match := InstantiatedTypeMatch
             itp.name := Source
             itp.args := Args
@@ -622,6 +622,7 @@ module XL.SEMANTICS.GENERICS is
             if tp <> nil then
                 tp.name := Source
                 TY.SetDefinedType Source, tp
+          
 
         assert result <> nil
         PT.AttachTree Name, "INSTANCEOF", Decl.Name
