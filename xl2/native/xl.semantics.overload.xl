@@ -185,14 +185,7 @@ module XL.SEMANTICS.OVERLOAD is
 
         // Add 'any' lookup as necessary
         if anyLookup then
-            coi : SYM.symbol_table := GN.ContextOfInstantiation()
-            if coi = nil then
-                ERR.Error "Internal: No context of instantiation for '$1'",
-                          NameTree
-                anyLookup := false
-            else
-                trace[overload] "Adding implicit ", coi, " to ", symbols
-                SYM.AddImplicit symbols, coi
+            GN.AddInstantiators symbols, input
 
         // If there were errors while evaluating arguments, don't go further
         if ERR.PopErrorContext() then
@@ -482,7 +475,7 @@ module XL.SEMANTICS.OVERLOAD is
 
         // Remove 'any' context if we added it
         if anyLookup then
-            SYM.RemoveImplicit symbols
+            GN.RemoveInstantiators symbols, input
 
         // Report results
         candidate_errors : boolean := ERR.PopErrorContext()
@@ -881,13 +874,9 @@ module XL.SEMANTICS.OVERLOAD is
                 then
                     return false
                 when (any.'Name') then
-                    coi : SYM.symbol_table := GN.ContextOfInstantiation()
-                    if coi = nil then
-                        ERR.Error "No context of instantiation for '$1'", Name
-                        return IsFunction(Name)
-                    SYM.AddImplicit XLT.context, coi
+                    GN.AddInstantiators XLT.context, T
                     result := IsFunction(Name)
-                    SYM.RemoveImplicit XLT.context
+                    GN.RemoveInstantiators XLT.context, T
                     return result
                 when ('Record'.'Field') where Field.kind = PT.xlNAME then
                     list : PT.tree_list

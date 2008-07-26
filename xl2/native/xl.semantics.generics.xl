@@ -328,21 +328,51 @@ module XL.SEMANTICS.GENERICS is
     type context_info is access to context_info_data
 
 
-    procedure SetContextOfInstantiation (instContext : SYM.symbol_table;
-                                         oldContext  : SYM.symbol_table) is
+    procedure SetInstantiator (instContext : SYM.symbol_table;
+                               oldContext  : SYM.symbol_table) is
     // ------------------------------------------------------------------------
-    //   Record the context of instantiation in the instantiation context
+    //   Record the context where we are instantiating
     // ------------------------------------------------------------------------
-        trace[inst] "Set COI ", instContext, " for ", oldContext
+        trace[inst] "Set instantiator ", instContext, " for ", oldContext
         SYM.SetContextProperty instContext, "COINST", oldContext
 
 
-    function ContextOfInstantiation () return SYM.symbol_table is
+    function Instantiator (table : SYM.symbol_table) return SYM.symbol_table is
     // ------------------------------------------------------------------------
-    //   Return the context of instantiation for the instantiation context
+    //   Return the context where we are instantiating context 'table'
     // ------------------------------------------------------------------------
-        result := SYM.ContextProperty(XLT.context, "COINST", true)
-        trace[inst] "Got COI ", result, " for ", XLT.context
+        result := SYM.ContextProperty(table, "COINST", true)
+        trace[inst] "Got instantiator ", result, " for ", table
+
+
+    procedure AddInstantiators(table : SYM.symbol_table; value : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Add all contexts of instantiation as implicit of given table
+    // ------------------------------------------------------------------------
+        coi : SYM.symbol_table := Instantiator(table)
+        if coi = nil then
+            ERR.Error "No instantiation in progress for '$1'", value
+            return
+        SYM.AddImplicit table, coi
+        loop
+            coi := Instantiator (coi)
+            exit if coi = nil
+            SYM.AddImplicit table, coi
+
+
+    procedure RemoveInstantiators(table : SYM.symbol_table; value : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Remove all contexts of instantiation added by AddInstantiators
+    // ------------------------------------------------------------------------
+        coi : SYM.symbol_table := Instantiator(table)
+        if coi = nil then
+            // Error emitted by AddInstantiators
+            return
+        SYM.RemoveImplicit table
+        loop
+            coi := Instantiator (coi)
+            exit if coi = nil
+            SYM.RemoveImplicit table
 
 
     procedure DeclareInstantiationContext (instContext : SYM.symbol_table) is
@@ -477,7 +507,7 @@ module XL.SEMANTICS.GENERICS is
         XLT.CopyScopeProperties instContext, oldContext
 
         // Record where to find the context of instantiation (oldContext)
-        SetContextOfInstantiation instContext, oldContext
+        SetInstantiator instContext, oldContext
         DeclareInstantiationContext instContext
 
         // Insert declarations in the instantiation context
@@ -710,7 +740,7 @@ module XL.SEMANTICS.GENERICS is
         XLT.global_context := instContext
 
         // Make the instantiation context visible for validation
-        SetContextOfInstantiation instContext, oldContext
+        SetInstantiator instContext, oldContext
         DeclareInstantiationContext instContext
         SYM.AddUsing instContext, nil, oldContext
         XLT.CopyScopeProperties instContext, oldContext
@@ -1248,10 +1278,7 @@ module XL.SEMANTICS.GENERICS is
         when ('Name'[]) where IsGenericName (Name, "TYPE") then
             return InstantiateType (Name, nil)
         when (any.'T') then
-            coi : SYM.symbol_table := ContextOfInstantiation()
-            if coi = nil then
-                ERR.Error "No context of instantiation for '$1'", T
-                return TY.EvaluateTypeAsTree(T)
-            SYM.AddImplicit XLT.context, coi
+            AddInstantiators XLT.context, input
             result := TY.EvaluateTypeAsTree(T)
-            SYM.RemoveImplicit XLT.context
+            RemoveInstantiators XLT.context, input
+
