@@ -1,7 +1,10 @@
 <!--July 2008-->
 June | <b>July 2008</b> | August
 <p>
-<a href="080722.html">Tuesday, 22 July</a>: Vacations, Git, Constructors... 
+Tuesday, 22 July: Vacations, Git, Constructors... 
+<ul>
+</ul>
+<a href="080726.html">Saturday, 26 July</a>: Bringing Java tests in line
 <ul>
 </ul>
 
