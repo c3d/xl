@@ -86,7 +86,7 @@ module XL.SEMANTICS.OVERLOAD is
 
         // Accelerate if this is "Pointer(3)" and we cannot deduce yet
         if TY.TargetType() = nil and PT.Attached(Input, "TODEDUCE") then
-            trace[overload] "Overload: cannot yet deduce ", Input
+            trace[overload] "Cannot yet deduce ", Input
             return Input
 
         context         : SYM.symbol_table := XLT.context
@@ -99,7 +99,7 @@ module XL.SEMANTICS.OVERLOAD is
         overloadSet     : PT.tree := nil
         ctorTarget      : PT.tree := PT.Attached(input, "CTORCALL")
 
-        trace [overload] "Overload resolution: name=", NameTree, " args=", Args
+        trace [+overload] "Overload resolution: name=", NameTree, " args=", Args
         if TY.TargetType() <> nil then
             trace [overload] "Target type=", TY.TargetType()
 
@@ -121,6 +121,7 @@ module XL.SEMANTICS.OVERLOAD is
                 else
                     ERR.Error "Internal: Non-name functor '$1'", NameTree
                     CGM.ExitCall callDepth, result
+                    trace[-overload] "Non-name functor ", PT.Tree(NameTree)
                     return parse_tree(@error)
         Name : NameTree as PT.name_tree
         if Name = nil then
@@ -198,6 +199,7 @@ module XL.SEMANTICS.OVERLOAD is
             ERR.Error "Unable to evaluate arguments to '$1'", NameTree
             ERR.DisplayLastErrors()
             CGM.ExitCall callDepth, result
+            trace[-overload] "Error evaluating arguments"
             return parse_tree(@error)
         ERR.PushErrorContext()
 
@@ -490,6 +492,7 @@ module XL.SEMANTICS.OVERLOAD is
             result := parse_tree(@@overload 'NameTree' 'overloadSet')
             CGM.ExitCall callDepth, result
             TY.SetType result, TY.InvalidType("overload set")
+            trace[-overload] "Return overload set"
             return result            
 
         // Otherwise, check which one we would call
@@ -508,6 +511,7 @@ module XL.SEMANTICS.OVERLOAD is
                     assert TY.TargetType() = nil
                     CGM.ExitCall callDepth, result
                     PT.AttachTree Input, "TODEDUCE", Input
+                    trace[-overload] "Must deduce result of ", PT.Tree(Input)
                     return Input
                 result := GN.InstantiateFunction(NameTree, bestF,
                                                  bestGArgs, bestVargs,
@@ -517,6 +521,7 @@ module XL.SEMANTICS.OVERLOAD is
                 if bestF = nil then
                     // Instantiation error
                     CGM.ExitCall callDepth, result
+                    trace[-overload] "Instantiation error ", result
                     return result
                 trace [overload] "INST: new name ", PT.tree(bestF.name),
                              "=", PT.tree(bestF.machine_name)
@@ -574,10 +579,13 @@ module XL.SEMANTICS.OVERLOAD is
             if candidate_errors then
                 ERR.DisplayLastErrors()
             CGM.ExitCall callDepth, result
+            trace[-overload] "No valid function found for ", PT.Tree(NameTree)
             return parse_tree(@error)
 
         // Destroy temporaries if necessary
         CGM.ExitCall callDepth, result
+
+        trace[-overload] "Resolved ", Input, " as ", result
 
 
     procedure OverloadSetToList(overloadSet : PT.tree;
