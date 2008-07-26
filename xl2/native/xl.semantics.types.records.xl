@@ -532,7 +532,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
     //    - It makes it possible to override it in the local scope
     //    - It is easier to destroy if there is any error
 
-        // Don't generate defaults while instantiation, they exist
+        // Don't generate defaults for instantiations, they exist
         // for the generic type already
         instctx : SYM.symbol_table := GN.InstantiationContext()
         if instctx = nil then
@@ -544,7 +544,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
             XLT.context := newsyms
             XLT.global_context := newsyms
 
-            trace[defaultfns] "In ", newsyms, "-", globals, " enter: ", source
+            trace[+defaultfns] "In ", newsyms, "-", globals, " enter: ", source
 
             // Try to evaluate the tentative function
             tnt : XLT.attempt := XLT.BeginAttempt()
@@ -554,10 +554,10 @@ module XL.SEMANTICS.TYPES.RECORDS is
             XLT.context := context
             XLT.global_context := globals
             if hadError then
-                trace[defaultfns] "Error: ", ERR.LastErrorsText()
+                trace[-defaultfns] "Error: ", ERR.LastErrorsText()
                 return nil
 
-            trace[defaultfns] "Code: ", result
+            trace[-defaultfns] "Code: ", result
 
             // If evaluation was successful, then add the context as a lateral
             SYM.AddUsing context, nil, newsyms
