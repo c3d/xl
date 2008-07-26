@@ -1269,8 +1269,7 @@ module XL.CODE_GENERATOR is
                         trace_count += 1
                         traces[tname] := trace_count
                     IO.Write "{ if (XLTrace[", traces[tname], "]) {"
-                    IO.Write " xl::textio::write(""", tname, ": "");"
-                    IO.Write " XLSpaces(XLTraceIndent);"
+                    IO.Write " XLTraceName(""", tname, """);"
                     IO.Write " xl::textio::writeln(";
                     XL2C B
                     IO.Write ");"
