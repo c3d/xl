@@ -916,6 +916,18 @@ module XL.TRANSLATOR is
             when
                 trace ['A'] 'B'
             then
+                indent : integer := 0
+                translate A
+                    when
+                        +'X'
+                    then
+                        indent := 1
+                        A := X
+                    when
+                        -'X'
+                    then
+                        indent := -1
+                        A := X
                 if A.kind = PT.xlNAME then
                     N : PT.name_tree := PT.name_tree(A)
                     tname : text := XLNormalize(N.value)
@@ -924,9 +936,13 @@ module XL.TRANSLATOR is
                         traces[tname] := trace_count
                     IO.Write "{ if (XLTrace[", traces[tname], "]) {"
                     IO.Write " xl::textio::write(""", tname, ": "");"
+                    IO.Write " XLSpaces(XLTraceIndent);"
                     IO.Write " xl::textio::writeln(";
                     XL2C B
-                    IO.WriteLn "); }}"
+                    IO.Write ");"
+                    if indent <> 0 then
+                        IO.Write "XLTraceIndent += ", indent, ";"
+                    IO.WriteLn "}}"
 
 
             // ----------------------------------------------------------------
