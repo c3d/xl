@@ -62,7 +62,7 @@ module XL.SEMANTICS.GENERICS is
         list : PT.tree_list
         BaseRecord : PT.tree
 
-        trace [inst] "Instantiate: name=", NameTree, " args=", Args
+        trace [+inst] "Lookup name=", NameTree, " args=", Args
 
         if NameTree.kind <> PT.xlNAME then
             translate NameTree
@@ -74,6 +74,7 @@ module XL.SEMANTICS.GENERICS is
                 else
                     ERR.Error "Internal: Non-name generic '$1'", NameTree
                     BestDecl := nil
+                    trace[-inst] "Non-name generic ", NameTree
                     return
         Name : NameTree as PT.name_tree
 
@@ -251,7 +252,7 @@ module XL.SEMANTICS.GENERICS is
                 ERR.Error "A first candidate is '$1'", bestD.name
                 ERR.Error "A second candidate is '$1'", ambig
 
-            trace [inst] "FOUND: Instantiating ", PT.tree(bestD.name)
+            trace [-inst] "FOUND: Instantiating ", PT.tree(bestD.name)
 
             // Pass result to caller
             BestDecl := bestD
@@ -263,6 +264,7 @@ module XL.SEMANTICS.GENERICS is
             if candidate_errors then
                 ERR.DisplayLastErrors()
             BestDecl := nil
+            trace[-inst] "FAIL: No valid generic for ", NameTree
 
 
     procedure VariadicToKey (Variadic    : PT.tree;
@@ -701,7 +703,7 @@ module XL.SEMANTICS.GENERICS is
     //    Check if ActType is a valid instance of GenType
     // ------------------------------------------------------------------------
 
-        trace [inst] "Validating ", TY.Source(GenType),
+        trace [+inst] "Validating ", TY.Source(GenType),
                      " with ", TY.Source (ActType)
 
         // If there are parameters, e.g. we are testing complex[integer],
@@ -709,15 +711,19 @@ module XL.SEMANTICS.GENERICS is
         if size(GenType.parameters) > 0 then
             InstType  : TY.any_type := TY.NonConstedType (ActType)
             if not IsInstanceOf(GenType, InstType, Gargs) then
+                trace[-inst] "Type ", TY.Source(ActType),
+                             " not an instance of ", TY.Source(GenType)
                 return false
 
         // If there is no validation, that's easy to answer
         if GenType.validation = nil then
+            trace[-inst] "Generic ", TY.Source(GenType), " has not validation"
             return true
 
         // Check recursive validation of the same type, which we won't allow
         if GenType.in_validation then
             ERR.Error "Recursive validation of '$1'", TY.Source(GenType)
+            trace[-inst] "Recursive validation of generic ", TY.Source(GenType)
             return false
 
         // Check if we have a cached answer
@@ -725,6 +731,7 @@ module XL.SEMANTICS.GENERICS is
         key    : text := "VALID:" + mn.value
         cached : integer := SYM.GetInteger(XLT.global_context, key)
         if cached <> 0 then
+            trace[-inst] "Cached result was ", cached
             return cached = 1
 
         GenType.in_validation := true
@@ -777,6 +784,7 @@ module XL.SEMANTICS.GENERICS is
         else
             cached := -1
         SYM.SetInteger(XLT.global_context, key, cached)
+        trace [-inst] "Generic ", TY.Source(GenType), " validation is ", cached
 
 
     function Deduce (FunGenType   : GEN.generic_type;
@@ -1144,6 +1152,9 @@ module XL.SEMANTICS.GENERICS is
         instOf : PT.tree := PT.Attached(result, "INSTANCEOF")
         if instOf <> nil then
             result := instOf
+        typeDecl : DCL.declaration := DCL.GetDeclaration(result)
+        if typeDecl <> nil then
+            result := typeDecl.name
 
 
     function GenericParameter(GenType  : PT.tree;
