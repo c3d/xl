@@ -180,7 +180,7 @@ module XL.SEMANTICS.OVERLOAD is
                 TY.PopTargetType()
             ActArgs += Arg
             ToBeDef += ToBeDefined
-            trace [overload] "Args->", Arg
+            trace [overload] "Args ", Arg, " type ", TY.Source(TY.GetType(Arg))
 
         // Add 'any' lookup as necessary
         if anyLookup then
@@ -216,7 +216,8 @@ module XL.SEMANTICS.OVERLOAD is
 
             Score : integer := itemDepth[C] + 1
             SemArgs := ActArgs
-            trace [overload] "Testing ", C, " depth ", Score
+            trace [overload] "Testing ", PT.name_tree(C), ":", C,
+                             " depth ", Score
 
             // Retrieve function information, ignore non functions
             Scope : PT.tree := nil
@@ -445,7 +446,7 @@ module XL.SEMANTICS.OVERLOAD is
             if not Matching then
                 restart
 
-            trace [overload] "PASS: The candidate matches"
+            trace [overload] "PASS: Candidate ", C, " matches, score ", Score
 
             // Compare scores and results
             if best = nil then
