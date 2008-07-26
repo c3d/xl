@@ -1121,7 +1121,7 @@ module XL.SEMANTICS.GENERICS is
                         result := ContainsGenerics(list)
                         if result <> nil then
                             return result
-            return false
+            return nil
 
         Nm : Name as PT.name_tree
         SYM.Lookup XLT.context, kind, Nm.value, list, SYM.lookupAll
@@ -1134,6 +1134,16 @@ module XL.SEMANTICS.GENERICS is
     //    Return true if the name is a generic declaration
     // ------------------------------------------------------------------------
         return GenericDeclaration(Name, kind) <> nil
+
+
+    function GenericName(tp : TY.any_type) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Return the name of the generic type if there is one
+    // ------------------------------------------------------------------------
+        result := TY.Source(tp)
+        instOf : PT.tree := PT.Attached(result, "INSTANCEOF")
+        if instOf <> nil then
+            result := instOf
 
 
     function GenericParameter(GenType  : PT.tree;
