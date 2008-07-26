@@ -5,11 +5,14 @@ K : complex[real]
 L : complex
 M : complex [integer]
 
+to Write (F : XL.TEXT_IO.file; Z : complex) is
+    IO.Write F, "(", Z.re, ";", Z.im, ")"
+
 to ShowNumbers(msg : text) is
     WriteLn msg
-    WriteLn "K=(", K.re, ";", K.im, ")"
-    WriteLn "L=(", L.re, ";", L.im, ")"
-    WriteLn "M=(", M.re, ";", M.im, ")"
+    WriteLn "K=", K
+    WriteLn "L=", L
+    WriteLn "M=", M
 
 
 // Check direct assignments to the fields
