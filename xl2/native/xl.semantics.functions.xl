@@ -95,6 +95,7 @@ module XL.SEMANTICS.FUNCTIONS is
         if MName = nil then
             MName := CGM.Name(Name, f.type)
         f.machine_name          := MName
+        f.result_machine_name   := nil
         f.frame_depth           := SYM.GetInteger(XLT.context, "FRAMEDEPTH")
         f.is_input              := false
         f.is_output             := false
