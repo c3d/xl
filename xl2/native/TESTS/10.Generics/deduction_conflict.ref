@@ -46,7 +46,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:130: Candidate form 'X' + 'Y' cannot be selected
 |     function Add(X, Y : real) return real                       written X+Y                     is XL.BYTECODE.add_real
 |__________________________________________________________________________^
-10.Generics/deduction_conflict.xl:9: Cannot convert 'b_629' from 'integer' to 'real'
+10.Generics/deduction_conflict.xl:9: Cannot convert 'b_630' from 'integer' to 'real'
 | function Pong (A : something; B : integer) return something is
 |_______________________________^
 10.Generics/deduction_conflict.xl:22: No translation for 'K := Ping (1 , 2)'

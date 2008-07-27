@@ -19,7 +19,7 @@
 10.Generics/value_type_constructor_crash.xl:8: 'test (n : test . value) return test' could not be selected because
 | function test (n : test.value) return test is
 |_____________________________________^
-10.Generics/value_type_constructor_crash.xl:12: the type 'constant integer' of '3' doesn't match '<undefined type>_604'
+10.Generics/value_type_constructor_crash.xl:12: the type 'constant integer' of '3' doesn't match '<undefined type>_605'
 | K : test(3)
 |__________^
 10.Generics/value_type_constructor_crash.xl:8: for parameter 'n'
@@ -59,7 +59,7 @@ b : item) return test' could not be selected because
 10.Generics/value_type_constructor_crash.xl:8: 'test (n : test . value) return test' could not be selected because
 | function test (n : test.value) return test is
 |_____________________________________^
-10.Generics/value_type_constructor_crash.xl:13: the type 'constant real' of '3.5' doesn't match '<undefined type>_604'
+10.Generics/value_type_constructor_crash.xl:13: the type 'constant real' of '3.5' doesn't match '<undefined type>_605'
 | L : test(3.5)
 |____________^
 10.Generics/value_type_constructor_crash.xl:8: for parameter 'n'
@@ -148,7 +148,7 @@ b : item) return test' could not be selected because
 10.Generics/value_type_constructor_crash.xl:8: 'test (n : test . value) return test' could not be selected because
 | function test (n : test.value) return test is
 |_____________________________________^
-10.Generics/value_type_constructor_crash.xl:12: the type 'constant integer' of '3' doesn't match '<undefined type>_604'
+10.Generics/value_type_constructor_crash.xl:12: the type 'constant integer' of '3' doesn't match '<undefined type>_605'
 | K : test(3)
 |__________^
 10.Generics/value_type_constructor_crash.xl:8: for parameter 'n'
@@ -179,7 +179,7 @@ b : item) return test' could not be selected because
 10.Generics/value_type_constructor_crash.xl:8: 'test (n : test . value) return test' could not be selected because
 | function test (n : test.value) return test is
 |_____________________________________^
-10.Generics/value_type_constructor_crash.xl:13: the type 'constant real' of '3.5' doesn't match '<undefined type>_604'
+10.Generics/value_type_constructor_crash.xl:13: the type 'constant real' of '3.5' doesn't match '<undefined type>_605'
 | L : test(3.5)
 |____________^
 10.Generics/value_type_constructor_crash.xl:8: for parameter 'n'
