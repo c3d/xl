@@ -484,10 +484,6 @@ module XL.SEMANTICS.TYPES is
             SetDefinedType NameTree, tp
 
         declared : DCL.declaration := DCL.GetDeclaration(result)
-        if declared <> nil and Value <> nil then
-            formerDecl : DCL.declaration := DCL.GetDeclaration(Value)
-            if formerDecl = nil then
-                DCL.SetDeclaration Value, declared
 
         // Check if we need to enter default ctors, dtors and copy functions
         N : Name as PT.name_tree
