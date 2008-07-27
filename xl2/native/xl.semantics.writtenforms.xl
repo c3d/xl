@@ -103,6 +103,8 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         FType      : F.type as FT.function_type
         Gtype      : F.type as GEN.generic_type
         Gargs      : GN.generic_map
+        trace[+expr] "Lookup ", test, " against ", info.reference_form,
+                     " for ", PT.tree(F.Name)
 
         if Ftype <> nil or Gtype = nil then
             base_score *= 100
@@ -111,6 +113,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         inIterator: boolean := PT.FindInfo(test, "ITERATOR_EXPR") <> nil
         asIterator: F as ITER.iterator
         if (asIterator <> nil) <> inIterator then
+            trace[-expr] "FAIL: Iterator vs. non-iterator"
             return 0
 
         // Check parameter types
@@ -122,6 +125,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             skip   : boolean := false
             tempDt : PT.tree // Temporary destructors
             keyD   : text := "WARG_DTORS"
+            trace[expr] "Testing parm ", param_name, " value ", value
             if semArg = nil then
                 if value.kind=PT.xlNAME and DCL.GetDeclaration(value)=nil then
                     // Undeclared out parameters will be declared in call
@@ -132,6 +136,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                         if Orig = nil then
                             semArg := value
                             skip := true
+                            trace[expr] "Will declare ", param_name
                 if semArg = nil then
                     tnt : XLT.attempt := XLT.BeginAttempt()
                     callDepth : integer := CGM.EnterCall()
@@ -144,6 +149,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                         E : PT.tree := PT.NewText(errors, '"', value.position)
                         semArg := parse_tree(@error 'E')
                         PT.AttachTree value, key, semArg
+                        trace[-expr] "FAIL: error ", E
                         return 0
                     if PT.Attached(semArg, "TODEDUCE") = nil then
                         PT.AttachTree value, key, semArg
@@ -168,12 +174,15 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                             CGM.ExitCall callDepth, tempDt
                             if XLT.EndAttempt(tnt) then
                                 trace[deduce] "Failed: ", ERR.LastErrorsText()
+                                trace[-expr] "FAIL: ded ", ERR.LastErrorsText()
                                 return 0
                         
             translate semArg
                 when (@error 'Error') then
+                    trace[-expr] "FAIL: Cached error ", Error
                     return 0
 
+            trace[expr] "Semantic value for ", param_name, " is ", semArg
             args[param_name] := semArg
             if not skip then
                 if Gtype <> nil then
@@ -182,16 +191,20 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                     if ERR.PopErrorContext() then
                         ok := false
                     if not ok then
+                        trace[-expr] "FAIL: type deduct ", ERR.LastErrorsText()
                         return 0
                 else
                     if not DCL.Assignable(decl, semArg) then
                         // Try implicit conversion
+                        trace[expr] "Trying implicit conversions"
                         callDepth : integer := CGM.EnterCall()
                         semArg := TY.TryConvert(semArg, decl.type)
                         CGM.ExitCall callDepth, tempDt
                         if semArg = nil then
+                            trace[-expr] "FAIL: implicit ", ERR.LastErrorsText()
                             return 0
                         if not DCL.Assignable(decl, semArg) then
+                            trace[-expr] "FAIL: Type error ", semArg
                             return 0
                         args[param_name] := semArg
                         base_score -= 1
@@ -199,6 +212,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         // Check if there are non-deduced generic arguments
         if Gtype <> nil then
             if not GN.FinalizeDeductions(Gtype, Gargs) then
+                trace[-expr] "FAIL: Could not finalize deductions"
                 return 0
 
             // This is the case for P := Pointer(3). Now we have
@@ -211,6 +225,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                     decl   : DCL.declaration := written.args_map[param_name]
                     tempDt : PT.tree // Temporary destructors
 
+                    trace[expr] "Deduce return type of ", value
                     trace[deduce] "For ", PT.tree(info.reference_form)
                     trace[deduce] "will try deducing return of ", value
                     trace[deduce] "from gen type ", TY.Source(decl.type),
@@ -235,9 +250,11 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                     if XLT.EndAttempt(tnt) then
                         // Oh well, all this effort to fail now...
                         trace[deduce] "Failed: ", ERR.LastErrorsText()
+                        trace[-expr] "FAIL: ret deduce ", ERR.LastErrorsText()
                         return 0
 
         written.generic_args := Gargs
+        trace[-expr] "PASS: score ", base_score
         return base_score
 
 
