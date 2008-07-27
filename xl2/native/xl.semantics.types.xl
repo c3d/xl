@@ -100,7 +100,7 @@ module XL.SEMANTICS.TYPES is
                 ERR.Error "Types '$1' and '$2' don't match",
                           Source(stp.implementation), Source(body)
                 return false
-            if stp.machine_name = nil or body.machine_name <> nil then
+            if body.machine_name <> nil then
                 stp.machine_name := body.machine_name
             return true
 
@@ -240,12 +240,22 @@ module XL.SEMANTICS.TYPES is
             return nil
         return tp.base
 
+    function NonSourceType(tp : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return the type after stripping names declared with 'type X is Y'
+    // ------------------------------------------------------------------------
+        result := tp
+        loop
+            stp : result as source_type
+            exit if stp = nil 
+            result := stp.base
+
 
     function IsConstedType(tp : any_type) return boolean is
     // ------------------------------------------------------------------------
     //   Return true if the type is constant X or variable X
     // ------------------------------------------------------------------------
-        ktp : tp as const_var_type
+        ktp : NonSourceType(tp) as const_var_type
         return ktp <> nil
 
 
@@ -253,7 +263,7 @@ module XL.SEMANTICS.TYPES is
     // ------------------------------------------------------------------------
     //   Return the non-consted version of the type
     // ------------------------------------------------------------------------
-        ktp : tp as const_var_type
+        ktp : NonSourceType(tp) as const_var_type
         if ktp <> nil then
             return ktp.base
         return tp
@@ -263,7 +273,7 @@ module XL.SEMANTICS.TYPES is
     // ------------------------------------------------------------------------
     //   Return the non-variable version of the type
     // ------------------------------------------------------------------------
-        ktp : tp as const_var_type
+        ktp : NonSourceType(tp) as const_var_type
         if ktp <> nil then
             if not ktp.is_constant then
                 return ktp.base
@@ -288,17 +298,6 @@ module XL.SEMANTICS.TYPES is
     // ------------------------------------------------------------------------
         if tp <> nil then
             return tp.name
-        return nil
-
-
-    function SourceName(tp : any_type) return PT.name_tree is
-    // ------------------------------------------------------------------------
-    //   Return the name given to type when declared, if any
-    // ------------------------------------------------------------------------
-        if tp <> nil then
-            typeDecl : DCL.declaration := DCL.GetDeclaration(tp.name)
-            if typeDecl <> nil then
-                return typeDecl.name
         return nil
 
 
@@ -349,20 +348,15 @@ module XL.SEMANTICS.TYPES is
 
 
         // Check if we have a type value associated with the type
-        tp : any_type
-        init : PT.tree
+        tp : any_type := NewType(Name)
         if Value <> nil then
-            tp := EvaluateType(Value)
-            if tp = nil then
+            tp.base := EvaluateType(Value)
+            if tp.base = nil then
                 ERR.Error "Expression '$1' is not a type", Value
-                tp := NewType(Name)
-        else
-            tp := NewType(Name)
 
         if GEN.IsGenericContext() then
             tp := GEN.MakeGeneric(tp)
             tp.name := Name
-            init := Value
 
         // Attach the type just defined to the name
         SetDefinedType Name, tp
@@ -378,7 +372,7 @@ module XL.SEMANTICS.TYPES is
         decl : DCL.declaration
         decl.name               := N
         decl.type               := type_of_types
-        decl.initializer        := init
+        decl.initializer        := Value
         decl.machine_name       := nil
         decl.frame_depth        := 0
         decl.is_input           := false
@@ -478,10 +472,10 @@ module XL.SEMANTICS.TYPES is
             NameTree : Name as PT.name_tree
             tp.machine_name := CGM.DeclareType(tp, NameTree)
 
-            NameTree := tp.machine_name
-            sig : text := NameTree.Value
+            MName : PT.name_tree := tp.machine_name
+            sig : text := MName.Value
             EnterSignature sig, tp
-            SetDefinedType NameTree, tp
+            SetDefinedType MName, tp
 
         declared : DCL.declaration := DCL.GetDeclaration(result)
 
@@ -650,10 +644,16 @@ module XL.SEMANTICS.TYPES is
         t1s : t1 as source_type
         t2s : t2 as source_type
         if t1s <> nil then
-            if t1s.implementation = t2 then
+            if t1s.implementation <> t1s then
+                if SameType(t1s.implementation, t2) then
+                    return true
+            if SameType(t1s.base, t2) then
                 return true
         if t2s <> nil then
-            if t1 = t2s.implementation then
+            if t2s.implementation <> t2s then
+                if SameType(t1, t2s.implementation) then
+                    return true
+            if SameType(t1, t2s.base) then
                 return true
         return false
 

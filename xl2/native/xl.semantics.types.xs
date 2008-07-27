@@ -56,13 +56,12 @@ module XL.SEMANTICS.TYPES with
     function IsConstant (tp: any_type) return boolean
     function IsVariable (tp: any_type) return boolean
     function BaseType (tp: any_type) return any_type
+    function NonSourceType(tp : any_type) return any_type
     function IsConstedType (tp: any_type) return boolean
     function NonConstedType (tp: any_type) return any_type
     function NonVariableType (tp: any_type) return any_type
     function MachineName(tp: any_type) return PT.name_tree
     function Source(tp : any_type) return PT.tree
-    function SourceName(tp : any_type) return PT.name_tree
-    procedure Set
     procedure MarkForRuntimeReference(tp : any_type)
 
     // Evaluate a type expression
