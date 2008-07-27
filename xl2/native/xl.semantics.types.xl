@@ -240,6 +240,7 @@ module XL.SEMANTICS.TYPES is
             return nil
         return tp.base
 
+
     function NonSourceType(tp : any_type) return any_type is
     // ------------------------------------------------------------------------
     //    Return the type after stripping names declared with 'type X is Y'
@@ -249,6 +250,25 @@ module XL.SEMANTICS.TYPES is
             stp : result as source_type
             exit if stp = nil 
             result := stp.base
+
+
+    function NonConstGenSourceType(tp : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return the type after stripping generics, constness and alias names
+    // ------------------------------------------------------------------------
+        while tp <> nil loop
+            result := tp
+            stp : result as source_type
+            if stp <> nil then
+                result := stp.base
+            gtp : result as GEN.generic_type
+            if gtp <> nil then
+                result := gtp.base
+            ctp : result as const_var_type
+            if ctp <> nil then
+                result := ctp.base
+            exit if result = tp
+            tp := result
 
 
     function IsConstedType(tp : any_type) return boolean is
@@ -484,35 +504,37 @@ module XL.SEMANTICS.TYPES is
 
         // Check if we need to enter default ctors, dtors and copy functions
         N : Name as PT.name_tree
-        baseType : any_type := GEN.NonGenericType(TY.NonSourceType(tp))
 
         if N <> nil then
             if (PT.Attached(N, "INSTANCEOF") = nil and
                 PT.Attached(N, "INSTARG") = nil) then
 
-               // Check if this is record type
-               rtp : baseType as REC.record_type
-               if rtp <> nil then
-                    result := XLT.Append(result, REC.EnterDefaults(N, rtp))
-                    SetDefinedType result, tp
-                    if declared <> nil then
-                        DCL.SetDeclaration result, declared
+                // Eliminate constness, generics and source names
+                baseType : any_type := NonConstGenSourceType(tp)
 
-               // Same for enumeration types
-               etp : baseType as EN.enumeration_type
-               if etp <> nil then
-                    result := XLT.Append(result,EN.EnterDefaults (N, etp))
-                    SetDefinedType result, tp
-                    if declared <> nil then
-                        DCL.SetDeclaration result, declared
+                // Check if this is record type
+                rtp : baseType as REC.record_type
+                if rtp <> nil then
+                     result := XLT.Append(result, REC.EnterDefaults(N, rtp))
+                     SetDefinedType result, tp
+                     if declared <> nil then
+                         DCL.SetDeclaration result, declared
 
-               // Same for function types
-               ftp : baseType as FT.function_type
-               if ftp <> nil then
-                    result := XLT.Append(result,FT.EnterDefaults (N, ftp))
-                    SetDefinedType result, tp
-                    if declared <> nil then
-                        DCL.SetDeclaration result, declared
+                // Same for enumeration types
+                etp : baseType as EN.enumeration_type
+                if etp <> nil then
+                     result := XLT.Append(result,EN.EnterDefaults (N, etp))
+                     SetDefinedType result, tp
+                     if declared <> nil then
+                         DCL.SetDeclaration result, declared
+
+                // Same for function types
+                ftp : baseType as FT.function_type
+                if ftp <> nil then
+                     result := XLT.Append(result,FT.EnterDefaults (N, ftp))
+                     SetDefinedType result, tp
+                     if declared <> nil then
+                         DCL.SetDeclaration result, declared
 
 
     function TypeTypeMatch (iface : any_type;
