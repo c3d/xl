@@ -73,7 +73,6 @@ module XL.SEMANTICS.GENERICS with
 
     function IsGenericName(Name : PT.tree; kind : text) return boolean
     function GenericIndex(GenType : PT.tree; Arg : PT.tree) return PT.tree
-    function GenericNames(tp : TY.any_type) return PT.tree_list
 
     function Deduce (FunType      : GEN.generic_type;
                      Decl         : DCL.declaration;

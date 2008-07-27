@@ -751,6 +751,28 @@ module XL.SEMANTICS.DECLARATIONS is
             return Construct (DType, MName, Value)
 
 
+    function ConstructorNames(tp : TY.any_type) return PT.tree_list is
+    // ------------------------------------------------------------------------
+    //    Return the names of the type that can be used for construction
+    // ------------------------------------------------------------------------
+        while tp <> nil loop
+            Source : PT.tree := TY.Source(tp)
+
+            // Try the name of the type itself
+            Name   : Source as PT.name_tree
+            if Name <> nil then
+                result += Source
+
+            // If the name is an instance of a generic, try generic name
+            instOf   : PT.tree := PT.Attached(Source, "INSTANCEOF")
+            if instOf <> nil then
+                result += ConstructorNames(TY.GetDefinedType(instOf))
+
+            stp : tp as TY.source_type
+            exit if stp = nil
+            tp := stp.base
+
+
     function CallConstructor (decl : declaration) return PT.tree is
     // ------------------------------------------------------------------------
     //   Return a constructor call if needed
@@ -761,7 +783,7 @@ module XL.SEMANTICS.DECLARATIONS is
 
         dtype : TY.any_type := decl.type
         assert dtype <> nil
-        nameList  : PT.tree_list := GN.GenericNames(dtype)
+        nameList  : PT.tree_list := ConstructorNames(dtype)
         found : PT.tree := nil
         attempt : XLT.attempt := XLT.BeginAttempt()
 

@@ -1156,37 +1156,6 @@ module XL.SEMANTICS.GENERICS is
         return GenericDeclaration(Name, kind) <> nil
 
 
-    function GenericNames(tp : TY.any_type) return PT.tree_list is
-    // ------------------------------------------------------------------------
-    //    Return the names of the type that can be used for construction
-    // ------------------------------------------------------------------------
-        Source : PT.tree := TY.Source(tp)
-
-        // Try the name of the type itself
-        Name   : Source as PT.name_tree
-        if Name <> nil then
-            result += Source
-
-        // Try the name given to type in declaration
-        typeDecl : DCL.declaration := DCL.GetDeclaration(Source)
-        tName : PT.name_tree
-        if typeDecl <> nil then
-            tName := typeDecl.name
-            if tName <> nil and tName <> Name then
-                result += PT.tree(tName)
-
-        // If the name is an instance of a generic, try generic name
-        instOf   : PT.tree := PT.Attached(Source, "INSTANCEOF")
-        instName : PT.name_tree
-        if instOf <> nil then
-            typeDecl := DCL.GetDeclaration (instOf)
-            if typeDecl <> nil then
-                instName := typeDecl.name
-                if instName <> nil then
-                    if instName <> Name and instName <> tName then
-                        result += PT.tree(instName)
-
-
     function GenericParameter(GenType  : PT.tree;
                               ParmName : PT.name_tree) return PT.tree is
     // ------------------------------------------------------------------------

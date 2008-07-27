@@ -50,6 +50,7 @@ module XL.SEMANTICS.DECLARATIONS with
     function Assignable(Tgt: declaration; Src: TY.any_type) return boolean
     function MatchInterface(iface : declarations;
                             body  : SYM.symbol_table) return boolean
+    function ConstructorNames(tp : TY.any_type) return PT.tree_list
     function CallConstructor (decl : declaration) return PT.tree
     function ConstructorCode (decl : declaration) return PT.tree
     function CallDestructor (name : PT.tree) return PT.tree
