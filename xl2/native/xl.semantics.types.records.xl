@@ -243,15 +243,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
             tp := TY.GetType(Record)
 
         // Eliminate constness, generics, source alias names
-        rtp : TY.any_type := tp
-        loop
-            tp := TY.NonSourceType(tp)      // Eliminate source name
-            tp := GEN.NonGenericType(tp)    // Eliminate generic decls
-            tp := TY.NonConstedType(tp)     // Eliminate constness
-            exit if tp = rtp
-            rtp := tp
-
-        return rtp
+        return TY.NonConstGenSourceType(tp)
 
 
     function GetRecordType(Record : PT.tree) return record_type is
