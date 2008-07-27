@@ -225,7 +225,13 @@ module XL.SEMANTICS.DECLARATIONS is
                     // Definition will be processed at semantics time
                     result := parse_tree(@@def 'Name' 'Value')
             else if decl.is_local or decl.is_global then
+                attempt : XLT.attempt := XLT.BeginAttempt()
                 result := DCL.CallConstructor(decl)
+                if XLT.EndAttempt(attempt) then
+                    trace[ctors] "Errors calling ctor for ", Names
+                    ERR.Error "No valid default constructor for '$1'", Name
+                    ERR.DisplayLastErrors()
+                
 
         // Make sure we have a result to attach the decl to
         if result = nil then
