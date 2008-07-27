@@ -387,7 +387,7 @@ uint64_from_char "$1 = (long) $2;"
 
 bool_from_uint   "$1 = $2 != 0;"
 bool_from_int    "$1 = $2 != 0;"
-int_from_bool    "$1 = (int) ($2 ? 1 : 0)"
+int_from_bool    "$1 = (int) ($2 ? 1 : 0);"
 int8_from_bool   "$1 = (byte) ($2 ? 1 : 0);"
 int16_from_bool  "$1 = (short) ($2 ? 1 : 0);"
 int32_from_bool  "$1 = (int) ($2 ? 1 : 0);"

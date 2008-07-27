@@ -82,6 +82,7 @@ do
     OPT=                                            # XL compiler options
     INC="-I $DIR -I $TESTDIR/library"               # XL include directory
     EXT=                                            # Extension for output
+    EXCLUDE=                                        # Runtimes to exclude
     CACHED=
 
     # Extract interesting variables from the test
@@ -98,75 +99,80 @@ do
 
     # Run the XL compiler on the test
     THIS_FAILED=
-    ( $CMD ) > $LOG 2>&1
-    RC=$?
+    if (echo $EXCLUDE | grep -q $RUNTIME) then
+        CACHED="(Excluded)"
+        RC=$EXIT
+    else
+        ( $CMD ) > $LOG 2>&1
+        RC=$?
 
-    # Try to compile the resulting C++ unless script specifies otherwise
-    if [ $EXIT -eq 0 ]; then
-        if [ $RC -eq 0 ]; then
-            # If we have a cached version, check if it stayed identical
-            # If so, we can skip 'compile' and 'run', unless forced
-            if [ -z "$NOCACHE" ]; then
-                if [ -f "$BASE$EXT" -a -f "$REF" ]; then
-                    if diff $LOG $BASE$EXT > /dev/null 2>&1; then
-                        # In that case, use the reference, don't run
-                        echo > $LOG
-                        cp $REF $LOG
-                        RUN=
-                        COMPILE=
-                        CACHED="(Cached)"
+        # Try to compile the resulting C++ unless script specifies otherwise
+        if [ $EXIT -eq 0 ]; then
+            if [ $RC -eq 0 ]; then
+                # If we have a cached version, check if it stayed identical
+                # If so, we can skip 'compile' and 'run', unless forced
+                if [ -z "$NOCACHE" ]; then
+                    if [ -f "$BASE$EXT" -a -f "$REF" ]; then
+                        if diff $LOG $BASE$EXT > /dev/null 2>&1; then
+                            # In that case, use the reference, don't run
+                            echo > $LOG
+                            cp $REF $LOG
+                            RUN=
+                            COMPILE=
+                            CACHED="(Cached)"
+                        fi
+                    fi
+                fi
+
+                # Compile the C++ code if needed
+                if [ ! -z "$COMPILE" ]; then
+                    echo -n Compile...
+                    rm -f $TO_REMOVE
+                    mv -f $LOG $BASE$EXT
+                    $COMPILE > $LOG 2>&1
+                    RC=$?
+                    if [ $RC -ne $EXIT ]; then
+                        cat $BASE$EXT >> $LOG
+                        rm $BASE$EXT
+                    fi
+                fi
+
+                # Run the target if needed
+                if [ $RC -eq 0 ]; then
+                    if [ ! -z "$RUN" ]; then
+                        $RUN > $LOG 2>&1
+                        RC=$?
                     fi
                 fi
             fi
-
-            # Compile the C++ code if needed
-            if [ ! -z "$COMPILE" ]; then
-                echo -n Compile...
-                rm -f $TO_REMOVE
-                mv -f $LOG $BASE$EXT
-                $COMPILE > $LOG 2>&1
-                RC=$?
-                if [ $RC -ne $EXIT ]; then
-                    cat $BASE$EXT >> $LOG
-                    rm $BASE$EXT
-                fi
-            fi
-
-            # Run the target if needed
-            if [ $RC -eq 0 ]; then
-                if [ ! -z "$RUN" ]; then
-                    $RUN > $LOG 2>&1
-                    RC=$?
-                fi
-            fi
         fi
-    fi
 
-    # Analyze the results
-    if [ $RC -ne $EXIT ]; then
-        THIS_FAILED="Exit code $RC, expected $EXIT"
-    elif [ ! -z "$REF" ]; then
-        sed 's@'$TESTDIR'@TESTS@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
-        sed 's@'library/runtime/$RUNTIME'@library/runtime/default@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
-        if diff $REF $LOG > /dev/null 2>&1; then
-            THIS=ok
-        elif [ ! -z "$UPDATE" ]; then
-            echo -n "Updating reference... "
-            mv -f $REF $REF.old
-            cp $LOG $REF
-        elif [ -f $REF ]; then
-            THIS_FAILED="Output mismatch"
-            diff $REF $LOG > $LOG.diff
-            mv $LOG.diff $LOG
-            rm -f $BASE$EXT
-        else
-            THIS_FAILED="Missing reference"
-        fi
-    elif [ ! -z "$GREP" ]; then
-        if $GREP $LOG; then
-            THIS=ok
-        else
-            THIS_FAILED="No pattern match"
+        # Analyze the results
+        if [ $RC -ne $EXIT ]; then
+            THIS_FAILED="Exit code $RC, expected $EXIT"
+        elif [ ! -z "$REF" ]; then
+            sed 's@'$TESTDIR'@TESTS@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
+            sed 's@'library/runtime/$RUNTIME'@library/runtime/default@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
+            if diff $REF $LOG > /dev/null 2>&1; then
+                THIS=ok
+            elif [ ! -z "$UPDATE" ]; then
+                echo -n "Updating reference... "
+                mv -f $REF $REF.old
+                cp $LOG $REF
+            elif [ -f $REF ]; then
+                THIS_FAILED="Output mismatch"
+                diff $REF $LOG > $LOG.diff
+                mv $LOG.diff $LOG
+                rm -f $BASE$EXT
+            else
+                THIS_FAILED="Missing reference"
+            fi
+        elif [ ! -z "$GREP" ]; then
+            if $GREP $LOG; then
+                THIS=ok
+            else
+                THIS_FAILED="No pattern match"
+            fi
         fi
     fi
 

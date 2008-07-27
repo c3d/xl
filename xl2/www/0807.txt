@@ -4,6 +4,9 @@ June | <b>July 2008</b> | August
 <a href="080722.html">Tuesday, 22 July</a>: Vacations, Git, Constructors... 
 <ul>
 </ul>
+<a href="080726.html">Saturday, 26 July</a>: Bringing Java tests in line
+<ul>
+</ul>
 
 <p>
 June | <b>July 2008</b> | August
