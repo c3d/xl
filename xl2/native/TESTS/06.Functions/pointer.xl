@@ -1,3 +1,4 @@
+// EXCLUDE=Java
 use XL.UI.CONSOLE
 
 procedure Foo (X : integer) is
