@@ -1271,20 +1271,26 @@ module XL.SEMANTICS.GENERICS is
     //   Check if 'complex.value' is the name of a generic parameter
     // ------------------------------------------------------------------------
 
+        trace[+genindex] "GenericIndex ", GenType, ".", Arg
         if IsGenericName(GenType, "TYPE") then
             ParmName : Arg as PT.name_tree
             decl : DCL.declaration := GenericDeclaration(GenType, "TYPE")
             gt   : TY.GetDefinedType(decl.name) as GEN.generic_type
+            trace[genindex] "Declaration ", PT.tree(decl.name), " gt ", gt
             if gt = nil then
                 ERR.Error "Internal: No generic type for '$1'",decl.name
             else
                 // Check if there is an instantiation of that guy
                 result := GenericInstance(GenType, ParmName, decl)
                 if result <> nil then
+                    trace[-genindex] "Generic instance ", result
                     return result
-
                 GEN.AddGenericDependency gt
-            return GenericParameter(GenType, ParmName)
+                trace[genindex] "Added dependency on ", TY.Source(gt)
+            result := GenericParameter(GenType, ParmName)
+            trace [-genindex] "Generic parameter ", result
+            return result
+        trace [-genindex] "Not a generic type"
         return nil
 
 
