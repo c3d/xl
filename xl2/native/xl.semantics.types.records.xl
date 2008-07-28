@@ -570,6 +570,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
     // ------------------------------------------------------------------------
     //   We create a tentative function body, which is created only
     //   if we can find defaults for all fields
+
         // Loop on all fields
         F    : declaration
         for F in rtp.fields loop
