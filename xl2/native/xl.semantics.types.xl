@@ -252,6 +252,22 @@ module XL.SEMANTICS.TYPES is
             result := stp.base
 
 
+    function NonConstSourceType(tp : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return the type after stripping generics, constness and alias names
+    // ------------------------------------------------------------------------
+        while tp <> nil loop
+            result := tp
+            stp : result as source_type
+            if stp <> nil and stp.base <> nil then
+                result := stp.base
+            ctp : result as const_var_type
+            if ctp <> nil then
+                result := ctp.base
+            exit if result = tp
+            tp := result
+
+
     function NonConstGenSourceType(tp : any_type) return any_type is
     // ------------------------------------------------------------------------
     //    Return the type after stripping generics, constness and alias names
@@ -259,7 +275,7 @@ module XL.SEMANTICS.TYPES is
         while tp <> nil loop
             result := tp
             stp : result as source_type
-            if stp <> nil then
+            if stp <> nil and stp.base <> nil then
                 result := stp.base
             gtp : result as GEN.generic_type
             if gtp <> nil then
@@ -381,11 +397,21 @@ module XL.SEMANTICS.TYPES is
             tp := GEN.MakeGeneric(tp)
             tp.name := Name
 
+        return EnterTypeDecl(N, Value, tp)
+ 
+
+    function EnterTypeDecl(Name : PT.name_tree;
+                           Value : PT.tree;
+                           tp : any_type) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Enter a type in the symbol table and associate declaration
+    // ------------------------------------------------------------------------
+
         // Attach the type just defined to the name
         SetDefinedType Name, tp
 
         // Store the original name (with its type info) in symbol table
-        SYM.Enter XLT.context, "TYPE", N.value, Name
+        SYM.Enter XLT.context, "TYPE", Name.value, Name
 
         // Create the result node and attach type to it
         result := parse_tree(@type)
@@ -393,7 +419,7 @@ module XL.SEMANTICS.TYPES is
 
         // Also make the type declaration a declaration
         decl : DCL.declaration
-        decl.name               := N
+        decl.name               := Name
         decl.type               := type_of_types
         decl.initializer        := Value
         decl.machine_name       := nil

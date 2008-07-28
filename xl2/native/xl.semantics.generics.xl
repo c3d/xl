@@ -460,7 +460,7 @@ module XL.SEMANTICS.GENERICS is
                 key += "F"
             else
                 key += "P"
-        else if TY.IsTypeType(baseType) then
+        else if TY.IsTypeType(decl.type) then
             key += "T"
         key += "["
         for I in 0..NP-1 loop
@@ -593,9 +593,9 @@ module XL.SEMANTICS.GENERICS is
         else if Decl.is_builtin then
             // Check if this is a generic bytecode
             if TY.IsTypeType(Decl.type) then
-                dn       : Decl.name as PT.name_tree
-                instName : PT.name_tree := SYM.Temporary(dn.value, dn.position)
-                instCode : PT.tree := gtp.machine_name
+                dn        : Decl.name as PT.name_tree
+                instMName : PT.name_tree := SYM.Temporary(dn.value, dn.position)
+                instCode  : PT.tree := gtp.machine_name
                 for I in 0..NP-1 loop
                     P : DCL.declaration := gtp.parameters[I]
                     A : PT.tree := Args[P.name]
@@ -606,15 +606,16 @@ module XL.SEMANTICS.GENERICS is
                     else
                         A := XLT.XLSemantics(A)
                     instCode := parse_tree('instCode' 'A')
-                instCode := parse_tree(@ 'instCode' 'instName')
-                tp : TY.any_type := TY.NewType(instName)
-                tp.machine_name := instName
+                instCode := parse_tree(@ 'instCode' 'instMName')
+                tp : TY.any_type := TY.NewType(instMName)
+                tp.machine_name := instMName
                 tp.name := Source
                 TY.SetDefinedType instCode, tp
-                TY.SetDefinedType instName, tp
+                TY.SetDefinedType instMName, tp
                 TY.SetDefinedType Source, tp
                 XLT.AddGlobalDecl instCode
-                result := instName
+                instName : Name as PT.name_tree
+                result := TY.EnterTypeDecl (instName, nil, tp)
             else
                 // For functions, we instantiate the bytecode normally,
                 // which assumes that it can take any valid argument of the type
@@ -660,7 +661,7 @@ module XL.SEMANTICS.GENERICS is
     //   Check if InstType is an instance of GenType, if so update Gargs
     // ------------------------------------------------------------------------
 
-        InstType    : TY.any_type := TY.NonConstedType (TestInstType)
+        InstType    : TY.any_type := TY.NonConstSourceType (TestInstType)
         InstTypeSrc : PT.tree := TY.Source (InstType)
         InstanceOf  : PT.tree := PT.Attached(InstTypeSrc, "INSTANCEOF")
         if InstanceOf <> nil then
@@ -721,7 +722,7 @@ module XL.SEMANTICS.GENERICS is
         // If there are parameters, e.g. we are testing complex[integer],
         // then check that the actual type is an instance of the generic type
         if size(GenType.parameters) > 0 then
-            InstType  : TY.any_type := TY.NonConstedType (ActType)
+            InstType  : TY.any_type := TY.NonConstSourceType (ActType)
             if not IsInstanceOf(GenType, InstType, Gargs) then
                 trace[-inst] "Type ", TY.Source(ActType),
                              " not an instance of ", TY.Source(GenType)
@@ -1202,7 +1203,8 @@ module XL.SEMANTICS.GENERICS is
             if decl <> nil then
                 if not GEN.IsGenericDeclaration(decl) then
                     instType : TY.any_type := TY.GetDefinedType(decl.name)
-                    instSrc  : PT.tree := TY.Source(instType)
+                    instImpl : TY.any_type := TY.NonConstSourceType(instType)
+                    instSrc  : PT.tree := TY.Source(instImpl)
                     instOf : PT.tree := PT.Attached(instSrc, "INSTANCEOF")
                     if instOf = GDecl.name then
                         return decl
@@ -1237,7 +1239,8 @@ module XL.SEMANTICS.GENERICS is
 
         // If so, then find the parameter type by position in arg list
         instType : TY.any_type := TY.GetDefinedType(instOf.name)
-        instSrc  : PT.tree := TY.Source(instType) // complex[real]
+        instImpl : TY.any_type := TY.NonConstSourceType(instType)
+        instSrc  : PT.tree := TY.Source(instImpl) // complex[real]
         translate instSrc
             when ('Name'['Args']) then
                 ArgList : PT.tree_list
