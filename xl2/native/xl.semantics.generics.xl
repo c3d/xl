@@ -1177,10 +1177,10 @@ module XL.SEMANTICS.GENERICS is
                         ERR.Error "One candidate is '$1'", types[0]
                         ERR.Error "Another candidate is '$1'", types[1]
                 else
-                    ERR.Error "No parameter named '$1' in generic type '$2'",
-                              ParmName, GenType
+                    ERR.Error "No parameter named '$1'", ParmName
+                    ERR.Error "in generic type '$1'", GenType
             else
-                ERR.Error "There is a generic type for '$1'", GenType
+                ERR.Error "There is a generic declaration for '$1'", GenType
                 ERR.Error "but '$1' is not a generic type", decl.name
 
 
