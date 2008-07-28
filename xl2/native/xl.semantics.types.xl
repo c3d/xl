@@ -666,13 +666,17 @@ module XL.SEMANTICS.TYPES is
         if t1 = nil or t2 = nil then
             trace[-sametype] "FAIL: Null type"
             return false
-        trace[sametype] "Names t1=", PT.tree(t1.name), " t2=", PT.tree(t2.name)
+        trace[sametype] "Names t1=", PT.tree(t1.name),
+                         " ", PT.tree(t1.machine_name),
+                         " t2=", PT.tree(t2.name),
+                         " ", PT.tree(t2.machine_name)
         if t1 = t2 then
             trace[-sametype] "PASS: Equal"
             return true
         t1s : t1 as source_type
         t2s : t2 as source_type
         if t1s <> nil then
+            trace[sametype] "Testing t1's base"
             if SameType(t1s.base, t2) then
                 trace[-sametype] "PASS: matched t1's base"
                 return true
@@ -682,6 +686,7 @@ module XL.SEMANTICS.TYPES is
                     trace[-sametype] "PASS: matched t1's implementation"
                     return true
         if t2s <> nil then
+            trace[sametype] "Testing t2's base"
             if SameType(t1, t2s.base) then
                 trace[-sametype] "PASS: matched t2's base"
                 return true
