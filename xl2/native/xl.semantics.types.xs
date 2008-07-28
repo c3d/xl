@@ -57,9 +57,10 @@ module XL.SEMANTICS.TYPES with
     function IsVariable (tp: any_type) return boolean
     function BaseType (tp: any_type) return any_type
     function NonSourceType(tp : any_type) return any_type
-    function NonConstGenSourceType(tp : any_type) return any_type
     function IsConstedType (tp: any_type) return boolean
     function NonConstedType (tp: any_type) return any_type
+    function NonConstSourceType(tp : any_type) return any_type
+    function NonConstGenSourceType(tp : any_type) return any_type
     function NonVariableType (tp: any_type) return any_type
     function MachineName(tp: any_type) return PT.name_tree
     function Source(tp : any_type) return PT.tree
@@ -71,6 +72,9 @@ module XL.SEMANTICS.TYPES with
 
     // Entering a named type in the symbol table
     function EnterType(Name : PT.tree; Value : PT.tree) return PT.tree
+    function EnterTypeDecl(Name : PT.name_tree;
+                           Value : PT.tree;
+                           tp : any_type) return PT.tree
 
     // Named types
     function NamedType (tname : PT.name_tree) return any_type
