@@ -834,7 +834,6 @@ module XL.SEMANTICS.DECLARATIONS is
         trace [-ctors] "CallConstructor result: ", result
 
 
-
     function ConstructorCode (decl : declaration) return PT.tree is
     // ------------------------------------------------------------------------
     //   Inline the default construction code for 'result'
