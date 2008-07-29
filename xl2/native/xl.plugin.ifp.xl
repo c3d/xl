@@ -58,5 +58,5 @@ module XL.PLUGIN.IFP is
                       return parse_tree(@nop)
               else
                  ERR.Error "Incorrect syntax '$1', use {ifp value}", pragma
-                 return parse_tree(@error)
+                 return ERR.ErrorTree()
 

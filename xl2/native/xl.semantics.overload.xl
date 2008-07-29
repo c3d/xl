@@ -122,7 +122,7 @@ module XL.SEMANTICS.OVERLOAD is
                     ERR.Error "Internal: Non-name functor '$1'", NameTree
                     CGM.ExitCall callDepth, result
                     trace[-overload] "Non-name functor ", PT.Tree(NameTree)
-                    return parse_tree(@error)
+                    return ERR.ErrorTree()
         Name : NameTree as PT.name_tree
         if Name = nil then
             ERR.Error "Cannot call non-name '$1'", NameTree
@@ -193,7 +193,7 @@ module XL.SEMANTICS.OVERLOAD is
             ERR.DisplayLastErrors()
             CGM.ExitCall callDepth, result
             trace[-overload] "Error evaluating arguments"
-            return parse_tree(@error)
+            return ERR.ErrorTree()
         ERR.PushErrorContext()
 
         // Lookup symbols at all relevant levels
@@ -589,7 +589,7 @@ module XL.SEMANTICS.OVERLOAD is
                 ERR.DisplayLastErrors()
             CGM.ExitCall callDepth, result
             trace[-overload] "No valid function found for ", PT.Tree(NameTree)
-            return parse_tree(@error)
+            return ERR.ErrorTree()
 
         // Destroy temporaries if necessary
         CGM.ExitCall callDepth, result
@@ -869,7 +869,7 @@ module XL.SEMANTICS.OVERLOAD is
             if candidate_errors then
                 ERR.DisplayLastErrors()
             CGM.ExitCall callDepth, result
-            return parse_tree(@error)
+            return ERR.ErrorTree()
 
         // Destroy temporaries if necessary
         CGM.ExitCall callDepth, result

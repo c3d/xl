@@ -147,11 +147,10 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                     TY.PopTargetType()
                     CGM.ExitCall callDepth, tempDt
                     if XLT.EndAttempt(tnt) then
-                        errors : text := ERR.LastErrorsText()
-                        E : PT.tree := PT.NewText(errors, '"', value.position)
-                        semArg := parse_tree(@error 'E')
+                        ERR.DisplayLastErrors()
+                        semArg := ERR.ErrorTree()
                         PT.AttachTree value, key, semArg
-                        trace[-expr] "FAIL: error ", E
+                        trace[-expr] "FAIL: error ", semArg
                         return 0
                     if PT.Attached(semArg, "TODEDUCE") = nil then
                         PT.AttachTree value, key, semArg
@@ -180,8 +179,11 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                                 return 0
                         
             translate semArg
-                when (@error 'Error') then
-                    trace[-expr] "FAIL: Cached error ", Error
+                when (@error 'Errors') then
+                    trace[-expr] "FAIL: Cached errors ", Errors
+                    ERR.PushErrorContext()
+                    ERR.ReplayErrors semArg
+                    ERR.PopErrorContext()
                     return 0
 
             trace[expr] "Value for ", param_name,
