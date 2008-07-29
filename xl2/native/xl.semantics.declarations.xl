@@ -852,9 +852,16 @@ module XL.SEMANTICS.DECLARATIONS is
             result := PT.Attached(mname, "CTORCODE")
             trace[ctors] "  Code=", result
             if result <> nil then
+                instSyms : SYM.symbol_table := GN.InstanceContext(result)
+                oldCtxt  : SYM.symbol_table := XLT.context
+                if instSyms <> nil then
+                    XLT.context := instSyms
+
                 result := PT.Clone(result)
                 result.position := mname.position
                 result := XLT.XLSemantics(result)
+
+                XLT.context := oldCtxt
 
 
     in_destruction : map[PT.name_tree, integer]

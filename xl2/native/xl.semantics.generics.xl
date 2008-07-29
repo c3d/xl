@@ -574,6 +574,7 @@ module XL.SEMANTICS.GENERICS is
         Source := parse_tree('Name' [ 'Source' ])
         Source.position := SourcePosition
         SetInstanceContext Source, instContext
+        SetInstanceContext Name, instContext
 
         // Process the instantiated declaration
         tnt : XLT.attempt := XLT.BeginAttempt()

@@ -63,6 +63,7 @@ module XL.SEMANTICS.TYPES.RECORDS with
                         Fields   : PT.tree) return PT.tree
 
     function GetRecordType(Record : PT.tree) return record_type
+    function GetRecordBaseType(Record : PT.tree) return any_type
     function IsRecord (Record : PT.tree) return boolean
     procedure RecordDeclarations(Record   : PT.tree;
                                  Field    : PT.name_tree;
