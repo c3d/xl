@@ -349,6 +349,15 @@ module XL.SEMANTICS.DECLARATIONS is
         Name : NameTerminal as PT.name_tree
         Original : PT.tree := SYM.LookupOne(XLT.context,"DECL",Name.value)
         if Original = nil then
+            // In that case, we may be interested in interpreting that as
+            // a function call, assuming there is a function with that name
+            functions : PT.tree_list
+            SYM.Lookup XLT.context, "FN", Name.value, functions
+            if size(functions) > 0 then
+                // Resolve the function, but return overload set.
+                // This is useful for the case "Ptr := FuncName
+                return OVL.Resolve(Name, nil, Name, false)
+
             ERR.Error "Name '$1' was not declared here", Name
             return parse_tree(@error)
 
@@ -357,7 +366,7 @@ module XL.SEMANTICS.DECLARATIONS is
             translate Original
                 when ('Context'.'Field') where Field.kind = PT.xlNAME then
                     FieldName : Field as PT.name_tree
-                    return REC.Index(Context, FieldName)
+                    return REC.Index(Context, FieldName, Original)
                 else
                     return Original
 
@@ -736,7 +745,7 @@ module XL.SEMANTICS.DECLARATIONS is
         when
             'NameTerminal'
         where
-            NameTerminal.kind = PT.xlNAME and not OVL.IsFunction(NameTerminal)
+            NameTerminal.kind = PT.xlNAME
         then
             return Lookup(NameTerminal)
 
