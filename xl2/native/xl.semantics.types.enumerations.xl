@@ -314,15 +314,15 @@ module XL.SEMANTICS.TYPES.ENUMERATIONS is
         etp : enumeration_type := GetEnumerationType(EnumName)
         if etp = nil then
             ERR.Error "'$1' is not the name of an enumeration", EnumName
-            return parse_tree(@error)
+            return ERR.ErrorTree()
         result := SYM.LookupOne (etp.symbols, "DECL",
                                  ItemName.value, SYM.lookupLocalOnly)
         if result = nil then
-            result := parse_tree(@error)
+            result := ERR.ErrorTree()
         else
             decl : DCL.declaration := DCL.GetDeclaration(result)
             if decl = nil then
-                result := parse_tree(@error)
+                result := ERR.ErrorTree()
             else
                 result := decl.machine_name
 

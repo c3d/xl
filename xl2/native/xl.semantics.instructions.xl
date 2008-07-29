@@ -45,7 +45,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
          mname : PT.tree := SYM.GetProperty(XLT.context, "FN", true)
          if mname = nil then
              ERR.Error "Return statement '$1' not in a function", Ret
-             return parse_tree(@error)
+             return ERR.ErrorTree()
 
          // Branch to exit of function
          result := parse_tree(@goto_exit 'mname')
@@ -71,7 +71,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
         body : PT.tree := SYM.GetProperty(XLT.context, "ITERATING", true)
         if body = nil then
             ERR.Error "'$1' is not in an iterator", Yield
-            return parse_tree(@error)
+            return ERR.ErrorTree()
 
         // Evaluate the body in its original context
         oldContext   : SYM.symbol_table := XLT.context
@@ -82,7 +82,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
         if XLT.context = nil then
             ERR.Error "This '$1' instruction", Yield
             ERR.Error "is the second one for this loop body", Body.position
-            result := parse_tree(@error)
+            result := ERR.ErrorTree()
         else
             // Run semantics on the body in that context
             PT.PurgeInfo body, "ITERCTX"
@@ -279,7 +279,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
         label : PT.tree := SYM.GetProperty (XLT.context, "LOOP", true)
         if label = nil then
             ERR.Error "No loop surrounding '$1' instruction", Instr
-            return parse_tree(@error)
+            return ERR.ErrorTree()
 
         inner : SYM.symbol_table := XLT.context
         outer : SYM.symbol_table := inner
@@ -336,7 +336,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
                     else
                         ERR.Error "Internal: Non-boolean test '$1'",
                                   TestConstant
-                        return parse_tree(@error)
+                        return ERR.ErrorTree()
 
                 // Convert to boolean and evaluate condition
                 label : PT.name_tree := SYM.Temporary("case", Test.position)
@@ -587,7 +587,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
         oldUnwind : PT.tree := SYM.GetProperty(XLT.context, "UNWIND")
         if oldUnwind = nil then
             ERR.Error "Cannot '$1' without an exception context", input
-            return parse_tree(@error)
+            return ERR.ErrorTree()
         return parse_tree(@unwind_reraise 'oldUnwind')
 
 

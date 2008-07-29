@@ -33,7 +33,9 @@ module XL.ERRORS with
     procedure DisplayLastErrors()
     function LastErrorsText() return text
     function PendingErrors() return integer
-    function PreserveLastErrors(offset : integer) return integer
+    procedure PutLastErrorFirst()
+    function ErrorTree(previous : PT.tree := nil) return PT.tree
+    procedure ReplayErrors(token : PT.tree)
 
     // Signaling an error
     procedure Error (E : text; pos : integer; args : string of text)

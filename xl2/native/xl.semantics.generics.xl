@@ -439,7 +439,7 @@ module XL.SEMANTICS.GENERICS is
         if gtp = nil then
             ERR.Error "Internal: '$1' is not a generic declaration", Decl.name
             trace[-inst] "Not a generic declaration: ", PT.tree(Decl.name)
-            return parse_tree(@error)
+            return ERR.ErrorTree()
 
         // Check if we already instantiated that guy
         I         : integer
@@ -474,7 +474,7 @@ module XL.SEMANTICS.GENERICS is
                     ERR.Error "Cannot instantiate '$1'", Decl.Name
                     ERR.Error "since '$1' is undefined", P.name
                     trace [-inst] "No value for ", PT.tree(P.name)
-                    return parse_tree(@error)
+                    return ERR.ErrorTree()
                 Args[P.name] := A
             if I > 0 then
                 key += ","
@@ -498,16 +498,15 @@ module XL.SEMANTICS.GENERICS is
         if result <> nil then
             trace[-inst] "Found cached: ", result
             translate result
-                when (@error 'errorText') then
-                    errT : errorText as PT.text_tree
-                    ERR.Error errT.value, result.position
+                when (@error 'errors') then
+                    ERR.ReplayErrors(result)
             return result
 
         // Check infinite recursion
         if instantiations > max_instantiations then
             ERR.Error "Too many recursive instantitiations at '$1'", Decl.name
             trace[-inst] "Too many recursions: ", instantiations
-            return parse_tree(@error)
+            return ERR.ErrorTree()
         instantiations += 1
 
         // Create instantiation context
@@ -539,7 +538,7 @@ module XL.SEMANTICS.GENERICS is
                 XLT.context := oldContext
                 XLT.function_context := fnContext
                 trace[-inst] "Parameter is not a name: ", PT.tree(P.name)
-                return parse_tree(@error)
+                return ERR.ErrorTree()
 
             // Build the source args list
             if Source = nil then
@@ -644,12 +643,10 @@ module XL.SEMANTICS.GENERICS is
 
         // Cache the result for next time
         if XLT.EndAttempt(tnt) then
-            errors : text := ERR.LastErrorsText()
-            errorText : PT.text_tree := PT.NewText(errors,'"',result.position)
-            result := parse_tree(@error 'errorText')
             ERR.DisplayLastErrors()
+            result := ERR.ErrorTree()
         SYM.Enter XLT.global_context, "INSTANCE", key, result
-        trace[-inst] "Entered ", key
+        trace[-inst] "Entered ", key, "=", result
 
         XLT.context := oldContext
         XLT.function_context := fnContext
@@ -1069,10 +1066,10 @@ module XL.SEMANTICS.GENERICS is
         if XLT.EndAttempt(tnt) then
             ERR.Error "Unable to instantiate '$1', because", Name
             ERR.DisplayLastErrors()
-            return parse_tree(@error)
+            return ERR.ErrorTree()
 
         if Decl = nil then
-            return parse_tree(@error)
+            return ERR.ErrorTree()
 
         result := Instantiate(Decl, ActualArgs, nil, Scope)
 

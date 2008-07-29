@@ -424,7 +424,7 @@ module XL.SEMANTICS.MODULES is
                     BaseName := BaseImport
                     if Enclosed.kind <> PT.xlNAME then
                         ERR.Error "'$1' is not a valid module name", Enclosed
-                        return parse_tree(@error)
+                        return ERR.ErrorTree()
                     LeafName := PT.name_tree(Enclosed)
                 else
                     ERR.Error "'$1' is not a valid import name", LongName
@@ -448,7 +448,7 @@ module XL.SEMANTICS.MODULES is
             if SYM.GetInteger(XLT.main_context, KeyR, 0, false) then
                 ERR.Error "Circular dependency detected when importing '$1'",
                           LongName
-                return parse_tree(@error)
+                return ERR.ErrorTree()
             SYM.SetInteger(XLT.main_context, KeyR, 2)
 
             // Load interface and body files
@@ -484,7 +484,7 @@ module XL.SEMANTICS.MODULES is
             // Check if we found nothing
             if Iface = nil and Body = nil then
                 ERR.Error "No file found for module '$1'", LongName
-                return parse_tree(@error)
+                return ERR.ErrorTree()
 
             // Run semantics on interface and body, and cache for next import
             if Iface <> nil then
@@ -533,7 +533,7 @@ module XL.SEMANTICS.MODULES is
         // Check that the input is valid
         if not IsValidImport(LongName) then
             ERR.Error "The form '$1' is not a valid import name", LongName
-            return parse_tree(@error)
+            return ERR.ErrorTree()
         if ShortName <> nil and ShortName.kind <> PT.xlNAME then
             ERR.Error "The form '$1' is not a valid import shortcut", ShortName
             ShortName := nil // Try to import anyway

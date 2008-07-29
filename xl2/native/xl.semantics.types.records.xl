@@ -363,7 +363,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 ERR.Error "No type for record '$1'", Record
             if size(list) = 0 then
                 ERR.Error "Field '$1' doesn't exist", Field
-                return parse_tree(@error)
+                return ERR.ErrorTree()
             selected := list[0]
         else if size(list) > 0 then
             ERR.Error "Ambiguous type index for '$1'", Field
@@ -388,7 +388,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         decl : declaration := DCL.GetDeclaration(selected)
         if decl = nil then
             ERR.Error "Internal: Record field '$1' has no decl", Field
-            return parse_tree(@error)
+            return ERR.ErrorTree()
 
 
         // Find machine name of field
@@ -396,7 +396,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         dtype  : TY.any_type  := TY.GetDefinedType(dname)
         if dtype = nil then
             ERR.Error "Internal: Record field '$1' has no defined type", dname
-            return parse_tree(@error)
+            return ERR.ErrorTree()
         if TY.GetDefinedType(dtype.machine_name) = nil and dtype <> nil then
             TY.SetDefinedType dtype.machine_name, dtype
         return dtype.machine_name
@@ -477,7 +477,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 ERR.Error "No type for record '$1'", Record
             if size(list) = 0 then
                 ERR.Error "Field '$1' doesn't exist", Field
-                return parse_tree(@error)
+                return ERR.ErrorTree()
             selected := list[0]
         else if size(list) > 0 then
             ERR.Error "Ambiguous index for $1", Field
@@ -490,7 +490,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         decl : declaration := DCL.GetDeclaration(selected)
         if decl = nil then
             ERR.Error "Internal: Record field '$1' has no decl", Field
-            return parse_tree(@error)
+            return ERR.ErrorTree()
         if instParm <> nil then
             if decl.initializer = nil then
                 ERR.Error "Internal: No initializer for generic '$1'", instParm

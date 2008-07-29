@@ -359,7 +359,7 @@ module XL.SEMANTICS.DECLARATIONS is
                 return OVL.Resolve(Name, nil, Name, false)
 
             ERR.Error "Name '$1' was not declared here", Name
-            return parse_tree(@error)
+            return ERR.ErrorTree()
 
         // If the result is an index form (from a using), look it up
         if Original.kind <> PT.xlNAME then

@@ -378,7 +378,7 @@ module XL.SEMANTICS.TYPES is
                 original <> PT.Attached(Name, "INSTANCEOF")) then
                 ERR.Error "The type '$1' can't be defined here", Name
                 ERR.Error "because a type named '$1' already exists", original
-                result := parse_tree(@error)
+                result := ERR.ErrorTree()
                 SetDefinedType result, otype
                 return result
 
