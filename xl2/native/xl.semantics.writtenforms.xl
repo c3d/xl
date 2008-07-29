@@ -104,7 +104,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         Gtype      : F.type as GEN.generic_type
         Gargs      : GN.generic_map
         trace[+expr] "Lookup ", test, " against ", info.reference_form,
-                     " for ", PT.tree(F.Name)
+                     " for ", PT.tree(F.Name), " : ", TY.Source(F.type)
 
         if Ftype <> nil or Gtype = nil then
             base_score *= 100
