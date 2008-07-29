@@ -336,8 +336,6 @@ module XL.SEMANTICS.TYPES.RECORDS is
         if selected <> nil then
             Record := selected
 
-        RecordDeclarations Record, Field, "TYPE", list, symbols
-
         // Try to evaluate something like 'A.item' where A is an array
         tp : TY.any_type := GetRecordBaseType(Record)
         if tp <> nil then
@@ -355,6 +353,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
                         ERR.Error "A second candidate is '$1", insts[1]
 
         // Otherwise, normal case
+        RecordDeclarations Record, Field, "TYPE", list, symbols
         if size(list) > 1 then
             ERR.Error "Type name '$1' is ambiguous", Field
             ERR.Error "A first candidate is '$1", list[0]
@@ -427,7 +426,8 @@ module XL.SEMANTICS.TYPES.RECORDS is
     // ========================================================================
 
     function Index(Record : PT.tree;
-                   Field  : PT.name_tree) return BC.bytecode is
+                   Field  : PT.name_tree;
+                   Input  : PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
     //   Index a record element
     // ------------------------------------------------------------------------
@@ -435,10 +435,9 @@ module XL.SEMANTICS.TYPES.RECORDS is
         list     : PT.tree_list
         selected : PT.tree := PT.Attached(Record, "DEREF")
         instParm : PT.tree := nil
+        funCall  : boolean := false
         if selected <> nil then
             Record := selected
-
-        RecordDeclarations Record, Field, "DECL", list, symbols
 
         // Find if there is an instantiation by that name locally
         tp : TY.any_type := GetRecordBaseType(Record)
@@ -446,7 +445,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
             instance : PT.tree := TY.Source(tp)
             instContext : SYM.symbol_table := GN.InstanceContext(instance)
             if instContext <> nil then
-                insts    : PT.tree_list
+                insts : PT.tree_list
                 SYM.Lookup instContext, "DECL", Field.value,
                            insts, SYM.lookupLocalOnly
                 if size(insts) = 0 then
@@ -460,8 +459,15 @@ module XL.SEMANTICS.TYPES.RECORDS is
                         ERR.Error "A second candidate is '$1", insts[1]
 
         // Otherwise, normal case
+        RecordDeclarations Record, Field, "DECL", list, symbols
         if size(list) = 0 then
             RecordDeclarations Record, Field, "FN", list, symbols
+            funCall := size(list) > 0
+
+        // TODO: Fix overload sets so that this works
+        if false and funCall then
+            // We only found functions: resolve as an overload set
+            return OVL.Resolve(Input, nil, Input, false)
 
         if size(list) > 1 then
             ERR.Error "Field '$1' is ambiguous", Field
@@ -694,7 +700,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         when ('Record'.'Field') where (IsRecord(Record) and
                                        Field.kind = PT.xlNAME) then
             FieldName : Field as PT.name_tree
-            return Index(Record, FieldName)
+            return Index(Record, FieldName, input)
 
         when
             using 'Record'

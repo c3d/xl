@@ -985,17 +985,3 @@ module XL.SEMANTICS.OVERLOAD is
         then
             return Resolve(FunctionName, FunctionArgs, input, true)
 
-        when
-            'FunctionName'
-        where
-            IsFunction (FunctionName)
-        then
-            // If we can find through normal lookup, that's it
-            ERR.PushErrorContext()
-            result := DCL.Lookup (FunctionName)
-            if not ERR.PopErrorContext() then
-                return result
-
-            // Otherwise, try to find the function, but return overload set
-            return Resolve(FunctionName, nil, input, false)
-
