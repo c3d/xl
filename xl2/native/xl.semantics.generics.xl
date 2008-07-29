@@ -626,6 +626,7 @@ module XL.SEMANTICS.GENERICS is
                 ERR.Error "Generic '$1' has no initializer", Name
             result := DCL.EnterDeclaration (Name, Type, Init, true)
             result := XLT.XLSemantics(result)
+            PT.AttachTree Name, "INSTSRC", Source
             if Decl.is_global then
                 f : FN.function := FN.GetFunction (result)
                 result := XLT.PostScopeSemantics(result, XLT.scopeGlobal, nil)
@@ -638,7 +639,7 @@ module XL.SEMANTICS.GENERICS is
           
 
         assert result <> nil
-        PT.AttachTree Name, "INSTANCEOF", Decl.Name
+        PT.AttachTree Name, "INSTSRC", Source
         PT.AttachTree Source, "INSTANCEOF", Decl.Name
 
         // Cache the result for next time
@@ -662,8 +663,10 @@ module XL.SEMANTICS.GENERICS is
     //   Check if InstType is an instance of GenType, if so update Gargs
     // ------------------------------------------------------------------------
 
-        InstType    : TY.any_type := TY.NonConstSourceType (TestInstType)
-        InstTypeSrc : PT.tree := TY.Source (InstType)
+        InstTypeSrc : PT.tree := TY.Source (TestInstType)
+        InstSource  : PT.tree := PT.Attached(InstTypeSrc, "INSTSRC")
+        if InstSource <> nil then
+            InstTypeSrc := InstSource
         InstanceOf  : PT.tree := PT.Attached(InstTypeSrc, "INSTANCEOF")
         if InstanceOf <> nil then
             GenInstType : TY.any_type := TY.GetDefinedType(InstanceOf)
@@ -705,6 +708,19 @@ module XL.SEMANTICS.GENERICS is
                 // OK, it looks like a match
                 return true
 
+        // If not a match with what we were given, try to strip constness
+        // and user-defined names
+        ctp : TestInstType as TY.const_var_type
+        if ctp <> nil then
+            if ctp.base <> nil and ctp.base <> ctp then
+                if IsInstanceOf(GenType, ctp.base, Gargs) then
+                    return true
+        stp : TestInstType as TY.source_type
+        if stp <> nil then
+            if stp.base <> nil and stp.base <> stp then
+                if IsInstanceOf(GenType, stp.base, Gargs) then
+                    return true
+
         ERR.Error "Candidate instance type '$1'", InstTypeSrc
         ERR.Error "is not an instance of '$1'", TY.Source(GenType)
         return false
@@ -723,8 +739,7 @@ module XL.SEMANTICS.GENERICS is
         // If there are parameters, e.g. we are testing complex[integer],
         // then check that the actual type is an instance of the generic type
         if size(GenType.parameters) > 0 then
-            InstType  : TY.any_type := TY.NonConstSourceType (ActType)
-            if not IsInstanceOf(GenType, InstType, Gargs) then
+            if not IsInstanceOf(GenType, ActType, Gargs) then
                 trace[-inst] "Type ", TY.Source(ActType),
                              " not an instance of ", TY.Source(GenType)
                 return false
