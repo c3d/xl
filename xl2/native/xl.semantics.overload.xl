@@ -45,8 +45,6 @@ module XL.SEMANTICS.OVERLOAD is
 //    Module implementing overload resolution
 // ----------------------------------------------------------------------------
 
-    checkAllConstructors : boolean := false
-
     procedure ArgsTreeToList(Args : PT.tree; in out List : PT.tree_list) is
     // ------------------------------------------------------------------------
     //   Convert the input argument tree into a list
@@ -204,21 +202,22 @@ module XL.SEMANTICS.OVERLOAD is
         // Find all candidates at this level
         if recurse then
             SYM.Lookup symbols, "FN", Name.value, candidates, itemDepth, 2
-            if checkAllConstructors then
-                // Check if this is a type name. If so, we need to look all
-                // possible constructor names
-                types : PT.tree_list
-                type  : PT.tree
-                SYM.Lookup XLT.context, "TYPE", Name.value, types, itemDepth, 0
-                for type in types loop
-                    tp    : TY.any_type := TY.GetDefinedType(type)
-                    ctors : PT.tree_list := DCL.ConstructorNames(tp)
-                    ctor  : PT.tree
-                    for ctor in ctors loop
-                        ctorName : ctor as PT.name_tree
-                        if ctorName <> nil then
-                            SYM.Lookup symbols, "FN", ctorName.value,
-                                       candidates, itemDepth, 100
+
+            // Check if this is a type name. If so, we need to look all
+            // possible constructor names
+            types : PT.tree_list
+            type  : PT.tree
+            SYM.Lookup XLT.context, "TYPE", Name.value, types, itemDepth, 0
+            for type in types loop
+                tp    : TY.any_type := TY.GetDefinedType(type)
+                ctors : PT.tree_list := DCL.ConstructorNames(tp)
+                ctor  : PT.tree
+                for ctor in ctors loop
+                    ctorName : ctor as PT.name_tree
+                    if ctorName <> nil then
+                        SYM.Lookup symbols, "FN", ctorName.value,
+                                   candidates, itemDepth, 100
+
         trace [overload] "In table ", symbols,
                          " found ", size(candidates), " candidates"
 
@@ -904,24 +903,21 @@ module XL.SEMANTICS.OVERLOAD is
                     return result
             return false
 
-        // Check if this is a type name. If so, we need to look all
-        // possible constructor names
         Name        : T as PT.name_tree
         scope       : map[PT.tree, integer]
-        if checkAllConstructors then
-            types       : PT.tree_list
-            type        : PT.tree
-            SYM.Lookup XLT.context, "TYPE", Name.value, types, scope, 0
-            trace [+isfunc] "Testing ", T, ", there are ", size(types), " types"
-            for type in types loop
-                tp    : TY.any_type := TY.GetDefinedType(type)
-                ctors : PT.tree_list := DCL.ConstructorNames(tp)
-                ctor  : PT.tree
-                for ctor in ctors loop
-                    trace [isfunc] "Testing constructor ", ctor
-                    if IsFunctionNoConstructor(ctor) then
-                        trace [-isfunc] "Found constructor ", ctor
-                        return true
+        types       : PT.tree_list
+        type        : PT.tree
+        SYM.Lookup XLT.context, "TYPE", Name.value, types, scope, 0
+        trace [+isfunc] "Testing ", T, ", there are ", size(types), " types"
+        for type in types loop
+            tp    : TY.any_type := TY.GetDefinedType(type)
+            ctors : PT.tree_list := DCL.ConstructorNames(tp)
+            ctor  : PT.tree
+            for ctor in ctors loop
+                trace [isfunc] "Testing constructor ", ctor
+                if IsFunctionNoConstructor(ctor) then
+                    trace [-isfunc] "Found constructor ", ctor
+                    return true
 
         result := IsFunctionNoConstructor(T)
         trace[-isfunc] "Result for ", T, " is ", result
