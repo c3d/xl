@@ -494,7 +494,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                 if GenTypeParm <> nil then
                     semType : TY.any_type := TY.GetDefinedType(semArg)
                     assert semType.machine_name <> nil
-                    args[param_name] := semType.machine_name
+                    args[param_name] := TY.Source(semType)
                     return base_score
             else
                 // Generic parameter is not a type
