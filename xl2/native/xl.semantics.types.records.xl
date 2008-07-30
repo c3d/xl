@@ -533,7 +533,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
     //    Declare a default function (ctor/dtor)
     // ------------------------------------------------------------------------
         source := parse_tree(@@defaultfn 'source')
-        XLT.AddGlobalDecl source
+        XLT.AddScopeDecl XLT.context, source
         return nil
 
 
