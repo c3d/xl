@@ -283,6 +283,8 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         callDepth : integer := CGM.EnterCall()
         ctorTarget: PT.tree := PT.Attached(input, "CTORCALL")
 
+        trace[+expr] "Translate ", input, " in scope ", scope
+
         // Check for generic functions
         if gentype <> nil then
             GFType : gentype.base as FT.function_type
@@ -320,6 +322,8 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             if fninfo = nil then
                 // Instantiation error
                 CGM.ExitCall callDepth, result
+                trace[-expr] "Instantiation error for ", input,
+                             " result=", result
                 return result
 
         ctors        : PT.tree
@@ -361,7 +365,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
 
         // Destroy temporaries if necessary
         CGM.ExitCall callDepth, result
-
+        trace[-expr] "Translated ", input, " as ", result
 
 
     function EnterWrittenForm(fniface : PT.tree;
