@@ -528,9 +528,6 @@ module XL.SEMANTICS.GENERICS is
         result := SYM.LookupOne (XLT.global_context, "INSTANCE", key)
         if result <> nil then
             trace[-inst] "Found cached: ", result
-            translate result
-                when (@error 'errors') then
-                    ERR.ReplayErrors(result)
             return result
 
         // Check infinite recursion
