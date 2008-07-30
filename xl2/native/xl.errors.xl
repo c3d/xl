@@ -44,7 +44,6 @@ module XL.ERRORS is
     type error_stack_level is string of error_stack_element
     error_stack         : string of error_stack_level
     last_errors         : error_stack_level
-    errors              : error_stack_level
     empty               : error_stack_level
 
 
@@ -53,7 +52,6 @@ module XL.ERRORS is
     //    Push a new output string stream to store errors
     // ------------------------------------------------------------------------
         error_stack += empty
-        errors := empty
 
 
     function PopErrorContext() return boolean is
@@ -62,7 +60,6 @@ module XL.ERRORS is
     // ------------------------------------------------------------------------
         last_errors := back(error_stack)
         pop_back error_stack
-        errors := empty
         return size(last_errors) > 0
 
 
@@ -72,7 +69,6 @@ module XL.ERRORS is
     // ------------------------------------------------------------------------
         if size(error_stack) > 0 then
             back(error_stack) += last_errors
-            errors += last_errors
         else
             E : error_stack_element
             for E in last_errors loop
@@ -107,6 +103,11 @@ module XL.ERRORS is
                 when (@error 'msgs') then
                     result := msgs
 
+        errors : error_stack_level
+        if size(error_stack) > 0 then
+            errors := back(error_stack)
+        else
+            errors := last_errors
         E : error_stack_element
         for E in errors loop
             msg : PT.text_tree := PT.NewText (E.message, '"', E.position)
@@ -152,14 +153,6 @@ module XL.ERRORS is
         I         : integer
         Max       : integer
         hadDollar : boolean := false
-        arg       : text
-
-        // Eliminate internal errors, those that refer to bytecode (@)
-        for arg in args loop
-            C : character
-            for C in arg loop
-                if C = '@' then
-                    return
 
         // Get message and perform substitution
         msg := Localize E
@@ -184,11 +177,11 @@ module XL.ERRORS is
         M : error_stack_element
         M.message := fmt
         M.position := pos
-        errors += M
         if size(error_stack) > 0 then
             back(error_stack) += M
         else
             error_count += 1
+            last_errors += M
 
             // Convert positon to line and column
             if pos = -1 then
@@ -260,12 +253,23 @@ module XL.ERRORS is
         return PT.NOPOS
 
 
+    function TreeToText(arg : PT.tree) return text is
+    // ------------------------------------------------------------------------
+    //    Convert arg to text, eliminating any bytecode reference
+    // ------------------------------------------------------------------------
+        result := text arg
+        C : character
+        for C in result loop
+            if C = '@' then
+                return "[internal]"
+
+
     procedure Error (E : text; arg : PT.tree) is
     // ------------------------------------------------------------------------
     //   Convenience function
     // ------------------------------------------------------------------------
         args : string of text
-        args += text arg
+        args += TreeToText arg
         Error E, ArgPosition(arg), args
 
 
@@ -274,7 +278,7 @@ module XL.ERRORS is
     //   Convenience function
     // ------------------------------------------------------------------------
         args : string of text
-        args += text arg
+        args += TreeToText arg
         args += arg2
         Error E, ArgPosition(arg), args
 
@@ -284,8 +288,8 @@ module XL.ERRORS is
     //   Convenience function
     // ------------------------------------------------------------------------
         args : string of text
-        args += text arg
-        args += text arg2
+        args += TreeToText arg
+        args += TreeToText arg2
         Error E, ArgPosition(arg), args
 
 
@@ -294,7 +298,7 @@ module XL.ERRORS is
     //   Convenience function
     // ------------------------------------------------------------------------
         args : string of text
-        args += text arg
+        args += TreeToText arg
         args += arg2
         args += arg3
         Error E, ArgPosition(arg), args
@@ -305,9 +309,9 @@ module XL.ERRORS is
     //   Convenience function
     // ------------------------------------------------------------------------
         args : string of text
-        args += text arg
+        args += TreeToText arg
         args += arg2
-        args += text arg3
+        args += TreeToText arg3
         Error E, ArgPosition(arg), args
 
 
@@ -316,8 +320,8 @@ module XL.ERRORS is
     //   Convenience function
     // ------------------------------------------------------------------------
         args : string of text
-        args += text arg
-        args += text arg2
+        args += TreeToText arg
+        args += TreeToText arg2
         args += arg3
         Error E, ArgPosition(arg), args
 
@@ -327,7 +331,7 @@ module XL.ERRORS is
     //   Convenience function
     // ------------------------------------------------------------------------
         args : string of text
-        args += text arg
-        args += text arg2
-        args += text arg3
+        args += TreeToText arg
+        args += TreeToText arg2
+        args += TreeToText arg3
         Error E, ArgPosition(arg), args
