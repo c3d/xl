@@ -683,7 +683,7 @@ module XL.SEMANTICS.GENERICS is
         // otherwise we cause infinite instantiation loops in common cases
         if not isPartial then
             infos : PT.infos := result.info
-            result := XLT.PostScopeSemantics(result, XLT.scopeGlobal, nil)
+            result := XLT.PostScopeSemantics(result, XLT.scopeLocal, nil)
             result.info := infos
 
         XLT.context := oldContext
