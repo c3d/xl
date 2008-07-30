@@ -190,7 +190,6 @@ module XL.SEMANTICS.GENERICS is
                             ERR.Error "'$1' could not be selected because", C
                             ERR.Error "'$1' is not a type",Arg,D.name
                             ERR.Error "for parameter '$1'", D.name
-                        Arg := TY.Source(AType)
                     else
                         // Non-type argument
                         Arg := XLT.XLSemantics (Arg)
@@ -535,6 +534,14 @@ module XL.SEMANTICS.GENERICS is
             return result
 
         // Check infinite recursion
+        inProgress : PT.tree := SYM.LookupOne(XLT.main_context,
+                                              "IN_INSTANCE", key)
+        if inProgress <> nil then
+            ERR.Error "'$1' instantiation is in progress", Decl.name
+            trace[-inst] "Instantiation in progress", key
+            return ERR.ErrorTree()
+        SYM.Enter XLT.main_context, "IN_INSTANCE", key, Decl.name
+        
         if instantiations > max_instantiations then
             ERR.Error "Too many recursive instantitiations at '$1'", Decl.name
             trace[-inst] "Too many recursions: ", instantiations
@@ -1026,7 +1033,7 @@ module XL.SEMANTICS.GENERICS is
                                 result := false
                             exit if not result
                     if result then
-                        trace[deduce] "Instantiating ", PT.tree(Parm)
+                        trace[deduce] "Instantiating ", PT.tree(Parm.Name)
                         tnt : XLT.attempt := XLT.BeginAttempt()
                         Arg := Instantiate(Parm, subArgs, nil, nil)
                         result := not XLT.EndAttempt(tnt)
