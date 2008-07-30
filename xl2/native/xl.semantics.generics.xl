@@ -422,6 +422,38 @@ module XL.SEMANTICS.GENERICS is
         return false
 
 
+    function InstanceType(tp : TY.any_type) return TY.any_type is
+    // ------------------------------------------------------------------------
+    //    Return the type we are an instance of, if any
+    // ------------------------------------------------------------------------
+        while tp <> nil loop
+            Source : PT.tree := TY.Source(tp)
+            exit if PT.Attached(Source, "INSTANCEOF") <> nil
+            Source := PT.Attached(Source, "INSTSRC")
+            if Source <> nil then
+                tp := TY.GetDefinedType(Source)
+                restart
+            ctp : tp as TY.const_var_type
+            if ctp <> nil and ctp.base <> tp then
+                tp := ctp.base
+                restart
+            stp : tp as TY.source_type
+            if stp <> nil and stp.base <> tp then
+                tp := stp.base
+                restart
+            tp := nil
+        return tp
+
+
+    function InstanceOf(tp : TY.any_type) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Return the type we are an instance of, if any
+    // ------------------------------------------------------------------------
+        tp := InstanceType(tp)
+        if tp <> nil then
+            result := PT.Attached(TY.Source(tp), "INSTANCEOF")
+
+
     function Instantiate(Decl       : DCL.declaration;
                          Args       : generic_map;
                          Variadics  : PT.tree;
@@ -574,6 +606,8 @@ module XL.SEMANTICS.GENERICS is
         Source.position := SourcePosition
         SetInstanceContext Source, instContext
         SetInstanceContext Name, instContext
+        PT.AttachTree Name, "INSTSRC", Source
+        PT.AttachTree Source, "INSTANCEOF", Decl.Name
 
         // Process the instantiated declaration
         tnt : XLT.attempt := XLT.BeginAttempt()
@@ -623,23 +657,16 @@ module XL.SEMANTICS.GENERICS is
         else
             if Init = nil then
                 ERR.Error "Generic '$1' has no initializer", Name
+            PT.AttachTree Init, "INSTSRC", Source
             result := DCL.EnterDeclaration (Name, Type, Init, true)
             result := XLT.XLSemantics(result)
-            PT.AttachTree Name, "INSTSRC", Source
             if Decl.is_global then
                 f : FN.function := FN.GetFunction (result)
                 result := XLT.PostScopeSemantics(result, XLT.scopeGlobal, nil)
                 if f <> nil then
                     PT.SetInfo result, "FN", f
-            tp : TY.any_type := TY.GetDefinedType(result)
-            if tp <> nil then
-                tp.name := Source
-                TY.SetDefinedType Source, tp
-          
 
         assert result <> nil
-        PT.AttachTree Name, "INSTSRC", Source
-        PT.AttachTree Source, "INSTANCEOF", Decl.Name
 
         // Cache the result for next time
         if XLT.EndAttempt(tnt) then
@@ -660,13 +687,11 @@ module XL.SEMANTICS.GENERICS is
     //   Check if InstType is an instance of GenType, if so update Gargs
     // ------------------------------------------------------------------------
 
-        InstTypeSrc : PT.tree := TY.Source (TestInstType)
-        InstSource  : PT.tree := PT.Attached(InstTypeSrc, "INSTSRC")
-        if InstSource <> nil then
-            InstTypeSrc := InstSource
-        InstanceOf  : PT.tree := PT.Attached(InstTypeSrc, "INSTANCEOF")
-        if InstanceOf <> nil then
-            GenInstType : TY.any_type := TY.GetDefinedType(InstanceOf)
+        InstType    : TY.any_type := InstanceType(TestInstType)
+        if InstType <> nil then
+            InstTypeSrc : PT.tree := TY.Source (InstType)
+            GenTypeSrc  : PT.tree := InstanceOf(InstType)
+            GenInstType : TY.any_type := TY.GetDefinedType(GenTypeSrc)
             if TY.SameType(GenType, GenInstType) then
 
                 // Extract the actual template arguments,
@@ -694,6 +719,9 @@ module XL.SEMANTICS.GENERICS is
                     subParm : DCL.declaration := GenType.parameters[GP]
                     subArg : PT.tree := ArgList[GP]
                     N : PT.name_tree := subParm.name
+                    subRef : PT.tree := PT.Attached(subArg, "INSTSRC")
+                    if subRef <> nil then
+                        subArg := subRef
                     if Gargs[N] = nil then
                         Gargs[N] := subArg
                     else if Gargs[N] <> subArg then
@@ -718,7 +746,7 @@ module XL.SEMANTICS.GENERICS is
                 if IsInstanceOf(GenType, stp.base, Gargs) then
                     return true
 
-        ERR.Error "Candidate instance type '$1'", InstTypeSrc
+        ERR.Error "Candidate instance type '$1'", TY.Source(TestInstType)
         ERR.Error "is not an instance of '$1'", TY.Source(GenType)
         return false
 
@@ -845,6 +873,9 @@ module XL.SEMANTICS.GENERICS is
             else
                 ArgType := TY.NonVariableType (ArgType)
             ArgTypeSrc  : PT.tree := TY.Source(ArgType)
+            ArgTypeRef  : PT.tree := PT.Attached(ArgTypeSrc, "INSTSRC")
+            if ArgTypeRef <> nil then
+                ArgTypeSrc := ArgTypeRef
 
             // Check consistency with deductions, or deduce if not found
             NG         : integer := size (FunGenType.parameters)
@@ -1220,9 +1251,7 @@ module XL.SEMANTICS.GENERICS is
             if decl <> nil then
                 if not GEN.IsGenericDeclaration(decl) then
                     instType : TY.any_type := TY.GetDefinedType(decl.name)
-                    instImpl : TY.any_type := TY.NonConstSourceType(instType)
-                    instSrc  : PT.tree := TY.Source(instImpl)
-                    instOf   : PT.tree := PT.Attached(instSrc, "INSTANCEOF")
+                    instOf   : PT.tree := InstanceOf(instType)
                     if instOf = GDecl.name then
                         return decl
                     
@@ -1257,7 +1286,7 @@ module XL.SEMANTICS.GENERICS is
 
         // If so, then find the parameter type by position in arg list
         instType : TY.any_type := TY.GetDefinedType(instOf.name)
-        instImpl : TY.any_type := TY.NonConstSourceType(instType)
+        instImpl : TY.any_type := InstanceType(instType)
         instSrc  : PT.tree := TY.Source(instImpl) // complex[real]
         translate instSrc
             when ('Name'['Args']) then

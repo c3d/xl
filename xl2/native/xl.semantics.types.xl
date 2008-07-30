@@ -397,6 +397,11 @@ module XL.SEMANTICS.TYPES is
             tp := GEN.MakeGeneric(tp)
             tp.name := Name
 
+        GenSource : PT.tree := PT.Attached(Value, "INSTSRC")
+        if GenSource <> nil then
+            tp.name := GenSource
+            TY.SetDefinedType GenSource, tp
+
         return EnterTypeDecl(N, Value, tp)
  
 
