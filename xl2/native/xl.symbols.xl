@@ -736,40 +736,51 @@ module XL.SYMBOLS is
         return PT.NewName (base, pos)
 
 
-    procedure Debug(S : symbol_table; indent : text) is
+    
+    procedure Debug(S : symbol_table; kind : lookup_kind) is
     // ------------------------------------------------------------------------
     //   Dump a symbol table
     // ------------------------------------------------------------------------
-        IO.WriteLn indent, "Symbol table ", S
-        name : text
-        indt : text := indent + " "
-        for name in S.names loop
-            IO.Write indt, "Name ", name, ": "
-            T : PT.tree
-            for T in S.names[name] loop
-                IO.Write PT.name_tree(T), " "
-            IO.WriteLn ""
-        for name in S.rewrites loop
-            IO.Write indt, "Rewr ", name, " (", size(S.rewrites[name]), "): "
-            R : rewrite
-            for R in S.rewrites[name] loop
-                IO.Write R, " "
-            IO.WriteLn ""
-        for name in S.properties loop
-            IO.Write indt, "Prop ", name, ": "
-            prop : PT.tree := S.properties[name] 
-            if prop = nil then
-                IO.WriteLn "nil"
-            else if (prop.kind = PT.xlINTEGER or prop.kind = PT.xlREAL or
-                     prop.kind = PT.xlTEXT or prop.kind = PT.xlNAME) then
-                IO.WriteLn prop
-            else
-                IO.WriteLn "p debug(", PT.name_tree(prop), ")"
-        ue : using_entry
-        for ue in S.usings loop
-            IO.WriteLn indt, "Usng ",ue.scope," p symbols(",ue.symbols, ")"
-        impl : symbol_table
-        for impl in S.implicit loop
-            IO.WriteLn indt, "Impl p symbols(", impl, ")"
-        if S.enclosing <> nil then
-            IO.WriteLn "Parent: p symbols(", S.enclosing, ")"
+        IO.WriteLn "Symbol table ", S
+
+        depths : symbol_table_depths
+        scopes : symbol_table_scopes
+        Collect S, depths, scopes, kind
+
+        for S in depths loop
+            depth :integer := depths[S]
+            IO.WriteLn "Table ", S, " depth ", depth, " scope ", scopes[S]
+            name : text
+            for name in S.names loop
+                IO.Write " Name ", name, ": "
+                T : PT.tree
+                for T in S.names[name] loop
+                    IO.Write PT.name_tree(T), " "
+                IO.WriteLn ""
+            for name in S.rewrites loop
+                IO.Write " Rewr ", name, " (", size(S.rewrites[name]), "): "
+                R : rewrite
+                for R in S.rewrites[name] loop
+                    IO.Write R, " "
+                IO.WriteLn ""
+            for name in S.properties loop
+                IO.Write " Prop ", name, ": "
+                prop : PT.tree := S.properties[name] 
+                if prop = nil then
+                    IO.WriteLn "nil"
+                else if (prop.kind = PT.xlINTEGER or prop.kind = PT.xlREAL or
+                         prop.kind = PT.xlTEXT or prop.kind = PT.xlNAME) then
+                    IO.WriteLn prop
+                else
+                    IO.WriteLn " p ::debug(", PT.name_tree(prop), ")"
+            ue : using_entry
+            for ue in S.usings loop
+                IO.WriteLn " Usng ", ue.scope, " depth ", depths[ue.symbols],
+                           " p ::symbols(",ue.symbols, ")"
+            impl : symbol_table
+            for impl in S.implicit loop
+                IO.WriteLn " Impl depth ", depths[impl],
+                           " p ::symbols(", impl, ")"
+            if S.enclosing <> nil then
+                IO.WriteLn " Parent depth ", depths[S.enclosing],
+                           " p ::symbols(", S.enclosing, ")"
