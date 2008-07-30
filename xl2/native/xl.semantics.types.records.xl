@@ -93,8 +93,8 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 ifaceR.machine_name := bodyR.machine_name
 
 
-    procedure MakeFieldList (Fields            : PT.tree;
-                             in out rtp        : record_type) is
+    procedure MakeFieldList (Fields     : PT.tree;
+                             in out rtp : record_type) is
     // ------------------------------------------------------------------------
     //    Translate a field list from parse tree form into a list
     // ------------------------------------------------------------------------
@@ -132,11 +132,9 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 else
                     translate Fields
                         when
-                            'X'
-                            'Y'
+                            @'ByteCode'
                         then
-                            MakeFieldList X, rtp
-                            MakeFieldList Y, rtp
+                            // We assume someone know what they did
                             return
                     ERR.Error "'$1' isn't a field declaration", Fields
 
