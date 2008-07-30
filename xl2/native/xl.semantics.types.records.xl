@@ -683,9 +683,10 @@ module XL.SEMANTICS.TYPES.RECORDS is
         // create new symbol table
         context : SYM.symbol_table := XLT.context
         globals : SYM.symbol_table := XLT.global_context
-        newsyms : SYM.symbol_table := SYM.NewSymbolTable(context)
+        newsyms : SYM.symbol_table := SYM.NewSymbolTable(globals)
         XLT.context := newsyms
         XLT.global_context := newsyms
+        SYM.AddImplicit newsyms, context
 
         trace[+defaultfns] "In ", newsyms, "-", globals, " enter: ", source
 
@@ -703,7 +704,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         trace[-defaultfns] "Code: ", result
 
         // If evaluation was successful, then add the context as a lateral
-        SYM.AddUsing context, nil, newsyms
+        SYM.AddUsing globals, nil, newsyms
 
 
     translation XLSemantics
