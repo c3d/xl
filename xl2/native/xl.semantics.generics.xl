@@ -824,8 +824,7 @@ module XL.SEMANTICS.GENERICS is
         valid := XLT.XLSemantics(valid)
         if XLT.EndAttempt(tnt) then
             trace[inst] "Errors during validation, result=", valid
-            ERR.Error "Generic validation failed for '$1'", IName
-            ERR.Error "against actual type '$1'", IInit
+            ERR.Error "Generic validation failed for '$1'='$2'", IName, IInit
             ERR.DisplayLastErrors()
             result := false
         else
