@@ -263,7 +263,7 @@ module XL.ERRORS is
         C : character
         for C in result loop
             if C = '@' then
-                return "[internal]"
+                return "<bytecode>"
 
 
     procedure Error (E : text; arg : PT.tree) is
