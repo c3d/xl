@@ -683,7 +683,6 @@ module XL.SEMANTICS.TYPES.RECORDS is
         globals : SYM.symbol_table := XLT.global_context
         newsyms : SYM.symbol_table := SYM.NewSymbolTable(globals)
         XLT.context := newsyms
-        XLT.global_context := newsyms
         SYM.AddImplicit newsyms, context
 
         trace[+defaultfns] "In ", newsyms, "-", globals, " enter: ", source
@@ -694,7 +693,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         result := XLT.XLSemantics(result)
         hadError : boolean := XLT.EndAttempt(tnt)
         XLT.context := context
-        XLT.global_context := globals
+        SYM.RemoveImplicit newsyms
         if hadError then
             trace[-defaultfns] "Error: ", ERR.LastErrorsText()
             return nil

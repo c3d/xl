@@ -547,19 +547,19 @@ module XL.SEMANTICS.GENERICS is
 
         // Create instantiation context
         oldContext : SYM.symbol_table := XLT.context
-        fnContext : SYM.symbol_table := XLT.function_context
         declContext : SYM.symbol_table := SYM.Enclosing(gtp.symbols)
-        instContext : SYM.symbol_table := SYM.NewSymbolTable(declContext)
-        Name : PT.tree := PT.Clone(Decl.Name)
+        instContext : SYM.symbol_table := SYM.NewSymbolTable(XLT.global_context)
         XLT.context := instContext
-        XLT.function_context := instContext
-        XLT.CopyScopeProperties instContext, oldContext
+        XLT.CopyScopeProperties instContext, XLT.global_context
+        SYM.AddImplicit instContext, declContext
+        SYM.AddImplicit XLT.global_context, instContext
 
         // Record where to find the context of instantiation (oldContext)
         SetInstantiator instContext, oldContext
         DeclareInstantiationContext instContext
 
         // Insert declarations in the instantiation context
+        Name : PT.tree := PT.Clone(Decl.Name)
         Source : PT.tree := nil
         SourcePosition : integer := PT.NOPOS
         for I in 0..NP-1 loop
@@ -572,7 +572,6 @@ module XL.SEMANTICS.GENERICS is
                 ERR.Error "Internal: '$1' is not a name", P.name
                 instantiations -= 1
                 XLT.context := oldContext
-                XLT.function_context := fnContext
                 trace[-inst] "Parameter is not a name: ", PT.tree(P.name)
                 return ERR.ErrorTree()
 
@@ -684,7 +683,6 @@ module XL.SEMANTICS.GENERICS is
             result.info := infos
 
         XLT.context := oldContext
-        XLT.function_context := fnContext
         instantiations -= 1
 
 
@@ -798,21 +796,17 @@ module XL.SEMANTICS.GENERICS is
 
         GenType.in_validation := true
 
-        // Create instantiation context
+        // Create instantiation context for validation
         oldContext : SYM.symbol_table := XLT.context
-        oldFunction: SYM.symbol_table := XLT.function_context
-        oldGlobal  : SYM.symbol_table := XLT.global_context
         declContext : SYM.symbol_table := GenType.context
         instContext : SYM.symbol_table := SYM.NewSymbolTable(declContext)
         XLT.context := instContext
-        XLT.function_context := instContext
-        XLT.global_context := instContext
+        XLT.CopyScopeProperties instContext, XLT.global_context
+        SYM.AddImplicit instContext, oldContext
 
         // Make the instantiation context visible for validation
         SetInstantiator instContext, oldContext
         DeclareInstantiationContext instContext
-        SYM.AddUsing instContext, nil, oldContext
-        XLT.CopyScopeProperties instContext, oldContext
 
         // Insert declarations for the replacement type
         IName : PT.tree := PT.Clone(GenType.name)
@@ -837,8 +831,6 @@ module XL.SEMANTICS.GENERICS is
             trace[inst] "Validated as: ", valid
             result := true
         XLT.context := oldContext
-        XLT.function_context := oldFunction
-        XLT.global_context := oldGlobal
         GenType.in_validation := false
 
         if result then

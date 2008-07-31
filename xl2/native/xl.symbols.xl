@@ -185,7 +185,8 @@ module XL.SYMBOLS is
                       in out depths : symbol_table_depths;
                       in out scopes : symbol_table_scopes;
                       mode          : lookup_kind;
-                      depth         : integer := 1) is
+                      depth         : integer := 1;
+                      scope         : PT.tree := nil) is
     // ------------------------------------------------------------------------
     //   Collect all tables referenced by the current one, with their depth
     // ------------------------------------------------------------------------
@@ -193,24 +194,26 @@ module XL.SYMBOLS is
 
         if current_depth > depth then
             depths[table] := depth
-            scopes[table] := nil
+            scopes[table] := scope
         else if current_depth = 0 then
             depths[table] := depth
-            scopes[table] := nil
+            scopes[table] := scope
             if mode <> lookupLocalOnly then
                 if mode <> lookupDirect then
                     entry : using_entry
                     for entry in table.usings loop
-                        Collect entry.symbols,depths,scopes,mode,depth+100
-                        if entry.scope <> nil then
-                            if scopes[entry.symbols] = nil then
-                                scopes[entry.symbols] := entry.scope
+                        entryScope : PT.tree := entry.scope
+                        if scope <> nil then
+                            entryScope := parse_tree('scope'.'entryScope')
+                        Collect entry.symbols,depths,scopes,mode,
+                                depth+100, entryScope
                     impl : symbol_table
                     for impl in table.implicit loop
-                        Collect impl, depths, scopes, mode, depth+100
+                        Collect impl, depths, scopes, mode, depth+100, scope
                 if mode <> lookupLocalUsing then
                     if table.enclosing <> nil then
-                        Collect table.enclosing, depths, scopes, mode, depth+2
+                        Collect table.enclosing, depths, scopes, mode,
+                                depth+2, scope
 
 
     procedure Lookup (table         : symbol_table;
@@ -771,12 +774,20 @@ module XL.SYMBOLS is
                     IO.WriteLn " p ::debug(", PT.name_tree(prop), ")"
             ue : using_entry
             for ue in S.usings loop
-                IO.WriteLn " Usng ", ue.scope, " depth ", depths[ue.symbols],
+                ueDepth : integer := depth + 1
+                if count(depths, ue.symbols) > 0 then
+                    ueDepth := depths[ue.symbols]
+                IO.WriteLn " Usng ", ue.scope, " depth ", ueDepth,
                            " p ::symbols(",ue.symbols, ")"
             impl : symbol_table
             for impl in S.implicit loop
-                IO.WriteLn " Impl depth ", depths[impl],
-                           " p ::symbols(", impl, ")"
+                implDepth : integer := depth + 1
+                if count(depths, impl) > 0 then
+                    implDepth := depths[impl]
+                IO.WriteLn " Impl depth ", implDepth, " p ::symbols(", impl, ")"
             if S.enclosing <> nil then
-                IO.WriteLn " Parent depth ", depths[S.enclosing],
+                enclDepth : integer := depth + 1
+                if count(depths, S.enclosing) > 0 then
+                    enclDepth := depths[S.enclosing]
+                IO.WriteLn " Parent depth ", enclDepth,
                            " p ::symbols(", S.enclosing, ")"
