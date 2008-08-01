@@ -381,8 +381,10 @@ module XL.SEMANTICS.OVERLOAD is
                         AType := TY.InvalidType("unknown in overload")
                     trace [overload] "FAIL: Type mismatch for ",
                                      PT.tree(D.name)
-                    trace [overload] "      Expected ", TY.Source(D.type)
-                    trace [overload] "      Got ", AType.name
+                    trace [overload] "      Expected ", TY.Source(D.type),
+                                     " = ", D.type
+                    trace [overload] "      Got ", AType.name,
+                                     " = ", AType
                     ERR.Error "'$1' could not be selected because", C
                     ERR.Error "the type '$3' of '$1' doesn't match '$2'",
                                 ArgList[A],
@@ -766,8 +768,10 @@ module XL.SEMANTICS.OVERLOAD is
                     if not Matching then
                         trace [overload] "FAIL: Type mismatch for ",
                                          PT.tree(D.name)
-                        trace [overload] "      Expected ", TY.Source(D.type)
-                        trace [overload] "      Got ", AType.name
+                        trace [overload] "      Expected ", TY.Source(D.type),
+                                         " : ", D.type
+                        trace [overload] "      Got ", AType.name,
+                                         " : ", AType
                         ERR.Error "'$1' could not be selected because", C
                         ERR.Error "the type '$3' of '$1' doesn't match '$2'",
                                     D.initializer,

@@ -502,6 +502,7 @@ module XL.SEMANTICS.DECLARATIONS is
                         if isType then
                             idt : TY.any_type := TY.GetDefinedType(iface_name)
                             bdt : TY.any_type := TY.GetDefinedType(body_name)
+                            trace[interface] "Type iface=", idt, " body=", bdt
                             if idt = nil then
                                 ERR.Error "Internal: missing i-type for '$1'",
                                           iface_name
