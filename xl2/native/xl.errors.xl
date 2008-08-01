@@ -268,7 +268,6 @@ module XL.ERRORS is
                 if arg.source <> nil then
                     arg := arg.source
                     restart
-                return "<bytecode>"
             return result
 
 

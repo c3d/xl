@@ -99,6 +99,14 @@ module XL.SEMANTICS.TYPES.RECORDS is
     //    Translate a field list from parse tree form into a list
     // ------------------------------------------------------------------------
 
+        trace [recdecl] "Fields: ", Fields
+        decl : DCL.declaration := DCL.GetDeclaration(Fields)
+        if decl then
+            if not decl.is_builtin then
+                trace [recdecl] "Decl: ", decl
+                rtp.fields += decl
+            return
+
         if Fields.kind = PT.xlBLOCK then
             block : Fields as PT.block_tree
             if (block.opening = XL.PARSER.INDENT_MARKER and
@@ -122,21 +130,14 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 MakeFieldList X, rtp
                 MakeFieldList Y, rtp
 
+            when
+                @ 'ByteCode'
+            then
+                // We assume someone know what they did...
+                return
+
             else
-                trace [recdecl] "Fields: ", Fields
-                decl : DCL.declaration := DCL.GetDeclaration(Fields)
-                if decl then
-                    if not decl.is_builtin then
-                        trace [recdecl] "Decl: ", decl
-                        rtp.fields += decl
-                else
-                    translate Fields
-                        when
-                            @'ByteCode'
-                        then
-                            // We assume someone know what they did
-                            return
-                    ERR.Error "'$1' isn't a field declaration", Fields
+                ERR.Error "'$1' isn't a field declaration", Fields
 
 
     function NewRecordType(Source     : PT.tree;
@@ -530,9 +531,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
     // ------------------------------------------------------------------------
     //    Declare a default function (ctor/dtor)
     // ------------------------------------------------------------------------
-        source := parse_tree(@@defaultfn 'source')
-        XLT.AddScopeDecl XLT.context, source
-        return nil
+        return parse_tree(@@defaultfn 'source')
 
 
     function EnterDefaultConstructor(recName : PT.name_tree;
