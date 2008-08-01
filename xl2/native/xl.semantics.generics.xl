@@ -787,8 +787,9 @@ module XL.SEMANTICS.GENERICS is
             return false
 
         // Check if we have a cached answer
-        mn     : PT.name_tree := ActType.machine_name
-        key    : text := "VALID:" + mn.value
+        mng    : PT.name_tree := GenType.machine_name
+        mna    : PT.name_tree := ActType.machine_name
+        key    : text := "VALID:" + mng.value + "=" + mna.value
         cached : integer := SYM.GetInteger(XLT.global_context, key)
         if cached <> 0 then
             trace[-inst] "Cached result was ", cached
