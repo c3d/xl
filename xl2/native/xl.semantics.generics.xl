@@ -661,25 +661,33 @@ module XL.SEMANTICS.GENERICS is
                 ERR.Error "Generic '$1' has no initializer", Name
             PT.AttachTree Init, "INSTSRC", Source
             result := DCL.EnterDeclaration (Name, Type, Init, true)
-            result := XLT.XLSemantics(result)
 
-        assert result <> nil
+        if result = nil then
+            ERR.Error "Instantiation failed for '$1'", Decl.name
 
-        // Cache the result for next time
-        if XLT.EndAttempt(tnt) then
+        // Cache the declaration result for next time
+        hadErrors : boolean := XLT.EndAttempt(tnt)
+        if hadErrors then
             ERR.DisplayLastErrors()
             result := ERR.ErrorTree()
         SYM.Enter XLT.global_context, "INSTANCE", key, result
         trace[-inst] "Entered ", key, "=", result
 
-        // Process declarations that we may have inserted in the local scope
-        // such as constructor, destructors, temporaries.
-        // We can't do that before having entered the instance above,
-        // otherwise we cause infinite instantiation loops in common cases
-        if not isPartial then
-            infos : PT.infos := result.info
+        // Run semantics on the result (after we have cached the declaration)
+        if not hadErrors and not isPartial then
+            previous : PT.tree := result
+
+            // Process declarations that we may have inserted in the local scope
+            // such as constructor, destructors, temporaries.
+            // We can't do that before having entered the instance above,
+            // otherwise we cause infinite instantiation loops in common cases
+            result := XLT.XLSemantics(result)
             result := XLT.PostScopeSemantics(result, XLT.scopeLocal, nil)
-            result.info := infos
+
+            // Restore the information (e.g. type, declarations, etc)
+            if result <> previous then
+                result := XLT.Append(result, parse_tree(@nop))
+                result.info := previous.info
 
         XLT.context := oldContext
         instantiations -= 1

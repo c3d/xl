@@ -204,7 +204,10 @@ module XL.SYMBOLS is
                     for entry in table.usings loop
                         entryScope : PT.tree := entry.scope
                         if scope <> nil then
-                            entryScope := parse_tree('scope'.'entryScope')
+                            if entryScope <> nil then
+                                entryScope := parse_tree('scope'.'entryScope')
+                            else
+                                entryScope := scope
                         Collect entry.symbols,depths,scopes,mode,
                                 depth+100, entryScope
                     impl : symbol_table
