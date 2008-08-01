@@ -468,6 +468,9 @@ module XL.SYMBOLS is
                 old_pos : integer := PT.NOPOS
                 PT.NOPOS := test_tree.position
                 result := bestR.translator(test_tree, bestS, bestR, bestA)
+                if result <> nil and result <> test_tree then
+                    if result.source = nil then
+                        result.source := test_tree
                 PT.NOPOS := old_pos
             else if report then
                 ERR.Error "The form '$1' is ambiguous", test_tree
