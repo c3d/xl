@@ -851,6 +851,8 @@ module XL.SEMANTICS.DECLARATIONS is
             result := ERR.ErrorTree()
 
         trace [-ctors] "CallConstructor result: ", result
+        if result = nil then
+            result := parse_tree(@nop)
 
 
     function ConstructorCode (decl : declaration) return PT.tree is
