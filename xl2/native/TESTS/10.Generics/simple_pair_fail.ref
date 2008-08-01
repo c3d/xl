@@ -79,6 +79,9 @@
 10.Generics/simple_pair_fail.xl:3: for parameter 'item'
 | generic [type item]
 |__________________^
+10.Generics/simple_pair_fail.xl:11: Unable to instantiate 'Pair', because
+| type kzoo is Pair[Pair[boo_lean]]
+|_________________^
 10.Generics/simple_pair_fail.xl:11: Expression 'Pair [Pair [boo_lean] ]' has no type
 | type kzoo is Pair[Pair[boo_lean]]
 |__________________^
@@ -97,9 +100,6 @@
 10.Generics/simple_pair_fail.xl:14: No valid generic found for 'Pair'
 | flax : Pair [Pair [ Pair [real ]]]
 |_________________^
-10.Generics/simple_pair_fail.xl:9: The type 'nonexistent_item' is unknown
-| type kazaa is Pair[real]
-|___________________^
 10.Generics/simple_pair_fail.xl:14: Expression 'Pair [real]' has no type
 | flax : Pair [Pair [ Pair [real ]]]
 |__________________________^
@@ -124,6 +124,9 @@
 10.Generics/simple_pair_fail.xl:3: for parameter 'item'
 | generic [type item]
 |__________________^
+10.Generics/simple_pair_fail.xl:14: Unable to instantiate 'Pair', because
+| flax : Pair [Pair [ Pair [real ]]]
+|___________^
 10.Generics/simple_pair_fail.xl:14: Expression 'Pair [Pair [Pair [real] ] ]' has no type
 | flax : Pair [Pair [ Pair [real ]]]
 |_____________^
@@ -139,9 +142,6 @@
 10.Generics/simple_pair_fail.xl:14: No valid generic found for 'Pair'
 | flax : Pair [Pair [ Pair [real ]]]
 |_________________^
-10.Generics/simple_pair_fail.xl:9: The type 'nonexistent_item' is unknown
-| type kazaa is Pair[real]
-|___________________^
 10.Generics/simple_pair_fail.xl:14: Expression 'Pair [real]' has no type
 | flax : Pair [Pair [ Pair [real ]]]
 |__________________________^
@@ -166,6 +166,9 @@
 10.Generics/simple_pair_fail.xl:3: for parameter 'item'
 | generic [type item]
 |__________________^
+10.Generics/simple_pair_fail.xl:14: Unable to instantiate 'Pair', because
+| flax : Pair [Pair [ Pair [real ]]]
+|___________^
 10.Generics/simple_pair_fail.xl:14: Expression 'Pair [Pair [Pair [real] ] ]' has no type
 | flax : Pair [Pair [ Pair [real ]]]
 |_____________^

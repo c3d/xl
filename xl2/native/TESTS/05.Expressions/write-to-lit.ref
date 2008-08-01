@@ -1,7 +1,7 @@
 05.Expressions/write-to-lit.xl:33: No translation for '0 := B'
 |     0 := B
 |________^
-05.Expressions/write-to-lit.xl:27: Candidate form 'Tgt' := 'Src' cannot be selected
+05.Expressions/write-to-lit.xl:27: Form ''Tgt' := 'Src'' could not be selected
 | to Copy(out Tgt : integer; in Src : integer) written Tgt := Src
 |___________________________________________________________^
 05.Expressions/write-to-lit.xl:33: Cannot convert '0' from 'constant integer' to 'integer'
