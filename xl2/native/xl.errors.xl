@@ -255,15 +255,21 @@ module XL.ERRORS is
         return PT.NOPOS
 
 
-    function TreeToText(arg : PT.tree) return text is
+    function TreeToText(in out arg : PT.tree) return text is
     // ------------------------------------------------------------------------
     //    Convert arg to text, eliminating any bytecode reference
     // ------------------------------------------------------------------------
-        result := text arg
-        C : character
-        for C in result loop
+        loop
+            result := text arg
+            C : character
+            for C in result loop
+                exit if C = '@'
             if C = '@' then
+                if arg.source <> nil then
+                    arg := arg.source
+                    restart
                 return "<bytecode>"
+            return result
 
 
     procedure Error (E : text; arg : PT.tree) is
