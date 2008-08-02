@@ -180,10 +180,12 @@ module XL.ERRORS is
         M.message := fmt
         M.position := pos
         if size(error_stack) > 0 then
-            back(error_stack) += M
+            if size(back(error_stack)) < max_errors then
+                back(error_stack) += M
         else
             error_count += 1
-            last_errors += M
+            if (size(last_errors) < max_errors) then
+                last_errors += M
 
             // Convert positon to line and column
             if pos = -1 then
