@@ -527,13 +527,6 @@ module XL.SEMANTICS.TYPES.RECORDS is
         return Code
 
 
-    function EnterDefaultFunction(source : PT.tree) return BC.bytecode is
-    // ------------------------------------------------------------------------
-    //    Declare a default function (ctor/dtor)
-    // ------------------------------------------------------------------------
-        return parse_tree(@@defaultfn 'source')
-
-
     function EnterDefaultConstructor(recName : PT.name_tree;
                                      rtp : record_type) return BC.bytecode is
     // ------------------------------------------------------------------------
@@ -701,6 +694,15 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
         // If evaluation was successful, then add the context as a lateral
         SYM.AddUsing globals, nil, newsyms
+
+
+    function EnterDefaultFunction(source : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Declare a default function (ctor/dtor)
+    // ------------------------------------------------------------------------
+        if GN.InstantiationContext() <> nil then
+            return parse_tree(@@defaultfn 'source')
+        return PostProcessDefaultFunction(source)
 
 
     translation XLSemantics
