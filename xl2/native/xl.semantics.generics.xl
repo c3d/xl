@@ -911,13 +911,17 @@ module XL.SEMANTICS.GENERICS is
                                 return false
                             trace [deduce] "Deduced ", N, " -> ", ArgTypeSrc
                             Gargs[N] := ArgTypeSrc
-                        else if Gargs[N] <> ArgTypeSrc then
-                            ERR.Error "Generic parameter type '$1' ", N
-                            ERR.Error "cannot be both '$1'", Gargs[N]
-                            ERR.Error "and '$1' in the same instance",ArgTypeSrc
-                            trace [deduce] "Conflict for ", N, "=", ArgTypeSrc
-                            trace [deduce] "We had ", N, "=", Gargs[N]
-                            return false
+                        else
+                            exType : TY.any_type := TY.GetDefinedType(Gargs[N])
+                            if not SameType(ArgType, exType) then
+                                ERR.Error "Generic parameter type '$1' ", N
+                                ERR.Error "cannot be both '$1'", Gargs[N]
+                                ERR.Error "and '$1' in the same instance",
+                                          ArgTypeSrc
+                                trace [deduce] "Conflict for ",
+                                               N, "=", ArgTypeSrc
+                                trace [deduce] "We had ", N, "=", Gargs[N]
+                                return false
                         return true
 
                     else
