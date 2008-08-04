@@ -242,6 +242,7 @@ module XL.SEMANTICS.ITERATORS is
         XLT.context := iter_context
         SYM.SetInteger XLT.context, "LOCAL", 1
         SYM.SetProperty iter_context, "ITERATING", LoopBody
+        SYM.AddImplicit iter_context, context // For := on generics
 
         // This should not be generic code at that stage...
         if GEN.IsGenericDeclaration(it) then
