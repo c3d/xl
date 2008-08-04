@@ -31,14 +31,13 @@ module XL_BUILTINS with
     // 
     // ========================================================================
 
-    type boolean                                                                                is enumeration (false, true) as XL.BYTECODE.xlbool 
-
     type integer                                                                                is XL.BYTECODE.xlint
     type unsigned                                                                               is XL.BYTECODE.xluint
     type real                                                                                   is XL.BYTECODE.xlreal
     type character                                                                              is XL.BYTECODE.xlchar
     type text                                                                                   is XL.BYTECODE.xltext
     type record                                                                                 is XL.BYTECODE.xlrecord
+    type boolean                                                                                is enumeration (false, true) as XL.BYTECODE.xlbool 
 
 
 
