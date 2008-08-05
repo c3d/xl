@@ -10,9 +10,87 @@
 04.Lookup/type_redefined.xl:29: because a type named 'integer' already exists
 | type integer
 |____________^
+04.Lookup/type_redefined.xl:36: No valid constructor for 'result'
+| function Foo (K : integer) return integer is
+|_________________________________________^
+04.Lookup/type_redefined.xl:29: Constructor 'integer' is invalid because
+| type integer
+|____________^
+04.Lookup/type_redefined.xl:29: No valid function found for 'integer'
+| type integer
+|____________^
+library/runtime/default/./xl_builtins.xs:57: 'xlbuiltins_580 . (Integer ( ) return integer)' could not be selected because
+|     function Integer() return integer                                                           is XL.BYTECODE.zero_int
+|_____________________________^
+library/runtime/default/./xl_builtins.xs:34: the return type 'integer'
+|     type integer                                                                                is XL.BYTECODE.xlint
+|________________^
+04.Lookup/type_redefined.xl:29: doesn't match expected type 'integer'
+| type integer
+|____________^
+library/runtime/default/./xl_builtins.xs:261: 'xlbuiltins_580 . (integer (Value : integer) return integer)' could not be selected because
+|     function integer(Value : integer) return integer                                            is XL.BYTECODE.int_from_int
+|____________________________________________^
+library/runtime/default/./xl_builtins.xs:34: the return type 'integer'
+|     type integer                                                                                is XL.BYTECODE.xlint
+|________________^
+04.Lookup/type_redefined.xl:29: doesn't match expected type 'integer'
+| type integer
+|____________^
+library/runtime/default/./xl_builtins.xs:262: 'xlbuiltins_580 . (integer (Value : unsigned) return integer)' could not be selected because
+|     function integer(Value : unsigned) return integer                                           is XL.BYTECODE.int_from_uint
+|_____________________________________________^
+library/runtime/default/./xl_builtins.xs:34: the return type 'integer'
+|     type integer                                                                                is XL.BYTECODE.xlint
+|________________^
+04.Lookup/type_redefined.xl:29: doesn't match expected type 'integer'
+| type integer
+|____________^
+library/runtime/default/./xl_builtins.xs:263: 'xlbuiltins_580 . (integer (Value : character) return integer)' could not be selected because
+|     function integer(Value : character) return integer                                          is XL.BYTECODE.int_from_char
+|______________________________________________^
 04.Lookup/type_redefined.xl:37: The type 'integer' can't be defined here
 |    type integer
 |_______________^
 04.Lookup/type_redefined.xl:29: because a type named 'integer' already exists
 | type integer
 |____________^
+04.Lookup/type_redefined.xl:38: No valid constructor for 'L'
+|    L : integer
+|____^
+04.Lookup/type_redefined.xl:29: Constructor 'integer' is invalid because
+| type integer
+|____________^
+04.Lookup/type_redefined.xl:29: No valid function found for 'integer'
+| type integer
+|____________^
+library/runtime/default/./xl_builtins.xs:57: 'xlbuiltins_580 . (Integer ( ) return integer)' could not be selected because
+|     function Integer() return integer                                                           is XL.BYTECODE.zero_int
+|_____________________________^
+library/runtime/default/./xl_builtins.xs:34: the return type 'integer'
+|     type integer                                                                                is XL.BYTECODE.xlint
+|________________^
+04.Lookup/type_redefined.xl:29: doesn't match expected type 'integer'
+| type integer
+|____________^
+library/runtime/default/./xl_builtins.xs:261: 'xlbuiltins_580 . (integer (Value : integer) return integer)' could not be selected because
+|     function integer(Value : integer) return integer                                            is XL.BYTECODE.int_from_int
+|____________________________________________^
+library/runtime/default/./xl_builtins.xs:34: the return type 'integer'
+|     type integer                                                                                is XL.BYTECODE.xlint
+|________________^
+04.Lookup/type_redefined.xl:29: doesn't match expected type 'integer'
+| type integer
+|____________^
+library/runtime/default/./xl_builtins.xs:262: 'xlbuiltins_580 . (integer (Value : unsigned) return integer)' could not be selected because
+|     function integer(Value : unsigned) return integer                                           is XL.BYTECODE.int_from_uint
+|_____________________________________________^
+library/runtime/default/./xl_builtins.xs:34: the return type 'integer'
+|     type integer                                                                                is XL.BYTECODE.xlint
+|________________^
+04.Lookup/type_redefined.xl:29: doesn't match expected type 'integer'
+| type integer
+|____________^
+library/runtime/default/./xl_builtins.xs:263: 'xlbuiltins_580 . (integer (Value : character) return integer)' could not be selected because
+|     function integer(Value : character) return integer                                          is XL.BYTECODE.int_from_char
+|______________________________________________^

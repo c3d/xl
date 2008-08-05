@@ -1,24 +1,3 @@
-10.Generics/implicit_instantiation_fail.xl:7: No valid function found for 'Ajouter'
-| C : text := Ajouter (3, "ABC")
-|___________________^
-10.Generics/implicit_instantiation_fail.xl:3: Generic parameter type 'item' 
-| generic [type item]
-|__________________^
-library/runtime/default/./xl_builtins.xs:36: cannot be both 'integer'
-|     type integer                                                                                is XL.BYTECODE.xlint
-|________________^
-library/runtime/default/./xl_builtins.xs:40: and 'text' in the same instance
-|     type text                                                                                   is XL.BYTECODE.xltext
-|_____________^
-10.Generics/implicit_instantiation_fail.xl:4: 'Ajouter (X , Y : item) return item' could not be selected because
-| function Ajouter (X, Y : item) return item is
-|_____________________________________^
-10.Generics/implicit_instantiation_fail.xl:7: the type 'constant text' of '"ABC"' doesn't match 'item'
-| C : text := Ajouter (3, "ABC")
-|_____________________________^
-10.Generics/implicit_instantiation_fail.xl:4: for parameter 'Y'
-| function Ajouter (X, Y : item) return item is
-|______________________^
 10.Generics/implicit_instantiation_fail.xl:7: No translation for 'C := Ajouter (3 , "ABC" )'
 | C : text := Ajouter (3, "ABC")
 |_____________________^
@@ -31,10 +10,10 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 10.Generics/implicit_instantiation_fail.xl:3: Generic parameter type 'item' 
 | generic [type item]
 |__________________^
-library/runtime/default/./xl_builtins.xs:36: cannot be both 'integer'
+library/runtime/default/./xl_builtins.xs:34: cannot be both 'integer'
 |     type integer                                                                                is XL.BYTECODE.xlint
 |________________^
-library/runtime/default/./xl_builtins.xs:40: and 'text' in the same instance
+library/runtime/default/./xl_builtins.xs:38: and 'text' in the same instance
 |     type text                                                                                   is XL.BYTECODE.xltext
 |_____________^
 10.Generics/implicit_instantiation_fail.xl:4: 'Ajouter (X , Y : item) return item' could not be selected because

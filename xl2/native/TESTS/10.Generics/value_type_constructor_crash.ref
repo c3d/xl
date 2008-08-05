@@ -4,9 +4,6 @@
 10.Generics/value_type_constructor_crash.xl:8: in generic type 'test'
 | function test (n : test.value) return test is
 |_______________________^
-10.Generics/value_type_constructor_crash.xl:8: Name 'test' was not declared here
-| function test (n : test.value) return test is
-|_______________________^
 10.Generics/value_type_constructor_crash.xl:8: Expression 'test . value' has no type
 | function test (n : test.value) return test is
 |________________________^
@@ -14,9 +11,6 @@
 | function test (n : test.value) return test is
 |_____________________________^
 10.Generics/value_type_constructor_crash.xl:8: in generic type 'test'
-| function test (n : test.value) return test is
-|_______________________^
-10.Generics/value_type_constructor_crash.xl:8: Name 'test' was not declared here
 | function test (n : test.value) return test is
 |_______________________^
 10.Generics/value_type_constructor_crash.xl:8: Expression 'test . value' has no type
@@ -31,12 +25,25 @@
 10.Generics/value_type_constructor_crash.xl:8: 'test (n : test . value) return test' could not be selected because
 | function test (n : test.value) return test is
 |_____________________________________^
-10.Generics/value_type_constructor_crash.xl:12: the type 'constant integer' of '3' doesn't match '<undefined type>_555'
+10.Generics/value_type_constructor_crash.xl:12: the type 'constant integer' of '3' doesn't match '<undefined type>_604'
 | K : test(3)
 |__________^
 10.Generics/value_type_constructor_crash.xl:8: for parameter 'n'
 | function test (n : test.value) return test is
 |________________^
+10.Generics/value_type_constructor_crash.xl:4: 'test ( ) return test' could not be selected because
+| generic [type item] type test is record with
+|_____________________________^
+10.Generics/value_type_constructor_crash.xl:12: there are too many arguments for 'test'
+| K : test(3)
+|________^
+10.Generics/value_type_constructor_crash.xl:5: 'test (a : item 
+b : item) return test' could not be selected because
+|   a : item
+|___^
+10.Generics/value_type_constructor_crash.xl:6: there is no value for 'b'
+|   b : item
+|___^
 10.Generics/value_type_constructor_crash.xl:12: No valid function found for 'test'
 | K : test(3)
 |________^
@@ -61,12 +68,25 @@
 10.Generics/value_type_constructor_crash.xl:8: 'test (n : test . value) return test' could not be selected because
 | function test (n : test.value) return test is
 |_____________________________________^
-10.Generics/value_type_constructor_crash.xl:13: the type 'constant real' of '3.5' doesn't match '<undefined type>_555'
+10.Generics/value_type_constructor_crash.xl:13: the type 'constant real' of '3.5' doesn't match '<undefined type>_604'
 | L : test(3.5)
 |____________^
 10.Generics/value_type_constructor_crash.xl:8: for parameter 'n'
 | function test (n : test.value) return test is
 |________________^
+10.Generics/value_type_constructor_crash.xl:4: 'test ( ) return test' could not be selected because
+| generic [type item] type test is record with
+|_____________________________^
+10.Generics/value_type_constructor_crash.xl:13: there are too many arguments for 'test'
+| L : test(3.5)
+|________^
+10.Generics/value_type_constructor_crash.xl:5: 'test (a : item 
+b : item) return test' could not be selected because
+|   a : item
+|___^
+10.Generics/value_type_constructor_crash.xl:6: there is no value for 'b'
+|   b : item
+|___^
 10.Generics/value_type_constructor_crash.xl:13: No valid function found for 'test'
 | L : test(3.5)
 |________^
@@ -91,28 +111,6 @@
 10.Generics/value_type_constructor_crash.xl:19: Error instantiating 'tart'
 | M : tart(3)
 |________^
-10.Generics/value_type_constructor_crash.xl:17: Internal: parameter 'value' not found in 'test [integer]'
-|    result.b := test.value(4)
-|_________________________^
-10.Generics/value_type_constructor_crash.xl:17: No parameter named 'value'
-|    result.b := test.value(4)
-|_________________________^
-10.Generics/value_type_constructor_crash.xl:17: in generic type 'test'
-|    result.b := test.value(4)
-|___________________^
-10.Generics/value_type_constructor_crash.xl:17: Internal: parameter 'value' not found in 'test [integer]'
-|    result.b := test.value(4)
-|_________________________^
-10.Generics/value_type_constructor_crash.xl:17: No parameter named 'value'
-|    result.b := test.value(4)
-|_________________________^
-10.Generics/value_type_constructor_crash.xl:17: in generic type 'test'
-|    result.b := test.value(4)
-|___________________^
-10.Generics/value_type_constructor_crash.xl:17: No translation for 'test . value (4)'
-|    result.b := test.value(4)
-|__________________________^
-[Compiler generated] Form ''functionname' ('functionargs')' could not be selected
 10.Generics/value_type_constructor_crash.xl:17: No translation for 'result . b := test . value (4)'
 |    result.b := test.value(4)
 |______________^
@@ -141,47 +139,6 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 |    result.b := test.value(4)
 |__________________________^
 [Compiler generated] Form ''functionname' ('functionargs')' could not be selected
-10.Generics/value_type_constructor_crash.xl:19: Error instantiating 'tart'
-| M : tart(3)
-|________^
-10.Generics/value_type_constructor_crash.xl:12: No valid function found for 'test'
-| K : test(3)
-|________^
-10.Generics/value_type_constructor_crash.xl:8: 'test (n : test . value) return test' could not be selected because
-| function test (n : test.value) return test is
-|_____________________________________^
-10.Generics/value_type_constructor_crash.xl:12: the type 'constant integer' of '3' doesn't match '<undefined type>_555'
-| K : test(3)
-|__________^
-10.Generics/value_type_constructor_crash.xl:8: for parameter 'n'
-| function test (n : test.value) return test is
-|________________^
-10.Generics/value_type_constructor_crash.xl:4: 'test ( ) return test' could not be selected because
-| generic [type item] type test is record with
-|_____________________________^
-10.Generics/value_type_constructor_crash.xl:12: there are too many arguments for 'test'
-| K : test(3)
-|________^
-10.Generics/value_type_constructor_crash.xl:4: 'test (a : item 
-b : item) return test' could not be selected because
-| generic [type item] type test is record with
-|_____________________________^
-10.Generics/value_type_constructor_crash.xl:6: there is no value for 'b'
-|   b : item
-|___^
-10.Generics/value_type_constructor_crash.xl:5: 'test (a : item 
-b : item) return test' could not be selected because
-|   a : item
-|___^
-10.Generics/value_type_constructor_crash.xl:6: there is no value for 'b'
-|   b : item
-|___^
-10.Generics/value_type_constructor_crash.xl:4: 'test ( ) return test' could not be selected because
-| generic [type item] type test is record with
-|_____________________________^
-10.Generics/value_type_constructor_crash.xl:12: there are too many arguments for 'test'
-| K : test(3)
-|________^
 10.Generics/value_type_constructor_crash.xl:12: No translation for 'K := test (3)'
 | K : test(3)
 |________^
@@ -194,7 +151,7 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 10.Generics/value_type_constructor_crash.xl:8: 'test (n : test . value) return test' could not be selected because
 | function test (n : test.value) return test is
 |_____________________________________^
-10.Generics/value_type_constructor_crash.xl:12: the type 'constant integer' of '3' doesn't match '<undefined type>_555'
+10.Generics/value_type_constructor_crash.xl:12: the type 'constant integer' of '3' doesn't match '<undefined type>_604'
 | K : test(3)
 |__________^
 10.Generics/value_type_constructor_crash.xl:8: for parameter 'n'
@@ -206,13 +163,6 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 10.Generics/value_type_constructor_crash.xl:12: there are too many arguments for 'test'
 | K : test(3)
 |________^
-10.Generics/value_type_constructor_crash.xl:4: 'test (a : item 
-b : item) return test' could not be selected because
-| generic [type item] type test is record with
-|_____________________________^
-10.Generics/value_type_constructor_crash.xl:6: there is no value for 'b'
-|   b : item
-|___^
 10.Generics/value_type_constructor_crash.xl:5: 'test (a : item 
 b : item) return test' could not be selected because
 |   a : item
@@ -220,53 +170,6 @@ b : item) return test' could not be selected because
 10.Generics/value_type_constructor_crash.xl:6: there is no value for 'b'
 |   b : item
 |___^
-10.Generics/value_type_constructor_crash.xl:4: 'test ( ) return test' could not be selected because
-| generic [type item] type test is record with
-|_____________________________^
-10.Generics/value_type_constructor_crash.xl:12: there are too many arguments for 'test'
-| K : test(3)
-|________^
-10.Generics/value_type_constructor_crash.xl:13: No valid function found for 'test'
-| L : test(3.5)
-|________^
-10.Generics/value_type_constructor_crash.xl:8: 'test (n : test . value) return test' could not be selected because
-| function test (n : test.value) return test is
-|_____________________________________^
-10.Generics/value_type_constructor_crash.xl:13: the type 'constant real' of '3.5' doesn't match '<undefined type>_555'
-| L : test(3.5)
-|____________^
-10.Generics/value_type_constructor_crash.xl:8: for parameter 'n'
-| function test (n : test.value) return test is
-|________________^
-10.Generics/value_type_constructor_crash.xl:4: 'test ( ) return test' could not be selected because
-| generic [type item] type test is record with
-|_____________________________^
-10.Generics/value_type_constructor_crash.xl:13: there are too many arguments for 'test'
-| L : test(3.5)
-|________^
-10.Generics/value_type_constructor_crash.xl:4: 'test (a : item 
-b : item) return test' could not be selected because
-| generic [type item] type test is record with
-|_____________________________^
-10.Generics/value_type_constructor_crash.xl:13: the type 'constant real' of '3.5' doesn't match 'item'
-| L : test(3.5)
-|____________^
-10.Generics/value_type_constructor_crash.xl:5: for parameter 'a'
-|   a : item
-|___^
-10.Generics/value_type_constructor_crash.xl:5: 'test (a : item 
-b : item) return test' could not be selected because
-|   a : item
-|___^
-10.Generics/value_type_constructor_crash.xl:6: there is no value for 'b'
-|   b : item
-|___^
-10.Generics/value_type_constructor_crash.xl:4: 'test ( ) return test' could not be selected because
-| generic [type item] type test is record with
-|_____________________________^
-10.Generics/value_type_constructor_crash.xl:13: there are too many arguments for 'test'
-| L : test(3.5)
-|________^
 10.Generics/value_type_constructor_crash.xl:13: No translation for 'L := test (3.5)'
 | L : test(3.5)
 |________^
@@ -279,7 +182,7 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 10.Generics/value_type_constructor_crash.xl:8: 'test (n : test . value) return test' could not be selected because
 | function test (n : test.value) return test is
 |_____________________________________^
-10.Generics/value_type_constructor_crash.xl:13: the type 'constant real' of '3.5' doesn't match '<undefined type>_555'
+10.Generics/value_type_constructor_crash.xl:13: the type 'constant real' of '3.5' doesn't match '<undefined type>_604'
 | L : test(3.5)
 |____________^
 10.Generics/value_type_constructor_crash.xl:8: for parameter 'n'
@@ -291,16 +194,6 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 10.Generics/value_type_constructor_crash.xl:13: there are too many arguments for 'test'
 | L : test(3.5)
 |________^
-10.Generics/value_type_constructor_crash.xl:4: 'test (a : item 
-b : item) return test' could not be selected because
-| generic [type item] type test is record with
-|_____________________________^
-10.Generics/value_type_constructor_crash.xl:13: the type 'constant real' of '3.5' doesn't match 'item'
-| L : test(3.5)
-|____________^
-10.Generics/value_type_constructor_crash.xl:5: for parameter 'a'
-|   a : item
-|___^
 10.Generics/value_type_constructor_crash.xl:5: 'test (a : item 
 b : item) return test' could not be selected because
 |   a : item
@@ -308,9 +201,3 @@ b : item) return test' could not be selected because
 10.Generics/value_type_constructor_crash.xl:6: there is no value for 'b'
 |   b : item
 |___^
-10.Generics/value_type_constructor_crash.xl:4: 'test ( ) return test' could not be selected because
-| generic [type item] type test is record with
-|_____________________________^
-10.Generics/value_type_constructor_crash.xl:13: there are too many arguments for 'test'
-| L : test(3.5)
-|________^
