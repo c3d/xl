@@ -311,7 +311,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
         // Lookup field
         syms := tp.symbols
-        SYM.Lookup syms, kind, Field.value, defs, SYM.lookupLocalOnly
+        SYM.Lookup syms, kind, Field.value, defs, SYM.lookupLocalUsing
 
 
 
@@ -343,7 +343,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
             if instContext <> nil then
                 insts    : PT.tree_list
                 SYM.Lookup instContext, "TYPE", Field.value,
-                           insts, SYM.lookupLocalOnly
+                           insts, SYM.lookupLocalUsing
                 if size(insts) > 0 then
                     instParm := insts[0]
                     if size(insts) > 1 then
@@ -375,7 +375,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         // (here, IO itself is not generic, but writable is)
         if ic <> nil then
             insts : PT.tree_list
-            SYM.Lookup ic, "TYPE", Field.value, insts, SYM.lookupLocalOnly
+            SYM.Lookup ic, "TYPE", Field.value, insts, SYM.lookupLocalUsing
             if size(insts) > 0 then
                 selected := insts[0]
                 if size(insts) > 1 then
@@ -445,10 +445,10 @@ module XL.SEMANTICS.TYPES.RECORDS is
             if instContext <> nil then
                 insts : PT.tree_list
                 SYM.Lookup instContext, "DECL", Field.value,
-                           insts, SYM.lookupLocalOnly
+                           insts, SYM.lookupLocalUsing
                 if size(insts) = 0 then
                     SYM.Lookup instContext, "FN", Field.value,
-                               insts, SYM.lookupLocalOnly
+                               insts, SYM.lookupLocalUsing
                 if size(insts) > 0 then
                     instParm := insts[0]
                     if size(insts) > 1 then
