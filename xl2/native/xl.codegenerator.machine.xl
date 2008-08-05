@@ -398,7 +398,10 @@ module XL.CODE_GENERATOR.MACHINE is
             if toCallImpl <> nil then
                 toCall := toCallImpl
 
-        FnType       : toCall.type as FT.function_type
+        FnType       : TY.NonSourceType (toCall.type) as FT.function_type
+        if FnType = nil then
+            ERR.Error "Internal: Calling non-function '$1'", toCall.machine_name
+            return ERR.ErrorTree()
         parms        : FN.declaration_list := FnType.parameters
         mname        : PT.name_tree := toCall.machine_name
         ocnt         : integer := FnType.outputs_count
