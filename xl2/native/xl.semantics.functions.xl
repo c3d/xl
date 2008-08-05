@@ -137,6 +137,8 @@ module XL.SEMANTICS.FUNCTIONS is
             result := parse_tree(@@fn_body 'result' 'Init')
             SetFunction result, f
 
+        TY.SetType f.machine_name, FnType
+
 
     function EnterBuiltinFunction(input : PT.tree;
                                   Interface : PT.tree;
