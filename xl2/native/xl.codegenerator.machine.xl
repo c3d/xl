@@ -29,6 +29,7 @@ import PT = XL.PARSER.TREE
 import SYM = XL.SYMBOLS
 import TY = XL.SEMANTICS.TYPES
 import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import EN = XL.SEMANTICS.TYPES.ENUMERATIONS
 import GEN = XL.SEMANTICS.TYPES.GENERICS
 import XLT = XL.TRANSLATOR
 import CG = XL.CODE_GENERATOR
@@ -657,6 +658,12 @@ module XL.CODE_GENERATOR.MACHINE is
     // ------------------------------------------------------------------------
     //    Index a field in a record type
     // ------------------------------------------------------------------------
+
+        // We generate global enumerations, so don't index them
+        etype : TY.NonSourceType(TY.GetType(MField)) as EN.enumeration_type
+        if etype <> nil then
+            return MField
+
         mname : PT.name_tree := SYM.Temporary ("fld")
         fdecl : PT.tree :=
                 parse_tree(@ref_decl 'mtype' 'mname')
