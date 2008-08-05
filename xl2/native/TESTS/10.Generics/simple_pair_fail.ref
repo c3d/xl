@@ -124,9 +124,6 @@
 10.Generics/simple_pair_fail.xl:3: for parameter 'item'
 | generic [type item]
 |__________________^
-10.Generics/simple_pair_fail.xl:14: Unable to instantiate 'Pair', because
-| flax : Pair [Pair [ Pair [real ]]]
-|___________^
 10.Generics/simple_pair_fail.xl:14: Expression 'Pair [Pair [Pair [real] ] ]' has no type
 | flax : Pair [Pair [ Pair [real ]]]
 |_____________^
@@ -166,9 +163,6 @@
 10.Generics/simple_pair_fail.xl:3: for parameter 'item'
 | generic [type item]
 |__________________^
-10.Generics/simple_pair_fail.xl:14: Unable to instantiate 'Pair', because
-| flax : Pair [Pair [ Pair [real ]]]
-|___________^
 10.Generics/simple_pair_fail.xl:14: Expression 'Pair [Pair [Pair [real] ] ]' has no type
 | flax : Pair [Pair [ Pair [real ]]]
 |_____________^

@@ -4,4 +4,10 @@
 10.Generics/any_lookup_fail.xl:7: No translation for 'Invoke A'
 |     Invoke A
 |____________^
-[Compiler generated] Candidate form 'functionname' 'functionargs' cannot be selected
+[Compiler generated] Form ''functionname' 'functionargs'' could not be selected
+[Compiler generated] Form ''type' 'names'' could not be selected
+[Compiler generated] Form ''functionname' 'functionargs'' could not be selected
+[Compiler generated] Form ''type' 'names'' could not be selected
+10.Generics/any_lookup_fail.xl:13: Error instantiating 'AnyLookupTest'
+|     AnyLookupTest 3
+|_________________^

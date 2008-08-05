@@ -1,24 +1,3 @@
-10.Generics/deduction_conflict.xl:17: No valid function found for 'Pang'
-| Z : boolean := Pang (1, 3.0)
-|___________________^
-10.Generics/deduction_conflict.xl:4: Generic parameter type 'something' 
-| generic type something
-|______________________^
-library/runtime/default/./xl_builtins.xs:36: cannot be both 'integer'
-|     type integer                                                                                is XL.BYTECODE.xlint
-|________________^
-library/runtime/default/./xl_builtins.xs:38: and 'real' in the same instance
-|     type real                                                                                   is XL.BYTECODE.xlreal
-|_____________^
-10.Generics/deduction_conflict.xl:6: 'Pang (A : something ; B : something) return boolean' could not be selected because
-| function Pang (A : something; B : something) return boolean is
-|___________________________________________________^
-10.Generics/deduction_conflict.xl:17: the type 'constant real' of '3' doesn't match 'something'
-| Z : boolean := Pang (1, 3.0)
-|___________________________^
-10.Generics/deduction_conflict.xl:6: for parameter 'B'
-| function Pang (A : something; B : something) return boolean is
-|_______________________________^
 10.Generics/deduction_conflict.xl:17: No translation for 'Z := Pang (1 , 3)'
 | Z : boolean := Pang (1, 3.0)
 |_____________________^
@@ -31,10 +10,10 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 10.Generics/deduction_conflict.xl:4: Generic parameter type 'something' 
 | generic type something
 |______________________^
-library/runtime/default/./xl_builtins.xs:36: cannot be both 'integer'
+library/runtime/default/./xl_builtins.xs:34: cannot be both 'integer'
 |     type integer                                                                                is XL.BYTECODE.xlint
 |________________^
-library/runtime/default/./xl_builtins.xs:38: and 'real' in the same instance
+library/runtime/default/./xl_builtins.xs:36: and 'real' in the same instance
 |     type real                                                                                   is XL.BYTECODE.xlreal
 |_____________^
 10.Generics/deduction_conflict.xl:6: 'Pang (A : something ; B : something) return boolean' could not be selected because
@@ -46,33 +25,6 @@ library/runtime/default/./xl_builtins.xs:38: and 'real' in the same instance
 10.Generics/deduction_conflict.xl:6: for parameter 'B'
 | function Pang (A : something; B : something) return boolean is
 |_______________________________^
-10.Generics/deduction_conflict.xl:20: Error instantiating 'Pong'
-| U : real := Pong (1.0, 3)
-|________________^
-10.Generics/deduction_conflict.xl:10: No translation for 'A + B'
-|    return A + B
-|_____________^
-library/runtime/default/./xl_builtins.xs:64: Form ''X' + 'Y'' could not be selected
-|     function Add(X, Y : integer) return integer                 written X+Y                     is XL.BYTECODE.add_int
-|__________________________________________________________________________^
-10.Generics/deduction_conflict.xl:9: Cannot convert 'a_594' from 'something' to 'integer'
-| function Pong (A : something; B : integer) return something is
-|________________^
-10.Generics/deduction_conflict.xl:10: No translation for 'result := A + B'
-|    return A + B
-|_____________^
-library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
-|     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
-|______________________________________________________________________________^
-10.Generics/deduction_conflict.xl:10: No translation for 'A + B'
-|    return A + B
-|_____________^
-library/runtime/default/./xl_builtins.xs:64: Form ''X' + 'Y'' could not be selected
-|     function Add(X, Y : integer) return integer                 written X+Y                     is XL.BYTECODE.add_int
-|__________________________________________________________________________^
-10.Generics/deduction_conflict.xl:9: Cannot convert 'a_594' from 'something' to 'integer'
-| function Pong (A : something; B : integer) return something is
-|________________^
 10.Generics/deduction_conflict.xl:20: No translation for 'U := Pong (1 , 3)'
 | U : real := Pong (1.0, 3)
 |__________________^
@@ -82,15 +34,6 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 10.Generics/deduction_conflict.xl:20: Error instantiating 'Pong'
 | U : real := Pong (1.0, 3)
 |________________^
-10.Generics/deduction_conflict.xl:10: No translation for 'A + B'
-|    return A + B
-|_____________^
-library/runtime/default/./xl_builtins.xs:64: Form ''X' + 'Y'' could not be selected
-|     function Add(X, Y : integer) return integer                 written X+Y                     is XL.BYTECODE.add_int
-|__________________________________________________________________________^
-10.Generics/deduction_conflict.xl:9: Cannot convert 'a_594' from 'something' to 'integer'
-| function Pong (A : something; B : integer) return something is
-|________________^
 10.Generics/deduction_conflict.xl:10: No translation for 'result := A + B'
 |    return A + B
 |_____________^
@@ -103,7 +46,7 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 library/runtime/default/./xl_builtins.xs:64: Form ''X' + 'Y'' could not be selected
 |     function Add(X, Y : integer) return integer                 written X+Y                     is XL.BYTECODE.add_int
 |__________________________________________________________________________^
-10.Generics/deduction_conflict.xl:9: Cannot convert 'a_594' from 'something' to 'integer'
+10.Generics/deduction_conflict.xl:9: Cannot convert 'a_628' from 'something' to 'integer'
 | function Pong (A : something; B : integer) return something is
 |________________^
 10.Generics/deduction_conflict.xl:22: No translation for 'K := Ping (1 , 2)'
@@ -130,6 +73,6 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
 |     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
 |______________________________________________________________________________^
-10.Generics/deduction_conflict.xl:12: Cannot convert 'result_602' from 'something' to 'integer'
+10.Generics/deduction_conflict.xl:12: Cannot convert 'result_636' from 'something' to 'integer'
 | function Ping (A : integer; B : integer) return something is
 |_________________________________________________________^
