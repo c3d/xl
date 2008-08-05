@@ -548,6 +548,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
                     fname : PT.tree := PT.Clone(F.name)
                     ctorCall : PT.tree := parse_tree
                         result.'fname' := 'ctorName' ()
+                    ctorCall := parse_tree({tentative} 'ctorCall')
                     result := XLT.Append(result, ctorCall)
 
         // If we found any, then generate a constructor here
@@ -611,7 +612,8 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 fname : PT.tree := PT.Clone(F.name)
                 dtorCall : PT.tree := parse_tree
                     delete this.'fname'
-                result := XLT.Append(result, XLT.TentativeSemantics(dtorCall))
+                dtorCall := parse_tree({tentative} 'dtorCall')
+                result := XLT.Append(result, result)
 
         // If we found any, then generate a 'delete' procedure here
         if result <> nil then
@@ -661,13 +663,16 @@ module XL.SEMANTICS.TYPES.RECORDS is
         result := XLT.Append(result, EnterCopy(N, rtp))
 
 
-    function PostProcessDefaultFunction (source : PT.tree) return PT.tree is
+    function EnterDefaultFunction(source : PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
-    //   Process the default functions entered in EnterDefaultFunction
+    //    Declare a default function (ctor/dtor)
     // ------------------------------------------------------------------------
     //    We put it in a lateral map for two reasons:
     //    - It makes it possible to override it in the local scope
     //    - It is easier to destroy if there is any error
+
+        if GN.InIncompleteInstantiationContext() then
+            return parse_tree(@@defaultfn 'source')
 
         // Save existing context, including global decls, and
         // create new symbol table
@@ -682,7 +687,6 @@ module XL.SEMANTICS.TYPES.RECORDS is
         // Try to evaluate the tentative function
         tnt : XLT.attempt := XLT.BeginAttempt()
         result := XLT.XLDeclarations(source)
-        result := XLT.XLSemantics(result)
         hadError : boolean := XLT.EndAttempt(tnt)
         XLT.context := context
         SYM.RemoveImplicit newsyms
@@ -694,15 +698,46 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
         // If evaluation was successful, then add the context as a lateral
         SYM.AddUsing globals, nil, newsyms
+        SYM.SetContextProperty result, "DEFAULTFN", newsyms
+
+        result := parse_tree(@@defaultfn_decl 'result')
 
 
-    function EnterDefaultFunction(source : PT.tree) return BC.bytecode is
+    function EvaluateDefaultFunction (source : PT.tree) return PT.tree is
     // ------------------------------------------------------------------------
-    //    Declare a default function (ctor/dtor)
+    //   Process the default functions entered in EnterDefaultFunction
     // ------------------------------------------------------------------------
-        if GN.InstantiationContext() <> nil then
-            return parse_tree(@@defaultfn 'source')
-        return PostProcessDefaultFunction(source)
+    //    We put it in a lateral map for two reasons:
+    //    - It makes it possible to override it in the local scope
+    //    - It is easier to destroy if there is any error
+
+        // Save existing context, including global decls, and
+        // create new symbol table
+        context : SYM.symbol_table := XLT.context
+        newsyms : SYM.symbol_table := SYM.ContextProperty (source, "DEFAULTFN")
+        XLT.context := newsyms
+        assert newsyms <> nil
+        trace[+defaultfns] "In ", newsyms, " evaluate: ", source
+        result := XLT.XLSemantics(source)
+        XLT.context := context
+        trace[-defaultfns] "Code: ", result
+
+
+    translation XLDeclarations
+    // ------------------------------------------------------------------------
+    //    Try to translate X.Y expressions
+    // ------------------------------------------------------------------------
+        when
+            @@defaultfn 'Source'
+        then
+            if not GN.InIncompleteInstantiationContext() then
+                result := EvaluateDefaultFunction(Source)
+            return result
+
+        when
+            @@defaultfn_decl 'Source'
+        then
+            return input
 
 
     translation XLSemantics
@@ -722,4 +757,12 @@ module XL.SEMANTICS.TYPES.RECORDS is
         when
             @@defaultfn 'Source'
         then
-            return PostProcessDefaultFunction(Source)
+            result := EnterDefaultFunction(Source)
+            if result <> nil then
+                result := XLT.XLSemantics(result)
+        when
+            @@defaultfn_decl 'Source'
+        then
+            result := EvaluateDefaultFunction(Source)
+            if result <> nil then
+                result := XLT.XLSemantics(result)
