@@ -70,6 +70,7 @@ module XL.SEMANTICS.GENERICS with
     function InstanceContext(source : PT.tree) return SYM.symbol_table
     procedure DeclareInstantiationContext (instContext : SYM.symbol_table)
     function InstantiationContext () return SYM.symbol_table
+    function InIncompleteInstantiationContext () return boolean
     function InstanceOf(tp : TY.any_type) return PT.tree
     function InstanceType(tp : TY.any_type) return TY.any_type
 
