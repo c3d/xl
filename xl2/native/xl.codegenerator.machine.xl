@@ -659,9 +659,9 @@ module XL.CODE_GENERATOR.MACHINE is
     //    Index a field in a record type
     // ------------------------------------------------------------------------
 
-        // We generate global enumerations, so don't index them
-        etype : TY.NonSourceType(TY.GetType(MField)) as EN.enumeration_type
-        if etype <> nil then
+        // If this is really some module, we have just generated some globals
+        rtype : TY.any_type := TY.GetType(Record)
+        if rtype = nil or TY.IsModuleType(rtype.base) then
             return MField
 
         mname : PT.name_tree := SYM.Temporary ("fld")
