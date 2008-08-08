@@ -572,8 +572,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
     // ------------------------------------------------------------------------
     //   Enter a constructor taking a value for each field
     // ------------------------------------------------------------------------
-    //   We create a tentative function body, which is created only
-    //   if we can find copies for all fields
+
         // Loop on all fields
         F       : declaration
         Parms   : PT.tree
