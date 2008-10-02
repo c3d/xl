@@ -583,8 +583,24 @@ module XL.CODE_GENERATOR.MACHINE is
     //    Call a function in a record
     // ------------------------------------------------------------------------
 
-        // TODO: For now, ignore the record
-        return FunctionCall(toCall, margs, target, ctors, dtors)
+        if toCall.is_global and not toCall.is_field then
+            // Ignore the record, this is really a module
+            return FunctionCall(toCall, margs, target, ctors, dtors)
+
+        // Save the machine name, which is really the field name
+        fName : PT.name_tree := toCall.machine_name
+
+        // Create a field tag to reference that particular value
+        fTag : PT.name_tree := SYM.Temporary("indirectFn")
+        result := parse_tree(@field 'fTag' 'Record' 'fName')
+
+        // Use the tag for the function call
+        toCall.machine_name := fTag
+        result := XLT.Append(result,
+                             FunctionCall(toCall, margs, target, ctors, dtors))
+
+        // Restore original machine name
+        toCall.machine_name := fName
 
 
     function EnterCall() return integer is
