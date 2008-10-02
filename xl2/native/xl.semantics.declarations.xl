@@ -652,7 +652,8 @@ module XL.SEMANTICS.DECLARATIONS is
                 if ProcOrFn <> nil then
                     TName : text := PT.XLNormalize(ProcOrFn.value)
                     if TName = "procedure" or TName = "function" then
-                        Type := parse_tree('Type' ('Args'))
+                        infix : input as PT.infix_tree
+                        Type := infix.right
                         return EnterDeclaration(Names, Type, nil, false)
                 ERR.Error "'$1' is not a type name", Type
             init : PT.tree := parse_tree('Type' ('Args'))
