@@ -148,6 +148,7 @@ module XL.SEMANTICS.MODULES is
             Name := PT.NewName (Name.value, Name.position)
             TY.SetType Name, rtp
             TY.SetType rtp.machine_name, rtp
+            TY.SetType modDecl.machine_name, rtp
             modDecl.type := rtp
             modDecl.name := Name
             SYM.CopySymbols recSyms, syms
