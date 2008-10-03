@@ -297,8 +297,9 @@ module XL.SEMANTICS.DECLARATIONS is
         XLT.AddScopeDecl ctxt, parse_tree(@ 'kind' 'mtype' 'mname')
 
         // Set the type of the name
-        TY.SetType Name, decl.type
-        TY.SetType mname, decl.type
+        TY.SetType Name, dtype
+        if not TY.IsModuleType(dtype) then
+            TY.SetType mname, dtype
 
         // Attach the declaration to the name (this is where we find it later)
         SetDeclaration Name, decl
