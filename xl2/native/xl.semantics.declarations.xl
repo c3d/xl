@@ -530,6 +530,11 @@ module XL.SEMANTICS.DECLARATIONS is
                     trace [interface] "  and also  ", multi.name,
                                       " : ", TY.Source(multi.type)
 
+                // Copy 'global' properties from implementation
+                if found.is_global then
+                    iface_decl.is_global := true
+                if not found.is_field then
+                    iface_decl.is_field := false
 
             if not needIt then
                 if found <> nil then
