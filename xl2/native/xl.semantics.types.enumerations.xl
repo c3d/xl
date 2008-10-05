@@ -199,7 +199,7 @@ module XL.SEMANTICS.TYPES.ENUMERATIONS is
     // ------------------------------------------------------------------------
         result := parse_tree
             function 'enName' () return 'enName' is XL.BYTECODE.zero_enum
-        result := REC.EnterDefaultFunction(result)
+        result := REC.EnterDefaultFunction(enName, result)
 
 
     function EnterCopy(enName : PT.name_tree;
@@ -210,7 +210,7 @@ module XL.SEMANTICS.TYPES.ENUMERATIONS is
         result := parse_tree
             to Copy(out this : 'enName'; that : 'enName')
                 written this := that is XL.BYTECODE.copy_enum
-        result := REC.EnterDefaultFunction(result)
+        result := REC.EnterDefaultFunction(enName, result)
 
 
     function EnterEqual(enName : PT.name_tree;
@@ -221,7 +221,7 @@ module XL.SEMANTICS.TYPES.ENUMERATIONS is
         result := parse_tree
             function Equal(this : 'enName'; that : 'enName')
                 written this = that is XL.BYTECODE.equal_enum
-        result := REC.EnterDefaultFunction(result)
+        result := REC.EnterDefaultFunction(enName, result)
 
 
     function EnterToInt(enName : PT.name_tree;
@@ -233,7 +233,7 @@ module XL.SEMANTICS.TYPES.ENUMERATIONS is
             function Integer(this : 'enName')
                 return integer
                 is XL.BYTECODE.enum_to_int
-        result := REC.EnterDefaultFunction(result)
+        result := REC.EnterDefaultFunction(enName, result)
 
 
     function EnterFromInt(enName : PT.name_tree;
@@ -245,7 +245,7 @@ module XL.SEMANTICS.TYPES.ENUMERATIONS is
             function 'enName'(this : integer)
                 return 'enName'
                 is XL.BYTECODE.int_to_enum
-        result := REC.EnterDefaultFunction(result)
+        result := REC.EnterDefaultFunction(enName, result)
 
 
     function EnterDefaults(N : PT.name_tree;

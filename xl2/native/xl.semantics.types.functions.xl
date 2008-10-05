@@ -318,7 +318,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
             procedure copy (out this:'fnName';
                             that : 'fnName') written this := that is
                 XL.BYTECODE.fnptr_copy
-        result := REC.EnterDefaultFunction(result)
+        result := REC.EnterDefaultFunction(fnName, result)
 
 
     function EnterDefaults(fnName : PT.name_tree;
