@@ -77,4 +77,5 @@ module XL.SEMANTICS.TYPES.RECORDS with
 
     function EnterDefaults(recName : PT.name_tree;
                            rtp : record_type) return BC.bytecode
-    function EnterDefaultFunction(source : PT.tree) return BC.bytecode
+    function EnterDefaultFunction(name : PT.tree;
+                                  source : PT.tree) return BC.bytecode
