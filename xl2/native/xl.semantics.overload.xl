@@ -213,11 +213,14 @@ module XL.SEMANTICS.OVERLOAD is
                 tp    : TY.any_type := TY.GetDefinedType(type)
                 ctors : PT.tree_list := DCL.ConstructorNames(tp)
                 ctor  : PT.tree
+                adjust: integer := 0
                 for ctor in ctors loop
                     ctorName : ctor as PT.name_tree
                     if ctorName <> nil then
+                        ctorList : PT.tree_list
+                        adjust += 1
                         SYM.Lookup symbols, "FN", ctorName.value,
-                                   candidates, itemDepth, 100
+                                   candidates, itemDepth, adjust + 100
 
         trace [overload] "In table ", symbols,
                          " found ", size(candidates), " candidates"
