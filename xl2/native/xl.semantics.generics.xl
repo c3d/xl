@@ -1125,8 +1125,12 @@ module XL.SEMANTICS.GENERICS is
         if Decl = nil then
             return ERR.ErrorTree()
 
+        tnt := XLT.BeginAttempt()
         result := Instantiate(Decl, ActualArgs, nil, Scope)
-
+        if XLT.EndAttempt(tnt) then
+            ERR.Error "Error instantiating '$1':", Name
+            ERR.DisplayLastErrors()
+            return ERR.ErrorTree()
 
 
     function InstantiateType (Decl : DCL.declaration;
