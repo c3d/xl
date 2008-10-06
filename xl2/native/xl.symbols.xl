@@ -164,6 +164,55 @@ module XL.SYMBOLS is
 
 
     // ========================================================================
+    // 
+    //    Score adjustment for the various lookup kinds
+    // 
+    // ========================================================================
+
+    SCORE_DEPTH_FACTOR          : integer := 16#1
+    SCORE_CONVERSION_FACTOR     : integer := 16#100
+    SCORE_GENERICITY_FACTOR     : integer := 16#4000
+    SCORE_VARIADICITY_FACTOR    : integer := 16#8000
+    SCORE_MATCH_FACTOR          : integer := 16#10000
+
+
+    procedure AdjustScoreMatches(in out score : integer; count : integer) is
+    // ------------------------------------------------------------------------
+    //   Adjust score specificity by a given amount
+    // ------------------------------------------------------------------------
+        score += (count+1) * SCORE_MATCH_FACTOR
+
+
+    procedure AdjustScoreDepth (in out score : integer; depth : integer) is
+    // ------------------------------------------------------------------------
+    //   Adjust the depth by the give amount
+    // ------------------------------------------------------------------------
+        score -= (depth + 1) * SCORE_DEPTH_FACTOR
+
+
+    procedure AdjustScoreConversions (in out score : integer) is
+    // ------------------------------------------------------------------------
+    //   Adjust the genericity by the give amount
+    // ------------------------------------------------------------------------
+        score -= SCORE_CONVERSION_FACTOR
+
+
+    procedure AdjustScoreGenericity (in out score : integer) is
+    // ------------------------------------------------------------------------
+    //   Adjust the genericity by the give amount
+    // ------------------------------------------------------------------------
+        score -= SCORE_GENERICITY_FACTOR
+
+
+    procedure AdjustScoreVariadicity (in out score : integer) is
+    // ------------------------------------------------------------------------
+    //    the variadicity by the given amount
+    // ------------------------------------------------------------------------
+        score -= SCORE_VARIADICITY_FACTOR
+
+
+
+    // ========================================================================
     //
     //    Simple name lookup
     //
@@ -424,11 +473,13 @@ module XL.SYMBOLS is
             args       : PT.tree_map
             ref        : PT.tree := R.reference_form
             dropErrors : boolean := false
-            score := PT.Matches(test_tree, ref, args)
+            matches    : integer := PT.Matches(test_tree, ref, args)
             if track then
                 IO.Write "Matching (", ref, ") = ", score, " depth ", depth, " "
-            if score > 0 then
-                score := 10000 * score - depth
+            if matches > 0 then
+                score := 0
+                AdjustScoreMatches score, matches
+                AdjustScoreDepth score, depth
                 if bestShape < score then
                     // The shape we found is better than anything before
                     bestShape := score

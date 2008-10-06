@@ -105,8 +105,8 @@ module XL.SEMANTICS.WRITTEN_FORMS is
         trace[+expr] "Lookup ", test, " against ", info.reference_form,
                      " for ", PT.tree(F.Name), " : ", TY.Source(F.type)
 
-        if Ftype <> nil or Gtype = nil then
-            base_score *= 100
+        if Ftype = nil and Gtype <> nil then
+            SYM.AdjustScoreGenericity base_score
 
         // Check whether this is an iterator / we are looking for one
         inIterator: boolean := PT.FindInfo(test, "ITERATOR_EXPR") <> nil
@@ -210,7 +210,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                             trace[-expr] "FAIL: Type error"
                             return 0
                         args[param_name] := semArg
-                        base_score -= 1
+                        SYM.AdjustScoreConversions base_score
 
         // Check if there are non-deduced generic arguments
         if Gtype <> nil then
