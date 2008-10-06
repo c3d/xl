@@ -229,7 +229,8 @@ module XL.SEMANTICS.OVERLOAD is
         C : PT.tree
         for C in candidates loop
 
-            Score : integer := itemDepth[C] + 1
+            Score : integer
+            SYM.AdjustScoreDepth Score, itemDepth[C]
             SemArgs := ActArgs
             trace [overload] "Testing ", PT.name_tree(C), ":", C,
                              " depth ", Score
@@ -269,7 +270,7 @@ module XL.SEMANTICS.OVERLOAD is
             if Ftype = nil and Gtype <> nil then
                 GFType : Gtype.base as FT.function_type
                 Ftype := GFType
-                Score *= 100
+                SYM.AdjustScoreGenericity Score
 
             // Check that we actually have a function
             if Ftype = nil then
@@ -294,7 +295,7 @@ module XL.SEMANTICS.OVERLOAD is
             // Check number of parameters.
             NP : integer := size(Ftype.parameters)
             if Ftype.variadic then
-                Score *= 100
+                SYM.AdjustScoreVariadicity Score
                 trace[overload] "Variadic ", TY.Source(Ftype), " score ", Score
             else if NA > NP then
                 ERR.Error "'$1' could not be selected because", C
@@ -324,10 +325,7 @@ module XL.SEMANTICS.OVERLOAD is
             for D in Ftype.parameters loop
                 // F(A, B) is better than F(A, B, C) where C has a default
                 // A += B is better than A+B for Add A, B
-                if D.is_output then
-                    Score += 1
-                else
-                    Score += 2
+                SYM.AdjustScoreMatches Score, 1 + integer(D.is_output)
                 if A < NA then
                     Arg := SemArgs[A]
                     if PT.Attached(Arg, "TODEDUCE") <> nil then
@@ -393,7 +391,7 @@ module XL.SEMANTICS.OVERLOAD is
                                             TY.Source(D.type)
                             trace[overload] "Expr=", Arg
                             SemArgs[A] := Arg
-                            Score += 1 // Make it worse
+                            SYM.AdjustScoreConversions Score
                 if not Matching then
                     if AType = nil then
                         AType := TY.InvalidType("unknown in overload")
@@ -492,7 +490,7 @@ module XL.SEMANTICS.OVERLOAD is
                 bestDNames := DNames
                 bestDidx := Didx
                 if recurse then BaseRecord := Scope
-            else if Score < bestScore then
+            else if Score > bestScore then
                 trace [overload] "BEST: New best score ", Score
                 best := C
                 bestScore := Score
@@ -714,12 +712,13 @@ module XL.SEMANTICS.OVERLOAD is
             Gtype : NSType as GEN.generic_type
             Gargs : GN.generic_map
             Vargs : PT.tree
-            Score : integer := depth
+            Score : integer := 0
+            SYM.AdjustScoreDepth Score, depth
 
             if Ftype = nil and Gtype <> nil then
                 GFType : Gtype.base as FT.function_type
                 Ftype := GFType
-                Score *= 100
+                SYM.AdjustScoreGenericity Score
 
             // Check that we actually have a function
             if Ftype = nil then
@@ -734,7 +733,7 @@ module XL.SEMANTICS.OVERLOAD is
             // Check number of parameters.
             NP : integer := size(Ftype.parameters)
             if Ftype.variadic then
-                Score *= 100
+                SYM.AdjustScoreVariadicity Score
             if toFnType <> nil then
                 if NP <> size(toFnType.parameters) then
                     ERR.Error "'$1' could not be selected because of the", C
@@ -783,7 +782,7 @@ module XL.SEMANTICS.OVERLOAD is
                                                 TY.Source(D.type)
                                 trace[overload] "Expr=", Arg
                                 SemArgs[A] := Arg
-                                Score += 1 // Make it worse
+                                SYM.AdjustScoreConversions Score
                     if not Matching then
                         trace [overload] "FAIL: Type mismatch for ",
                                          PT.tree(D.name)
@@ -827,7 +826,7 @@ module XL.SEMANTICS.OVERLOAD is
                 bestGtype := Gtype
                 bestVargs := Vargs
                 BaseRecord := Scope
-            else if Score < bestScore then
+            else if Score > bestScore then
                 trace [overload] "BEST: New best score ", Score
                 best := C
                 bestScore := Score
