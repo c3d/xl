@@ -750,10 +750,17 @@ module XL.SEMANTICS.GENERICS is
                     if Gargs[N] = nil then
                         Gargs[N] := subArg
                     else if Gargs[N] <> subArg then
-                        ERR.Error "Generic parameter '$1' ", subParm.name
-                        ERR.Error "cannot be both '$1'", Gargs[N]
-                        ERR.Error "and '$1' in the same instance", subArg
-                        return false
+                        mismatch : boolean := true
+                        if TY.IsTypeType (subParm.type) then
+                            oldType : TY.any_type := TY.GetDefinedType(Gargs[N])
+                            newType : TY.any_type := TY.GetDefinedType(subArg)
+                            if TY.SameType(oldType, newType) then
+                                mismatch := false
+                        if mismatch then
+                            ERR.Error "Generic parameter '$1' ", subParm.name
+                            ERR.Error "cannot be both '$1'", Gargs[N]
+                            ERR.Error "and '$1' in the same instance", subArg
+                            return false
 
                 // OK, it looks like a match
                 return true
