@@ -169,12 +169,13 @@ module XL.SYMBOLS is
     // 
     // ========================================================================
 
-    SCORE_DEPTH_FACTOR          : integer := 16#1
-    SCORE_DEFAULT_VALUES_FACTOR : integer := 16#100
-    SCORE_CONVERSION_FACTOR     : integer := 16#1000
-    SCORE_GENERICITY_FACTOR     : integer := 16#40000
-    SCORE_VARIADICITY_FACTOR    : integer := 16#80000
-    SCORE_MATCH_FACTOR          : integer := 16#100000
+    SCORE_RENAMES_FACTOR        : integer := 16#1
+    SCORE_DEPTH_FACTOR          : integer := 16#10
+    SCORE_DEFAULT_VALUES_FACTOR : integer := 16#1000
+    SCORE_CONVERSION_FACTOR     : integer := 16#10000
+    SCORE_GENERICITY_FACTOR     : integer := 16#400000
+    SCORE_VARIADICITY_FACTOR    : integer := 16#800000
+    SCORE_MATCH_FACTOR          : integer := 16#1000000
 
 
     procedure AdjustScoreMatches(in out score : integer; count : integer) is
@@ -189,6 +190,13 @@ module XL.SYMBOLS is
     //   Adjust the depth by the give amount
     // ------------------------------------------------------------------------
         score -= (depth + 1) * SCORE_DEPTH_FACTOR
+
+
+    procedure AdjustScoreRenames(in out score : integer; count : integer) is
+    // ------------------------------------------------------------------------
+    //   Adjust score specificity by a given amount
+    // ------------------------------------------------------------------------
+        score += (count+1) * SCORE_RENAMES_FACTOR
 
 
     procedure AdjustScoreDefaultValues (in out score : integer) is
