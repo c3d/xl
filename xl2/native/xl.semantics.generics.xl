@@ -951,35 +951,38 @@ module XL.SEMANTICS.GENERICS is
                         NP : integer := size (gtp.parameters)
                         P  : integer
                         for P in 0..NP-1 loop
-                            // Get declaration for sub parameter
-                            // i.e. we have F[complex](complex.value), and
-                            // complex[value], and we try to deduce value
-                            subParm : DCL.declaration := gtp.parameters[P]
+                          // Get declaration for sub parameter
+                          // i.e. we have F[complex](complex.value), and
+                          // complex[value], and we try to deduce value
+                          subParm : DCL.declaration := gtp.parameters[P]
 
-                            if TY.IsTypeType (subParm.type) then
-                                N : PT.tree := subParm.name
-                                subType1 : TY.any_type
-                                subType1 := TY.GetDefinedType(N)
-                                subType : subType1 as GEN.generic_type
-                                assert subType <> nil
+                          if TY.IsTypeType (subParm.type) then
+                            N : PT.tree := subParm.name
+                            subType : TY.GetDefinedType(N) as GEN.generic_type
+                            assert subType <> nil
 
-                                if TY.SameType (subType, ParmType) then
-                                    if Gargs[N] = nil then
-                                        if not Validate (subType, ArgType,
-                                                         Gargs) then
-                                            return false
-                                        trace [deduce] "Deduced ind ", N,
-                                                        " -> ", ArgTypeSrc
-                                        Gargs[N] := ArgTypeSrc
-                                    else if Gargs[N] <> ArgTypeSrc then
-                                        ERR.Error "Generic subtype '$1'", N
-                                        ERR.Error "can't be both '$1' and '$2'",
-                                                  Gargs[N], ArgTypeSrc
-                                        trace[deduce] "Conflict ind ", N, ":"
-                                        trace[deduce] "Had ", Gargs[N], " now",
-                                                      ArgTypeSrc
-                                        return false
-                                    return true
+                            if TY.SameType (subType, ParmType) then
+                              if Gargs[N] = nil then
+                                if not Validate (subType, ArgType, Gargs) then
+                                  return false
+                                trace [deduce] "Deduced ind ", N,
+                                                " -> ", ArgTypeSrc
+                                Gargs[N] := ArgTypeSrc
+                              else if Gargs[N] <> ArgTypeSrc then
+                                oldType : TY.any_type
+                                newType : TY.any_type
+                                oldType := TY.GetDefinedType(Gargs[N])
+                                newType := TY.GetDefinedType(ArgTypeSrc)
+                                if not SameType(oldType, newType) then
+                                  ERR.Error "Generic subtype '$1'", N
+                                  ERR.Error "cannot be both '$1'", Gargs[N]
+                                  ERR.Error "and '$1' in same instance",
+                                            ArgTypeSrc
+                                  trace[deduce] "Conflict ind ", N, ":"
+                                  trace[deduce] "Had ", Gargs[N],
+                                                " now ", ArgTypeSrc
+                                  return false
+                              return true
 
             // If not found in function generic parameters, what is it?
             ERR.Error "Internal: '$1' is generic, but not found in ",
