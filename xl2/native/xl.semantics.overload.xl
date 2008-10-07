@@ -233,7 +233,7 @@ module XL.SEMANTICS.OVERLOAD is
             SYM.AdjustScoreDepth Score, itemDepth[C]
             SemArgs := ActArgs
             trace [overload] "Testing ", PT.name_tree(C), ":", C,
-                             " depth ", Score
+                             " depth ", itemDepth[C], " score ", Score
 
             // Retrieve function information, ignore non functions
             Scope : PT.tree := nil
