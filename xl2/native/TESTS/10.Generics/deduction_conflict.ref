@@ -55,24 +55,12 @@ library/runtime/default/./xl_builtins.xs:64: Form ''X' + 'Y'' could not be selec
 library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
 |     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
 |______________________________________________________________________________^
-10.Generics/deduction_conflict.xl:22: Error instantiating 'Ping'
+10.Generics/deduction_conflict.xl:22: No valid function found for 'Ping'
 | K : integer := Ping(1, 2)
 |___________________^
-10.Generics/deduction_conflict.xl:4: Expression '@ error "Generic 'something' has no initializer"' has no type
-| generic type something
-|______________________^
-10.Generics/deduction_conflict.xl:4: Expression '@ error "Generic 'something' has no initializer"' has no type
-| generic type something
-|______________________^
-10.Generics/deduction_conflict.xl:4: Expression '@ error "Generic 'something' has no initializer"' is not a type
-| generic type something
-|______________________^
-10.Generics/deduction_conflict.xl:13: No translation for 'result := A + B'
-|    return A + B
-|_____________^
-library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
-|     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
-|______________________________________________________________________________^
-10.Generics/deduction_conflict.xl:12: Cannot convert 'result_636' from 'something' to 'integer'
+10.Generics/deduction_conflict.xl:12: 'Ping (A : integer ; B : integer) return something' could not be selected because
 | function Ping (A : integer; B : integer) return something is
-|_________________________________________________________^
+|_______________________________________________^
+10.Generics/deduction_conflict.xl:12: the generic type 'function (A : integer ; B : integer) return something' cannot be deduced
+| function Ping (A : integer; B : integer) return something is
+|________________^

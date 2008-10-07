@@ -540,6 +540,9 @@ module XL.SEMANTICS.GENERICS is
         result := SYM.LookupOne (XLT.global_context, "INSTANCE", key)
         if result <> nil then
             trace[-inst] "Found cached: ", result
+            translate result
+                when (@error 'Messages') then
+                    ERR.ReplayErrors result
             return result
 
         // Check infinite recursion
@@ -693,11 +696,19 @@ module XL.SEMANTICS.GENERICS is
             // such as constructor, destructors, temporaries.
             // We can't do that before having entered the instance above,
             // otherwise we cause infinite instantiation loops in common cases
+            tnt := XLT.BeginAttempt()
             result := XLT.XLSemantics(result)
             result := XLT.PostScopeSemantics(result, XLT.scopeLocal, nil)
+            hadErrors := XLT.EndAttempt(tnt)
 
             // Restore the information (e.g. type, declarations, etc)
-            if result <> previous then
+            if hadErrors then
+                ERR.DisplayLastErrors()
+                result := ERR.ErrorTree()
+                SYM.Enter XLT.global_context, "INSTANCE", key, result
+                SYM.SetProperty instContext, "INSTANCE", result
+
+            else if result <> previous then
                 result := XLT.Append(result, parse_tree(@nop))
                 result.info := previous.info
 
