@@ -139,6 +139,21 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 |    result.b := test.value(4)
 |__________________________^
 [Compiler generated] Form ''functionname' ('functionargs')' could not be selected
+10.Generics/value_type_constructor_crash.xl:19: No type for 'variable'
+| M : tart(3)
+|_^
+10.Generics/value_type_constructor_crash.xl:19: can be deduced from 'tart (3)'
+| M : tart(3)
+|________^
+10.Generics/value_type_constructor_crash.xl:19: The type 'variable' is unknown
+| M : tart(3)
+|_^
+10.Generics/value_type_constructor_crash.xl:19: The type 'variable' is unknown
+| M : tart(3)
+|_^
+10.Generics/value_type_constructor_crash.xl:19: 'M' has no type
+| M : tart(3)
+|_^
 10.Generics/value_type_constructor_crash.xl:12: No translation for 'K := test (3)'
 | K : test(3)
 |________^
@@ -201,3 +216,12 @@ b : item) return test' could not be selected because
 10.Generics/value_type_constructor_crash.xl:6: there is no value for 'b'
 |   b : item
 |___^
+10.Generics/value_type_constructor_crash.xl:19: No translation for 'M := tart (3)'
+| M : tart(3)
+|________^
+library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
+|     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
+|______________________________________________________________________________^
+10.Generics/value_type_constructor_crash.xl:19: Cannot convert 'tart (3)' from 'constant test [integer]' to 'integer'
+| M : tart(3)
+|________^

@@ -121,6 +121,18 @@
 10.Generics/simple_pair_fail.xl:14: No valid generic found for 'Pair'
 | flax : Pair [Pair [ Pair [real ]]]
 |_________________^
+10.Generics/simple_pair_fail.xl:14: Error instantiating 'Pair':
+| flax : Pair [Pair [ Pair [real ]]]
+|________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: 'Second' has no type
+|     Second : nonexistent_item
+|__________^
 10.Generics/simple_pair_fail.xl:14: Expression 'Pair [real]' has no type
 | flax : Pair [Pair [ Pair [real ]]]
 |__________________________^
@@ -130,18 +142,6 @@
 10.Generics/simple_pair_fail.xl:14: 'Pair [real]' is not a type
 | flax : Pair [Pair [ Pair [real ]]]
 |__________________________^
-10.Generics/simple_pair_fail.xl:3: for parameter 'item'
-| generic [type item]
-|__________________^
-10.Generics/simple_pair_fail.xl:14: Expression 'Pair [Pair [real] ]' has no type
-| flax : Pair [Pair [ Pair [real ]]]
-|___________________^
-10.Generics/simple_pair_fail.xl:4: 'Pair' could not be selected because
-| type Pair is record with
-|_________^
-10.Generics/simple_pair_fail.xl:14: 'Pair [Pair [real] ]' is not a type
-| flax : Pair [Pair [ Pair [real ]]]
-|___________________^
 10.Generics/simple_pair_fail.xl:3: for parameter 'item'
 | generic [type item]
 |__________________^
@@ -160,6 +160,18 @@
 10.Generics/simple_pair_fail.xl:14: No valid generic found for 'Pair'
 | flax : Pair [Pair [ Pair [real ]]]
 |_________________^
+10.Generics/simple_pair_fail.xl:14: Error instantiating 'Pair':
+| flax : Pair [Pair [ Pair [real ]]]
+|________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: 'Second' has no type
+|     Second : nonexistent_item
+|__________^
 10.Generics/simple_pair_fail.xl:14: Expression 'Pair [real]' has no type
 | flax : Pair [Pair [ Pair [real ]]]
 |__________________________^
@@ -169,18 +181,6 @@
 10.Generics/simple_pair_fail.xl:14: 'Pair [real]' is not a type
 | flax : Pair [Pair [ Pair [real ]]]
 |__________________________^
-10.Generics/simple_pair_fail.xl:3: for parameter 'item'
-| generic [type item]
-|__________________^
-10.Generics/simple_pair_fail.xl:14: Expression 'Pair [Pair [real] ]' has no type
-| flax : Pair [Pair [ Pair [real ]]]
-|___________________^
-10.Generics/simple_pair_fail.xl:4: 'Pair' could not be selected because
-| type Pair is record with
-|_________^
-10.Generics/simple_pair_fail.xl:14: 'Pair [Pair [real] ]' is not a type
-| flax : Pair [Pair [ Pair [real ]]]
-|___________________^
 10.Generics/simple_pair_fail.xl:3: for parameter 'item'
 | generic [type item]
 |__________________^
