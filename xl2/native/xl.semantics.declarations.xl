@@ -413,7 +413,7 @@ module XL.SEMANTICS.DECLARATIONS is
             SrcType := TY.NonVariableType(SrcType)
             result := TY.SameTypeRenames(SrcType, Tgt.type)
             if result then
-                trace[-assign] "PASS: Type comparison succeeded"
+                trace[-assign] "PASS: Type comparison succeeded, score ", result
             else
                 trace[-assign] "FAIL: Type comparison failed"
             return result
@@ -421,15 +421,15 @@ module XL.SEMANTICS.DECLARATIONS is
         // If decl and value types are identical, it's assignable
         result := TY.SameTypeRenames(SrcType, Tgt.type)
         if result > 0 then
-            trace[-assign] "PASS: Types are identical"
+            trace[-assign] "PASS: Types are identical, score", result
             return result
 
         // If the value is 'constant', we can strip that for an input
         NonConst : TY.any_type := TY.NonConstedType(SrcType)
         trace[assign] "Trying non-consted type ", TY.Source(NonConst)
-        result := TY.SameType(NonConst, TGT.type)
+        result := TY.SameTypeRenames(NonConst, TGT.type)
         if result > 0 then
-            trace[-assign] "PASS: Non-consted type succeeded"
+            trace[-assign] "PASS: Non-consted type succeeded, score ", result
             return result
 
         // Otherwise, we don't match
