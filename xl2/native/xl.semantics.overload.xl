@@ -372,6 +372,7 @@ module XL.SEMANTICS.OVERLOAD is
                     else
                         SemArgs += XLT.XLSemantics (Arg)
                         trace [overload] "Testing default argument ", Arg
+                        SYM.AdjustScoreDefaultValues Score
                     exit if not Matching
                 assert Arg <> nil
                 AType : TY.any_type := TY.GetType(Arg)
@@ -766,6 +767,7 @@ module XL.SEMANTICS.OVERLOAD is
                     else
                         SemArgs += XLT.XLSemantics (Arg)
                         trace [overload] "Testing default argument ", Arg
+                        SYM.AdjustScoreDefaultValues Score
                     exit if not Matching
 
                     AType : TY.any_type := TY.GetType(Arg)
