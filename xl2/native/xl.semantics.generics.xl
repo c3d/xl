@@ -195,7 +195,7 @@ module XL.SEMANTICS.GENERICS is
                         Arg := XLT.XLSemantics (Arg)
                         Arg := CST.EvaluateConstant (Arg)
                         AType : TY.any_type := TY.GetType(Arg)
-                        Matching := DCL.Assignable(D, Arg)
+                        Matching := DCL.Assignable(D, Arg) > 0
                         if not Matching then
                             trace [inst] "FAIL: Type mismatch for ", D.name
                             trace [inst] "   Expected ", TY.Source(D.type)
@@ -982,7 +982,7 @@ module XL.SEMANTICS.GENERICS is
 
 
         // If this is not a generic parameter, then we just check it matches
-        return DCL.Assignable(FunParm, Arg)
+        return DCL.Assignable(FunParm, Arg) > 0
 
 
     function FinalizeDeductions (FunType      : GEN.generic_type;

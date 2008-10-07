@@ -82,6 +82,7 @@ module XL.SEMANTICS.TYPES with
 
     // Check if two types are identical
     function SameType (t1 : any_type; t2: any_type) return boolean
+    function SameTypeRenames (t1 : any_type; t2: any_type) return integer
     function InterfaceMatch (iface: any_type; body: any_type) return boolean
     function IsTypeType (t : any_type) return boolean
     function IsModuleType (t : any_type) return boolean
