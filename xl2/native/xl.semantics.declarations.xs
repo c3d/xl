@@ -46,8 +46,8 @@ module XL.SEMANTICS.DECLARATIONS with
     procedure SetDeclaration(decl : PT.tree; info : declaration)
     function Lookup (NameTerminal : PT.tree) return BC.bytecode
     procedure SetLookupResult (NameTerminal : PT.tree; Value : BC.bytecode)
-    function Assignable(Tgt: declaration; Src: PT.tree) return boolean
-    function Assignable(Tgt: declaration; Src: TY.any_type) return boolean
+    function Assignable(Tgt: declaration; Src: PT.tree) return integer
+    function Assignable(Tgt: declaration; Src: TY.any_type) return integer
     function MatchInterface(iface : declarations;
                             body  : SYM.symbol_table) return boolean
     function ConstructorNames(tp : TY.any_type) return PT.tree_list
