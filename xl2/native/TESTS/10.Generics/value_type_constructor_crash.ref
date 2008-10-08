@@ -117,7 +117,7 @@ b : item) return test' could not be selected because
 library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
 |     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
 |______________________________________________________________________________^
-10.Generics/value_type_constructor_crash.xl:17: Internal: parameter 'value' not found in 'test [integer]'
+10.Generics/value_type_constructor_crash.xl:17: Parameter 'value' not found in 'test [integer]'
 |    result.b := test.value(4)
 |_________________________^
 10.Generics/value_type_constructor_crash.xl:17: No parameter named 'value'
@@ -126,7 +126,7 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 10.Generics/value_type_constructor_crash.xl:17: in generic type 'test'
 |    result.b := test.value(4)
 |___________________^
-10.Generics/value_type_constructor_crash.xl:17: Internal: parameter 'value' not found in 'test [integer]'
+10.Generics/value_type_constructor_crash.xl:17: Parameter 'value' not found in 'test [integer]'
 |    result.b := test.value(4)
 |_________________________^
 10.Generics/value_type_constructor_crash.xl:17: No parameter named 'value'
@@ -231,7 +231,7 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
 |     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
 |______________________________________________________________________________^
-10.Generics/value_type_constructor_crash.xl:17: Internal: parameter 'value' not found in 'test [integer]'
+10.Generics/value_type_constructor_crash.xl:17: Parameter 'value' not found in 'test [integer]'
 |    result.b := test.value(4)
 |_________________________^
 10.Generics/value_type_constructor_crash.xl:17: No parameter named 'value'
@@ -240,7 +240,7 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 10.Generics/value_type_constructor_crash.xl:17: in generic type 'test'
 |    result.b := test.value(4)
 |___________________^
-10.Generics/value_type_constructor_crash.xl:17: Internal: parameter 'value' not found in 'test [integer]'
+10.Generics/value_type_constructor_crash.xl:17: Parameter 'value' not found in 'test [integer]'
 |    result.b := test.value(4)
 |_________________________^
 10.Generics/value_type_constructor_crash.xl:17: No parameter named 'value'
