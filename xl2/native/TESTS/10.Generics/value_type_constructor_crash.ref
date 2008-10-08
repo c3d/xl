@@ -222,6 +222,27 @@ b : item) return test' could not be selected because
 library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
 |     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
 |______________________________________________________________________________^
-10.Generics/value_type_constructor_crash.xl:19: Cannot convert 'tart (3)' from 'constant test [integer]' to 'integer'
+10.Generics/value_type_constructor_crash.xl:19: Error instantiating 'tart'
 | M : tart(3)
 |________^
+10.Generics/value_type_constructor_crash.xl:17: No translation for 'result . b := test . value (4)'
+|    result.b := test.value(4)
+|______________^
+library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
+|     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
+|______________________________________________________________________________^
+10.Generics/value_type_constructor_crash.xl:17: Internal: parameter 'value' not found in 'test [integer]'
+|    result.b := test.value(4)
+|_________________________^
+10.Generics/value_type_constructor_crash.xl:17: No parameter named 'value'
+|    result.b := test.value(4)
+|_________________________^
+10.Generics/value_type_constructor_crash.xl:17: in generic type 'test'
+|    result.b := test.value(4)
+|___________________^
+10.Generics/value_type_constructor_crash.xl:17: Internal: parameter 'value' not found in 'test [integer]'
+|    result.b := test.value(4)
+|_________________________^
+10.Generics/value_type_constructor_crash.xl:17: No parameter named 'value'
+|    result.b := test.value(4)
+|_________________________^

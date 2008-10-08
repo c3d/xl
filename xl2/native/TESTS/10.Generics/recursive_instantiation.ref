@@ -4,7 +4,7 @@
 library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
 |     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:7: Error instantiating 'Moxotron' with '...' set to 'var_5130 : integer'
+10.Generics/recursive_instantiation.xl:7: Error instantiating 'Moxotron' with '...' set to 'var_13030 : integer'
 | L : integer := Moxotron(3)
 |_______________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -13,7 +13,7 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
 |     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to 'var_5127 : integer ; var_5128 : integer'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to 'var_13016 : integer ; var_13017 : integer'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -22,7 +22,7 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
 |     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '(var_5123 : integer ; var_5124 : integer) ; var_5125 : integer'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '(var_12995 : integer ; var_12996 : integer) ; var_12997 : integer'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
