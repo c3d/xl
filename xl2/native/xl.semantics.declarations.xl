@@ -368,6 +368,9 @@ module XL.SEMANTICS.DECLARATIONS is
             translate Original
                 when ('Context'.'Field') where Field.kind = PT.xlNAME then
                     FieldName : Field as PT.name_tree
+                    decl := GetDeclaration(FieldName)
+                    if decl <> nil and not decl.is_field then
+                        return decl.machine_name
                     return REC.Index(Context, FieldName, Original)
                 else
                     return Original
