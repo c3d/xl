@@ -308,13 +308,15 @@ module XL.SEMANTICS.OVERLOAD is
                 retType : TY.any_type := FType.base
                 if not GEN.IsGenericType(retType) then
                     tgTp : TY.any_type := TY.GetDefinedType(targetType)
-                    if not TY.SameType(retType, tgTp) then
+                    matches : integer := TY.SameTypeRenames(retType, tgTp)
+                    if matches = 0 then
                         ERR.Error "'$1' could not be selected because", C
                         ERR.Error "the return type '$1'", TY.Source(retType)
                         ERR.Error "doesn't match expected type '$1'", targetType
                         trace[overload] "FAIL: Wrong return type, want ",
                                         targetType, " got ", TY.Source(retType)
                         restart
+                    SYM.AdjustScoreRenames Score, matches
 
             // Check type of parameters
             D        : DCL.declaration
