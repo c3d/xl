@@ -50,9 +50,9 @@ M := M - M
 ShowNumbers "After subtraction"
 
 // Check initializers with explicit real conversion
-K := complex(15.92)
-L := complex(3.02)
-M := complex(2)
+K := complex(17.02)
+L := complex(5.12)
+M := complex(997)
 ShowNumbers "After real initializers"
 
 K := K / K
@@ -61,9 +61,9 @@ M := M / M
 ShowNumbers "After Divide"
 
 // Check initializers with implicit real conversion
-K := 15.92
-L := 3.02
-M := 2
+K := 125.521
+L := 5.06
+M := 777
 ShowNumbers "After implicit real initializers"
 
 // Check scaling
@@ -73,19 +73,18 @@ M := 2 * M
 ShowNumbers "After multiplication by a real"
 
 // Check initializers with imaginary notation
-K := 15.92i
-L := 3.02i
+K := 0.02i
+L := 5.03i
 M := 26i
 ShowNumbers "After imaginary initializers"
 
 // Check divide by a real
-K := K / 3.6
-L := L / 2.2
-M := M / 3
+K := K / 3.61
+L := L / 2.24
+M := M / 9
 ShowNumbers "After divide by a real"
 
 Copy K, Add(K,K)
 Copy L, Add(L, L)
 Copy M, Subtract(M, Add(M, M))
 ShowNumbers "After function-style calls"
-
