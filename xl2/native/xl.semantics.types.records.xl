@@ -530,37 +530,11 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
     function EnterDefaultFunction(source : PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
-    //    Create a default ctor/dtor in a lateral map
+    //    Declare a default function (ctor/dtor)
     // ------------------------------------------------------------------------
-    //    We put it in a lateral map for two reasons:
-    //    - It makes it possible to override it in the local scope
-    //    - It is easier to destroy if there is any error
-
-        // Save existing context, including global decls, and
-        // create new symbol table
-        context : SYM.symbol_table := XLT.context
-        globals : SYM.symbol_table := XLT.global_context
-        newsyms : SYM.symbol_table := SYM.NewSymbolTable(context)
-        XLT.context := newsyms
-        XLT.global_context := newsyms
-
-        trace[+defaultfns] "In ", newsyms, "-", globals, " enter: ", source
-
-        // Try to evaluate the tentative function
-        tnt : XLT.attempt := XLT.BeginAttempt()
-        result := XLT.XLDeclarations(source)
-        result := XLT.XLSemantics(result)
-        hadError : boolean := XLT.EndAttempt(tnt)
-        XLT.context := context
-        XLT.global_context := globals
-        if hadError then
-            trace[-defaultfns] "Error: ", ERR.LastErrorsText()
-            return nil
-
-        trace[-defaultfns] "Code: ", result
-
-        // If evaluation was successful, then add the context as a lateral
-        SYM.AddUsing context, nil, newsyms
+        source := parse_tree(@@defaultfn 'source')
+        XLT.AddGlobalDecl source
+        return nil
 
 
     function EnterDefaultConstructor(recName : PT.name_tree;
@@ -697,6 +671,41 @@ module XL.SEMANTICS.TYPES.RECORDS is
         result := XLT.Append(result, EnterCopy(N, rtp))
 
 
+    function PostProcessDefaultFunction (source : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Process the default functions entered in EnterDefaultFunction
+    // ------------------------------------------------------------------------
+    //    We put it in a lateral map for two reasons:
+    //    - It makes it possible to override it in the local scope
+    //    - It is easier to destroy if there is any error
+
+        // Save existing context, including global decls, and
+        // create new symbol table
+        context : SYM.symbol_table := XLT.context
+        globals : SYM.symbol_table := XLT.global_context
+        newsyms : SYM.symbol_table := SYM.NewSymbolTable(context)
+        XLT.context := newsyms
+        XLT.global_context := newsyms
+
+        trace[+defaultfns] "In ", newsyms, "-", globals, " enter: ", source
+
+        // Try to evaluate the tentative function
+        tnt : XLT.attempt := XLT.BeginAttempt()
+        result := XLT.XLDeclarations(source)
+        result := XLT.XLSemantics(result)
+        hadError : boolean := XLT.EndAttempt(tnt)
+        XLT.context := context
+        XLT.global_context := globals
+        if hadError then
+            trace[-defaultfns] "Error: ", ERR.LastErrorsText()
+            return nil
+
+        trace[-defaultfns] "Code: ", result
+
+        // If evaluation was successful, then add the context as a lateral
+        SYM.AddUsing context, nil, newsyms
+
+
     translation XLSemantics
     // ------------------------------------------------------------------------
     //    Try to translate X.Y expressions
@@ -711,4 +720,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         then
             return EnterUsing (Record)
 
-
+        when
+            @@defaultfn 'Source'
+        then
+            return PostProcessDefaultFunction(Source)
