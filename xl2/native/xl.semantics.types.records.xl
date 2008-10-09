@@ -538,18 +538,19 @@ module XL.SEMANTICS.TYPES.RECORDS is
         // Loop on all fields
         F    : declaration
         for F in rtp.fields loop
-            if not TY.SameType (F.type, TY.type_of_records) then
-                ftype : TY.Source(F.type) as PT.name_tree
-                if ftype <> nil then
-                    ctorName : PT.tree := ftype
-                    genericType : PT.tree := PT.Attached(ftype, "INSTARG")
-                    if genericType <> nil then
-                        ctorName := parse_tree('genericType'.'ctorName')
-                    fname : PT.tree := PT.Clone(F.name)
-                    ctorCall : PT.tree := parse_tree
-                        result.'fname' := 'ctorName' ()
-                    ctorCall := parse_tree({tentative} 'ctorCall')
-                    result := XLT.Append(result, ctorCall)
+            if F.initializer = nil then
+                if not TY.SameType (F.type, TY.type_of_records) then
+                    ftype : TY.Source(F.type) as PT.name_tree
+                    if ftype <> nil then
+                        ctorName : PT.tree := ftype
+                        genericType : PT.tree := PT.Attached(ftype, "INSTARG")
+                        if genericType <> nil then
+                            ctorName := parse_tree('genericType'.'ctorName')
+                        fname : PT.tree := PT.Clone(F.name)
+                        ctorCall : PT.tree := parse_tree
+                            result.'fname' := 'ctorName' ()
+                        ctorCall := parse_tree({tentative} 'ctorCall')
+                        result := XLT.Append(result, ctorCall)
 
         // If we found any, then generate a constructor here
         if result <> nil then
@@ -577,15 +578,16 @@ module XL.SEMANTICS.TYPES.RECORDS is
         F       : declaration
         Parms   : PT.tree
         for F in rtp.fields loop
-            if not TY.SameType (F.type, TY.type_of_records) then
-                ftype : PT.tree := TY.Source(F.type)
-                fname : PT.tree := PT.Clone(F.name)
-                pname : PT.tree := PT.Clone(F.name)
-                ctorCall : PT.tree := parse_tree
-                    result.'fname' := 'pname'
-                result := XLT.Append(result, ctorCall)
-                Parm   : PT.tree := parse_tree('pname' : 'ftype')
-                Parms  := XLT.Append(Parms, parm)
+            if F.initializer = nil then
+                if not TY.SameType (F.type, TY.type_of_records) then
+                    ftype : PT.tree := TY.Source(F.type)
+                    fname : PT.tree := PT.Clone(F.name)
+                    pname : PT.tree := PT.Clone(F.name)
+                    ctorCall : PT.tree := parse_tree
+                        result.'fname' := 'pname'
+                    result := XLT.Append(result, ctorCall)
+                    Parm   : PT.tree := parse_tree('pname' : 'ftype')
+                    Parms  := XLT.Append(Parms, parm)
 
         // If we found any, then generate a constructor here
         if result <> nil then
@@ -607,12 +609,13 @@ module XL.SEMANTICS.TYPES.RECORDS is
         // Loop on all fields
         F    : declaration
         for F in rtp.fields loop
-            if not TY.SameType (F.type, TY.type_of_records) then
-                fname : PT.tree := PT.Clone(F.name)
-                dtorCall : PT.tree := parse_tree
-                    delete this.'fname'
-                dtorCall := parse_tree({tentative} 'dtorCall')
-                result := XLT.Append(result, result)
+            if F.initializer = nil then
+                if not TY.SameType (F.type, TY.type_of_records) then
+                    fname : PT.tree := PT.Clone(F.name)
+                    dtorCall : PT.tree := parse_tree
+                        delete this.'fname'
+                    dtorCall := parse_tree({tentative} 'dtorCall')
+                    result := XLT.Append(result, result)
 
         // If we found any, then generate a 'delete' procedure here
         if result <> nil then
@@ -633,12 +636,13 @@ module XL.SEMANTICS.TYPES.RECORDS is
         // Loop on all fields
         F    : declaration
         for F in rtp.fields loop
-            if not TY.SameType (F.type, TY.type_of_records) then
-                thisName : PT.tree := PT.Clone(F.name)
-                thatName : PT.tree := PT.Clone(F.name)
-                copyCall : PT.tree := parse_tree
-                    this.'thisName' := that.'thatName'
-                result := XLT.Append(result, copyCall)
+            if F.initializer = nil then
+                if not TY.SameType (F.type, TY.type_of_records) then
+                    thisName : PT.tree := PT.Clone(F.name)
+                    thatName : PT.tree := PT.Clone(F.name)
+                    copyCall : PT.tree := parse_tree
+                        this.'thisName' := that.'thatName'
+                    result := XLT.Append(result, copyCall)
 
         // If we found any, then generate a 'copy' procedure here
         if result <> nil then
