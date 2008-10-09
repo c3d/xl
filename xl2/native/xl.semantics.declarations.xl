@@ -781,25 +781,26 @@ module XL.SEMANTICS.DECLARATIONS is
     //   If there is any function that matches the type name, then
     //   the type is constructed, and we try to call a function with no args
 
-        dtype : TY.any_type := decl.type
-        assert dtype <> nil
-        nameList  : PT.tree_list := ConstructorNames(dtype)
-        found : PT.tree := nil
-        attempt : XLT.attempt := XLT.BeginAttempt()
+        dtype    : TY.any_type := decl.type
+        nameList : PT.tree_list := ConstructorNames(dtype)
+        tSrc     : PT.tree := nil
+        attempt  : XLT.attempt := XLT.BeginAttempt()
+
+        trace [+ctors] "CallConstructor ",
+                        PT.tree(decl.name), " : ", TY.Source(decl.type)
+        trace [ctors] "The type has ", size(nameList), " name(s)"
 
         // Loop on all possible names for that type
-        while found = nil and size(nameList) > 0 loop
-            tsrc  : PT.tree := back(nameList)
-            tname : tsrc as PT.name_tree
+        for tSrc in NameList loop
+            tName : tSrc as PT.name_tree
 
-            trace[ctors] "CallConstructor ", PT.tree(decl.name), " : ", tsrc
-            pop_back nameList
+            trace[ctors] "Testing name ", tSrc, " for ", PT.tree(decl.name)
 
-            if tname <> nil then
+            if tName <> nil then
                 list : PT.tree_list
-                SYM.Lookup XLT.context, "FN", tname.value, list, SYM.lookupAll
+                SYM.Lookup XLT.context, "FN", tName.value, list, SYM.lookupAll
+                trace[ctors] "Name ", tSrc, " has ", size(list), " candidates"
                 if size(list) > 0 then
-
                     attemptOne : XLT.attempt := XLT.BeginAttempt()
 
                     dname : PT.name_tree := decl.machine_name
@@ -809,21 +810,20 @@ module XL.SEMANTICS.DECLARATIONS is
                     result := XLT.XLSemantics(result)
 
                     if XLT.EndAttempt(attemptOne) then
-                        trace[ctors] "Errors calling ctor for ", tsrc
+                        trace[ctors] "Errors calling ctor for ", tSrc
                         ERR.Error "Constructor '$1' is invalid because", tsrc
                         ERR.DisplayLastErrors()
                     else
-                        found := result
+                        trace[ctors] "Name ", tSrc, " is a valid candidate"
+                        exit if result <> nil
 
         if XLT.EndAttempt(attempt) then
-            if found = nil then
-                ERR.Error "No valid constructor for '$1'", decl.name
-                ERR.DisplayLastErrors()
-                result := parse_tree(@error)
-            else
-                result := found
-        else
-            result := found
+            result := nil
+            ERR.Error "No valid constructor for '$1'", decl.name
+            ERR.DisplayLastErrors()
+
+        trace [-ctors] "CallConstructor result: ", result
+
 
 
     function ConstructorCode (decl : declaration) return PT.tree is
