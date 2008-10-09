@@ -825,6 +825,7 @@ module XL.SEMANTICS.GENERICS is
         if XLT.EndAttempt(tnt) then
             trace[inst] "Errors during validation, result=", valid
             ERR.Error "Generic validation failed for '$1'", IName
+            ERR.Error "against actual type '$1'", IInit
             ERR.DisplayLastErrors()
             result := false
         else
@@ -1150,8 +1151,11 @@ module XL.SEMANTICS.GENERICS is
         result := Instantiate (Decl, Args, Variadics, BaseRecord)
         if XLT.EndAttempt(tnt) then
             if Variadics <> nil then
+                Decls : PT.tree
+                Exprs : PT.tree
+                VariadicToTrees Variadics, Decls, Exprs
                 ERR.Error "Error instantiating '$1' with '...' set to '$2'",
-                          Source, Variadics
+                          Source, Decls
             else
                 ERR.Error "Error instantiating '$1'", Source
             ERR.DisplayLastErrors()
