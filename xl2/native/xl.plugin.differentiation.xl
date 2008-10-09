@@ -110,7 +110,7 @@ module XL.PLUGIN.DIFFERENTIATION is
 
             else
                 ERR.Error "Unknown form '$1' for differentiation", expr
-                return parse_tree(@error)
+                return ERR.ErrorTree()
 
 
     function Differentiate (dFn : PT.tree;
@@ -127,14 +127,14 @@ module XL.PLUGIN.DIFFERENTIATION is
         dv : text := varName.value
         if (dv[0]) <> 'd' then
             ERR.Error "Invalid differential variable name '$1'", dVar
-            return parse_tree(@error)
+            return ERR.ErrorTree()
         dv := dv[1..length(dv)-1]
 
         // Find function name without the initial 'd'
         fn : text := fnName.value
         if fn[0] <> 'd' then
             ERR.Error "Invalid differential function name '$1'", dFn
-            return parse_tree(@error)
+            return ERR.ErrorTree()
         fn := fn[1..length(fn)-1]
 
         if fn = "" then

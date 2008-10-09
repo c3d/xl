@@ -80,9 +80,9 @@ module XL.PLUGIN.DEFINE is
                     else
                        ERR.Error "Pragma error : '$1'", pragma
                        ERR.Error "Syntax is : {Define Variable Value}", pragma.position
-                       return parse_tree(@error)
+                       return ERR.ErrorTree()
 
               else
                  ERR.Error "Pragma error : '$1'", pragma
                  ERR.Error "Syntax is : {Define Variable [Value]}", pragma.position
-                 return parse_tree(@error)
+                 return ERR.ErrorTree()

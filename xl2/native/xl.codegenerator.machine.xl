@@ -415,7 +415,7 @@ module XL.CODE_GENERATOR.MACHINE is
         if argCount <> parmCount then
             ERR.Error "Internal: Calling $1 with invalid number of arguments",
                       mname
-            return parse_tree(@error)
+            return ERR.ErrorTree()
 
         // If the callee has a return value, then we are going to emit @value
         // Create a local temporary holding the returned value

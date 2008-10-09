@@ -43,7 +43,7 @@ module XL.PLUGIN.INCLUDE is
 
         if not IO.valid aScanner.input then
            ERR.Error "Unable to include file : '$1'", filename
-           return parse_tree(@error)
+           return ERR.ErrorTree()
 
         tree   : BC.bytecode := PR.Parse(aParser)
 
@@ -80,7 +80,7 @@ module XL.PLUGIN.INCLUDE is
 
                  if DefineInfo = nil then
                     ERR.Error "Define is not defined : '$1'", Symbol
-                    return parse_tree(@error)
+                    return ERR.ErrorTree()
 
                  filename : DefineInfo as PT.text_tree
                  return GetInclude(filename)
@@ -89,8 +89,8 @@ module XL.PLUGIN.INCLUDE is
                  'PragmaName' 'IncludeFile'
               then
                  ERR.Error "Unknown form for include pragma : '$1'", IncludeFile
-                 return parse_tree(@error)
+                 return ERR.ErrorTree()
 
               else
                  ERR.Error "Syntax is : {Include Filename}", pragma.position
-                 return parse_tree(@error)
+                 return ERR.ErrorTree()

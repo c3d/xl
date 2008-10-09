@@ -364,7 +364,8 @@ module XL.SYMBOLS is
         bestA      : PT.tree_map
         bestS      : PT.tree
         bestShape  : integer := 0
-        bestRef    : PT.tree := nil
+        errorList  : PT.tree := nil
+        errorCount : integer := 0
         ambig      : rewrite := nil
         key        : text := "TRANSFORMS"
         track      : boolean := count(test_tree.info, key) > 0
@@ -424,19 +425,30 @@ module XL.SYMBOLS is
             if score > 0 then
                 score := 10000 * score - depth
                 if bestShape < score then
+                    // The shape we found is better than anything before
                     bestShape := score
+                    errorList := nil
+                    errorCount := 0
                 if bestShape > score or ref.kind = PT.xlWILDCARD then
+                    // The shape is worse than the best, do not show errors
                     dropErrors := true
-                    ERR.PreserveLastErrors(1)
-                else
-                    bestRef := ref
 
                 if R.score_adjust <> nil then
                     score := R.score_adjust (test_tree, R, args,
                                              depth, score)
+                    if score = 0 and not dropErrors then
+                        if errorCount = 0 or XLT.verbose then
+                            ERR.PushErrorContext()
+                            ERR.Error "Form '$1' could not be selected", ref
+                            ERR.DisplayLastErrors()
+                            errorList := ERR.ErrorTree(errorList)
+                            ERR.PopErrorContext()
+                            errorCount += 1
                     if track then
                         IO.WriteLn " adjusted = ", score
                 if score > 0 then
+                    errorList := nil
+                    errorCount := 0
                     if score > best then
                         if track then
                             IO.WriteLn "Best so far"
@@ -451,8 +463,6 @@ module XL.SYMBOLS is
                             IO.WriteLn "Ambiguity"
                         ambig := R
                         cnt += 1
-                if dropErrors then
-                    ERR.PreserveLastErrors(-1)
 
         if bestR <> nil then
             if ambig = nil then
@@ -467,14 +477,12 @@ module XL.SYMBOLS is
                 ERR.Error "A second possible match is $1",
                           ambig.reference_form
         else if report and count(report_misses, kind) > 0 then
-            if bestRef = nil then
-                ERR.Error "No translation for '$1' (no matching form)",
-                          test_tree
-            else
-                ERR.Error "No translation for '$1'", test_tree
-                ERR.Error "Candidate form $1 cannot be selected", bestRef
-                ERR.DisplayLastErrors()
-            result := parse_tree(@error)
+            ERR.PushErrorContext()
+            ERR.Error "No translation for '$1'", test_tree
+            ERR.ReplayErrors errorList
+            ERR.PopErrorContext()
+            ERR.DisplayLastErrors()
+            result := ERR.ErrorTree()
 
         trace[rewrite] "Rewritten: ", kind, "(", test_tree, ")=", result
         if track then

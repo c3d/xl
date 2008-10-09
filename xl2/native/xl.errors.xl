@@ -44,38 +44,26 @@ module XL.ERRORS is
     type error_stack_level is string of error_stack_element
     error_stack         : string of error_stack_level
     last_errors         : error_stack_level
-    last_errors_to_keep : integer := 0
+    errors              : error_stack_level
+    empty               : error_stack_level
 
 
     procedure PushErrorContext() is
     // ------------------------------------------------------------------------
     //    Push a new output string stream to store errors
     // ------------------------------------------------------------------------
-        level : error_stack_level
-        error_stack += level
-        if last_errors_to_keep > 0 then
-            last_errors_to_keep += 1
+        error_stack += empty
+        errors := empty
 
 
     function PopErrorContext() return boolean is
     // ------------------------------------------------------------------------
     //   Pop last string stream for errors
     // ------------------------------------------------------------------------
-        last : error_stack_level := back(error_stack)
-        if last_errors_to_keep > 0 then
-            last_errors_to_keep -= 1
-        else
-            last_errors := last
+        last_errors := back(error_stack)
         pop_back error_stack
-        return size(last) > 0
-
-
-    function PreserveLastErrors(offset : integer) return integer is
-    // ------------------------------------------------------------------------
-    //   Make sure that we do not overwrite a useful last_errors
-    // ------------------------------------------------------------------------
-        last_errors_to_keep += offset
-        return last_errors_to_keep
+        errors := empty
+        return size(last_errors) > 0
 
 
     procedure DisplayLastErrors() is
@@ -84,6 +72,7 @@ module XL.ERRORS is
     // ------------------------------------------------------------------------
         if size(error_stack) > 0 then
             back(error_stack) += last_errors
+            errors += last_errors
         else
             E : error_stack_element
             for E in last_errors loop
@@ -106,6 +95,48 @@ module XL.ERRORS is
         if size(error_stack) > 0 then
             return size(back(error_stack))
         return error_count
+
+
+    function ErrorTree(previous : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Generate an "@error" parse tree recording the errors we had
+    // ------------------------------------------------------------------------
+        // Recover previous errors if any
+        if previous <> nil then
+            translate previous
+                when (@error 'msgs') then
+                    result := msgs
+
+        E : error_stack_element
+        for E in errors loop
+            msg : PT.text_tree := PT.NewText (E.message, '"', E.position)
+            if result = nil then
+                result := msg
+            else
+                result := parse_tree ('result' 'msg')
+        if result <> nil then
+            result := parse_tree(@error 'result')
+
+
+    procedure ReplayErrors(token : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Replay errors recorded by some '@error' tree
+    // ------------------------------------------------------------------------
+        if token <> nil then
+            translate token
+                when (@error 'messages') then
+                    ReplayErrors messages
+                when (@error) then
+                    Error "Error message was lost", token.position
+                when ('msg1' 'msg2') then
+                    ReplayErrors msg1
+                    ReplayErrors msg2
+                else
+                    msg : token as PT.text_tree
+                    if msg <> nil then
+                        Error msg.value, msg.position
+                    else
+                        Error "Unknown error token '$1'", token
 
 
     procedure Error (E : text; pos : integer; args : string of text) is
@@ -150,11 +181,12 @@ module XL.ERRORS is
 
         trace[errors] "Error @", pos, ": ", fmt
 
+        M : error_stack_element
+        M.message := fmt
+        M.position := pos
+        errors += M
         if size(error_stack) > 0 then
-            E : error_stack_element
-            E.message := fmt
-            E.position := pos
-            back(error_stack) += E
+            back(error_stack) += M
         else
             error_count += 1
 

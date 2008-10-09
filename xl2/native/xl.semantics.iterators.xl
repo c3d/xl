@@ -128,7 +128,7 @@ module XL.SEMANTICS.ITERATORS is
         if f = nil then
             ERR.Error "Initializing non-iterator '$1'", Interface
             ERR.Error "with '$1'", Body
-            return parse_tree(@error)
+            return ERR.ErrorTree()
 
         if f.initializer <> nil then
             ERR.Error "Duplicate iterator initializer '$1'", Body
@@ -234,7 +234,7 @@ module XL.SEMANTICS.ITERATORS is
         if LoopBody = nil then
             ERR.Error "'$1' called outside of loop", it.name
             ERR.Error "as '$1'", Input
-            return parse_tree(@error)
+            return ERR.ErrorTree()
 
         // Create a symbol table for the iterator body
         decl_context : SYM.symbol_table := it.declaration_context
@@ -255,7 +255,7 @@ module XL.SEMANTICS.ITERATORS is
             ERR.Error "while evaluating '$1'", Input
             XLT.context := context
             SYM.SetProperty XLT.context, "TEMPDTORS", oldTemps
-            return parse_tree(@error)
+            return ERR.ErrorTree()
         Parms : DCL.declarations := ftype.parameters
         NA    : integer := size(Args)
         NP    : integer := size(Parms)
@@ -264,7 +264,7 @@ module XL.SEMANTICS.ITERATORS is
             ERR.Error "as '$1'", Input
             XLT.context := context
             SYM.SetProperty XLT.context, "TEMPDTORS", oldTemps
-            return parse_tree(@error)
+            return ERR.ErrorTree()
 
         // Enter evaluated arguments in the newly created symbol table
         A  : integer
