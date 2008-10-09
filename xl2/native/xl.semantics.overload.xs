@@ -36,6 +36,7 @@ module XL.SEMANTICS.OVERLOAD with
                      Input     : PT.tree;
                      forceCall : PT.tree) return BC.bytecode
     function IsFunction(T : PT.tree) return boolean
+    function IsFunctionNoConstructor(T : PT.tree) return boolean
     procedure ArgsTreeToList(Args : PT.tree; in out List : PT.tree_list)
     function ResolveOverload(FunName     : PT.tree;
                              overloadSet : PT.tree;
