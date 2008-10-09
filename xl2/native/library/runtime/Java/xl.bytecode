@@ -77,7 +77,7 @@ stderr          "$1 = null;"
 OpenFile        "$1 = new xlfile();"
 CloseFile       "$1 = null;"
 PutChar         "System.out.print((char) $1);"
-PutReal         "System.out.printf(""%g"", $1);"
+PutReal         "System.out.printf(""%10.4g"", $1);"
 PutString       "System.out.print($1);"
 PutNewLine      "System.out.println();"
 
@@ -301,7 +301,7 @@ int_to_real      "$1 = (double) $2;"
 real_to_int      "$1 = (int) $2;"
 
 pointer_type     "public static class $2 { public $1 Value; }"
-                 "public static $2 make_$2() { return new $2(); }"z
+                 "public static $2 make_$2() { return new $2(); }"
                  "public static $2 make_$2($1 Value) {"
                  "   $2 tmp = new $2();"
                  "   tmp.Value = Value;"
