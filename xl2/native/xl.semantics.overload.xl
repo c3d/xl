@@ -257,8 +257,9 @@ module XL.SEMANTICS.OVERLOAD is
                 restart
 
             // Check if it is a generic function
-            Ftype : F.type as FT.function_type
-            Gtype : F.type as GEN.generic_type
+            NStype: TY.any_type := TY.NonSourceType(F.Type)
+            Ftype : NSType as FT.function_type
+            Gtype : NSType as GEN.generic_type
             Gargs : GN.generic_map
             Vargs : PT.tree
             if Ftype = nil and Gtype <> nil then
@@ -541,7 +542,7 @@ module XL.SEMANTICS.OVERLOAD is
             // If there are parameters to declare, declare them now
             ctors        : PT.tree
             declaredHere : map[DCL.declaration, boolean]
-            ftp          : bestF.type as FT.function_type
+            ftp          : TY.NonSourceType(bestF.type) as FT.function_type
             if callDepth = 0 and ftp.base <> nil and ctorTarget = nil then
                 ERR.Error "The value returned by '$1' is ignored", NameTree
             if size(bestDNames) > 0 then
@@ -643,7 +644,7 @@ module XL.SEMANTICS.OVERLOAD is
             return NameTree
 
         // If it is a function type, we will try to find the matching function
-        toFnType : toType as FT.function_type
+        toFnType : TY.NonSourceType(toType) as FT.function_type
 
         // Turn the overload set into a more usable tree list
         candidates : PT.tree_list
@@ -691,8 +692,9 @@ module XL.SEMANTICS.OVERLOAD is
                     restart
 
             // Check if it is a generic function
-            Ftype : F.type as FT.function_type
-            Gtype : F.type as GEN.generic_type
+            NSType: TY.any_type := TY.NonSourceType(F.type)
+            Ftype : NSType as FT.function_type
+            Gtype : NSType as GEN.generic_type
             Gargs : GN.generic_map
             Vargs : PT.tree
             Score : integer := depth

@@ -146,17 +146,17 @@ module XL.SEMANTICS.DECLARATIONS is
            return TY.EnterType (Name, Value)
 
         // Check if this is a function type we need to enter
-        decl_gen_type : decl_type as GEN.generic_type
-        decl_base_type : TY.any_type := decl_type
+        decl_base_type : TY.any_type := TY.NonSourceType(decl_type)
+        decl_gen_type : decl_base_type as GEN.generic_type
         if decl_gen_type <> nil then
-            decl_base_type := decl_gen_type.base
+            decl_base_type := TY.NonSourceType(decl_gen_type.base)
         decl_fn_type : decl_base_type as FT.function_type
         decl : declaration
         if decl_fn_type <> nil then
             if decl_fn_type.iterator then
-                result := ITER.EnterIterator(Name, decl_fn_type, Value, Name)
+                result := ITER.EnterIterator(Name, decl_type, Value, Name)
             else
-                result := FN.EnterFunction (Name, decl_fn_type, Value, Name)
+                result := FN.EnterFunction (Name, decl_type, Value, Name)
             decl := GetDeclaration(result)
             isFunction := true
             
