@@ -179,7 +179,7 @@ module XL.CODE_GENERATOR.MACHINE is
             retDecl := parse_tree(@fn_retN_begin 'BaseName')
             if RetType <> nil then
                 ParmType := RetType.machine_name
-                resName : PT.tree := PT.NewName("result",BaseName.position)
+                resName : PT.tree := PT.NewName("result", BaseName.position)
                 retDecl := parse_tree
                     'retDecl'
                     @fn_retN_decl 'ParmType' 'resName'
