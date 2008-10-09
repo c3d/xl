@@ -749,6 +749,12 @@ module XL.SYMBOLS is
         for S in depths loop
             depth :integer := depths[S]
             IO.WriteLn "Table ", S, " depth ", depth, " scope ", scopes[S]
+            if S.enclosing <> nil then
+                enclDepth : integer := depth + 1
+                if count(depths, S.enclosing) > 0 then
+                    enclDepth := depths[S.enclosing]
+                IO.WriteLn " Parent depth ", enclDepth,
+                           " p ::symbols(", S.enclosing, ")"
             name : text
             for name in S.names loop
                 IO.Write " Name ", name, ": "
@@ -785,9 +791,3 @@ module XL.SYMBOLS is
                 if count(depths, impl) > 0 then
                     implDepth := depths[impl]
                 IO.WriteLn " Impl depth ", implDepth, " p ::symbols(", impl, ")"
-            if S.enclosing <> nil then
-                enclDepth : integer := depth + 1
-                if count(depths, S.enclosing) > 0 then
-                    enclDepth := depths[S.enclosing]
-                IO.WriteLn " Parent depth ", enclDepth,
-                           " p ::symbols(", S.enclosing, ")"
