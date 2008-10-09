@@ -1,13 +1,3 @@
-09.Modules/import_simple_module_bad.xl:32: No translation for 'FooZoo (0)'
-| Test_Call : integer := FooZoo(0)
-|______________________________^
-[Compiler generated] Form ''functionname' ('functionargs')' could not be selected
-[Compiler generated] Form ''functionname' 'functionargs'' could not be selected
-[Compiler generated] Form ''functionname' 'functionargs'' could not be selected
-[Compiler generated] Form ''functionname' 'functionargs'' could not be selected
-[Compiler generated] Form ''functionname' 'functionargs'' could not be selected
-[Compiler generated] Form ''type' 'name' is 'value'' could not be selected
-[Compiler generated] Form ''type' 'names'' could not be selected
 09.Modules/import_simple_module_bad.xl:32: No translation for 'Test_Call := FooZoo (0)'
 | Test_Call : integer := FooZoo(0)
 |______________________________^

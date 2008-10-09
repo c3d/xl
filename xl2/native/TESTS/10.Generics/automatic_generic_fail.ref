@@ -10,3 +10,12 @@
 10.Generics/automatic_generic_fail.xl:7: 'Z' has no type
 |     Z : Zabata
 |_____^
+10.Generics/automatic_generic_fail.xl:7: No translation for 'this . Z := that . Z'
+|     Z : Zabata
+|_____^
+10.Generics/automatic_generic_fail.xl:6: Form ''this' := 'that'' could not be selected
+| type zortibus is record with
+|_____________^
+10.Generics/automatic_generic_fail.xl:7: Cannot convert 'that . Z' from '<undefined type>_585' to 'zortibus'
+|     Z : Zabata
+|_____^

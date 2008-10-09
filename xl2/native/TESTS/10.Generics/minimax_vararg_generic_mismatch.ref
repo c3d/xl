@@ -1,22 +1,10 @@
-10.Generics/minimax_vararg_generic_mismatch.xl:17: Error instantiating 'Max' with '...' set to 'var_627 : real'
-| Test_bad     : integer := Max(1, 2.5)
-|_____________________________^
-10.Generics/minimax_vararg_generic_mismatch.xl:12: No translation for 'result := Max ( ... )'
-|     result := Max(...)
-|_____________^
-library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
-|     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
-|______________________________________________________________________________^
-10.Generics/minimax_vararg_generic_mismatch.xl:12: Cannot convert 'Max ( ... )' from 'constant real' to 'integer'
-|     result := Max(...)
-|__________________^
 10.Generics/minimax_vararg_generic_mismatch.xl:17: No translation for 'Test_bad := Max (1 , 2.5)'
 | Test_bad     : integer := Max(1, 2.5)
 |______________________________^
 library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
 |     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
 |______________________________________________________________________________^
-10.Generics/minimax_vararg_generic_mismatch.xl:17: Error instantiating 'Max' with '...' set to 'var_627 : real'
+10.Generics/minimax_vararg_generic_mismatch.xl:17: Error instantiating 'Max' with '...' set to 'var_661 : real'
 | Test_bad     : integer := Max(1, 2.5)
 |_____________________________^
 10.Generics/minimax_vararg_generic_mismatch.xl:12: No translation for 'result := Max ( ... )'

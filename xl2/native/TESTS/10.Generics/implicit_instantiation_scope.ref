@@ -1,12 +1,3 @@
-10.Generics/implicit_instantiation_scope.xl:8: Error instantiating 'Ajouter'
-| X : text := Ajouter (3, 4)
-|___________________^
-10.Generics/implicit_instantiation_scope.xl:5: Redeclaration of 'X' 
-|     X : item := A + B
-|_____^
-10.Generics/implicit_instantiation_scope.xl:8: Previous declaration of 'X' here
-| X : text := Ajouter (3, 4)
-|_^
 10.Generics/implicit_instantiation_scope.xl:8: No translation for 'X := Ajouter (3 , 4)'
 | X : text := Ajouter (3, 4)
 |_____________________^
