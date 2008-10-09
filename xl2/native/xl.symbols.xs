@@ -68,6 +68,20 @@ module XL.SYMBOLS with
 
 
     // ========================================================================
+    // 
+    //    Score adjustment for the various lookups
+    // 
+    // ========================================================================
+    //  Score are adjusted so that a higher score is better
+
+    procedure  AdjustScoreMatches(in out score : integer; count : integer)
+    procedure  AdjustScoreDepth (in out score : integer; depth : integer)
+    procedure  AdjustScoreConversions(in out score : integer)
+    procedure  AdjustScoreGenericity (in out score : integer)
+    procedure  AdjustScoreVariadicity (in out score : integer)
+
+
+    // ========================================================================
     //
     //    Simple name lookup
     //
