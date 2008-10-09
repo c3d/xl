@@ -896,7 +896,10 @@ module XL.SEMANTICS.OVERLOAD is
                     // Check if we are looking for 'complex.value'
                     gt : GN.GenericIndex(Record, Field) as PT.name_tree
                     if gt <> nil then
-                        return IsFunction(gt)
+                        result := IsFunction(gt)
+                        trace[-isFunc] "From GenericIndex ", PT.tree(gt),
+                                        " result ", result
+                        return result
                     REC.RecordDeclarations Record, FN, "FN", list, syms
                     result := syms <> nil and size(list) > 0
                     trace[-isfunc] "Testing ", T, " returned ", result
