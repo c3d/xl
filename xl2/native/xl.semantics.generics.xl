@@ -552,7 +552,6 @@ module XL.SEMANTICS.GENERICS is
         XLT.context := instContext
         XLT.CopyScopeProperties instContext, XLT.global_context
         SYM.AddImplicit instContext, declContext
-        SYM.AddImplicit XLT.global_context, instContext
 
         // Record where to find the context of instantiation (oldContext)
         SetInstantiator instContext, oldContext
