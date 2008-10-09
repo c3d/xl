@@ -291,7 +291,7 @@ module XL.SEMANTICS.TYPES.ENUMERATIONS is
             tp := TY.GetDefinedType(En)
 
         // Evaluate expression type
-        etp : TY.NonConstedType(GEN.NonGenericType(tp)) as enumeration_type
+        etp : TY.NonConstGenSourceType(tp) as enumeration_type
         return etp
 
 
