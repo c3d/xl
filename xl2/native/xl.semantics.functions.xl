@@ -537,21 +537,16 @@ module XL.SEMANTICS.FUNCTIONS is
 
         ftype      : GEN.NonGenericType(f.type) as FT.function_type
         retType    : TY.any_type := ftype.base
-        rtSrc      : PT.tree := TY.Source(retType)
-        instanceOf : PT.Attached(rtSrc, "INSTANCEOF") as PT.name_tree
-        rtName     : TY.Source(retType) as PT.name_tree
-        trace[ctors] "  Type ", rtSrc, " instance of ", PT.tree(instanceOf)
-        trace[ctors] "  Res ", PT.tree(rtName)
+        ctorNames  : PT.tree_list := DCL.ConstructorNames(retType)
+        ctorName   : PT.tree
+        fnName     : PT.name_tree := F.Name
+        fnNameT    : text := PT.XLNormalize(fnName.value)
 
-        if instanceOf <> nil then
-            rtName := instanceOf
-
-        // Ctors have the name of the type
-        if rtName <> nil then
-            fName  : PT.name_tree := f.name
-            trace[ctors] "  fName ", PT.tree(fName)
-            if PT.XLNormalize(rtName.value) = PT.XLNormalize(fName.value) then
-                return true
+        for ctorName in ctorNames loop
+            AsName : ctorName as PT.name_tree
+            if AsName <> nil then
+                if PT.XLNormalize(AsName.value) = fnNameT then
+                    return true
         return false
 
 
