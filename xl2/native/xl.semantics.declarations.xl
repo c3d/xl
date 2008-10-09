@@ -701,7 +701,7 @@ module XL.SEMANTICS.DECLARATIONS is
     //    Evaluate 'Value' directly with result 'MName'
     // ------------------------------------------------------------------------
 
-        trace[ddd] "Construct ", MName, " type ", DType, " val ", Value
+        trace[ctors] "Construct ", MName, " type ", DType, " val ", Value
 
         TY.PushTargetType DType
         PT.AttachTree Value, "CTORCALL", MName
