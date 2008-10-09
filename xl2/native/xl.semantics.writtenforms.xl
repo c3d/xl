@@ -125,7 +125,9 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             skip   : boolean := false
             tempDt : PT.tree // Temporary destructors
             keyD   : text := "WARG_DTORS"
-            trace[expr] "Testing parm ", param_name, " value ", value
+            trace[expr] "Testing parm ", param_name,
+                        " type ", TY.Source(decl.type),
+                        " against ", value
             if semArg = nil then
                 if value.kind=PT.xlNAME and DCL.GetDeclaration(value)=nil then
                     // Undeclared out parameters will be declared in call
@@ -182,7 +184,8 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                     trace[-expr] "FAIL: Cached error ", Error
                     return 0
 
-            trace[expr] "Semantic value for ", param_name, " is ", semArg
+            trace[expr] "Value for ", param_name,
+                       " has type ", TY.Source(TY.GetType(semArg))
             args[param_name] := semArg
             if not skip then
                 if Gtype <> nil then
@@ -204,7 +207,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                             trace[-expr] "FAIL: implicit ", ERR.LastErrorsText()
                             return 0
                         if not DCL.Assignable(decl, semArg) then
-                            trace[-expr] "FAIL: Type error ", semArg
+                            trace[-expr] "FAIL: Type error"
                             return 0
                         args[param_name] := semArg
                         base_score -= 1
