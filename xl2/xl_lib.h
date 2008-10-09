@@ -554,6 +554,8 @@ extern void XLTerm();
 extern void XLTraceInit(int Argc, char **Argv);
 extern char XLTrace[];
 
+void XLSpaces(int n) { for (int i = 0; i < n; i++) std::cout << ' '; }
+
 int main(int argc, char **argv)
 {
     for (int arg = 0; arg < argc; arg++)
