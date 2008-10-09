@@ -745,9 +745,9 @@ module XL.SEMANTICS.DECLARATIONS is
 
         dtype : TY.any_type := decl.type
         assert dtype <> nil
-        tname : GN.GenericName(dtype) as PT.name_tree
-        trace[ctors] "CallConstructor ",
-                     PT.tree(decl.name), " : ", PT.tree(tname)
+        dname : PT.tree := GN.GenericName(dtype)
+        tname : dname as PT.name_tree
+        trace[ctors] "CallConstructor ", PT.tree(decl.name), " : ", dname
         if tname <> nil then
             list : PT.tree_list
             SYM.Lookup XLT.context, "FN", tname.value, list, SYM.lookupAll
