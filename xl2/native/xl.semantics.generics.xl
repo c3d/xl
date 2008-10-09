@@ -333,6 +333,7 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
     //   Record the context of instantiation in the instantiation context
     // ------------------------------------------------------------------------
+        trace[inst] "Set COI ", instContext, " for ", oldContext
         SYM.SetContextProperty instContext, "COINST", oldContext
 
 
@@ -340,13 +341,15 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
     //   Return the context of instantiation for the instantiation context
     // ------------------------------------------------------------------------
-        return SYM.ContextProperty(XLT.context, "COINST", true)
+        result := SYM.ContextProperty(XLT.context, "COINST", true)
+        trace[inst] "Got COI ", result, " for ", XLT.context
 
 
     procedure DeclareInstantiationContext (instContext : SYM.symbol_table) is
     // ------------------------------------------------------------------------
     //   Declare the context where we store instantiations
     // ------------------------------------------------------------------------
+        trace[inst] "Declare IC ", instContext
         SYM.SetContextProperty instContext, "INSTANTIATION", instContext
 
 
@@ -354,7 +357,8 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
     //   Return the context where we store instantiations
     // ------------------------------------------------------------------------
-        return SYM.ContextProperty(XLT.context, "INSTANTIATION", true)
+        result := SYM.ContextProperty(XLT.context, "INSTANTIATION", true)
+        trace[inst] "Got IC ", result, " for ", XLT.context
     
 
     procedure SetInstanceContext(source      : PT.tree;
