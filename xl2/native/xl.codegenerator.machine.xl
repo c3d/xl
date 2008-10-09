@@ -126,10 +126,12 @@ module XL.CODE_GENERATOR.MACHINE is
                 @value 'ValueName'
             then
                 copy : PT.tree := parse_tree(@copy 'mname' 'ValueName')
+                info : PT.infos := value.info
                 value := parse_tree
                     'value'
                     'copy'
                     @value 'mname'
+                value.info := info
 
 
 
