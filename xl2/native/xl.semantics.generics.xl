@@ -548,10 +548,9 @@ module XL.SEMANTICS.GENERICS is
         // Create instantiation context
         oldContext : SYM.symbol_table := XLT.context
         declContext : SYM.symbol_table := SYM.Enclosing(gtp.symbols)
-        instContext : SYM.symbol_table := SYM.NewSymbolTable(XLT.global_context)
+        instContext : SYM.symbol_table := SYM.NewSymbolTable(declContext)
         XLT.context := instContext
-        XLT.CopyScopeProperties instContext, XLT.global_context
-        SYM.AddImplicit instContext, declContext
+        XLT.CopyScopeProperties instContext, declContext
 
         // Record where to find the context of instantiation (oldContext)
         SetInstantiator instContext, oldContext
@@ -809,8 +808,7 @@ module XL.SEMANTICS.GENERICS is
         declContext : SYM.symbol_table := GenType.context
         instContext : SYM.symbol_table := SYM.NewSymbolTable(declContext)
         XLT.context := instContext
-        XLT.CopyScopeProperties instContext, XLT.global_context
-        SYM.AddImplicit instContext, oldContext
+        XLT.CopyScopeProperties instContext, declContext
 
         // Make the instantiation context visible for validation
         SetInstantiator instContext, oldContext
