@@ -1,0 +1,36 @@
+<!--September 2008-->
+August | <b>September 2008</b> | October
+<p>
+<a href="080926.html">Friday, 26 September</a>: The new C++ standard
+<ul>
+<li>DevX.com has a <a href="http://www.devx.com/SpecialReports/Door/38865">special report</a>
+<a href="http://en.wikipedia.org/wiki/C%2B%2B0x">C++ 0x</a>
+<li>One of the major features in C++ is <em>concepts</em>. DevX has a <a href="http://www.devx.com/SpecialReports/Article/38864">dedicated article</a>
+<li><a href="http://xlr.sourceforge.net/Concept%20Programming%20Presentation.pdf">
+{picl "http://upload.wikimedia.org/wikipedia/commons/d/d4/Brain_090407.jpg" "Concepts vs. code" "150"}
+</a>
+<li>C++ concepts, however, are somewhat annoying to me. One reason is that XL has been for a long time based on an approach that I dubbed <a href="http://xlr.sourceforge.net/Concept%20Programming%20Presentation.pdf">concept programming</a>
+<li>Many aspects of XL are a direct consequence of the concept programming design philosophy. For example, XL implemented, since <a href="http://mozart-dev.cvs.sourceforge.net/viewvc/mozart-dev/mozart/lx/TESTS/instantiation/generic_validation.lx?revision=1.1&view=markup">at least 2002</a>
+<a href="http://xlr.svn.sourceforge.net/viewvc/xlr/trunk/xl2/native/TESTS/10.Generics/minimax_vararg_generic.xl?view=markup">XL implementation of a <em>minimum</em> function</a>
+<a href="http://www.devx.com/SpecialReports/Article/38864/1763?supportItem=1">implementation of the same</a>
+<li><a href="http://images.businessweek.com/ss/05/12/bestideas/source/14.htm"><img src="http://images.businessweek.com/ss/05/12/bestideas/image/mmedia.jpg" width="150" align="right"/></a>
+<li>C++ 0x also adds <a href="http://www.devx.com/SpecialReports/Article/38883">standard support for threads</a>
+<a href="http://en.wikipedia.org/wiki/Cell_(microprocessor)">Cell microprocessor</a>
+<li>This kind of problem is much more complicated, and is already, to some extent, solved by other languages such as <a href="http://en.wikipedia.org/wiki/Java_(programming_language)#Servlet">Java</a>
+<a href="http://en.wikipedia.org/wiki/Erlang_(programming_language)#Concurrency_and_distribution_oriented_language">Erlang</a>
+<li>At this point, XL has little to offer in that space, because what is needed is not coded yet. However, I am confident that XL's extensibility will make it easy to implement not one, but a multitude of tasking models. Among the top candidates are <a href="http://www.seas.gwu.edu/~csci51/fall99/ada_task.html">rendez-vous based mechanisms</a>
+<li>C++ 0x will, at long last, implement <a href="http://en.wikipedia.org/wiki/C%2B%2B0x#Variadic_templates">variadic templates</a>
+<li>This is, again, something that existed in XL since <a href="http://mozart-dev.cvs.sourceforge.net/viewvc/*checkout*/mozart-dev/mozart/lx/TESTS/expr_rdn/writeln.lx?revision=1.1">2001</a>
+<a href="http://xlr.svn.sourceforge.net/viewvc/xlr/trunk/xl2/native/TESTS/10.Generics/minimax_vararg_generic.xl">takes advantage of this feature</a>
+<li>A new <a href="http://en.wikipedia.org/wiki/C%2B%2B0x#Range-based_for-loop">range-based iteration</a>
+<a href="http://xlr.svn.sourceforge.net/viewvc/xlr/trunk/xl2/native/TESTS/08.Aggregates/for_loops.xl">for loops</a>
+<li>C++ 0x introduces the notion of <a href="http://en.wikipedia.org/wiki/C%2B%2B0x#Generalized_constant_expressions">generalized constant expression</a>
+<li>Once again, the XL approach is very different. The XL compiler has various phases, implemented as "plug-ins" for the compiler. One of them deals with constant folding (i.e. evaluation of constant expressions). Here is an <a href="http://xlr.svn.sourceforge.net/viewvc/xlr/trunk/xl2/native/TESTS/11.Preprocessor/constant_evaluation.xl?view=markup">example</a>
+<li>The XL pre-processor also makes it easy to implement <a href="http://xlr.svn.sourceforge.net/viewvc/xlr/trunk/xl2/native/TESTS/11.Preprocessor/assert_macro_compile_time_failure.xl?view=markup">compile-time assertions</a>
+<a href="http://en.wikipedia.org/wiki/C%2B%2B0x#Static_assertions">new feature</a>
+<li>Note: This article was originally published
+<a href="http://grenouille-bouillie.blogspot.com/2008/09/new-c-standard.html">here</a>
+</ul>
+
+<p>
+August | <b>September 2008</b> | October

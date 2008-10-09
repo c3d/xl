@@ -55,10 +55,6 @@ init            "#include <stdio.h>"
                 "typedef FILE *                 xlfile;"
                 "jmp_buf *                      XL_exception_stack = NULL;"
 
-                "// Assume C99 behavior for %, i.e. sign same as dividend"
-                "#define XL_MODULO(x,y)         (x^y) >= 0 ? x % y : x % y + y"
-                "#define XL_REMAINDER(x,y)      x%y"
-
 term            "/*end*/"
 
 stdfile         "$1 = xl_getstdfile($2);"
