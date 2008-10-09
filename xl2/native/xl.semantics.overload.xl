@@ -380,7 +380,10 @@ module XL.SEMANTICS.OVERLOAD is
                     Matching := GN.Deduce (Gtype, D, Arg, Gargs)
                 else
                     if AType <> nil then
-                        Matching := DCL.Assignable(D, Arg) > 0
+                        assignable : integer := DCL.Assignable(D, Arg)
+                        Matching :=  assignable > 0
+                        if Matching then
+                            SYM.AdjustScoreRenames Score, assignable
                     else
                         Matching := false
                     if not Matching then
@@ -755,8 +758,10 @@ module XL.SEMANTICS.OVERLOAD is
             for D in Ftype.parameters loop
                 if toFnType <> nil then
                     toD : DCL.Declaration := toFnType.parameters[A]
-                    Matching := DCL.Assignable(D, toD.type) > 0
+                    assignable : integer := DCL.Assignable(D, toD.type)
+                    Matching := assignable > 0
                     exit if not Matching
+                    SYM.AdjustScoreRenames Score, assignable
                 else
                     Arg : PT.tree := D.initializer
                     if Arg = nil then
@@ -774,11 +779,14 @@ module XL.SEMANTICS.OVERLOAD is
                     if Gtype <> nil then
                         Matching := GN.Deduce (Gtype, D, Arg, Gargs)
                     else
-                        Matching := DCL.Assignable(D, Arg) > 0
-                        if not Matching then
+                        assignable : integer := DCL.Assignable(D, Arg)
+                        Matching := assignable > 0
+                        if Matching then
+                            SYM.AdjustScoreRenames Score, assignable
+                        else
                             // Try implicit conversions
                             Arg := TY.TryConvert(Arg, D.type)
-                            Matching := Arg <> nil and DCL.Assignable(D, Arg)>0
+                            Matching := Arg <> nil and DCL.Assignable(D,Arg) > 0
                             if Matching then
                                 trace[overload] "Implicit conversion to ",
                                                 TY.Source(D.type)

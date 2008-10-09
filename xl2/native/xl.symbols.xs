@@ -76,6 +76,7 @@ module XL.SYMBOLS with
 
     procedure  AdjustScoreMatches(in out score : integer; count : integer)
     procedure  AdjustScoreDepth (in out score : integer; depth : integer)
+    procedure  AdjustScoreRenames (in out score : integer; depth : integer)
     procedure  AdjustScoreDefaultValues(in out score : integer)
     procedure  AdjustScoreConversions(in out score : integer)
     procedure  AdjustScoreGenericity (in out score : integer)
