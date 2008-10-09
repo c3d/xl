@@ -667,11 +667,6 @@ module XL.SEMANTICS.GENERICS is
             PT.AttachTree Init, "INSTSRC", Source
             result := DCL.EnterDeclaration (Name, Type, Init, true)
             result := XLT.XLSemantics(result)
-            if Decl.is_global then
-                f : FN.function := FN.GetFunction (result)
-                result := XLT.PostScopeSemantics(result, XLT.scopeGlobal, nil)
-                if f <> nil then
-                    PT.SetInfo result, "FN", f
 
         assert result <> nil
 
@@ -681,6 +676,15 @@ module XL.SEMANTICS.GENERICS is
             result := ERR.ErrorTree()
         SYM.Enter XLT.global_context, "INSTANCE", key, result
         trace[-inst] "Entered ", key, "=", result
+
+        // Process declarations that we may have inserted in the local scope
+        // such as constructor, destructors, temporaries.
+        // We can't do that before having entered the instance above,
+        // otherwise we cause infinite instantiation loops in common cases
+        if not isPartial then
+            infos : PT.infos := result.info
+            result := XLT.PostScopeSemantics(result, XLT.scopeGlobal, nil)
+            result.info := infos
 
         XLT.context := oldContext
         XLT.function_context := fnContext
