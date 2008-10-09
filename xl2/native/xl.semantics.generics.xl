@@ -394,7 +394,7 @@ module XL.SEMANTICS.GENERICS is
     //   Instantiate a specific declaration
     // ------------------------------------------------------------------------
 
-        trace [inst] "Instantiating ", PT.tree(Decl.name)
+        trace [+inst] "Instantiating ", PT.tree(Decl.name)
         if Decl.implementation <> nil then
             Decl := Decl.implementation
             trace[inst] "Using implementation ", Decl.name
@@ -402,6 +402,7 @@ module XL.SEMANTICS.GENERICS is
         gtp : GEN.generic_type := GEN.DeclGenericType(Decl)
         if gtp = nil then
             ERR.Error "Internal: '$1' is not a generic declaration", Decl.name
+            trace[-inst] "Not a generic declaration: ", PT.tree(Decl.name)
             return parse_tree(@error)
 
         // Check if we already instantiated that guy
@@ -425,6 +426,7 @@ module XL.SEMANTICS.GENERICS is
                 if A = nil then
                     ERR.Error "Cannot instantiate '$1'", Decl.Name
                     ERR.Error "since '$1' is undefined", P.name
+                    trace [-inst] "No value for ", PT.tree(P.name)
                     return parse_tree(@error)
                 Args[P.name] := A
             if I > 0 then
@@ -447,7 +449,7 @@ module XL.SEMANTICS.GENERICS is
         trace[inst] "Looking up ", key
         result := SYM.LookupOne (XLT.global_context, "INSTANCE", key)
         if result <> nil then
-            trace[inst] "Found cached: ", result
+            trace[-inst] "Found cached: ", result
             translate result
                 when (@error 'errorText') then
                     errT : errorText as PT.text_tree
@@ -457,6 +459,7 @@ module XL.SEMANTICS.GENERICS is
         // Check infinite recursion
         if instantiations > max_instantiations then
             ERR.Error "Too many recursive instantitiations at '$1'", Decl.name
+            trace[-inst] "Too many recursions: ", instantiations
             return parse_tree(@error)
         instantiations += 1
 
@@ -487,6 +490,7 @@ module XL.SEMANTICS.GENERICS is
                 instantiations -= 1
                 XLT.context := oldContext
                 XLT.function_context := fnContext
+                trace[-inst] "Parameter is not a name: ", PT.tree(P.name)
                 return parse_tree(@error)
 
             // Build the source args list
@@ -594,7 +598,7 @@ module XL.SEMANTICS.GENERICS is
             result := parse_tree(@error 'errorText')
             ERR.DisplayLastErrors()
         SYM.Enter XLT.global_context, "INSTANCE", key, result
-        trace[inst] "Entered ", key
+        trace[-inst] "Entered ", key
 
         XLT.context := oldContext
         XLT.function_context := fnContext
