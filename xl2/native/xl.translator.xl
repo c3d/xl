@@ -165,7 +165,7 @@ module XL.TRANSLATOR is
         SYM.CopyProperty toTable, fromTable, "GLOBAL"
         SYM.CopyProperty toTable, fromTable, "LOCAL"
         SYM.CopyProperty toTable, fromTable, "FNPARM"
-        // SYM.CopyProperty toTable, fromTable, "FIELD"
+        SYM.CopyProperty toTable, fromTable, "FIELD"
         SYM.CopyProperty toTable, fromTable, "GENPARM"
 
 
@@ -223,6 +223,7 @@ module XL.TRANSLATOR is
                                " for ", ModName
                 SYM.AddUsing context, nil, ifaceSyms
                 CopyScopeProperties context, ifaceSyms 
+                SYM.SetProperty context, "FIELD", nil
 
         if scope = scopeMain or scope = scopeModule or scope = scopeGlobal then
             global_context := context
