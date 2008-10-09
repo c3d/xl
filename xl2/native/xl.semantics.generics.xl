@@ -1195,6 +1195,7 @@ module XL.SEMANTICS.GENERICS is
             else
                 ERR.Error "Error instantiating '$1'", Source
             ERR.DisplayLastErrors()
+            result := ERR.ErrorTree()
 
 
     function ContainsGenerics (List : PT.tree_list) return DCL.declaration is
