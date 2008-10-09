@@ -152,11 +152,24 @@ procedure Main is
         exit 2
 
 
-procedure Symbols(S : SYM.symbol_table) is
+procedure Symbols(S : SYM.symbol_table; K: SYM.lookup_kind) is
 // ------------------------------------------------------------------------
 //   Dump a symbol table
 // ------------------------------------------------------------------------
     if S = nil then
         S := XLT.context
-    SYM.Debug S, ""
+    SYM.Debug S, K
 
+
+procedure Symbols(S : SYM.symbol_table) is
+// ------------------------------------------------------------------------
+//   Dump a symbol table
+// ------------------------------------------------------------------------
+    Symbols S, SYM.lookupLocalOnly
+
+
+procedure Symbols() is
+// ------------------------------------------------------------------------
+//   Dump a symbol table
+// ------------------------------------------------------------------------
+    Symbols nil

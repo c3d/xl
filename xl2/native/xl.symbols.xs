@@ -248,4 +248,4 @@ module XL.SYMBOLS with
 
     // Creating a temporary compiler-generated name
     function Temporary(base : text; pos : integer := -1) return PT.name_tree
-    procedure Debug(S : symbol_table; indent : text)
+    procedure Debug(S : symbol_table; kind : lookup_kind)
