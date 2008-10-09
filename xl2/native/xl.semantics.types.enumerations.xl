@@ -136,7 +136,7 @@ module XL.SEMANTICS.TYPES.ENUMERATIONS is
         etp.base := nil
         if Base <> nil then
             BaseType : any_type := TY.EvaluateType (Base)
-            BaseEnum : BaseType as enumeration_type
+            BaseEnum : TY.NonSourceType(BaseType) as enumeration_type
             if BaseEnum = nil then
                 ERR.Error "Base '$1' is not an enumeration", Base
             else
