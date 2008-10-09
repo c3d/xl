@@ -515,6 +515,7 @@ module XL.SEMANTICS.GENERICS is
         fnContext : SYM.symbol_table := XLT.function_context
         declContext : SYM.symbol_table := SYM.Enclosing(gtp.symbols)
         instContext : SYM.symbol_table := SYM.NewSymbolTable(declContext)
+        Name : PT.tree := PT.Clone(Decl.Name)
         XLT.context := instContext
         XLT.function_context := instContext
         XLT.CopyScopeProperties instContext, oldContext
@@ -552,11 +553,10 @@ module XL.SEMANTICS.GENERICS is
             trace[inst] "GenArg ", PT.tree(NT),
                         " : ", TY.Source(P.type),
                         " is ", A
-            PT.AttachTree NT, "INSTARG", N
+            PT.AttachTree NT, "INSTARG", Name
             A := DCL.EnterDeclaration (NT, TY.Source(P.type), A, true)
 
         // Create the required elements to enter the instantiated declaration
-        Name : PT.tree := PT.Clone(Decl.Name)
         Type : PT.tree := TY.Source(GEN.NonGenericType(Decl.type))
         if not TY.IsTypeType(Decl.type) then
             Type := PT.Clone(Type)
@@ -1197,6 +1197,10 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
     //   Return declaration of instance if any
     // ------------------------------------------------------------------------
+        GDN : PT.tree := GDecl.name
+        if GDN = nil then
+            return nil
+
         Name : PT.tree
         for Name in List loop
             decl : DCL.declaration := DCL.GetDeclaration(Name)
@@ -1205,9 +1209,10 @@ module XL.SEMANTICS.GENERICS is
                     instType : TY.any_type := TY.GetDefinedType(decl.name)
                     instImpl : TY.any_type := TY.NonConstSourceType(instType)
                     instSrc  : PT.tree := TY.Source(instImpl)
-                    instOf : PT.tree := PT.Attached(instSrc, "INSTANCEOF")
+                    instOf   : PT.tree := PT.Attached(instSrc, "INSTANCEOF")
                     if instOf = GDecl.name then
                         return decl
+                    
         return nil
 
 

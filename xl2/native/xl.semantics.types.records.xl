@@ -523,8 +523,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
         return Code
 
 
-    function EnterDefaultFunction(source : PT.tree;
-                                  force  : boolean) return BC.bytecode is
+    function EnterDefaultFunction(source : PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
     //    Create a default ctor/dtor in a lateral map
     // ------------------------------------------------------------------------
@@ -532,35 +531,31 @@ module XL.SEMANTICS.TYPES.RECORDS is
     //    - It makes it possible to override it in the local scope
     //    - It is easier to destroy if there is any error
 
-        // Don't generate defaults for instantiations, they exist
-        // for the generic type already
-        instctx : SYM.symbol_table := GN.InstantiationContext()
-        if instctx = nil or force then
-            // Save existing context, including global decls, and
-            // create new symbol table
-            context : SYM.symbol_table := XLT.context
-            globals : SYM.symbol_table := XLT.global_context
-            newsyms : SYM.symbol_table := SYM.NewSymbolTable(context)
-            XLT.context := newsyms
-            XLT.global_context := newsyms
+        // Save existing context, including global decls, and
+        // create new symbol table
+        context : SYM.symbol_table := XLT.context
+        globals : SYM.symbol_table := XLT.global_context
+        newsyms : SYM.symbol_table := SYM.NewSymbolTable(context)
+        XLT.context := newsyms
+        XLT.global_context := newsyms
 
-            trace[+defaultfns] "In ", newsyms, "-", globals, " enter: ", source
+        trace[+defaultfns] "In ", newsyms, "-", globals, " enter: ", source
 
-            // Try to evaluate the tentative function
-            tnt : XLT.attempt := XLT.BeginAttempt()
-            result := XLT.XLDeclarations(source)
-            result := XLT.XLSemantics(result)
-            hadError : boolean := XLT.EndAttempt(tnt)
-            XLT.context := context
-            XLT.global_context := globals
-            if hadError then
-                trace[-defaultfns] "Error: ", ERR.LastErrorsText()
-                return nil
+        // Try to evaluate the tentative function
+        tnt : XLT.attempt := XLT.BeginAttempt()
+        result := XLT.XLDeclarations(source)
+        result := XLT.XLSemantics(result)
+        hadError : boolean := XLT.EndAttempt(tnt)
+        XLT.context := context
+        XLT.global_context := globals
+        if hadError then
+            trace[-defaultfns] "Error: ", ERR.LastErrorsText()
+            return nil
 
-            trace[-defaultfns] "Code: ", result
+        trace[-defaultfns] "Code: ", result
 
-            // If evaluation was successful, then add the context as a lateral
-            SYM.AddUsing context, nil, newsyms
+        // If evaluation was successful, then add the context as a lateral
+        SYM.AddUsing context, nil, newsyms
 
 
     function EnterDefaultConstructor(recName : PT.name_tree;
@@ -577,9 +572,13 @@ module XL.SEMANTICS.TYPES.RECORDS is
             if not TY.SameType (F.type, TY.type_of_records) then
                 ftype : TY.Source(F.type) as PT.name_tree
                 if ftype <> nil then
+                    ctorName : PT.tree := ftype
+                    genericType : PT.tree := PT.Attached(ftype, "INSTARG")
+                    if genericType <> nil then
+                        ctorName := parse_tree('genericType'.'ctorName')
                     fname : PT.tree := PT.Clone(F.name)
                     ctorCall : PT.tree := parse_tree
-                        result.'fname' := 'ftype' ()
+                        result.'fname' := 'ctorName' ()
                     result := XLT.Append(result, ctorCall)
 
         // If we found any, then generate a constructor here
