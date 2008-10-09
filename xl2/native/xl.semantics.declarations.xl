@@ -389,23 +389,38 @@ module XL.SEMANTICS.DECLARATIONS is
     //   Return true if target can receive source type
     // ------------------------------------------------------------------------
         // Cannot assign a constant to an output
+        trace[+assign] "Assigning ",
+                          PT.Tree(Tgt.Name), " : ", TY.Source(Tgt.Type),
+                          " <- ", TY.Source(SrcType)
+
         if Tgt.is_output then
+            trace[assign] "Declaration is output"
             if TY.IsConstant(SrcType) then
+                trace[-assign] "FAIL: Cannot assign constant"
                 return false
             // Output types must match exactly
             SrcType := TY.NonVariableType(SrcType)
-            return TY.SameType(SrcType, Tgt.type)
+            result := TY.SameType(SrcType, Tgt.type)
+            if result then
+                trace[-assign] "PASS: Type comparison succeeded"
+            else
+                trace[-assign] "FAIL: Type comparison failed"
+            return result
 
         // If decl and value types are identical, it's assignable
         if TY.SameType(SrcType, Tgt.type) then
+            trace[-assign] "PASS: Types are identical"
             return true
 
         // If the value is 'constant', we can strip that for an input
         NonConst : TY.any_type := TY.NonConstedType(SrcType)
+        trace[assign] "Trying non-consted type ", TY.Source(NonConst)
         if TY.SameType(NonConst, TGT.type) then
+            trace[-assign] "PASS: Non-consted type succeeded"
             return true
 
         // Otherwise, we don't match
+        trace [-assign] "FAIL: Could not find anything suitable"
         return false
 
 
