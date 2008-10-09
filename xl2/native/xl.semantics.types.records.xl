@@ -565,7 +565,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
             result := parse_tree
                 function 'recName' () return 'recName' is
                     @info DefaultCtor // CTORCODE to be inserted on 'result'
-            result := EnterDefaultFunction(result)
+            result := EnterDefaultFunction(recName, result)
 
 
     function EnterFieldConstructor(recName : PT.name_tree;
@@ -595,7 +595,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 function 'recName'('Parms') return 'recName' is
                     @info DefaultFieldConstructor
                     'result'
-            result := EnterDefaultFunction(result)
+            result := EnterDefaultFunction(recName, result)
 
 
     function EnterDestructor(recName : PT.name_tree;
@@ -623,7 +623,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
                 procedure delete (this : 'recName') is
                     @info DefaultDestructor
                     'result'
-            result := EnterDefaultFunction(result)
+            result := EnterDefaultFunction(recName, result)
 
 
     function EnterCopy(recName : PT.name_tree;
@@ -652,7 +652,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
                                 that : 'recName') written this := that is
                     @info DefaultCopy
                     'result'
-            result := EnterDefaultFunction(result)
+            result := EnterDefaultFunction(recName, result)
 
 
     function EnterDefaults(N : PT.name_tree;
@@ -666,7 +666,8 @@ module XL.SEMANTICS.TYPES.RECORDS is
         result := XLT.Append(result, EnterCopy(N, rtp))
 
 
-    function EnterDefaultFunction(source : PT.tree) return BC.bytecode is
+    function EnterDefaultFunction(name : PT.tree;
+                                  source : PT.tree) return BC.bytecode is
     // ------------------------------------------------------------------------
     //    Declare a default function (ctor/dtor)
     // ------------------------------------------------------------------------
@@ -675,7 +676,7 @@ module XL.SEMANTICS.TYPES.RECORDS is
     //    - It is easier to destroy if there is any error
 
         if GN.InIncompleteInstantiationContext() then
-            return parse_tree(@@defaultfn 'source')
+            return parse_tree(@@defaultfn 'source' 'name')
 
         // Save existing context, including global decls, and
         // create new symbol table
@@ -703,10 +704,11 @@ module XL.SEMANTICS.TYPES.RECORDS is
         SYM.AddUsing globals, nil, newsyms
         SYM.SetContextProperty result, "DEFAULTFN", newsyms
 
-        result := parse_tree(@@defaultfn_decl 'result')
+        result := parse_tree(@@defaultfn_decl 'result' 'name')
 
 
-    function EvaluateDefaultFunction (source : PT.tree) return PT.tree is
+    function EvaluateDefaultFunction (name : PT.tree;
+                                      source : PT.tree) return PT.tree is
     // ------------------------------------------------------------------------
     //   Process the default functions entered in EnterDefaultFunction
     // ------------------------------------------------------------------------
@@ -721,7 +723,12 @@ module XL.SEMANTICS.TYPES.RECORDS is
         XLT.context := newsyms
         assert newsyms <> nil
         trace[+defaultfns] "In ", newsyms, " evaluate: ", source
+        tnt : XLT.attempt := XLT.BeginAttempt()
         result := XLT.XLSemantics(source)
+        if XLT.EndAttempt(tnt) then
+            ERR.Error "Error in constructor, destructor or copy for '$1'", name
+            ERR.DisplayLastErrors()
+            result := ERR.ErrorTree()
         XLT.context := context
         trace[-defaultfns] "Code: ", result
 
@@ -731,10 +738,10 @@ module XL.SEMANTICS.TYPES.RECORDS is
     //    Try to translate X.Y expressions
     // ------------------------------------------------------------------------
         when
-            @@defaultfn 'Source'
+            @@defaultfn 'Source' 'Name'
         then
             if not GN.InIncompleteInstantiationContext() then
-                result := EvaluateDefaultFunction(Source)
+                result := EvaluateDefaultFunction(Name, Source)
             return result
 
         when
@@ -758,14 +765,14 @@ module XL.SEMANTICS.TYPES.RECORDS is
             return EnterUsing (Record)
 
         when
-            @@defaultfn 'Source'
+            @@defaultfn 'Source' 'Name'
         then
-            result := EnterDefaultFunction(Source)
+            result := EnterDefaultFunction(Name, Source)
             if result <> nil then
                 result := XLT.XLSemantics(result)
         when
-            @@defaultfn_decl 'Source'
+            @@defaultfn_decl 'Source' 'Name'
         then
-            result := EvaluateDefaultFunction(Source)
+            result := EvaluateDefaultFunction(Name, Source)
             if result <> nil then
                 result := XLT.XLSemantics(result)
