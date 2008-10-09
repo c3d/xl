@@ -13,7 +13,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var581_583'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var586_588'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -22,25 +22,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var586_589 , var587_590'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|____________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var593_597 , var594_598 , var595_599'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|___________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var602_607 , var603_608 , var604_609 , var605_610'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var591_594 , var592_595'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -49,7 +31,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var613_619 , var614_620 , var615_621 , var616_622 , var617_623'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var598_602 , var599_603 , var600_604'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -58,25 +40,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var626_633 , var627_634 , var628_635 , var629_636 , var630_637 , var631_638'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|____________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var641_649 , var642_650 , var643_651 , var644_652 , var645_653 , var646_654 , var647_655'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|___________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var658_667 , var659_668 , var660_669 , var661_670 , var662_671 , var663_672 , var664_673 , var665_674'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var607_612 , var608_613 , var609_614 , var610_615'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -85,7 +49,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var677_687 , var678_688 , var679_689 , var680_690 , var681_691 , var682_692 , var683_693 , var684_694 , var685_695'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var618_624 , var619_625 , var620_626 , var621_627 , var622_628'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -94,25 +58,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var698_709 , var699_710 , var700_711 , var701_712 , var702_713 , var703_714 , var704_715 , var705_716 , var706_717 , var707_718'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|____________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var721_733 , var722_734 , var723_735 , var724_736 , var725_737 , var726_738 , var727_739 , var728_740 , var729_741 , var730_742 , var731_743'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|___________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var746_759 , var747_760 , var748_761 , var749_762 , var750_763 , var751_764 , var752_765 , var753_766 , var754_767 , var755_768 , var756_769 , var757_770'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var631_638 , var632_639 , var633_640 , var634_641 , var635_642 , var636_643'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -121,7 +67,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var773_787 , var774_788 , var775_789 , var776_790 , var777_791 , var778_792 , var779_793 , var780_794 , var781_795 , var782_796 , var783_797 , var784_798 , var785_799'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var646_654 , var647_655 , var648_656 , var649_657 , var650_658 , var651_659 , var652_660'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -130,25 +76,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var802_817 , var803_818 , var804_819 , var805_820 , var806_821 , var807_822 , var808_823 , var809_824 , var810_825 , var811_826 , var812_827 , var813_828 , var814_829 , var815_830'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|____________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var833_849 , var834_850 , var835_851 , var836_852 , var837_853 , var838_854 , var839_855 , var840_856 , var841_857 , var842_858 , var843_859 , var844_860 , var845_861 , var846_862 , var847_863'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|___________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var866_883 , var867_884 , var868_885 , var869_886 , var870_887 , var871_888 , var872_889 , var873_890 , var874_891 , var875_892 , var876_893 , var877_894 , var878_895 , var879_896 , var880_897 , var881_898'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var663_672 , var664_673 , var665_674 , var666_675 , var667_676 , var668_677 , var669_678 , var670_679'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -157,7 +85,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var901_919 , var902_920 , var903_921 , var904_922 , var905_923 , var906_924 , var907_925 , var908_926 , var909_927 , var910_928 , var911_929 , var912_930 , var913_931 , var914_932 , var915_933 , var916_934 , var917_935'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var682_692 , var683_693 , var684_694 , var685_695 , var686_696 , var687_697 , var688_698 , var689_699 , var690_700'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -166,25 +94,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var938_957 , var939_958 , var940_959 , var941_960 , var942_961 , var943_962 , var944_963 , var945_964 , var946_965 , var947_966 , var948_967 , var949_968 , var950_969 , var951_970 , var952_971 , var953_972 , var954_973 , var955_974'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|____________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var977_997 , var978_998 , var979_999 , var980_1000 , var981_1001 , var982_1002 , var983_1003 , var984_1004 , var985_1005 , var986_1006 , var987_1007 , var988_1008 , var989_1009 , var990_1010 , var991_1011 , var992_1012 , var993_1013 , var994_1014 , var995_1015'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|___________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1018_1039 , var1019_1040 , var1020_1041 , var1021_1042 , var1022_1043 , var1023_1044 , var1024_1045 , var1025_1046 , var1026_1047 , var1027_1048 , var1028_1049 , var1029_1050 , var1030_1051 , var1031_1052 , var1032_1053 , var1033_1054 , var1034_1055 , var1035_1056 , var1036_1057 , var1037_1058'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var703_714 , var704_715 , var705_716 , var706_717 , var707_718 , var708_719 , var709_720 , var710_721 , var711_722 , var712_723'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -193,7 +103,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1061_1083 , var1062_1084 , var1063_1085 , var1064_1086 , var1065_1087 , var1066_1088 , var1067_1089 , var1068_1090 , var1069_1091 , var1070_1092 , var1071_1093 , var1072_1094 , var1073_1095 , var1074_1096 , var1075_1097 , var1076_1098 , var1077_1099 , var1078_1100 , var1079_1101 , var1080_1102 , var1081_1103'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var726_738 , var727_739 , var728_740 , var729_741 , var730_742 , var731_743 , var732_744 , var733_745 , var734_746 , var735_747 , var736_748'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -202,25 +112,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1106_1129 , var1107_1130 , var1108_1131 , var1109_1132 , var1110_1133 , var1111_1134 , var1112_1135 , var1113_1136 , var1114_1137 , var1115_1138 , var1116_1139 , var1117_1140 , var1118_1141 , var1119_1142 , var1120_1143 , var1121_1144 , var1122_1145 , var1123_1146 , var1124_1147 , var1125_1148 , var1126_1149 , var1127_1150'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|____________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1153_1177 , var1154_1178 , var1155_1179 , var1156_1180 , var1157_1181 , var1158_1182 , var1159_1183 , var1160_1184 , var1161_1185 , var1162_1186 , var1163_1187 , var1164_1188 , var1165_1189 , var1166_1190 , var1167_1191 , var1168_1192 , var1169_1193 , var1170_1194 , var1171_1195 , var1172_1196 , var1173_1197 , var1174_1198 , var1175_1199'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|___________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1202_1227 , var1203_1228 , var1204_1229 , var1205_1230 , var1206_1231 , var1207_1232 , var1208_1233 , var1209_1234 , var1210_1235 , var1211_1236 , var1212_1237 , var1213_1238 , var1214_1239 , var1215_1240 , var1216_1241 , var1217_1242 , var1218_1243 , var1219_1244 , var1220_1245 , var1221_1246 , var1222_1247 , var1223_1248 , var1224_1249 , var1225_1250'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var751_764 , var752_765 , var753_766 , var754_767 , var755_768 , var756_769 , var757_770 , var758_771 , var759_772 , var760_773 , var761_774 , var762_775'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -229,7 +121,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1253_1279 , var1254_1280 , var1255_1281 , var1256_1282 , var1257_1283 , var1258_1284 , var1259_1285 , var1260_1286 , var1261_1287 , var1262_1288 , var1263_1289 , var1264_1290 , var1265_1291 , var1266_1292 , var1267_1293 , var1268_1294 , var1269_1295 , var1270_1296 , var1271_1297 , var1272_1298 , var1273_1299 , var1274_1300 , var1275_1301 , var1276_1302 , var1277_1303'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var778_792 , var779_793 , var780_794 , var781_795 , var782_796 , var783_797 , var784_798 , var785_799 , var786_800 , var787_801 , var788_802 , var789_803 , var790_804'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -238,25 +130,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1306_1333 , var1307_1334 , var1308_1335 , var1309_1336 , var1310_1337 , var1311_1338 , var1312_1339 , var1313_1340 , var1314_1341 , var1315_1342 , var1316_1343 , var1317_1344 , var1318_1345 , var1319_1346 , var1320_1347 , var1321_1348 , var1322_1349 , var1323_1350 , var1324_1351 , var1325_1352 , var1326_1353 , var1327_1354 , var1328_1355 , var1329_1356 , var1330_1357 , var1331_1358'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|____________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1361_1389 , var1362_1390 , var1363_1391 , var1364_1392 , var1365_1393 , var1366_1394 , var1367_1395 , var1368_1396 , var1369_1397 , var1370_1398 , var1371_1399 , var1372_1400 , var1373_1401 , var1374_1402 , var1375_1403 , var1376_1404 , var1377_1405 , var1378_1406 , var1379_1407 , var1380_1408 , var1381_1409 , var1382_1410 , var1383_1411 , var1384_1412 , var1385_1413 , var1386_1414 , var1387_1415'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|___________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1418_1447 , var1419_1448 , var1420_1449 , var1421_1450 , var1422_1451 , var1423_1452 , var1424_1453 , var1425_1454 , var1426_1455 , var1427_1456 , var1428_1457 , var1429_1458 , var1430_1459 , var1431_1460 , var1432_1461 , var1433_1462 , var1434_1463 , var1435_1464 , var1436_1465 , var1437_1466 , var1438_1467 , var1439_1468 , var1440_1469 , var1441_1470 , var1442_1471 , var1443_1472 , var1444_1473 , var1445_1474'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var807_822 , var808_823 , var809_824 , var810_825 , var811_826 , var812_827 , var813_828 , var814_829 , var815_830 , var816_831 , var817_832 , var818_833 , var819_834 , var820_835'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -265,7 +139,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1477_1507 , var1478_1508 , var1479_1509 , var1480_1510 , var1481_1511 , var1482_1512 , var1483_1513 , var1484_1514 , var1485_1515 , var1486_1516 , var1487_1517 , var1488_1518 , var1489_1519 , var1490_1520 , var1491_1521 , var1492_1522 , var1493_1523 , var1494_1524 , var1495_1525 , var1496_1526 , var1497_1527 , var1498_1528 , var1499_1529 , var1500_1530 , var1501_1531 , var1502_1532 , var1503_1533 , var1504_1534 , var1505_1535'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var838_854 , var839_855 , var840_856 , var841_857 , var842_858 , var843_859 , var844_860 , var845_861 , var846_862 , var847_863 , var848_864 , var849_865 , var850_866 , var851_867 , var852_868'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -274,25 +148,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1538_1569 , var1539_1570 , var1540_1571 , var1541_1572 , var1542_1573 , var1543_1574 , var1544_1575 , var1545_1576 , var1546_1577 , var1547_1578 , var1548_1579 , var1549_1580 , var1550_1581 , var1551_1582 , var1552_1583 , var1553_1584 , var1554_1585 , var1555_1586 , var1556_1587 , var1557_1588 , var1558_1589 , var1559_1590 , var1560_1591 , var1561_1592 , var1562_1593 , var1563_1594 , var1564_1595 , var1565_1596 , var1566_1597 , var1567_1598'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|____________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1601_1633 , var1602_1634 , var1603_1635 , var1604_1636 , var1605_1637 , var1606_1638 , var1607_1639 , var1608_1640 , var1609_1641 , var1610_1642 , var1611_1643 , var1612_1644 , var1613_1645 , var1614_1646 , var1615_1647 , var1616_1648 , var1617_1649 , var1618_1650 , var1619_1651 , var1620_1652 , var1621_1653 , var1622_1654 , var1623_1655 , var1624_1656 , var1625_1657 , var1626_1658 , var1627_1659 , var1628_1660 , var1629_1661 , var1630_1662 , var1631_1663'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|___________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1666_1699 , var1667_1700 , var1668_1701 , var1669_1702 , var1670_1703 , var1671_1704 , var1672_1705 , var1673_1706 , var1674_1707 , var1675_1708 , var1676_1709 , var1677_1710 , var1678_1711 , var1679_1712 , var1680_1713 , var1681_1714 , var1682_1715 , var1683_1716 , var1684_1717 , var1685_1718 , var1686_1719 , var1687_1720 , var1688_1721 , var1689_1722 , var1690_1723 , var1691_1724 , var1692_1725 , var1693_1726 , var1694_1727 , var1695_1728 , var1696_1729 , var1697_1730'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var871_888 , var872_889 , var873_890 , var874_891 , var875_892 , var876_893 , var877_894 , var878_895 , var879_896 , var880_897 , var881_898 , var882_899 , var883_900 , var884_901 , var885_902 , var886_903'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -301,7 +157,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1733_1767 , var1734_1768 , var1735_1769 , var1736_1770 , var1737_1771 , var1738_1772 , var1739_1773 , var1740_1774 , var1741_1775 , var1742_1776 , var1743_1777 , var1744_1778 , var1745_1779 , var1746_1780 , var1747_1781 , var1748_1782 , var1749_1783 , var1750_1784 , var1751_1785 , var1752_1786 , var1753_1787 , var1754_1788 , var1755_1789 , var1756_1790 , var1757_1791 , var1758_1792 , var1759_1793 , var1760_1794 , var1761_1795 , var1762_1796 , var1763_1797 , var1764_1798 , var1765_1799'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var906_924 , var907_925 , var908_926 , var909_927 , var910_928 , var911_929 , var912_930 , var913_931 , var914_932 , var915_933 , var916_934 , var917_935 , var918_936 , var919_937 , var920_938 , var921_939 , var922_940'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -310,25 +166,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1802_1837 , var1803_1838 , var1804_1839 , var1805_1840 , var1806_1841 , var1807_1842 , var1808_1843 , var1809_1844 , var1810_1845 , var1811_1846 , var1812_1847 , var1813_1848 , var1814_1849 , var1815_1850 , var1816_1851 , var1817_1852 , var1818_1853 , var1819_1854 , var1820_1855 , var1821_1856 , var1822_1857 , var1823_1858 , var1824_1859 , var1825_1860 , var1826_1861 , var1827_1862 , var1828_1863 , var1829_1864 , var1830_1865 , var1831_1866 , var1832_1867 , var1833_1868 , var1834_1869 , var1835_1870'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|____________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1873_1909 , var1874_1910 , var1875_1911 , var1876_1912 , var1877_1913 , var1878_1914 , var1879_1915 , var1880_1916 , var1881_1917 , var1882_1918 , var1883_1919 , var1884_1920 , var1885_1921 , var1886_1922 , var1887_1923 , var1888_1924 , var1889_1925 , var1890_1926 , var1891_1927 , var1892_1928 , var1893_1929 , var1894_1930 , var1895_1931 , var1896_1932 , var1897_1933 , var1898_1934 , var1899_1935 , var1900_1936 , var1901_1937 , var1902_1938 , var1903_1939 , var1904_1940 , var1905_1941 , var1906_1942 , var1907_1943'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|___________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1946_1983 , var1947_1984 , var1948_1985 , var1949_1986 , var1950_1987 , var1951_1988 , var1952_1989 , var1953_1990 , var1954_1991 , var1955_1992 , var1956_1993 , var1957_1994 , var1958_1995 , var1959_1996 , var1960_1997 , var1961_1998 , var1962_1999 , var1963_2000 , var1964_2001 , var1965_2002 , var1966_2003 , var1967_2004 , var1968_2005 , var1969_2006 , var1970_2007 , var1971_2008 , var1972_2009 , var1973_2010 , var1974_2011 , var1975_2012 , var1976_2013 , var1977_2014 , var1978_2015 , var1979_2016 , var1980_2017 , var1981_2018'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var943_962 , var944_963 , var945_964 , var946_965 , var947_966 , var948_967 , var949_968 , var950_969 , var951_970 , var952_971 , var953_972 , var954_973 , var955_974 , var956_975 , var957_976 , var958_977 , var959_978 , var960_979'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -337,7 +175,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2021_2059 , var2022_2060 , var2023_2061 , var2024_2062 , var2025_2063 , var2026_2064 , var2027_2065 , var2028_2066 , var2029_2067 , var2030_2068 , var2031_2069 , var2032_2070 , var2033_2071 , var2034_2072 , var2035_2073 , var2036_2074 , var2037_2075 , var2038_2076 , var2039_2077 , var2040_2078 , var2041_2079 , var2042_2080 , var2043_2081 , var2044_2082 , var2045_2083 , var2046_2084 , var2047_2085 , var2048_2086 , var2049_2087 , var2050_2088 , var2051_2089 , var2052_2090 , var2053_2091 , var2054_2092 , var2055_2093 , var2056_2094 , var2057_2095'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var982_1002 , var983_1003 , var984_1004 , var985_1005 , var986_1006 , var987_1007 , var988_1008 , var989_1009 , var990_1010 , var991_1011 , var992_1012 , var993_1013 , var994_1014 , var995_1015 , var996_1016 , var997_1017 , var998_1018 , var999_1019 , var1000_1020'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -346,25 +184,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2098_2137 , var2099_2138 , var2100_2139 , var2101_2140 , var2102_2141 , var2103_2142 , var2104_2143 , var2105_2144 , var2106_2145 , var2107_2146 , var2108_2147 , var2109_2148 , var2110_2149 , var2111_2150 , var2112_2151 , var2113_2152 , var2114_2153 , var2115_2154 , var2116_2155 , var2117_2156 , var2118_2157 , var2119_2158 , var2120_2159 , var2121_2160 , var2122_2161 , var2123_2162 , var2124_2163 , var2125_2164 , var2126_2165 , var2127_2166 , var2128_2167 , var2129_2168 , var2130_2169 , var2131_2170 , var2132_2171 , var2133_2172 , var2134_2173 , var2135_2174'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|____________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2177_2217 , var2178_2218 , var2179_2219 , var2180_2220 , var2181_2221 , var2182_2222 , var2183_2223 , var2184_2224 , var2185_2225 , var2186_2226 , var2187_2227 , var2188_2228 , var2189_2229 , var2190_2230 , var2191_2231 , var2192_2232 , var2193_2233 , var2194_2234 , var2195_2235 , var2196_2236 , var2197_2237 , var2198_2238 , var2199_2239 , var2200_2240 , var2201_2241 , var2202_2242 , var2203_2243 , var2204_2244 , var2205_2245 , var2206_2246 , var2207_2247 , var2208_2248 , var2209_2249 , var2210_2250 , var2211_2251 , var2212_2252 , var2213_2253 , var2214_2254 , var2215_2255'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|___________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2258_2299 , var2259_2300 , var2260_2301 , var2261_2302 , var2262_2303 , var2263_2304 , var2264_2305 , var2265_2306 , var2266_2307 , var2267_2308 , var2268_2309 , var2269_2310 , var2270_2311 , var2271_2312 , var2272_2313 , var2273_2314 , var2274_2315 , var2275_2316 , var2276_2317 , var2277_2318 , var2278_2319 , var2279_2320 , var2280_2321 , var2281_2322 , var2282_2323 , var2283_2324 , var2284_2325 , var2285_2326 , var2286_2327 , var2287_2328 , var2288_2329 , var2289_2330 , var2290_2331 , var2291_2332 , var2292_2333 , var2293_2334 , var2294_2335 , var2295_2336 , var2296_2337 , var2297_2338'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1023_1044 , var1024_1045 , var1025_1046 , var1026_1047 , var1027_1048 , var1028_1049 , var1029_1050 , var1030_1051 , var1031_1052 , var1032_1053 , var1033_1054 , var1034_1055 , var1035_1056 , var1036_1057 , var1037_1058 , var1038_1059 , var1039_1060 , var1040_1061 , var1041_1062 , var1042_1063'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -373,7 +193,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2341_2383 , var2342_2384 , var2343_2385 , var2344_2386 , var2345_2387 , var2346_2388 , var2347_2389 , var2348_2390 , var2349_2391 , var2350_2392 , var2351_2393 , var2352_2394 , var2353_2395 , var2354_2396 , var2355_2397 , var2356_2398 , var2357_2399 , var2358_2400 , var2359_2401 , var2360_2402 , var2361_2403 , var2362_2404 , var2363_2405 , var2364_2406 , var2365_2407 , var2366_2408 , var2367_2409 , var2368_2410 , var2369_2411 , var2370_2412 , var2371_2413 , var2372_2414 , var2373_2415 , var2374_2416 , var2375_2417 , var2376_2418 , var2377_2419 , var2378_2420 , var2379_2421 , var2380_2422 , var2381_2423'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1066_1088 , var1067_1089 , var1068_1090 , var1069_1091 , var1070_1092 , var1071_1093 , var1072_1094 , var1073_1095 , var1074_1096 , var1075_1097 , var1076_1098 , var1077_1099 , var1078_1100 , var1079_1101 , var1080_1102 , var1081_1103 , var1082_1104 , var1083_1105 , var1084_1106 , var1085_1107 , var1086_1108'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -382,25 +202,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2426_2469 , var2427_2470 , var2428_2471 , var2429_2472 , var2430_2473 , var2431_2474 , var2432_2475 , var2433_2476 , var2434_2477 , var2435_2478 , var2436_2479 , var2437_2480 , var2438_2481 , var2439_2482 , var2440_2483 , var2441_2484 , var2442_2485 , var2443_2486 , var2444_2487 , var2445_2488 , var2446_2489 , var2447_2490 , var2448_2491 , var2449_2492 , var2450_2493 , var2451_2494 , var2452_2495 , var2453_2496 , var2454_2497 , var2455_2498 , var2456_2499 , var2457_2500 , var2458_2501 , var2459_2502 , var2460_2503 , var2461_2504 , var2462_2505 , var2463_2506 , var2464_2507 , var2465_2508 , var2466_2509 , var2467_2510'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|____________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2513_2557 , var2514_2558 , var2515_2559 , var2516_2560 , var2517_2561 , var2518_2562 , var2519_2563 , var2520_2564 , var2521_2565 , var2522_2566 , var2523_2567 , var2524_2568 , var2525_2569 , var2526_2570 , var2527_2571 , var2528_2572 , var2529_2573 , var2530_2574 , var2531_2575 , var2532_2576 , var2533_2577 , var2534_2578 , var2535_2579 , var2536_2580 , var2537_2581 , var2538_2582 , var2539_2583 , var2540_2584 , var2541_2585 , var2542_2586 , var2543_2587 , var2544_2588 , var2545_2589 , var2546_2590 , var2547_2591 , var2548_2592 , var2549_2593 , var2550_2594 , var2551_2595 , var2552_2596 , var2553_2597 , var2554_2598 , var2555_2599'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|___________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2602_2647 , var2603_2648 , var2604_2649 , var2605_2650 , var2606_2651 , var2607_2652 , var2608_2653 , var2609_2654 , var2610_2655 , var2611_2656 , var2612_2657 , var2613_2658 , var2614_2659 , var2615_2660 , var2616_2661 , var2617_2662 , var2618_2663 , var2619_2664 , var2620_2665 , var2621_2666 , var2622_2667 , var2623_2668 , var2624_2669 , var2625_2670 , var2626_2671 , var2627_2672 , var2628_2673 , var2629_2674 , var2630_2675 , var2631_2676 , var2632_2677 , var2633_2678 , var2634_2679 , var2635_2680 , var2636_2681 , var2637_2682 , var2638_2683 , var2639_2684 , var2640_2685 , var2641_2686 , var2642_2687 , var2643_2688 , var2644_2689 , var2645_2690'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1111_1134 , var1112_1135 , var1113_1136 , var1114_1137 , var1115_1138 , var1116_1139 , var1117_1140 , var1118_1141 , var1119_1142 , var1120_1143 , var1121_1144 , var1122_1145 , var1123_1146 , var1124_1147 , var1125_1148 , var1126_1149 , var1127_1150 , var1128_1151 , var1129_1152 , var1130_1153 , var1131_1154 , var1132_1155'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -409,7 +211,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2693_2739 , var2694_2740 , var2695_2741 , var2696_2742 , var2697_2743 , var2698_2744 , var2699_2745 , var2700_2746 , var2701_2747 , var2702_2748 , var2703_2749 , var2704_2750 , var2705_2751 , var2706_2752 , var2707_2753 , var2708_2754 , var2709_2755 , var2710_2756 , var2711_2757 , var2712_2758 , var2713_2759 , var2714_2760 , var2715_2761 , var2716_2762 , var2717_2763 , var2718_2764 , var2719_2765 , var2720_2766 , var2721_2767 , var2722_2768 , var2723_2769 , var2724_2770 , var2725_2771 , var2726_2772 , var2727_2773 , var2728_2774 , var2729_2775 , var2730_2776 , var2731_2777 , var2732_2778 , var2733_2779 , var2734_2780 , var2735_2781 , var2736_2782 , var2737_2783'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1158_1182 , var1159_1183 , var1160_1184 , var1161_1185 , var1162_1186 , var1163_1187 , var1164_1188 , var1165_1189 , var1166_1190 , var1167_1191 , var1168_1192 , var1169_1193 , var1170_1194 , var1171_1195 , var1172_1196 , var1173_1197 , var1174_1198 , var1175_1199 , var1176_1200 , var1177_1201 , var1178_1202 , var1179_1203 , var1180_1204'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -418,25 +220,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2786_2833 , var2787_2834 , var2788_2835 , var2789_2836 , var2790_2837 , var2791_2838 , var2792_2839 , var2793_2840 , var2794_2841 , var2795_2842 , var2796_2843 , var2797_2844 , var2798_2845 , var2799_2846 , var2800_2847 , var2801_2848 , var2802_2849 , var2803_2850 , var2804_2851 , var2805_2852 , var2806_2853 , var2807_2854 , var2808_2855 , var2809_2856 , var2810_2857 , var2811_2858 , var2812_2859 , var2813_2860 , var2814_2861 , var2815_2862 , var2816_2863 , var2817_2864 , var2818_2865 , var2819_2866 , var2820_2867 , var2821_2868 , var2822_2869 , var2823_2870 , var2824_2871 , var2825_2872 , var2826_2873 , var2827_2874 , var2828_2875 , var2829_2876 , var2830_2877 , var2831_2878'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|____________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2881_2929 , var2882_2930 , var2883_2931 , var2884_2932 , var2885_2933 , var2886_2934 , var2887_2935 , var2888_2936 , var2889_2937 , var2890_2938 , var2891_2939 , var2892_2940 , var2893_2941 , var2894_2942 , var2895_2943 , var2896_2944 , var2897_2945 , var2898_2946 , var2899_2947 , var2900_2948 , var2901_2949 , var2902_2950 , var2903_2951 , var2904_2952 , var2905_2953 , var2906_2954 , var2907_2955 , var2908_2956 , var2909_2957 , var2910_2958 , var2911_2959 , var2912_2960 , var2913_2961 , var2914_2962 , var2915_2963 , var2916_2964 , var2917_2965 , var2918_2966 , var2919_2967 , var2920_2968 , var2921_2969 , var2922_2970 , var2923_2971 , var2924_2972 , var2925_2973 , var2926_2974 , var2927_2975'
-|     return Moxotron(2, ...)
-|___________________^
-10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
-|     return Moxotron(2, ...)
-|___________________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2978_3027 , var2979_3028 , var2980_3029 , var2981_3030 , var2982_3031 , var2983_3032 , var2984_3033 , var2985_3034 , var2986_3035 , var2987_3036 , var2988_3037 , var2989_3038 , var2990_3039 , var2991_3040 , var2992_3041 , var2993_3042 , var2994_3043 , var2995_3044 , var2996_3045 , var2997_3046 , var2998_3047 , var2999_3048 , var3000_3049 , var3001_3050 , var3002_3051 , var3003_3052 , var3004_3053 , var3005_3054 , var3006_3055 , var3007_3056 , var3008_3057 , var3009_3058 , var3010_3059 , var3011_3060 , var3012_3061 , var3013_3062 , var3014_3063 , var3015_3064 , var3016_3065 , var3017_3066 , var3018_3067 , var3019_3068 , var3020_3069 , var3021_3070 , var3022_3071 , var3023_3072 , var3024_3073 , var3025_3074'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1207_1232 , var1208_1233 , var1209_1234 , var1210_1235 , var1211_1236 , var1212_1237 , var1213_1238 , var1214_1239 , var1215_1240 , var1216_1241 , var1217_1242 , var1218_1243 , var1219_1244 , var1220_1245 , var1221_1246 , var1222_1247 , var1223_1248 , var1224_1249 , var1225_1250 , var1226_1251 , var1227_1252 , var1228_1253 , var1229_1254 , var1230_1255'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -445,7 +229,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var3077_3127 , var3078_3128 , var3079_3129 , var3080_3130 , var3081_3131 , var3082_3132 , var3083_3133 , var3084_3134 , var3085_3135 , var3086_3136 , var3087_3137 , var3088_3138 , var3089_3139 , var3090_3140 , var3091_3141 , var3092_3142 , var3093_3143 , var3094_3144 , var3095_3145 , var3096_3146 , var3097_3147 , var3098_3148 , var3099_3149 , var3100_3150 , var3101_3151 , var3102_3152 , var3103_3153 , var3104_3154 , var3105_3155 , var3106_3156 , var3107_3157 , var3108_3158 , var3109_3159 , var3110_3160 , var3111_3161 , var3112_3162 , var3113_3163 , var3114_3164 , var3115_3165 , var3116_3166 , var3117_3167 , var3118_3168 , var3119_3169 , var3120_3170 , var3121_3171 , var3122_3172 , var3123_3173 , var3124_3174 , var3125_3175'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1258_1284 , var1259_1285 , var1260_1286 , var1261_1287 , var1262_1288 , var1263_1289 , var1264_1290 , var1265_1291 , var1266_1292 , var1267_1293 , var1268_1294 , var1269_1295 , var1270_1296 , var1271_1297 , var1272_1298 , var1273_1299 , var1274_1300 , var1275_1301 , var1276_1302 , var1277_1303 , var1278_1304 , var1279_1305 , var1280_1306 , var1281_1307 , var1282_1308'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -454,7 +238,7 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var3178_3229 , var3179_3230 , var3180_3231 , var3181_3232 , var3182_3233 , var3183_3234 , var3184_3235 , var3185_3236 , var3186_3237 , var3187_3238 , var3188_3239 , var3189_3240 , var3190_3241 , var3191_3242 , var3192_3243 , var3193_3244 , var3194_3245 , var3195_3246 , var3196_3247 , var3197_3248 , var3198_3249 , var3199_3250 , var3200_3251 , var3201_3252 , var3202_3253 , var3203_3254 , var3204_3255 , var3205_3256 , var3206_3257 , var3207_3258 , var3208_3259 , var3209_3260 , var3210_3261 , var3211_3262 , var3212_3263 , var3213_3264 , var3214_3265 , var3215_3266 , var3216_3267 , var3217_3268 , var3218_3269 , var3219_3270 , var3220_3271 , var3221_3272 , var3222_3273 , var3223_3274 , var3224_3275 , var3225_3276 , var3226_3277 , var3227_3278'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1311_1338 , var1312_1339 , var1313_1340 , var1314_1341 , var1315_1342 , var1316_1343 , var1317_1344 , var1318_1345 , var1319_1346 , var1320_1347 , var1321_1348 , var1322_1349 , var1323_1350 , var1324_1351 , var1325_1352 , var1326_1353 , var1327_1354 , var1328_1355 , var1329_1356 , var1330_1357 , var1331_1358 , var1332_1359 , var1333_1360 , var1334_1361 , var1335_1362 , var1336_1363'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
@@ -463,7 +247,223 @@ library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cann
 library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
 |     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
 |______________________________________________________________________________^
-10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var3281_3333 , var3282_3334 , var3283_3335 , var3284_3336 , var3285_3337 , var3286_3338 , var3287_3339 , var3288_3340 , var3289_3341 , var3290_3342 , var3291_3343 , var3292_3344 , var3293_3345 , var3294_3346 , var3295_3347 , var3296_3348 , var3297_3349 , var3298_3350 , var3299_3351 , var3300_3352 , var3301_3353 , var3302_3354 , var3303_3355 , var3304_3356 , var3305_3357 , var3306_3358 , var3307_3359 , var3308_3360 , var3309_3361 , var3310_3362 , var3311_3363 , var3312_3364 , var3313_3365 , var3314_3366 , var3315_3367 , var3316_3368 , var3317_3369 , var3318_3370 , var3319_3371 , var3320_3372 , var3321_3373 , var3322_3374 , var3323_3375 , var3324_3376 , var3325_3377 , var3326_3378 , var3327_3379 , var3328_3380 , var3329_3381 , var3330_3382 , var3331_3383'
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1366_1394 , var1367_1395 , var1368_1396 , var1369_1397 , var1370_1398 , var1371_1399 , var1372_1400 , var1373_1401 , var1374_1402 , var1375_1403 , var1376_1404 , var1377_1405 , var1378_1406 , var1379_1407 , var1380_1408 , var1381_1409 , var1382_1410 , var1383_1411 , var1384_1412 , var1385_1413 , var1386_1414 , var1387_1415 , var1388_1416 , var1389_1417 , var1390_1418 , var1391_1419 , var1392_1420'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1423_1452 , var1424_1453 , var1425_1454 , var1426_1455 , var1427_1456 , var1428_1457 , var1429_1458 , var1430_1459 , var1431_1460 , var1432_1461 , var1433_1462 , var1434_1463 , var1435_1464 , var1436_1465 , var1437_1466 , var1438_1467 , var1439_1468 , var1440_1469 , var1441_1470 , var1442_1471 , var1443_1472 , var1444_1473 , var1445_1474 , var1446_1475 , var1447_1476 , var1448_1477 , var1449_1478 , var1450_1479'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1482_1512 , var1483_1513 , var1484_1514 , var1485_1515 , var1486_1516 , var1487_1517 , var1488_1518 , var1489_1519 , var1490_1520 , var1491_1521 , var1492_1522 , var1493_1523 , var1494_1524 , var1495_1525 , var1496_1526 , var1497_1527 , var1498_1528 , var1499_1529 , var1500_1530 , var1501_1531 , var1502_1532 , var1503_1533 , var1504_1534 , var1505_1535 , var1506_1536 , var1507_1537 , var1508_1538 , var1509_1539 , var1510_1540'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1543_1574 , var1544_1575 , var1545_1576 , var1546_1577 , var1547_1578 , var1548_1579 , var1549_1580 , var1550_1581 , var1551_1582 , var1552_1583 , var1553_1584 , var1554_1585 , var1555_1586 , var1556_1587 , var1557_1588 , var1558_1589 , var1559_1590 , var1560_1591 , var1561_1592 , var1562_1593 , var1563_1594 , var1564_1595 , var1565_1596 , var1566_1597 , var1567_1598 , var1568_1599 , var1569_1600 , var1570_1601 , var1571_1602 , var1572_1603'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1606_1638 , var1607_1639 , var1608_1640 , var1609_1641 , var1610_1642 , var1611_1643 , var1612_1644 , var1613_1645 , var1614_1646 , var1615_1647 , var1616_1648 , var1617_1649 , var1618_1650 , var1619_1651 , var1620_1652 , var1621_1653 , var1622_1654 , var1623_1655 , var1624_1656 , var1625_1657 , var1626_1658 , var1627_1659 , var1628_1660 , var1629_1661 , var1630_1662 , var1631_1663 , var1632_1664 , var1633_1665 , var1634_1666 , var1635_1667 , var1636_1668'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1671_1704 , var1672_1705 , var1673_1706 , var1674_1707 , var1675_1708 , var1676_1709 , var1677_1710 , var1678_1711 , var1679_1712 , var1680_1713 , var1681_1714 , var1682_1715 , var1683_1716 , var1684_1717 , var1685_1718 , var1686_1719 , var1687_1720 , var1688_1721 , var1689_1722 , var1690_1723 , var1691_1724 , var1692_1725 , var1693_1726 , var1694_1727 , var1695_1728 , var1696_1729 , var1697_1730 , var1698_1731 , var1699_1732 , var1700_1733 , var1701_1734 , var1702_1735'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1738_1772 , var1739_1773 , var1740_1774 , var1741_1775 , var1742_1776 , var1743_1777 , var1744_1778 , var1745_1779 , var1746_1780 , var1747_1781 , var1748_1782 , var1749_1783 , var1750_1784 , var1751_1785 , var1752_1786 , var1753_1787 , var1754_1788 , var1755_1789 , var1756_1790 , var1757_1791 , var1758_1792 , var1759_1793 , var1760_1794 , var1761_1795 , var1762_1796 , var1763_1797 , var1764_1798 , var1765_1799 , var1766_1800 , var1767_1801 , var1768_1802 , var1769_1803 , var1770_1804'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1807_1842 , var1808_1843 , var1809_1844 , var1810_1845 , var1811_1846 , var1812_1847 , var1813_1848 , var1814_1849 , var1815_1850 , var1816_1851 , var1817_1852 , var1818_1853 , var1819_1854 , var1820_1855 , var1821_1856 , var1822_1857 , var1823_1858 , var1824_1859 , var1825_1860 , var1826_1861 , var1827_1862 , var1828_1863 , var1829_1864 , var1830_1865 , var1831_1866 , var1832_1867 , var1833_1868 , var1834_1869 , var1835_1870 , var1836_1871 , var1837_1872 , var1838_1873 , var1839_1874 , var1840_1875'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1878_1914 , var1879_1915 , var1880_1916 , var1881_1917 , var1882_1918 , var1883_1919 , var1884_1920 , var1885_1921 , var1886_1922 , var1887_1923 , var1888_1924 , var1889_1925 , var1890_1926 , var1891_1927 , var1892_1928 , var1893_1929 , var1894_1930 , var1895_1931 , var1896_1932 , var1897_1933 , var1898_1934 , var1899_1935 , var1900_1936 , var1901_1937 , var1902_1938 , var1903_1939 , var1904_1940 , var1905_1941 , var1906_1942 , var1907_1943 , var1908_1944 , var1909_1945 , var1910_1946 , var1911_1947 , var1912_1948'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var1951_1988 , var1952_1989 , var1953_1990 , var1954_1991 , var1955_1992 , var1956_1993 , var1957_1994 , var1958_1995 , var1959_1996 , var1960_1997 , var1961_1998 , var1962_1999 , var1963_2000 , var1964_2001 , var1965_2002 , var1966_2003 , var1967_2004 , var1968_2005 , var1969_2006 , var1970_2007 , var1971_2008 , var1972_2009 , var1973_2010 , var1974_2011 , var1975_2012 , var1976_2013 , var1977_2014 , var1978_2015 , var1979_2016 , var1980_2017 , var1981_2018 , var1982_2019 , var1983_2020 , var1984_2021 , var1985_2022 , var1986_2023'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2026_2064 , var2027_2065 , var2028_2066 , var2029_2067 , var2030_2068 , var2031_2069 , var2032_2070 , var2033_2071 , var2034_2072 , var2035_2073 , var2036_2074 , var2037_2075 , var2038_2076 , var2039_2077 , var2040_2078 , var2041_2079 , var2042_2080 , var2043_2081 , var2044_2082 , var2045_2083 , var2046_2084 , var2047_2085 , var2048_2086 , var2049_2087 , var2050_2088 , var2051_2089 , var2052_2090 , var2053_2091 , var2054_2092 , var2055_2093 , var2056_2094 , var2057_2095 , var2058_2096 , var2059_2097 , var2060_2098 , var2061_2099 , var2062_2100'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2103_2142 , var2104_2143 , var2105_2144 , var2106_2145 , var2107_2146 , var2108_2147 , var2109_2148 , var2110_2149 , var2111_2150 , var2112_2151 , var2113_2152 , var2114_2153 , var2115_2154 , var2116_2155 , var2117_2156 , var2118_2157 , var2119_2158 , var2120_2159 , var2121_2160 , var2122_2161 , var2123_2162 , var2124_2163 , var2125_2164 , var2126_2165 , var2127_2166 , var2128_2167 , var2129_2168 , var2130_2169 , var2131_2170 , var2132_2171 , var2133_2172 , var2134_2173 , var2135_2174 , var2136_2175 , var2137_2176 , var2138_2177 , var2139_2178 , var2140_2179'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2182_2222 , var2183_2223 , var2184_2224 , var2185_2225 , var2186_2226 , var2187_2227 , var2188_2228 , var2189_2229 , var2190_2230 , var2191_2231 , var2192_2232 , var2193_2233 , var2194_2234 , var2195_2235 , var2196_2236 , var2197_2237 , var2198_2238 , var2199_2239 , var2200_2240 , var2201_2241 , var2202_2242 , var2203_2243 , var2204_2244 , var2205_2245 , var2206_2246 , var2207_2247 , var2208_2248 , var2209_2249 , var2210_2250 , var2211_2251 , var2212_2252 , var2213_2253 , var2214_2254 , var2215_2255 , var2216_2256 , var2217_2257 , var2218_2258 , var2219_2259 , var2220_2260'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2263_2304 , var2264_2305 , var2265_2306 , var2266_2307 , var2267_2308 , var2268_2309 , var2269_2310 , var2270_2311 , var2271_2312 , var2272_2313 , var2273_2314 , var2274_2315 , var2275_2316 , var2276_2317 , var2277_2318 , var2278_2319 , var2279_2320 , var2280_2321 , var2281_2322 , var2282_2323 , var2283_2324 , var2284_2325 , var2285_2326 , var2286_2327 , var2287_2328 , var2288_2329 , var2289_2330 , var2290_2331 , var2291_2332 , var2292_2333 , var2293_2334 , var2294_2335 , var2295_2336 , var2296_2337 , var2297_2338 , var2298_2339 , var2299_2340 , var2300_2341 , var2301_2342 , var2302_2343'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2346_2388 , var2347_2389 , var2348_2390 , var2349_2391 , var2350_2392 , var2351_2393 , var2352_2394 , var2353_2395 , var2354_2396 , var2355_2397 , var2356_2398 , var2357_2399 , var2358_2400 , var2359_2401 , var2360_2402 , var2361_2403 , var2362_2404 , var2363_2405 , var2364_2406 , var2365_2407 , var2366_2408 , var2367_2409 , var2368_2410 , var2369_2411 , var2370_2412 , var2371_2413 , var2372_2414 , var2373_2415 , var2374_2416 , var2375_2417 , var2376_2418 , var2377_2419 , var2378_2420 , var2379_2421 , var2380_2422 , var2381_2423 , var2382_2424 , var2383_2425 , var2384_2426 , var2385_2427 , var2386_2428'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2431_2474 , var2432_2475 , var2433_2476 , var2434_2477 , var2435_2478 , var2436_2479 , var2437_2480 , var2438_2481 , var2439_2482 , var2440_2483 , var2441_2484 , var2442_2485 , var2443_2486 , var2444_2487 , var2445_2488 , var2446_2489 , var2447_2490 , var2448_2491 , var2449_2492 , var2450_2493 , var2451_2494 , var2452_2495 , var2453_2496 , var2454_2497 , var2455_2498 , var2456_2499 , var2457_2500 , var2458_2501 , var2459_2502 , var2460_2503 , var2461_2504 , var2462_2505 , var2463_2506 , var2464_2507 , var2465_2508 , var2466_2509 , var2467_2510 , var2468_2511 , var2469_2512 , var2470_2513 , var2471_2514 , var2472_2515'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2518_2562 , var2519_2563 , var2520_2564 , var2521_2565 , var2522_2566 , var2523_2567 , var2524_2568 , var2525_2569 , var2526_2570 , var2527_2571 , var2528_2572 , var2529_2573 , var2530_2574 , var2531_2575 , var2532_2576 , var2533_2577 , var2534_2578 , var2535_2579 , var2536_2580 , var2537_2581 , var2538_2582 , var2539_2583 , var2540_2584 , var2541_2585 , var2542_2586 , var2543_2587 , var2544_2588 , var2545_2589 , var2546_2590 , var2547_2591 , var2548_2592 , var2549_2593 , var2550_2594 , var2551_2595 , var2552_2596 , var2553_2597 , var2554_2598 , var2555_2599 , var2556_2600 , var2557_2601 , var2558_2602 , var2559_2603 , var2560_2604'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2607_2652 , var2608_2653 , var2609_2654 , var2610_2655 , var2611_2656 , var2612_2657 , var2613_2658 , var2614_2659 , var2615_2660 , var2616_2661 , var2617_2662 , var2618_2663 , var2619_2664 , var2620_2665 , var2621_2666 , var2622_2667 , var2623_2668 , var2624_2669 , var2625_2670 , var2626_2671 , var2627_2672 , var2628_2673 , var2629_2674 , var2630_2675 , var2631_2676 , var2632_2677 , var2633_2678 , var2634_2679 , var2635_2680 , var2636_2681 , var2637_2682 , var2638_2683 , var2639_2684 , var2640_2685 , var2641_2686 , var2642_2687 , var2643_2688 , var2644_2689 , var2645_2690 , var2646_2691 , var2647_2692 , var2648_2693 , var2649_2694 , var2650_2695'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2698_2744 , var2699_2745 , var2700_2746 , var2701_2747 , var2702_2748 , var2703_2749 , var2704_2750 , var2705_2751 , var2706_2752 , var2707_2753 , var2708_2754 , var2709_2755 , var2710_2756 , var2711_2757 , var2712_2758 , var2713_2759 , var2714_2760 , var2715_2761 , var2716_2762 , var2717_2763 , var2718_2764 , var2719_2765 , var2720_2766 , var2721_2767 , var2722_2768 , var2723_2769 , var2724_2770 , var2725_2771 , var2726_2772 , var2727_2773 , var2728_2774 , var2729_2775 , var2730_2776 , var2731_2777 , var2732_2778 , var2733_2779 , var2734_2780 , var2735_2781 , var2736_2782 , var2737_2783 , var2738_2784 , var2739_2785 , var2740_2786 , var2741_2787 , var2742_2788'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2791_2838 , var2792_2839 , var2793_2840 , var2794_2841 , var2795_2842 , var2796_2843 , var2797_2844 , var2798_2845 , var2799_2846 , var2800_2847 , var2801_2848 , var2802_2849 , var2803_2850 , var2804_2851 , var2805_2852 , var2806_2853 , var2807_2854 , var2808_2855 , var2809_2856 , var2810_2857 , var2811_2858 , var2812_2859 , var2813_2860 , var2814_2861 , var2815_2862 , var2816_2863 , var2817_2864 , var2818_2865 , var2819_2866 , var2820_2867 , var2821_2868 , var2822_2869 , var2823_2870 , var2824_2871 , var2825_2872 , var2826_2873 , var2827_2874 , var2828_2875 , var2829_2876 , var2830_2877 , var2831_2878 , var2832_2879 , var2833_2880 , var2834_2881 , var2835_2882 , var2836_2883'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2886_2934 , var2887_2935 , var2888_2936 , var2889_2937 , var2890_2938 , var2891_2939 , var2892_2940 , var2893_2941 , var2894_2942 , var2895_2943 , var2896_2944 , var2897_2945 , var2898_2946 , var2899_2947 , var2900_2948 , var2901_2949 , var2902_2950 , var2903_2951 , var2904_2952 , var2905_2953 , var2906_2954 , var2907_2955 , var2908_2956 , var2909_2957 , var2910_2958 , var2911_2959 , var2912_2960 , var2913_2961 , var2914_2962 , var2915_2963 , var2916_2964 , var2917_2965 , var2918_2966 , var2919_2967 , var2920_2968 , var2921_2969 , var2922_2970 , var2923_2971 , var2924_2972 , var2925_2973 , var2926_2974 , var2927_2975 , var2928_2976 , var2929_2977 , var2930_2978 , var2931_2979 , var2932_2980'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var2983_3032 , var2984_3033 , var2985_3034 , var2986_3035 , var2987_3036 , var2988_3037 , var2989_3038 , var2990_3039 , var2991_3040 , var2992_3041 , var2993_3042 , var2994_3043 , var2995_3044 , var2996_3045 , var2997_3046 , var2998_3047 , var2999_3048 , var3000_3049 , var3001_3050 , var3002_3051 , var3003_3052 , var3004_3053 , var3005_3054 , var3006_3055 , var3007_3056 , var3008_3057 , var3009_3058 , var3010_3059 , var3011_3060 , var3012_3061 , var3013_3062 , var3014_3063 , var3015_3064 , var3016_3065 , var3017_3066 , var3018_3067 , var3019_3068 , var3020_3069 , var3021_3070 , var3022_3071 , var3023_3072 , var3024_3073 , var3025_3074 , var3026_3075 , var3027_3076 , var3028_3077 , var3029_3078 , var3030_3079'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var3082_3132 , var3083_3133 , var3084_3134 , var3085_3135 , var3086_3136 , var3087_3137 , var3088_3138 , var3089_3139 , var3090_3140 , var3091_3141 , var3092_3142 , var3093_3143 , var3094_3144 , var3095_3145 , var3096_3146 , var3097_3147 , var3098_3148 , var3099_3149 , var3100_3150 , var3101_3151 , var3102_3152 , var3103_3153 , var3104_3154 , var3105_3155 , var3106_3156 , var3107_3157 , var3108_3158 , var3109_3159 , var3110_3160 , var3111_3161 , var3112_3162 , var3113_3163 , var3114_3164 , var3115_3165 , var3116_3166 , var3117_3167 , var3118_3168 , var3119_3169 , var3120_3170 , var3121_3171 , var3122_3172 , var3123_3173 , var3124_3174 , var3125_3175 , var3126_3176 , var3127_3177 , var3128_3178 , var3129_3179 , var3130_3180'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|___________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var3183_3234 , var3184_3235 , var3185_3236 , var3186_3237 , var3187_3238 , var3188_3239 , var3189_3240 , var3190_3241 , var3191_3242 , var3192_3243 , var3193_3244 , var3194_3245 , var3195_3246 , var3196_3247 , var3197_3248 , var3198_3249 , var3199_3250 , var3200_3251 , var3201_3252 , var3202_3253 , var3203_3254 , var3204_3255 , var3205_3256 , var3206_3257 , var3207_3258 , var3208_3259 , var3209_3260 , var3210_3261 , var3211_3262 , var3212_3263 , var3213_3264 , var3214_3265 , var3215_3266 , var3216_3267 , var3217_3268 , var3218_3269 , var3219_3270 , var3220_3271 , var3221_3272 , var3222_3273 , var3223_3274 , var3224_3275 , var3225_3276 , var3226_3277 , var3227_3278 , var3228_3279 , var3229_3280 , var3230_3281 , var3231_3282 , var3232_3283'
+|     return Moxotron(2, ...)
+|___________________^
+10.Generics/recursive_instantiation.xl:5: No translation for 'result := Moxotron (2 , ... )'
+|     return Moxotron(2, ...)
+|____________________^
+library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
+|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
+|______________________________________________________________________________^
+10.Generics/recursive_instantiation.xl:5: Error instantiating 'Moxotron' with '...' set to '2 , var3286_3338 , var3287_3339 , var3288_3340 , var3289_3341 , var3290_3342 , var3291_3343 , var3292_3344 , var3293_3345 , var3294_3346 , var3295_3347 , var3296_3348 , var3297_3349 , var3298_3350 , var3299_3351 , var3300_3352 , var3301_3353 , var3302_3354 , var3303_3355 , var3304_3356 , var3305_3357 , var3306_3358 , var3307_3359 , var3308_3360 , var3309_3361 , var3310_3362 , var3311_3363 , var3312_3364 , var3313_3365 , var3314_3366 , var3315_3367 , var3316_3368 , var3317_3369 , var3318_3370 , var3319_3371 , var3320_3372 , var3321_3373 , var3322_3374 , var3323_3375 , var3324_3376 , var3325_3377 , var3326_3378 , var3327_3379 , var3328_3380 , var3329_3381 , var3330_3382 , var3331_3383 , var3332_3384 , var3333_3385 , var3334_3386 , var3335_3387 , var3336_3388'
 |     return Moxotron(2, ...)
 |___________________^
 10.Generics/recursive_instantiation.xl:4: Too many recursive instantitiations at 'Moxotron'
