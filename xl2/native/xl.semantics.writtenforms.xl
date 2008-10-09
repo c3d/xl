@@ -147,7 +147,6 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                     TY.PopTargetType()
                     CGM.ExitCall callDepth, tempDt
                     if XLT.EndAttempt(tnt) then
-                        ERR.DisplayLastErrors()
                         semArg := ERR.ErrorTree()
                         PT.AttachTree value, key, semArg
                         trace[-expr] "FAIL: error ", semArg
