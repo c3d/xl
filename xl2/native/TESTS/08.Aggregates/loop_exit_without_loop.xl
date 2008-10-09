@@ -1,4 +1,6 @@
-// This checks that 'exit' without a loop fails
+// This checks that 'exit' or 'restart' without a loop fails
 // EXIT=2
 
 exit
+
+restart

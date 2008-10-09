@@ -1,0 +1,39 @@
+// Test the basic loop restart functionality
+use XL.UI.CONSOLE
+
+I : integer := 1
+
+loop
+    WriteLn "Infinite I=", I
+    I := I + 1
+    restart if I < 50
+    I := I + 1
+    exit if I > 100
+
+while I < 200 loop
+    WriteLn "Pre-while I=", I
+    I := I + 2
+    restart if I > 125
+    I := I + 1
+
+until I > 300 loop
+    WriteLn "Pre-until I=", I
+    I := I + 3
+    restart if I < 175
+    I := I + 1
+
+loop
+    WriteLn "Post-while I=", I
+    I := I + 6
+    restart if I > 250 and I < 650
+    I := I + 1
+while I < 600
+
+loop
+    WriteLn "Post-until I=", I
+    I := I + 7
+    restart if I > 350 and I < 750
+    I := I + 1
+until I > 700
+
+WriteLn "Final I=", I

@@ -1,3 +1,6 @@
 08.Aggregates/loop_exit_without_loop.xl:4: No loop surrounding 'exit' instruction
 | exit
 |____^
+08.Aggregates/loop_exit_without_loop.xl:6: No loop surrounding 'restart' instruction
+| restart
+|_______^
