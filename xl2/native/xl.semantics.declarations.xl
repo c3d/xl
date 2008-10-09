@@ -800,7 +800,7 @@ module XL.SEMANTICS.DECLARATIONS is
         tp : TY.any_type := decl.type
         mname : PT.tree := tp.machine_name
         trace[ctors] "ConstructorCode ",
-                     PT.tree(decl.name), " : ", PT.tree(TY.SourceName(tp))
+                     PT.tree(decl.name), " : ", PT.tree(TY.Source(tp))
         trace[ctors] "  MName=", PT.tree(mname), " at ", mname
         if mname <> nil then
             result := PT.Attached(mname, "CTORCODE")

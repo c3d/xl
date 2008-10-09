@@ -539,7 +539,7 @@ module XL.SEMANTICS.FUNCTIONS is
         retType    : TY.any_type := ftype.base
         rtSrc      : PT.tree := TY.Source(retType)
         instanceOf : PT.Attached(rtSrc, "INSTANCEOF") as PT.name_tree
-        rtName     : TY.SourceName(retType) as PT.name_tree
+        rtName     : TY.Source(retType) as PT.name_tree
         trace[ctors] "  Type ", rtSrc, " instance of ", PT.tree(instanceOf)
         trace[ctors] "  Res ", PT.tree(rtName)
 
