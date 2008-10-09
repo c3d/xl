@@ -450,7 +450,18 @@ module XL.SEMANTICS.GENERICS is
             mn := Decl.name
             mn := SYM.Temporary("<generic>" + PT.XLNormalize(mn.value))
             Decl.machine_name := mn
+        baseType : TY.any_type := gtp.base
+        funcType : baseType as FT.function_type
         key : text := mn.value
+        if funcType <> nil then
+            if funcType.iterator then
+                key += "I"
+            if funcType.base <> nil then
+                key += "F"
+            else
+                key += "P"
+        else if TY.IsTypeType(baseType) then
+            key += "T"
         key += "["
         for I in 0..NP-1 loop
             P : DCL.declaration := gtp.parameters[I]
