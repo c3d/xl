@@ -648,6 +648,12 @@ module XL.SEMANTICS.DECLARATIONS is
         then
             trace [decl] "Decl1: Name=", Names, " Type=", Type
             if not TY.IsTypeName(Type) then
+                ProcOrFn : Type as PT.name_tree
+                if ProcOrFn <> nil then
+                    TName : text := PT.XLNormalize(ProcOrFn.value)
+                    if TName = "procedure" or TName = "function" then
+                        Type := parse_tree('Type' ('Args'))
+                        return EnterDeclaration(Names, Type, nil, false)
                 ERR.Error "'$1' is not a type name", Type
             init : PT.tree := parse_tree('Type' ('Args'))
             vartype : PT.tree := parse_tree(variable)
