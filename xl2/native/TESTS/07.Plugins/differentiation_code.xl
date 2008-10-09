@@ -2,7 +2,7 @@ import IO = XL.UI.CONSOLE
 
 function Sin(X : real) return real is XL.RUNTIME.sin
 function Cos(X : real) return real is XL.RUNTIME.cos
-function ImplicitReal(X : integer) return real written X is XL.BYTECODE.int_to_real
+function ImplicitReal(X : integer) return real written X is XL.BYTECODE.real_from_int
 
 function F(X : real) return real is
     return {differentiation} d/dX(sin(X) + cos (2*X))

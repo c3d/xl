@@ -274,11 +274,11 @@ module XL_BUILTINS with
     function real(Value : real) return real                                                     is XL.BYTECODE.real_from_real
 
     // Convert to character
-    function character(Value : integer) return character                                        is XL.BYTECODE.char_from_int
+    function character(Value : integer) return character                                        is XL.BYTECODE.int_to_char
 
     // Convert to boolean
-    function boolean(Value : integer) return boolean                                            is XL.BYTECODE.bool_from_int
-    function boolean(Value : unsigned) return boolean                                           is XL.BYTECODE.bool_from_uint
+    function boolean(Value : integer) return boolean                                            is XL.BYTECODE.int_to_bool
+    function boolean(Value : unsigned) return boolean                                           is XL.BYTECODE.uint_to_bool
 
 
 
