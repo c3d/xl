@@ -148,7 +148,6 @@ module XL.SEMANTICS.OVERLOAD is
         bestDNames: string of PT.name_tree
         bestDidx  : string of integer
         ambig     : PT.tree
-        depth     : integer := 0
         recurse   : boolean := BaseRecord = nil
         inIterator: boolean := FindInfo(Input, "ITERATOR_EXPR") <> nil
 
@@ -207,7 +206,7 @@ module XL.SEMANTICS.OVERLOAD is
 
         // Find all candidates at this level
         if recurse then
-            SYM.Lookup symbols, "FN", Name.value, candidates, itemDepth, 0
+            SYM.Lookup symbols, "FN", Name.value, candidates, itemDepth, 2
         trace [overload] "In table ", symbols,
                          " found ", size(candidates), " candidates"
 
@@ -215,8 +214,9 @@ module XL.SEMANTICS.OVERLOAD is
         C : PT.tree
         for C in candidates loop
 
-            trace [overload] "Testing ", C, " depth ", itemDepth[C]
+            Score : integer := itemDepth[C] + 1
             SemArgs := ActArgs
+            trace [overload] "Testing ", C, " depth ", Score
 
             // Retrieve function information, ignore non functions
             Scope : PT.tree := nil
@@ -249,9 +249,6 @@ module XL.SEMANTICS.OVERLOAD is
             Gtype : F.type as GEN.generic_type
             Gargs : GN.generic_map
             Vargs : PT.tree
-            Score : integer := depth
-            if recurse then Score := itemDepth[C]
-            assert Score >= depth
             if Ftype = nil and Gtype <> nil then
                 GFType : Gtype.base as FT.function_type
                 Ftype := GFType
@@ -281,6 +278,7 @@ module XL.SEMANTICS.OVERLOAD is
             NP : integer := size(Ftype.parameters)
             if Ftype.variadic then
                 Score *= 100
+                trace[overload] "Variadic ", TY.Source(Ftype), " score ", Score
             else if NA > NP then
                 ERR.Error "'$1' could not be selected because", C
                 ERR.Error "there are too many arguments for '$1'", Name
@@ -302,9 +300,9 @@ module XL.SEMANTICS.OVERLOAD is
                     Score += 2
                 if A < NA then
                     Arg := SemArgs[A]
-                    trace [overload] "Trying to deduce arg ", Arg
                     if PT.Attached(Arg, "TODEDUCE") <> nil then
                         toType : PT.tree := TY.Source(D.type)
+                        trace [overload] "Trying to deduce arg ", Arg
                         trace[overload] "Return type to deduce: ", toType
 
                         dt  : TY.any_type := D.type
