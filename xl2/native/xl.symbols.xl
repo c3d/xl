@@ -437,7 +437,7 @@ module XL.SYMBOLS is
                     if score = 0 and not dropErrors then
                         if errorList = nil or XLT.verbose then
                             ERR.PushErrorContext()
-                            ERR.Error "Form '$1' could not be selected for $2", ref, test_tree
+                            ERR.Error "Form '$1' could not be selected", ref
                             ERR.DisplayLastErrors()
                             errorList := ERR.ErrorTree(errorList)
                             ERR.PopErrorContext()
