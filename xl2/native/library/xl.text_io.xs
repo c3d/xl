@@ -38,7 +38,7 @@ module XL.TEXT_IO with
     generic type writable where
         W : writable
         F : file := file("Dummy", "w")
-        Write F, W
+        any.Write F, W
 
     // A readable is a type which can be read from a file
     generic type readable where
