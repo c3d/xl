@@ -673,23 +673,23 @@ module XL.SEMANTICS.TYPES is
         t1s : t1 as source_type
         t2s : t2 as source_type
         if t1s <> nil then
+            if SameType(t1s.base, t2) then
+                trace[-sametype] "PASS: matched t1's base"
+                return true
             if t1s.implementation <> t1s then
                 trace[sametype] "Testing t1's implementation"
                 if SameType(t1s.implementation, t2) then
                     trace[-sametype] "PASS: matched t1's implementation"
                     return true
-            if SameType(t1s.base, t2) then
-                trace[-sametype] "PASS: matched t1's base"
-                return true
         if t2s <> nil then
+            if SameType(t1, t2s.base) then
+                trace[-sametype] "PASS: matched t2's base"
+                return true
             if t2s.implementation <> t2s then
                 trace[sametype] "Testing t2's implementation"
                 if SameType(t1, t2s.implementation) then
                     trace[-sametype] "PASS: matched t2's implementation"
                     return true
-            if SameType(t1, t2s.base) then
-                trace[-sametype] "PASS: matched t2's base"
-                return true
 
         trace[-sametype] "FAIL: distinct types"
         return false
