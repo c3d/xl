@@ -57,6 +57,7 @@ module XL.SEMANTICS.TYPES with
     function IsVariable (tp: any_type) return boolean
     function BaseType (tp: any_type) return any_type
     function NonSourceType(tp : any_type) return any_type
+    function NonConstGenSourceType(tp : any_type) return any_type
     function IsConstedType (tp: any_type) return boolean
     function NonConstedType (tp: any_type) return any_type
     function NonVariableType (tp: any_type) return any_type
