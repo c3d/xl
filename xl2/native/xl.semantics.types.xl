@@ -531,8 +531,6 @@ module XL.SEMANTICS.TYPES is
             EnterSignature sig, tp
             SetDefinedType MName, tp
 
-        declared : DCL.declaration := DCL.GetDeclaration(result)
-
         // Check if we need to enter default ctors, dtors and copy functions
         N : Name as PT.name_tree
 
@@ -543,29 +541,27 @@ module XL.SEMANTICS.TYPES is
                 // Eliminate constness, generics and source names
                 baseType : any_type := NonConstGenSourceType(tp)
 
+                // Original tree before we append ctors, dtors, etc.
+                previous : PT.tree := result
+
                 // Check if this is record type
                 rtp : baseType as REC.record_type
                 if rtp <> nil then
                      result := XLT.Append(result, REC.EnterDefaults(N, rtp))
-                     SetDefinedType result, tp
-                     if declared <> nil then
-                         DCL.SetDeclaration result, declared
 
                 // Same for enumeration types
                 etp : baseType as EN.enumeration_type
                 if etp <> nil then
                      result := XLT.Append(result,EN.EnterDefaults (N, etp))
-                     SetDefinedType result, tp
-                     if declared <> nil then
-                         DCL.SetDeclaration result, declared
 
                 // Same for function types
                 ftp : baseType as FT.function_type
                 if ftp <> nil then
                      result := XLT.Append(result,FT.EnterDefaults (N, ftp))
-                     SetDefinedType result, tp
-                     if declared <> nil then
-                         DCL.SetDeclaration result, declared
+
+                if previous <> result then
+                    result := XLT.Append(result, parse_tree(@nop))
+                    result.info := previous.info
 
 
     function TypeTypeMatch (iface : any_type;

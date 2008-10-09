@@ -225,7 +225,8 @@ module XL.SEMANTICS.DECLARATIONS is
                     // Definition will be processed at semantics time
                     result := parse_tree(@@def 'Name' 'Value')
             else if decl.is_local or decl.is_global then
-                result := DCL.CallConstructor(decl)
+                // Constructor generation will be processed at semantics time
+                result := parse_tree(@@defctor 'Name')
                 
 
         // Make sure we have a result to attach the decl to
@@ -739,6 +740,12 @@ module XL.SEMANTICS.DECLARATIONS is
         result := XLT.XLSemantics (Value)
         TY.PopTargetType()
 
+        valueType : TY.any_type := TY.NonConstedType(TY.GetType(result))
+        destType  : TY.any_type := TY.NonVariableType(TY.GetDefinedType(DType))
+        if not SameType(valueType, destType) then
+            ERR.Error "Cannot construct a '$2' with a '$1'",
+                      TY.Source(valueType), TY.Source(destType)
+
         if PT.Attached(Value, "CTORCALL") <> nil then
             PT.AttachTree Value, "CTORCAL", nil
             CGM.SetExpressionTarget result, MName
@@ -759,6 +766,12 @@ module XL.SEMANTICS.DECLARATIONS is
             @@def 'Name' 'Value'
         then
             return Define (Name, Value)
+
+        when
+            @@defctor 'Name'
+        then
+            decl : declaration := GetDeclaration(Name)
+            return CallConstructor (decl)
 
         when
             @@ctor 'DType' 'MName' 'Value'
@@ -833,9 +846,9 @@ module XL.SEMANTICS.DECLARATIONS is
                         exit if result <> nil
 
         if XLT.EndAttempt(attempt) then
-            result := nil
             ERR.Error "No valid constructor for '$1'", decl.name
             ERR.DisplayLastErrors()
+            result := ERR.ErrorTree()
 
         trace [-ctors] "CallConstructor result: ", result
 
