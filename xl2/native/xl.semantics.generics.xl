@@ -1213,7 +1213,8 @@ module XL.SEMANTICS.GENERICS is
             result := ERR.ErrorTree()
 
 
-    function ContainsGenerics (List : PT.tree_list) return DCL.declaration is
+    function ContainsGenerics (List      : PT.tree_list;
+                               instances : boolean) return DCL.declaration is
     // ------------------------------------------------------------------------
     //   Return true if any name corresponds to a generic thing
     // ------------------------------------------------------------------------
@@ -1223,11 +1224,17 @@ module XL.SEMANTICS.GENERICS is
             if decl <> nil then
                 if GEN.IsGenericDeclaration(decl) then
                     return decl
+                if instances then
+                    tp : TY.any_type := TY.GetDefinedType(decl.name)
+                    tp := InstanceType(tp)
+                    if tp <> nil then
+                        return DCL.GetDeclaration(InstanceOf(tp))
         return nil
 
 
-    function GenericDeclaration(Name : PT.tree;
-                                kind : text) return DCL.declaration is
+    function GenericDeclaration(Name      : PT.tree;
+                                kind      : text;
+                                instances : boolean) return DCL.declaration is
     // ------------------------------------------------------------------------
     //   Check if a name is possibly generic
     // ------------------------------------------------------------------------
@@ -1239,14 +1246,14 @@ module XL.SEMANTICS.GENERICS is
                     fName : Field as PT.name_tree
                     REC.RecordDeclarations Record, fName, kind, list, syms
                     if syms <> nil then
-                        result := ContainsGenerics(list)
+                        result := ContainsGenerics(list, instances)
                         if result <> nil then
                             return result
             return nil
 
         Nm : Name as PT.name_tree
         SYM.Lookup XLT.context, kind, Nm.value, list, SYM.lookupAll
-        result := ContainsGenerics (list)
+        result := ContainsGenerics (list, instances)
 
 
     function IsGenericName (Name : PT.tree;
@@ -1254,7 +1261,7 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
     //    Return true if the name is a generic declaration
     // ------------------------------------------------------------------------
-        return GenericDeclaration(Name, kind) <> nil
+        return GenericDeclaration(Name, kind, false) <> nil
 
 
     function GenericParameter(GenType  : PT.tree;
@@ -1262,7 +1269,7 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
     //   Return the generic parameter for a given type
     // ------------------------------------------------------------------------
-        decl : DCL.declaration := GenericDeclaration(GenType, "TYPE")
+        decl : DCL.declaration := GenericDeclaration(GenType, "TYPE", false)
         if decl = nil then
             ERR.Error "'$1' is not a generic type", GenType
         else
@@ -1377,7 +1384,7 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
 
         trace[+genindex] "GenericIndex ", GenType, ".", Arg
-        decl : DCL.declaration := GenericDeclaration(GenType, "TYPE")
+        decl : DCL.declaration := GenericDeclaration(GenType, "TYPE", true)
         if decl <> nil then
             ParmName : Arg as PT.name_tree
             gt   : TY.GetDefinedType(decl.name) as GEN.generic_type
