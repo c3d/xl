@@ -70,8 +70,10 @@ module XL.ERRORS is
         if size(error_stack) > 0 then
             back(error_stack) += last_errors
         else
+            errors : error_stack_level := last_errors
+            last_errors := empty
             E : error_stack_element
-            for E in last_errors loop
+            for E in errors loop
                 Error E.message, E.position
 
 
@@ -172,7 +174,7 @@ module XL.ERRORS is
             else
                 fmt += C
 
-        trace[errors] "Error @", pos, ": ", fmt
+        trace[errors] "Error @", pos, ":", size(error_stack), ": ", fmt
 
         M : error_stack_element
         M.message := fmt
