@@ -560,6 +560,11 @@ module XL.SEMANTICS.DECLARATIONS is
     //    Extend a type with additional fields
     // ------------------------------------------------------------------------
          trace [recdecl] "Extend type ", Base, " with ", Fields
+         // REVISIT: It is not very logical to use "Input' as the name of the
+         // type, because it's actually the name of the declared entity
+         // We end up with a type that has the name of the declared entity
+         // The type lookup rules are such that it's generally not found,
+         // but still, this is probably worth changing.
          return REC.EnterType (Input, Base, Fields)
 
 
@@ -852,15 +857,15 @@ module XL.SEMANTICS.DECLARATIONS is
             trace[ctors] "  Code=", result
             if result <> nil then
                 instSyms : SYM.symbol_table := GN.InstanceContext(result)
-                oldCtxt  : SYM.symbol_table := XLT.context
                 if instSyms <> nil then
-                    XLT.context := instSyms
+                    SYM.AddImplicit XLT.context, instSyms
 
                 result := PT.Clone(result)
                 result.position := mname.position
                 result := XLT.XLSemantics(result)
 
-                XLT.context := oldCtxt
+                if instSyms <> nil then
+                    SYM.RemoveImplicit XLT.context
 
 
     in_destruction : map[PT.name_tree, integer]
