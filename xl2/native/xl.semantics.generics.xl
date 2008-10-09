@@ -1377,9 +1377,9 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
 
         trace[+genindex] "GenericIndex ", GenType, ".", Arg
-        if IsGenericName(GenType, "TYPE") then
+        decl : DCL.declaration := GenericDeclaration(GenType, "TYPE")
+        if decl <> nil then
             ParmName : Arg as PT.name_tree
-            decl : DCL.declaration := GenericDeclaration(GenType, "TYPE")
             gt   : TY.GetDefinedType(decl.name) as GEN.generic_type
             trace[genindex] "Declaration ", PT.tree(decl.name), " gt ", gt
             if gt = nil then
