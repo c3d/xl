@@ -74,7 +74,7 @@ module XL.SEMANTICS.MODULES is
         modules_path := new_paths
 
 
-    function GetSymbols (Value    : PT.tree) return SYM.symbol_table is
+    function GetSymbols (Value : PT.tree) return SYM.symbol_table is
     // ------------------------------------------------------------------------
     //    Find the symbols associated with a given entity
     // ------------------------------------------------------------------------
