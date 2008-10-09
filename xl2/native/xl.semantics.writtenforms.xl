@@ -95,7 +95,6 @@ module XL.SEMANTICS.WRITTEN_FORMS is
     //   At this point, we already ran through PT.Matches, so the 'args'
     //   map already contains the trees for each argument. We simply need
     //   to check that the types match.
-    //   TODO: Implicit conversions
 
         written    : info as written_form
         param_name : text
@@ -185,8 +184,8 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                     ERR.PopErrorContext()
                     return 0
 
-            trace[expr] "Value for ", param_name,
-                       " has type ", TY.Source(TY.GetType(semArg))
+            argType : PT.tree := TY.Source(TY.GetType(semArg))
+            trace[expr] "Value for ", param_name, " has type ", argType
             args[param_name] := semArg
             if not skip then
                 if Gtype <> nil then
@@ -258,7 +257,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                         return 0
 
         written.generic_args := Gargs
-        trace[-expr] "PASS: score ", base_score
+        trace[-expr] "PASS: score ",base_score," for ",PT.tree(F.machine_name)
         return base_score
 
 
