@@ -390,7 +390,19 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
         result := SYM.ContextProperty(XLT.context, "INSTANTIATION", true)
         trace[inst] "Got IC ", result, " for ", XLT.context
-    
+
+
+    function InIncompleteInstantiationContext () return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if in instantiation context and did not complete yet
+    // ------------------------------------------------------------------------
+        syms : SYM.symbol_table := InstantiationContext()
+        if syms = nil then
+            return false
+        if SYM.GetProperty(syms, "INSTANCE") = nil then
+            return true
+        return false
+
 
     procedure SetInstanceContext(source      : PT.tree;
                                  instContext : SYM.symbol_table) is
@@ -670,6 +682,7 @@ module XL.SEMANTICS.GENERICS is
             ERR.DisplayLastErrors()
             result := ERR.ErrorTree()
         SYM.Enter XLT.global_context, "INSTANCE", key, result
+        SYM.SetProperty instContext, "INSTANCE", result
         trace[-inst] "Entered ", key, "=", result
 
         // Run semantics on the result (after we have cached the declaration)
