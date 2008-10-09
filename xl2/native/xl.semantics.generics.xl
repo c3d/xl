@@ -540,6 +540,9 @@ module XL.SEMANTICS.GENERICS is
         result := SYM.LookupOne (XLT.global_context, "INSTANCE", key)
         if result <> nil then
             trace[-inst] "Found cached: ", result
+            errors : PT.tree := PT.Attached(result, "INSTERROR")
+            if errors <> nil then
+                result := errors
             translate result
                 when (@error 'Messages') then
                     ERR.ReplayErrors result
@@ -705,8 +708,7 @@ module XL.SEMANTICS.GENERICS is
             if hadErrors then
                 ERR.DisplayLastErrors()
                 result := ERR.ErrorTree()
-                SYM.Enter XLT.global_context, "INSTANCE", key, result
-                SYM.SetProperty instContext, "INSTANCE", result
+                PT.AttachTree previous, "INSTERROR", result
 
             else if result <> previous then
                 result := XLT.Append(result, parse_tree(@nop))
@@ -1356,7 +1358,7 @@ module XL.SEMANTICS.GENERICS is
                         Parm : DCL.declaration := gtype.parameters[P]
                         if PT.Matches(Parm.name, ParmName) then
                             return ArgList[P]
-                    ERR.Error "Internal: parameter '$1' not found in '$2'",
+                    ERR.Error "Parameter '$1' not found in '$2'",
                               ParmName, instSrc
                     return nil
                 else
@@ -1365,7 +1367,6 @@ module XL.SEMANTICS.GENERICS is
             else
                 ERR.Error "Internal: Instance '$1' has invalid shape", instSrc
                 return nil
-
 
 
     function GenericIndex(GenType : PT.tree; Arg : PT.tree) return PT.tree is
