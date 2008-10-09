@@ -379,13 +379,13 @@ module XL.SEMANTICS.OVERLOAD is
                     Matching := GN.Deduce (Gtype, D, Arg, Gargs)
                 else
                     if AType <> nil then
-                        Matching := DCL.Assignable(D, Arg)
+                        Matching := DCL.Assignable(D, Arg) > 0
                     else
                         Matching := false
                     if not Matching then
                         // Try implicit conversions
                         Arg := TY.TryConvert(Arg, D.type)
-                        Matching := Arg <> nil and DCL.Assignable(D, Arg)
+                        Matching := Arg <> nil and DCL.Assignable(D, Arg) > 0
                         if Matching then
                             trace[overload] "Implicit conversion to ",
                                             TY.Source(D.type)
@@ -754,7 +754,7 @@ module XL.SEMANTICS.OVERLOAD is
             for D in Ftype.parameters loop
                 if toFnType <> nil then
                     toD : DCL.Declaration := toFnType.parameters[A]
-                    Matching := DCL.Assignable(D, toD.type)
+                    Matching := DCL.Assignable(D, toD.type) > 0
                     exit if not Matching
                 else
                     Arg : PT.tree := D.initializer
@@ -772,11 +772,11 @@ module XL.SEMANTICS.OVERLOAD is
                     if Gtype <> nil then
                         Matching := GN.Deduce (Gtype, D, Arg, Gargs)
                     else
-                        Matching := DCL.Assignable(D, Arg)
+                        Matching := DCL.Assignable(D, Arg) > 0
                         if not Matching then
                             // Try implicit conversions
                             Arg := TY.TryConvert(Arg, D.type)
-                            Matching := Arg <> nil and DCL.Assignable(D, Arg)
+                            Matching := Arg <> nil and DCL.Assignable(D, Arg)>0
                             if Matching then
                                 trace[overload] "Implicit conversion to ",
                                                 TY.Source(D.type)

@@ -197,7 +197,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                         trace[-expr] "FAIL: type deduct ", ERR.LastErrorsText()
                         return 0
                 else
-                    if not DCL.Assignable(decl, semArg) then
+                    if DCL.Assignable(decl, semArg) = 0 then
                         // Try implicit conversion
                         trace[expr] "Trying implicit conversions"
                         callDepth : integer := CGM.EnterCall()
@@ -206,7 +206,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                         if semArg = nil then
                             trace[-expr] "FAIL: implicit ", ERR.LastErrorsText()
                             return 0
-                        if not DCL.Assignable(decl, semArg) then
+                        if DCL.Assignable(decl, semArg) = 0 then
                             trace[-expr] "FAIL: Type error"
                             return 0
                         args[param_name] := semArg
@@ -496,7 +496,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                     return base_score
             else
                 // Generic parameter is not a type
-                if DCL.Assignable (gd, semArg) then
+                if DCL.Assignable (gd, semArg) > 0 then
                     return base_score
 
         return 0

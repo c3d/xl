@@ -387,17 +387,17 @@ module XL.SEMANTICS.DECLARATIONS is
         return decl.machine_name
 
 
-    function Assignable(Tgt: declaration; Src: PT.tree) return boolean is
+    function Assignable(Tgt: declaration; Src: PT.tree) return integer is
     // ------------------------------------------------------------------------
-    //   Return true of target can receive source value
+    //   Return > 0 if target can receive source value, counts renames
     // ------------------------------------------------------------------------
         return Assignable(Tgt, TY.GetType(Src))
 
 
     function Assignable(Tgt: declaration;
-                        SrcType: TY.any_type) return boolean is
+                        SrcType: TY.any_type) return integer is
     // ------------------------------------------------------------------------
-    //   Return true if target can receive source type
+    //   Return > 0 if target can receive source type, count renames
     // ------------------------------------------------------------------------
         // Cannot assign a constant to an output
         trace[+assign] "Assigning ",
@@ -408,10 +408,10 @@ module XL.SEMANTICS.DECLARATIONS is
             trace[assign] "Declaration is output"
             if TY.IsConstant(SrcType) then
                 trace[-assign] "FAIL: Cannot assign constant"
-                return false
+                return 0
             // Output types must match exactly
             SrcType := TY.NonVariableType(SrcType)
-            result := TY.SameType(SrcType, Tgt.type)
+            result := TY.SameTypeRenames(SrcType, Tgt.type)
             if result then
                 trace[-assign] "PASS: Type comparison succeeded"
             else
@@ -419,20 +419,22 @@ module XL.SEMANTICS.DECLARATIONS is
             return result
 
         // If decl and value types are identical, it's assignable
-        if TY.SameType(SrcType, Tgt.type) then
+        result := TY.SameTypeRenames(SrcType, Tgt.type)
+        if result > 0 then
             trace[-assign] "PASS: Types are identical"
-            return true
+            return result
 
         // If the value is 'constant', we can strip that for an input
         NonConst : TY.any_type := TY.NonConstedType(SrcType)
         trace[assign] "Trying non-consted type ", TY.Source(NonConst)
-        if TY.SameType(NonConst, TGT.type) then
+        result := TY.SameType(NonConst, TGT.type)
+        if result > 0 then
             trace[-assign] "PASS: Non-consted type succeeded"
-            return true
+            return result
 
         // Otherwise, we don't match
         trace [-assign] "FAIL: Could not find anything suitable"
-        return false
+        return 0
 
 
     function MatchInterface(iface : declarations;
