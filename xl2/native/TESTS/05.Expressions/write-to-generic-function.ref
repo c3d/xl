@@ -1,8 +1,14 @@
+05.Expressions/write-to-generic-function.xl:8: Error instantiating 'TestInOut'
+| if TestInOut(0) = 1 then
+|____________^
+05.Expressions/write-to-generic-function.xl:3: Output parameter 'Z' cannot have constant type 'anything_I_want'
+| function TestInOut(in out Z : anything_I_want) return anything_I_want is
+|___________________________^
 05.Expressions/write-to-generic-function.xl:8: No translation for 'TestInOut (0) = 1'
 | if TestInOut(0) = 1 then
 |_________________^
-library/runtime/default/./xl_builtins.xs:188: Candidate form 'X' = 'Y' cannot be selected
-|     function Equal(X, Y : character) return boolean             written X=Y                     is XL.BYTECODE.equ_char
+library/runtime/default/./xl_builtins.xs:72: Form ''X' = 'Y'' could not be selected
+|     function Equal(X, Y : integer) return boolean               written X=Y                     is XL.BYTECODE.equ_int
 |__________________________________________________________________________^
 05.Expressions/write-to-generic-function.xl:8: Error instantiating 'TestInOut'
 | if TestInOut(0) = 1 then
@@ -10,9 +16,6 @@ library/runtime/default/./xl_builtins.xs:188: Candidate form 'X' = 'Y' cannot be
 05.Expressions/write-to-generic-function.xl:3: Output parameter 'Z' cannot have constant type 'anything_I_want'
 | function TestInOut(in out Z : anything_I_want) return anything_I_want is
 |___________________________^
-05.Expressions/write-to-generic-function.xl:4: No translation for 'result := Z + 1'
-|     return Z + 1
-|______________^
-library/runtime/default/./xl_builtins.xs:187: Candidate form 'Tgt' := 'Src' cannot be selected
-|     to Copy(out Tgt : character; in Src : character)            written Tgt := Src              is XL.BYTECODE.copy_char
-|______________________________________________________________________________^
+05.Expressions/write-to-generic-function.xl:8: Expression '@ error "No translation for 'TestInOut (0) = 1'" "Form ''X' = 'Y'' could not be selected" "Error instantiating 'TestInOut'" "Output parameter 'Z' cannot have constant type 'anything_I_want'"' has no type
+| if TestInOut(0) = 1 then
+|_________________^

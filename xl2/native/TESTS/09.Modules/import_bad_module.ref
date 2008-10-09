@@ -10,6 +10,9 @@ library/runtime/default/./xl_builtins.xs:38: The return type 'real'
 library/runtime/default/./xl_builtins.xs:36: doesn't match return type 'integer'
 |     type integer                                                                                is XL.BYTECODE.xlint
 |________________^
+TESTS/09.Modules/bad_module.xs:1: There is no valid implementation for 'BAD_MODULE'
+| module BAD_MODULE with
+|_________________^
 09.Modules/import_bad_module.xl:27: The body and interface of 'BAD_MODULE' don't match
 | import BAD_MODULE
 |_________________^
