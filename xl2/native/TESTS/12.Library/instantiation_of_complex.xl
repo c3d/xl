@@ -57,11 +57,17 @@ L := L / L
 M := M / M
 ShowNumbers "After Divide"
 
-// TODO: Check initializers with implicit real conversion
-// K := 15.92
-// L := 3.02
-// M := 2
+// Check initializers with implicit real conversion
+K := 15.92
+L := 3.02
+M := 2
 ShowNumbers "After implicit real initializers"
+
+// Check scaling
+K := K * 2.0
+L := 3.1 * K
+M := 2 * M
+ShowNumbers "After multiplication by a real"
 
 // Check initializers with imaginary notation
 K := 15.92i
@@ -79,3 +85,4 @@ Copy K, Add(K,K)
 Copy L, Add(L, L)
 Copy M, Subtract(M, Add(M, M))
 ShowNumbers "After function-style calls"
+
