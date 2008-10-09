@@ -59,9 +59,12 @@ module XL.SEMANTICS.GENERICS with
                                   Args       : generic_map;
                                   Variadics  : PT.tree;
                                   BaseRecord : PT.tree) return BC.bytecode
-    procedure SetContextOfInstantiation (instContext : SYM.symbol_table;
-                                         oldContext  : SYM.symbol_table)
-    function ContextOfInstantiation () return SYM.symbol_table
+    procedure SetInstantiator (instContext : SYM.symbol_table;
+                               oldContext  : SYM.symbol_table)
+    function Instantiator (table : SYM.symbol_table) return SYM.symbol_table
+    procedure AddInstantiators(table : SYM.symbol_table; value : PT.tree)
+    procedure RemoveInstantiators(table : SYM.symbol_table; value : PT.tree)
+
     procedure SetInstanceContext(source      : PT.tree;
                                  instContext : SYM.symbol_table)
     function InstanceContext(source : PT.tree) return SYM.symbol_table
