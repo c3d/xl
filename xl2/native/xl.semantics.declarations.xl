@@ -652,9 +652,16 @@ module XL.SEMANTICS.DECLARATIONS is
                 if ProcOrFn <> nil then
                     TName : text := PT.XLNormalize(ProcOrFn.value)
                     if TName = "procedure" or TName = "function" then
+                        // If we have a procedure type, create a temporary
+                        // type name for construction / copy purpose
                         infix : input as PT.infix_tree
-                        Type := infix.right
-                        return EnterDeclaration(Names, Type, nil, false)
+                        pType : PT.tree := infix.right
+                        pName : PT.name_tree := SYM.Temporary("functionType",
+                                                              input.position)
+                        result := TY.EnterType(pName, pType)
+                        pDecl : PT.tree := parse_tree
+                            'Names' : 'pName'
+                        return XLDeclarations(pDecl)
                 ERR.Error "'$1' is not a type name", Type
             init : PT.tree := parse_tree('Type' ('Args'))
             vartype : PT.tree := parse_tree(variable)

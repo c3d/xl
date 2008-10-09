@@ -10,8 +10,6 @@ procedure Foo (X : real) is
 procedure Bar (X : integer) is
     WriteLn "Bar ", X
 
-type proc_ptr is procedure (X : integer)
-
 to Invoke (callback : procedure (X : integer)) written -> callback is
    callback 3
 
@@ -26,12 +24,12 @@ type callbacks is record with
    second : procedure (Y : integer)
 
 procedure Invoke (toCall : callbacks) written -> toCall is
-    Invoke toCall.first
-    Invoke toCall.second
+    toCall.first 3
+    toCall.second 6
 
-function Build (first, second : proc_ptr) return callbacks is
-   result.first := first
-   result.second := second
 
-Invoke Build(Foo, Bar)
-Invoke Build(Bar, Foo)
+C : callbacks
+C.first := Foo
+C.second := Bar
+
+Invoke C
