@@ -283,6 +283,8 @@ module XL.TRANSLATOR is
             term := XLSemantics(term)
         // The above semantics may have added declarations
         decl : PT.tree := SYM.ScopeItems(context, "DECL")
+        if decl <> nil then
+            decl := XLSemantics(decl)
 
         if scope = scopeGlobal or scope = scopeModule or scope = scopeMain then
             // Make sure global init and term invoked from 'main'
