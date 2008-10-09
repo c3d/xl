@@ -863,10 +863,8 @@ module XL.SEMANTICS.OVERLOAD is
             else if BaseRecord <> nil then
                 result := CGM.RecordFunctionCall (BaseRecord, bestF,
                                                   bestArgs, nil, nil, nil)
-                ERR.Error "ResolveOverload '$1' not implemented", result
             else
                 result := CGM.FunctionCall (bestF, bestArgs, nil, nil, nil)
-                ERR.Error "ResolveOverload '$1' not implemented 2", result
 
         else
             ERR.Error "No valid function found for '$1'", NameTree
