@@ -57,3 +57,4 @@ module XL.ERRORS with
     procedure Error (E : text; arg : PT.tree; arg2 : PT.tree; arg3 : PT.tree)
 
     error_count : integer := 0
+    max_errors  : integer := 10
