@@ -33,7 +33,6 @@ module XL.MATH.COMPLEX is
         result.re := re
 
     function Imaginary (im : complex.value) return complex written im i is
-        // result.re := 0.0
         result.im := im
 
     to Copy(out Target : complex; Source : complex) written Target := Source is
