@@ -365,7 +365,6 @@ module XL.SYMBOLS is
         bestS      : PT.tree
         bestShape  : integer := 0
         errorList  : PT.tree := nil
-        errorCount : integer := 0
         ambig      : rewrite := nil
         key        : text := "TRANSFORMS"
         track      : boolean := count(test_tree.info, key) > 0
@@ -428,7 +427,6 @@ module XL.SYMBOLS is
                     // The shape we found is better than anything before
                     bestShape := score
                     errorList := nil
-                    errorCount := 0
                 if bestShape > score or ref.kind = PT.xlWILDCARD then
                     // The shape is worse than the best, do not show errors
                     dropErrors := true
@@ -437,18 +435,16 @@ module XL.SYMBOLS is
                     score := R.score_adjust (test_tree, R, args,
                                              depth, score)
                     if score = 0 and not dropErrors then
-                        if errorCount = 0 or XLT.verbose then
+                        if errorList = nil or XLT.verbose then
                             ERR.PushErrorContext()
                             ERR.Error "Form '$1' could not be selected", ref
                             ERR.DisplayLastErrors()
                             errorList := ERR.ErrorTree(errorList)
                             ERR.PopErrorContext()
-                            errorCount += 1
                     if track then
                         IO.WriteLn " adjusted = ", score
                 if score > 0 then
                     errorList := nil
-                    errorCount := 0
                     if score > best then
                         if track then
                             IO.WriteLn "Best so far"
