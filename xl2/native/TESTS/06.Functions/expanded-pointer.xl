@@ -1,0 +1,37 @@
+// EXCLUDE=Java
+use XL.UI.CONSOLE
+
+procedure Foo (X : integer) is
+    WriteLn "Foo ", X
+
+procedure Foo (X : real) is
+    WriteLn "Foo (real) ", X
+
+procedure Bar (X : integer) is
+    WriteLn "Bar ", X
+
+type proc_ptr is procedure (X : integer)
+
+to Invoke (callback : procedure (X : integer)) written -> callback is
+   callback 3
+
+Invoke Foo
+Invoke Bar
+
+-> Bar
+-> Foo
+
+type callbacks is record with
+   first : procedure (X : integer)
+   second : procedure (Y : integer)
+
+procedure Invoke (toCall : callbacks) written -> toCall is
+    Invoke toCall.first
+    Invoke toCall.second
+
+function Build (first, second : proc_ptr) return callbacks is
+   result.first := first
+   result.second := second
+
+Invoke Build(Foo, Bar)
+Invoke Build(Bar, Foo)
