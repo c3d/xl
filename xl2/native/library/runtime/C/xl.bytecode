@@ -165,12 +165,13 @@ case_def_exit   "break;"
 case_end        "}"
 
 exit_loop       "goto loopexit_$1;"
+restart_loop    "goto loop_$1;"
 
 loop_begin      "loop_$1:"
 loop_end        "goto loop_$1;"
                 "loopexit_$1: 0;"
 
-non_loop_begin  ""
+non_loop_begin  "loop_$1:"
 non_loop_end    "loopexit_$1: 0;"
 
 do_while_begin  "loop_$1:"

@@ -290,6 +290,29 @@ module XL.SEMANTICS.INSTRUCTIONS is
         result := XLT.Append(dtors, result)
 
 
+    function DoRestart (Instr : PT.tree; Test : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Implement the 'restart' instruction
+    // ------------------------------------------------------------------------
+        if Test <> nil then
+            result := parse_tree
+                if 'Test' then restart
+            return XLT.XLSemantics (result)
+
+        label : PT.tree := SYM.GetProperty (XLT.context, "LOOP", true)
+        if label = nil then
+            ERR.Error "No loop surrounding '$1' instruction", Instr
+            return ERR.ErrorTree()
+
+        inner : SYM.symbol_table := XLT.context
+        outer : SYM.symbol_table := inner
+        while outer <> nil and SYM.GetProperty(outer, "LOOP", false) = nil loop
+            outer := SYM.Enclosing(outer)
+        dtors : PT.tree := DCL.ScopeDestructors(inner, outer, true)
+        result := parse_tree(@restart_loop 'label')
+        result := XLT.Append(dtors, result)
+
+
     function DoCase(Cases : PT.tree;
                     exitL : PT.name_tree) return BC.bytecode is
     // ------------------------------------------------------------------------
@@ -682,6 +705,15 @@ module XL.SEMANTICS.INSTRUCTIONS is
             exit if 'Condition'
         then
             return DoExit(input, Condition)
+
+        when
+            restart
+        then
+            return DoRestart(input, nil)
+        when
+            restart if 'Condition'
+        then
+            return DoRestart(input, Condition)
 
         when
             case
