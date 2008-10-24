@@ -176,6 +176,7 @@ case_def_exit   "break;"
 case_end        "}"
 
 exit_loop       "break loop_$1;"
+restart_loop    "continue loop_$1;"
 
 loop_begin      "loop_$1: while (true) {"
 loop_end        "} /* while loop_$1 */"
