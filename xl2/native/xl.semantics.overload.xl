@@ -913,6 +913,8 @@ module XL.SEMANTICS.OVERLOAD is
     // ------------------------------------------------------------------------
         if T.kind <> PT.xlNAME then
             translate T
+                when (@ 'Stuff') then
+                    return false
                 when (any.'Name') then
                     trace[+isfunc] "Testing any.", Name
                     GN.AddInstantiators XLT.context, T
@@ -939,6 +941,8 @@ module XL.SEMANTICS.OVERLOAD is
             return false
 
         Name        : T as PT.name_tree
+        if Name.value = "@" then
+            return false
         scope       : map[PT.tree, integer]
         types       : PT.tree_list
         type        : PT.tree
