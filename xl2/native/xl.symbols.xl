@@ -421,6 +421,20 @@ module XL.SYMBOLS is
                         " into ", table
 
 
+    procedure DebugEntry(what : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Debug hook to be used in the compiler, entry to rewrite
+    // ------------------------------------------------------------------------
+        what := what
+
+
+    procedure DebugExit(what : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Debug hook to be used in the compiler, entry to rewrite
+    // ------------------------------------------------------------------------
+        what := what
+
+
     function  LookupRewrite (table     : symbol_table;
                              kind      : text;
                              test_tree : PT.tree;
@@ -452,6 +466,7 @@ module XL.SYMBOLS is
         if track then
             IO.WriteLn "Rewrite: ", kind, "(", test_tree, ")"
             info := test_tree.info[key]
+            DebugEntry test_tree
 
         Name += "."
         Wild := Name
@@ -562,6 +577,7 @@ module XL.SYMBOLS is
         if track then
             IO.WriteLn "Rewritten: ", kind, "(", test_tree, ")=", result
             result.info[key] := info
+            DebugExit result
 
 
     function  LookupRewrite (table     : symbol_table;

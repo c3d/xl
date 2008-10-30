@@ -590,6 +590,8 @@ module XL.SEMANTICS.OVERLOAD is
                 if parm.is_output and not parm.is_input then
                     if not declaredHere[parm] then
                         dtorCall : PT.tree := DCL.CallDestructor(bestArgs[P])
+                        if dtorCall <> nil then
+                            trace [calldtors] "Parm ", parm, " dtor ", dtorCall
                         dtors := XLT.Append(dtors, dtorCall)
                 P += 1
 
@@ -913,6 +915,8 @@ module XL.SEMANTICS.OVERLOAD is
     // ------------------------------------------------------------------------
         if T.kind <> PT.xlNAME then
             translate T
+                when (@ 'Stuff') then
+                    return false
                 when (any.'Name') then
                     trace[+isfunc] "Testing any.", Name
                     GN.AddInstantiators XLT.context, T
@@ -928,7 +932,9 @@ module XL.SEMANTICS.OVERLOAD is
                     // Check if we are looking for 'complex.value'
                     gt : GN.GenericIndex(Record, Field) as PT.name_tree
                     if gt <> nil then
+                        GN.AddInstantiators XLT.context, gt
                         result := IsFunction(gt)
+                        GN.RemoveInstantiators XLT.context, gt
                         trace[-isFunc] "From GenericIndex ", PT.tree(gt),
                                         " result ", result
                         return result
@@ -939,6 +945,8 @@ module XL.SEMANTICS.OVERLOAD is
             return false
 
         Name        : T as PT.name_tree
+        if Name.value = "@" then
+            return false
         scope       : map[PT.tree, integer]
         types       : PT.tree_list
         type        : PT.tree

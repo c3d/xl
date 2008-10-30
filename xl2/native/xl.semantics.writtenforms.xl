@@ -352,6 +352,8 @@ module XL.SEMANTICS.WRITTEN_FORMS is
             if parm.is_output and not parm.is_input then
                 if not declaredHere[parm] then
                     dtorCall : PT.tree := DCL.CallDestructor(margs[a])
+                    if dtorCall <> nil then
+                        trace [calldtors] "Parm ", parm, " dtor ", dtorCall
                     dtors := XLT.Append(dtors, dtorCall)
 
         // Check if this is an iterator call

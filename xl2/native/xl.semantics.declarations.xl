@@ -955,6 +955,8 @@ module XL.SEMANTICS.DECLARATIONS is
 
             temps   : PT.tree := SYM.GetProperty(inner, "TEMPDTORS")
             result := XLT.Append (result, temps)
+            if temps <> nil then
+                trace [scopedtors] "In ", inner, " temp dtors ", temps
 
             SYM.LocalSymbols inner, names
             for entry in names loop
@@ -969,6 +971,8 @@ module XL.SEMANTICS.DECLARATIONS is
                                 dtorCall : PT.tree := CallDestructor (entry)
                                 if dtorCall <> nil then
                                     result := XLT.Append(result, dtorCall)
+                                    trace [scopedtors] "In ", inner, " dtor ",
+                                                       dtorCall
 
             exit if inner = outer
             inner := SYM.Enclosing(inner)
