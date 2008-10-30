@@ -5,10 +5,15 @@
 use XL.UI.CONSOLE
 use XL.ARRAY.BASIC
 
-function Real() return real is
-   WriteLn "Real default constructor"
+DefaultReal : real := 0.5
 
-to Delete (R : real) is
-    WriteLn "Real destructor"
+function Real() return real is
+   WriteLn "Real default constructor", DefaultReal
+   result := DefaultReal
+   DefaultReal += 0.7
+
+to Delete (in out R : real) is
+    WriteLn "Real destructor", R
+    R -= 14.6
 
 A : array[3] of real

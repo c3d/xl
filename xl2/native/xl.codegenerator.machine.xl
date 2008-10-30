@@ -558,14 +558,15 @@ module XL.CODE_GENERATOR.MACHINE is
         // Check if we need to compute a return value
         if retType <> nil then
             // If the callee has a value, then we specify it here
+            isVariable : boolean := TY.IsVariable(retType)
             result := MakeExpression(result, retValueName)
-            if not TY.IsVariable(retType) then
+            if not isVariable then
                 retType := TY.ConstantType(retType)
             if target = nil then
                 TY.SetType result, retType
                 TY.SetType retValueName, retType
                 // Post a temporary destructor for the temp we just created
-                if retValueType <> nil then
+                if not isVariable and retValueType <> nil then
                     dtor : PT.tree := parse_tree(delete 'retValueName')
                     ERR.PushErrorContext()
                     dtor := XLT.XLSemantics(dtor)

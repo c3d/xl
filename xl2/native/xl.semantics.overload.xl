@@ -590,6 +590,8 @@ module XL.SEMANTICS.OVERLOAD is
                 if parm.is_output and not parm.is_input then
                     if not declaredHere[parm] then
                         dtorCall : PT.tree := DCL.CallDestructor(bestArgs[P])
+                        if dtorCall <> nil then
+                            trace [calldtors] "Parm ", parm, " dtor ", dtorCall
                         dtors := XLT.Append(dtors, dtorCall)
                 P += 1
 
