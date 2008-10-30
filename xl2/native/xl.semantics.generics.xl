@@ -1420,3 +1420,12 @@ module XL.SEMANTICS.GENERICS is
             result := TY.EvaluateTypeAsTree(T)
             RemoveInstantiators XLT.context, input
 
+
+    translation XLSemantics
+    // ------------------------------------------------------------------------
+    //   Translation of 'any-expressions'
+    // ------------------------------------------------------------------------
+        when (any ('Expression')) then
+            AddInstantiators XLT.context, input
+            result := XLT.XLSemantics(Expression)
+            RemoveInstantiators XLT.context, input

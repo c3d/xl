@@ -35,7 +35,7 @@ module XL.ARRAY.BASIC with
 
     function Array() return array is
         for I in result.range loop
-            result[I] := array.item()
+            any(result[I] := array.item())
 
     to Delete (A : array) is
         for I in A.range loop
