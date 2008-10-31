@@ -909,10 +909,47 @@ module XL.SEMANTICS.OVERLOAD is
         CGM.ExitCall callDepth, result
 
 
-    function IsFunction(T : PT.tree) return boolean is
+    function IsFunctionNoConstructor(T : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if a name indicates a function (excluding constructors)
+    // ------------------------------------------------------------------------
+        // Check that there is at least one function
+        // If there is one, and if there is a local name, check that there
+        // are local functions, otherwise, assume the local name takes over
+        // external functions. This way, instantiationg XL.TEXT_IO.Write
+        // doesn't break just because you happen to have a function called "F"
+        // (which is otherwise visible during instantiation)
+        Name        : T as PT.name_tree
+        scope       : map[PT.tree, integer]
+        funs        : PT.tree_list
+        SYM.Lookup XLT.context, "FN", Name.value, funs, scope, 0
+        trace[isfunc] "For ", T, " there are ", size(funs), " functions"
+        if size(funs) = 0 then
+            trace[isfunc] "No function named ", T
+            return false        // No function at all
+
+        dcls        : PT.tree_list
+        dclDepth    : integer := 0
+        SYM.Lookup XLT.context, "DECL", Name.value, dcls,
+                   scope, dclDepth, SYM.lookupInnermost
+        if size(dcls) = 0 then
+            trace[isfunc] "Only functions named ", T, " - Success"
+            return true         // There are functions, but no decl
+
+        // This is a function name if the closest scope where we find a
+        // function is at least as close as the first scope where we find
+        // a non-function declaration
+        trace[isfunc] "First function at ", scope[funs[0]],
+                      " first decl at ", scope[dcls[0]]
+        result := scope[funs[0]] <= scope[dcls[0]]
+        trace[isfunc] "For ", T, " isfunction=", result
+
+
+    function IsFunctionNoCache(T : PT.tree) return boolean is
     // ------------------------------------------------------------------------
     //   Return true if a name indicates a function (including constructors)
     // ------------------------------------------------------------------------
+
         if T.kind <> PT.xlNAME then
             translate T
                 when (@ 'Stuff') then
@@ -966,53 +1003,25 @@ module XL.SEMANTICS.OVERLOAD is
         trace[-isfunc] "Result for ", T, " is ", result
 
 
-    function IsFunctionNoConstructor(T : PT.tree) return boolean is
+    function IsFunction(T : PT.tree) return boolean is
     // ------------------------------------------------------------------------
-    //   Return true if a name indicates a function (excluding constructors)
+    //   Return true if a name indicates a function, caches result
     // ------------------------------------------------------------------------
-        // Check that there is at least one function
-        // If there is one, and if there is a local name, check that there
-        // are local functions, otherwise, assume the local name takes over
-        // external functions. This way, instantiationg XL.TEXT_IO.Write
-        // doesn't break just because you happen to have a function called "F"
-        // (which is otherwise visible during instantiation)
-        Name        : T as PT.name_tree
-        scope       : map[PT.tree, integer]
-        funs        : PT.tree_list
-        SYM.Lookup XLT.context, "FN", Name.value, funs, scope, 0
-        trace[isfunc] "For ", T, " there are ", size(funs), " functions"
-        if size(funs) = 0 then
-            trace[isfunc] "No function named ", T
-            return false        // No function at all
-
-        dcls        : PT.tree_list
-        dclDepth    : integer := 0
-        SYM.Lookup XLT.context, "DECL", Name.value, dcls,
-                   scope, dclDepth, SYM.lookupInnermost
-        if size(dcls) = 0 then
-            trace[isfunc] "Only functions named ", T, " - Success"
-            return true         // There are functions, but no decl
-
-        // This is a function name if the closest scope where we find a
-        // function is at least as close as the first scope where we find
-        // a non-function declaration
-        trace[isfunc] "First function at ", scope[funs[0]],
-                      " first decl at ", scope[dcls[0]]
-        result := scope[funs[0]] <= scope[dcls[0]]
-        trace[isfunc] "For ", T, " isfunction=", result
+        if PT.Attached(T, "ISFUNC=0") then
+            return false
+        if PT.Attached(T, "ISFUNC=1") then
+            return true
+        result := IsFunctionNoCache(T)
+        if result then
+            PT.AttachTree T, "ISFUNC=1", T
+        else
+            PT.AttachTree T, "ISFUNC=0", T
 
 
     translation XLSemantics
     // ------------------------------------------------------------------------
     //    Overload resolution for function names
     // ------------------------------------------------------------------------
-
-        when
-            'FunctionName' ('FunctionArgs')
-        where
-            IsFunction (FunctionName)
-        then
-            return Resolve(FunctionName, FunctionArgs, input, true)
 
         when
             'FunctionName' ()
@@ -1026,5 +1035,9 @@ module XL.SEMANTICS.OVERLOAD is
         where
             IsFunction (FunctionName)
         then
+            block : FunctionArgs as PT.block_tree
+            if block <> nil then
+                if block.opening = "(" and block.closing = ")" then
+                    FunctionArgs := block.child
             return Resolve(FunctionName, FunctionArgs, input, true)
 
