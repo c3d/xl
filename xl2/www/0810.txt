@@ -1,7 +1,7 @@
 <!--October 2008-->
 September | <b>October 2008</b> | November
 <p>
-<a href="081013.html">Monday, 13 October</a>: Comment to ESR's announcement about "C++ considered harmful" 
+Monday, 13 October: Comment to ESR's announcement about "C++ considered harmful" 
 <ul>
 <li>
 This is a comment to the <a href="http://esr.ibiblio.org/?p=532">C++ considered harmful</a>
@@ -36,6 +36,9 @@ Tuesday, 14 October: C++ Considered Harmful
 <li>
 There is a <a href="http://esr.ibiblio.org/?p=532">blog entry</a>
 <li><a href="http://gcc.gnu.org/viewcvs/trunk/libstdc%2B%2B-v3/include/std/complex?view=markup">the C++ implementation of the same</a>
+</ul>
+<a href="081031.html">Friday, 31 October</a>: Scope Injection / Context-oriented programming
+<ul>
 </ul>
 
 <p>

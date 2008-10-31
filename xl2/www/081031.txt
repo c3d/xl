@@ -1,0 +1,115 @@
+<!--Scope Injection / Context-oriented programming-->
+We were discussing how to simplify the implementation and extension of
+{tt "Write"}. Currently, two modules implement slightly different versions
+of {tt "Write"}:
+
+- {tt "XL.UI.CONSOLE.Write"} writes to the console
+
+- {tt "XL.TEXT_IO.Write"} writes to a file
+
+The first one is implemented using the second one, writing to standard
+output. More are to come, like writing to a string. Like C++, we could
+decide to use a {tt "stream"} class, that would tell where to write,
+whether it's a file, a string, etc. We also need either that stream or
+something else to store formatting preferences, e.g. number of digits.
+
+One problem with this approach is that it makes extending write rather
+complicated. For example, if you want to write a {tt "complex"} number, you
+need something like:
+
+{pre}
+to Write (output : stream; Z : complex) is
+    Write Z, "(", Z.re, ";", Z.im, ")"
+{erp}
+
+This is not too complicated, but if all I actually use is writing to
+the console, the code above has a rather unnecessary built-in notion
+that "Write to stdout" is really a write to a stream. Also, when you
+write {tt "Z.re"} or {tt "Z.im"}, you will use the formatting for real-numbers
+(e.g. number of digits), but how would you specify additional
+formatting info for complex numbers, e.g. allow you to choose between
+{tt "(1;3)"}, {tt "[1, 3]"} or {tt "1 + 3i"} ?
+
+Ideally, I would like this:
+
+{pre}
+to Write(Z : complex) is
+    Write ComplexFormat.OpenSeparator,
+          Z.re,
+          ComplexFormat.InnerSeparator,
+          Z.im,
+          ComplexFormat.ClosingSeparator
+{erp}
+
+But then, that variant would not allow you to write to a file... or
+would it? This is where the idea of scope injection comes in.
+
+
+It seems like we could actually make it work with a file, if we add
+the idea that the Write we call could have an implicit generic
+dependency on a {tt "StandardOutput"} variable. Consider that the final
+step in writing, writing a character, is currently written as
+something like:
+
+{pre}
+to Write(F : stream; C : character) is
+     C.putc(C, F)
+{erp}
+
+What if we used any-lookup with an extension, and replaced that tail with one that doesn't take the standard output argument, but introduces it:
+
+{pre}
+to Write(C : character) is
+    Write any.StandardOutput, C
+{erp}
+
+The idea is the following: if you do not redefine {tt "StandardOutput"} in
+the instantiation context, then {tt "any.StandardOutput"} evaluates as the
+{tt "StandardOutput"} in the current context, which is a stream, so you end
+up calling the Write-to-stream function. But you can override
+{tt "StandardOutput"} and instantiate {tt "complex"} to write into some text
+like this:
+
+{pre}
+to Write (in out target : text; C : character) is
+    target += C
+
+to Write (in out StandardOutput : text; ...) is
+    Write ...
+
+Z : complex
+Write Z
+{erp}
+
+Now, here is what happens. The call to {tt "Write Z"} gets decomposed to
+its components, until the final {tt "Write C"} for individual
+characters. But at that stage, the {tt "any.StandardOutput"} finds a
+{tt "StandardOutput"} in the instantiation context, specifically the
+local parameter to the second {tt "Write"} we just defined.
+
+A few things are a bit complicated to make this work:
+
+- We need to detect implicit dependencies to generic items, e.g. the
+  {tt "any.StandardOutput"} in the character {tt "Write"}.
+
+- This may now resolve to a local variable, not just some global. In
+  that case, we need to pass some implicit parameter down the
+  instantiation stack, in that case the {tt "StandardOutput : text"}
+  parameter.
+
+It is also not clear if it is a good idea to create this implicit dependency
+based solely on the implementation, i.e. based on the use of
+{tt "any.StandardOutput"} inside a function that, otherwise, would not
+even be generic. An alternative is to add some new syntax indicating
+that generic dependency in the interface, something like:
+
+{pre}
+generic [name StandardOutput]
+to Write (C : character) is
+    Write StandardOutput, C
+{erp}
+
+This would make it much clearer which part is generic and which part
+is not.
+
+Any opinion is welcome...
