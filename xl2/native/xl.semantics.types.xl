@@ -635,11 +635,10 @@ module XL.SEMANTICS.TYPES is
             return result
 
         // For names, lookup in the type table.
-        if type_expr.kind = PT.xlNAME then
-            tname : type_expr as PT.name_tree
-            result := NamedType(tname)
-            SetDefinedType original, result
-            return result
+        tname : type_expr as PT.name_tree
+        result := NamedType(tname)
+        SetDefinedType original, result
+        return result
 
 
     function EvaluateTypeAsTree (type_expr : PT.tree) return PT.tree is
