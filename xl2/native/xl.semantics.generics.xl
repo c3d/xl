@@ -873,7 +873,7 @@ module XL.SEMANTICS.GENERICS is
             result := false
         else
             trace[inst] "Validated as: ", valid
-            XLT.ClearAttempt tnt
+            XLT.ClearAttempt tnt, false
             result := true
         XLT.context := oldContext
         XLT.global_context := oldGlobalContext

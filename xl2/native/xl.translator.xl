@@ -406,7 +406,7 @@ module XL.TRANSLATOR is
         ERR.PushErrorContext()
 
 
-    procedure ClearAttempt(what : attempt) is
+    procedure ClearAttempt(what : attempt; globals : boolean) is
     // ------------------------------------------------------------------------
     //   End the tentative translation of a tree, return true if error
     // ------------------------------------------------------------------------
@@ -416,11 +416,12 @@ module XL.TRANSLATOR is
         SYM.SetProperty function_context, "INIT", what.fn_init
         SYM.SetProperty function_context, "DECL", what.fn_decl
         SYM.SetProperty function_context, "TERM", what.fn_term
-        SYM.SetProperty main_context, "MAIN_LOCALS", what.main_locals
-        SYM.SetProperty main_context, "MAIN_DECL", what.main_decl
-        SYM.SetProperty main_context, "MAIN_INIT", what.main_init
-        SYM.SetProperty main_context, "MAIN_BODY", what.main_body
-        SYM.SetProperty main_context, "MAIN_TERM", what.main_term
+        if globals then
+            SYM.SetProperty main_context, "MAIN_LOCALS", what.main_locals
+            SYM.SetProperty main_context, "MAIN_DECL", what.main_decl
+            SYM.SetProperty main_context, "MAIN_INIT", what.main_init
+            SYM.SetProperty main_context, "MAIN_BODY", what.main_body
+            SYM.SetProperty main_context, "MAIN_TERM", what.main_term
 
 
     function EndAttempt(what : attempt) return boolean is
@@ -429,7 +430,7 @@ module XL.TRANSLATOR is
     // ------------------------------------------------------------------------
         result := ERR.PopErrorContext()
         if result then
-            ClearAttempt what
+            ClearAttempt what, true
 
 
     function TentativeSemantics(what : PT.tree) return PT.tree is
