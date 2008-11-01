@@ -31,3 +31,11 @@ module XL.POINTER.HEAP with
 
     function Allocate(size : memory_size) return pointer is XL.BYTECODE.allocate_memory
     to Free (in out memory : pointer) is XL.BYTECODE.free_memory
+
+    generic [type item]
+    function Byte_Size(value : item) return memory_size is XL.BYTECODE.byte_size
+
+    generic [type item]
+    function Bit_Size(value : item) return memory_size is XL.BYTECODE.bit_size
+
+

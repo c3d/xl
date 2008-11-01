@@ -20,11 +20,21 @@ L : list_ptr
 
 WriteLn "Building list"
 for I in 1..12 loop
-    new : list_ptr := Allocate(40U)
+    new : list_ptr := Allocate(40U + unsigned(I)) // Should be enough
     new.next := L
     L := new
     new.value := I
     PrintList L
+
+WriteLn "Expanding list"
+for I in 1..12 loop
+    new : list_ptr := Allocate(Byte_size(*L)) // Should be enough
+    new.next := L
+    L := new
+    new.value := I
+    PrintList L
+
+WriteLn "For reference, byte size=", Byte_Size(*L), " bit size=", Bit_Size(*L)
 
 WriteLn "Destroying list"
 P : list_ptr := L

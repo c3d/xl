@@ -353,4 +353,3 @@ module XL_BUILTINS with
     transform (xl_assert_implementation('cond', 'msg', 'src')) into
         if not 'cond' then
             xl_assertion_failure 'msg', xl.file 'src', xl.line 'src'
-
