@@ -30,6 +30,7 @@ module XL.POINTER.HEAP with
     type memory_size is unsigned
 
     function Allocate(size : memory_size) return pointer is XL.BYTECODE.allocate_memory
+    function New(value : pointer.item) return pointer is XL.BYTECODE.new_memory
     to Free (in out memory : pointer) is XL.BYTECODE.free_memory
 
     generic [type item]
@@ -37,5 +38,7 @@ module XL.POINTER.HEAP with
 
     generic [type item]
     function Bit_Size(value : item) return memory_size is XL.BYTECODE.bit_size
+
+
 
 

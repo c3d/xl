@@ -27,11 +27,16 @@ for I in 1..12 loop
     PrintList L
 
 WriteLn "Expanding list"
-for I in 1..12 loop
+for I in 2..7 loop
     new : list_ptr := Allocate(Byte_size(*L)) // Should be enough
     new.next := L
     L := new
     new.value := I
+    PrintList L
+
+WriteLn "Expanding list more"
+for I in 4..8 loop
+    L := new(list(L, 3-I))
     PrintList L
 
 WriteLn "For reference, byte size=", Byte_Size(*L), " bit size=", Bit_Size(*L)
