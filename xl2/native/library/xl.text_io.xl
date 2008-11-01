@@ -73,6 +73,17 @@ module XL.TEXT_IO is
         PutCharInFile N + integer('0'), F
 
 
+    to Write(F : file; N : unsigned) is
+    // ------------------------------------------------------------------------
+    //    Writing an unsigned integer
+    // ------------------------------------------------------------------------
+        base    : unsigned := 10U
+        if N / base <> 0U then
+            Write F, N/base
+        N := N mod base
+        PutCharInFile integer(N) + integer('0'), F
+
+
     to Write(F : file; N : real) is
     // ------------------------------------------------------------------------
     //   Writing a real number 

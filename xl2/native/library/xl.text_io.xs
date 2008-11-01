@@ -71,6 +71,7 @@ module XL.TEXT_IO with
 
     to Write(F : file; C : character)          // Writing a character
     to Write(F : file; N : integer)            // Writing an integer
+    to Write(F : file; N : unsigned)           // Writing an unsigned
     to Write(F : file; N : real)               // Writing a real number
     to Write(F : file; S : text)               // Writing a text
 
