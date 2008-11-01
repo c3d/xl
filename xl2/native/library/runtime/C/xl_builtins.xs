@@ -265,7 +265,7 @@ module XL_BUILTINS with
     function integer(Value : real) return integer                                               is XL.BYTECODE.int_from_real
 
     // Convert to unsigned
-    function unsigned(Value : integer) return unsigned                                          is XL.BYTECODE.uint_from_int
+    function unsigned(Value : integer) return unsigned written Value U                          is XL.BYTECODE.uint_from_int
     function unsigned(Value : unsigned) return unsigned                                         is XL.BYTECODE.uint_from_uint
 
     // Convert to real
