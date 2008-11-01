@@ -77,7 +77,8 @@ info            "/* Info: $1 */"
 value           "/* Value: $1 */"
 copy            "$1 = $2;"
 
-type_decl       "typedef struct $1_data *$2;"
+type_decl       "typedef struct $1_data $2;"
+type_impl       "/* exist $1 impl $2 */$= $2 $1_data"
 
 ref_decl        "/* $1 $2; Ref */"
 temp_decl       "$1 $2; /* Temp */"

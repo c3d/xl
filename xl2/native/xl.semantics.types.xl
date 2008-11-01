@@ -368,6 +368,32 @@ module XL.SEMANTICS.TYPES is
 
         // Check if there is already a type by that name
         N : Name as PT.name_tree
+        if Value <> nil then
+            // Check if there was a prototype with the same name
+            types : SYM.tree_list
+            SYM.Lookup XLT.context, "TYPE", N.value, types, SYM.lookupLocalOnly
+            if size(types) = 1 then
+                proto : PT.tree := types[0]
+                decl : DCL.declaration := DCL.GetDeclaration(proto)
+                if decl <> nil and decl.initializer = nil then
+                    tp : any_type := GetDefinedType(proto)
+                    assert tp.base = nil
+                    base : any_type := EvaluateType(Value)
+                    tp.base := base
+                    if base = nil then
+                        ERR.Error "Expression '$1' is not a type", Value
+                    else
+                        exist : PT.name_tree := tp.machine_name
+                        impl  : PT.name_tree := base.machine_name
+                        assert exist <> nil
+                        assert impl <> nil
+                        ren : PT.tree :=  parse_tree(@type_impl 'exist' 'impl')
+                        SYM.PushScopeItem XLT.global_context, "DECL", ren
+                    result := parse_tree(@type)
+                    DCL.SetDeclaration result, decl
+                    SetDefinedType result, tp
+                    return result                    
+
         original : PT.tree := SYM.LookupOne(XLT.context, "TYPE",
                                             N.value, SYM.lookupDirect)
         if original <> nil then
@@ -391,7 +417,7 @@ module XL.SEMANTICS.TYPES is
             if base = nil then
                 ERR.Error "Expression '$1' is not a type", Value
             else
-                tp.machine_name := base.machine_name            
+                tp.machine_name := base.machine_name
 
         if GEN.IsGenericContext() then
             tp := GEN.MakeGeneric(tp)

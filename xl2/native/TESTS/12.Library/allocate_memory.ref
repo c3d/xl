@@ -1,0 +1,26 @@
+Building list
+List: 1, EOL
+List: 2, 1, EOL
+List: 3, 2, 1, EOL
+List: 4, 3, 2, 1, EOL
+List: 5, 4, 3, 2, 1, EOL
+List: 6, 5, 4, 3, 2, 1, EOL
+List: 7, 6, 5, 4, 3, 2, 1, EOL
+List: 8, 7, 6, 5, 4, 3, 2, 1, EOL
+List: 9, 8, 7, 6, 5, 4, 3, 2, 1, EOL
+List: 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, EOL
+List: 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, EOL
+List: 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, EOL
+Destroying list
+List: 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, EOL
+List: 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, EOL
+List: 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, EOL
+List: 9, 8, 7, 6, 5, 4, 3, 2, 1, EOL
+List: 8, 7, 6, 5, 4, 3, 2, 1, EOL
+List: 7, 6, 5, 4, 3, 2, 1, EOL
+List: 6, 5, 4, 3, 2, 1, EOL
+List: 5, 4, 3, 2, 1, EOL
+List: 4, 3, 2, 1, EOL
+List: 3, 2, 1, EOL
+List: 2, 1, EOL
+List: 1, EOL

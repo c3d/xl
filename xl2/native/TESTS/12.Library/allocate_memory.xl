@@ -2,21 +2,35 @@ use XL.POINTER
 use XL.POINTER.HEAP
 use XL.UI.CONSOLE
 
+type list
 type list_ptr is pointer to list
 
 type list is record with
    next  : list_ptr
    value : integer
 
+to PrintList(ptr : list_ptr) is
+    Write "List: "
+    while ptr <> nil loop
+        Write ptr.value, ", "
+        ptr := ptr.next
+    WriteLn "EOL"
+
 L : list_ptr
 
-for I in 1..100 loop
+WriteLn "Building list"
+for I in 1..12 loop
     new : list_ptr := Allocate(40U)
     new.next := L
     L := new
     new.value := I
+    PrintList L
 
+WriteLn "Destroying list"
 P : list_ptr := L
-while P <> nil loop
-    Write P.value
-    P := P.next
+while L <> nil loop
+    PrintList L
+    P := L.next
+    Free L
+    L := P
+
