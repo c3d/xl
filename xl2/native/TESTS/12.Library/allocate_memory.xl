@@ -2,19 +2,21 @@ use XL.POINTER
 use XL.POINTER.HEAP
 use XL.UI.CONSOLE
 
+type list_ptr is pointer to list
+
 type list is record with
-   next  : pointer to record
+   next  : list_ptr
    value : integer
 
-L : pointer [list]
+L : list_ptr
 
 for I in 1..100 loop
-    new : pointer to list := Allocate(40U)
+    new : list_ptr := Allocate(40U)
     new.next := L
     L := new
     new.value := I
 
-P : pointer to list := L
+P : list_ptr := L
 while P <> nil loop
     Write P.value
     P := P.next
