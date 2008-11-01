@@ -838,12 +838,16 @@ module XL.SEMANTICS.GENERICS is
 
         GenType.in_validation := true
 
-        // Create instantiation context for validation
+        // Create instantiation contexts for validation
         oldContext : SYM.symbol_table := XLT.context
         declContext : SYM.symbol_table := GenType.context
         instContext : SYM.symbol_table := SYM.NewSymbolTable(declContext)
         XLT.context := instContext
         XLT.CopyScopeProperties instContext, declContext
+        oldFnContext : SYM.symbol_table := XLT.function_context
+        XLT.function_context := SYM.NewSymbolTable(oldFnContext)
+        oldGlobalContext : SYM.symbol_table := XLT.global_context
+        XLT.global_context := SYM.NewSymbolTable(oldGlobalContext)
 
         // Make the instantiation context visible for validation
         SetInstantiator instContext, oldContext
@@ -857,7 +861,6 @@ module XL.SEMANTICS.GENERICS is
         trace[inst] "Validation entered decl ", Decl
 
         // Check the validation
-        XLT.context := instContext
         tnt : XLT.attempt := XLT.BeginAttempt()
         valid : PT.tree := PT.Clone(GenType.validation)
         trace[inst] "Validation: ", valid
@@ -870,8 +873,11 @@ module XL.SEMANTICS.GENERICS is
             result := false
         else
             trace[inst] "Validated as: ", valid
+            XLT.ClearAttempt tnt
             result := true
         XLT.context := oldContext
+        XLT.global_context := oldGlobalContext
+        XLT.function_context := oldFnContext
         GenType.in_validation := false
 
         if result then

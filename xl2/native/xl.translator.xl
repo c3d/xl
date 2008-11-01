@@ -378,6 +378,9 @@ module XL.TRANSLATOR is
         init            : PT.tree
         decl            : PT.tree
         term            : PT.tree
+        fn_init         : PT.tree
+        fn_decl         : PT.tree
+        fn_term         : PT.tree
         main_locals     : PT.tree
         main_decl       : PT.tree
         main_init       : PT.tree
@@ -392,6 +395,9 @@ module XL.TRANSLATOR is
         result.init := SYM.ScopeItems(context, "INIT")
         result.decl := SYM.ScopeItems(context, "DECL")
         result.term := SYM.ScopeItems(context, "TERM")
+        result.fn_init := SYM.ScopeItems(function_context, "INIT")
+        result.fn_decl := SYM.ScopeItems(function_context, "DECL")
+        result.fn_term := SYM.ScopeItems(function_context, "TERM")
         result.main_locals := SYM.ScopeItems(main_context,"MAIN_LOCALS")
         result.main_decl := SYM.ScopeItems(main_context, "MAIN_DECL")
         result.main_init := SYM.ScopeItems(main_context, "MAIN_INIT")
@@ -400,20 +406,30 @@ module XL.TRANSLATOR is
         ERR.PushErrorContext()
 
 
+    procedure ClearAttempt(what : attempt) is
+    // ------------------------------------------------------------------------
+    //   End the tentative translation of a tree, return true if error
+    // ------------------------------------------------------------------------
+        SYM.SetProperty context, "INIT", what.init
+        SYM.SetProperty context, "DECL", what.decl
+        SYM.SetProperty context, "TERM", what.term
+        SYM.SetProperty function_context, "INIT", what.fn_init
+        SYM.SetProperty function_context, "DECL", what.fn_decl
+        SYM.SetProperty function_context, "TERM", what.fn_term
+        SYM.SetProperty main_context, "MAIN_LOCALS", what.main_locals
+        SYM.SetProperty main_context, "MAIN_DECL", what.main_decl
+        SYM.SetProperty main_context, "MAIN_INIT", what.main_init
+        SYM.SetProperty main_context, "MAIN_BODY", what.main_body
+        SYM.SetProperty main_context, "MAIN_TERM", what.main_term
+
+
     function EndAttempt(what : attempt) return boolean is
     // ------------------------------------------------------------------------
     //   End the tentative translation of a tree, return true if error
     // ------------------------------------------------------------------------
         result := ERR.PopErrorContext()
         if result then
-            SYM.SetProperty context, "INIT", what.init
-            SYM.SetProperty context, "DECL", what.decl
-            SYM.SetProperty context, "TERM", what.term
-            SYM.SetProperty main_context, "MAIN_LOCALS", what.main_locals
-            SYM.SetProperty main_context, "MAIN_DECL", what.main_decl
-            SYM.SetProperty main_context, "MAIN_INIT", what.main_init
-            SYM.SetProperty main_context, "MAIN_BODY", what.main_body
-            SYM.SetProperty main_context, "MAIN_TERM", what.main_term
+            ClearAttempt what
 
 
     function TentativeSemantics(what : PT.tree) return PT.tree is

@@ -79,6 +79,7 @@ module XL.TRANSLATOR with
     type attempt_data
     type attempt is access to attempt_data
     function BeginAttempt() return attempt
+    procedure ClearAttempt(what : attempt)
     function EndAttempt(what : attempt) return boolean
     function TentativeSemantics(what : PT.tree) return PT.tree
 
