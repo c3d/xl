@@ -19,7 +19,7 @@
 TESTS/library/xl.pointer.xs:34: Form ''Tgt' := nil' could not be selected
 |     to Zero(out Tgt : pointer) written Tgt := nil                                       is XL.BYTECODE.zero_ptr
 |_____________________________________________^
-[Compiler generated] Candidate instance type '<undefined type>_613'
+[Compiler generated] Candidate instance type '<undefined type>_639'
 TESTS/library/xl.pointer.xs:29: is not an instance of 'pointer'
 |     type pointer written pointer to item is XL.BYTECODE.pointer_type
 |________________^
