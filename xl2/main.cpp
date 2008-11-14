@@ -26,6 +26,7 @@
 #include "configuration.h"
 #if CONFIG_USE_SBRK
 #include <unistd.h>
+#include <stdlib.h>
 #endif
 #include <map>
 #include <iostream>
