@@ -35,6 +35,8 @@
 #include <map>
 #include <ciso646>
 #include <sys/types.h>
+#include <stdlib.h>
+#include <string.h>
 
 #ifndef _MSC_VER
 #if !defined(CONFIG_HPUX) && !defined(__hpux)
