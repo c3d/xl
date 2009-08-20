@@ -173,6 +173,11 @@ module XL.PLUGIN.XL2C is
                         IsConst := true
                         input := pre.right
                         restart
+                    if name = "char" then
+                        if IsUnsigned then
+                            TyName := parse_tree(unsigned8)
+                        else
+                            TyName := parse_tree(character)
                     if name = "int" then
                         if IsShort then
                             if IsUnsigned then
