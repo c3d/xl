@@ -91,14 +91,16 @@ procedure Main is
             SYM.SetText XLT.context, "PHASE", "xlcommand"
             SYM.SetProperty XLT.context, "PRAGMA", PT.NewText(plugin, '"')
             theProgram := SYM.LookupRewrite(XLT.context, plugin, theProgram)
-        else if name = "-style" or name = "-syntax" then
+        else if name = "-style" or name = "-syntax" or name = "-bytecode" then
             if I + 1 <= Max - 1 then
                I += 1
                newfile : text := CS.arguments[I]
                if name = "-style" then
                    XLT.style_file := newfile + ".stylesheet"
-               else
+               else if name = "-syntax" then
                    XLT.syntax_file := newfile + ".syntax"
+               else if name = "-bytecode" then
+                   XLT.bytecode_file := newfile + ".bytecode"
                RD.Close RD.DefaultRenderer
                RD.DefaultRenderer := RD.Open(XLT.RuntimePath(XLT.style_file),
                                              XLT.RuntimePath(XLT.syntax_file))

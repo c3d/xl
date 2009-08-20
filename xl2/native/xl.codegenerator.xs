@@ -33,6 +33,7 @@ module XL.CODE_GENERATOR with
     function HasFormat(input : text) return boolean
     function Format(input : text) return text
     procedure InitializeBytecodeMap()
+    procedure LoadBytecodeMap(filename : text)
     semantics_translations_init : text
     initializations             : text
     terminations                : text

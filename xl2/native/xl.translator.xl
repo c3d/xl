@@ -91,7 +91,7 @@ module XL.TRANSLATOR is
         MDL.ReplacePath oldPath, newPath
         PPR.ReplacePath oldPath, newPath
         RD.Close RD.DefaultRenderer
-        RD.DefaultRenderer := RD.Open(RuntimePath("xl.stylesheet"))
+        RD.DefaultRenderer := RD.Open(RuntimePath(XLT.style_file))
         CG.InitializeBytecodeMap()
 
 
