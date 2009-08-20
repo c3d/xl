@@ -332,6 +332,24 @@ module XL_BUILTINS with
 
     // ========================================================================
     // 
+    //   Default Index function (for case statements)
+    // 
+    // ========================================================================
+
+    generic [type item]
+    function Index(Val : item) return integer is
+        return 1
+
+    generic [type item]
+    function Index(Val : item; Ref : item; ...) return integer is
+        if Val = Ref then
+            return 0
+        return 1 + Index(Val, ...)
+
+
+
+    // ========================================================================
+    // 
     //    Assert macro
     // 
     // ========================================================================
