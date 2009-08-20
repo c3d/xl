@@ -120,4 +120,5 @@ module XL.TRANSLATOR with
     function XLEnterGeneric(input: PT.tree) return PT.tree     // Generated
     function XLConstant(input : PT.tree) return PT.tree        // Generated
     function XLMacros(input : PT.tree) return PT.tree          // Generated
+    function XL2C(input : PT.tree) return PT.tree              // Generated
     function XLNormalizeGeneric(input : PT.tree) return PT.tree// Generated

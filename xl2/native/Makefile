@@ -87,6 +87,7 @@ OTHER_SOURCES=					\
 	../xl_lib.h				\
 	../xl.syntax				\
 						\
+	xl.plugin.xl2c.xl			\
 	xl.plugin.listing.xl			\
 	xl.plugin.include.xl			\
 	xl.plugin.transforms.xl			\
