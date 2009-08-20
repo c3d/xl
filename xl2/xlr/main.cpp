@@ -63,7 +63,8 @@ int main(int argc, char **argv)
     syntax.ReadSyntaxFile("xl.syntax");
 
     // Initialize basic rendering engine
-    XL::Renderer::defaultRenderer = &renderer;
+    XL::Renderer::renderer = &renderer;
+    XL::Context::context = &context;
 
     XL::command_line_options = &options;
     for (cmd = options.Parse(argc, argv);
@@ -72,6 +73,8 @@ int main(int argc, char **argv)
     {
         XL::Parser parser (cmd.c_str(), syntax, positions, errors);
         XL::Tree *tree = parser.Parse();
+        context.Root(tree);
+        context.CollectGarbage();
         IFTRACE(source)
             std::cout << tree << "\n";
         if (!options.parseOnly)
@@ -80,7 +83,7 @@ int main(int argc, char **argv)
     }
 
 #if CONFIG_USE_SBRK
-        IFTRACE(timing)
+        IFTRACE(memory)
             fprintf(stderr, "Total memory usage: %ldK\n",
                     long ((char *) malloc(1) - low_water) / 1024);
 #endif

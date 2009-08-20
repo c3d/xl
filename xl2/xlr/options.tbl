@@ -68,7 +68,7 @@ OPTION(o, "Select output file", output_file = STRING)
 // We use lower-case names here to avoid duplicate definition and be able
 // to reuse the IFTRACE macro as is.
 TRACE(source)
-TRACE(timing)
+TRACE(memory)
 
 // Undefine for next use...
 #undef OPTVAR

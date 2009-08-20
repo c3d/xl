@@ -28,6 +28,7 @@
 #include "context.h"
 #include "tree.h"
 #include "errors.h"
+#include "options.h"
 
 XL_BEGIN
 
@@ -98,7 +99,7 @@ struct GCAction : Action
 
 
 ulong Context::gc_increment = 200;
-ulong Context::gc_growth_percent = 110;
+ulong Context::gc_growth_percent = 200;
 
 void Context::CollectGarbage ()
 // ----------------------------------------------------------------------------
@@ -110,6 +111,7 @@ void Context::CollectGarbage ()
         GCAction gc;
         active_set::iterator i;
         evaluation_stack::iterator s;
+        ulong deletedCount = 0, activeCount = 0;
 
         // Mark roots and stack
         for (i = roots.begin(); i != roots.end(); i++)
@@ -120,11 +122,19 @@ void Context::CollectGarbage ()
         // Then delete all trees in active set that are no longer referenced
         for (i = active.begin(); i != active.end(); i++)
         {
+            activeCount++;
             if (!gc.alive.count(*i))
+            {
+                deletedCount++;
                 delete *i;
+            }
         }
         active = gc.alive;
         gc_threshold = active.size() * gc_growth_percent / 100 + gc_increment;
+        IFTRACE(memory)
+            std::cerr << "GC: purged " << deletedCount
+                      << " out of " << activeCount
+                      << " threshold " << gc_threshold << "\n";
     }
 }
 
@@ -346,5 +356,7 @@ void Context::EnterBlock (text name, Tree *value)
 {
     block_symbols[name] = value;
 }
+
+Context *Context::context = NULL;
 
 XL_END

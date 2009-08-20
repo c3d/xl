@@ -81,7 +81,10 @@ struct Tree
     tree_position       Position()                 { return position; }
 
     // Conversion to text
-    operator text();
+                        operator text();
+
+    // Operator new to record the tree in the garbage collector
+    void *              operator new(size_t sz);
 
 protected:
     tree_position       position;
@@ -313,12 +316,7 @@ struct Infix : Tree
 {
     Infix(text n, tree_list &tl, tree_position pos = NOWHERE):
         Tree(pos), name(n), list(tl) {}
-    Infix(text n, Tree *left, Tree *right, tree_position pos = NOWHERE):
-        Tree(pos), name(n), list()
-    {
-        list.push_back(left);
-        list.push_back(right);
-    }
+    Infix(text n, Tree *left, Tree *right, tree_position pos = NOWHERE);
     virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context);
     Tree *              Left();

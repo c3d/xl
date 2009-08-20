@@ -59,7 +59,7 @@ struct Context
     
     // Garbage collection
     void                Root(Tree *t)           { roots.insert(t); }
-    void                Mark(Tree *t)            { active.insert(t); }
+    void                Mark(Tree *t)           { active.insert(t); }
     void                CollectGarbage();
 
     // Evaluation of trees
@@ -87,6 +87,7 @@ struct Context
 public:
     static ulong        gc_increment;
     static ulong        gc_growth_percent;
+    static Context *    context;
 
 private:
     Errors &            errors;

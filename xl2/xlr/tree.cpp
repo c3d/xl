@@ -38,6 +38,18 @@ XL_BEGIN
 
 tree_position Tree::NOWHERE = ~0UL;
 
+void *Tree::operator new(size_t sz)
+// ----------------------------------------------------------------------------
+//    Record the tree in the garbage collector
+// ----------------------------------------------------------------------------
+{
+    void *result = ::operator new(sz);
+    if (Context::context)
+        Context::context->Mark((Tree *) result);
+    return result;
+}
+
+
 Tree *Tree::Run(Context *context)
 // ----------------------------------------------------------------------------
 //   The default when executing a tree is to return it
@@ -379,6 +391,36 @@ Tree *Postfix::Run(Context *context)
 //    Class Infix 
 // 
 // ============================================================================
+
+Infix::Infix(text n, Tree *left, Tree *right, tree_position pos)
+// ----------------------------------------------------------------------------
+//   Constructor optimizing the tree structure
+// ----------------------------------------------------------------------------
+    : Tree(pos), name(n), list()
+{
+    if (Infix *li = dynamic_cast<Infix *> (left))
+    {
+        if (li->name == name)
+        {
+            list.insert(list.end(), li->list.begin(), li->list.end());
+            left = NULL;
+        }
+    }
+    if (left)
+        list.push_back(left);
+
+    if (Infix *ri = dynamic_cast<Infix *> (right))
+    {
+        if (ri->name == name)
+        {
+            list.insert(list.end(), ri->list.begin(), ri->list.end());
+            right = NULL;
+        }
+    }
+    if (right)
+        list.push_back(right);
+}
+
 
 Tree *Action::DoInfix(Infix *what)
 // ----------------------------------------------------------------------------

@@ -41,7 +41,7 @@ struct Renderer : Action
 // ----------------------------------------------------------------------------
 {
     Renderer(std::ostream &out, text styleFile, Syntax &stx, uint ts = 4);
-    Renderer(std::ostream &out, Renderer *from = defaultRenderer);
+    Renderer(std::ostream &out, Renderer *from = renderer);
 
     virtual Tree *      Do(Tree *what);
     virtual Tree *      DoInteger(Integer *what);
@@ -55,7 +55,7 @@ struct Renderer : Action
     virtual Tree *      DoNative(Native *what);
     void                Indent(text t);
 
-    static Renderer *   defaultRenderer;
+    static Renderer *   renderer;
 
     std::ostream &      output;
     Syntax &            syntax;

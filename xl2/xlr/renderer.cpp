@@ -293,7 +293,7 @@ Tree *Renderer::DoNative(Native *what)
 }
 
 
-Renderer *Renderer::defaultRenderer = NULL;
+Renderer *Renderer::renderer = NULL;
 
 
 XL_END
