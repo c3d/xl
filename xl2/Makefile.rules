@@ -87,7 +87,7 @@ prebuild:
 postbuild:
 
 tags: TAGS
-TAGS:
+TAGS: $(SOURCES)
 	etags $(SOURCES)
 
 #------------------------------------------------------------------------------
