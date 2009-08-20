@@ -228,6 +228,7 @@ void Syntax::ReadSyntaxFile(kstring filename)
         case tokNAME:
         case tokSYMBOL:
         case tokSTRING:
+        case tokQUOTE:
             txt = scanner.TextValue();
 
             if (txt == "NEWLINE")

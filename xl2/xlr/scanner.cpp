@@ -180,7 +180,7 @@ token_t Scanner::NextToken()
                 if (!indentChar)
                     indentChar = c;
                 else if (indentChar != c)
-                    errors.Error("Mixed tabs and spaces for indentation",
+                    errors.Error("Mixed tabs and spaces in indentation",
                                  position);
             }
         }
