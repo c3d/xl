@@ -29,9 +29,16 @@
 #include "syntax.h"
 #include "errors.h"
 #include <iostream>
+#include <sstream>
 #include <cctype>
 
 XL_BEGIN
+
+// ============================================================================
+// 
+//   Renderer construction / initialization
+// 
+// ============================================================================
 
 struct EnterFormatsAction : Action
 // ----------------------------------------------------------------------------
@@ -108,6 +115,13 @@ Renderer::Renderer(std::ostream &out, Renderer *from)
 {
 }
 
+
+
+// ============================================================================
+// 
+//   Rendering proper
+// 
+// ============================================================================
 
 void Renderer::Indent(text t)
 // ----------------------------------------------------------------------------
@@ -205,8 +219,9 @@ Tree *Renderer::DoBlock (Block *what)
     if (open == iblk.Opening())
         Indent("\n");
     else
-        output << open;
-    
+        output << need_space << open;
+
+    need_space = "";
     what->child->Do(this);
         
     indent -= tabsize;
@@ -252,7 +267,8 @@ Tree *Renderer::DoInfix (Infix *what)
         (*c)->Do(this);
         if (count--)
         {
-            if (what->name == "\n" || what->name == "." || what->name == ",")
+            if (what->name == "\n" || what->name == "." ||
+                what->name == "," || what->name == ":")
                 need_space = "";
             else
                 need_space = " ";
