@@ -52,9 +52,9 @@ void EnterBasics(Context *c)
 #define PREFIX(n,t)     \
     do { static t tmp; c->EnterPrefix(n, &tmp); } while(0)
 
-    INFIX("\n", InfixStructureHandler);
-    INFIX(";", InfixStructureHandler);
-    INFIX(",", InfixStructureHandler);
+    INFIX("\n", LastInListHandler);
+    INFIX(";", LastInListHandler);
+    INFIX(",", ListHandler);
 
     INFIX("+", BinaryAdd);
     INFIX("-", BinarySub);
@@ -97,9 +97,9 @@ void EnterBasics(Context *c)
 // 
 // ============================================================================
 
-Tree *InfixStructureHandler::Call(Context *context, Tree *args)
+Tree *ListHandler::Call(Context *context, Tree *args)
 // ----------------------------------------------------------------------------
-//   Evaluate args, which is suppsed to be an infix
+//   When processing A,B,C, return a similar list fA,fB,fC
 // ----------------------------------------------------------------------------
 {
     if (Infix *infix = dynamic_cast<Infix *> (args))
@@ -115,6 +115,26 @@ Tree *InfixStructureHandler::Call(Context *context, Tree *args)
         case 1: return results[0];
         default: return new Infix(infix->name, results, infix->Position());
         }
+    }
+    else
+    {
+        return context->Error("Infix expected, got '$1'", args);
+    }
+}
+
+
+Tree *LastInListHandler::Call(Context *context, Tree *args)
+// ----------------------------------------------------------------------------
+//   When processing blocks or A;B, return last value, e.g. B
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = dynamic_cast<Infix *> (args))
+    {
+        Tree *result = NULL;
+        tree_list::iterator i;
+        for (i = infix->list.begin(); i != infix->list.end(); i++)
+            result = (*i)->Run(context);
+        return result;
     }
     else
     {

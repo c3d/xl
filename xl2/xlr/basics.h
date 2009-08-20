@@ -38,14 +38,24 @@ XL_BEGIN
 // Top-level entry point: enter all basic operations in the context
 void EnterBasics(Context *context);
 
-struct InfixStructureHandler : Native
+struct ListHandler : Native
 // ----------------------------------------------------------------------------
-//    Deal with the newline, comma or semicolon operators
+//    Deal with the comma or similar constructive handlers
 // ----------------------------------------------------------------------------
 {
-    InfixStructureHandler(): Native() {}
+    ListHandler(): Native() {}
     virtual Tree *      Call(Context *context, Tree *args);
 };
+
+struct LastInListHandler : Native
+// ----------------------------------------------------------------------------
+//    Deal with the newline or semi-colon, where value is value of last
+// ----------------------------------------------------------------------------
+{
+    LastInListHandler(): Native() {}
+    virtual Tree *      Call(Context *context, Tree *args);
+};
+
 
 
 // ============================================================================
