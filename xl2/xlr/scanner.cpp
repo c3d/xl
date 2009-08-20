@@ -82,11 +82,12 @@ Scanner::Scanner(kstring name, Syntax &stx, Positions &pos, Errors &err)
 //   Open the file and make sure it's readable
 // ----------------------------------------------------------------------------
     : syntax(stx),
-      fileName(name), fileLine(1),
       file(NULL),
       tokenText(""),
       textValue(""), realValue(0.0), intValue(0),
-      indents(), indent(0), indentChar(0), column(0), checkingIndent(false),
+      indents(), indent(0), indentChar(0),
+      checkingIndent(false), settingIndent(false),
+      position(0), lineStart(0),
       positions(pos), errors(err)
 {
     file = fopen(name, "r");
@@ -168,9 +169,8 @@ token_t Scanner::NextToken()
         if (c == '\n')
         {
             // New line: start counting indentation
-            fileLine += 1;
             checkingIndent = true;
-            column = 0;
+            lineStart = position;
         }
         else if (checkingIndent)
         {
@@ -182,7 +182,6 @@ token_t Scanner::NextToken()
                 else if (indentChar != c)
                     errors.Error("Mixed tabs and spaces for indentation",
                                  position);
-                column += 1;
             }
         }
 
@@ -197,14 +196,24 @@ token_t Scanner::NextToken()
         ungetc(c, file);
         position--;
         checkingIndent = false;
-        if (column > indent)
+        ulong column = position - lineStart;
+
+        if (settingIndent)
+        {
+            // We set a new indent, for instance after opening paren
+            indents.push_back(indent);
+            indent = column;
+            settingIndent = false;
+            return tokNEWLINE;
+        }
+        else if (column > indent)
         {
             // Strictly deeper indent : report
             indent = column;
             indents.push_back(indent);
             return tokINDENT;
         }
-        else if (column < indent)
+        else if (column < indents.back())
         {
             // Unindenting: remove rightmost indent level
             XL_ASSERT(indents.size());
@@ -453,27 +462,29 @@ text Scanner::Comment(text EOC)
 //   Keep adding characters until end of comment is found (and consumed)
 // ----------------------------------------------------------------------------
 {
-    kstring eoc = EOC.c_str();
-    kstring match = eoc;
-    text comment = "";
-    int c = 0;
+    kstring eoc     = EOC.c_str();
+    kstring match   = eoc;
+    text    comment = "";
+    int     c       = 0;
+    bool    skip    = false;
+    uint    column  = position - lineStart;
 
     while (*match && c != EOF)
     {
         c = fgetc(file);
         position++;
+        skip = false;
 
         if (c == '\n')
         {
             // New line: start counting indentation
-            fileLine += 1;
             checkingIndent = true;
-            column = 0;
+            lineStart = position;
         }
         else if (checkingIndent)
         {
             if (isspace(c))
-                column += 1;
+                skip = position - lineStart <= column;
             else
                 checkingIndent = false;
         }
@@ -482,11 +493,40 @@ text Scanner::Comment(text EOC)
             match++;
         else
             match = eoc;
-        comment += c;
+
+        if (!skip)
+            comment += c;
     }
 
     // Returned comment includes termination
     return comment;
+}
+
+
+uint Scanner::OpenParen()
+// ----------------------------------------------------------------------------
+//   Opening some parenthese: remember the settingIndent value
+// ----------------------------------------------------------------------------
+{
+    uint result = indent;
+    if (settingIndent)
+        result = ~result;
+    settingIndent = true;
+    return result;
+}
+
+
+void Scanner::CloseParen(uint oldIndent)
+// ----------------------------------------------------------------------------
+//   Closing some parenthese: reset the settingIndent value
+// ----------------------------------------------------------------------------
+{
+    bool wasSet = int(oldIndent) < 0;
+    indent = wasSet ? ~oldIndent : oldIndent;
+    if (!settingIndent)
+        if (indent == indents.back())
+            indents.pop_back();
+    settingIndent = wasSet;
 }
 
 

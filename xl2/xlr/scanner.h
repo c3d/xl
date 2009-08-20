@@ -183,19 +183,16 @@ public:
  
     // Access to location information
     uint        Indent()                { return indent; }
-    text        FileName()              { return fileName; }
-    ulong       FileLine()              { return fileLine; }
     void        SetPosition(ulong pos)  { position = pos; }
     ulong       Position()              { return position; }
 
     // Indent management
-    int         OpenParen()             { return 0; /* temp */ }
-    void        CloseParen(int old)     { /* temp */ }
+    uint        OpenParen();
+    void        CloseParen(uint old);
 
 private:
     Syntax &    syntax;
-    text        fileName;
-    ulong       fileLine;
+
     FILE *      file;
     text        tokenText;
     text        textValue;
@@ -205,10 +202,11 @@ private:
     indent_list indents;
     uint        indent;
     int         indentChar;
-    uint        column;
     bool        checkingIndent;
+    bool        settingIndent;
     text        endMarker;
     ulong       position;
+    ulong       lineStart;
     Positions & positions;
     Errors &    errors;
 };
