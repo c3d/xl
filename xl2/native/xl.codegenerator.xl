@@ -1419,7 +1419,7 @@ module XL.CODE_GENERATOR is
             Path      : text := PathList[I]
             Candidate : text := Path + "/" + filename
 
-            result := PR.Open(Candidate, XLT.RuntimePath("xl.syntax"))
+            result := PR.Open(Candidate, XLT.RuntimePath(XLT.syntax_file))
 
             CurrentScanner : SC.scanner := result.scanner
             exit if IO.valid CurrentScanner.input

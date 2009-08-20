@@ -44,7 +44,7 @@ module XL.PLUGIN.LISTING is
         then
            pragma : PT.tree := SYM.GetProperty(XLT.context, "PRAGMA")
            format : text := XLT.RuntimePath("xl.stylesheet")
-           syntax : text := XLT.RuntimePath("xl.syntax")
+           syntax : text := XLT.RuntimePath(XLT.syntax_file)
            translate pragma
                when ('Base' 'Style' 'Stx') where (Style.kind = PT.xlTEXT and
                                                   Stx.kind = PT.xlTEXT) then

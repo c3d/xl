@@ -48,6 +48,8 @@ module XL.TRANSLATOR with
     verbose           : boolean := false
     runtime           : text := "default"
     runtime_name      : text := ""
+    syntax_file       : text := "xl.syntax"
+    style_file        : text := "xl.stylesheet"
 
     nop               : BC.bytecode
 

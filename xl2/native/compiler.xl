@@ -76,7 +76,7 @@ procedure Main is
     compile    : boolean := true
     transcode  : boolean := true
 
-    RD.DefaultRenderer := RD.Open(XLT.RuntimePath("xl.stylesheet"))
+    RD.DefaultRenderer := RD.Open(XLT.RuntimePath(XLT.style_file))
     CG.InitializeBytecodeMap()
 
 
@@ -90,14 +90,17 @@ procedure Main is
             SYM.SetText XLT.context, "PHASE", "xlcommand"
             SYM.SetProperty XLT.context, "PRAGMA", PT.NewText(plugin, '"')
             theProgram := SYM.LookupRewrite(XLT.context, plugin, theProgram)
-        else if name = "-style" then
+        else if name = "-style" or name = "-syntax" then
             if I + 1 <= Max - 1 then
                I += 1
-               styleName : text := CS.arguments[I]
-               styleFile : text := XLT.RuntimePath(styleName + ".stylesheet")
+               newfile : text := CS.arguments[I]
+               if name = "-style" then
+                   XLT.style_file := newfile + ".stylesheet"
+               else
+                   XLT.syntax_file := newfile + ".syntax"
                RD.Close RD.DefaultRenderer
-               RD.DefaultRenderer := RD.Open(styleFile,
-                                             XLT.RuntimePath("xl.syntax"))
+               RD.DefaultRenderer := RD.Open(XLT.RuntimePath(XLT.style_file),
+                                             XLT.RuntimePath(XLT.syntax_file))
         else if name = "-parse" then
             compile := false
             transcode := false

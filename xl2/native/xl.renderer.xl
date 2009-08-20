@@ -191,7 +191,7 @@ module XL.RENDERER is
         if format = "" then
             format := XLT.RuntimePath("xl.stylesheet")
         if syntax = "" then
-            syntax := XLT.RuntimePath("xl.syntax")
+            syntax := XLT.RuntimePath(XLT.syntax_file)
         ReadSyntaxFile result, syntax
         ReadRenderingFile result, format
 
