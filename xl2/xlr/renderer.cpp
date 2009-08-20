@@ -110,10 +110,14 @@ Tree *Renderer::Run(Tree *what)
             Run(*c);
             if (count--)
             {
-                if (f->name != "\n")
+                if (f->name == "\n" || f->name == "." || f->name == ",")
+                    need_space = "";
+                else
                     need_space = " ";
                 Indent(f->name);
-                if (f->name != "\n")
+                if (f->name == "\n" || f->name == ".")
+                    need_space = "";
+                else
                     need_space = " ";
             }
         }
