@@ -34,74 +34,25 @@
 
 XL_BEGIN
 
-enum ErrorSeverity
+class Positions;
+
+
+struct Errors
 // ----------------------------------------------------------------------------
-//   Severity information
+//   Structure used to report errors
 // ----------------------------------------------------------------------------
 {
-    severityError,
-    severityWarning,
-    severityInfo
+    Errors (Positions *pos): positions(pos) {}
+
+    typedef std::vector<std::string> Arguments;
+    void Error(text err, ulong pos, Arguments &args);
+    void Error(text err, ulong pos);
+    void Error(text err, ulong pos, text arg1);
+    void Error(text err, ulong pos, text arg1, text arg2);
+    void Error(text err, ulong pos, text arg1, text arg2, text arg3);
+
+    Positions * positions;
 };
-
-
-typedef std::vector<std::string> ErrorArguments;
-
-
-void Error(text errMsg, ulong pos, ErrorArguments args,
-           ErrorSeverity severity);
-// ----------------------------------------------------------------------------
-//   The general routine
-// ----------------------------------------------------------------------------
-
-
-inline void Error(text err, ulong pos,
-                  ErrorSeverity severity = severityError)
-// ----------------------------------------------------------------------------
-//    Default error, no arguments
-// ----------------------------------------------------------------------------
-{
-    Error(err, pos, ErrorArguments(), severity);
-}
-       
-
-inline void Error(text err, ulong pos, text arg1,
-                  ErrorSeverity severity = severityError)
-// ----------------------------------------------------------------------------
-//   Default error, one argument
-// ----------------------------------------------------------------------------
-{
-    ErrorArguments args;
-    args.push_back(arg1);
-    Error(err, pos, args, severity);
-}
-       
-
-inline void Error(text err, ulong pos, text arg1, text arg2,
-                  ErrorSeverity severity = severityError)
-// ----------------------------------------------------------------------------
-//   Default error, one argument
-// ----------------------------------------------------------------------------
-{
-    ErrorArguments args;
-    args.push_back(arg1);
-    args.push_back(arg2);
-    Error(err, pos, args, severity);
-}
-       
-
-inline void Error(text err, ulong pos, text arg1, text arg2, text arg3,
-                  ErrorSeverity severity = severityError)
-// ----------------------------------------------------------------------------
-//   Default error, one argument
-// ----------------------------------------------------------------------------
-{
-    ErrorArguments args;
-    args.push_back(arg1);
-    args.push_back(arg2);
-    args.push_back(arg3);
-    Error(err, pos, args, severity);
-}
 
 XL_END
 

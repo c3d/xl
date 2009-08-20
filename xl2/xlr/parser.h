@@ -83,14 +83,16 @@ XL_BEGIN
 // 
 // ============================================================================
 
+class Errors;
+
 class Parser
 // ----------------------------------------------------------------------------
 //   This parses an input file and returns a parse tree
 // ----------------------------------------------------------------------------
 {
 public:
-    Parser(kstring name, Syntax &stx):
-        scanner(name, stx), syntax(stx) {}
+    Parser(kstring name, Syntax &stx, Positions &pos, Errors &err):
+        scanner(name, stx, pos, err), syntax(stx), errors(err) {}
 
 public:
     Tree *              Parse(text closing_paren = "");
@@ -101,6 +103,7 @@ private:
     Scanner             scanner;
     Syntax &            syntax;
     token_t             pending;
+    Errors &            errors;
 };
 
 XL_END

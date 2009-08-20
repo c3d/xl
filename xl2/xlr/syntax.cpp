@@ -26,6 +26,7 @@
 #include "syntax.h"
 #include "scanner.h"
 #include "tree.h"
+#include "errors.h"
 
 XL_BEGIN
 
@@ -209,7 +210,9 @@ void Syntax::ReadSyntaxFile(kstring filename)
     token_t     tok;
     int         priority;
     Syntax      baseSyntax;
-    Scanner     scanner(filename, baseSyntax);
+    Positions   basePositions;
+    Errors      errors(&basePositions);
+    Scanner     scanner(filename, baseSyntax, basePositions, errors);
     Block       indentBlock(NULL);
 
     while(tok != tokEOF)

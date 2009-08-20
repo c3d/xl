@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include "errors.h"
 #include "options.h"
+#include "scanner.h" // for Positions
 
 XL_BEGIN
 
@@ -35,9 +36,7 @@ XL_BEGIN
 // 
 // ============================================================================
 
-void Error(text errMsg, ulong pos,
-           ErrorArguments args = ErrorArguments(),
-           ErrorSeverity severity = severityError)
+void Errors::Error(text errMsg, ulong pos, Errors::Arguments &args)
 // ----------------------------------------------------------------------------
 //   Emit an error message
 // ----------------------------------------------------------------------------
@@ -50,8 +49,71 @@ void Error(text errMsg, ulong pos,
         if (found)
             errMsg.replace(found, strlen(buffer), args[i]);
     }
-    fprintf(stderr, "%lu: %s\n", pos, errMsg.c_str());
+    if (positions)
+    {
+        text  file, source;
+        ulong line, column;
+        positions->GetInfo(pos, &file, &line, &column, &source);
+        fprintf(stderr, "%s:%lu: %s\n",
+                file.c_str(), line, errMsg.c_str());
+    }
+    else
+    {
+        fprintf(stderr, "At offset %lu: %s\n", pos, errMsg.c_str());
+    }
 }
+
+
+// ----------------------------------------------------------------------------
+//   The general routine
+// ----------------------------------------------------------------------------
+
+
+void Errors::Error(text err, ulong pos)
+// ----------------------------------------------------------------------------
+//    Default error, no arguments
+// ----------------------------------------------------------------------------
+{
+    Arguments args;
+    Error(err, pos, args);
+}
+       
+
+void Errors::Error(text err, ulong pos, text arg1)
+// ----------------------------------------------------------------------------
+//   Default error, one argument
+// ----------------------------------------------------------------------------
+{
+    Arguments args;
+    args.push_back(arg1);
+    Error(err, pos, args);
+}
+       
+
+void Errors::Error(text err, ulong pos, text arg1, text arg2)
+// ----------------------------------------------------------------------------
+//   Default error, one argument
+// ----------------------------------------------------------------------------
+{
+    Arguments args;
+    args.push_back(arg1);
+    args.push_back(arg2);
+    Error(err, pos, args);
+}
+       
+
+void Errors::Error(text err, ulong pos, text arg1, text arg2, text arg3)
+// ----------------------------------------------------------------------------
+//   Default error, one argument
+// ----------------------------------------------------------------------------
+{
+    Arguments args;
+    args.push_back(arg1);
+    args.push_back(arg2);
+    args.push_back(arg3);
+    Error(err, pos, args);
+}
+
 
 XL_END
 

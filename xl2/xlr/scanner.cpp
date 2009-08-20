@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  scanner.cpp                     (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  scanner.cpp                     (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     This is the file scanner for the XL project
-// 
+//
 //     See detailed documentation in scanner.h
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This program is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -34,9 +34,9 @@
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //    Helper classes
-// 
+//
 // ============================================================================
 
 class DigitValue
@@ -46,7 +46,7 @@ class DigitValue
 {
 public:
     enum { SIZE = 128, INVALID = 999 };
-    
+
 public:
     DigitValue()
     {
@@ -72,12 +72,12 @@ private:
 
 
 // ============================================================================
-// 
+//
 //    Class XLScanner
-// 
+//
 // ============================================================================
 
-Scanner::Scanner(kstring name, Syntax &stx)
+Scanner::Scanner(kstring name, Syntax &stx, Positions &pos, Errors &err)
 // ----------------------------------------------------------------------------
 //   Open the file and make sure it's readable
 // ----------------------------------------------------------------------------
@@ -86,13 +86,15 @@ Scanner::Scanner(kstring name, Syntax &stx)
       file(NULL),
       tokenText(""),
       textValue(""), realValue(0.0), intValue(0),
-      indents(), indent(0), indentChar(0), column(0), checkingIndent(false)
+      indents(), indent(0), indentChar(0), column(0), checkingIndent(false),
+      positions(pos), errors(err)
 {
     file = fopen(name, "r");
     indents.push_back(0);       // We start with an indent of 0
+    position = positions.OpenFile(name);
     if (!file)
-        Error("File '$1' cannot be read: $2",
-              0, name, strerror(errno));
+        err.Error("File '$1' cannot be read: $2",
+                  0, name, strerror(errno));
 }
 
 
@@ -103,6 +105,7 @@ Scanner::~Scanner()
 {
     if (file)
         fclose(file);
+    positions.CloseFile(position);
 }
 
 
@@ -177,8 +180,8 @@ token_t Scanner::NextToken()
                 if (!indentChar)
                     indentChar = c;
                 else if (indentChar != c)
-                    Error("Mixed tabs and spaces for indentation",
-                          position);
+                    errors.Error("Mixed tabs and spaces for indentation",
+                                 position);
                 column += 1;
             }
         }
@@ -207,16 +210,16 @@ token_t Scanner::NextToken()
             XL_ASSERT(indents.size());
             indents.pop_back();
             indent = column;
-            
+
             // If we unindented, but did not go as far as the
             // most recent indent, report inconsistency.
             if (indents.back() < column)
             {
-                Error("Unindenting to the right of previous indentation",
-                      position);
+                errors.Error("Unindenting to the right of previous indentation",
+                             position);
                 return tokERROR;
             }
-            
+
             // Otherwise, report that we unindented
             // We may report multiple tokUNINDENT if we unindented deep
             return tokUNINDENT;
@@ -253,11 +256,11 @@ token_t Scanner::NextToken()
                 {
                     IGNORE_CHAR(c);
                     if (c == '_')
-                        Error("Two _ characters in a row look ugly",
-                              position);
+                        errors.Error("Two _ characters in a row look ugly",
+                                     position);
                 }
             }
-            
+
             // Check if this is a based number
             if (c == '#' && !basedNumber)
             {
@@ -265,8 +268,8 @@ token_t Scanner::NextToken()
                 if (base < 2 || base > 36)
                 {
                     base = 36;
-                    Error("The base '$1' is not valid, not in 2..36",
-                          position, textValue);
+                    errors.Error("The base '$1' is not valid, not in 2..36",
+                                 position, textValue);
                 }
                 NEXT_CHAR(c);
                 intValue = 0;
@@ -308,8 +311,8 @@ token_t Scanner::NextToken()
                     {
                         IGNORE_CHAR(c);
                         if (c == '_')
-                            Error("Two _ characters in a row look ugly",
-                                  position);
+                            errors.Error("Two _ characters in a row look ugly",
+                                         position);
                     }
                 }
             }
@@ -389,7 +392,7 @@ token_t Scanner::NextToken()
             return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
         return tokNAME;
     }
-    
+
     // Look for texts
     else if (c == '"' || c == '\'')
     {
@@ -416,8 +419,8 @@ token_t Scanner::NextToken()
             }
             if (c == EOF || c == '\n')
             {
-                Error("End of input in the middle of a text",
-                      position);
+                errors.Error("End of input in the middle of a text",
+                             position);
                 return tokERROR;
             }
             NEXT_CHAR(c);
@@ -484,6 +487,124 @@ text Scanner::Comment(text EOC)
 
     // Returned comment includes termination
     return comment;
+}
+
+
+
+// ============================================================================
+//
+//    Class Positions
+//
+// ============================================================================
+
+ulong Positions::OpenFile(text name)
+// ----------------------------------------------------------------------------
+//    Open a new file
+// ----------------------------------------------------------------------------
+{
+    positions.push_back(Range(current_position, name));
+    return current_position;
+}
+
+
+void Positions::CloseFile (ulong pos)
+// ----------------------------------------------------------------------------
+//    Remember the end position for a file
+// ----------------------------------------------------------------------------
+{
+    current_position = pos;
+}
+
+
+void Positions::GetFile(ulong pos, text *file, ulong *offset)
+// ----------------------------------------------------------------------------
+//    Return the file and the offset in the file
+// ----------------------------------------------------------------------------
+{
+    std::vector<Range>::iterator i;
+    for (i = positions.begin(); i != positions.end(); i++)
+        if (pos < (*i).start)
+            break;
+    if (i != positions.begin())
+    {
+        i--;
+        if (file)
+            *file = (*i).file;
+        if (offset)
+            *offset = pos - (*i).start;
+    }
+    else
+    {
+        if (file)
+            *file = "";
+        if (offset)
+            *offset = pos;
+    }
+}
+
+
+void Positions::GetInfo(ulong pos, text *out_file, ulong *out_line,
+                        ulong *out_column, text *out_source)
+// ----------------------------------------------------------------------------
+//   Scan the input files to find the location of the error
+// ----------------------------------------------------------------------------
+{
+    ulong  offset = 0;
+    ulong  line   = 1;
+    ulong  column = 0;
+    text   source = "";
+    text   name = "";
+    FILE  *file;
+    char   c;
+
+    GetFile (pos, &name, &offset);
+    if (name != "")
+    {
+        file = fopen(name.c_str(), "r");
+        if (file)
+        {
+            while (!feof(file))
+            {
+                c = fgetc(file);
+                if (c == EOF)
+                    break;
+                if (c == '\n')
+                {
+                    line++;
+                    column = 0;
+                    source = "";
+                }
+                else
+                {
+                    column++;
+                    source += c;
+                }
+                offset--;
+                if (offset <= 1)
+                    break;
+            }
+
+            // Read rest of line
+            while(!feof(file))
+            {
+                c = fgetc(file);
+                if (c == '\n' || c == EOF)
+                    break;
+                source += c;
+            }
+            fclose(file);
+        }
+    }
+
+    // Output result
+    if (out_file)
+        *out_file = name;
+    if (out_line)
+        *out_line = line;
+    if (out_column)
+        *out_column = column;
+    if (out_source)
+        *out_source = source;
 }
 
 XL_END

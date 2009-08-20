@@ -30,6 +30,8 @@
 
 XL_BEGIN
 
+class Errors;
+
 enum Trace
 // ----------------------------------------------------------------------------
 //   List the traces known to the compiler
@@ -50,7 +52,7 @@ class Options
 /*---------------------------------------------------------------------------*/
 {
   public:
-    Options();
+    Options(Errors &err);
     text                Parse(int argc, char **argv);
     text                ParseNext();
 
@@ -67,10 +69,11 @@ class Options
     int                 arg;
     int                 argc;
     char **             argv;
+    Errors &            errors;
 };
 
 
-extern Options command_line_options;
+extern Options *command_line_options;
 /*---------------------------------------------------------------------------*/
 /*  The options referred to in the whole compiler                            */
 /*---------------------------------------------------------------------------*/

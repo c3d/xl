@@ -33,6 +33,7 @@
 #include "scanner.h"
 #include "parser.h"
 #include "renderer.h"
+#include "errors.h"
 #include "tree.h"
 #include "options.h"
 
@@ -45,6 +46,9 @@ int main(int argc, char **argv)
     char *low_water = (char *) sbrk(0);
 #endif
     XL::Syntax syntax;
+    XL::Positions positions;
+    XL::Errors errors(&positions);
+    XL::Options options(errors);
     text cmd, end = "";
 
     // Make sure debug function is linked in...
@@ -54,11 +58,12 @@ int main(int argc, char **argv)
     // Initialize basic XL syntax from syntax description file
     syntax.ReadSyntaxFile("xl.syntax");
 
-    for (cmd = XL::command_line_options.Parse(argc, argv);
+    XL::command_line_options = &options;
+    for (cmd = options.Parse(argc, argv);
          cmd != end;
-         cmd = XL::command_line_options.ParseNext())
+         cmd = options.ParseNext())
     {
-        XL::Parser parser (cmd.c_str(), syntax);
+        XL::Parser parser (cmd.c_str(), syntax, positions, errors);
         XL::Tree *tree = parser.Parse();
         std::cout << tree;
 

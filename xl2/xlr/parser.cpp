@@ -25,12 +25,11 @@
 // ****************************************************************************
 
 #include <vector>
+#include <stdio.h>
 #include "parser.h"
 #include "scanner.h"
 #include "errors.h"
 #include "tree.h"
-
-#include <stdio.h>
 
 
 XL_BEGIN
@@ -242,8 +241,8 @@ Tree *Parser::Parse(text closing)
         case tokERROR:
             done = true;
             if (closing != "" && closing != indentedBlock.Closing())
-                Error("Unexpected end of text, expected '$1'",
-                      scanner.Position(), closing);
+                errors.Error("Unexpected end of text, expected '$1'",
+                             scanner.Position(), closing);
             break;
         case tokINTEGER:
             right = new Integer(scanner.IntegerValue(), pos);
@@ -334,15 +333,15 @@ Tree *Parser::Parse(text closing)
         case tokPARCLOSE:
             // Check for mismatched parenthese here
             if (scanner.TokenText() != closing)
-                Error("Mismatched parentheses: got '$1', expected '$2'",
-                      scanner.Position(), scanner.TokenText(), closing);
+                errors.Error("Mismatched parentheses: got '$1', expected '$2'",
+                             pos, scanner.TokenText(), closing);
             done = true;
             break;
         case tokUNINDENT:
             // Check for mismatched blocks here
             if (closing != indentedBlock.Closing())
-                Error("Mismatched identation, expected '$1'",
-                      scanner.Position(), closing);
+                errors.Error("Mismatched identation, expected '$1'",
+                             pos, closing);
             done = true;
             break;
         case tokINDENT:
@@ -351,8 +350,8 @@ Tree *Parser::Parse(text closing)
         case tokPAROPEN:
             blk_opening = scanner.TokenText();
             if (!syntax.IsBlock(blk_opening, blk_closing))
-                Error("Unknown parenthese type: '$1' (internal)",
-                      scanner.Position(), blk_opening);
+                errors.Error("Unknown parenthese type: '$1' (internal)",
+                             pos, blk_opening);
             if (tok == tokPAROPEN)
                 old_indent = scanner.OpenParen();
             name = blk_opening;
@@ -369,8 +368,13 @@ Tree *Parser::Parse(text closing)
             right = Block::MakeBlock(right, blk_opening, blk_closing, pos);
             break;
         default:
-            Error("Internal error: unknown token $1",
-                  pos, scanner.TokenText());
+            if (true)
+            {
+                char buffer[20];
+                sprintf(buffer, "%u", tok);
+                errors.Error("Internal error: unknown token $1 ($2)",
+                             pos, scanner.TokenText(), buffer);
+            }
             break;
         } // switch(tok)
 
@@ -506,8 +510,8 @@ Tree *Parser::Parse(text closing)
         {
             Pending &last = stack.back();
             if (last.opcode != text("\n"))
-                Error("Trailing opcode '$1' ignored",
-                      scanner.Position(), last.opcode);
+                errors.Error("Trailing opcode '$1' ignored",
+                             pos, last.opcode);
             result = last.argument;
             stack.pop_back();
         }

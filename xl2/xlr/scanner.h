@@ -100,6 +100,7 @@
 XL_BEGIN
 
 class Syntax;
+class Errors;
 
 enum token_t
 // ----------------------------------------------------------------------------
@@ -129,13 +130,40 @@ enum token_t
 typedef std::vector<uint> indent_list;
 
 
+struct Positions
+// ----------------------------------------------------------------------------
+//    Records the positions of various scanners
+// ----------------------------------------------------------------------------
+{
+                        Positions(): positions(), current_position(0) {}
+                        ~Positions() {}
+
+    ulong               OpenFile(text name);
+    void                CloseFile (ulong pos);
+
+    void                GetFile(ulong pos, text *file, ulong *offset);
+    void                GetInfo(ulong pos, text *file, ulong *line,
+                                ulong *column, text *source);
+
+private:
+    struct Range
+    {
+        Range(ulong s, text f): start(s), file(f) {}
+        ulong   start;
+        text    file;
+    };
+    std::vector<Range>  positions;
+    ulong               current_position;
+};
+
+
 class Scanner
 // ----------------------------------------------------------------------------
 //   Interface for invoking the scanner
 // ----------------------------------------------------------------------------
 {
 public:
-    Scanner(kstring fileName, Syntax &stx);
+    Scanner(kstring fileName, Syntax &stx, Positions &pos, Errors &err);
     ~Scanner();
     
 public:
@@ -181,6 +209,8 @@ private:
     bool        checkingIndent;
     text        endMarker;
     ulong       position;
+    Positions & positions;
+    Errors &    errors;
 };
 
 XL_END

@@ -2,18 +2,18 @@
 //   Christophe de Dinechin                                        XL2 PROJECT
 //   XL COMPILER: options.cpp
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Processing of XL compiler options
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is distributed under the GNU General Public License
 // See the enclosed COPYING file or http://www.gnu.org for information
@@ -40,7 +40,7 @@ XL_BEGIN
 /*                                                                           */
 /* ========================================================================= */
 
-Options::Options():
+Options::Options(Errors &err):
 /*---------------------------------------------------------------------------*/
 /*  Set the default values for all options                                   */
 /*---------------------------------------------------------------------------*/
@@ -48,7 +48,7 @@ Options::Options():
 #define OPTION(name, descr, code)
 #define TRACE(name)
 #include "options.tbl"
-    arg(0), argc(0), argv(NULL)
+    arg(0), argc(0), argv(NULL), errors(err)
 {}
 
 
@@ -88,8 +88,7 @@ static bool OptionMatches(kstring &command_line, kstring optdescr)
 }
 
 
-static kstring OptionString(kstring &command_line,
-                            int &arg, int argc, char **argv)
+static kstring OptionString(kstring &command_line, Options &opt)
 // ----------------------------------------------------------------------------
 //   Check if we find an integer between low and high on the command line
 // ----------------------------------------------------------------------------
@@ -100,20 +99,20 @@ static kstring OptionString(kstring &command_line,
         command_line = "";
         return result;
     }
-    arg += 1;
-    if (arg  < argc)
+    opt.arg += 1;
+    if (opt.arg  < opt.argc)
     {
         command_line = "";
-        return argv[arg];
+        return opt.argv[opt.arg];
     }
-    Error("Option '$1' is not an integer value", arg, command_line);
+    opt.errors.Error("Option '$1' is not an integer value",
+                     opt.arg, command_line);
     return "";
 }
 
 
-static uint OptionInteger(kstring &command_line,
-                          int &arg, int argc, char **argv,
-                          uint low, uint high)
+static ulong OptionInteger(kstring &command_line, Options &opt,
+                           ulong low, ulong high)
 // ----------------------------------------------------------------------------
 //   Check if we find an integer between low and high on the command line
 // ----------------------------------------------------------------------------
@@ -125,23 +124,26 @@ static uint OptionInteger(kstring &command_line,
         if (isdigit(*command_line))
             result = strtol(command_line, (char**) &command_line, 10);
         else
-            Error("Option '$1' is not an integer value", arg, command_line);
+            opt.errors.Error("Option '$1' is not an integer value",
+                             opt.arg, command_line);
     }
     else
     {
-        arg += 1;
-        if (arg  < argc && isdigit(argv[arg][0]))
-            result = strtol(old = argv[arg], (char **) &command_line, 10);
+        opt.arg += 1;
+        if (opt.arg  < opt.argc && isdigit(opt.argv[opt.arg][0]))
+            result = strtol(old = opt.argv[opt.arg],
+                            (char **) &command_line, 10);
         else
-            Error("Option '$1' is not an integer value", arg, command_line);
+            opt.errors.Error("Option '$1' is not an integer value",
+                             opt.arg, command_line);
     }
     if (result < low || result > high)
     {
         char lowstr[15], highstr[15];
-        sprintf(lowstr, "%d", low);
-        sprintf(highstr, "%d", high);
-        Error("Option '$1' is out of range $2..$3",
-              arg, old, lowstr, highstr);
+        sprintf(lowstr, "%lu", low);
+        sprintf(highstr, "%lu", high);
+        opt.errors.Error("Option '$1' is out of range $2..$3",
+                         opt.arg, old, lowstr, highstr);
         if (result < low)
             result = low;
         else
@@ -172,24 +174,24 @@ text Options::ParseNext()
 // ----------------------------------------------------------------------------
 //   Parse the command line, looking for known options, return first unknown
 // ----------------------------------------------------------------------------
-// Note: What we read here should be compatible with GCC parsing 
+// Note: What we read here should be compatible with GCC parsing
 {
     while (arg < argc)
-    {   
+    {
         if(argv[arg] && argv[arg][0] == '-' && argv[arg][1])
         {
             kstring argval = argv[arg] + 1;
-            
+
 #define OPTVAR(name, type, value)
-#define OPTION(name, descr, code)                               \
-            if (OptionMatches(argval, #name))                   \
-            {                                                   \
-                code;                                           \
-                                                                \
-                if (*argval)                                    \
-                    Error("Garbage found after option '$1'",    \
-                           arg, argval);                        \
-            }                                                   \
+#define OPTION(name, descr, code)                                       \
+            if (OptionMatches(argval, #name))                           \
+            {                                                           \
+                code;                                                   \
+                                                                        \
+                if (*argval)                                            \
+                    errors.Error("Garbage found after option '$1'",     \
+                                 arg, argval);                          \
+            }                                                           \
             else
 #if XL_DEBUG
 #define TRACE(name)                                 \
@@ -199,12 +201,12 @@ text Options::ParseNext()
 #else
 #define TRACE(name)
 #endif
-#define INTEGER(n, m)           OptionInteger(argval, arg, argc, argv, n, m)
-#define STRING                  OptionString(argval, arg, argc, argv)
+#define INTEGER(n, m)           OptionInteger(argval, *this, n, m)
+#define STRING                  OptionString(argval, *this)
 #include "options.tbl"
             {
                 // Default: Output usage
-                Error("Unknown option '$1' ignored", arg, argval);
+                errors.Error("Unknown option '$1' ignored", arg, argval);
                 Usage(argv);
             }
             arg++;
@@ -218,7 +220,7 @@ text Options::ParseNext()
 }
 
 
-Options command_line_options;
+Options *command_line_options = NULL;
 /*---------------------------------------------------------------------------*/
 /*  The global options used by all parts of the compiler                     */
 /*---------------------------------------------------------------------------*/
