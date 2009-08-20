@@ -709,6 +709,9 @@ module XL.CODE_GENERATOR is
     //    The main XL to C translator
     // ------------------------------------------------------------------------
 
+        // Make macro preprocessor available even in transcode mode
+        input := XLT.XLMacros(input)
+
         // --------------------------------------------------------------------
         //    Leafs
         // --------------------------------------------------------------------
