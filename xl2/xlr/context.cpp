@@ -113,6 +113,9 @@ void Context::CollectGarbage ()
         evaluation_stack::iterator s;
         ulong deletedCount = 0, activeCount = 0;
 
+        IFTRACE(memory)
+            std::cerr << "Garbage collecting...";
+        
         // Mark roots and stack
         for (i = roots.begin(); i != roots.end(); i++)
             (*i)->Do(&gc);
@@ -132,7 +135,7 @@ void Context::CollectGarbage ()
         active = gc.alive;
         gc_threshold = active.size() * gc_growth_percent / 100 + gc_increment;
         IFTRACE(memory)
-            std::cerr << "GC: purged " << deletedCount
+            std::cerr << "done: Purged " << deletedCount
                       << " out of " << activeCount
                       << " threshold " << gc_threshold << "\n";
     }
