@@ -33,7 +33,6 @@
 #include "scanner.h"
 #include "parser.h"
 #include "tree.h"
-#include "ctrans.h"
 #include "options.h"
 
 
@@ -213,9 +212,6 @@ int main(int argc, char **argv)
     // Initialize basic XL syntax from syntax description file
     ReadContext("xl.syntax", gContext);
 
-    // Initialize the C translator
-    XLInitCTrans();
-
     for (cmd = gOptions.Parse(argc, argv);
          cmd != end;
          cmd = gOptions.ParseNext())
@@ -232,8 +228,6 @@ int main(int argc, char **argv)
             XLTree::outputDebug = true;
             std::cout << *tree << "\n";
         }
-
-        XL2C(tree);
     }
 
 #if CONFIG_USE_SBRK

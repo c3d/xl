@@ -32,7 +32,6 @@ SOURCES     =					\
 	tree.cpp				\
 	context.cpp				\
 	parser.cpp				\
-	ctrans.cpp				\
 	options.cpp				\
 	errors.cpp
 
