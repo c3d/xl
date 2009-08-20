@@ -421,6 +421,7 @@ module XL.CODE_GENERATOR is
         // Replace $1, $2, $3 strings
         fmt       : text
         I         : integer
+        J         : integer
         Max       : integer
         hadDollar : boolean := false
         noNewLine : boolean := true
@@ -432,6 +433,8 @@ module XL.CODE_GENERATOR is
         saveFmt   : text := ""
         CR        : character := ASCII.CR[0]
         lastWasCR : boolean := false
+        indent    : integer := 0
+        hadNewLine: boolean := false
 
         // Get message and perform substitution
         Max := length format
@@ -487,6 +490,10 @@ module XL.CODE_GENERATOR is
                 else if C = '#' then
                     sep : integer := back(separator_stack)
                     fmt += prefix + text(sep)
+                else if C = '<' then
+                    indent += 1
+                else if C = '>' then
+                    indent -= 1
                 else if C = '=' then
                     if key <> "" then
                         if lastWasCR then
@@ -522,10 +529,15 @@ module XL.CODE_GENERATOR is
             noNewLine := fmt = ""
 
         // Output result
+        if hadNewLine then
+            for J in 0..indent loop
+                IO.Write " "
+            hadNewLine := false
         if noNewLine then
             IO.Write fmt
         else
             IO.WriteLn fmt
+            hadNewLine := true
 
 
     last_position : integer := -1
