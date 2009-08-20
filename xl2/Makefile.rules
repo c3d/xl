@@ -48,7 +48,6 @@ OBJDRIVER=	$(DRIVER:%=$(OBJROOT)/%)
 OBJEXE=		$(PRODUCT)
 OBJLIBRARIES=	$(LIBRARIES:%.a=$(OBJROOT)/%.a)
 OBJLIBDEP=	$(filter %.a, $(OBJLIBRARIES))
-MZINFO_DEPS=	$(OBJLIBDEP)
 GARBAGE=	*~ *.bak
 
 # Default target
@@ -71,13 +70,14 @@ install: all
 startup: clean all
 
 depend: $(OBJDIR)/Makefile.depend
-
+	@echo Dependencies for $(TARGET) done
 hello:
 	@echo ----------- Making $(TARGET) in $$(pwd) ------------
 goodbye:
 	@echo ---------- Done with $(TARGET) in $$(pwd) ----------
 
 build:									\
+        depend                                                          \
 	prebuild							\
 	$(OBJDIR) $(OBJECTS) $(OBJLIBRARY) $(OBJDRIVER) $(OBJEXE)	\
 	postbuild
@@ -142,13 +142,6 @@ $(OBJDIR)/%.C.o: %.C
 	$V $(CXX) $(CXXFLAGS) $(CPPFLAGS_$*) $(CXXFLAGS_$*) -o $@ -c $<
 $(OBJDIR)/%.cpp.o: %.cpp
 	$V $(CXX) $(CXXFLAGS) $(CPPFLAGS_$*) $(CXXFLAGS_$*) -o $@ -c $<
-$(MZINFO).mzinfo.cpp: # $(MZINFO_HEADER) $(MZINFO_SOURCES) $(MZINFO_DEPS)
-	$R $(TPP)					\
-		-t $(MZINFO)				\
-		-i $(MZINFO).mzinfo.h			\
-		-o $(MZINFO).mzinfo.cpp			\
-		$(MZINFO_DEPS:%=-e %)			\
-		$(MZINFO_HEADERS) -x $(MZINFO_SOURCES)
 
 # Dependencies generation
 CAT_DEPEND=sed								\
@@ -156,10 +149,16 @@ CAT_DEPEND=sed								\
 	-e 's@$*.o:@$(OBJDIR)/$(@:.mkdepend=).o:@g'	 		\
 	< _tmp.depend >> $(OBJDIR)/_Makefile.depend &&			\
 	rm -f _tmp.depend
-$(OBJDIR)/Makefile.depend:
+ifdef TARGET
+$(OBJDIR)/Makefile.depend: $(SOURCES)
+	@echo Generating dependencies in $@
+	@echo > $(OBJDIR)/Makefile.depend
+	@$(MAKE) mkdepend
+endif
+
 mkdepend: predepend $(SOURCES:%=%.mkdepend)
-	@touch $(OBJDIR)/_Makefile.depend;			\
-	mv $(OBJDIR)/_Makefile.depend $(OBJDIR)/Makefile.depend
+	@touch $(OBJDIR)/_Makefile.depend
+	@mv $(OBJDIR)/_Makefile.depend $(OBJDIR)/Makefile.depend
 predepend:
 	@echo > $(OBJDIR)/_Makefile.depend
 %.c.mkdepend:
@@ -172,10 +171,6 @@ predepend:
 	$V $(AS_DEPEND) $*.S && $(CAT_DEPEND)
 %.s.mkdepend:
 	$V $(AS_DEPEND) $*.s && $(CAT_DEPEND)
-%.mzinfo.cpp.mkdepend:
-	@echo No dependency for $*.mzinfo.cpp
-%.mzinfo.h.mkdepend:
-	@echo No dependency for $*.mzinfo.h
 
 
 # Include dependencies from current directory
