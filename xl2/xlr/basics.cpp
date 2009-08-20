@@ -366,9 +366,118 @@ Tree *Assignment::Call(Context *context, Tree *args)
 
 // ============================================================================
 // 
-//    class Definition
+//    Definition
 // 
 // ============================================================================
+//  This deals with XL definitions, such as:
+//    fact 0 => 1
+//    fact N => N * fact(N-1)
+
+struct CollectVariables : Action
+// ----------------------------------------------------------------------------
+//   Collect the variables in a defined entity
+// ----------------------------------------------------------------------------
+{
+    CollectVariables(Context *ctx): context(ctx) {}
+
+    Tree *Do (Tree *what) { return what; }
+    
+    Tree *DoName(Name *what)
+    {
+        // Check if it already exists, if so return existing: A+A
+        if (Tree *other = context->Name(what->value, false))
+            return other;
+
+        // Otherwise, enter it in the context
+        context->EnterName(what->value, what);
+
+        return what;
+    }
+
+    Context *           context;
+};
+
+
+struct CollectDefinition : Action
+// ----------------------------------------------------------------------------
+//   Collect the definitions in a tree
+// ----------------------------------------------------------------------------
+{
+    CollectDefinition(Context *ctx, Tree *def):
+        context(ctx), definition(def) {}
+
+    Tree *Do (Tree *what) { return what; }
+    
+    // Specialization for the canonical nodes, default is to run them
+    Tree *DoName(Name *what)
+    {
+        if (context->Name(what->value, false))
+            return context->Error("Redefining '$1'", what);
+        context->EnterName(what->value, definition);
+        return what;
+    }
+
+    Tree *DoPrefix(Prefix *what)
+    {
+        // For a prefix, e.g. fact N, collect variables (N)
+        if (Name *defined = dynamic_cast<Name *> (what->left))
+        {
+            Context locals(context);
+            CollectVariables vars(&locals);
+            vars.Do(what->right);
+            context->EnterPrefix(defined->value, definition);
+        }
+        else
+        {
+            // Not implemented yet
+            return context->Error("Unimplemented: defining '$1'", what->left);
+        }
+        return what;
+    }
+
+    Tree *DoPostfix(Postfix *what)
+    {
+        // For a postfix, e.g. N!, collect variables (N)
+        if (Name *defined = dynamic_cast<Name *> (what->right))
+        {
+            Context locals(context);
+            CollectVariables vars(&locals);
+            vars.Do(what->left);
+            context->EnterPostfix(defined->value, definition);
+        }
+        else
+        {
+            // Not implemented yet
+            return context->Error("Unimplemented: defining '$1'", what->right);
+        }
+        return what;
+    }
+
+    Tree *DoInfix(Infix *what)
+    {
+        // For an infix, e.g. A+B, collect variables A and B
+        tree_list::iterator i;
+        Context locals(context);
+        CollectVariables vars(&locals);
+
+        for (i = what->list.begin(); i != what->list.end(); i++)
+        {
+            vars.Do(*i);
+        }
+        context->EnterInfix(what->name, definition);
+        return what;
+    }
+
+    Tree *DoBlock(Block *what)
+    {
+        // For a block, e.g. (A), collect variable A
+        return context->Error("Unimplemented: defining block '$1'", what);
+    }
+
+    Context *           context;
+    Tree *              definition;
+};
+
 
 Tree *Definition::Call(Context *context, Tree *args)
 // ----------------------------------------------------------------------------
@@ -377,22 +486,18 @@ Tree *Definition::Call(Context *context, Tree *args)
 {
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
-        if (infix->list.size() < 2)
-            return context->Error("Definition '$1' is empty", args);
+        if (infix->list.size() != 2)
+            return context->Error("Definition '$1' is malformed", args);
 
-        Tree *defined = infix->list.back();
-        if (!defined)
-            return context->Error("No value for '$1' in definition", defined);
+        Tree *defined = infix->list[0];
+        Tree *definition = infix->list[1];
+        if (!defined || !definition)
+            return context->Error("Definition '$1' is incomplete", args);
 
-        tree_list::iterator begin = infix->list.begin();
-        tree_list::iterator end = infix->list.end();
+        // Collect variables and store definition
+        CollectDefinition define(context, definition);
+        defined->Do(&define);
 
-        end--;
-        for (tree_list::iterator i = begin; i != end; i++)
-            if (Name *name = dynamic_cast<Name *> (*i))
-                context->EnterName(name->value, defined);
-            else
-                return context->Error("Cannot define non-name '$1'", *i);
         return defined;
     }
     return context->Error ("Invalid assignment '$1'", args);
