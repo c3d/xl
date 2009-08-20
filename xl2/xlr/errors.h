@@ -34,17 +34,6 @@
 
 XL_BEGIN
 
-enum ErrorNumber
-// ----------------------------------------------------------------------------
-//   Definition of error numbers
-// ----------------------------------------------------------------------------
-{
-#define XL_ERROR(x, y)             x,
-#include "errors.tbl"
-    E_LAST
-};
-
-
 enum ErrorSeverity
 // ----------------------------------------------------------------------------
 //   Severity information
@@ -59,24 +48,24 @@ enum ErrorSeverity
 typedef std::vector<std::string> ErrorArguments;
 
 
-void Error(ErrorNumber err,
-           text file, uint line,
-           ErrorArguments args,
+void Error(text errMsg, ulong pos, ErrorArguments args,
            ErrorSeverity severity);
+// ----------------------------------------------------------------------------
+//   The general routine
+// ----------------------------------------------------------------------------
 
 
-inline void Error(ErrorNumber err, text file, uint line,
+inline void Error(text err, ulong pos,
                   ErrorSeverity severity = severityError)
 // ----------------------------------------------------------------------------
 //    Default error, no arguments
 // ----------------------------------------------------------------------------
 {
-    Error(err, file, line, ErrorArguments(), severity);
+    Error(err, pos, ErrorArguments(), severity);
 }
        
 
-inline void Error(ErrorNumber err, text file, uint line,
-                  text arg1,
+inline void Error(text err, ulong pos, text arg1,
                   ErrorSeverity severity = severityError)
 // ----------------------------------------------------------------------------
 //   Default error, one argument
@@ -84,12 +73,11 @@ inline void Error(ErrorNumber err, text file, uint line,
 {
     ErrorArguments args;
     args.push_back(arg1);
-    Error(err, file, line, args, severity);
+    Error(err, pos, args, severity);
 }
        
 
-inline void Error(ErrorNumber err, text file, uint line,
-                  text arg1, text arg2,
+inline void Error(text err, ulong pos, text arg1, text arg2,
                   ErrorSeverity severity = severityError)
 // ----------------------------------------------------------------------------
 //   Default error, one argument
@@ -98,12 +86,11 @@ inline void Error(ErrorNumber err, text file, uint line,
     ErrorArguments args;
     args.push_back(arg1);
     args.push_back(arg2);
-    Error(err, file, line, args, severity);
+    Error(err, pos, args, severity);
 }
        
 
-inline void Error(ErrorNumber err, text file, uint line,
-                  text arg1, text arg2, text arg3,
+inline void Error(text err, ulong pos, text arg1, text arg2, text arg3,
                   ErrorSeverity severity = severityError)
 // ----------------------------------------------------------------------------
 //   Default error, one argument
@@ -113,7 +100,7 @@ inline void Error(ErrorNumber err, text file, uint line,
     args.push_back(arg1);
     args.push_back(arg2);
     args.push_back(arg3);
-    Error(err, file, line, args, severity);
+    Error(err, pos, args, severity);
 }
 
 XL_END

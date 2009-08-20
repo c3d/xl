@@ -85,6 +85,31 @@ void Syntax::SetPrefixPriority(text n, int p)
 }
 
 
+int Syntax::PostfixPriority(text n)
+// ----------------------------------------------------------------------------
+//   Return postfix priority, which is either this or parent's
+// ----------------------------------------------------------------------------
+{
+    if (postfix_priority.count(n))
+    {
+        int p = postfix_priority[n];
+        if (p)
+            return p;
+    }
+    return default_priority;
+}
+
+
+void Syntax::SetPostfixPriority(text n, int p)
+// ----------------------------------------------------------------------------
+//   Define the priority for a given postfix operator
+// ----------------------------------------------------------------------------
+{
+    if (p)
+        postfix_priority[n] = p;
+}
+
+
 void Syntax::CommentDelimiter(text Begin, text End)
 // ----------------------------------------------------------------------------
 //   Define comment syntax

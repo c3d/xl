@@ -48,6 +48,8 @@ public:
     void                SetInfixPriority(text n, int p);
     int                 PrefixPriority(text n);
     void                SetPrefixPriority(text n, int p);
+    int                 PostfixPriority(text n);
+    void                SetPostfixPriority(text n, int p);
 
     // Read a complete syntax file (xl.syntax)
     void                ReadSyntaxFile (kstring filename);

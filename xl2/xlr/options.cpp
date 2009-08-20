@@ -106,7 +106,7 @@ static kstring OptionString(kstring &command_line,
         command_line = "";
         return argv[arg];
     }
-    Error(E_OptNotIntegral, "<cmdline>", arg, command_line);
+    Error("Option '$1' is not an integer value", arg, command_line);
     return "";
 }
 
@@ -125,7 +125,7 @@ static uint OptionInteger(kstring &command_line,
         if (isdigit(*command_line))
             result = strtol(command_line, (char**) &command_line, 10);
         else
-            Error(E_OptNotIntegral, "<cmdline>", arg, command_line);
+            Error("Option '$1' is not an integer value", arg, command_line);
     }
     else
     {
@@ -133,14 +133,15 @@ static uint OptionInteger(kstring &command_line,
         if (arg  < argc && isdigit(argv[arg][0]))
             result = strtol(old = argv[arg], (char **) &command_line, 10);
         else
-            Error(E_OptNotIntegral, "<cmdline>", arg, command_line);
+            Error("Option '$1' is not an integer value", arg, command_line);
     }
     if (result < low || result > high)
     {
         char lowstr[15], highstr[15];
         sprintf(lowstr, "%d", low);
         sprintf(highstr, "%d", high);
-        Error(E_OptValueRange, "<cmdline>", arg, old, lowstr, highstr);
+        Error("Option '$1' is out of range $2..$3",
+              arg, old, lowstr, highstr);
         if (result < low)
             result = low;
         else
@@ -180,14 +181,15 @@ text Options::ParseNext()
             kstring argval = argv[arg] + 1;
             
 #define OPTVAR(name, type, value)
-#define OPTION(name, descr, code)                                       \
-            if (OptionMatches(argval, #name))                           \
-            {                                                           \
-                code;                                                   \
-                                                                        \
-                if (*argval)                                            \
-                    Error(E_OptGarbage, "<cmdline>", arg, argval);    \
-            }                                                           \
+#define OPTION(name, descr, code)                               \
+            if (OptionMatches(argval, #name))                   \
+            {                                                   \
+                code;                                           \
+                                                                \
+                if (*argval)                                    \
+                    Error("Garbage found after option '$1'",    \
+                           arg, argval);                        \
+            }                                                   \
             else
 #if XL_DEBUG
 #define TRACE(name)                                 \
@@ -202,7 +204,7 @@ text Options::ParseNext()
 #include "options.tbl"
             {
                 // Default: Output usage
-                Error(E_OptInvalid, "<cmdline>", arg, argval);
+                Error("Unknown option '$1' ignored", arg, argval);
                 Usage(argv);
             }
             arg++;

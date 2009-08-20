@@ -144,7 +144,7 @@ struct Quote : Text
 
 struct LongText : Text
 // ----------------------------------------------------------------------------
-//   Long text with delimiters, e.g <html>This is some text</html>
+//   Long text with delimiters, e.g html This is some text end_html
 // ----------------------------------------------------------------------------
 {
     LongText(text t, text open, text close, tree_position pos = NOWHERE):

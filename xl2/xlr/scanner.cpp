@@ -79,7 +79,7 @@ private:
 
 Scanner::Scanner(kstring name, Syntax &stx)
 // ----------------------------------------------------------------------------
-//   XLScanner constructor opens the file
+//   Open the file and make sure it's readable
 // ----------------------------------------------------------------------------
     : syntax(stx),
       fileName(name), fileLine(1),
@@ -91,7 +91,8 @@ Scanner::Scanner(kstring name, Syntax &stx)
     file = fopen(name, "r");
     indents.push_back(0);       // We start with an indent of 0
     if (!file)
-        Error(E_ScanNoFile, name, 1, name, strerror(errno));
+        Error("File '$1' cannot be read: $2",
+              0, name, strerror(errno));
 }
 
 
@@ -108,16 +109,18 @@ Scanner::~Scanner()
 #define NEXT_CHAR(c)                            \
 do {                                            \
     tokenText += c;                             \
-    textValue += c;                           \
+    textValue += c;                             \
     c = fgetc(file);                            \
+    position++;                                 \
 } while(0)
 
 
 #define NEXT_LOWER_CHAR(c)                      \
 do {                                            \
     tokenText += c;                             \
-    textValue += tolower(c);                  \
+    textValue += tolower(c);                    \
     c = fgetc(file);                            \
+    position++;                                 \
 } while(0)
 
 
@@ -125,6 +128,7 @@ do {                                            \
 do {                                            \
     tokenText += c;                             \
     c = fgetc(file);                            \
+    position++;                                 \
 } while (0)
 
 
@@ -152,6 +156,7 @@ token_t Scanner::NextToken()
 
     // Read next character
     int c = fgetc(file);
+    position++;
 
 
     // Skip spaces and check indendation
@@ -172,19 +177,22 @@ token_t Scanner::NextToken()
                 if (!indentChar)
                     indentChar = c;
                 else if (indentChar != c)
-                    Error(E_ScanMixedIndent, fileName, fileLine);
+                    Error("Mixed tabs and spaces for indentation",
+                          position);
                 column += 1;
             }
         }
 
         // Keep looking for more spaces
         c = fgetc(file);
+        position++;
     } // End of space testing
 
     // Stop counting indentation
     if (checkingIndent)
     {
         ungetc(c, file);
+        position--;
         checkingIndent = false;
         if (column > indent)
         {
@@ -204,7 +212,8 @@ token_t Scanner::NextToken()
             // most recent indent, report inconsistency.
             if (indents.back() < column)
             {
-                Error(E_ScanInconsistent, fileName, fileLine);
+                Error("Unindenting to the right of previous indentation",
+                      position);
                 return tokERROR;
             }
             
@@ -244,7 +253,8 @@ token_t Scanner::NextToken()
                 {
                     IGNORE_CHAR(c);
                     if (c == '_')
-                        Error(E_ScanDoubleUnder, fileName, fileLine);
+                        Error("Two _ characters in a row look ugly",
+                              position);
                 }
             }
             
@@ -255,7 +265,8 @@ token_t Scanner::NextToken()
                 if (base < 2 || base > 36)
                 {
                     base = 36;
-                    Error(E_ScanInvalidBase, fileName, fileLine);
+                    Error("The base '$1' is not valid, not in 2..36",
+                          position, textValue);
                 }
                 NEXT_CHAR(c);
                 intValue = 0;
@@ -272,11 +283,13 @@ token_t Scanner::NextToken()
         if (c == '.')
         {
             c = fgetc(file);
+            position++;
             if (digit_values[c] >= base)
             {
                 // This is something else following an integer: 1..3, 1.(3)
                 ungetc(c, file);
                 ungetc('.', file);
+                position -= 2;
                 return tokINTEGER;
             }
             else
@@ -295,7 +308,8 @@ token_t Scanner::NextToken()
                     {
                         IGNORE_CHAR(c);
                         if (c == '_')
-                            Error(E_ScanDoubleUnder, fileName, fileLine);
+                            Error("Two _ characters in a row look ugly",
+                                  position);
                     }
                 }
             }
@@ -355,6 +369,7 @@ token_t Scanner::NextToken()
 
         // Return the token
         ungetc(c, file);
+        position--;
         return floating_point ? tokREAL : tokINTEGER;
     } // Numbers
 
@@ -369,6 +384,7 @@ token_t Scanner::NextToken()
                 NEXT_LOWER_CHAR(c);
         }
         ungetc(c, file);
+        position--;
         if (syntax.IsBlock(textValue, endMarker))
             return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
         return tokNAME;
@@ -380,6 +396,7 @@ token_t Scanner::NextToken()
         char eos = c;
         tokenText = c;
         c = fgetc(file);
+        position++;
         for(;;)
         {
             // Check end of text
@@ -389,6 +406,7 @@ token_t Scanner::NextToken()
                 if (c != eos)
                 {
                     ungetc(c, file);
+                    position--;
                     return eos == '"' ? tokSTRING : tokQUOTE;
                 }
 
@@ -396,7 +414,8 @@ token_t Scanner::NextToken()
             }
             if (c == EOF || c == '\n')
             {
-                Error(E_ScanTextEOL, fileName, fileLine);
+                Error("End of input in the middle of a text",
+                      position);
                 return tokERROR;
             }
             NEXT_CHAR(c);
@@ -417,6 +436,7 @@ token_t Scanner::NextToken()
            !syntax.IsBlock(c, endMarker))
         NEXT_CHAR(c);
     ungetc(c, file);
+    position--;
     if (syntax.IsBlock(textValue, endMarker))
         return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
     return tokSYMBOL;
@@ -436,6 +456,7 @@ text Scanner::Comment(text EOC)
     while (*match && c != EOF)
     {
         c = fgetc(file);
+        position++;
 
         if (c == '\n')
         {

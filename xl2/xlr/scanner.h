@@ -144,18 +144,26 @@ public:
     text        Comment(text EndOfComment);
     
     // Access to scanned data
-    text        TokenText()     { return tokenText; }
-    text        NameValue()     { return textValue; }
-    text        TextValue()     { return textValue; }
-    double      RealValue()     { return realValue; }
-    ulong       IntegerValue()  { return intValue; }
-    uint        Base()          { return base; }
+    text        TokenText()             { return tokenText; }
+    text        NameValue()             { return textValue; }
+    text        TextValue()             { return textValue; }
+    double      RealValue()             { return realValue; }
+    ulong       IntegerValue()          { return intValue; }
+    uint        Base()                  { return base; }
+    void        SetTextValue(text t)    { textValue = t; }
+    void        SetTokenText(text t)    { tokenText = t; }
  
     // Access to location information
-    uint        Indent()        { return indent; }
-    text        FileName()      { return fileName; }
-    ulong       FileLine()      { return fileLine; }
-    
+    uint        Indent()                { return indent; }
+    text        FileName()              { return fileName; }
+    ulong       FileLine()              { return fileLine; }
+    void        SetPosition(ulong pos)  { position = pos; }
+    ulong       Position()              { return position; }
+
+    // Indent management
+    int         OpenParen()             { return 0; /* temp */ }
+    void        CloseParen(int old)     { /* temp */ }
+
 private:
     Syntax &    syntax;
     text        fileName;
@@ -172,6 +180,7 @@ private:
     uint        column;
     bool        checkingIndent;
     text        endMarker;
+    ulong       position;
 };
 
 XL_END

@@ -35,25 +35,13 @@ XL_BEGIN
 // 
 // ============================================================================
 
-kstring ErrorMessages[E_LAST] =
-// ----------------------------------------------------------------------------
-//    Internal table of all error messages
-// ----------------------------------------------------------------------------
-{
-#define XL_ERROR(x, y)     y,
-#include "errors.tbl"
-};
-
-
-void Error(ErrorNumber err, text file, uint line,
+void Error(text errMsg, ulong pos,
            ErrorArguments args = ErrorArguments(),
            ErrorSeverity severity = severityError)
 // ----------------------------------------------------------------------------
 //   Emit an error message
 // ----------------------------------------------------------------------------
 {
-    XL_ASSERT(err < E_LAST);
-    text errMsg = ErrorMessages[err];
     for (uint i = 0; i < args.size(); i++)
     {
         char buffer[10];
@@ -62,7 +50,7 @@ void Error(ErrorNumber err, text file, uint line,
         if (found)
             errMsg.replace(found, strlen(buffer), args[i]);
     }
-    fprintf(stderr, "%s:%d: %s\n", file.c_str(), line, errMsg.c_str());
+    fprintf(stderr, "%lu: %s\n", pos, errMsg.c_str());
 }
 
 XL_END

@@ -45,8 +45,3 @@ CXXFLAGS+= -I/usr/X11/include -I/usr/X11/include/freetype2
 LDFLAGS=-Wl,-framework -Wl,ApplicationServices \
 	-Wl,-framework -Wl,OpenGL \
 	-Wl,-framework -Wl,GLUT \
-
-errors.tbl: errors.txt
-	@echo Generating errors messages table
-	@awk '/\#.*/ { next } /^[A-Za-z_].*/ { printf "XL_ERROR(E_%s, ", $$1; printf "\""; for (i = 2; i <= NF; i++) printf (i<NF ? "%s " : "%s"), $$i; print "\")"; }' $< > $@
-	@echo "#undef XL_ERROR" >> $@

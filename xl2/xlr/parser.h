@@ -93,12 +93,14 @@ public:
         scanner(name, stx), syntax(stx) {}
 
 public:
-    Tree *            Parse(text closing_paren = "");
-    Scanner *         ParserScanner() { return &scanner; }
+    Tree *              Parse(text closing_paren = "");
+    Scanner *           ParserScanner() { return &scanner; }
+    token_t             NextToken();
 
 private:
-    Scanner           scanner;
-    Syntax &          syntax;
+    Scanner             scanner;
+    Syntax &            syntax;
+    token_t             pending;
 };
 
 XL_END
