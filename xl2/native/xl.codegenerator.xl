@@ -31,6 +31,8 @@ import IO = XL.TEXT_IO
 import ASCII = XL.TEXT_IO.ENCODING.ASCII
 import ERR = XL.ERRORS
 import XLT = XL.TRANSLATOR
+import FL = XL.FILES
+import MACRO = XL.SEMANTICS.MACROS
 
 module XL.CODE_GENERATOR is
 
@@ -133,17 +135,31 @@ module XL.CODE_GENERATOR is
     // ------------------------------------------------------------------------
         empty  : map[text, text]
         bytecode_formats := empty
-        LoadBytecodeMap XLT.RuntimePath(XLT.bytecode_file)
+        LoadBytecodeMap XLT.bytecode_file
 
 
     procedure LoadBytecodeMap(filename : text) is
     // ------------------------------------------------------------------------
     //   Read the xl.bytecode file to get the map formats
     // ------------------------------------------------------------------------
-        S      : SC.scanner := SC.Open (filename)
-        if not IO.valid S.input then
-           ERR.Error "Unable to load bytecode file", -1
+        S       : SC.scanner
+        DirName : text
+        for DirName in MACRO.include_path loop
+            NormalizedName : text := PT.XLNormalize(filename)
+            NameInDir : text
+            Directory : string of text := FL.Directory(DirName)
+            for NameInDir in Directory loop
+                if PT.XLNormalize(NameInDir) = NormalizedName then
+                    FullName : text := DirName + "/" + NameInDir
+                    S := SC.Open (FullName)
+                    exit if S <> nil and IO.valid S.input
+            exit if S <> nil and IO.valid S.input
+
+        if S = nil or not IO.valid S.input then
+           ERR.Error "Unable to load bytecode file $1",
+                     PT.NewText(filename, '"', -1)
            return
+
         tok       : SC.token
         symbol    : text
         existing  : text
@@ -164,7 +180,7 @@ module XL.CODE_GENERATOR is
                 else if name = "include" then
                     tok := SC.NextToken S
                     if tok = SC.tokTEXT then
-                        LoadBytecodeMap XLT.RuntimePath(S.string_value)
+                        LoadBytecodeMap S.string_value
                     else
                         ERR.Error "Invalid include file name in bytecode", -1
                 else if had_nl then
