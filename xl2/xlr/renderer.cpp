@@ -203,7 +203,10 @@ void Renderer::Render(std::ostream &out, Tree *t)
 // ----------------------------------------------------------------------------
 {
     Renderer renderer(out);
-    t->Do(&renderer);
+    if (t)
+        t->Do(&renderer);
+    else
+        out << "NULL";
 }
 
 
