@@ -9,7 +9,7 @@ XL_ERROR(E_ScanMixedIndent, "Indentation with both tabs and spaces in the same f
 XL_ERROR(E_ScanInconsistent, "Unindenting to the right of previous indentation")
 XL_ERROR(E_ScanDoubleUnder, "Two underscore characters in a row")
 XL_ERROR(E_ScanInvalidBase, "Invalid based number (the base must be between 2 and 36)")
-XL_ERROR(E_ScanStringEOL, "End of line found in the middle of a string")
+XL_ERROR(E_ScanTextEOL, "End of line found in the middle of text")
 XL_ERROR(E_ParseMismatchParen, "Mismatched parentheses: Got $1, expected $2")
 XL_ERROR(E_ParseTrailingOp, "Trailing '$1' operator ignored")
 #undef XL_ERROR

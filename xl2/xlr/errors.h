@@ -32,9 +32,9 @@
 #include <vector>
 #include "base.h"
 
+XL_BEGIN
 
-
-enum XLErrorNumber
+enum ErrorNumber
 // ----------------------------------------------------------------------------
 //   Definition of error numbers
 // ----------------------------------------------------------------------------
@@ -45,7 +45,7 @@ enum XLErrorNumber
 };
 
 
-enum XLErrorSeverity
+enum ErrorSeverity
 // ----------------------------------------------------------------------------
 //   Severity information
 // ----------------------------------------------------------------------------
@@ -56,64 +56,66 @@ enum XLErrorSeverity
 };
 
 
-typedef std::vector<std::string> XLErrorArguments;
+typedef std::vector<std::string> ErrorArguments;
 
 
-void XLError(XLErrorNumber err,
-             text file, uint line,
-             XLErrorArguments args,
-             XLErrorSeverity severity);
+void Error(ErrorNumber err,
+           text file, uint line,
+           ErrorArguments args,
+           ErrorSeverity severity);
 
 
-inline void XLError(XLErrorNumber err, text file, uint line,
-                    XLErrorSeverity severity = severityError)
+inline void Error(ErrorNumber err, text file, uint line,
+                  ErrorSeverity severity = severityError)
 // ----------------------------------------------------------------------------
 //    Default error, no arguments
 // ----------------------------------------------------------------------------
 {
-    XLError(err, file, line, XLErrorArguments(), severity);
+    Error(err, file, line, ErrorArguments(), severity);
 }
        
 
-inline void XLError(XLErrorNumber err, text file, uint line,
-                    text arg1,
-                    XLErrorSeverity severity = severityError)
+inline void Error(ErrorNumber err, text file, uint line,
+                  text arg1,
+                  ErrorSeverity severity = severityError)
 // ----------------------------------------------------------------------------
 //   Default error, one argument
 // ----------------------------------------------------------------------------
 {
-    XLErrorArguments args;
+    ErrorArguments args;
     args.push_back(arg1);
-    XLError(err, file, line, args, severity);
+    Error(err, file, line, args, severity);
 }
        
 
-inline void XLError(XLErrorNumber err, text file, uint line,
-                    text arg1, text arg2,
-                    XLErrorSeverity severity = severityError)
+inline void Error(ErrorNumber err, text file, uint line,
+                  text arg1, text arg2,
+                  ErrorSeverity severity = severityError)
 // ----------------------------------------------------------------------------
 //   Default error, one argument
 // ----------------------------------------------------------------------------
 {
-    XLErrorArguments args;
+    ErrorArguments args;
     args.push_back(arg1);
     args.push_back(arg2);
-    XLError(err, file, line, args, severity);
+    Error(err, file, line, args, severity);
 }
        
 
-inline void XLError(XLErrorNumber err, text file, uint line,
-                    text arg1, text arg2, text arg3,
-                    XLErrorSeverity severity = severityError)
+inline void Error(ErrorNumber err, text file, uint line,
+                  text arg1, text arg2, text arg3,
+                  ErrorSeverity severity = severityError)
 // ----------------------------------------------------------------------------
 //   Default error, one argument
 // ----------------------------------------------------------------------------
 {
-    XLErrorArguments args;
+    ErrorArguments args;
     args.push_back(arg1);
     args.push_back(arg2);
     args.push_back(arg3);
-    XLError(err, file, line, args, severity);
+    Error(err, file, line, args, severity);
 }
+
+XL_END
 
 #endif /* XL_ERRORS_H */

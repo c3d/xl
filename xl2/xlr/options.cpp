@@ -32,7 +32,7 @@
 #include "options.h"
 #include "errors.h"
 
-
+XL_BEGIN
 
 /* ========================================================================= */
 /*                                                                           */
@@ -40,7 +40,7 @@
 /*                                                                           */
 /* ========================================================================= */
 
-XLOptions::XLOptions():
+Options::Options():
 /*---------------------------------------------------------------------------*/
 /*  Set the default values for all options                                   */
 /*---------------------------------------------------------------------------*/
@@ -106,7 +106,7 @@ static kstring OptionString(kstring &command_line,
         command_line = "";
         return argv[arg];
     }
-    XLError(E_OptNotIntegral, "<cmdline>", arg, command_line);
+    Error(E_OptNotIntegral, "<cmdline>", arg, command_line);
     return "";
 }
 
@@ -125,7 +125,7 @@ static uint OptionInteger(kstring &command_line,
         if (isdigit(*command_line))
             result = strtol(command_line, (char**) &command_line, 10);
         else
-            XLError(E_OptNotIntegral, "<cmdline>", arg, command_line);
+            Error(E_OptNotIntegral, "<cmdline>", arg, command_line);
     }
     else
     {
@@ -133,14 +133,14 @@ static uint OptionInteger(kstring &command_line,
         if (arg  < argc && isdigit(argv[arg][0]))
             result = strtol(old = argv[arg], (char **) &command_line, 10);
         else
-            XLError(E_OptNotIntegral, "<cmdline>", arg, command_line);
+            Error(E_OptNotIntegral, "<cmdline>", arg, command_line);
     }
     if (result < low || result > high)
     {
         char lowstr[15], highstr[15];
         sprintf(lowstr, "%d", low);
         sprintf(highstr, "%d", high);
-        XLError(E_OptValueRange, "<cmdline>", arg, old, lowstr, highstr);
+        Error(E_OptValueRange, "<cmdline>", arg, old, lowstr, highstr);
         if (result < low)
             result = low;
         else
@@ -150,7 +150,7 @@ static uint OptionInteger(kstring &command_line,
 }
 
 
-text XLOptions::Parse(int argc, char **argv)
+text Options::Parse(int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Start parsing options, return first non-option
 // ----------------------------------------------------------------------------
@@ -158,7 +158,7 @@ text XLOptions::Parse(int argc, char **argv)
     this->arg = 1;
     this->argc = argc;
     this->argv = argv;
-    if (cstring envopt = getenv("XLOPTIONS"))
+    if (cstring envopt = getenv("OPTIONS"))
     {
         this->argv[0] = envopt;
         this->arg = 0;
@@ -167,7 +167,7 @@ text XLOptions::Parse(int argc, char **argv)
 }
 
 
-text XLOptions::ParseNext()
+text Options::ParseNext()
 // ----------------------------------------------------------------------------
 //   Parse the command line, looking for known options, return first unknown
 // ----------------------------------------------------------------------------
@@ -186,13 +186,13 @@ text XLOptions::ParseNext()
                 code;                                                   \
                                                                         \
                 if (*argval)                                            \
-                    XLError(E_OptGarbage, "<cmdline>", arg, argval);    \
+                    Error(E_OptGarbage, "<cmdline>", arg, argval);    \
             }                                                           \
             else
 #if XL_DEBUG
 #define TRACE(name)                                 \
             if (OptionMatches(argval, "t" #name))   \
-                xl_traces |= 1 << XL_TRACE_##name;  \
+                xl_traces |= 1 << XL::TRACE_##name; \
             else
 #else
 #define TRACE(name)
@@ -202,7 +202,7 @@ text XLOptions::ParseNext()
 #include "options.tbl"
             {
                 // Default: Output usage
-                XLError(E_OptInvalid, "<cmdline>", arg, argval);
+                Error(E_OptInvalid, "<cmdline>", arg, argval);
                 Usage(argv);
             }
             arg++;
@@ -216,13 +216,16 @@ text XLOptions::ParseNext()
 }
 
 
-XLOptions gOptions;
+Options command_line_options;
 /*---------------------------------------------------------------------------*/
 /*  The global options used by all parts of the compiler                     */
 /*---------------------------------------------------------------------------*/
+
+XL_END
 
 
 ulong xl_traces = 0;
 // ----------------------------------------------------------------------------
 //   Bits for each trace
 // ----------------------------------------------------------------------------
+

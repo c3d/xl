@@ -31,6 +31,7 @@
 #include "syntax.h"
 
 
+XL_BEGIN
 
 // ============================================================================
 // 
@@ -76,25 +77,25 @@ private:
 // 
 // ============================================================================
 
-XLScanner::XLScanner(kstring name, XLSyntax *stx)
+Scanner::Scanner(kstring name, Syntax &stx)
 // ----------------------------------------------------------------------------
 //   XLScanner constructor opens the file
 // ----------------------------------------------------------------------------
     : syntax(stx),
-    fileName(name), fileLine(1),
-    file(NULL),
-    tokenText(""),
-    stringValue(""), realValue(0.0), intValue(0),
-    indents(), indent(0), indentChar(0), column(0), checkingIndent(false)
+      fileName(name), fileLine(1),
+      file(NULL),
+      tokenText(""),
+      textValue(""), realValue(0.0), intValue(0),
+      indents(), indent(0), indentChar(0), column(0), checkingIndent(false)
 {
     file = fopen(name, "r");
     indents.push_back(0);       // We start with an indent of 0
     if (!file)
-        XLError(E_ScanNoFile, name, 1, name, strerror(errno));
+        Error(E_ScanNoFile, name, 1, name, strerror(errno));
 }
 
 
-XLScanner::~XLScanner()
+Scanner::~Scanner()
 // ----------------------------------------------------------------------------
 //   XLScanner destructor closes the file
 // ----------------------------------------------------------------------------
@@ -107,7 +108,7 @@ XLScanner::~XLScanner()
 #define NEXT_CHAR(c)                            \
 do {                                            \
     tokenText += c;                             \
-    stringValue += c;                           \
+    textValue += c;                           \
     c = fgetc(file);                            \
 } while(0)
 
@@ -115,7 +116,7 @@ do {                                            \
 #define NEXT_LOWER_CHAR(c)                      \
 do {                                            \
     tokenText += c;                             \
-    stringValue += tolower(c);                  \
+    textValue += tolower(c);                  \
     c = fgetc(file);                            \
 } while(0)
 
@@ -127,12 +128,12 @@ do {                                            \
 } while (0)
 
 
-token_t XLScanner::NextToken()
+token_t Scanner::NextToken()
 // ----------------------------------------------------------------------------
 //   Return the next token, and compute the token text and value
 // ----------------------------------------------------------------------------
 {
-    stringValue = "";
+    textValue = "";
     tokenText = "";
     intValue = 0;
     realValue = 0.0;
@@ -171,7 +172,7 @@ token_t XLScanner::NextToken()
                 if (!indentChar)
                     indentChar = c;
                 else if (indentChar != c)
-                    XLError(E_ScanMixedIndent, fileName, fileLine);
+                    Error(E_ScanMixedIndent, fileName, fileLine);
                 column += 1;
             }
         }
@@ -203,7 +204,7 @@ token_t XLScanner::NextToken()
             // most recent indent, report inconsistency.
             if (indents.back() < column)
             {
-                XLError(E_ScanInconsistent, fileName, fileLine);
+                Error(E_ScanInconsistent, fileName, fileLine);
                 return tokERROR;
             }
             
@@ -243,7 +244,7 @@ token_t XLScanner::NextToken()
                 {
                     IGNORE_CHAR(c);
                     if (c == '_')
-                        XLError(E_ScanDoubleUnder, fileName, fileLine);
+                        Error(E_ScanDoubleUnder, fileName, fileLine);
                 }
             }
             
@@ -254,7 +255,7 @@ token_t XLScanner::NextToken()
                 if (base < 2 || base > 36)
                 {
                     base = 36;
-                    XLError(E_ScanInvalidBase, fileName, fileLine);
+                    Error(E_ScanInvalidBase, fileName, fileLine);
                 }
                 NEXT_CHAR(c);
                 intValue = 0;
@@ -281,7 +282,7 @@ token_t XLScanner::NextToken()
             else
             {
                 tokenText += '.';
-                stringValue += '.';
+                textValue += '.';
                 floating_point = true;
 
                 double comma_position = 1.0;
@@ -294,7 +295,7 @@ token_t XLScanner::NextToken()
                     {
                         IGNORE_CHAR(c);
                         if (c == '_')
-                            XLError(E_ScanDoubleUnder, fileName, fileLine);
+                            Error(E_ScanDoubleUnder, fileName, fileLine);
                     }
                 }
             }
@@ -368,12 +369,12 @@ token_t XLScanner::NextToken()
                 NEXT_LOWER_CHAR(c);
         }
         ungetc(c, file);
-        if (syntax->IsBlock(stringValue, endMarker))
+        if (syntax.IsBlock(textValue, endMarker))
             return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
         return tokNAME;
     }
     
-    // Look for strings
+    // Look for texts
     else if (c == '"' || c == '\'')
     {
         char eos = c;
@@ -381,7 +382,7 @@ token_t XLScanner::NextToken()
         c = fgetc(file);
         for(;;)
         {
-            // Check end of string
+            // Check end of text
             if (c == eos)
             {
                 IGNORE_CHAR(c);
@@ -395,7 +396,7 @@ token_t XLScanner::NextToken()
             }
             if (c == EOF || c == '\n')
             {
-                XLError(E_ScanStringEOL, fileName, fileLine);
+                Error(E_ScanTextEOL, fileName, fileLine);
                 return tokERROR;
             }
             NEXT_CHAR(c);
@@ -403,9 +404,9 @@ token_t XLScanner::NextToken()
     }
 
     // Look for single-char block delimiters (parentheses, etc)
-    if (syntax->IsBlock(c, endMarker))
+    if (syntax.IsBlock(c, endMarker))
     {
-        stringValue = c;
+        textValue = c;
         tokenText = c;
         return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
     }
@@ -413,16 +414,16 @@ token_t XLScanner::NextToken()
     // Look for other symbols
     while (ispunct(c) &&
            c != '\'' && c != '"' && c != EOF &&
-           !syntax->IsBlock(c, endMarker))
+           !syntax.IsBlock(c, endMarker))
         NEXT_CHAR(c);
     ungetc(c, file);
-    if (syntax->IsBlock(stringValue, endMarker))
+    if (syntax.IsBlock(textValue, endMarker))
         return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
     return tokSYMBOL;
 }
 
 
-text XLScanner::Comment(text EOC)
+text Scanner::Comment(text EOC)
 // ----------------------------------------------------------------------------
 //   Keep adding characters until end of comment is found (and consumed)
 // ----------------------------------------------------------------------------
@@ -461,3 +462,5 @@ text XLScanner::Comment(text EOC)
     // Returned comment includes termination
     return comment;
 }
+
+XL_END

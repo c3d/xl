@@ -36,7 +36,7 @@
   The four leaf types are:
   - Integer numbers such as 130 or 16#FE
   - Real numbers such as 0.1 or 10.4E-31
-  - String/quotes such as "Hello" or 'ABC'
+  - Text such as "Hello" or 'ABC'
   - Name/symbols such as ABC or --->
 
   High-level program structure is also represented by these same nodes:
@@ -75,17 +75,7 @@
 #include "scanner.h"
 #include "syntax.h"
 
-
-// ============================================================================
-// 
-//    Indentation markers (for block definition purpose)
-// 
-// ============================================================================
-
-#define INDENT_MARKER     "I+"
-#define UNINDENT_MARKER   "I-"
-
-
+XL_BEGIN
 
 // ============================================================================
 // 
@@ -93,23 +83,24 @@
 // 
 // ============================================================================
 
-class XLParser
+class Parser
 // ----------------------------------------------------------------------------
 //   This parses an input file and returns a parse tree
 // ----------------------------------------------------------------------------
 {
 public:
-    XLParser(kstring name, XLSyntax *stx):
+    Parser(kstring name, Syntax &stx):
         scanner(name, stx), syntax(stx) {}
 
 public:
-    XLTree *            Parse(text closing_paren = "");
-    XLScanner *         Scanner() { return &scanner; }
+    Tree *            Parse(text closing_paren = "");
+    Scanner *         ParserScanner() { return &scanner; }
 
 private:
-    XLScanner           scanner;
-    XLSyntax *          syntax;
+    Scanner           scanner;
+    Syntax &          syntax;
 };
 
+XL_END
 
 #endif // PARSER_H

@@ -26,34 +26,74 @@
 // ****************************************************************************
 
 #include <map>
+#include <set>
+#include <vector>
 #include "base.h"
 
-struct XLTree;
-class XLContext;
+XL_BEGIN
 
-typedef std::map<text, XLTree *>        symbol_table;
+struct Tree;
+struct Context;
 
-class XLContext
+typedef std::map<text, Tree *>  symbol_table;
+typedef std::vector<Tree *>     evaluation_stack;
+typedef std::set<Tree *>        active_set;
+
+
+struct Context
 // ----------------------------------------------------------------------------
 //   This is the execution context in which we evaluate trees
 // ----------------------------------------------------------------------------
 {
-public:
-    XLContext(): parent(NULL) {}
-    XLContext(XLContext *p): parent(p) {}
+    // Constructors and destructors
+    Context():
+        parent(NULL), gc_threshold(200), error_handler(NULL) {}
+    Context(Context *p):
+        parent(p), gc_threshold(200), error_handler(NULL) {}
 
-public:
-    XLContext *         Parent() { return parent; }
+    // Context properties
+    Context *           Parent()                { return parent; }
+    Tree *              ErrorHandler();
+    void                SetErrorHandler(Tree *e) { error_handler = e; }
     
-    // Symbol table for values
-    void                Enter(text name, XLTree *v) { symbols[name] = v; }
-    XLTree *            Symbol(text name) { return symbols[name]; }
-    XLTree *            Find(text name);
+    // Garbage collection
+    void                Root(Tree *t)           { roots.insert(t); }
+    void                Mark(Tree *t)            { active.insert(t); }
+    void                CollectGarbage();
 
+    // Evaluation of trees
+    Tree *              Run (Tree *what);
+    Tree *              Error (text message, Tree *args = NULL);
+    uint                Push (Tree *tos);
+    Tree *              Pop(void);
+    Tree *              Peek(uint depth = 1);
+    uint                Depth(void)             { return stack.size(); }
+
+    // Symbol management
+    Tree *              Name (text name, bool deep = true);
+    Tree *              Infix (text name, bool deep = true);
+    Tree *              Prefix (text name, bool deep = true);
+    Tree *              Postfix (text name, bool deep = true);
+    Tree *              Block (text opening, bool deep = true);
+
+public:
+    static ulong        gc_increment;
+    static ulong        gc_growth_percent;
 
 private:
-    XLContext *         parent;
-    symbol_table        symbols;
+    Context *           parent;
+    symbol_table        name_symbols;
+    symbol_table        infix_symbols;
+    symbol_table        prefix_symbols;
+    symbol_table        postfix_symbols;
+    symbol_table        block_symbols;
+    active_set          active;
+    active_set          roots;
+    evaluation_stack    stack;
+    ulong               gc_threshold;
+    Tree *              error_handler;
 };
+
+XL_END
 
 #endif // CONTEXT_H

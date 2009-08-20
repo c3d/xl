@@ -37,7 +37,7 @@ ScanMixedIndent Indentation with both tabs and spaces in the same file
 ScanInconsistent Unindenting to the right of previous indentation
 ScanDoubleUnder Two underscore characters in a row
 ScanInvalidBase Invalid based number (the base must be between 2 and 36)
-ScanStringEOL   End of line found in the middle of a string
+ScanTextEOL     End of line found in the middle of text
 
 ParseMismatchParen Mismatched parentheses: Got $1, expected $2
 ParseTrailingOp Trailing '$1' operator ignored

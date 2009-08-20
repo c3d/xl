@@ -24,14 +24,18 @@
 // ****************************************************************************
 
 #include "syntax.h"
+#include "scanner.h"
+#include "tree.h"
+
+XL_BEGIN
 
 // ============================================================================
 // 
-//    XLSyntax class: Syntax used to parse trees
+//    Syntax used to parse trees
 // 
 // ============================================================================
 
-int XLSyntax::InfixPriority(text n)
+int Syntax::InfixPriority(text n)
 // ----------------------------------------------------------------------------
 //   Return infix priority, which is either this or parent's
 // ----------------------------------------------------------------------------
@@ -46,7 +50,7 @@ int XLSyntax::InfixPriority(text n)
 }
 
 
-void XLSyntax::SetInfixPriority(text n, int p)
+void Syntax::SetInfixPriority(text n, int p)
 // ----------------------------------------------------------------------------
 //   Define the priority for a given infix operator
 // ----------------------------------------------------------------------------
@@ -56,7 +60,7 @@ void XLSyntax::SetInfixPriority(text n, int p)
 }
 
 
-int XLSyntax::PrefixPriority(text n)
+int Syntax::PrefixPriority(text n)
 // ----------------------------------------------------------------------------
 //   Return prefix priority, which is either this or parent's
 // ----------------------------------------------------------------------------
@@ -71,7 +75,7 @@ int XLSyntax::PrefixPriority(text n)
 }
 
 
-void XLSyntax::SetPrefixPriority(text n, int p)
+void Syntax::SetPrefixPriority(text n, int p)
 // ----------------------------------------------------------------------------
 //   Define the priority for a given prefix operator
 // ----------------------------------------------------------------------------
@@ -81,13 +85,40 @@ void XLSyntax::SetPrefixPriority(text n, int p)
 }
 
 
-bool XLSyntax::IsComment(text Begin, text &End)
+void Syntax::CommentDelimiter(text Begin, text End)
+// ----------------------------------------------------------------------------
+//   Define comment syntax
+// ----------------------------------------------------------------------------
+{
+    comment_delimiters[Begin] = End;
+}
+
+
+void Syntax::TextDelimiter(text Begin, text End)
+// ----------------------------------------------------------------------------
+//   Define comment syntax
+// ----------------------------------------------------------------------------
+{
+    text_delimiters[Begin] = End;
+}
+
+
+void Syntax::BlockDelimiter(text Begin, text End)
+// ----------------------------------------------------------------------------
+//   Define comment syntax
+// ----------------------------------------------------------------------------
+{
+    block_delimiters[Begin] = End;
+}
+
+
+bool Syntax::IsComment(text Begin, text &End)
 // ----------------------------------------------------------------------------
 //   Check if something is in the comments table
 // ----------------------------------------------------------------------------
 {
-    comment_table::iterator found = comments.find(Begin);
-    if (found != comments.end())
+    delimiter_table::iterator found = comment_delimiters.find(Begin);
+    if (found != comment_delimiters.end())
     {
         End = found->second;
         return true;
@@ -96,12 +127,12 @@ bool XLSyntax::IsComment(text Begin, text &End)
 }
 
 
-bool XLSyntax::IsTextDelimiter(text Begin, text &End)
+bool Syntax::IsTextDelimiter(text Begin, text &End)
 // ----------------------------------------------------------------------------
 //    Check if something is in the text delimiters table
 // ----------------------------------------------------------------------------
 {
-    comment_table::iterator found = text_delimiters.find(Begin);
+    delimiter_table::iterator found = text_delimiters.find(Begin);
     if (found != text_delimiters.end())
     {
         End = found->second;
@@ -111,16 +142,138 @@ bool XLSyntax::IsTextDelimiter(text Begin, text &End)
 }
 
 
-bool XLSyntax::IsBlock(text Begin, text &End)
+bool Syntax::IsBlock(text Begin, text &End)
 // ----------------------------------------------------------------------------
 //   Return true if we are looking at a block
 // ----------------------------------------------------------------------------
 {
-    block_table::iterator found = blocks.find(Begin);
-    if (found != blocks.end())
+    delimiter_table::iterator found = block_delimiters.find(Begin);
+    if (found != block_delimiters.end())
     {
         End = found->second;
         return true;
     }
     return false;
 }
+
+
+bool Syntax::IsBlock(char Begin, text &End)
+// ----------------------------------------------------------------------------
+//   Return true if we are looking at a block
+// ----------------------------------------------------------------------------
+{
+    return IsBlock(text(&Begin, 1), End);
+}
+
+
+void Syntax::ReadSyntaxFile(kstring filename)
+// ----------------------------------------------------------------------------
+//   Parse the syntax description table
+// ----------------------------------------------------------------------------
+{
+    enum State
+    {
+        inUnknown, inPrefix, inInfix, inPostfix,
+        inComment, inCommentDef,
+        inText, inTextDef,
+        inBlock, inBlockDef
+    };
+
+    State       state = inUnknown;
+    text        txt, entry;
+    token_t     tok;
+    int         priority;
+    Syntax      baseSyntax;
+    Scanner     scanner(filename, baseSyntax);
+
+    while(tok != tokEOF)
+    {
+        tok = scanner.NextToken();
+        switch(tok)
+        {
+        case tokEOF:
+            break;
+        case tokINTEGER:
+            priority = scanner.IntegerValue();
+            break;
+        case tokNAME:
+        case tokSYMBOL:
+        case tokSTRING:
+            txt = scanner.TextValue();
+
+            if (txt == "NEWLINE")
+                txt = "\n";
+            else if (txt == "INDENT")
+                txt = Block(NULL).Opening();
+            else if (txt == "UNINDENT")
+                txt = Block(NULL).Closing();
+
+            else if (txt == "INFIX")
+                state = inInfix;
+            else if (txt == "PREFIX")
+                state = inPrefix;
+            else if (txt == "POSTFIX")
+                state = inPostfix;
+            else if (txt == "BLOCK")
+                state = inBlock;
+            else if (txt == "COMMENT")
+                state = inComment;
+            else if (txt == "TEXT")
+                state = inText;
+
+            else if (txt == "STATEMENT")
+                statement_priority = priority;
+            else if (txt == "FUNCTION")
+                function_priority = priority;
+            else if (txt == "DEFAULT")
+                default_priority = priority;
+
+            else switch(state)
+            {
+            case inUnknown:
+                break;
+            case inPrefix:
+                prefix_priority[txt] = priority;
+                break;
+            case inPostfix:
+                postfix_priority[txt] = priority;
+                break;
+            case inInfix:
+                infix_priority[txt] = priority;
+                break;
+            case inComment:
+                entry = txt;
+                state = inCommentDef;
+                break;
+            case inCommentDef:
+                comment_delimiters[entry] = txt;
+                state = inComment;
+                break;
+            case inText:
+                entry = txt;
+                state = inTextDef;
+                break;
+            case inTextDef:
+                text_delimiters[entry] = txt;
+                state = inText;
+                break;
+            case inBlock:
+                entry = txt;
+                state = inBlockDef;
+                infix_priority[entry] = priority;
+                break;
+            case inBlockDef:
+                block_delimiters[entry] = txt;
+                block_delimiters[txt] = "";
+                infix_priority[txt] = priority;
+                state = inBlock;
+                break;
+            }
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+XL_END

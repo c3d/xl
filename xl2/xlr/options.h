@@ -28,28 +28,29 @@
 #include <string>
 #include "base.h"
 
+XL_BEGIN
 
-enum XlTrace
+enum Trace
 // ----------------------------------------------------------------------------
 //   List the traces known to the compiler
 // ----------------------------------------------------------------------------
 {
-    XL_TRACE_none = 0,
+    TRACE_none = 0,
 #define OPTVAR(name, type, value)
 #define OPTION(name, descr, code)
-#define TRACE(name)     XL_TRACE_##name,
+#define TRACE(name)     TRACE_##name,
 #include "options.tbl"
-    XL_TRACE_last
+    TRACE_last
 };
 
 
-class XLOptions
+class Options
 /*---------------------------------------------------------------------------*/
 /*  Class holding options for the compiler                                   */
 /*---------------------------------------------------------------------------*/
 {
   public:
-    XLOptions();
+    Options();
     text                Parse(int argc, char **argv);
     text                ParseNext();
 
@@ -69,12 +70,11 @@ class XLOptions
 };
 
 
-
-
-extern XLOptions gOptions;
+extern Options command_line_options;
 /*---------------------------------------------------------------------------*/
 /*  The options referred to in the whole compiler                            */
 /*---------------------------------------------------------------------------*/
 
+XL_END
 
 #endif /* XL_OPTIONS_H */

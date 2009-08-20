@@ -29,7 +29,7 @@
 
   - Integer or real numbers, beginning with a digit
   - Names, beginning with a letter
-  - Strings, enclosed in single or double quotes
+  - Text, enclosed in single or double quotes
   - Symbols, formed by consecutive sequences of punctuation characters
   - Blanks and line separators
 
@@ -53,12 +53,12 @@
   Names are not case-sensitive nor underscore-sensitive: Joe_Dalton=JOEDALTON
 
 
-  STRINGS:
+  TEXT:
 
-  Strings begin with a single or double quote, and terminate with the same
-  quote used to begin them. They cannot contain a line termination.
-  A quote character can be embedded in a string by doubling it.
-  "ABC" and 'def ghi' are examples of valid strings.
+  Text begins with a single or double quote, and terminate with the same
+  quote used to begin them. It cannot contain a line termination.
+  A quote character can be embedded in text by doubling it.
+  "ABC" and 'def ghi' are examples of valid text.
 
 
   SYMBOLS:
@@ -97,8 +97,9 @@
 #include <vector>
 #include "base.h"
 
+XL_BEGIN
 
-class XLSyntax;
+class Syntax;
 
 enum token_t
 // ----------------------------------------------------------------------------
@@ -128,14 +129,14 @@ enum token_t
 typedef std::vector<uint> indent_list;
 
 
-class XLScanner
+class Scanner
 // ----------------------------------------------------------------------------
 //   Interface for invoking the scanner
 // ----------------------------------------------------------------------------
 {
 public:
-    XLScanner(kstring fileName, XLSyntax *stx);
-    ~XLScanner();
+    Scanner(kstring fileName, Syntax &stx);
+    ~Scanner();
     
 public:
     // Scanning
@@ -144,8 +145,8 @@ public:
     
     // Access to scanned data
     text        TokenText()     { return tokenText; }
-    text        NameValue()     { return stringValue; }
-    text        StringValue()   { return stringValue; }
+    text        NameValue()     { return textValue; }
+    text        TextValue()     { return textValue; }
     double      RealValue()     { return realValue; }
     ulong       IntegerValue()  { return intValue; }
     uint        Base()          { return base; }
@@ -156,12 +157,12 @@ public:
     ulong       FileLine()      { return fileLine; }
     
 private:
-    XLSyntax *  syntax;
+    Syntax &    syntax;
     text        fileName;
     ulong       fileLine;
     FILE *      file;
     text        tokenText;
-    text        stringValue;
+    text        textValue;
     double      realValue;
     ulong       intValue;
     uint        base;
@@ -172,5 +173,7 @@ private:
     bool        checkingIndent;
     text        endMarker;
 };
+
+XL_END
 
 #endif // SCANNER_H

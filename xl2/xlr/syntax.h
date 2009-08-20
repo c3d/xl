@@ -24,21 +24,21 @@
 #include <map>
 #include "base.h"
 
-struct XLTree;
+XL_BEGIN
+
+struct Tree;
 
 typedef std::map<text, int>             priority_table;
-typedef std::map<text, text>            comment_table;
-typedef std::map<text, text>            text_delimiters_table;
-typedef std::map<text, text>            block_table;
+typedef std::map<text, text>            delimiter_table;
 
 
-class XLSyntax
+class Syntax
 // ----------------------------------------------------------------------------
 //   This is the execution environment for all trees
 // ----------------------------------------------------------------------------
 {
 public:
-    XLSyntax():
+    Syntax():
         priority(0), default_priority(0),
         statement_priority(100), function_priority(200) {}
 
@@ -49,56 +49,26 @@ public:
     int                 PrefixPriority(text n);
     void                SetPrefixPriority(text n, int p);
 
-    // Convenience notation to define priorities
-    XLSyntax &         operator / (kstring opname)
-    {
-        SetInfixPriority(opname, priority);
-        return *this;
-    }
-    XLSyntax &         operator / (int prio)
-    {
-        priority = prio;
-        return *this;
-    }
-    XLSyntax &         operator | (kstring opname)
-    {
-        SetPrefixPriority(opname, priority);
-        return *this;
-    }
-    XLSyntax &         operator | (int prio)
-    {
-        priority = prio;
-        return *this;
-    }
-    XLSyntax &         Comment(text Begin, text End)
-    {
-        comments[Begin] = End;
-        return *this;
-    }
-    XLSyntax &         TextDelimiter(text Begin, text End)
-    {
-        text_delimiters[Begin] = End;
-        return *this;
-    }
+    // Read a complete syntax file (xl.syntax)
+    void                ReadSyntaxFile (kstring filename);
+
+    // Defining delimiters
+    void                CommentDelimiter(text Begin, text End);
+    void                TextDelimiter(text Begin, text End);
+    void                BlockDelimiter(text Begin, text End);
+
     bool                IsComment(text Begin, text &end);
     bool                IsTextDelimiter(text Begin, text &end);
-    XLSyntax &         Block(text Begin, text End)
-    {
-        blocks[Begin] = End;
-        return *this;
-    }
     bool                IsBlock(text Begin, text &end);
-    bool                IsBlock(char Begin, text &end)
-    {
-        return IsBlock(text(&Begin, 1), end);
-    }
+    bool                IsBlock(char Begin, text &end);
 
 private:
     priority_table      infix_priority;
     priority_table      prefix_priority;
-    comment_table       comments;
-    text_delimiters_table text_delimiters;
-    block_table         blocks;
+    priority_table      postfix_priority;
+    delimiter_table     comment_delimiters;
+    delimiter_table     text_delimiters;
+    delimiter_table     block_delimiters;
     int                 priority;
 
 public:
@@ -107,6 +77,6 @@ public:
     int                 function_priority;
 };
 
-
+XL_END
 
 #endif // SYNTAX_H

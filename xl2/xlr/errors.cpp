@@ -27,7 +27,7 @@
 #include "errors.h"
 #include "options.h"
 
-
+XL_BEGIN
 
 // ============================================================================
 // 
@@ -45,9 +45,9 @@ kstring ErrorMessages[E_LAST] =
 };
 
 
-void XLError(XLErrorNumber err, text file, uint line,
-             XLErrorArguments args = XLErrorArguments(),
-             XLErrorSeverity severity = severityError)
+void Error(ErrorNumber err, text file, uint line,
+           ErrorArguments args = ErrorArguments(),
+           ErrorSeverity severity = severityError)
 // ----------------------------------------------------------------------------
 //   Emit an error message
 // ----------------------------------------------------------------------------
@@ -64,6 +64,8 @@ void XLError(XLErrorNumber err, text file, uint line,
     }
     fprintf(stderr, "%s:%d: %s\n", file.c_str(), line, errMsg.c_str());
 }
+
+XL_END
 
 
 void xl_assert_failed(kstring msg, kstring file, uint line)
