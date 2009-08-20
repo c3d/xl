@@ -94,8 +94,10 @@ module XL.PLUGIN.XL2C is
                 if FnArgs <> nil then
                     if FnPtrCnt = 0 then
                         if TyName = nil then
-                            return parse_tree(procedure 'namt' ('FnArgs'))
-                        return parse_tree(function 'namt' ('FnArgs') return 'TyName')
+                            return parse_tree
+                                procedure 'namt' ('FnArgs') is C.'namt'
+                        return parse_tree
+                          function 'namt'('FnArgs') return 'TyName' is C.'namt'
                     if TyName = nil then
                         TyName := parse_tree(procedure('FnArgs'))
                     else
@@ -230,9 +232,7 @@ module XL.PLUGIN.XL2C is
             when ('A1', 'A2') then
                 A1 := ConvertArgs(A1)
                 A2 := ConvertArgs(A2)
-                return parse_tree
-                    'A1'
-                    'A2'
+                return parse_tree ('A1';'A2')
             when (void) then
                 return PT.NewName("", Args.position)
 
