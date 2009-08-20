@@ -24,6 +24,7 @@
 // ****************************************************************************
 
 #include <sstream>
+#include <typeinfo>
 #include "tree.h"
 #include "context.h"
 #include "renderer.h"
@@ -509,6 +510,15 @@ Tree *Native::Run(Context *context)
 // ----------------------------------------------------------------------------
 {
     return context->Error("Uknown native operation '$1'", this);
+}
+
+
+text Native::Name()
+// ----------------------------------------------------------------------------
+//   The name of a native tree is its type
+// ----------------------------------------------------------------------------
+{
+    return typeid(*this).name();
 }
 
 

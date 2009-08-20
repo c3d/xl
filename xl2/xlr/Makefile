@@ -35,7 +35,8 @@ SOURCES     =					\
 	parser.cpp				\
 	renderer.cpp				\
 	options.cpp				\
-	errors.cpp
+	errors.cpp				\
+	basics.cpp
 
 PRODUCT=xlr$(EXE)
 

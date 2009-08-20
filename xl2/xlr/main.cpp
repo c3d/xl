@@ -37,6 +37,7 @@
 #include "tree.h"
 #include "context.h"
 #include "options.h"
+#include "basics.h"
 
 
 int main(int argc, char **argv)
@@ -65,6 +66,9 @@ int main(int argc, char **argv)
     // Initialize basic rendering engine
     XL::Renderer::renderer = &renderer;
     XL::Context::context = &context;
+
+    // Initialize basics
+    XL::EnterBasics(&context);
 
     XL::command_line_options = &options;
     for (cmd = options.Parse(argc, argv);
