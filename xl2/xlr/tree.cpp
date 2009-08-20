@@ -83,17 +83,11 @@ void XLPrefix::Output(ostream &o)
 {
     if (outputDebug)
     {
-        if (left->Kind() == xlBLOCK)
-            o << '[' << *left << *right << ']';
-        else
-            o << '[' << *left<<' '<< *right << ']';
+        o << '[' << *left << *right << ']';
     }
     else
     {
-        if (left->Kind() == xlBLOCK)
-            o << *left << *right;
-        else
-            o << *left<<' '<< *right;
+        o << *left << *right;
     }
 }
 
@@ -110,9 +104,8 @@ void XLInfix::Output(ostream &o)
         o << *left;
         XLTree *tail = right;
         text op;
-        while (tail->Kind() == xlINFIX)
+        while (XLInfix *infix = dynamic_cast<XLInfix *>(tail))
         {
-            XLInfix *infix = (XLInfix *) tail;
             if (infix->name != seq)
                 break;
             o << nl_indent << *infix->left;

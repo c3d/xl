@@ -429,7 +429,7 @@ XLTree *XLParser::Parse(text closing_paren)
             }
 
             // Check if new statement
-            if (right->Kind() != xlBLOCK)
+            if (dynamic_cast<XLBlock *> (right) == NULL)
                 if (stack.size() == 0 || stack.back().priority<statement_priority)
                     result_priority = statement_priority;
 

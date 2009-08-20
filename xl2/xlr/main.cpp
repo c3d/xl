@@ -36,7 +36,7 @@
 #include "options.h"
 
 
-struct XLInitializeContext : XLAction
+struct XLInitializeContext 
 // ----------------------------------------------------------------------------
 //   For debugging: emit the things of interest
 // ----------------------------------------------------------------------------
@@ -185,8 +185,8 @@ void ReadContext(kstring file, XLContext &context)
     // At first, I thought it was elegant.
     // In reality, it is darn ugly. But hey, it's just throwaway code
     XLInitializeContext init(context);
-    XLDo<XLInitializeContext> doInit(init);
-    doInit(tree);
+    // XLDo<XLInitializeContext> doInit(init);
+    // doInit(tree);
 
     // Cheat grossly, now that the C++ parser behaves differently from the
     // XL versions with respect to block priority...
