@@ -50,7 +50,6 @@ struct Infix;                                   // Infix: A+B, newline
 struct Block;                                   // Block: (A), {A}
 struct Native;                                  // Some native code
 struct Action;                                  // Action on trees
-struct DataAction;                              // Action including data
 typedef ulong tree_position;                    // Position in context
 typedef std::map<text, Tree *> tree_data;       // Data associated to tree
 typedef std::vector<Tree *> tree_list;          // A list of trees
@@ -322,6 +321,8 @@ struct Infix : Tree
     }
     virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context);
+    Tree *              Left();
+    Tree *              Right();
     text                name;
     tree_list           list;
 };

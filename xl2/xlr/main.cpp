@@ -52,6 +52,7 @@ int main(int argc, char **argv)
     XL::Errors errors(&positions);
     XL::Options options(errors);
     XL::Context context(errors);
+    XL::Renderer renderer(std::cout, "xl.stylesheet", syntax);
     text cmd, end = "";
 
     // Make sure debug function is linked in...
@@ -60,6 +61,9 @@ int main(int argc, char **argv)
 
     // Initialize basic XL syntax from syntax description file
     syntax.ReadSyntaxFile("xl.syntax");
+
+    // Initialize basic rendering engine
+    XL::Renderer::defaultRenderer = &renderer;
 
     XL::command_line_options = &options;
     for (cmd = options.Parse(argc, argv);

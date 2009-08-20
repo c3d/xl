@@ -24,10 +24,90 @@
 // ****************************************************************************
 
 #include "renderer.h"
+#include "parser.h"
+#include "tree.h"
+#include "syntax.h"
+#include "errors.h"
 #include <iostream>
 #include <cctype>
 
 XL_BEGIN
+
+struct EnterFormatsAction : Action
+// ----------------------------------------------------------------------------
+//   Enter formats in a format table
+// ----------------------------------------------------------------------------
+{
+    EnterFormatsAction (formats_table &fmt): formats(fmt) {}
+
+    Tree *Do (Tree *what)                       { return what; }
+    Tree *DoInfix(Infix *what)
+    {
+        static Block block(NULL);
+        if (what->name == "=")
+        {
+            if (Name *nmt = dynamic_cast<Name *> (what->Left()))
+            {
+                text N = nmt->value;
+                if (N == "cr")                  N = "\n";
+                else if (N == "tab")            N = "\t";
+                else if (N == "space")          N = " ";
+                else if (N == "indent")         N = block.Opening();
+                else if (N == "unindent")       N = block.Closing();
+                else                            N += " ";
+                formats[N] = what->Right();
+                return what;
+            }
+            else if (Text *txt = dynamic_cast<Text *> (what->Left()))
+            {
+                formats[txt->value] = what->Right();
+                return what;
+            }
+        }
+        return Action::DoInfix(what);
+    }
+
+    formats_table &     formats;
+};
+
+
+
+Renderer::Renderer(std::ostream &out, text styleFile, Syntax &stx, uint ts)
+// ----------------------------------------------------------------------------
+//   Renderer constructor
+// ----------------------------------------------------------------------------
+    : Action(), output(out), syntax(stx),
+      indent(0), tabsize(ts), need_space("")
+{
+    Syntax defaultSyntax;
+    Positions positions;
+    Errors errors(&positions);
+    defaultSyntax.ReadSyntaxFile("xl.syntax");
+    Parser p(styleFile.c_str(), defaultSyntax, positions, errors);
+    static Block block(NULL);
+
+    // Some defaults
+    formats[block.Opening()] = new Name("indent");
+    formats[block.Closing()] = new Name("unindent");
+
+    Tree *fmts = p.Parse();
+    if (fmts)
+    {
+        EnterFormatsAction action(formats);
+        fmts->Do(&action);
+    }
+}
+
+
+Renderer::Renderer(std::ostream &out, Renderer *from)
+// ----------------------------------------------------------------------------
+//   Clone a renderer from some existing one
+// ----------------------------------------------------------------------------
+    : Action(), output(out), syntax(from->syntax), formats(from->formats),
+      indent(0), tabsize(from->tabsize), need_space("")
+{
+}
+
 
 void Renderer::Indent(text t)
 // ----------------------------------------------------------------------------
@@ -197,20 +277,23 @@ Tree *Renderer::DoNative(Native *what)
 }
 
 
-void Renderer::Render(std::ostream &out, Tree *t)
-// ----------------------------------------------------------------------------
-//   Render a tree
-// ----------------------------------------------------------------------------
-{
-    Renderer renderer(out);
-    if (t)
-        t->Do(&renderer);
-    else
-        out << "NULL";
-}
+Renderer *Renderer::defaultRenderer = NULL;
 
 
 XL_END
+
+std::ostream& operator<< (std::ostream &out, XL::Tree *t)
+// ----------------------------------------------------------------------------
+//   Just in case you want to emit a tree using normal ostream interface
+// ----------------------------------------------------------------------------
+{
+    XL::Renderer r(out);
+    if (t)
+        t->Do(&r);
+    else
+        out << "NULL";
+    return out;
+}
 
 void debug(XL::Tree *tree)
 // ----------------------------------------------------------------------------

@@ -31,13 +31,17 @@
 
 XL_BEGIN
 
+class Syntax;
+typedef std::map<text,Tree*>    formats_table;
+
+
 struct Renderer : Action
 // ----------------------------------------------------------------------------
 //   Render a tree to some ostream
 // ----------------------------------------------------------------------------
 {
-    Renderer(std::ostream &out, uint ts = 4):
-        Action(), output(out), indent(0), tabsize(ts), need_space("") {}
+    Renderer(std::ostream &out, text styleFile, Syntax &stx, uint ts = 4);
+    Renderer(std::ostream &out, Renderer *from = defaultRenderer);
 
     virtual Tree *      Do(Tree *what);
     virtual Tree *      DoInteger(Integer *what);
@@ -50,9 +54,12 @@ struct Renderer : Action
     virtual Tree *      DoBlock(Block *what);
     virtual Tree *      DoNative(Native *what);
     void                Indent(text t);
-    static void         Render(std::ostream &out, Tree *t);
+
+    static Renderer *   defaultRenderer;
 
     std::ostream &      output;
+    Syntax &            syntax;
+    formats_table       formats;
     uint                indent;
     uint                tabsize;
     kstring             need_space;
@@ -60,14 +67,7 @@ struct Renderer : Action
 
 XL_END
 
-inline std::ostream& operator<< (std::ostream&out, XL::Tree *t)
-// ----------------------------------------------------------------------------
-//   Just in case you want to emit a tree using normal ostream interface
-// ----------------------------------------------------------------------------
-{
-    XL::Renderer::Render(out, t);
-    return out;
-}
+extern std::ostream& operator<< (std::ostream&out, XL::Tree *t);
 
 // For use in a debugger
 extern "C" void debug(XL::Tree *);
