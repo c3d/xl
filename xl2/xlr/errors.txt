@@ -1,0 +1,43 @@
+# *****************************************************************************
+#   xl_errors.txt                  (C) 1992-2000 Christophe de Dinechin (ddd)  
+#                                                              Mozart Project  
+# *****************************************************************************
+# 
+#   File Description:
+# 
+#     List of errors for the XL compiler
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# *****************************************************************************
+# This document is distributed under the GNU General Public License.
+# See the enclosed COPYING file or http://www.gnu.org for information.
+# *****************************************************************************
+# * File       : $RCSFile$
+# * Revision   : $Revision$
+# * Date       : $Date$
+# *****************************************************************************
+
+NO_ERROR        This is really not an error, but an internal error.
+
+OutOfMemory     Out of memory.
+
+OptNotIntegral  Command line argument '$1' is not integral
+OptValueRange   Command line argument '$1' is not between $2 and $3
+OptInvalid      Uknown option '$1' ignored
+OptGarbage      Garbage '$1' after option
+
+ScanNoFile      Unable to read file '$1': $2
+ScanMixedIndent Indentation with both tabs and spaces in the same file
+ScanInconsistent Unindenting to the right of previous indentation
+ScanDoubleUnder Two underscore characters in a row
+ScanInvalidBase Invalid based number (the base must be between 2 and 36)
+ScanStringEOL   End of line found in the middle of a string
+
+ParseMismatchParen Mismatched parentheses: Got $1, expected $2
+ParseTrailingOp Trailing '$1' operator ignored
