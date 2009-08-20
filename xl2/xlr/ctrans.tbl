@@ -1,0 +1,88 @@
+// ****************************************************************************
+//  ctrans.tbl                      (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     This describes the various operations that can be performed by
+//     the translator when it "recognized" something
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This program is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+// Translation of names and symbols
+NAME(character, char)
+NAME(integer, int)
+NAME(real, double)
+NAME(boolean, bool)
+NAME(main, XLMain)
+
+SYMBOL(":=", "=")
+SYMBOL("=", "==")
+SYMBOL("<>", "!=")
+SYMBOL("and", "&&")
+SYMBOL("or", "||")
+SYMBOL("xor", "^")
+SYMBOL("bitwisenot", "~")
+SYMBOL("nil", "0")
+PREFIX(in)
+PREFIX(out)
+
+BINARY(".", scope)
+BINARY("in", iterator)
+
+// Data types
+SYMBOL("string", "std::vector")
+SYMBOL("text", "::text")
+INFIX(of)
+INFIX(to)
+PREFIX(map)
+
+
+// Declarations
+PREFIX(import)
+PREFIX(module)
+BINARY(":", declaration)
+BINARY("\n", sequence)
+BINARY(";", sequence)
+BINARY(",", list)
+BINARY("..", range)
+INFIX(is)
+INFIX(return)
+PREFIX(function)
+PREFIX(procedure)
+UNARY("to", procedure)
+PREFIX(type)
+PREFIX(record)
+PREFIX(enumeration)
+UNARY("enum", enumeration)
+
+// Statements
+INFIX(then)
+INFIX(else)
+PREFIX(loop)
+INFIX(loop)
+PREFIX(exit)
+PREFIX(for)
+PREFIX(translate)
+
+
+#undef NAME
+#undef SYMBOL
+#undef INFIX
+#undef PREFIX
+#undef UNARY
+#undef BINARY
