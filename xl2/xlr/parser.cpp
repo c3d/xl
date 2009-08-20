@@ -254,6 +254,7 @@ Tree *Parser::Parse(text closing)
             prefix_priority = function_priority;
             break;
         case tokSTRING:
+        case tokQUOTE:
             char separator = scanner.TokenText()[0];
             if (separator == '\'')
                 right = new Quote(scanner.TextValue(), pos);
