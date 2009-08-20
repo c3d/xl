@@ -78,9 +78,15 @@ void EnterBasics(Context *c)
     INFIX(">", BooleanGreater);
     INFIX(">=", BooleanGreaterOrEqual);
 
+    INFIX(":=", Assignment);
+    INFIX("=>", Definition);
+
     NAME(nil, ReservedName);
     NAME(true, ReservedName);
     NAME(false, ReservedName);
+
+    PREFIX("quote", ParseTree);
+    PREFIX("eval", Evaluation);
 }
 
 
@@ -298,6 +304,112 @@ bool BooleanHandler::DoText(text left, text right)
 // ----------------------------------------------------------------------------
 {
     throw "Operation '$1' not supported on text";
+}
+
+
+// ============================================================================
+// 
+//    class Assignment
+// 
+// ============================================================================
+
+Tree *Assignment::Call(Context *context, Tree *args)
+// ----------------------------------------------------------------------------
+//    Assign to the name on the left the value on the right
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = dynamic_cast<Infix *> (args))
+    {
+        if (infix->list.size() < 2)
+            return context->Error("Assignment '$1' without arguments", args);
+
+        Tree *assigned = infix->list.back();
+        Tree *value = assigned->Run(context);
+        if (!value)
+            return context->Error("No value for '$1' in assignment", assigned);
+
+        tree_list::iterator begin = infix->list.begin();
+        tree_list::iterator end = infix->list.end();
+
+        end--;
+        for (tree_list::iterator i = begin; i != end; i++)
+            if (Name *name = dynamic_cast<Name *> (*i))
+                context->EnterName(name->value, value);
+            else
+                return context->Error("Cannot assign to non-name '$1'", *i);
+        return value;
+    }
+    return context->Error ("Invalid assignment '$1'", args);
+}
+
+
+
+// ============================================================================
+// 
+//    class Definition
+// 
+// ============================================================================
+
+Tree *Definition::Call(Context *context, Tree *args)
+// ----------------------------------------------------------------------------
+//    Define the expression on the left to match expression on the right
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = dynamic_cast<Infix *> (args))
+    {
+        if (infix->list.size() < 2)
+            return context->Error("Definition '$1' is empty", args);
+
+        Tree *defined = infix->list.back();
+        if (!defined)
+            return context->Error("No value for '$1' in definition", defined);
+
+        tree_list::iterator begin = infix->list.begin();
+        tree_list::iterator end = infix->list.end();
+
+        end--;
+        for (tree_list::iterator i = begin; i != end; i++)
+            if (Name *name = dynamic_cast<Name *> (*i))
+                context->EnterName(name->value, defined);
+            else
+                return context->Error("Cannot define non-name '$1'", *i);
+        return defined;
+    }
+    return context->Error ("Invalid assignment '$1'", args);
+}
+
+
+
+// ============================================================================
+// 
+//    class Evaluation and Parse
+// 
+// ============================================================================
+
+Tree *ParseTree::Call(Context *context, Tree *args)
+// ----------------------------------------------------------------------------
+//    Return the parse tree, not its value
+// ----------------------------------------------------------------------------
+{
+    if (!args)
+        return args;
+    if (Block *block = dynamic_cast<Block *> (args))
+        return block->child;
+    return args;
+}
+
+
+Tree *Evaluation::Call(Context *context, Tree *args)
+// ----------------------------------------------------------------------------
+//    Return the parse tree, not its value
+// ----------------------------------------------------------------------------
+{
+    if (!args)
+        return args;
+    Tree *toEval = args->Run(context);
+    if (!toEval)
+        return context->Error("Unable to evaluate '$1'", args);
+    return toEval->Run(context);
 }
 
 XL_END

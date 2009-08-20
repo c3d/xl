@@ -1,6 +1,7 @@
 INFIX
         11      NEWLINE
         21      ;
+        25      =>
         30      loop
         35      else into
         40      then where require ensure

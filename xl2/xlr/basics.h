@@ -1,20 +1,20 @@
 #ifndef BASICS_H
 // ****************************************************************************
-//  basics.h                        (C) 1992-2009 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  basics.h                        (C) 1992-2009 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //      Basic operations (arithmetic, etc)
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
@@ -30,9 +30,9 @@
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //   Top level entry point
-// 
+//
 // ============================================================================
 
 // Top-level entry point: enter all basic operations in the context
@@ -49,9 +49,9 @@ struct InfixStructureHandler : Native
 
 
 // ============================================================================
-// 
+//
 //    Special names
-// 
+//
 // ============================================================================
 
 struct ReservedName : Name
@@ -70,9 +70,9 @@ extern ReservedName *nil_name;
 
 
 // ============================================================================
-// 
+//
 //   Binary arithmetic
-// 
+//
 // ============================================================================
 
 struct BinaryHandler : Native
@@ -185,9 +185,9 @@ struct BinaryXor : BinaryHandler
 
 
 // ============================================================================
-// 
+//
 //    Binary logic
-// 
+//
 // ============================================================================
 
 struct BooleanHandler : Native
@@ -217,7 +217,48 @@ BOOL_OP(Different, !=);
 BOOL_OP(Greater, >);
 BOOL_OP(GreaterOrEqual, >=);
 
+
+// ============================================================================
+//
+//   Assignments and declarations
+//
+// ============================================================================
+
+struct Assignment : Native
+// ----------------------------------------------------------------------------
+//    Assign a value to a name
+// ----------------------------------------------------------------------------
+{
+    Tree *Call(Context *context, Tree *args);
+};
+
+
+struct Definition : Native
+// ----------------------------------------------------------------------------
+//    Define a name to be some value
+// ----------------------------------------------------------------------------
+{
+    Tree *Call(Context *context, Tree *args);
+};
+
+
+struct ParseTree : Native
+// ----------------------------------------------------------------------------
+//    Define a name to be some value
+// ----------------------------------------------------------------------------
+{
+    Tree *Call(Context *context, Tree *args);
+};
+
+
+struct Evaluation : Native
+// ----------------------------------------------------------------------------
+//    Define a name to be some value
+// ----------------------------------------------------------------------------
+{
+    Tree *Call(Context *context, Tree *args);
+};
+
 XL_END
 
 #endif // BASICS_H
-

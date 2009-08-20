@@ -225,7 +225,7 @@ Tree *Name::Run(Context *context)
 // ----------------------------------------------------------------------------
 {
     if (Tree *named = context->Name(value))
-        return named;
+        return named->Run(context);
 
     // Otherwise, this is an error to evaluate the name
     return context->Error("Name '$1' doesn't exist", this);
@@ -513,20 +513,12 @@ Tree *Native::Run(Context *context)
 }
 
 
-text Native::Name()
+text Native::TypeName()
 // ----------------------------------------------------------------------------
 //   The name of a native tree is its type
 // ----------------------------------------------------------------------------
 {
     return typeid(*this).name();
 }
-
-
-
-// ============================================================================
-//
-//   Output: Show a possibly parenthesized rendering of the tree
-//
-// ============================================================================
 
 XL_END

@@ -334,7 +334,7 @@ struct Native : Tree
     Native(tree_position pos = NOWHERE): Tree(pos) {}
     virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context);
-    virtual text        Name();
+    virtual text        TypeName();
 };
     
 XL_END
