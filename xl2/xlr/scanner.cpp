@@ -28,7 +28,7 @@
 #include <errno.h>
 #include "scanner.h"
 #include "errors.h"
-#include "context.h"
+#include "syntax.h"
 
 
 
@@ -76,11 +76,12 @@ private:
 // 
 // ============================================================================
 
-XLScanner::XLScanner(kstring name)
+XLScanner::XLScanner(kstring name, XLSyntax *stx)
 // ----------------------------------------------------------------------------
 //   XLScanner constructor opens the file
 // ----------------------------------------------------------------------------
-  : fileName(name), fileLine(1),
+    : syntax(stx),
+    fileName(name), fileLine(1),
     file(NULL),
     tokenText(""),
     stringValue(""), realValue(0.0), intValue(0),
@@ -367,7 +368,7 @@ token_t XLScanner::NextToken()
                 NEXT_LOWER_CHAR(c);
         }
         ungetc(c, file);
-        if (gContext.IsBlock(stringValue, endMarker))
+        if (syntax->IsBlock(stringValue, endMarker))
             return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
         return tokNAME;
     }
@@ -402,7 +403,7 @@ token_t XLScanner::NextToken()
     }
 
     // Look for single-char block delimiters (parentheses, etc)
-    if (gContext.IsBlock(c, endMarker))
+    if (syntax->IsBlock(c, endMarker))
     {
         stringValue = c;
         tokenText = c;
@@ -412,10 +413,10 @@ token_t XLScanner::NextToken()
     // Look for other symbols
     while (ispunct(c) &&
            c != '\'' && c != '"' && c != EOF &&
-           !gContext.IsBlock(c, endMarker))
+           !syntax->IsBlock(c, endMarker))
         NEXT_CHAR(c);
     ungetc(c, file);
-    if (gContext.IsBlock(stringValue, endMarker))
+    if (syntax->IsBlock(stringValue, endMarker))
         return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
     return tokSYMBOL;
 }

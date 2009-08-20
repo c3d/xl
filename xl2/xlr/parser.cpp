@@ -98,9 +98,9 @@ XLTree *XLParser::Parse(text closing_paren)
     token_t tok;
     bool done = false;
     text opening, closing;
-    int default_priority = context->default_priority;
-    int function_priority = context->function_priority;
-    int statement_priority = context->statement_priority;
+    int default_priority = syntax->default_priority;
+    int function_priority = syntax->function_priority;
+    int statement_priority = syntax->statement_priority;
     int prefix_priority, infix_priority, paren_priority;
     int result_priority = default_priority;
     std::vector<Pending> stack;
@@ -130,7 +130,7 @@ XLTree *XLParser::Parse(text closing_paren)
             else if (tok == tokSYMBOL || tok == tokNAME)
             {
                 name = scanner.NameValue();
-                if (context->IsComment(name, comment_end))
+                if (syntax->IsComment(name, comment_end))
                 {
                     // Got a comment with a pending newline: skip it
                     scanner.Comment(comment_end);
@@ -139,7 +139,7 @@ XLTree *XLParser::Parse(text closing_paren)
                 }
 
                 // Check if we got something like 'else'
-                if (context->InfixPriority(name) >= statement_priority)
+                if (syntax->InfixPriority(name) >= statement_priority)
                 {
                     // Otherwise, delay current token and process fake newline
                     pendingToken = tok;
@@ -195,7 +195,7 @@ XLTree *XLParser::Parse(text closing_paren)
         case tokSYMBOL:
             name = scanner.NameValue();
             spelling = scanner.TokenText();
-            if (context->IsComment(name, comment_end))
+            if (syntax->IsComment(name, comment_end))
             {
                 scanner.Comment(comment_end);
                 if (comment_end == "\n")
@@ -205,7 +205,7 @@ XLTree *XLParser::Parse(text closing_paren)
             else if (!result)
             {
                 // If this is the very first thing we see
-                prefix_priority = context->PrefixPriority(name);
+                prefix_priority = syntax->PrefixPriority(name);
                 right = new XLName(spelling);
                 if (prefix_priority == default_priority)
                     prefix_priority = function_priority;
@@ -216,7 +216,7 @@ XLTree *XLParser::Parse(text closing_paren)
                 // If we have "A and not B", where "not" has higher priority
                 // than "and", we want to parse this as "A and (not B)", not
                 // as "(A and not) B".
-                prefix_priority = context->PrefixPriority(name);
+                prefix_priority = syntax->PrefixPriority(name);
                 right = new XLName(spelling);
                 if (prefix_priority == default_priority)
                     prefix_priority = function_priority;
@@ -224,7 +224,7 @@ XLTree *XLParser::Parse(text closing_paren)
             else
             {
                 // Complicated case: need to disambiguate infix and prefix
-                infix_priority = context->InfixPriority(name);
+                infix_priority = syntax->InfixPriority(name);
                 if (infix_priority != default_priority)
                 {
                     // We got an infix
@@ -234,7 +234,7 @@ XLTree *XLParser::Parse(text closing_paren)
                 else
                 {
                     // No priority: take this as a prefix-op
-                    prefix_priority = context->PrefixPriority(name);
+                    prefix_priority = syntax->PrefixPriority(name);
                     right = new XLName(spelling);
                     if (prefix_priority == default_priority)
                         prefix_priority = function_priority;
@@ -247,7 +247,7 @@ XLTree *XLParser::Parse(text closing_paren)
                 tok = scanner.NextToken();
                 if (tok == tokSYMBOL || tok == tokNAME)
                 {
-                    if (context->IsComment(scanner.NameValue(), comment_end))
+                    if (syntax->IsComment(scanner.NameValue(), comment_end))
                     {
                         // Followed by a comment:
                         // Can't decide just yet what indent we have,
@@ -262,7 +262,7 @@ XLTree *XLParser::Parse(text closing_paren)
             // Consider newline as an infix operator
             infix = "\n";
             name = infix;
-            infix_priority = context->InfixPriority(infix);
+            infix_priority = syntax->InfixPriority(infix);
             left = result;
             break;
         case tokPARCLOSE:
@@ -293,14 +293,14 @@ XLTree *XLParser::Parse(text closing_paren)
             else
             {
                 opening = scanner.NameValue()[0];
-                if (!gContext.IsBlock(opening, closing))
+                if (!syntax->IsBlock(opening, closing))
                     XLError(E_ParseMismatchParen,
                             scanner.FileName(), scanner.FileLine(),
                             text("<internal error>"),
                             ErrorNameOf(closing_paren));
             }
             name = opening;
-            paren_priority = context->InfixPriority(name);
+            paren_priority = syntax->InfixPriority(name);
 
             // Make sure 'foo.bar(x)' parses as '(foo.bar)(x)'
             if (result)

@@ -73,7 +73,7 @@
  */
 
 #include "scanner.h"
-#include "context.h"
+#include "syntax.h"
 
 
 // ============================================================================
@@ -99,8 +99,8 @@ class XLParser
 // ----------------------------------------------------------------------------
 {
 public:
-    XLParser(kstring name, XLContext *ctx):
-        scanner(name), context(ctx) {}
+    XLParser(kstring name, XLSyntax *stx):
+        scanner(name, stx), syntax(stx) {}
 
 public:
     XLTree *            Parse(text closing_paren = "");
@@ -108,7 +108,7 @@ public:
 
 private:
     XLScanner           scanner;
-    XLContext *         context;
+    XLSyntax *          syntax;
 };
 
 

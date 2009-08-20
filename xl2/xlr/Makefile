@@ -31,6 +31,7 @@ SOURCES     =					\
 	scanner.cpp				\
 	tree.cpp				\
 	context.cpp				\
+	syntax.cpp				\
 	parser.cpp				\
 	options.cpp				\
 	errors.cpp

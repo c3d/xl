@@ -36,7 +36,7 @@
 #include "options.h"
 
 
-struct XLInitializeContext 
+struct XLInitializeSyntax 
 // ----------------------------------------------------------------------------
 //   For debugging: emit the things of interest
 // ----------------------------------------------------------------------------
@@ -46,8 +46,8 @@ struct XLInitializeContext
                     inText, inTextDef,
                     inBlock, inBlockDef };
 
-    XLInitializeContext(XLContext &ctx):
-        context(ctx), priority(0), whereami(inUnknown) {}
+    XLInitializeSyntax(XLSyntax &ctx):
+        syntax(ctx), priority(0), whereami(inUnknown) {}
     
     bool Name(XLName *input)
     {
@@ -100,23 +100,23 @@ struct XLInitializeContext
         }
         else if (txt == text("STATEMENT"))
         {
-            context.statement_priority = priority;
+            syntax.statement_priority = priority;
         }
         else if (txt == text("FUNCTION"))
         {
-            context.function_priority = priority;
+            syntax.function_priority = priority;
         }
         else if (txt == text("DEFAULT"))
         {
-            context.default_priority = priority;
+            syntax.default_priority = priority;
         }
         else switch (whereami)
         {
         case inPrefix:
-            context.SetPrefixPriority(txt, priority);
+            syntax.SetPrefixPriority(txt, priority);
             break;
         case inInfix:
-            context.SetInfixPriority(txt, priority);
+            syntax.SetInfixPriority(txt, priority);
             break;
         case inPostfix:
             // Ignored
@@ -126,7 +126,7 @@ struct XLInitializeContext
             whereami = inCommentDef;
             break;
         case inCommentDef:
-            context.Comment(entry, txt);
+            syntax.Comment(entry, txt);
             whereami = inComment;
             break;
         case inText:
@@ -134,17 +134,17 @@ struct XLInitializeContext
             whereami = inTextDef;
             break;
         case inTextDef:
-            context.TextDelimiter(entry, txt);
+            syntax.TextDelimiter(entry, txt);
             whereami = inComment;
             break;
         case inBlock:
             entry = txt;
             whereami = inBlockDef;
-            context.SetInfixPriority(entry, priority);
+            syntax.SetInfixPriority(entry, priority);
             break;
         case inBlockDef:
-            context.Block(entry, txt);
-            context.Block(txt, ""); // Mark to indentify single-char blocks
+            syntax.Block(entry, txt);
+            syntax.Block(txt, ""); // Mark to indentify single-char blocks
             whereami = inBlock;
             break;
         case inUnknown:
@@ -155,19 +155,19 @@ struct XLInitializeContext
         return false;
     }
 
-    XLContext & context;
+    XLSyntax & syntax;
     int priority;
     WhereAmI whereami;
     text entry;
 };
 
 
-void ReadContext(kstring file, XLContext &context)
+void ReadSyntax(kstring file, XLSyntax &syntax)
 // ----------------------------------------------------------------------------
 //   Parse the syntax description table
 // ----------------------------------------------------------------------------
 {
-    XLContext syntaxTable;
+    XLSyntax syntaxTable;
 
     // Enter infix priorities
     syntaxTable /
@@ -184,16 +184,14 @@ void ReadContext(kstring file, XLContext &context)
 
     // At first, I thought it was elegant.
     // In reality, it is darn ugly. But hey, it's just throwaway code
-    XLInitializeContext init(context);
-    // XLDo<XLInitializeContext> doInit(init);
+    XLInitializeSyntax init(syntax);
+    // XLDo<XLInitializeSyntax> doInit(init);
     // doInit(tree);
 
     // Cheat grossly, now that the C++ parser behaves differently from the
     // XL versions with respect to block priority...
-    context.SetInfixPriority(INDENT_MARKER, 400);
+    syntax.SetInfixPriority(INDENT_MARKER, 400);
 }
-
-XLContext gContext;
 
 int main(int argc, char **argv)
 // ----------------------------------------------------------------------------
@@ -203,20 +201,20 @@ int main(int argc, char **argv)
 #if CONFIG_USE_SBRK
     char *low_water = (char *) sbrk(0);
 #endif
-
+    XLSyntax syntax;
     text cmd, end = "";
 
     // Make sure debug function is linked in...
     debug(NULL);
 
     // Initialize basic XL syntax from syntax description file
-    ReadContext("xl.syntax", gContext);
+    ReadSyntax("xl.syntax", syntax);
 
     for (cmd = gOptions.Parse(argc, argv);
          cmd != end;
          cmd = gOptions.ParseNext())
     {
-        XLParser parser (cmd.c_str(), &gContext);
+        XLParser parser (cmd.c_str(), &syntax);
         XLTree *tree = parser.Parse();
 
         IFTRACE(source)

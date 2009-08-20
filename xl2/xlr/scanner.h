@@ -98,6 +98,8 @@
 #include "base.h"
 
 
+class XLSyntax;
+
 enum token_t
 // ----------------------------------------------------------------------------
 //   Possible token types
@@ -132,7 +134,7 @@ class XLScanner
 // ----------------------------------------------------------------------------
 {
 public:
-    XLScanner(kstring fileName);
+    XLScanner(kstring fileName, XLSyntax *stx);
     ~XLScanner();
     
 public:
@@ -154,6 +156,7 @@ public:
     ulong       FileLine()      { return fileLine; }
     
 private:
+    XLSyntax *  syntax;
     text        fileName;
     ulong       fileLine;
     FILE *      file;
