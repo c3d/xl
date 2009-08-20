@@ -221,12 +221,12 @@ int main(int argc, char **argv)
 
         IFTRACE(source)
         {
-            std::cout << *tree << "\n";
+            // std::cout << *tree << "\n";
         }
         IFTRACE(parse)
         {
-            XLTree::outputDebug = true;
-            std::cout << *tree << "\n";
+            // XLTree::outputDebug = true;
+            // std::cout << *tree << "\n";
         }
     }
 
