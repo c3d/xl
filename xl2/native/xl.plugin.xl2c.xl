@@ -81,6 +81,9 @@ module XL.PLUGIN.XL2C is
             reat: input as PT.real_tree
             txtt: input as PT.text_tree
 
+            if intt <> nil or reat <> nil or txtt <> nil then
+                return input
+
             if namt <> nil then
                 // Strip pointers (convert void * to 'pointer to anything')
                 if PtrCnt > 0 and TyName = nil then
@@ -212,6 +215,9 @@ module XL.PLUGIN.XL2C is
                     input := pre.right
                     restart
 
+            // All other cases are dealt with using recursion
+            return XLT.Recurse(input, Convert)
+                
 
         ERR.Error "Don't know how to deal with $1", input
 
@@ -224,7 +230,9 @@ module XL.PLUGIN.XL2C is
             when ('A1', 'A2') then
                 A1 := ConvertArgs(A1)
                 A2 := ConvertArgs(A2)
-                return parse_tree('A1';'A2')
+                return parse_tree
+                    'A1'
+                    'A2'
             when (void) then
                 return PT.NewName("", Args.position)
 
