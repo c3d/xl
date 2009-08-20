@@ -1,7 +1,7 @@
 INFIX
         11      NEWLINE
         21      ;
-        25      =>
+        25      ->
         30      loop
         35      else into
         40      then where require ensure
@@ -12,7 +12,7 @@ INFIX
         200     DEFAULT
         210     ,
         221     := += -= *= /= ^= |= &=
-        230     return -> --> <- <--
+        230     return 
         240     and or xor
         250     in
         251     of to
