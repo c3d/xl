@@ -77,6 +77,13 @@ struct Context
     Tree *              Postfix (text name, bool deep = true);
     Tree *              Block (text opening, bool deep = true);
 
+    // Entering symbols in the symbol table
+    void                EnterName (text name, Tree *value);
+    void                EnterInfix (text name, Tree *value);
+    void                EnterPrefix (text name, Tree *value);
+    void                EnterPostfix (text name, Tree *value);
+    void                EnterBlock (text name, Tree *value);
+
 public:
     static ulong        gc_increment;
     static ulong        gc_growth_percent;

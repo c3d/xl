@@ -303,4 +303,48 @@ Tree *Context::Infix(text name, bool deep)
 }
 
 
+void Context::EnterName (text name, Tree *value)
+// ----------------------------------------------------------------------------
+//   Enter a name in the context
+// ----------------------------------------------------------------------------
+{
+    name_symbols[name] = value;
+}
+
+
+void Context::EnterInfix (text name, Tree *value)
+// ----------------------------------------------------------------------------
+//   Enter an infix operator
+// ----------------------------------------------------------------------------
+{
+    infix_symbols[name] = value;
+}
+
+
+void Context::EnterPrefix (text name, Tree *value)
+// ----------------------------------------------------------------------------
+//   Enter a prefix operator
+// ----------------------------------------------------------------------------
+{
+    prefix_symbols[name] = value;
+}
+
+
+void Context::EnterPostfix (text name, Tree *value)
+// ----------------------------------------------------------------------------
+//   Enter a postfix operator
+// ----------------------------------------------------------------------------
+{
+    postfix_symbols[name] = value;
+}
+
+
+void Context::EnterBlock (text name, Tree *value)
+// ----------------------------------------------------------------------------
+//   Enter a block operator
+// ----------------------------------------------------------------------------
+{
+    block_symbols[name] = value;
+}
+
 XL_END
