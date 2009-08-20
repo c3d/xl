@@ -86,6 +86,9 @@ build:									\
 prebuild:
 postbuild:
 
+tags: TAGS
+TAGS:
+	etags $(SOURCES)
 
 #------------------------------------------------------------------------------
 #  General rules
