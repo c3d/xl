@@ -1,19 +1,19 @@
 // ****************************************************************************
 //  main.cpp                       (C) 1992-2003 Christophe de Dinechin (ddd)
-//                                                                XL2 project 
+//                                                                XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //      Main entry point of the compiler
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This program is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -35,7 +35,9 @@
 #include "renderer.h"
 #include "errors.h"
 #include "tree.h"
+#include "context.h"
 #include "options.h"
+
 
 int main(int argc, char **argv)
 // ----------------------------------------------------------------------------
@@ -49,6 +51,7 @@ int main(int argc, char **argv)
     XL::Positions positions;
     XL::Errors errors(&positions);
     XL::Options options(errors);
+    XL::Context context(errors);
     text cmd, end = "";
 
     // Make sure debug function is linked in...
@@ -65,15 +68,10 @@ int main(int argc, char **argv)
     {
         XL::Parser parser (cmd.c_str(), syntax, positions, errors);
         XL::Tree *tree = parser.Parse();
-
         IFTRACE(source)
-        {
             std::cout << tree << "\n";
-        }
-        IFTRACE(parse)
-        {
-            std::cout << tree << "\n";
-        }
+        tree = context.Run(tree);
+        std::cout << tree << "\n";
     }
 
 #if CONFIG_USE_SBRK

@@ -34,6 +34,7 @@ XL_BEGIN
 
 struct Tree;
 struct Context;
+struct Errors;
 
 typedef std::map<text, Tree *>  symbol_table;
 typedef std::vector<Tree *>     evaluation_stack;
@@ -46,10 +47,10 @@ struct Context
 // ----------------------------------------------------------------------------
 {
     // Constructors and destructors
-    Context():
-        parent(NULL), gc_threshold(200), error_handler(NULL) {}
+    Context(Errors &err):
+        errors(err), parent(NULL), gc_threshold(200), error_handler(NULL) {}
     Context(Context *p):
-        parent(p), gc_threshold(200), error_handler(NULL) {}
+        errors(p->errors), parent(p), gc_threshold(200), error_handler(NULL) {}
 
     // Context properties
     Context *           Parent()                { return parent; }
@@ -81,6 +82,7 @@ public:
     static ulong        gc_growth_percent;
 
 private:
+    Errors &            errors;
     Context *           parent;
     symbol_table        name_symbols;
     symbol_table        infix_symbols;

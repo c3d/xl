@@ -78,8 +78,11 @@ struct Tree
 
     // Tree properties
     void                Set(text name, Tree *prop) { data[name] = prop; }
-    Tree *              Get(text name) { return data[name]; }
-    tree_position       Position() { return position; }
+    Tree *              Get(text name)             { return data[name]; }
+    tree_position       Position()                 { return position; }
+
+    // Conversion to text
+    operator text();
 
 protected:
     tree_position       position;

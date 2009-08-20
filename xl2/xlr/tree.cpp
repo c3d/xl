@@ -23,8 +23,10 @@
 // * Date       : $Date$
 // ****************************************************************************
 
+#include <sstream>
 #include "tree.h"
 #include "context.h"
+#include "renderer.h"
 
 XL_BEGIN
 
@@ -90,6 +92,17 @@ Tree *Tree::Normalize()
               dynamic_cast<Infix *> (this));
 
     return this;
+}
+
+
+Tree::operator text()
+// ----------------------------------------------------------------------------
+//   Conversion of a tree to text
+// ----------------------------------------------------------------------------
+{
+    std::ostringstream out;
+    out << this;
+    return out.str();
 }
 
 
@@ -438,7 +451,7 @@ Tree *Native::Run(Context *context)
 
 // ============================================================================
 //
-//    Output: Show a possibly parenthesized rendering of the tree
+//   Output: Show a possibly parenthesized rendering of the tree
 //
 // ============================================================================
 

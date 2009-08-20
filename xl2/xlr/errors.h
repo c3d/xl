@@ -35,6 +35,7 @@
 XL_BEGIN
 
 class Positions;
+class Tree;
 
 
 struct Errors
@@ -50,6 +51,9 @@ struct Errors
     void Error(text err, ulong pos, text arg1);
     void Error(text err, ulong pos, text arg1, text arg2);
     void Error(text err, ulong pos, text arg1, text arg2, text arg3);
+    void Error(text err, Tree *arg1);
+    void Error(text err, Tree *arg1, Tree *arg2);
+    void Error(text err, Tree *arg1, Tree *arg2, Tree *arg3);
 
     Positions * positions;
 };

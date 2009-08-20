@@ -35,6 +35,10 @@
 // Getting help on options
 OPTION(help, "List usage information", Usage(argv))
 
+// Parse only
+OPTVAR(parseOnly, bool, false)
+OPTION(parse, "Only parse file, do not run", parseOnly = true)
+
 // Debug controlling options
 OPTVAR(debug, bool, false)
 OPTION(g, "Compile with debugging information", debug=true)
@@ -64,7 +68,6 @@ OPTION(o, "Select output file", output_file = STRING)
 // We use lower-case names here to avoid duplicate definition and be able
 // to reuse the IFTRACE macro as is.
 TRACE(source)
-TRACE(parse)
 TRACE(timing)
 
 // Undefine for next use...

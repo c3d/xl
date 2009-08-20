@@ -27,6 +27,7 @@
 #include "errors.h"
 #include "options.h"
 #include "scanner.h" // for Positions
+#include "tree.h"
 
 XL_BEGIN
 
@@ -112,6 +113,33 @@ void Errors::Error(text err, ulong pos, text arg1, text arg2, text arg3)
     args.push_back(arg2);
     args.push_back(arg3);
     Error(err, pos, args);
+}
+
+
+void Errors::Error(text err, Tree *arg1)
+// ----------------------------------------------------------------------------
+//   Emit an error at a tree position
+// ----------------------------------------------------------------------------
+{
+    Error (err, arg1->Position(), text(*arg1));
+}
+
+
+void Errors::Error(text err, Tree *arg1, Tree *arg2)
+// ----------------------------------------------------------------------------
+//   Emit an error at a tree position
+// ----------------------------------------------------------------------------
+{
+    Error (err, arg1->Position(), text(*arg1), text(*arg2));
+}
+
+
+void Errors::Error(text err, Tree *arg1, Tree *arg2, Tree *arg3)
+// ----------------------------------------------------------------------------
+//   Emit an error at a tree position
+// ----------------------------------------------------------------------------
+{
+    Error (err, arg1->Position(), text(*arg1), text(*arg2), text(*arg3));
 }
 
 

@@ -23,10 +23,11 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-#include "context.h"
-#include "tree.h"
 #include <iostream>
 #include <cstdlib>
+#include "context.h"
+#include "tree.h"
+#include "errors.h"
 
 XL_BEGIN
 
@@ -155,7 +156,11 @@ Tree * Context::Error(text message, Tree *args)
     }
 
     // No handler: terminate
-    std::cerr << "Error: No error handler\n" << "Message: " << message << "\n";
+    std::cerr << "Error: No error handler\n";
+    if (!args)
+        std::cerr << "Message: " << message << "\n";
+    else
+        errors.Error(message, args);
     std::exit(1);
 }
 
