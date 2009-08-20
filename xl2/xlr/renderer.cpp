@@ -25,20 +25,26 @@
 
 #include "renderer.h"
 #include <iostream>
+#include <cctype>
 
 XL_BEGIN
 
-static void Indent(std::ostream &out, text t, uint indent)
+void Renderer::Indent(text t)
 // ----------------------------------------------------------------------------
 //   Emit the given text with proper indentation
 // ----------------------------------------------------------------------------
 {
-    for (text::iterator c = t.begin(); c != t.end(); c++)
+    for (text::iterator i = t.begin(); i != t.end(); i++)
     {
-        out << *c;
-        if (*c == '\n')
+        char c = *i;
+        if (isspace(c))
+            need_space = "";
+        output << need_space << c;
+        if (c == '\n')
+        {
             for (uint i = 0; i < indent; i++)
-                out << ' ';
+                output << ' ';
+        }
     }
 }
 
@@ -50,25 +56,26 @@ Tree *Renderer::Run(Tree *what)
 {
     if (!what)
     {
-        output << "NULL";
+        output << need_space << "NULL";
     }
     else if (Integer *i = dynamic_cast<Integer *> (what))
     {
-        output << i->value;
+        output << need_space << i->value;
     }
     else if (Real *r = dynamic_cast<Real *> (what))
     {
-        output << r->value;
+        output << need_space << r->value;
     }
     else if (Text *t = dynamic_cast<Text *> (what))
     {
-        output << t->Opening();
-        Indent (output, t->value, indent);
+        output << need_space << t->Opening();
+        need_space = "";
+        Indent (t->value);
         output << t->Closing();
     }
     else if (Name *n = dynamic_cast<Name *> (what))
     {
-        output << n->value;
+        output << need_space << n->value;
     }
     else if (Block *b = dynamic_cast<Block *> (what))
     {
@@ -77,7 +84,7 @@ Tree *Renderer::Run(Tree *what)
 
         indent += tabsize;
         if (open == iblk.Opening())
-            Indent(output, "\n", indent);
+            Indent("\n");
         else
             output << open;
 
@@ -85,13 +92,14 @@ Tree *Renderer::Run(Tree *what)
         
         indent -= tabsize;
         if (close == iblk.Closing())
-            Indent(output, "\n", indent);
+            Indent("\n");
         else
             output << close;
     }
     else if (Prefix *p = dynamic_cast<Prefix *> (what))
     {
         Run(p->left);
+        need_space = " ";
         Run(p->right);
     }
     else if (Infix *f = dynamic_cast<Infix *> (what))
@@ -101,7 +109,10 @@ Tree *Renderer::Run(Tree *what)
         {
             Run(*c);
             if (count--)
-                Indent(output, f->name, indent);
+            {
+                need_space = " ";
+                Indent(f->name);
+            }
         }
     }
     else

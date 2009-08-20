@@ -37,14 +37,16 @@ struct Renderer : Action
 // ----------------------------------------------------------------------------
 {
     Renderer(std::ostream &out, uint ts = 4):
-        Action(), output(out), indent(0), tabsize(ts) {}
+        Action(), output(out), indent(0), tabsize(ts), need_space("") {}
 
     virtual Tree *      Run(Tree *what);
+    void                Indent(text t);
     static void         Render(std::ostream &out, Tree *t);
 
     std::ostream &      output;
     uint                indent;
     uint                tabsize;
+    kstring             need_space;
 };
 
 XL_END
