@@ -24,9 +24,11 @@
 // ****************************************************************************
 
 import PT = XL.PARSER.TREE
+import PR = XL.PARSER
 import XLT = XL.TRANSLATOR
 import RD = XL.RENDERER
 import SYM = XL.SYMBOLS
+import ASCII = XL.TEXT_IO.ENCODING.ASCII
 
 
 module XL.PLUGIN.XL2C is
@@ -37,16 +39,32 @@ module XL.PLUGIN.XL2C is
     function ConvertArgs(Args : PT.tree) return PT.tree
 
 
-    function EliminateSemicolon(input : PT.tree) return PT.tree is
+    function IntegerType (IsUnsigned : boolean;
+                          IsShort : boolean;
+                          LongCnt : integer) return PT.tree is
     // ------------------------------------------------------------------------
-    //   Eliminate trailing semicolon
+    //   Compute the name of the integer type
     // ------------------------------------------------------------------------
-        pre : input as PT.prefix_tree
-        if pre <> nil then
-            rname : pre.right as PT.name_tree
-            if rname <> nil and rname.value = ";" then
-                return pre.left
-        return XLT.Recurse (input, EliminateSemicolon)
+        if IsShort then
+            if IsUnsigned then
+                result := parse_tree(unsigned16)
+            else
+                result := parse_tree(integer16)
+        else if LongCnt > 1 then
+            if IsUnsigned then
+                result := parse_tree(unsigned64)
+            else
+                result := parse_tree(integer64)
+        else if LongCnt > 0 then
+            if IsUnsigned then
+                result := parse_tree(unsigned32)
+            else
+                result := parse_tree(integer32)
+        else
+            if IsUnsigned then
+                result := parse_tree(unsigned)
+            else
+                result := parse_tree(integer)
 
 
     function Convert (input : PT.tree) return PT.tree is
@@ -68,9 +86,7 @@ module XL.PLUGIN.XL2C is
         IsTypedef  : boolean := false
         FnArgs     : PT.tree := false
         FnPtrCnt   : integer := 0
-
-        // Check 'X;'
-        input := EliminateSemicolon(input)
+        IsMacro    : integer := 0
 
         loop
             pre : input as PT.prefix_tree
@@ -83,6 +99,13 @@ module XL.PLUGIN.XL2C is
 
             if intt <> nil or reat <> nil or txtt <> nil then
                 return input
+
+            if inf <> nil and inf.name = ";" then
+                inf.name := ASCII.CR
+
+            if blk <> nil and blk.opening = "{" and blk.closing = "}" then
+                blk.opening := PR.INDENT_MARKER
+                blk.closing := PR.UNINDENT_MARKER
 
             if namt <> nil then
                 // Strip pointers (convert void * to 'pointer to anything')
@@ -101,7 +124,7 @@ module XL.PLUGIN.XL2C is
                     if TyName = nil then
                         TyName := parse_tree(procedure('FnArgs'))
                     else
-                        TyName := parse_tree(function ('FnArgs') return 'TyName')
+                        TyName := parse_tree(function('FnArgs') return 'TyName')
                     while FnPtrCnt > 1 loop
                         TyName := parse_tree(pointer to 'TyName')
                         FnPtrCnt -= 1
@@ -109,13 +132,15 @@ module XL.PLUGIN.XL2C is
                 else
                     // We get there only when the name is at end:
                     //   int X; int *X; typedef int X;
+                    if TyName = nil then
+                        TyName := IntegerType (IsUnsigned, IsShort, LongCnt)
                     if IsTypedef then
                         return parse_tree(type 'namt' is 'TyName')
                 return parse_tree('namt' : 'TyName')
 
             if pre <> nil then
 
-                // Check int x(int y); parsed as [int x] [(int y) ;]
+                // Check int x(int y); parsed as [int x] [(int y)]
                 lpre : pre.left as PT.prefix_tree
                 if lpre <> nil then
                     pre.left := lpre.left
@@ -138,6 +163,25 @@ module XL.PLUGIN.XL2C is
                 lname : pre.left as PT.name_tree
                 if lname <> nil then
                     name : text := lname.value
+                    if name = "#" then
+                        IsMacro := 1
+                        input := pre.right
+                        restart
+                    if IsMacro = 1 then
+                        if name = "define" then
+                            rpre : pre.right as PT.prefix_tree
+                            rnam : pre.right as PT.name_tree
+                            if rnam <> nil then
+                                return parse_tree
+                                    integer 'rnam' is 1
+                            if rpre <> nil then
+                                rl : PT.tree := rpre.left
+                                rr : PT.tree := rpre.right
+                                return parse_tree
+                                    integer 'rl' is 'rr'
+                    if IsMacro then
+                        IsMacro := 0
+                        restart
                     if name = "extern" then
                         IsExtern := true
                         input := pre.right
@@ -179,26 +223,7 @@ module XL.PLUGIN.XL2C is
                         else
                             TyName := parse_tree(character)
                     if name = "int" then
-                        if IsShort then
-                            if IsUnsigned then
-                                TyName := parse_tree(unsigned16)
-                            else
-                                TyName := parse_tree(integer16)
-                        else if LongCnt > 1 then
-                            if IsUnsigned then
-                                TyName := parse_tree(unsigned64)
-                            else
-                                TyName := parse_tree(integer64)
-                        else if LongCnt > 0 then
-                            if IsUnsigned then
-                                TyName := parse_tree(unsigned32)
-                            else
-                                TyName := parse_tree(integer32)
-                        else
-                            if IsUnsigned then
-                                TyName := parse_tree(unsigned)
-                            else
-                                TyName := parse_tree(integer)
+                        TyName := IntegerType (IsUnsigned, IsShort, LongCnt)
                         input := pre.right
                         restart
                     if name = "float" then

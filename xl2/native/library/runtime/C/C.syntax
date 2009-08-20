@@ -1,4 +1,5 @@
 INFIX
+        11      ;
         30      
         35      else
         40      
@@ -30,7 +31,6 @@ PREFIX
         500     &
 
 POSTFIX
-        10      ;
         400     ++ --
 
 BLOCK
