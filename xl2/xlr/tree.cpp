@@ -47,26 +47,23 @@ Tree *Tree::Run(Context *context)
 }
 
 
-Tree *Tree::Do(Action &action)
+Tree *Tree::Do(Action *action)
 // ----------------------------------------------------------------------------
 //   Perform an action on the tree and its descendents
 // ----------------------------------------------------------------------------
 {
-    return action.Run(this);
+    return action->Do(this);
 }
 
 
-Tree *Tree::Mark(Action &action)
+void Tree::DoData(Action *action)
 // ----------------------------------------------------------------------------
-//   Mark all trees referenced by this tree
+//   For data actions, run on all trees referenced by this tree
 // ----------------------------------------------------------------------------
 {
     // Loop on all associated data
     for (tree_data::iterator i = data.begin(); i != data.end(); i++)
-        (*i).second = action.Run((*i).second);
-
-    // And finish with self
-    return Do(action);
+        (*i).second = (*i).second->Do(action);
 }
 
 
@@ -91,9 +88,102 @@ Tree *Tree::Normalize()
 
 // ============================================================================
 // 
+//   Class Integer
+// 
+// ============================================================================
+
+Tree *Action::DoInteger(Integer *what)
+// ----------------------------------------------------------------------------
+//   Default is simply to invoke 'Do'
+// ----------------------------------------------------------------------------
+{
+    return Do(what);
+}
+
+
+Tree *Integer::Do(Action *action)
+// ----------------------------------------------------------------------------
+//   Call specialized Integer routine in the action
+// ----------------------------------------------------------------------------
+{
+    return action->DoInteger(this);
+}
+
+
+
+// ============================================================================
+// 
+//   Class Real
+// 
+// ============================================================================
+
+Tree *Action::DoReal(Real *what)
+// ----------------------------------------------------------------------------
+//   Default is simply to invoke 'Do'
+// ----------------------------------------------------------------------------
+{
+    return Do(what);
+}
+
+
+Tree *Real::Do(Action *action)
+// ----------------------------------------------------------------------------
+//   Call specialized Real routine in the action
+// ----------------------------------------------------------------------------
+{
+    return action->DoReal(this);
+}
+
+
+
+// ============================================================================
+// 
+//   Class Text
+// 
+// ============================================================================
+
+Tree *Action::DoText(Text *what)
+// ----------------------------------------------------------------------------
+//   Default is simply to invoke 'Do'
+// ----------------------------------------------------------------------------
+{
+    return Do(what);
+}
+
+
+Tree *Text::Do(Action *action)
+// ----------------------------------------------------------------------------
+//   Call specialized Text routine in the action
+// ----------------------------------------------------------------------------
+{
+    return action->DoText(this);
+}
+
+
+
+// ============================================================================
+// 
 //   Class Name
 // 
 // ============================================================================
+
+Tree *Action::DoName(Name *what)
+// ----------------------------------------------------------------------------
+//   Default is simply to invoke 'Do'
+// ----------------------------------------------------------------------------
+{
+    return Do(what);
+}
+
+
+Tree *Name::Do(Action *action)
+// ----------------------------------------------------------------------------
+//   Call specialized Name routine in the action
+// ----------------------------------------------------------------------------
+{
+    return action->DoName(this);
+}
+
 
 Tree *Name::Run(Context *context)
 // ----------------------------------------------------------------------------
@@ -122,13 +212,22 @@ Tree *Name::Run(Context *context)
 // 
 // ============================================================================
 
-Tree *Block::Do(Action &action)
+Tree *Action::DoBlock(Block *what)
+// ----------------------------------------------------------------------------
+//    Default is to firm perform action on block's child, then on self
+// ----------------------------------------------------------------------------
+{
+    what->child = what->child->Do(this);
+    return Do(what);
+}
+
+
+Tree *Block::Do(Action *action)
 // ----------------------------------------------------------------------------
 //   Run the action on the child first
 // ----------------------------------------------------------------------------
 {
-    child = action.Run(child);
-    return Tree::Do(action);
+    return action->DoBlock(this);
 }
 
 
@@ -180,14 +279,23 @@ Block *Block::MakeBlock(Tree *child, text open, text close, tree_position pos)
 // 
 // ============================================================================
 
-Tree *Prefix::Do(Action &action)
+Tree *Action::DoPrefix(Prefix *what)
+// ----------------------------------------------------------------------------
+//   Default is to run the action on the left, then on right
+// ----------------------------------------------------------------------------
+{
+    what->left = what->left->Do(this);
+    what->right = what->right->Do(this);
+    return Do(what);
+}
+
+
+Tree *Prefix::Do(Action *action)
 // ----------------------------------------------------------------------------
 //   Run the action on the left and right children first
 // ----------------------------------------------------------------------------
 {
-    left = action.Run(left);
-    right = action.Run(right);
-    return Tree::Do(action);
+    return action->DoPrefix(this);
 }
 
 
@@ -231,14 +339,23 @@ Tree *Prefix::Run(Context *context)
 // 
 // ============================================================================
 
-Tree *Postfix::Do(Action &action)
+Tree *Action::DoPostfix(Postfix *what)
+// ----------------------------------------------------------------------------
+//   Default is to run the action on the right, then on the left
+// ----------------------------------------------------------------------------
+{
+    what->right = what->right->Do(this);
+    what->left = what->left->Do(this);
+    return Do(what);
+}
+
+
+Tree *Postfix::Do(Action *action)
 // ----------------------------------------------------------------------------
 //   Run the action on the left and right children first
 // ----------------------------------------------------------------------------
 {
-    left = action.Run(left);
-    right = action.Run(right);
-    return Tree::Do(action);
+    return action->DoPostfix(this);
 }
 
 
@@ -269,15 +386,24 @@ Tree *Postfix::Run(Context *context)
 // 
 // ============================================================================
 
-Tree *Infix::Do(Action &action)
+Tree *Action::DoInfix(Infix *what)
+// ----------------------------------------------------------------------------
+//   Default is to run the action on children first
+// ----------------------------------------------------------------------------
+{
+    tree_list::iterator i;
+    for (i = what->list.begin(); i != what->list.end(); i++)
+        *i = (*i)->Do(this);
+    return Do(what);
+}
+
+
+Tree *Infix::Do(Action *action)
 // ----------------------------------------------------------------------------
 //   Run the action on the children first
 // ----------------------------------------------------------------------------
 {
-    tree_list::iterator i;
-    for (i = list.begin(); i != list.end(); i++)
-        *i = action.Run(*i);
-    return Tree::Do(action);
+    return action->DoInfix(this);
 }
 
 
@@ -317,12 +443,21 @@ Tree *Infix::Run(Context *context)
 // 
 // ============================================================================
 
-Tree *Native::Do(Action &action)
+Tree *Action::DoNative(Native *what)
+// ----------------------------------------------------------------------------
+//   Default is simply to invoke 'Do'
+// ----------------------------------------------------------------------------
+{
+    return Do(what);
+}
+
+
+Tree *Native::Do(Action *action)
 // ----------------------------------------------------------------------------
 //   For native nodes, default actions will do
 // ----------------------------------------------------------------------------
 {
-    return Tree::Do(action);
+    return action->DoNative(this);
 }
 
 

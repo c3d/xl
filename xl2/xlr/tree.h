@@ -38,22 +38,22 @@ XL_BEGIN
 // 
 // ============================================================================
 
-struct Tree;                                    // Tree structure
 struct Context;                                 // Execution context
+struct Tree;                                    // Base tree
+struct Integer;                                 // Integer: 0, 3, 8
+struct Real;                                    // Real: 3.2, 1.6e4
+struct Text;                                    // Text: "ABC"
+struct Name;                                    // Name / symbol: ABC, ++-
+struct Prefix;                                  // Prefix: sin X
+struct Postfix;                                 // Postfix: 3!
+struct Infix;                                   // Infix: A+B, newline
+struct Block;                                   // Block: (A), {A}
+struct Native;                                  // Some native code
+struct Action;                                  // Action on trees
+struct DataAction;                              // Action including data
 typedef ulong tree_position;                    // Position in context
 typedef std::map<text, Tree *> tree_data;       // Data associated to tree
 typedef std::vector<Tree *> tree_list;          // A list of trees
-
-
-struct Action
-// ----------------------------------------------------------------------------
-//   An operation we do recursively on trees
-// ----------------------------------------------------------------------------
-{
-    Action () {}
-    virtual ~Action() {}
-    virtual Tree *Run (Tree *what) = 0;
-};
 
 
 struct Tree
@@ -65,13 +65,12 @@ struct Tree
     Tree (tree_position pos = NOWHERE): position(pos) {}
     virtual ~Tree() {}
 
-    // Evaluate a tree, return self or an optimized way to compute same result
-    // The context's stack holds the input and output of the evaluation
+    // Evaluate a tree
     virtual Tree *      Run(Context *context);
 
     // Perform recursive actions on a tree
-    virtual Tree *      Do(Action &action);
-    virtual Tree *      Mark(Action &action);
+    virtual Tree *      Do(Action *action);
+    virtual void        DoData(Action *action);
 
     // Return in normalized form (i.e. using only trees in this file)
     virtual Tree *      Normalize();
@@ -82,9 +81,31 @@ struct Tree
     tree_position       Position() { return position; }
 
 protected:
-    tree_position position;
-    tree_data     data;
+    tree_position       position;
+    tree_data           data;
     static tree_position NOWHERE;
+};
+
+
+struct Action
+// ----------------------------------------------------------------------------
+//   An operation we do recursively on trees
+// ----------------------------------------------------------------------------
+{
+    Action () {}
+    virtual ~Action() {}
+    virtual Tree *Do (Tree *what) = 0;
+
+    // Specialization for the canonical nodes, default is to run them
+    virtual Tree *DoInteger(Integer *what);
+    virtual Tree *DoReal(Real *what);
+    virtual Tree *DoText(Text *what);
+    virtual Tree *DoName(Name *what);
+    virtual Tree *DoPrefix(Prefix *what);
+    virtual Tree *DoPostfix(Postfix *what);
+    virtual Tree *DoInfix(Infix *what);
+    virtual Tree *DoBlock(Block *what);
+    virtual Tree *DoNative(Native *what);
 };
 
 
@@ -102,6 +123,7 @@ struct Integer : Tree
 {
     Integer(longlong i = 0, tree_position pos = NOWHERE):
         Tree(pos), value(i) {}
+    virtual Tree *      Do(Action *action);
     longlong            value;
 };
 
@@ -113,6 +135,7 @@ struct Real : Tree
 {
     Real(double d = 0.0, tree_position pos = NOWHERE):
         Tree(pos), value(d) {}
+    virtual Tree *      Do(Action *action);
     double              value;
 };
 
@@ -124,6 +147,7 @@ struct Text : Tree
 {
     Text(text t = "", tree_position pos = NOWHERE):
         Tree(pos), value(t) {}
+    virtual Tree *      Do(Action *action);
     virtual text        Opening() { return "\""; }
     virtual text        Closing() { return "\""; }
     text                value;
@@ -172,6 +196,7 @@ struct Name : Tree
 {
     Name(text n, tree_position pos = NOWHERE):
         Tree(pos), value(n) {}
+    virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context);
     text                value;
 };
@@ -192,7 +217,7 @@ struct Block : Tree
     Block(Tree *c, tree_position pos = NOWHERE): Tree(pos), child(c) {}
     virtual text        Opening() { return "\t+"; }
     virtual text        Closing() { return "\t-"; }
-    virtual Tree *      Do(Action &action);
+    virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context);
     static Block *      MakeBlock(Tree *child,
                                   text open, text close,
@@ -254,11 +279,10 @@ struct Prefix : Tree
 {
     Prefix(Tree *l, Tree *r, tree_position pos = NOWHERE):
         Tree(pos), left(l), right(r) {}
+    virtual Tree *      Do(Action *action);
+    virtual Tree *      Run(Context *context);
     Tree *              left;
     Tree *              right;
-
-    virtual Tree *      Do(Action &action);
-    virtual Tree *      Run(Context *context);
 };
 
 
@@ -269,7 +293,7 @@ struct Postfix : Prefix
 {
     Postfix(Tree *l, Tree *r, tree_position pos = NOWHERE):
         Prefix(l, r, pos) {}
-    virtual Tree *      Do(Action &action);
+    virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context);
 };
 
@@ -292,11 +316,10 @@ struct Infix : Tree
         list.push_back(left);
         list.push_back(right);
     }
+    virtual Tree *      Do(Action *action);
+    virtual Tree *      Run(Context *context);
     text                name;
     tree_list           list;
-
-    virtual Tree *      Do(Action &action);
-    virtual Tree *      Run(Context *context);
 };
 
 
@@ -306,7 +329,7 @@ struct Native : Tree
 // ----------------------------------------------------------------------------
 {
     Native(tree_position pos = NOWHERE): Tree(pos) {}
-    virtual Tree *      Do(Action &action);
+    virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context);
     virtual text        Name() { return "<Base Native Operation>"; }
 };

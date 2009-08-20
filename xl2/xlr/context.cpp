@@ -44,12 +44,52 @@ struct GCAction : Action
     GCAction (): alive() {}
     ~GCAction () {}
 
-    Tree *Run(Tree *what)
+    bool Mark(Tree *what)
     {
         typedef std::pair<active_set::iterator, bool> inserted;
         inserted ins = alive.insert(what);
-        if (ins.second)
-            return what->Mark(*this);
+        return ins.second;
+    }
+    Tree *Do(Tree *what)
+    {
+        if (Mark(what))
+            what->DoData(this);
+        return what;
+    }
+    Tree *DoBlock(Block *what)
+    {
+        if (Mark(what))
+        {
+            what->DoData(this);
+            Action::DoBlock(what);
+        }
+        return what;
+    }
+    Tree *DoInfix(Infix *what)
+    {
+        if (Mark(what))
+        {
+            what->DoData(this);
+            Action::DoInfix(what);
+        }
+        return what;
+    }
+    Tree *DoPrefix(Prefix *what)
+    {
+        if (Mark(what))
+        {
+            what->DoData(this);
+            Action::DoPrefix(what);
+        }
+        return what;
+    }
+    Tree *DoPostfix(Postfix *what)
+    {
+        if (Mark(what))
+        {
+            what->DoData(this);
+            Action::DoPostfix(what);
+        }
         return what;
     }
     active_set  alive;
@@ -72,9 +112,9 @@ void Context::CollectGarbage ()
 
         // Mark roots and stack
         for (i = roots.begin(); i != roots.end(); i++)
-            (*i)->Mark(gc);
+            (*i)->Do(&gc);
         for (s = stack.begin(); s != stack.end(); s++)
-            (*s)->Mark(gc);
+            (*s)->Do(&gc);
 
         // Then delete all trees in active set that are no longer referenced
         for (i = active.begin(); i != active.end(); i++)

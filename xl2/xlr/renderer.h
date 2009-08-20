@@ -39,7 +39,16 @@ struct Renderer : Action
     Renderer(std::ostream &out, uint ts = 4):
         Action(), output(out), indent(0), tabsize(ts), need_space("") {}
 
-    virtual Tree *      Run(Tree *what);
+    virtual Tree *      Do(Tree *what);
+    virtual Tree *      DoInteger(Integer *what);
+    virtual Tree *      DoReal(Real *what);
+    virtual Tree *      DoText(Text *what);
+    virtual Tree *      DoName(Name *what);
+    virtual Tree *      DoPrefix(Prefix *what);
+    virtual Tree *      DoPostfix(Postfix *what);
+    virtual Tree *      DoInfix(Infix *what);
+    virtual Tree *      DoBlock(Block *what);
+    virtual Tree *      DoNative(Native *what);
     void                Indent(text t);
     static void         Render(std::ostream &out, Tree *t);
 
