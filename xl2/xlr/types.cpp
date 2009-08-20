@@ -30,10 +30,11 @@ XL_BEGIN
 
 Tree *InferTypes::Do (Tree *what)
 // ----------------------------------------------------------------------------
-//   For a default tree, return an error for the moment
+//   Infer the type of some arbitrary tree
 // ----------------------------------------------------------------------------
 {
-    return context->Error("Infer type not implemented for '$1'", what);
+    // Otherwise, we don't know how to deal with it
+    return context->Error("Cannot infer the type of '$1'", what);
 }
 
 
@@ -42,6 +43,7 @@ Tree *InferTypes::DoInteger(Integer *what)
 //   Return the integer type
 // ----------------------------------------------------------------------------
 {
+    types[what] = integer_type;
     return integer_type;
 }
 
@@ -51,6 +53,7 @@ Tree *InferTypes::DoReal(Real *what)
 //   Return the real type
 // ----------------------------------------------------------------------------
 {
+    types[what] = real_type;
     return real_type;
 }
 
@@ -61,9 +64,9 @@ Tree *InferTypes::DoText(Text *what)
 // ----------------------------------------------------------------------------
 {
     static Quote quote;
-    if (what->Opening() == quote.Opening())
-        return character_type;
-    return text_type;
+    Tree *t = what->Opening() == quote.Opening() ? character_type : text_type;
+    types[what] = t;
+    return t;
 }
 
 
@@ -72,16 +75,19 @@ Tree *InferTypes::DoName(Name *what)
 //   Return the type of the value of the name
 // ----------------------------------------------------------------------------
 {
-    Tree *value = context->Name(what->value);
-    if (value)
-        return value->Do(this);
-    return context->Error("Unknown type for '$1'", what);
+    if (Tree *value = context->Name(what->value))
+    {
+        if (Tree *t = types[value])
+            return t;
+        return context->Error("Unknown type for '$1'", what);
+    }
+    return context->Error("Unknown name '$1'", what);
 }
 
 
 Tree *InferTypes::DoPrefix(Prefix *what)
 // ----------------------------------------------------------------------------
-// 
+//   Infer all the possible types for a prefix expression
 // ----------------------------------------------------------------------------
 {
     return what;

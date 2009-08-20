@@ -33,18 +33,23 @@
 //  - text, type of "ABC" and "Hello World"
 //  - character, type of 'A' and ' '
 //  - boolean, type of true and false
-//  - nil, type of nil
 //
 //  The type constructors are:
-//  - T1 | T2: Values of either type T1 or T2
+//  - T1 <nl> T2: Values of either type T1 or T2 (<nl> is infix newline)
 //  - T1 -> T2: A function taking T1 and returning T2
 //  - expr: A tree with the given shape, e.g  (T1, T2), T1+T2
+//
+//  The type analysis phase consists in scanning the input tree,
+//  recording type information and returning typed trees.
 
 
 #include "tree.h"
 #include "context.h"
+#include <map>
 
 XL_BEGIN
+
+typedef std::map<Tree *, Tree *>        type_map;
 
 struct InferTypes : Action
 // ----------------------------------------------------------------------------
@@ -65,6 +70,7 @@ struct InferTypes : Action
     Tree *DoNative(Native *what);
 
     Context *   context;
+    type_map    types;
 };
 
 extern Tree * integer_type;

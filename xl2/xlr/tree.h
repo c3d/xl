@@ -71,6 +71,7 @@ struct Tree
     // Perform recursive actions on a tree
     virtual Tree *      Do(Action *action);
     virtual void        DoData(Action *action);
+    Tree *              Do(Action &action) { return Do(&action); }
 
     // Return in normalized form (i.e. using only trees in this file)
     virtual Tree *      Normalize();
@@ -130,6 +131,8 @@ struct Integer : Tree
     Integer(longlong i = 0, tree_position pos = NOWHERE):
         Tree(pos), value(i) {}
     virtual Tree *      Do(Action *action);
+    virtual Tree *      Run(Context *context)                 { return this; }
+    virtual Tree *      Call(Context *context, Tree *args)    { return this; }
     longlong            value;
 };
 
@@ -142,6 +145,8 @@ struct Real : Tree
     Real(double d = 0.0, tree_position pos = NOWHERE):
         Tree(pos), value(d) {}
     virtual Tree *      Do(Action *action);
+    virtual Tree *      Run(Context *context)                 { return this; }
+    virtual Tree *      Call(Context *context, Tree *args)    { return this; }
     double              value;
 };
 
@@ -154,6 +159,8 @@ struct Text : Tree
     Text(text t = "", tree_position pos = NOWHERE):
         Tree(pos), value(t) {}
     virtual Tree *      Do(Action *action);
+    virtual Tree *      Run(Context *context)                 { return this; }
+    virtual Tree *      Call(Context *context, Tree *args)    { return this; }
     virtual text        Opening() { return "\""; }
     virtual text        Closing() { return "\""; }
     text                value;
@@ -204,6 +211,7 @@ struct Name : Tree
         Tree(pos), value(n) {}
     virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context);
+    virtual Tree *      Call(Context *context, Tree *args);
     text                value;
 };
 
@@ -225,6 +233,7 @@ struct Block : Tree
     virtual text        Closing() { return "\t-"; }
     virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context);
+    virtual Tree *      Call(Context *context, Tree *args);
     static Block *      MakeBlock(Tree *child,
                                   text open, text close,
                                   tree_position pos = NOWHERE);
@@ -287,6 +296,7 @@ struct Prefix : Tree
         Tree(pos), left(l), right(r) {}
     virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context);
+    virtual Tree *      Call(Context *context, Tree *args);
     Tree *              left;
     Tree *              right;
 };
@@ -301,6 +311,7 @@ struct Postfix : Prefix
         Prefix(l, r, pos) {}
     virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context);
+    virtual Tree *      Call(Context *context, Tree *args);
 };
 
 
@@ -319,6 +330,7 @@ struct Infix : Tree
     Infix(text n, Tree *left, Tree *right, tree_position pos = NOWHERE);
     virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context);
+    virtual Tree *      Call(Context *context, Tree *args);
     Tree *              Left();
     Tree *              Right();
     text                name;

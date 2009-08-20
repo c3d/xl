@@ -50,7 +50,7 @@ void EnterBasics(Context *c)
 #define NAME(n,t)       \
     do { static t tmp(#n); c->EnterName(#n, &tmp); n##_name = &tmp; } while(0)
 #define PREFIX(n,t)     \
-    do { static t tmp; c->EnterPrefix(n, &tmp); } while(0)
+    do { static t tmp; c->EnterName(n, &tmp); } while(0)
 
     INFIX("\n", LastInListHandler);
     INFIX(";", LastInListHandler);
@@ -425,7 +425,7 @@ struct CollectDefinition : Action
             Context locals(context);
             CollectVariables vars(&locals);
             vars.Do(what->right);
-            context->EnterPrefix(defined->value, definition);
+            context->EnterName(defined->value, definition);
         }
         else
         {
@@ -443,7 +443,7 @@ struct CollectDefinition : Action
             Context locals(context);
             CollectVariables vars(&locals);
             vars.Do(what->left);
-            context->EnterPostfix(defined->value, definition);
+            context->EnterName(defined->value, definition);
         }
         else
         {
@@ -496,7 +496,7 @@ Tree *Definition::Call(Context *context, Tree *args)
 
         // Collect variables and store definition
         CollectDefinition define(context, definition);
-        defined->Do(&define);
+        defined->Do(define);
 
         return defined;
     }

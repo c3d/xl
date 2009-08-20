@@ -53,20 +53,19 @@ void *Tree::operator new(size_t sz)
 
 Tree *Tree::Run(Context *context)
 // ----------------------------------------------------------------------------
-//   The default when executing a tree is to return it
+//   By default, we don't know how to evaluate a tree
 // ----------------------------------------------------------------------------
 {
-    return this;
+    return context->Error("Don't know how to evaluate '$1'", this);
 }
 
 
 Tree *Tree::Call(Context *context, Tree *args)
 // ----------------------------------------------------------------------------
-//   The default when executing a tree with arguments (invoke)
+//   By default, we don't know how to call a tree
 // ----------------------------------------------------------------------------
 {
-    // By default, we don't know how to invoke a tree
-    return context->Error("Don't know how to evaluate '$1'", this);
+    return context->Error("Don't know how to call '$1'", this);
 }
 
 
@@ -232,6 +231,19 @@ Tree *Name::Run(Context *context)
 }
 
 
+Tree *Name::Call(Context *context, Tree *args)
+// ----------------------------------------------------------------------------
+//    Call a name: call the associated value
+// ----------------------------------------------------------------------------
+{
+    if (Tree *named = context->Name(value))
+        return named->Call(context, args);
+
+    // Otherwise, this is an error to try and call the name
+    return context->Error("Called name '$1' doesn't exist", this);
+}
+
+
 
 // ============================================================================
 // 
@@ -270,6 +282,17 @@ Tree *Block::Run(Context *context)
 
     // Otherwise, simply execute the child (i.e. optimize away block)
     return child->Run(context);
+}
+
+
+Tree *Block::Call(Context *context, Tree *args)
+// ----------------------------------------------------------------------------
+//    Execute a block
+// ----------------------------------------------------------------------------
+{
+    // If there is a block operation, execute that operation on child
+    Tree *callee = Run(context);
+    return callee->Call(context, args);
 }
 
 
@@ -326,17 +349,25 @@ Tree *Prefix::Run(Context *context)
 //    Execute a prefix node
 // ----------------------------------------------------------------------------
 {
-    // If the name denotes a known prefix, then execute, e.g. sin X
-    if (Name *name = dynamic_cast<Name *> (left))
-        if (Tree *prefixOp = context->Prefix(name->value))
-            return prefixOp->Call(context, right);
-
-    // Evaluate left, e.g. in A[5] (3), evaluate A[5]
-    Tree *callee = left->Run(context);
-    if (callee)
+    // Call the left with the right as argument
+    if (Tree *callee = left->Run(context))
         return callee->Call(context, right);
 
+    // If there was no valid left, error out
     return context->Error("Don't know how to call '$1'", left);
+}
+
+
+Tree *Prefix::Call(Context *context, Tree *args)
+// ----------------------------------------------------------------------------
+//    Call a prefix node
+// ----------------------------------------------------------------------------
+{
+    if (Tree *callee = Run(context))
+        return callee->Call(context, args);
+
+    // If there was no valid result, error out
+    return context->Error("Don't know how to call prefix '$1'", right);
 }
 
 
@@ -372,17 +403,25 @@ Tree *Postfix::Run(Context *context)
 //    Execute a postfix node
 // ----------------------------------------------------------------------------
 {
-    // If the name denotes a known prefix, then execute, e.g. sin X
-    if (Name *name = dynamic_cast<Name *> (right))
-        if (Tree *postfixOp = context->Postfix(name->value))
-            return postfixOp->Call(context, left);
-
-    // Evaluate right
-    Tree *callee = right->Run(context);
-    if (callee)
+    // Call the right with the left as argument
+    if (Tree *callee = right->Run(context))
         return callee->Call(context, left);
 
+    // If there was no valid left, error out
     return context->Error("Don't know how to call '$1'", right);
+}
+
+
+Tree *Postfix::Call(Context *context, Tree *args)
+// ----------------------------------------------------------------------------
+//    Call a postfix node
+// ----------------------------------------------------------------------------
+{
+    if (Tree *callee = Run(context))
+        return callee->Call(context, args);
+
+    // If there was no valid callee, error out
+    return context->Error("Don't know how to call postfix '$1'", right);
 }
 
 
@@ -453,7 +492,20 @@ Tree *Infix::Run(Context *context)
     if (Tree *infixOp = context->Infix(name))
         return infixOp->Call(context, this);
 
-    return context->Error("Uknown infix operation '$1'", this);
+    return context->Error ("Cannot evaluate unknown infix '$1'", this);
+}
+
+
+Tree *Infix::Call(Context *context, Tree *args)
+// ----------------------------------------------------------------------------
+//    Call an infix node
+// ----------------------------------------------------------------------------
+{
+    // Check if the result of evaluating ourselves is something we can call
+    if (Tree *callee = Run(context))
+        return callee->Call(context, args);
+
+    return context->Error("Cannot call unknown infix '$1'", this);
 }
 
 

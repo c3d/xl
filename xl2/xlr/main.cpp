@@ -82,7 +82,7 @@ int main(int argc, char **argv)
         IFTRACE(source)
             std::cout << tree << "\n";
         if (!options.parseOnly)
-            tree = context.Run(tree);
+            tree = tree->Run(&context);
         std::cout << tree << "\n";
     }
 

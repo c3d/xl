@@ -101,7 +101,7 @@ Renderer::Renderer(std::ostream &out, text styleFile, Syntax &stx, uint ts)
     if (fmts)
     {
         EnterFormatsAction action(formats);
-        fmts->Do(&action);
+        fmts->Do(action);
     }
 }
 
@@ -301,9 +301,9 @@ std::ostream& operator<< (std::ostream &out, XL::Tree *t)
 //   Just in case you want to emit a tree using normal ostream interface
 // ----------------------------------------------------------------------------
 {
-    XL::Renderer r(out);
+    XL::Renderer render(out);
     if (t)
-        t->Do(&r);
+        t->Do(render);
     else
         out << "NULL";
     return out;
