@@ -104,17 +104,14 @@ Tree *ListHandler::Call(Context *context, Tree *args)
 {
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
-        tree_list results;
-        tree_list::iterator i;
-        for (i = infix->list.begin(); i != infix->list.end(); i++)
-            if (Tree *item = (*i)->Run(context))
-                results.push_back(item);
-        switch (results.size())
-        {
-        case 0: return NULL;
-        case 1: return results[0];
-        default: return new Infix(infix->name, results, infix->Position());
-        }
+        Tree *left = infix->left->Run(context);
+        Tree *right = infix->right->Run(context);
+        if (left)
+            if (right)
+                return new Infix(infix->name, left, right, infix->Position());
+            else
+                return left;
+        return right;
     }
     else
     {
@@ -131,9 +128,8 @@ Tree *LastInListHandler::Call(Context *context, Tree *args)
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
         Tree *result = NULL;
-        tree_list::iterator i;
-        for (i = infix->list.begin(); i != infix->list.end(); i++)
-            result = (*i)->Run(context);
+        result = infix->left->Run(context);
+        result = infix->right->Run(context);
         return result;
     }
     else
@@ -157,50 +153,31 @@ Tree *BinaryHandler::Call(Context *context, Tree *args)
 {
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
-        if (infix->list.size() < 2)
-            return context->Error("Expected two arguments in '$1", args);
-
-        tree_list::iterator i    = infix->list.begin();
-        Tree *              item = (*i)->Run(context);
-
-        if (!item)
+        tree_position pos = args->Position();
+        Tree *left = infix->left->Run(context);
+        if (!left)
             return context->Error("No value to left of '$1'", args);
+        Tree *right = infix->right->Run(context);
+        if (!right)
+            return context->Error("No value to right of '$1'", args);
 
         // Check if implementation is unhappy somehow
         try
         {
             // Check type of first argument
-            if (Integer *integer = dynamic_cast<Integer *> (item))
-            {
-                longlong result = integer->value;
-                for (i++; i != infix->list.end(); i++)
-                    if (Integer*r=dynamic_cast<Integer*> ((*i)->Run(context)))
-                        result = DoInteger(result, r->value);
-                    else
-                        return context->Error("'$1' is not an integer", *i);
-                return new Integer(result, args->Position());
-            }
-            else if (Real *real = dynamic_cast<Real *> (item))
-            {
-                double result = real->value;
-                for (i++; i != infix->list.end(); i++)
-                    if (Real*r=dynamic_cast<Real*> ((*i)->Run(context)))
-                        result = DoReal(result, r->value);
-                    else
-                        return context->Error("'$1' is not a real", *i);
-                return new Real(result, args->Position());
-            }
-            else if (Text *txt = dynamic_cast<Text *> (item))
-            {
-                text result = txt->value;
-                for (i++; i != infix->list.end(); i++)
-                    if (Text*r=dynamic_cast<Text*> ((*i)->Run(context)))
-                        result = DoText(result, r->value);
-                    else
-                        return context->Error("'$1' is not a text", *i);
-                return new Text(result, args->Position());
-            }
-            return context->Error("Unimplemented operation '$1'", args);
+            if (Integer *li = dynamic_cast<Integer *> (left))
+                if (Integer *ri = dynamic_cast<Integer *> (right))
+                    return new Integer(DoInteger(li->value, ri->value), pos);
+
+            if (Real *lr = dynamic_cast<Real *> (left))
+                if (Real *rr = dynamic_cast<Real *> (right))
+                    return new Real(DoReal(lr->value, rr->value), pos);
+
+            if (Text *lt = dynamic_cast<Text *> (left))
+                if (Text *rt = dynamic_cast<Text *> (right))
+                    return new Text(DoText(lt->value, rt->value), pos);
+
+            return context->Error("Incompatible types in '$1'", args);
         }
         catch(kstring msg)
         {
@@ -250,47 +227,33 @@ Tree *BooleanHandler::Call(Context *context, Tree *args)
 {
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
-        if (infix->list.size() != 2)
-            return context->Error("Expected two arguments in '$1", args);
-
-        Tree *left = infix->list[0]->Run(context);
+        Tree *left = infix->left->Run(context);
         if (!left)
             return context->Error("No value to left of '$1'", args);
-        Tree *right = infix->list[1]->Run(context);
+        Tree *right = infix->right->Run(context);
+        if (!right)
+            return context->Error("No value to right of '$1'", args);
 
         // Check if implementation is unhappy somehow
         try
         {
-            bool result = false;
-
             // Check type of first argument
-            if (Integer *il = dynamic_cast<Integer *> (left))
-            {
-                if (Integer *ir = dynamic_cast<Integer*> (right))
-                    result = DoInteger(il->value, ir->value);
-                else
-                    return context->Error("'$1' is not an integer", right);
-            }
-            else if (Real *il = dynamic_cast<Real *> (left))
-            {
-                if (Real *ir = dynamic_cast<Real*> (right))
-                    result = DoReal(il->value, ir->value);
-                else
-                    return context->Error("'$1' is not a real number", right);
-            }
-            else if (Text *il = dynamic_cast<Text *> (left))
-            {
-                if (Text *ir = dynamic_cast<Text*> (right))
-                    result = DoText(il->value, ir->value);
-                else
-                    return context->Error("'$1' is not a text", right);
-            }
-            else
-                return context->Error("Unimplemented operation '$1'", args);
+            if (Integer *li = dynamic_cast<Integer *> (left))
+                if (Integer *ri = dynamic_cast<Integer *> (right))
+                    return DoInteger(li->value, ri->value)
+                        ? true_name : false_name;
 
-            if (result)
-                return true_name;
-            return false_name;
+            if (Real *lr = dynamic_cast<Real *> (left))
+                if (Real *rr = dynamic_cast<Real *> (right))
+                    return DoReal(lr->value, rr->value)
+                        ? true_name : false_name;
+
+            if (Text *lt = dynamic_cast<Text *> (left))
+                if (Text *rt = dynamic_cast<Text *> (right))
+                    return DoText(lt->value, rt->value)
+                        ? true_name : false_name;
+
+            return context->Error("Incompatible types in '$1'", args);
         }
         catch(kstring msg)
         {
@@ -340,23 +303,17 @@ Tree *Assignment::Call(Context *context, Tree *args)
 {
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
-        if (infix->list.size() < 2)
-            return context->Error("Assignment '$1' without arguments", args);
-
-        Tree *assigned = infix->list.back();
-        Tree *value = assigned->Run(context);
+        Tree *expr = infix->right;
+        Tree *value = expr->Run(context);
         if (!value)
-            return context->Error("No value for '$1' in assignment", assigned);
+            return context->Error("No value for '$1' in assignment", expr);
 
-        tree_list::iterator begin = infix->list.begin();
-        tree_list::iterator end = infix->list.end();
+        Tree *target = infix->left;
+        if (Name *name = dynamic_cast<Name *> (target))
+            context->EnterName(name->value, value);
+        else
+            return context->Error("Cannot assign to non-name '$1'", target);
 
-        end--;
-        for (tree_list::iterator i = begin; i != end; i++)
-            if (Name *name = dynamic_cast<Name *> (*i))
-                context->EnterName(name->value, value);
-            else
-                return context->Error("Cannot assign to non-name '$1'", *i);
         return value;
     }
     return context->Error ("Invalid assignment '$1'", args);
@@ -456,14 +413,10 @@ struct CollectDefinition : Action
     Tree *DoInfix(Infix *what)
     {
         // For an infix, e.g. A+B, collect variables A and B
-        tree_list::iterator i;
         Context locals(context);
         CollectVariables vars(&locals);
-
-        for (i = what->list.begin(); i != what->list.end(); i++)
-        {
-            vars.Do(*i);
-        }
+        vars.Do(what->left);
+        vars.Do(what->right);
         context->EnterInfix(what->name, definition);
         return what;
     }
@@ -486,11 +439,8 @@ Tree *Definition::Call(Context *context, Tree *args)
 {
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
-        if (infix->list.size() != 2)
-            return context->Error("Definition '$1' is malformed", args);
-
-        Tree *defined = infix->list[0];
-        Tree *definition = infix->list[1];
+        Tree *defined = infix->left;
+        Tree *definition = infix->right;
         if (!defined || !definition)
             return context->Error("Definition '$1' is incomplete", args);
 

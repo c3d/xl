@@ -53,7 +53,7 @@ struct EnterFormatsAction : Action
         static Block block(NULL);
         if (what->name == "=")
         {
-            if (Name *nmt = dynamic_cast<Name *> (what->Left()))
+            if (Name *nmt = dynamic_cast<Name *> (what->left))
             {
                 text N = nmt->value;
                 if (N == "cr")                  N = "\n";
@@ -62,12 +62,12 @@ struct EnterFormatsAction : Action
                 else if (N == "indent")         N = block.Opening();
                 else if (N == "unindent")       N = block.Closing();
                 else                            N += " ";
-                formats[N] = what->Right();
+                formats[N] = what->right;
                 return what;
             }
-            else if (Text *txt = dynamic_cast<Text *> (what->Left()))
+            else if (Text *txt = dynamic_cast<Text *> (what->left))
             {
-                formats[txt->value] = what->Right();
+                formats[txt->value] = what->right;
                 return what;
             }
         }
@@ -268,29 +268,29 @@ Tree *Renderer::DoInfix (Infix *what)
 //   Render an infix tree
 // ----------------------------------------------------------------------------
 {
-    tree_list &list = what->list;
-    uint count = list.size() - 1;
-    for (tree_list::iterator c = list.begin(); c != list.end(); c++)
-    {
-        if (parenthesize)
-            output << "(";
-        (*c)->Do(this);
-        if (parenthesize)
-            output << ")";
-        if (count--)
-        {
-            if (what->name == "\n" || what->name == "." ||
-                what->name == "," || what->name == ":")
-                need_space = "";
-            else
-                need_space = " ";
-            Indent(what->name);
-            if (what->name == "\n" || what->name == ".")
-                need_space = "";
-            else
-                need_space = " ";
-        }
-    }
+    if (parenthesize)
+        output << "(";
+    what->left->Do(this);
+    if (parenthesize)
+        output << ")";
+
+    if (what->name == "\n" || what->name == "." ||
+        what->name == "," || what->name == ":")
+        need_space = "";
+    else
+        need_space = " ";
+    Indent(what->name);
+    if (what->name == "\n" || what->name == ".")
+        need_space = "";
+    else
+        need_space = " ";
+
+    if (parenthesize)
+        output << "(";
+    what->right->Do(this);
+    if (parenthesize)
+        output << ")";
+
     return what;
 }
 
@@ -333,7 +333,8 @@ void debug(XL::Tree *tree)
     if (tree)
         tree->Do(render);
     else
-        std::cout << "NULL\n";
+        std::cout << "NULL";
+    std::cout << "\n";
 }
 
 void debugp(XL::Tree *tree)
@@ -348,5 +349,4 @@ void debugp(XL::Tree *tree)
     else
         std::cout << "NULL";
     std::cout << "\n";
-    std::cout << "NULL\n";
 }

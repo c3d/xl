@@ -432,44 +432,13 @@ Tree *Postfix::Call(Context *context, Tree *args)
 // 
 // ============================================================================
 
-Infix::Infix(text n, Tree *left, Tree *right, tree_position pos)
-// ----------------------------------------------------------------------------
-//   Constructor optimizing the tree structure
-// ----------------------------------------------------------------------------
-    : Tree(pos), name(n), list()
-{
-    if (Infix *li = dynamic_cast<Infix *> (left))
-    {
-        if (li->name == name)
-        {
-            list.insert(list.end(), li->list.begin(), li->list.end());
-            left = NULL;
-        }
-    }
-    if (left)
-        list.push_back(left);
-
-    if (Infix *ri = dynamic_cast<Infix *> (right))
-    {
-        if (ri->name == name)
-        {
-            list.insert(list.end(), ri->list.begin(), ri->list.end());
-            right = NULL;
-        }
-    }
-    if (right)
-        list.push_back(right);
-}
-
-
 Tree *Action::DoInfix(Infix *what)
 // ----------------------------------------------------------------------------
 //   Default is to run the action on children first
 // ----------------------------------------------------------------------------
 {
-    tree_list::iterator i;
-    for (i = what->list.begin(); i != what->list.end(); i++)
-        *i = (*i)->Do(this);
+    what->left = what->left->Do(this);
+    what->right = what->right->Do(this);
     return Do(what);
 }
 
@@ -506,28 +475,6 @@ Tree *Infix::Call(Context *context, Tree *args)
         return callee->Call(context, args);
 
     return context->Error("Cannot call unknown infix '$1'", this);
-}
-
-
-Tree *Infix::Left()
-// ----------------------------------------------------------------------------
-//   Return the left of an infix if it exists
-// ----------------------------------------------------------------------------
-{
-    if (list.size())
-        return list[0];
-    return NULL;
-}
-
-
-Tree *Infix::Right()
-// ----------------------------------------------------------------------------
-//   Return the right of an infix if it exists
-// ----------------------------------------------------------------------------
-{
-    if (list.size() == 2)
-        return list[1];
-    return NULL;
 }
 
 

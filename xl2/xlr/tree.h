@@ -315,7 +315,7 @@ struct Postfix : Prefix
 };
 
 
-struct Infix : Tree
+struct Infix : Prefix
 // ----------------------------------------------------------------------------
 //   Infix operators, e.g. A+B, A and B, A,B,C,D,E
 // ----------------------------------------------------------------------------
@@ -325,16 +325,12 @@ struct Infix : Tree
 //   infix operators in a single Infix tree. This is the reason it holds
 //   a tree list and not a just left and right
 {
-    Infix(text n, tree_list &tl, tree_position pos = NOWHERE):
-        Tree(pos), name(n), list(tl) {}
-    Infix(text n, Tree *left, Tree *right, tree_position pos = NOWHERE);
+    Infix(text n, Tree *left, Tree *right, tree_position pos = NOWHERE):
+        Prefix(left, right, pos), name(n) {}
     virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context);
     virtual Tree *      Call(Context *context, Tree *args);
-    Tree *              Left();
-    Tree *              Right();
     text                name;
-    tree_list           list;
 };
 
 
