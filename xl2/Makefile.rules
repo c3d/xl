@@ -154,16 +154,19 @@ CAT_DEPEND=sed								\
 	rm -f _tmp.depend
 ifdef TARGET
 $(OBJDIR)/Makefile.depend: $(SOURCES)
-	@echo Generating dependencies in $@
-	@echo > $(OBJDIR)/Makefile.depend
-	@$(MAKE) mkdepend
+	$V echo Generating dependencies in $@
+	$V mkdir -p $(OBJDIR)
+	$V echo > $(OBJDIR)/Makefile.depend
+	$V $(MAKE) mkdepend
+else
+$(OBJDIR)/Makefile.depend:
 endif
 
 mkdepend: predepend $(SOURCES:%=%.mkdepend)
-	@touch $(OBJDIR)/_Makefile.depend
-	@mv $(OBJDIR)/_Makefile.depend $(OBJDIR)/Makefile.depend
+	$V touch $(OBJDIR)/_Makefile.depend
+	$V mv $(OBJDIR)/_Makefile.depend $(OBJDIR)/Makefile.depend
 predepend:
-	@echo > $(OBJDIR)/_Makefile.depend
+	$V echo > $(OBJDIR)/_Makefile.depend
 %.c.mkdepend:
 	$V $(CC_DEPEND) $*.c && $(CAT_DEPEND)
 %.C.mkdepend:
@@ -174,6 +177,7 @@ predepend:
 	$V $(AS_DEPEND) $*.S && $(CAT_DEPEND)
 %.s.mkdepend:
 	$V $(AS_DEPEND) $*.s && $(CAT_DEPEND)
+%.xl.mkdepend:
 
 
 # Include dependencies from current directory
