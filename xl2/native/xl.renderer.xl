@@ -172,7 +172,7 @@ module XL.RENDERER is
         P        : PR.Parser
         formats  : PT.tree
 
-        P := PR.Open(format)
+        P := PR.Open(format, XLT.RuntimePath("xl.syntax"))
         formats := PR.Parse(P)
         PR.Close P
 
