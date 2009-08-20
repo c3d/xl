@@ -100,7 +100,7 @@ Tree *Renderer::Run(Tree *what)
         for (tree_list::iterator c = f->list.begin(); c != f->list.end(); c++)
         {
             Run(*c);
-            if (--count)
+            if (count--)
                 Indent(output, f->name, indent);
         }
     }
