@@ -72,5 +72,6 @@ extern std::ostream& operator<< (std::ostream&out, XL::Tree *t);
 
 // For use in a debugger
 extern "C" void debug(XL::Tree *);
+extern "C" void debugp(XL::Tree *);
 
 #endif // RENDERER_H

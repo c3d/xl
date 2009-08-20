@@ -336,3 +336,17 @@ void debug(XL::Tree *tree)
         std::cout << "NULL\n";
 }
 
+void debugp(XL::Tree *tree)
+// ----------------------------------------------------------------------------
+//    Emit for debugging purpose
+// ----------------------------------------------------------------------------
+{
+    XL::Renderer render(std::cout);
+    render.parenthesize = true;
+    if (tree)
+        tree->Do(render);
+    else
+        std::cout << "NULL";
+    std::cout << "\n";
+    std::cout << "NULL\n";
+}
