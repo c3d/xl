@@ -313,7 +313,4 @@ struct Native : Tree
     
 XL_END
 
-// For use in a debugger
-extern "C" void debug(XL::Tree *);
-
 #endif // TREE_H

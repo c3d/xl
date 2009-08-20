@@ -32,6 +32,7 @@
 #include <iostream>
 #include "scanner.h"
 #include "parser.h"
+#include "renderer.h"
 #include "tree.h"
 #include "options.h"
 
@@ -47,7 +48,8 @@ int main(int argc, char **argv)
     text cmd, end = "";
 
     // Make sure debug function is linked in...
-    debug(NULL);
+    if (!low_water)
+        debug(NULL);
 
     // Initialize basic XL syntax from syntax description file
     syntax.ReadSyntaxFile("xl.syntax");
@@ -58,6 +60,7 @@ int main(int argc, char **argv)
     {
         XL::Parser parser (cmd.c_str(), syntax);
         XL::Tree *tree = parser.Parse();
+        std::cout << tree;
 
         IFTRACE(source)
         {

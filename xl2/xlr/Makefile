@@ -33,6 +33,7 @@ SOURCES     =					\
 	context.cpp				\
 	syntax.cpp				\
 	parser.cpp				\
+	renderer.cpp				\
 	options.cpp				\
 	errors.cpp
 
