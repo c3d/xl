@@ -229,6 +229,8 @@ module XL.SEMANTICS.FUNCTIONS is
             BN : CName as PT.name_tree
             assert f.machine_name = BN
             result := Interface
+            f.is_global := true // Make sure code generated is not x.f()
+            f.is_field := false
         SYM.SetProperty XLT.context, "MNAME", nil
         SYM.SetProperty XLT.context, "EXTERN", nil
 
