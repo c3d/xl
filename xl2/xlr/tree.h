@@ -67,6 +67,7 @@ struct Tree
 
     // Evaluate a tree
     virtual Tree *      Run(Context *context);
+    virtual Tree *      Call(Context *context, Tree *args);
 
     // Perform recursive actions on a tree
     virtual Tree *      Do(Action *action);

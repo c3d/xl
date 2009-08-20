@@ -65,16 +65,14 @@ int main(int argc, char **argv)
     {
         XL::Parser parser (cmd.c_str(), syntax, positions, errors);
         XL::Tree *tree = parser.Parse();
-        std::cout << tree;
 
         IFTRACE(source)
         {
-            // std::cout << *tree << "\n";
+            std::cout << tree << "\n";
         }
         IFTRACE(parse)
         {
-            // Tree::outputDebug = true;
-            // std::cout << *tree << "\n";
+            std::cout << tree << "\n";
         }
     }
 

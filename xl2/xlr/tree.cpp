@@ -38,12 +38,20 @@ tree_position Tree::NOWHERE = ~0UL;
 
 Tree *Tree::Run(Context *context)
 // ----------------------------------------------------------------------------
-//   Execute a tree.
+//   The default when executing a tree is to return it
 // ----------------------------------------------------------------------------
-//   [ ] -> [ this ]
 {
-    context->Push(this);
     return this;
+}
+
+
+Tree *Tree::Call(Context *context, Tree *args)
+// ----------------------------------------------------------------------------
+//   The default when executing a tree with arguments (invoke)
+// ----------------------------------------------------------------------------
+{
+    // By default, we don't know how to invoke a tree
+    return context->Error("Don't know how to evaluate '$1'", this);
 }
 
 
@@ -189,16 +197,9 @@ Tree *Name::Run(Context *context)
 // ----------------------------------------------------------------------------
 //    Evaluate a name
 // ----------------------------------------------------------------------------
-//    [ ] -> [ named-value ]
 {
     if (Tree *named = context->Name(value))
-    {
-        // We have a tree with that name in the context, put that on TOS
-        context->Mark(named->Run(context));
-
-        // Make sure we lookup the name every time
-        return this;
-    }
+        return named;
 
     // Otherwise, this is an error to evaluate the name
     return context->Error("Name '$1' doesn't exist", this);
@@ -239,12 +240,7 @@ Tree *Block::Run(Context *context)
     // If there is a block operation, execute that operation on child
     Tree *blockOp = context->Block(Opening());
     if (blockOp)
-    {
-        // Leave child unevaluated for block operation to process
-        context->Push(this);
-        context->Push(child);
-        return blockOp->Run(context);
-    }
+        return blockOp->Call(context, child);
 
     // Otherwise, simply execute the child (i.e. optimize away block)
     return child->Run(context);
@@ -306,29 +302,15 @@ Tree *Prefix::Run(Context *context)
 {
     // If the name denotes a known prefix, then execute, e.g. sin X
     if (Name *name = dynamic_cast<Name *> (left))
-    {
         if (Tree *prefixOp = context->Prefix(name->value))
-        {
-            context->Push(this);
-            context->Push(right);
-            return prefixOp->Run(context);
-        }
-    }
+            return prefixOp->Call(context, right);
 
-   // Evaluate left, e.g. in A[5] (3), evaluate A[5]
-    left = left->Run(context);
+    // Evaluate left, e.g. in A[5] (3), evaluate A[5]
+    Tree *callee = left->Run(context);
+    if (callee)
+        return callee->Call(context, right);
 
-    // Retrieve TOS, i.e. evaluated value of A[5]
-    Tree *leftVal = context->Pop();
-
-    // If leftVal is left, we don't know what to do with it.
-    if (leftVal == left)
-        return context->Error("Uknown prefix operation '$1'", this);
-
-    // Otherwise, evaluate with that result
-    context->Push(this);
-    context->Push(right);
-    return leftVal->Run(context);
+    return context->Error("Don't know how to call '$1'", left);
 }
 
 
@@ -364,18 +346,17 @@ Tree *Postfix::Run(Context *context)
 //    Execute a postfix node
 // ----------------------------------------------------------------------------
 {
-    // If the name denotes a known postfix, then execute, e.g. sin X
-    if (Name *name = dynamic_cast<Name *> (left))
-    {
+    // If the name denotes a known prefix, then execute, e.g. sin X
+    if (Name *name = dynamic_cast<Name *> (right))
         if (Tree *postfixOp = context->Postfix(name->value))
-        {
-            context->Push(this);
-            context->Push(left);
-            return postfixOp->Run(context);
-        }
-    }
+            return postfixOp->Call(context, left);
 
-    return context->Error("Uknown postfix operation '$1'", this);
+    // Evaluate right
+    Tree *callee = right->Run(context);
+    if (callee)
+        return callee->Call(context, left);
+
+    return context->Error("Don't know how to call '$1'", right);
 }
 
 
@@ -414,23 +395,7 @@ Tree *Infix::Run(Context *context)
 {
     // If the name denotes a known infix, then execute, e.g. A+B
     if (Tree *infixOp = context->Infix(name))
-    {
-        tree_list::iterator i;
-        bool firstOne = true;
-        Tree *result = this;
-        context->Push(this);
-        for (i = list.begin(); i != list.end(); i++)
-        {
-            context->Push(*i);
-            if (!firstOne)
-            {
-                result = infixOp->Run(context);
-                context->Mark(result);
-            }
-            firstOne = true;
-        }
-        return result;
-    }
+        return infixOp->Call(context, this);
 
     return context->Error("Uknown infix operation '$1'", this);
 }
