@@ -34,12 +34,12 @@ enum XlTrace
 //   List the traces known to the compiler
 // ----------------------------------------------------------------------------
 {
-    MZ_TRACE_none = 0,
+    XL_TRACE_none = 0,
 #define OPTVAR(name, type, value)
 #define OPTION(name, descr, code)
-#define TRACE(name)     MZ_TRACE_##name,
+#define TRACE(name)     XL_TRACE_##name,
 #include "options.tbl"
-    MZ_TRACE_last
+    XL_TRACE_last
 };
 
 

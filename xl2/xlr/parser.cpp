@@ -336,7 +336,7 @@ XLTree *XLParser::Parse(text closing_paren)
             }
             break;
         default:
-            MZ_ASSERT(!"Invalid token");
+            XL_ASSERT(!"Invalid token");
         } // Switch
 
 

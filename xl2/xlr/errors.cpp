@@ -52,7 +52,7 @@ void XLError(XLErrorNumber err, text file, uint line,
 //   Emit an error message
 // ----------------------------------------------------------------------------
 {
-    MZ_ASSERT(err < E_LAST);
+    XL_ASSERT(err < E_LAST);
     text errMsg = ErrorMessages[err];
     for (uint i = 0; i < args.size(); i++)
     {
@@ -66,7 +66,7 @@ void XLError(XLErrorNumber err, text file, uint line,
 }
 
 
-void mz_assert_failed(kstring msg, kstring file, uint line)
+void xl_assert_failed(kstring msg, kstring file, uint line)
 // ----------------------------------------------------------------------------
 //   Report an assertion failure
 // ----------------------------------------------------------------------------

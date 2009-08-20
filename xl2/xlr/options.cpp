@@ -189,10 +189,10 @@ text XLOptions::ParseNext()
                     XLError(E_OptGarbage, "<cmdline>", arg, argval);    \
             }                                                           \
             else
-#if MZ_DEBUG
+#if XL_DEBUG
 #define TRACE(name)                                 \
             if (OptionMatches(argval, "t" #name))   \
-                mz_traces |= 1 << MZ_TRACE_##name;  \
+                xl_traces |= 1 << XL_TRACE_##name;  \
             else
 #else
 #define TRACE(name)
@@ -222,7 +222,7 @@ XLOptions gOptions;
 /*---------------------------------------------------------------------------*/
 
 
-ulong mz_traces = 0;
+ulong xl_traces = 0;
 // ----------------------------------------------------------------------------
 //   Bits for each trace
 // ----------------------------------------------------------------------------

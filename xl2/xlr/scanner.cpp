@@ -194,7 +194,7 @@ token_t XLScanner::NextToken()
         else if (column < indent)
         {
             // Unindenting: remove rightmost indent level
-            MZ_ASSERT(indents.size());
+            XL_ASSERT(indents.size());
             indents.pop_back();
             indent = column;
             

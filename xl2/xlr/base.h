@@ -153,23 +153,23 @@ typedef const wchar *   wkstring;
 /*                                                                           */
 /* ========================================================================= */
 /*
-   MZ_ASSERT checks for some condition at runtime.
-   MZ_CASSERT checks for a condition at compile time
+   XL_ASSERT checks for some condition at runtime.
+   XL_CASSERT checks for a condition at compile time
 */
 
 
-#if !defined(MZ_DEBUG) && (defined(DEBUG) || defined(_DEBUG))
-#define MZ_DEBUG        1
+#if !defined(XL_DEBUG) && (defined(DEBUG) || defined(_DEBUG))
+#define XL_DEBUG        1
 #endif
 
-#ifdef MZ_DEBUG
-#define MZ_ASSERT(x)   { if (!(x)) mz_assert_failed(#x, __FILE__, __LINE__); }
-#define MZ_CASSERT(x)  char __dummy[((int) (x))*2-1]
-externc void mz_assert_failed(kstring msg, kstring file, uint line);
+#ifdef XL_DEBUG
+#define XL_ASSERT(x)   { if (!(x)) xl_assert_failed(#x, __FILE__, __LINE__); }
+#define XL_CASSERT(x)  char __dummy[((int) (x))*2-1]
+externc void xl_assert_failed(kstring msg, kstring file, uint line);
 
 #else
-#define MZ_ASSERT(x)
-#define MZ_CASSERT(x)
+#define XL_ASSERT(x)
+#define XL_CASSERT(x)
 #endif
 
 
@@ -179,9 +179,9 @@ externc void mz_assert_failed(kstring msg, kstring file, uint line);
 // 
 // ============================================================================
 
-#ifdef MZ_DEBUG
-extern ulong mz_traces;
-#  define IFTRACE(x)    if (mz_traces & (1 << MZ_TRACE_##x))
+#ifdef XL_DEBUG
+extern ulong xl_traces;
+#  define IFTRACE(x)    if (xl_traces & (1 << XL_TRACE_##x))
 #else
 #  define IFTRACE(x)    if(0)
 #endif
@@ -195,11 +195,11 @@ extern ulong mz_traces;
 /* ========================================================================= */
 
 #if CONFIG_HAS_NAMESPACE
-#define MZ_BEGIN                namespace Mozart {
-#define MZ_END                  }
+#define XL_BEGIN                namespace Mozart {
+#define XL_END                  }
 #else   /* !CONFIG_HAS_NAMESPACE */
-#define MZ_BEGIN
-#define MZ_END
+#define XL_BEGIN
+#define XL_END
 #endif  /* ?CONFIG_HAS_NAMESPACE */
 
 
