@@ -225,9 +225,7 @@ Tree *Renderer::DoBlock (Block *what)
     what->child->Do(this);
         
     indent -= tabsize;
-    if (close == iblk.Closing())
-        Indent("\n");
-    else
+    if (close != iblk.Closing())
         output << close;
 
     return what;
