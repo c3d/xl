@@ -441,6 +441,20 @@ module XL.SEMANTICS.MACROS is
             // Turn an expression into the equivalent text
             return PT.NewText (text(Expression), '"', input.position)
 
+        when (xl.concat 'N1' 'N2') then
+            // Concatenate the two names
+            N1 := XLT.XLMacros N1
+            N2 := XLT.XLMacros N2
+            N1N : N1 as PT.name_tree
+            N2N : N2 as PT.name_tree
+            if N1N = nil then
+                ERR.Error "Argument $1 to xl.concat is not a name", N1
+                return parse_tree('N1' 'N2')
+            else if N2N = nil then
+                ERR.Error "Argument $1 to xl.concat is not a name", N2
+                return parse_tree('N1' 'N2')
+            return PT.NewName (N1N.value + N2N.value, input.position)
+
         when (xl.error 'Message') then
             EmitError Message
             return parse_tree (@nop)
