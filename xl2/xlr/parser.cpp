@@ -470,6 +470,9 @@ Tree *Parser::Parse(text closing)
             // low bit off for the previous priority
             if (prefix_priority <= result_priority)
             {
+                if (new_statement)
+                    result_priority = statement_priority;
+
                 while (stack.size())
                 {
                     Pending &prev = stack.back();
