@@ -70,7 +70,8 @@ int main(int argc, char **argv)
         XL::Tree *tree = parser.Parse();
         IFTRACE(source)
             std::cout << tree << "\n";
-        tree = context.Run(tree);
+        if (!options.parseOnly)
+            tree = context.Run(tree);
         std::cout << tree << "\n";
     }
 
