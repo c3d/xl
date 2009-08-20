@@ -84,7 +84,7 @@ Renderer::Renderer(std::ostream &out, text styleFile, Syntax &stx, uint ts)
 //   Renderer constructor
 // ----------------------------------------------------------------------------
     : Action(), output(out), syntax(stx),
-      indent(0), tabsize(ts), need_space("")
+      indent(0), tabsize(ts), need_space(""), parenthesize(false)
 {
     Syntax defaultSyntax;
     Positions positions;
@@ -111,7 +111,7 @@ Renderer::Renderer(std::ostream &out, Renderer *from)
 //   Clone a renderer from some existing one
 // ----------------------------------------------------------------------------
     : Action(), output(out), syntax(from->syntax), formats(from->formats),
-      indent(0), tabsize(from->tabsize), need_space("")
+      indent(0), tabsize(from->tabsize), need_space(""), parenthesize(false)
 {
 }
 
@@ -237,9 +237,19 @@ Tree *Renderer::DoPrefix(Prefix *what)
 //   Render a prefix tree
 // ----------------------------------------------------------------------------
 {
+    if (parenthesize)
+        output << "(";
     what->left->Do(this);
+    if (parenthesize)
+        output << ")";
+
     need_space = " ";
+    if (parenthesize)
+        output << "(";
     what->right->Do(this);
+    if (parenthesize)
+        output << ")";
+
     return what;
 }
 
@@ -262,7 +272,11 @@ Tree *Renderer::DoInfix (Infix *what)
     uint count = list.size() - 1;
     for (tree_list::iterator c = list.begin(); c != list.end(); c++)
     {
+        if (parenthesize)
+            output << "(";
         (*c)->Do(this);
+        if (parenthesize)
+            output << ")";
         if (count--)
         {
             if (what->name == "\n" || what->name == "." ||
@@ -314,6 +328,11 @@ void debug(XL::Tree *tree)
 //    Emit for debugging purpose
 // ----------------------------------------------------------------------------
 {
-    std::cout << tree << "\n";
+    XL::Renderer render(std::cout);
+    render.parenthesize = true;
+    if (tree)
+        tree->Do(render);
+    else
+        std::cout << "NULL\n";
 }
 

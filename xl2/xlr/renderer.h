@@ -63,6 +63,7 @@ struct Renderer : Action
     uint                indent;
     uint                tabsize;
     kstring             need_space;
+    bool                parenthesize;
 };
 
 XL_END
