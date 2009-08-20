@@ -210,6 +210,7 @@ void Syntax::ReadSyntaxFile(kstring filename)
     int         priority;
     Syntax      baseSyntax;
     Scanner     scanner(filename, baseSyntax);
+    Block       indentBlock(NULL);
 
     while(tok != tokEOF)
     {
@@ -229,11 +230,11 @@ void Syntax::ReadSyntaxFile(kstring filename)
             if (txt == "NEWLINE")
                 txt = "\n";
             else if (txt == "INDENT")
-                txt = Block(NULL).Opening();
+                txt = indentBlock.Opening();
             else if (txt == "UNINDENT")
-                txt = Block(NULL).Closing();
+                txt = indentBlock.Closing();
 
-            else if (txt == "INFIX")
+            if (txt == "INFIX")
                 state = inInfix;
             else if (txt == "PREFIX")
                 state = inPrefix;

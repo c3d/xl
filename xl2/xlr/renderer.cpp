@@ -38,13 +38,13 @@ void Renderer::Indent(text t)
     {
         char c = *i;
         if (isspace(c))
-            need_space = "";
-        output << need_space << c;
+            output << c;
+        else
+            output << need_space << c;
+        need_space = "";
         if (c == '\n')
-        {
             for (uint i = 0; i < indent; i++)
                 output << ' ';
-        }
     }
 }
 
@@ -110,8 +110,11 @@ Tree *Renderer::Run(Tree *what)
             Run(*c);
             if (count--)
             {
-                need_space = " ";
+                if (f->name != "\n")
+                    need_space = " ";
                 Indent(f->name);
+                if (f->name != "\n")
+                    need_space = " ";
             }
         }
     }

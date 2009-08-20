@@ -117,8 +117,8 @@ do {                                            \
 
 #define NEXT_LOWER_CHAR(c)                      \
 do {                                            \
-    tokenText += c;                             \
-    textValue += tolower(c);                    \
+    tokenText += tolower(c);                    \
+    textValue += c;                             \
     c = fgetc(file);                            \
     position++;                                 \
 } while(0)
@@ -126,7 +126,7 @@ do {                                            \
 
 #define IGNORE_CHAR(c)                          \
 do {                                            \
-    tokenText += c;                             \
+    textValue += c;                             \
     c = fgetc(file);                            \
     position++;                                 \
 } while (0)
@@ -402,7 +402,9 @@ token_t Scanner::NextToken()
             // Check end of text
             if (c == eos)
             {
-                IGNORE_CHAR(c);
+                tokenText += c;
+                c = fgetc(file);
+                position++;
                 if (c != eos)
                 {
                     ungetc(c, file);

@@ -78,10 +78,11 @@ token_t Parser::NextToken()
 {
     while (true)
     {
-        if (pending != tokNONE && pending != tokNEWLINE)
+        token_t pend = pending;
+        if (pend != tokNONE && pend != tokNEWLINE)
         {
             pending = tokNONE;
-            return pending;
+            return pend;
         }
 
         // Here, there's nothing pending or only a newline
@@ -96,7 +97,7 @@ token_t Parser::NextToken()
             {
                 // Skip comments, keep looking to get the right indentation
                 text comment = scanner.Comment(closing);
-                if (closing == "\n" && pending == tokNONE)
+                if (closing == "\n" && pend == tokNONE)
                     pending = tokNEWLINE;
                 continue;
             }
@@ -104,26 +105,26 @@ token_t Parser::NextToken()
             {
                 text longText = scanner.Comment(closing);
                 scanner.SetTextValue(longText);
-                if (pending == tokNEWLINE)
+                if (pend == tokNEWLINE)
                 {
                     pending = tokSTRING;
                     return tokNEWLINE;
                 }
-                if (closing == "\n" && pending == tokNONE)
+                if (closing == "\n" && pend == tokNONE)
                     pending = tokNEWLINE;
                 return tokSTRING;
             }
 
             // If the next token has a substatement infix priority,
             // this takes over any pending newline. Example: else
-            if (pending == tokNEWLINE)
+            if (pend == tokNEWLINE)
             {
                 int prefixPrio = syntax.PrefixPriority(opening);
                 if (prefixPrio == syntax.default_priority)
                 {
                     int infixPrio = syntax.InfixPriority(opening);
                     if (infixPrio < syntax.statement_priority)
-                        pending = tokNONE;
+                        pending = pend = tokNONE;
                 }    
             }
             break;
@@ -145,11 +146,10 @@ token_t Parser::NextToken()
 
         // If we have another token here and a pending newline, push
         // the other token back.
-        if (pending != tokNONE)
+        if (pend != tokNONE)
         {
-            token_t wasPending = pending;
             pending = result;
-            return wasPending;
+            return pend;
         }
 
         return result;
@@ -250,7 +250,7 @@ Tree *Parser::Parse(text closing)
             prefix_priority = function_priority;
             break;
         case tokREAL:
-            right = new Integer(scanner.IntegerValue(), pos);
+            right = new Real(scanner.RealValue(), pos);
             prefix_priority = function_priority;
             break;
         case tokSTRING:
@@ -295,7 +295,7 @@ Tree *Parser::Parse(text closing)
                 {
                     // We got an infix
                     left = result;
-                    infix = spelling;
+                    infix = name;
                 }
                 else
                 {
