@@ -39,7 +39,7 @@ struct Context;
 struct Errors;
 struct Rewrite;
 
-typedef std::map<text, Variable *>symbol_table;
+typedef std::map<text, Tree *>    symbol_table;
 typedef std::set<Tree *>          active_set;
 typedef std::map<ulong, Rewrite*> rewrite_table;
 typedef std::map<Tree*, Tree*>    compile_cache;
@@ -56,12 +56,13 @@ struct Namespace
     Namespace *         Parent()                { return parent; }
 
     // Symbol management
-    Variable *          Name (text name)        { return names[name]; }
+    Tree *              Name (text name)        { return names[name]; }
     Rewrite *           Rewrites()              { return rewrites; }
 
     // Entering symbols in the symbol table
-    Variable *          EnterName (text name, Tree *source);
+    void                EnterName (text name, Tree *value);
     Rewrite *           EnterRewrite(Rewrite *r);
+    Variable *          AllocateVariable (text name, ulong treepos);
 
     // Clearing symbol tables
     void                Clear();
@@ -99,10 +100,8 @@ struct Context : Namespace
 
     // Evaluation of trees
     Tree *              Compile(Tree *source);
-    Tree *              Run(Tree *source, bool eager = true);
-    Tree *              LazyRun(Tree *source) { return Run(source, false); }
+    Tree *              Run(Tree *source);
     Rewrite *           EnterRewrite(Tree *from, Tree *to);
-    Rewrite *           EnterInfix (text name, Tree *callee);
     Tree *              Error (text message,
                                Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
 

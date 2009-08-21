@@ -24,7 +24,6 @@
 // ****************************************************************************
 
 #include <sstream>
-#include <typeinfo>
 #include "tree.h"
 #include "opcodes.h"
 #include "context.h"

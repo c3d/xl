@@ -50,18 +50,24 @@ Namespace::~Namespace()
 }
 
 
-Variable *Namespace::EnterName (text name, Tree *source)
+void Namespace::EnterName(text name, Tree *value)
 // ----------------------------------------------------------------------------
-//   Enter a name in the namespace
+//   Enter a value in the namespace
 // ----------------------------------------------------------------------------
 {
-    Variable *variable = names[name];
+    names[name] = value;
+}
+
+
+Variable *Namespace::AllocateVariable (text name, ulong treepos)
+// ----------------------------------------------------------------------------
+//   Enter a variable in the namespace
+// ----------------------------------------------------------------------------
+{
+    Variable *variable = dynamic_cast<Variable *> (names[name]);
     if (variable)
         return variable;
-    if (source)
-        variable = new Variable(++numVars, source->Position());
-    else
-        variable = new Variable(++numVars);
+    variable = new Variable(numVars++, treepos);
     names[name] = variable;
     return variable;
 }
@@ -293,6 +299,249 @@ struct RewriteKey : Action
 
 // ============================================================================
 // 
+//    Tree rewrites actions
+// 
+// ============================================================================
+
+struct TreeRewrite : Action
+// ----------------------------------------------------------------------------
+//   Apply all transformations to a tree
+// ----------------------------------------------------------------------------
+{
+    TreeRewrite (Context *c): context(c) {}
+
+    Tree *DoInteger(Integer *what)
+    {
+        return what;
+    }
+    Tree *DoReal(Real *what)
+    {
+        return what;
+    }
+    Tree *DoText(Text *what)
+    {
+        return what;
+    }
+    Tree *DoName(Name *what)
+    {
+        Tree *result = context->Name(what->value);
+        if (result)
+            return result;
+        return what;
+    }
+
+    Tree *DoBlock(Block *what)
+    {
+        Tree *child = what->child->Do(this);
+        return Block::MakeBlock(child, what->Opening(), what->Closing(),
+                                what->Position());
+    }
+    Tree *DoInfix(Infix *what)
+    {
+        Tree *left = what->left->Do(this);
+        Tree *right = what->right->Do(this);
+        return new Infix(what->name, left, right, what->Position());
+    }
+    Tree *DoPrefix(Prefix *what)
+    {
+        Tree *left = what->left->Do(this);
+        Tree *right = what->right->Do(this);
+        return new Prefix(left, right, what->Position());
+    }
+    Tree *DoPostfix(Postfix *what)
+    {
+        Tree *left = what->left->Do(this);
+        Tree *right = what->right->Do(this);
+        return new Postfix(left, right, what->Position());
+    }
+    Tree *Do(Tree *what)
+    {
+        // Native trees and such are left unchanged
+        return what;
+    }
+
+    Context *   context;
+};
+
+
+
+// ============================================================================
+// 
+//    Parameter match - Isolate parameters in an rewrite source
+// 
+// ============================================================================
+
+struct ParameterMatch : Action
+// ----------------------------------------------------------------------------
+//   Check if two trees match, collect 'variables' and emit type test nodes
+// ----------------------------------------------------------------------------
+{
+    ParameterMatch (Context *c): context(c), defined(NULL) {}
+
+    virtual Tree *Do(Tree *what);
+    virtual Tree *DoInteger(Integer *what);
+    virtual Tree *DoReal(Real *what);
+    virtual Tree *DoText(Text *what);
+    virtual Tree *DoName(Name *what);
+    virtual Tree *DoPrefix(Prefix *what);
+    virtual Tree *DoPostfix(Postfix *what);
+    virtual Tree *DoInfix(Infix *what);
+    virtual Tree *DoBlock(Block *what);
+    virtual Tree *DoNative(Native *what);
+
+    Context * context;          // Context in which we test
+    Tree *    defined;          // Tree beind defined, e.g. 'sin' in 'sin X'
+};
+
+
+Tree *ParameterMatch::Do(Tree *what)
+// ----------------------------------------------------------------------------
+//   Nothing to do for leaves
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *ParameterMatch::DoInteger(Integer *what)
+// ----------------------------------------------------------------------------
+//   Nothing to do for leaves
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *ParameterMatch::DoReal(Real *what)
+// ----------------------------------------------------------------------------
+//   Nothing to do for leaves
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *ParameterMatch::DoText(Text *what)
+// ----------------------------------------------------------------------------
+//   Nothing to do for leaves
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *ParameterMatch::DoName(Name *what)
+// ----------------------------------------------------------------------------
+//    Identify the parameters being defined in the shape
+// ----------------------------------------------------------------------------
+{
+    if (!defined)
+    {
+        // The first name we see must match exactly, e.g. 'sin' in 'sin X'
+        defined = what;
+        return what;
+    }
+    else
+    {
+        // Check if the name already exists, e.g. 'false' or 'A+A'
+        if (Tree *existing = context->Name(what->value))
+            return existing;
+
+        // If first occurence of the name, enter it in symbol table
+        Variable *v = context->AllocateVariable(what->value, what->Position());
+        return v;
+    }
+}
+
+
+Tree *ParameterMatch::DoBlock(Block *what)
+// ----------------------------------------------------------------------------
+//   Parameters in a block are in its child
+// ----------------------------------------------------------------------------
+{
+    return what->child->Do(this);
+}
+
+
+Tree *ParameterMatch::DoInfix(Infix *what)
+// ----------------------------------------------------------------------------
+//   Check if we match an infix operator
+// ----------------------------------------------------------------------------
+{
+    // Check if we match a type, e.g. 2 vs. 'K : integer'
+    if (what->name == ":")
+    {
+        // Check the variable name, e.g. K in example above
+        Name *varName = dynamic_cast<Name *> (what->left);
+        if (!varName)
+            return context->Error("Expected a name, got '$1' ", what->left);
+
+        // Check if the name already exists
+        if (Tree *existing = context->Name(varName->value))
+            return context->Error("Typed name '$1' already exists as '$2'",
+                                  what->left, existing);
+
+        // Enter the name in symbol table
+        Variable *variable = context->AllocateVariable(varName->value,
+                                                       varName->Position());
+        return variable;
+    }
+
+    // Otherwise, test left and right
+    Tree *lr = what->left->Do(this);
+    if (!lr)
+        return NULL;
+    Tree *rr = what->right->Do(this);
+    if (!rr)
+        return NULL;
+    return what;
+}
+
+
+Tree *ParameterMatch::DoPrefix(Prefix *what)
+// ----------------------------------------------------------------------------
+//   For prefix expressions, simply test left then right
+// ----------------------------------------------------------------------------
+{
+    Tree *lr = what->left->Do(this);
+    if (!lr)
+        return NULL;
+    Tree *rr = what->right->Do(this);
+    if (!rr)
+        return NULL;
+    return what;
+}
+
+
+Tree *ParameterMatch::DoPostfix(Postfix *what)
+// ----------------------------------------------------------------------------
+//    For postfix expressions, simply test right, then left
+// ----------------------------------------------------------------------------
+{
+    // Note that ordering is reverse compared to prefix, so that
+    // the 'defined' names is set correctly
+    Tree *rr = what->right->Do(this);
+    if (!rr)
+        return NULL;
+    Tree *lr = what->left->Do(this);
+    if (!lr)
+        return NULL;
+    return what;
+}
+
+
+Tree *ParameterMatch::DoNative(Native *what)
+// ----------------------------------------------------------------------------
+//   Should never be used
+// ----------------------------------------------------------------------------
+{
+    return context->Error("Internal error: Native parameter '$1'", what);
+}
+
+
+
+// ============================================================================
+// 
 //    Parameter matching - Test input parameters
 // 
 // ============================================================================
@@ -475,7 +724,7 @@ Tree *ArgumentMatch::DoName(Name *what)
         }
 
         // If first occurence of the name, enter it in symbol table
-        context->EnterName(what->value, what);
+        context->EnterName(what->value, compiled);
         return what;
     }
     return NULL;
@@ -562,7 +811,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         tree_position pos = test->Position();
 
         // Enter the name in symbol table
-        context->EnterName(varName->value, test);
+        context->EnterName(varName->value, compiled);
 
         // Evaluate type expression, e.g. 'integer' in example above
         Tree *typeExpr = context->Compile(what->right);
@@ -864,14 +1113,11 @@ Tree *CompileAction::DoName(Name *what)
 //   Build a unique reference in the context for the entity
 // ----------------------------------------------------------------------------
 {
-    // Check if a name has already been seen. If so, return its reference.
+    // Normally, the name should have been declared in ParameterMatch
     if (Tree *result = context->Name(what->value))
         return result;
     
-    // Otherwise, create a NULL reference and return that.
-    Variable *variable = new Variable(NULL, what->Position());
-    context->EnterName(what->value, variable);
-    return variable;
+    return context->Error("Internal: CompileAction knows '$1' not", what);
 }
 
 
@@ -973,6 +1219,8 @@ Tree * CompileAction::Rewrites(Tree *what)
     formKey = formKeyHash.Key();
 
     Tree *result = NULL;
+    Tree *endOfCall = NULL;
+    Tree *endOfPrev = NULL;
 
     for (Namespace *c = context; c; c = c->Parent())
     {
@@ -987,42 +1235,86 @@ Tree * CompileAction::Rewrites(Tree *what)
             // If we have an exact match for the keys, we may have a winner
             if (testKey == formKey)
             {
-                // If we find a real match, it will require its own context
-                Context args(context);
-                Invoke *invoke = new Invoke(what->Position());
-                ArgumentMatch matchArgs(what, &args);
-                Tree *match = candidate->from->Do(matchArgs);
-                if (match)
-                {
-                    // We have found a possible match.
-                    Tree *code = NULL;
+                // If we find a real match, identify its parameters
+                Context parms(candidate->context);
+                ParameterMatch matchParms(&parms);
+                Tree *parmsTest = candidate->from->Do(matchParms);
+                if (!parmsTest)
+                    context->Error("Internal: Invokation parameters for '$1'?",
+                                   candidate->from);
 
-                    // Map the arguments we found to invoke list
+                // Create the invokation point
+                Context args(context);
+                ArgumentMatch matchArgs(what, &args);
+                Tree *argsTest = candidate->from->Do(matchArgs);
+                if (argsTest)
+                {
+                    // We should have same number of args and parms
+                    if (parms.names.size() != args.names.size())
+                        return context->Error(
+                            "Internal: arg/parm mismatch in '$1'", what);
+
+                    Tree *rawCode = candidate->Compile();
+                    Scope *code = dynamic_cast<Scope *> (rawCode);
+                    if (!code)
+                        return context->Error("Internal: Not a scope '$1' "
+                                              "for '$2'", rawCode, what);
+
+                    // Create invokation node
+                    Invoke *invoke = new Invoke(what->Position());
+                    ulong parmCount = code->parameterCount;
+                    invoke->child = code;
+                    invoke->parameterCount = parmCount;
+                    invoke->values.resize(parmCount);
+                    if (parmCount != parms.names.size())
+                        return context->Error(
+                            "Internal: Parm count for '$1'", what);
+
+                    // Map the arguments we found in called scope order
+                    // (i.e. we take the order from scope variables ids)
                     symbol_table::iterator i;
-                    invoke->arguments.resize(args.numVars);
-                    for (i = args.names.begin(); i != args.names.end(); i++)
+                    for (i = parms.names.begin(); i != parms.names.end(); i++)
                     {
-                        Variable *var = (*i).second;
-                        
+                        text name = (*i).first;
+                        Tree *argValue = args.Name(name);
+                        Tree *parm = parms.Name(name);
+                        Variable *parmVar = dynamic_cast<Variable *> (parm);
+                        if (!parmVar)
+                            return context->Error(
+                                "Internal: non-var parm '$1'?", parm);
+                        invoke->values[parmVar->id] = argValue;
                     }
 
-
-                    // If there is test code to validate candidate, use it
+                    // If there is test code to validate candidate, prepend it
+                    Tree *callCode = NULL;
                     if (matchArgs.code)
-                        code = matchArgs.code;
+                    {
+                        // We need an exit point when a call is successful
+                        if (!endOfCall)
+                            endOfCall = new BranchTarget(what->Position());
+                        callCode = matchArgs.code;
+                    }
 
                     // Compile the target and use it as invoke child
-                    invoke->child = candidate->Compile();
-                    code = Append(code, invoke);
+                    callCode = Append(callCode, invoke);
 
-                    // If we defined an end point for matchParms, append it
+                    // If there were tests, branch for successful call
+                    if (endOfCall)
+                        invoke->Append(endOfCall);
+
+                    // If previous call was conditional, append to failed exit
+                    if (endOfPrev)
+                        callCode = Append(endOfPrev, callCode);
+
+                    // If this call defined a condition, remember it
                     if (matchArgs.end)
-                        code = Append(code, matchArgs.end);
+                        endOfPrev = matchArgs.end;
 
                     // Append generated code to result
-                    result = Append(result, code);
-                }
-            }
+                    if (!result)
+                        result = callCode;
+                } // Match args
+            } // Match test key
 
             // Otherwise, check if we have a key match in the hash table,
             // and if so follow it.
@@ -1032,6 +1324,11 @@ Tree * CompileAction::Rewrites(Tree *what)
                 candidate = NULL;
         } // while(candidate)
     } // for(namespaces)
+
+    // If there were tests in previous calls, and if none succeeded,
+    // indicate that the call failed
+    if (endOfPrev)
+        Append(endOfPrev, new FailedCall(what, what->Position()));
 
     return result;
 }
@@ -1064,15 +1361,16 @@ Tree *Context::Compile(Tree *source)
 }
 
 
-Tree *Context::Run(Tree *code, bool eager)
+Tree *Context::Run(Tree *code)
 // ----------------------------------------------------------------------------
 //   Execute a compiled code tree
 // ----------------------------------------------------------------------------
 {
     Tree *result = code;
+    Scope topLevel(code->Position());
     while (Native *native = dynamic_cast<Native *> (code))
     {
-        result = native->Run(this);
+        result = native->Run(&topLevel);
         code = native->Next();
     }
     return result;
@@ -1086,21 +1384,6 @@ Rewrite *Context::EnterRewrite(Tree *from, Tree *to)
 {
     Rewrite *rewrite = new Rewrite(this, from, to);
     return Namespace::EnterRewrite(rewrite);
-}
-
-
-Rewrite *Context::EnterInfix(text name, Tree *callee)
-// ----------------------------------------------------------------------------
-//   Enter an infix expression that will call the given callee
-// ----------------------------------------------------------------------------
-{
-    XL::Name *left = new XL::Name("x");
-    XL::Name *right = new XL::Name("y");
-
-    Infix *from = new Infix(name, left, right);
-    Prefix *to = new Prefix(callee, from);
-
-    return EnterRewrite(from, to);
 }
 
 
@@ -1119,14 +1402,16 @@ Tree * Context::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
     Tree *handler = ErrorHandler();
     if (handler)
     {
+        Invoke errorInvokation(handler->Position());
         Tree *info = new XL::Text (message);
+        errorInvokation.AddArgument(info);
         if (arg1)
-            info = new XL::Infix(",", info, arg1, arg1->Position());
+            errorInvokation.AddArgument(arg1);
         if (arg2)
-            info = new XL::Infix(",", info, arg2, arg2->Position());
+            errorInvokation.AddArgument(arg2);
         if (arg3)
-            info = new XL::Infix(",", info, arg3, arg3->Position());
-        return handler->Call(this, info);
+            errorInvokation.AddArgument(arg3);
+        return handler->Run(&errorInvokation);
     }
 
     // No handler: terminate
@@ -1145,251 +1430,6 @@ Tree *Context::ErrorHandler()
         if (c->error_handler)
             return c->error_handler;
     return NULL;
-}
-
-
-
-// ============================================================================
-// 
-//    Tree rewrites actions
-// 
-// ============================================================================
-
-struct TreeRewrite : Action
-// ----------------------------------------------------------------------------
-//   Apply all transformations to a tree
-// ----------------------------------------------------------------------------
-{
-    TreeRewrite (Context *c): context(c) {}
-
-    Tree *DoInteger(Integer *what)
-    {
-        return what;
-    }
-    Tree *DoReal(Real *what)
-    {
-        return what;
-    }
-    Tree *DoText(Text *what)
-    {
-        return what;
-    }
-    Tree *DoName(Name *what)
-    {
-        Tree *result = context->Name(what->value);
-        if (result)
-            return result;
-        return what;
-    }
-
-    Tree *DoBlock(Block *what)
-    {
-        Tree *child = what->child->Do(this);
-        return Block::MakeBlock(child, what->Opening(), what->Closing(),
-                                what->Position());
-    }
-    Tree *DoInfix(Infix *what)
-    {
-        Tree *left = what->left->Do(this);
-        Tree *right = what->right->Do(this);
-        return new Infix(what->name, left, right, what->Position());
-    }
-    Tree *DoPrefix(Prefix *what)
-    {
-        Tree *left = what->left->Do(this);
-        Tree *right = what->right->Do(this);
-        return new Prefix(left, right, what->Position());
-    }
-    Tree *DoPostfix(Postfix *what)
-    {
-        Tree *left = what->left->Do(this);
-        Tree *right = what->right->Do(this);
-        return new Postfix(left, right, what->Position());
-    }
-    Tree *Do(Tree *what)
-    {
-        // Native trees and such are left unchanged
-        return what;
-    }
-
-    Context *   context;
-};
-
-
-
-// ============================================================================
-// 
-//    Parameter match - Isolate parameters in an rewrite source
-// 
-// ============================================================================
-
-struct ParameterMatch : Action
-// ----------------------------------------------------------------------------
-//   Check if two trees match, collect 'variables' and emit type test nodes
-// ----------------------------------------------------------------------------
-{
-    ParameterMatch (Context *c): context(c), defined(NULL) {}
-
-    virtual Tree *Do(Tree *what);
-    virtual Tree *DoInteger(Integer *what);
-    virtual Tree *DoReal(Real *what);
-    virtual Tree *DoText(Text *what);
-    virtual Tree *DoName(Name *what);
-    virtual Tree *DoPrefix(Prefix *what);
-    virtual Tree *DoPostfix(Postfix *what);
-    virtual Tree *DoInfix(Infix *what);
-    virtual Tree *DoBlock(Block *what);
-    virtual Tree *DoNative(Native *what);
-
-    Context * context;          // Context in which we test
-    Tree *    defined;          // Tree beind defined, e.g. 'sin' in 'sin X'
-};
-
-
-Tree *ParameterMatch::Do(Tree *what)
-// ----------------------------------------------------------------------------
-//   Nothing to do for leaves
-// ----------------------------------------------------------------------------
-{
-    return what;
-}
-
-
-Tree *ParameterMatch::DoInteger(Integer *what)
-// ----------------------------------------------------------------------------
-//   Nothing to do for leaves
-// ----------------------------------------------------------------------------
-{
-    return what;
-}
-
-
-Tree *ParameterMatch::DoReal(Real *what)
-// ----------------------------------------------------------------------------
-//   Nothing to do for leaves
-// ----------------------------------------------------------------------------
-{
-    return what;
-}
-
-
-Tree *ParameterMatch::DoText(Text *what)
-// ----------------------------------------------------------------------------
-//   Nothing to do for leaves
-// ----------------------------------------------------------------------------
-{
-    return what;
-}
-
-
-Tree *ParameterMatch::DoName(Name *what)
-// ----------------------------------------------------------------------------
-//    Identify the parameters being defined in the shape
-// ----------------------------------------------------------------------------
-{
-    if (!defined)
-    {
-        // The first name we see must match exactly, e.g. 'sin' in 'sin X'
-        defined = what;
-        return what;
-    }
-    else
-    {
-        // Check if the name already exists, e.g. 'false' or 'A+A'
-        if (Tree *existing = context->Name(what->value))
-            return existing;
-
-        // If first occurence of the name, enter it in symbol table
-        Variable *variable = new Variable(NULL, what->Position());
-        context->EnterName(what->value, variable);
-        return variable;
-    }
-}
-
-
-Tree *ParameterMatch::DoBlock(Block *what)
-// ----------------------------------------------------------------------------
-//   Parameters in a block are in its child
-// ----------------------------------------------------------------------------
-{
-    return what->child->Do(this);
-}
-
-
-Tree *ParameterMatch::DoInfix(Infix *what)
-// ----------------------------------------------------------------------------
-//   Check if we match an infix operator
-// ----------------------------------------------------------------------------
-{
-    // Check if we match a type, e.g. 2 vs. 'K : integer'
-    if (what->name == ":")
-    {
-        // Check the variable name, e.g. K in example above
-        Name *varName = dynamic_cast<Name *> (what->left);
-        if (!varName)
-            return context->Error("Expected a name, got '$1' ", what->left);
-
-        // Check if the name already exists
-        if (Tree *existing = context->Name(varName->value))
-            return context->Error("Typed name '$1' already exists as '$2'",
-                                  what->left, existing);
-
-        // Enter the name in symbol table
-        Variable *variable = new Variable(NULL, varName->Position());
-        context->EnterName(varName->value, variable);
-
-        return what;
-    }
-
-    // Otherwise, test left and right
-    Tree *lr = what->left->Do(this);
-    if (!lr)
-        return NULL;
-    Tree *rr = what->right->Do(this);
-    if (!rr)
-        return NULL;
-    return what;
-}
-
-
-Tree *ParameterMatch::DoPrefix(Prefix *what)
-// ----------------------------------------------------------------------------
-//   For prefix expressions, simply test left then right
-// ----------------------------------------------------------------------------
-{
-    Tree *lr = what->left->Do(this);
-    if (!lr)
-        return NULL;
-    Tree *rr = what->right->Do(this);
-    if (!rr)
-        return NULL;
-    return what;
-}
-
-
-Tree *ParameterMatch::DoPostfix(Postfix *what)
-// ----------------------------------------------------------------------------
-//    For postfix expressions, simply test right, then left
-// ----------------------------------------------------------------------------
-{
-    // Note that ordering is reverse compared to prefix, so that
-    // the 'defined' names is set correctly
-    Tree *rr = what->right->Do(this);
-    if (!rr)
-        return NULL;
-    Tree *lr = what->left->Do(this);
-    if (!lr)
-        return NULL;
-    return what;
-}
-
-
-Tree *ParameterMatch::DoNative(Native *what)
-// ----------------------------------------------------------------------------
-//   Should never be used
-// ----------------------------------------------------------------------------
-{
-    return context->Error("Internal error: Native parameter '$1'", what);
 }
 
 
@@ -1466,17 +1506,24 @@ Tree *Rewrite::Compile(void)
     if (!scope)
     {
         tree_position pos = to->Position();
-        scope = new Scope(context, pos);
-        Context *locals = &scope->parameters;
-        ParameterMatch matchParms(locals);
-        Tree *args = from->Do(matchParms);
-        if (!args)
-            return context->Error("Internal: parameters for '$1' don't match",
-                                  from);
-        Tree *code = locals->Compile(to);
+        scope = new Scope(pos);
+        Context locals(context);
+
+        // Match all parameters and save parameter count for that scope
+        ParameterMatch matchParms(&locals);
+        Tree *parms = from->Do(matchParms);
+        if (!parms)
+            return context->Error("Internal: what parameters in '$1'?", from);
+        scope->parameterCount = locals.names.size();
+
+        // Compile the body of the rewrite, which may add local variables
+        Tree *code = locals.Compile(to);
         if (!code)
             return context->Error("Unable to compile '$1'", to);
         scope->next = code;
+        scope->values.resize(locals.names.size());
+
+        // Remember the compile form only from now on
         to = scope;
     }
     return scope;

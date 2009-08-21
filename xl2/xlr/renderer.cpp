@@ -28,6 +28,7 @@
 #include "tree.h"
 #include "syntax.h"
 #include "errors.h"
+#include "opcodes.h"
 #include <iostream>
 #include <sstream>
 #include <cctype>

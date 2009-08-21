@@ -1,0 +1,74 @@
+// Integer arithmetic and comparisons
+INFIX(integer, "+", integer, BinaryAddInt, RINT(INT(0) + INT(1)))
+INFIX(integer, "-", integer, BinarySubInt, RINT(INT(0) - INT(1)))
+INFIX(integer, "*", integer, BinaryMulInt, RINT(INT(0) * INT(1)))
+INFIX(integer, "/", integer, BinaryDivInt, RINT(INT(0) / INT(1)))
+INFIX(integer, "mod", integer, BinaryModInt, RINT(INT(0) % INT(1)))
+
+INFIX(integer, "<<", integer, BinaryLeftShift, RINT(INT(0) << INT(1)))
+INFIX(integer, ">>", integer, BinaryRightShift, RINT(INT(0) >> INT(1)))
+
+INFIX(integer, "and", integer, BinaryAnd, RINT(INT(0) & INT(1)))
+INFIX(integer, "or", integer, BinaryOr, RINT(INT(0) | INT(1)))
+INFIX(integer, "xor", integer, BinaryXor, RINT(INT(0) ^ INT(1)))
+
+INFIX(integer, "<", integer, BinaryLTInt, RBOOL(INT(0) < INT(1)))
+INFIX(integer, ">", integer, BinaryGTInt, RBOOL(INT(0) > INT(1)))
+INFIX(integer, "<=", integer, BinaryLEInt, RBOOL(INT(0) <= INT(1)))
+INFIX(integer, ">=", integer, BinaryGEInt, RBOOL(INT(0) >= INT(1)))
+INFIX(integer, "<>", integer, BinaryNEInt, RBOOL(INT(0) != INT(1)))
+INFIX(integer, "=", integer, BinaryEQInt, RBOOL(INT(0) == INT(1)))
+
+PREFIX("-", PARM(x, integer), NegateInt, RINT(-x))
+
+
+// Real arithmetic and comparisons
+INFIX(real, "+", real, BinaryAddReal, RREAL(REAL(0) + REAL(1)))
+INFIX(real, "-", real, BinarySubReal, RREAL(REAL(0) - REAL(1)))
+INFIX(real, "*", real, BinaryMulReal, RREAL(REAL(0) * REAL(1)))
+INFIX(real, "/", real, BinaryDivReal, RREAL(REAL(0) / REAL(1)))
+INFIX(real, "mod", real, BinaryModReal, RREAL(fmod(REAL(0), REAL(1))))
+
+INFIX(real, "<", real, BinaryLTReal, RBOOL(REAL(0) < REAL(1)))
+INFIX(real, ">", real, BinaryGTReal, RBOOL(REAL(0) > REAL(1)))
+INFIX(real, "<=", real, BinaryLEReal, RBOOL(REAL(0) <= REAL(1)))
+INFIX(real, ">=", real, BinaryGEReal, RBOOL(REAL(0) >= REAL(1)))
+INFIX(real, "<>", real, BinaryNEReal, RBOOL(REAL(0) != REAL(1)))
+INFIX(real, "=", real, BinaryEQReal, RBOOL(REAL(0) == REAL(1)))
+
+PREFIX("-", PARM(r, real), NegateReal, RREAL(-r))
+
+// Boolean operations
+INFIX(boolean, "and", boolean, BinaryAndBool, RBOOL(BOOL(0) & BOOL(1)))
+INFIX(boolean, "or", boolean, BinaryOrBool, RBOOL(BOOL(0) | BOOL(1)))
+INFIX(boolean, "xor", boolean, BinaryXorBool, RBOOL(BOOL(0) ^ BOOL(1)))
+
+INFIX(boolean, "<>", boolean, BinaryNEBool, RBOOL(BOOL(0) != BOOL(1)))
+INFIX(boolean, "=", boolean, BinaryEQBool, RBOOL(BOOL(0) == BOOL(1)))
+
+// Debugging code
+PREFIX("debug", PARM(tree, anything), DebugTree,
+       std::cerr << "DEBUG: " << tree; return tree)
+
+NAME(nil, ReservedName);
+NAME(true, ReservedName);
+NAME(false, ReservedName);
+
+TYPE("boolean", BooleanType);
+TYPE("integer", IntegerType);
+TYPE("real", RealType);
+TYPE("text", TextType);
+TYPE("character", CharacterType);
+TYPE("anything", AnyType);
+TYPE("infix", InfixType);
+TYPE("prefix", PrefixType);
+TYPE("postfix", PostfixType);
+TYPE("block", BlockType);
+
+
+#undef INFIX
+#undef PREFIX
+#undef POSTFIX
+#undef NAME
+#undef TYPE
+#undef PARM

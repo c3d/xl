@@ -25,6 +25,7 @@
 
 #include "opcodes.h"
 #include "basics.h"
+#include <typeinfo>
 
 XL_BEGIN
 
@@ -93,22 +94,36 @@ Tree *Scope::Run(Scope *scope)
 // ----------------------------------------------------------------------------
 {
     tree_list saveFrame = values;
-    ulong i, max = scope->values.size();
-    if (max > values.size())
+    ulong i, max = parameterCount;
+    if (max != scope->parameterCount)
         return scope->Error("Internal error: Frame size error '$1'", this);
 
-    // Copy input frame
+    // Save frame
+    saveFrame.resize(max);
+    for (i = 0; i < max; i++)
+        saveFrame[i] = values[i];
+
+    // Copy input parameters
     for (i = 0; i < max; i++)
         values[i] = scope->values[i];
 
     // Run 'next'
     Tree *result = next->Run(this);
 
-    // Restore old values
+    // Restore input parameters
     for (i = 0; i < max; i++)
         values[i] = saveFrame[i];
 
     return result;
+}
+
+
+Tree * Scope::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
+// ----------------------------------------------------------------------------
+//   Execute the innermost error handler
+// ----------------------------------------------------------------------------
+{
+    return Context::context->Error(message, arg1, arg2, arg3);
 }
 
 
@@ -120,8 +135,7 @@ Tree * Variable::Run(Scope *scope)
     if (id < scope->values.size())
     {
         Tree *value = scope->values[id];
-        if (value)
-            return value->Run(scope);
+        return value;
     }
     return scope->Error("Unbound variable '$1'", this);
 }
@@ -133,6 +147,16 @@ Tree *Invoke::Run(Scope *scope)
 // ----------------------------------------------------------------------------
 {
     return child->Run(this);
+}
+
+
+void Invoke::AddArgument(Tree *value)
+// ----------------------------------------------------------------------------
+//    Add an argument to the invokation context
+// ----------------------------------------------------------------------------
+{
+    values.push_back(value);
+    parameterCount++;
 }
 
 
@@ -281,10 +305,105 @@ Tree *TypeTest::Run (Scope *scope)
     Tree *ref = type_value->Run(scope);
     condition = false;
     if (TypeExpression *typeChecker = dynamic_cast<TypeExpression *>(ref))
-        if (typeChecker->HasType(scope, code))
+        if (typeChecker->TypeCheck(scope, code))
             condition = true;
     return code;
 }
+
+
+
+// ============================================================================
+// 
+//   Helper functions
+// 
+// ============================================================================
+
+longlong integer_arg(Scope *scope, ulong index)
+// ----------------------------------------------------------------------------
+//    Return an integer value 
+// ----------------------------------------------------------------------------
+{
+    Tree *value = scope->values[index];
+    if (Integer *ival = dynamic_cast<Integer *> (value))
+        return ival->value;
+    scope->Error("Value '$1' is not an integer", value);
+    return 0;
+}
+
+
+double real_arg(Scope *scope, ulong index)
+// ----------------------------------------------------------------------------
+//    Return a real value 
+// ----------------------------------------------------------------------------
+{
+    Tree *value = scope->values[index];
+    if (Real *rval = dynamic_cast<Real *> (value))
+        return rval->value;
+    scope->Error("Value '$1' is not a real", value);
+    return 0.0;
+}
+
+
+text text_arg(Scope *scope, ulong index)
+// ----------------------------------------------------------------------------
+//    Return a text value 
+// ----------------------------------------------------------------------------
+{
+    Tree *value = scope->values[index];
+    if (Text *tval = dynamic_cast<Text *> (value))
+        return tval->value;
+    scope->Error("Value '$1' is not a text", value);
+    return "";
+}
+
+
+bool boolean_arg(Scope *scope, ulong index)
+// ----------------------------------------------------------------------------
+//    Return a boolean truth value 
+// ----------------------------------------------------------------------------
+{
+    Tree *value = scope->values[index];
+    if (value == true_name)
+        return true;
+    else if (value == false_name)
+        return false;
+    scope->Error("Value '$1' is not a boolean value", value);
+    return false;
+}
+
+
+Tree *anything_arg(Scope *scope, ulong index)
+// ----------------------------------------------------------------------------
+//    Return a boolean truth value 
+// ----------------------------------------------------------------------------
+{
+    Tree *value = scope->values[index];
+    return value;
+}
+
+
+Tree *AddParameter(Tree *existing, Tree *append)
+// ----------------------------------------------------------------------------
+//   Create a comma-separated parameter list
+// ----------------------------------------------------------------------------
+{
+    Tree *arglist = existing;
+    if (!arglist)
+        return append;
+
+    Infix *parent = NULL;
+    while (Infix *infix = dynamic_cast<Infix *> (existing))
+    {
+        parent = infix;
+        existing = parent->right;
+    }
+    if (!parent)
+        return new Infix(",", existing, append);
+
+    parent->right = new Infix(",", parent->right, append);
+    return arglist;
+}
+
 
 XL_END
 

@@ -31,9 +31,9 @@
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //    Native code
-// 
+//
 // ============================================================================
 
 struct Native : Tree
@@ -53,17 +53,30 @@ struct Native : Tree
 
 struct Scope : Native
 // ----------------------------------------------------------------------------
-//   Create an execution context with local variables
+//   Create a local scope, i.e. a frame for local variables
 // ----------------------------------------------------------------------------
 {
-    Scope(Context *c, tree_position pos = NOWHERE):
-        Native(NULL, pos), locals(c), values() {}
+    Scope(tree_position pos = NOWHERE):
+        Native(NULL, pos), parameterCount(0), values() {}
     Tree *              Run(Scope *scope);
     Tree *              Next() { return NULL; }
     Tree *              Error (text message,
                                Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
-    Context *           locals;
+    ulong               parameterCount;
     tree_list           values;
+};
+
+
+struct Invoke : Scope
+// ----------------------------------------------------------------------------
+//   Invoke a rewrite with some local variable
+// ----------------------------------------------------------------------------
+{
+    Invoke(tree_position pos = NOWHERE):
+        Scope(pos), child(NULL) {}
+    Tree *              Run(Scope *scope);
+    void                AddArgument(Tree *value);
+    Tree *              child;
 };
 
 
@@ -79,28 +92,29 @@ struct Variable : Native
 };
 
 
-struct Invoke : Native
-// ----------------------------------------------------------------------------
-//   Invoke a rewrite with some local variable
-// ----------------------------------------------------------------------------
-{
-    Invoke(tree_position pos = NOWHERE):
-        Native(NULL, pos), scope(s), child(NULL), arguments() {}
-    Tree *              Run(Scope *scope);
-    Tree *              child;
-    tree_list           arguments;
-};
-
-
 struct BranchTarget : Native
 // ----------------------------------------------------------------------------
 //   A branch target for conditionals
 // ----------------------------------------------------------------------------
 {
-    BranchTarget(tree_position pos = NOWHERE):
-        Native(NULL, pos) {}
+    BranchTarget(tree_position pos = NOWHERE): Native(NULL, pos) {}
 };
-    
+
+
+struct FailedCall : Native
+// ----------------------------------------------------------------------------
+//    Indicate if we don't know how to deal with a call
+// ----------------------------------------------------------------------------
+{
+    FailedCall(Tree *src, tree_position pos = NOWHERE):
+        Native(NULL, pos), source(src) {}
+    Tree *Run(Scope *scope)
+    {
+        return scope->Error("Don't know how to call '$1'", source);
+    }
+    Tree *source;
+};
+
 
 struct TreeTest : Native
 // ----------------------------------------------------------------------------
@@ -246,7 +260,35 @@ struct TypeTest : TreeTest
 };
 
 
+// ============================================================================
+// 
+//    Helpers for infix / prefix definition
+// 
+// ============================================================================
+//    See how these are used in opcodes_declare.h and opcodes_define.h
 
+longlong integer_arg(Scope *scope, ulong index);
+double real_arg(Scope *scope, ulong index);
+text text_arg(Scope *scope, ulong index);
+bool boolean_arg(Scope *scope, ulong index);
+Tree *anything_arg(Scope *scope, ulong index);
+Tree *AddParameter(Tree *existing, Tree *append);
+
+#define ANYTHING(index) scope->values[(index)]
+#define INT(index)      integer_arg(scope, (index))
+#define REAL(index)     real_arg(scope, (index))
+#define TEXT(index)     text_arg(scope, (index))
+#define BOOL(index)     boolean_arg(scope, (index))
+#define RINT(val)       return new Integer((val), scope->Position())
+#define RREAL(val)      return new Real((val), scope->Position())
+#define RTEXT(val)      return new Text((val), scope->Position())
+#define RBOOL(val)      return (val) ? true_name : false_name
+
+typedef longlong integer_t;
+typedef double real_t;
+typedef text text_t;
+typedef bool boolean_t;
+typedef Tree *anything_t;
 
 XL_END
 
