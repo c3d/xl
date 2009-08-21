@@ -41,7 +41,7 @@
         Name *to = new Name(symbol);                                    \
         c->EnterRewrite(from, to);                                      \
         to->code = (eval_fn) xl_##name;                                 \
-        compiler->EnterBuiltin("xl_" #name, from, to->code);            \
+        compiler->EnterBuiltin("xl_" #name, to, to->code);              \
     } while(0);
 
 #define PARM(symbol, type)                                      \
@@ -64,7 +64,7 @@
             Name *to = new Name(symbol);                                \
             c->EnterRewrite(from, to);                                  \
             to->code = (eval_fn) xl_##name;                             \
-            compiler->EnterBuiltin("xl_" #name, from, to->code);        \
+            compiler->EnterBuiltin("xl_" #name, to, to->code);          \
         }                                                               \
         else                                                            \
         {                                                               \
@@ -84,7 +84,7 @@
         Name *to = new Name(symbol);                            \
         c->EnterRewrite(from, to);                              \
         to->code = (eval_fn) xl_##name;                         \
-        compiler->EnterBuiltin("xl_" #name, from, to->code);    \
+        compiler->EnterBuiltin("xl_" #name, to, to->code);      \
     } while(0);
 
 #define NAME(symbol)                            \

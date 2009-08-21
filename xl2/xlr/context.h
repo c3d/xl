@@ -138,9 +138,10 @@ struct Name;                                    // Name node, e.g. ABC or +
 struct Action;                                  // Action on trees
 struct Context;                                 // Compile-time context
 struct Rewrite;                                 // Tree rewrite data
-struct Compiler;                                // JIT compiler
 struct Runtime;                                 // Runtime context
 struct Errors;                                  // Error handlers
+struct Compiler;                                // JIT compiler
+struct CompiledUnit;                            // Compilation unit
 
 typedef std::map<text, Tree *>    symbol_table; // Symbol table in context
 typedef std::set<Tree *>          active_set;   // Not to be garbage collected
@@ -181,7 +182,8 @@ struct Symbols
     void                Clear();
 
     // Compiling and evaluating a tree in scope defined by these symbols
-    Tree *              Compile(Tree *source, bool nullIfBad = false);
+    Tree *              Compile(Tree *s, CompiledUnit *, bool nullIfBad=false);
+    Tree *              CompileAll(Tree *s);
     Tree *              Run(Tree *t);
     void                ParameterList(Tree *form, std::vector<Tree *> &list);
 
@@ -270,8 +272,6 @@ struct Runtime
 // 
 // ============================================================================
 
-struct Compiler;
-struct CompiledUnit;
 typedef std::map<Tree *, ulong> eval_cache;
 
 
@@ -303,8 +303,7 @@ struct CompileAction : Action
 //   Compute the input tree using the given compiler
 // ----------------------------------------------------------------------------
 {
-    CompileAction (Symbols *s, Tree *source, tree_list parms, bool nullIfBad);
-    ~CompileAction();
+    CompileAction (Symbols *s, CompiledUnit *, bool nullIfBad);
 
     virtual Tree *Do(Tree *what);
     virtual Tree *DoInteger(Integer *what);

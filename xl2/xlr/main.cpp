@@ -85,7 +85,7 @@ int main(int argc, char **argv)
         {
             if (tree && !options.parseOnly)
             {
-                tree = context.Compile(tree);
+                tree = context.CompileAll(tree);
                 if (tree && !options.compileOnly)
                     tree = context.Run(tree);
             }
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
         }
         else if (tree)
         {
-            tree = context.Compile(tree);
+            tree = context.CompileAll(tree);
         }
     }
 

@@ -168,15 +168,15 @@ Compiler::Compiler(kstring moduleName)
 #define RIGHT_VALUE_INDEX       4
 
     // Record the type names
-    module->addTypeName("struct.tree", treeTy);
-    module->addTypeName("struct.treeptr", treePtrTy);
-    module->addTypeName("struct.treeptrptr", treePtrPtrTy);
-    module->addTypeName("struct.integer", integerTreeTy);
-    module->addTypeName("struct.integerptr", integerTreePtrTy);
-    module->addTypeName("struct.real", realTreeTy);
-    module->addTypeName("struct.realptr", realTreePtrTy);
-    module->addTypeName("struct.eval", evalTy);
-    module->addTypeName("struct.evalfn", evalFnTy);
+    module->addTypeName("tree", treeTy);
+    module->addTypeName("treeptr", treePtrTy);
+    module->addTypeName("treeptrptr", treePtrPtrTy);
+    module->addTypeName("integer", integerTreeTy);
+    module->addTypeName("integerptr", integerTreePtrTy);
+    module->addTypeName("real", realTreeTy);
+    module->addTypeName("realptr", realTreePtrTy);
+    module->addTypeName("eval", evalTy);
+    module->addTypeName("evalfn", evalFnTy);
 
     // Create a reference to the evaluation function
     Type *charPtrTy = PointerType::get(LLVM_INTTYPE(char), 0);
@@ -277,9 +277,7 @@ Value *Compiler::Known(Tree *tree)
 // ----------------------------------------------------------------------------
 {
     Value *result = NULL;
-    if (functions.count(tree) > 0)
-        result = functions[tree];
-    else if (globals.count(tree) > 0)
+    if (globals.count(tree) > 0)
         result = globals[tree];
     return result;
 }
@@ -297,7 +295,7 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *source, tree_list parms)
 //   CompiledUnit constructor
 // ----------------------------------------------------------------------------
     : compiler(comp), builder(NULL), function(NULL),
-      entrybb(NULL), exitbb(NULL), invokebb(NULL), failbb(NULL)
+      allocabb(NULL), entrybb(NULL), exitbb(NULL), invokebb(NULL), failbb(NULL)
 {
     // If a compilation for that tree is alread in progress, fwd decl
     if (compiler->functions[source])
@@ -318,6 +316,9 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *source, tree_list parms)
     // Save it in the compiler
     compiler->functions[source] = function;
 
+    // Create function entry point, where we will have all allocas
+    allocabb = BasicBlock::Create("allocas", function);
+
     // Create entry block for the function
     entrybb = BasicBlock::Create("entry", function);
 
@@ -334,7 +335,7 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *source, tree_list parms)
     }
 
     // Create the pointer to the return value, initialize with input
-    builder->SetInsertPoint(entrybb);
+    builder->SetInsertPoint(allocabb);
     Value *zero = ConstantPointerNull::get(compiler->treePtrTy);
     result = builder->CreateAlloca(compiler->treePtrTy, 0, "result");
     builder->CreateStore(zero, result);
@@ -547,6 +548,10 @@ eval_fn CompiledUnit::Finalize()
     // Branch to the exit block from the last test we did
     builder->CreateBr(exitbb);
 
+    // Connect the "allocas" to the actual entry point
+    builder->SetInsertPoint(allocabb);
+    builder->CreateBr(entrybb);
+
     // Verify the function we built
     verifyFunction(*function);
     if (compiler->optimizer)
@@ -584,7 +589,7 @@ Value * CompiledUnit::NeedLazy(Tree *tree)
     // Create some local "stack" variable
     std::ostringstream out;
     BasicBlock *current = builder->GetInsertBlock();
-    builder->SetInsertPoint(entrybb); // Only valid location for alloca
+    builder->SetInsertPoint(allocabb); // Only valid location for alloca
     value = builder->CreateAlloca(compiler->treePtrTy, 0, "lazy");
     builder->SetInsertPoint(current);
     lazy[tree] = value;

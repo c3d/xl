@@ -334,7 +334,7 @@ extern "C"
             return what;
 
         if (!what->code)
-            what = Context::context->Compile(what);
+            what = Context::context->CompileAll(what);
 
         assert(what->code);
         Tree *result = what->code(what);

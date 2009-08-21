@@ -126,46 +126,52 @@ void Symbols::ParameterList(Tree *form, tree_list &list)
 }
 
 
-Tree *Symbols::Compile(Tree *source, bool nullIfBad)
+Tree *Symbols::Compile(Tree *source, CompiledUnit *unit, bool nullIfBad)
 // ----------------------------------------------------------------------------
 //    Return an optimized version of the source tree, ready to run
 // ----------------------------------------------------------------------------
 //    This associates an eval_fn to the tree, i.e. code that takes a tree
 //    as input and returns a tree as output.
 {
-    // If we already have compiled code, we are done
-    if (source->code)
-        return source;
-
     // Record rewrites and data declarations in the current context
     Symbols parms(this);
     DeclarationAction declare(&parms);
     Tree *result = source->Do(declare);
 
     // Compile code for that tree
-    tree_list parmsList;
-    parmsList.push_back(source);
-
-    Context *context = Context::context;
-    CompileAction compile(&parms, source, parmsList, nullIfBad);
-    if (compile.unit->IsForwardCall())
-        return source;          // Nested compile
-
-    // Generate the code
+    CompileAction compile(&parms, unit, nullIfBad);
     result = source->Do(compile);
 
     // If we didn't compile successfully, report
     if (!result)
     {
+        Context *context = Context::context;
         if (nullIfBad)
             return result;
         return context->Error("Couldn't compile '$1'", source);
     }
 
     // If we compiled successfully, get the code and store it
-    eval_fn code = compile.unit->Finalize();
-    source->code = code;
+    return source;
+}
 
+
+Tree *Symbols::CompileAll(Tree *source)
+// ----------------------------------------------------------------------------
+//   Compile a top-level tree
+// ----------------------------------------------------------------------------
+{
+    Context *context = Context::context;
+    Compiler *compiler = context->compiler;
+    tree_list noParms;
+    CompiledUnit unit (compiler, source, noParms);
+
+    Tree *result = Compile(source, &unit, false);
+    if (!result)
+        return result;
+
+    eval_fn code = unit.Finalize();
+    source->code = code;
     return source;
 }
 
@@ -180,7 +186,7 @@ Tree *Symbols::Run(Tree *code)
         return result;
 
     if (!result->code)
-        result = Compile(result);
+        result = CompileAll(result);
 
     assert(result->code);
     result = result->code(code);
@@ -535,7 +541,7 @@ Tree *ArgumentMatch::Compile(Tree *source)
 {
     // Compile the code
     if (!source->code)
-        source = symbols->Compile(source, true);
+        source = symbols->Compile(source, unit, true);
     if (!source)
         return NULL; // No match
  
@@ -954,25 +960,12 @@ void DeclarationAction::EnterRewrite(Tree *defined, Tree *definition)
 // 
 // ============================================================================
 
-CompileAction::CompileAction(Symbols *s, Tree *src, tree_list parms, bool nib)
+CompileAction::CompileAction(Symbols *s, CompiledUnit *u, bool nib)
 // ----------------------------------------------------------------------------
 //   Constructor
 // ----------------------------------------------------------------------------
-    : symbols(s), unit(NULL), needed(), nullIfBad(nib)
-{
-    Context *context = Context::context;
-    Compiler *compiler = context->compiler;
-    unit = new CompiledUnit(compiler, src, parms);
-}
-
-
-CompileAction::~CompileAction()
-// ----------------------------------------------------------------------------
-//   Destructor deletes the CompiledUnit
-// ----------------------------------------------------------------------------
-{
-    delete unit;
-}
+    : symbols(s), unit(u), needed(), nullIfBad(nib)
+{}
 
 
 Tree *CompileAction::Do(Tree *what)
@@ -1345,8 +1338,10 @@ Tree *Rewrite::Compile(void)
     if (to->code)
         return to;
 
-    // Identify all parameters in 'from'
     Context *context = Context::context;
+    Compiler *compiler = context->compiler;
+
+    // Identify all parameters in 'from'
     Symbols parms(symbols);
     ParameterMatch matchParms(&parms);
     Tree *parmsOK = from->Do(matchParms);
@@ -1358,8 +1353,10 @@ Tree *Rewrite::Compile(void)
     tree_list parmsList;
     for (p = parms.names.begin(); p != parms.names.end(); p++)
         parmsList.push_back((*p).second);
-    CompileAction compile(&parms, to, parmsList, false);
-    if (compile.unit->IsForwardCall())
+
+    // Create the compilation unit and check if we are already compiling this
+    CompiledUnit unit(compiler, to, parmsList);
+    if (unit.IsForwardCall())
     {
         // Recursive compilation of that form
         // REVISIT: Can this happen?
@@ -1367,6 +1364,7 @@ Tree *Rewrite::Compile(void)
     }
 
     // Compile the body of the rewrite
+    CompileAction compile(&parms, &unit, false);
     Tree *result = to->Do(compile);
     if (!result)
         return context->Error("Unable to compile '$1'", to);

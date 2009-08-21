@@ -136,6 +136,7 @@ public:
     llvm::Value *       result;         // Returned value from function
     llvm::IRBuilder<> * builder;        // Instruction builder
     llvm::Function *    function;       // Function we generate
+    llvm::BasicBlock *  allocabb;       // Function entry point, allocas
     llvm::BasicBlock *  entrybb;        // Entry point for that code
     llvm::BasicBlock *  exitbb;         // Exit point for that code
     llvm::BasicBlock *  invokebb;       // Entry basic block for current invoke
