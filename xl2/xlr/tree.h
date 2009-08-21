@@ -87,6 +87,8 @@ struct Tree
     // Operator new to record the tree in the garbage collector
     void *              operator new(size_t sz);
 
+public:
+    Tree *              cached_value;
 protected:
     tree_position       position;
     tree_data           data;
@@ -123,13 +125,22 @@ struct Action
 // 
 // ============================================================================
 
-struct Integer : Tree
+struct Leaf : Tree
+// ----------------------------------------------------------------------------
+//   We use this only so that we can identify all leaf types easily
+// ----------------------------------------------------------------------------
+{
+    Leaf(tree_position pos = NOWHERE) : Tree(pos) {}
+};
+
+
+struct Integer : Leaf
 // ----------------------------------------------------------------------------
 //   Integer constants
 // ----------------------------------------------------------------------------
 {
     Integer(longlong i = 0, tree_position pos = NOWHERE):
-        Tree(pos), value(i) {}
+        Leaf(pos), value(i) {}
     virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context)                 { return this; }
     virtual Tree *      Call(Context *context, Tree *args)    { return this; }
@@ -137,13 +148,13 @@ struct Integer : Tree
 };
 
 
-struct Real : Tree
+struct Real : Leaf
 // ----------------------------------------------------------------------------
 //   Real numbers
 // ----------------------------------------------------------------------------
 {
     Real(double d = 0.0, tree_position pos = NOWHERE):
-        Tree(pos), value(d) {}
+        Leaf(pos), value(d) {}
     virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context)                 { return this; }
     virtual Tree *      Call(Context *context, Tree *args)    { return this; }
@@ -151,13 +162,13 @@ struct Real : Tree
 };
 
 
-struct Text : Tree
+struct Text : Leaf
 // ----------------------------------------------------------------------------
 //   Text, e.g. "Hello World"
 // ----------------------------------------------------------------------------
 {
     Text(text t = "", tree_position pos = NOWHERE):
-        Tree(pos), value(t) {}
+        Leaf(pos), value(t) {}
     virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context)                 { return this; }
     virtual Tree *      Call(Context *context, Tree *args)    { return this; }
@@ -202,19 +213,31 @@ struct Comment : LongText
 };
 
 
-struct Name : Tree
+struct Name : Leaf
 // ----------------------------------------------------------------------------
 //   A node representing a name or symbol
 // ----------------------------------------------------------------------------
 {
     Name(text n, tree_position pos = NOWHERE):
-        Tree(pos), value(n) {}
+        Leaf(pos), value(n) {}
     virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context);
     virtual Tree *      Call(Context *context, Tree *args);
     text                value;
 };
 
+
+struct Native : Leaf
+// ----------------------------------------------------------------------------
+//   A native tree is intended to represent directly executable code
+// ----------------------------------------------------------------------------
+{
+    Native(tree_position pos = NOWHERE): Leaf(pos) {}
+    virtual Tree *      Do(Action *action);
+    virtual Tree *      Run(Context *context);
+    virtual text        TypeName();
+};
+    
 
 
 // ============================================================================
@@ -223,12 +246,21 @@ struct Name : Tree
 // 
 // ============================================================================
 
-struct Block : Tree
+struct NonLeaf : Tree
+// ----------------------------------------------------------------------------
+//   We use this to identify all the non-leaf types
+// ----------------------------------------------------------------------------
+{
+    NonLeaf(tree_position pos = NOWHERE): Tree(pos) {}
+};
+
+
+struct Block : NonLeaf
 // ----------------------------------------------------------------------------
 //   A block, such as (X), {X}, [X] or indented block (defaults to indented)
 // ----------------------------------------------------------------------------
 {
-    Block(Tree *c, tree_position pos = NOWHERE): Tree(pos), child(c) {}
+    Block(Tree *c, tree_position pos = NOWHERE): NonLeaf(pos), child(c) {}
     virtual text        Opening() { return "\t+"; }
     virtual text        Closing() { return "\t-"; }
     virtual Tree *      Do(Action *action);
@@ -287,13 +319,13 @@ struct DelimitedBlock : Block
 };
 
 
-struct Prefix : Tree
+struct Prefix : NonLeaf
 // ----------------------------------------------------------------------------
 //   A prefix operator, e.g. sin X, +3
 // ----------------------------------------------------------------------------
 {
     Prefix(Tree *l, Tree *r, tree_position pos = NOWHERE):
-        Tree(pos), left(l), right(r) {}
+        NonLeaf(pos), left(l), right(r) {}
     virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context);
     virtual Tree *      Call(Context *context, Tree *args);
@@ -334,17 +366,6 @@ struct Infix : Prefix
 };
 
 
-struct Native : Tree
-// ----------------------------------------------------------------------------
-//   A native tree is intended to represent directly executable code
-// ----------------------------------------------------------------------------
-{
-    Native(tree_position pos = NOWHERE): Tree(pos) {}
-    virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Context *context);
-    virtual text        TypeName();
-};
-    
 XL_END
 
 #endif // TREE_H
