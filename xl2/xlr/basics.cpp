@@ -344,7 +344,7 @@ Tree *Definition::Call(Context *context, Tree *args)
         if (!defined || !definition)
             return context->Error("Definition '$1' is incomplete", args);
 
-        context->Parent()->EnterRewrite(defined, definition);
+        context->EnterRewrite(defined, definition);
 
         return nil_name;
     }
