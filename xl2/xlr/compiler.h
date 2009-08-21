@@ -57,7 +57,9 @@ struct Compiler
 {
     Compiler(kstring moduleName = "xl");
 
-    llvm::Function *          EnterBuiltin(text name, Tree *form, eval_fn code);
+    llvm::Function *          EnterBuiltin(text name,
+                                           Tree *from, Tree *to,
+                                           eval_fn code);
     llvm::Function *          ExternFunction(kstring name, void *address,
                                              const llvm::Type *retType,
                                              uint parmCount, ...);
@@ -109,7 +111,7 @@ struct CompiledUnit
     llvm::Value *       ConstantReal(Real *what);
     llvm::Value *       ConstantText(Text *what);
 
-    llvm::Value *       Invoke(Tree *callee, tree_list args);
+    llvm::Value *       Invoke(Tree *subexpr, Tree *callee, tree_list args);
     eval_fn             Finalize();
 
     llvm::BasicBlock *  NeedTest();
@@ -128,7 +130,7 @@ struct CompiledUnit
 
 public:
     Compiler *          compiler;       // The compiler environment we use
-    ulong               parameters;     // Size of the tree input list
+    Tree *              source;         // The original source we compile
 
     llvm::IRBuilder<> * builder;        // Instruction builder
     llvm::Function *    function;       // Function we generate
@@ -160,6 +162,7 @@ struct ExpressionReduction
 
 public:
     CompiledUnit &      unit;
+    Tree *              source;
     llvm::Value *       alloca;
     llvm::BasicBlock *  invokebb;
     llvm::BasicBlock *  failbb;

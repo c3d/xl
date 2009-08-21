@@ -30,7 +30,6 @@
 #undef NAME
 #undef TYPE
 #undef PARM
-#undef MPARM
 
 #define INFIX(t1, symbol, t2, name, _code)                              \
     do                                                                  \
@@ -41,7 +40,7 @@
         Name *to = new Name(symbol);                                    \
         c->EnterRewrite(from, to);                                      \
         to->code = (eval_fn) xl_##name;                                 \
-        compiler->EnterBuiltin("xl_" #name, to, to->code);              \
+        compiler->EnterBuiltin("xl_" #name, from, to, to->code);        \
     } while(0);
 
 #define PARM(symbol, type)                                      \
@@ -49,8 +48,6 @@
                                          new Name(#symbol),     \
                                          new Name(#type));      \
         parameters.push_back(symbol##_decl);
-
-#define MPARM(symbol, type) PARM(symbol, type)
 
 #define PREFIX(symbol, parms, name, _code)                              \
     do                                                                  \
@@ -64,7 +61,7 @@
             Name *to = new Name(symbol);                                \
             c->EnterRewrite(from, to);                                  \
             to->code = (eval_fn) xl_##name;                             \
-            compiler->EnterBuiltin("xl_" #name, to, to->code);          \
+            compiler->EnterBuiltin("xl_" #name, from, to, to->code);    \
         }                                                               \
         else                                                            \
         {                                                               \
@@ -74,17 +71,17 @@
         }                                                               \
     } while(0);
 
-#define POSTFIX(t1, symbol, name, _code)                        \
-    do                                                          \
-    {                                                           \
-        tree_list parameters;                                   \
-        parms;                                                  \
-        Tree *parmtree = ParametersTree(parameters);            \
-        Prefix *from = new Postfix(parmtree, new Name(symbol)); \
-        Name *to = new Name(symbol);                            \
-        c->EnterRewrite(from, to);                              \
-        to->code = (eval_fn) xl_##name;                         \
-        compiler->EnterBuiltin("xl_" #name, to, to->code);      \
+#define POSTFIX(t1, symbol, name, _code)                                \
+    do                                                                  \
+    {                                                                   \
+        tree_list parameters;                                           \
+        parms;                                                          \
+        Tree *parmtree = ParametersTree(parameters);                    \
+        Prefix *from = new Postfix(parmtree, new Name(symbol));         \
+        Name *to = new Name(symbol);                                    \
+        c->EnterRewrite(from, to);                                      \
+        to->code = (eval_fn) xl_##name;                                 \
+        compiler->EnterBuiltin("xl_" #name, from, to, to->code);        \
     } while(0);
 
 #define NAME(symbol)                            \

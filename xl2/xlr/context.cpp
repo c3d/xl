@@ -913,6 +913,10 @@ Tree *DeclarationAction::DoInfix(Infix *what)
     // Check if this is a rewrite declaration
     if (what->name == "->")
     {
+        // If the definition is a literal, make sure we still compile it
+        if (what->right->code == xl_identity)
+            what->right->code = NULL;
+
         // Enter the rewrite
         EnterRewrite(what->left, what->right);
         return what;
@@ -1035,6 +1039,8 @@ Tree *CompileAction::DoBlock(Block *what)
 //   Optimize away indent or parenthese blocks, evaluate others
 // ----------------------------------------------------------------------------
 {
+    unit.Left(what);
+
     if ((what->opening == Block::indent && what->closing == Block::unindent) ||
         (what->opening == "(" && what->closing == ")"))
         return what->child->Do(this);
@@ -1049,6 +1055,9 @@ Tree *CompileAction::DoInfix(Infix *what)
 //   Compile built-in operators: \n ; -> and :
 // ----------------------------------------------------------------------------
 {
+    unit.Left(what);
+    unit.Right(what);
+
     // Check if this is an instruction list
     if (what->name == "\n" || what->name == ";")
     {
@@ -1083,6 +1092,8 @@ Tree *CompileAction::DoPrefix(Prefix *what)
 //    All prefix operations translate into a rewrite
 // ----------------------------------------------------------------------------
 {
+    unit.Left(what);
+    unit.Right(what);
     return Rewrites(what);
 }
 
@@ -1092,6 +1103,8 @@ Tree *CompileAction::DoPostfix(Postfix *what)
 //    All postfix operations translate into a rewrite
 // ----------------------------------------------------------------------------
 {
+    unit.Left(what);
+    unit.Right(what);
     return Rewrites(what);
 }
 
@@ -1181,9 +1194,12 @@ Tree * CompileAction::Rewrites(Tree *what)
                             }
                         }
 
+                        // Push the "self" argument as first arg
+                        tree_list argsList;
+                        argsList.push_back(what);
+
                         // Map the arguments we found in called stack order
                         // (i.e. we take the order from parms ids)
-                        tree_list argsList;
                         symbol_iter i;
                         for (i=parms.names.begin(); i!=parms.names.end(); i++)
                         {
@@ -1196,7 +1212,7 @@ Tree * CompileAction::Rewrites(Tree *what)
                         Tree *code = candidate->Compile();
 
                         // Invoke the candidate
-                        unit.Invoke(code, argsList);
+                        unit.Invoke(what, code, argsList);
 
                         // If there was no test code, don't keep testing further
                         foundUnconditional = !unit.failbb;

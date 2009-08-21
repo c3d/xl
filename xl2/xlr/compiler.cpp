@@ -177,6 +177,8 @@ Compiler::Compiler(kstring moduleName)
     module->addTypeName("realptr", realTreePtrTy);
     module->addTypeName("eval", evalTy);
     module->addTypeName("evalfn", evalFnTy);
+    module->addTypeName("prefix", prefixTreeTy);
+    module->addTypeName("prefixptr", prefixTreePtrTy);
 
     // Create a reference to the evaluation function
     Type *charPtrTy = PointerType::get(LLVM_INTTYPE(char), 0);
@@ -203,7 +205,9 @@ Compiler::Compiler(kstring moduleName)
 }
 
 
-Function *Compiler::EnterBuiltin(text name, Tree *form, eval_fn code)
+Function *Compiler::EnterBuiltin(text name,
+                                 Tree *from, Tree *to,
+                                 eval_fn code)
 // ----------------------------------------------------------------------------
 //   Declare a built-in function
 // ----------------------------------------------------------------------------
@@ -213,10 +217,11 @@ Function *Compiler::EnterBuiltin(text name, Tree *form, eval_fn code)
     // Find the parameters
     tree_list parms;
     Context *context = Context::context;
-    context->ParameterList (form, parms);
+    context->ParameterList (from, parms);
 
     // Create the LLVM function
     std::vector<const Type *> parmTypes;
+    parmTypes.push_back(treePtrTy); // First arg is self
     for (tree_list::iterator p = parms.begin(); p != parms.end(); p++)
         parmTypes.push_back(treePtrTy);
     FunctionType *fnTy = FunctionType::get(treePtrTy, parmTypes, false);
@@ -227,7 +232,7 @@ Function *Compiler::EnterBuiltin(text name, Tree *form, eval_fn code)
     sys::DynamicLibrary::AddSymbol(name, (void*) code);
 
     // Associate the function with the tree form
-    functions[form] = result;
+    functions[to] = result;
 
     return result;    
 }
@@ -290,16 +295,17 @@ Value *Compiler::Known(Tree *tree)
 // 
 // ============================================================================
 
-CompiledUnit::CompiledUnit(Compiler *comp, Tree *source, tree_list parms)
+CompiledUnit::CompiledUnit(Compiler *comp, Tree *src, tree_list parms)
 // ----------------------------------------------------------------------------
 //   CompiledUnit constructor
 // ----------------------------------------------------------------------------
-    : compiler(comp), builder(NULL), function(NULL),
+    : compiler(comp), source(src),
+      builder(NULL), function(NULL),
       allocabb(NULL), entrybb(NULL), exitbb(NULL),
       invokebb(NULL), failbb(NULL), successbb(NULL)
 {
     // If a compilation for that tree is alread in progress, fwd decl
-    if (compiler->functions[source])
+    if (compiler->functions[src])
         return;
 
     // Create the instruction builder for this compiled unit
@@ -315,7 +321,7 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *source, tree_list parms)
                                 "xl_eval", compiler->module);
 
     // Save it in the compiler
-    compiler->functions[source] = function;
+    compiler->functions[src] = function;
 
     // Create function entry point, where we will have all allocas
     allocabb = BasicBlock::Create("allocas", function);
@@ -329,7 +335,7 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *source, tree_list parms)
     builder->SetInsertPoint(allocabb);
     Value *result_storage = builder->CreateAlloca(treeTy, 0, "result");
     builder->CreateStore(inputArg, result_storage);
-    alloca[source] = result_storage;
+    alloca[src] = result_storage;
 
     // Associate the value for the additional arguments (read-only, no alloca)
     tree_list::iterator parm;
@@ -344,7 +350,7 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *source, tree_list parms)
     // Create the exit basic block and return statement
     exitbb = BasicBlock::Create("exit", function);
     builder->SetInsertPoint(exitbb);
-    Value *retVal = builder->CreateLoad(result_storage);
+    Value *retVal = builder->CreateLoad(result_storage, "retval");
     builder->CreateRet(retVal);
 
     // Begin by inserting code at the top
@@ -380,14 +386,14 @@ Value *CompiledUnit::Known(Tree *tree)
     else if (alloca.count(tree) > 0)
     {
         // Value is a variable
-        result = builder->CreateLoad(alloca[tree]);
+        result = builder->CreateLoad(alloca[tree], "known.alloca");
     }
     else
     {
         // Check if this is a global
         result = compiler->Known(tree);
         if (result)
-            result = builder->CreateLoad(result);
+            result = builder->CreateLoad(result, "known.global");
     }
     return result;
 }
@@ -463,11 +469,16 @@ Value *CompiledUnit::ConstantText(Text *what)
 }
 
 
-llvm::Value *CompiledUnit::Invoke(Tree *callee, tree_list args)
+llvm::Value *CompiledUnit::Invoke(Tree *subexpr, Tree *callee, tree_list args)
 // ----------------------------------------------------------------------------
 //    Generate a call with the given arguments
 // ----------------------------------------------------------------------------
 {
+    // Check if the resulting form is a name or literal
+    if (args.size() == 0)
+        if (Value *known = Known(callee))
+            return known;
+
     Function *toCall = compiler->functions[callee];
     assert(toCall);
 
@@ -485,8 +496,10 @@ llvm::Value *CompiledUnit::Invoke(Tree *callee, tree_list args)
                                          argValues.begin(), argValues.end());
 
     // Store this as the result
-    assert (alloca.count(callee) > 0);
-    builder->CreateStore(callVal, alloca[callee]);
+    if (alloca.count(subexpr) > 0)
+        builder->CreateStore(callVal, alloca[subexpr]);
+    else
+        value[subexpr] = callVal;
 
     return callVal;
 }
@@ -573,7 +586,8 @@ Value *CompiledUnit::Left(Tree *code)
         Value *pptr = builder->CreateBitCast(parent, compiler->prefixTreePtrTy,
                                              "asprefix.left");
         result = builder->CreateConstGEP2_32(pptr, 0,
-                                             LEFT_VALUE_INDEX, "left");
+                                             LEFT_VALUE_INDEX, "leftptr");
+        result = builder->CreateLoad(result, "left");
         assert(!value[prefix->left]);
         value[prefix->left] = result;
     }
@@ -610,7 +624,8 @@ Value *CompiledUnit::Right(Tree *code)
         Value *pptr = builder->CreateBitCast(parent, compiler->prefixTreePtrTy,
                                              "asprefix.right");
         result = builder->CreateConstGEP2_32(pptr, 0,
-                                             RIGHT_VALUE_INDEX, "right");
+                                             RIGHT_VALUE_INDEX, "rightptr");
+        result = builder->CreateLoad(result, "right");
         assert(!value[prefix->right]);
         value[prefix->right] = result;
     }
@@ -636,8 +651,8 @@ Value *CompiledUnit::LazyEvaluation(Tree *code)
     BasicBlock *doneEval = BasicBlock::Create("doneEval", function);
 
     // Load the cached value, and test if it null
-    Value *cached = builder->CreateLoad(cache);
-    Value *testIfNull = builder->CreateIsNull(cached);
+    Value *cached = builder->CreateLoad(cache, "cached");
+    Value *testIfNull = builder->CreateIsNull(cached, "nulltest");
     builder->CreateCondBr(testIfNull, doEval, doneEval);
 
     // If we need to evaluate, call the xl_evaluate function and store result
@@ -648,13 +663,15 @@ Value *CompiledUnit::LazyEvaluation(Tree *code)
         Context::context->Error("No value for '$1'", code);
         return NULL;
     }
-    Value *evaluated = builder->CreateCall(compiler->xl_evaluate, treeValue);
+    Value *evaluated = builder->CreateCall(compiler->xl_evaluate, treeValue,
+                                           "evalcall");
     builder->CreateStore(evaluated, cache);
     builder->CreateBr(doneEval);
 
     // Load the cached value in the 'doneEval' basic block
     builder->SetInsertPoint(doneEval);
-    cached = builder->CreateLoad(cache);
+    cached = builder->CreateLoad(cache, "cached.done");
+    invokebb = doneEval;
 
     return cached;
 }
@@ -854,27 +871,34 @@ BasicBlock *CompiledUnit::TypeTest(Tree *value, Tree *type)
 //   call is statically not valid. So we save the initial basic block,
 //   and decide at the end to connect it or not. Let LLVM optimize branches
 //   and dead code away...
+//
+//   Invariants:
+//   - u.invokebb is where we generate the code
+//   - u.successbb is where we jump if we find a valid candidate
+//   - u.failbb is where we jump if the current form doesn't match
 
-ExpressionReduction::ExpressionReduction(CompiledUnit &u, Tree *source)
+
+ExpressionReduction::ExpressionReduction(CompiledUnit &u, Tree *src)
 // ----------------------------------------------------------------------------
 //    Snapshot current basic blocks in the compiled unit
 // ----------------------------------------------------------------------------
-    : unit(u),
+    : unit(u), source(src),
       invokebb(u.invokebb), failbb(u.failbb), successbb(u.successbb)
 {
     BasicBlock *bb = u.builder->GetInsertBlock();
 
     // Create the end-of-expression point if we find a match
     u.successbb = BasicBlock::Create("success", u.function);
+    u.failbb = NULL;
 
     // Try to build a somewhat descriptive label for the tree
     text label;
-    switch (source->Kind())
+    switch (src->Kind())
     {
     case INTEGER:       label = "integer"; break;
     case REAL:          label = "real"; break;
     case TEXT:          label = "text"; break;
-    case NAME:          label = "name." + source->AsName()->value; break;
+    case NAME:          label = "name." + src->AsName()->value; break;
     case BLOCK:         label = "block"; break;
     case PREFIX:        label = "prefix"; break;
     case POSTFIX:       label = "postfix"; break;
@@ -886,17 +910,14 @@ ExpressionReduction::ExpressionReduction(CompiledUnit &u, Tree *source)
     u.builder->SetInsertPoint(u.allocabb); // Only valid location for alloca
     const char *clabel = label.c_str();
     Value *storage = u.builder->CreateAlloca(u.compiler->treePtrTy, 0, clabel);
-    u.alloca[source] = storage;
 
     // We should have an initial value for that tree from the source
-    u.builder->SetInsertPoint(u.entrybb);
-    Value *initval = u.value[source];
-    if (!initval)
-        source = Context::context->Error("No initial value for '$1'", source);
-    u.builder->CreateStore(initval, storage);
-
-    // Shift back to the previous insertion point
     u.builder->SetInsertPoint(bb);
+    Value *initval = u.Known(src);
+    if (!initval)
+        source = Context::context->Error("No initial value for '$1'", src);
+    u.builder->CreateStore(initval, storage);
+    u.alloca[src] = storage;
 }
 
 
@@ -905,12 +926,18 @@ ExpressionReduction::~ExpressionReduction()
 //   Destructor restores the prevous sucess and fail points
 // ----------------------------------------------------------------------------
 {
+    CompiledUnit &u = unit;
+
     // If last expression was conditional, branch to 'success' from there
     // (in that case, we leave the input tree unchanged if all tests fail)
-    CompiledUnit &u = unit;
     if (u.failbb)
     {
         u.builder->SetInsertPoint(u.failbb);
+        u.builder->CreateBr(u.successbb);
+    }
+    if (u.invokebb)
+    {
+        u.builder->SetInsertPoint(u.invokebb);
         u.builder->CreateBr(u.successbb);
     }
 
@@ -971,6 +998,18 @@ void ExpressionReduction::Failed()
 // ----------------------------------------------------------------------------
 {
     CompiledUnit &u = unit;
+    Value *drop = ConstantInt::get(LLVM_INTTYPE(int), 0);
+    if (u.failbb)
+    {
+        u.builder->SetInsertPoint(u.failbb);
+        u.builder->CreateAdd(drop, drop, "drop.failbb");
+        u.builder->CreateUnreachable();
+    }
+    u.builder->SetInsertPoint(u.invokebb);
+    u.builder->CreateSub(drop, drop, "drop.invokebb");
+    u.builder->CreateUnreachable();
+
+    u.failbb = NULL;
     u.invokebb = invokebb;
     u.builder->SetInsertPoint(invokebb);
 }

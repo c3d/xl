@@ -30,19 +30,17 @@
 #undef NAME
 #undef TYPE
 #undef PARM
-#undef MPARM
 
 #define INFIX(t1, symbol, t2, name, code)       \
-    Tree *xl_##name(Tree *l, Tree *r) { code; }
+    Tree *xl_##name(Tree*self, Tree *l, Tree *r) { code; }
 
-#define MPARM(symbol, type)     type##_t symbol,
-#define PARM(symbol, type)      type##_t symbol
+#define PARM(symbol, type)      , type##_t symbol
 
 #define PREFIX(symbol, parms, name, code)       \
-    Tree *xl_##name(parms) { code; }
+    Tree *xl_##name(Tree *self parms) { code; }
 
 #define POSTFIX(parms, symbol, name, code)       \
-    Tree *xl_##name(parms) { code; }
+    Tree *xl_##name(Tree *self parms) { code; }
 
 #define NAME(symbol)    \
     Name *xl_##symbol;
