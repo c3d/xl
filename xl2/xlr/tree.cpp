@@ -240,7 +240,7 @@ Tree *Name::Call(Context *context, Tree *args)
         return named->Call(context, args);
 
     // Otherwise, this is an error to try and call the name
-    return context->Error("Called name '$1' doesn't exist", this);
+    return context->Error("No match for call '$1 $2'", this, args);
 }
 
 
