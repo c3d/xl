@@ -245,7 +245,7 @@ struct Assignment : Native
 
 struct Definition : Native
 // ----------------------------------------------------------------------------
-//    Define a tree rewrite (expr => expr)
+//    Define a tree rewrite (expr -> expr)
 // ----------------------------------------------------------------------------
 {
     Tree *Call(Context *context, Tree *args);

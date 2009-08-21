@@ -327,8 +327,8 @@ Tree *Assignment::Call(Context *context, Tree *args)
 // 
 // ============================================================================
 //  This deals with XL definitions, such as:
-//    fact 0 => 1
-//    fact N => N * fact(N-1)
+//    fact 0 -> 1
+//    fact N -> N * fact(N-1)
 
 struct CollectVariables : Action
 // ----------------------------------------------------------------------------
@@ -341,9 +341,10 @@ struct CollectVariables : Action
     
     Tree *DoName(Name *what)
     {
-        // Check if it already exists, if so return existing: A+A
-        if (Tree *other = context->Name(what->value, false))
-            return other;
+        // Check if it already exists, if so return existing:
+        // This is useful for A+A, or for globals, e.g false
+        if (Tree *existing = context->Name(what->value, false))
+            return existing;
 
         // Otherwise, enter it in the context
         context->EnterName(what->value, what);
@@ -365,7 +366,6 @@ struct CollectDefinition : Action
 
     Tree *Do (Tree *what) { return what; }
     
-    // Specialization for the canonical nodes, default is to run them
     Tree *DoName(Name *what)
     {
         context->EnterName(what->value, definition);

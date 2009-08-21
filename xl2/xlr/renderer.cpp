@@ -329,7 +329,7 @@ void debug(XL::Tree *tree)
 // ----------------------------------------------------------------------------
 {
     XL::Renderer render(std::cout);
-    render.parenthesize = true;
+    render.parenthesize = false;
     if (tree)
         tree->Do(render);
     else
