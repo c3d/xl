@@ -28,17 +28,111 @@
 
 XL_BEGIN
 
-Tree *Invoke::Run(Context *context)
+// ============================================================================
+// 
+//    Class Native
+// 
+// ============================================================================
+
+Tree *Action::DoNative(Native *what)
 // ----------------------------------------------------------------------------
-//    Run the child in the local context
+//   Default is simply to invoke 'Do'
 // ----------------------------------------------------------------------------
 {
-    symbol_table save = locals.name_symbols;
-    if (context != locals.Parent())
-        return context->Error("Invalid context for '$1'", this);
-    Tree *result = child->Run(&locals);
-    locals.name_symbols = save;
+    return Do(what);
+}
+
+
+Tree *Native::Do(Action *action)
+// ----------------------------------------------------------------------------
+//   For native nodes, default actions will do
+// ----------------------------------------------------------------------------
+{
+    return action->DoNative(this);
+}
+
+
+Tree *Native::Run(Scope *scope)
+// ----------------------------------------------------------------------------
+//    Running a native node returns the native itself
+// ----------------------------------------------------------------------------
+{
+    return this;
+}
+
+
+text Native::TypeName()
+// ----------------------------------------------------------------------------
+//   The name of a native tree is its type
+// ----------------------------------------------------------------------------
+{
+    return typeid(*this).name();
+}
+
+
+Tree *Native::Append(Tree *tail)
+// ----------------------------------------------------------------------------
+//   Append another tree to a native tree
+// ----------------------------------------------------------------------------
+{
+    // Find end of opcode chain. If end is not native, optimize away
+    Native *prev = this;
+    while (Native *next = dynamic_cast<Native *> (prev->next))
+        prev = next;
+
+    // String right opcode at end
+    prev->next = tail;
+
+    return this;
+}
+
+
+Tree *Scope::Run(Scope *scope)
+// ----------------------------------------------------------------------------
+//    Enter a scope, capture caller's variables
+// ----------------------------------------------------------------------------
+{
+    tree_list saveFrame = values;
+    ulong i, max = scope->values.size();
+    if (max > values.size())
+        return scope->Error("Internal error: Frame size error '$1'", this);
+
+    // Copy input frame
+    for (i = 0; i < max; i++)
+        values[i] = scope->values[i];
+
+    // Run 'next'
+    Tree *result = next->Run(this);
+
+    // Restore old values
+    for (i = 0; i < max; i++)
+        values[i] = saveFrame[i];
+
     return result;
+}
+
+
+Tree * Variable::Run(Scope *scope)
+// ----------------------------------------------------------------------------
+//   Return the variable at given index in the scope
+// ----------------------------------------------------------------------------
+{
+    if (id < scope->values.size())
+    {
+        Tree *value = scope->values[id];
+        if (value)
+            return value->Run(scope);
+    }
+    return scope->Error("Unbound variable '$1'", this);
+}
+
+
+Tree *Invoke::Run(Scope *scope)
+// ----------------------------------------------------------------------------
+//    Run the child in the local arguments scope
+// ----------------------------------------------------------------------------
+{
+    return child->Run(this);
 }
 
 
@@ -163,13 +257,13 @@ struct TreeMatch : Action
 };
 
 
-Tree *EqualityTest::Run (Context *context)
+Tree *EqualityTest::Run (Scope *scope)
 // ----------------------------------------------------------------------------
 //   Check equality of two trees
 // ----------------------------------------------------------------------------
 {
-    Tree *code = test->Run(context);
-    Tree *ref = value->Run(context);
+    Tree *code = test->Run(scope);
+    Tree *ref = value->Run(scope);
     condition = false;
     TreeMatch compareForEquality(ref);
     if (code->Do(compareForEquality))
@@ -178,16 +272,16 @@ Tree *EqualityTest::Run (Context *context)
 }
 
 
-Tree *TypeTest::Run (Context *context)
+Tree *TypeTest::Run (Scope *scope)
 // ----------------------------------------------------------------------------
 //   Check if the code being tested has the given type value
 // ----------------------------------------------------------------------------
 {
-    Tree *code = test->Run(context);
-    Tree *ref = type_value->Run(context);
+    Tree *code = test->Run(scope);
+    Tree *ref = type_value->Run(scope);
     condition = false;
     if (TypeExpression *typeChecker = dynamic_cast<TypeExpression *>(ref))
-        if (typeChecker->HasType(context, code))
+        if (typeChecker->HasType(scope, code))
             condition = true;
     return code;
 }

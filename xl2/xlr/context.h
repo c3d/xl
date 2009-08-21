@@ -33,15 +33,16 @@
 XL_BEGIN
 
 struct Tree;
+struct Variable;
 struct Action;
 struct Context;
 struct Errors;
 struct Rewrite;
 
-typedef std::map<text, Tree *>  symbol_table;
-typedef std::set<Tree *>        active_set;
-typedef std::map<ulong, Rewrite*>rewrite_table;
-typedef std::map<Tree*, Tree*>  compile_cache;
+typedef std::map<text, Variable *>symbol_table;
+typedef std::set<Tree *>          active_set;
+typedef std::map<ulong, Rewrite*> rewrite_table;
+typedef std::map<Tree*, Tree*>    compile_cache;
 
 
 struct Namespace
@@ -49,17 +50,17 @@ struct Namespace
 //   Holds the symbols in a given context
 // ----------------------------------------------------------------------------
 {
-    Namespace(Namespace *p): parent(p), rewrites(NULL) {}
+    Namespace(Namespace *p): parent(p), rewrites(NULL), numVars(0) {}
     ~Namespace();
 
     Namespace *         Parent()                { return parent; }
 
     // Symbol management
-    Tree *              Name (text name, bool deep = true);
+    Variable *          Name (text name)        { return names[name]; }
     Rewrite *           Rewrites()              { return rewrites; }
 
     // Entering symbols in the symbol table
-    void                EnterName (text name, Tree *value);
+    Variable *          EnterName (text name, Tree *source);
     Rewrite *           EnterRewrite(Rewrite *r);
 
     // Clearing symbol tables
@@ -67,14 +68,15 @@ struct Namespace
 
 public:
     Namespace *         parent;
-    symbol_table        name_symbols;
+    symbol_table        names;
     Rewrite *           rewrites;
+    ulong               numVars;
 };
 
 
 struct Context : Namespace
 // ----------------------------------------------------------------------------
-//   The execution context in which we evaluate trees
+//   The compilation context in which we evaluate trees
 // ----------------------------------------------------------------------------
 {
     // Constructors and destructors
@@ -125,18 +127,17 @@ struct Rewrite
 // ----------------------------------------------------------------------------
 {
     Rewrite (Context *c, Tree *f, Tree *t):
-        context(c), from(f), to(t), conditions(NULL), hash() {}
+        context(c), from(f), to(t), hash() {}
     ~Rewrite();
 
     Rewrite *           Add (Rewrite *rewrite);
-    Tree *              Apply(Tree *form, Context *locals);
     Tree *              Do(Action &a);
+    Tree *              Compile(void);
 
 public:
     Context *           context;
     Tree *              from;
     Tree *              to;
-    Tree *              conditions;
     rewrite_table       hash;
 };
 

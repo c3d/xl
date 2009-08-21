@@ -50,6 +50,7 @@ struct Infix;                                   // Infix: A+B, newline
 struct Block;                                   // Block: (A), {A}
 struct Native;                                  // Some native code
 struct Action;                                  // Action on trees
+struct Scope;                                   // Variable storage
 typedef ulong tree_position;                    // Position in context
 typedef std::map<text, Tree *> tree_data;       // Data associated to tree
 typedef std::vector<Tree *> tree_list;          // A list of trees
@@ -65,8 +66,7 @@ struct Tree
     virtual ~Tree() {}
 
     // Evaluate a tree
-    virtual Tree *      Run(Context *context);
-    virtual Tree *      Call(Context *context, Tree *args);
+    virtual Tree *      Run(Scope *scope);
 
     // Perform recursive actions on a tree
     virtual Tree *      Do(Action *action);
@@ -140,8 +140,7 @@ struct Integer : Leaf
     Integer(longlong i = 0, tree_position pos = NOWHERE):
         Leaf(pos), value(i) {}
     virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Context *context)                 { return this; }
-    virtual Tree *      Call(Context *context, Tree *args)    { return this; }
+    virtual Tree *      Run(Scope *scope) { return this; }
     longlong            value;
 };
 
@@ -154,8 +153,7 @@ struct Real : Leaf
     Real(double d = 0.0, tree_position pos = NOWHERE):
         Leaf(pos), value(d) {}
     virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Context *context)                 { return this; }
-    virtual Tree *      Call(Context *context, Tree *args)    { return this; }
+    virtual Tree *      Run(Scope *scope) { return this; }
     double              value;
 };
 
@@ -168,10 +166,9 @@ struct Text : Leaf
     Text(text t = "", tree_position pos = NOWHERE):
         Leaf(pos), value(t) {}
     virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Context *context)                 { return this; }
-    virtual Tree *      Call(Context *context, Tree *args)    { return this; }
-    virtual text        Opening() { return "\""; }
-    virtual text        Closing() { return "\""; }
+    virtual Tree *      Run(Scope *scope)       { return this; }
+    virtual text        Opening()               { return "\""; }
+    virtual text        Closing()               { return "\""; }
     text                value;
 };
 
@@ -183,8 +180,8 @@ struct Quote : Text
 {
     Quote(text t = "", tree_position pos = NOWHERE):
         Text(t, pos) {}
-    virtual text        Opening() { return "'"; }
-    virtual text        Closing() { return "'"; }
+    virtual text        Opening()               { return "'"; }
+    virtual text        Closing()               { return "'"; }
 };
 
 
@@ -195,8 +192,8 @@ struct LongText : Text
 {
     LongText(text t, text open, text close, tree_position pos = NOWHERE):
         Text(t, pos), opening(open), closing(close) {}
-    virtual text        Opening() { return opening; }
-    virtual text        Closing() { return closing; }
+    virtual text        Opening()               { return opening; }
+    virtual text        Closing()               { return closing; }
     text                opening, closing;
 };
 
@@ -219,33 +216,10 @@ struct Name : Leaf
     Name(text n, tree_position pos = NOWHERE):
         Leaf(pos), value(n) {}
     virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Context *context);
-    virtual Tree *      Call(Context *context, Tree *args);
+    virtual Tree *      Run(Scope *scope);
     text                value;
 };
 
-
-
-// ============================================================================
-// 
-//    Native code
-// 
-// ============================================================================
-
-struct Native : Tree
-// ----------------------------------------------------------------------------
-//   A native tree is intended to represent directly executable code
-// ----------------------------------------------------------------------------
-{
-    Native(Tree *n=NULL, tree_position pos = NOWHERE): Tree(pos), next(n) {}
-    virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Context *context);
-    virtual text        TypeName();
-    virtual Tree *      Next()          { return next; }
-    virtual Tree *      Append(Tree *tail);
-    Tree *              next;   // Next opcode to run
-};
-    
 
 
 // ============================================================================
@@ -272,8 +246,7 @@ struct Block : NonLeaf
     virtual text        Opening() { return "\t+"; }
     virtual text        Closing() { return "\t-"; }
     virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Context *context);
-    virtual Tree *      Call(Context *context, Tree *args);
+    virtual Tree *      Run(Scope *scope);
     static Block *      MakeBlock(Tree *child,
                                   text open, text close,
                                   tree_position pos = NOWHERE);
@@ -335,8 +308,7 @@ struct Prefix : NonLeaf
     Prefix(Tree *l, Tree *r, tree_position pos = NOWHERE):
         NonLeaf(pos), left(l), right(r) {}
     virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Context *context);
-    virtual Tree *      Call(Context *context, Tree *args);
+    virtual Tree *      Run(Scope *scope);
     Tree *              left;
     Tree *              right;
 };
@@ -350,8 +322,7 @@ struct Postfix : Prefix
     Postfix(Tree *l, Tree *r, tree_position pos = NOWHERE):
         Prefix(l, r, pos) {}
     virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Context *context);
-    virtual Tree *      Call(Context *context, Tree *args);
+    virtual Tree *      Run(Scope *scope);
 };
 
 
@@ -368,11 +339,9 @@ struct Infix : Prefix
     Infix(text n, Tree *left, Tree *right, tree_position pos = NOWHERE):
         Prefix(left, right, pos), name(n) {}
     virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Context *context);
-    virtual Tree *      Call(Context *context, Tree *args);
+    virtual Tree *      Run(Scope *scope);
     text                name;
 };
-
 
 XL_END
 

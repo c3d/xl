@@ -26,6 +26,7 @@
 #include <sstream>
 #include <typeinfo>
 #include "tree.h"
+#include "opcodes.h"
 #include "context.h"
 #include "renderer.h"
 
@@ -51,21 +52,12 @@ void *Tree::operator new(size_t sz)
 }
 
 
-Tree *Tree::Run(Context *context)
+Tree *Tree::Run(Scope *scope)
 // ----------------------------------------------------------------------------
 //   By default, we don't know how to evaluate a tree
 // ----------------------------------------------------------------------------
 {
-    return context->Error("Don't know how to evaluate '$1'", this);
-}
-
-
-Tree *Tree::Call(Context *context, Tree *args)
-// ----------------------------------------------------------------------------
-//   By default, we don't know how to call a tree
-// ----------------------------------------------------------------------------
-{
-    return context->Error("Don't know how to call '$1'", this);
+    return scope->Error("Don't know how to evaluate '$1'", this);
 }
 
 
@@ -218,29 +210,13 @@ Tree *Name::Do(Action *action)
 }
 
 
-Tree *Name::Run(Context *context)
+Tree *Name::Run(Scope *scope)
 // ----------------------------------------------------------------------------
 //    Evaluate a name
 // ----------------------------------------------------------------------------
 {
-    if (Tree *named = context->Name(value))
-        return context->Run(named);
-
-    // Otherwise, this is an error to evaluate the name
-    return context->Error("Name '$1' doesn't exist", this);
-}
-
-
-Tree *Name::Call(Context *context, Tree *args)
-// ----------------------------------------------------------------------------
-//    Call a name: call the associated value
-// ----------------------------------------------------------------------------
-{
-    if (Tree *named = context->Name(value))
-        return named->Call(context, args);
-
-    // Otherwise, this is an error to try and call the name
-    return context->Error("No match for call '$1 $2'", this, args);
+    // If not found at compile-time, this is an error to evaluate the name
+    return scope->Error("Name '$1' doesn't exist", this);
 }
 
 
@@ -270,24 +246,13 @@ Tree *Block::Do(Action *action)
 }
 
 
-Tree *Block::Run(Context *context)
+Tree *Block::Run(Scope *scope)
 // ----------------------------------------------------------------------------
 //    Execute a block
 // ----------------------------------------------------------------------------
 {
-    // Otherwise, simply execute the child (i.e. optimize away block)
-    return context->Run(child);
-}
-
-
-Tree *Block::Call(Context *context, Tree *args)
-// ----------------------------------------------------------------------------
-//    Execute a block
-// ----------------------------------------------------------------------------
-{
-    // If there is a block operation, execute that operation on child
-    Tree *callee = Run(context);
-    return callee->Call(context, args);
+    // If the block was not identified at compile time, this is an error
+    return scope->Error ("Unidentified block '$1'", this);
 }
 
 
@@ -339,30 +304,13 @@ Tree *Prefix::Do(Action *action)
 }
 
 
-Tree *Prefix::Run(Context *context)
+Tree *Prefix::Run(Scope *scope)
 // ----------------------------------------------------------------------------
 //    Execute a prefix node
 // ----------------------------------------------------------------------------
 {
-    // Call the left with the right as argument
-    if (Tree *callee = context->Run(left))
-        return callee->Call(context, right);
-
-    // If there was no valid left, error out
-    return context->Error("Don't know how to call '$1'", left);
-}
-
-
-Tree *Prefix::Call(Context *context, Tree *args)
-// ----------------------------------------------------------------------------
-//    Call a prefix node
-// ----------------------------------------------------------------------------
-{
-    if (Tree *callee = Run(context))
-        return callee->Call(context, args);
-
-    // If there was no valid result, error out
-    return context->Error("Don't know how to call prefix '$1'", right);
+    // If not found at compile-time, this is an error
+    return scope->Error("Don't know how to call '$1'", left);
 }
 
 
@@ -393,30 +341,13 @@ Tree *Postfix::Do(Action *action)
 }
 
 
-Tree *Postfix::Run(Context *context)
+Tree *Postfix::Run(Scope *scope)
 // ----------------------------------------------------------------------------
 //    Execute a postfix node
 // ----------------------------------------------------------------------------
 {
-    // Call the right with the left as argument
-    if (Tree *callee = context->Run(right))
-        return callee->Call(context, left);
-
-    // If there was no valid left, error out
-    return context->Error("Don't know how to call '$1'", right);
-}
-
-
-Tree *Postfix::Call(Context *context, Tree *args)
-// ----------------------------------------------------------------------------
-//    Call a postfix node
-// ----------------------------------------------------------------------------
-{
-    if (Tree *callee = Run(context))
-        return callee->Call(context, args);
-
-    // If there was no valid callee, error out
-    return context->Error("Don't know how to call postfix '$1'", right);
+    // If the postfix was not identified at compile-time, this is an error
+    return scope->Error("Don't know how to call '$1'", right);
 }
 
 
@@ -447,85 +378,12 @@ Tree *Infix::Do(Action *action)
 }
 
 
-Tree *Infix::Run(Context *context)
+Tree *Infix::Run(Scope *scope)
 // ----------------------------------------------------------------------------
 //    Execute an infix node
 // ----------------------------------------------------------------------------
 {
-    return context->Error ("Cannot evaluate unknown infix '$1'", this);
-}
-
-
-Tree *Infix::Call(Context *context, Tree *args)
-// ----------------------------------------------------------------------------
-//    Call an infix node
-// ----------------------------------------------------------------------------
-{
-    // Check if the result of evaluating ourselves is something we can call
-    if (Tree *callee = Run(context))
-        return callee->Call(context, args);
-
-    return context->Error("Cannot call unknown infix '$1'", this);
-}
-
-
-
-// ============================================================================
-// 
-//    Class Native
-// 
-// ============================================================================
-
-Tree *Action::DoNative(Native *what)
-// ----------------------------------------------------------------------------
-//   Default is simply to invoke 'Do'
-// ----------------------------------------------------------------------------
-{
-    return Do(what);
-}
-
-
-Tree *Native::Do(Action *action)
-// ----------------------------------------------------------------------------
-//   For native nodes, default actions will do
-// ----------------------------------------------------------------------------
-{
-    return action->DoNative(this);
-}
-
-
-Tree *Native::Run(Context *context)
-// ----------------------------------------------------------------------------
-//    Running a native node returns the native itself
-// ----------------------------------------------------------------------------
-{
-    return context->Error("Uknown native operation '$1'", this);
-}
-
-
-text Native::TypeName()
-// ----------------------------------------------------------------------------
-//   The name of a native tree is its type
-// ----------------------------------------------------------------------------
-{
-    return typeid(*this).name();
-}
-
-
-Tree *Native::Append(Tree *tail)
-// ----------------------------------------------------------------------------
-//   Append another tree to a native tree
-// ----------------------------------------------------------------------------
-{
-    // Find end of opcode chain. If end is not native, optimize away
-    Native *prev = this;
-    while (Native *next = dynamic_cast<Native *> (prev->next))
-        prev = next;
-
-    // String right opcode at end
-    prev->next = tail;
-
-    return this;
+    return scope->Error ("Cannot evaluate unknown infix '$1'", this);
 }
 
 XL_END

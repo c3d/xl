@@ -50,28 +50,20 @@ Namespace::~Namespace()
 }
 
 
-Tree *Namespace::Name(text name, bool deep)
-// ----------------------------------------------------------------------------
-//   Lookup a name in the symbol table
-// ----------------------------------------------------------------------------
-{
-    for (Namespace *c = this; c; c = c->Parent())
-    {
-        if (c->name_symbols.count(name))
-            return c->name_symbols[name];
-        if (!deep)
-            break;
-    }
-    return NULL;
-}
-
-
-void Namespace::EnterName (text name, Tree *value)
+Variable *Namespace::EnterName (text name, Tree *source)
 // ----------------------------------------------------------------------------
 //   Enter a name in the namespace
 // ----------------------------------------------------------------------------
 {
-    name_symbols[name] = value;
+    Variable *variable = names[name];
+    if (variable)
+        return variable;
+    if (source)
+        variable = new Variable(++numVars, source->Position());
+    else
+        variable = new Variable(++numVars);
+    names[name] = variable;
+    return variable;
 }
 
 
@@ -93,7 +85,7 @@ void Namespace::Clear()
 // ----------------------------------------------------------------------------
 {
     symbol_table empty;
-    name_symbols = empty;
+    names = empty;
     if (rewrites)
     {
         delete rewrites;
@@ -305,12 +297,12 @@ struct RewriteKey : Action
 // 
 // ============================================================================
 
-struct ParameterMatch : Action
+struct ArgumentMatch : Action
 // ----------------------------------------------------------------------------
 //   Check if two trees match, collect 'variables' and emit type test nodes
 // ----------------------------------------------------------------------------
 {
-    ParameterMatch (Tree *t, Context *c):
+    ArgumentMatch (Tree *t, Context *c):
         context(c), test(t), defined(NULL), code(NULL), end(NULL) {}
 
     Tree *  Append(Tree *left, Tree *right);
@@ -334,7 +326,7 @@ struct ParameterMatch : Action
 };
 
 
-Tree *ParameterMatch::Append(Tree *left, Tree *right)
+Tree *ArgumentMatch::Append(Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 //   Append 'right' at end of native tree list starting at 'left'
 // ----------------------------------------------------------------------------
@@ -348,7 +340,7 @@ Tree *ParameterMatch::Append(Tree *left, Tree *right)
 }
 
 
-Tree *ParameterMatch::Do(Tree *what)
+Tree *ArgumentMatch::Do(Tree *what)
 // ----------------------------------------------------------------------------
 //   Default is to return failure
 // ----------------------------------------------------------------------------
@@ -357,7 +349,7 @@ Tree *ParameterMatch::Do(Tree *what)
 }
 
 
-Tree *ParameterMatch::DoInteger(Integer *what)
+Tree *ArgumentMatch::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------
 //   An integer matches the exact value
 // ----------------------------------------------------------------------------
@@ -386,7 +378,7 @@ Tree *ParameterMatch::DoInteger(Integer *what)
 }
 
 
-Tree *ParameterMatch::DoReal(Real *what)
+Tree *ArgumentMatch::DoReal(Real *what)
 // ----------------------------------------------------------------------------
 //   A real matches the exact value
 // ----------------------------------------------------------------------------
@@ -415,7 +407,7 @@ Tree *ParameterMatch::DoReal(Real *what)
 }
 
 
-Tree *ParameterMatch::DoText(Text *what)
+Tree *ArgumentMatch::DoText(Text *what)
 // ----------------------------------------------------------------------------
 //   A text matches the exact value
 // ----------------------------------------------------------------------------
@@ -444,7 +436,7 @@ Tree *ParameterMatch::DoText(Text *what)
 }
 
 
-Tree *ParameterMatch::DoName(Name *what)
+Tree *ArgumentMatch::DoName(Name *what)
 // ----------------------------------------------------------------------------
 //    Identify the parameters being defined in the shape
 // ----------------------------------------------------------------------------
@@ -483,15 +475,14 @@ Tree *ParameterMatch::DoName(Name *what)
         }
 
         // If first occurence of the name, enter it in symbol table
-        Named *named = new Named(compiled, pos);
-        context->EnterName(what->value, named);
+        context->EnterName(what->value, what);
         return what;
     }
     return NULL;
 }
 
 
-Tree *ParameterMatch::DoBlock(Block *what)
+Tree *ArgumentMatch::DoBlock(Block *what)
 // ----------------------------------------------------------------------------
 //   Check if we match a block
 // ----------------------------------------------------------------------------
@@ -526,7 +517,7 @@ Tree *ParameterMatch::DoBlock(Block *what)
 }
 
 
-Tree *ParameterMatch::DoInfix(Infix *what)
+Tree *ArgumentMatch::DoInfix(Infix *what)
 // ----------------------------------------------------------------------------
 //   Check if we match an infix operator
 // ----------------------------------------------------------------------------
@@ -571,8 +562,7 @@ Tree *ParameterMatch::DoInfix(Infix *what)
         tree_position pos = test->Position();
 
         // Enter the name in symbol table
-        Named *named = new Named(compiled, pos);
-        context->EnterName(varName->value, named);
+        context->EnterName(varName->value, test);
 
         // Evaluate type expression, e.g. 'integer' in example above
         Tree *typeExpr = context->Compile(what->right);
@@ -591,7 +581,7 @@ Tree *ParameterMatch::DoInfix(Infix *what)
 }
 
 
-Tree *ParameterMatch::DoPrefix(Prefix *what)
+Tree *ArgumentMatch::DoPrefix(Prefix *what)
 // ----------------------------------------------------------------------------
 //   For prefix expressions, simply test left then right
 // ----------------------------------------------------------------------------
@@ -616,7 +606,7 @@ Tree *ParameterMatch::DoPrefix(Prefix *what)
 }
 
 
-Tree *ParameterMatch::DoPostfix(Postfix *what)
+Tree *ArgumentMatch::DoPostfix(Postfix *what)
 // ----------------------------------------------------------------------------
 //    For postfix expressions, simply test right, then left
 // ----------------------------------------------------------------------------
@@ -642,7 +632,7 @@ Tree *ParameterMatch::DoPostfix(Postfix *what)
 }
 
 
-Tree *ParameterMatch::DoNative(Native *what)
+Tree *ArgumentMatch::DoNative(Native *what)
 // ----------------------------------------------------------------------------
 //   Should never be used
 // ----------------------------------------------------------------------------
@@ -879,9 +869,9 @@ Tree *CompileAction::DoName(Name *what)
         return result;
     
     // Otherwise, create a NULL reference and return that.
-    Named *named = new Named(NULL, what->Position());
-    context->EnterName(what->value, named);
-    return named;
+    Variable *variable = new Variable(NULL, what->Position());
+    context->EnterName(what->value, variable);
+    return variable;
 }
 
 
@@ -998,28 +988,36 @@ Tree * CompileAction::Rewrites(Tree *what)
             if (testKey == formKey)
             {
                 // If we find a real match, it will require its own context
-                Invoke *invoke = new Invoke(context, what->Position());
-                ParameterMatch matchParms(what, &invoke->locals);
-                Tree *match = candidate->from->Do(matchParms);
+                Context args(context);
+                Invoke *invoke = new Invoke(what->Position());
+                ArgumentMatch matchArgs(what, &args);
+                Tree *match = candidate->from->Do(matchArgs);
                 if (match)
                 {
                     // We have found a possible match.
                     Tree *code = NULL;
 
+                    // Map the arguments we found to invoke list
+                    symbol_table::iterator i;
+                    invoke->arguments.resize(args.numVars);
+                    for (i = args.names.begin(); i != args.names.end(); i++)
+                    {
+                        Variable *var = (*i).second;
+                        
+                    }
+
+
                     // If there is test code to validate candidate, use it
-                    if (matchParms.code)
-                        code = matchParms.code;
+                    if (matchArgs.code)
+                        code = matchArgs.code;
 
-                    // Apply the rewrite to the input tree
-                    Tree *rewritten = candidate->Apply(what, &invoke->locals);
-
-                    // Compile the result and store it as invoke child
-                    invoke->child = context->Compile(rewritten);
+                    // Compile the target and use it as invoke child
+                    invoke->child = candidate->Compile();
                     code = Append(code, invoke);
 
                     // If we defined an end point for matchParms, append it
-                    if (matchParms.end)
-                        code = Append(code, matchParms.end);
+                    if (matchArgs.end)
+                        code = Append(code, matchArgs.end);
 
                     // Append generated code to result
                     result = Append(result, code);
@@ -1221,6 +1219,183 @@ struct TreeRewrite : Action
 
 // ============================================================================
 // 
+//    Parameter match - Isolate parameters in an rewrite source
+// 
+// ============================================================================
+
+struct ParameterMatch : Action
+// ----------------------------------------------------------------------------
+//   Check if two trees match, collect 'variables' and emit type test nodes
+// ----------------------------------------------------------------------------
+{
+    ParameterMatch (Context *c): context(c), defined(NULL) {}
+
+    virtual Tree *Do(Tree *what);
+    virtual Tree *DoInteger(Integer *what);
+    virtual Tree *DoReal(Real *what);
+    virtual Tree *DoText(Text *what);
+    virtual Tree *DoName(Name *what);
+    virtual Tree *DoPrefix(Prefix *what);
+    virtual Tree *DoPostfix(Postfix *what);
+    virtual Tree *DoInfix(Infix *what);
+    virtual Tree *DoBlock(Block *what);
+    virtual Tree *DoNative(Native *what);
+
+    Context * context;          // Context in which we test
+    Tree *    defined;          // Tree beind defined, e.g. 'sin' in 'sin X'
+};
+
+
+Tree *ParameterMatch::Do(Tree *what)
+// ----------------------------------------------------------------------------
+//   Nothing to do for leaves
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *ParameterMatch::DoInteger(Integer *what)
+// ----------------------------------------------------------------------------
+//   Nothing to do for leaves
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *ParameterMatch::DoReal(Real *what)
+// ----------------------------------------------------------------------------
+//   Nothing to do for leaves
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *ParameterMatch::DoText(Text *what)
+// ----------------------------------------------------------------------------
+//   Nothing to do for leaves
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *ParameterMatch::DoName(Name *what)
+// ----------------------------------------------------------------------------
+//    Identify the parameters being defined in the shape
+// ----------------------------------------------------------------------------
+{
+    if (!defined)
+    {
+        // The first name we see must match exactly, e.g. 'sin' in 'sin X'
+        defined = what;
+        return what;
+    }
+    else
+    {
+        // Check if the name already exists, e.g. 'false' or 'A+A'
+        if (Tree *existing = context->Name(what->value))
+            return existing;
+
+        // If first occurence of the name, enter it in symbol table
+        Variable *variable = new Variable(NULL, what->Position());
+        context->EnterName(what->value, variable);
+        return variable;
+    }
+}
+
+
+Tree *ParameterMatch::DoBlock(Block *what)
+// ----------------------------------------------------------------------------
+//   Parameters in a block are in its child
+// ----------------------------------------------------------------------------
+{
+    return what->child->Do(this);
+}
+
+
+Tree *ParameterMatch::DoInfix(Infix *what)
+// ----------------------------------------------------------------------------
+//   Check if we match an infix operator
+// ----------------------------------------------------------------------------
+{
+    // Check if we match a type, e.g. 2 vs. 'K : integer'
+    if (what->name == ":")
+    {
+        // Check the variable name, e.g. K in example above
+        Name *varName = dynamic_cast<Name *> (what->left);
+        if (!varName)
+            return context->Error("Expected a name, got '$1' ", what->left);
+
+        // Check if the name already exists
+        if (Tree *existing = context->Name(varName->value))
+            return context->Error("Typed name '$1' already exists as '$2'",
+                                  what->left, existing);
+
+        // Enter the name in symbol table
+        Variable *variable = new Variable(NULL, varName->Position());
+        context->EnterName(varName->value, variable);
+
+        return what;
+    }
+
+    // Otherwise, test left and right
+    Tree *lr = what->left->Do(this);
+    if (!lr)
+        return NULL;
+    Tree *rr = what->right->Do(this);
+    if (!rr)
+        return NULL;
+    return what;
+}
+
+
+Tree *ParameterMatch::DoPrefix(Prefix *what)
+// ----------------------------------------------------------------------------
+//   For prefix expressions, simply test left then right
+// ----------------------------------------------------------------------------
+{
+    Tree *lr = what->left->Do(this);
+    if (!lr)
+        return NULL;
+    Tree *rr = what->right->Do(this);
+    if (!rr)
+        return NULL;
+    return what;
+}
+
+
+Tree *ParameterMatch::DoPostfix(Postfix *what)
+// ----------------------------------------------------------------------------
+//    For postfix expressions, simply test right, then left
+// ----------------------------------------------------------------------------
+{
+    // Note that ordering is reverse compared to prefix, so that
+    // the 'defined' names is set correctly
+    Tree *rr = what->right->Do(this);
+    if (!rr)
+        return NULL;
+    Tree *lr = what->left->Do(this);
+    if (!lr)
+        return NULL;
+    return what;
+}
+
+
+Tree *ParameterMatch::DoNative(Native *what)
+// ----------------------------------------------------------------------------
+//   Should never be used
+// ----------------------------------------------------------------------------
+{
+    return context->Error("Internal error: Native parameter '$1'", what);
+}
+
+
+
+// ============================================================================
+// 
 //    Tree rewrites
 // 
 // ============================================================================
@@ -1268,18 +1443,6 @@ Rewrite *Rewrite::Add (Rewrite *rewrite)
 }
 
 
-Tree *Rewrite::Apply(Tree *source, Context *locals)
-// ----------------------------------------------------------------------------
-//   Return a tree built by cloning the 'to' tree and replacing args
-// ----------------------------------------------------------------------------
-//   Note: this assumes the rewrite results from 'Handler', so that the
-//   context is populated with all the right local variables
-{
-    TreeRewrite rewrite(locals);
-    return to->Do(rewrite);
-}
-
-
 Tree *Rewrite::Do(Action &a)
 // ----------------------------------------------------------------------------
 //   Apply an action to the 'from' and 'to' fields and all hash entries
@@ -1292,5 +1455,32 @@ Tree *Rewrite::Do(Action &a)
         result = (*i).second->Do(a);
     return result;
 }
+
+
+Tree *Rewrite::Compile(void)
+// ----------------------------------------------------------------------------
+//   Make sure that the 'to' tree is compiled
+// ----------------------------------------------------------------------------
+{
+    Scope *scope = dynamic_cast<Scope *> (to);
+    if (!scope)
+    {
+        tree_position pos = to->Position();
+        scope = new Scope(context, pos);
+        Context *locals = &scope->parameters;
+        ParameterMatch matchParms(locals);
+        Tree *args = from->Do(matchParms);
+        if (!args)
+            return context->Error("Internal: parameters for '$1' don't match",
+                                  from);
+        Tree *code = locals->Compile(to);
+        if (!code)
+            return context->Error("Unable to compile '$1'", to);
+        scope->next = code;
+        to = scope;
+    }
+    return scope;
+}
+
 
 XL_END

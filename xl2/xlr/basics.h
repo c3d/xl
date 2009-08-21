@@ -25,6 +25,7 @@
 // ****************************************************************************
 
 #include "tree.h"
+#include "opcodes.h"
 #include <cmath>
 
 XL_BEGIN
@@ -35,7 +36,7 @@ XL_BEGIN
 //
 // ============================================================================
 
-// Top-level entry point: enter all basic operations in the context
+// Top-level entry point: enter all basic operations in the scope
 void EnterBasics(Context *context);
 
 struct LastInListHandler : Native
@@ -43,7 +44,7 @@ struct LastInListHandler : Native
 //    Deal with the newline or semi-colon, where value is value of last
 // ----------------------------------------------------------------------------
 {
-    virtual Tree *      Call(Context *context, Tree *args);
+    virtual Tree *      Call(Scope *scope, Tree *args);
 };
 
 
@@ -60,7 +61,7 @@ struct ReservedName : Name
 // ----------------------------------------------------------------------------
 {
     ReservedName(text n) : Name(n) {}
-    virtual Tree *      Run(Context *context)   { return this; }
+    virtual Tree *      Run(Scope *scope)   { return this; }
 };
 
 extern ReservedName *true_name;
@@ -80,7 +81,7 @@ struct BinaryHandler : Native
 //   Deal with all binary operators that apply to identical types
 // ----------------------------------------------------------------------------
 {
-    virtual Tree *      Call(Context *context, Tree *args);
+    virtual Tree *      Call(Scope *scope, Tree *args);
     virtual longlong    DoInteger(longlong left, longlong right);
     virtual double      DoReal(double left, double right);
     virtual text        DoText(text left, text right);
@@ -188,7 +189,7 @@ struct Negate : Native
 //    Negate the argument
 // ----------------------------------------------------------------------------
 {
-    Tree *Call(Context *context, Tree *args);
+    Tree *Call(Scope *scope, Tree *args);
 };
 
 
@@ -205,7 +206,7 @@ struct BooleanHandler : Native
 // ----------------------------------------------------------------------------
 {
     BooleanHandler(): Native() {}
-    virtual Tree *      Call(Context *context, Tree *args);
+    virtual Tree *      Call(Scope *scope, Tree *args);
     virtual bool        DoInteger(longlong left, longlong right);
     virtual bool        DoReal(double left, double right);
     virtual bool        DoText(text left, text right);
@@ -238,7 +239,7 @@ struct Assignment : Native
 //    Assign a value to a name
 // ----------------------------------------------------------------------------
 {
-    Tree *Call(Context *context, Tree *args);
+    Tree *Call(Scope *scope, Tree *args);
 };
 
 
@@ -247,7 +248,7 @@ struct Definition : Native
 //    Define a tree rewrite (expr -> expr)
 // ----------------------------------------------------------------------------
 {
-    Tree *Call(Context *context, Tree *args);
+    Tree *Call(Scope *scope, Tree *args);
 };
 
 
@@ -256,7 +257,7 @@ struct ParseTree : Native
 //    Define a name to be some value
 // ----------------------------------------------------------------------------
 {
-    Tree *Call(Context *context, Tree *args);
+    Tree *Call(Scope *scope, Tree *args);
 };
 
 
@@ -265,7 +266,7 @@ struct Evaluation : Native
 //    Define a name to be some value
 // ----------------------------------------------------------------------------
 {
-    Tree *Call(Context *context, Tree *args);
+    Tree *Call(Scope *scope, Tree *args);
 };
 
 
@@ -274,7 +275,7 @@ struct DebugPrint : Native
 //    Print its argument as a tree
 // ----------------------------------------------------------------------------
 {
-    virtual Tree *      Call(Context *context, Tree *args);
+    virtual Tree *      Call(Scope *scope, Tree *args);
 };
 
 
@@ -291,7 +292,7 @@ struct TypeExpression : Native
 // ----------------------------------------------------------------------------
 //   The compiler can use a type expression to verify types
 {
-    Tree *HasType(Context *context, Tree *args) { return NULL; }
+    Tree *TypeCheck(Scope *scope, Tree *args) { return NULL; }
 };
 
 
@@ -300,7 +301,7 @@ struct BooleanType : TypeExpression
 //    Check if argument can be interpreted as true or false
 // ----------------------------------------------------------------------------
 {
-    Tree *HasType(Context *context, Tree *args);
+    Tree *TypeCheck(Scope *scope, Tree *args);
 };
 
 
@@ -309,7 +310,7 @@ struct IntegerType : TypeExpression
 //    Check if argument can be interpreted as an integer
 // ----------------------------------------------------------------------------
 {
-    Tree *HasType(Context *context, Tree *args);
+    Tree *TypeCheck(Scope *scope, Tree *args);
 };
 
 
@@ -318,7 +319,7 @@ struct RealType : TypeExpression
 //    Check if argument can be interpreted as an integer
 // ----------------------------------------------------------------------------
 {
-    Tree *HasType(Context *context, Tree *args);
+    Tree *TypeCheck(Scope *scope, Tree *args);
 };
 
 
@@ -327,7 +328,7 @@ struct TextType : TypeExpression
 //    Check if argument can be interpreted as an integer
 // ----------------------------------------------------------------------------
 {
-    Tree *HasType(Context *context, Tree *args);
+    Tree *TypeCheck(Scope *scope, Tree *args);
 };
 
 
@@ -336,7 +337,7 @@ struct CharacterType : TypeExpression
 //    Check if argument can be interpreted as an integer
 // ----------------------------------------------------------------------------
 {
-    Tree *HasType(Context *context, Tree *args);
+    Tree *TypeCheck(Scope *scope, Tree *args);
 };
 
 XL_END

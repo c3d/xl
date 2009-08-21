@@ -105,7 +105,7 @@ void EnterBasics(Context *c)
 // 
 // ============================================================================
 
-Tree *LastInListHandler::Call(Context *context, Tree *args)
+Tree *LastInListHandler::Call(Scope *scope, Tree *args)
 // ----------------------------------------------------------------------------
 //   When processing blocks or A;B, return last value, e.g. B
 // ----------------------------------------------------------------------------
@@ -113,13 +113,13 @@ Tree *LastInListHandler::Call(Context *context, Tree *args)
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
         Tree *result = NULL;
-        result = context->Run(infix->left);
-        result = context->Run(infix->right);
+        result = scope->Run(infix->left);
+        result = scope->Run(infix->right);
         return result;
     }
     else
     {
-        return context->Error("Infix expected, got '$1'", args);
+        return scope->Error("Infix expected, got '$1'", args);
     }
 }
 
@@ -131,7 +131,7 @@ Tree *LastInListHandler::Call(Context *context, Tree *args)
 // 
 // ============================================================================
 
-Tree *BinaryHandler::Call(Context *context, Tree *args)
+Tree *BinaryHandler::Call(Scope *scope, Tree *args)
 // ----------------------------------------------------------------------------
 //   Assume an infix argument, deal with binary ops
 // ----------------------------------------------------------------------------
@@ -139,12 +139,12 @@ Tree *BinaryHandler::Call(Context *context, Tree *args)
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
         tree_position pos = args->Position();
-        Tree *left = context->Run(infix->left);
+        Tree *left = scope->Run(infix->left);
         if (!left)
-            return context->Error("No value to left of '$1'", args);
-        Tree *right = context->Run(infix->right);
+            return scope->Error("No value to left of '$1'", args);
+        Tree *right = scope->Run(infix->right);
         if (!right)
-            return context->Error("No value to right of '$1'", args);
+            return scope->Error("No value to right of '$1'", args);
 
         // Check if implementation is unhappy somehow
         try
@@ -162,14 +162,14 @@ Tree *BinaryHandler::Call(Context *context, Tree *args)
                 if (Text *rt = dynamic_cast<Text *> (right))
                     return new Text(DoText(lt->value, rt->value), pos);
 
-            return context->Error("Incompatible types in '$1'", args);
+            return scope->Error("Incompatible types in '$1'", args);
         }
         catch(kstring msg)
         {
-            return context->Error (msg, args);
+            return scope->Error (msg, args);
         }
     }
-    return context->Error("Infix expected, got '$1'", args);
+    return scope->Error("Infix expected, got '$1'", args);
 }
 
 
@@ -199,12 +199,12 @@ text     BinaryHandler::DoText(text left, text right)
 }
 
 
-Tree *Negate::Call(Context *context, Tree *args)
+Tree *Negate::Call(Scope *scope, Tree *args)
 // ----------------------------------------------------------------------------
 //   Negate its input argument
 // ----------------------------------------------------------------------------
 {
-    Tree *value = context->Run(args);
+    Tree *value = scope->Run(args);
     tree_position pos = args->Position();
 
     if (Integer *li = dynamic_cast<Integer *> (value))
@@ -212,7 +212,7 @@ Tree *Negate::Call(Context *context, Tree *args)
     if (Real *ri = dynamic_cast<Real *> (value))
         return new Real(-ri->value, pos);
 
-    return context->Error("Invalid type for negation in '$1'", args);
+    return scope->Error("Invalid type for negation in '$1'", args);
 }
 
 
@@ -222,19 +222,19 @@ Tree *Negate::Call(Context *context, Tree *args)
 // 
 // ============================================================================
 
-Tree *BooleanHandler::Call(Context *context, Tree *args)
+Tree *BooleanHandler::Call(Scope *scope, Tree *args)
 // ----------------------------------------------------------------------------
 //   Assume an infix argument, deal with binary boolean ops
 // ----------------------------------------------------------------------------
 {
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
-        Tree *left = context->Run(infix->left);
+        Tree *left = scope->Run(infix->left);
         if (!left)
-            return context->Error("No value to left of '$1'", args);
-        Tree *right = context->Run(infix->right);
+            return scope->Error("No value to left of '$1'", args);
+        Tree *right = scope->Run(infix->right);
         if (!right)
-            return context->Error("No value to right of '$1'", args);
+            return scope->Error("No value to right of '$1'", args);
 
         // Check if implementation is unhappy somehow
         try
@@ -255,14 +255,14 @@ Tree *BooleanHandler::Call(Context *context, Tree *args)
                     return DoText(lt->value, rt->value)
                         ? true_name : false_name;
 
-            return context->Error("Incompatible types in '$1'", args);
+            return scope->Error("Incompatible types in '$1'", args);
         }
         catch(kstring msg)
         {
-            return context->Error (msg, args);
+            return scope->Error (msg, args);
         }
     }
-    return context->Error("Infix expected, got '$1'", args);
+    return scope->Error("Infix expected, got '$1'", args);
 }
 
 
@@ -298,7 +298,7 @@ bool BooleanHandler::DoText(text left, text right)
 // 
 // ============================================================================
 
-Tree *Assignment::Call(Context *context, Tree *args)
+Tree *Assignment::Call(Scope *scope, Tree *args)
 // ----------------------------------------------------------------------------
 //    Assign to the name on the left the value on the right
 // ----------------------------------------------------------------------------
@@ -306,19 +306,19 @@ Tree *Assignment::Call(Context *context, Tree *args)
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
         Tree *expr = infix->right;
-        Tree *value = context->LazyRun(expr);
+        Tree *value = scope->LazyRun(expr);
         if (!value)
-            return context->Error("No value for '$1' in assignment", expr);
+            return scope->Error("No value for '$1' in assignment", expr);
 
         Tree *target = infix->left;
         if (Name *name = dynamic_cast<Name *> (target))
-            context->EnterName(name->value, value);
+            scope->EnterName(name->value, value);
         else
-            return context->Error("Cannot assign to non-name '$1'", target);
+            return scope->Error("Cannot assign to non-name '$1'", target);
 
         return value;
     }
-    return context->Error ("Invalid assignment '$1'", args);
+    return scope->Error ("Invalid assignment '$1'", args);
 }
 
 
@@ -332,7 +332,7 @@ Tree *Assignment::Call(Context *context, Tree *args)
 //    fact 0 -> 1
 //    fact N -> N * fact(N-1)
 
-Tree *Definition::Call(Context *context, Tree *args)
+Tree *Definition::Call(Scope *scope, Tree *args)
 // ----------------------------------------------------------------------------
 //    Define the expression on the left to match expression on the right
 // ----------------------------------------------------------------------------
@@ -342,13 +342,13 @@ Tree *Definition::Call(Context *context, Tree *args)
         Tree *defined = infix->left;
         Tree *definition = infix->right;
         if (!defined || !definition)
-            return context->Error("Definition '$1' is incomplete", args);
+            return scope->Error("Definition '$1' is incomplete", args);
 
-        context->EnterRewrite(defined, definition);
+        scope->EnterRewrite(defined, definition);
 
         return nil_name;
     }
-    return context->Error ("Invalid assignment '$1'", args);
+    return scope->Error ("Invalid assignment '$1'", args);
 }
 
 
@@ -359,7 +359,7 @@ Tree *Definition::Call(Context *context, Tree *args)
 // 
 // ============================================================================
 
-Tree *ParseTree::Call(Context *context, Tree *args)
+Tree *ParseTree::Call(Scope *scope, Tree *args)
 // ----------------------------------------------------------------------------
 //    Return the parse tree, not its value
 // ----------------------------------------------------------------------------
@@ -372,18 +372,18 @@ Tree *ParseTree::Call(Context *context, Tree *args)
 }
 
 
-Tree *Evaluation::Call(Context *context, Tree *args)
+Tree *Evaluation::Call(Scope *scope, Tree *args)
 // ----------------------------------------------------------------------------
 //    Evaluate the tree given by the argument
 // ----------------------------------------------------------------------------
 {
     if (!args)
         return args;
-    return context->Run(args);
+    return scope->Run(args);
 }
 
 
-Tree *DebugPrint::Call(Context *context, Tree *args)
+Tree *DebugPrint::Call(Scope *scope, Tree *args)
 // ----------------------------------------------------------------------------
 //   Print the tree given as argument
 // ----------------------------------------------------------------------------
@@ -399,7 +399,7 @@ Tree *DebugPrint::Call(Context *context, Tree *args)
 // 
 // ============================================================================
 
-Tree *BooleanType::HasType(Context *context, Tree *value)
+Tree *BooleanType::TypeCheck(Scope *scope, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a boolean value (true/false)
 // ----------------------------------------------------------------------------
@@ -410,34 +410,34 @@ Tree *BooleanType::HasType(Context *context, Tree *value)
 }
 
 
-Tree *IntegerType::HasType(Context *context, Tree *value)
+Tree *IntegerType::TypeCheck(Scope *scope, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as an integer
 // ----------------------------------------------------------------------------
 {
-    if (Integer *it = dynamic_cast<Integer *>(context->Run(value)))
+    if (Integer *it = dynamic_cast<Integer *>(scope->Run(value)))
         return it;
     return NULL;
 }
 
 
-Tree *RealType::HasType(Context *context, Tree *value)
+Tree *RealType::TypeCheck(Scope *scope, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a real
 // ----------------------------------------------------------------------------
 {
-    if (Real *rt = dynamic_cast<Real *>(context->Run(value)))
+    if (Real *rt = dynamic_cast<Real *>(scope->Run(value)))
         return rt;
     return NULL;
 }
 
 
-Tree *TextType::HasType(Context *context, Tree *value)
+Tree *TextType::TypeCheck(Scope *scope, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a text
 // ----------------------------------------------------------------------------
 {
-    if (Text *tt = dynamic_cast<Text *>(context->Run(value)))
+    if (Text *tt = dynamic_cast<Text *>(scope->Run(value)))
     {
         Quote q;
         if (tt->Opening() != q.Opening() || tt->Closing() != q.Closing())
@@ -447,12 +447,12 @@ Tree *TextType::HasType(Context *context, Tree *value)
 }
 
 
-Tree *CharacterType::HasType(Context *context, Tree *value)
+Tree *CharacterType::TypeCheck(Scope *scope, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as an integer
 // ----------------------------------------------------------------------------
 {
-    if (Text *tt = dynamic_cast<Text *>(context->Run(value)))
+    if (Text *tt = dynamic_cast<Text *>(scope->Run(value)))
     {
         Quote q;
         if (tt->Opening() == q.Opening() && tt->Closing() == q.Closing())
