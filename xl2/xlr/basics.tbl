@@ -3,7 +3,31 @@ INFIX(integer, "+", integer, BinaryAddInt, RINT(INT(0) + INT(1)))
 INFIX(integer, "-", integer, BinarySubInt, RINT(INT(0) - INT(1)))
 INFIX(integer, "*", integer, BinaryMulInt, RINT(INT(0) * INT(1)))
 INFIX(integer, "/", integer, BinaryDivInt, RINT(INT(0) / INT(1)))
-INFIX(integer, "mod", integer, BinaryModInt, RINT(INT(0) % INT(1)))
+INFIX(integer, "rem", integer, BinaryRemInt, RINT(INT(0) % INT(1)))
+INFIX(integer, "mod", integer, BinaryModInt,
+      integer_t x = INT(0);
+      integer_t y = INT(1);
+      integer_t tmp = x % y;
+      if (tmp && (x^y) < 0)
+          tmp += y;
+      RINT(tmp);
+      )
+INFIX(integer, "^", integer, BinaryPowerInt,
+      integer_t x = INT(0);
+      integer_t y = INT(1);
+      integer_t tmp = 0;
+      if (y >= 0)
+      {
+          tmp = 1;
+          while (y)
+          {
+              if (y & 1)
+                  tmp *= x;
+              x *= x;
+              y >>= 1;
+          }
+      }
+      RINT(tmp);)
 
 INFIX(integer, "<<", integer, BinaryLeftShift, RINT(INT(0) << INT(1)))
 INFIX(integer, ">>", integer, BinaryRightShift, RINT(INT(0) >> INT(1)))
@@ -27,7 +51,30 @@ INFIX(real, "+", real, BinaryAddReal, RREAL(REAL(0) + REAL(1)))
 INFIX(real, "-", real, BinarySubReal, RREAL(REAL(0) - REAL(1)))
 INFIX(real, "*", real, BinaryMulReal, RREAL(REAL(0) * REAL(1)))
 INFIX(real, "/", real, BinaryDivReal, RREAL(REAL(0) / REAL(1)))
-INFIX(real, "mod", real, BinaryModReal, RREAL(fmod(REAL(0), REAL(1))))
+INFIX(real, "rem", real, BinaryRemReal, RREAL(fmod(REAL(0), REAL(1))))
+INFIX(real, "mod", real, BinaryModReal,
+      real_t x = REAL(0);
+      real_t y = REAL(1);
+      real_t tmp = fmod(x,y);
+      if (tmp != 0.0 && x*y < 0.0)
+          tmp += y;
+      RREAL(tmp);)
+INFIX(real, "^", integer, BinaryPowRealInt,
+      real_t x = REAL(0);
+      integer_t y = INT(1);
+      boolean_t negative = y < 0;
+      real_t tmp = 1.0;
+      if (negative) y = -y;
+      while (y)
+      {
+          if (y & 1)
+              tmp *= x;
+          x *= x;
+          y >>= 1;
+      }
+      if (negative) tmp = 1.0/tmp;
+      RREAL(tmp);)
+INFIX(real, "^", real, BinaryPowReal, RREAL(pow(REAL(0), REAL(1))))
 
 INFIX(real, "<", real, BinaryLTReal, RBOOL(REAL(0) < REAL(1)))
 INFIX(real, ">", real, BinaryGTReal, RBOOL(REAL(0) > REAL(1)))
@@ -37,6 +84,19 @@ INFIX(real, "<>", real, BinaryNEReal, RBOOL(REAL(0) != REAL(1)))
 INFIX(real, "=", real, BinaryEQReal, RBOOL(REAL(0) == REAL(1)))
 
 PREFIX("-", PARM(r, real), NegateReal, RREAL(-r))
+PREFIX("sin", PARM(x, real), SinReal, RREAL(sin(x)))
+PREFIX("cos", PARM(x, real), CosReal, RREAL(cos(x)))
+PREFIX("tan", PARM(x, real), TanReal, RREAL(tan(x)))
+PREFIX("asin", PARM(x, real), ArcSinReal, RREAL(asin(x)))
+PREFIX("acos", PARM(x, real), ArcCosReal, RREAL(acos(x)))
+PREFIX("atan", PARM(x, real), ArcTanReal, RREAL(atan(x)))
+PREFIX("atan", PARM(y, real) PARM(x, real), ArcTanReal2, RREAL(atan2(y,x)))
+PREFIX("exp", PARM(x, real), ExpReal, RREAL(exp(x)))
+PREFIX("expm1", PARM(x, real), ExpRealMinus1, RREAL(expm1(x)))
+PREFIX("log", PARM(x, real), LogReal, RREAL(log(x)))
+PREFIX("log2", PARM(x, real), Log2Real, RREAL(log2(x)))
+PREFIX("log10", PARM(x, real), Log10Real, RREAL(log10(x)))
+PREFIX("log1p", PARM(x, real), LogPlus1Real, RREAL(log1p(x)))
 
 // Boolean operations
 INFIX(boolean, "and", boolean, BinaryAndBool, RBOOL(BOOL(0) & BOOL(1)))
