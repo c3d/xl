@@ -62,7 +62,7 @@ void EnterBasics(Context *c)
 // 
 // ============================================================================
 
-Tree *BooleanType::TypeCheck(Scope *scope, Tree *value)
+Tree *BooleanType::TypeCheck(Stack *stack, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a boolean value (true/false)
 // ----------------------------------------------------------------------------
@@ -73,34 +73,34 @@ Tree *BooleanType::TypeCheck(Scope *scope, Tree *value)
 }
 
 
-Tree *IntegerType::TypeCheck(Scope *scope, Tree *value)
+Tree *IntegerType::TypeCheck(Stack *stack, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as an integer
 // ----------------------------------------------------------------------------
 {
-    if (Integer *it = dynamic_cast<Integer *>(value->Run(scope)))
+    if (Integer *it = dynamic_cast<Integer *>(value->Run(stack)))
         return it;
     return NULL;
 }
 
 
-Tree *RealType::TypeCheck(Scope *scope, Tree *value)
+Tree *RealType::TypeCheck(Stack *stack, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a real
 // ----------------------------------------------------------------------------
 {
-    if (Real *rt = dynamic_cast<Real *>(value->Run(scope)))
+    if (Real *rt = dynamic_cast<Real *>(value->Run(stack)))
         return rt;
     return NULL;
 }
 
 
-Tree *TextType::TypeCheck(Scope *scope, Tree *value)
+Tree *TextType::TypeCheck(Stack *stack, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a text
 // ----------------------------------------------------------------------------
 {
-    if (Text *tt = dynamic_cast<Text *>(value->Run(scope)))
+    if (Text *tt = dynamic_cast<Text *>(value->Run(stack)))
     {
         Quote q;
         if (tt->Opening() != q.Opening() || tt->Closing() != q.Closing())
@@ -110,12 +110,12 @@ Tree *TextType::TypeCheck(Scope *scope, Tree *value)
 }
 
 
-Tree *CharacterType::TypeCheck(Scope *scope, Tree *value)
+Tree *CharacterType::TypeCheck(Stack *stack, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as an integer
 // ----------------------------------------------------------------------------
 {
-    if (Text *tt = dynamic_cast<Text *>(value->Run(scope)))
+    if (Text *tt = dynamic_cast<Text *>(value->Run(stack)))
     {
         Quote q;
         if (tt->Opening() == q.Opening() && tt->Closing() == q.Closing())
@@ -125,7 +125,7 @@ Tree *CharacterType::TypeCheck(Scope *scope, Tree *value)
 }
 
 
-Tree *AnyType::TypeCheck(Scope *scope, Tree *value)
+Tree *AnyType::TypeCheck(Stack *stack, Tree *value)
 // ----------------------------------------------------------------------------
 //   Don't really check the argument
 // ----------------------------------------------------------------------------
@@ -134,45 +134,45 @@ Tree *AnyType::TypeCheck(Scope *scope, Tree *value)
 }
 
 
-Tree *InfixType::TypeCheck(Scope *scope, Tree *value)
+Tree *InfixType::TypeCheck(Stack *stack, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as an infix
 // ----------------------------------------------------------------------------
 {
-    if (Infix *it = dynamic_cast<Infix *>(value->Run(scope)))
+    if (Infix *it = dynamic_cast<Infix *>(value->Run(stack)))
         return it;
     return NULL;
 }
 
 
-Tree *PrefixType::TypeCheck(Scope *scope, Tree *value)
+Tree *PrefixType::TypeCheck(Stack *stack, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a prefix
 // ----------------------------------------------------------------------------
 {
-    if (Prefix *it = dynamic_cast<Prefix *>(value->Run(scope)))
+    if (Prefix *it = dynamic_cast<Prefix *>(value->Run(stack)))
         return it;
     return NULL;
 }
 
 
-Tree *PostfixType::TypeCheck(Scope *scope, Tree *value)
+Tree *PostfixType::TypeCheck(Stack *stack, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a postfix
 // ----------------------------------------------------------------------------
 {
-    if (Postfix *it = dynamic_cast<Postfix *>(value->Run(scope)))
+    if (Postfix *it = dynamic_cast<Postfix *>(value->Run(stack)))
         return it;
     return NULL;
 }
 
 
-Tree *BlockType::TypeCheck(Scope *scope, Tree *value)
+Tree *BlockType::TypeCheck(Stack *stack, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a block
 // ----------------------------------------------------------------------------
 {
-    if (Block *it = dynamic_cast<Block *>(value->Run(scope)))
+    if (Block *it = dynamic_cast<Block *>(value->Run(stack)))
         return it;
     return NULL;
 }

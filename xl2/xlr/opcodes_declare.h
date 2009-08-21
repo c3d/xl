@@ -2,22 +2,22 @@
 struct name : Native                            \
 {                                               \
     name(): Native(NULL) {}                     \
-    Tree *Run(Scope *scope) { code; }           \
+    Tree *Run(Stack *stack) { code; }           \
 };
 
-#define PARM(symbol, type)      type##_t symbol = type##_arg(scope, argc++);
+#define PARM(symbol, type)      type##_t symbol = type##_arg(stack, argc++);
 
 #define PREFIX(symbol, parms, name, code)                       \
 struct name : Native                                            \
 {                                                               \
     name(): Native(NULL) {}                                     \
-    Tree *Run(Scope *scope) { uint argc=0; parms; code; }       \
+    Tree *Run(Stack *stack) { uint argc=0; parms; code; }       \
 };
 #define POSTFIX(parms, symbol, name, code)                      \
 struct name : Native                                            \
 {                                                               \
     name(): Native(NULL) {}                                     \
-    Tree *Run(Scope *scope) { uint argc=0; parms; code; }       \
+    Tree *Run(Stack *stack) { uint argc=0; parms; code; }       \
 };
 #define NAME(symbol, name)
 #define TYPE(symbol, name)

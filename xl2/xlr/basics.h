@@ -36,7 +36,7 @@ XL_BEGIN
 //
 // ============================================================================
 
-// Top-level entry point: enter all basic operations in the scope
+// Top-level entry point: enter all basic operations in the context
 void EnterBasics(Context *context);
 
 
@@ -53,7 +53,7 @@ struct ReservedName : Name
 // ----------------------------------------------------------------------------
 {
     ReservedName(text n) : Name(n) {}
-    virtual Tree *      Run(Scope *scope)   { return this; }
+    virtual Tree *      Run(Stack *stack)   { return this; }
 };
 
 extern ReservedName *true_name;
@@ -74,7 +74,7 @@ struct TypeExpression : Native
 // ----------------------------------------------------------------------------
 //   The compiler can use a type expression to verify types
 {
-    Tree *TypeCheck(Scope *scope, Tree *args) { return NULL; }
+    Tree *TypeCheck(Stack *stack, Tree *args) { return NULL; }
 };
 
 
@@ -83,7 +83,7 @@ struct BooleanType : TypeExpression
 //    Check if argument can be interpreted as true or false
 // ----------------------------------------------------------------------------
 {
-    Tree *TypeCheck(Scope *scope, Tree *args);
+    Tree *TypeCheck(Stack *stack, Tree *args);
 };
 
 
@@ -92,7 +92,7 @@ struct IntegerType : TypeExpression
 //    Check if argument can be interpreted as an integer
 // ----------------------------------------------------------------------------
 {
-    Tree *TypeCheck(Scope *scope, Tree *args);
+    Tree *TypeCheck(Stack *stack, Tree *args);
 };
 
 
@@ -101,7 +101,7 @@ struct RealType : TypeExpression
 //    Check if argument can be interpreted as an integer
 // ----------------------------------------------------------------------------
 {
-    Tree *TypeCheck(Scope *scope, Tree *args);
+    Tree *TypeCheck(Stack *stack, Tree *args);
 };
 
 
@@ -110,7 +110,7 @@ struct TextType : TypeExpression
 //    Check if argument can be interpreted as an integer
 // ----------------------------------------------------------------------------
 {
-    Tree *TypeCheck(Scope *scope, Tree *args);
+    Tree *TypeCheck(Stack *stack, Tree *args);
 };
 
 
@@ -119,7 +119,7 @@ struct CharacterType : TypeExpression
 //    Check if argument can be interpreted as an integer
 // ----------------------------------------------------------------------------
 {
-    Tree *TypeCheck(Scope *scope, Tree *args);
+    Tree *TypeCheck(Stack *stack, Tree *args);
 };
 
 
@@ -128,7 +128,7 @@ struct AnyType : TypeExpression
 //    Don't actually check the argument...
 // ----------------------------------------------------------------------------
 {
-    Tree *TypeCheck(Scope *scope, Tree *args);
+    Tree *TypeCheck(Stack *stack, Tree *args);
 };
 
 
@@ -137,7 +137,7 @@ struct InfixType : TypeExpression
 //    Check if the argument is an infix
 // ----------------------------------------------------------------------------
 {
-    Tree *TypeCheck(Scope *scope, Tree *args);
+    Tree *TypeCheck(Stack *stack, Tree *args);
 };
 
 
@@ -146,7 +146,7 @@ struct PrefixType : TypeExpression
 //    Check if the argument is a prefix tree
 // ----------------------------------------------------------------------------
 {
-    Tree *TypeCheck(Scope *scope, Tree *args);
+    Tree *TypeCheck(Stack *stack, Tree *args);
 };
 
 
@@ -155,7 +155,7 @@ struct PostfixType : TypeExpression
 //    Check if the argument is a postfix tree
 // ----------------------------------------------------------------------------
 {
-    Tree *TypeCheck(Scope *scope, Tree *args);
+    Tree *TypeCheck(Stack *stack, Tree *args);
 };
 
 
@@ -164,7 +164,7 @@ struct BlockType : TypeExpression
 //    Check if the argument is a block tree
 // ----------------------------------------------------------------------------
 {
-    Tree *TypeCheck(Scope *scope, Tree *args);
+    Tree *TypeCheck(Stack *stack, Tree *args);
 };
 
 XL_END

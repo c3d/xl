@@ -43,7 +43,7 @@ struct Native : Tree
 {
     Native(Tree *n=NULL, tree_position pos = NOWHERE): Tree(pos), next(n) {}
     virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Scope *scope);
+    virtual Tree *      Run(Stack *stack);
     virtual text        TypeName();
     virtual Tree *      Next()          { return next; }
     virtual Tree *      Append(Tree *tail);
@@ -51,44 +51,41 @@ struct Native : Tree
 };
 
 
-struct Scope : Native
+struct Invoke : Native
 // ----------------------------------------------------------------------------
-//   Create a local scope, i.e. a frame for local variables
-// ----------------------------------------------------------------------------
-{
-    Scope(tree_position pos = NOWHERE):
-        Native(NULL, pos), parameterCount(0), values() {}
-    Tree *              Run(Scope *scope);
-    Tree *              Next() { return NULL; }
-    Tree *              Error (text message,
-                               Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
-    ulong               parameterCount;
-    tree_list           values;
-};
-
-
-struct Invoke : Scope
-// ----------------------------------------------------------------------------
-//   Invoke a rewrite with some local variable
+//   Invoke a rewrite form
 // ----------------------------------------------------------------------------
 {
     Invoke(tree_position pos = NOWHERE):
-        Scope(pos), child(NULL) {}
-    Tree *              Run(Scope *scope);
+        Native(NULL, pos), invoked(NULL), values() {}
+    Tree *              Run(Stack *stack);
     void                AddArgument(Tree *value);
-    Tree *              child;
+    Tree *              invoked;
+    tree_list           values;
 };
 
 
 struct Variable : Native
 // ----------------------------------------------------------------------------
-//   A reference to some entity in a scope
+//   A reference to a local entity on the stack
 // ----------------------------------------------------------------------------
 {
     Variable(ulong vid, tree_position pos = NOWHERE):
         Native(NULL,pos), id(vid) {}
-    Tree *              Run(Scope *scope);
+    Tree *              Run(Stack *stack);
     ulong               id;
+};
+
+
+struct NonLocalVariable : Variable
+// ----------------------------------------------------------------------------
+//   A reference to a a variable that belongs to an upper frame
+// ----------------------------------------------------------------------------
+{
+    NonLocalVariable(ulong fr, ulong vid, tree_position pos = NOWHERE):
+        Variable(vid, pos), frame(fr) {}
+    Tree *              Run(Stack *stack);
+    ulong               frame;
 };
 
 
@@ -108,9 +105,9 @@ struct FailedCall : Native
 {
     FailedCall(Tree *src, tree_position pos = NOWHERE):
         Native(NULL, pos), source(src) {}
-    Tree *Run(Scope *scope)
+    Tree *Run(Stack *stack)
     {
-        return scope->Error("Don't know how to call '$1'", source);
+        return stack->Error("Don't know how to call '$1'", source);
     }
     Tree *source;
 };
@@ -124,9 +121,9 @@ struct TreeTest : Native
     TreeTest (Tree *toTest, Tree *ift, Tree *iff, tree_position pos = NOWHERE):
         Native(ift, pos), test(toTest), iffalse(iff), condition(true) {}
 
-    Tree *Run(Scope *scope)
+    Tree *Run(Stack *stack)
     {
-        Tree *code = test->Run(scope);
+        Tree *code = test->Run(stack);
         return code;
     }
     Tree *Next() { return condition ? next : iffalse; }
@@ -147,9 +144,9 @@ struct IntegerTest : TreeTest
                  tree_position pos = NOWHERE):
         TreeTest(code, ift, iff, pos), value(tv) {}
 
-    Tree *Run(Scope *scope)
+    Tree *Run(Stack *stack)
     {
-        Tree *code = test->Run(scope);
+        Tree *code = test->Run(stack);
         condition = false;
         if (Integer *iv = dynamic_cast<Integer *> (code))
             if (iv->value == value)
@@ -170,9 +167,9 @@ struct RealTest : TreeTest
               tree_position pos = NOWHERE):
         TreeTest(code, ift, iff, pos), value(tv) {}
 
-    Tree *Run(Scope *scope)
+    Tree *Run(Stack *stack)
     {
-        Tree *code = test->Run(scope);
+        Tree *code = test->Run(stack);
         condition = false;
         if (Real *iv = dynamic_cast<Real *> (code))
             if (iv->value == value)
@@ -193,9 +190,9 @@ struct TextTest : TreeTest
               tree_position pos = NOWHERE):
         TreeTest(code, ift, iff, pos), value(tv) {}
 
-    Tree *Run(Scope *scope)
+    Tree *Run(Stack *stack)
     {
-        Tree *code = test->Run(scope);
+        Tree *code = test->Run(stack);
         condition = false;
         if (Text *iv = dynamic_cast<Text *> (code))
             if (iv->value == value)
@@ -216,9 +213,9 @@ struct NameTest : TreeTest
               tree_position pos = NOWHERE):
         TreeTest(code, ift, iff, pos), value(tv) {}
 
-    Tree *Run(Scope *scope)
+    Tree *Run(Stack *stack)
     {
-        Tree *code = test->Run(scope);
+        Tree *code = test->Run(stack);
         condition = false;
         if (Name *iv = dynamic_cast<Name *> (code))
             if (iv->value == value->value)
@@ -239,7 +236,7 @@ struct EqualityTest : TreeTest
                   tree_position pos = NOWHERE):
         TreeTest(code, ift, iff, pos), value(tv) {}
 
-    Tree *Run(Scope *scope);
+    Tree *Run(Stack *stack);
     Tree *value;
 };
 
@@ -255,7 +252,7 @@ struct TypeTest : TreeTest
               tree_position pos = NOWHERE):
         TreeTest(code, ift, iff, pos), type_value(tv) {}
 
-    Tree *Run(Scope *scope);
+    Tree *Run(Stack *stack);
     Tree *type_value;
 };
 
@@ -267,21 +264,21 @@ struct TypeTest : TreeTest
 // ============================================================================
 //    See how these are used in opcodes_declare.h and opcodes_define.h
 
-longlong integer_arg(Scope *scope, ulong index);
-double real_arg(Scope *scope, ulong index);
-text text_arg(Scope *scope, ulong index);
-bool boolean_arg(Scope *scope, ulong index);
-Tree *anything_arg(Scope *scope, ulong index);
+longlong integer_arg(Stack *stack, ulong index);
+double real_arg(Stack *stack, ulong index);
+text text_arg(Stack *stack, ulong index);
+bool boolean_arg(Stack *stack, ulong index);
+Tree *anything_arg(Stack *stack, ulong index);
 Tree *AddParameter(Tree *existing, Tree *append);
 
-#define ANYTHING(index) scope->values[(index)]
-#define INT(index)      integer_arg(scope, (index))
-#define REAL(index)     real_arg(scope, (index))
-#define TEXT(index)     text_arg(scope, (index))
-#define BOOL(index)     boolean_arg(scope, (index))
-#define RINT(val)       return new Integer((val), scope->Position())
-#define RREAL(val)      return new Real((val), scope->Position())
-#define RTEXT(val)      return new Text((val), scope->Position())
+#define ANYTHING(index) stack->values[(index)]
+#define INT(index)      integer_arg(stack, (index))
+#define REAL(index)     real_arg(stack, (index))
+#define TEXT(index)     text_arg(stack, (index))
+#define BOOL(index)     boolean_arg(stack, (index))
+#define RINT(val)       return new Integer((val), Position())
+#define RREAL(val)      return new Real((val), Position())
+#define RTEXT(val)      return new Text((val), Position())
 #define RBOOL(val)      return (val) ? true_name : false_name
 
 typedef longlong integer_t;

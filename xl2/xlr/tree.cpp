@@ -51,12 +51,12 @@ void *Tree::operator new(size_t sz)
 }
 
 
-Tree *Tree::Run(Scope *scope)
+Tree *Tree::Run(Stack *stack)
 // ----------------------------------------------------------------------------
 //   By default, we don't know how to evaluate a tree
 // ----------------------------------------------------------------------------
 {
-    return scope->Error("Don't know how to evaluate '$1'", this);
+    return stack->Error("Don't know how to evaluate '$1'", this);
 }
 
 
@@ -209,13 +209,13 @@ Tree *Name::Do(Action *action)
 }
 
 
-Tree *Name::Run(Scope *scope)
+Tree *Name::Run(Stack *stack)
 // ----------------------------------------------------------------------------
 //    Evaluate a name
 // ----------------------------------------------------------------------------
 {
     // If not found at compile-time, this is an error to evaluate the name
-    return scope->Error("Name '$1' doesn't exist", this);
+    return stack->Error("Name '$1' doesn't exist", this);
 }
 
 
@@ -245,13 +245,13 @@ Tree *Block::Do(Action *action)
 }
 
 
-Tree *Block::Run(Scope *scope)
+Tree *Block::Run(Stack *stack)
 // ----------------------------------------------------------------------------
 //    Execute a block
 // ----------------------------------------------------------------------------
 {
     // If the block was not identified at compile time, this is an error
-    return scope->Error ("Unidentified block '$1'", this);
+    return stack->Error ("Unidentified block '$1'", this);
 }
 
 
@@ -303,13 +303,13 @@ Tree *Prefix::Do(Action *action)
 }
 
 
-Tree *Prefix::Run(Scope *scope)
+Tree *Prefix::Run(Stack *stack)
 // ----------------------------------------------------------------------------
 //    Execute a prefix node
 // ----------------------------------------------------------------------------
 {
     // If not found at compile-time, this is an error
-    return scope->Error("Don't know how to call '$1'", left);
+    return stack->Error("Don't know how to call '$1'", left);
 }
 
 
@@ -340,13 +340,13 @@ Tree *Postfix::Do(Action *action)
 }
 
 
-Tree *Postfix::Run(Scope *scope)
+Tree *Postfix::Run(Stack *stack)
 // ----------------------------------------------------------------------------
 //    Execute a postfix node
 // ----------------------------------------------------------------------------
 {
     // If the postfix was not identified at compile-time, this is an error
-    return scope->Error("Don't know how to call '$1'", right);
+    return stack->Error("Don't know how to call '$1'", right);
 }
 
 
@@ -377,12 +377,12 @@ Tree *Infix::Do(Action *action)
 }
 
 
-Tree *Infix::Run(Scope *scope)
+Tree *Infix::Run(Stack *stack)
 // ----------------------------------------------------------------------------
 //    Execute an infix node
 // ----------------------------------------------------------------------------
 {
-    return scope->Error ("Cannot evaluate unknown infix '$1'", this);
+    return stack->Error ("Cannot evaluate unknown infix '$1'", this);
 }
 
 XL_END

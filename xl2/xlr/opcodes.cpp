@@ -53,7 +53,7 @@ Tree *Native::Do(Action *action)
 }
 
 
-Tree *Native::Run(Scope *scope)
+Tree *Native::Run(Stack *stack)
 // ----------------------------------------------------------------------------
 //    Running a native node returns the native itself
 // ----------------------------------------------------------------------------
@@ -88,65 +88,45 @@ Tree *Native::Append(Tree *tail)
 }
 
 
-Tree *Scope::Run(Scope *scope)
+Tree * Variable::Run(Stack *stack)
 // ----------------------------------------------------------------------------
-//    Enter a scope, capture caller's variables
+//   Return the variable at given index in the stack
 // ----------------------------------------------------------------------------
 {
-    tree_list saveFrame = values;
-    ulong i, max = parameterCount;
-    if (max != scope->parameterCount)
-        return scope->Error("Internal error: Frame size error '$1'", this);
+    return stack->Get(id);
+}
 
-    // Save frame
-    saveFrame.resize(max);
-    for (i = 0; i < max; i++)
-        saveFrame[i] = values[i];
 
-    // Copy input parameters
-    for (i = 0; i < max; i++)
-        values[i] = scope->values[i];
+Tree * NonLocalVariable::Run(Stack *stack)
+// ----------------------------------------------------------------------------
+//   Return the variable at given index in the stack
+// ----------------------------------------------------------------------------
+{
+    return stack->Get(id, frame);
+}
 
-    // Run 'next'
-    Tree *result = next->Run(this);
 
-    // Restore input parameters
-    for (i = 0; i < max; i++)
-        values[i] = saveFrame[i];
+Tree *Invoke::Run(Stack *stack)
+// ----------------------------------------------------------------------------
+//    Run the child in the local arguments stack
+// ----------------------------------------------------------------------------
+{
+    // Evaluate all arguments without changing the stack
+    tree_list args;
+    tree_list::iterator i;
+    for (i = values.begin(); i != values.end(); i++)
+        args.push_back((*i)->Run(stack));
 
+    // Copy the resulting values on the stack
+    for (i = args.begin(); i != args.end(); i++)
+        stack->Push(*i);
+
+    // Invoke the called tree
+    Tree *result = invoked->Run(stack);
+
+    // Restore original stack state
+    stack->Free(values.size());
     return result;
-}
-
-
-Tree * Scope::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
-// ----------------------------------------------------------------------------
-//   Execute the innermost error handler
-// ----------------------------------------------------------------------------
-{
-    return Context::context->Error(message, arg1, arg2, arg3);
-}
-
-
-Tree * Variable::Run(Scope *scope)
-// ----------------------------------------------------------------------------
-//   Return the variable at given index in the scope
-// ----------------------------------------------------------------------------
-{
-    if (id < scope->values.size())
-    {
-        Tree *value = scope->values[id];
-        return value;
-    }
-    return scope->Error("Unbound variable '$1'", this);
-}
-
-
-Tree *Invoke::Run(Scope *scope)
-// ----------------------------------------------------------------------------
-//    Run the child in the local arguments scope
-// ----------------------------------------------------------------------------
-{
-    return child->Run(this);
 }
 
 
@@ -156,7 +136,6 @@ void Invoke::AddArgument(Tree *value)
 // ----------------------------------------------------------------------------
 {
     values.push_back(value);
-    parameterCount++;
 }
 
 
@@ -281,13 +260,13 @@ struct TreeMatch : Action
 };
 
 
-Tree *EqualityTest::Run (Scope *scope)
+Tree *EqualityTest::Run (Stack *stack)
 // ----------------------------------------------------------------------------
 //   Check equality of two trees
 // ----------------------------------------------------------------------------
 {
-    Tree *code = test->Run(scope);
-    Tree *ref = value->Run(scope);
+    Tree *code = test->Run(stack);
+    Tree *ref = value->Run(stack);
     condition = false;
     TreeMatch compareForEquality(ref);
     if (code->Do(compareForEquality))
@@ -296,16 +275,16 @@ Tree *EqualityTest::Run (Scope *scope)
 }
 
 
-Tree *TypeTest::Run (Scope *scope)
+Tree *TypeTest::Run (Stack *stack)
 // ----------------------------------------------------------------------------
 //   Check if the code being tested has the given type value
 // ----------------------------------------------------------------------------
 {
-    Tree *code = test->Run(scope);
-    Tree *ref = type_value->Run(scope);
+    Tree *code = test->Run(stack);
+    Tree *ref = type_value->Run(stack);
     condition = false;
     if (TypeExpression *typeChecker = dynamic_cast<TypeExpression *>(ref))
-        if (typeChecker->TypeCheck(scope, code))
+        if (typeChecker->TypeCheck(stack, code))
             condition = true;
     return code;
 }
@@ -318,66 +297,66 @@ Tree *TypeTest::Run (Scope *scope)
 // 
 // ============================================================================
 
-longlong integer_arg(Scope *scope, ulong index)
+longlong integer_arg(Stack *stack, ulong index)
 // ----------------------------------------------------------------------------
 //    Return an integer value 
 // ----------------------------------------------------------------------------
 {
-    Tree *value = scope->values[index];
+    Tree *value = stack->values[index];
     if (Integer *ival = dynamic_cast<Integer *> (value))
         return ival->value;
-    scope->Error("Value '$1' is not an integer", value);
+    stack->Error("Value '$1' is not an integer", value);
     return 0;
 }
 
 
-double real_arg(Scope *scope, ulong index)
+double real_arg(Stack *stack, ulong index)
 // ----------------------------------------------------------------------------
 //    Return a real value 
 // ----------------------------------------------------------------------------
 {
-    Tree *value = scope->values[index];
+    Tree *value = stack->values[index];
     if (Real *rval = dynamic_cast<Real *> (value))
         return rval->value;
-    scope->Error("Value '$1' is not a real", value);
+    stack->Error("Value '$1' is not a real", value);
     return 0.0;
 }
 
 
-text text_arg(Scope *scope, ulong index)
+text text_arg(Stack *stack, ulong index)
 // ----------------------------------------------------------------------------
 //    Return a text value 
 // ----------------------------------------------------------------------------
 {
-    Tree *value = scope->values[index];
+    Tree *value = stack->values[index];
     if (Text *tval = dynamic_cast<Text *> (value))
         return tval->value;
-    scope->Error("Value '$1' is not a text", value);
+    stack->Error("Value '$1' is not a text", value);
     return "";
 }
 
 
-bool boolean_arg(Scope *scope, ulong index)
+bool boolean_arg(Stack *stack, ulong index)
 // ----------------------------------------------------------------------------
 //    Return a boolean truth value 
 // ----------------------------------------------------------------------------
 {
-    Tree *value = scope->values[index];
+    Tree *value = stack->values[index];
     if (value == true_name)
         return true;
     else if (value == false_name)
         return false;
-    scope->Error("Value '$1' is not a boolean value", value);
+    stack->Error("Value '$1' is not a boolean value", value);
     return false;
 }
 
 
-Tree *anything_arg(Scope *scope, ulong index)
+Tree *anything_arg(Stack *stack, ulong index)
 // ----------------------------------------------------------------------------
 //    Return a boolean truth value 
 // ----------------------------------------------------------------------------
 {
-    Tree *value = scope->values[index];
+    Tree *value = stack->values[index];
     return value;
 }
 

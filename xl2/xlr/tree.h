@@ -50,7 +50,7 @@ struct Infix;                                   // Infix: A+B, newline
 struct Block;                                   // Block: (A), {A}
 struct Native;                                  // Some native code
 struct Action;                                  // Action on trees
-struct Scope;                                   // Variable storage
+struct Stack;                                   // Variable storage
 typedef ulong tree_position;                    // Position in context
 typedef std::map<text, Tree *> tree_data;       // Data associated to tree
 typedef std::vector<Tree *> tree_list;          // A list of trees
@@ -66,7 +66,7 @@ struct Tree
     virtual ~Tree() {}
 
     // Evaluate a tree
-    virtual Tree *      Run(Scope *scope);
+    virtual Tree *      Run(Stack *stack);
 
     // Perform recursive actions on a tree
     virtual Tree *      Do(Action *action);
@@ -140,7 +140,7 @@ struct Integer : Leaf
     Integer(longlong i = 0, tree_position pos = NOWHERE):
         Leaf(pos), value(i) {}
     virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Scope *scope) { return this; }
+    virtual Tree *      Run(Stack *stack) { return this; }
     longlong            value;
 };
 
@@ -153,7 +153,7 @@ struct Real : Leaf
     Real(double d = 0.0, tree_position pos = NOWHERE):
         Leaf(pos), value(d) {}
     virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Scope *scope) { return this; }
+    virtual Tree *      Run(Stack *stack) { return this; }
     double              value;
 };
 
@@ -166,7 +166,7 @@ struct Text : Leaf
     Text(text t = "", tree_position pos = NOWHERE):
         Leaf(pos), value(t) {}
     virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Scope *scope)       { return this; }
+    virtual Tree *      Run(Stack *stack)       { return this; }
     virtual text        Opening()               { return "\""; }
     virtual text        Closing()               { return "\""; }
     text                value;
@@ -216,7 +216,7 @@ struct Name : Leaf
     Name(text n, tree_position pos = NOWHERE):
         Leaf(pos), value(n) {}
     virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Scope *scope);
+    virtual Tree *      Run(Stack *stack);
     text                value;
 };
 
@@ -246,7 +246,7 @@ struct Block : NonLeaf
     virtual text        Opening() { return "\t+"; }
     virtual text        Closing() { return "\t-"; }
     virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Scope *scope);
+    virtual Tree *      Run(Stack *stack);
     static Block *      MakeBlock(Tree *child,
                                   text open, text close,
                                   tree_position pos = NOWHERE);
@@ -308,7 +308,7 @@ struct Prefix : NonLeaf
     Prefix(Tree *l, Tree *r, tree_position pos = NOWHERE):
         NonLeaf(pos), left(l), right(r) {}
     virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Scope *scope);
+    virtual Tree *      Run(Stack *stack);
     Tree *              left;
     Tree *              right;
 };
@@ -322,7 +322,7 @@ struct Postfix : Prefix
     Postfix(Tree *l, Tree *r, tree_position pos = NOWHERE):
         Prefix(l, r, pos) {}
     virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Scope *scope);
+    virtual Tree *      Run(Stack *stack);
 };
 
 
@@ -339,7 +339,7 @@ struct Infix : Prefix
     Infix(text n, Tree *left, Tree *right, tree_position pos = NOWHERE):
         Prefix(left, right, pos), name(n) {}
     virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Scope *scope);
+    virtual Tree *      Run(Stack *stack);
     text                name;
 };
 

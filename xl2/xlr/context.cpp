@@ -1250,34 +1250,25 @@ Tree * CompileAction::Rewrites(Tree *what)
                 if (argsTest)
                 {
                     // We should have same number of args and parms
-                    if (parms.names.size() != args.names.size())
+                    ulong parmCount = parms.names.size();
+                    if (parmCount != args.names.size())
                         return context->Error(
                             "Internal: arg/parm mismatch in '$1'", what);
 
-                    Tree *rawCode = candidate->Compile();
-                    Scope *code = dynamic_cast<Scope *> (rawCode);
-                    if (!code)
-                        return context->Error("Internal: Not a scope '$1' "
-                                              "for '$2'", rawCode, what);
-
                     // Create invokation node
+                    Tree *code = candidate->Compile();
                     Invoke *invoke = new Invoke(what->Position());
-                    ulong parmCount = code->parameterCount;
-                    invoke->child = code;
-                    invoke->parameterCount = parmCount;
+                    invoke->invoked = code;
                     invoke->values.resize(parmCount);
-                    if (parmCount != parms.names.size())
-                        return context->Error(
-                            "Internal: Parm count for '$1'", what);
 
-                    // Map the arguments we found in called scope order
-                    // (i.e. we take the order from scope variables ids)
+                    // Map the arguments we found in called stack order
+                    // (i.e. we take the order from stack variables ids)
                     symbol_table::iterator i;
                     for (i = parms.names.begin(); i != parms.names.end(); i++)
                     {
                         text name = (*i).first;
-                        Tree *argValue = args.Name(name);
-                        Tree *parm = parms.Name(name);
+                        Tree *argValue = args.NamedTree(name);
+                        Tree *parm = parms.NamedTree(name);
                         Variable *parmVar = dynamic_cast<Variable *> (parm);
                         if (!parmVar)
                             return context->Error(
@@ -1341,21 +1332,41 @@ Tree * CompileAction::Rewrites(Tree *what)
 // 
 // ============================================================================
 
+Tree *Context::Name(text name)
+// ----------------------------------------------------------------------------
+//    Return a variable in the name if there is one
+// ----------------------------------------------------------------------------
+{
+    ulong frame = 0;
+    for (Context *c = this; c; c = c->Parent())
+    {
+        Tree *existing = names[name];
+        Variable *variable = dynamic_cast<Variable *> (existing);
+        if (existing && !variable)
+            return existing;
+        if (variable)
+        {
+            if (!frame)
+                return variable;
+            return new NonLocalVariable(frame, variable->id,
+                                        variable->Position());
+        }
+        frame++;
+    }
+    return NULL;
+}
+
+
 Tree *Context::Compile(Tree *source)
 // ----------------------------------------------------------------------------
 //    Return an optimized version of the source tree, ready to run
 // ----------------------------------------------------------------------------
 {
-    Tree *result = compiled[source];
-    if (result)
-        return result;
-
     DeclarationAction declare(this);
-    result = source->Do(declare);
+    Tree *result = source->Do(declare);
         
     CompileAction compile(this);
     result = source->Do(compile);
-    compiled[source] = result;
 
     return result;
 }
@@ -1367,10 +1378,10 @@ Tree *Context::Run(Tree *code)
 // ----------------------------------------------------------------------------
 {
     Tree *result = code;
-    Scope topLevel(code->Position());
+    Stack stack(errors);
     while (Native *native = dynamic_cast<Native *> (code))
     {
-        result = native->Run(&topLevel);
+        result = native->Run(&stack);
         code = native->Next();
     }
     return result;
@@ -1394,6 +1405,37 @@ Rewrite *Context::EnterRewrite(Tree *from, Tree *to)
 // 
 // ============================================================================
 
+Tree * Stack::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
+// ----------------------------------------------------------------------------
+//   Execute the innermost error handler
+// ----------------------------------------------------------------------------
+{
+    Tree *handler = error_handler;
+    if (handler)
+    {
+        Invoke errorInvokation(handler->Position());
+        Tree *info = new XL::Text (message);
+        errorInvokation.AddArgument(info);
+        if (arg1)
+            errorInvokation.AddArgument(arg1);
+        if (arg2)
+            errorInvokation.AddArgument(arg2);
+        if (arg3)
+            errorInvokation.AddArgument(arg3);
+        errorInvokation.invoked = handler;
+        error_handler = NULL;
+        Tree *result =  errorInvokation.Run(this);
+        error_handler = handler;
+        return result;
+    }
+
+    // No handler: terminate
+    std::cerr << "Error: No error handler\n";
+    errors.Error(message, arg1, arg2, arg3);
+    std::exit(1);
+}
+
+
 Tree * Context::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
 // ----------------------------------------------------------------------------
 //   Execute the innermost error handler
@@ -1411,13 +1453,26 @@ Tree * Context::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
             errorInvokation.AddArgument(arg2);
         if (arg3)
             errorInvokation.AddArgument(arg3);
-        return handler->Run(&errorInvokation);
+        errorInvokation.invoked = handler;
+        return errorInvokation.Run(NULL);
     }
 
     // No handler: terminate
     std::cerr << "Error: No error handler\n";
     errors.Error(message, arg1, arg2, arg3);
     std::exit(1);
+}
+
+
+ulong Context::Depth()
+// ----------------------------------------------------------------------------
+//    Return the depth for the current context
+// ----------------------------------------------------------------------------
+{
+    ulong depth = 0;
+    for (Context *c = this; c; c = c->Parent())
+        depth++;
+    return depth;
 }
 
 
@@ -1502,31 +1557,29 @@ Tree *Rewrite::Compile(void)
 //   Make sure that the 'to' tree is compiled
 // ----------------------------------------------------------------------------
 {
-    Scope *scope = dynamic_cast<Scope *> (to);
-    if (!scope)
-    {
-        tree_position pos = to->Position();
-        scope = new Scope(pos);
-        Context locals(context);
+    Leaf *leaf = dynamic_cast<Leaf *> (to);
+    if (leaf)
+        return leaf;
+    Native *native = dynamic_cast<Native *> (to);
+    if (native)
+        return native;
 
-        // Match all parameters and save parameter count for that scope
-        ParameterMatch matchParms(&locals);
-        Tree *parms = from->Do(matchParms);
-        if (!parms)
-            return context->Error("Internal: what parameters in '$1'?", from);
-        scope->parameterCount = locals.names.size();
+    Context locals(context);
 
-        // Compile the body of the rewrite, which may add local variables
-        Tree *code = locals.Compile(to);
-        if (!code)
-            return context->Error("Unable to compile '$1'", to);
-        scope->next = code;
-        scope->values.resize(locals.names.size());
+    // Identify all parameters in 'from'
+    ParameterMatch matchParms(&locals);
+    Tree *parms = from->Do(matchParms);
+    if (!parms)
+        return context->Error("Internal: what parameters in '$1'?", from);
 
-        // Remember the compile form only from now on
-        to = scope;
-    }
-    return scope;
+    // Compile the body of the rewrite
+    Tree *code = locals.Compile(to);
+    if (!code)
+        return context->Error("Unable to compile '$1'", to);
+
+    // Remember the compiled
+    to = code;
+    return code;
 }
 
 

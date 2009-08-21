@@ -4,10 +4,7 @@
         Infix *xdecl = new Infix(":", new Name("x"), new Name(#t1));    \
         Infix *ydecl = new Infix(":", new Name("y"), new Name(#t2));    \
         Infix *from = new Infix(symbol, xdecl, ydecl);                  \
-        Scope *to = new Scope();                                        \
-        to->parameterCount = 2;                                         \
-        to->values.resize(2);                                           \
-        to->next = new name();                                          \
+        name *to = new name();                                          \
         c->EnterRewrite(from, to);                                      \
     } while(0);
 
@@ -23,10 +20,7 @@
         Tree *parameters = NULL;                                        \
         parms;                                                          \
         Prefix *from = new Prefix(new Name(symbol), parameters);        \
-        Scope *to = new Scope();                                        \
-        to->parameterCount = 1;                                         \
-        to->values.resize(1);                                           \
-        to->next = new name();                                          \
+        name *to = new name();                                          \
         c->EnterRewrite(from, to);                                      \
     } while(0);
 
@@ -36,10 +30,7 @@
         Tree *parameters = NULL;                                        \
         parms;                                                          \
         Prefix *from = new Postfix(parameters, new Name(symbol));       \
-        Scope *to = new Scope();                                        \
-        to->parameterCount = 1;                                         \
-        to->values.resize(1);                                           \
-        to->next = new name();                                          \
+        name *to = new name();                                          \
         c->EnterRewrite(from, to);                                      \
     } while(0);
 
