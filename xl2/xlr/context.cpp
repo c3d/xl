@@ -1189,7 +1189,6 @@ Tree *CompileAction::DoName(Name *what)
     // Normally, the name should have been declared in ParameterMatch
     if (Tree *result = context->Name(what->value))
         return result;
-    
     return context->Error("Name '$1' does not exist", what);
 }
 
@@ -1224,6 +1223,14 @@ Tree *CompileAction::DoInfix(Infix *what)
     {
         // For instruction list, string compile results together
         Tree *left = what->left->Do(this);
+        if (dynamic_cast<Name *> (what->left))
+        {
+            // If left is a name, we return a reference to some object
+            // We need something to append to, so create an invoke
+            Invoke *invoke = new Invoke();
+            invoke->invoked = left;
+            left = invoke;
+        }
         Tree *right = what->right->Do(this);
         return Append(left, right);
     }

@@ -369,7 +369,13 @@ void debugc(XL::Tree *n)
         if (TreeTest *tt = dynamic_cast<TreeTest *> (native))
             std::cerr << " else " << (void *) tt->iffalse;
         if (Invoke *inv = dynamic_cast<Invoke *> (native))
+        {
             std::cerr << " invoking " << (void *) inv->invoked;
+            if (Entry *entry = dynamic_cast<Entry *> (inv->invoked))
+                std::cerr << "entry " << entry->source;
+            else
+                std::cerr << ": " << inv->invoked;
+        }
         if (BranchTarget *bt = dynamic_cast<BranchTarget *> (native))
             std::cerr << " at " << (void *) bt;
         if (Entry *entry = dynamic_cast<Entry *> (native))
