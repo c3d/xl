@@ -7,11 +7,11 @@ struct name : Native                            \
 
 #define PARM(symbol, type)      type##_t symbol = type##_arg(stack, argc++);
 
-#define PREFIX(symbol, parms, name, code)                       \
-struct name : Native                                            \
-{                                                               \
-    name(): Native(NULL) {}                                     \
-    Tree *Run(Stack *stack) { uint argc=0; parms; code; }       \
+#define PREFIX(symbol, parms, name, code)                               \
+struct name : Native                                                    \
+{                                                                       \
+    name(): Native(NULL) {}                                             \
+    Tree *Run(Stack *stack) { uint argc=0; argc=argc; parms; code; }    \
 };
 #define POSTFIX(parms, symbol, name, code)                      \
 struct name : Native                                            \
@@ -21,4 +21,3 @@ struct name : Native                                            \
 };
 #define NAME(symbol, name)
 #define TYPE(symbol, name)
-

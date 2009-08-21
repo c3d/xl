@@ -14,15 +14,22 @@
                                          new Name(#type));      \
         parameters.push_back(symbol##_decl);
 
-#define PREFIX(symbol, parms, name, code)                       \
-    do                                                          \
-    {                                                           \
-        tree_list parameters;                                   \
-        parms;                                                  \
-        Tree *parmtree = ParametersTree(parameters);            \
-        Prefix *from = new Prefix(new Name(symbol), parmtree);  \
-        name *to = new name();                                  \
-        c->EnterRewrite(from, to);                              \
+#define PREFIX(symbol, parms, name, code)                               \
+    do                                                                  \
+    {                                                                   \
+        tree_list parameters;                                           \
+        parms;                                                          \
+        if (parameters.size())                                          \
+        {                                                               \
+            Tree *parmtree = ParametersTree(parameters);                \
+            Prefix *from = new Prefix(new Name(symbol), parmtree);      \
+            name *to = new name();                                      \
+            c->EnterRewrite(from, to);                                  \
+        }                                                               \
+        else                                                            \
+        {                                                               \
+            c->EnterName(symbol, new name());                           \
+        }                                                               \
     } while(0);
 
 #define POSTFIX(t1, symbol, name, code)                         \

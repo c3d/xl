@@ -106,6 +106,11 @@ INFIX(boolean, "xor", boolean, BinaryXorBool, RBOOL(BOOL(0) ^ BOOL(1)))
 INFIX(boolean, "<>", boolean, BinaryNEBool, RBOOL(BOOL(0) != BOOL(1)))
 INFIX(boolean, "=", boolean, BinaryEQBool, RBOOL(BOOL(0) == BOOL(1)))
 
+// Conversions
+PREFIX("real", PARM(x, integer), IntToReal, RREAL((real_t) x))
+PREFIX("integer", PARM(x, real), RealToInt, RINT((integer_t) x))
+
+
 // Debugging code
 PREFIX("debug", PARM(tree, anything), DebugTree,
        std::cerr << "DEBUG: " << tree << "\n"; return tree)
