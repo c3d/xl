@@ -116,11 +116,20 @@ Tree *Invoke::Run(Stack *stack)
     tree_list args;
     tree_list::iterator i;
     for (i = values.begin(); i != values.end(); i++)
-        args.push_back((*i)->Run(stack));
+    {
+        Tree *value = (*i);
+        value = value->Run(stack);
+        args.push_back(value);
+    }
 
     // Copy the resulting values on the stack
+    ulong index = 0;
+    stack->Allocate(args.size());
     for (i = args.begin(); i != args.end(); i++)
-        stack->Push(*i);
+    {
+        Tree *value = (*i);
+        stack->Set(index++, value);
+    }
 
     // Invoke the called tree
     Tree *result = stack->Run(invoked);
@@ -303,7 +312,7 @@ longlong integer_arg(Stack *stack, ulong index)
 //    Return an integer value 
 // ----------------------------------------------------------------------------
 {
-    Tree *value = stack->values[index];
+    Tree *value = stack->Get(index);
     if (Integer *ival = dynamic_cast<Integer *> (value))
         return ival->value;
     stack->Error("Value '$1' is not an integer", value);
@@ -316,7 +325,7 @@ double real_arg(Stack *stack, ulong index)
 //    Return a real value 
 // ----------------------------------------------------------------------------
 {
-    Tree *value = stack->values[index];
+    Tree *value = stack->Get(index);
     if (Real *rval = dynamic_cast<Real *> (value))
         return rval->value;
     stack->Error("Value '$1' is not a real", value);
@@ -329,7 +338,7 @@ text text_arg(Stack *stack, ulong index)
 //    Return a text value 
 // ----------------------------------------------------------------------------
 {
-    Tree *value = stack->values[index];
+    Tree *value = stack->Get(index);
     if (Text *tval = dynamic_cast<Text *> (value))
         return tval->value;
     stack->Error("Value '$1' is not a text", value);
@@ -342,7 +351,7 @@ bool boolean_arg(Stack *stack, ulong index)
 //    Return a boolean truth value 
 // ----------------------------------------------------------------------------
 {
-    Tree *value = stack->values[index];
+    Tree *value = stack->Get(index);
     if (value == true_name)
         return true;
     else if (value == false_name)
@@ -357,7 +366,7 @@ Tree *anything_arg(Stack *stack, ulong index)
 //    Return a boolean truth value 
 // ----------------------------------------------------------------------------
 {
-    Tree *value = stack->values[index];
+    Tree *value = stack->Get(index);
     return value;
 }
 

@@ -157,7 +157,7 @@ struct IntegerTest : TreeTest
 
     Tree *Run(Stack *stack)
     {
-        Tree *code = test->Run(stack);
+        Tree *code = stack->Run(test);
         condition = false;
         if (Integer *iv = dynamic_cast<Integer *> (code))
             if (iv->value == value)
@@ -282,7 +282,7 @@ bool boolean_arg(Stack *stack, ulong index);
 Tree *anything_arg(Stack *stack, ulong index);
 Tree *AddParameter(Tree *existing, Tree *append);
 
-#define ANYTHING(index) stack->values[(index)]
+#define ANYTHING(index) stack->Get[(index)]
 #define INT(index)      integer_arg(stack, (index))
 #define REAL(index)     real_arg(stack, (index))
 #define TEXT(index)     text_arg(stack, (index))

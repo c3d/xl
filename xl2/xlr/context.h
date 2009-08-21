@@ -150,18 +150,6 @@ struct Stack
         values.resize(values.size() - sz);
     }
 
-    void Push(Tree *value)
-    {
-        values.push_back(value);
-    }
-
-    Tree *Pop(void)
-    {
-        Tree *result = values.back();
-        values.pop_back();
-        return result;
-    }
-
     void Enter()
     {
         frames.push_back(values.size());

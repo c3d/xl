@@ -1422,12 +1422,12 @@ Tree *Stack::Run(Tree *code)
 //    Execute code until there is nothing left to do
 // ----------------------------------------------------------------------------
 {
-    Tree *result = code;
+    Tree *result = NULL;
     while (Native *native = dynamic_cast<Native *> (code))
     {
-        Tree *intermediate = native->Run(this);
-        if (intermediate)
-            result = intermediate;
+        Tree *value = native->Run(this);
+        if (value)
+            result = value;
         code = native->Next();
     }
     return result;
