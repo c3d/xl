@@ -1,11 +1,4 @@
 fact 0 -> 1
-fact (N : integer) -> N * fact (N-1)
-
-0! -> 1
-N! -> N * (N-1)!
-
-6!
+fact N -> N * fact (N-1)
 
 fact 6
-
-//fact 3.5

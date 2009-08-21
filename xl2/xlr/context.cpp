@@ -229,6 +229,9 @@ Tree *Context::Run(Tree *source, bool eager)
     while (changed)
     {
         changed = false;
+        if (!source)
+            return source;
+
         for (Namespace *c = this; c; c = c->Parent())
         {
             if (Rewrite *rew = c->Rewrites())
@@ -247,7 +250,7 @@ Tree *Context::Run(Tree *source, bool eager)
             }
         }
 
-        if (!changed && eager)
+        if (!changed && eager && source)
         {
             Tree *result = source->Run(this);
             if (result != source)
