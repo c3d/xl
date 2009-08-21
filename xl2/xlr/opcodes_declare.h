@@ -32,9 +32,9 @@
 #undef PARM
 
 #define INFIX(t1, symbol, t2, name, code)       \
-    Tree *xl_##name(Tree*self, Tree *l, Tree *r) { code; }
+    Tree *xl_##name(Tree*self, t1##_r l, t2##_r r) { code; }
 
-#define PARM(symbol, type)      , type##_t symbol
+#define PARM(symbol, type)      , type##_r symbol
 
 #define PREFIX(symbol, parms, name, code)       \
     Tree *xl_##name(Tree *self parms) { code; }

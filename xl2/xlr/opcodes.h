@@ -40,26 +40,36 @@ extern Name *   xl_true;
 extern Name *   xl_false;
 
 #define TREE(v)         (v)
-#define INT(v)          xl_integer_arg(v)
+#define INT(v)          ((integer_t) (v))
 #define CHAR(v)         xl_character_arg(v)
-#define REAL(v)         xl_real_arg(v)
-#define TEXT(v)         xl_text_arg(v)
-#define BOOL(v)         xl_boolean_arg(v)
+#define REAL(v)         ((real_t) (v))
+#define TEXT(v)         ((text_t) (v))
+#define BOOL(v)         ((boolean_t) (v))
 #define RINT(val)       return new Integer(val)
 #define RREAL(val)      return new Real(val)
 #define RTEXT(val)      return new Text(val)
 #define RBOOL(val)      return (val) ? xl_true : xl_false
 #define RTREE(val)      return (val)
 
+typedef Integer &       integer_r;
+typedef Real &          real_r;
+typedef Text &          text_r;
+typedef Name &          boolean_r;
+typedef Tree &          tree_r;
+typedef Infix &         infix_r;
+typedef Prefix &        prefix_r;
+typedef Postfix &       postfix_r;
+typedef Block &         block_r;
+
 typedef longlong        integer_t;
 typedef double          real_t;
 typedef text            text_t;
 typedef bool            boolean_t;
-typedef Tree *          tree_t;
-typedef Infix *         infix_t;
-typedef Prefix *        prefix_t;
-typedef Postfix *       postfix_t;
-typedef Block *         block_t;
+typedef Tree &          tree_t;
+typedef Infix &         infix_t;
+typedef Prefix &        prefix_t;
+typedef Postfix &       postfix_t;
+typedef Block &         block_t;
 
 XL_END
 

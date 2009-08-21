@@ -61,6 +61,20 @@ Tree::operator text()
 }
 
 
+Name::operator bool()
+// ----------------------------------------------------------------------------
+//    Conversion of a name to text
+// ----------------------------------------------------------------------------
+{
+    if (this == xl_true)
+        return true;
+    else if (this == xl_false)
+        return false;
+    Context::context->Error("Value '$1' is not a boolean value", this);
+    return false;
+}
+
+
 
 // ============================================================================
 // 

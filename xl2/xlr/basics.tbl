@@ -121,29 +121,29 @@ PREFIX("text", PARM(x, real), RealToText,
 // Time computations
 PREFIX("time",,    SystemTime,    time_t t; time(&t); RINT(t))
 PREFIX("hours", PARM(t, integer),   TimeHours,
-       struct tm tm;
-       localtime_r(&t, &tm); RINT(tm.tm_hour))
+       struct tm tm; time_t clock = t;
+       localtime_r(&clock, &tm); RINT(tm.tm_hour))
 PREFIX("minutes", PARM(t, integer), TimeMinutes,
-       struct tm tm;
-       localtime_r(&t, &tm); RINT(tm.tm_min))
+       struct tm tm; time_t clock = t;
+       localtime_r(&clock, &tm); RINT(tm.tm_min))
 PREFIX("seconds", PARM(t, integer), TimeSeconds,
-       struct tm tm;
-       localtime_r(&t, &tm); RINT(tm.tm_sec))
+       struct tm tm; time_t clock = t;
+       localtime_r(&clock, &tm); RINT(tm.tm_sec))
 PREFIX("year", PARM(t, integer), TimeYear,
-       struct tm tm;
-       localtime_r(&t, &tm); RINT(tm.tm_year + 1900))
+       struct tm tm; time_t clock = t;
+       localtime_r(&clock, &tm); RINT(tm.tm_year + 1900))
 PREFIX("month", PARM(t, integer), TimeMonth,
-       struct tm tm;
-       localtime_r(&t, &tm); RINT(tm.tm_mon))
+       struct tm tm; time_t clock = t;
+       localtime_r(&clock, &tm); RINT(tm.tm_mon))
 PREFIX("day", PARM(t, integer), TimeMonthDay,
-       struct tm tm;
-       localtime_r(&t, &tm); RINT(tm.tm_mday))
+       struct tm tm; time_t clock = t;
+       localtime_r(&clock, &tm); RINT(tm.tm_mday))
 PREFIX("week_day", PARM(t, integer), TimeWeekDay,
-       struct tm tm;
-       localtime_r(&t, &tm); RINT(tm.tm_wday))
+       struct tm tm; time_t clock = t;
+       localtime_r(&clock, &tm); RINT(tm.tm_wday))
 PREFIX("year_day", PARM(t, integer), TimeYearDay,
-       struct tm tm;
-       localtime_r(&t, &tm); RINT(tm.tm_yday))
+       struct tm tm; time_t clock = t;
+       localtime_r(&clock, &tm); RINT(tm.tm_yday))
 
 // Return hour, minutes, seconds
 PREFIX("hours",,   SystemHours,
@@ -173,7 +173,7 @@ PREFIX("year_day",, SystemYearDay,
 
 // Debugging code
 PREFIX("debug", PARM(toDebug, tree), DebugTree,
-       std::cerr << "DEBUG: " << toDebug << "\n"; return toDebug)
+       std::cerr << "DEBUG: " << &toDebug << "\n"; return &toDebug)
 
 NAME(nil);
 NAME(true);

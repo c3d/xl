@@ -188,6 +188,7 @@ struct Integer : Tree
     Integer(longlong i = 0, tree_position pos = NOWHERE):
         Tree(INTEGER, pos), value(i) { code = xl_identity; }
     longlong            value;
+    operator longlong()         { return value; }
 };
 
 
@@ -199,6 +200,7 @@ struct Real : Tree
     Real(double d = 0.0, tree_position pos = NOWHERE):
         Tree(REAL, pos), value(d) { code = xl_identity; }
     double              value;
+    operator double()           { return value; }
 };
 
 
@@ -213,6 +215,7 @@ struct Text : Tree
     text                value;
     text                opening, closing;
     static text         textQuote, charQuote;
+    operator text()             { return value; }
 };
 
 
@@ -224,6 +227,7 @@ struct Name : Tree
     Name(text n, tree_position pos = NOWHERE):
         Tree(NAME, pos), value(n) {}
     text                value;
+    operator bool();
 };
 
 
