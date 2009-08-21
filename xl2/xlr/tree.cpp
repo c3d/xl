@@ -167,8 +167,8 @@ Tree *Action::DoInfix(Infix *what)
 }
 
 
-text Block::indent   = "\t+";
-text Block::unindent = "\t-";
+text Block::indent   = "I+";
+text Block::unindent = "I-";
 text Text::textQuote = "\"";
 text Text::charQuote = "'";
 

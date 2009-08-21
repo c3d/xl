@@ -44,6 +44,9 @@ struct Renderer
     Renderer(std::ostream &out, text styleFile, Syntax &stx);
     Renderer(std::ostream &out, Renderer *from = renderer);
 
+    // Selecting the style sheet file
+    void                SelectStyleSheet(text styleFile);
+
     // Rendering proper
     void                Render (Tree *what);
     void                RenderOne(Tree *what);

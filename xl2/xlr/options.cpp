@@ -31,6 +31,7 @@
 #include <iostream>
 #include "options.h"
 #include "errors.h"
+#include "renderer.h"
 
 XL_BEGIN
 

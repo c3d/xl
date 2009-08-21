@@ -35,6 +35,12 @@
 // Getting help on options
 OPTION(help, "List usage information", Usage(argv))
 
+// Rendering control
+OPTVAR(stylesheet, text, "xl")
+OPTION(style, "Select the stylesheet",
+       stylesheet = STRING;
+       Renderer::renderer->SelectStyleSheet(stylesheet + ".stylesheet"))
+
 // Parse only
 OPTVAR(parseOnly, bool, false)
 OPTION(parse, "Only parse file, do not compile nor run", parseOnly = true)

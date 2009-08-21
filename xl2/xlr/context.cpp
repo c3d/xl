@@ -170,6 +170,10 @@ void Context::CollectGarbage ()
             if (s->rewrites)
                 s->rewrites->Do(gc);
         }
+        formats_table::iterator f;
+        formats_table &formats = Renderer::renderer->formats;
+        for (f = formats.begin(); f != formats.end(); f++)
+            (*f).second->Do(gc);
 
         // Then delete all trees in active set that are no longer referenced
         for (active_set::iterator a = active.begin(); a != active.end(); a++)

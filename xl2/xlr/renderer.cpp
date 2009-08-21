@@ -87,22 +87,7 @@ Renderer::Renderer(std::ostream &out, text styleFile, Syntax &stx)
       had_space(true), had_punctuation(false), need_separator(false),
       force_parentheses(false)
 {
-    Syntax defaultSyntax;
-    Positions positions;
-    Errors errors(&positions);
-    defaultSyntax.ReadSyntaxFile("xl.syntax");
-    Parser p(styleFile.c_str(), defaultSyntax, positions, errors);
-
-    // Some defaults
-    formats[Block::indent]   = new Name("indent");
-    formats[Block::unindent] = new Name("unindent");
-
-    Tree *fmts = p.Parse();
-    if (fmts)
-    {
-        EnterFormatsAction action(formats);
-        fmts->Do(action);
-    }
+    SelectStyleSheet(styleFile);
 }
 
 
@@ -118,6 +103,31 @@ Renderer::Renderer(std::ostream &out, Renderer *from)
       need_separator(from->need_separator),
       force_parentheses(from->force_parentheses)
 {}
+
+
+void Renderer::SelectStyleSheet(text styleFile)
+// ----------------------------------------------------------------------------
+//   Select an arbitrary style sheet
+// ----------------------------------------------------------------------------
+{
+    Syntax defaultSyntax;
+    Positions positions;
+    Errors errors(&positions);
+    defaultSyntax.ReadSyntaxFile("xl.syntax");
+    Parser p(styleFile.c_str(), defaultSyntax, positions, errors);
+
+    // Some defaults
+    formats.clear();
+    formats[Block::indent]   = new Name("indent");
+    formats[Block::unindent] = new Name("unindent");
+
+    Tree *fmts = p.Parse();
+    if (fmts)
+    {
+        EnterFormatsAction action(formats);
+        fmts->Do(action);
+    }
+}
 
 
 
@@ -250,7 +260,7 @@ void Renderer::RenderFormat(Tree *format)
             output << '\n';
             had_space = true;
         }
-        else if (formats.count(n) > 0)
+        else if (formats.count(n = n + " ") > 0)
         {
             RenderFormat (formats[n]);
         }
