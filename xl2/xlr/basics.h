@@ -285,48 +285,58 @@ struct DebugPrint : Native
 // 
 // ============================================================================
 
-struct BooleanType : Native
+struct TypeExpression : Native
+// ----------------------------------------------------------------------------
+//   A type used to identify all type expressions
+// ----------------------------------------------------------------------------
+//   The compiler can use a type expression to verify types
+{
+    Tree *HasType(Context *context, Tree *args) { return NULL; }
+};
+
+
+struct BooleanType : TypeExpression
 // ----------------------------------------------------------------------------
 //    Check if argument can be interpreted as true or false
 // ----------------------------------------------------------------------------
 {
-    Tree *Call(Context *context, Tree *args);
+    Tree *HasType(Context *context, Tree *args);
 };
 
 
-struct IntegerType : Native
+struct IntegerType : TypeExpression
 // ----------------------------------------------------------------------------
 //    Check if argument can be interpreted as an integer
 // ----------------------------------------------------------------------------
 {
-    Tree *Call(Context *context, Tree *args);
+    Tree *HasType(Context *context, Tree *args);
 };
 
 
-struct RealType : Native
+struct RealType : TypeExpression
 // ----------------------------------------------------------------------------
 //    Check if argument can be interpreted as an integer
 // ----------------------------------------------------------------------------
 {
-    Tree *Call(Context *context, Tree *args);
+    Tree *HasType(Context *context, Tree *args);
 };
 
 
-struct TextType : Native
+struct TextType : TypeExpression
 // ----------------------------------------------------------------------------
 //    Check if argument can be interpreted as an integer
 // ----------------------------------------------------------------------------
 {
-    Tree *Call(Context *context, Tree *args);
+    Tree *HasType(Context *context, Tree *args);
 };
 
 
-struct CharacterType : Native
+struct CharacterType : TypeExpression
 // ----------------------------------------------------------------------------
 //    Check if argument can be interpreted as an integer
 // ----------------------------------------------------------------------------
 {
-    Tree *Call(Context *context, Tree *args);
+    Tree *HasType(Context *context, Tree *args);
 };
 
 XL_END

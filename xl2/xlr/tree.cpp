@@ -496,7 +496,7 @@ Tree *Native::Do(Action *action)
 
 Tree *Native::Run(Context *context)
 // ----------------------------------------------------------------------------
-//    Execute a infix node
+//    Running a native node returns the native itself
 // ----------------------------------------------------------------------------
 {
     return context->Error("Uknown native operation '$1'", this);
@@ -509,6 +509,23 @@ text Native::TypeName()
 // ----------------------------------------------------------------------------
 {
     return typeid(*this).name();
+}
+
+
+Tree *Native::Append(Tree *tail)
+// ----------------------------------------------------------------------------
+//   Append another tree to a native tree
+// ----------------------------------------------------------------------------
+{
+    // Find end of opcode chain. If end is not native, optimize away
+    Native *prev = this;
+    while (Native *next = dynamic_cast<Native *> (prev->next))
+        prev = next;
+
+    // String right opcode at end
+    prev->next = tail;
+
+    return this;
 }
 
 XL_END

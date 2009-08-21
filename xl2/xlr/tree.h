@@ -225,16 +225,24 @@ struct Name : Leaf
 };
 
 
-struct Native : Leaf
+
+// ============================================================================
+// 
+//    Native code
+// 
+// ============================================================================
+
+struct Native : Tree
 // ----------------------------------------------------------------------------
 //   A native tree is intended to represent directly executable code
 // ----------------------------------------------------------------------------
 {
-    Native(tree_position pos = NOWHERE, Tree *n=NULL): Leaf(pos), next(n) {}
+    Native(Tree *n=NULL, tree_position pos = NOWHERE): Tree(pos), next(n) {}
     virtual Tree *      Do(Action *action);
     virtual Tree *      Run(Context *context);
     virtual text        TypeName();
     virtual Tree *      Next()          { return next; }
+    virtual Tree *      Append(Tree *tail);
     Tree *              next;   // Next opcode to run
 };
     

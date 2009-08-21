@@ -399,7 +399,7 @@ Tree *DebugPrint::Call(Context *context, Tree *args)
 // 
 // ============================================================================
 
-Tree *BooleanType::Call(Context *context, Tree *value)
+Tree *BooleanType::HasType(Context *context, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a boolean value (true/false)
 // ----------------------------------------------------------------------------
@@ -410,7 +410,7 @@ Tree *BooleanType::Call(Context *context, Tree *value)
 }
 
 
-Tree *IntegerType::Call(Context *context, Tree *value)
+Tree *IntegerType::HasType(Context *context, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as an integer
 // ----------------------------------------------------------------------------
@@ -421,7 +421,7 @@ Tree *IntegerType::Call(Context *context, Tree *value)
 }
 
 
-Tree *RealType::Call(Context *context, Tree *value)
+Tree *RealType::HasType(Context *context, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a real
 // ----------------------------------------------------------------------------
@@ -432,7 +432,7 @@ Tree *RealType::Call(Context *context, Tree *value)
 }
 
 
-Tree *TextType::Call(Context *context, Tree *value)
+Tree *TextType::HasType(Context *context, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a text
 // ----------------------------------------------------------------------------
@@ -447,7 +447,7 @@ Tree *TextType::Call(Context *context, Tree *value)
 }
 
 
-Tree *CharacterType::Call(Context *context, Tree *value)
+Tree *CharacterType::HasType(Context *context, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as an integer
 // ----------------------------------------------------------------------------

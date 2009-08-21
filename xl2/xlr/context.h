@@ -64,7 +64,7 @@ struct Namespace
     // Clearing symbol tables
     void                Clear();
 
-protected:
+public:
     Namespace *         parent;
     symbol_table        name_symbols;
     Rewrite *           rewrites;
@@ -95,6 +95,7 @@ struct Context : Namespace
     void                CollectGarbage();
 
     // Evaluation of trees
+    Tree *              Compile(Tree *source);
     Tree *              Run(Tree *source, bool eager = true);
     Tree *              LazyRun(Tree *source) { return Run(source, false); }
     Rewrite *           EnterRewrite(Tree *from, Tree *to);
@@ -122,11 +123,10 @@ struct Rewrite
 // ----------------------------------------------------------------------------
 {
     Rewrite (Context *c, Tree *f, Tree *t):
-        context(c), from(f), to(t), hash() {}
+        context(c), from(f), to(t), conditions(NULL), hash() {}
     ~Rewrite();
 
     Rewrite *           Add (Rewrite *rewrite);
-    Rewrite *           Handler(Tree *form, Context *locals);
     Tree *              Apply(Tree *form, Context *locals);
     Tree *              Do(Action &a);
 
@@ -134,6 +134,7 @@ public:
     Context *           context;
     Tree *              from;
     Tree *              to;
+    Tree *              conditions;
     rewrite_table       hash;
 };
 
