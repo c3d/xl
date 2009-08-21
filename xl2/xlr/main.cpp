@@ -51,9 +51,10 @@ int main(int argc, char **argv)
     XL::Positions positions;
     XL::Errors errors(&positions);
     XL::Options options(errors);
+    XL::command_line_options = &options;
     XL::Compiler compiler("xl_tao");
     XL::Context context(errors, &compiler);
-    XL::Renderer renderer(std::cout, "xl.stylesheet", syntax);
+    XL::Symbols globals(&context);
     text cmd, end = "";
 
     // Make sure debug function is linked in...
@@ -64,13 +65,13 @@ int main(int argc, char **argv)
     syntax.ReadSyntaxFile("xl.syntax");
 
     // Initialize basic rendering engine
+    XL::Renderer renderer(std::cout, "xl.stylesheet", syntax);
     XL::Renderer::renderer = &renderer;
     XL::Context::context = &context;
 
     // Initialize basics
     XL::EnterBasics(&context);
 
-    XL::command_line_options = &options;
     for (cmd = options.Parse(argc, argv);
          cmd != end;
          cmd = options.ParseNext())

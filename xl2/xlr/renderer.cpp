@@ -81,7 +81,7 @@ Renderer::Renderer(std::ostream &out, text styleFile, Syntax &stx)
 // ----------------------------------------------------------------------------
 //   Renderer constructor
 // ----------------------------------------------------------------------------
-    : Action(), output(out), syntax(stx), formats(),
+    : output(out), syntax(stx), formats(),
       indent(0), self(""), left(NULL), right(NULL), current_quote("\""),
       priority(0),
       had_space(true), had_punctuation(false), need_separator(false),
@@ -110,7 +110,7 @@ Renderer::Renderer(std::ostream &out, Renderer *from)
 // ----------------------------------------------------------------------------
 //   Clone a renderer from some existing one
 // ----------------------------------------------------------------------------
-    : Action(), output(out), syntax(from->syntax), formats(from->formats),
+    : output(out), syntax(from->syntax), formats(from->formats),
       indent(from->indent), self(from->self), 
       left(from->left), right(from->right),
       current_quote(from->current_quote), priority(from->priority),
@@ -615,16 +615,6 @@ void Renderer::Render(Tree *what)
 }
 
 
-Tree *Renderer::Do(Tree *what)
-// ----------------------------------------------------------------------------
-//   Render the normalized trees
-// ----------------------------------------------------------------------------
-{
-    Render (what);
-    return what;
-}
-
-
 Renderer *Renderer::renderer = NULL;
 
 
@@ -636,10 +626,7 @@ std::ostream& operator<< (std::ostream &out, XL::Tree *t)
 // ----------------------------------------------------------------------------
 {
     XL::Renderer render(out);
-    if (t)
-        t->Do(render);
-    else
-        out << "NULL";
+    render.Render(t);
     return out;
 }
 

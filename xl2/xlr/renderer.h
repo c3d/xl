@@ -35,7 +35,7 @@ class Syntax;
 typedef std::map<text,Tree*>    formats_table;
 
 
-struct Renderer : Action
+struct Renderer
 // ----------------------------------------------------------------------------
 //   Render a tree to some ostream
 // ----------------------------------------------------------------------------
@@ -43,9 +43,6 @@ struct Renderer : Action
     // Construction
     Renderer(std::ostream &out, text styleFile, Syntax &stx);
     Renderer(std::ostream &out, Renderer *from = renderer);
-
-    // Action callbacks
-    virtual Tree *      Do(Tree *what);
 
     // Rendering proper
     void                Render (Tree *what);

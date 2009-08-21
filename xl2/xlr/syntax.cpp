@@ -207,7 +207,7 @@ void Syntax::ReadSyntaxFile(kstring filename)
 
     State       state = inUnknown;
     text        txt, entry;
-    token_t     tok;
+    token_t     tok = tokNAME;
     int         priority;
     Syntax      baseSyntax;
     Positions   basePositions;

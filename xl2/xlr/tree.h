@@ -271,7 +271,7 @@ struct Infix : Tree
 // ----------------------------------------------------------------------------
 {
     Infix(text n, Tree *l, Tree *r, tree_position pos = NOWHERE):
-        Tree(INFIX, pos), left(l), right(r) {}
+        Tree(INFIX, pos), left(l), right(r), name(n) {}
     Tree *              left;
     Tree *              right;
     text                name;
