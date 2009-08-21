@@ -985,7 +985,15 @@ void ExpressionReduction::Succeeded(void)
 
     // If there were tests, we keep testing from that 'else' spot
     if (u.failbb)
+    {
         u.code->SetInsertPoint(u.failbb);
+    }
+    else
+    {
+        // Create a fake basic block in case someone decides to add code
+        BasicBlock *empty = BasicBlock::Create("empty", u.function);
+        u.code->SetInsertPoint(empty);
+    }
     u.failbb = NULL;
 }
 
