@@ -105,6 +105,8 @@ Tree *ListHandler::Call(Context *context, Tree *args)
     {
         Tree *left = context->Run(infix->left);
         Tree *right = context->Run(infix->right);
+        if (left == infix->left && right == infix->right)
+            return infix;
         if (left)
             if (right)
                 return new Infix(infix->name, left, right, infix->Position());
@@ -153,10 +155,10 @@ Tree *BinaryHandler::Call(Context *context, Tree *args)
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
         tree_position pos = args->Position();
-        Tree *left = context->Run(infix->left);
+        Tree *left = context->Eval(infix->left);
         if (!left)
             return context->Error("No value to left of '$1'", args);
-        Tree *right = context->Run(infix->right);
+        Tree *right = context->Eval(infix->right);
         if (!right)
             return context->Error("No value to right of '$1'", args);
 

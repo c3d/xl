@@ -220,7 +220,7 @@ void Context::CollectGarbage ()
 // 
 // ============================================================================
 
-Tree *Context::Run(Tree *source)
+Tree *Context::Run(Tree *source, bool eager)
 // ----------------------------------------------------------------------------
 //   Apply any applicable rewrite to the source and evaluate result
 // ----------------------------------------------------------------------------
@@ -233,9 +233,10 @@ Tree *Context::Run(Tree *source)
         {
             if (Rewrite *rew = c->Rewrites())
             {
-                if (Rewrite *handler = rew->Handler(source))
+                Context locals(rew->context);
+                if (Rewrite *handler = rew->Handler(source, &locals))
                 {
-                    Tree *rewritten = handler->Apply(source);
+                    Tree *rewritten = handler->Apply(source, &locals);
                     IFTRACE(rewrite)
                         std::cout << "Rewrite " << source
                                   << " --> " << rewritten << "\n";
@@ -246,7 +247,7 @@ Tree *Context::Run(Tree *source)
             }
         }
 
-        if (!changed)
+        if (!changed && eager)
         {
             Tree *result = source->Run(this);
             if (result != source)
@@ -428,21 +429,21 @@ struct TreeMatch : Action
 
     Tree *DoInteger(Integer *what)
     {
-        if (Integer *it = dynamic_cast<Integer *> (test))
+        if (Integer *it = dynamic_cast<Integer *> (context->Eval(test)))
             if (it->value == what->value)
                 return what;
         return NULL;
     }
     Tree *DoReal(Real *what)
     {
-        if (Real *rt = dynamic_cast<Real *> (test))
+        if (Real *rt = dynamic_cast<Real *> (context->Eval(test)))
             if (rt->value == what->value)
                 return what;
         return NULL;
     }
     Tree *DoText(Text *what)
     {
-        if (Text *tt = dynamic_cast<Text *> (test))
+        if (Text *tt = dynamic_cast<Text *> (context->Eval(test)))
             if (tt->value == what->value)
                 return what;
         return NULL;
@@ -671,48 +672,6 @@ Rewrite::~Rewrite()
 }
 
 
-Rewrite *Rewrite::Handler(Tree *form)
-// ----------------------------------------------------------------------------
-//   Find the rewrite that deals with the given tree
-// ----------------------------------------------------------------------------
-{
-    Rewrite *candidate = this;
-    ulong formKey, testKey;
-
-    // Compute the hash key for the form we have to match
-    RewriteKey formKeyHash;
-    form->Do(formKeyHash);
-    formKey = formKeyHash.Key();
-
-    while (candidate)
-    {
-        // Compute the hash key for the 'from' of the current rewrite
-        RewriteKey testKeyHash;
-        candidate->from->Do(testKeyHash);
-        testKey = testKeyHash.Key();
-
-        // If we have an exact match for the keys, we may have a winner
-        if (testKey == formKey)
-        {
-            Context parameters(context);
-            TreeMatch testTreeShape(form, &parameters);
-            Tree *result = candidate->from->Do(testTreeShape);
-            if (result)
-                return candidate;
-        }
-
-        // Otherwise, check if we have a key match in the hash table,
-        // and if so follow it.
-        if (candidate->hash.count(formKey) > 0)
-            candidate = candidate->hash[formKey];
-        else
-            candidate = NULL;
-    }
-
-    return candidate;
-}
-
-
 Rewrite *Rewrite::Add (Rewrite *rewrite)
 // ----------------------------------------------------------------------------
 //   Add a new rewrite at the right place in an existing rewrite
@@ -745,19 +704,56 @@ Rewrite *Rewrite::Add (Rewrite *rewrite)
 }
 
 
-Tree *Rewrite::Apply(Tree *source)
+Rewrite *Rewrite::Handler(Tree *form, Context *locals)
+// ----------------------------------------------------------------------------
+//   Find the rewrite that deals with the given tree
+// ----------------------------------------------------------------------------
+{
+    Rewrite *candidate = this;
+    ulong formKey, testKey;
+
+    // Compute the hash key for the form we have to match
+    RewriteKey formKeyHash;
+    form->Do(formKeyHash);
+    formKey = formKeyHash.Key();
+
+    while (candidate)
+    {
+        // Compute the hash key for the 'from' of the current rewrite
+        RewriteKey testKeyHash;
+        candidate->from->Do(testKeyHash);
+        testKey = testKeyHash.Key();
+
+        // If we have an exact match for the keys, we may have a winner
+        if (testKey == formKey)
+        {
+            TreeMatch testTreeShape(form, locals);
+            Tree *result = candidate->from->Do(testTreeShape);
+            if (result)
+                return candidate;
+        }
+
+        // Otherwise, check if we have a key match in the hash table,
+        // and if so follow it.
+        if (candidate->hash.count(formKey) > 0)
+            candidate = candidate->hash[formKey];
+        else
+            candidate = NULL;
+    }
+
+    return candidate;
+}
+
+
+Tree *Rewrite::Apply(Tree *source, Context *locals)
 // ----------------------------------------------------------------------------
 //   Return a tree built by cloning the 'to' tree and replacing args
 // ----------------------------------------------------------------------------
 //   Note: this assumes the rewrite results from 'Handler', so that the
 //   context is populated with all the right local variables
 {
-    Context args(context);
-    TreeMatch collectArgs(source, &args);
-    Tree *result = from->Do(collectArgs);
-    TreeRewrite rewrite (&args);
-    result = to->Do(rewrite);
-    return result;
+    TreeRewrite rewrite(locals);
+    return to->Do(rewrite);
 }
 
 

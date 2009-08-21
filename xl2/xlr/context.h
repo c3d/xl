@@ -95,7 +95,8 @@ struct Context : Namespace
     void                CollectGarbage();
 
     // Evaluation of trees
-    Tree *              Run(Tree *source);
+    Tree *              Run(Tree *source, bool eager = false);
+    Tree *              Eval(Tree *source) { return Run(source, true); }
     Rewrite *           EnterRewrite(Tree *from, Tree *to);
     Rewrite *           EnterInfix (text name, Tree *callee);
     Tree *              Error (text message, Tree *args = NULL);
@@ -123,9 +124,9 @@ struct Rewrite
         context(c), from(f), to(t), hash() {}
     ~Rewrite();
 
-    Rewrite *           Handler(Tree *form);
     Rewrite *           Add (Rewrite *rewrite);
-    Tree *              Apply(Tree *form);
+    Rewrite *           Handler(Tree *form, Context *locals);
+    Tree *              Apply(Tree *form, Context *locals);
     Tree *              Do(Action &a);
 
 public:
