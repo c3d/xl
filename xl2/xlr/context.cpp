@@ -654,18 +654,12 @@ struct TreeRewrite : Action
     {
         Tree *left = what->left->Do(this);
         Tree *right = what->right->Do(this);
-        if (Native *native = dynamic_cast<Native *> (left))
-            return native->Call(context, right);
-        right = context->Run(right);
         return new Prefix(left, right, what->Position());
     }
     Tree *DoPostfix(Postfix *what)
     {
         Tree *left = what->left->Do(this);
         Tree *right = what->right->Do(this);
-        if (Native *native = dynamic_cast<Native *> (right))
-            return native->Call(context, left);
-        left = context->Run(left);
         return new Postfix(left, right, what->Position());
     }
     Tree *Do(Tree *what)

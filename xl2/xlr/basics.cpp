@@ -229,10 +229,10 @@ Tree *BooleanHandler::Call(Context *context, Tree *args)
 {
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
-        Tree *left = context->Run(infix->left);
+        Tree *left = context->Eval(infix->left);
         if (!left)
             return context->Error("No value to left of '$1'", args);
-        Tree *right = context->Run(infix->right);
+        Tree *right = context->Eval(infix->right);
         if (!right)
             return context->Error("No value to right of '$1'", args);
 
@@ -388,7 +388,7 @@ Tree *DebugPrint::Call(Context *context, Tree *args)
 //   Print the tree given as argument
 // ----------------------------------------------------------------------------
 {
-    std::cout << "DEBUG: " << args << "\n";
+    std::cerr << "DEBUG: " << args << "\n";
     return args;
 }
 
