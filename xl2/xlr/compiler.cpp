@@ -435,17 +435,17 @@ Value *CompiledUnit::Known(Tree *tree, IRBuilder<> *c)
     Value *result = NULL;
     if (!c)
         c = code;
-    if (storage.count(tree) > 0)
-    {
-        // Value is a variable
-        result = c->CreateLoad(storage[tree], "adat");
-    }
-    else if (value.count(tree) > 0)
+    if (value.count(tree) > 0)
     {
         // Immediate value of some sort, use that
         result = value[tree];
     }
-    else 
+    else if (storage.count(tree) > 0)
+    {
+        // Value is a variable
+        result = c->CreateLoad(storage[tree], "adat");
+    }
+    else
     {
         // Check if this is a global
         result = compiler->Known(tree);
@@ -558,8 +558,6 @@ llvm::Value *CompiledUnit::MarkComputed(Tree *subexpr, Value *val)
     {
         if (storage.count(subexpr) > 0)
             code->CreateStore(val, storage[subexpr]);
-        else
-            value[subexpr] = val;
     }
 
     // Return the test flag
