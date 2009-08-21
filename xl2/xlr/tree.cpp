@@ -224,7 +224,7 @@ Tree *Name::Run(Context *context)
 // ----------------------------------------------------------------------------
 {
     if (Tree *named = context->Name(value))
-        return named->Run(context);
+        return context->Run(named);
 
     // Otherwise, this is an error to evaluate the name
     return context->Error("Name '$1' doesn't exist", this);
@@ -275,13 +275,8 @@ Tree *Block::Run(Context *context)
 //    Execute a block
 // ----------------------------------------------------------------------------
 {
-    // If there is a block operation, execute that operation on child
-    Tree *blockOp = context->Block(Opening());
-    if (blockOp)
-        return blockOp->Call(context, child);
-
     // Otherwise, simply execute the child (i.e. optimize away block)
-    return child->Run(context);
+    return context->Run(child);
 }
 
 
@@ -350,7 +345,7 @@ Tree *Prefix::Run(Context *context)
 // ----------------------------------------------------------------------------
 {
     // Call the left with the right as argument
-    if (Tree *callee = left->Run(context))
+    if (Tree *callee = context->Run(left))
         return callee->Call(context, right);
 
     // If there was no valid left, error out
@@ -404,7 +399,7 @@ Tree *Postfix::Run(Context *context)
 // ----------------------------------------------------------------------------
 {
     // Call the right with the left as argument
-    if (Tree *callee = right->Run(context))
+    if (Tree *callee = context->Run(right))
         return callee->Call(context, left);
 
     // If there was no valid left, error out
@@ -457,10 +452,6 @@ Tree *Infix::Run(Context *context)
 //    Execute an infix node
 // ----------------------------------------------------------------------------
 {
-    // If the name denotes a known infix, then execute, e.g. A+B
-    if (Tree *infixOp = context->Infix(name))
-        return infixOp->Call(context, this);
-
     return context->Error ("Cannot evaluate unknown infix '$1'", this);
 }
 

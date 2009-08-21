@@ -39,7 +39,6 @@ ReservedName *true_name = NULL;
 ReservedName *false_name = NULL;
 ReservedName *nil_name = NULL;
 
-
 void EnterBasics(Context *c)
 // ----------------------------------------------------------------------------
 //   Enter all the basic operations defined in this file
@@ -104,8 +103,8 @@ Tree *ListHandler::Call(Context *context, Tree *args)
 {
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
-        Tree *left = infix->left->Run(context);
-        Tree *right = infix->right->Run(context);
+        Tree *left = context->Run(infix->left);
+        Tree *right = context->Run(infix->right);
         if (left)
             if (right)
                 return new Infix(infix->name, left, right, infix->Position());
@@ -128,8 +127,8 @@ Tree *LastInListHandler::Call(Context *context, Tree *args)
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
         Tree *result = NULL;
-        result = infix->left->Run(context);
-        result = infix->right->Run(context);
+        result = context->Run(infix->left);
+        result = context->Run(infix->right);
         return result;
     }
     else
@@ -154,10 +153,10 @@ Tree *BinaryHandler::Call(Context *context, Tree *args)
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
         tree_position pos = args->Position();
-        Tree *left = infix->left->Run(context);
+        Tree *left = context->Run(infix->left);
         if (!left)
             return context->Error("No value to left of '$1'", args);
-        Tree *right = infix->right->Run(context);
+        Tree *right = context->Run(infix->right);
         if (!right)
             return context->Error("No value to right of '$1'", args);
 
@@ -227,10 +226,10 @@ Tree *BooleanHandler::Call(Context *context, Tree *args)
 {
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
-        Tree *left = infix->left->Run(context);
+        Tree *left = context->Run(infix->left);
         if (!left)
             return context->Error("No value to left of '$1'", args);
-        Tree *right = infix->right->Run(context);
+        Tree *right = context->Run(infix->right);
         if (!right)
             return context->Error("No value to right of '$1'", args);
 
@@ -304,7 +303,7 @@ Tree *Assignment::Call(Context *context, Tree *args)
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
         Tree *expr = infix->right;
-        Tree *value = expr->Run(context);
+        Tree *value = context->Run(expr);
         if (!value)
             return context->Error("No value for '$1' in assignment", expr);
 
@@ -330,106 +329,6 @@ Tree *Assignment::Call(Context *context, Tree *args)
 //    fact 0 -> 1
 //    fact N -> N * fact(N-1)
 
-struct CollectVariables : Action
-// ----------------------------------------------------------------------------
-//   Collect the variables in a defined entity
-// ----------------------------------------------------------------------------
-{
-    CollectVariables(Context *ctx): context(ctx) {}
-
-    Tree *Do (Tree *what) { return what; }
-    
-    Tree *DoName(Name *what)
-    {
-        // Check if it already exists, if so return existing:
-        // This is useful for A+A, or for globals, e.g false
-        if (Tree *existing = context->Name(what->value, false))
-            return existing;
-
-        // Otherwise, enter it in the context
-        context->EnterName(what->value, what);
-
-        return what;
-    }
-
-    Context *           context;
-};
-
-
-struct CollectDefinition : Action
-// ----------------------------------------------------------------------------
-//   Collect the definitions in a tree
-// ----------------------------------------------------------------------------
-{
-    CollectDefinition(Context *ctx, Tree *def):
-        context(ctx), definition(def) {}
-
-    Tree *Do (Tree *what) { return what; }
-    
-    Tree *DoName(Name *what)
-    {
-        context->EnterName(what->value, definition);
-        return what;
-    }
-
-    Tree *DoPrefix(Prefix *what)
-    {
-        // For a prefix, e.g. fact N, collect variables (N)
-        if (Name *defined = dynamic_cast<Name *> (what->left))
-        {
-            Context locals(context);
-            CollectVariables vars(&locals);
-            vars.Do(what->right);
-            context->EnterName(defined->value, definition);
-        }
-        else
-        {
-            // Not implemented yet
-            return context->Error("Unimplemented: defining '$1'", what->left);
-        }
-        return what;
-    }
-
-    Tree *DoPostfix(Postfix *what)
-    {
-        // For a postfix, e.g. N!, collect variables (N)
-        if (Name *defined = dynamic_cast<Name *> (what->right))
-        {
-            Context locals(context);
-            CollectVariables vars(&locals);
-            vars.Do(what->left);
-            context->EnterName(defined->value, definition);
-        }
-        else
-        {
-            // Not implemented yet
-            return context->Error("Unimplemented: defining '$1'", what->right);
-        }
-        return what;
-    }
-
-    Tree *DoInfix(Infix *what)
-    {
-        // For an infix, e.g. A+B, collect variables A and B
-        Context locals(context);
-        CollectVariables vars(&locals);
-        vars.Do(what->left);
-        vars.Do(what->right);
-        context->EnterInfix(what->name, definition);
-        return what;
-    }
-
-    Tree *DoBlock(Block *what)
-    {
-        // For a block, e.g. (A), collect variable A
-        return context->Error("Unimplemented: defining block '$1'", what);
-    }
-
-    Context *           context;
-    Tree *              definition;
-};
-
-
 Tree *Definition::Call(Context *context, Tree *args)
 // ----------------------------------------------------------------------------
 //    Define the expression on the left to match expression on the right
@@ -442,11 +341,9 @@ Tree *Definition::Call(Context *context, Tree *args)
         if (!defined || !definition)
             return context->Error("Definition '$1' is incomplete", args);
 
-        // Collect variables and store definition
-        CollectDefinition define(context, definition);
-        defined->Do(define);
+        context->Parent()->EnterRewrite(defined, definition);
 
-        return defined;
+        return nil_name;
     }
     return context->Error ("Invalid assignment '$1'", args);
 }
@@ -474,15 +371,12 @@ Tree *ParseTree::Call(Context *context, Tree *args)
 
 Tree *Evaluation::Call(Context *context, Tree *args)
 // ----------------------------------------------------------------------------
-//    Return the parse tree, not its value
+//    Evaluate the tree given by the argument
 // ----------------------------------------------------------------------------
 {
     if (!args)
         return args;
-    Tree *toEval = args->Run(context);
-    if (!toEval)
-        return context->Error("Unable to evaluate '$1'", args);
-    return toEval->Run(context);
+    return context->Run(args);
 }
 
 XL_END

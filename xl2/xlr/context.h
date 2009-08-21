@@ -33,11 +33,14 @@
 XL_BEGIN
 
 struct Tree;
+struct Action;
 struct Context;
 struct Errors;
+struct Rewrite;
 
 typedef std::map<text, Tree *>  symbol_table;
 typedef std::set<Tree *>        active_set;
+typedef std::map<ulong, Rewrite*>rewrite_table;
 
 
 struct Namespace
@@ -45,46 +48,46 @@ struct Namespace
 //   Holds the symbols in a given context
 // ----------------------------------------------------------------------------
 {
-    Namespace(Namespace *p): parent(p) {}
+    Namespace(Namespace *p): parent(p), rewrites(NULL) {}
+    ~Namespace();
 
     Namespace *         Parent()                { return parent; }
 
     // Symbol management
     Tree *              Name (text name, bool deep = true);
-    Tree *              Infix (text name, bool deep = true);
-    Tree *              Block (text opening, bool deep = true);
+    Rewrite *           Rewrites()              { return rewrites; }
 
     // Entering symbols in the symbol table
     void                EnterName (text name, Tree *value);
-    void                EnterInfix (text name, Tree *value);
-    void                EnterBlock (text name, Tree *value);
+    Rewrite *           EnterRewrite(Rewrite *r);
+
+    // Clearing symbol tables
+    void                Clear();
 
 protected:
     Namespace *         parent;
     symbol_table        name_symbols;
-    symbol_table        infix_symbols;
-    symbol_table        block_symbols;
+    Rewrite *           rewrites;
 };
 
 
 struct Context : Namespace
 // ----------------------------------------------------------------------------
-//   This is the execution context in which we evaluate trees
+//   The execution context in which we evaluate trees
 // ----------------------------------------------------------------------------
 {
     // Constructors and destructors
     Context(Errors &err):
-        Namespace(NULL), types(NULL),
+        Namespace(NULL),
         errors(err), gc_threshold(200), error_handler(NULL) {}
     Context(Context *p):
-        Namespace(p), types(p->types),
+        Namespace(p),
         errors(p->errors),gc_threshold(200),error_handler(NULL) {}
 
     // Context properties
     Context *           Parent()                 { return (Context *) parent;}
     Tree *              ErrorHandler();
     void                SetErrorHandler(Tree *e) { error_handler = e; }
-    Namespace &         Types()                 { return types; }
     
     // Garbage collection
     void                Root(Tree *t)           { roots.insert(t); }
@@ -92,6 +95,9 @@ struct Context : Namespace
     void                CollectGarbage();
 
     // Evaluation of trees
+    Tree *              Run(Tree *source);
+    Rewrite *           EnterRewrite(Tree *from, Tree *to);
+    Rewrite *           EnterInfix (text name, Tree *callee);
     Tree *              Error (text message, Tree *args = NULL);
 
 public:
@@ -100,12 +106,33 @@ public:
     static Context *    context;
 
 private:
-    Namespace           types;
     Errors &            errors;
     active_set          active;
     active_set          roots;
     ulong               gc_threshold;
     Tree *              error_handler;
+};
+
+
+struct Rewrite
+// ----------------------------------------------------------------------------
+//   Information about a rewrite, e.g fact N -> N * fact(N-1) 
+// ----------------------------------------------------------------------------
+{
+    Rewrite (Context *c, Tree *f, Tree *t):
+        context(c), from(f), to(t), hash() {}
+    ~Rewrite();
+
+    Rewrite *           Handler(Tree *form);
+    Rewrite *           Add (Rewrite *rewrite);
+    Tree *              Apply(Tree *form);
+    Tree *              Do(Action &a);
+
+public:
+    Context *           context;
+    Tree *              from;
+    Tree *              to;
+    rewrite_table       hash;
 };
 
 XL_END

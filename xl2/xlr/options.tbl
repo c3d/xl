@@ -69,6 +69,7 @@ OPTION(o, "Select output file", output_file = STRING)
 // to reuse the IFTRACE macro as is.
 TRACE(source)
 TRACE(memory)
+TRACE(rewrite)
 
 // Undefine for next use...
 #undef OPTVAR

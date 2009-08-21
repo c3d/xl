@@ -304,7 +304,7 @@ Tree *Parser::Parse(text closing)
                     {
                         // We have a postfix operator
                         right = new Name(spelling, pos);
-                        right = new Prefix(result, right, pos);
+                        right = new Postfix(result, right, pos);
                         prefix_priority = postfix_priority;
                         result = NULL;
                     }
