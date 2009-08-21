@@ -605,6 +605,8 @@ Tree *ArgumentMatch::Compile(Tree *source)
 {
     // Compile the code
     Tree *code = context->Compile(source);
+    if (!code)
+        return context->Error("Unable to compile '$1'", source);
 
     // For leaves, delayed invokation doesn't help
     if (Leaf *leaf = dynamic_cast<Leaf *> (code))

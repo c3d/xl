@@ -12,26 +12,28 @@
         Infix *symbol##_decl = new Infix(":",                   \
                                          new Name(#symbol),     \
                                          new Name(#type));      \
-        parameters = AddParameter(parameters, symbol##_decl);
+        parameters.push_back(symbol##_decl);
 
-#define PREFIX(symbol, parms, name, code)                               \
-    do                                                                  \
-    {                                                                   \
-        Tree *parameters = NULL;                                        \
-        parms;                                                          \
-        Prefix *from = new Prefix(new Name(symbol), parameters);        \
-        name *to = new name();                                          \
-        c->EnterRewrite(from, to);                                      \
+#define PREFIX(symbol, parms, name, code)                       \
+    do                                                          \
+    {                                                           \
+        tree_list parameters;                                   \
+        parms;                                                  \
+        Tree *parmtree = ParametersTree(parameters);            \
+        Prefix *from = new Prefix(new Name(symbol), parmtree);  \
+        name *to = new name();                                  \
+        c->EnterRewrite(from, to);                              \
     } while(0);
 
-#define POSTFIX(t1, symbol, name, code)                                 \
-    do                                                                  \
-    {                                                                   \
-        Tree *parameters = NULL;                                        \
-        parms;                                                          \
-        Prefix *from = new Postfix(parameters, new Name(symbol));       \
-        name *to = new name();                                          \
-        c->EnterRewrite(from, to);                                      \
+#define POSTFIX(t1, symbol, name, code)                         \
+    do                                                          \
+    {                                                           \
+        tree_list parameters;                                   \
+        parms;                                                  \
+        Tree *parmtree = ParametersTree(parameters);            \
+        Prefix *from = new Postfix(parmtree, new Name(symbol)); \
+        name *to = new name();                                  \
+        c->EnterRewrite(from, to);                              \
     } while(0);
 
 #define NAME(symbol, name)                      \

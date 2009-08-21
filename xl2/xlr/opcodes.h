@@ -304,7 +304,7 @@ double real_arg(Stack *stack, ulong index);
 text text_arg(Stack *stack, ulong index);
 bool boolean_arg(Stack *stack, ulong index);
 Tree *anything_arg(Stack *stack, ulong index);
-Tree *AddParameter(Tree *existing, Tree *append);
+Tree *ParametersTree(tree_list parameters);
 
 #define ANYTHING(index) stack->Get[(index)]
 #define INT(index)      integer_arg(stack, (index))

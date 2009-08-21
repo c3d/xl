@@ -382,26 +382,22 @@ Tree *anything_arg(Stack *stack, ulong index)
 }
 
 
-Tree *AddParameter(Tree *existing, Tree *append)
+Tree *ParametersTree(tree_list parameters)
 // ----------------------------------------------------------------------------
 //   Create a comma-separated parameter list
 // ----------------------------------------------------------------------------
 {
-    Tree *arglist = existing;
-    if (!arglist)
-        return append;
-
-    Infix *parent = NULL;
-    while (Infix *infix = dynamic_cast<Infix *> (existing))
+    ulong i, max = parameters.size();
+    Tree *result = NULL;
+    for (i = 0; i < max; i++)
     {
-        parent = infix;
-        existing = parent->right;
+        Tree *parm = parameters[max + ~i];
+        if (result)
+            result = new Infix(",", result, parm);
+        else
+            result = parm;
     }
-    if (!parent)
-        return new Infix(",", existing, append);
-
-    parent->right = new Infix(",", parent->right, append);
-    return arglist;
+    return result;
 }
 
 
