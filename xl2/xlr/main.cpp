@@ -82,9 +82,24 @@ int main(int argc, char **argv)
         context.CollectGarbage();
         IFTRACE(source)
             std::cout << "SOURCE:\n" << tree << "\n";
-        if (!options.parseOnly)
-            tree = context.Run(tree);
-        std::cout << tree << "\n";
+        if (options.parseOnly || options.compileOnly)
+        {
+            if (tree && !options.parseOnly)
+            {
+                tree = context.Compile(tree);
+                if (tree && !options.compileOnly)
+                    tree = context.Run(tree);
+            }
+
+            if (options.verbose)
+                debugp(tree);
+            else
+                std::cout << tree << "\n";
+        }
+        else if (tree)
+        {
+            tree = context.Compile(tree);
+        }
     }
 
 #if CONFIG_USE_SBRK

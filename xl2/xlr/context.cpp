@@ -1060,10 +1060,12 @@ Tree *CompileAction::DoInfix(Infix *what)
     if (what->name == "\n" || what->name == ";")
     {
         // For instruction list, string compile results together
+        compiler.Left(what);
         if (!what->left->Do(this))
             return NULL;
         if (Name *n = what->left->AsName())
             compiler.EagerEvaluation(n);
+        compiler.Right(what);
         if (!what->right->Do(this))
             return NULL;
         if (Name *m = what->right->AsName())
@@ -1075,7 +1077,7 @@ Tree *CompileAction::DoInfix(Infix *what)
     if (what->name == "->")
     {
         // If so, skip, this has been done in DeclarationAction
-        return NULL;
+        return what;
     }
 
     // In all other cases, look up the rewrites
@@ -1483,6 +1485,5 @@ Tree *Rewrite::Compile(void)
 
     return result;
 }
-
 
 XL_END

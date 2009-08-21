@@ -84,8 +84,7 @@ Renderer::Renderer(std::ostream &out, text styleFile, Syntax &stx)
     : output(out), syntax(stx), formats(),
       indent(0), self(""), left(NULL), right(NULL), current_quote("\""),
       priority(0),
-      had_space(true), had_punctuation(false), need_separator(false),
-      force_parentheses(false)
+      had_space(true), had_punctuation(false), need_separator(false)
 {
     SelectStyleSheet(styleFile);
 }
@@ -100,8 +99,7 @@ Renderer::Renderer(std::ostream &out, Renderer *from)
       left(from->left), right(from->right),
       current_quote(from->current_quote), priority(from->priority),
       had_space(from->had_space), had_punctuation(from->had_punctuation),
-      need_separator(from->need_separator),
-      force_parentheses(from->force_parentheses)
+      need_separator(from->need_separator)
 {}
 
 
@@ -660,7 +658,7 @@ void debugp(XL::Tree *tree)
 // ----------------------------------------------------------------------------
 {
     XL::Renderer render(std::cout);
-    render.force_parentheses = true;
+    render.SelectStyleSheet("debug.stylesheet");
     render.Render(tree);
     std::cout << "\n";
 }

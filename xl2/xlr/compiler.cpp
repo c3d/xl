@@ -26,6 +26,7 @@
 #include "compiler.h"
 #include "options.h"
 #include "context.h"
+#include "renderer.h"
 
 #include <iostream>
 #include <sstream>
@@ -147,14 +148,14 @@ Compiler::Compiler(kstring moduleName)
     integerElements.push_back(LLVM_INTTYPE(longlong));  // value
     integerTreeTy = StructType::get(integerElements);   // struct Integer{}
     integerTreePtrTy = PointerType::get(integerTreeTy,0); // Integer *
-#define INTEGER_VALUE_INDEX     4
+#define INTEGER_VALUE_INDEX     3
 
     // Create the Real type
     std::vector<const Type *> realElements = treeElements;
     realElements.push_back(Type::DoubleTy);             // value
     realTreeTy = StructType::get(realElements);         // struct Real{}
     realTreePtrTy = PointerType::get(realTreeTy, 0);    // Real *
-#define REAL_VALUE_INDEX        4
+#define REAL_VALUE_INDEX        3
 
     // Create the Prefix type (which we also use for Infix and Block)
     std::vector<const Type *> prefixElements = treeElements;
@@ -162,8 +163,8 @@ Compiler::Compiler(kstring moduleName)
     prefixElements.push_back(treePtrTy);                // Tree *
     prefixTreeTy = StructType::get(prefixElements);     // struct Prefix {}
     prefixTreePtrTy = PointerType::get(prefixTreeTy, 0);// Prefix *
-#define LEFT_VALUE_INDEX        4
-#define RIGHT_VALUE_INDEX       5
+#define LEFT_VALUE_INDEX        3
+#define RIGHT_VALUE_INDEX       4
 
     // Record the type names
     module->addTypeName("struct.tree", treeTy);
@@ -288,12 +289,12 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *source, tree_list parms)
     }
 
     // Create the pointer to the return value, initialize with input
+    builder->SetInsertPoint(entrybb);
     Value *zero = ConstantPointerNull::get(compiler->treePtrTy);
+    result = builder->CreateAlloca(compiler->treePtrTy, 0, "result");
     builder->CreateStore(zero, result);
 
     // Create the exit basic block and return statement
-    builder->SetInsertPoint(entrybb);
-    result = builder->CreateAlloca(compiler->treePtrTy, 0, "result");
     exitbb = BasicBlock::Create("exit");
     builder->SetInsertPoint(exitbb);
     Value *retVal = builder->CreateLoad(result);
@@ -474,14 +475,26 @@ Value *CompiledUnit::Left(Tree *code)
 
     // Check that we already have a value for the given code
     Value *value = map[code];
-    assert (value);
+    Value *result = NULL;
+    if (value)
+    {
+        // WARNING: This relies on the layout of all nodes beginning the same
+        Prefix *prefix = (Prefix *) code;
+        result = map[prefix->left];
+        if (result)
+            return result;
+        value = builder->CreateBitCast(value, compiler->prefixTreePtrTy);
+        result = builder->CreateConstGEP2_32(value, 0,
+                                             LEFT_VALUE_INDEX, "left");
+        assert(!map[prefix->left]);
+        map[prefix->left] = result;
+    }
+    else
+    {
+        Context::context->Error("Internal: Using left of uncompiled '$1'",
+                                code);
+    }
 
-    // WARNING: This relies on the layout of all nodes beginning the same
-    Prefix *prefix = (Prefix *) code;
-    Value *result = builder->CreateConstGEP2_32(value, 0,
-                                                LEFT_VALUE_INDEX, "left");
-    assert(!map[prefix->left]);
-    map[prefix->left] = result;
     return result;
 }
 
@@ -497,14 +510,25 @@ Value *CompiledUnit::Right(Tree *code)
 
     // Check that we already have a value for the given code
     Value *value = map[code];
-    assert(value);
-
-    // WARNING: This relies on the layout of all nodes beginning the same
-    Prefix *prefix = (Prefix *) code;
-    Value *result = builder->CreateConstGEP2_32(value, 0,
-                                                RIGHT_VALUE_INDEX, "right");
-    assert(!map[prefix->right]);
-    map[prefix->right] = result;
+    Value *result = NULL;
+    if (value)
+    {
+        // WARNING: This relies on the layout of all nodes beginning the same
+        Prefix *prefix = (Prefix *) code;
+        result = map[prefix->right];
+        if (result)
+            return result;
+        value = builder->CreateBitCast(value, compiler->prefixTreePtrTy);
+        result = builder->CreateConstGEP2_32(value, 0,
+                                             RIGHT_VALUE_INDEX, "right");
+        assert(!map[prefix->right]);
+        map[prefix->right] = result;
+    }
+    else
+    {
+        Context::context->Error("Internal: Using right of uncompiled '$1'",
+                                code);
+    }
     return result;
 }
 
@@ -727,3 +751,10 @@ BasicBlock *CompiledUnit::TypeTest(Tree *value, Tree *type)
 }
 
 XL_END
+
+void debugm(XL::value_map &m)
+{
+    XL::value_map::iterator i;
+    for (i = m.begin(); i != m.end(); i++)
+        std::cerr << "map[" << (*i).first << "]=" << *(*i).second << '\n';
+}

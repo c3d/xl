@@ -38,7 +38,7 @@
         Infix *ldecl = new Infix(":", new Name("l"), new Name(#t1));    \
         Infix *rdecl = new Infix(":", new Name("r"), new Name(#t2));    \
         Infix *from = new Infix(symbol, ldecl, rdecl);                  \
-        Name *to = new Name(#symbol);                                   \
+        Name *to = new Name(symbol);                                    \
         c->EnterRewrite(from, to);                                      \
         to->code = (eval_fn) xl_##name;                                 \
         compiler->EnterBuiltin("xl_" #name, from, to->code);            \

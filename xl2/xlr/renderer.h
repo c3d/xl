@@ -74,7 +74,6 @@ struct Renderer
     bool                had_space;
     bool                had_punctuation;
     bool                need_separator;
-    bool                force_parentheses;
 };
 
 XL_END
