@@ -36,6 +36,7 @@ struct Tree;
 struct Variable;
 struct Action;
 struct Context;
+struct Stack;
 struct Errors;
 struct Rewrite;
 
@@ -57,7 +58,10 @@ struct Namespace
     Namespace *         Parent()                { return parent; }
 
     // Symbol management
-    Tree *              NamedTree (text name)   { return names[name]; }
+    Tree *              NamedTree (text name)
+    {
+        return names.count(name) > 0 ? names[name] : NULL;
+    }
     Rewrite *           Rewrites()              { return rewrites; }
 
     // Entering symbols in the symbol table
@@ -84,10 +88,12 @@ struct Context : Namespace
     // Constructors and destructors
     Context(Errors &err):
         Namespace(NULL),
-        errors(err), gc_threshold(200), error_handler(NULL) {}
+        errors(err), gc_threshold(200),
+        error_handler(NULL), run_stack(NULL) {}
     Context(Context *p):
         Namespace(p),
-        errors(p->errors),gc_threshold(200),error_handler(NULL) {}
+        errors(p->errors), gc_threshold(200),
+        error_handler(NULL), run_stack(NULL) {}
 
     // Context properties
     Context *           Parent()                 { return (Context *) parent;}
@@ -119,6 +125,7 @@ private:
     active_set          roots;
     ulong               gc_threshold;
     Tree *              error_handler;
+    Stack *             run_stack;
 };
 
 

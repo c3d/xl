@@ -98,6 +98,17 @@ struct BranchTarget : Native
 };
 
 
+struct Entry : Native
+// ----------------------------------------------------------------------------
+//   An entry point for a compiled rewrite
+// ----------------------------------------------------------------------------
+{
+    Entry(Tree *src, tree_position pos = NOWHERE):
+        Native(NULL, pos), source(src) {}
+    Tree *source;
+};
+
+
 struct FailedCall : Native
 // ----------------------------------------------------------------------------
 //    Indicate if we don't know how to deal with a call

@@ -179,28 +179,40 @@ void Context::CollectGarbage ()
     if (active.size() > gc_threshold)
     {
         GCAction gc;
-        active_set::iterator i;
+        active_set::iterator a;
+        symbol_table::iterator s;
+        value_list::iterator v;
         ulong deletedCount = 0, activeCount = 0;
 
         IFTRACE(memory)
             std::cerr << "Garbage collecting...";
-        
-        // Mark roots and stack
-        for (i = roots.begin(); i != roots.end(); i++)
-            (*i)->Do(gc);
 
-        // Mark all rewrites
-        if (rewrites)
-            rewrites->Do(gc);
+        // Loop on all known contexts from here
+        for (Context *c = this; c; c = c->Parent())
+        {
+            // Mark roots, names, rewrites and stack
+            for (a = c->roots.begin(); a != c->roots.end(); a++)
+                (*a)->Do(gc);
+            for (s = c->names.begin(); s != c->names.end(); s++)
+                (*s).second->Do(gc);
+            if (c->rewrites)
+                c->rewrites->Do(gc);
+            if (c->run_stack)
+            {
+                value_list &values = c->run_stack->values;
+                for (v = values.begin(); v != values.end(); v++)
+                    (*v)->Do(gc);
+            }
+        }
 
         // Then delete all trees in active set that are no longer referenced
-        for (i = active.begin(); i != active.end(); i++)
+        for (a = active.begin(); a != active.end(); a++)
         {
             activeCount++;
-            if (!gc.alive.count(*i))
+            if (!gc.alive.count(*a))
             {
                 deletedCount++;
-                delete *i;
+                delete *a;
             }
         }
         active = gc.alive;
@@ -552,7 +564,8 @@ struct ArgumentMatch : Action
 // ----------------------------------------------------------------------------
 {
     ArgumentMatch (Tree *t, Context *c):
-        context(c), test(t), defined(NULL), code(NULL), end(NULL) {}
+        locals(c), context(c->Parent()),
+        test(t), defined(NULL), code(NULL), end(NULL) {}
 
     Tree *  Append(Tree *left, Tree *right);
 
@@ -567,7 +580,8 @@ struct ArgumentMatch : Action
     virtual Tree *DoBlock(Block *what);
     virtual Tree *DoNative(Native *what);
 
-    Context * context;          // Context in which we test
+    Context * locals;           // Context where we declare arguments
+    Context * context;          // Context in which we test values
     Tree *    test;             // Tree we test
     Tree *    defined;          // Tree beind defined, e.g. 'sin' in 'sin X'
     Tree *    code;             // Generated code
@@ -697,6 +711,7 @@ Tree *ArgumentMatch::DoName(Name *what)
         if (Name *nt = dynamic_cast<Name *> (test))
             if (nt->value == what->value)
                 return what;
+        return NULL;
     }
     else
     {
@@ -705,7 +720,6 @@ Tree *ArgumentMatch::DoName(Name *what)
         tree_position pos = test->Position();
 
         // If input tree doesn't compile by itself, we can't match this,
-        // e.g. if we have 2+3*i, and we try to compile 3*i
         if (!compiled)
             return NULL;
 
@@ -724,10 +738,9 @@ Tree *ArgumentMatch::DoName(Name *what)
         }
 
         // If first occurence of the name, enter it in symbol table
-        context->EnterName(what->value, compiled);
+        locals->EnterName(what->value, compiled);
         return what;
     }
-    return NULL;
 }
 
 
@@ -811,7 +824,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         tree_position pos = test->Position();
 
         // Enter the name in symbol table
-        context->EnterName(varName->value, compiled);
+        locals->EnterName(varName->value, compiled);
 
         // Evaluate type expression, e.g. 'integer' in example above
         Tree *typeExpr = context->Compile(what->right);
@@ -1117,7 +1130,7 @@ Tree *CompileAction::DoName(Name *what)
     if (Tree *result = context->Name(what->value))
         return result;
     
-    return context->Error("Internal: CompileAction knows '$1' not", what);
+    return context->Error("Name '$1' does not exist", what);
 }
 
 
@@ -1240,8 +1253,9 @@ Tree * CompileAction::Rewrites(Tree *what)
                 ParameterMatch matchParms(&parms);
                 Tree *parmsTest = candidate->from->Do(matchParms);
                 if (!parmsTest)
-                    context->Error("Internal: Invokation parameters for '$1'?",
-                                   candidate->from);
+                    return context->Error(
+                        "Internal: Invokation parameters for '$1'?",
+                        candidate->from);
 
                 // Create the invokation point
                 Context args(context);
@@ -1340,7 +1354,7 @@ Tree *Context::Name(text name)
     ulong frame = 0;
     for (Context *c = this; c; c = c->Parent())
     {
-        Tree *existing = names[name];
+        Tree *existing = c->names.count(name) > 0 ? c->names[name] : NULL;
         Variable *variable = dynamic_cast<Variable *> (existing);
         if (existing && !variable)
             return existing;
@@ -1379,11 +1393,13 @@ Tree *Context::Run(Tree *code)
 {
     Tree *result = code;
     Stack stack(errors);
+    run_stack = &stack;
     while (Native *native = dynamic_cast<Native *> (code))
     {
         result = native->Run(&stack);
         code = native->Next();
     }
+    run_stack = NULL;
     return result;
 }
 
@@ -1572,14 +1588,18 @@ Tree *Rewrite::Compile(void)
     if (!parms)
         return context->Error("Internal: what parameters in '$1'?", from);
 
+    // Put a native placeholder in 'to' in case we compile recursively
+    Entry *entry = new Entry(to, to->Position());
+    to = entry;
+
     // Compile the body of the rewrite
     Tree *code = locals.Compile(to);
     if (!code)
         return context->Error("Unable to compile '$1'", to);
 
-    // Remember the compiled
-    to = code;
-    return code;
+    // Remember the compiled form
+    entry->next = code;
+    return entry;
 }
 
 
