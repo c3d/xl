@@ -303,7 +303,7 @@ Tree *Renderer::DoNative(Native *what)
 //   What does it mean to render a native tree?
 // ----------------------------------------------------------------------------
 {
-    output << "NATIVE@" << (void *) what;
+    output << "NATIVE:" << typeid(*what).name() << "@" << (void *) what;
     return what;
 }
 
