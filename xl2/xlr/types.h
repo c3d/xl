@@ -56,7 +56,7 @@ struct InferTypes : Action
 //    Infer the types in an expression
 // ----------------------------------------------------------------------------
 {
-    InferTypes(Context *ctx): Action(), context(ctx) {}
+    InferTypes(Symbols *s): Action(), symbols(s) {}
 
     Tree *Do (Tree *what);
     Tree *DoInteger(Integer *what);
@@ -68,7 +68,7 @@ struct InferTypes : Action
     Tree *DoInfix(Infix *what);
     Tree *DoBlock(Block *what);
 
-    Context *   context;
+    Symbols *   symbols;
     type_map    types;
 };
 

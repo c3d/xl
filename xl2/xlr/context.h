@@ -160,7 +160,6 @@ struct Symbols
 //   Holds the symbols in a given context
 // ----------------------------------------------------------------------------
 {
-    Symbols(Context *c);
     Symbols(Symbols *s);
     ~Symbols();
 
@@ -175,35 +174,35 @@ struct Symbols
     // Entering symbols in the symbol table
     void                EnterName (text name, Tree *value);
     Rewrite *           EnterRewrite(Rewrite *r);
+    Rewrite *           EnterRewrite(Tree *from, Tree *to);
     Name *              Allocate(Name *varName);
 
     // Clearing symbol tables
     void                Clear();
 
+    // Compiling and evaluating a tree in scope defined by these symbols
+    Tree *              Compile(Tree *source, bool nullIfBad = false);
+    Tree *              Run(Tree *t);
+    void                ParameterList(Tree *form, std::vector<Tree *> &list);
+
 public:
-    Context *           context;
     Symbols *           parent;
-    Symbols *           previous;
     symbol_table        names;
     Rewrite *           rewrites;
-    ulong               locals;
 };
 
 
-struct Context
+struct Context : Symbols
 // ----------------------------------------------------------------------------
 //   The compile-time context in which we are currently evaluating
 // ----------------------------------------------------------------------------
 {
     // Constructors and destructors
     Context(Errors &err, Compiler *comp):
-        symbols(NULL),                          // Symbols
+        Symbols(NULL),
         errors(err), error_handler(NULL),       // Error management
         compiler(comp),                         // Tree compilation
         active(), roots(), gc_threshold(200) {} // Garbage collection
-
-    // Evaluation of trees (the killer feature of this class)
-    Tree *              Run(Tree *t);
 
     // Context properties
     Tree *              ErrorHandler();
@@ -215,10 +214,6 @@ struct Context
     void                CollectGarbage();
 
     // Helpers for compilation of trees
-    Tree *              Compile(Tree *source, bool nullIfBad = false);
-    void                EnterName (text n, Tree *v) { symbols->EnterName(n,v);}
-    Rewrite *           EnterRewrite(Tree *from, Tree *to);
-    void                ParameterList(Tree *form, std::vector<Tree *> &list);
     Tree *              Error (text message,
                                Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
 
@@ -227,7 +222,6 @@ public:
     static ulong        gc_growth_percent;
     static Context *    context;
 
-    Symbols *           symbols;
     Errors &            errors;
     Tree *              error_handler;
     Compiler *          compiler;
@@ -309,8 +303,7 @@ struct CompileAction : Action
 //   Compute the input tree using the given compiler
 // ----------------------------------------------------------------------------
 {
-    CompileAction (Compiler *comp, Symbols *s,
-                   Tree *source, tree_list parms, bool nullIfBad);
+    CompileAction (Symbols *s, Tree *source, tree_list parms, bool nullIfBad);
     ~CompileAction();
 
     virtual Tree *Do(Tree *what);
@@ -339,7 +332,7 @@ struct ParameterMatch : Action
 // ----------------------------------------------------------------------------
 {
     ParameterMatch (Symbols *s)
-        : symbols(s), context(s->context), defined(NULL) {}
+        : symbols(s), defined(NULL) {}
 
     virtual Tree *Do(Tree *what);
     virtual Tree *DoInteger(Integer *what);
@@ -352,7 +345,6 @@ struct ParameterMatch : Action
     virtual Tree *DoBlock(Block *what);
 
     Symbols * symbols;          // Symbols in which we test
-    Context * context;          // Compilation context (for errors)
     Tree *    defined;          // Tree beind defined, e.g. 'sin' in 'sin X'
 };
 
@@ -400,23 +392,11 @@ public:
 // 
 // ============================================================================
 
-inline Symbols::Symbols(Context *c)
-// ----------------------------------------------------------------------------
-//   Links the symbol table being created into the context
-// ----------------------------------------------------------------------------
-    : context(c), parent(c->symbols), previous(c->symbols),
-      rewrites(NULL), locals(0)
-{
-    c->symbols = this;
-}
-
-
 inline Symbols::Symbols(Symbols *s)
 // ----------------------------------------------------------------------------
 //   Create a "child" symbol table
 // ----------------------------------------------------------------------------
-    : context(s->context), parent(s), previous(context->symbols),
-      rewrites(NULL), locals(0)
+    : parent(s), rewrites(NULL)
 {}
 
 
@@ -427,8 +407,7 @@ inline Symbols::~Symbols()
 {
     if (rewrites)
         delete rewrites;
-    context->symbols = previous;
-}
+ }
 
 
 inline Tree *Symbols::Named(text name, bool deep)

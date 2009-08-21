@@ -54,7 +54,6 @@ int main(int argc, char **argv)
     XL::command_line_options = &options;
     XL::Compiler compiler("xl_tao");
     XL::Context context(errors, &compiler);
-    XL::Symbols globals(&context);
     text cmd, end = "";
 
     // Make sure debug function is linked in...

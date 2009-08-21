@@ -73,6 +73,16 @@ Rewrite *Symbols::EnterRewrite(Rewrite *rw)
 }
 
 
+Rewrite *Symbols::EnterRewrite(Tree *from, Tree *to)
+// ----------------------------------------------------------------------------
+//   Create a rewrite for the current context and enter it
+// ----------------------------------------------------------------------------
+{
+    Rewrite *rewrite = new Rewrite(this, from, to);
+    return EnterRewrite(rewrite);
+}
+
+
 void Symbols::Clear()
 // ----------------------------------------------------------------------------
 //   Clear all symbol tables
@@ -85,6 +95,96 @@ void Symbols::Clear()
         delete rewrites;
         rewrites = NULL;
     }
+}
+
+
+// ============================================================================
+// 
+//    Evaluation of trees
+// 
+// ============================================================================
+
+void Symbols::ParameterList(Tree *form, tree_list &list)
+// ----------------------------------------------------------------------------
+//    List the parameters for the form and add them to the list
+// ----------------------------------------------------------------------------
+{
+    // Identify all parameters in 'from'
+    Symbols parms(this);
+    ParameterMatch matchParms(&parms);
+    Tree *parmsOK = form->Do(matchParms);
+    if (!parmsOK)
+    {
+        Context *context = Context::context;
+        context->Error("Internal: what parameter list in '$1'?", form);
+    }
+
+    // Build the parameter list for 'to'
+    symbol_iter p;
+    for (p = parms.names.begin(); p != parms.names.end(); p++)
+        list.push_back((*p).second);
+}
+
+
+Tree *Symbols::Compile(Tree *source, bool nullIfBad)
+// ----------------------------------------------------------------------------
+//    Return an optimized version of the source tree, ready to run
+// ----------------------------------------------------------------------------
+//    This associates an eval_fn to the tree, i.e. code that takes a tree
+//    as input and returns a tree as output.
+{
+    // If we already have compiled code, we are done
+    if (source->code)
+        return source;
+
+    // Record rewrites and data declarations in the current context
+    Symbols parms(this);
+    DeclarationAction declare(&parms);
+    Tree *result = source->Do(declare);
+
+    // Compile code for that tree
+    tree_list parmsList;
+    parmsList.push_back(source);
+
+    Context *context = Context::context;
+    CompileAction compile(&parms, source, parmsList, nullIfBad);
+    if (compile.unit->IsForwardCall())
+        return source;          // Nested compile
+
+    // Generate the code
+    result = source->Do(compile);
+
+    // If we didn't compile successfully, report
+    if (!result)
+    {
+        if (nullIfBad)
+            return result;
+        return context->Error("Couldn't compile '$1'", source);
+    }
+
+    // If we compiled successfully, get the code and store it
+    eval_fn code = compile.unit->Finalize();
+    source->code = code;
+
+    return source;
+}
+
+
+Tree *Symbols::Run(Tree *code)
+// ----------------------------------------------------------------------------
+//   Execute a compiled code tree - Very similar to xl_evaluate
+// ----------------------------------------------------------------------------
+{
+    Tree *result = code;
+    if (!result)
+        return result;
+
+    if (!result->code)
+        result = Compile(result);
+
+    assert(result->code);
+    result = result->code(code);
+    return result;
 }
 
 
@@ -163,13 +263,11 @@ void Context::CollectGarbage ()
         // Mark roots, names, rewrites and stack
         for (active_set::iterator a = roots.begin(); a != roots.end(); a++)
             (*a)->Do(gc);
-        for (Symbols *s = symbols; s; s = s->parent)
-        {
-            for (symbol_iter y = s->names.begin(); y != s->names.end(); y++)
-                (*y).second->Do(gc);
-            if (s->rewrites)
-                s->rewrites->Do(gc);
-        }
+        for (symbol_iter y = names.begin(); y != names.end(); y++)
+            (*y).second->Do(gc);
+        if (rewrites)
+            rewrites->Do(gc);
+
         formats_table::iterator f;
         formats_table &formats = Renderer::renderer->formats;
         for (f = formats.begin(); f != formats.end(); f++)
@@ -363,6 +461,8 @@ Tree *ParameterMatch::DoInfix(Infix *what)
     // Check if we match a type, e.g. 2 vs. 'K : integer'
     if (what->name == ":")
     {
+        Context *context = Context::context;
+
         // Check the variable name, e.g. K in example above
         Name *varName = what->left->AsName();
         if (!varName)
@@ -435,7 +535,7 @@ Tree *ArgumentMatch::Compile(Tree *source)
 {
     // Compile the code
     if (!source->code)
-        source = symbols->context->Compile(source, true);
+        source = symbols->Compile(source, true);
     if (!source)
         return NULL; // No match
  
@@ -635,7 +735,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
     if (what->name == ":")
     {
         // Check the variable name, e.g. K in example above
-        Context *context = symbols->context;
+        Context *context = Context::context;
         Name *varName = what->left->AsName();
         if (!varName)
             return context->Error("Expected a name, got '$1' ", what->left);
@@ -854,14 +954,15 @@ void DeclarationAction::EnterRewrite(Tree *defined, Tree *definition)
 // 
 // ============================================================================
 
-CompileAction::CompileAction(Compiler *c, Symbols *s,
-                             Tree *source, tree_list parms, bool nib)
+CompileAction::CompileAction(Symbols *s, Tree *src, tree_list parms, bool nib)
 // ----------------------------------------------------------------------------
 //   Constructor
 // ----------------------------------------------------------------------------
     : symbols(s), unit(NULL), needed(), nullIfBad(nib)
 {
-    unit = new CompiledUnit(c, source, parms);
+    Context *context = Context::context;
+    Compiler *compiler = context->compiler;
+    unit = new CompiledUnit(compiler, src, parms);
 }
 
 
@@ -921,7 +1022,8 @@ Tree *CompileAction::DoName(Name *what)
     // Normally, the name should have been declared in ParameterMatch
     if (Tree *result = symbols->Named(what->value))
         return result;
-    return symbols->context->Error("Name '$1' does not exist", what);
+    Context *context = Context::context;
+    return context->Error("Name '$1' does not exist", what);
 }
 
 
@@ -1002,7 +1104,7 @@ Tree * CompileAction::Rewrites(Tree *what)
     bool foundUnconditional = false;
     bool foundSomething = false;
 
-    Context *context = symbols->context;
+    Context *context = Context::context;
     for (Symbols *s = symbols; s && !foundUnconditional; s = s->Parent())
     {
         Rewrite *candidate = s->Rewrites();
@@ -1027,7 +1129,7 @@ Tree * CompileAction::Rewrites(Tree *what)
 
                 // Create the invokation point
                 llvm::BasicBlock *bb = unit->BeginInvokation();
-                Symbols args(context->symbols);
+                Symbols args(symbols);
                 ArgumentMatch matchArgs(what,
                                         symbols, &args, candidate->symbols,
                                         this, needed);
@@ -1118,105 +1220,10 @@ Tree * CompileAction::Rewrites(Tree *what)
     {
         if (nullIfBad)
             return NULL;
-        return symbols->context->Error("No rewrite candidate for '$1'", what);
+        Context *context = Context::context;
+        return context->Error("No rewrite candidate for '$1'", what);
     }
     return what;
-}
-
-
-
-// ============================================================================
-// 
-//    Evaluation of trees
-// 
-// ============================================================================
-
-Tree *Context::Compile(Tree *source, bool nullIfBad)
-// ----------------------------------------------------------------------------
-//    Return an optimized version of the source tree, ready to run
-// ----------------------------------------------------------------------------
-//    This associates an eval_fn to the tree, i.e. code that takes a tree
-//    as input and returns a tree as output.
-{
-    // If we already have compiled code, we are done
-    if (source->code)
-        return source;
-
-    // Record rewrites in the current context
-    Symbols parms(this);
-    DeclarationAction declare(&parms);
-    Tree *result = source->Do(declare);
-
-    // Compile code for that tree
-    tree_list parmsList;
-    parmsList.push_back(source);
-    CompileAction compile(compiler, &parms, source, parmsList, nullIfBad);
-    if (compile.unit->IsForwardCall())
-        return source;          // Nested compile
-
-    // Generate the code
-    result = source->Do(compile);
-
-    // If we didn't compile successfully, report
-    if (!result)
-    {
-        if (nullIfBad)
-            return result;
-        return Error("Couldn't compile '$1'", source);
-    }
-
-    // If we compiled successfully, get the code and store it
-    eval_fn code = compile.unit->Finalize();
-    source->code = code;
-
-    return source;
-}
-
-
-Tree *Context::Run(Tree *code)
-// ----------------------------------------------------------------------------
-//   Execute a compiled code tree - Very similar to xl_evaluate
-// ----------------------------------------------------------------------------
-{
-    Tree *result = code;
-    if (!result)
-        return result;
-
-    if (!result->code)
-        result = Compile(result);
-
-    assert(result->code);
-    result = result->code(code);
-    return result;
-}
-
-
-Rewrite *Context::EnterRewrite(Tree *from, Tree *to)
-// ----------------------------------------------------------------------------
-//   Create a rewrite for the current context and enter it
-// ----------------------------------------------------------------------------
-{
-    Rewrite *rewrite = new Rewrite(symbols, from, to);
-    return symbols->EnterRewrite(rewrite);
-}
-
-
-void Context::ParameterList(Tree *form, tree_list &list)
-// ----------------------------------------------------------------------------
-//    List the parameters for the form and add them to the list
-// ----------------------------------------------------------------------------
-{
-    // Identify all parameters in 'from'
-    Symbols parms(symbols);
-    ParameterMatch matchParms(&parms);
-    Tree *parmsOK = form->Do(matchParms);
-    if (!parmsOK)
-        Error("Internal: what parameter list in '$1'?", form);
-
-    // Build the parameter list for 'to'
-    symbol_iter p;
-    for (p = parms.names.begin(); p != parms.names.end(); p++)
-        list.push_back((*p).second);
 }
 
 
@@ -1339,7 +1346,7 @@ Tree *Rewrite::Compile(void)
         return to;
 
     // Identify all parameters in 'from'
-    Context *context = symbols->context;
+    Context *context = Context::context;
     Symbols parms(symbols);
     ParameterMatch matchParms(&parms);
     Tree *parmsOK = from->Do(matchParms);
@@ -1351,7 +1358,7 @@ Tree *Rewrite::Compile(void)
     tree_list parmsList;
     for (p = parms.names.begin(); p != parms.names.end(); p++)
         parmsList.push_back((*p).second);
-    CompileAction compile(context->compiler, &parms, to, parmsList, false);
+    CompileAction compile(&parms, to, parmsList, false);
     if (compile.unit->IsForwardCall())
     {
         // Recursive compilation of that form
@@ -1375,17 +1382,30 @@ Tree *Rewrite::Compile(void)
 XL_END
 
 
-extern "C" void debugs(XL::Symbols *symbols)
+extern "C" void debugs(XL::Symbols *s)
 // ----------------------------------------------------------------------------
 //   For the debugger, dump a symbol table
 // ----------------------------------------------------------------------------
 {
     using namespace XL;
-    for (Symbols *s = symbols; s; s = s->Parent())
+    std::cerr << "SYMBOLS AT " << s << "\n";
+    symbol_table::iterator i;
+    for (i = s->names.begin(); i != s->names.end(); i++)
+        std::cerr << (*i).first << ": " << (*i).second << "\n";
+}
+
+
+extern "C" void debugsc(XL::Symbols *s)
+// ----------------------------------------------------------------------------
+//   For the debugger, dump a symbol table
+// ----------------------------------------------------------------------------
+{
+    using namespace XL;
+    if (s)
     {
-        std::cerr << "SYMBOLS AT " << s << "\n";
-        symbol_table::iterator i;
-        for (i = s->names.begin(); i != s->names.end(); i++)
-            std::cerr << (*i).first << ": " << (*i).second << "\n";
+        debugsc(s->Parent());
+        debugs(s);
     }
 }
+
+
