@@ -1336,8 +1336,8 @@ Tree * CompileAction::Rewrites(Tree *what)
 
                 // Create the invokation point
                 Context args(context);
-                ArgumentMatch matchArgs(what, &args,
-                                        context, candidate->context,
+                ArgumentMatch matchArgs(what,
+                                        &args, context, candidate->context,
                                         needed);
                 Tree *argsTest = candidate->from->Do(matchArgs);
                 if (argsTest)
@@ -1752,9 +1752,9 @@ Tree *Rewrite::Compile(void)
 // ----------------------------------------------------------------------------
 {
     Tree *source = to;
-    Leaf *leaf = dynamic_cast<Leaf *> (source);
-    if (leaf)
-        return leaf;
+    if (Leaf *leaf = dynamic_cast<Leaf *> (source))
+        if (!dynamic_cast<Name *> (source))
+            return leaf;
     Native *native = dynamic_cast<Native *> (source);
     if (native)
         return native;

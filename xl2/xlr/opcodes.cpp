@@ -94,6 +94,8 @@ Tree *Variable::Run(Stack *stack)
 // ----------------------------------------------------------------------------
 {
     Tree *value = stack->Get(id);
+    if (QuotedTree *quoted = dynamic_cast<QuotedTree *> (value))
+        value = stack->Run(quoted->source);
     return value;
 }
 
@@ -103,7 +105,10 @@ Tree *NonLocalVariable::Run(Stack *stack)
 //   Return the variable at given index in the stack
 // ----------------------------------------------------------------------------
 {
-    return stack->Get(id, frame);
+    Tree *value = stack->Get(id, frame);
+    if (QuotedTree *quoted = dynamic_cast<QuotedTree *> (value))
+        value = stack->Run(quoted->source);
+    return value;
 }
 
 
