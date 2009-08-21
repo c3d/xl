@@ -310,7 +310,7 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *source, tree_list parms)
     builder->CreateStore(zero, result);
 
     // Create the exit basic block and return statement
-    exitbb = BasicBlock::Create("exit");
+    exitbb = BasicBlock::Create("exit", function);
     builder->SetInsertPoint(exitbb);
     Value *retVal = builder->CreateLoad(result);
     builder->CreateRet(retVal);
@@ -342,7 +342,7 @@ BasicBlock *CompiledUnit::BeginInvokation()
 {
     BasicBlock *saved = invokebb;
     assert(!failbb); assert(invokebb);    
-    invokebb = BasicBlock::Create("invoke");
+    invokebb = BasicBlock::Create("invoke", function);
     builder->SetInsertPoint(invokebb);
     return saved;
 }
@@ -522,7 +522,7 @@ BasicBlock *CompiledUnit::NeedTest()
 // ----------------------------------------------------------------------------
 {
     if (!failbb)
-        failbb = BasicBlock::Create("failed_test");
+        failbb = BasicBlock::Create("failed_test", function);
     return failbb;
 }
 
@@ -627,8 +627,8 @@ Value *CompiledUnit::LazyEvaluation(Tree *code)
     Value *cache = NeedLazy(code);
 
     // Create the basic blocks 
-    BasicBlock *doEval = BasicBlock::Create("doEval");
-    BasicBlock *doneEval = BasicBlock::Create("doneEval");
+    BasicBlock *doEval = BasicBlock::Create("doEval", function);
+    BasicBlock *doneEval = BasicBlock::Create("doneEval", function);
 
     // Load the cached value, and test if it null
     Value *cached = builder->CreateLoad(cache);
@@ -689,7 +689,7 @@ BasicBlock *CompiledUnit::TagTest(Tree *code, ulong tagValue)
     Value *kind = builder->CreateAnd(tag, mask, "tagAndMask");
     Constant *refTag = ConstantInt::get(tag->getType(), tagValue);
     Value *isRightTag = builder->CreateICmpEQ(kind, refTag, "isRightTag");
-    BasicBlock *isRightKindBB = BasicBlock::Create("isRightKind");
+    BasicBlock *isRightKindBB = BasicBlock::Create("isRightKind", function);
     builder->CreateCondBr(isRightTag, isRightKindBB, notGood);
 
     builder->SetInsertPoint(isRightKindBB);
@@ -719,7 +719,7 @@ BasicBlock *CompiledUnit::IntegerTest(Tree *code, longlong value)
     Value *tval = builder->CreateLoad(valueFieldPtr, "treeValue");
     Constant *rval = ConstantInt::get(tval->getType(), value, "refValue");
     Value *isGood = builder->CreateICmpEQ(tval, rval, "isGood");
-    BasicBlock *isGoodBB = BasicBlock::Create("isGood");
+    BasicBlock *isGoodBB = BasicBlock::Create("isGood", function);
     builder->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
@@ -750,7 +750,7 @@ BasicBlock *CompiledUnit::RealTest(Tree *code, double value)
     Value *tval = builder->CreateLoad(valueFieldPtr, "treeValue");
     Constant *rval = ConstantFP::get(tval->getType(), value);
     Value *isGood = builder->CreateFCmpOEQ(tval, rval, "isGood");
-    BasicBlock *isGoodBB = BasicBlock::Create("isGood");
+    BasicBlock *isGoodBB = BasicBlock::Create("isGood", function);
     builder->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
@@ -779,7 +779,7 @@ BasicBlock *CompiledUnit::TextTest(Tree *code, text value)
     Value *refPtr = builder->CreateConstGEP1_32(refVal, 0);
     Value *isGood = builder->CreateCall2(compiler->xl_same_text,
                                          treeValue, refPtr);
-    BasicBlock *isGoodBB = BasicBlock::Create("isGood");
+    BasicBlock *isGoodBB = BasicBlock::Create("isGood", function);
     builder->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
@@ -804,7 +804,7 @@ BasicBlock *CompiledUnit::ShapeTest(Tree *left, Tree *right)
     BasicBlock *notGood = NeedTest();
     Value *isGood = builder->CreateCall2(compiler->xl_same_shape,
                                          leftVal, rightVal);
-    BasicBlock *isGoodBB = BasicBlock::Create("isGood");
+    BasicBlock *isGoodBB = BasicBlock::Create("isGood", function);
     builder->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
@@ -827,7 +827,7 @@ BasicBlock *CompiledUnit::TypeTest(Tree *value, Tree *type)
     BasicBlock *notGood = NeedTest();
     Value *isGood = builder->CreateCall2(compiler->xl_type_check,
                                          valueVal, typeVal);
-    BasicBlock *isGoodBB = BasicBlock::Create("isGood");
+    BasicBlock *isGoodBB = BasicBlock::Create("isGood", function);
     builder->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
@@ -845,4 +845,14 @@ void debugm(XL::value_map &m)
     XL::value_map::iterator i;
     for (i = m.begin(); i != m.end(); i++)
         std::cerr << "map[" << (*i).first << "]=" << *(*i).second << '\n';
+}
+
+
+void debugv(void *v)
+// ----------------------------------------------------------------------------
+//   Dump a value for the debugger
+// ----------------------------------------------------------------------------
+{
+    llvm::Value *value = (llvm::Value *) v;
+    std::cerr << *value << "\n";
 }
