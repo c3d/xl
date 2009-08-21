@@ -54,7 +54,6 @@ OPTION(w, "Set the warning level, from 0 to 5",
 OPTION(pedantic, "Set the maximum warning level",
        warning_level = 5)
 
-
 // Optimize level options
 OPTVAR(optimize_level, uint, 0)
 OPTION(O, "Set the optimization level, from 0 to 3",

@@ -56,6 +56,8 @@ typedef std::map<text, Tree *> tree_data;       // Data associated to tree
 typedef std::vector<Tree *> tree_list;          // A list of trees
 
 
+typedef Tree (*runtime_function) (Tree *input, ...);
+
 struct Tree
 // ----------------------------------------------------------------------------
 //   The base class for all XL trees

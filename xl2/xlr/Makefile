@@ -28,14 +28,14 @@ BROOT=../
 # List of directories to process
 SOURCES     =					\
 	main.cpp				\
-	scanner.cpp				\
-	tree.cpp				\
-	context.cpp				\
-	syntax.cpp				\
-	parser.cpp				\
-	renderer.cpp				\
 	options.cpp				\
 	errors.cpp				\
+	tree.cpp				\
+	syntax.cpp				\
+	scanner.cpp				\
+	parser.cpp				\
+	renderer.cpp				\
+	context.cpp				\
 	basics.cpp				\
 	types.cpp				\
 	opcodes.cpp
@@ -44,7 +44,7 @@ PRODUCT=xlr$(EXE)
 
 include $(BROOT)Makefile.config
 
-CXXFLAGS+= -I/usr/X11/include -I/usr/X11/include/freetype2
-LDFLAGS=-Wl,-framework -Wl,ApplicationServices \
-	-Wl,-framework -Wl,OpenGL \
-	-Wl,-framework -Wl,GLUT \
+LLVM_FLAGS=`llvm-config --cppflags | sed -e s/-DNDEBUG//g`
+LLVM_LIBS=`llvm-config --ldflags --libs core jit native interpreter`
+
+LDFLAGS=-L/usr/local/lib -lftgl $(LLVM_LIBS)

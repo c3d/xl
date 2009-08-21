@@ -64,12 +64,7 @@
   for instance in (-A-B), where the first minus is a prefix.
   Any name or symbol is valid to identify a prefix or infix operator.
 
-  Operator precedence is defined by declaration order. The most recently
-  defined operator has a higher precedence than any operator defined
-  previously. An operator declaration only indicates that a given name
-  or symbol is an operator, but doesn't give its meaning. In other words,
-  an operator declaration only declares how the operator parses,
-  but not its semantics.
+  Operator precedence is defined by the xl.syntax file.
  */
 
 #include "scanner.h"
