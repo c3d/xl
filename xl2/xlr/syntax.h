@@ -64,7 +64,7 @@ public:
     bool                IsBlock(text Begin, text &end);
     bool                IsBlock(char Begin, text &end);
 
-private:
+public:
     priority_table      infix_priority;
     priority_table      prefix_priority;
     priority_table      postfix_priority;
@@ -73,7 +73,6 @@ private:
     delimiter_table     block_delimiters;
     int                 priority;
 
-public:
     int                 default_priority;
     int                 statement_priority;
     int                 function_priority;

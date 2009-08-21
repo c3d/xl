@@ -213,7 +213,6 @@ void Syntax::ReadSyntaxFile(kstring filename)
     Positions   basePositions;
     Errors      errors(&basePositions);
     Scanner     scanner(filename, baseSyntax, basePositions, errors);
-    Block       indentBlock(NULL);
 
     while(tok != tokEOF)
     {
@@ -234,9 +233,9 @@ void Syntax::ReadSyntaxFile(kstring filename)
             if (txt == "NEWLINE")
                 txt = "\n";
             else if (txt == "INDENT")
-                txt = indentBlock.Opening();
+                txt = Block::indent;
             else if (txt == "UNINDENT")
-                txt = indentBlock.Closing();
+                txt = Block::unindent;
 
             if (txt == "INFIX")
                 state = inInfix;

@@ -39,10 +39,6 @@ XL_BEGIN
 // 
 // ============================================================================
 
-ReservedName *true_name = NULL;
-ReservedName *false_name = NULL;
-ReservedName *nil_name = NULL;
-
 #include "opcodes_declare.h"
 #include "basics.tbl"
 

@@ -1,21 +1,22 @@
 #ifndef TREE_H
 #define TREE_H
 // ****************************************************************************
-//  tree.h                          (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                            XL2 project 
+//  tree.h                          (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                            XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
-//     Basic representation of parse tree. See parser.h and parser.cpp
-//     for details about the generation of these trees.
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//     Basic representation of parse tree.
+//
+//     See the big comment at the top of parser.h for details about
+//     the basics of XL tree representation
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This program is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -29,13 +30,13 @@
 #include <map>
 #include <vector>
 
+
 XL_BEGIN
 
-
 // ============================================================================
-// 
-//    Foundation types
-// 
+//
+//    The types being defined or used to define XL trees
+//
 // ============================================================================
 
 struct Context;                                 // Execution context
@@ -48,40 +49,78 @@ struct Prefix;                                  // Prefix: sin X
 struct Postfix;                                 // Postfix: 3!
 struct Infix;                                   // Infix: A+B, newline
 struct Block;                                   // Block: (A), {A}
-struct Native;                                  // Some native code
 struct Action;                                  // Action on trees
-struct Stack;                                   // Variable storage
 typedef ulong tree_position;                    // Position in context
-typedef std::map<text, Tree *> tree_data;       // Data associated to tree
 typedef std::vector<Tree *> tree_list;          // A list of trees
+typedef Tree *(*eval_fn) (Tree *);              // Compiled evaluation code
 
 
-typedef Tree (*runtime_function) (Tree *input, ...);
+// ============================================================================
+// 
+//    Runtime functions with C interface
+// 
+// ============================================================================
+
+// Value leaf nodes return themselves, so we set their code to xl_identity
+extern "C" 
+{
+    Tree *xl_identity(Tree *);
+    Tree *xl_evaluate(Tree *);
+    bool  xl_same_text(Tree *, const char *);
+    bool  xl_same_shape(Tree *t1, Tree *t2);
+    bool  xl_type_check(Tree *value, Tree *type);
+}
+
+
+
+// ============================================================================
+// 
+//    The Tree class
+// 
+// ============================================================================
+
+enum kind
+// ----------------------------------------------------------------------------
+//   The kinds of tree that compose an XL parse tree
+// ----------------------------------------------------------------------------
+{
+    INTEGER, REAL, TEXT, NAME,                  // Leaf nodes
+    BLOCK, PREFIX, POSTFIX, INFIX               // Non-leaf nodes
+};
+
 
 struct Tree
 // ----------------------------------------------------------------------------
 //   The base class for all XL trees
 // ----------------------------------------------------------------------------
 {
-    // Constructor and destructor
-    Tree (tree_position pos = NOWHERE): position(pos) {}
-    virtual ~Tree() {}
+    enum { NOWHERE = ~0UL };
+    enum { KINDBITS = 3, KINDMASK=7 };
 
-    // Evaluate a tree
-    virtual Tree *      Run(Stack *stack);
+    // Constructor and destructor
+    Tree (kind k, tree_position pos = NOWHERE):
+        tag((pos<<KINDBITS) | k), code(NULL), type(NULL) {}
+    ~Tree() {}
 
     // Perform recursive actions on a tree
-    virtual Tree *      Do(Action *action);
-    virtual void        DoData(Action *action);
-    Tree *              Do(Action &action) { return Do(&action); }
+    Tree *              Do(Action *action);
+    Tree *              Do(Action &action)    { return Do(&action); }
 
-    // Return in normalized form (i.e. using only trees in this file)
-    virtual Tree *      Normalize();
+    // Attributes
+    kind                Kind()                { return kind(tag & KINDMASK); }
+    tree_position       Position()            { return tag>>KINDBITS; }
+    bool                IsLeaf()              { return Kind() <= NAME; }
+    bool                IsConstant()          { return Kind() <= TEXT; }
 
-    // Tree properties
-    void                Set(text name, Tree *prop) { data[name] = prop; }
-    Tree *              Get(text name)             { return data[name]; }
-    tree_position       Position()                 { return position; }
+    // Safe cast to an appropriate subclass
+    Integer *           AsInteger();
+    Real *              AsReal();
+    Text *              AsText();
+    Name *              AsName();
+    Block *             AsBlock();
+    Infix *             AsInfix();
+    Prefix *            AsPrefix();
+    Postfix *           AsPostfix();
 
     // Conversion to text
                         operator text();
@@ -89,10 +128,10 @@ struct Tree
     // Operator new to record the tree in the garbage collector
     void *              operator new(size_t sz);
 
-protected:
-    tree_position       position;
-    tree_data           data;
-    static tree_position NOWHERE;
+public:
+    ulong       tag;                            // Position + kind
+    eval_fn     code;                           // Compiled code
+    Tree *      type;                           // Type information if any
 };
 
 
@@ -114,236 +153,212 @@ struct Action
     virtual Tree *DoPostfix(Postfix *what);
     virtual Tree *DoInfix(Infix *what);
     virtual Tree *DoBlock(Block *what);
-    virtual Tree *DoNative(Native *what);
 };
 
 
 
 // ============================================================================
-// 
+//
 //   Leaf nodes (integer, real, name, text)
-// 
+//
 // ============================================================================
 
-struct Leaf : Tree
-// ----------------------------------------------------------------------------
-//   We use this only so that we can identify all leaf types easily
-// ----------------------------------------------------------------------------
-{
-    Leaf(tree_position pos = NOWHERE) : Tree(pos) {}
-};
-
-
-struct Integer : Leaf
+struct Integer : Tree
 // ----------------------------------------------------------------------------
 //   Integer constants
 // ----------------------------------------------------------------------------
 {
     Integer(longlong i = 0, tree_position pos = NOWHERE):
-        Leaf(pos), value(i) {}
-    virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Stack *stack) { return this; }
+        Tree(INTEGER, pos), value(i) { code = xl_identity; }
     longlong            value;
 };
 
 
-struct Real : Leaf
+struct Real : Tree
 // ----------------------------------------------------------------------------
 //   Real numbers
 // ----------------------------------------------------------------------------
 {
     Real(double d = 0.0, tree_position pos = NOWHERE):
-        Leaf(pos), value(d) {}
-    virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Stack *stack) { return this; }
+        Tree(REAL, pos), value(d) { code = xl_identity; }
     double              value;
 };
 
 
-struct Text : Leaf
+struct Text : Tree
 // ----------------------------------------------------------------------------
 //   Text, e.g. "Hello World"
 // ----------------------------------------------------------------------------
 {
-    Text(text t = "", tree_position pos = NOWHERE):
-        Leaf(pos), value(t) {}
-    virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Stack *stack)       { return this; }
-    virtual text        Opening()               { return "\""; }
-    virtual text        Closing()               { return "\""; }
+    Text(text t, text open="\"", text close="\"", tree_position pos=NOWHERE):
+        Tree(TEXT, pos), value(t), opening(open), closing(close)
+    { code = xl_identity; }
     text                value;
-};
-
-
-struct Quote : Text
-// ----------------------------------------------------------------------------
-//   Quoted text, e.g. 'Hello World'
-// ----------------------------------------------------------------------------
-{
-    Quote(text t = "", tree_position pos = NOWHERE):
-        Text(t, pos) {}
-    virtual text        Opening()               { return "'"; }
-    virtual text        Closing()               { return "'"; }
-};
-
-
-struct LongText : Text
-// ----------------------------------------------------------------------------
-//   Long text with delimiters, e.g html This is some text end_html
-// ----------------------------------------------------------------------------
-{
-    LongText(text t, text open, text close, tree_position pos = NOWHERE):
-        Text(t, pos), opening(open), closing(close) {}
-    virtual text        Opening()               { return opening; }
-    virtual text        Closing()               { return closing; }
     text                opening, closing;
+    static text         textQuote, charQuote;
 };
 
 
-struct Comment : LongText
-// ----------------------------------------------------------------------------
-//   Comments, e.g. /* Hello World */
-// ----------------------------------------------------------------------------
-{
-    Comment(text t, text open, text close, tree_position pos = NOWHERE):
-        LongText(t, open, close, pos) {}
-};
-
-
-struct Name : Leaf
+struct Name : Tree
 // ----------------------------------------------------------------------------
 //   A node representing a name or symbol
 // ----------------------------------------------------------------------------
 {
     Name(text n, tree_position pos = NOWHERE):
-        Leaf(pos), value(n) {}
-    virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Stack *stack);
+        Tree(NAME, pos), value(n) {}
     text                value;
 };
 
 
 
 // ============================================================================
-// 
+//
 //   Structured types: Block, Prefix, Infix
-// 
+//
 // ============================================================================
 
-struct NonLeaf : Tree
+struct Block : Tree
 // ----------------------------------------------------------------------------
-//   We use this to identify all the non-leaf types
-// ----------------------------------------------------------------------------
-{
-    NonLeaf(tree_position pos = NOWHERE): Tree(pos) {}
-};
-
-
-struct Block : NonLeaf
-// ----------------------------------------------------------------------------
-//   A block, such as (X), {X}, [X] or indented block (defaults to indented)
+//   A block, such as (X), {X}, [X] or indented block
 // ----------------------------------------------------------------------------
 {
-    Block(Tree *c, tree_position pos = NOWHERE): NonLeaf(pos), child(c) {}
-    virtual text        Opening() { return "\t+"; }
-    virtual text        Closing() { return "\t-"; }
-    virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Stack *stack);
-    static Block *      MakeBlock(Tree *child,
-                                  text open, text close,
-                                  tree_position pos = NOWHERE);
+    Block(Tree *c, text open, text close, tree_position pos = NOWHERE):
+        Tree(BLOCK, pos), child(c), opening(open), closing(close) {}
     Tree *              child;
-};
-
-
-struct Parentheses : Block
-// ----------------------------------------------------------------------------
-//   Parentheses around a tree, e.g. (X)
-// ----------------------------------------------------------------------------
-{
-    Parentheses(Tree *c, tree_position pos = NOWHERE): Block(c, pos) {}
-    virtual text        Opening() { return "("; }
-    virtual text        Closing() { return ")"; }
-};
-
-
-struct Brackets : Block
-// ----------------------------------------------------------------------------
-//   Brackets around a tree, e.g. [X]
-// ----------------------------------------------------------------------------
-{
-    Brackets(Tree *c, tree_position pos = NOWHERE): Block(c, pos) {}
-    virtual text        Opening() { return "["; }
-    virtual text        Closing() { return "]"; }
-};
-
-
-struct Curly : Block
-// ----------------------------------------------------------------------------
-//   Brackets around a tree, e.g. [X]
-// ----------------------------------------------------------------------------
-{
-    Curly(Tree *c, tree_position pos = NOWHERE): Block(c, pos) {}
-    virtual text        Opening() { return "{"; }
-    virtual text        Closing() { return "}"; }
-};
-
-
-struct DelimitedBlock : Block
-// ----------------------------------------------------------------------------
-//   A block delimited by arbitrary opening/closing delimiters
-// ----------------------------------------------------------------------------
-{
-    DelimitedBlock(Tree *c, text open, text close, tree_position pos=NOWHERE):
-        Block(c, pos), opening(open), closing(close) {}
-    virtual text        Opening() { return opening; }
-    virtual text        Closing() { return closing; }
     text                opening, closing;
+    static text         indent, unindent;
 };
 
 
-struct Prefix : NonLeaf
+struct Prefix : Tree
 // ----------------------------------------------------------------------------
 //   A prefix operator, e.g. sin X, +3
 // ----------------------------------------------------------------------------
 {
     Prefix(Tree *l, Tree *r, tree_position pos = NOWHERE):
-        NonLeaf(pos), left(l), right(r) {}
-    virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Stack *stack);
+        Tree(PREFIX, pos), left(l), right(r) {}
     Tree *              left;
     Tree *              right;
 };
 
 
-struct Postfix : Prefix
+struct Postfix : Tree
 // ----------------------------------------------------------------------------
 //   A postfix operator, e.g. 3!
 // ----------------------------------------------------------------------------
 {
     Postfix(Tree *l, Tree *r, tree_position pos = NOWHERE):
-        Prefix(l, r, pos) {}
-    virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Stack *stack);
+        Tree(POSTFIX, pos), left(l), right(r) {}
+    Tree *              left;
+    Tree *              right;
 };
 
 
-struct Infix : Prefix
+struct Infix : Tree
 // ----------------------------------------------------------------------------
 //   Infix operators, e.g. A+B, A and B, A,B,C,D,E
 // ----------------------------------------------------------------------------
-//   Since it's very frequent to have sequences with the same separator
-//   e.g. blocks of code, where the separator is newline, or arguments
-//   where the separator is a comma, the parser groups such identical
-//   infix operators in a single Infix tree. This is the reason it holds
-//   a tree list and not a just left and right
 {
-    Infix(text n, Tree *left, Tree *right, tree_position pos = NOWHERE):
-        Prefix(left, right, pos), name(n) {}
-    virtual Tree *      Do(Action *action);
-    virtual Tree *      Run(Stack *stack);
+    Infix(text n, Tree *l, Tree *r, tree_position pos = NOWHERE):
+        Tree(INFIX, pos), left(l), right(r) {}
+    Tree *              left;
+    Tree *              right;
     text                name;
 };
+
+
+// ============================================================================
+//
+//    Safe casts
+//
+// ============================================================================
+
+inline Integer *Tree::AsInteger()
+// ----------------------------------------------------------------------------
+//    Return a pointer to an Integer or NULL
+// ----------------------------------------------------------------------------
+{
+    if (this && Kind() == INTEGER)
+        return (Integer *) this;
+    return NULL;
+}
+
+
+inline Real *Tree::AsReal()
+// ----------------------------------------------------------------------------
+//    Return a pointer to an Real or NULL
+// ----------------------------------------------------------------------------
+{
+    if (this && Kind() == REAL)
+        return (Real *) this;
+    return NULL;
+}
+
+
+inline Text *Tree::AsText()
+// ----------------------------------------------------------------------------
+//    Return a pointer to an Text or NULL
+// ----------------------------------------------------------------------------
+{
+    if (this && Kind() == TEXT)
+        return (Text *) this;
+    return NULL;
+}
+
+
+inline Name *Tree::AsName()
+// ----------------------------------------------------------------------------
+//    Return a pointer to an Name or NULL
+// ----------------------------------------------------------------------------
+{
+    if (this && Kind() == NAME)
+        return (Name *) this;
+    return NULL;
+}
+
+
+inline Block *Tree::AsBlock()
+// ----------------------------------------------------------------------------
+//    Return a pointer to an Block or NULL
+// ----------------------------------------------------------------------------
+{
+    if (this && Kind() == BLOCK)
+        return (Block *) this;
+    return NULL;
+}
+
+
+inline Infix *Tree::AsInfix()
+// ----------------------------------------------------------------------------
+//    Return a pointer to an Infix or NULL
+// ----------------------------------------------------------------------------
+{
+    if (this && Kind() == INFIX)
+        return (Infix *) this;
+    return NULL;
+}
+
+
+inline Prefix *Tree::AsPrefix()
+// ----------------------------------------------------------------------------
+//    Return a pointer to an Prefix or NULL
+// ----------------------------------------------------------------------------
+{
+    if (this && Kind() == PREFIX)
+        return (Prefix *) this;
+    return NULL;
+}
+
+
+inline Postfix *Tree::AsPostfix()
+// ----------------------------------------------------------------------------
+//    Return a pointer to an Postfix or NULL
+// ----------------------------------------------------------------------------
+{
+    if (this && Kind() == POSTFIX)
+        return (Postfix *) this;
+    return NULL;
+}
 
 XL_END
 

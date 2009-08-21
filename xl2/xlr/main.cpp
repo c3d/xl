@@ -24,10 +24,8 @@
 // ****************************************************************************
 
 #include "configuration.h"
-#if CONFIG_USE_SBRK
 #include <unistd.h>
 #include <stdlib.h>
-#endif
 #include <map>
 #include <iostream>
 #include "scanner.h"
@@ -36,6 +34,7 @@
 #include "errors.h"
 #include "tree.h"
 #include "context.h"
+#include "compiler.h"
 #include "options.h"
 #include "basics.h"
 
@@ -52,7 +51,8 @@ int main(int argc, char **argv)
     XL::Positions positions;
     XL::Errors errors(&positions);
     XL::Options options(errors);
-    XL::Context context(errors);
+    XL::Compiler compiler("xl_tao");
+    XL::Context context(errors, &compiler);
     XL::Renderer renderer(std::cout, "xl.stylesheet", syntax);
     text cmd, end = "";
 

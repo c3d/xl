@@ -40,20 +40,25 @@ struct Renderer : Action
 //   Render a tree to some ostream
 // ----------------------------------------------------------------------------
 {
-    Renderer(std::ostream &out, text styleFile, Syntax &stx, uint ts = 4);
+    // Construction
+    Renderer(std::ostream &out, text styleFile, Syntax &stx);
     Renderer(std::ostream &out, Renderer *from = renderer);
 
+    // Action callbacks
     virtual Tree *      Do(Tree *what);
-    virtual Tree *      DoInteger(Integer *what);
-    virtual Tree *      DoReal(Real *what);
-    virtual Tree *      DoText(Text *what);
-    virtual Tree *      DoName(Name *what);
-    virtual Tree *      DoPrefix(Prefix *what);
-    virtual Tree *      DoPostfix(Postfix *what);
-    virtual Tree *      DoInfix(Infix *what);
-    virtual Tree *      DoBlock(Block *what);
-    virtual Tree *      DoNative(Native *what);
-    void                Indent(text t);
+
+    // Rendering proper
+    void                Render (Tree *what);
+    void                RenderOne(Tree *what);
+    void                RenderText(text format);
+    void                RenderFormat(Tree *format);
+    void                RenderFormat(text self, text format);
+    void                RenderFormat(text self, text format, text generic);
+    void                RenderFormat(text self, text f, text g1, text g2);
+    Tree *              ImplicitBlock(Tree *t);
+    bool                IsAmbiguousPrefix(Tree *test, bool testL, bool testR);
+    bool                IsSubFunctionInfix(Tree *t);
+    int                 InfixPriority(Tree *test);
 
     static Renderer *   renderer;
 
@@ -61,9 +66,15 @@ struct Renderer : Action
     Syntax &            syntax;
     formats_table       formats;
     uint                indent;
-    uint                tabsize;
-    kstring             need_space;
-    bool                parenthesize;
+    text                self;
+    Tree *              left;
+    Tree *              right;
+    text                current_quote;
+    int                 priority;
+    bool                had_space;
+    bool                had_punctuation;
+    bool                need_separator;
+    bool                force_parentheses;
 };
 
 XL_END

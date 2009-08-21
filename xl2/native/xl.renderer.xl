@@ -447,6 +447,7 @@ module XL.RENDERER is
         old_right : PT.tree := output.right
         old_priority : integer := output.priority
 
+
         if what = nil then
             RenderFormat output, "?null?", "?null?", "error "
         else if what.kind = PT.xlINTEGER then

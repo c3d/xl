@@ -2,10 +2,9 @@ INFIX
         11      NEWLINE
         21      ;
         25      ->
-        30      loop
+        30      loop when
         35      else into
-        40      then where require ensure
-        50      :
+        40      then require ensure
         100     STATEMENT
         110     is as  while until
         120     with written
@@ -23,11 +22,12 @@ INFIX
         300     * / mod rem
         311     ^
         510     .
+        520     :
 
 PREFIX
-        30      generic
+        30      data
         120     exit loop
-        125     case if return while until when yield transform
+        125     case if return while until yield transform
         320     not in out constant variable const var
         340     @ 
         380     ! ~

@@ -199,7 +199,6 @@ Tree *Parser::Parse(text closing)
     token_t              tok;
     text                 blk_opening, blk_closing;
     std::vector<Pending> stack;
-    static Block         indentedBlock(NULL);
 
     // When inside a () block, we are in 'expression' mode right away
     if (closing != "" && paren_priority > statement_priority)
@@ -240,7 +239,7 @@ Tree *Parser::Parse(text closing)
         case tokEOF:
         case tokERROR:
             done = true;
-            if (closing != "" && closing != indentedBlock.Closing())
+            if (closing != "" && closing != Block::unindent)
                 errors.Error("Unexpected end of text, expected '$1'",
                              scanner.Position(), closing);
             break;
@@ -255,10 +254,8 @@ Tree *Parser::Parse(text closing)
         case tokSTRING:
         case tokQUOTE:
             char separator = scanner.TokenText()[0];
-            if (separator == '\'')
-                right = new Quote(scanner.TextValue(), pos);
-            else
-                right = new Text(scanner.TextValue(), pos);
+            name = "" + separator;
+            right = new Text(scanner.TextValue(), name, name, pos);
             if (!result && new_statement)
                 is_expression = false;
             break;
@@ -339,13 +336,13 @@ Tree *Parser::Parse(text closing)
             break;
         case tokUNINDENT:
             // Check for mismatched blocks here
-            if (closing != indentedBlock.Closing())
+            if (closing != Block::unindent)
                 errors.Error("Mismatched identation, expected '$1'",
                              pos, closing);
             done = true;
             break;
         case tokINDENT:
-            scanner.SetTokenText(indentedBlock.Opening());
+            scanner.SetTokenText(Block::indent);
             // Fall-through
         case tokPAROPEN:
             blk_opening = scanner.TokenText();
@@ -365,7 +362,7 @@ Tree *Parser::Parse(text closing)
                 scanner.CloseParen(old_indent);
             if (!right)
                 right = new Name("", pos); // Case where we have ()
-            right = Block::MakeBlock(right, blk_opening, blk_closing, pos);
+            right = new Block(right, blk_opening, blk_closing, pos);
             break;
         default:
             if (true)
@@ -489,7 +486,7 @@ Tree *Parser::Parse(text closing)
 
             // Check if new statement
             if (!is_expression)
-                if (!dynamic_cast<Block *> (right))
+                if (right->Kind() != BLOCK)
                     if (result_priority > statement_priority)
                         if (stack.size() == 0)
                             result_priority = statement_priority;

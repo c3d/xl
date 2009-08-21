@@ -35,6 +35,7 @@ SOURCES     =					\
 	scanner.cpp				\
 	parser.cpp				\
 	renderer.cpp				\
+	compiler.cpp				\
 	context.cpp				\
 	basics.cpp				\
 	types.cpp				\
@@ -47,4 +48,5 @@ include $(BROOT)Makefile.config
 LLVM_FLAGS=`llvm-config --cppflags | sed -e s/-DNDEBUG//g`
 LLVM_LIBS=`llvm-config --ldflags --libs core jit native interpreter`
 
-LDFLAGS=-L/usr/local/lib -lftgl $(LLVM_LIBS)
+CPPFLAGS+=$(LLVM_FLAGS)
+LDFLAGS=-L/usr/local/lib $(LLVM_LIBS)

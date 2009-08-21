@@ -24,8 +24,8 @@
 // ****************************************************************************
 
 #include <sstream>
+#include <cassert>
 #include "tree.h"
-#include "opcodes.h"
 #include "context.h"
 #include "renderer.h"
 
@@ -37,8 +37,6 @@ XL_BEGIN
 //
 // ============================================================================
 
-tree_position Tree::NOWHERE = ~0UL;
-
 void *Tree::operator new(size_t sz)
 // ----------------------------------------------------------------------------
 //    Record the tree in the garbage collector
@@ -48,53 +46,6 @@ void *Tree::operator new(size_t sz)
     if (Context::context)
         Context::context->Mark((Tree *) result);
     return result;
-}
-
-
-Tree *Tree::Run(Stack *stack)
-// ----------------------------------------------------------------------------
-//   By default, we don't know how to evaluate a tree
-// ----------------------------------------------------------------------------
-{
-    return stack->Error("Don't know how to evaluate '$1'", this);
-}
-
-
-Tree *Tree::Do(Action *action)
-// ----------------------------------------------------------------------------
-//   Perform an action on the tree and its descendents
-// ----------------------------------------------------------------------------
-{
-    return action->Do(this);
-}
-
-
-void Tree::DoData(Action *action)
-// ----------------------------------------------------------------------------
-//   For data actions, run on all trees referenced by this tree
-// ----------------------------------------------------------------------------
-{
-    // Loop on all associated data
-    for (tree_data::iterator i = data.begin(); i != data.end(); i++)
-        (*i).second = (*i).second->Do(action);
-}
-
-
-Tree *Tree::Normalize()
-// ----------------------------------------------------------------------------
-//   The basic tree types are normalized by definition
-// ----------------------------------------------------------------------------
-{
-    // Verify that we don't use the default 'Normalize' for unholy trees
-    XL_ASSERT(dynamic_cast<Integer *> (this)  ||
-              dynamic_cast<Real *> (this)     ||
-              dynamic_cast<Text *> (this)     ||
-              dynamic_cast<Name *> (this)     ||
-              dynamic_cast<Block *> (this)    ||
-              dynamic_cast<Prefix *> (this)   ||
-              dynamic_cast<Infix *> (this));
-
-    return this;
 }
 
 
@@ -112,9 +63,29 @@ Tree::operator text()
 
 // ============================================================================
 // 
-//   Class Integer
+//   Actions on a tree
 // 
 // ============================================================================
+
+Tree *Tree::Do(Action *action)
+// ----------------------------------------------------------------------------
+//   Perform an action on the tree 
+// ----------------------------------------------------------------------------
+{
+    switch(Kind())
+    {
+    case INTEGER:       return action->DoInteger((Integer *) this);
+    case REAL:          return action->DoReal((Real *) this);
+    case TEXT:          return action->DoText((Text *) this);
+    case NAME:          return action->DoName((Name *) this);
+    case BLOCK:         return action->DoBlock((Block *) this);
+    case PREFIX:        return action->DoPrefix((Prefix *) this);
+    case POSTFIX:       return action->DoPostfix((Postfix *) this);
+    case INFIX:         return action->DoInfix((Infix *) this);
+    default:            assert(!"Unexpected tree kind");
+    }
+}
+
 
 Tree *Action::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------
@@ -125,22 +96,6 @@ Tree *Action::DoInteger(Integer *what)
 }
 
 
-Tree *Integer::Do(Action *action)
-// ----------------------------------------------------------------------------
-//   Call specialized Integer routine in the action
-// ----------------------------------------------------------------------------
-{
-    return action->DoInteger(this);
-}
-
-
-
-// ============================================================================
-// 
-//   Class Real
-// 
-// ============================================================================
-
 Tree *Action::DoReal(Real *what)
 // ----------------------------------------------------------------------------
 //   Default is simply to invoke 'Do'
@@ -149,22 +104,6 @@ Tree *Action::DoReal(Real *what)
     return Do(what);
 }
 
-
-Tree *Real::Do(Action *action)
-// ----------------------------------------------------------------------------
-//   Call specialized Real routine in the action
-// ----------------------------------------------------------------------------
-{
-    return action->DoReal(this);
-}
-
-
-
-// ============================================================================
-// 
-//   Class Text
-// 
-// ============================================================================
 
 Tree *Action::DoText(Text *what)
 // ----------------------------------------------------------------------------
@@ -175,22 +114,6 @@ Tree *Action::DoText(Text *what)
 }
 
 
-Tree *Text::Do(Action *action)
-// ----------------------------------------------------------------------------
-//   Call specialized Text routine in the action
-// ----------------------------------------------------------------------------
-{
-    return action->DoText(this);
-}
-
-
-
-// ============================================================================
-// 
-//   Class Name
-// 
-// ============================================================================
-
 Tree *Action::DoName(Name *what)
 // ----------------------------------------------------------------------------
 //   Default is simply to invoke 'Do'
@@ -199,32 +122,6 @@ Tree *Action::DoName(Name *what)
     return Do(what);
 }
 
-
-Tree *Name::Do(Action *action)
-// ----------------------------------------------------------------------------
-//   Call specialized Name routine in the action
-// ----------------------------------------------------------------------------
-{
-    return action->DoName(this);
-}
-
-
-Tree *Name::Run(Stack *stack)
-// ----------------------------------------------------------------------------
-//    Evaluate a name
-// ----------------------------------------------------------------------------
-{
-    // If not found at compile-time, this is an error to evaluate the name
-    return stack->Error("Name '$1' doesn't exist", this);
-}
-
-
-
-// ============================================================================
-// 
-//   Class Block
-// 
-// ============================================================================
 
 Tree *Action::DoBlock(Block *what)
 // ----------------------------------------------------------------------------
@@ -235,53 +132,6 @@ Tree *Action::DoBlock(Block *what)
     return Do(what);
 }
 
-
-Tree *Block::Do(Action *action)
-// ----------------------------------------------------------------------------
-//   Run the action on the child first
-// ----------------------------------------------------------------------------
-{
-    return action->DoBlock(this);
-}
-
-
-Tree *Block::Run(Stack *stack)
-// ----------------------------------------------------------------------------
-//    Execute a block
-// ----------------------------------------------------------------------------
-{
-    // If the block was not identified at compile time, this is an error
-    return stack->Error ("Unidentified block '$1'", this);
-}
-
-
-Block *Block::MakeBlock(Tree *child, text open, text close, tree_position pos)
-// ----------------------------------------------------------------------------
-//   Create the right type of block based on open and close
-// ----------------------------------------------------------------------------
-{
-    static Block indent(NULL);
-    static Parentheses paren(NULL);
-    static Brackets brackets(NULL);
-    static Curly curly(NULL);
-    if (open == indent.Opening() && close == indent.Closing())
-        return new Block(child, pos);
-    else if (open == paren.Opening() && close == paren.Closing())
-        return new Parentheses(child, pos);
-    else if (open == brackets.Opening() && close == brackets.Closing())
-        return new Brackets(child, pos);
-    else if (open == curly.Opening() && close == curly.Closing())
-        return new Curly(child, pos);
-    return new DelimitedBlock(child, open, close, pos);
-}
-
-
-
-// ============================================================================
-// 
-//   Class Prefix
-// 
-// ============================================================================
 
 Tree *Action::DoPrefix(Prefix *what)
 // ----------------------------------------------------------------------------
@@ -294,32 +144,6 @@ Tree *Action::DoPrefix(Prefix *what)
 }
 
 
-Tree *Prefix::Do(Action *action)
-// ----------------------------------------------------------------------------
-//   Run the action on the left and right children first
-// ----------------------------------------------------------------------------
-{
-    return action->DoPrefix(this);
-}
-
-
-Tree *Prefix::Run(Stack *stack)
-// ----------------------------------------------------------------------------
-//    Execute a prefix node
-// ----------------------------------------------------------------------------
-{
-    // If not found at compile-time, this is an error
-    return stack->Error("Don't know how to call '$1'", left);
-}
-
-
-
-// ============================================================================
-// 
-//   Class Postfix
-// 
-// ============================================================================
-
 Tree *Action::DoPostfix(Postfix *what)
 // ----------------------------------------------------------------------------
 //   Default is to run the action on the right, then on the left
@@ -330,32 +154,6 @@ Tree *Action::DoPostfix(Postfix *what)
     return Do(what);
 }
 
-
-Tree *Postfix::Do(Action *action)
-// ----------------------------------------------------------------------------
-//   Run the action on the left and right children first
-// ----------------------------------------------------------------------------
-{
-    return action->DoPostfix(this);
-}
-
-
-Tree *Postfix::Run(Stack *stack)
-// ----------------------------------------------------------------------------
-//    Execute a postfix node
-// ----------------------------------------------------------------------------
-{
-    // If the postfix was not identified at compile-time, this is an error
-    return stack->Error("Don't know how to call '$1'", right);
-}
-
-
-
-// ============================================================================
-// 
-//    Class Infix 
-// 
-// ============================================================================
 
 Tree *Action::DoInfix(Infix *what)
 // ----------------------------------------------------------------------------
@@ -368,21 +166,214 @@ Tree *Action::DoInfix(Infix *what)
 }
 
 
-Tree *Infix::Do(Action *action)
-// ----------------------------------------------------------------------------
-//   Run the action on the children first
-// ----------------------------------------------------------------------------
-{
-    return action->DoInfix(this);
-}
+text Block::indent   = "\t+";
+text Block::unindent = "\t-";
+text Text::textQuote = "\"";
+text Text::charQuote = "'";
 
 
-Tree *Infix::Run(Stack *stack)
+
+// ============================================================================
+// 
+//    Tree shape equality comparison
+// 
+// ============================================================================
+
+struct TreeMatch : Action
 // ----------------------------------------------------------------------------
-//    Execute an infix node
+//   Check if two trees match in structure
 // ----------------------------------------------------------------------------
 {
-    return stack->Error ("Cannot evaluate unknown infix '$1'", this);
-}
+    TreeMatch (Tree *t): test(t) {}
+    Tree *DoInteger(Integer *what)
+    {
+        if (Integer *it = test->AsInteger())
+            if (it->value == what->value)
+                return what;
+        return NULL;
+    }
+    Tree *DoReal(Real *what)
+    {
+        if (Real *rt = test->AsReal())
+            if (rt->value == what->value)
+                return what;
+        return NULL;
+    }
+    Tree *DoText(Text *what)
+    {
+        if (Text *tt = test->AsText())
+            if (tt->value == what->value)
+                return what;
+        return NULL;
+    }
+    Tree *DoName(Name *what)
+    {
+        if (Name *nt = test->AsName())
+            if (nt->value == what->value)
+                return what;
+        return NULL;
+    }
+
+    Tree *DoBlock(Block *what)
+    {
+        // Test if we exactly match the block, i.e. the reference is a block
+        if (Block *bt = test->AsBlock())
+        {
+            if (bt->opening == what->opening &&
+                bt->closing == what->closing)
+            {
+                test = bt->child;
+                Tree *br = what->child->Do(this);
+                test = bt;
+                if (br)
+                    return br;
+            }
+        }
+        return NULL;
+    }
+    Tree *DoInfix(Infix *what)
+    {
+        if (Infix *it = test->AsInfix())
+        {
+            // Check if we match the tree, e.g. A+B vs 2+3
+            if (it->name == what->name)
+            {
+                test = it->left;
+                Tree *lr = what->left->Do(this);
+                test = it;
+                if (!lr)
+                    return NULL;
+                test = it->right;
+                Tree *rr = what->right->Do(this);
+                test = it;
+                if (!rr)
+                    return NULL;
+                return what;
+            }
+        }
+        return NULL;
+    }
+    Tree *DoPrefix(Prefix *what)
+    {
+        if (Prefix *pt = test->AsPrefix())
+        {
+            // Check if we match the tree, e.g. f(A) vs. f(2)
+            test = pt->left;
+            Tree *lr = what->left->Do(this);
+            test = pt;
+            if (!lr)
+                return NULL;
+            test = pt->right;
+            Tree *rr = what->right->Do(this);
+            test = pt;
+            if (!rr)
+                return NULL;
+            return what;
+        }
+        return NULL;
+    }
+    Tree *DoPostfix(Postfix *what)
+    {
+        if (Postfix *pt = test->AsPostfix())
+        {
+            // Check if we match the tree, e.g. A! vs 2!
+            test = pt->right;
+            Tree *rr = what->right->Do(this);
+            test = pt;
+            if (!rr)
+                return NULL;
+            test = pt->left;
+            Tree *lr = what->left->Do(this);
+            test = pt;
+            if (!lr)
+                return NULL;
+            return what;
+        }
+        return NULL;
+    }
+    Tree *Do(Tree *what)
+    {
+        return NULL;
+    }
+
+    Tree *      test;
+};
+
 
 XL_END
+
+
+// ============================================================================
+// 
+//    Runtime functions that can be invoked from the compiled code
+// 
+// ============================================================================
+
+extern "C"
+{
+    using namespace XL;
+
+
+    Tree *xl_identity(Tree *what)
+    // ------------------------------------------------------------------------
+    //   Return the input tree unchanged
+    // ------------------------------------------------------------------------
+    {
+        return what;
+    }
+
+
+    Tree *xl_evaluate(Tree *what)
+    // ------------------------------------------------------------------------
+    //   Compile the tree if necessary, then evaluate it
+    // ------------------------------------------------------------------------
+    // This is similar to Context::Run, but we save stack space for recursion
+    {
+        if (!what)
+            return what;
+
+        if (!what->code)
+            what = Context::context->Compile(what);
+
+        assert(what->code);
+        Tree *result = what->code(what);
+        return result;
+    }
+
+
+    bool xl_same_text(Text *what, const char *ref)
+    // ------------------------------------------------------------------------
+    //   Compile the tree if necessary, then evaluate it
+    // ------------------------------------------------------------------------
+    {
+        assert(what && what->Kind() == TEXT);
+        return what->value == text(ref);
+    }
+
+
+    bool xl_same_shape(Tree *left, Tree *right)
+    // ------------------------------------------------------------------------
+    //   Check equality of two trees
+    // ------------------------------------------------------------------------
+    {
+        XL::TreeMatch compareForEquality(right);
+        if (left->Do(compareForEquality))
+            return true;
+        return false;
+    }
+
+
+    bool xl_type_check(Tree *value, Tree *type)
+    // ------------------------------------------------------------------------
+    //   Check if value has the type of 'type'
+    // ------------------------------------------------------------------------
+    {
+        if (!type->code)
+            return false;
+        Tree *afterTypeCast = type->code(value);
+        if (afterTypeCast != value)
+            return false;
+        return true;
+    }
+
+} // extern "C"
