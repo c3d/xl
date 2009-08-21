@@ -1403,7 +1403,10 @@ Tree * CompileAction::Rewrites(Tree *what)
         alloc->next = result;
         result = alloc;
         AllocateLocals *dealloc = new AllocateLocals(-slots);
-        endOfCall->next = dealloc;
+        if (endOfCall)
+            endOfCall->next = dealloc;
+        else
+            Append(result, dealloc);
     }
 
     return result;
