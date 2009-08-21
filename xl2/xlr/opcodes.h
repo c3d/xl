@@ -149,6 +149,18 @@ struct FailedCall : Native
 };
 
 
+struct QuotedTree : Native
+// ----------------------------------------------------------------------------
+//   Protect some input parameter from evaluation
+// ----------------------------------------------------------------------------
+{
+    QuotedTree(Tree *src, tree_position pos = NOWHERE):
+        Native(NULL, pos), source(src) {}
+    Tree *Run(Stack *stack) { return this; }
+    Tree *source;
+};
+
+
 struct TreeTest : Native
 // ----------------------------------------------------------------------------
 //    Test a tree argument for a specific condition
@@ -304,9 +316,11 @@ double real_arg(Stack *stack, ulong index);
 text text_arg(Stack *stack, ulong index);
 bool boolean_arg(Stack *stack, ulong index);
 Tree *anything_arg(Stack *stack, ulong index);
+Tree *tree_arg(Stack *stack, ulong index);
 Tree *ParametersTree(tree_list parameters);
 
 #define ANYTHING(index) stack->Get[(index)]
+#define TREE(index)     stack->Get[(index)]
 #define INT(index)      integer_arg(stack, (index))
 #define REAL(index)     real_arg(stack, (index))
 #define TEXT(index)     text_arg(stack, (index))
@@ -315,12 +329,14 @@ Tree *ParametersTree(tree_list parameters);
 #define RREAL(val)      return new Real((val), Position())
 #define RTEXT(val)      return new Text((val), Position())
 #define RBOOL(val)      return (val) ? true_name : false_name
+#define RTREE(val)      return (val)
 
 typedef longlong integer_t;
 typedef double real_t;
 typedef text text_t;
 typedef bool boolean_t;
 typedef Tree *anything_t;
+typedef Tree *tree_t;
 
 XL_END
 

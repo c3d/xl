@@ -171,8 +171,8 @@ PREFIX("year_day",, SystemYearDay,
        time (&t); localtime_r(&t, &tm); RINT(tm.tm_yday))
 
 // Debugging code
-PREFIX("debug", PARM(tree, anything), DebugTree,
-       std::cerr << "DEBUG: " << tree << "\n"; return tree)
+PREFIX("debug", PARM(toDebug, tree), DebugTree,
+       std::cerr << "DEBUG: " << toDebug << "\n"; return toDebug)
 
 NAME(nil, ReservedName);
 NAME(true, ReservedName);
@@ -188,6 +188,7 @@ TYPE("infix", InfixType);
 TYPE("prefix", PrefixType);
 TYPE("postfix", PostfixType);
 TYPE("block", BlockType);
+TYPE("tree", TreeType);
 
 
 #undef INFIX

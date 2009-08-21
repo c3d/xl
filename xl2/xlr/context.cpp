@@ -31,6 +31,7 @@
 #include "options.h"
 #include "renderer.h"
 #include "opcodes.h"
+#include "basics.h"
 
 XL_BEGIN
 
@@ -860,21 +861,39 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
             return context->Error("Name '$1' already exists as '$2'",
                                   what->left, existing);
 
-        // Compile what we are testing against
-        Tree *compiled = Compile(test);
-        tree_position pos = test->Position();
-
         // Evaluate type expression, e.g. 'integer' in example above
-        Tree *typeExpr = Compile(what->right);
+        Tree *typeExpr = context->Compile(what->right);
+        if (dynamic_cast<AnyType *> (typeExpr))
+        {
+            // If we know statically it's an any-type check, don't add checks
+            // Since this was explicitly declared, still eager evaluation
+            Tree *compiled = Compile(test);
+            locals->EnterName(varName->value, compiled);
+        }
+        else if (dynamic_cast<TreeType *> (typeExpr))
+        {
+            // No type check in that case, and switch to lazy evaluation
+            // (i.e. we generate a quote, caller must explicitly run it)
+            Tree *compiled = context->Compile(test);
+            QuotedTree *quote = new QuotedTree(compiled);
+            locals->EnterName(varName->value, quote);
+        }
+        else
+        {
+            // Compile what we are testing against
+            Tree *compiled = Compile(test);
+            tree_position pos = test->Position();
+            
+            // Insert a run-time type test
+            if (!end)
+                end = new BranchTarget(pos);
+            Tree *itest = new TypeTest(compiled, typeExpr, NULL, end, pos);
+            code = Append(code, itest);
 
-        // Insert a run-time type test
-        if (!end)
-            end = new BranchTarget(pos);
-        Tree *itest = new TypeTest(compiled, typeExpr, NULL, end, pos);
-        code = Append(code, itest);
+            // Enter the result of the type test in symbol table
+            locals->EnterName(varName->value, compiled);
+        }
 
-        // Enter the result of the type test in symbol table
-        locals->EnterName(varName->value, compiled);
         
         return what;
     }

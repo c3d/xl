@@ -382,6 +382,19 @@ Tree *anything_arg(Stack *stack, ulong index)
 }
 
 
+Tree *tree_arg(Stack *stack, ulong index)
+// ----------------------------------------------------------------------------
+//    Return a quoted argument
+// ----------------------------------------------------------------------------
+{
+    Tree *value = stack->Get(index);
+    if (QuotedTree *quote = dynamic_cast<QuotedTree *> (value))
+        return quote->source;
+    stack->Error("Value '$1' is not a quoted tree", value);
+    return NULL;
+}
+
+
 Tree *ParametersTree(tree_list parameters)
 // ----------------------------------------------------------------------------
 //   Create a comma-separated parameter list

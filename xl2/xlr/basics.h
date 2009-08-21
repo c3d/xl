@@ -133,6 +133,15 @@ struct AnyType : TypeExpression
 };
 
 
+struct TreeType : TypeExpression
+// ----------------------------------------------------------------------------
+//    Don't actually check the argument, but protect from evaluation...
+// ----------------------------------------------------------------------------
+{
+    Tree *TypeCheck(Stack *stack, Tree *args);
+};
+
+
 struct InfixType : TypeExpression
 // ----------------------------------------------------------------------------
 //    Check if the argument is an infix

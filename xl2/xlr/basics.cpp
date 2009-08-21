@@ -136,6 +136,15 @@ Tree *AnyType::TypeCheck(Stack *stack, Tree *value)
 }
 
 
+Tree *TreeType::TypeCheck(Stack *stack, Tree *value)
+// ----------------------------------------------------------------------------
+//   Don't really check the argument
+// ----------------------------------------------------------------------------
+{
+    return value;
+}
+
+
 Tree *InfixType::TypeCheck(Stack *stack, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as an infix
