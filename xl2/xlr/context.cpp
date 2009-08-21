@@ -654,6 +654,153 @@ Tree *ParameterMatch::DoNative(Native *what)
 
 // ============================================================================
 // 
+//   Declaration action - Enter all tree rewrites in the current context
+// 
+// ============================================================================
+
+struct DeclarationAction : Action
+// ----------------------------------------------------------------------------
+//   Compute an optimized version of the input tree
+// ----------------------------------------------------------------------------
+{
+    DeclarationAction (Context *c): context(c) {}
+
+    virtual Tree *Do(Tree *what);
+    virtual Tree *DoInteger(Integer *what);
+    virtual Tree *DoReal(Real *what);
+    virtual Tree *DoText(Text *what);
+    virtual Tree *DoName(Name *what);
+    virtual Tree *DoPrefix(Prefix *what);
+    virtual Tree *DoPostfix(Postfix *what);
+    virtual Tree *DoInfix(Infix *what);
+    virtual Tree *DoBlock(Block *what);
+    virtual Tree *DoNative(Native *what);
+
+    void        EnterRewrite(Tree *defined, Tree *definition);
+
+    Context *context;
+};
+
+
+Tree *DeclarationAction::Do(Tree *what)
+// ----------------------------------------------------------------------------
+//   Default is to leave trees alone (for native trees)
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *DeclarationAction::DoInteger(Integer *what)
+// ----------------------------------------------------------------------------
+//   Integers evaluate directly
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *DeclarationAction::DoReal(Real *what)
+// ----------------------------------------------------------------------------
+//   Reals evaluate directly
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *DeclarationAction::DoText(Text *what)
+// ----------------------------------------------------------------------------
+//   Text evaluates directly
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *DeclarationAction::DoName(Name *what)
+// ----------------------------------------------------------------------------
+//   Build a unique reference in the context for the entity
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *DeclarationAction::DoBlock(Block *what)
+// ----------------------------------------------------------------------------
+//   Optimize away indent or parenthese blocks, evaluate others
+// ----------------------------------------------------------------------------
+{
+    return what->child->Do(this);
+}
+
+
+Tree *DeclarationAction::DoInfix(Infix *what)
+// ----------------------------------------------------------------------------
+//   Compile built-in operators: \n ; -> and :
+// ----------------------------------------------------------------------------
+{
+    // Check if this is an instruction list
+    if (what->name == "\n" || what->name == ";")
+    {
+        // For instruction list, string declaration results together
+        what->left->Do(this);
+        what->right->Do(this);
+        return what;
+    }
+
+    // Check if this is a rewrite declaration
+    if (what->name == "->")
+    {
+        // Enter the rewrite
+        EnterRewrite(what->left, what->right);
+        return what;
+    }
+
+    return what;
+}
+
+
+Tree *DeclarationAction::DoPrefix(Prefix *what)
+// ----------------------------------------------------------------------------
+//    All prefix operations translate into a rewrite
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *DeclarationAction::DoPostfix(Postfix *what)
+// ----------------------------------------------------------------------------
+//    All postfix operations translate into a rewrite
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *DeclarationAction::DoNative(Native *what)
+// ----------------------------------------------------------------------------
+//    Leave all native code alone
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+void DeclarationAction::EnterRewrite(Tree *defined, Tree *definition)
+// ----------------------------------------------------------------------------
+//   Add a definition in the current context
+// ----------------------------------------------------------------------------
+{
+    context->EnterRewrite(defined, definition);
+}
+
+
+
+// ============================================================================
+// 
 //   Compilation action - Generation of "optimized" native trees
 // 
 // ============================================================================
@@ -681,9 +828,6 @@ struct CompileAction : Action
 
     // Build code selecting among rewrites in current context
     Tree *      Rewrites(Tree *what);
-
-    // Add a definition in the current context
-    void        EnterRewrite(Tree *defined, Tree *definition);
 
     Context *context;
 };
@@ -778,10 +922,7 @@ Tree *CompileAction::DoInfix(Infix *what)
     // Check if this is a rewrite declaration
     if (what->name == "->")
     {
-        // Enter the rewrite
-        EnterRewrite(what->left, what->right);
-
-        // Return a total lack of anything else to do
+        // If so, skip, this has been done in DeclarationAction
         return NULL;
     }
 
@@ -898,15 +1039,6 @@ Tree * CompileAction::Rewrites(Tree *what)
 }
 
 
-void CompileAction::EnterRewrite(Tree *defined, Tree *definition)
-// ----------------------------------------------------------------------------
-//   Add a definition in the current context
-// ----------------------------------------------------------------------------
-{
-    context->EnterRewrite(defined, definition);
-}
-
-
 
 // ============================================================================
 // 
@@ -923,6 +1055,9 @@ Tree *Context::Compile(Tree *source)
     if (result)
         return result;
 
+    DeclarationAction declare(this);
+    result = source->Do(declare);
+        
     CompileAction compile(this);
     result = source->Do(compile);
     compiled[source] = result;
