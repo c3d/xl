@@ -30,6 +30,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <cstdarg>
 
 #include <llvm/Analysis/Verifier.h>
 #include <llvm/CallingConv.h>
@@ -178,35 +179,27 @@ Compiler::Compiler(kstring moduleName)
     module->addTypeName("struct.evalfn", evalFnTy);
 
     // Create a reference to the evaluation function
-    xl_evaluate = Function::Create(evalTy, Function::ExternalLinkage,
-                                   "xl_evaluate", module);
-    sys::DynamicLibrary::AddSymbol("xl_evaluate", (void *) XL::xl_evaluate);
-
-    // Create a reference to the xl_same_text function
-    std::vector<const Type *> sameTextParms;
-    PointerType *i8PtrTy = PointerType::get(LLVM_INTTYPE(char), 0);
-    sameTextParms.push_back(treePtrTy);
-    sameTextParms.push_back(i8PtrTy);
-    FunctionType *sameTextTy = FunctionType::get(Type::Int1Ty,
-                                                 sameTextParms, false);
-    xl_same_text = Function::Create(sameTextTy, Function::ExternalLinkage,
-                                    "xl_same_text", module);
-    sys::DynamicLibrary::AddSymbol("xl_same_text", (void*) XL::xl_same_text);
-
-    // Create a reference to the xl_same_shape function
-    std::vector<const Type *> sameShapeParms;
-    sameTextParms.push_back(treePtrTy);
-    sameTextParms.push_back(treePtrTy);
-    FunctionType *sameShapeTy = FunctionType::get(Type::Int1Ty,
-                                                  sameShapeParms, false);
-    xl_same_shape = Function::Create(sameShapeTy, Function::ExternalLinkage,
-                                     "xl_same_shape", module);
-    sys::DynamicLibrary::AddSymbol("xl_same_shape", (void*) XL::xl_same_shape);
-
-    // Create a reference to the xl_type_check function
-    xl_type_check = Function::Create(sameShapeTy, Function::ExternalLinkage,
-                                     "xl_type_check", module);
-    sys::DynamicLibrary::AddSymbol("xl_type_check", (void*) XL::xl_type_check);
+    Type *charPtrTy = PointerType::get(LLVM_INTTYPE(char), 0);
+    const Type *boolTy = Type::Int1Ty;
+#define FN(x) #x, (void *) XL::x
+    xl_evaluate = ExternFunction(FN(xl_evaluate),
+                                 treePtrTy, 1, treePtrTy);
+    xl_same_text = ExternFunction(FN(xl_same_text),
+                                  boolTy, 2, treePtrTy, charPtrTy);
+    xl_same_shape = ExternFunction(FN(xl_same_shape),
+                                   boolTy, 2, treePtrTy, treePtrTy);
+    xl_type_check = ExternFunction(FN(xl_type_check),
+                                   boolTy, 2, treePtrTy, treePtrTy);
+    xl_new_integer = ExternFunction(FN(xl_new_integer),
+                                    treePtrTy, 1, LLVM_INTTYPE(longlong));
+    xl_new_real = ExternFunction(FN(xl_new_real),
+                                 treePtrTy, 1, Type::DoubleTy);
+    xl_new_character = ExternFunction(FN(xl_new_character),
+                                      treePtrTy, 1, charPtrTy);
+    xl_new_text = ExternFunction(FN(xl_new_text),
+                                 treePtrTy, 1, charPtrTy);
+    xl_new_text = ExternFunction(FN(xl_new_xtext),
+                                 treePtrTy, 3, charPtrTy, charPtrTy, charPtrTy);
 }
 
 
@@ -237,6 +230,28 @@ Function *Compiler::EnterBuiltin(text name, Tree *form, eval_fn code)
     functions[form] = result;
 
     return result;    
+}
+
+
+Function *Compiler::ExternFunction(kstring name, void *address,
+                                   const Type *retType, uint parmCount, ...)
+// ----------------------------------------------------------------------------
+//   Return a Function for some given external symbol
+// ----------------------------------------------------------------------------
+{
+    va_list va;
+    va_start (va, parmCount);
+    std::vector<const Type *> parms;
+    for (uint i = 0; i < parmCount; i++)
+    {
+        Type *ty = va_arg(va, Type *);
+        parms.push_back(ty);
+    }
+    FunctionType *fnType = FunctionType::get(retType, parms, false);
+    Function *result = Function::Create(fnType, Function::ExternalLinkage,
+                                        name, module);
+    sys::DynamicLibrary::AddSymbol(name, address);
+    return result;
 }
 
 
@@ -365,6 +380,76 @@ void CompiledUnit::EndInvokation(llvm::BasicBlock *bb, bool success)
         invokebb = bb;
         failbb = NULL;
     }
+}
+
+
+Value *CompiledUnit::ConstantInteger(Integer *what)
+// ----------------------------------------------------------------------------
+//    Generate a call to xl_new_integer to build an Integer tree
+// ----------------------------------------------------------------------------
+{
+    Value *result = map[what];
+    if (!result)
+    {
+        Value *imm = ConstantInt::get(LLVM_INTTYPE(longlong), what->value);
+        result = builder->CreateCall(compiler->xl_new_integer, imm);
+        map[what] = result;
+    }
+    return result;
+}
+
+
+Value *CompiledUnit::ConstantReal(Real *what)
+// ----------------------------------------------------------------------------
+//    Generate a call to xl_new_real to build a Real tree
+// ----------------------------------------------------------------------------
+{
+    Value *result = map[what];
+    if (!result)
+    {
+        Value *imm = ConstantFP::get(Type::DoubleTy, what->value);
+        result = builder->CreateCall(compiler->xl_new_real, imm);
+        map[what] = result;
+    }
+    return result;
+}
+
+
+Value *CompiledUnit::ConstantText(Text *what)
+// ----------------------------------------------------------------------------
+//    Generate a text with the same properaties as the input
+// ----------------------------------------------------------------------------
+{
+    Value *result = map[what];
+    if (!result)
+    {
+        Constant *txtArray = ConstantArray::get(what->value);
+        Value *txtPtr = builder->CreateConstGEP1_32(txtArray, 0);
+
+        // Check if this is a normal text, "Foo"
+        if (what->opening == Text::textQuote &&
+            what->closing == Text::textQuote)
+        {
+            result = builder->CreateCall(compiler->xl_new_text, txtPtr);
+        }
+        // Check if this is is a normal character description, 'A'
+        else if (what->opening == Text::charQuote &&
+                 what->closing == Text::charQuote)
+        {
+            result = builder->CreateCall(compiler->xl_new_character, txtPtr);
+        }
+        else
+        {
+            Constant *openArray = ConstantArray::get(what->opening);
+            Constant *closeArray = ConstantArray::get(what->opening);
+            Value *openPtr = builder->CreateConstGEP1_32(openArray, 0);
+            Value *closePtr = builder->CreateConstGEP1_32(closeArray, 0);
+            result = builder->CreateCall3(compiler->xl_new_xtext,
+                                          txtPtr, openPtr, closePtr);
+        }
+        map[what] = result;
+    }
+    return result;
 }
 
 
@@ -533,7 +618,7 @@ Value *CompiledUnit::Right(Tree *code)
 }
 
 
-Value *CompiledUnit::LazyEvaluation(Tree *code, ulong id)
+Value *CompiledUnit::LazyEvaluation(Tree *code)
 // ----------------------------------------------------------------------------
 //   Evaluate the given tree on demand
 // ----------------------------------------------------------------------------
@@ -753,6 +838,9 @@ BasicBlock *CompiledUnit::TypeTest(Tree *value, Tree *type)
 XL_END
 
 void debugm(XL::value_map &m)
+// ----------------------------------------------------------------------------
+//   Dump a value map from the debugger
+// ----------------------------------------------------------------------------
 {
     XL::value_map::iterator i;
     for (i = m.begin(); i != m.end(); i++)

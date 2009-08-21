@@ -58,7 +58,9 @@ struct Compiler
     Compiler(kstring moduleName = "xl");
 
     llvm::Function *          EnterBuiltin(text name, Tree *form, eval_fn code);
-
+    llvm::Function *          ExternFunction(kstring name, void *address,
+                                             const llvm::Type *retType,
+                                             uint parmCount, ...);
 public:
     llvm::Module              *module;
     llvm::ModuleProvider      *provider;
@@ -79,6 +81,11 @@ public:
     llvm::Function            *xl_same_text;
     llvm::Function            *xl_same_shape;
     llvm::Function            *xl_type_check;
+    llvm::Function            *xl_new_integer;
+    llvm::Function            *xl_new_real;
+    llvm::Function            *xl_new_character;
+    llvm::Function            *xl_new_text;
+    llvm::Function            *xl_new_xtext;
     function_map               functions;
 };
 
@@ -96,6 +103,10 @@ struct CompiledUnit
     llvm::BasicBlock *  BeginInvokation();
     void                EndInvokation(llvm::BasicBlock *bb, bool success);
 
+    llvm::Value *       ConstantInteger(Integer *what);
+    llvm::Value *       ConstantReal(Real *what);
+    llvm::Value *       ConstantText(Text *what);
+
     llvm::Value *       Invoke(Tree *callee, tree_list args);
     llvm::Value *       Return(Tree *value);
     eval_fn             Finalize();
@@ -105,7 +116,7 @@ struct CompiledUnit
     llvm::Value *       Left(Tree *);
     llvm::Value *       Right(Tree *);
 
-    llvm::Value *       LazyEvaluation(Tree *code, ulong id);
+    llvm::Value *       LazyEvaluation(Tree *code);
     llvm::Value *       EagerEvaluation(Tree *code);
     llvm::BasicBlock *  TagTest(Tree *code, ulong tag);
     llvm::BasicBlock *  IntegerTest(Tree *code, longlong value);

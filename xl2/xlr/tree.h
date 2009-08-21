@@ -70,6 +70,12 @@ extern "C"
     bool  xl_same_shape(Tree *t1, Tree *t2);
     bool  xl_type_check(Tree *value, Tree *type);
 
+    Tree *xl_new_integer(longlong value);
+    Tree *xl_new_real(double value);
+    Tree *xl_new_character(kstring value);
+    Tree *xl_new_text(kstring value);
+    Tree *xl_new_xtext(kstring value, kstring open, kstring close);
+
     Tree *xl_boolean(Tree *value);    
     Tree *xl_integer(Tree *value);
     Tree *xl_real(Tree *value);

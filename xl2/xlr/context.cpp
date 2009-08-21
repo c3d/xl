@@ -286,30 +286,6 @@ struct RewriteKey : Action
 // 
 // ============================================================================
 
-struct ParameterMatch : Action
-// ----------------------------------------------------------------------------
-//   Check if two trees match, collect 'variables' and emit type test nodes
-// ----------------------------------------------------------------------------
-{
-    ParameterMatch (Symbols *s)
-        : symbols(s), context(s->context), defined(NULL) {}
-
-    virtual Tree *Do(Tree *what);
-    virtual Tree *DoInteger(Integer *what);
-    virtual Tree *DoReal(Real *what);
-    virtual Tree *DoText(Text *what);
-    virtual Tree *DoName(Name *what);
-    virtual Tree *DoPrefix(Prefix *what);
-    virtual Tree *DoPostfix(Postfix *what);
-    virtual Tree *DoInfix(Infix *what);
-    virtual Tree *DoBlock(Block *what);
-
-    Symbols * symbols;          // Symbols in which we test
-    Context * context;          // Compilation context (for errors)
-    Tree *    defined;          // Tree beind defined, e.g. 'sin' in 'sin X'
-};
-
-
 Tree *ParameterMatch::Do(Tree *what)
 // ----------------------------------------------------------------------------
 //   Nothing to do for leaves
@@ -448,47 +424,9 @@ Tree *ParameterMatch::DoPostfix(Postfix *what)
 
 // ============================================================================
 // 
-//    Parameter matching - Test input parameters
+//    Argument matching - Test input parameters
 // 
 // ============================================================================
-
-typedef std::map<Tree *, ulong> eval_cache;
-
-struct ArgumentMatch : Action
-// ----------------------------------------------------------------------------
-//   Check if two trees match, collect 'variables' and emit type test nodes
-// ----------------------------------------------------------------------------
-{
-    ArgumentMatch (Tree *t,
-                   Symbols *s, Symbols *l, Symbols *r,
-                   CompiledUnit *comp, eval_cache &evals):
-        symbols(s), locals(l), rewrite(r),
-        test(t), defined(NULL), compiler(comp), expressions(evals) {}
-
-    // Action callbacks
-    virtual Tree *Do(Tree *what);
-    virtual Tree *DoInteger(Integer *what);
-    virtual Tree *DoReal(Real *what);
-    virtual Tree *DoText(Text *what);
-    virtual Tree *DoName(Name *what);
-    virtual Tree *DoPrefix(Prefix *what);
-    virtual Tree *DoPostfix(Postfix *what);
-    virtual Tree *DoInfix(Infix *what);
-    virtual Tree *DoBlock(Block *what);
-
-    // Compile a tree and record the use in 'expressions'
-    Tree *        Compile(Tree *source);
-
-public:
-    Symbols *     symbols;      // Context in which we evaluate values
-    Symbols *     locals;       // Symbols where we declare arguments
-    Symbols *     rewrite;      // Symbols in which the rewrite was declared
-    Tree *        test;         // Tree we test
-    Tree *        defined;      // Tree beind defined, e.g. 'sin' in 'sin X'
-    CompiledUnit *compiler;     // Which JIT compiler we use to generate code
-    eval_cache &  expressions;  // Expressions needed for determination
-};
-
 
 Tree *ArgumentMatch::Compile(Tree *source)
 // ----------------------------------------------------------------------------
@@ -501,15 +439,9 @@ Tree *ArgumentMatch::Compile(Tree *source)
     if (!source)
         return NULL; // No match
  
-    // Identify stack slot for that expression
-    ulong id = expressions.size();
-    if (expressions.count(source) > 0)
-        id = expressions[source];
-    else
-        expressions[source] = id;
-        
     // Generate code to only evaluate the result once
-    compiler->LazyEvaluation(source, id);
+    source->Do(compile);
+    unit->LazyEvaluation(source);
     return source;
 }
 
@@ -543,7 +475,7 @@ Tree *ArgumentMatch::DoInteger(Integer *what)
         return NULL;
 
     // Compare at run-time the actual tree value with the test value
-    compiler->IntegerTest(compiled, what->value);
+    unit->IntegerTest(compiled, what->value);
     return compiled;
 }
 
@@ -568,7 +500,7 @@ Tree *ArgumentMatch::DoReal(Real *what)
         return NULL;
 
     // Compare at run-time the actual tree value with the test value
-    compiler->RealTest(compiled, what->value);
+    unit->RealTest(compiled, what->value);
     return compiled;
 }
 
@@ -593,7 +525,7 @@ Tree *ArgumentMatch::DoText(Text *what)
         return NULL;
 
     // Compare at run-time the actual tree value with the test value
-    compiler->TextTest(compiled, what->value);
+    unit->TextTest(compiled, what->value);
     return compiled;
 }
 
@@ -625,7 +557,7 @@ Tree *ArgumentMatch::DoName(Name *what)
             Tree *thisCode = Compile(existing);
             if (!thisCode)
                 return NULL;
-            compiler->ShapeTest(testCode, thisCode);
+            unit->ShapeTest(testCode, thisCode);
 
             // Return compilation success
             return what;
@@ -655,7 +587,6 @@ Tree *ArgumentMatch::DoBlock(Block *what)
             bt->closing == what->closing)
         {
             test = bt->child;
-            compiler->Left(bt);
             Tree *br = what->child->Do(this);
             test = bt;
             if (br)
@@ -687,13 +618,11 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
             if (!defined)
                 defined = what;
             test = it->left;
-            compiler->Left(it);
             Tree *lr = what->left->Do(this);
             test = it;
             if (!lr)
                 return NULL;
             test = it->right;
-            compiler->Right(it);
             Tree *rr = what->right->Do(this);
             test = it;
             if (!rr)
@@ -723,7 +652,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         Tree *compiled = Compile(test);
 
         // Insert a run-time type test
-        compiler->TypeTest(compiled, typeExpr);
+        unit->TypeTest(compiled, typeExpr);
 
         // Enter the compiled expression in the symbol table
         locals->EnterName(varName->value, compiled);
@@ -750,13 +679,11 @@ Tree *ArgumentMatch::DoPrefix(Prefix *what)
             defined = NULL;
 
         test = pt->left;
-        compiler->Left(pt);
         Tree *lr = what->left->Do(this);
         test = pt;
         if (!lr)
             return NULL;
         test = pt->right;
-        compiler->Right(pt);
         Tree *rr = what->right->Do(this);
         test = pt;
         if (!rr)
@@ -780,13 +707,11 @@ Tree *ArgumentMatch::DoPostfix(Postfix *what)
         // Note that ordering is reverse compared to prefix, so that
         // the 'defined' names is set correctly
         test = pt->right;
-        compiler->Right(pt);
         Tree *rr = what->right->Do(this);
         test = pt;
         if (!rr)
             return NULL;
         test = pt->left;
-        compiler->Left(pt);
         Tree *lr = what->left->Do(this);
         test = pt;
         if (!lr)
@@ -803,29 +728,6 @@ Tree *ArgumentMatch::DoPostfix(Postfix *what)
 //   Declaration action - Enter all tree rewrites in the current symbols
 // 
 // ============================================================================
-
-struct DeclarationAction : Action
-// ----------------------------------------------------------------------------
-//   Compute an optimized version of the input tree
-// ----------------------------------------------------------------------------
-{
-    DeclarationAction (Symbols *c): symbols(c) {}
-
-    virtual Tree *Do(Tree *what);
-    virtual Tree *DoInteger(Integer *what);
-    virtual Tree *DoReal(Real *what);
-    virtual Tree *DoText(Text *what);
-    virtual Tree *DoName(Name *what);
-    virtual Tree *DoPrefix(Prefix *what);
-    virtual Tree *DoPostfix(Postfix *what);
-    virtual Tree *DoInfix(Infix *what);
-    virtual Tree *DoBlock(Block *what);
-
-    void        EnterRewrite(Tree *defined, Tree *definition);
-
-    Symbols *symbols;
-};
-
 
 Tree *DeclarationAction::Do(Tree *what)
 // ----------------------------------------------------------------------------
@@ -952,41 +854,24 @@ void DeclarationAction::EnterRewrite(Tree *defined, Tree *definition)
 // 
 // ============================================================================
 
-struct CompileAction : Action
-// ----------------------------------------------------------------------------
-//   Compute an optimized version of the input tree
-// ----------------------------------------------------------------------------
-{
-    CompileAction (Compiler *comp, Symbols *s,
-                   Tree *source, tree_list parms, bool nullIfBad);
-
-    virtual Tree *Do(Tree *what);
-    virtual Tree *DoInteger(Integer *what);
-    virtual Tree *DoReal(Real *what);
-    virtual Tree *DoText(Text *what);
-    virtual Tree *DoName(Name *what);
-    virtual Tree *DoPrefix(Prefix *what);
-    virtual Tree *DoPostfix(Postfix *what);
-    virtual Tree *DoInfix(Infix *what);
-    virtual Tree *DoBlock(Block *what);
-
-    // Build code selecting among rewrites in current context
-    Tree *      Rewrites(Tree *what);
-
-    Symbols *    symbols;
-    CompiledUnit compiler;
-    eval_cache   needed;
-    bool         nullIfBad;
-};
-
-
 CompileAction::CompileAction(Compiler *c, Symbols *s,
                              Tree *source, tree_list parms, bool nib)
 // ----------------------------------------------------------------------------
 //   Constructor
 // ----------------------------------------------------------------------------
-    : symbols(s), compiler(c, source, parms), needed(), nullIfBad(nib)
-{}
+    : symbols(s), unit(NULL), needed(), nullIfBad(nib)
+{
+    unit = new CompiledUnit(c, source, parms);
+}
+
+
+CompileAction::~CompileAction()
+// ----------------------------------------------------------------------------
+//   Destructor deletes the CompiledUnit
+// ----------------------------------------------------------------------------
+{
+    delete unit;
+}
 
 
 Tree *CompileAction::Do(Tree *what)
@@ -1003,6 +888,7 @@ Tree *CompileAction::DoInteger(Integer *what)
 //   Integers evaluate directly
 // ----------------------------------------------------------------------------
 {
+    unit->ConstantInteger(what);
     return what;
 }
 
@@ -1012,6 +898,7 @@ Tree *CompileAction::DoReal(Real *what)
 //   Reals evaluate directly
 // ----------------------------------------------------------------------------
 {
+    unit->ConstantReal(what);
     return what;
 }
 
@@ -1021,6 +908,7 @@ Tree *CompileAction::DoText(Text *what)
 //   Text evaluates directly
 // ----------------------------------------------------------------------------
 {
+    unit->ConstantText(what);
     return what;
 }
 
@@ -1060,16 +948,14 @@ Tree *CompileAction::DoInfix(Infix *what)
     if (what->name == "\n" || what->name == ";")
     {
         // For instruction list, string compile results together
-        compiler.Left(what);
         if (!what->left->Do(this))
             return NULL;
         if (Name *n = what->left->AsName())
-            compiler.EagerEvaluation(n);
-        compiler.Right(what);
+            unit->EagerEvaluation(n);
         if (!what->right->Do(this))
             return NULL;
         if (Name *m = what->right->AsName())
-            compiler.EagerEvaluation(m);
+            unit->EagerEvaluation(m);
         return what;
     }
 
@@ -1140,11 +1026,11 @@ Tree * CompileAction::Rewrites(Tree *what)
                         candidate->from);
 
                 // Create the invokation point
-                llvm::BasicBlock *bb = compiler.BeginInvokation();
+                llvm::BasicBlock *bb = unit->BeginInvokation();
                 Symbols args(context->symbols);
                 ArgumentMatch matchArgs(what,
                                         symbols, &args, candidate->symbols,
-                                        &compiler, needed);
+                                        this, needed);
                 Tree *argsTest = candidate->from->Do(matchArgs);
                 if (argsTest)
                 {
@@ -1154,8 +1040,8 @@ Tree * CompileAction::Rewrites(Tree *what)
                     // If this is a data form, we are done
                     if (!candidate->to)
                     {
-                        compiler.Return (what);
-                        foundUnconditional = !compiler.failbb;
+                        unit->Return (what);
+                        foundUnconditional = !unit->failbb;
                     }
                     else
                     {
@@ -1202,19 +1088,19 @@ Tree * CompileAction::Rewrites(Tree *what)
                         Tree *code = candidate->Compile();
 
                         // Invoke the candidate
-                        compiler.Invoke(code, argsList);
+                        unit->Invoke(code, argsList);
 
                         // If there was no test code, don't keep testing further
-                        foundUnconditional = !compiler.failbb;
+                        foundUnconditional = !unit->failbb;
                         
                         // This is the end of a successful invokation
-                        compiler.EndInvokation(bb, true);
+                        unit->EndInvokation(bb, true);
                     } // if (data form)
                 } // Match args
                 else
                 {
                     // Indicate unsuccessful invokation
-                    compiler.EndInvokation(bb, false);
+                    unit->EndInvokation(bb, false);
                 }
             } // Match test key
 
@@ -1265,7 +1151,7 @@ Tree *Context::Compile(Tree *source, bool nullIfBad)
     tree_list parmsList;
     parmsList.push_back(source);
     CompileAction compile(compiler, &parms, source, parmsList, nullIfBad);
-    if (compile.compiler.IsForwardCall())
+    if (compile.unit->IsForwardCall())
         return source;          // Nested compile
 
     // Generate the code
@@ -1280,7 +1166,7 @@ Tree *Context::Compile(Tree *source, bool nullIfBad)
     }
 
     // If we compiled successfully, get the code and store it
-    eval_fn code = compile.compiler.Finalize();
+    eval_fn code = compile.unit->Finalize();
     source->code = code;
 
     return source;
@@ -1466,7 +1352,7 @@ Tree *Rewrite::Compile(void)
     for (p = parms.names.begin(); p != parms.names.end(); p++)
         parmsList.push_back((*p).second);
     CompileAction compile(context->compiler, &parms, to, parmsList, false);
-    if (compile.compiler.IsForwardCall())
+    if (compile.unit->IsForwardCall())
     {
         // Recursive compilation of that form
         // REVISIT: Can this happen?
@@ -1480,7 +1366,7 @@ Tree *Rewrite::Compile(void)
 
     // Even if technically, this is not an 'eval_fn' (it has more args),
     // we still record it to avoid recompiling multiple times
-    eval_fn code = compile.compiler.Finalize();
+    eval_fn code = compile.unit->Finalize();
     to->code = code;
 
     return result;

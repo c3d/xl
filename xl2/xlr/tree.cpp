@@ -381,6 +381,38 @@ extern "C"
 
     // ========================================================================
     // 
+    //    Creating entities (callbacks for compiled code)
+    // 
+    // ========================================================================
+
+    Tree *xl_new_integer(longlong value)
+    {
+        return new Integer(value);
+    }
+
+    Tree *xl_new_real(double value)
+    {
+        return new Real (value);
+    }
+
+    Tree *xl_new_character(kstring value)
+    {
+        return new Text(value, "'", "'");
+    }
+
+    Tree *xl_new_text(kstring value)
+    {
+        return new Text(text(value));
+    }
+
+    Tree *xl_new_xtext(kstring value, kstring open, kstring close)
+    {
+        return new Text(value, open, close);
+    }
+
+
+    // ========================================================================
+    // 
     //    Type matching
     // 
     // ========================================================================

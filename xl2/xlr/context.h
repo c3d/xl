@@ -123,6 +123,7 @@
 #include <set>
 #include <vector>
 #include "base.h"
+#include "tree.h"
 
 XL_BEGIN
 
@@ -168,7 +169,7 @@ struct Symbols
     ulong               Depth();
 
     // Symbol management
-    Tree *              Named (text name, bool deep=false);
+    Tree *              Named (text name, bool deep = true);
     Rewrite *           Rewrites()              { return rewrites; }
 
     // Entering symbols in the symbol table
@@ -264,6 +265,130 @@ struct Runtime
 {
     Tree *      pc;                             // Program counter
     Tree **     fp;                             // Frame pointer
+};
+
+
+
+// ============================================================================
+// 
+//    Compilation actions
+// 
+// ============================================================================
+
+struct Compiler;
+struct CompiledUnit;
+typedef std::map<Tree *, ulong> eval_cache;
+
+
+struct DeclarationAction : Action
+// ----------------------------------------------------------------------------
+//   Record data and rewrite declarations in the input tree
+// ----------------------------------------------------------------------------
+{
+    DeclarationAction (Symbols *c): symbols(c) {}
+
+    virtual Tree *Do(Tree *what);
+    virtual Tree *DoInteger(Integer *what);
+    virtual Tree *DoReal(Real *what);
+    virtual Tree *DoText(Text *what);
+    virtual Tree *DoName(Name *what);
+    virtual Tree *DoPrefix(Prefix *what);
+    virtual Tree *DoPostfix(Postfix *what);
+    virtual Tree *DoInfix(Infix *what);
+    virtual Tree *DoBlock(Block *what);
+
+    void        EnterRewrite(Tree *defined, Tree *definition);
+
+    Symbols *symbols;
+};
+
+
+struct CompileAction : Action
+// ----------------------------------------------------------------------------
+//   Compute the input tree using the given compiler
+// ----------------------------------------------------------------------------
+{
+    CompileAction (Compiler *comp, Symbols *s,
+                   Tree *source, tree_list parms, bool nullIfBad);
+    ~CompileAction();
+
+    virtual Tree *Do(Tree *what);
+    virtual Tree *DoInteger(Integer *what);
+    virtual Tree *DoReal(Real *what);
+    virtual Tree *DoText(Text *what);
+    virtual Tree *DoName(Name *what);
+    virtual Tree *DoPrefix(Prefix *what);
+    virtual Tree *DoPostfix(Postfix *what);
+    virtual Tree *DoInfix(Infix *what);
+    virtual Tree *DoBlock(Block *what);
+
+    // Build code selecting among rewrites in current context
+    Tree *        Rewrites(Tree *what);
+
+    Symbols *     symbols;
+    CompiledUnit *unit;
+    eval_cache    needed;
+    bool          nullIfBad;
+};
+
+
+struct ParameterMatch : Action
+// ----------------------------------------------------------------------------
+//   Collect parameters on the left of a rewrite
+// ----------------------------------------------------------------------------
+{
+    ParameterMatch (Symbols *s)
+        : symbols(s), context(s->context), defined(NULL) {}
+
+    virtual Tree *Do(Tree *what);
+    virtual Tree *DoInteger(Integer *what);
+    virtual Tree *DoReal(Real *what);
+    virtual Tree *DoText(Text *what);
+    virtual Tree *DoName(Name *what);
+    virtual Tree *DoPrefix(Prefix *what);
+    virtual Tree *DoPostfix(Postfix *what);
+    virtual Tree *DoInfix(Infix *what);
+    virtual Tree *DoBlock(Block *what);
+
+    Symbols * symbols;          // Symbols in which we test
+    Context * context;          // Compilation context (for errors)
+    Tree *    defined;          // Tree beind defined, e.g. 'sin' in 'sin X'
+};
+
+
+struct ArgumentMatch : Action
+// ----------------------------------------------------------------------------
+//   Check if a tree matches the form of the left of a rewrite
+// ----------------------------------------------------------------------------
+{
+    ArgumentMatch (Tree *t,
+                   Symbols *s, Symbols *l, Symbols *r,
+                   CompileAction *comp, eval_cache &evals):
+        symbols(s), locals(l), rewrite(r),
+        test(t), defined(NULL), compile(comp), unit(comp->unit) {}
+
+    // Action callbacks
+    virtual Tree *Do(Tree *what);
+    virtual Tree *DoInteger(Integer *what);
+    virtual Tree *DoReal(Real *what);
+    virtual Tree *DoText(Text *what);
+    virtual Tree *DoName(Name *what);
+    virtual Tree *DoPrefix(Prefix *what);
+    virtual Tree *DoPostfix(Postfix *what);
+    virtual Tree *DoInfix(Infix *what);
+    virtual Tree *DoBlock(Block *what);
+
+    // Compile a tree
+    Tree *        Compile(Tree *source);
+
+public:
+    Symbols *     symbols;      // Context in which we evaluate values
+    Symbols *     locals;       // Symbols where we declare arguments
+    Symbols *     rewrite;      // Symbols in which the rewrite was declared
+    Tree *        test;         // Tree we test
+    Tree *        defined;      // Tree beind defined, e.g. 'sin' in 'sin X'
+    CompileAction *compile;     // Action in which we are compiling
+    CompiledUnit *unit;         // JIT compiler compilation unit
 };
 
 

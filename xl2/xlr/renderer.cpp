@@ -164,7 +164,7 @@ void Renderer::RenderText(text format)
             }
             needsep = false;
         }
-        text t = text("") + c;
+        text t = text(1, c);
         quoted = i > 0 && i < length-1 && t == current_quote;
         if (quoted)
             t += " quoted";
