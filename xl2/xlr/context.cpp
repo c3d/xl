@@ -1071,6 +1071,7 @@ Tree *CompileAction::DoInfix(Infix *what)
             return NULL;
         if (Name *m = what->right->AsName())
             unit.CallEvaluate(m);
+        unit.MarkComputed(what, unit.Known(what->right));
         return what;
     }
 
