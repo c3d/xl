@@ -38,21 +38,11 @@ XL_BEGIN
 // Top-level entry point: enter all basic operations in the context
 void EnterBasics(Context *context);
 
-struct ListHandler : Native
-// ----------------------------------------------------------------------------
-//    Deal with the comma or similar constructive handlers
-// ----------------------------------------------------------------------------
-{
-    ListHandler(): Native() {}
-    virtual Tree *      Call(Context *context, Tree *args);
-};
-
 struct LastInListHandler : Native
 // ----------------------------------------------------------------------------
 //    Deal with the newline or semi-colon, where value is value of last
 // ----------------------------------------------------------------------------
 {
-    LastInListHandler(): Native() {}
     virtual Tree *      Call(Context *context, Tree *args);
 };
 
@@ -90,7 +80,6 @@ struct BinaryHandler : Native
 //   Deal with all binary operators that apply to identical types
 // ----------------------------------------------------------------------------
 {
-    BinaryHandler(): Native() {}
     virtual Tree *      Call(Context *context, Tree *args);
     virtual longlong    DoInteger(longlong left, longlong right);
     virtual double      DoReal(double left, double right);

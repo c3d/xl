@@ -53,7 +53,6 @@ void EnterBasics(Context *c)
 
     INFIX("\n", LastInListHandler);
     INFIX(";", LastInListHandler);
-    INFIX(",", ListHandler);
 
     INFIX("+", BinaryAdd);
     INFIX("-", BinarySub);
@@ -100,31 +99,6 @@ void EnterBasics(Context *c)
 //    class InfixStructureHandler
 // 
 // ============================================================================
-
-Tree *ListHandler::Call(Context *context, Tree *args)
-// ----------------------------------------------------------------------------
-//   When processing A,B,C, return a similar list fA,fB,fC
-// ----------------------------------------------------------------------------
-{
-    if (Infix *infix = dynamic_cast<Infix *> (args))
-    {
-        Tree *left = context->Eval(infix->left);
-        Tree *right = context->Eval(infix->right);
-        if (left == infix->left && right == infix->right)
-            return infix;
-        if (left)
-            if (right)
-                return new Infix(infix->name, left, right, infix->Position());
-            else
-                return left;
-        return right;
-    }
-    else
-    {
-        return context->Error("Infix expected, got '$1'", args);
-    }
-}
-
 
 Tree *LastInListHandler::Call(Context *context, Tree *args)
 // ----------------------------------------------------------------------------
