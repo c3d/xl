@@ -227,6 +227,8 @@ Tree *Renderer::DoBlock (Block *what)
     indent -= tabsize;
     if (close != iblk.Closing())
         output << close;
+    else
+        Indent("\n");
 
     return what;
 }
@@ -275,7 +277,8 @@ Tree *Renderer::DoInfix (Infix *what)
         output << ")";
 
     if (what->name == "\n" || what->name == "." ||
-        what->name == "," || what->name == ":")
+        what->name == "," || what->name == ":" ||
+        (what->name == "else" && dynamic_cast<Block *> (what->left)))
         need_space = "";
     else
         need_space = " ";
