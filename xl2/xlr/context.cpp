@@ -574,8 +574,9 @@ struct ArgumentMatch : Action
 //   Check if two trees match, collect 'variables' and emit type test nodes
 // ----------------------------------------------------------------------------
 {
-    ArgumentMatch (Tree *t, Context *l, Context *c, eval_cache &evals):
-        locals(l), context(c),
+    ArgumentMatch (Tree *t, Context *l, Context *c, Context *r,
+                   eval_cache &evals):
+        locals(l), context(c), rewrite(r),
         test(t), defined(NULL), code(NULL), end(NULL),
         expressions(evals) {}
 
@@ -595,7 +596,8 @@ struct ArgumentMatch : Action
     Tree *        Compile(Tree *source);
 
     Context *     locals;       // Context where we declare arguments
-    Context *     context;      // Context in which we test values
+    Context *     context;      // Context in which we evaluate values
+    Context *     rewrite;      // Context in which the rewrite was declared
     Tree *        test;         // Tree we test
     Tree *        defined;      // Tree beind defined, e.g. 'sin' in 'sin X'
     Tree *        code;         // Generated code
@@ -767,7 +769,7 @@ Tree *ArgumentMatch::DoName(Name *what)
 
         // Check if the name already exists, e.g. 'false' or 'A+A'
         // If it does, we generate a run-time check to verify equality
-        if (Tree *existing = locals->NamedTree(what->value))
+        if (Tree *existing = rewrite->Name(what->value))
         {
             // Insert a dynamic tree comparison test
             if (!end)
@@ -914,6 +916,10 @@ Tree *ArgumentMatch::DoPrefix(Prefix *what)
     {
         // Check if we match the tree, e.g. f(A) vs. f(2)
         // Note that we must test left first to define 'f' in above case
+        Infix *defined_infix = dynamic_cast<Infix *> (defined);
+        if (defined_infix)
+            defined = NULL;
+
         test = pt->left;
         Tree *lr = what->left->Do(this);
         test = pt;
@@ -924,6 +930,8 @@ Tree *ArgumentMatch::DoPrefix(Prefix *what)
         test = pt;
         if (!rr)
             return NULL;
+            if (!defined && defined_infix)
+                defined = defined_infix;
         return what;
     }
     return NULL;
@@ -1328,15 +1336,37 @@ Tree * CompileAction::Rewrites(Tree *what)
 
                 // Create the invokation point
                 Context args(context);
-                ArgumentMatch matchArgs(what, &args, context, needed);
+                ArgumentMatch matchArgs(what, &args,
+                                        context, candidate->context,
+                                        needed);
                 Tree *argsTest = candidate->from->Do(matchArgs);
                 if (argsTest)
                 {
                     // We should have same number of args and parms
                     ulong parmCount = parms.names.size();
-                    if (parmCount < args.names.size())
-                        return context->Error(
-                            "Internal: arg/parm mismatch in '$1'", what);
+                    if (args.names.size() != parmCount)
+                    {
+                        symbol_table::iterator a, p;
+                        std::cerr << "Args/parms mismatch:\n";
+                        std::cerr << "Parms:\n";
+                        for (p = parms.names.begin();
+                             p != parms.names.end();
+                             p++)
+                        {
+                            text name = (*p).first;
+                            Tree *parm = parms.NamedTree(name);
+                            std::cerr << "   " << name << " = " << parm << "\n";
+                        }
+                        std::cerr << "Args:\n";
+                        for (a = args.names.begin();
+                             a != args.names.end();
+                             a++)
+                        {
+                            text name = (*a).first;
+                            Tree *arg = args.NamedTree(name);
+                            std::cerr << "   " << name << " = " << arg << "\n";
+                        }
+                    }
 
                     // Create invokation node
                     Tree *code = candidate->Compile();
