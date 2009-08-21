@@ -112,11 +112,11 @@ Tree *EvaluateArgument::Run(Stack *stack)
 //   Evaluate argument in given slot if it has not been evaluated yet
 // ----------------------------------------------------------------------------
 {
-    Tree *value = stack->Get(id);
+    Tree *value = stack->GetLocal(id);
     if (!value)
     {
         value = stack->Run(code);
-        stack->Set(id, value);
+        stack->SetLocal(id, value);
     }
     return value;
 }
@@ -128,11 +128,11 @@ Tree *Invoke::Run(Stack *stack)
 // ----------------------------------------------------------------------------
 {
     // Evaluate arguments that have not been evaluated yet
-    tree_list::iterator i;
+    ulong i, max = values.size();
     tree_list args;
-    for (i = values.begin(); i != values.end(); i++)
+    for (i = 0; i < max; i++)
     {
-        Tree *value = *i;
+        Tree *value = values[max + ~i];
         value = stack->Run(value);
         args.push_back(value);
     }

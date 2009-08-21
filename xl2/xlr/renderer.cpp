@@ -372,8 +372,24 @@ void debugc(XL::Tree *n)
             std::cerr << " invoking " << (void *) inv->invoked;
         if (BranchTarget *bt = dynamic_cast<BranchTarget *> (native))
             std::cerr << " at " << (void *) bt;
+        if (Entry *entry = dynamic_cast<Entry *> (native))
+            std::cerr << " for " << entry->source;
+        if (AllocateLocals *al = dynamic_cast<AllocateLocals *> (native))
+            std::cerr << " size " << al->space;
         std::cerr << "\n";
         n = native->next;
     }
     std::cerr << idx++ << ":" << n << "\n";
+}
+
+
+void debugs(XL::Stack *s)
+// ----------------------------------------------------------------------------
+//   Show the contents of the stack
+// ----------------------------------------------------------------------------
+{
+    using namespace XL;
+    ulong i = 0, max = s->values.size();
+    for (i = 0; i < max; i++)
+        std::cerr << i << (i == s->frame ? "=>" : ": ") << s->values[i] << "\n";
 }

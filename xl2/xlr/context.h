@@ -147,8 +147,8 @@ struct Stack
     ulong Grow(ulong sz)
     {
         ulong oldFrame = frame;
-        frame += sz;
-        values.resize(frame+1);
+        values.resize(values.size() + sz);
+        frame = values.size() - 1;
         return oldFrame;
     }
 
@@ -166,9 +166,9 @@ struct Stack
         values.resize(values.size() - sz);
     }
 
-    void AllocateLocals(ulong sz)
+    void AllocateLocals(long sz)
     {
-        values.resize(frame+sz+1);
+        values.resize(values.size() + sz);
     }
 
     void Enter()
@@ -181,15 +181,26 @@ struct Stack
         frames.pop_back();
     }
 
-    Tree *Get(long id)
+    Tree *Get(ulong id)
     {
         Tree *value = values[frame - id];
         return value;
     }
 
-    void Set(long id, Tree *v)
+    void Set(ulong id, Tree *v)
     {
         values[frame - id] = v;
+    }
+
+    Tree *GetLocal(ulong id)
+    {
+        Tree *value = values[values.size() + ~id];
+        return value;
+    }
+
+    void SetLocal(ulong id, Tree *v)
+    {
+        values[values.size() + ~id] = v;
     }
 
     Tree *Get(long id, ulong depth)

@@ -58,7 +58,7 @@ struct AllocateLocals : Native
 {
     AllocateLocals(ulong slots): Native(NULL), space(slots) {}
     Tree * Run(Stack *stack) { stack->AllocateLocals(space); return NULL; }
-    ulong space;
+    long space;
 };
 
 
@@ -67,11 +67,12 @@ struct EvaluateArgument : Native
 //   Evaluate an argument if necessary
 // ----------------------------------------------------------------------------
 {
-    EvaluateArgument(Tree *arg, long i):
-        Native(NULL, arg->Position()), code(arg), id(i) {}
+    EvaluateArgument(Tree *arg, long i, Tree *src):
+        Native(NULL, arg->Position()), code(arg), id(i), source(src) {}
     Tree *Run(Stack *stack);
     Tree *code;
     long id;
+    Tree *source;
 };
 
 

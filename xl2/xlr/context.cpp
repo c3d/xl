@@ -618,7 +618,7 @@ Tree *ArgumentMatch::Compile(Tree *source)
         expressions[code] = id;
 
     // Record a lazy-evaluation node to evaluate on demand
-    EvaluateArgument *eval = new EvaluateArgument(code, ~id);
+    EvaluateArgument *eval = new EvaluateArgument(code, id, source);
     return eval;
 }
 
@@ -1266,7 +1266,7 @@ Tree * CompileAction::Rewrites(Tree *what)
     formKey = formKeyHash.Key();
 
     Tree *result = NULL;
-    Tree *endOfCall = NULL;
+    BranchTarget *endOfCall = NULL;
     Tree *endOfPrev = NULL;
     eval_cache needed;
 
@@ -1376,6 +1376,8 @@ Tree * CompileAction::Rewrites(Tree *what)
         AllocateLocals *alloc = new AllocateLocals(slots);
         alloc->next = result;
         result = alloc;
+        AllocateLocals *dealloc = new AllocateLocals(-slots);
+        endOfCall->next = dealloc;
     }
 
     return result;
