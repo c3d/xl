@@ -37,7 +37,11 @@ OPTION(help, "List usage information", Usage(argv))
 
 // Parse only
 OPTVAR(parseOnly, bool, false)
-OPTION(parse, "Only parse file, do not run", parseOnly = true)
+OPTION(parse, "Only parse file, do not compile nor run", parseOnly = true)
+
+// Compile only
+OPTVAR(compileOnly, bool, false)
+OPTION(compile, "Only compile file, do not run", compileOnly = true)
 
 // Debug controlling options
 OPTVAR(debug, bool, false)
@@ -62,7 +66,6 @@ OPTION(v, "Short form for -verbose.", verbose = true)
 // Output file
 OPTVAR(output_file, std::string, "")
 OPTION(o, "Select output file", output_file = STRING)
-
 
 // Traces. The first ones must match the MzTrace definition in base.h
 // We use lower-case names here to avoid duplicate definition and be able

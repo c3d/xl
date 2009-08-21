@@ -41,6 +41,7 @@ struct Rewrite;
 typedef std::map<text, Tree *>  symbol_table;
 typedef std::set<Tree *>        active_set;
 typedef std::map<ulong, Rewrite*>rewrite_table;
+typedef std::map<Tree*, Tree*>  compile_cache;
 
 
 struct Namespace
@@ -114,6 +115,7 @@ private:
     active_set          roots;
     ulong               gc_threshold;
     Tree *              error_handler;
+    compile_cache       compiled;
 };
 
 

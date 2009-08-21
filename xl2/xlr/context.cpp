@@ -218,7 +218,7 @@ void Context::CollectGarbage ()
 
 // ============================================================================
 // 
-//    Compilation of trees
+//    Hash key for tree rewrite
 // 
 // ============================================================================
 
@@ -297,6 +297,13 @@ struct RewriteKey : Action
     ulong key;
 };
 
+
+
+// ============================================================================
+// 
+//    Parameter matching - Test input parameters
+// 
+// ============================================================================
 
 struct ParameterMatch : Action
 // ----------------------------------------------------------------------------
@@ -645,6 +652,12 @@ Tree *ParameterMatch::DoNative(Native *what)
 
 
 
+// ============================================================================
+// 
+//   Compilation action - Generation of "optimized" native trees
+// 
+// ============================================================================
+
 struct CompileAction : Action
 // ----------------------------------------------------------------------------
 //   Compute an optimized version of the input tree
@@ -894,22 +907,29 @@ void CompileAction::EnterRewrite(Tree *defined, Tree *definition)
 }
 
 
-Tree *Context::Compile(Tree *source)
-// ----------------------------------------------------------------------------
-//    Return an optimized version of the source tree, ready to run
-// ----------------------------------------------------------------------------
-{
-    CompileAction compile(this);
-    return source->Do(compile);
-}
-
-
 
 // ============================================================================
 // 
 //    Evaluation of trees
 // 
 // ============================================================================
+
+Tree *Context::Compile(Tree *source)
+// ----------------------------------------------------------------------------
+//    Return an optimized version of the source tree, ready to run
+// ----------------------------------------------------------------------------
+{
+    Tree *result = compiled[source];
+    if (result)
+        return result;
+
+    CompileAction compile(this);
+    result = source->Do(compile);
+    compiled[source] = result;
+
+    return result;
+}
+
 
 Tree *Context::Run(Tree *code, bool eager)
 // ----------------------------------------------------------------------------

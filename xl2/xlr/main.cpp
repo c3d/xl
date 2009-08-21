@@ -80,7 +80,7 @@ int main(int argc, char **argv)
         context.Root(tree);
         context.CollectGarbage();
         IFTRACE(source)
-            std::cout << tree << "\n";
+            std::cout << "SOURCE:\n" << tree << "\n";
         if (!options.parseOnly)
             tree = context.Run(tree);
         std::cout << tree << "\n";
