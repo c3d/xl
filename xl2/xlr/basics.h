@@ -266,6 +266,15 @@ struct Evaluation : Native
 // 
 // ============================================================================
 
+struct BooleanType : Native
+// ----------------------------------------------------------------------------
+//    Check if argument can be interpreted as true or false
+// ----------------------------------------------------------------------------
+{
+    Tree *Call(Context *context, Tree *args);
+};
+
+
 struct IntegerType : Native
 // ----------------------------------------------------------------------------
 //    Check if argument can be interpreted as an integer

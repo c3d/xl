@@ -1,4 +1,16 @@
 fact 0 -> 1
 fact N -> N * fact (N-1)
+if true then trueClause else falseClause -> trueClause
+if false then trueClause else falseClause -> falseClause
 
-fact 6
+truc 0 -> 1
+truc N ->
+    if N < 10 then
+        truc N - 1
+        2
+    else
+        truc N - 2
+        3
+
+truc 14
+

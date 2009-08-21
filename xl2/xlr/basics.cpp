@@ -86,6 +86,7 @@ void EnterBasics(Context *c)
     PREFIX("quote", ParseTree);
     PREFIX("eval", Evaluation);
 
+    PREFIX("boolean", BooleanType);
     PREFIX("integer", IntegerType);
     PREFIX("real", RealType);
     PREFIX("text", TextType);
@@ -367,6 +368,17 @@ Tree *Evaluation::Call(Context *context, Tree *args)
 //    Type matching
 // 
 // ============================================================================
+
+Tree *BooleanType::Call(Context *context, Tree *value)
+// ----------------------------------------------------------------------------
+//   Check if argument can be evaluated as a boolean value (true/false)
+// ----------------------------------------------------------------------------
+{
+    if (value == true_name || value == false_name)
+        return value;
+    return NULL;
+}
+
 
 Tree *IntegerType::Call(Context *context, Tree *value)
 // ----------------------------------------------------------------------------
