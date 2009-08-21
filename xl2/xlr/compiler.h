@@ -105,22 +105,26 @@ struct CompiledUnit
     ~CompiledUnit();
 
     bool                IsForwardCall()         { return entrybb == NULL; }
+    eval_fn             Finalize();
+
+    llvm::Value *       NeedStorage(Tree *tree);
     llvm::Value *       Known(Tree *tree);
 
     llvm::Value *       ConstantInteger(Integer *what);
     llvm::Value *       ConstantReal(Real *what);
     llvm::Value *       ConstantText(Text *what);
 
-    llvm::Value *       Invoke(Tree *subexpr, Tree *callee, tree_list args);
-    eval_fn             Finalize();
+    llvm::Value *       NeedLazy(Tree *subexpr);
+    llvm::Value *       MarkComputed(Tree *subexpr, llvm::Value *value);
+    llvm::BasicBlock *  BeginLazy(Tree *subexpr);
+    llvm::Value *       EndLazy(Tree *subexpr, llvm::BasicBlock *skip);
 
     llvm::BasicBlock *  NeedTest();
-    llvm::Value *       NeedLazy(Tree *tree);
     llvm::Value *       Left(Tree *);
     llvm::Value *       Right(Tree *);
+    llvm::Value *       Invoke(Tree *subexpr, Tree *callee, tree_list args);
+    llvm::Value *       CallEvaluate(Tree *);
 
-    llvm::Value *       LazyEvaluation(Tree *code);
-    llvm::Value *       EagerEvaluation(Tree *code);
     llvm::BasicBlock *  TagTest(Tree *code, ulong tag);
     llvm::BasicBlock *  IntegerTest(Tree *code, longlong value);
     llvm::BasicBlock *  RealTest(Tree *code, double value);
@@ -132,19 +136,18 @@ public:
     Compiler *          compiler;       // The compiler environment we use
     Tree *              source;         // The original source we compile
 
-    llvm::IRBuilder<> * builder;        // Instruction builder
+    llvm::IRBuilder<> * code;           // Instruction builder for code
+    llvm::IRBuilder<> * data;           // Instruction builder for data
     llvm::Function *    function;       // Function we generate
+
     llvm::BasicBlock *  allocabb;       // Function entry point, allocas
     llvm::BasicBlock *  entrybb;        // Entry point for that code
     llvm::BasicBlock *  exitbb;         // Exit point for that code
-
-    llvm::BasicBlock *  invokebb;       // Entry point for current reduction
     llvm::BasicBlock *  failbb;         // Where we go if tests fail
-    llvm::BasicBlock *  successbb;      // Where we go after evaluating expr
 
     value_map           value;          // Map tree -> LLVM value
-    value_map           alloca;         // Map tree -> LLVM alloca space
-    value_map           lazy;           // Map tree -> LLVM alloca for lazy eval
+    value_map           storage;        // Map tree -> LLVM alloca space
+    value_map           computed;       // Map tree -> LLVM "computed" flag
 };
 
 
@@ -161,15 +164,18 @@ struct ExpressionReduction
     void                Failed();
 
 public:
-    CompiledUnit &      unit;
-    Tree *              source;
-    llvm::Value *       alloca;
-    llvm::BasicBlock *  invokebb;
-    llvm::BasicBlock *  failbb;
-    llvm::BasicBlock *  successbb;
+    CompiledUnit &      unit;           // Compilation unit we use
+    Tree *              source;         // Tree we build (mostly for debugging)
+
+    llvm::Value *       storage;        // Storage for expression value
+    llvm::Value *       computed;       // Flag telling if value was computed
+
+    llvm::BasicBlock *  savedfailbb;    // Saved location of failbb
+
+    llvm::BasicBlock *  entrybb;        // Entry point to subcase
+    llvm::BasicBlock *  savedbb;        // Saved position before subcase
+    llvm::BasicBlock *  successbb;      // Successful completion of expression
 };
-
-
 
 
 #define LLVM_INTTYPE(t)         llvm::IntegerType::get(sizeof(t) * 8)

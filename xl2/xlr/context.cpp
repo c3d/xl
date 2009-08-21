@@ -547,7 +547,6 @@ Tree *ArgumentMatch::Compile(Tree *source)
  
     // Generate code to only evaluate the result once
     source = source->Do(compile);
-    unit.LazyEvaluation(source);
     return source;
 }
 
@@ -1066,12 +1065,12 @@ Tree *CompileAction::DoInfix(Infix *what)
         if (!what->left->Do(this))
             return NULL;
         if (Name *n = what->left->AsName())
-            unit.EagerEvaluation(n);
+            unit.CallEvaluate(n);
         unit.Right(what);
         if (!what->right->Do(this))
             return NULL;
         if (Name *m = what->right->AsName())
-            unit.EagerEvaluation(m);
+            unit.CallEvaluate(m);
         return what;
     }
 
