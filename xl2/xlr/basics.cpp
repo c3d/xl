@@ -86,6 +86,11 @@ void EnterBasics(Context *c)
 
     PREFIX("quote", ParseTree);
     PREFIX("eval", Evaluation);
+
+    PREFIX("integer", IntegerType);
+    PREFIX("real", RealType);
+    PREFIX("text", TextType);
+    PREFIX("character", CharacterType);
 }
 
 
@@ -103,8 +108,8 @@ Tree *ListHandler::Call(Context *context, Tree *args)
 {
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
-        Tree *left = context->Run(infix->left);
-        Tree *right = context->Run(infix->right);
+        Tree *left = context->Eval(infix->left);
+        Tree *right = context->Eval(infix->right);
         if (left == infix->left && right == infix->right)
             return infix;
         if (left)
@@ -129,8 +134,8 @@ Tree *LastInListHandler::Call(Context *context, Tree *args)
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
         Tree *result = NULL;
-        result = context->Run(infix->left);
-        result = context->Run(infix->right);
+        result = context->Eval(infix->left);
+        result = context->Eval(infix->right);
         return result;
     }
     else
@@ -379,6 +384,65 @@ Tree *Evaluation::Call(Context *context, Tree *args)
     if (!args)
         return args;
     return context->Run(args);
+}
+
+
+
+// ============================================================================
+// 
+//    Type matching
+// 
+// ============================================================================
+
+Tree *IntegerType::Call(Context *context, Tree *value)
+// ----------------------------------------------------------------------------
+//   Check if argument can be evaluated as an integer
+// ----------------------------------------------------------------------------
+{
+    if (Integer *it = dynamic_cast<Integer *>(context->Eval(value)))
+        return it;
+    return NULL;
+}
+
+
+Tree *RealType::Call(Context *context, Tree *value)
+// ----------------------------------------------------------------------------
+//   Check if argument can be evaluated as a real
+// ----------------------------------------------------------------------------
+{
+    if (Real *rt = dynamic_cast<Real *>(context->Eval(value)))
+        return rt;
+    return NULL;
+}
+
+
+Tree *TextType::Call(Context *context, Tree *value)
+// ----------------------------------------------------------------------------
+//   Check if argument can be evaluated as a text
+// ----------------------------------------------------------------------------
+{
+    if (Text *tt = dynamic_cast<Text *>(context->Eval(value)))
+    {
+        Quote q;
+        if (tt->Opening() != q.Opening() || tt->Closing() != q.Closing())
+            return tt;
+    }
+    return NULL;
+}
+
+
+Tree *CharacterType::Call(Context *context, Tree *value)
+// ----------------------------------------------------------------------------
+//   Check if argument can be evaluated as an integer
+// ----------------------------------------------------------------------------
+{
+    if (Text *tt = dynamic_cast<Text *>(context->Eval(value)))
+    {
+        Quote q;
+        if (tt->Opening() == q.Opening() && tt->Closing() == q.Closing())
+            return tt;
+    }
+    return NULL;
 }
 
 XL_END

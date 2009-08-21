@@ -269,6 +269,51 @@ struct Evaluation : Native
     Tree *Call(Context *context, Tree *args);
 };
 
+
+
+// ============================================================================
+// 
+//    Base types
+// 
+// ============================================================================
+
+struct IntegerType : Native
+// ----------------------------------------------------------------------------
+//    Check if argument can be interpreted as an integer
+// ----------------------------------------------------------------------------
+{
+    Tree *Call(Context *context, Tree *args);
+};
+
+
+struct RealType : Native
+// ----------------------------------------------------------------------------
+//    Check if argument can be interpreted as an integer
+// ----------------------------------------------------------------------------
+{
+    Tree *Call(Context *context, Tree *args);
+};
+
+
+struct TextType : Native
+// ----------------------------------------------------------------------------
+//    Check if argument can be interpreted as an integer
+// ----------------------------------------------------------------------------
+{
+    Tree *Call(Context *context, Tree *args);
+};
+
+
+struct CharacterType : Native
+// ----------------------------------------------------------------------------
+//    Check if argument can be interpreted as an integer
+// ----------------------------------------------------------------------------
+{
+    Tree *Call(Context *context, Tree *args);
+};
+
+
+
 XL_END
 
 #endif // BASICS_H

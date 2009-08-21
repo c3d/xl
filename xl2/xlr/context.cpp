@@ -238,8 +238,8 @@ Tree *Context::Run(Tree *source, bool eager)
                 {
                     Tree *rewritten = handler->Apply(source, &locals);
                     IFTRACE(rewrite)
-                        std::cout << "Rewrite " << source
-                                  << " --> " << rewritten << "\n";
+                        std::cout << (eager ? "Eager " : "Lazy ") << source
+                                  << " ===> " << rewritten << "\n";
                     source = rewritten;
                     changed = true;
                     break;
@@ -253,9 +253,8 @@ Tree *Context::Run(Tree *source, bool eager)
             if (result != source)
             {
                 IFTRACE(rewrite)
-                    std::cout << "Tail " << source
-                              << " --> " << result << "\n";
-                changed = true;
+                    std::cout << (eager ? "EagerTail " : "LazyTail") << source
+                              << " ===> " << result << "\n";
                 source = result;
                 changed = true;
             }
@@ -513,27 +512,27 @@ struct TreeMatch : Action
                     return NULL;
                 return what;
             }
+        }
 
-            // Check if we match a type, e.g. 2 vs. 'K : integer'
-            if (what->name == ":")
-            {
-                // Check the variable name, e.g. K in example above
-                Name *varName = dynamic_cast<Name *> (what->left);
-                if (!varName)
-                    return context->Error("Expected a name, got '$1' ",
-                                          what->left);
+        // Check if we match a type, e.g. 2 vs. 'K : integer'
+        if (what->name == ":")
+        {
+            // Check the variable name, e.g. K in example above
+            Name *varName = dynamic_cast<Name *> (what->left);
+            if (!varName)
+                return context->Error("Expected a name, got '$1' ",
+                                      what->left);
 
-                // Evaluate type expression, e.g. 'integer' in example above
-                Tree *typeExpr = context->Run(what->right);
+            // Evaluate type expression, e.g. 'integer' in example above
+            Tree *typeExpr = context->Run(what->right);
 
-                // Calling the type expression returns the expression
-                // (with appropriate casts as necessary) if of the right type
-                // In that case, we enter the name K in the context
-                Tree *result = typeExpr->Call(context, test);
-                if (result)
-                    context->EnterName(varName->value, result);
-                return result;
-            }
+            // Calling the type expression returns the expression
+            // (with appropriate casts as necessary) if of the right type
+            // In that case, we enter the name K in the context
+            Tree *result = typeExpr->Call(context, test);
+            if (result)
+                context->EnterName(varName->value, result);
+            return result;
         }
         return NULL;
     }
