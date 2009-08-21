@@ -561,14 +561,17 @@ Tree *ParameterMatch::DoNative(Native *what)
 // 
 // ============================================================================
 
+typedef std::map<Tree *, ulong> eval_cache;
+
 struct ArgumentMatch : Action
 // ----------------------------------------------------------------------------
 //   Check if two trees match, collect 'variables' and emit type test nodes
 // ----------------------------------------------------------------------------
 {
-    ArgumentMatch (Tree *t, Context *l, Context *c):
+    ArgumentMatch (Tree *t, Context *l, Context *c, eval_cache &evals):
         locals(l), context(c),
-        test(t), defined(NULL), code(NULL), end(NULL) {}
+        test(t), defined(NULL), code(NULL), end(NULL),
+        expressions(evals) {}
 
     Tree *  Append(Tree *left, Tree *right);
 
@@ -583,13 +586,41 @@ struct ArgumentMatch : Action
     virtual Tree *DoBlock(Block *what);
     virtual Tree *DoNative(Native *what);
 
-    Context * locals;           // Context where we declare arguments
-    Context * context;          // Context in which we test values
-    Tree *    test;             // Tree we test
-    Tree *    defined;          // Tree beind defined, e.g. 'sin' in 'sin X'
-    Tree *    code;             // Generated code
-    Tree *    end;              // End label if necessary
+    Tree *        Compile(Tree *source);
+
+    Context *     locals;       // Context where we declare arguments
+    Context *     context;      // Context in which we test values
+    Tree *        test;         // Tree we test
+    Tree *        defined;      // Tree beind defined, e.g. 'sin' in 'sin X'
+    Tree *        code;         // Generated code
+    Tree *        end;          // End label if necessary
+    eval_cache &  expressions;  // Expressions needed for determination
 };
+
+
+Tree *ArgumentMatch::Compile(Tree *source)
+// ----------------------------------------------------------------------------
+//    Compile the source tree, and record we use the value in expr cache
+// ----------------------------------------------------------------------------
+{
+    // Compile the code
+    Tree *code = context->Compile(source);
+
+    // For leaves, delayed invokation doesn't help
+    if (Leaf *leaf = dynamic_cast<Leaf *> (code))
+        return leaf;
+
+    // Identify stack slot for that expression
+    ulong id = expressions.size();
+    if (expressions.count(code) > 0)
+        id = expressions[code];
+    else
+        expressions[code] = id;
+
+    // Record a lazy-evaluation node to evaluate on demand
+    EvaluateArgument *eval = new EvaluateArgument(code, ~id);
+    return eval;
+}
 
 
 Tree *ArgumentMatch::Append(Tree *left, Tree *right)
@@ -621,7 +652,7 @@ Tree *ArgumentMatch::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------
 {
     // Compile the test tree
-    Tree *compiled = context->Compile(test);
+    Tree *compiled = Compile(test);
     tree_position pos = test->Position();
 
     // If the tested tree is a leaf, it must be an integer with same value
@@ -650,7 +681,7 @@ Tree *ArgumentMatch::DoReal(Real *what)
 // ----------------------------------------------------------------------------
 {
     // Compile the test tree
-    Tree *compiled = context->Compile(test);
+    Tree *compiled = Compile(test);
     tree_position pos = test->Position();
 
     // If the tested tree is a leaf, it must be a real with same value
@@ -679,7 +710,7 @@ Tree *ArgumentMatch::DoText(Text *what)
 // ----------------------------------------------------------------------------
 {
     // Compile the test tree
-    Tree *compiled = context->Compile(test);
+    Tree *compiled = Compile(test);
     tree_position pos = test->Position();
 
     // If the tested tree is a leaf, it must be a real with same value
@@ -719,7 +750,7 @@ Tree *ArgumentMatch::DoName(Name *what)
     else
     {
         // Compile what we are testing against
-        Tree *compiled = context->Compile(test);
+        Tree *compiled = Compile(test);
         tree_position pos = test->Position();
 
         // If input tree doesn't compile by itself, we can't match this,
@@ -823,11 +854,11 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                                   what->left, existing);
 
         // Compile what we are testing against
-        Tree *compiled = context->Compile(test);
+        Tree *compiled = Compile(test);
         tree_position pos = test->Position();
 
         // Evaluate type expression, e.g. 'integer' in example above
-        Tree *typeExpr = context->Compile(what->right);
+        Tree *typeExpr = Compile(what->right);
 
         // Insert a run-time type test
         if (!end)
@@ -837,7 +868,6 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
 
         // Enter the result of the type test in symbol table
         locals->EnterName(varName->value, compiled);
-
         
         return what;
     }
@@ -1238,6 +1268,7 @@ Tree * CompileAction::Rewrites(Tree *what)
     Tree *result = NULL;
     Tree *endOfCall = NULL;
     Tree *endOfPrev = NULL;
+    eval_cache needed;
 
     for (Namespace *c = context; c; c = c->Parent())
     {
@@ -1263,7 +1294,7 @@ Tree * CompileAction::Rewrites(Tree *what)
 
                 // Create the invokation point
                 Context args(context);
-                ArgumentMatch matchArgs(what, &args, context);
+                ArgumentMatch matchArgs(what, &args, context, needed);
                 Tree *argsTest = candidate->from->Do(matchArgs);
                 if (argsTest)
                 {
@@ -1337,6 +1368,15 @@ Tree * CompileAction::Rewrites(Tree *what)
     // indicate that the call failed
     if (endOfPrev)
         Append(endOfPrev, new FailedCall(what, what->Position()));
+
+    // Allocate enough locals for the complete evaluation of the rewrite
+    ulong slots = needed.size();
+    if (slots)
+    {
+        AllocateLocals *alloc = new AllocateLocals(slots);
+        alloc->next = result;
+        result = alloc;
+    }
 
     return result;
 }
@@ -1454,11 +1494,13 @@ Tree *Stack::Run(Tree *code)
             std::cerr << indent(values.size())
                       << "Step " << native->TypeName() << "\n";
         Tree *value = native->Run(this);
-        IFTRACE(eval)
-            std::cerr << indent(values.size())
-                      << "  result " << value << "\n";
         if (value)
+        {
+            IFTRACE(eval)
+                std::cerr << indent(values.size())
+                          << "  result " << value << "\n";
             result = value;
+        }
         code = native->Next();
     }
     IFTRACE(eval)

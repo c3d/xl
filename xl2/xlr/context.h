@@ -135,26 +135,45 @@ struct Stack
 // ----------------------------------------------------------------------------
 //    A runtime stack holding args and locals
 // ----------------------------------------------------------------------------
+//   Ids of local variables start at 0 and grow up.
+//   Ids of temporaries start at -1 and grow down
 {
     Stack(Errors &err):
-        values(), frames(), error_handler(NULL), errors(err)
+        values(), frames(), frame(~0UL), error_handler(NULL), errors(err)
     {
-        frames.push_back(0);
+        frames.push_back(frame);
     }
 
-    void Allocate(ulong sz)
+    ulong Grow(ulong sz)
     {
-        values.resize(values.size() + sz);
+        ulong oldFrame = frame;
+        frame += sz;
+        values.resize(frame+1);
+        return oldFrame;
     }
 
-    void Free(ulong sz)
+    ulong Grow(value_list &args)
     {
+        ulong oldFrame = frame;
+        values.insert(values.end(), args.begin(), args.end());
+        frame = values.size() - 1;
+        return oldFrame;
+    }
+
+    void Shrink(ulong newFrame, ulong sz)
+    {
+        frame = newFrame;
         values.resize(values.size() - sz);
+    }
+
+    void AllocateLocals(ulong sz)
+    {
+        values.resize(frame+sz+1);
     }
 
     void Enter()
     {
-        frames.push_back(values.size());
+        frames.push_back(frame);
     }
 
     void Exit()
@@ -162,17 +181,28 @@ struct Stack
         frames.pop_back();
     }
 
-    Tree *Get(ulong id, ulong frame = 0)
+    Tree *Get(long id)
     {
-        ulong base = frame ? frames[frames.size() - frame] : values.size();
-        Tree *value = values[base - id - 1];
+        Tree *value = values[frame - id];
         return value;
     }
 
-    void Set(ulong id, Tree *v, ulong frame = 0)
+    void Set(long id, Tree *v)
     {
-        ulong base = frame ? frames[frames.size() - frame] : values.size();
-        values[base - id - 1] = v;
+        values[frame - id] = v;
+    }
+
+    Tree *Get(long id, ulong depth)
+    {
+        ulong base = depth ? frames[frames.size() - depth] : frame;
+        Tree *value = values[base - id];
+        return value;
+    }
+
+    void Set(long id, Tree *v, ulong depth)
+    {
+        ulong base = depth ? frames[frames.size() - depth] : frame;
+        values[base - id] = v;
     }
 
     Tree * Run(Tree *source);
@@ -181,6 +211,7 @@ struct Stack
 public:
     value_list values;
     frame_list frames;
+    ulong      frame;
     Tree *     error_handler;
     Errors &   errors;
 };

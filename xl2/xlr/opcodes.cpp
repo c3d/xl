@@ -88,7 +88,7 @@ Tree *Native::Append(Tree *tail)
 }
 
 
-Tree * Variable::Run(Stack *stack)
+Tree *Variable::Run(Stack *stack)
 // ----------------------------------------------------------------------------
 //   Return the variable at given index in the stack
 // ----------------------------------------------------------------------------
@@ -98,7 +98,7 @@ Tree * Variable::Run(Stack *stack)
 }
 
 
-Tree * NonLocalVariable::Run(Stack *stack)
+Tree *NonLocalVariable::Run(Stack *stack)
 // ----------------------------------------------------------------------------
 //   Return the variable at given index in the stack
 // ----------------------------------------------------------------------------
@@ -107,42 +107,53 @@ Tree * NonLocalVariable::Run(Stack *stack)
 }
 
 
+Tree *EvaluateArgument::Run(Stack *stack)
+// ----------------------------------------------------------------------------
+//   Evaluate argument in given slot if it has not been evaluated yet
+// ----------------------------------------------------------------------------
+{
+    Tree *value = stack->Get(id);
+    if (!value)
+    {
+        value = stack->Run(code);
+        stack->Set(id, value);
+    }
+    return value;
+}
+
+
 Tree *Invoke::Run(Stack *stack)
 // ----------------------------------------------------------------------------
 //    Run the child in the local arguments stack
 // ----------------------------------------------------------------------------
 {
-    // Evaluate all arguments without changing the stack
-    tree_list args;
+    // Evaluate arguments that have not been evaluated yet
     tree_list::iterator i;
+    tree_list args;
     for (i = values.begin(); i != values.end(); i++)
     {
-        Tree *value = (*i);
+        Tree *value = *i;
         value = stack->Run(value);
         args.push_back(value);
     }
 
-    // Copy the resulting values on the stack
-    ulong index = 0;
-    stack->Allocate(args.size());
-    for (i = args.begin(); i != args.end(); i++)
-    {
-        Tree *value = (*i);
-        stack->Set(index++, value);
-    }
-
+    // Allocate stack frame and copy args there
+    ulong argsSize = args.size();
+    ulong oldFrame = stack->Grow(args);
+    args.clear();
+        
     // Invoke the called tree
     Tree *result = stack->Run(invoked);
 
-    // Restore original stack state
-    stack->Free(values.size());
+    // Free stack frame and return result
+    stack->Shrink(oldFrame, argsSize);
     return result;
 }
 
 
 void Invoke::AddArgument(Tree *value)
 // ----------------------------------------------------------------------------
-//    Add an argument to the invokation context
+//   Add an argument to the value list (for immediate invokation)
 // ----------------------------------------------------------------------------
 {
     values.push_back(value);

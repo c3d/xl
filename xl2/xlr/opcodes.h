@@ -51,6 +51,30 @@ struct Native : Tree
 };
 
 
+struct AllocateLocals : Native
+// ----------------------------------------------------------------------------
+//   Allocate a given number of slots on the stack
+// ----------------------------------------------------------------------------
+{
+    AllocateLocals(ulong slots): Native(NULL), space(slots) {}
+    Tree * Run(Stack *stack) { stack->AllocateLocals(space); return NULL; }
+    ulong space;
+};
+
+
+struct EvaluateArgument : Native
+// ----------------------------------------------------------------------------
+//   Evaluate an argument if necessary
+// ----------------------------------------------------------------------------
+{
+    EvaluateArgument(Tree *arg, long i):
+        Native(NULL, arg->Position()), code(arg), id(i) {}
+    Tree *Run(Stack *stack);
+    Tree *code;
+    long id;
+};
+
+
 struct Invoke : Native
 // ----------------------------------------------------------------------------
 //   Invoke a rewrite form
@@ -59,7 +83,7 @@ struct Invoke : Native
     Invoke(tree_position pos = NOWHERE):
         Native(NULL, pos), invoked(NULL), values() {}
     Tree *              Run(Stack *stack);
-    void                AddArgument(Tree *value);
+    void                AddArgument (Tree *value);
     Tree *              invoked;
     tree_list           values;
 };
