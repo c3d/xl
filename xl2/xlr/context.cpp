@@ -226,9 +226,11 @@ Tree *Context::Run(Tree *source, bool eager)
 // ----------------------------------------------------------------------------
 {
     bool changed = true;
+    static uint depth = 0;
 
     IFTRACE(eval)
-        std::cout << (eager ? "Eval: " : "Run: ") << source << "\n";
+        std::cout << (eager ? "Eval" : "Run")
+                  << depth << ": " << source << "\n";
 
     // For all leaf types, optimize away evaluation
     if (dynamic_cast<Leaf *> (source))
@@ -240,6 +242,7 @@ Tree *Context::Run(Tree *source, bool eager)
         if (!source)
             return source;
 
+        depth++;
         for (Namespace *c = this; c; c = c->Parent())
         {
             if (Rewrite *rew = c->Rewrites())
@@ -270,6 +273,7 @@ Tree *Context::Run(Tree *source, bool eager)
                 changed = true;
             }
         }
+        depth--;
     }
     return source;
 }
