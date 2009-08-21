@@ -79,7 +79,7 @@ void EnterBasics(Context *c)
     INFIX(">=", BooleanGreaterOrEqual);
 
     INFIX(":=", Assignment);
-    INFIX("=>", Definition);
+    INFIX("->", Definition);
 
     NAME(nil, ReservedName);
     NAME(true, ReservedName);
@@ -368,8 +368,6 @@ struct CollectDefinition : Action
     // Specialization for the canonical nodes, default is to run them
     Tree *DoName(Name *what)
     {
-        if (context->Name(what->value, false))
-            return context->Error("Redefining '$1'", what);
         context->EnterName(what->value, definition);
         return what;
     }
