@@ -485,22 +485,22 @@ Tree *Parser::Parse(text closing)
                                            result, prev.position);
                     stack.pop_back();
                 }
-
-                // Check if new statement
-                if (!is_expression)
-                    if (!dynamic_cast<Block *> (right))
-                        if (result_priority > statement_priority)
-                            if (stack.size() == 0)
-                                result_priority = statement_priority;
-                            else
-                                if (stack.back().priority < statement_priority)
-                                    result_priority = statement_priority;
-
-                // Push a recognized prefix op
-                stack.push_back(Pending(prefix,result,result_priority,pos));
-                result = right;
-                result_priority = prefix_priority;
             }
+
+            // Check if new statement
+            if (!is_expression)
+                if (!dynamic_cast<Block *> (right))
+                    if (result_priority > statement_priority)
+                        if (stack.size() == 0)
+                            result_priority = statement_priority;
+                        else
+                            if (stack.back().priority < statement_priority)
+                                result_priority = statement_priority;
+            
+            // Push a recognized prefix op
+            stack.push_back(Pending(prefix,result,result_priority,pos));
+            result = right;
+            result_priority = prefix_priority;
         }
     } // While(!done)
 
