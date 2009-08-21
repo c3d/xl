@@ -58,7 +58,7 @@ Tree *Native::Run(Stack *stack)
 //    Running a native node returns the native itself
 // ----------------------------------------------------------------------------
 {
-    return this;
+    return NULL;
 }
 
 
@@ -93,7 +93,8 @@ Tree * Variable::Run(Stack *stack)
 //   Return the variable at given index in the stack
 // ----------------------------------------------------------------------------
 {
-    return stack->Get(id);
+    Tree *value = stack->Get(id);
+    return value;
 }
 
 
@@ -122,7 +123,7 @@ Tree *Invoke::Run(Stack *stack)
         stack->Push(*i);
 
     // Invoke the called tree
-    Tree *result = invoked->Run(stack);
+    Tree *result = stack->Run(invoked);
 
     // Restore original stack state
     stack->Free(values.size());
@@ -271,7 +272,7 @@ Tree *EqualityTest::Run (Stack *stack)
     TreeMatch compareForEquality(ref);
     if (code->Do(compareForEquality))
         condition = true;
-    return code;
+    return NULL;
 }
 
 
@@ -286,7 +287,7 @@ Tree *TypeTest::Run (Stack *stack)
     if (TypeExpression *typeChecker = dynamic_cast<TypeExpression *>(ref))
         if (typeChecker->TypeCheck(stack, code))
             condition = true;
-    return code;
+    return NULL;
 }
 
 

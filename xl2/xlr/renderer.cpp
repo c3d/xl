@@ -354,3 +354,18 @@ void debugp(XL::Tree *tree)
         std::cout << "NULL";
     std::cout << "\n";
 }
+
+
+void debugc(XL::Tree *n)
+// ----------------------------------------------------------------------------
+//   Debug a code stream
+// ----------------------------------------------------------------------------
+{
+    ulong idx = 0;
+    while (XL::Native *native = dynamic_cast<XL::Native *> (n))
+    {
+        std::cerr << idx++ << ": " << native->TypeName() << "\n";
+        n = native->next;
+    }
+    std::cerr << idx++ << ":" << n << "\n";
+}

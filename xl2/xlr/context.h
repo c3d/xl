@@ -134,7 +134,11 @@ struct Stack
 //    A runtime stack holding args and locals
 // ----------------------------------------------------------------------------
 {
-    Stack(Errors &err): errors(err) { frames.push_back(0); }
+    Stack(Errors &err):
+        values(), frames(), error_handler(NULL), errors(err)
+    {
+        frames.push_back(0);
+    }
 
     void Allocate(ulong sz)
     {
@@ -170,16 +174,18 @@ struct Stack
 
     Tree *Get(ulong id, ulong frame = 0)
     {
-        ulong base = frame ? values.size() : frames[frames.size() - frame];
-        return values[base - id - 1];
+        ulong base = frame ? frames[frames.size() - frame] : values.size();
+        Tree *value = values[base - id - 1];
+        return value;
     }
 
     void Set(ulong id, Tree *v, ulong frame = 0)
     {
-        ulong base = frame ? values.size() : frames[frames.size() - frame];
+        ulong base = frame ? frames[frames.size() - frame] : values.size();
         values[base - id - 1] = v;
     }
 
+    Tree * Run(Tree *source);
     Tree * Error (text message, Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
 
 public:

@@ -563,8 +563,8 @@ struct ArgumentMatch : Action
 //   Check if two trees match, collect 'variables' and emit type test nodes
 // ----------------------------------------------------------------------------
 {
-    ArgumentMatch (Tree *t, Context *c):
-        locals(c), context(c->Parent()),
+    ArgumentMatch (Tree *t, Context *l, Context *c):
+        locals(l), context(c),
         test(t), defined(NULL), code(NULL), end(NULL) {}
 
     Tree *  Append(Tree *left, Tree *right);
@@ -1259,13 +1259,13 @@ Tree * CompileAction::Rewrites(Tree *what)
 
                 // Create the invokation point
                 Context args(context);
-                ArgumentMatch matchArgs(what, &args);
+                ArgumentMatch matchArgs(what, &args, context);
                 Tree *argsTest = candidate->from->Do(matchArgs);
                 if (argsTest)
                 {
                     // We should have same number of args and parms
                     ulong parmCount = parms.names.size();
-                    if (parmCount != args.names.size())
+                    if (parmCount < args.names.size())
                         return context->Error(
                             "Internal: arg/parm mismatch in '$1'", what);
 
@@ -1394,11 +1394,7 @@ Tree *Context::Run(Tree *code)
     Tree *result = code;
     Stack stack(errors);
     run_stack = &stack;
-    while (Native *native = dynamic_cast<Native *> (code))
-    {
-        result = native->Run(&stack);
-        code = native->Next();
-    }
+    result = stack.Run(code);
     run_stack = NULL;
     return result;
 }
@@ -1421,7 +1417,24 @@ Rewrite *Context::EnterRewrite(Tree *from, Tree *to)
 // 
 // ============================================================================
 
-Tree * Stack::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
+Tree *Stack::Run(Tree *code)
+// ----------------------------------------------------------------------------
+//    Execute code until there is nothing left to do
+// ----------------------------------------------------------------------------
+{
+    Tree *result = code;
+    while (Native *native = dynamic_cast<Native *> (code))
+    {
+        Tree *intermediate = native->Run(this);
+        if (intermediate)
+            result = intermediate;
+        code = native->Next();
+    }
+    return result;
+}
+
+
+Tree *Stack::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
 // ----------------------------------------------------------------------------
 //   Execute the innermost error handler
 // ----------------------------------------------------------------------------
@@ -1573,16 +1586,16 @@ Tree *Rewrite::Compile(void)
 //   Make sure that the 'to' tree is compiled
 // ----------------------------------------------------------------------------
 {
-    Leaf *leaf = dynamic_cast<Leaf *> (to);
+    Tree *source = to;
+    Leaf *leaf = dynamic_cast<Leaf *> (source);
     if (leaf)
         return leaf;
-    Native *native = dynamic_cast<Native *> (to);
+    Native *native = dynamic_cast<Native *> (source);
     if (native)
         return native;
 
-    Context locals(context);
-
     // Identify all parameters in 'from'
+    Context locals(context);
     ParameterMatch matchParms(&locals);
     Tree *parms = from->Do(matchParms);
     if (!parms)
@@ -1593,12 +1606,13 @@ Tree *Rewrite::Compile(void)
     to = entry;
 
     // Compile the body of the rewrite
-    Tree *code = locals.Compile(to);
+    Tree *code = locals.Compile(source);
     if (!code)
-        return context->Error("Unable to compile '$1'", to);
+        return context->Error("Unable to compile '$1'", source);
 
     // Remember the compiled form
-    entry->next = code;
+    if (!entry->next)
+        entry->next = code;
     return entry;
 }
 

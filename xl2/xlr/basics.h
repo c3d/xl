@@ -74,7 +74,7 @@ struct TypeExpression : Native
 // ----------------------------------------------------------------------------
 //   The compiler can use a type expression to verify types
 {
-    Tree *TypeCheck(Stack *stack, Tree *args) { return NULL; }
+    virtual Tree *TypeCheck(Stack *stack, Tree *args) { return NULL; }
 };
 
 
