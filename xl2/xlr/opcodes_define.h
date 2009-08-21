@@ -68,7 +68,7 @@
         }                                                               \
         else                                                            \
         {                                                               \
-            Name *n  = new Name(#symbol);                               \
+            Name *n  = new Name(symbol);                                \
             n->code = (eval_fn) xl_##name;                              \
             c->EnterName(symbol, n);                                    \
         }                                                               \
@@ -94,13 +94,15 @@
         n->code = xl_identity;                  \
         c->EnterName(#symbol, n);               \
         xl_##symbol = n;                        \
+        compiler->EnterGlobal(n, &xl_##symbol); \
     } while (0);
 
-#define TYPE(symbol)                            \
-    do                                          \
-    {                                           \
-        Name *n = new Name(#symbol);            \
-        n->code = (eval_fn) xl_##symbol;        \
-        c->EnterName(#symbol, n);               \
-        xl_##symbol##_name = n;                 \
+#define TYPE(symbol)                                    \
+    do                                                  \
+    {                                                   \
+        Name *n = new Name(#symbol);                    \
+        n->code = (eval_fn) xl_##symbol;                \
+        c->EnterName(#symbol, n);                       \
+        xl_##symbol##_name = n;                         \
+        compiler->EnterGlobal(n, &xl_##symbol##_name);  \
     } while(0);

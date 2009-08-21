@@ -255,6 +255,36 @@ Function *Compiler::ExternFunction(kstring name, void *address,
 }
 
 
+Value *Compiler::EnterGlobal(Name *name, Name **address)
+// ----------------------------------------------------------------------------
+//   Enter a global variable in the symbol table
+// ----------------------------------------------------------------------------
+{
+    Constant *null = ConstantPointerNull::get(treePtrTy);
+    bool isConstant = false;
+    GlobalValue *result = new GlobalVariable (treePtrTy, isConstant,
+                                              GlobalVariable::ExternalLinkage,
+                                              null, name->value, module);
+    runtime->addGlobalMapping(result, address);
+    globals[name] = result;
+    return result;
+}
+
+
+Value *Compiler::Known(Tree *tree)
+// ----------------------------------------------------------------------------
+//    Return the known global value of the tree if it exists
+// ----------------------------------------------------------------------------
+{
+    Value *result = NULL;
+    if (functions.count(tree) > 0)
+        result = functions[tree];
+    else if (globals.count(tree) > 0)
+        result = globals[tree];
+    return result;
+}
+
+
 
 // ============================================================================
 // 
@@ -329,6 +359,20 @@ CompiledUnit::~CompiledUnit()
 }    
 
 
+Value *CompiledUnit::Known(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if the tree has a known local or global value
+// ----------------------------------------------------------------------------
+{
+    Value *result = NULL;
+    if (map.count(tree) > 0)
+        result = map[tree];
+    else
+        result = compiler->Known(tree);
+    return result;
+}
+
+
 BasicBlock *CompiledUnit::BeginInvokation()
 // ----------------------------------------------------------------------------
 //   Begin a new invokation
@@ -388,7 +432,7 @@ Value *CompiledUnit::ConstantInteger(Integer *what)
 //    Generate a call to xl_new_integer to build an Integer tree
 // ----------------------------------------------------------------------------
 {
-    Value *result = map[what];
+    Value *result = Known(what);
     if (!result)
     {
         Value *imm = ConstantInt::get(LLVM_INTTYPE(longlong), what->value);
@@ -404,7 +448,7 @@ Value *CompiledUnit::ConstantReal(Real *what)
 //    Generate a call to xl_new_real to build a Real tree
 // ----------------------------------------------------------------------------
 {
-    Value *result = map[what];
+    Value *result = Known(what);
     if (!result)
     {
         Value *imm = ConstantFP::get(Type::DoubleTy, what->value);
@@ -420,7 +464,7 @@ Value *CompiledUnit::ConstantText(Text *what)
 //    Generate a text with the same properaties as the input
 // ----------------------------------------------------------------------------
 {
-    Value *result = map[what];
+    Value *result = Known(what);
     if (!result)
     {
         Constant *txtArray = ConstantArray::get(what->value);
@@ -467,7 +511,7 @@ llvm::Value *CompiledUnit::Invoke(Tree *callee, tree_list args)
     for (a = args.begin(); a != args.end(); a++)
     {
         Tree *arg = *a;
-        Value *value = map[arg];
+        Value *value = Known(arg);
         assert(value);
         argValues.push_back(value);
     }
@@ -488,7 +532,7 @@ Value *CompiledUnit::Return(Tree *value)
 //   Store the given value in the return storage
 // ----------------------------------------------------------------------------
 {
-    Value *retVal = map[value];
+    Value *retVal = Known(value);
     assert(retVal);
     builder->CreateStore(retVal, result);
     return retVal;
@@ -559,13 +603,13 @@ Value *CompiledUnit::Left(Tree *code)
     assert (k >= BLOCK);
 
     // Check that we already have a value for the given code
-    Value *value = map[code];
+    Value *value = Known(code);
     Value *result = NULL;
     if (value)
     {
         // WARNING: This relies on the layout of all nodes beginning the same
         Prefix *prefix = (Prefix *) code;
-        result = map[prefix->left];
+        result = Known(prefix->left);
         if (result)
             return result;
         value = builder->CreateBitCast(value, compiler->prefixTreePtrTy);
@@ -594,13 +638,13 @@ Value *CompiledUnit::Right(Tree *code)
     assert(k > BLOCK);
 
     // Check that we already have a value for the given code
-    Value *value = map[code];
+    Value *value = Known(code);
     Value *result = NULL;
     if (value)
     {
         // WARNING: This relies on the layout of all nodes beginning the same
         Prefix *prefix = (Prefix *) code;
-        result = map[prefix->right];
+        result = Known(prefix->right);
         if (result)
             return result;
         value = builder->CreateBitCast(value, compiler->prefixTreePtrTy);
@@ -637,7 +681,7 @@ Value *CompiledUnit::LazyEvaluation(Tree *code)
 
     // If we need to evaluate, call the xl_evaluate function and store result
     builder->SetInsertPoint(doEval);
-    Value *treeValue = map[code];
+    Value *treeValue = Known(code);
     if (!treeValue)
     {
         Context::context->Error("No value for '$1'", code);
@@ -660,7 +704,7 @@ Value *CompiledUnit::EagerEvaluation(Tree *tree)
 //   Evaluate the given tree immediately
 // ----------------------------------------------------------------------------
 {
-    Value *treeValue = map[tree];
+    Value *treeValue = Known(tree);
     assert(treeValue);
     Value *evaluated = builder->CreateCall(compiler->xl_evaluate, treeValue);
     builder->CreateStore(evaluated, result);
@@ -677,7 +721,7 @@ BasicBlock *CompiledUnit::TagTest(Tree *code, ulong tagValue)
     BasicBlock *notGood = NeedTest();
 
     // Check if the tag is INTEGER
-    Value *treeValue = map[code];
+    Value *treeValue = Known(code);
     if (!treeValue)
     {
         Context::context->Error("No value for '$1'", code);
@@ -711,7 +755,7 @@ BasicBlock *CompiledUnit::IntegerTest(Tree *code, longlong value)
         return isIntegerBB;
 
     // Check if the value is the same
-    Value *treeValue = map[code];
+    Value *treeValue = Known(code);
     assert(treeValue);
     treeValue = builder->CreateBitCast(treeValue, compiler->integerTreePtrTy);
     Value *valueFieldPtr = builder->CreateConstGEP2_32(treeValue, 0,
@@ -742,7 +786,7 @@ BasicBlock *CompiledUnit::RealTest(Tree *code, double value)
         return isRealBB;
 
     // Check if the value is the same
-    Value *treeValue = map[code];
+    Value *treeValue = Known(code);
     assert(treeValue);
     treeValue = builder->CreateBitCast(treeValue, compiler->realTreePtrTy);
     Value *valueFieldPtr = builder->CreateConstGEP2_32(treeValue, 0,
@@ -773,7 +817,7 @@ BasicBlock *CompiledUnit::TextTest(Tree *code, text value)
         return isTextBB;
 
     // Check if the value is the same, call xl_same_text
-    Value *treeValue = map[code];
+    Value *treeValue = Known(code);
     assert(treeValue);
     Constant *refVal = ConstantArray::get(value);
     Value *refPtr = builder->CreateConstGEP1_32(refVal, 0);
@@ -793,8 +837,8 @@ BasicBlock *CompiledUnit::ShapeTest(Tree *left, Tree *right)
 //   Test if the two given trees have the same shape
 // ----------------------------------------------------------------------------
 {
-    Value *leftVal = map[left];
-    Value *rightVal = map[right];
+    Value *leftVal = Known(left);
+    Value *rightVal = Known(right);
     assert(leftVal);
     assert(rightVal);
     if (leftVal == rightVal) // How unlikely?
@@ -818,8 +862,8 @@ BasicBlock *CompiledUnit::TypeTest(Tree *value, Tree *type)
 //   Test if the given value has the given type
 // ----------------------------------------------------------------------------
 {
-    Value *valueVal = map[value];
-    Value *typeVal = map[type];
+    Value *valueVal = Known(value);
+    Value *typeVal = Known(type);
     assert(valueVal);
     assert(typeVal);
 

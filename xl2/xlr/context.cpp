@@ -646,7 +646,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                                   what->left, existing);
 
         // Evaluate type expression, e.g. 'integer' in example above
-        Tree *typeExpr = context->Compile(what->right);
+        Tree *typeExpr = Compile(what->right);
 
         // Compile what we are testing against
         Tree *compiled = Compile(test);
@@ -1373,3 +1373,19 @@ Tree *Rewrite::Compile(void)
 }
 
 XL_END
+
+
+extern "C" void debugs(XL::Symbols *symbols)
+// ----------------------------------------------------------------------------
+//   For the debugger, dump a symbol table
+// ----------------------------------------------------------------------------
+{
+    using namespace XL;
+    for (Symbols *s = symbols; s; s = s->Parent())
+    {
+        std::cerr << "SYMBOLS AT " << s << "\n";
+        symbol_table::iterator i;
+        for (i = s->names.begin(); i != s->names.end(); i++)
+            std::cerr << (*i).first << ": " << (*i).second << "\n";
+    }
+}

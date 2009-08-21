@@ -183,6 +183,7 @@ struct Symbols
 public:
     Context *           context;
     Symbols *           parent;
+    Symbols *           previous;
     symbol_table        names;
     Rewrite *           rewrites;
     ulong               locals;
@@ -403,7 +404,8 @@ inline Symbols::Symbols(Context *c)
 // ----------------------------------------------------------------------------
 //   Links the symbol table being created into the context
 // ----------------------------------------------------------------------------
-    : context(c), parent(c->symbols), rewrites(NULL), locals(0)
+    : context(c), parent(c->symbols), previous(c->symbols),
+      rewrites(NULL), locals(0)
 {
     c->symbols = this;
 }
@@ -413,7 +415,8 @@ inline Symbols::Symbols(Symbols *s)
 // ----------------------------------------------------------------------------
 //   Create a "child" symbol table
 // ----------------------------------------------------------------------------
-    : context(s->context), parent(s), rewrites(NULL), locals(0)
+    : context(s->context), parent(s), previous(context->symbols),
+      rewrites(NULL), locals(0)
 {}
 
 
@@ -424,8 +427,7 @@ inline Symbols::~Symbols()
 {
     if (rewrites)
         delete rewrites;
-    if (context->symbols == this)
-        context->symbols = parent;
+    context->symbols = previous;
 }
 
 

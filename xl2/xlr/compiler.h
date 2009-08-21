@@ -61,6 +61,9 @@ struct Compiler
     llvm::Function *          ExternFunction(kstring name, void *address,
                                              const llvm::Type *retType,
                                              uint parmCount, ...);
+    llvm::Value *             EnterGlobal(Name *name, Name **address);
+    llvm::Value *             Known(Tree *value);
+
 public:
     llvm::Module              *module;
     llvm::ModuleProvider      *provider;
@@ -87,6 +90,7 @@ public:
     llvm::Function            *xl_new_text;
     llvm::Function            *xl_new_xtext;
     function_map               functions;
+    value_map                  globals;
 };
 
 
@@ -99,6 +103,7 @@ struct CompiledUnit
     ~CompiledUnit();
 
     bool                IsForwardCall()         { return entrybb == NULL; }
+    llvm::Value *       Known(Tree *tree);
 
     llvm::BasicBlock *  BeginInvokation();
     void                EndInvokation(llvm::BasicBlock *bb, bool success);
