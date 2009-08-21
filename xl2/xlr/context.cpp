@@ -183,7 +183,7 @@ void Context::CollectGarbage ()
         symbol_table::iterator s;
         compile_cache::iterator cc;
         value_list::iterator v;
-        ulong deletedCount = 0, activeCount = 0;
+        ulong deletedCount = 0, activeCount = 0, nativeCount = 0;
 
         IFTRACE(memory)
             std::cerr << "Garbage collecting...";
@@ -212,7 +212,11 @@ void Context::CollectGarbage ()
         for (a = active.begin(); a != active.end(); a++)
         {
             activeCount++;
-            if (!gc.alive.count(*a))
+            if (dynamic_cast<Native *> (*a))
+            {
+                nativeCount++;
+            }
+            else if (!gc.alive.count(*a))
             {
                 deletedCount++;
                 delete *a;
@@ -223,6 +227,7 @@ void Context::CollectGarbage ()
         IFTRACE(memory)
             std::cerr << "done: Purged " << deletedCount
                       << " out of " << activeCount
+                      << " and " << nativeCount << " natives, "
                       << " threshold " << gc_threshold << "\n";
     }
 }

@@ -89,11 +89,11 @@ struct Context : Namespace
     // Constructors and destructors
     Context(Errors &err):
         Namespace(NULL),
-        errors(err), gc_threshold(200000000),
+        errors(err), gc_threshold(200),
         error_handler(NULL), run_stack(NULL), compiled() {}
     Context(Context *p):
         Namespace(p),
-        errors(p->errors), gc_threshold(200000000),
+        errors(p->errors), gc_threshold(200),
         error_handler(NULL), run_stack(NULL), compiled() {}
 
     // Context properties
