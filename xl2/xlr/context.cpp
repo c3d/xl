@@ -226,6 +226,9 @@ Tree *Context::Run(Tree *source, bool eager)
 // ----------------------------------------------------------------------------
 {
     bool changed = true;
+    IFTRACE(eval)
+        std::cout << (eager ? "Eval: " : "Run: ") << source << "\n";
+
     while (changed)
     {
         changed = false;
@@ -425,7 +428,7 @@ struct TreeMatch : Action
 // ----------------------------------------------------------------------------
 {
     TreeMatch (Tree *t, Context *c):
-        test(t), context(c), hadName(false)
+        test(t), context(c), defined(NULL)
     {
         context->Clear();
     }
@@ -453,17 +456,28 @@ struct TreeMatch : Action
     }
     Tree *DoName(Name *what)
     {
-        if (!hadName)
+        if (!defined)
         {
             // The first name we see must match exactly
-            hadName = true;
+            defined = what;
             if (Name *nt = dynamic_cast<Name *> (test))
                 if (nt->value == what->value)
                     return what;
         }
         else
         {
-            // Subsequence names are considered variable names
+            // Subsequence names are considered variable names unless
+            // they already exist in the context. This also is useful
+            // to check "A+A"
+            // Subtlety: if the name exists, e.g. "false", we need to
+            // do an eager evaluation of the match. Otherwise, we
+            // enter the tree, so we do lazy evaluation.
+            if (Tree *existing = context->Name(what->value))
+            {
+                if (existing == context->Eval(test)) // Revisit: tree match?
+                    return what;
+                return NULL;
+            }
             context->EnterName(what->value, test);
             return what;
         }
@@ -503,7 +517,8 @@ struct TreeMatch : Action
             // Check if we match the tree, e.g. A+B vs 2+3
             if (it->name == what->name)
             {
-                hadName = true;
+                if (!defined)
+                    defined = what;
                 test = it->left;
                 Tree *lr = what->left->Do(this);
                 test = it;
@@ -545,6 +560,9 @@ struct TreeMatch : Action
         if (Prefix *pt = dynamic_cast<Prefix *> (test))
         {
             // Check if we match the tree, e.g. f(A) vs. f(2)
+            Infix *defined_infix = dynamic_cast<Infix *> (defined);
+            if (defined_infix)
+                defined = NULL;
             test = pt->left;
             Tree *lr = what->left->Do(this);
             test = pt;
@@ -555,6 +573,8 @@ struct TreeMatch : Action
             test = pt;
             if (!rr)
                 return NULL;
+            if (!defined && defined_infix)
+                defined = defined_infix;
             return what;
         }
         return NULL;
@@ -564,7 +584,8 @@ struct TreeMatch : Action
         if (Postfix *pt = dynamic_cast<Postfix *> (test))
         {
             // Check if we match the tree, e.g. A! vs 2!
-            // Note that ordering is reverse compared to prefix, see names
+            // Note that ordering is reverse compared to prefix, so that
+            // the 'defined' names is set correctly
             test = pt->right;
             Tree *rr = what->right->Do(this);
             test = pt;
@@ -586,13 +607,13 @@ struct TreeMatch : Action
 
     Tree *      test;
     Context *   context;
-    bool        hadName;
+    Tree *      defined;
 };
 
 
 struct TreeRewrite : Action
 // ----------------------------------------------------------------------------
-//   Check if two trees match
+//   Apply all transformations to a tree
 // ----------------------------------------------------------------------------
 {
     TreeRewrite (Context *c): context(c) {}

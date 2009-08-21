@@ -6,9 +6,11 @@ if false then trueClause else falseClause -> falseClause
 truc 0 -> 1
 truc N ->
     if N < 10 then
+        debug "Clause 1"
         truc N - 1
         2
     else
+        debug "Clause 2"
         truc N - 2
         3
 

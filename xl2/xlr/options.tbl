@@ -70,6 +70,7 @@ OPTION(o, "Select output file", output_file = STRING)
 TRACE(source)
 TRACE(memory)
 TRACE(rewrite)
+TRACE(eval)
 
 // Undefine for next use...
 #undef OPTVAR

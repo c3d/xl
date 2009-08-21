@@ -25,6 +25,8 @@
 
 #include "basics.h"
 #include "context.h"
+#include "renderer.h"
+#include <iostream>
 
 
 XL_BEGIN
@@ -85,6 +87,7 @@ void EnterBasics(Context *c)
 
     PREFIX("quote", ParseTree);
     PREFIX("eval", Evaluation);
+    PREFIX("debug", DebugPrint);
     PREFIX("-", Negate);
 
     PREFIX("boolean", BooleanType);
@@ -379,6 +382,15 @@ Tree *Evaluation::Call(Context *context, Tree *args)
     return context->Run(args);
 }
 
+
+Tree *DebugPrint::Call(Context *context, Tree *args)
+// ----------------------------------------------------------------------------
+//   Print the tree given as argument
+// ----------------------------------------------------------------------------
+{
+    std::cout << "DEBUG: " << args << "\n";
+    return args;
+}
 
 
 // ============================================================================

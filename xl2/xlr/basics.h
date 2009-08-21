@@ -269,6 +269,15 @@ struct Evaluation : Native
 };
 
 
+struct DebugPrint : Native
+// ----------------------------------------------------------------------------
+//    Print its argument as a tree
+// ----------------------------------------------------------------------------
+{
+    virtual Tree *      Call(Context *context, Tree *args);
+};
+
+
 
 // ============================================================================
 // 
@@ -319,8 +328,6 @@ struct CharacterType : Native
 {
     Tree *Call(Context *context, Tree *args);
 };
-
-
 
 XL_END
 
