@@ -85,6 +85,7 @@ void EnterBasics(Context *c)
 
     PREFIX("quote", ParseTree);
     PREFIX("eval", Evaluation);
+    PREFIX("-", Negate);
 
     PREFIX("boolean", BooleanType);
     PREFIX("integer", IntegerType);
@@ -192,6 +193,23 @@ text     BinaryHandler::DoText(text left, text right)
 // ----------------------------------------------------------------------------
 {
     throw "Operation '$1' not supported on text";
+}
+
+
+Tree *Negate::Call(Context *context, Tree *args)
+// ----------------------------------------------------------------------------
+//   Negate its input argument
+// ----------------------------------------------------------------------------
+{
+    Tree *value = context->Eval(args);
+    tree_position pos = args->Position();
+
+    if (Integer *li = dynamic_cast<Integer *> (value))
+        return new Integer(-li->value, pos);
+    if (Real *ri = dynamic_cast<Real *> (value))
+        return new Real(-ri->value, pos);
+
+    return context->Error("Invalid type for negation in '$1'", args);
 }
 
 
