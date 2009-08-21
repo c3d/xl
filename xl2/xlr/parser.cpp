@@ -254,7 +254,7 @@ Tree *Parser::Parse(text closing)
         case tokSTRING:
         case tokQUOTE:
             char separator = scanner.TokenText()[0];
-            name = "" + separator;
+            name = text("") + separator;
             right = new Text(scanner.TextValue(), name, name, pos);
             if (!result && new_statement)
                 is_expression = false;

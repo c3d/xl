@@ -166,7 +166,7 @@ void Renderer::RenderText(text format)
             }
             needsep = false;
         }
-        text t = "" + c;
+        text t = text("") + c;
         quoted = i > 0 && i < length-1 && t == current_quote;
         if (quoted)
             t += " quoted";
@@ -191,15 +191,16 @@ void Renderer::RenderFormat(Tree *format)
     if (Text *tf = format->AsText())
     {
         if (tf->opening == Text::textQuote)
-            output << tf->value;              // As is, no formatting
+            output << tf->value;                // As is, no formatting
         else
-            RenderText(tf->value);               // Format contents
+            RenderText(tf->value);              // Format contents
     }
     else if (Name *nf = format->AsName())
     {
         text n = nf->value;
+        text m = n + " ";
         if (n == "cr")
-            n = "\n";
+            m = "\n";
 
         if (n == "indent")
         {
@@ -239,12 +240,14 @@ void Renderer::RenderFormat(Tree *format)
         else if (n == "opening")
         {
             Block *b = right->AsBlock();
-            if (b) RenderText(b->opening);
+            if (b)
+                RenderText(b->opening);
         }
         else if (n == "closing")
         {
             Block *b = right->AsBlock();
-            if (b) RenderText(b->closing);
+            if (b)
+                RenderText(b->closing);
         }
         else if (n == "space")
         {
@@ -260,9 +263,9 @@ void Renderer::RenderFormat(Tree *format)
             output << '\n';
             had_space = true;
         }
-        else if (formats.count(n = n + " ") > 0)
+        else if (formats.count(m) > 0)
         {
-            RenderFormat (formats[n]);
+            RenderFormat (formats[m]);
         }
         else
         {
