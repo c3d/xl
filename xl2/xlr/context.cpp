@@ -610,9 +610,9 @@ Tree *ArgumentMatch::Compile(Tree *source)
 // ----------------------------------------------------------------------------
 {
     // Compile the code
-    Tree *code = context->Compile(source);
+    Tree *code = context->Compile(source, true);
     if (!code)
-        return context->Error("Unable to compile '$1'", source);
+        return NULL; // No match
 
     // For leaves, delayed invokation doesn't help
     if (Leaf *leaf = dynamic_cast<Leaf *> (code))
@@ -1416,6 +1416,9 @@ Tree * CompileAction::Rewrites(Tree *what)
             Append(result, dealloc);
     }
 
+    if (!result)
+        return context->Error("No candidate for '$1'", what);
+
     return result;
 }
 
@@ -1452,7 +1455,17 @@ Tree *Context::Name(text name)
 }
 
 
-Tree *Context::Compile(Tree *source)
+struct ReturnNullIfBad : Native
+// ----------------------------------------------------------------------------
+//   Simply return NULL if some error occurs
+// ----------------------------------------------------------------------------
+{
+    ReturnNullIfBad() : Native(NULL) {}
+    Tree *Run(Stack *stack) { return NULL; }
+};
+
+
+Tree *Context::Compile(Tree *source, bool nullIfBad)
 // ----------------------------------------------------------------------------
 //    Return an optimized version of the source tree, ready to run
 // ----------------------------------------------------------------------------
@@ -1460,13 +1473,20 @@ Tree *Context::Compile(Tree *source)
     if (compiled.count(source) > 0)
         return compiled[source];
 
+    ReturnNullIfBad nib;
+    Tree *handler = error_handler;
+    if (nullIfBad)
+        error_handler = &nib;
+
     DeclarationAction declare(this);
     Tree *result = source->Do(declare);
         
     CompileAction compile(this);
     result = source->Do(compile);
 
-    compiled[source] = result;
+    if (result)
+        compiled[source] = result;
+    error_handler = handler;
 
     return result;
 }
@@ -1574,7 +1594,6 @@ Tree *Stack::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
     }
 
     // No handler: terminate
-    std::cerr << "Error: No error handler\n";
     errors.Error(message, arg1, arg2, arg3);
     std::exit(1);
 }
@@ -1598,11 +1617,11 @@ Tree * Context::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
         if (arg3)
             errorInvokation.AddArgument(arg3);
         errorInvokation.invoked = handler;
-        return errorInvokation.Run(NULL);
+        Stack errorStack(errors);
+        return errorInvokation.Run(&errorStack);
     }
 
     // No handler: terminate
-    std::cerr << "Error: No error handler\n";
     errors.Error(message, arg1, arg2, arg3);
     std::exit(1);
 }

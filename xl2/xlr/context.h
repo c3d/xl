@@ -109,7 +109,7 @@ struct Context : Namespace
 
     // Evaluation of trees
     Tree *              Name(text name);
-    Tree *              Compile(Tree *source);
+    Tree *              Compile(Tree *source, bool nullIfBad = false);
     Tree *              Run(Tree *source);
     Rewrite *           EnterRewrite(Tree *from, Tree *to);
     Tree *              Error (text message,
