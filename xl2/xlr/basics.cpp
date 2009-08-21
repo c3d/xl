@@ -78,7 +78,7 @@ Tree *IntegerType::TypeCheck(Stack *stack, Tree *value)
 //   Check if argument can be evaluated as an integer
 // ----------------------------------------------------------------------------
 {
-    if (Integer *it = dynamic_cast<Integer *>(value->Run(stack)))
+    if (Integer *it = dynamic_cast<Integer *>(stack->Run(value)))
         return it;
     return NULL;
 }
@@ -89,7 +89,7 @@ Tree *RealType::TypeCheck(Stack *stack, Tree *value)
 //   Check if argument can be evaluated as a real
 // ----------------------------------------------------------------------------
 {
-    if (Real *rt = dynamic_cast<Real *>(value->Run(stack)))
+    if (Real *rt = dynamic_cast<Real *>(stack->Run(value)))
         return rt;
     return NULL;
 }
@@ -100,7 +100,7 @@ Tree *TextType::TypeCheck(Stack *stack, Tree *value)
 //   Check if argument can be evaluated as a text
 // ----------------------------------------------------------------------------
 {
-    if (Text *tt = dynamic_cast<Text *>(value->Run(stack)))
+    if (Text *tt = dynamic_cast<Text *>(stack->Run(value)))
     {
         Quote q;
         if (tt->Opening() != q.Opening() || tt->Closing() != q.Closing())
@@ -115,7 +115,7 @@ Tree *CharacterType::TypeCheck(Stack *stack, Tree *value)
 //   Check if argument can be evaluated as an integer
 // ----------------------------------------------------------------------------
 {
-    if (Text *tt = dynamic_cast<Text *>(value->Run(stack)))
+    if (Text *tt = dynamic_cast<Text *>(stack->Run(value)))
     {
         Quote q;
         if (tt->Opening() == q.Opening() && tt->Closing() == q.Closing())
@@ -139,7 +139,7 @@ Tree *InfixType::TypeCheck(Stack *stack, Tree *value)
 //   Check if argument can be evaluated as an infix
 // ----------------------------------------------------------------------------
 {
-    if (Infix *it = dynamic_cast<Infix *>(value->Run(stack)))
+    if (Infix *it = dynamic_cast<Infix *>(stack->Run(value)))
         return it;
     return NULL;
 }
@@ -150,7 +150,7 @@ Tree *PrefixType::TypeCheck(Stack *stack, Tree *value)
 //   Check if argument can be evaluated as a prefix
 // ----------------------------------------------------------------------------
 {
-    if (Prefix *it = dynamic_cast<Prefix *>(value->Run(stack)))
+    if (Prefix *it = dynamic_cast<Prefix *>(stack->Run(value)))
         return it;
     return NULL;
 }
@@ -161,7 +161,7 @@ Tree *PostfixType::TypeCheck(Stack *stack, Tree *value)
 //   Check if argument can be evaluated as a postfix
 // ----------------------------------------------------------------------------
 {
-    if (Postfix *it = dynamic_cast<Postfix *>(value->Run(stack)))
+    if (Postfix *it = dynamic_cast<Postfix *>(stack->Run(value)))
         return it;
     return NULL;
 }
@@ -172,7 +172,7 @@ Tree *BlockType::TypeCheck(Stack *stack, Tree *value)
 //   Check if argument can be evaluated as a block
 // ----------------------------------------------------------------------------
 {
-    if (Block *it = dynamic_cast<Block *>(value->Run(stack)))
+    if (Block *it = dynamic_cast<Block *>(stack->Run(value)))
         return it;
     return NULL;
 }

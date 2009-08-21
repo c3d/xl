@@ -134,7 +134,7 @@ struct TreeTest : Native
 
     Tree *Run(Stack *stack)
     {
-        Tree *code = test->Run(stack);
+        Tree *code = stack->Run(test);
         return code;
     }
     Tree *Next() { return condition ? next : iffalse; }
@@ -180,7 +180,7 @@ struct RealTest : TreeTest
 
     Tree *Run(Stack *stack)
     {
-        Tree *code = test->Run(stack);
+        Tree *code = stack->Run(test);
         condition = false;
         if (Real *iv = dynamic_cast<Real *> (code))
             if (iv->value == value)
@@ -203,7 +203,7 @@ struct TextTest : TreeTest
 
     Tree *Run(Stack *stack)
     {
-        Tree *code = test->Run(stack);
+        Tree *code = stack->Run(test);
         condition = false;
         if (Text *iv = dynamic_cast<Text *> (code))
             if (iv->value == value)
@@ -226,7 +226,7 @@ struct NameTest : TreeTest
 
     Tree *Run(Stack *stack)
     {
-        Tree *code = test->Run(stack);
+        Tree *code = stack->Run(test);
         condition = false;
         if (Name *iv = dynamic_cast<Name *> (code))
             if (iv->value == value->value)
@@ -250,7 +250,6 @@ struct EqualityTest : TreeTest
     Tree *Run(Stack *stack);
     Tree *value;
 };
-
 
 
 struct TypeTest : TreeTest

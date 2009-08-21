@@ -362,9 +362,17 @@ void debugc(XL::Tree *n)
 // ----------------------------------------------------------------------------
 {
     ulong idx = 0;
-    while (XL::Native *native = dynamic_cast<XL::Native *> (n))
+    using namespace XL;
+    while (Native *native = dynamic_cast<XL::Native *> (n))
     {
-        std::cerr << idx++ << ": " << native->TypeName() << "\n";
+        std::cerr << idx++ << ": " << native->TypeName();
+        if (TreeTest *tt = dynamic_cast<TreeTest *> (native))
+            std::cerr << " else " << (void *) tt->iffalse;
+        if (Invoke *inv = dynamic_cast<Invoke *> (native))
+            std::cerr << " invoking " << (void *) inv->invoked;
+        if (BranchTarget *bt = dynamic_cast<BranchTarget *> (native))
+            std::cerr << " at " << (void *) bt;
+        std::cerr << "\n";
         n = native->next;
     }
     std::cerr << idx++ << ":" << n << "\n";

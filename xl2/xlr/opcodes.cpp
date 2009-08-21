@@ -118,7 +118,7 @@ Tree *Invoke::Run(Stack *stack)
     for (i = values.begin(); i != values.end(); i++)
     {
         Tree *value = (*i);
-        value = value->Run(stack);
+        value = stack->Run(value);
         args.push_back(value);
     }
 
@@ -275,8 +275,8 @@ Tree *EqualityTest::Run (Stack *stack)
 //   Check equality of two trees
 // ----------------------------------------------------------------------------
 {
-    Tree *code = test->Run(stack);
-    Tree *ref = value->Run(stack);
+    Tree *code = stack->Run(test);
+    Tree *ref = stack->Run(value);
     condition = false;
     TreeMatch compareForEquality(ref);
     if (code->Do(compareForEquality))
@@ -290,8 +290,8 @@ Tree *TypeTest::Run (Stack *stack)
 //   Check if the code being tested has the given type value
 // ----------------------------------------------------------------------------
 {
-    Tree *code = test->Run(stack);
-    Tree *ref = type_value->Run(stack);
+    Tree *code = stack->Run(test);
+    Tree *ref = stack->Run(type_value);
     condition = false;
     if (TypeExpression *typeChecker = dynamic_cast<TypeExpression *>(ref))
         if (typeChecker->TypeCheck(stack, code))

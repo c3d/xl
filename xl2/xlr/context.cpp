@@ -725,7 +725,7 @@ Tree *ArgumentMatch::DoName(Name *what)
 
         // Check if the name already exists, e.g. 'false' or 'A+A'
         // If it does, we generate a run-time check to verify equality
-        if (Tree *existing = context->Name(what->value))
+        if (Tree *existing = locals->NamedTree(what->value))
         {
             // Insert a dynamic tree comparison test
             if (!end)
@@ -1312,8 +1312,7 @@ Tree * CompileAction::Rewrites(Tree *what)
                         callCode = Append(endOfPrev, callCode);
 
                     // If this call defined a condition, remember it
-                    if (matchArgs.end)
-                        endOfPrev = matchArgs.end;
+                    endOfPrev = matchArgs.end;
 
                     // Append generated code to result
                     if (!result)
@@ -1417,19 +1416,46 @@ Rewrite *Context::EnterRewrite(Tree *from, Tree *to)
 // 
 // ============================================================================
 
+static inline const char *indent(ulong sz)
+// ----------------------------------------------------------------------------
+//    Return enough spacing for indentation
+// ----------------------------------------------------------------------------
+{
+    return "                                        " + (sz<40 ? (40-sz) : 0);
+}
+
+
 Tree *Stack::Run(Tree *code)
 // ----------------------------------------------------------------------------
 //    Execute code until there is nothing left to do
 // ----------------------------------------------------------------------------
 {
     Tree *result = NULL;
+    IFTRACE(eval)
+        std::cerr << indent(values.size())
+                  << "Stack " << values.size()
+                  << " Exec " << code << "\n";
+
+    if (Leaf *leaf = dynamic_cast<Leaf *> (code))
+        return leaf;
+
     while (Native *native = dynamic_cast<Native *> (code))
     {
+        IFTRACE(eval)
+            std::cerr << indent(values.size())
+                      << "Step " << native->TypeName() << "\n";
         Tree *value = native->Run(this);
+        IFTRACE(eval)
+            std::cerr << indent(values.size())
+                      << "  result " << value << "\n";
         if (value)
             result = value;
         code = native->Next();
     }
+    IFTRACE(eval)
+        std::cerr << indent(values.size())
+                  << "Stack " << values.size()
+                  << " Result " << result << "\n";
     return result;
 }
 
