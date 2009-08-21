@@ -418,37 +418,39 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
         storage[tree] = result;
 
         // If there is an initial value for that tree, store that
-        Value *initval = Known(tree);
+        Value *initval = Known(tree, data);
         if (initval)
-            code->CreateStore(initval, result);
+            data->CreateStore(initval, result);
     }
 
     return result;
 }
 
 
-Value *CompiledUnit::Known(Tree *tree)
+Value *CompiledUnit::Known(Tree *tree, IRBuilder<> *c)
 // ----------------------------------------------------------------------------
 //   Check if the tree has a known local or global value
 // ----------------------------------------------------------------------------
 {
     Value *result = NULL;
-    if (value.count(tree) > 0)
+    if (!c)
+        c = code;
+    if (storage.count(tree) > 0)
+    {
+        // Value is a variable
+        result = c->CreateLoad(storage[tree], "adat");
+    }
+    else if (value.count(tree) > 0)
     {
         // Immediate value of some sort, use that
         result = value[tree];
     }
-    else if (storage.count(tree) > 0)
-    {
-        // Value is a variable
-        result = code->CreateLoad(storage[tree], "known.alloca");
-    }
-    else
+    else 
     {
         // Check if this is a global
         result = compiler->Known(tree);
         if (result)
-            result = code->CreateLoad(result, "known.global");
+            result = c->CreateLoad(result, "gdat");
     }
     return result;
 }
@@ -655,15 +657,15 @@ Value *CompiledUnit::Left(Tree *tree)
         return result;
 
     // Check that we already have a value for the given tree
-    Value *parent = Known(tree);
+    Value *parent = Known(tree, data);
     if (parent)
     {
         // WARNING: This relies on the layout of all nodes beginning the same
-        Value *pptr = code->CreateBitCast(parent, compiler->prefixTreePtrTy,
-                                          "prefix.l");
-        result = code->CreateConstGEP2_32(pptr, 0,
-                                          LEFT_VALUE_INDEX, "leftptr");
-        result = code->CreateLoad(result, "left");
+        Value *pptr = data->CreateBitCast(parent, compiler->prefixTreePtrTy,
+                                          "pfxl");
+        result = data->CreateConstGEP2_32(pptr, 0,
+                                          LEFT_VALUE_INDEX, "lptr");
+        result = data->CreateLoad(result, "left");
         assert(!value[prefix->left]);
         value[prefix->left] = result;
     }
@@ -693,15 +695,15 @@ Value *CompiledUnit::Right(Tree *tree)
         return result;
 
     // Check that we already have a value for the given tree
-    Value *parent = Known(tree);
+    Value *parent = Known(tree, data);
     if (parent)
     {
         // WARNING: This relies on the layout of all nodes beginning the same
-        Value *pptr = code->CreateBitCast(parent, compiler->prefixTreePtrTy,
-                                          "prefix.r");
-        result = code->CreateConstGEP2_32(pptr, 0,
-                                          RIGHT_VALUE_INDEX, "rightptr");
-        result = code->CreateLoad(result, "right");
+        Value *pptr = data->CreateBitCast(parent, compiler->prefixTreePtrTy,
+                                          "pfxr");
+        result = data->CreateConstGEP2_32(pptr, 0,
+                                          RIGHT_VALUE_INDEX, "rptr");
+        result = data->CreateLoad(result, "right");
         assert(!value[prefix->right]);
         value[prefix->right] = result;
     }

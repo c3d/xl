@@ -108,7 +108,7 @@ struct CompiledUnit
     eval_fn             Finalize();
 
     llvm::Value *       NeedStorage(Tree *tree);
-    llvm::Value *       Known(Tree *tree);
+    llvm::Value *       Known(Tree *tree, llvm::IRBuilder<> *bb = NULL);
 
     llvm::Value *       ConstantInteger(Integer *what);
     llvm::Value *       ConstantReal(Real *what);
