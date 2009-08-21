@@ -106,10 +106,69 @@ INFIX(boolean, "xor", boolean, BinaryXorBool, RBOOL(BOOL(0) ^ BOOL(1)))
 INFIX(boolean, "<>", boolean, BinaryNEBool, RBOOL(BOOL(0) != BOOL(1)))
 INFIX(boolean, "=", boolean, BinaryEQBool, RBOOL(BOOL(0) == BOOL(1)))
 
+// Text operations
+INFIX(text, "&", text, BinaryTextConcatenate, RTEXT(TEXT(0) + TEXT(1)))
+
 // Conversions
 PREFIX("real", PARM(x, integer), IntToReal, RREAL((real_t) x))
 PREFIX("integer", PARM(x, real), RealToInt, RINT((integer_t) x))
+PREFIX("text", PARM(x, integer), IntToText,
+       std::ostringstream out; out << x; RTEXT(out.str()))
+PREFIX("text", PARM(x, real), RealToText,
+       std::ostringstream out; out << x; RTEXT(out.str()))
 
+// Time computations
+PREFIX("time",,    SystemTime,    time_t t; time(&t); RINT(t))
+PREFIX("hours", PARM(t, integer),   TimeHours,
+       struct tm tm;
+       localtime_r(&t, &tm); RINT(tm.tm_hour))
+PREFIX("minutes", PARM(t, integer), TimeMinutes,
+       struct tm tm;
+       localtime_r(&t, &tm); RINT(tm.tm_min))
+PREFIX("seconds", PARM(t, integer), TimeSeconds,
+       struct tm tm;
+       localtime_r(&t, &tm); RINT(tm.tm_sec))
+PREFIX("year", PARM(t, integer), TimeYear,
+       struct tm tm;
+       localtime_r(&t, &tm); RINT(tm.tm_year + 1900))
+PREFIX("month", PARM(t, integer), TimeMonth,
+       struct tm tm;
+       localtime_r(&t, &tm); RINT(tm.tm_mon))
+PREFIX("day", PARM(t, integer), TimeMonthDay,
+       struct tm tm;
+       localtime_r(&t, &tm); RINT(tm.tm_mday))
+PREFIX("week_day", PARM(t, integer), TimeWeekDay,
+       struct tm tm;
+       localtime_r(&t, &tm); RINT(tm.tm_wday))
+PREFIX("year_day", PARM(t, integer), TimeYearDay,
+       struct tm tm;
+       localtime_r(&t, &tm); RINT(tm.tm_yday))
+
+// Return hour, minutes, seconds
+PREFIX("hours",,   SystemHours,
+       time_t t; struct tm tm;
+       time (&t); localtime_r(&t, &tm); RINT(tm.tm_hour))
+PREFIX("minutes",, SystemMinutes,
+       time_t t; struct tm tm;
+       time (&t); localtime_r(&t, &tm); RINT(tm.tm_min))
+PREFIX("seconds",, SystemSeconds,
+       time_t t; struct tm tm;
+       time (&t); localtime_r(&t, &tm); RINT(tm.tm_sec))
+PREFIX("year",, SystemYear,
+       time_t t; struct tm tm;
+       time (&t); localtime_r(&t, &tm); RINT(tm.tm_year + 1900))
+PREFIX("month",, SystemMonth,
+       time_t t; struct tm tm;
+       time (&t); localtime_r(&t, &tm); RINT(tm.tm_mon))
+PREFIX("day",, SystemMonthDay,
+       time_t t; struct tm tm;
+       time (&t); localtime_r(&t, &tm); RINT(tm.tm_mday))
+PREFIX("week_day",, SystemWeekDay,
+       time_t t; struct tm tm;
+       time (&t); localtime_r(&t, &tm); RINT(tm.tm_wday))
+PREFIX("year_day",, SystemYearDay,
+       time_t t; struct tm tm;
+       time (&t); localtime_r(&t, &tm); RINT(tm.tm_yday))
 
 // Debugging code
 PREFIX("debug", PARM(tree, anything), DebugTree,

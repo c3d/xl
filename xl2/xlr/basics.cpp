@@ -27,6 +27,8 @@
 #include "context.h"
 #include "renderer.h"
 #include <iostream>
+#include <sstream>
+#include <ctime>
 
 
 XL_BEGIN
