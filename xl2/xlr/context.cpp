@@ -545,7 +545,8 @@ Tree *ArgumentMatch::Compile(Tree *source)
     if (!source)
         return NULL; // No match
  
-    // Generate code to only evaluate the result once
+    // Generate code to evaluate the argument
+    LocalSave<bool> nib(compile->nullIfBad, true);
     source = source->Do(compile);
     return source;
 }
@@ -755,9 +756,13 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
 
         // Evaluate type expression, e.g. 'integer' in example above
         Tree *typeExpr = Compile(what->right);
+        if (!typeExpr)
+            return NULL;
 
         // Compile what we are testing against
         Tree *compiled = Compile(test);
+        if (!compiled)
+            return NULL;
 
         // Insert a run-time type test
         unit.TypeTest(compiled, typeExpr);
