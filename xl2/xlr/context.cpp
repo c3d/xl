@@ -120,9 +120,7 @@ void Symbols::ParameterList(Tree *form, tree_list &list)
     }
 
     // Build the parameter list for 'to'
-    symbol_iter p;
-    for (p = parms.names.begin(); p != parms.names.end(); p++)
-        list.push_back((*p).second);
+    list = matchParms.order;
 }
 
 
@@ -445,6 +443,7 @@ Tree *ParameterMatch::DoName(Name *what)
 
         // If first occurence of the name, enter it in symbol table
         Tree *result = symbols->Allocate(what);
+        order.push_back(result);
         return result;
     }
 }
@@ -481,6 +480,7 @@ Tree *ParameterMatch::DoInfix(Infix *what)
 
         // Enter the name in symbol table
         Tree *result = symbols->Allocate(varName);
+        order.push_back(result);
         return result;
     }
 
@@ -1198,13 +1198,14 @@ Tree * CompileAction::Rewrites(Tree *what)
                         tree_list argsList;
                         argsList.push_back(what);
 
-                        // Map the arguments we found in called stack order
-                        // (i.e. we take the order from parms ids)
-                        symbol_iter i;
-                        for (i=parms.names.begin(); i!=parms.names.end(); i++)
+                        // Map the arguments we found in parameter order
+                        // (actually, in reverse order, which is what we want)
+                        tree_list::iterator p;
+                        tree_list &order = matchParms.order;
+                        for (p = order.begin(); p != order.end(); p++)
                         {
-                            text name = (*i).first;
-                            Tree *argValue = args.Named(name);
+                            Name *name = (*p)->AsName();
+                            Tree *argValue = args.Named(name->value);
                             argsList.push_back(argValue);
                         }
 
@@ -1377,14 +1378,8 @@ Tree *Rewrite::Compile(void)
     if (!parmsOK)
         return context->Error("Internal: what parameters in '$1'?", from);
 
-    // Build the parameter list for 'to'
-    symbol_iter p;
-    tree_list parmsList;
-    for (p = parms.names.begin(); p != parms.names.end(); p++)
-        parmsList.push_back((*p).second);
-
     // Create the compilation unit and check if we are already compiling this
-    CompiledUnit unit(compiler, to, parmsList);
+    CompiledUnit unit(compiler, to, matchParms.order);
     if (unit.IsForwardCall())
     {
         // Recursive compilation of that form

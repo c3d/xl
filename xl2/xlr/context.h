@@ -347,6 +347,7 @@ struct ParameterMatch : Action
 
     Symbols * symbols;          // Symbols in which we test
     Tree *    defined;          // Tree beind defined, e.g. 'sin' in 'sin X'
+    tree_list order;            // Record order of parameters
 };
 
 
