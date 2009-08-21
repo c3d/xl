@@ -99,7 +99,8 @@ struct Context : Namespace
     Tree *              Eval(Tree *source) { return Run(source, true); }
     Rewrite *           EnterRewrite(Tree *from, Tree *to);
     Rewrite *           EnterInfix (text name, Tree *callee);
-    Tree *              Error (text message, Tree *args = NULL);
+    Tree *              Error (text message,
+                               Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
 
 public:
     static ulong        gc_increment;

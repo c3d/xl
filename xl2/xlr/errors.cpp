@@ -47,7 +47,7 @@ void Errors::Error(text errMsg, ulong pos, Errors::Arguments &args)
         char buffer[10];
         sprintf(buffer, "$%d", i+1);
         size_t found = errMsg.find(buffer);
-        if (found)
+        if (found != errMsg.npos)
             errMsg.replace(found, strlen(buffer), args[i]);
     }
     if (positions)

@@ -296,7 +296,7 @@ Rewrite *Context::EnterInfix(text name, Tree *callee)
 // 
 // ============================================================================
 
-Tree * Context::Error(text message, Tree *args)
+Tree * Context::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
 // ----------------------------------------------------------------------------
 //   Execute the innermost error handler
 // ----------------------------------------------------------------------------
@@ -305,17 +305,18 @@ Tree * Context::Error(text message, Tree *args)
     if (handler)
     {
         Tree *info = new XL::Text (message);
-        if (args)
-            info = new XL::Infix(",", info, args, args->Position());
+        if (arg1)
+            info = new XL::Infix(",", info, arg1, arg1->Position());
+        if (arg2)
+            info = new XL::Infix(",", info, arg2, arg2->Position());
+        if (arg3)
+            info = new XL::Infix(",", info, arg3, arg3->Position());
         return handler->Call(this, info);
     }
 
     // No handler: terminate
     std::cerr << "Error: No error handler\n";
-    if (!args)
-        std::cerr << "Message: " << message << "\n";
-    else
-        errors.Error(message, args);
+    errors.Error(message, arg1, arg2, arg3);
     std::exit(1);
 }
 
