@@ -81,10 +81,11 @@ struct Invoke : Native
 //   Invoke a rewrite form
 // ----------------------------------------------------------------------------
 {
-    Invoke(tree_position pos = NOWHERE):
-        Native(NULL, pos), invoked(NULL), values() {}
+    Invoke(ulong d, Tree *inv = NULL, tree_position pos = NOWHERE):
+        Native(NULL, pos), depth(d), invoked(inv), values() {}
     Tree *              Run(Stack *stack);
     void                AddArgument (Tree *value);
+    ulong               depth;
     Tree *              invoked;
     tree_list           values;
 };

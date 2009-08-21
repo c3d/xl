@@ -139,9 +139,10 @@ struct Stack
 //   Ids of temporaries start at -1 and grow down
 {
     Stack(Errors &err):
-        values(), frames(), frame(~0UL), error_handler(NULL), errors(err)
+        values(), frames(), frame(~0UL), depth(0),
+        error_handler(NULL), errors(err)
     {
-        frames.push_back(frame);
+        frames.resize(4);       // A good default
     }
 
     ulong Grow(ulong sz)
@@ -171,14 +172,20 @@ struct Stack
         values.resize(values.size() + sz);
     }
 
-    void Enter()
+    ulong EnterFrame(ulong newDepth)
     {
-        frames.push_back(frame);
+        if (frames.size() <= depth)
+            frames.resize(depth+1);
+        ulong oldFrame = frames[depth];
+        frames[depth] = frame;
+        depth = newDepth;
+        return oldFrame;
     }
 
-    void Exit()
+    void ExitFrame(ulong oldDepth, ulong oldFrame)
     {
-        frames.pop_back();
+        frames[oldDepth] = oldFrame;
+        depth = oldDepth;
     }
 
     Tree *Get(ulong id)
@@ -223,6 +230,7 @@ public:
     value_list values;
     frame_list frames;
     ulong      frame;
+    ulong      depth;
     Tree *     error_handler;
     Errors &   errors;
 };

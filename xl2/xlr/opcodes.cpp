@@ -128,6 +128,7 @@ Tree *Invoke::Run(Stack *stack)
 // ----------------------------------------------------------------------------
 {
     // Evaluate arguments that have not been evaluated yet
+    ulong curDepth = stack->depth;
     ulong i, max = values.size();
     tree_list args;
     for (i = 0; i < max; i++)
@@ -136,6 +137,10 @@ Tree *Invoke::Run(Stack *stack)
         value = stack->Run(value);
         args.push_back(value);
     }
+
+    ulong oldFrameAtCurDepth = 0;
+    if (curDepth != depth)
+        oldFrameAtCurDepth = stack->EnterFrame(depth);
 
     // Allocate stack frame and copy args there
     ulong argsSize = args.size();
@@ -147,6 +152,8 @@ Tree *Invoke::Run(Stack *stack)
 
     // Free stack frame and return result
     stack->Shrink(oldFrame, argsSize);
+    if (curDepth != depth)
+        stack->ExitFrame(curDepth, oldFrameAtCurDepth);
     return result;
 }
 

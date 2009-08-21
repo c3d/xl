@@ -1227,8 +1227,7 @@ Tree *CompileAction::DoInfix(Infix *what)
         {
             // If left is a name, we return a reference to some object
             // We need something to append to, so create an invoke
-            Invoke *invoke = new Invoke();
-            invoke->invoked = left;
+            Invoke *invoke = new Invoke(context->Depth(),left,what->Position());
             left = invoke;
         }
         Tree *right = what->right->Do(this);
@@ -1339,8 +1338,10 @@ Tree * CompileAction::Rewrites(Tree *what)
 
                     // Create invokation node
                     Tree *code = candidate->Compile();
-                    Invoke *invoke = new Invoke(what->Position());
-                    invoke->invoked = code;
+                    Invoke *invoke;
+                    invoke = new Invoke(candidate->context->Depth(),
+                                        code,
+                                        what->Position());
                     invoke->values.resize(parmCount);
 
                     // Map the arguments we found in called stack order
@@ -1446,7 +1447,7 @@ Tree *Context::Name(text name)
         {
             if (!frame)
                 return variable;
-            return new NonLocalVariable(frame, variable->id,
+            return new NonLocalVariable(c->Depth(), variable->id,
                                         variable->Position());
         }
         frame++;
