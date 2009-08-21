@@ -45,6 +45,7 @@ typedef std::set<Tree *>          active_set;
 typedef std::map<ulong, Rewrite*> rewrite_table;
 typedef std::vector<Tree *>       value_list;
 typedef std::vector<ulong>        frame_list;
+typedef std::map<Tree *, Tree *>  compile_cache;
 
 
 struct Namespace
@@ -89,11 +90,11 @@ struct Context : Namespace
     Context(Errors &err):
         Namespace(NULL),
         errors(err), gc_threshold(200),
-        error_handler(NULL), run_stack(NULL) {}
+        error_handler(NULL), run_stack(NULL), compiled() {}
     Context(Context *p):
         Namespace(p),
         errors(p->errors), gc_threshold(200),
-        error_handler(NULL), run_stack(NULL) {}
+        error_handler(NULL), run_stack(NULL), compiled() {}
 
     // Context properties
     Context *           Parent()                 { return (Context *) parent;}
@@ -126,6 +127,7 @@ private:
     ulong               gc_threshold;
     Tree *              error_handler;
     Stack *             run_stack;
+    compile_cache       compiled;
 };
 
 

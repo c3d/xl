@@ -181,6 +181,7 @@ void Context::CollectGarbage ()
         GCAction gc;
         active_set::iterator a;
         symbol_table::iterator s;
+        compile_cache::iterator cc;
         value_list::iterator v;
         ulong deletedCount = 0, activeCount = 0;
 
@@ -203,6 +204,8 @@ void Context::CollectGarbage ()
                 for (v = values.begin(); v != values.end(); v++)
                     (*v)->Do(gc);
             }
+            for (cc = compiled.begin(); cc != compiled.end(); cc++)
+                (*cc).second->Do(gc);
         }
 
         // Then delete all trees in active set that are no longer referenced
@@ -823,9 +826,6 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         Tree *compiled = context->Compile(test);
         tree_position pos = test->Position();
 
-        // Enter the name in symbol table
-        locals->EnterName(varName->value, compiled);
-
         // Evaluate type expression, e.g. 'integer' in example above
         Tree *typeExpr = context->Compile(what->right);
 
@@ -834,6 +834,10 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
             end = new BranchTarget(pos);
         Tree *itest = new TypeTest(compiled, typeExpr, NULL, end, pos);
         code = Append(code, itest);
+
+        // Enter the result of the type test in symbol table
+        locals->EnterName(varName->value, compiled);
+
         
         return what;
     }
@@ -1375,11 +1379,16 @@ Tree *Context::Compile(Tree *source)
 //    Return an optimized version of the source tree, ready to run
 // ----------------------------------------------------------------------------
 {
+    if (compiled.count(source) > 0)
+        return compiled[source];
+
     DeclarationAction declare(this);
     Tree *result = source->Do(declare);
         
     CompileAction compile(this);
     result = source->Do(compile);
+
+    compiled[source] = result;
 
     return result;
 }
