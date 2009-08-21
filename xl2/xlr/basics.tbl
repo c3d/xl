@@ -48,7 +48,7 @@ INFIX(boolean, "=", boolean, BinaryEQBool, RBOOL(BOOL(0) == BOOL(1)))
 
 // Debugging code
 PREFIX("debug", PARM(tree, anything), DebugTree,
-       std::cerr << "DEBUG: " << tree; return tree)
+       std::cerr << "DEBUG: " << tree << "\n"; return tree)
 
 NAME(nil, ReservedName);
 NAME(true, ReservedName);
