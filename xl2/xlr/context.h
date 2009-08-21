@@ -94,12 +94,14 @@
   designed to be invoked by normal C code using the normal C stack. This
   facilitate the interaction with other code.
 
-  In general, the compiler generates only functions with the same prototype as
-  eval_fn, i.e. Tree *(Tree *). The code is being generated on invokation
-  of a form, and helps rewriting it, although attempts are made to leverage
-  existing rewrites.
+  At top-level, the compiler generates only functions with the same
+  prototype as eval_fn, i.e. Tree *(Tree *). The code is being
+  generated on invokation of a form, and helps rewriting it, although
+  attempts are made to leverage existing rewrites. This is implemented
+  in Context::CompileAll.
 
-  In general, a specific rewrite can invoke multiple candidates. For example,
+  Compiling such top-level forms invokes a number of rewrites. A
+  specific rewrite can invoke multiple candidates. For example,
   consider the following factorial declaration:
      0! -> 1
      N! when N>0 -> N * (N-1)!
@@ -182,7 +184,7 @@ struct Symbols
     void                Clear();
 
     // Compiling and evaluating a tree in scope defined by these symbols
-    Tree *              Compile(Tree *s, CompiledUnit *, bool nullIfBad=false);
+    Tree *              Compile(Tree *s, CompiledUnit &, bool nullIfBad=false);
     Tree *              CompileAll(Tree *s);
     Tree *              Run(Tree *t);
     void                ParameterList(Tree *form, std::vector<Tree *> &list);
@@ -300,10 +302,10 @@ struct DeclarationAction : Action
 
 struct CompileAction : Action
 // ----------------------------------------------------------------------------
-//   Compute the input tree using the given compiler
+//   Compute the input tree in the given compiled unit
 // ----------------------------------------------------------------------------
 {
-    CompileAction (Symbols *s, CompiledUnit *, bool nullIfBad);
+    CompileAction (Symbols *s, CompiledUnit &, bool nullIfBad);
 
     virtual Tree *Do(Tree *what);
     virtual Tree *DoInteger(Integer *what);
@@ -319,7 +321,7 @@ struct CompileAction : Action
     Tree *        Rewrites(Tree *what);
 
     Symbols *     symbols;
-    CompiledUnit *unit;
+    CompiledUnit &unit;
     eval_cache    needed;
     bool          nullIfBad;
 };
@@ -380,7 +382,7 @@ public:
     Tree *        test;         // Tree we test
     Tree *        defined;      // Tree beind defined, e.g. 'sin' in 'sin X'
     CompileAction *compile;     // Action in which we are compiling
-    CompiledUnit *unit;         // JIT compiler compilation unit
+    CompiledUnit &unit;         // JIT compiler compilation unit
 };
 
 

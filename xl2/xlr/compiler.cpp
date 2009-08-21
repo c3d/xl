@@ -295,7 +295,8 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *source, tree_list parms)
 //   CompiledUnit constructor
 // ----------------------------------------------------------------------------
     : compiler(comp), builder(NULL), function(NULL),
-      allocabb(NULL), entrybb(NULL), exitbb(NULL), invokebb(NULL), failbb(NULL)
+      allocabb(NULL), entrybb(NULL), exitbb(NULL),
+      invokebb(NULL), failbb(NULL), successbb(NULL)
 {
     // If a compilation for that tree is alread in progress, fwd decl
     if (compiler->functions[source])
@@ -304,14 +305,14 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *source, tree_list parms)
     // Create the instruction builder for this compiled unit
     builder = new IRBuilder<> ();
 
-    // Create the function signature, one entry per parameter
+    // Create the function signature, one entry per parameter + one for source
     std::vector<const Type *> signature;
     Type *treeTy = compiler->treePtrTy;
-    for (ulong p = 0; p < parms.size(); p++)
+    for (ulong p = 0; p <= parms.size(); p++)
         signature.push_back(treeTy);
     FunctionType *fnTy = FunctionType::get(treeTy, signature, false);
     function = Function::Create(fnTy, Function::InternalLinkage,
-                                "xleval", compiler->module);
+                                "xl_eval", compiler->module);
 
     // Save it in the compiler
     compiler->functions[source] = function;
@@ -322,32 +323,37 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *source, tree_list parms)
     // Create entry block for the function
     entrybb = BasicBlock::Create("entry", function);
 
-    // This is where we will initially insert
-    invokebb = entrybb;
-
     // Associate the value for the input tree
     Function::arg_iterator args = function->arg_begin();
+    Value *inputArg = args++;
+    builder->SetInsertPoint(allocabb);
+    Value *result_storage = builder->CreateAlloca(treeTy, 0, "result");
+    builder->CreateStore(inputArg, result_storage);
+    alloca[source] = result_storage;
+
+    // Associate the value for the additional arguments (read-only, no alloca)
     tree_list::iterator parm;
+    ulong parmsCount = 0;
     for (parm = parms.begin(); parm != parms.end(); parm++)
     {
-        Value* inputArg = args++;
-        map[*parm] = inputArg;
+        inputArg = args++;
+        value[*parm] = inputArg;
+        parmsCount++;
     }
-
-    // Create the pointer to the return value, initialize with input
-    builder->SetInsertPoint(allocabb);
-    Value *zero = ConstantPointerNull::get(compiler->treePtrTy);
-    result = builder->CreateAlloca(compiler->treePtrTy, 0, "result");
-    builder->CreateStore(zero, result);
 
     // Create the exit basic block and return statement
     exitbb = BasicBlock::Create("exit", function);
     builder->SetInsertPoint(exitbb);
-    Value *retVal = builder->CreateLoad(result);
+    Value *retVal = builder->CreateLoad(result_storage);
     builder->CreateRet(retVal);
 
     // Begin by inserting code at the top
     builder->SetInsertPoint(entrybb);
+
+    // Record current entry/exit points for the current expression
+    invokebb = entrybb;
+    successbb = exitbb;
+    failbb = NULL;
 }
 
 
@@ -366,65 +372,24 @@ Value *CompiledUnit::Known(Tree *tree)
 // ----------------------------------------------------------------------------
 {
     Value *result = NULL;
-    if (map.count(tree) > 0)
-        result = map[tree];
+    if (value.count(tree) > 0)
+    {
+        // Immediate value of some sort, use that
+        result = value[tree];
+    }
+    else if (alloca.count(tree) > 0)
+    {
+        // Value is a variable
+        result = builder->CreateLoad(alloca[tree]);
+    }
     else
+    {
+        // Check if this is a global
         result = compiler->Known(tree);
+        if (result)
+            result = builder->CreateLoad(result);
+    }
     return result;
-}
-
-
-BasicBlock *CompiledUnit::BeginInvokation()
-// ----------------------------------------------------------------------------
-//   Begin a new invokation
-// ----------------------------------------------------------------------------
-//   A tree invokation typically has the form:
-//     if (cond1) if (cond2) if (cond3) invoke(T)
-//   However, we may determine during compilation of if(cond2) that the
-//   call is statically not valid. So we save the initial basic block,
-//   and decide at the end to connect it or not. Let LLVM optimize branches
-//   and dead code away...
-{
-    BasicBlock *saved = invokebb;
-    assert(!failbb); assert(invokebb);    
-    invokebb = BasicBlock::Create("invoke", function);
-    builder->SetInsertPoint(invokebb);
-    return saved;
-}
-
-
-void CompiledUnit::EndInvokation(llvm::BasicBlock *bb, bool success)
-// ----------------------------------------------------------------------------
-//   Connect the basic block we saved... or not
-// ----------------------------------------------------------------------------
-{
-    if (success)
-    {
-        // Branch current point to exit
-        builder->CreateBr(exitbb);
-
-        // Since we successfully generated a call, connect to it
-        builder->SetInsertPoint(bb);
-        builder->CreateBr(invokebb);
-
-        // If there were tests and they failed, connect to them
-        if (failbb)
-        {
-            invokebb = failbb;
-            failbb = NULL;
-        }
-        else
-        {
-            // Call was unconditional, we should never use invokebb again
-            invokebb = NULL;
-        }
-    }
-    else
-    {
-        // Drop whatever tests we did so far, restore insert where it was
-        invokebb = bb;
-        failbb = NULL;
-    }
 }
 
 
@@ -438,7 +403,7 @@ Value *CompiledUnit::ConstantInteger(Integer *what)
     {
         Value *imm = ConstantInt::get(LLVM_INTTYPE(longlong), what->value);
         result = builder->CreateCall(compiler->xl_new_integer, imm);
-        map[what] = result;
+        value[what] = result;
     }
     return result;
 }
@@ -454,7 +419,7 @@ Value *CompiledUnit::ConstantReal(Real *what)
     {
         Value *imm = ConstantFP::get(Type::DoubleTy, what->value);
         result = builder->CreateCall(compiler->xl_new_real, imm);
-        map[what] = result;
+        value[what] = result;
     }
     return result;
 }
@@ -492,7 +457,7 @@ Value *CompiledUnit::ConstantText(Text *what)
             result = builder->CreateCall3(compiler->xl_new_xtext,
                                           txtPtr, openPtr, closePtr);
         }
-        map[what] = result;
+        value[what] = result;
     }
     return result;
 }
@@ -503,7 +468,6 @@ llvm::Value *CompiledUnit::Invoke(Tree *callee, tree_list args)
 //    Generate a call with the given arguments
 // ----------------------------------------------------------------------------
 {
-    assert(callee->code);
     Function *toCall = compiler->functions[callee];
     assert(toCall);
 
@@ -521,22 +485,10 @@ llvm::Value *CompiledUnit::Invoke(Tree *callee, tree_list args)
                                          argValues.begin(), argValues.end());
 
     // Store this as the result
-    map[callee] = callVal;
-    builder->CreateStore(callVal, result);
+    assert (alloca.count(callee) > 0);
+    builder->CreateStore(callVal, alloca[callee]);
 
     return callVal;
-}
-
-
-Value *CompiledUnit::Return(Tree *value)
-// ----------------------------------------------------------------------------
-//   Store the given value in the return storage
-// ----------------------------------------------------------------------------
-{
-    Value *retVal = Known(value);
-    assert(retVal);
-    builder->CreateStore(retVal, result);
-    return retVal;
 }
 
 
@@ -571,7 +523,7 @@ BasicBlock *CompiledUnit::NeedTest()
 // ----------------------------------------------------------------------------
 {
     if (!failbb)
-        failbb = BasicBlock::Create("failed_test", function);
+        failbb = BasicBlock::Create("fail", function);
     return failbb;
 }
 
@@ -607,21 +559,23 @@ Value *CompiledUnit::Left(Tree *code)
     kind k = code->Kind();
     assert (k >= BLOCK);
 
+    // Check if we already know the result, if so just return it
+    Prefix *prefix = (Prefix *) code;
+    Value *result = Known(prefix->left);
+    if (result)
+        return result;
+
     // Check that we already have a value for the given code
-    Value *value = Known(code);
-    Value *result = NULL;
-    if (value)
+    Value *parent = Known(code);
+    if (parent)
     {
         // WARNING: This relies on the layout of all nodes beginning the same
-        Prefix *prefix = (Prefix *) code;
-        result = Known(prefix->left);
-        if (result)
-            return result;
-        value = builder->CreateBitCast(value, compiler->prefixTreePtrTy);
-        result = builder->CreateConstGEP2_32(value, 0,
+        Value *pptr = builder->CreateBitCast(parent, compiler->prefixTreePtrTy,
+                                             "asprefix.left");
+        result = builder->CreateConstGEP2_32(pptr, 0,
                                              LEFT_VALUE_INDEX, "left");
-        assert(!map[prefix->left]);
-        map[prefix->left] = result;
+        assert(!value[prefix->left]);
+        value[prefix->left] = result;
     }
     else
     {
@@ -642,21 +596,23 @@ Value *CompiledUnit::Right(Tree *code)
     kind k = code->Kind();
     assert(k > BLOCK);
 
+    // Check if we already known the result, if so just return it
+    Prefix *prefix = (Prefix *) code;
+    Value *result = Known(prefix->right);
+    if (result)
+        return result;
+
     // Check that we already have a value for the given code
-    Value *value = Known(code);
-    Value *result = NULL;
-    if (value)
+    Value *parent = Known(code);
+    if (parent)
     {
         // WARNING: This relies on the layout of all nodes beginning the same
-        Prefix *prefix = (Prefix *) code;
-        result = Known(prefix->right);
-        if (result)
-            return result;
-        value = builder->CreateBitCast(value, compiler->prefixTreePtrTy);
-        result = builder->CreateConstGEP2_32(value, 0,
+        Value *pptr = builder->CreateBitCast(parent, compiler->prefixTreePtrTy,
+                                             "asprefix.right");
+        result = builder->CreateConstGEP2_32(pptr, 0,
                                              RIGHT_VALUE_INDEX, "right");
-        assert(!map[prefix->right]);
-        map[prefix->right] = result;
+        assert(!value[prefix->right]);
+        value[prefix->right] = result;
     }
     else
     {
@@ -712,7 +668,8 @@ Value *CompiledUnit::EagerEvaluation(Tree *tree)
     Value *treeValue = Known(tree);
     assert(treeValue);
     Value *evaluated = builder->CreateCall(compiler->xl_evaluate, treeValue);
-    builder->CreateStore(evaluated, result);
+    if (alloca.count(tree) > 0)
+        builder->CreateStore(evaluated, alloca[tree]);
     return evaluated;
 }
 
@@ -884,7 +841,149 @@ BasicBlock *CompiledUnit::TypeTest(Tree *value, Tree *type)
     return isGoodBB;
 }
 
+
+
+// ============================================================================
+// 
+//    Expression reduction
+// 
+// ============================================================================
+//   An expression reduction typically compiles as:
+//     if (cond1) if (cond2) if (cond3) invoke(T)
+//   However, we may determine during compilation of if(cond2) that the
+//   call is statically not valid. So we save the initial basic block,
+//   and decide at the end to connect it or not. Let LLVM optimize branches
+//   and dead code away...
+
+ExpressionReduction::ExpressionReduction(CompiledUnit &u, Tree *source)
+// ----------------------------------------------------------------------------
+//    Snapshot current basic blocks in the compiled unit
+// ----------------------------------------------------------------------------
+    : unit(u),
+      invokebb(u.invokebb), failbb(u.failbb), successbb(u.successbb)
+{
+    BasicBlock *bb = u.builder->GetInsertBlock();
+
+    // Create the end-of-expression point if we find a match
+    u.successbb = BasicBlock::Create("success", u.function);
+
+    // Try to build a somewhat descriptive label for the tree
+    text label;
+    switch (source->Kind())
+    {
+    case INTEGER:       label = "integer"; break;
+    case REAL:          label = "real"; break;
+    case TEXT:          label = "text"; break;
+    case NAME:          label = "name." + source->AsName()->value; break;
+    case BLOCK:         label = "block"; break;
+    case PREFIX:        label = "prefix"; break;
+    case POSTFIX:       label = "postfix"; break;
+    case INFIX:         label = "infix"; break;
+    default:            label = "unknown"; break;
+    }
+
+    // Create alloca to store the new form
+    u.builder->SetInsertPoint(u.allocabb); // Only valid location for alloca
+    const char *clabel = label.c_str();
+    Value *storage = u.builder->CreateAlloca(u.compiler->treePtrTy, 0, clabel);
+    u.alloca[source] = storage;
+
+    // We should have an initial value for that tree from the source
+    u.builder->SetInsertPoint(u.entrybb);
+    Value *initval = u.value[source];
+    if (!initval)
+        source = Context::context->Error("No initial value for '$1'", source);
+    u.builder->CreateStore(initval, storage);
+
+    // Shift back to the previous insertion point
+    u.builder->SetInsertPoint(bb);
+}
+
+
+ExpressionReduction::~ExpressionReduction()
+// ----------------------------------------------------------------------------
+//   Destructor restores the prevous sucess and fail points
+// ----------------------------------------------------------------------------
+{
+    // If last expression was conditional, branch to 'success' from there
+    // (in that case, we leave the input tree unchanged if all tests fail)
+    CompiledUnit &u = unit;
+    if (u.failbb)
+    {
+        u.builder->SetInsertPoint(u.failbb);
+        u.builder->CreateBr(u.successbb);
+    }
+
+    // Make the curent success point the next invokation point,
+    // restore previous fail and success points
+    u.invokebb = u.successbb;
+    u.failbb = failbb;
+    u.successbb = successbb;
+
+    // Resume at new invoke point
+    u.builder->SetInsertPoint(u.invokebb);
+}
+
+
+void ExpressionReduction::NewForm ()
+// ----------------------------------------------------------------------------
+//    Indicate that we are testing a new form for evaluating the expression
+// ----------------------------------------------------------------------------
+{
+    CompiledUnit &u = unit;
+    // Save previous basic blocks in the compiled unit
+    invokebb = u.invokebb;
+    assert(invokebb || !"NewForm called after unconditional success");
+
+    // Create entry / exit basic blocks for this expression
+    u.invokebb = BasicBlock::Create("invoke", u.function);
+    u.failbb = NULL;
+
+    // Set the insertion point to the new invokation code
+    u.builder->SetInsertPoint(u.invokebb);
+}
+
+
+void ExpressionReduction::Succeeded(void)
+// ----------------------------------------------------------------------------
+//   We successfully compiled a reduction for that expression
+// ----------------------------------------------------------------------------
+//   In that case, we connect the basic blocks to evaluate the expression
+{
+    CompiledUnit &u = unit;
+
+    // Branch from current point (end of expression) to exit of evaluation
+    u.builder->CreateBr(u.successbb);
+
+    // Branch from saved invokation to this one
+    u.builder->SetInsertPoint(invokebb);
+    u.builder->CreateBr(u.invokebb);
+
+    // If there were tests, we keep testing from that 'else' spot
+    u.invokebb = u.failbb;
+    u.failbb = NULL;
+}
+
+
+void ExpressionReduction::Failed()
+// ----------------------------------------------------------------------------
+//    We figured out statically that the current form doesn't apply
+// ----------------------------------------------------------------------------
+{
+    CompiledUnit &u = unit;
+    u.invokebb = invokebb;
+    u.builder->SetInsertPoint(invokebb);
+}
+
+
 XL_END
+
+
+// ============================================================================
+// 
+//    Debug helpers
+// 
+// ============================================================================
 
 void debugm(XL::value_map &m)
 // ----------------------------------------------------------------------------

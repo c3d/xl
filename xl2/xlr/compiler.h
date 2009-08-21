@@ -105,15 +105,11 @@ struct CompiledUnit
     bool                IsForwardCall()         { return entrybb == NULL; }
     llvm::Value *       Known(Tree *tree);
 
-    llvm::BasicBlock *  BeginInvokation();
-    void                EndInvokation(llvm::BasicBlock *bb, bool success);
-
     llvm::Value *       ConstantInteger(Integer *what);
     llvm::Value *       ConstantReal(Real *what);
     llvm::Value *       ConstantText(Text *what);
 
     llvm::Value *       Invoke(Tree *callee, tree_list args);
-    llvm::Value *       Return(Tree *value);
     eval_fn             Finalize();
 
     llvm::BasicBlock *  NeedTest();
@@ -133,17 +129,45 @@ struct CompiledUnit
 public:
     Compiler *          compiler;       // The compiler environment we use
     ulong               parameters;     // Size of the tree input list
-    llvm::Value *       result;         // Returned value from function
+
     llvm::IRBuilder<> * builder;        // Instruction builder
     llvm::Function *    function;       // Function we generate
     llvm::BasicBlock *  allocabb;       // Function entry point, allocas
     llvm::BasicBlock *  entrybb;        // Entry point for that code
     llvm::BasicBlock *  exitbb;         // Exit point for that code
-    llvm::BasicBlock *  invokebb;       // Entry basic block for current invoke
+
+    llvm::BasicBlock *  invokebb;       // Entry point for current reduction
     llvm::BasicBlock *  failbb;         // Where we go if tests fail
-    value_map           map;            // Map tree -> LLVM value
-    value_map           lazy;           // Map trees that need lazy eval
+    llvm::BasicBlock *  successbb;      // Where we go after evaluating expr
+
+    value_map           value;          // Map tree -> LLVM value
+    value_map           alloca;         // Map tree -> LLVM alloca space
+    value_map           lazy;           // Map tree -> LLVM alloca for lazy eval
 };
+
+
+struct ExpressionReduction
+// ----------------------------------------------------------------------------
+//   Record compilation state around a specific expression reduction
+// ----------------------------------------------------------------------------
+{
+    ExpressionReduction(CompiledUnit &unit, Tree *source);
+    ~ExpressionReduction();
+
+    void                NewForm();
+    void                Succeeded();
+    void                Failed();
+
+public:
+    CompiledUnit &      unit;
+    llvm::Value *       alloca;
+    llvm::BasicBlock *  invokebb;
+    llvm::BasicBlock *  failbb;
+    llvm::BasicBlock *  successbb;
+};
+
+
+
 
 #define LLVM_INTTYPE(t)         llvm::IntegerType::get(sizeof(t) * 8)
 
