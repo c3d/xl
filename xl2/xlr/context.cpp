@@ -874,8 +874,10 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         {
             // No type check in that case, and switch to lazy evaluation
             // (i.e. we generate a quote, caller must explicitly run it)
-            Tree *compiled = context->Compile(test);
-            QuotedTree *quote = new QuotedTree(compiled);
+            Context block(context);
+            Tree *compiled = block.Compile(test);
+            Invoke *invoke = new Invoke(block.Depth(), compiled);
+            QuotedTree *quote = new QuotedTree(invoke);
             locals->EnterName(varName->value, quote);
         }
         else
@@ -1338,10 +1340,9 @@ Tree * CompileAction::Rewrites(Tree *what)
 
                     // Create invokation node
                     Tree *code = candidate->Compile();
-                    Invoke *invoke;
-                    invoke = new Invoke(candidate->context->Depth(),
-                                        code,
-                                        what->Position());
+                    Invoke *invoke = new Invoke(candidate->context->Depth(),
+                                                code,
+                                                what->Position());
                     invoke->values.resize(parmCount);
 
                     // Map the arguments we found in called stack order
@@ -1578,7 +1579,7 @@ Tree *Stack::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
     Tree *handler = error_handler;
     if (handler)
     {
-        Invoke errorInvokation(handler->Position());
+        Invoke errorInvokation(1, handler, handler->Position());
         Tree *info = new XL::Text (message);
         errorInvokation.AddArgument(info);
         if (arg1)
@@ -1608,7 +1609,7 @@ Tree * Context::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
     Tree *handler = ErrorHandler();
     if (handler)
     {
-        Invoke errorInvokation(handler->Position());
+        Invoke errorInvokation(1, handler, handler->Position());
         Tree *info = new XL::Text (message);
         errorInvokation.AddArgument(info);
         if (arg1)
@@ -1617,7 +1618,6 @@ Tree * Context::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
             errorInvokation.AddArgument(arg2);
         if (arg3)
             errorInvokation.AddArgument(arg3);
-        errorInvokation.invoked = handler;
         Stack errorStack(errors);
         return errorInvokation.Run(&errorStack);
     }
