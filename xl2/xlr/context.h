@@ -174,7 +174,7 @@ struct Symbols
     // Entering symbols in the symbol table
     void                EnterName (text name, Tree *value);
     Rewrite *           EnterRewrite(Rewrite *r);
-    Tree *              Allocate(Name *varName);
+    Name *              Allocate(Name *varName);
 
     // Clearing symbol tables
     void                Clear();
@@ -214,7 +214,9 @@ struct Context
 
     // Helpers for compilation of trees
     Tree *              Compile(Tree *source, bool nullIfBad = false);
+    void                EnterName (text n, Tree *v) { symbols->EnterName(n,v);}
     Rewrite *           EnterRewrite(Tree *from, Tree *to);
+    void                ParameterList(Tree *form, std::vector<Tree *> &list);
     Tree *              Error (text message,
                                Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
 

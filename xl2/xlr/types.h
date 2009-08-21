@@ -67,7 +67,6 @@ struct InferTypes : Action
     Tree *DoPostfix(Postfix *what);
     Tree *DoInfix(Infix *what);
     Tree *DoBlock(Block *what);
-    Tree *DoNative(Native *what);
 
     Context *   context;
     type_map    types;

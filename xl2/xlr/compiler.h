@@ -57,7 +57,7 @@ struct Compiler
 {
     Compiler(kstring moduleName = "xl");
 
-    CompiledUnit *      NewUnit(kstring name);
+    llvm::Function *          EnterBuiltin(text name, Tree *form, eval_fn code);
 
 public:
     llvm::Module              *module;

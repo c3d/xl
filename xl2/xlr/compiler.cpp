@@ -209,6 +209,36 @@ Compiler::Compiler(kstring moduleName)
 }
 
 
+Function *Compiler::EnterBuiltin(text name, Tree *form, eval_fn code)
+// ----------------------------------------------------------------------------
+//   Declare a built-in function
+// ----------------------------------------------------------------------------
+//   The input is not technically an eval_fn, but has as many parameters as
+//   there are variables in the form
+{
+    // Find the parameters
+    tree_list parms;
+    Context *context = Context::context;
+    context->ParameterList (form, parms);
+
+    // Create the LLVM function
+    std::vector<const Type *> parmTypes;
+    for (tree_list::iterator p = parms.begin(); p != parms.end(); p++)
+        parmTypes.push_back(treePtrTy);
+    FunctionType *fnTy = FunctionType::get(treePtrTy, parmTypes, false);
+    Function *result = Function::Create(fnTy, Function::ExternalLinkage,
+                                        name, module);
+
+    // Record the runtime symbol address
+    sys::DynamicLibrary::AddSymbol(name, (void*) code);
+
+    // Associate the function with the tree form
+    functions[form] = result;
+
+    return result;    
+}
+
+
 
 // ============================================================================
 // 

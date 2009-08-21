@@ -1,20 +1,20 @@
 // Integer arithmetic and comparisons
-INFIX(integer, "+", integer, BinaryAddInt, RINT(INT(0) + INT(1)))
-INFIX(integer, "-", integer, BinarySubInt, RINT(INT(0) - INT(1)))
-INFIX(integer, "*", integer, BinaryMulInt, RINT(INT(0) * INT(1)))
-INFIX(integer, "/", integer, BinaryDivInt, RINT(INT(0) / INT(1)))
-INFIX(integer, "rem", integer, BinaryRemInt, RINT(INT(0) % INT(1)))
+INFIX(integer, "+", integer, BinaryAddInt, RINT(INT(l) + INT(r)))
+INFIX(integer, "-", integer, BinarySubInt, RINT(INT(l) - INT(r)))
+INFIX(integer, "*", integer, BinaryMulInt, RINT(INT(l) * INT(r)))
+INFIX(integer, "/", integer, BinaryDivInt, RINT(INT(l) / INT(r)))
+INFIX(integer, "rem", integer, BinaryRemInt, RINT(INT(l) % INT(r)))
 INFIX(integer, "mod", integer, BinaryModInt,
-      integer_t x = INT(0);
-      integer_t y = INT(1);
+      integer_t x = INT(l);
+      integer_t y = INT(r);
       integer_t tmp = x % y;
       if (tmp && (x^y) < 0)
           tmp += y;
       RINT(tmp);
       )
 INFIX(integer, "^", integer, BinaryPowerInt,
-      integer_t x = INT(0);
-      integer_t y = INT(1);
+      integer_t x = INT(l);
+      integer_t y = INT(r);
       integer_t tmp = 0;
       if (y >= 0)
       {
@@ -29,39 +29,39 @@ INFIX(integer, "^", integer, BinaryPowerInt,
       }
       RINT(tmp);)
 
-INFIX(integer, "<<", integer, BinaryLeftShift, RINT(INT(0) << INT(1)))
-INFIX(integer, ">>", integer, BinaryRightShift, RINT(INT(0) >> INT(1)))
+INFIX(integer, "<<", integer, BinaryLeftShift, RINT(INT(l) << INT(r)))
+INFIX(integer, ">>", integer, BinaryRightShift, RINT(INT(l) >> INT(r)))
 
-INFIX(integer, "and", integer, BinaryAnd, RINT(INT(0) & INT(1)))
-INFIX(integer, "or", integer, BinaryOr, RINT(INT(0) | INT(1)))
-INFIX(integer, "xor", integer, BinaryXor, RINT(INT(0) ^ INT(1)))
+INFIX(integer, "and", integer, BinaryAnd, RINT(INT(l) & INT(r)))
+INFIX(integer, "or", integer, BinaryOr, RINT(INT(l) | INT(r)))
+INFIX(integer, "xor", integer, BinaryXor, RINT(INT(l) ^ INT(r)))
 
-INFIX(integer, "<", integer, BinaryLTInt, RBOOL(INT(0) < INT(1)))
-INFIX(integer, ">", integer, BinaryGTInt, RBOOL(INT(0) > INT(1)))
-INFIX(integer, "<=", integer, BinaryLEInt, RBOOL(INT(0) <= INT(1)))
-INFIX(integer, ">=", integer, BinaryGEInt, RBOOL(INT(0) >= INT(1)))
-INFIX(integer, "<>", integer, BinaryNEInt, RBOOL(INT(0) != INT(1)))
-INFIX(integer, "=", integer, BinaryEQInt, RBOOL(INT(0) == INT(1)))
+INFIX(integer, "<", integer, BinaryLTInt, RBOOL(INT(l) < INT(r)))
+INFIX(integer, ">", integer, BinaryGTInt, RBOOL(INT(l) > INT(r)))
+INFIX(integer, "<=", integer, BinaryLEInt, RBOOL(INT(l) <= INT(r)))
+INFIX(integer, ">=", integer, BinaryGEInt, RBOOL(INT(l) >= INT(r)))
+INFIX(integer, "<>", integer, BinaryNEInt, RBOOL(INT(l) != INT(r)))
+INFIX(integer, "=", integer, BinaryEQInt, RBOOL(INT(l) == INT(r)))
 
 PREFIX("-", PARM(x, integer), NegateInt, RINT(-x))
 
 
 // Real arithmetic and comparisons
-INFIX(real, "+", real, BinaryAddReal, RREAL(REAL(0) + REAL(1)))
-INFIX(real, "-", real, BinarySubReal, RREAL(REAL(0) - REAL(1)))
-INFIX(real, "*", real, BinaryMulReal, RREAL(REAL(0) * REAL(1)))
-INFIX(real, "/", real, BinaryDivReal, RREAL(REAL(0) / REAL(1)))
-INFIX(real, "rem", real, BinaryRemReal, RREAL(fmod(REAL(0), REAL(1))))
+INFIX(real, "+", real, BinaryAddReal, RREAL(REAL(l) + REAL(r)))
+INFIX(real, "-", real, BinarySubReal, RREAL(REAL(l) - REAL(r)))
+INFIX(real, "*", real, BinaryMulReal, RREAL(REAL(l) * REAL(r)))
+INFIX(real, "/", real, BinaryDivReal, RREAL(REAL(l) / REAL(r)))
+INFIX(real, "rem", real, BinaryRemReal, RREAL(fmod(REAL(l), REAL(r))))
 INFIX(real, "mod", real, BinaryModReal,
-      real_t x = REAL(0);
-      real_t y = REAL(1);
+      real_t x = REAL(l);
+      real_t y = REAL(r);
       real_t tmp = fmod(x,y);
       if (tmp != 0.0 && x*y < 0.0)
           tmp += y;
       RREAL(tmp);)
 INFIX(real, "^", integer, BinaryPowRealInt,
-      real_t x = REAL(0);
-      integer_t y = INT(1);
+      real_t x = REAL(l);
+      integer_t y = INT(r);
       boolean_t negative = y < 0;
       real_t tmp = 1.0;
       if (negative) y = -y;
@@ -74,14 +74,14 @@ INFIX(real, "^", integer, BinaryPowRealInt,
       }
       if (negative) tmp = 1.0/tmp;
       RREAL(tmp);)
-INFIX(real, "^", real, BinaryPowReal, RREAL(pow(REAL(0), REAL(1))))
+INFIX(real, "^", real, BinaryPowReal, RREAL(pow(REAL(l), REAL(r))))
 
-INFIX(real, "<", real, BinaryLTReal, RBOOL(REAL(0) < REAL(1)))
-INFIX(real, ">", real, BinaryGTReal, RBOOL(REAL(0) > REAL(1)))
-INFIX(real, "<=", real, BinaryLEReal, RBOOL(REAL(0) <= REAL(1)))
-INFIX(real, ">=", real, BinaryGEReal, RBOOL(REAL(0) >= REAL(1)))
-INFIX(real, "<>", real, BinaryNEReal, RBOOL(REAL(0) != REAL(1)))
-INFIX(real, "=", real, BinaryEQReal, RBOOL(REAL(0) == REAL(1)))
+INFIX(real, "<", real, BinaryLTReal, RBOOL(REAL(l) < REAL(r)))
+INFIX(real, ">", real, BinaryGTReal, RBOOL(REAL(l) > REAL(r)))
+INFIX(real, "<=", real, BinaryLEReal, RBOOL(REAL(l) <= REAL(r)))
+INFIX(real, ">=", real, BinaryGEReal, RBOOL(REAL(l) >= REAL(r)))
+INFIX(real, "<>", real, BinaryNEReal, RBOOL(REAL(l) != REAL(r)))
+INFIX(real, "=", real, BinaryEQReal, RBOOL(REAL(l) == REAL(r)))
 
 PREFIX("-", PARM(r, real), NegateReal, RREAL(-r))
 PREFIX("sin", PARM(x, real), SinReal, RREAL(sin(x)))
@@ -90,7 +90,7 @@ PREFIX("tan", PARM(x, real), TanReal, RREAL(tan(x)))
 PREFIX("asin", PARM(x, real), ArcSinReal, RREAL(asin(x)))
 PREFIX("acos", PARM(x, real), ArcCosReal, RREAL(acos(x)))
 PREFIX("atan", PARM(x, real), ArcTanReal, RREAL(atan(x)))
-PREFIX("atan", PARM(y, real) PARM(x, real), ArcTanReal2, RREAL(atan2(y,x)))
+PREFIX("atan", MPARM(y, real) PARM(x, real), ArcTanReal2, RREAL(atan2(y,x)))
 PREFIX("exp", PARM(x, real), ExpReal, RREAL(exp(x)))
 PREFIX("expm1", PARM(x, real), ExpRealMinus1, RREAL(expm1(x)))
 PREFIX("log", PARM(x, real), LogReal, RREAL(log(x)))
@@ -100,15 +100,15 @@ PREFIX("log1p", PARM(x, real), LogPlus1Real, RREAL(log1p(x)))
 PREFIX("pi", , PiConstant, RREAL(M_PI))
 
 // Boolean operations
-INFIX(boolean, "and", boolean, BinaryAndBool, RBOOL(BOOL(0) & BOOL(1)))
-INFIX(boolean, "or", boolean, BinaryOrBool, RBOOL(BOOL(0) | BOOL(1)))
-INFIX(boolean, "xor", boolean, BinaryXorBool, RBOOL(BOOL(0) ^ BOOL(1)))
+INFIX(boolean, "and", boolean, BinaryAndBool, RBOOL(BOOL(l) & BOOL(r)))
+INFIX(boolean, "or", boolean, BinaryOrBool, RBOOL(BOOL(l) | BOOL(r)))
+INFIX(boolean, "xor", boolean, BinaryXorBool, RBOOL(BOOL(l) ^ BOOL(r)))
 
-INFIX(boolean, "<>", boolean, BinaryNEBool, RBOOL(BOOL(0) != BOOL(1)))
-INFIX(boolean, "=", boolean, BinaryEQBool, RBOOL(BOOL(0) == BOOL(1)))
+INFIX(boolean, "<>", boolean, BinaryNEBool, RBOOL(BOOL(l) != BOOL(r)))
+INFIX(boolean, "=", boolean, BinaryEQBool, RBOOL(BOOL(l) == BOOL(r)))
 
 // Text operations
-INFIX(text, "&", text, BinaryTextConcatenate, RTEXT(TEXT(0) + TEXT(1)))
+INFIX(text, "&", text, BinaryTextConcatenate, RTEXT(TEXT(l) + TEXT(r)))
 
 // Conversions
 PREFIX("real", PARM(x, integer), IntToReal, RREAL((real_t) x))
@@ -175,26 +175,17 @@ PREFIX("year_day",, SystemYearDay,
 PREFIX("debug", PARM(toDebug, tree), DebugTree,
        std::cerr << "DEBUG: " << toDebug << "\n"; return toDebug)
 
-NAME(nil, ReservedName);
-NAME(true, ReservedName);
-NAME(false, ReservedName);
+NAME(nil);
+NAME(true);
+NAME(false);
 
-TYPE("boolean", BooleanType);
-TYPE("integer", IntegerType);
-TYPE("real", RealType);
-TYPE("text", TextType);
-TYPE("character", CharacterType);
-TYPE("anything", AnyType);
-TYPE("infix", InfixType);
-TYPE("prefix", PrefixType);
-TYPE("postfix", PostfixType);
-TYPE("block", BlockType);
-TYPE("tree", TreeType);
-
-
-#undef INFIX
-#undef PREFIX
-#undef POSTFIX
-#undef NAME
-#undef TYPE
-#undef PARM
+TYPE(boolean);
+TYPE(integer);
+TYPE(real);
+TYPE(text);
+TYPE(character);
+TYPE(tree);
+TYPE(infix);
+TYPE(prefix);
+TYPE(postfix);
+TYPE(block);

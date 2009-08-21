@@ -31,379 +31,71 @@ XL_BEGIN
 
 // ============================================================================
 // 
-//    Class Native
+//    Helper functions for native code
 // 
 // ============================================================================
 
-Tree *Action::DoNative(Native *what)
-// ----------------------------------------------------------------------------
-//   Default is simply to invoke 'Do'
-// ----------------------------------------------------------------------------
-{
-    return Do(what);
-}
-
-
-Tree *Native::Do(Action *action)
-// ----------------------------------------------------------------------------
-//   For native nodes, default actions will do
-// ----------------------------------------------------------------------------
-{
-    return action->DoNative(this);
-}
-
-
-Tree *Native::Run(Stack *stack)
-// ----------------------------------------------------------------------------
-//    Running a native node returns the native itself
-// ----------------------------------------------------------------------------
-{
-    return NULL;
-}
-
-
-text Native::TypeName()
-// ----------------------------------------------------------------------------
-//   The name of a native tree is its type
-// ----------------------------------------------------------------------------
-{
-    return typeid(*this).name();
-}
-
-
-Tree *Native::Append(Tree *tail)
-// ----------------------------------------------------------------------------
-//   Append another tree to a native tree
-// ----------------------------------------------------------------------------
-{
-    // Find end of opcode chain. If end is not native, optimize away
-    Native *prev = this;
-    while (Native *next = dynamic_cast<Native *> (prev->next))
-        prev = next;
-
-    // String right opcode at end
-    prev->next = tail;
-
-    return this;
-}
-
-
-Tree *Variable::Run(Stack *stack)
-// ----------------------------------------------------------------------------
-//   Return the variable at given index in the stack
-// ----------------------------------------------------------------------------
-{
-    Tree *value = stack->Get(id);
-    if (QuotedTree *quoted = dynamic_cast<QuotedTree *> (value))
-        value = stack->Run(quoted->source);
-    return value;
-}
-
-
-Tree *NonLocalVariable::Run(Stack *stack)
-// ----------------------------------------------------------------------------
-//   Return the variable at given index in the stack
-// ----------------------------------------------------------------------------
-{
-    Tree *value = stack->Get(id, frame);
-    if (QuotedTree *quoted = dynamic_cast<QuotedTree *> (value))
-        value = stack->Run(quoted->source);
-    return value;
-}
-
-
-Tree *EvaluateArgument::Run(Stack *stack)
-// ----------------------------------------------------------------------------
-//   Evaluate argument in given slot if it has not been evaluated yet
-// ----------------------------------------------------------------------------
-{
-    Tree *value = stack->GetLocal(id);
-    if (!value)
-    {
-        value = stack->Run(code);
-        stack->SetLocal(id, value);
-    }
-    return value;
-}
-
-
-Tree *Invoke::Run(Stack *stack)
-// ----------------------------------------------------------------------------
-//    Run the child in the local arguments stack
-// ----------------------------------------------------------------------------
-{
-    // Evaluate arguments that have not been evaluated yet
-    ulong curDepth = stack->depth;
-    ulong i, max = values.size();
-    tree_list args;
-    for (i = 0; i < max; i++)
-    {
-        Tree *value = values[max + ~i];
-        value = stack->Run(value);
-        args.push_back(value);
-    }
-
-    ulong oldFrameAtCurDepth = 0;
-    if (curDepth != depth)
-        oldFrameAtCurDepth = stack->EnterFrame(depth);
-
-    // Allocate stack frame and copy args there
-    ulong argsSize = args.size();
-    ulong oldFrame = stack->Grow(args);
-    args.clear();
-        
-    // Invoke the called tree
-    Tree *result = stack->Run(invoked);
-
-    // Free stack frame and return result
-    stack->Shrink(oldFrame, argsSize);
-    if (curDepth != depth)
-        stack->ExitFrame(curDepth, oldFrameAtCurDepth);
-    return result;
-}
-
-
-void Invoke::AddArgument(Tree *value)
-// ----------------------------------------------------------------------------
-//   Add an argument to the value list (for immediate invokation)
-// ----------------------------------------------------------------------------
-{
-    values.push_back(value);
-}
-
-
-struct TreeMatch : Action
-// ----------------------------------------------------------------------------
-//   Check if two trees match in structure
-// ----------------------------------------------------------------------------
-{
-    TreeMatch (Tree *t): test(t) {}
-    Tree *DoInteger(Integer *what)
-    {
-        if (Integer *it = dynamic_cast<Integer *> (test))
-            if (it->value == what->value)
-                return what;
-        return NULL;
-    }
-    Tree *DoReal(Real *what)
-    {
-        if (Real *rt = dynamic_cast<Real *> (test))
-            if (rt->value == what->value)
-                return what;
-        return NULL;
-    }
-    Tree *DoText(Text *what)
-    {
-        if (Text *tt = dynamic_cast<Text *> (test))
-            if (tt->value == what->value)
-                return what;
-        return NULL;
-    }
-    Tree *DoName(Name *what)
-    {
-        if (Name *nt = dynamic_cast<Name *> (test))
-            if (nt->value == what->value)
-                return what;
-        return NULL;
-    }
-
-    Tree *DoBlock(Block *what)
-    {
-        // Test if we exactly match the block, i.e. the reference is a block
-        if (Block *bt = dynamic_cast<Block *> (test))
-        {
-            if (bt->Opening() == what->Opening() &&
-                bt->Closing() == what->Closing())
-            {
-                test = bt->child;
-                Tree *br = what->child->Do(this);
-                test = bt;
-                if (br)
-                    return br;
-            }
-        }
-        return NULL;
-    }
-    Tree *DoInfix(Infix *what)
-    {
-        if (Infix *it = dynamic_cast<Infix *> (test))
-        {
-            // Check if we match the tree, e.g. A+B vs 2+3
-            if (it->name == what->name)
-            {
-                test = it->left;
-                Tree *lr = what->left->Do(this);
-                test = it;
-                if (!lr)
-                    return NULL;
-                test = it->right;
-                Tree *rr = what->right->Do(this);
-                test = it;
-                if (!rr)
-                    return NULL;
-                return what;
-            }
-        }
-        return NULL;
-    }
-    Tree *DoPrefix(Prefix *what)
-    {
-        if (Prefix *pt = dynamic_cast<Prefix *> (test))
-        {
-            // Check if we match the tree, e.g. f(A) vs. f(2)
-            test = pt->left;
-            Tree *lr = what->left->Do(this);
-            test = pt;
-            if (!lr)
-                return NULL;
-            test = pt->right;
-            Tree *rr = what->right->Do(this);
-            test = pt;
-            if (!rr)
-                return NULL;
-            return what;
-        }
-        return NULL;
-    }
-    Tree *DoPostfix(Postfix *what)
-    {
-        if (Postfix *pt = dynamic_cast<Postfix *> (test))
-        {
-            // Check if we match the tree, e.g. A! vs 2!
-            test = pt->right;
-            Tree *rr = what->right->Do(this);
-            test = pt;
-            if (!rr)
-                return NULL;
-            test = pt->left;
-            Tree *lr = what->left->Do(this);
-            test = pt;
-            if (!lr)
-                return NULL;
-            return what;
-        }
-        return NULL;
-    }
-    Tree *Do(Tree *what)
-    {
-        return NULL;
-    }
-
-    Tree *      test;
-};
-
-
-Tree *EqualityTest::Run (Stack *stack)
-// ----------------------------------------------------------------------------
-//   Check equality of two trees
-// ----------------------------------------------------------------------------
-{
-    Tree *code = stack->Run(test);
-    Tree *ref = stack->Run(value);
-    condition = false;
-    TreeMatch compareForEquality(ref);
-    if (code->Do(compareForEquality))
-        condition = true;
-    return NULL;
-}
-
-
-Tree *TypeTest::Run (Stack *stack)
-// ----------------------------------------------------------------------------
-//   Check if the code being tested has the given type value
-// ----------------------------------------------------------------------------
-{
-    Tree *code = stack->Run(test);
-    Tree *ref = stack->Run(type_value);
-    condition = false;
-    if (TypeExpression *typeChecker = dynamic_cast<TypeExpression *>(ref))
-        if (typeChecker->TypeCheck(stack, code))
-            condition = true;
-    return NULL;
-}
-
-
-
-// ============================================================================
-// 
-//   Helper functions
-// 
-// ============================================================================
-
-longlong integer_arg(Stack *stack, ulong index)
+longlong xl_integer_arg(Tree *value)
 // ----------------------------------------------------------------------------
 //    Return an integer value 
 // ----------------------------------------------------------------------------
 {
-    Tree *value = stack->Get(index);
-    if (Integer *ival = dynamic_cast<Integer *> (value))
+    if (Integer *ival = value->AsInteger())
         return ival->value;
-    stack->Error("Value '$1' is not an integer", value);
+    Context::context->Error("Value '$1' is not an integer", value);
     return 0;
 }
 
 
-double real_arg(Stack *stack, ulong index)
+double xl_real_arg(Tree *value)
 // ----------------------------------------------------------------------------
 //    Return a real value 
 // ----------------------------------------------------------------------------
 {
-    Tree *value = stack->Get(index);
-    if (Real *rval = dynamic_cast<Real *> (value))
+    if (Real *rval = value->AsReal())
         return rval->value;
-    stack->Error("Value '$1' is not a real", value);
+    Context::context->Error("Value '$1' is not a real", value);
     return 0.0;
 }
 
 
-text text_arg(Stack *stack, ulong index)
+text xl_text_arg(Tree *value)
 // ----------------------------------------------------------------------------
 //    Return a text value 
 // ----------------------------------------------------------------------------
 {
-    Tree *value = stack->Get(index);
-    if (Text *tval = dynamic_cast<Text *> (value))
-        return tval->value;
-    stack->Error("Value '$1' is not a text", value);
+    if (Text *tval = value->AsText())
+        if (tval->opening != "'")
+            return tval->value;
+    Context::context->Error("Value '$1' is not a text", value);
     return "";
 }
 
 
-bool boolean_arg(Stack *stack, ulong index)
+int xl_character_arg(Tree *value)
+// ----------------------------------------------------------------------------
+//    Return a character value 
+// ----------------------------------------------------------------------------
+{
+    if (Text *tval = value->AsText())
+        if (tval->opening == "'" && tval->value.length() == 1)
+            return tval->value[0];
+    Context::context->Error("Value '$1' is not a character", value);
+    return 0;
+}
+
+
+bool xl_boolean_arg(Tree *value)
 // ----------------------------------------------------------------------------
 //    Return a boolean truth value 
 // ----------------------------------------------------------------------------
 {
-    Tree *value = stack->Get(index);
-    if (value == true_name)
+    if (value == xl_true)
         return true;
-    else if (value == false_name)
+    else if (value == xl_false)
         return false;
-    stack->Error("Value '$1' is not a boolean value", value);
+    Context::context->Error("Value '$1' is not a boolean value", value);
     return false;
-}
-
-
-Tree *anything_arg(Stack *stack, ulong index)
-// ----------------------------------------------------------------------------
-//    Return a boolean truth value 
-// ----------------------------------------------------------------------------
-{
-    Tree *value = stack->Get(index);
-    return value;
-}
-
-
-Tree *tree_arg(Stack *stack, ulong index)
-// ----------------------------------------------------------------------------
-//    Return a quoted argument
-// ----------------------------------------------------------------------------
-{
-    Tree *value = stack->Get(index);
-    if (QuotedTree *quote = dynamic_cast<QuotedTree *> (value))
-        return quote->source;
-    stack->Error("Value '$1' is not a quoted tree", value);
-    return NULL;
 }
 
 

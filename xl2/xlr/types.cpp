@@ -63,8 +63,7 @@ Tree *InferTypes::DoText(Text *what)
 //   Return text or character type
 // ----------------------------------------------------------------------------
 {
-    static Quote quote;
-    Tree *t = what->Opening() == quote.Opening() ? character_type : text_type;
+    Tree *t = what->opening == "'" ? character_type : text_type;
     types[what] = t;
     return t;
 }
@@ -75,7 +74,7 @@ Tree *InferTypes::DoName(Name *what)
 //   Return the type of the value of the name
 // ----------------------------------------------------------------------------
 {
-    if (Tree *value = context->Name(what->value))
+    if (Tree *value = context->symbols->Named(what->value))
     {
         if (Tree *t = types[value])
             return t;
@@ -113,15 +112,6 @@ Tree *InferTypes::DoInfix(Infix *what)
 
 
 Tree *InferTypes::DoBlock(Block *what)
-// ----------------------------------------------------------------------------
-// 
-// ----------------------------------------------------------------------------
-{
-    return what;
-}
-
-
-Tree *InferTypes::DoNative(Native *what)
 // ----------------------------------------------------------------------------
 // 
 // ----------------------------------------------------------------------------

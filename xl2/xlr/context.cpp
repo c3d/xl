@@ -51,6 +51,16 @@ void Symbols::EnterName(text name, Tree *value)
 }
 
 
+Name *Symbols::Allocate(Name *n)
+// ----------------------------------------------------------------------------
+//   Enter a value in the namespace
+// ----------------------------------------------------------------------------
+{
+    names[n->value] = n;
+    return n;
+}
+
+
 Rewrite *Symbols::EnterRewrite(Rewrite *rw)
 // ----------------------------------------------------------------------------
 //   Enter the given rewrite in the rewrites table
@@ -1233,6 +1243,8 @@ Tree *Context::Compile(Tree *source, bool nullIfBad)
 // ----------------------------------------------------------------------------
 //    Return an optimized version of the source tree, ready to run
 // ----------------------------------------------------------------------------
+//    This associates an eval_fn to the tree, i.e. code that takes a tree
+//    as input and returns a tree as output.
 {
     // If we already have compiled code, we are done
     if (source->code)
@@ -1245,9 +1257,7 @@ Tree *Context::Compile(Tree *source, bool nullIfBad)
 
     // Compile code for that tree
     tree_list parmsList;
-    symbol_iter p;
-    for (p = parms.names.begin(); p != parms.names.end(); p++)
-        parmsList.push_back((*p).second);
+    parmsList.push_back(source);
     CompileAction compile(compiler, &parms, source, parmsList, nullIfBad);
     if (compile.compiler.IsForwardCall())
         return source;          // Nested compile
@@ -1296,6 +1306,25 @@ Rewrite *Context::EnterRewrite(Tree *from, Tree *to)
 {
     Rewrite *rewrite = new Rewrite(symbols, from, to);
     return symbols->EnterRewrite(rewrite);
+}
+
+
+void Context::ParameterList(Tree *form, tree_list &list)
+// ----------------------------------------------------------------------------
+//    List the parameters for the form and add them to the list
+// ----------------------------------------------------------------------------
+{
+    // Identify all parameters in 'from'
+    Symbols parms(symbols);
+    ParameterMatch matchParms(&parms);
+    Tree *parmsOK = form->Do(matchParms);
+    if (!parmsOK)
+        Error("Internal: what parameter list in '$1'?", form);
+
+    // Build the parameter list for 'to'
+    symbol_iter p;
+    for (p = parms.names.begin(); p != parms.names.end(); p++)
+        list.push_back((*p).second);
 }
 
 
@@ -1407,8 +1436,11 @@ Tree *Rewrite::Do(Action &a)
 
 Tree *Rewrite::Compile(void)
 // ----------------------------------------------------------------------------
-//   Make sure that the 'to' tree is compiled
+//   Compile code for the 'to' form
 // ----------------------------------------------------------------------------
+//   This is similar to Context::Compile, except that it may generate a
+//   function with more parameters, i.e. Tree *f(Tree *, Tree *, ...),
+//   where there is one input arg per variable in the 'from' tree
 {
     assert (to || !"Rewrite::Compile called for data rewrite?");
     if (to->code)
@@ -1422,12 +1454,30 @@ Tree *Rewrite::Compile(void)
     if (!parmsOK)
         return context->Error("Internal: what parameters in '$1'?", from);
 
+    // Build the parameter list for 'to'
+    symbol_iter p;
+    tree_list parmsList;
+    for (p = parms.names.begin(); p != parms.names.end(); p++)
+        parmsList.push_back((*p).second);
+    CompileAction compile(context->compiler, &parms, to, parmsList, false);
+    if (compile.compiler.IsForwardCall())
+    {
+        // Recursive compilation of that form
+        // REVISIT: Can this happen?
+        return to;              // We know how to invoke it anyway
+    }
+
     // Compile the body of the rewrite
-    Tree *code = context->Compile(to);
-    if (!code)
+    Tree *result = to->Do(compile);
+    if (!result)
         return context->Error("Unable to compile '$1'", to);
 
-    return code;
+    // Even if technically, this is not an 'eval_fn' (it has more args),
+    // we still record it to avoid recompiling multiple times
+    eval_fn code = compile.compiler.Finalize();
+    to->code = code;
+
+    return result;
 }
 
 

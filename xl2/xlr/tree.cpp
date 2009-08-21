@@ -28,6 +28,7 @@
 #include "tree.h"
 #include "context.h"
 #include "renderer.h"
+#include "opcodes.h"
 
 XL_BEGIN
 
@@ -375,5 +376,123 @@ extern "C"
             return false;
         return true;
     }
+
+
+
+    // ========================================================================
+    // 
+    //    Type matching
+    // 
+    // ========================================================================
+
+    Tree *xl_boolean(Tree *value)
+    // ------------------------------------------------------------------------
+    //   Check if argument can be evaluated as a boolean value (true/false)
+    // ------------------------------------------------------------------------
+    {
+        if (value == xl_true || value == xl_false)
+            return value;
+        return NULL;
+    }
+    
+    
+    Tree *xl_integer(Tree *value)
+    // ------------------------------------------------------------------------
+    //   Check if argument can be evaluated as an integer
+    // ------------------------------------------------------------------------
+    {
+        if (Integer *it = value->AsInteger())
+            return it;
+        return NULL;
+    }
+    
+    
+    Tree *xl_real(Tree *value)
+    // ------------------------------------------------------------------------
+    //   Check if argument can be evaluated as a real
+    // ------------------------------------------------------------------------
+    {
+        if (Real *rt = value->AsReal())
+            return rt;
+        return NULL;
+    }
+    
+    
+    Tree *xl_text(Tree *value)
+    // ------------------------------------------------------------------------
+    //   Check if argument can be evaluated as a text
+    // ------------------------------------------------------------------------
+    {
+        if (Text *tt = value->AsText())
+            if (tt->opening != "'")
+                return tt;
+        return NULL;
+    }
+    
+    
+    Tree *xl_character(Tree *value)
+    // ------------------------------------------------------------------------
+    //   Check if argument can be evaluated as a character
+    // ------------------------------------------------------------------------
+    {
+        if (Text *tt = value->AsText())
+            if (tt->opening == "'")
+                return tt;
+        return NULL;
+    }
+    
+    
+    Tree *xl_tree(Tree *value)
+    // ------------------------------------------------------------------------
+    //   Don't really check the argument
+    // ------------------------------------------------------------------------
+    {
+        return value;
+    }
+
+    
+    Tree *xl_infix(Tree *value)
+    // ------------------------------------------------------------------------
+    //   Check if argument can be evaluated as an infix
+    // ------------------------------------------------------------------------
+    {
+        if (Infix *it = value->AsInfix())
+            return it;
+        return NULL;
+    }
+    
+    
+    Tree *xl_prefix(Tree *value)
+    // ------------------------------------------------------------------------
+    //   Check if argument can be evaluated as a prefix
+    // ------------------------------------------------------------------------
+    {
+        if (Prefix *it = value->AsPrefix())
+            return it;
+        return NULL;
+}
+    
+    
+    Tree *xl_postfix(Tree *value)
+    // ------------------------------------------------------------------------
+    //   Check if argument can be evaluated as a postfix
+    // ------------------------------------------------------------------------
+    {
+    if (Postfix *it = value->AsPostfix())
+        return it;
+    return NULL;
+    }
+    
+    
+    Tree *xl_block(Tree *value)
+    // ------------------------------------------------------------------------
+    //   Check if argument can be evaluated as a block
+    // ------------------------------------------------------------------------
+    {
+        if (Block *it = value->AsBlock())
+            return it;
+        return NULL;
+    }
+
 
 } // extern "C"

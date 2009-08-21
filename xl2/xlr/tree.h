@@ -69,6 +69,17 @@ extern "C"
     bool  xl_same_text(Tree *, const char *);
     bool  xl_same_shape(Tree *t1, Tree *t2);
     bool  xl_type_check(Tree *value, Tree *type);
+
+    Tree *xl_boolean(Tree *value);    
+    Tree *xl_integer(Tree *value);
+    Tree *xl_real(Tree *value);
+    Tree *xl_text(Tree *value);
+    Tree *xl_character(Tree *value);
+    Tree *xl_tree(Tree *value);
+    Tree *xl_infix(Tree *value);
+    Tree *xl_prefix(Tree *value);
+    Tree *xl_postfix(Tree *value);
+    Tree *xl_block(Tree *value);
 }
 
 
