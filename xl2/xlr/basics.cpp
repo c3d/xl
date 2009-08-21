@@ -113,8 +113,8 @@ Tree *LastInListHandler::Call(Context *context, Tree *args)
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
         Tree *result = NULL;
-        result = context->Eval(infix->left);
-        result = context->Eval(infix->right);
+        result = context->Run(infix->left);
+        result = context->Run(infix->right);
         return result;
     }
     else
@@ -139,10 +139,10 @@ Tree *BinaryHandler::Call(Context *context, Tree *args)
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
         tree_position pos = args->Position();
-        Tree *left = context->Eval(infix->left);
+        Tree *left = context->Run(infix->left);
         if (!left)
             return context->Error("No value to left of '$1'", args);
-        Tree *right = context->Eval(infix->right);
+        Tree *right = context->Run(infix->right);
         if (!right)
             return context->Error("No value to right of '$1'", args);
 
@@ -204,7 +204,7 @@ Tree *Negate::Call(Context *context, Tree *args)
 //   Negate its input argument
 // ----------------------------------------------------------------------------
 {
-    Tree *value = context->Eval(args);
+    Tree *value = context->Run(args);
     tree_position pos = args->Position();
 
     if (Integer *li = dynamic_cast<Integer *> (value))
@@ -229,10 +229,10 @@ Tree *BooleanHandler::Call(Context *context, Tree *args)
 {
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
-        Tree *left = context->Eval(infix->left);
+        Tree *left = context->Run(infix->left);
         if (!left)
             return context->Error("No value to left of '$1'", args);
-        Tree *right = context->Eval(infix->right);
+        Tree *right = context->Run(infix->right);
         if (!right)
             return context->Error("No value to right of '$1'", args);
 
@@ -306,7 +306,7 @@ Tree *Assignment::Call(Context *context, Tree *args)
     if (Infix *infix = dynamic_cast<Infix *> (args))
     {
         Tree *expr = infix->right;
-        Tree *value = context->Run(expr);
+        Tree *value = context->LazyRun(expr);
         if (!value)
             return context->Error("No value for '$1' in assignment", expr);
 
@@ -415,7 +415,7 @@ Tree *IntegerType::Call(Context *context, Tree *value)
 //   Check if argument can be evaluated as an integer
 // ----------------------------------------------------------------------------
 {
-    if (Integer *it = dynamic_cast<Integer *>(context->Eval(value)))
+    if (Integer *it = dynamic_cast<Integer *>(context->Run(value)))
         return it;
     return NULL;
 }
@@ -426,7 +426,7 @@ Tree *RealType::Call(Context *context, Tree *value)
 //   Check if argument can be evaluated as a real
 // ----------------------------------------------------------------------------
 {
-    if (Real *rt = dynamic_cast<Real *>(context->Eval(value)))
+    if (Real *rt = dynamic_cast<Real *>(context->Run(value)))
         return rt;
     return NULL;
 }
@@ -437,7 +437,7 @@ Tree *TextType::Call(Context *context, Tree *value)
 //   Check if argument can be evaluated as a text
 // ----------------------------------------------------------------------------
 {
-    if (Text *tt = dynamic_cast<Text *>(context->Eval(value)))
+    if (Text *tt = dynamic_cast<Text *>(context->Run(value)))
     {
         Quote q;
         if (tt->Opening() != q.Opening() || tt->Closing() != q.Closing())
@@ -452,7 +452,7 @@ Tree *CharacterType::Call(Context *context, Tree *value)
 //   Check if argument can be evaluated as an integer
 // ----------------------------------------------------------------------------
 {
-    if (Text *tt = dynamic_cast<Text *>(context->Eval(value)))
+    if (Text *tt = dynamic_cast<Text *>(context->Run(value)))
     {
         Quote q;
         if (tt->Opening() == q.Opening() && tt->Closing() == q.Closing())

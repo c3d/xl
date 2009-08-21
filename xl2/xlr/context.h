@@ -95,8 +95,8 @@ struct Context : Namespace
     void                CollectGarbage();
 
     // Evaluation of trees
-    Tree *              Run(Tree *source, bool eager = false);
-    Tree *              Eval(Tree *source) { return Run(source, true); }
+    Tree *              Run(Tree *source, bool eager = true);
+    Tree *              LazyRun(Tree *source) { return Run(source, false); }
     Rewrite *           EnterRewrite(Tree *from, Tree *to);
     Rewrite *           EnterInfix (text name, Tree *callee);
     Tree *              Error (text message,

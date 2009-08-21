@@ -37,7 +37,8 @@ SOURCES     =					\
 	options.cpp				\
 	errors.cpp				\
 	basics.cpp				\
-	types.cpp
+	types.cpp				\
+	opcodes.cpp
 
 PRODUCT=xlr$(EXE)
 

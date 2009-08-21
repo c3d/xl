@@ -444,21 +444,21 @@ struct TreeMatch : Action
 
     Tree *DoInteger(Integer *what)
     {
-        if (Integer *it = dynamic_cast<Integer *> (context->Eval(test)))
+        if (Integer *it = dynamic_cast<Integer *> (context->Run(test)))
             if (it->value == what->value)
                 return what;
         return NULL;
     }
     Tree *DoReal(Real *what)
     {
-        if (Real *rt = dynamic_cast<Real *> (context->Eval(test)))
+        if (Real *rt = dynamic_cast<Real *> (context->Run(test)))
             if (rt->value == what->value)
                 return what;
         return NULL;
     }
     Tree *DoText(Text *what)
     {
-        if (Text *tt = dynamic_cast<Text *> (context->Eval(test)))
+        if (Text *tt = dynamic_cast<Text *> (context->Run(test)))
             if (tt->value == what->value)
                 return what;
         return NULL;
@@ -483,7 +483,7 @@ struct TreeMatch : Action
             // enter the tree, so we do lazy evaluation.
             if (Tree *existing = context->Name(what->value))
             {
-                if (existing == context->Eval(test)) // Revisit: tree match?
+                if (existing == context->Run(test)) // Revisit: tree match?
                     return what;
                 return NULL;
             }
