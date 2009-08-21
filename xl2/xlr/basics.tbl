@@ -97,6 +97,7 @@ PREFIX("log", PARM(x, real), LogReal, RREAL(log(x)))
 PREFIX("log2", PARM(x, real), Log2Real, RREAL(log2(x)))
 PREFIX("log10", PARM(x, real), Log10Real, RREAL(log10(x)))
 PREFIX("log1p", PARM(x, real), LogPlus1Real, RREAL(log1p(x)))
+PREFIX("pi", , PiConstant, RREAL(M_PI))
 
 // Boolean operations
 INFIX(boolean, "and", boolean, BinaryAndBool, RBOOL(BOOL(0) & BOOL(1)))
