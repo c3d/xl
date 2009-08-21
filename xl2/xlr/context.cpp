@@ -220,13 +220,12 @@ void Context::CollectGarbage ()
 // 
 // ============================================================================
 
-Tree *Context::Run(Tree *toRun, bool eager)
+Tree *Context::Run(Tree *source, bool eager)
 // ----------------------------------------------------------------------------
 //   Apply any applicable rewrite to the source and evaluate result
 // ----------------------------------------------------------------------------
 {
     bool changed = true;
-    Tree *source = toRun;
 
     IFTRACE(eval)
         std::cout << (eager ? "Eval: " : "Run: ") << source << "\n";
@@ -234,9 +233,6 @@ Tree *Context::Run(Tree *toRun, bool eager)
     // For all leaf types, optimize away evaluation
     if (dynamic_cast<Leaf *> (source))
         return source;
-
-    if (source->cached_value)
-        return source->cached_value;
 
     while (changed)
     {
@@ -275,7 +271,6 @@ Tree *Context::Run(Tree *toRun, bool eager)
             }
         }
     }
-    toRun->cached_value = source;
     return source;
 }
 

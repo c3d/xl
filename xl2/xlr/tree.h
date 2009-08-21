@@ -87,8 +87,6 @@ struct Tree
     // Operator new to record the tree in the garbage collector
     void *              operator new(size_t sz);
 
-public:
-    Tree *              cached_value;
 protected:
     tree_position       position;
     tree_data           data;
