@@ -36,31 +36,6 @@ XL_BEGIN
 // ============================================================================
 
 struct Tree;                                    // 
-struct Code;                                    // Object representation
-struct Symbols;                                 // Symbol table
-struct Text;                                    // Text representation
-typedef Tree *(*eval_fn) (Tree *);              // Compiled evaluation code
-
-
-
-// ============================================================================
-// 
-//    Code: Run-time representation of trees
-// 
-// ============================================================================
-
-struct Code
-// ----------------------------------------------------------------------------
-//    Information passed around compiled code describing the trees
-// ----------------------------------------------------------------------------
-{
-    Code(eval_fn cd =NULL, Symbols *loc =NULL, Tree *tp =NULL):
-        code(cd), locals(loc), type(tp) {}
-
-    eval_fn     code;                           // Compiled code
-    Symbols *   locals;                         // Local symbols
-    Tree *      type;                           // Type information if any
-};
 
 
 

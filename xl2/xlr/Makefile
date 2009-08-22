@@ -37,6 +37,7 @@ SOURCES     =					\
 	renderer.cpp				\
 	compiler.cpp				\
 	context.cpp				\
+	runtime.cpp				\
 	basics.cpp				\
 	types.cpp				\
 	opcodes.cpp

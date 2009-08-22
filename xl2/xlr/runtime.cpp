@@ -59,8 +59,8 @@ Tree *xl_evaluate(Tree *what)
         if (!what->code)
             what = Context::context->CompileAll(what);
         
-        assert(what->code); assert(what->code->code);
-        result = what->code->code(what);
+        assert(what->code);
+        result = what->code(what);
     }
     return result;
 }
@@ -95,9 +95,9 @@ bool xl_type_check(Tree *value, Tree *type)
 {
     IFTRACE(typecheck)
         std::cerr << "Type check " << value << " against " << type << '\n';
-    if (!value || !type->code || !type->code->code)
+    if (!value || !type->code)
         return false;
-    Tree *afterTypeCast = type->code->code(value);
+    Tree *afterTypeCast = type->code(value);
     if (afterTypeCast != value)
         return false;
     return true;

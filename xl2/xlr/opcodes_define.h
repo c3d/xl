@@ -40,7 +40,8 @@
         Name *to = new Name(symbol);                                    \
         eval_fn fn = (eval_fn) xl_##name;                               \
         c->EnterRewrite(from, to);                                      \
-        to->code = new Code(fn, c, NULL);                               \
+        to->code = fn;                                                  \
+        to->symbols = c;                                                \
         compiler->EnterBuiltin("xl_" #name, from, to, fn);              \
     } while(0);
 
@@ -62,13 +63,15 @@
             Prefix *from = new Prefix(new Name(symbol), parmtree);      \
             Name *to = new Name(symbol);                                \
             c->EnterRewrite(from, to);                                  \
-            to->code = new Code(fn, c, NULL);                           \
+            to->code = fn;                                              \
+            to->symbols = c;                                            \
             compiler->EnterBuiltin("xl_" #name, from, to, fn);          \
         }                                                               \
         else                                                            \
         {                                                               \
             Name *n  = new Name(symbol);                                \
-            n->code = new Code(fn, c, NULL);                            \
+            n->code = fn;                                               \
+            n->symbols = c;                                             \
             c->EnterName(symbol, n);                                    \
             compiler->EnterBuiltin("xl_" #name, n, n, fn);              \
         }                                                               \
@@ -84,7 +87,8 @@
         Name *to = new Name(symbol);                                    \
         eval_fn fn = (eval_fn) xl_##name;                               \
         c->EnterRewrite(from, to);                                      \
-        to->code = new Code(fn, c, NULL);                               \
+        to->code = fn;                                                  \
+        to->symbols = c;                                                \
         compiler->EnterBuiltin("xl_" #name, from, to, to->code);        \
     } while(0);
 
@@ -92,7 +96,8 @@
     do                                          \
     {                                           \
         Name *n = new Name(#symbol);            \
-        n->code = new Code(xl_identity, c);     \
+        n->code = xl_identity;                  \
+        n->symbols = c;                         \
         c->EnterName(#symbol, n);               \
         xl_##symbol = n;                        \
         compiler->EnterGlobal(n, &xl_##symbol); \
@@ -103,7 +108,8 @@
     {                                                   \
         Name *n = new Name(#symbol);                    \
         eval_fn fn = (eval_fn) xl_##symbol;             \
-        n->code = new Code(fn, c);                      \
+        n->code = fn;                                   \
+        n-> symbols = c;                                \
         c->EnterName(#symbol, n);                       \
         xl_##symbol##_name = n;                         \
         compiler->EnterGlobal(n, &xl_##symbol##_name);  \

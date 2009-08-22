@@ -50,43 +50,10 @@ struct Postfix;                                 // Postfix: 3!
 struct Infix;                                   // Infix: A+B, newline
 struct Block;                                   // Block: (A), {A}
 struct Action;                                  // Action on trees
-struct Code;                                    // Code representation
+struct Symbols;                                 // Symbol table
 typedef ulong tree_position;                    // Position in context
 typedef std::vector<Tree *> tree_list;          // A list of trees
-
-
-// ============================================================================
-// 
-//    Runtime functions with C interface
-// 
-// ============================================================================
-
-// Value leaf nodes return themselves, so we set their code to xl_identity
-extern "C" 
-{
-    Tree *xl_identity(Tree *);
-    Tree *xl_evaluate(Tree *);
-    bool  xl_same_text(Tree *, const char *);
-    bool  xl_same_shape(Tree *t1, Tree *t2);
-    bool  xl_type_check(Tree *value, Tree *type);
-
-    Tree *xl_new_integer(longlong value);
-    Tree *xl_new_real(double value);
-    Tree *xl_new_character(kstring value);
-    Tree *xl_new_text(kstring value);
-    Tree *xl_new_xtext(kstring value, kstring open, kstring close);
-
-    Tree *xl_boolean(Tree *value);    
-    Tree *xl_integer(Tree *value);
-    Tree *xl_real(Tree *value);
-    Tree *xl_text(Tree *value);
-    Tree *xl_character(Tree *value);
-    Tree *xl_tree(Tree *value);
-    Tree *xl_infix(Tree *value);
-    Tree *xl_prefix(Tree *value);
-    Tree *xl_postfix(Tree *value);
-    Tree *xl_block(Tree *value);
-}
+typedef Tree *(*eval_fn) (Tree *);              // Compiled evaluation code
 
 
 
@@ -116,8 +83,8 @@ struct Tree
 
     // Constructor and destructor
     Tree (kind k, tree_position pos = NOWHERE):
-        tag((pos<<KINDBITS) | k), code(NULL) {}
-    ~Tree() { delete code; }
+        tag((pos<<KINDBITS) | k), code(NULL), symbols(NULL), type(NULL) {}
+    ~Tree() {}
 
     // Perform recursive actions on a tree
     Tree *              Do(Action *action);
@@ -147,7 +114,9 @@ struct Tree
 
 public:
     ulong       tag;                            // Position + kind
-    Code *      code;                           // Compiled code information
+    eval_fn     code;                           // Compiled code
+    Symbols *   symbols;                        // Local symbols
+    Tree *      type;                           // Type information
 };
 
 

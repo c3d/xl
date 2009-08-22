@@ -129,6 +129,9 @@ Tree *Symbols::Compile(Tree *source, CompiledUnit &unit, bool nullIfBad)
 //    Return an optimized version of the source tree, ready to run
 // ----------------------------------------------------------------------------
 {
+    // Record the symbol table for this tree
+    source->symbols = this;
+
     // Record rewrites and data declarations in the current context
     Symbols parms(this);
     DeclarationAction declare(&parms);
@@ -169,8 +172,8 @@ Tree *Symbols::CompileAll(Tree *source)
         return result;
 
     eval_fn fn = unit.Finalize();
-    Code *code = new Code(fn, this, NULL);
-    source->code = code;
+    source->code = fn;
+    source->symbols = this;
     return source;
 }
 
@@ -189,8 +192,8 @@ Tree *Symbols::Run(Tree *code)
         if (!result->code)
             result = CompileAll(result);
 
-        assert(result->code); assert(result->code->code);
-        result = result->code->code(code);
+        assert(result->code);
+        result = result->code(code);
     }
     return result;
 }
@@ -1441,8 +1444,8 @@ Tree *Rewrite::Compile(void)
     // Even if technically, this is not an 'eval_fn' (it has more args),
     // we still record it to avoid recompiling multiple times
     eval_fn fn = compile.unit.Finalize();
-    Code *code = new Code(fn, symbols, NULL);
-    to->code = code;
+    to->code = fn;
+    to->symbols = symbols;
 
     return to;
 }
