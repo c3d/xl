@@ -204,6 +204,28 @@ ulong Context::gc_increment = 200;
 ulong Context::gc_growth_percent = 200;
 Context *Context::context = NULL;
 
+Context::~Context()
+// ----------------------------------------------------------------------------
+//   Delete all globals allocated by that context
+// ----------------------------------------------------------------------------
+{
+    globals_table::iterator g;
+    for (g = globals.begin(); g != globals.end(); g++)
+        delete *g;
+}
+
+
+Tree **Context::AddGlobal(Tree *value)
+// ----------------------------------------------------------------------------
+//   Create a global, immutable address for LLVM
+// ----------------------------------------------------------------------------
+{
+    Tree **ptr = new Tree*;
+    *ptr = value;
+    return ptr;
+}
+
+
 struct GCAction : Action
 // ----------------------------------------------------------------------------
 //   Mark trees for garbage collection and compute active set
@@ -276,6 +298,10 @@ void Context::CollectGarbage ()
         formats_table &formats = Renderer::renderer->formats;
         for (f = formats.begin(); f != formats.end(); f++)
             (*f).second->Do(gc);
+
+        globals_table::iterator g;
+        for (g = globals.begin(); g != globals.end(); g++)
+            (**g)->Do(gc);
 
         // Then delete all trees in active set that are no longer referenced
         for (active_set::iterator a = active.begin(); a != active.end(); a++)

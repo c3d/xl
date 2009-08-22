@@ -64,6 +64,7 @@ struct Compiler
                                              const llvm::Type *retType,
                                              uint parmCount, ...);
     llvm::Value *             EnterGlobal(Name *name, Name **address);
+    llvm::Value *             EnterConstant(Tree *constant);
     llvm::Value *             Known(Tree *value);
 
 public:
@@ -175,6 +176,8 @@ public:
     llvm::BasicBlock *  entrybb;        // Entry point to subcase
     llvm::BasicBlock *  savedbb;        // Saved position before subcase
     llvm::BasicBlock *  successbb;      // Successful completion of expression
+
+    value_map           savedvalue;     // Saved compile unit value map
 };
 
 

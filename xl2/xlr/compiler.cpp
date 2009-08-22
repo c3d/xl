@@ -276,6 +276,30 @@ Value *Compiler::EnterGlobal(Name *name, Name **address)
 }
 
 
+Value *Compiler::EnterConstant(Tree *constant)
+// ----------------------------------------------------------------------------
+//   Enter a constant (i.e. an Integer, Real or Text) into global map
+// ----------------------------------------------------------------------------
+{
+    bool isConstant = true;
+    text name = "xlcst";
+    switch(constant->Kind())
+    {
+    case INTEGER: name = "xlint";  break;
+    case REAL:    name = "xlreal"; break;
+    case TEXT:    name = "xltext"; break;
+    default:                       break;
+    }
+    GlobalValue *result = new GlobalVariable (treePtrTy, isConstant,
+                                              GlobalVariable::InternalLinkage,
+                                              NULL, name, module);
+    Tree **address = Context::context->AddGlobal(constant);
+    runtime->addGlobalMapping(result, address);
+    globals[constant] = result;
+    return result;
+}
+
+
 Value *Compiler::Known(Tree *tree)
 // ----------------------------------------------------------------------------
 //    Return the known global value of the tree if it exists
@@ -463,11 +487,7 @@ Value *CompiledUnit::ConstantInteger(Integer *what)
 {
     Value *result = Known(what);
     if (!result)
-    {
-        Value *imm = ConstantInt::get(LLVM_INTTYPE(longlong), what->value);
-        result = data->CreateCall(compiler->xl_new_integer, imm);
-        value[what] = result;
-    }
+        result = compiler->EnterConstant(what);
     return result;
 }
 
@@ -479,11 +499,7 @@ Value *CompiledUnit::ConstantReal(Real *what)
 {
     Value *result = Known(what);
     if (!result)
-    {
-        Value *imm = ConstantFP::get(Type::DoubleTy, what->value);
-        result = data->CreateCall(compiler->xl_new_real, imm);
-        value[what] = result;
-    }
+        result = compiler->EnterConstant(what);
     return result;
 }
 
@@ -495,33 +511,7 @@ Value *CompiledUnit::ConstantText(Text *what)
 {
     Value *result = Known(what);
     if (!result)
-    {
-        Constant *txtArray = ConstantArray::get(what->value);
-        Value *txtPtr = data->CreateConstGEP1_32(txtArray, 0);
-
-        // Check if this is a normal text, "Foo"
-        if (what->opening == Text::textQuote &&
-            what->closing == Text::textQuote)
-        {
-            result = data->CreateCall(compiler->xl_new_text, txtPtr);
-        }
-        // Check if this is is a normal character description, 'A'
-        else if (what->opening == Text::charQuote &&
-                 what->closing == Text::charQuote)
-        {
-            result = data->CreateCall(compiler->xl_new_character, txtPtr);
-        }
-        else
-        {
-            Constant *openArray = ConstantArray::get(what->opening);
-            Constant *closeArray = ConstantArray::get(what->opening);
-            Value *openPtr = code->CreateConstGEP1_32(openArray, 0);
-            Value *closePtr = code->CreateConstGEP1_32(closeArray, 0);
-            result = data->CreateCall3(compiler->xl_new_xtext,
-                                       txtPtr, openPtr, closePtr);
-        }
-        value[what] = result;
-    }
+        result = compiler->EnterConstant(what);
     return result;
 }
 
@@ -915,7 +905,8 @@ ExpressionReduction::ExpressionReduction(CompiledUnit &u, Tree *src)
     : unit(u), source(src),
       storage(NULL), computed(NULL),
       savedfailbb(NULL),
-      entrybb(NULL), savedbb(NULL), successbb(NULL)
+      entrybb(NULL), savedbb(NULL), successbb(NULL),
+      savedvalue(u.value)
 {
     // We need storage and a compute flag to skip this computation if needed
     storage = u.NeedStorage(src);
@@ -940,8 +931,9 @@ ExpressionReduction::~ExpressionReduction()
     // Mark the end of a lazy expression evaluation
     u.EndLazy(source, successbb);
 
-    // Restore saved 'failbb'
+    // Restore saved 'failbb' and value map
     u.failbb = savedfailbb;
+    u.value = savedvalue;
 }
 
 

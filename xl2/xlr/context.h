@@ -149,6 +149,7 @@ typedef std::map<text, Tree *>    symbol_table; // Symbol table in context
 typedef std::set<Tree *>          active_set;   // Not to be garbage collected
 typedef std::map<ulong, Rewrite*> rewrite_table;// Hashing of rewrites
 typedef symbol_table::iterator    symbol_iter;  // Iterator over sym table
+typedef std::vector<Tree **>      globals_table;// Table of LLVM globals
 
 
 
@@ -207,6 +208,7 @@ struct Context : Symbols
         errors(err), error_handler(NULL),       // Error management
         compiler(comp),                         // Tree compilation
         active(), roots(), gc_threshold(200) {} // Garbage collection
+    ~Context();
 
     // Context properties
     Tree *              ErrorHandler();
@@ -220,6 +222,7 @@ struct Context : Symbols
     // Helpers for compilation of trees
     Tree *              Error (text message,
                                Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
+    Tree **             AddGlobal(Tree *value);
 
 public:
     static ulong        gc_increment;
@@ -232,6 +235,7 @@ public:
     active_set          active;
     active_set          roots;
     ulong               gc_threshold;
+    globals_table       globals;
 };
 
 
