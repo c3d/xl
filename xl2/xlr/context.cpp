@@ -731,7 +731,6 @@ Tree *ArgumentMatch::DoBlock(Block *what)
             bt->closing == what->closing)
         {
             test = bt->child;
-            //unit.Left(bt);
             Tree *br = what->child->Do(this);
             test = bt;
             if (br)
@@ -763,13 +762,11 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
             if (!defined)
                 defined = what;
             test = it->left;
-            unit.Left(it);
             Tree *lr = what->left->Do(this);
             test = it;
             if (!lr)
                 return NULL;
             test = it->right;
-            //unit.Right(it);
             Tree *rr = what->right->Do(this);
             test = it;
             if (!rr)
@@ -830,13 +827,11 @@ Tree *ArgumentMatch::DoPrefix(Prefix *what)
             defined = NULL;
 
         test = pt->left;
-        //unit.Left(pt);
         Tree *lr = what->left->Do(this);
         test = pt;
         if (!lr)
             return NULL;
         test = pt->right;
-        //unit.Right(pt);
         Tree *rr = what->right->Do(this);
         test = pt;
         if (!rr)
@@ -860,13 +855,11 @@ Tree *ArgumentMatch::DoPostfix(Postfix *what)
         // Note that ordering is reverse compared to prefix, so that
         // the 'defined' names is set correctly
         test = pt->right;
-        //unit.Right(pt);
         Tree *rr = what->right->Do(this);
         test = pt;
         if (!rr)
             return NULL;
         test = pt->left;
-        //unit.Left(pt);
         Tree *lr = what->left->Do(this);
         test = pt;
         if (!lr)
@@ -1089,7 +1082,6 @@ Tree *CompileAction::DoBlock(Block *what)
     }
     
     // In other cases, we need to evaluate rewrites
-    //unit.Left(what);
     return Rewrites(what);
 }
 
@@ -1103,12 +1095,10 @@ Tree *CompileAction::DoInfix(Infix *what)
     if (what->name == "\n" || what->name == ";")
     {
         // For instruction list, string compile results together
-        //unit.Left(what);
         if (!what->left->Do(this))
             return NULL;
         if (Name *n = what->left->AsName())
             unit.CallEvaluate(n);
-        //unit.Right(what);
         if (!what->right->Do(this))
             return NULL;
         if (Name *m = what->right->AsName())
@@ -1126,8 +1116,6 @@ Tree *CompileAction::DoInfix(Infix *what)
     }
 
     // In all other cases, look up the rewrites
-    //unit.Left(what);
-    //unit.Right(what);
     return Rewrites(what);
 }
 
@@ -1137,8 +1125,6 @@ Tree *CompileAction::DoPrefix(Prefix *what)
 //    All prefix operations translate into a rewrite
 // ----------------------------------------------------------------------------
 {
-    //unit.Left(what);
-    //unit.Right(what);
     return Rewrites(what);
 }
 
@@ -1148,8 +1134,6 @@ Tree *CompileAction::DoPostfix(Postfix *what)
 //    All postfix operations translate into a rewrite
 // ----------------------------------------------------------------------------
 {
-    //unit.Left(what);
-    //unit.Right(what);
     return Rewrites(what);
 }
 

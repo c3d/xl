@@ -421,10 +421,8 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
     Value *result = storage[tree];
     if (!result)
     {
-        // Try to build a somewhat descriptive label for the tree
-        text label(*tree);
-
         // Create alloca to store the new form
+        text label(*tree);
         const char *clabel = label.c_str();
         result = data->CreateAlloca(compiler->treePtrTy, 0, clabel);
         storage[tree] = result;
