@@ -50,9 +50,9 @@ struct Postfix;                                 // Postfix: 3!
 struct Infix;                                   // Infix: A+B, newline
 struct Block;                                   // Block: (A), {A}
 struct Action;                                  // Action on trees
+struct Code;                                    // Code representation
 typedef ulong tree_position;                    // Position in context
 typedef std::vector<Tree *> tree_list;          // A list of trees
-typedef Tree *(*eval_fn) (Tree *);              // Compiled evaluation code
 
 
 // ============================================================================
@@ -116,8 +116,8 @@ struct Tree
 
     // Constructor and destructor
     Tree (kind k, tree_position pos = NOWHERE):
-        tag((pos<<KINDBITS) | k), code(NULL), type(NULL) {}
-    ~Tree() {}
+        tag((pos<<KINDBITS) | k), code(NULL) {}
+    ~Tree() { delete code; }
 
     // Perform recursive actions on a tree
     Tree *              Do(Action *action);
@@ -147,8 +147,7 @@ struct Tree
 
 public:
     ulong       tag;                            // Position + kind
-    eval_fn     code;                           // Compiled code
-    Tree *      type;                           // Type information if any
+    Code *      code;                           // Compiled code information
 };
 
 
@@ -186,7 +185,7 @@ struct Integer : Tree
 // ----------------------------------------------------------------------------
 {
     Integer(longlong i = 0, tree_position pos = NOWHERE):
-        Tree(INTEGER, pos), value(i) { code = xl_identity; }
+        Tree(INTEGER, pos), value(i) {}
     longlong            value;
     operator longlong()         { return value; }
 };
@@ -198,7 +197,7 @@ struct Real : Tree
 // ----------------------------------------------------------------------------
 {
     Real(double d = 0.0, tree_position pos = NOWHERE):
-        Tree(REAL, pos), value(d) { code = xl_identity; }
+        Tree(REAL, pos), value(d) {}
     double              value;
     operator double()           { return value; }
 };
@@ -210,8 +209,7 @@ struct Text : Tree
 // ----------------------------------------------------------------------------
 {
     Text(text t, text open="\"", text close="\"", tree_position pos=NOWHERE):
-        Tree(TEXT, pos), value(t), opening(open), closing(close)
-    { code = xl_identity; }
+        Tree(TEXT, pos), value(t), opening(open), closing(close) {}
     text                value;
     text                opening, closing;
     static text         textQuote, charQuote;

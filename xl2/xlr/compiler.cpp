@@ -83,7 +83,7 @@ Compiler::Compiler(kstring moduleName)
       integerTreeTy(NULL), integerTreePtrTy(NULL),
       realTreeTy(NULL), realTreePtrTy(NULL),
       prefixTreeTy(NULL), prefixTreePtrTy(NULL),
-      evalTy(NULL), evalFnTy(NULL),
+      evalTy(NULL), evalFnTy(NULL), codePtrTy(NULL),
       xl_evaluate(NULL), xl_same_text(NULL), xl_same_shape(NULL),
       xl_type_check(NULL),
       functions()
@@ -126,6 +126,10 @@ Compiler::Compiler(kstring moduleName)
     // systems which do not allow the program to dlopen itself.
     runtime->InstallLazyFunctionCreator(unresolved_external);
 
+    // Create the Code pointer type
+    PATypeHolder structCodeTy = OpaqueType::get();      // struct Code
+    codePtrTy = PointerType::get(structCodeTy, 0);      // Code *
+
     // Create the eval_fn type
     PATypeHolder structTreeTy = OpaqueType::get();      // struct Tree
     treePtrTy = PointerType::get(structTreeTy, 0);      // Tree *
@@ -138,8 +142,7 @@ Compiler::Compiler(kstring moduleName)
     // Create the Tree type
     std::vector<const Type *> treeElements;
     treeElements.push_back(LLVM_INTTYPE(ulong));        // tag
-    treeElements.push_back(evalFnTy);			// code
-    treeElements.push_back(treePtrTy);			// type
+    treeElements.push_back(codePtrTy);			// code
     treeTy = StructType::get(treeElements);		// struct Tree {}
     cast<OpaqueType>(structTreeTy.get())->refineAbstractTypeTo(treeTy);
     treeTy = cast<StructType> (structTreeTy.get());
@@ -149,14 +152,14 @@ Compiler::Compiler(kstring moduleName)
     integerElements.push_back(LLVM_INTTYPE(longlong));  // value
     integerTreeTy = StructType::get(integerElements);   // struct Integer{}
     integerTreePtrTy = PointerType::get(integerTreeTy,0); // Integer *
-#define INTEGER_VALUE_INDEX     3
+#define INTEGER_VALUE_INDEX     2
 
     // Create the Real type
     std::vector<const Type *> realElements = treeElements;
     realElements.push_back(Type::DoubleTy);             // value
     realTreeTy = StructType::get(realElements);         // struct Real{}
     realTreePtrTy = PointerType::get(realTreeTy, 0);    // Real *
-#define REAL_VALUE_INDEX        3
+#define REAL_VALUE_INDEX        2
 
     // Create the Prefix type (which we also use for Infix and Block)
     std::vector<const Type *> prefixElements = treeElements;
@@ -164,21 +167,22 @@ Compiler::Compiler(kstring moduleName)
     prefixElements.push_back(treePtrTy);                // Tree *
     prefixTreeTy = StructType::get(prefixElements);     // struct Prefix {}
     prefixTreePtrTy = PointerType::get(prefixTreeTy, 0);// Prefix *
-#define LEFT_VALUE_INDEX        3
-#define RIGHT_VALUE_INDEX       4
+#define LEFT_VALUE_INDEX        2
+#define RIGHT_VALUE_INDEX       3
 
     // Record the type names
     module->addTypeName("tree", treeTy);
-    module->addTypeName("treeptr", treePtrTy);
-    module->addTypeName("treeptrptr", treePtrPtrTy);
+    module->addTypeName("treePtr", treePtrTy);
+    module->addTypeName("treePtrPtr", treePtrPtrTy);
     module->addTypeName("integer", integerTreeTy);
-    module->addTypeName("integerptr", integerTreePtrTy);
+    module->addTypeName("integerPtr", integerTreePtrTy);
     module->addTypeName("real", realTreeTy);
-    module->addTypeName("realptr", realTreePtrTy);
+    module->addTypeName("realPtr", realTreePtrTy);
     module->addTypeName("eval", evalTy);
-    module->addTypeName("evalfn", evalFnTy);
+    module->addTypeName("evalFn", evalFnTy);
     module->addTypeName("prefix", prefixTreeTy);
-    module->addTypeName("prefixptr", prefixTreePtrTy);
+    module->addTypeName("prefixPtr", prefixTreePtrTy);
+    module->addTypeName("codePtr", codePtrTy);
 
     // Create a reference to the evaluation function
     Type *charPtrTy = PointerType::get(LLVM_INTTYPE(char), 0);
@@ -337,8 +341,11 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *src, tree_list parms)
     for (ulong p = 0; p <= parms.size(); p++)
         signature.push_back(treeTy);
     FunctionType *fnTy = FunctionType::get(treeTy, signature, false);
+    text label = "xl_eval";
+    IFTRACE(treelabels)
+        label = text(*src);
     function = Function::Create(fnTy, Function::InternalLinkage,
-                                "xl_eval", compiler->module);
+                                label.c_str(), compiler->module);
 
     // Save it in the compiler
     compiler->functions[src] = function;
@@ -588,7 +595,8 @@ llvm::Value *CompiledUnit::Invoke(Tree *subexpr, Tree *callee, tree_list args)
 // ----------------------------------------------------------------------------
 {
     // Check if the resulting form is a name or literal
-    if (callee->code == xl_identity)
+    kind k = callee->Kind();
+    if (k == INTEGER || k == REAL || k == TEXT)
         if (Value *known = Known(callee))
             return known;
         else

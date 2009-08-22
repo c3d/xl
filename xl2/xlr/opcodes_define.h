@@ -38,9 +38,10 @@
         Infix *rdecl = new Infix(":", new Name("r"), new Name(#t2));    \
         Infix *from = new Infix(symbol, ldecl, rdecl);                  \
         Name *to = new Name(symbol);                                    \
+        eval_fn fn = (eval_fn) xl_##name;                               \
         c->EnterRewrite(from, to);                                      \
-        to->code = (eval_fn) xl_##name;                                 \
-        compiler->EnterBuiltin("xl_" #name, from, to, to->code);        \
+        to->code = new Code(fn, c, NULL);                               \
+        compiler->EnterBuiltin("xl_" #name, from, to, fn);              \
     } while(0);
 
 #define PARM(symbol, type)                                      \
@@ -54,21 +55,22 @@
     {                                                                   \
         tree_list parameters;                                           \
         parms;                                                          \
+        eval_fn fn = (eval_fn) xl_##name;                               \
         if (parameters.size())                                          \
         {                                                               \
             Tree *parmtree = ParametersTree(parameters);                \
             Prefix *from = new Prefix(new Name(symbol), parmtree);      \
             Name *to = new Name(symbol);                                \
             c->EnterRewrite(from, to);                                  \
-            to->code = (eval_fn) xl_##name;                             \
-            compiler->EnterBuiltin("xl_" #name, from, to, to->code);    \
+            to->code = new Code(fn, c, NULL);                           \
+            compiler->EnterBuiltin("xl_" #name, from, to, fn);          \
         }                                                               \
         else                                                            \
         {                                                               \
             Name *n  = new Name(symbol);                                \
-            n->code = (eval_fn) xl_##name;                              \
+            n->code = new Code(fn, c, NULL);                            \
             c->EnterName(symbol, n);                                    \
-            compiler->EnterBuiltin("xl_" #name, n, n, n->code);         \
+            compiler->EnterBuiltin("xl_" #name, n, n, fn);              \
         }                                                               \
     } while(0);
 
@@ -80,8 +82,9 @@
         Tree *parmtree = ParametersTree(parameters);                    \
         Prefix *from = new Postfix(parmtree, new Name(symbol));         \
         Name *to = new Name(symbol);                                    \
+        eval_fn fn = (eval_fn) xl_##name;                               \
         c->EnterRewrite(from, to);                                      \
-        to->code = (eval_fn) xl_##name;                                 \
+        to->code = new Code(fn, c, NULL);                               \
         compiler->EnterBuiltin("xl_" #name, from, to, to->code);        \
     } while(0);
 
@@ -89,7 +92,7 @@
     do                                          \
     {                                           \
         Name *n = new Name(#symbol);            \
-        n->code = xl_identity;                  \
+        n->code = new Code(xl_identity, c);     \
         c->EnterName(#symbol, n);               \
         xl_##symbol = n;                        \
         compiler->EnterGlobal(n, &xl_##symbol); \
@@ -99,7 +102,8 @@
     do                                                  \
     {                                                   \
         Name *n = new Name(#symbol);                    \
-        n->code = (eval_fn) xl_##symbol;                \
+        eval_fn fn = (eval_fn) xl_##symbol;             \
+        n->code = new Code(fn, c);                      \
         c->EnterName(#symbol, n);                       \
         xl_##symbol##_name = n;                         \
         compiler->EnterGlobal(n, &xl_##symbol##_name);  \

@@ -83,6 +83,7 @@ public:
     llvm::PointerType         *prefixTreePtrTy;
     llvm::FunctionType        *evalTy;
     llvm::PointerType         *evalFnTy;
+    llvm::PointerType         *codePtrTy;
     llvm::Function            *xl_evaluate;
     llvm::Function            *xl_same_text;
     llvm::Function            *xl_same_shape;

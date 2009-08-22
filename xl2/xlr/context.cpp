@@ -168,7 +168,8 @@ Tree *Symbols::CompileAll(Tree *source)
     if (!result)
         return result;
 
-    eval_fn code = unit.Finalize();
+    eval_fn fn = unit.Finalize();
+    Code *code = new Code(fn, this, NULL);
     source->code = code;
     return source;
 }
@@ -183,11 +184,14 @@ Tree *Symbols::Run(Tree *code)
     if (!result)
         return result;
 
-    if (!result->code)
-        result = CompileAll(result);
+    if (result->Kind() >= NAME)
+    {
+        if (!result->code)
+            result = CompileAll(result);
 
-    assert(result->code);
-    result = result->code(code);
+        assert(result->code); assert(result->code->code);
+        result = result->code->code(code);
+    }
     return result;
 }
 
@@ -952,10 +956,6 @@ Tree *DeclarationAction::DoInfix(Infix *what)
     // Check if this is a rewrite declaration
     if (what->name == "->")
     {
-        // If the definition is a literal, make sure we still compile it
-        if (what->right->code == xl_identity)
-            what->right->code = NULL;
-
         // Enter the rewrite
         EnterRewrite(what->left, what->right);
         return what;
@@ -1442,7 +1442,8 @@ Tree *Rewrite::Compile(void)
 
     // Even if technically, this is not an 'eval_fn' (it has more args),
     // we still record it to avoid recompiling multiple times
-    eval_fn code = compile.unit.Finalize();
+    eval_fn fn = compile.unit.Finalize();
+    Code *code = new Code(fn, symbols, NULL);
     to->code = code;
 
     return to;

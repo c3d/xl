@@ -82,6 +82,7 @@ TRACE(eval)
 TRACE(code)
 TRACE(typecheck)
 TRACE(treelabels)
+TRACE(builtins)
 
 // Undefine for next use...
 #undef OPTVAR

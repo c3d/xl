@@ -28,6 +28,7 @@
 #include "renderer.h"
 #include "opcodes.h"
 #include "compiler.h"
+#include "options.h"
 #include <iostream>
 #include <sstream>
 #include <ctime>
