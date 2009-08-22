@@ -348,6 +348,132 @@ inline Postfix *Tree::AsPostfix()
     return NULL;
 }
 
+// ============================================================================
+// 
+//    Tree shape equality comparison
+// 
+// ============================================================================
+
+struct TreeMatch : Action
+// ----------------------------------------------------------------------------
+//   Check if two trees match in structure
+// ----------------------------------------------------------------------------
+{
+    TreeMatch (Tree *t): test(t) {}
+    Tree *DoInteger(Integer *what)
+    {
+        if (Integer *it = test->AsInteger())
+            if (it->value == what->value)
+                return what;
+        return NULL;
+    }
+    Tree *DoReal(Real *what)
+    {
+        if (Real *rt = test->AsReal())
+            if (rt->value == what->value)
+                return what;
+        return NULL;
+    }
+    Tree *DoText(Text *what)
+    {
+        if (Text *tt = test->AsText())
+            if (tt->value == what->value)
+                return what;
+        return NULL;
+    }
+    Tree *DoName(Name *what)
+    {
+        if (Name *nt = test->AsName())
+            if (nt->value == what->value)
+                return what;
+        return NULL;
+    }
+
+    Tree *DoBlock(Block *what)
+    {
+        // Test if we exactly match the block, i.e. the reference is a block
+        if (Block *bt = test->AsBlock())
+        {
+            if (bt->opening == what->opening &&
+                bt->closing == what->closing)
+            {
+                test = bt->child;
+                Tree *br = what->child->Do(this);
+                test = bt;
+                if (br)
+                    return br;
+            }
+        }
+        return NULL;
+    }
+    Tree *DoInfix(Infix *what)
+    {
+        if (Infix *it = test->AsInfix())
+        {
+            // Check if we match the tree, e.g. A+B vs 2+3
+            if (it->name == what->name)
+            {
+                test = it->left;
+                Tree *lr = what->left->Do(this);
+                test = it;
+                if (!lr)
+                    return NULL;
+                test = it->right;
+                Tree *rr = what->right->Do(this);
+                test = it;
+                if (!rr)
+                    return NULL;
+                return what;
+            }
+        }
+        return NULL;
+    }
+    Tree *DoPrefix(Prefix *what)
+    {
+        if (Prefix *pt = test->AsPrefix())
+        {
+            // Check if we match the tree, e.g. f(A) vs. f(2)
+            test = pt->left;
+            Tree *lr = what->left->Do(this);
+            test = pt;
+            if (!lr)
+                return NULL;
+            test = pt->right;
+            Tree *rr = what->right->Do(this);
+            test = pt;
+            if (!rr)
+                return NULL;
+            return what;
+        }
+        return NULL;
+    }
+    Tree *DoPostfix(Postfix *what)
+    {
+        if (Postfix *pt = test->AsPostfix())
+        {
+            // Check if we match the tree, e.g. A! vs 2!
+            test = pt->right;
+            Tree *rr = what->right->Do(this);
+            test = pt;
+            if (!rr)
+                return NULL;
+            test = pt->left;
+            Tree *lr = what->left->Do(this);
+            test = pt;
+            if (!lr)
+                return NULL;
+            return what;
+        }
+        return NULL;
+    }
+    Tree *Do(Tree *what)
+    {
+        return NULL;
+    }
+
+    Tree *      test;
+};
+
 XL_END
 
 #endif // TREE_H

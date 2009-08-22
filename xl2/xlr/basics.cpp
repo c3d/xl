@@ -29,6 +29,7 @@
 #include "opcodes.h"
 #include "compiler.h"
 #include "options.h"
+#include "runtime.h"
 #include <iostream>
 #include <sstream>
 #include <ctime>
