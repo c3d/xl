@@ -422,19 +422,7 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
     if (!result)
     {
         // Try to build a somewhat descriptive label for the tree
-        text label;
-        switch (tree->Kind())
-        {
-        case INTEGER:       label = "integer"; break;
-        case REAL:          label = "real"; break;
-        case TEXT:          label = "text"; break;
-        case NAME:          label = "name." + tree->AsName()->value; break;
-        case BLOCK:         label = "block"; break;
-        case PREFIX:        label = "prefix"; break;
-        case POSTFIX:       label = "postfix"; break;
-        case INFIX:         label = "infix"; break;
-        default:            label = "unknown"; break;
-        }
+        text label(*tree);
 
         // Create alloca to store the new form
         const char *clabel = label.c_str();
@@ -719,9 +707,14 @@ Value *CompiledUnit::Copy(Tree *source, Tree *dest)
 //    Copy data from source to destination
 // ----------------------------------------------------------------------------
 {
-    Value *result = Known(source);
-    Value *ptr = NeedStorage(dest);
+    Value *result = Known(source); assert(result);
+    Value *ptr = NeedStorage(dest); assert(ptr);
     code->CreateStore(result, ptr);
+
+    Value *doneFlag = NeedLazy(dest);
+    Value *trueFlag = ConstantInt::get(Type::Int1Ty, 1);
+    code->CreateStore(trueFlag, doneFlag);
+
     return result;
 }
 
