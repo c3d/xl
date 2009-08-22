@@ -510,6 +510,10 @@ Tree *ParameterMatch::DoInfix(Infix *what)
         return result;
     }
 
+    // If this is the first one, this is what we define
+    if (!defined)
+        defined = what;
+
     // Otherwise, test left and right
     Tree *lr = what->left->Do(this);
     if (!lr)
@@ -526,12 +530,20 @@ Tree *ParameterMatch::DoPrefix(Prefix *what)
 //   For prefix expressions, simply test left then right
 // ----------------------------------------------------------------------------
 {
+    Infix *defined_infix = defined->AsInfix();
+    if (defined_infix)
+        defined = NULL;
+
     Tree *lr = what->left->Do(this);
     if (!lr)
         return NULL;
     Tree *rr = what->right->Do(this);
     if (!rr)
         return NULL;
+
+    if (!defined && defined_infix)
+        defined = defined_infix;
+
     return what;
 }
 
@@ -829,8 +841,8 @@ Tree *ArgumentMatch::DoPrefix(Prefix *what)
         test = pt;
         if (!rr)
             return NULL;
-            if (!defined && defined_infix)
-                defined = defined_infix;
+        if (!defined && defined_infix)
+            defined = defined_infix;
         return what;
     }
     return NULL;
