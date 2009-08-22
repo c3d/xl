@@ -465,7 +465,7 @@ Value *CompiledUnit::ConstantInteger(Integer *what)
     if (!result)
     {
         Value *imm = ConstantInt::get(LLVM_INTTYPE(longlong), what->value);
-        result = code->CreateCall(compiler->xl_new_integer, imm);
+        result = data->CreateCall(compiler->xl_new_integer, imm);
         value[what] = result;
     }
     return result;
@@ -481,7 +481,7 @@ Value *CompiledUnit::ConstantReal(Real *what)
     if (!result)
     {
         Value *imm = ConstantFP::get(Type::DoubleTy, what->value);
-        result = code->CreateCall(compiler->xl_new_real, imm);
+        result = data->CreateCall(compiler->xl_new_real, imm);
         value[what] = result;
     }
     return result;
@@ -497,19 +497,19 @@ Value *CompiledUnit::ConstantText(Text *what)
     if (!result)
     {
         Constant *txtArray = ConstantArray::get(what->value);
-        Value *txtPtr = code->CreateConstGEP1_32(txtArray, 0);
+        Value *txtPtr = data->CreateConstGEP1_32(txtArray, 0);
 
         // Check if this is a normal text, "Foo"
         if (what->opening == Text::textQuote &&
             what->closing == Text::textQuote)
         {
-            result = code->CreateCall(compiler->xl_new_text, txtPtr);
+            result = data->CreateCall(compiler->xl_new_text, txtPtr);
         }
         // Check if this is is a normal character description, 'A'
         else if (what->opening == Text::charQuote &&
                  what->closing == Text::charQuote)
         {
-            result = code->CreateCall(compiler->xl_new_character, txtPtr);
+            result = data->CreateCall(compiler->xl_new_character, txtPtr);
         }
         else
         {
@@ -517,8 +517,8 @@ Value *CompiledUnit::ConstantText(Text *what)
             Constant *closeArray = ConstantArray::get(what->opening);
             Value *openPtr = code->CreateConstGEP1_32(openArray, 0);
             Value *closePtr = code->CreateConstGEP1_32(closeArray, 0);
-            result = code->CreateCall3(compiler->xl_new_xtext,
-                                          txtPtr, openPtr, closePtr);
+            result = data->CreateCall3(compiler->xl_new_xtext,
+                                       txtPtr, openPtr, closePtr);
         }
         value[what] = result;
     }
