@@ -294,6 +294,8 @@ Value *Compiler::EnterConstant(Tree *constant)
     case TEXT:    name = "xltext"; break;
     default:                       break;
     }
+    IFTRACE(treelabels)
+        name += "[" + text(*constant) + "]";
     GlobalValue *result = new GlobalVariable (treePtrTy, isConstant,
                                               GlobalVariable::InternalLinkage,
                                               NULL, name, module);
@@ -343,7 +345,7 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *src, tree_list parms)
     FunctionType *fnTy = FunctionType::get(treeTy, signature, false);
     text label = "xl_eval";
     IFTRACE(treelabels)
-        label = text(*src);
+        label += "[" + text(*src) + "]";
     function = Function::Create(fnTy, Function::InternalLinkage,
                                 label.c_str(), compiler->module);
 
@@ -429,9 +431,9 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
     if (!result)
     {
         // Create alloca to store the new form
-        text label = "locl";
+        text label = "loc";
         IFTRACE(treelabels)
-            label = text(*tree);
+            label += "[" + text(*tree) + "]";
         const char *clabel = label.c_str();
         result = data->CreateAlloca(compiler->treePtrTy, 0, clabel);
         storage[tree] = result;
@@ -519,6 +521,23 @@ Value *CompiledUnit::ConstantText(Text *what)
 }
 
 
+Value *CompiledUnit::ConstantTree(Tree *what)
+// ----------------------------------------------------------------------------
+//    Generate a constant tree
+// ----------------------------------------------------------------------------
+{
+    Value *result = Known(what, knowGlobals);
+    if (!result)
+    {
+        result = compiler->EnterConstant(what);
+        result = code->CreateLoad(result, "treek");
+        if (storage.count(what))
+            code->CreateStore(result, storage[what]);
+    }
+    return result;
+}
+
+
 Value *CompiledUnit::NeedLazy(Tree *subexpr)
 // ----------------------------------------------------------------------------
 //   Record that we need a 'computed' flag for lazy evaluation of the subexpr
@@ -527,7 +546,10 @@ Value *CompiledUnit::NeedLazy(Tree *subexpr)
     Value *result = computed[subexpr];
     if (!result)
     {
-        result = data->CreateAlloca(Type::Int1Ty, 0, "computed");
+        text label = "computed";
+        IFTRACE(treelabels)
+            label += "[" + text(*subexpr) + "]";
+        result = data->CreateAlloca(Type::Int1Ty, 0, label.c_str());
         Value *falseFlag = ConstantInt::get(Type::Int1Ty, 0);
         data->CreateStore(falseFlag, result);
         computed[subexpr] = result;
@@ -575,17 +597,14 @@ BasicBlock *CompiledUnit::BeginLazy(Tree *subexpr)
 }
 
 
-llvm::Value *CompiledUnit::EndLazy(Tree *subexpr,
-                                   llvm::BasicBlock *skip)
+void CompiledUnit::EndLazy(Tree *subexpr,
+                           llvm::BasicBlock *skip)
 // ----------------------------------------------------------------------------
 //   Finish lazy evaluation of a block of code
 // ----------------------------------------------------------------------------
 {
     code->CreateBr(skip);
     code->SetInsertPoint(skip);
-    Value *ptr = storage[subexpr]; assert(ptr);
-    Value *result = code->CreateLoad(ptr, "final");
-    return result;
 }
 
 
@@ -597,14 +616,25 @@ llvm::Value *CompiledUnit::Invoke(Tree *subexpr, Tree *callee, tree_list args)
     // Check if the resulting form is a name or literal
     kind k = callee->Kind();
     if (k == INTEGER || k == REAL || k == TEXT)
+    {
         if (Value *known = Known(callee))
+        {
+            MarkComputed(subexpr, known);
             return known;
+        }
         else
+        {
             std::cerr << "No value for xl_identity tree " << callee << '\n';
+        }
+    }
 
     Function *toCall = compiler->functions[callee]; assert(toCall);
 
+    // Add the 'self' argument
     std::vector<Value *> argV;
+    Value *defaultVal = ConstantPointerNull::get(compiler->treePtrTy);
+    argV.push_back(defaultVal);
+
     tree_list::iterator a;
     for (a = args.begin(); a != args.end(); a++)
     {

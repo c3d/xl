@@ -117,11 +117,12 @@ struct CompiledUnit
     llvm::Value *       ConstantInteger(Integer *what);
     llvm::Value *       ConstantReal(Real *what);
     llvm::Value *       ConstantText(Text *what);
+    llvm::Value *       ConstantTree(Tree *what);
 
     llvm::Value *       NeedLazy(Tree *subexpr);
     llvm::Value *       MarkComputed(Tree *subexpr, llvm::Value *value);
     llvm::BasicBlock *  BeginLazy(Tree *subexpr);
-    llvm::Value *       EndLazy(Tree *subexpr, llvm::BasicBlock *skip);
+    void                EndLazy(Tree *subexpr, llvm::BasicBlock *skip);
 
     llvm::BasicBlock *  NeedTest();
     llvm::Value *       Left(Tree *);

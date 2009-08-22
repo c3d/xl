@@ -1071,18 +1071,19 @@ Tree *CompileAction::DoName(Name *what)
         if (compiler->functions.count(result))
         {
             // Case of "Name -> Foo": Invoke Name
-            tree_list selfArg;
+            tree_list noArgs;
             unit.NeedStorage(what);
-            selfArg.push_back(what);
-            unit.Invoke(what, result, selfArg);
+            unit.Invoke(what, result, noArgs);
             return what;
         }
-        else if (unit.value.count(result))
+        else if (false && unit.value.count(result))
         {
+            // DISABLED
             // Case of "Foo(A,B) -> B" with B: evaluate B
             unit.CallEvaluate(result);
             return result;
         }
+
         return result;
     }
     return context->Error("Name '$1' does not exist", what);
@@ -1241,12 +1242,9 @@ Tree * CompileAction::Rewrites(Tree *what)
                             }
                         }
 
-                        // Push the "self" argument as first arg
-                        tree_list argsList;
-                        argsList.push_back(what);
-
                         // Map the arguments we found in parameter order
                         // (actually, in reverse order, which is what we want)
+                        tree_list argsList;
                         tree_list::iterator p;
                         tree_list &order = matchParms.order;
                         for (p = order.begin(); p != order.end(); p++)

@@ -95,7 +95,7 @@ bool xl_type_check(Tree *value, Tree *type)
 {
     IFTRACE(typecheck)
         std::cerr << "Type check " << value << " against " << type << '\n';
-    if (!type->code || !type->code->code)
+    if (!value || !type->code || !type->code->code)
         return false;
     Tree *afterTypeCast = type->code->code(value);
     if (afterTypeCast != value)
