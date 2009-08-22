@@ -1078,12 +1078,19 @@ Tree *CompileAction::DoBlock(Block *what)
 //   Optimize away indent or parenthese blocks, evaluate others
 // ----------------------------------------------------------------------------
 {
-    unit.Left(what);
     if ((what->opening == Block::indent && what->closing == Block::unindent) ||
         (what->opening == "(" && what->closing == ")"))
-        return what->child->Do(this);
+    {
+        unit.Copy(what, what->child);
+        Tree *result = what->child->Do(this);
+        if (!result)
+            return NULL;
+        unit.Copy(what->child, what);
+        return what;
+    }
     
     // In other cases, we need to evaluate rewrites
+    unit.Left(what);
     return Rewrites(what);
 }
 

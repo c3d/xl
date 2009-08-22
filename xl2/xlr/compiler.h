@@ -125,6 +125,7 @@ struct CompiledUnit
     llvm::BasicBlock *  NeedTest();
     llvm::Value *       Left(Tree *);
     llvm::Value *       Right(Tree *);
+    llvm::Value *       Copy(Tree *src, Tree *dst);
     llvm::Value *       Invoke(Tree *subexpr, Tree *callee, tree_list args);
     llvm::Value *       CallEvaluate(Tree *);
 

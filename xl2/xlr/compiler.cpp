@@ -475,7 +475,7 @@ Value *CompiledUnit::Known(Tree *tree, uint which)
 
 Value *CompiledUnit::ConstantInteger(Integer *what)
 // ----------------------------------------------------------------------------
-//    Generate a call to xl_new_integer to build an Integer tree
+//    Generate an Integer tree
 // ----------------------------------------------------------------------------
 {
     Value *result = Known(what, knowGlobals);
@@ -492,7 +492,7 @@ Value *CompiledUnit::ConstantInteger(Integer *what)
 
 Value *CompiledUnit::ConstantReal(Real *what)
 // ----------------------------------------------------------------------------
-//    Generate a call to xl_new_real to build a Real tree
+//    Generate a Real tree 
 // ----------------------------------------------------------------------------
 {
     Value *result = Known(what, knowGlobals);
@@ -509,7 +509,7 @@ Value *CompiledUnit::ConstantReal(Real *what)
 
 Value *CompiledUnit::ConstantText(Text *what)
 // ----------------------------------------------------------------------------
-//    Generate a text with the same properaties as the input
+//    Generate a Text tree
 // ----------------------------------------------------------------------------
 {
     Value *result = Known(what, knowGlobals);
@@ -710,6 +710,18 @@ Value *CompiledUnit::Right(Tree *tree)
         Context::context->Error("Internal: Using right of uncompiled '$1'",
                                 tree);
     }
+    return result;
+}
+
+
+Value *CompiledUnit::Copy(Tree *source, Tree *dest)
+// ----------------------------------------------------------------------------
+//    Copy data from source to destination
+// ----------------------------------------------------------------------------
+{
+    Value *result = Known(source);
+    Value *ptr = NeedStorage(dest);
+    code->CreateStore(result, ptr);
     return result;
 }
 
