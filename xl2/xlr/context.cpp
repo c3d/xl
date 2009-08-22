@@ -1066,11 +1066,18 @@ Tree *CompileAction::DoName(Name *what)
         Compiler *compiler = context->compiler;
         if (compiler->functions.count(result))
         {
+            // Case of "Name -> Foo": Invoke Name
             tree_list selfArg;
             unit.NeedStorage(what);
             selfArg.push_back(what);
             unit.Invoke(what, result, selfArg);
             return what;
+        }
+        else if (unit.value.count(result))
+        {
+            // Case of "Foo(A,B) -> B" with B: evaluate B
+            unit.CallEvaluate(result);
+            return result;
         }
         return result;
     }
@@ -1109,13 +1116,8 @@ Tree *CompileAction::DoInfix(Infix *what)
         // For instruction list, string compile results together
         if (!what->left->Do(this))
             return NULL;
-        if (Name *n = what->left->AsName())
-            unit.CallEvaluate(n);
         if (!what->right->Do(this))
             return NULL;
-        if (Name *m = what->right->AsName())
-            unit.CallEvaluate(m);
-
         unit.Copy(what->right, what);
         return what;
     }
@@ -1439,7 +1441,7 @@ Tree *Rewrite::Compile(void)
     eval_fn code = compile.unit.Finalize();
     to->code = code;
 
-    return result;
+    return to;
 }
 
 XL_END
