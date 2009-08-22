@@ -128,8 +128,6 @@ Tree *Symbols::Compile(Tree *source, CompiledUnit &unit, bool nullIfBad)
 // ----------------------------------------------------------------------------
 //    Return an optimized version of the source tree, ready to run
 // ----------------------------------------------------------------------------
-//    This associates an eval_fn to the tree, i.e. code that takes a tree
-//    as input and returns a tree as output.
 {
     // Record rewrites and data declarations in the current context
     Symbols parms(this);
@@ -150,7 +148,7 @@ Tree *Symbols::Compile(Tree *source, CompiledUnit &unit, bool nullIfBad)
     }
 
     // If we compiled successfully, get the code and store it
-    return source;
+    return result;
 }
 
 
@@ -158,6 +156,8 @@ Tree *Symbols::CompileAll(Tree *source)
 // ----------------------------------------------------------------------------
 //   Compile a top-level tree
 // ----------------------------------------------------------------------------
+//    This associates an eval_fn to the tree, i.e. code that takes a tree
+//    as input and returns a tree as output.
 {
     Context *context = Context::context;
     Compiler *compiler = context->compiler;
@@ -579,13 +579,17 @@ Tree *ArgumentMatch::Compile(Tree *source)
 {
     // Compile the code
     if (!unit.Known(source))
+    {
         source = symbols->Compile(source, unit, true);
-    if (!source)
-        return NULL; // No match
- 
-    // Generate code to evaluate the argument
-    LocalSave<bool> nib(compile->nullIfBad, true);
-    source = source->Do(compile);
+        if (!source)
+            return NULL; // No match
+    }
+    else
+    {
+        // Generate code to evaluate the argument
+        LocalSave<bool> nib(compile->nullIfBad, true);
+        source = source->Do(compile);
+    }
     return source;
 }
 
