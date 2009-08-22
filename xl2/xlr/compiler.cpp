@@ -478,9 +478,14 @@ Value *CompiledUnit::ConstantInteger(Integer *what)
 //    Generate a call to xl_new_integer to build an Integer tree
 // ----------------------------------------------------------------------------
 {
-    Value *result = Known(what);
+    Value *result = Known(what, knowGlobals);
     if (!result)
+    {
         result = compiler->EnterConstant(what);
+        result = code->CreateLoad(result, "intk");
+        if (storage.count(what))
+            code->CreateStore(result, storage[what]);
+    }
     return result;
 }
 
@@ -490,9 +495,14 @@ Value *CompiledUnit::ConstantReal(Real *what)
 //    Generate a call to xl_new_real to build a Real tree
 // ----------------------------------------------------------------------------
 {
-    Value *result = Known(what);
+    Value *result = Known(what, knowGlobals);
     if (!result)
+    {
         result = compiler->EnterConstant(what);
+        result = code->CreateLoad(result, "realk");
+        if (storage.count(what))
+            code->CreateStore(result, storage[what]);
+    }
     return result;
 }
 
@@ -502,9 +512,14 @@ Value *CompiledUnit::ConstantText(Text *what)
 //    Generate a text with the same properaties as the input
 // ----------------------------------------------------------------------------
 {
-    Value *result = Known(what);
+    Value *result = Known(what, knowGlobals);
     if (!result)
+    {
         result = compiler->EnterConstant(what);
+        result = code->CreateLoad(result, "textk");
+        if (storage.count(what))
+            code->CreateStore(result, storage[what]);
+    }
     return result;
 }
 
