@@ -1095,6 +1095,10 @@ Tree *CompileAction::DoInfix(Infix *what)
             return NULL;
         if (Name *m = what->right->AsName())
             unit.CallEvaluate(m);
+
+        llvm::Value *result = unit.Known(what->right);
+        if (result)
+            unit.MarkComputed(what, result);
         return what;
     }
 
