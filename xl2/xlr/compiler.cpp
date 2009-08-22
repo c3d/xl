@@ -418,8 +418,12 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
 //    Allocate storage for a given tree
 // ----------------------------------------------------------------------------
 {
-    Value *result = storage[tree];
-    if (!result)
+    Value *result = NULL;
+    if (storage.count(tree))
+    {
+        result = storage[tree];
+    }
+    else
     {
         // Try to build a somewhat descriptive label for the tree
         text label;
@@ -439,12 +443,13 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
         // Create alloca to store the new form
         const char *clabel = label.c_str();
         result = data->CreateAlloca(compiler->treePtrTy, 0, clabel);
-        storage[tree] = result;
 
         // If there is an initial value for that tree, store that
         Value *initval = Known(tree, data);
         if (initval)
             data->CreateStore(initval, result);
+
+        storage[tree] = result;
     }
 
     return result;
