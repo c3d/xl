@@ -25,10 +25,12 @@
 
 #include <sstream>
 #include <cassert>
+#include <iostream>
 #include "tree.h"
 #include "context.h"
 #include "renderer.h"
 #include "opcodes.h"
+#include "options.h"
 
 XL_BEGIN
 
@@ -383,6 +385,8 @@ extern "C"
     //   Check if value has the type of 'type'
     // ------------------------------------------------------------------------
     {
+        IFTRACE(typecheck)
+            std::cerr << "Type check " << value << " against " << type << '\n';
         if (!type->code)
             return false;
         Tree *afterTypeCast = type->code(value);

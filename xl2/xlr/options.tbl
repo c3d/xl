@@ -80,6 +80,7 @@ TRACE(memory)
 TRACE(rewrite)
 TRACE(eval)
 TRACE(code)
+TRACE(typecheck)
 
 // Undefine for next use...
 #undef OPTVAR
