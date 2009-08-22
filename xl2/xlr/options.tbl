@@ -81,6 +81,7 @@ TRACE(rewrite)
 TRACE(eval)
 TRACE(code)
 TRACE(typecheck)
+TRACE(treelabels)
 
 // Undefine for next use...
 #undef OPTVAR
