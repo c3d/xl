@@ -418,12 +418,8 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
 //    Allocate storage for a given tree
 // ----------------------------------------------------------------------------
 {
-    Value *result = NULL;
-    if (storage.count(tree))
-    {
-        result = storage[tree];
-    }
-    else
+    Value *result = storage[tree];
+    if (!result)
     {
         // Try to build a somewhat descriptive label for the tree
         text label;
@@ -443,12 +439,6 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
         // Create alloca to store the new form
         const char *clabel = label.c_str();
         result = data->CreateAlloca(compiler->treePtrTy, 0, clabel);
-
-        // If there is an initial value for that tree, store that
-        Value *initval = Known(tree, data);
-        if (initval)
-            data->CreateStore(initval, result);
-
         storage[tree] = result;
     }
 
@@ -456,30 +446,28 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
 }
 
 
-Value *CompiledUnit::Known(Tree *tree, IRBuilder<> *c)
+Value *CompiledUnit::Known(Tree *tree, uint which)
 // ----------------------------------------------------------------------------
 //   Check if the tree has a known local or global value
 // ----------------------------------------------------------------------------
 {
     Value *result = NULL;
-    if (!c)
-        c = code;
-    if (value.count(tree) > 0)
+    if ((which & knowLocals) && storage.count(tree) > 0)
+    {
+        // Value is stored in a local variable
+        result = code->CreateLoad(storage[tree], "loc");
+    }
+    else if ((which & knowValues) && value.count(tree) > 0)
     {
         // Immediate value of some sort, use that
         result = value[tree];
     }
-    else if (storage.count(tree) > 0)
-    {
-        // Value is a variable
-        result = c->CreateLoad(storage[tree], "adat");
-    }
-    else
+    else if (which & knowGlobals)
     {
         // Check if this is a global
         result = compiler->Known(tree);
         if (result)
-            result = c->CreateLoad(result, "gdat");
+            result = code->CreateLoad(result, "glob");
     }
     return result;
 }
@@ -650,17 +638,18 @@ Value *CompiledUnit::Left(Tree *tree)
         return result;
 
     // Check that we already have a value for the given tree
-    Value *parent = Known(tree, data);
+    Value *parent = Known(tree);
     if (parent)
     {
+        Value *ptr = NeedStorage(prefix->left);
+
         // WARNING: This relies on the layout of all nodes beginning the same
-        Value *pptr = data->CreateBitCast(parent, compiler->prefixTreePtrTy,
+        Value *pptr = code->CreateBitCast(parent, compiler->prefixTreePtrTy,
                                           "pfxl");
-        result = data->CreateConstGEP2_32(pptr, 0,
+        result = code->CreateConstGEP2_32(pptr, 0,
                                           LEFT_VALUE_INDEX, "lptr");
-        result = data->CreateLoad(result, "left");
-        assert(!value[prefix->left]);
-        value[prefix->left] = result;
+        result = code->CreateLoad(result, "left");
+        code->CreateStore(result, ptr);
     }
     else
     {
@@ -688,17 +677,18 @@ Value *CompiledUnit::Right(Tree *tree)
         return result;
 
     // Check that we already have a value for the given tree
-    Value *parent = Known(tree, data);
+    Value *parent = Known(tree);
     if (parent)
     {
+        Value *ptr = NeedStorage(prefix->right);
+
         // WARNING: This relies on the layout of all nodes beginning the same
-        Value *pptr = data->CreateBitCast(parent, compiler->prefixTreePtrTy,
+        Value *pptr = code->CreateBitCast(parent, compiler->prefixTreePtrTy,
                                           "pfxr");
-        result = data->CreateConstGEP2_32(pptr, 0,
+        result = code->CreateConstGEP2_32(pptr, 0,
                                           RIGHT_VALUE_INDEX, "rptr");
-        result = data->CreateLoad(result, "right");
-        assert(!value[prefix->right]);
-        value[prefix->right] = result;
+        result = code->CreateLoad(result, "right");
+        code->CreateStore(result, ptr);
     }
     else
     {
