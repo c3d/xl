@@ -77,6 +77,9 @@ int main(int argc, char **argv)
     {
         XL::Parser parser (cmd.c_str(), syntax, positions, errors);
         XL::Tree *tree = parser.Parse();
+        if (!tree)
+            break;           // File read error, message already emitted
+
         context.Root(tree);
         context.CollectGarbage();
         IFTRACE(source)
