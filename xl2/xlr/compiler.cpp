@@ -586,12 +586,13 @@ llvm::Value *CompiledUnit::Invoke(Tree *subexpr, Tree *callee, tree_list args)
 // ----------------------------------------------------------------------------
 {
     // Check if the resulting form is a name or literal
-    if (args.size() == 0)
+    if (callee->code == xl_identity)
         if (Value *known = Known(callee))
             return known;
+        else
+            std::cerr << "No value for xl_identity tree " << callee << '\n';
 
-    Function *toCall = compiler->functions[callee];
-    assert(toCall);
+    Function *toCall = compiler->functions[callee]; assert(toCall);
 
     std::vector<Value *> argV;
     tree_list::iterator a;
@@ -880,10 +881,8 @@ BasicBlock *CompiledUnit::TypeTest(Tree *value, Tree *type)
 //   Test if the given value has the given type
 // ----------------------------------------------------------------------------
 {
-    Value *valueVal = Known(value);
-    Value *typeVal = Known(type);
-    assert(valueVal);
-    assert(typeVal);
+    Value *valueVal = Known(value);     assert(valueVal);
+    Value *typeVal = Known(type);       assert(typeVal);
 
     // Where we go if the tests fail
     BasicBlock *notGood = NeedTest();

@@ -1059,9 +1059,21 @@ Tree *CompileAction::DoName(Name *what)
 // ----------------------------------------------------------------------------
 {
     // Normally, the name should have been declared in ParameterMatch
-    if (Tree *result = symbols->Named(what->value))
-        return result;
     Context *context = Context::context;
+    if (Tree *result = symbols->Named(what->value))
+    {
+        // Check if there is code we need to call
+        Compiler *compiler = context->compiler;
+        if (compiler->functions.count(result))
+        {
+            tree_list selfArg;
+            unit.NeedStorage(what);
+            selfArg.push_back(what);
+            unit.Invoke(what, result, selfArg);
+            return what;
+        }
+        return result;
+    }
     return context->Error("Name '$1' does not exist", what);
 }
 
@@ -1077,7 +1089,7 @@ Tree *CompileAction::DoBlock(Block *what)
         Tree *result = what->child->Do(this);
         if (!result)
             return NULL;
-        unit.Copy(what->child, what);
+        unit.Copy(result, what);
         return what;
     }
     

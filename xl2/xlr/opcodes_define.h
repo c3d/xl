@@ -68,6 +68,7 @@
             Name *n  = new Name(symbol);                                \
             n->code = (eval_fn) xl_##name;                              \
             c->EnterName(symbol, n);                                    \
+            compiler->EnterBuiltin("xl_" #name, n, n, n->code);         \
         }                                                               \
     } while(0);
 
