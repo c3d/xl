@@ -908,7 +908,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
             return context->Error("Expected a name, got '$1' ", what->left);
 
         // Check if the name already exists
-        if (Tree *existing = symbols->Named(varName->value))
+        if (Tree *existing = rewrite->Named(varName->value))
             return context->Error("Name '$1' already exists as '$2'",
                                   what->left, existing);
 
