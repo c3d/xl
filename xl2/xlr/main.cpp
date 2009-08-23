@@ -137,8 +137,6 @@ int Main::Run()
             tree = context.Run(runnable);
         }
 
-        if (isBuiltin)
-            isBuiltin = false;
         if (file != files.begin() || options.verbose)
         {
             if (options.verbose)

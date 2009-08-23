@@ -99,7 +99,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     provider = new ExistingModuleProvider(module);
 
     // Select "fast JIT" if optimize level is 0, optimizing JIT otherwise
-    if (command_line_options->optimize_level == 0)
+    if (optimize_level == 0)
         runtime = ExecutionEngine::create(provider, false, NULL,
                                           /* false */ CodeGenOpt::None);
     else
@@ -375,10 +375,10 @@ void Compiler::FreeResources(Tree *tree)
 {
     if (functions.count(tree) > 0 && closet.count(tree) == 0)
     {
-        std::cerr << "Deleting resources for " << tree << "\n";
+        std::cerr << "Deleting resources for tree\n";
         Function *f = functions[tree];
         runtime->freeMachineCodeForFunction(f);
-        delete f;
+        // delete f;  Seems to crash, not sure why
         functions.erase(tree);
     }
 }
