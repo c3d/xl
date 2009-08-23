@@ -199,17 +199,35 @@ Tree *Symbols::CompileCall(text callee, tree_list &arglist)
             // Replace arguments in place if necessary
             Prefix *pfx = previous->AsPrefix();
             Tree **args = &pfx->right;
-            while (*args && --arity)
+            while (*args && arity--)
             {
-                Infix *infix = (*args)->AsInfix();
-                if (Real *rt = infix->right->AsReal())
-                    if (Real *rs = arglist[arity]->AsReal())
+                Tree *value = arglist[arity];
+                Tree *existing = *args;
+                if (arity)
+                {
+                    Infix *infix = existing->AsInfix();
+                    args = &infix->left;
+                    existing = infix->right;
+                } 
+                if (Real *rs = value->AsReal())
+                    if (Real *rt = existing->AsReal())
                         rt->value = rs->value;
-                args = &infix->left;
+                    else
+                        Error("Real '$1' cannot replace non-real '$2'",
+                              value, existing);
+                else if (Integer *is = value->AsInteger())
+                    if (Integer *it = existing->AsInteger())
+                        it->value = is->value;
+                    else
+                        Error("Integer '$1' cannot replace non-integer '$2'",
+                              value, existing);
+                else if (Text *ts = value->AsText())
+                    if (Text *tt = existing->AsText())
+                        tt->value = ts->value;
+                    else
+                        Error("Text '$1' cannot replace non-text '$2'",
+                              value, existing);
             }
-            if (Real *rt = (*args)->AsReal())
-                if (Real *rs = arglist[arity]->AsReal())
-                    rt->value = rs->value;
         }
 
         // Call the previously compiled code

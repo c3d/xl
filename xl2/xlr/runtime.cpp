@@ -416,6 +416,20 @@ Tree *xl_call(text name, double x, double y, double w, double h)
 }
 
 
+Tree *xl_call(text name, text arg)
+// ----------------------------------------------------------------------------
+//   Invoke the tree with the given name
+// ----------------------------------------------------------------------------
+{
+    tree_list args;
+    args.push_back(new Text(arg));
+    Tree *callee = Context::context->CompileCall(name, args);
+    if (callee && callee->code)
+        callee = callee->code(callee);
+    return callee;
+}
+
+
 Tree *xl_load(text name)
 // ----------------------------------------------------------------------------
 //    Load a file from disk
