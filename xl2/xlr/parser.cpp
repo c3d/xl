@@ -489,14 +489,20 @@ Tree *Parser::Parse(text closing)
 
             // Check if new statement
             if (!is_expression)
+            {
                 if (right->Kind() != BLOCK)
+                {
                     if (result_priority > statement_priority)
+                    {
                         if (stack.size() == 0)
                             result_priority = statement_priority;
                         else
                             if (stack.back().priority < statement_priority)
                                 result_priority = statement_priority;
-            
+                    }
+                }
+            }
+
             // Push a recognized prefix op
             stack.push_back(Pending(prefix,result,result_priority,pos));
             result = right;

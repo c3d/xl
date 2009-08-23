@@ -367,10 +367,12 @@ bool Renderer::IsSubFunctionInfix(Tree *test)
 // ----------------------------------------------------------------------------
 {
     if (Infix *it = test->AsInfix())
+    {
         if (syntax.infix_priority.count(it->name) <= 0)
             return true;
         else if (syntax.infix_priority[it->name] < syntax.function_priority)
             return true;
+    }
     return false;
 }
 
