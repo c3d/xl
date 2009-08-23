@@ -615,9 +615,9 @@ Value *CompiledUnit::ConstantTree(Tree *what)
     if (!result)
     {
         result = compiler->EnterConstant(what);
-        result = code->CreateLoad(result, "treek");
+        result = data->CreateLoad(result, "treek");
         if (storage.count(what))
-            code->CreateStore(result, storage[what]);
+            data->CreateStore(result, storage[what]);
     }
     return result;
 }
