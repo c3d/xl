@@ -46,10 +46,18 @@
     } while(0);
 
 #define PARM(symbol, type)                                      \
-        Infix *symbol##_decl = new Infix(":",                   \
-                                         new Name(#symbol),     \
-                                         new Name(#type));      \
-        parameters.push_back(symbol##_decl);
+        if (text(#type) == "tree")                              \
+        {                                                       \
+            Name *symbol##_decl = new Name(#symbol);            \
+            parameters.push_back(symbol##_decl);                 \
+        }                                                       \
+        else                                                    \
+        {                                                       \
+            Infix *symbol##_decl = new Infix(":",               \
+                                             new Name(#symbol), \
+                                             new Name(#type));  \
+            parameters.push_back(symbol##_decl);                \
+        }
 
 #define PREFIX(symbol, parms, name, _code)                              \
     do                                                                  \

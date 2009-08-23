@@ -163,9 +163,14 @@ Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
 //   Create a new closure at runtime, capturing the various trees
 // ----------------------------------------------------------------------------
 {
-    // We want to be able to evaluate the result
-    if (!expr->code || !ntrees)
+    // Immediately return anything we could evaluate at no cost
+    if (!expr || expr->IsConstant() || !expr->code || !ntrees)
         return expr;
+
+    IFTRACE(closure)
+        std::cerr << "CLOSURE: Arity " << ntrees
+                  << " code " << (void *) expr->code 
+                  << " [" << expr << "]\n";
 
     // Build the prefix with all the arguments
     Prefix *result = new Prefix(expr, NULL);
@@ -175,6 +180,8 @@ Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
     for (uint i = 0; i < ntrees; i++)
     {
         Tree *arg = va_arg(va, Tree *);
+        IFTRACE(closure)
+            std::cerr << "  ARG: " << arg << '\n';
         Prefix *item = new Prefix(arg, NULL);
         parent->right = item;
         parent = item;

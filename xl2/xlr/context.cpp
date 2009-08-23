@@ -666,6 +666,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     }
     
     // Create the compilation unit and check if we are already compiling this
+    // Can this happen for a closure?
     CompiledUnit subUnit(compiler, source, parms);
     if (!subUnit.IsForwardCall())
     {

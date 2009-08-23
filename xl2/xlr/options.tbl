@@ -83,6 +83,7 @@ TRACE(code)
 TRACE(typecheck)
 TRACE(labels)
 TRACE(builtins)
+TRACE(closure)
 
 // Undefine for next use...
 #undef OPTVAR

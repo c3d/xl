@@ -808,7 +808,10 @@ Value *CompiledUnit::CreateClosure(Tree *callee, tree_list &args)
     Value *callVal = code->CreateCall(compiler->xl_new_closure,
                                       argV.begin(), argV.end());
 
-    MarkComputed(callee, callVal);
+    // Need to store result, but not mark it as evaluated
+    NeedStorage(callee);
+    code->CreateStore(callVal, storage[callee]);
+    // MarkComputed(callee, callVal);
 
     return callVal;
 }
