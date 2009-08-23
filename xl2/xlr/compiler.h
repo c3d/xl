@@ -27,6 +27,7 @@
 
 #include "tree.h"
 #include <map>
+#include <set>
 #include <llvm/Support/IRBuilder.h>
 
 
@@ -49,6 +50,7 @@ struct CompiledUnit;
 typedef std::map<Tree *, llvm::Value *>         value_map;
 typedef std::map<Tree *, llvm::Function *>      function_map;
 typedef std::map<uint, eval_fn>                 closure_map;
+typedef std::set<Tree *>                        closure_set;
 
 
 struct Compiler
@@ -67,6 +69,8 @@ struct Compiler
     llvm::Value *             EnterGlobal(Name *name, Name **address);
     llvm::Value *             EnterConstant(Tree *constant);
     llvm::Value *             Known(Tree *value);
+
+    void                      FreeResources(Tree *tree);
 
 public:
     llvm::Module              *module;
@@ -98,6 +102,7 @@ public:
     function_map               functions;
     value_map                  globals;
     closure_map                closures;
+    closure_set                closet;
 };
 
 

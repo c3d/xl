@@ -323,6 +323,8 @@ void Context::CollectGarbage ()
             if (!gc.alive.count(*a))
             {
                 deletedCount++;
+                if (compiler)
+                    compiler->FreeResources(*a);
                 delete *a;
             }
         }

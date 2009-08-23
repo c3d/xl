@@ -201,6 +201,7 @@ Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
         compiler->closures[ntrees] = fn;
     }
     result->code = fn;
+    compiler->closet.insert(result);
 
     return result;
 }

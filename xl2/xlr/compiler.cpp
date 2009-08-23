@@ -349,6 +349,22 @@ Value *Compiler::Known(Tree *tree)
 }
 
 
+void Compiler::FreeResources(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Free the LLVM resources associated to the tree, if any
+// ----------------------------------------------------------------------------
+{
+    if (functions.count(tree) > 0 && closet.count(tree) == 0)
+    {
+        std::cerr << "Deleting resources for " << tree << "\n";
+        Function *f = functions[tree];
+        runtime->freeMachineCodeForFunction(f);
+        delete f;
+        functions.erase(tree);
+    }
+}
+
+
 
 // ============================================================================
 // 
