@@ -113,7 +113,17 @@ Compiler::Compiler(kstring moduleName)
         // Do simple "peephole" optimizations and bit-twiddling optimizations.
         optimizer->add(createInstructionCombiningPass());
 
-        // Reassociate expressions.
+        // Inlining of tails
+        optimizer->add(createTailDuplicationPass());
+        optimizer->add(createTailCallEliminationPass());
+
+        // Re-order blocks to eliminate branches
+        optimizer->add(createBlockPlacementPass());
+
+        // Collapse duplicate variables into canonical form
+        optimizer->add(createPredicateSimplifierPass());
+
+        // Reassociate expression for better constant propagation
         optimizer->add(createReassociatePass());
 
         // Eliminate common subexpressions.
@@ -121,6 +131,18 @@ Compiler::Compiler(kstring moduleName)
 
         // Simplify the control flow graph (deleting unreachable blocks, etc).
         optimizer->add(createCFGSimplificationPass());
+
+        // Place phi nodes at loop boundaries to simplify other loop passes
+        optimizer->add(createLCSSAPass());
+
+        // Loop invariant code motion and memory promotion
+        optimizer->add(createLICMPass());
+
+        // Transform a[n] into *ptr++
+        optimizer->add(createLoopStrengthReducePass());
+
+        // Unroll loops (can it help in our case?)
+        optimizer->add(createLoopUnrollPass());
     }
 
     // Install a fallback mechanism to resolve references to the runtime, on
