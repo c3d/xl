@@ -149,6 +149,10 @@ Compiler::Compiler(kstring moduleName)
     treeTy = StructType::get(treeElements);		// struct Tree {}
     cast<OpaqueType>(structTreeTy.get())->refineAbstractTypeTo(treeTy);
     treeTy = cast<StructType> (structTreeTy.get());
+#define TAG_INDEX       0
+#define CODE_INDEX      1
+#define SYMBOLS_INDEX   2
+#define TYPE_INDEX      3
 
     // Create the Integer type
     std::vector<const Type *> integerElements = treeElements;
@@ -810,16 +814,23 @@ Value *CompiledUnit::CreateClosure(Tree *callee, tree_list &args)
 
 
 Value *CompiledUnit::CallClosure(Tree *callee, uint ntrees)
- // ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 //   Call a closure function with the given n trees
 // ----------------------------------------------------------------------------
+//   We build it with an indirect call so that we generate one closure call
+//   subroutine per number of arguments only.
 {
-    // Closure-creation function to call
-    Function *toCall = compiler->functions[callee]; assert(toCall);
-
+    // Load left tree and get its code tag
+    Value *ptr = Known(callee); assert(ptr);
+    Value *pfx = code->CreateBitCast(ptr,compiler->prefixTreePtrTy);
+    Value *lf = code->CreateConstGEP2_32(pfx, 0, LEFT_VALUE_INDEX);
+    Value *callTree = code->CreateLoad(lf);
+    Value *callCode = code->CreateConstGEP2_32(callTree, 0, CODE_INDEX);
+    Type *treePtrTy = compiler->treePtrTy;
+    
     // Build argument list
     std::vector<Value *> argV;
-    Value *ptr = Known(callee); assert(ptr);
+    std::vector<const Type *> signature;
     for (uint i = 0; i < ntrees; i++)
     {
         // WARNING: This relies on the layout of all nodes beginning the same
@@ -830,10 +841,13 @@ Value *CompiledUnit::CallClosure(Tree *callee, uint ntrees)
         Value *lf = code->CreateConstGEP2_32(pfx, 0, LEFT_VALUE_INDEX);
         Value *arg = code->CreateLoad(lf);
         argV.push_back(arg);
-
+        signature.push_back(treePtrTy);
     }
 
     // Call the resulting function
+    FunctionType *fnTy = FunctionType::get(treePtrTy, signature, false);
+    PointerType *fnPtrTy = PointerType::get(fnTy, 0);
+    Value *toCall = code->CreateBitCast(callCode, fnPtrTy);
     Value *callVal = code->CreateCall(toCall, argV.begin(), argV.end());
 
     // Store the flags indicating that we computed the value
