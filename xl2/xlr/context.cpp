@@ -1933,8 +1933,17 @@ Tree *Rewrite::Compile(void)
     if (!from->symbols)
         return Error("Internal: No symbols for '$1'", from);
 
+    // Create local symbols
+    Symbols *locals = new Symbols (from->symbols);
+
+    // Record rewrites and data declarations in the current context
+    DeclarationAction declare(locals);
+    Tree *toDecl = to->Do(declare);
+    if (!toDecl)
+        return Error("Internal: Declaration error for '$1'", to);
+
     // Compile the body of the rewrite
-    CompileAction compile(from->symbols, unit, false, false);
+    CompileAction compile(locals, unit, false, false);
     Tree *result = to->Do(compile);
     if (!result)
         return Error("Unable to compile '$1'", to);
