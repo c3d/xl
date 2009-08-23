@@ -635,7 +635,7 @@ llvm::Value *CompiledUnit::Invoke(Tree *subexpr, Tree *callee, tree_list args)
 
     // Add the 'self' argument
     std::vector<Value *> argV;
-    Value *defaultVal = ConstantPointerNull::get(compiler->treePtrTy);
+    Value *defaultVal = ConstantTree(subexpr);
     argV.push_back(defaultVal);
 
     tree_list::iterator a;
