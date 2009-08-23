@@ -190,7 +190,12 @@ Tree *Symbols::Run(Tree *code)
     if (result->Kind() >= NAME)
     {
         if (!result->code)
-            result = CompileAll(result);
+        {
+            Symbols *symbols = result->symbols;
+            if (!symbols)
+                symbols = this;
+            result = symbols->CompileAll(result);
+        }
 
         assert(result->code);
         result = result->code(code);

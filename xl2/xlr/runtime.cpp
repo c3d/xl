@@ -57,8 +57,13 @@ Tree *xl_evaluate(Tree *what)
     if (result->Kind() >= NAME)
     {
         if (!what->code)
-            what = Context::context->CompileAll(what);
-        
+        {
+            Symbols *symbols = what->symbols;
+            if (!symbols)
+                symbols = Context::context;
+            what = symbols->CompileAll(what);
+        }
+
         assert(what->code);
         result = what->code(what);
     }
