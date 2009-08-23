@@ -80,8 +80,11 @@ Rewrite *Symbols::EnterRewrite(Rewrite *rw)
     Tree *check = rw->from->Do(parms);
     if (!check)
         Context::context->Error("Parameter error for '$1'", rw->from);
+
+    // If we are defining a name, store the definition in the symbols
     if (Name *name = parms.defined->AsName())
         Allocate(name);
+
     if (rewrites)
         return rewrites->Add(rw);
     rewrites = rw;
@@ -678,11 +681,16 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
         {
             // This is a global, we'll find it running the target.
         }
-        else
+        else if (unit.IsKnown(name))
         {
             // This is a local: simply pass it around
             parms.push_back(name);
             args.push_back(name);
+        }
+        else
+        {
+            // This is a local 'name' like a form definition
+            // We don't need to pass these around.
         }
     }
     
