@@ -412,8 +412,8 @@ struct BuildChildren : Action
 //   Build a clone of a tree, evaluating its children
 // ----------------------------------------------------------------------------
 {
-    BuildChildren(CompileAction *comp):
-        compile(comp), unit(comp->unit) {}
+    BuildChildren(CompileAction *comp);
+    ~BuildChildren();
 
     virtual Tree *Do(Tree *what)                { return what; }
     virtual Tree *DoInteger(Integer *what)      { return what; }
@@ -426,8 +426,9 @@ struct BuildChildren : Action
     virtual Tree *DoBlock(Block *what);
  
 public:
-    CompileAction *compile;     // Compilation in progress
-    CompiledUnit & unit;        // JIT compiler compilation unit
+    CompileAction *compile;             // Compilation in progress
+    CompiledUnit & unit;                // JIT compiler compilation unit
+    bool           saveNullIfBad;       // Unit original "nib" settings
 };
 
 

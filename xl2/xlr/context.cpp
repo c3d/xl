@@ -56,6 +56,15 @@ Name *Symbols::Allocate(Name *n)
 //   Enter a value in the namespace
 // ----------------------------------------------------------------------------
 {
+    if (Tree *existing = names[n->value])
+    {
+        if (Name *name = existing->AsName())
+            if (name->value == n->value)
+                return name;
+        existing = Context::context->Error("Redefining '$1' as data, was '$2'",
+                                           n, existing);
+        return existing->AsName();
+    }
     names[n->value] = n;
     return n;
 }
@@ -66,6 +75,13 @@ Rewrite *Symbols::EnterRewrite(Rewrite *rw)
 //   Enter the given rewrite in the rewrites table
 // ----------------------------------------------------------------------------
 {
+    Symbols locals(this);
+    ParameterMatch parms(&locals);
+    Tree *check = rw->from->Do(parms);
+    if (!check)
+        Context::context->Error("Parameter error for '$1'", rw->from);
+    if (Name *name = parms.defined->AsName())
+        Allocate(name);
     if (rewrites)
         return rewrites->Add(rw);
     rewrites = rw;
@@ -1082,6 +1098,25 @@ Tree *EnvironmentScan::DoPostfix(Postfix *what)
 // 
 // ============================================================================
 
+BuildChildren::BuildChildren(CompileAction *comp)
+// ----------------------------------------------------------------------------
+//   Constructor saves the unit's nullIfBad and sets it
+// ----------------------------------------------------------------------------
+    : compile(comp), unit(comp->unit), saveNullIfBad(comp->nullIfBad)
+{
+    comp->nullIfBad = true;
+}
+
+
+BuildChildren::~BuildChildren()
+// ----------------------------------------------------------------------------
+//   Destructor restores the original nullIfBad settigns
+// ----------------------------------------------------------------------------
+{
+    compile->nullIfBad = saveNullIfBad;
+}
+
+
 Tree *BuildChildren::DoPrefix(Prefix *what)
 // ----------------------------------------------------------------------------
 //   Evaluate children, then build a prefix
@@ -1393,11 +1428,27 @@ Tree *CompileAction::DoInfix(Infix *what)
         if (!what->left->Do(this))
             return NULL;
         if (unit.IsKnown(what->left))
+        {
+            if (false && !what->left->code)
+            {
+                Tree *left = symbols->CompileAll(what->left);
+                assert (left == what->left);
+                assert (left->code);
+            }
             unit.CallEvaluate(what->left);
+        }
         if (!what->right->Do(this))
             return NULL;
         if (unit.IsKnown(what->right))
+        {
+            if (false && !what->right->code)
+            {
+                Tree *right = symbols->CompileAll(what->right);
+                assert(right == what->right);
+                assert (right->code);
+            }                
             unit.CallEvaluate(what->right);
+        }
         unit.Copy(what->right, what);
         return what;
     }
@@ -1571,7 +1622,11 @@ Tree * CompileAction::Rewrites(Tree *what)
     if (!foundSomething)
     {
         if (nullIfBad)
+        {
+            BuildChildren children(this);
+            what = what->Do(children);
             return NULL;
+        }
         Context *context = Context::context;
         return context->Error("No rewrite candidate for '$1'", what);
     }
