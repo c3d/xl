@@ -33,6 +33,7 @@
 #include "renderer.h"
 #include "basics.h"
 #include "compiler.h"
+#include <sstream>
 
 XL_BEGIN
 
@@ -182,6 +183,58 @@ Tree *Symbols::CompileAll(Tree *source)
 }
 
 
+Tree *Symbols::CompileCall(text callee, tree_list &arglist)
+// ----------------------------------------------------------------------------
+//   Compile a top-level call, reusing calls if possible
+// ----------------------------------------------------------------------------
+{
+    // Build key for this call
+    uint arity = arglist.size();
+    std::ostringstream keyBuilder;
+    keyBuilder << callee << ":" << arity;
+    text key = keyBuilder.str();
+
+    // Check if we already have a call compiled
+    if (Tree *previous = calls[key])
+    {
+        if (arity)
+        {
+            // Replace arguments in place if necessary
+            Prefix *pfx = previous->AsPrefix();
+            Tree **args = &pfx->right;
+            while (*args && --arity)
+            {
+                Infix *infix = (*args)->AsInfix();
+                if (Real *rt = infix->right->AsReal())
+                    if (Real *rs = arglist[arity]->AsReal())
+                        rt->value = rs->value;
+                args = &infix->left;
+            }
+            if (Real *rt = (*args)->AsReal())
+                if (Real *rs = arglist[arity]->AsReal())
+                    rt->value = rs->value;
+        }
+
+        // Call the previously compiled code
+        return previous;
+    }
+
+    Tree *call = Named(callee);
+    if (!call)
+        call = new Name(callee);
+    if (arity)
+    {
+        Tree *args = arglist[0];
+        for (uint a = 1; a < arity; a++)
+            args = new Infix(",", args, arglist[a]);
+        call = new Prefix(call, args);
+    }
+    call = CompileAll(call);
+    calls[key] = call;
+    return call;
+}
+
+
 Tree *Symbols::Run(Tree *code)
 // ----------------------------------------------------------------------------
 //   Execute a compiled code tree - Very similar to xl_evaluate
@@ -315,6 +368,9 @@ void Context::CollectGarbage ()
             (*a)->tree->Do(gc);
         for (symbol_iter y = names.begin(); y != names.end(); y++)
             if (Tree *named = (*y).second)
+                named->Do(gc);
+        for (symbol_iter call = calls.begin(); call != calls.end(); call++)
+            if (Tree *named = (*call).second)
                 named->Do(gc);
         if (rewrites)
             rewrites->Do(gc);

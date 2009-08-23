@@ -191,12 +191,14 @@ struct Symbols
     // Compiling and evaluating a tree in scope defined by these symbols
     Tree *              Compile(Tree *s, CompiledUnit &, bool nullIfBad=false);
     Tree *              CompileAll(Tree *s);
+    Tree *              CompileCall(text callee, tree_list &args);
     Tree *              Run(Tree *t);
 
 public:
     Symbols *           parent;
     symbol_table        names;
     Rewrite *           rewrites;
+    symbol_table        calls;
 };
 
 

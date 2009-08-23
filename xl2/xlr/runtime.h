@@ -79,6 +79,9 @@ Tree *xl_prefix(Tree *value);
 Tree *xl_postfix(Tree *value);
 Tree *xl_block(Tree *value);
 
+Tree *xl_call(text name);
+Tree *xl_call(text name, double x, double y, double w, double h);
+
 XL_END
 
 #endif // RUNTIME_H

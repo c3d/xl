@@ -384,4 +384,36 @@ Tree *xl_block(Tree *value)
     return NULL;
 }
 
+
+Tree *xl_call(text name)
+// ----------------------------------------------------------------------------
+//   Invoke the tree with the given name
+// ----------------------------------------------------------------------------
+{
+    Context *context = Context::context;
+    tree_list args;
+    Tree *callee = context->CompileCall(name, args);
+    if (callee && callee->code)
+        callee = callee->code(callee);
+    return callee;
+}
+
+
+Tree *xl_call(text name, double x, double y, double w, double h)
+// ----------------------------------------------------------------------------
+//   Invoke the tree with the given name
+// ----------------------------------------------------------------------------
+{
+    Context *context = Context::context;
+    tree_list args;
+    args.push_back(new Real(x));
+    args.push_back(new Real(y));
+    args.push_back(new Real(w));
+    args.push_back(new Real(h));
+    Tree *callee = context->CompileCall(name, args);
+    if (callee && callee->code)
+        callee = callee->code(callee);
+    return callee;
+}
+
 XL_END
