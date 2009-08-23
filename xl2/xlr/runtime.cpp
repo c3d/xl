@@ -149,6 +149,22 @@ Tree *xl_new_xtext(kstring value, kstring open, kstring close)
 {
     return new Text(value, open, close);
 }
+Tree *xl_new_block(Tree *child, kstring open, kstring close)
+{
+    return new Block(child, open, close);
+}
+Tree *xl_new_prefix(Tree *left, Tree *right)
+{
+    return new Prefix(left, right);
+}
+Tree *xl_new_postfix(Tree *left, Tree *right)
+{
+    return new Postfix(left, right);
+}
+Tree *xl_new_infix(kstring name, Tree *left, Tree *right)
+{
+    return new Infix(name, left, right);
+}
 
 
 

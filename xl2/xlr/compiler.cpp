@@ -87,6 +87,9 @@ Compiler::Compiler(kstring moduleName)
       evalTy(NULL), evalFnTy(NULL), symbolsPtrTy(NULL),
       xl_evaluate(NULL), xl_same_text(NULL), xl_same_shape(NULL),
       xl_type_check(NULL),
+      xl_new_integer(NULL), xl_new_real(NULL), xl_new_character(NULL),
+      xl_new_text(NULL), xl_new_xtext(NULL), xl_new_block(NULL),
+      xl_new_prefix(NULL), xl_new_postfix(NULL), xl_new_infix(NULL),
       functions()
 {
     // Thanks to Dr. Albert Graef (pure programming language) for inspiration
@@ -232,6 +235,14 @@ Compiler::Compiler(kstring moduleName)
     xl_new_closure = ExternFunction(FN(xl_new_closure),
                                     treePtrTy, -2,
                                     treePtrTy, LLVM_INTTYPE(uint));
+    xl_new_block = ExternFunction(FN(xl_new_block),
+                                  treePtrTy, 3, treePtrTy,charPtrTy,charPtrTy);
+    xl_new_prefix = ExternFunction(FN(xl_new_prefix),
+                                   treePtrTy, 2, treePtrTy,treePtrTy);
+    xl_new_postfix = ExternFunction(FN(xl_new_postfix),
+                                    treePtrTy, 2, treePtrTy,treePtrTy);
+    xl_new_infix = ExternFunction(FN(xl_new_infix),
+                                  treePtrTy, 3, charPtrTy,treePtrTy,treePtrTy);
 }
 
 

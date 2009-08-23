@@ -98,6 +98,10 @@ public:
     llvm::Function            *xl_new_character;
     llvm::Function            *xl_new_text;
     llvm::Function            *xl_new_xtext;
+    llvm::Function            *xl_new_block;
+    llvm::Function            *xl_new_prefix;
+    llvm::Function            *xl_new_postfix;
+    llvm::Function            *xl_new_infix;
     llvm::Function            *xl_new_closure;
     function_map               functions;
     value_map                  globals;

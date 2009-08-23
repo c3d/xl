@@ -56,6 +56,10 @@ Tree *xl_new_real(double value);
 Tree *xl_new_character(kstring value);
 Tree *xl_new_text(kstring value);
 Tree *xl_new_xtext(kstring value, kstring open, kstring close);
+Tree *xl_new_block(Tree *child, kstring open, kstring close);
+Tree *xl_new_prefix(Tree *left, Tree *right);
+Tree *xl_new_postfix(Tree *left, Tree *right);
+Tree *xl_new_infix(kstring name, Tree *left, Tree *right);
 
 Tree *xl_new_closure(Tree *expr, uint ntrees, ...);
 
