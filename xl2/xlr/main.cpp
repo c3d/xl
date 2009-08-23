@@ -55,6 +55,9 @@ int main(int argc, char **argv)
     XL::Compiler compiler("xl_tao");
     XL::Context context(errors, &compiler);
     text cmd, end = "";
+    std::vector<text> files;
+    std::vector<text>::iterator file;
+    bool hadError = false;
 
     // Make sure debug function is linked in...
     if (!low_water)
@@ -71,14 +74,25 @@ int main(int argc, char **argv)
     // Initialize basics
     XL::EnterBasics(&context);
 
-    for (cmd = options.Parse(argc, argv);
-         cmd != end;
-         cmd = options.ParseNext())
+    // Scan options and build list of files we need to process
+    files.push_back("builtins.xl");
+    for (cmd = options.Parse(argc, argv); cmd != end; cmd = options.ParseNext())
+        files.push_back(cmd);
+
+    // Loop over files we will process
+    for (file = files.begin(); file != files.end(); file++)
     {
+        // Get the individual command line file
+        cmd = *file;
+
+        // Parse and execute program
         XL::Parser parser (cmd.c_str(), syntax, positions, errors);
         XL::Tree *tree = parser.Parse();
         if (!tree)
+        {
+            hadError = true;
             break;           // File read error, message already emitted
+        }
 
         context.Root(tree);
         context.CollectGarbage();
@@ -86,17 +100,28 @@ int main(int argc, char **argv)
             std::cout << "SOURCE:\n" << tree << "\n";
         if (options.parseOnly || options.compileOnly)
         {
-            if (tree && !options.parseOnly)
+            if (!options.parseOnly)
             {
                 tree = context.CompileAll(tree);
                 if (tree && !options.compileOnly)
                     tree = context.Run(tree);
+                if (!tree)
+                {
+                    hadError = true;
+                    break;
+                }
             }
         }
         else if (tree)
         {
-            tree = context.CompileAll(tree);
-            tree = context.Run(tree);
+            XL::Tree *runnable = context.CompileAll(tree);
+            if (!runnable)
+            {
+                hadError = true;
+                break;
+            }
+            context.Root(runnable);
+            tree = context.Run(runnable);
         }
 
         if (options.verbose)
