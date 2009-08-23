@@ -1300,7 +1300,7 @@ void DeclarationAction::EnterRewrite(Tree *defined, Tree *definition)
 {
     if (Name *name = defined->AsName())
     {
-        symbols->EnterName(name->value, definition);
+        symbols->EnterName(name->value, definition ? definition : name);
     }
     else
     {
