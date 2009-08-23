@@ -35,3 +35,5 @@ indents = "    "
 "block I+ I-" = indent cr child unindent cr
 "block  ( ) " = "(" child ")"
 "?wildcard?" = "'" self "'"
+"infix ," = separator left "," space right separator
+"infix ;" = separator left "," space right separator
