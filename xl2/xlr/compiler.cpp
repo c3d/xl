@@ -84,7 +84,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
       integerTreeTy(NULL), integerTreePtrTy(NULL),
       realTreeTy(NULL), realTreePtrTy(NULL),
       prefixTreeTy(NULL), prefixTreePtrTy(NULL),
-      evalTy(NULL), evalFnTy(NULL), symbolsPtrTy(NULL),
+      evalTy(NULL), evalFnTy(NULL), symbolsPtrTy(NULL), charPtrTy(NULL),
       xl_evaluate(NULL), xl_same_text(NULL), xl_same_shape(NULL),
       xl_type_check(NULL), xl_type_error(NULL),
       xl_new_integer(NULL), xl_new_real(NULL), xl_new_character(NULL),
@@ -212,7 +212,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     module->addTypeName("symbols*", symbolsPtrTy);
 
     // Create a reference to the evaluation function
-    Type *charPtrTy = PointerType::get(LLVM_INTTYPE(char), 0);
+    charPtrTy = PointerType::get(LLVM_INTTYPE(char), 0);
     const Type *boolTy = Type::Int1Ty;
 #define FN(x) #x, (void *) XL::x
     xl_evaluate = ExternFunction(FN(xl_evaluate),
@@ -375,7 +375,6 @@ void Compiler::FreeResources(Tree *tree)
 {
     if (functions.count(tree) > 0 && closet.count(tree) == 0)
     {
-        std::cerr << "Deleting resources for tree\n";
         Function *f = functions[tree];
         runtime->freeMachineCodeForFunction(f);
         // delete f;  Seems to crash, not sure why
@@ -1116,7 +1115,11 @@ BasicBlock *CompiledUnit::TextTest(Tree *tree, text value)
     Value *treeValue = Known(tree);
     assert(treeValue);
     Constant *refVal = ConstantArray::get(value);
-    Value *refPtr = code->CreateConstGEP1_32(refVal, 0);
+    const Type *refValTy = refVal->getType();
+    GlobalVariable *gvar = new GlobalVariable(refValTy, true,
+                                              GlobalValue::InternalLinkage,
+                                              refVal, "str");
+    Value *refPtr = code->CreateConstGEP2_32(gvar, 0, 0);
     Value *isGood = code->CreateCall2(compiler->xl_same_text,
                                       treeValue, refPtr);
     BasicBlock *isGoodBB = BasicBlock::Create("isGood", function);

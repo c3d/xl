@@ -131,7 +131,8 @@ void Symbols::Clear()
 // 
 // ============================================================================
 
-Tree *Symbols::Compile(Tree *source, CompiledUnit &unit, bool nullIfBad)
+Tree *Symbols::Compile(Tree *source, CompiledUnit &unit,
+                       bool nullIfBad, bool keepAlternatives)
 // ----------------------------------------------------------------------------
 //    Return an optimized version of the source tree, ready to run
 // ----------------------------------------------------------------------------
@@ -141,7 +142,7 @@ Tree *Symbols::Compile(Tree *source, CompiledUnit &unit, bool nullIfBad)
     Tree *result = source->Do(declare);
 
     // Compile code for that tree
-    CompileAction compile(this, unit, nullIfBad);
+    CompileAction compile(this, unit, nullIfBad, keepAlternatives);
     result = source->Do(compile);
 
     // If we didn't compile successfully, report
@@ -157,12 +158,18 @@ Tree *Symbols::Compile(Tree *source, CompiledUnit &unit, bool nullIfBad)
 }
 
 
-Tree *Symbols::CompileAll(Tree *source)
+Tree *Symbols::CompileAll(Tree *source, bool keepAlternatives)
 // ----------------------------------------------------------------------------
 //   Compile a top-level tree
 // ----------------------------------------------------------------------------
 //    This associates an eval_fn to the tree, i.e. code that takes a tree
 //    as input and returns a tree as output.
+//    keepAlternatives is set by CompileCall to avoid eliding alternatives
+//    based on the value of constants, so that if we compile
+//    (key "X"), we also generate the code for (key "Y"), knowing that
+//    CompileCall may change the constant at run-time. The objective is
+//    to avoid re-generating LLVM code for each and every call
+//    (it's more difficult to avoid leaking memory from LLVM)
 {
     Compiler *compiler = Context::context->compiler;
     tree_list noParms;
@@ -170,7 +177,7 @@ Tree *Symbols::CompileAll(Tree *source)
     if (unit.IsForwardCall())
         return source;
 
-    Tree *result = Compile(source, unit, false);
+    Tree *result = Compile(source, unit, false, keepAlternatives);
     if (!result)
         return result;
 
@@ -244,7 +251,7 @@ Tree *Symbols::CompileCall(text callee, tree_list &arglist)
             args = new Infix(",", args, arglist[a]);
         call = new Prefix(call, args);
     }
-    call = CompileAll(call);
+    call = CompileAll(call, true);
     calls[key] = call;
     return call;
 }
@@ -812,10 +819,15 @@ Tree *ArgumentMatch::DoInteger(Integer *what)
     // If the tested tree is a constant, it must be an integer with same value
     if (test->IsConstant())
     {
-        if (Integer *it = test->AsInteger())
+        Integer *it = test->AsInteger();
+        if (!it)
+            return NULL;
+        if (!compile->keepAlternatives)
+        {
             if (it->value == what->value)
                 return what;
-        return NULL;
+            return NULL;
+        }
     }
 
     // Compile the test tree
@@ -837,10 +849,15 @@ Tree *ArgumentMatch::DoReal(Real *what)
     // If the tested tree is a constant, it must be an integer with same value
     if (test->IsConstant())
     {
-        if (Real *rt = test->AsReal())
+        Real *rt = test->AsReal();
+        if (!rt)
+            return NULL;
+        if (!compile->keepAlternatives)
+        {
             if (rt->value == what->value)
                 return what;
-        return NULL;
+            return NULL;
+        }
     }
 
     // Compile the test tree
@@ -862,10 +879,15 @@ Tree *ArgumentMatch::DoText(Text *what)
     // If the tested tree is a constant, it must be an integer with same value
     if (test->IsConstant())
     {
-        if (Text *tt = test->AsText())
+        Text *tt = test->AsText();
+        if (!tt)
+            return NULL;
+        if (!compile->keepAlternatives)
+        {
             if (tt->value == what->value)
                 return what;
-        return NULL;
+            return NULL;
+        }
     }
 
     // Compile the test tree
@@ -1397,11 +1419,11 @@ void DeclarationAction::EnterRewrite(Tree *defined, Tree *definition)
 // 
 // ============================================================================
 
-CompileAction::CompileAction(Symbols *s, CompiledUnit &u, bool nib)
+CompileAction::CompileAction(Symbols *s, CompiledUnit &u, bool nib, bool ka)
 // ----------------------------------------------------------------------------
 //   Constructor
 // ----------------------------------------------------------------------------
-    : symbols(s), unit(u), needed(), nullIfBad(nib)
+    : symbols(s), unit(u), needed(), nullIfBad(nib), keepAlternatives(ka)
 {}
 
 
@@ -1452,6 +1474,15 @@ Tree *CompileAction::DoName(Name *what)
     // Normally, the name should have been declared in ParameterMatch
     if (Tree *result = symbols->Named(what->value))
     {
+        // Try to compile the definition of the name
+        if (!result->AsName())
+        {
+            Rewrite rw(symbols, what, result);
+            if (!what->symbols)
+                what->SetSymbols(symbols);
+            result = rw.Compile();
+        }
+
         // Check if there is code we need to call
         Compiler *compiler = Context::context->compiler;
         if (compiler->functions.count(result))
@@ -1859,7 +1890,7 @@ Tree *Rewrite::Compile(void)
         return Error("Internal: No symbols for '$1'", from);
 
     // Compile the body of the rewrite
-    CompileAction compile(from->symbols, unit, false);
+    CompileAction compile(from->symbols, unit, false, false);
     Tree *result = to->Do(compile);
     if (!result)
         return Error("Unable to compile '$1'", to);
