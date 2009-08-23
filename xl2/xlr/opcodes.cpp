@@ -108,7 +108,7 @@ Tree *ParametersTree(tree_list parameters)
     Tree *result = NULL;
     for (i = 0; i < max; i++)
     {
-        Tree *parm = parameters[max + ~i];
+        Tree *parm = parameters[i];
         if (result)
             result = new Infix(",", result, parm);
         else
