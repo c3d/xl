@@ -610,18 +610,19 @@ Tree *ArgumentMatch::CompileValue(Tree *source)
 //   Compile the source and make sure we evaluate it
 // ----------------------------------------------------------------------------
 {
-    source = Compile(source);
+    Tree *result = Compile(source);
 
-    if (source)
+    if (result)
     {
-        if (Name *name = source->AsName())
+        if (Name *name = result->AsName())
         {
             llvm::BasicBlock *bb = unit.BeginLazy(name);
+            unit.NeedStorage(name);
             unit.CallEvaluate(name);
             unit.EndLazy(name, bb);
         }
     }
-    return source;
+    return result;
 }
 
 
@@ -1268,9 +1269,8 @@ Tree *CompileAction::DoName(Name *what)
         }
         else if (unit.value.count(result))
         {
-            // Case of "Foo(A,B) -> B" with B: evaluate B
-            unit.NeedStorage(what);
-            unit.MarkComputed(what, unit.value[result]);
+            // Case of "Foo(A,B) -> B" with B: evaluate B lazily
+            unit.Copy(result, what, false);
             return result;
         }
 

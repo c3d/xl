@@ -179,17 +179,11 @@ Compiler::Compiler(kstring moduleName)
 
     // Record the type names
     module->addTypeName("tree", treeTy);
-    module->addTypeName("treePtr", treePtrTy);
-    module->addTypeName("treePtrPtr", treePtrPtrTy);
     module->addTypeName("integer", integerTreeTy);
-    module->addTypeName("integerPtr", integerTreePtrTy);
     module->addTypeName("real", realTreeTy);
-    module->addTypeName("realPtr", realTreePtrTy);
     module->addTypeName("eval", evalTy);
-    module->addTypeName("evalFn", evalFnTy);
     module->addTypeName("prefix", prefixTreeTy);
-    module->addTypeName("prefixPtr", prefixTreePtrTy);
-    module->addTypeName("symbolsPtr", symbolsPtrTy);
+    module->addTypeName("symbols*", symbolsPtrTy);
 
     // Create a reference to the evaluation function
     Type *charPtrTy = PointerType::get(LLVM_INTTYPE(char), 0);
@@ -452,6 +446,8 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
         const char *clabel = label.c_str();
         result = data->CreateAlloca(compiler->treePtrTy, 0, clabel);
         storage[tree] = result;
+        if (value.count(tree))
+            data->CreateStore(value[tree], result);
     }
 
     return result;
@@ -578,17 +574,17 @@ llvm::Value *CompiledUnit::MarkComputed(Tree *subexpr, Value *val)
 //   Record that we computed that particular subexpression
 // ----------------------------------------------------------------------------
 {
-    // Set the 'lazy' flag or lazy evaluation
-    Value *result = NeedLazy(subexpr);
-    Value *trueFlag = ConstantInt::get(Type::Int1Ty, 1);
-    code->CreateStore(trueFlag, result);
-
     // Store the value we were given as the result
     if (val)
     {
         if (storage.count(subexpr) > 0)
             code->CreateStore(val, storage[subexpr]);
     }
+
+    // Set the 'lazy' flag or lazy evaluation
+    Value *result = NeedLazy(subexpr);
+    Value *trueFlag = ConstantInt::get(Type::Int1Ty, 1);
+    code->CreateStore(trueFlag, result);
 
     // Return the test flag
     return result;
@@ -629,8 +625,7 @@ llvm::Value *CompiledUnit::Invoke(Tree *subexpr, Tree *callee, tree_list args)
 // ----------------------------------------------------------------------------
 {
     // Check if the resulting form is a name or literal
-    kind k = callee->Kind();
-    if (k == INTEGER || k == REAL || k == TEXT)
+    if (callee->IsConstant())
     {
         if (Value *known = Known(callee))
         {
@@ -785,6 +780,7 @@ Value *CompiledUnit::CallEvaluate(Tree *tree)
     Value *treeValue = Known(tree);
     assert(treeValue);
     Value *evaluated = code->CreateCall(compiler->xl_evaluate, treeValue);
+    
     MarkComputed(tree, evaluated);
     return evaluated;
 }
