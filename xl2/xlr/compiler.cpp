@@ -448,6 +448,8 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
         storage[tree] = result;
         if (value.count(tree))
             data->CreateStore(value[tree], result);
+        else if (Value *global = compiler->Known(tree))
+            data->CreateStore(data->CreateLoad(global), result);
     }
 
     return result;
