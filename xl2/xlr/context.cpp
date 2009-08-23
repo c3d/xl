@@ -1273,6 +1273,12 @@ Tree *CompileAction::DoName(Name *what)
             unit.Copy(result, what, false);
             return result;
         }
+        else
+        {
+            // Return the name itself by default
+            unit.ConstantTree(result);
+            unit.Copy(result, what);
+        }
 
         return result;
     }

@@ -55,6 +55,9 @@ Tree *xl_evaluate(Tree *what)
     if (!what)
         return what;
 
+    IFTRACE(eval)
+        std::cerr << "EVAL: " << what << '\n';
+
     Tree *result = what;
     if (!result->IsConstant())
     {
@@ -68,7 +71,11 @@ Tree *xl_evaluate(Tree *what)
 
         assert(what->code);
         result = what->code(what);
+
+        IFTRACE(eval)
+            std::cerr << "EVAL= " << result << '\n';
     }
+
     return result;
 }
 
@@ -156,6 +163,10 @@ Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
 //   Create a new closure at runtime, capturing the various trees
 // ----------------------------------------------------------------------------
 {
+    // We want to be able to evaluate the result
+    if (!expr->code || !ntrees)
+        return expr;
+
     // Build the prefix with all the arguments
     Prefix *result = new Prefix(expr, NULL);
     Prefix *parent = result;
