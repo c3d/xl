@@ -1405,6 +1405,8 @@ Tree *CompileAction::DoName(Name *what)
             // Return the name itself by default
             unit.ConstantTree(result);
             unit.Copy(result, what);
+            if (!result->symbols)
+                result->SetSymbols(symbols);
         }
 
         return result;
