@@ -124,10 +124,13 @@ int main(int argc, char **argv)
             tree = context.Run(runnable);
         }
 
-        if (options.verbose)
-            debugp(tree);
-        else
-            std::cout << tree << "\n";
+        if (file != files.begin() || options.verbose)
+        {
+            if (options.verbose)
+                debugp(tree);
+            else
+                std::cout << tree << "\n";
+        }
     }
 
 #if CONFIG_USE_SBRK

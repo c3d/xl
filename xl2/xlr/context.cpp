@@ -321,7 +321,8 @@ void Context::CollectGarbage ()
         for (active_set::iterator a = roots.begin(); a != roots.end(); a++)
             (*a)->Do(gc);
         for (symbol_iter y = names.begin(); y != names.end(); y++)
-            (*y).second->Do(gc);
+            if (Tree *named = (*y).second)
+                named->Do(gc);
         if (rewrites)
             rewrites->Do(gc);
 
@@ -1743,7 +1744,8 @@ Tree *Rewrite::Do(Action &a)
 {
     rewrite_table::iterator i;
     Tree *result = from->Do(a);
-    result = to->Do(a);
+    if (to)
+        result = to->Do(a);
     for (i = hash.begin(); i != hash.end(); i++)
         result = (*i).second->Do(a);
     return result;
