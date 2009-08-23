@@ -185,7 +185,10 @@ Tree *Symbols::Run(Tree *code)
     if (!result)
         return result;
 
-    if (!result->IsConstant())
+     IFTRACE(eval)
+        std::cerr << "RUN: " << code << '\n';
+
+   if (!result->IsConstant())
     {
         if (!result->code)
         {
@@ -1320,10 +1323,10 @@ Tree *CompileAction::DoInfix(Infix *what)
         // For instruction list, string compile results together
         if (!what->left->Do(this))
             return NULL;
-        if (!what->right->Do(this))
-            return NULL;
         if (unit.Known(what->left))
             unit.CallEvaluate(what->left);
+        if (!what->right->Do(this))
+            return NULL;
         if (unit.Known(what->right))
             unit.CallEvaluate(what->right);
         unit.Copy(what->right, what);
