@@ -602,6 +602,7 @@ void Renderer::RenderOne(Tree *what)
         this->left = l;
         this->right = w;
         this->self = w->opening + w->closing;
+        this->priority = syntax.InfixPriority(w->opening);
         if (formats.count(n) > 0)
             RenderFormat(formats[n]);
         else if (formats.count(n0) > 0)
