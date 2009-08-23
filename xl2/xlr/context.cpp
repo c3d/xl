@@ -710,9 +710,9 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     CompiledUnit subUnit(compiler, source, parms);
     if (!subUnit.IsForwardCall())
     {
-        Tree *result = symbols->Compile(source, subUnit, false);
+        Tree *result = symbols->Compile(source, subUnit, true);
         if (!result)
-             return result;
+            unit.ConstantTree(source);
 
         eval_fn fn = subUnit.Finalize();
         source->code = fn;
@@ -1410,6 +1410,11 @@ Tree *CompileAction::DoName(Name *what)
         }
 
         return result;
+    }
+    if (nullIfBad)
+    {
+        unit.ConstantTree(what);
+        return what;
     }
     return context->Error("Name '$1' does not exist", what);
 }
