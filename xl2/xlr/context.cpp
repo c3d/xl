@@ -600,6 +600,7 @@ Tree *ArgumentMatch::Compile(Tree *source)
         LocalSave<bool> nib(compile->nullIfBad, true);
         source = source->Do(compile);
     }
+
     return source;
 }
 
@@ -1267,6 +1268,8 @@ Tree *CompileAction::DoBlock(Block *what)
     if ((what->opening == Block::indent && what->closing == Block::unindent) ||
         (what->opening == "(" && what->closing == ")"))
     {
+        if (unit.Known(what))
+            unit.Copy(what, what->child, false);
         Tree *result = what->child->Do(this);
         if (!result)
             return NULL;

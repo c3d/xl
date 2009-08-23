@@ -757,7 +757,7 @@ Value *CompiledUnit::Right(Tree *tree)
 }
 
 
-Value *CompiledUnit::Copy(Tree *source, Tree *dest)
+Value *CompiledUnit::Copy(Tree *source, Tree *dest, bool markDone)
 // ----------------------------------------------------------------------------
 //    Copy data from source to destination
 // ----------------------------------------------------------------------------
@@ -766,9 +766,12 @@ Value *CompiledUnit::Copy(Tree *source, Tree *dest)
     Value *ptr = NeedStorage(dest); assert(ptr);
     code->CreateStore(result, ptr);
 
-    Value *doneFlag = NeedLazy(dest);
-    Value *trueFlag = ConstantInt::get(Type::Int1Ty, 1);
-    code->CreateStore(trueFlag, doneFlag);
+    if (markDone)
+    {
+        Value *doneFlag = NeedLazy(dest);
+        Value *trueFlag = ConstantInt::get(Type::Int1Ty, 1);
+        code->CreateStore(trueFlag, doneFlag);
+    }
 
     return result;
 }
@@ -809,6 +812,8 @@ Value *CompiledUnit::CreateClosure(Tree *callee, tree_list &args)
     Value *callVal = code->CreateCall(compiler->xl_new_closure,
                                       argV.begin(), argV.end());
 
+    MarkComputed(callee, callVal);
+
     return callVal;
 }
 
@@ -821,16 +826,20 @@ Value *CompiledUnit::CallClosure(Tree *callee, uint ntrees)
 //   subroutine per number of arguments only.
 {
     // Load left tree and get its code tag
+    Type *treePtrTy = compiler->treePtrTy;
     Value *ptr = Known(callee); assert(ptr);
+    Value *topPtr = ptr;
     Value *pfx = code->CreateBitCast(ptr,compiler->prefixTreePtrTy);
     Value *lf = code->CreateConstGEP2_32(pfx, 0, LEFT_VALUE_INDEX);
     Value *callTree = code->CreateLoad(lf);
     Value *callCode = code->CreateConstGEP2_32(callTree, 0, CODE_INDEX);
-    Type *treePtrTy = compiler->treePtrTy;
+    callCode = code->CreateLoad(callCode);
     
     // Build argument list
     std::vector<Value *> argV;
     std::vector<const Type *> signature;
+    argV.push_back(topPtr);     // Self argument
+    signature.push_back(treePtrTy);
     for (uint i = 0; i < ntrees; i++)
     {
         // WARNING: This relies on the layout of all nodes beginning the same

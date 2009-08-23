@@ -130,7 +130,7 @@ struct CompiledUnit
     llvm::BasicBlock *  NeedTest();
     llvm::Value *       Left(Tree *);
     llvm::Value *       Right(Tree *);
-    llvm::Value *       Copy(Tree *src, Tree *dst);
+    llvm::Value *       Copy(Tree *src, Tree *dst, bool markDone=true);
     llvm::Value *       Invoke(Tree *subexpr, Tree *callee, tree_list args);
     llvm::Value *       CallEvaluate(Tree *);
     llvm::Value *       CreateClosure(Tree *callee, tree_list &args);
