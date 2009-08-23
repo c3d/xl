@@ -792,7 +792,7 @@ Tree *ArgumentMatch::DoName(Name *what)
             Tree *testCode = CompileValue(test);
             if (!testCode)
                 return NULL;
-            Tree *thisCode = CompileValue(existing);
+            Tree *thisCode = Compile(existing);
             if (!thisCode)
                 return NULL;
             unit.ShapeTest(testCode, thisCode);
