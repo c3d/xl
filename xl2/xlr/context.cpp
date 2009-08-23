@@ -615,7 +615,7 @@ Tree *ParameterMatch::DoName(Name *what)
 
 Tree *ParameterMatch::DoBlock(Block *what)
 // ----------------------------------------------------------------------------
-//   Parameters in a block are in its child
+//   Parameters in a block belong to the child
 // ----------------------------------------------------------------------------
 {
     return what->child->Do(this);
@@ -744,6 +744,8 @@ Tree *ArgumentMatch::CompileValue(Tree *source)
         {
             llvm::BasicBlock *bb = unit.BeginLazy(name);
             unit.NeedStorage(name);
+            if (!name->symbols)
+                name->SetSymbols(symbols);
             unit.CallEvaluate(name);
             unit.EndLazy(name, bb);
         }
@@ -1348,7 +1350,7 @@ Tree *DeclarationAction::DoName(Name *what)
 
 Tree *DeclarationAction::DoBlock(Block *what)
 // ----------------------------------------------------------------------------
-//   Optimize away indent or parenthese blocks, evaluate others
+//   Declarations in a block belong to the child, not to us
 // ----------------------------------------------------------------------------
 {
     return what->child->Do(this);
