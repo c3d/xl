@@ -467,7 +467,7 @@ text Scanner::Comment(text EOC)
     text    comment = "";
     int     c       = 0;
     bool    skip    = false;
-    uint    column  = position - lineStart;
+    ulong   column  = position - lineStart;
 
     while (*match && c != EOF)
     {
@@ -484,9 +484,15 @@ text Scanner::Comment(text EOC)
         else if (checkingIndent)
         {
             if (isspace(c))
-                skip = position - lineStart <= column;
+            {
+                skip = ((position - lineStart) < column);
+            }
             else
-                checkingIndent = false;
+            {
+                checkingIndent = skip = false;
+                if (column > position - lineStart)
+                    column = position - lineStart;
+            }
         }
 
         if (c == *match)
