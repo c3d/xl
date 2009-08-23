@@ -1,0 +1,14 @@
+rect x, y -> 
+    debug x
+    debug y
+
+rects 0,0 ->
+    rect 0,0
+rects N,0 ->
+    rect N,0
+    rects N-1, 5
+rects N,M ->
+    rect N,M
+    rects N,M-1
+
+rects 5, 5
