@@ -48,6 +48,7 @@ XL_BEGIN
 struct CompiledUnit;
 typedef std::map<Tree *, llvm::Value *>         value_map;
 typedef std::map<Tree *, llvm::Function *>      function_map;
+typedef std::map<uint, eval_fn>                 closure_map;
 
 
 struct Compiler
@@ -62,7 +63,7 @@ struct Compiler
                                            eval_fn code);
     llvm::Function *          ExternFunction(kstring name, void *address,
                                              const llvm::Type *retType,
-                                             uint parmCount, ...);
+                                             int parmCount, ...);
     llvm::Value *             EnterGlobal(Name *name, Name **address);
     llvm::Value *             EnterConstant(Tree *constant);
     llvm::Value *             Known(Tree *value);
@@ -93,8 +94,10 @@ public:
     llvm::Function            *xl_new_character;
     llvm::Function            *xl_new_text;
     llvm::Function            *xl_new_xtext;
+    llvm::Function            *xl_new_closure;
     function_map               functions;
     value_map                  globals;
+    closure_map                closures;
 };
 
 
@@ -130,6 +133,8 @@ struct CompiledUnit
     llvm::Value *       Copy(Tree *src, Tree *dst);
     llvm::Value *       Invoke(Tree *subexpr, Tree *callee, tree_list args);
     llvm::Value *       CallEvaluate(Tree *);
+    llvm::Value *       CreateClosure(Tree *callee, tree_list &args);
+    llvm::Value *       CallClosure(Tree *callee, uint ntrees);
 
     llvm::BasicBlock *  TagTest(Tree *code, ulong tag);
     llvm::BasicBlock *  IntegerTest(Tree *code, longlong value);

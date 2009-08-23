@@ -24,6 +24,7 @@
 // ****************************************************************************
 
 #include <iostream>
+#include <cstdarg>
 
 #include "runtime.h"
 #include "tree.h"
@@ -31,6 +32,7 @@
 #include "context.h"
 #include "options.h"
 #include "opcodes.h"
+#include "compiler.h"
 
 
 XL_BEGIN
@@ -54,7 +56,7 @@ Tree *xl_evaluate(Tree *what)
         return what;
 
     Tree *result = what;
-    if (result->Kind() >= NAME)
+    if (!result->IsConstant())
     {
         if (!what->code)
         {
@@ -140,6 +142,51 @@ Tree *xl_new_xtext(kstring value, kstring open, kstring close)
 {
     return new Text(value, open, close);
 }
+
+
+
+// ============================================================================
+// 
+//    Closure management
+// 
+// ============================================================================
+
+Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
+// ----------------------------------------------------------------------------
+//   Create a new closure at runtime, capturing the various trees
+// ----------------------------------------------------------------------------
+{
+    // Build the prefix with all the arguments
+    Prefix *result = new Prefix(expr, NULL);
+    Prefix *parent = result;
+    va_list va;
+    va_start(va, ntrees);
+    for (uint i = 0; i < ntrees; i++)
+    {
+        Tree *arg = va_arg(va, Tree *);
+        Prefix *item = new Prefix(arg, NULL);
+        parent->right = item;
+        parent = item;
+    }
+    va_end(va);
+
+    // Generate the code for the arguments
+    Context *context = Context::context;
+    Compiler * compiler = context->compiler;
+    eval_fn fn = compiler->closures[ntrees];
+    if (!fn)
+    {
+        tree_list noParms;
+        CompiledUnit unit(compiler, result, noParms);
+        unit.CallClosure(result, ntrees);
+        fn = unit.Finalize();
+        compiler->closures[ntrees] = fn;
+    }
+    result->code = fn;
+
+    return result;
+}
+
 
 
 // ========================================================================

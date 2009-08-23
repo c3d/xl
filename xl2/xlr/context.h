@@ -150,6 +150,7 @@ typedef std::set<Tree *>          active_set;   // Not to be garbage collected
 typedef std::map<ulong, Rewrite*> rewrite_table;// Hashing of rewrites
 typedef symbol_table::iterator    symbol_iter;  // Iterator over sym table
 typedef std::vector<Tree **>      globals_table;// Table of LLVM globals
+typedef std::map<Tree*, Symbols*> capture_table;// Symbol capture table
 
 
 
@@ -379,6 +380,7 @@ struct ArgumentMatch : Action
 
     // Compile a tree
     Tree *        Compile(Tree *source);
+    Tree *        CompileClosure(Tree *source);
 
 public:
     Symbols *     symbols;      // Context in which we evaluate values
@@ -388,6 +390,28 @@ public:
     Tree *        defined;      // Tree beind defined, e.g. 'sin' in 'sin X'
     CompileAction *compile;     // Action in which we are compiling
     CompiledUnit &unit;         // JIT compiler compilation unit
+};
+
+
+struct EnvironmentScan : Action
+// ----------------------------------------------------------------------------
+//   Collect variables in the tree that are imported from environment
+// ----------------------------------------------------------------------------
+{
+    EnvironmentScan (Symbols *s): symbols(s) {}
+
+    virtual Tree *Do(Tree *what);
+    virtual Tree *DoInteger(Integer *what);
+    virtual Tree *DoReal(Real *what);
+    virtual Tree *DoText(Text *what);
+    virtual Tree *DoName(Name *what);
+    virtual Tree *DoPrefix(Prefix *what);
+    virtual Tree *DoPostfix(Postfix *what);
+    virtual Tree *DoInfix(Infix *what);
+    virtual Tree *DoBlock(Block *what);
+
+    Symbols *           symbols;        // Symbols in which we test
+    capture_table       captured;       // Captured symbols
 };
 
 
@@ -446,7 +470,7 @@ inline Tree *Symbols::Named(text name, bool deep)
 //   Find the name in the current context
 // ----------------------------------------------------------------------------
 {
-    for (Symbols *s = this; s && deep; s = s->parent)
+    for (Symbols *s = this; s; s = deep ? s->parent : NULL)
         if (s->names.count(name) > 0)
             return s->names[name];
     return NULL;

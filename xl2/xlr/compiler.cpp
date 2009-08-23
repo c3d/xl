@@ -207,8 +207,11 @@ Compiler::Compiler(kstring moduleName)
                                       treePtrTy, 1, charPtrTy);
     xl_new_text = ExternFunction(FN(xl_new_text),
                                  treePtrTy, 1, charPtrTy);
-    xl_new_text = ExternFunction(FN(xl_new_xtext),
+    xl_new_xtext = ExternFunction(FN(xl_new_xtext),
                                  treePtrTy, 3, charPtrTy, charPtrTy, charPtrTy);
+    xl_new_closure = ExternFunction(FN(xl_new_closure),
+                                    treePtrTy, -2,
+                                    treePtrTy, LLVM_INTTYPE(uint));
 }
 
 
@@ -246,20 +249,25 @@ Function *Compiler::EnterBuiltin(text name,
 
 
 Function *Compiler::ExternFunction(kstring name, void *address,
-                                   const Type *retType, uint parmCount, ...)
+                                   const Type *retType, int parmCount, ...)
 // ----------------------------------------------------------------------------
 //   Return a Function for some given external symbol
 // ----------------------------------------------------------------------------
 {
     va_list va;
-    va_start (va, parmCount);
     std::vector<const Type *> parms;
-    for (uint i = 0; i < parmCount; i++)
+    bool isVarArg = parmCount < 0;
+    if (isVarArg)
+        parmCount = -parmCount;
+
+    va_start(va, parmCount);
+    for (int i = 0; i < parmCount; i++)
     {
         Type *ty = va_arg(va, Type *);
         parms.push_back(ty);
     }
-    FunctionType *fnType = FunctionType::get(retType, parms, false);
+    va_end(va);
+    FunctionType *fnType = FunctionType::get(retType, parms, isVarArg);
     Function *result = Function::Create(fnType, Function::ExternalLinkage,
                                         name, module);
     sys::DynamicLibrary::AddSymbol(name, address);
@@ -297,7 +305,7 @@ Value *Compiler::EnterConstant(Tree *constant)
     case TEXT:    name = "xltext"; break;
     default:                       break;
     }
-    IFTRACE(treelabels)
+    IFTRACE(labels)
         name += "[" + text(*constant) + "]";
     GlobalValue *result = new GlobalVariable (treePtrTy, isConstant,
                                               GlobalVariable::InternalLinkage,
@@ -347,7 +355,7 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *src, tree_list parms)
         signature.push_back(treeTy);
     FunctionType *fnTy = FunctionType::get(treeTy, signature, false);
     text label = "xl_eval";
-    IFTRACE(treelabels)
+    IFTRACE(labels)
         label += "[" + text(*src) + "]";
     function = Function::Create(fnTy, Function::InternalLinkage,
                                 label.c_str(), compiler->module);
@@ -435,7 +443,7 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
     {
         // Create alloca to store the new form
         text label = "loc";
-        IFTRACE(treelabels)
+        IFTRACE(labels)
             label += "[" + text(*tree) + "]";
         const char *clabel = label.c_str();
         result = data->CreateAlloca(compiler->treePtrTy, 0, clabel);
@@ -550,7 +558,7 @@ Value *CompiledUnit::NeedLazy(Tree *subexpr)
     if (!result)
     {
         text label = "computed";
-        IFTRACE(treelabels)
+        IFTRACE(labels)
             label += "[" + text(*subexpr) + "]";
         result = data->CreateAlloca(Type::Int1Ty, 0, label.c_str());
         Value *falseFlag = ConstantInt::get(Type::Int1Ty, 0);
@@ -772,6 +780,66 @@ Value *CompiledUnit::CallEvaluate(Tree *tree)
     Value *evaluated = code->CreateCall(compiler->xl_evaluate, treeValue);
     MarkComputed(tree, evaluated);
     return evaluated;
+}
+
+
+Value *CompiledUnit::CreateClosure(Tree *callee, tree_list &args)
+// ----------------------------------------------------------------------------
+//   Create a closure for an expression we want to evaluate later
+// ----------------------------------------------------------------------------
+{
+    std::vector<Value *> argV;
+    Value *calleeVal = Known(callee); assert(calleeVal);
+    Value *countVal = ConstantInt::get(LLVM_INTTYPE(uint), args.size());
+    tree_list::iterator a;
+
+    argV.push_back(calleeVal);
+    argV.push_back(countVal);
+    for (a = args.begin(); a != args.end(); a++)
+    {
+        Tree *value = *a;
+        Value *llvmValue = Known(value); assert(llvmValue);
+        argV.push_back(llvmValue);
+    }
+        
+    Value *callVal = code->CreateCall(compiler->xl_new_closure,
+                                      argV.begin(), argV.end());
+
+    return callVal;
+}
+
+
+Value *CompiledUnit::CallClosure(Tree *callee, uint ntrees)
+ // ----------------------------------------------------------------------------
+//   Call a closure function with the given n trees
+// ----------------------------------------------------------------------------
+{
+    // Closure-creation function to call
+    Function *toCall = compiler->functions[callee]; assert(toCall);
+
+    // Build argument list
+    std::vector<Value *> argV;
+    Value *ptr = Known(callee); assert(ptr);
+    for (uint i = 0; i < ntrees; i++)
+    {
+        // WARNING: This relies on the layout of all nodes beginning the same
+        Value *pfx = code->CreateBitCast(ptr,compiler->prefixTreePtrTy);
+        Value *rt = code->CreateConstGEP2_32(pfx, 0, RIGHT_VALUE_INDEX);
+        ptr = code->CreateLoad(rt);
+        pfx = code->CreateBitCast(ptr,compiler->prefixTreePtrTy);
+        Value *lf = code->CreateConstGEP2_32(pfx, 0, LEFT_VALUE_INDEX);
+        Value *arg = code->CreateLoad(lf);
+        argV.push_back(arg);
+
+    }
+
+    // Call the resulting function
+    Value *callVal = code->CreateCall(toCall, argV.begin(), argV.end());
+
+    // Store the flags indicating that we computed the value
+    MarkComputed(callee, callVal);
+
+    return callVal;
 }
 
 

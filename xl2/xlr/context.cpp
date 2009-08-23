@@ -163,6 +163,8 @@ Tree *Symbols::CompileAll(Tree *source)
     Compiler *compiler = context->compiler;
     tree_list noParms;
     CompiledUnit unit (compiler, source, noParms);
+    if (unit.IsForwardCall())
+        return source;
 
     Tree *result = Compile(source, unit, false);
     if (!result)
@@ -183,7 +185,7 @@ Tree *Symbols::Run(Tree *code)
     if (!result)
         return result;
 
-    if (result->Kind() >= NAME)
+    if (!result->IsConstant())
     {
         if (!result->code)
         {
@@ -602,6 +604,64 @@ Tree *ArgumentMatch::Compile(Tree *source)
 }
 
 
+Tree *ArgumentMatch::CompileClosure(Tree *source)
+// ----------------------------------------------------------------------------
+//    Compile the source tree for lazy evaluation, i.e. wrap in code
+// ----------------------------------------------------------------------------
+{
+    // Compile leaves normally
+    if (source->IsLeaf())
+        return Compile(source);
+
+    // For more complex expression, return a constant tree
+    unit.ConstantTree(source);
+
+    // Record which elements of the expression are captured from context
+    Context *context = Context::context;
+    Compiler *compiler = context->compiler;
+    EnvironmentScan env(symbols);
+    Tree *envOK = source->Do(env);
+    if (!envOK)
+        return context->Error("Internal: what environment in '$1'?", source);
+
+    // Create the parameter list with all imported locals
+    tree_list parms, args;
+    capture_table::iterator c;
+    for (c = env.captured.begin(); c != env.captured.end(); c++)
+    {
+        Tree *name = (*c).first;
+        Symbols *where = (*c).second;
+        if (where == context)
+        {
+            // This is a global, we'll find it running the target.
+        }
+        else
+        {
+            // This is a local: simply pass it around
+            parms.push_back(name);
+            args.push_back(name);
+        }
+    }
+    
+    // Create the compilation unit and check if we are already compiling this
+    CompiledUnit subUnit(compiler, source, parms);
+    if (!subUnit.IsForwardCall())
+    {
+        Tree *result = symbols->Compile(source, subUnit, false);
+        if (!result)
+             return result;
+
+        eval_fn fn = subUnit.Finalize();
+        source->code = fn;
+    }
+
+    // Create a call to xl_new_closure to save the required trees
+    unit.CreateClosure(source, args);
+
+    return source;
+}
+
+
 Tree *ArgumentMatch::Do(Tree *what)
 // ----------------------------------------------------------------------------
 //   Default is to return failure
@@ -720,7 +780,7 @@ Tree *ArgumentMatch::DoName(Name *what)
         }
 
         // If first occurence of the name, enter it in symbol table
-        Tree *compiled = Compile(test);
+        Tree *compiled = CompileClosure(test);
         if (!compiled)
             return NULL;
 
@@ -878,6 +938,112 @@ Tree *ArgumentMatch::DoPostfix(Postfix *what)
         return what;
     }
     return NULL;
+}
+
+
+
+// ============================================================================
+// 
+//    Environment scan - Identify which names are imported from context
+// 
+// ============================================================================
+
+Tree *EnvironmentScan::Do(Tree *what)
+// ----------------------------------------------------------------------------
+//   Nothing to do for leaves
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *EnvironmentScan::DoInteger(Integer *what)
+// ----------------------------------------------------------------------------
+//   Nothing to do for leaves
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *EnvironmentScan::DoReal(Real *what)
+// ----------------------------------------------------------------------------
+//   Nothing to do for leaves
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *EnvironmentScan::DoText(Text *what)
+// ----------------------------------------------------------------------------
+//   Nothing to do for leaves
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *EnvironmentScan::DoName(Name *what)
+// ----------------------------------------------------------------------------
+//    Check if name is found in context, if so record where we took it from
+// ----------------------------------------------------------------------------
+{
+    for (Symbols *s = symbols; s; s = s->Parent())
+    {
+        if (Tree *existing = s->Named(what->value, false))
+        {
+            // Found the symbol in the given symbol table
+            if (!captured.count(existing))
+                captured[existing] = s;
+            break;
+        }
+    }
+    return what;
+}
+
+
+Tree *EnvironmentScan::DoBlock(Block *what)
+// ----------------------------------------------------------------------------
+//   Parameters in a block are in its child
+// ----------------------------------------------------------------------------
+{
+    return what->child->Do(this);
+}
+
+
+Tree *EnvironmentScan::DoInfix(Infix *what)
+// ----------------------------------------------------------------------------
+//   Check if we match an infix operator
+// ----------------------------------------------------------------------------
+{
+    // Test left and right
+    what->left->Do(this);
+    what->right->Do(this);
+    return what;
+}
+
+
+Tree *EnvironmentScan::DoPrefix(Prefix *what)
+// ----------------------------------------------------------------------------
+//   For prefix expressions, simply test left then right
+// ----------------------------------------------------------------------------
+{
+    what->left->Do(this);
+    what->right->Do(this);
+    return what;
+}
+
+
+Tree *EnvironmentScan::DoPostfix(Postfix *what)
+// ----------------------------------------------------------------------------
+//    For postfix expressions, simply test right, then left
+// ----------------------------------------------------------------------------
+{
+    // Order shouldn't really matter here (unlike ParameterMach)
+    what->right->Do(this);
+    what->left->Do(this);
+    return what;
 }
 
 
@@ -1126,6 +1292,10 @@ Tree *CompileAction::DoInfix(Infix *what)
             return NULL;
         if (!what->right->Do(this))
             return NULL;
+        if (unit.Known(what->left))
+            unit.CallEvaluate(what->left);
+        if (unit.Known(what->right))
+            unit.CallEvaluate(what->right);
         unit.Copy(what->right, what);
         return what;
     }
