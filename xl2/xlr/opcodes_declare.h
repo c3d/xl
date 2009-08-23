@@ -30,19 +30,22 @@
 #undef NAME
 #undef TYPE
 #undef PARM
+#undef DS
+#undef RS
 
 #define DS(n) IFTRACE(builtins) std::cerr << "Builtin " #n ": " << self << '\n';
+#define RS return self
 
 #define INFIX(t1, symbol, t2, name, code)       \
-    Tree *xl_##name(Tree*self, t1##_r l, t2##_r r) { DS(symbol) code; }
+    Tree *xl_##name(Tree*self, t1##_r l, t2##_r r) { DS(symbol) code; RS; }
 
 #define PARM(symbol, type)      , type##_r symbol
 
 #define PREFIX(symbol, parms, name, code)       \
-    Tree *xl_##name(Tree *self parms) { DS(symbol) code; }
+    Tree *xl_##name(Tree *self parms) { DS(symbol) code; RS; }
 
 #define POSTFIX(parms, symbol, name, code)       \
-    Tree *xl_##name(Tree *self parms) { DS(symbol) code; }
+    Tree *xl_##name(Tree *self parms) { DS(symbol) code; RS; }
 
 #define NAME(symbol)    \
     Name *xl_##symbol;
@@ -50,3 +53,4 @@
 #define TYPE(symbol)                            \
     Name *xl_##symbol##_name;                   \
     extern Tree *xl_##symbol(Tree *value);
+
