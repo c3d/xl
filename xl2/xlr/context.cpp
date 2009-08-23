@@ -1456,8 +1456,12 @@ Tree *CompileAction::DoInfix(Infix *what)
                 assert (right->code);
             }                
             unit.CallEvaluate(what->right);
+            unit.Copy(what->right, what);
         }
-        unit.Copy(what->right, what);
+        else if (unit.IsKnown(what->left))
+        {
+            unit.Copy(what->left, what);
+        }
         return what;
     }
 
