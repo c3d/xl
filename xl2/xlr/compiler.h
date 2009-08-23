@@ -51,6 +51,7 @@ typedef std::map<Tree *, llvm::Value *>         value_map;
 typedef std::map<Tree *, llvm::Function *>      function_map;
 typedef std::map<uint, eval_fn>                 closure_map;
 typedef std::set<Tree *>                        closure_set;
+typedef std::set<Tree *>                        data_set;
 
 
 struct Compiler
@@ -68,6 +69,7 @@ struct Compiler
                                              int parmCount, ...);
     llvm::Value *             EnterGlobal(Name *name, Name **address);
     llvm::Value *             EnterConstant(Tree *constant);
+    bool                      IsKnown(Tree *value);
     llvm::Value *             Known(Tree *value);
 
     void                      FreeResources(Tree *tree);
@@ -124,6 +126,7 @@ struct CompiledUnit
     enum { knowAll = -1, knowGlobals = 1, knowLocals = 2, knowValues = 4 };
 
     llvm::Value *       NeedStorage(Tree *tree);
+    bool                IsKnown(Tree *tree, uint which = knowAll);
     llvm::Value *       Known(Tree *tree, uint which = knowAll );
 
     llvm::Value *       ConstantInteger(Integer *what);
@@ -142,6 +145,10 @@ struct CompiledUnit
     llvm::Value *       Copy(Tree *src, Tree *dst, bool markDone=true);
     llvm::Value *       Invoke(Tree *subexpr, Tree *callee, tree_list args);
     llvm::Value *       CallEvaluate(Tree *);
+    llvm::Value *       CallNewBlock(Block *);
+    llvm::Value *       CallNewPrefix(Prefix *);
+    llvm::Value *       CallNewPostfix(Postfix *);
+    llvm::Value *       CallNewInfix(Infix *);
     llvm::Value *       CreateClosure(Tree *callee, tree_list &args);
     llvm::Value *       CallClosure(Tree *callee, uint ntrees);
 
@@ -168,6 +175,7 @@ public:
     value_map           value;          // Map tree -> LLVM value
     value_map           storage;        // Map tree -> LLVM alloca space
     value_map           computed;       // Map tree -> LLVM "computed" flag
+    data_set            noeval;         // Data expressions we don't evaluate
 };
 
 

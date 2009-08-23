@@ -236,13 +236,13 @@ Compiler::Compiler(kstring moduleName)
                                     treePtrTy, -2,
                                     treePtrTy, LLVM_INTTYPE(uint));
     xl_new_block = ExternFunction(FN(xl_new_block),
-                                  treePtrTy, 3, treePtrTy,charPtrTy,charPtrTy);
+                                  treePtrTy, 2, treePtrTy,treePtrTy);
     xl_new_prefix = ExternFunction(FN(xl_new_prefix),
-                                   treePtrTy, 2, treePtrTy,treePtrTy);
+                                   treePtrTy, 3, treePtrTy,treePtrTy,treePtrTy);
     xl_new_postfix = ExternFunction(FN(xl_new_postfix),
-                                    treePtrTy, 2, treePtrTy,treePtrTy);
+                                    treePtrTy, 3,treePtrTy,treePtrTy,treePtrTy);
     xl_new_infix = ExternFunction(FN(xl_new_infix),
-                                  treePtrTy, 3, charPtrTy,treePtrTy,treePtrTy);
+                                  treePtrTy, 3, treePtrTy,treePtrTy,treePtrTy);
 }
 
 
@@ -345,6 +345,15 @@ Value *Compiler::EnterConstant(Tree *constant)
     runtime->addGlobalMapping(result, address);
     globals[constant] = result;
     return result;
+}
+
+
+bool Compiler::IsKnown(Tree *tree)
+// ----------------------------------------------------------------------------
+//    Test if global is known
+// ----------------------------------------------------------------------------
+{
+    return globals.count(tree) > 0;
 }
 
 
@@ -505,9 +514,25 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
 }
 
 
-Value *CompiledUnit::Known(Tree *tree, uint which)
+bool CompiledUnit::IsKnown(Tree *tree, uint which)
 // ----------------------------------------------------------------------------
 //   Check if the tree has a known local or global value
+// ----------------------------------------------------------------------------
+{
+    if ((which & knowLocals) && storage.count(tree) > 0)
+        return true;
+    else if ((which & knowValues) && value.count(tree) > 0)
+        return true;
+    else if (which & knowGlobals)
+        if (compiler->IsKnown(tree))
+            return true;
+    return false;
+}
+
+
+Value *CompiledUnit::Known(Tree *tree, uint which)
+// ----------------------------------------------------------------------------
+//   Return the known local or global value if any
 // ----------------------------------------------------------------------------
 {
     Value *result = NULL;
@@ -828,12 +853,72 @@ Value *CompiledUnit::CallEvaluate(Tree *tree)
 //   Call the evaluate function for the given tree
 // ----------------------------------------------------------------------------
 {
-    Value *treeValue = Known(tree);
-    assert(treeValue);
+    Value *treeValue = Known(tree); assert(treeValue);
+    if (noeval.count(tree))
+        return treeValue;
+
     Value *evaluated = code->CreateCall(compiler->xl_evaluate, treeValue);
-    
     MarkComputed(tree, evaluated);
     return evaluated;
+}
+
+
+Value *CompiledUnit::CallNewBlock(Block *block)
+// ----------------------------------------------------------------------------
+//    Compile code generating the children of the block
+// ----------------------------------------------------------------------------
+{
+    Value *blockValue = Known(block);
+    Value *childValue = Known(block->child);
+    Value *result = code->CreateCall2(compiler->xl_new_block,
+                                      blockValue, childValue);
+    MarkComputed(block, result);
+    return result;
+}
+
+
+Value *CompiledUnit::CallNewPrefix(Prefix *prefix)
+// ----------------------------------------------------------------------------
+//    Compile code generating the children of a prefix
+// ----------------------------------------------------------------------------
+{
+    Value *prefixValue = Known(prefix);
+    Value *leftValue = Known(prefix->left);
+    Value *rightValue = Known(prefix->right);
+    Value *result = code->CreateCall3(compiler->xl_new_prefix,
+                                      prefixValue, leftValue, rightValue);
+    MarkComputed(prefix, result);
+    return result;
+}
+
+
+Value *CompiledUnit::CallNewPostfix(Postfix *postfix)
+// ----------------------------------------------------------------------------
+//    Compile code generating the children of a postfix
+// ----------------------------------------------------------------------------
+{
+    Value *postfixValue = Known(postfix);
+    Value *leftValue = Known(postfix->left);
+    Value *rightValue = Known(postfix->right);
+    Value *result = code->CreateCall3(compiler->xl_new_postfix,
+                                      postfixValue, leftValue, rightValue);
+    MarkComputed(postfix, result);
+    return result;
+}
+
+
+Value *CompiledUnit::CallNewInfix(Infix *infix)
+// ----------------------------------------------------------------------------
+//    Compile code generating the children of an infix
+// ----------------------------------------------------------------------------
+{
+    Value *infixValue = Known(infix);
+    Value *leftValue = Known(infix->left);
+    Value *rightValue = Known(infix->right);
+    Value *result = code->CreateCall3(compiler->xl_new_infix,
+                                      infixValue, leftValue, rightValue);
+    MarkComputed(infix, result);
+    return result;
 }
 
 

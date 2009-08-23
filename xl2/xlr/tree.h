@@ -84,6 +84,12 @@ struct Tree
     // Constructor and destructor
     Tree (kind k, tree_position pos = NOWHERE):
         tag((pos<<KINDBITS) | k), code(NULL), symbols(NULL), type(NULL) {}
+    Tree(kind k, Tree *from):
+        tag(from->tag),
+        code(from->code), symbols(from->symbols), type(from->type)
+    {
+        assert(k == Kind());
+    }
     ~Tree() {}
 
     // Perform recursive actions on a tree
@@ -156,6 +162,7 @@ struct Integer : Tree
 {
     Integer(longlong i = 0, tree_position pos = NOWHERE):
         Tree(INTEGER, pos), value(i) {}
+    Integer(Integer *i): Tree(INTEGER, i), value(i->value) {}
     longlong            value;
     operator longlong()         { return value; }
 };
@@ -168,6 +175,7 @@ struct Real : Tree
 {
     Real(double d = 0.0, tree_position pos = NOWHERE):
         Tree(REAL, pos), value(d) {}
+    Real(Real *r): Tree(REAL, r), value(r->value) {}
     double              value;
     operator double()           { return value; }
 };
@@ -180,6 +188,9 @@ struct Text : Tree
 {
     Text(text t, text open="\"", text close="\"", tree_position pos=NOWHERE):
         Tree(TEXT, pos), value(t), opening(open), closing(close) {}
+    Text(Text *t):
+        Tree(TEXT, t),
+        value(t->value), opening(t->opening), closing(t->closing) {}
     text                value;
     text                opening, closing;
     static text         textQuote, charQuote;
@@ -194,6 +205,8 @@ struct Name : Tree
 {
     Name(text n, tree_position pos = NOWHERE):
         Tree(NAME, pos), value(n) {}
+    Name(Name *n):
+        Tree(NAME, n), value(n->value) {}
     text                value;
     operator bool();
 };
@@ -213,6 +226,8 @@ struct Block : Tree
 {
     Block(Tree *c, text open, text close, tree_position pos = NOWHERE):
         Tree(BLOCK, pos), child(c), opening(open), closing(close) {}
+    Block(Block *b, Tree *ch):
+        Tree(BLOCK, b), child(ch), opening(b->opening), closing(b->closing) {}
     Tree *              child;
     text                opening, closing;
     static text         indent, unindent;
@@ -226,6 +241,8 @@ struct Prefix : Tree
 {
     Prefix(Tree *l, Tree *r, tree_position pos = NOWHERE):
         Tree(PREFIX, pos), left(l), right(r) {}
+    Prefix(Prefix *p, Tree *l, Tree *r):
+        Tree(PREFIX, p), left(l), right(r) {}
     Tree *              left;
     Tree *              right;
 };
@@ -238,6 +255,8 @@ struct Postfix : Tree
 {
     Postfix(Tree *l, Tree *r, tree_position pos = NOWHERE):
         Tree(POSTFIX, pos), left(l), right(r) {}
+    Postfix(Postfix *p, Tree *l, Tree *r):
+        Tree(POSTFIX, p), left(l), right(r) {}
     Tree *              left;
     Tree *              right;
 };
@@ -250,6 +269,8 @@ struct Infix : Tree
 {
     Infix(text n, Tree *l, Tree *r, tree_position pos = NOWHERE):
         Tree(INFIX, pos), left(l), right(r), name(n) {}
+    Infix(Infix *i, Tree *l, Tree *r):
+        Tree(INFIX, i), left(l), right(r), name(i->name) {}
     Tree *              left;
     Tree *              right;
     text                name;

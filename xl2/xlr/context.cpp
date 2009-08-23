@@ -593,7 +593,7 @@ Tree *ArgumentMatch::Compile(Tree *source)
 // ----------------------------------------------------------------------------
 {
     // Compile the code
-    if (!unit.Known(source))
+    if (!unit.IsKnown(source))
     {
         source = symbols->Compile(source, unit, true);
         if (!source)
@@ -1078,6 +1078,66 @@ Tree *EnvironmentScan::DoPostfix(Postfix *what)
 
 // ============================================================================
 // 
+//   BuildChildren action: Build a non-leaf after evaluating children
+// 
+// ============================================================================
+
+Tree *BuildChildren::DoPrefix(Prefix *what)
+// ----------------------------------------------------------------------------
+//   Evaluate children, then build a prefix
+// ----------------------------------------------------------------------------
+{
+    unit.Left(what);
+    what->left->Do(compile);
+    unit.Right(what);
+    what->right->Do(compile);
+    unit.CallNewPrefix(what);
+    return what;
+}
+
+
+Tree *BuildChildren::DoPostfix(Postfix *what)
+// ----------------------------------------------------------------------------
+//   Evaluate children, then build a postfix
+// ----------------------------------------------------------------------------
+{
+    unit.Left(what);
+    what->left->Do(compile);
+    unit.Right(what);
+    what->right->Do(compile);
+    unit.CallNewPostfix(what);
+    return what;
+}
+
+
+Tree *BuildChildren::DoInfix(Infix *what)
+// ----------------------------------------------------------------------------
+//   Evaluate children, then build an infix
+// ----------------------------------------------------------------------------
+{
+    unit.Left(what);
+    what->left->Do(compile);
+    unit.Right(what);
+    what->right->Do(compile);
+    unit.CallNewInfix(what);
+    return what;
+}
+
+
+Tree *BuildChildren::DoBlock(Block *what)
+// ----------------------------------------------------------------------------
+//   Evaluate children, then build a new block
+// ----------------------------------------------------------------------------
+{
+    unit.Left(what);
+    what->child->Do(compile);
+    unit.CallNewBlock(what);
+    return what;
+}
+
+
+// ============================================================================
+// 
 //   Declaration action - Enter all tree rewrites in the current symbols
 // 
 // ============================================================================
@@ -1307,7 +1367,7 @@ Tree *CompileAction::DoBlock(Block *what)
     if ((what->opening == Block::indent && what->closing == Block::unindent) ||
         (what->opening == "(" && what->closing == ")"))
     {
-        if (unit.Known(what))
+        if (unit.IsKnown(what))
             unit.Copy(what, what->child, false);
         Tree *result = what->child->Do(this);
         if (!result)
@@ -1332,11 +1392,11 @@ Tree *CompileAction::DoInfix(Infix *what)
         // For instruction list, string compile results together
         if (!what->left->Do(this))
             return NULL;
-        if (unit.Known(what->left))
+        if (unit.IsKnown(what->left))
             unit.CallEvaluate(what->left);
         if (!what->right->Do(this))
             return NULL;
-        if (unit.Known(what->right))
+        if (unit.IsKnown(what->right))
             unit.CallEvaluate(what->right);
         unit.Copy(what->right, what);
         return what;
@@ -1356,9 +1416,14 @@ Tree *CompileAction::DoInfix(Infix *what)
 
 Tree *CompileAction::DoPrefix(Prefix *what)
 // ----------------------------------------------------------------------------
-//    All prefix operations translate into a rewrite
+//    Deal with data declarations, otherwise translate as a rewrite
 // ----------------------------------------------------------------------------
 {
+    if (Name *name = what->left->AsName())
+    {
+        if (name->value == "data")
+            return what;
+    }
     return Rewrites(what);
 }
 
@@ -1424,7 +1489,11 @@ Tree * CompileAction::Rewrites(Tree *what)
                     // If this is a data form, we are done
                     if (!candidate->to)
                     {
+                        unit.ConstantTree(what);
                         foundUnconditional = !unit.failbb;
+                        BuildChildren children(this);
+                        what = what->Do(children);
+                        unit.noeval.insert(what);
                         reduction.Succeeded();
                     }
                     else

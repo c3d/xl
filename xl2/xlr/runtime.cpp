@@ -149,21 +149,21 @@ Tree *xl_new_xtext(kstring value, kstring open, kstring close)
 {
     return new Text(value, open, close);
 }
-Tree *xl_new_block(Tree *child, kstring open, kstring close)
+Tree *xl_new_block(Block *source, Tree *child)
 {
-    return new Block(child, open, close);
+    return new Block(source, child);
 }
-Tree *xl_new_prefix(Tree *left, Tree *right)
+Tree *xl_new_prefix(Prefix *source, Tree *left, Tree *right)
 {
-    return new Prefix(left, right);
+    return new Prefix(source, left, right);
 }
-Tree *xl_new_postfix(Tree *left, Tree *right)
+Tree *xl_new_postfix(Postfix *source, Tree *left, Tree *right)
 {
-    return new Postfix(left, right);
+    return new Postfix(source, left, right);
 }
-Tree *xl_new_infix(kstring name, Tree *left, Tree *right)
+Tree *xl_new_infix(Infix *source, Tree *left, Tree *right)
 {
-    return new Infix(name, left, right);
+    return new Infix(source, left, right);
 }
 
 

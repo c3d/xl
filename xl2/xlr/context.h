@@ -401,8 +401,33 @@ struct EnvironmentScan : Action
     virtual Tree *DoInfix(Infix *what);
     virtual Tree *DoBlock(Block *what);
 
+public:
     Symbols *           symbols;        // Symbols in which we test
     capture_table       captured;       // Captured symbols
+};
+
+
+struct BuildChildren : Action
+// ----------------------------------------------------------------------------
+//   Build a clone of a tree, evaluating its children
+// ----------------------------------------------------------------------------
+{
+    BuildChildren(CompileAction *comp):
+        compile(comp), unit(comp->unit) {}
+
+    virtual Tree *Do(Tree *what)                { return what; }
+    virtual Tree *DoInteger(Integer *what)      { return what; }
+    virtual Tree *DoReal(Real *what)            { return what; }
+    virtual Tree *DoText(Text *what)            { return what; }
+    virtual Tree *DoName(Name *what)            { return what; }
+    virtual Tree *DoPrefix(Prefix *what);
+    virtual Tree *DoPostfix(Postfix *what);
+    virtual Tree *DoInfix(Infix *what);
+    virtual Tree *DoBlock(Block *what);
+ 
+public:
+    CompileAction *compile;     // Compilation in progress
+    CompiledUnit & unit;        // JIT compiler compilation unit
 };
 
 
