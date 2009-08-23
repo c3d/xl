@@ -66,6 +66,7 @@ Tree *xl_new_postfix(Postfix *source, Tree *left, Tree *right);
 Tree *xl_new_infix(Infix *source, Tree *left, Tree *right);
 
 Tree *xl_new_closure(Tree *expr, uint ntrees, ...);
+Tree *xl_type_error(Tree *tree);
 
 Tree *xl_boolean(Tree *value);    
 Tree *xl_integer(Tree *value);

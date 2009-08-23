@@ -254,6 +254,15 @@ Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
 }
 
 
+Tree *xl_type_error(Tree *what)
+// ----------------------------------------------------------------------------
+//   Display message if we have a type error
+// ----------------------------------------------------------------------------
+{
+    return Context::context->Error("No form matches '$1'", what);
+}
+
+
 
 // ========================================================================
 // 

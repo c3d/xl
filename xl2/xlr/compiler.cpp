@@ -86,7 +86,7 @@ Compiler::Compiler(kstring moduleName)
       prefixTreeTy(NULL), prefixTreePtrTy(NULL),
       evalTy(NULL), evalFnTy(NULL), symbolsPtrTy(NULL),
       xl_evaluate(NULL), xl_same_text(NULL), xl_same_shape(NULL),
-      xl_type_check(NULL),
+      xl_type_check(NULL), xl_type_error(NULL),
       xl_new_integer(NULL), xl_new_real(NULL), xl_new_character(NULL),
       xl_new_text(NULL), xl_new_xtext(NULL), xl_new_block(NULL),
       xl_new_prefix(NULL), xl_new_postfix(NULL), xl_new_infix(NULL),
@@ -222,6 +222,8 @@ Compiler::Compiler(kstring moduleName)
                                    boolTy, 2, treePtrTy, treePtrTy);
     xl_type_check = ExternFunction(FN(xl_type_check),
                                    boolTy, 2, treePtrTy, treePtrTy);
+    xl_type_error = ExternFunction(FN(xl_type_error),
+                                   treePtrTy, 1, treePtrTy);
     xl_new_integer = ExternFunction(FN(xl_new_integer),
                                     treePtrTy, 1, LLVM_INTTYPE(longlong));
     xl_new_real = ExternFunction(FN(xl_new_real),
@@ -993,6 +995,18 @@ Value *CompiledUnit::CallClosure(Tree *callee, uint ntrees)
     // Store the flags indicating that we computed the value
     MarkComputed(callee, callVal);
 
+    return callVal;
+}
+
+
+Value *CompiledUnit::CallTypeError(Tree *what)
+// ----------------------------------------------------------------------------
+//   Report a type error trying to evaluate some argument
+// ----------------------------------------------------------------------------
+{
+    Value *ptr = ConstantTree(what); assert(what);
+    Value *callVal = code->CreateCall(compiler->xl_type_error, ptr);
+    MarkComputed(what, callVal);
     return callVal;
 }
 

@@ -1624,6 +1624,10 @@ Tree * CompileAction::Rewrites(Tree *what)
         } // while(candidate)
     } // for(namespaces)
 
+    // If we didn't match anything, then emit an error at runtime
+    if (!foundUnconditional && !nullIfBad)
+        unit.CallTypeError(what);
+
     // If we didn't find anything, report it
     if (!foundSomething)
     {

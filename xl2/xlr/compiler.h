@@ -96,6 +96,7 @@ public:
     llvm::Function            *xl_same_text;
     llvm::Function            *xl_same_shape;
     llvm::Function            *xl_type_check;
+    llvm::Function            *xl_type_error;
     llvm::Function            *xl_new_integer;
     llvm::Function            *xl_new_real;
     llvm::Function            *xl_new_character;
@@ -152,6 +153,7 @@ struct CompiledUnit
     llvm::Value *       CallNewInfix(Infix *);
     llvm::Value *       CreateClosure(Tree *callee, tree_list &args);
     llvm::Value *       CallClosure(Tree *callee, uint ntrees);
+    llvm::Value *       CallTypeError(Tree *what);
 
     llvm::BasicBlock *  TagTest(Tree *code, ulong tag);
     llvm::BasicBlock *  IntegerTest(Tree *code, longlong value);
