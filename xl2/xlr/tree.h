@@ -351,6 +351,67 @@ inline Postfix *Tree::AsPostfix()
 
 // ============================================================================
 // 
+//    Tree cloning
+// 
+// ============================================================================
+
+struct TreeClone : Action
+// ----------------------------------------------------------------------------
+//   Clone a tree
+// ----------------------------------------------------------------------------
+{
+    TreeClone() {}
+
+    Tree *DoInteger(Integer *what)
+    {
+        return new Integer(what->value, what->Position());
+    }
+    Tree *DoReal(Real *what)
+    {
+        return new Real(what->value, what->Position());
+
+    }
+    Tree *DoText(Text *what)
+    {
+        return new Text(what->value, what->opening, what->closing,
+                        what->Position());
+    }
+    Tree *DoName(Name *what)
+    {
+        return new Name(what->value, what->Position());
+    }
+
+    Tree *DoBlock(Block *what)
+    {
+        return new Block(what->child->Do(this),
+                         what->opening, what->closing, what->Position());
+    }
+    Tree *DoInfix(Infix *what)
+    {
+        return new Infix (what->name,
+                          what->left->Do(this), what->right->Do(this),
+                          what->Position());
+    }
+    Tree *DoPrefix(Prefix *what)
+    {
+        return new Prefix(what->left->Do(this), what->right->Do(this),
+                          what->Position());
+    }
+    Tree *DoPostfix(Postfix *what)
+    {
+        return new Postfix(what->left->Do(this), what->right->Do(this),
+                           what->Position());
+    }
+    Tree *Do(Tree *what)
+    {
+        return what;            // ??? Should not happen
+    }
+};
+
+
+
+// ============================================================================
+// 
 //    Tree shape equality comparison
 // 
 // ============================================================================
