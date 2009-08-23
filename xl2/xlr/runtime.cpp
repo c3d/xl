@@ -118,6 +118,11 @@ bool xl_type_check(Tree *value, Tree *type)
             std::cerr << "Failed (no value / no code)\n";
         return false;
     }
+
+    // Check if this is a closure or something we want to evaluate
+    if (!value->IsConstant() && value->code)
+        value = value->code(value);
+
     Tree *afterTypeCast = type->code(value);
     if (afterTypeCast != value)
     {
