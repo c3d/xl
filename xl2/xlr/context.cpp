@@ -1489,6 +1489,12 @@ Tree *CompileAction::DoBlock(Block *what)
         Tree *result = what->child->Do(this);
         if (!result)
             return NULL;
+        if (unit.IsKnown(what->child))
+        {
+            if (!what->child->symbols)
+                what->child->SetSymbols(symbols);
+            unit.CallEvaluate(what->child);
+        }
         unit.Copy(result, what);
         return what;
     }
