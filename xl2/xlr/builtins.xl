@@ -1,3 +1,6 @@
 0! -> 1
 N! -> N * (N-1)!
 
+// If-then-else statement
+if true then TrueBody else FalseBody -> TrueBody
+if false then TrueBody else FalseBody -> FalseBody
