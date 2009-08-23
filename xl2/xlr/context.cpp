@@ -1079,11 +1079,11 @@ Tree *CompileAction::DoName(Name *what)
             unit.Invoke(what, result, noArgs);
             return what;
         }
-        else if (false && unit.value.count(result))
+        else if (unit.value.count(result))
         {
-            // DISABLED
             // Case of "Foo(A,B) -> B" with B: evaluate B
-            unit.CallEvaluate(result);
+            unit.NeedStorage(what);
+            unit.MarkComputed(what, unit.value[result]);
             return result;
         }
 
