@@ -1193,8 +1193,15 @@ void DeclarationAction::EnterRewrite(Tree *defined, Tree *definition)
 //   Add a definition in the current context
 // ----------------------------------------------------------------------------
 {
-    Rewrite *rewrite = new Rewrite(symbols, defined, definition);
-    symbols->EnterRewrite(rewrite);
+    if (Name *name = defined->AsName())
+    {
+        symbols->EnterName(name->value, definition);
+    }
+    else
+    {
+        Rewrite *rewrite = new Rewrite(symbols, defined, definition);
+        symbols->EnterRewrite(rewrite);
+    }
 }
 
 
