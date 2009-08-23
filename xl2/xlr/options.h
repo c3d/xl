@@ -72,12 +72,6 @@ class Options
     Errors &            errors;
 };
 
-
-extern Options *command_line_options;
-/*---------------------------------------------------------------------------*/
-/*  The options referred to in the whole compiler                            */
-/*---------------------------------------------------------------------------*/
-
-XL_END
+ XL_END
 
 #endif /* XL_OPTIONS_H */

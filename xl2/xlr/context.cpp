@@ -33,6 +33,7 @@
 #include "renderer.h"
 #include "basics.h"
 #include "compiler.h"
+#include "main.h"
 #include <sstream>
 
 XL_BEGIN
@@ -62,8 +63,7 @@ Name *Symbols::Allocate(Name *n)
         if (Name *name = existing->AsName())
             if (name->value == n->value)
                 return name;
-        existing = Context::context->Error("Redefining '$1' as data, was '$2'",
-                                           n, existing);
+        existing = Error("Redefining '$1' as data, was '$2'", n, existing);
         return existing->AsName();
     }
     names[n->value] = n;
@@ -84,7 +84,7 @@ Rewrite *Symbols::EnterRewrite(Rewrite *rw)
     ParameterMatch parms(locals);
     Tree *check = rw->from->Do(parms);
     if (!check)
-        Context::context->Error("Parameter error for '$1'", rw->from);
+        MAIN->context.Error("Parameter error for '$1'", rw->from);
     rw->parameters = parms.order;
 
     // If we are defining a name, store the definition in the symbols
@@ -148,10 +148,10 @@ Tree *Symbols::Compile(Tree *source, CompiledUnit &unit, bool nullIfBad)
     // If we didn't compile successfully, report
     if (!result)
     {
-        Context *context = Context::context;
+        Context &context = MAIN->context;
         if (nullIfBad)
             return result;
-        return context->Error("Couldn't compile '$1'", source);
+        return context.Error("Couldn't compile '$1'", source);
     }
 
     // If we compiled successfully, get the code and store it
@@ -166,8 +166,8 @@ Tree *Symbols::CompileAll(Tree *source)
 //    This associates an eval_fn to the tree, i.e. code that takes a tree
 //    as input and returns a tree as output.
 {
-    Context *context = Context::context;
-    Compiler *compiler = context->compiler;
+    Context &context = MAIN->context;
+    Compiler *compiler = context.compiler;
     tree_list noParms;
     CompiledUnit unit (compiler, source, noParms);
     if (unit.IsForwardCall())
@@ -277,7 +277,6 @@ Tree *Symbols::Run(Tree *code)
 
 ulong Context::gc_increment = 200;
 ulong Context::gc_growth_percent = 200;
-Context *Context::context = NULL;
 
 Context::~Context()
 // ----------------------------------------------------------------------------
@@ -376,7 +375,7 @@ void Context::CollectGarbage ()
             rewrites->Do(gc);
 
         formats_table::iterator f;
-        formats_table &formats = Renderer::renderer->formats;
+        formats_table &formats = MAIN->renderer.formats;
         for (f = formats.begin(); f != formats.end(); f++)
             (*f).second->Do(gc);
 
@@ -593,17 +592,15 @@ Tree *ParameterMatch::DoInfix(Infix *what)
     // Check if we match a type, e.g. 2 vs. 'K : integer'
     if (what->name == ":")
     {
-        Context *context = Context::context;
-
         // Check the variable name, e.g. K in example above
         Name *varName = what->left->AsName();
         if (!varName)
-            return context->Error("Expected a name, got '$1' ", what->left);
+            return Error("Expected a name, got '$1' ", what->left);
 
         // Check if the name already exists
         if (Tree *existing = symbols->Named(varName->value))
-            return context->Error("Typed name '$1' already exists as '$2'",
-                                  what->left, existing);
+            return Error("Typed name '$1' already exists as '$2'",
+                         what->left, existing);
 
         // Enter the name in symbol table
         Tree *result = symbols->Allocate(varName);
@@ -730,12 +727,12 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     unit.ConstantTree(source);
 
     // Record which elements of the expression are captured from context
-    Context *context = Context::context;
+    Context *context = &MAIN->context;
     Compiler *compiler = context->compiler;
     EnvironmentScan env(symbols);
     Tree *envOK = source->Do(env);
     if (!envOK)
-        return context->Error("Internal: what environment in '$1'?", source);
+        return Error("Internal: what environment in '$1'?", source);
 
     // Create the parameter list with all imported locals
     tree_list parms, args;
@@ -969,15 +966,14 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
     if (what->name == ":")
     {
         // Check the variable name, e.g. K in example above
-        Context *context = Context::context;
         Name *varName = what->left->AsName();
         if (!varName)
-            return context->Error("Expected a name, got '$1' ", what->left);
+            return Error("Expected a name, got '$1' ", what->left);
 
         // Check if the name already exists
         if (Tree *existing = rewrite->Named(varName->value))
-            return context->Error("Name '$1' already exists as '$2'",
-                                  what->left, existing);
+            return Error("Name '$1' already exists as '$2'",
+                         what->left, existing);
 
         // Evaluate type expression, e.g. 'integer' in example above
         Tree *typeExpr = Compile(what->right);
@@ -1437,11 +1433,10 @@ Tree *CompileAction::DoName(Name *what)
 // ----------------------------------------------------------------------------
 {
     // Normally, the name should have been declared in ParameterMatch
-    Context *context = Context::context;
     if (Tree *result = symbols->Named(what->value))
     {
         // Check if there is code we need to call
-        Compiler *compiler = context->compiler;
+        Compiler *compiler = MAIN->context.compiler;
         if (compiler->functions.count(result))
         {
             // Case of "Name -> Foo": Invoke Name
@@ -1472,7 +1467,7 @@ Tree *CompileAction::DoName(Name *what)
         unit.ConstantTree(what);
         return what;
     }
-    return context->Error("Name '$1' does not exist", what);
+    return Error("Name '$1' does not exist", what);
 }
 
 
@@ -1706,8 +1701,7 @@ Tree * CompileAction::Rewrites(Tree *what)
             what = what->Do(children);
             return NULL;
         }
-        Context *context = Context::context;
-        return context->Error("No rewrite candidate for '$1'", what);
+        return Error("No rewrite candidate for '$1'", what);
     }
     return what;
 }
@@ -1737,7 +1731,7 @@ Tree * Context::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
         info = info ? new Infix(",", arg0, info) : arg0;
 
         Prefix *errorCall = new Prefix(handler, info);
-        return context->Run(errorCall);
+        return Run(errorCall);
     }
 
     // No handler: terminate
@@ -1833,8 +1827,8 @@ Tree *Rewrite::Compile(void)
     if (to->code)
         return to;
 
-    Context *context = Context::context;
-    Compiler *compiler = context->compiler;
+    Context &context = MAIN->context;
+    Compiler *compiler = context.compiler;
 
     // Create the compilation unit and check if we are already compiling this
     CompiledUnit unit(compiler, to, parameters);
@@ -1846,13 +1840,13 @@ Tree *Rewrite::Compile(void)
 
     // Check that we had symbols defined for the 'from' tree
     if (!from->symbols)
-        return context->Error("Internal: No symbols for '$1'", from);
+        return Error("Internal: No symbols for '$1'", from);
 
     // Compile the body of the rewrite
     CompileAction compile(from->symbols, unit, false);
     Tree *result = to->Do(compile);
     if (!result)
-        return context->Error("Unable to compile '$1'", to);
+        return Error("Unable to compile '$1'", to);
 
     // Even if technically, this is not an 'eval_fn' (it has more args),
     // we still record it to avoid recompiling multiple times
@@ -1860,6 +1854,22 @@ Tree *Rewrite::Compile(void)
     to->code = fn;
 
     return to;
+}
+
+
+
+// ============================================================================
+// 
+//   Global error handler
+// 
+// ============================================================================
+
+Tree *Error (text message, Tree *a1, Tree *a2, Tree *a3)
+// ----------------------------------------------------------------------------
+//    Use the error handler in the global context
+// ----------------------------------------------------------------------------
+{
+    return MAIN->context.Error(message, a1, a2, a3);
 }
 
 XL_END

@@ -41,6 +41,12 @@ public:
     Syntax():
         priority(0), default_priority(0),
         statement_priority(100), function_priority(200) {}
+    Syntax(kstring filename):
+        priority(0), default_priority(0),
+        statement_priority(100), function_priority(200)
+    {
+        ReadSyntaxFile(filename);
+    }
 
 public:
     // Managing priorities

@@ -34,8 +34,7 @@ Tree *InferTypes::Do (Tree *what)
 // ----------------------------------------------------------------------------
 {
     // Otherwise, we don't know how to deal with it
-    Context *context = Context::context;
-    return context->Error("Cannot infer the type of '$1'", what);
+    return Error("Cannot infer the type of '$1'", what);
 }
 
 
@@ -75,14 +74,13 @@ Tree *InferTypes::DoName(Name *what)
 //   Return the type of the value of the name
 // ----------------------------------------------------------------------------
 {
-    Context *context = Context::context;
     if (Tree *value = symbols->Named(what->value))
     {
         if (Tree *t = types[value])
             return t;
-        return context->Error("Unknown type for '$1'", what);
+        return Error("Unknown type for '$1'", what);
     }
-    return context->Error("Unknown name '$1'", what);
+    return Error("Unknown name '$1'", what);
 }
 
 

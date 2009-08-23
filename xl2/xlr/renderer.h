@@ -42,7 +42,7 @@ struct Renderer
 {
     // Construction
     Renderer(std::ostream &out, text styleFile, Syntax &stx);
-    Renderer(std::ostream &out, Renderer *from = renderer);
+    Renderer(std::ostream &out, Renderer *from = NULL);
 
     // Selecting the style sheet file
     void                SelectStyleSheet(text styleFile);
@@ -59,8 +59,6 @@ struct Renderer
     bool                IsAmbiguousPrefix(Tree *test, bool testL, bool testR);
     bool                IsSubFunctionInfix(Tree *t);
     int                 InfixPriority(Tree *test);
-
-    static Renderer *   renderer;
 
     std::ostream &      output;
     Syntax &            syntax;

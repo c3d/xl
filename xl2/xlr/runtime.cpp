@@ -28,11 +28,14 @@
 
 #include "runtime.h"
 #include "tree.h"
+#include "parser.h"
+#include "scanner.h"
 #include "renderer.h"
 #include "context.h"
 #include "options.h"
 #include "opcodes.h"
 #include "compiler.h"
+#include "main.h"
 
 
 XL_BEGIN
@@ -67,7 +70,7 @@ Tree *xl_evaluate(Tree *what)
             if (!symbols)
             {
                 std::cerr << "WARNING: No symbols for '" << what << "'\n";
-                symbols = Context::context;
+                symbols = &MAIN->context;
             }
             what = symbols->CompileAll(what);
         }
@@ -241,8 +244,8 @@ Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
     va_end(va);
 
     // Generate the code for the arguments
-    Context *context = Context::context;
-    Compiler * compiler = context->compiler;
+    Context &context = MAIN->context;
+    Compiler * compiler = context.compiler;
     eval_fn fn = compiler->closures[ntrees];
     if (!fn)
     {
@@ -264,7 +267,7 @@ Tree *xl_type_error(Tree *what)
 //   Display message if we have a type error
 // ----------------------------------------------------------------------------
 {
-    return Context::context->Error("No form matches '$1'", what);
+    return Error("No form matches '$1'", what);
 }
 
 
@@ -390,9 +393,9 @@ Tree *xl_call(text name)
 //   Invoke the tree with the given name
 // ----------------------------------------------------------------------------
 {
-    Context *context = Context::context;
+    Context &context = MAIN->context;
     tree_list args;
-    Tree *callee = context->CompileCall(name, args);
+    Tree *callee = context.CompileCall(name, args);
     if (callee && callee->code)
         callee = callee->code(callee);
     return callee;
@@ -404,16 +407,25 @@ Tree *xl_call(text name, double x, double y, double w, double h)
 //   Invoke the tree with the given name
 // ----------------------------------------------------------------------------
 {
-    Context *context = Context::context;
+    Context &context = MAIN->context;
     tree_list args;
     args.push_back(new Real(x));
     args.push_back(new Real(y));
     args.push_back(new Real(w));
     args.push_back(new Real(h));
-    Tree *callee = context->CompileCall(name, args);
+    Tree *callee = context.CompileCall(name, args);
     if (callee && callee->code)
         callee = callee->code(callee);
     return callee;
+}
+
+
+Tree *xl_load(text name)
+// ----------------------------------------------------------------------------
+//    Load a file from disk
+// ----------------------------------------------------------------------------
+{
+    return NULL;
 }
 
 XL_END

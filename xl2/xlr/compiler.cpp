@@ -28,6 +28,7 @@
 #include "context.h"
 #include "renderer.h"
 #include "runtime.h"
+#include "main.h"
 
 #include <iostream>
 #include <sstream>
@@ -75,7 +76,7 @@ static void* unresolved_external(const std::string& name)
 }
 
 
-Compiler::Compiler(kstring moduleName)
+Compiler::Compiler(kstring moduleName, uint optimize_level)
 // ----------------------------------------------------------------------------
 //   Initialize the various instances we may need
 // ----------------------------------------------------------------------------
@@ -100,7 +101,8 @@ Compiler::Compiler(kstring moduleName)
 
     // Select "fast JIT" if optimize level is 0, optimizing JIT otherwise
     if (command_line_options->optimize_level == 0)
-        runtime = ExecutionEngine::create(provider, false, 0);
+        runtime = ExecutionEngine::create(provider, false, NULL,
+                                          /* false */ CodeGenOpt::None);
     else
         runtime = ExecutionEngine::create(provider);
 
@@ -339,7 +341,7 @@ Value *Compiler::EnterConstant(Tree *constant)
     GlobalValue *result = new GlobalVariable (treePtrTy, isConstant,
                                               GlobalVariable::InternalLinkage,
                                               NULL, name, module);
-    Tree **address = Context::context->AddGlobal(constant);
+    Tree **address = MAIN->context.AddGlobal(constant);
     runtime->addGlobalMapping(result, address);
     globals[constant] = result;
     return result;
@@ -779,8 +781,7 @@ Value *CompiledUnit::Left(Tree *tree)
     }
     else
     {
-        Context::context->Error("Internal: Using left of uncompiled '$1'",
-                                tree);
+        MAIN->context.Error("Internal: Using left of uncompiled '$1'", tree);
     }
 
     return result;
@@ -817,8 +818,7 @@ Value *CompiledUnit::Right(Tree *tree)
     }
     else
     {
-        Context::context->Error("Internal: Using right of uncompiled '$1'",
-                                tree);
+        MAIN->context.Error("Internal: Using right of uncompiled '$1'", tree);
     }
     return result;
 }
@@ -1021,7 +1021,7 @@ BasicBlock *CompiledUnit::TagTest(Tree *tree, ulong tagValue)
     Value *treeValue = Known(tree);
     if (!treeValue)
     {
-        Context::context->Error("No value for '$1'", tree);
+        MAIN->context.Error("No value for '$1'", tree);
         return NULL;
     }
     Value *tagPtr = code->CreateConstGEP2_32(treeValue, 0, 0, "tagPtr");

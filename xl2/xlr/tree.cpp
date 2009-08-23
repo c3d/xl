@@ -31,6 +31,7 @@
 #include "renderer.h"
 #include "opcodes.h"
 #include "options.h"
+#include "main.h"
 
 XL_BEGIN
 
@@ -46,8 +47,8 @@ void *Tree::operator new(size_t sz)
 // ----------------------------------------------------------------------------
 {
     void *result = ::operator new(sz);
-    if (Context::context)
-        Context::context->Mark((Tree *) result);
+    if (MAIN)
+        MAIN->context.Mark((Tree *) result);
     return result;
 }
 
@@ -72,7 +73,7 @@ Name::operator bool()
         return true;
     else if (this == xl_false)
         return false;
-    Context::context->Error("Value '$1' is not a boolean value", this);
+    Error("Value '$1' is not a boolean value", this);
     return false;
 }
 
@@ -91,7 +92,7 @@ void Tree::SetSymbols(Symbols *s)
         debugsc(s);
     }
     symbols = s;
-    Context::context->active_symbols.insert(s);
+    MAIN->context.active_symbols.insert(s);
 }
 
 
@@ -108,7 +109,7 @@ TreeRoot::TreeRoot(Tree *t)
 // ----------------------------------------------------------------------------
     : tree(t)
 {
-    Context::context->roots.insert(this);
+    MAIN->context.roots.insert(this);
 }
 
 
@@ -117,7 +118,7 @@ TreeRoot::~TreeRoot()
 //   Remove a root from the context
 // ----------------------------------------------------------------------------
 {
-    Context::context->roots.erase(this);
+    MAIN->context.roots.erase(this);
 }
 
 

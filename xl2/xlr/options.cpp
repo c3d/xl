@@ -32,6 +32,7 @@
 #include "options.h"
 #include "errors.h"
 #include "renderer.h"
+#include "main.h"
 
 XL_BEGIN
 
@@ -220,15 +221,7 @@ text Options::ParseNext()
     return text("");
 }
 
-
-Options *command_line_options = NULL;
-/*---------------------------------------------------------------------------*/
-/*  The global options used by all parts of the compiler                     */
-/*---------------------------------------------------------------------------*/
-
 XL_END
-
-
 ulong xl_traces = 0;
 // ----------------------------------------------------------------------------
 //   Bits for each trace

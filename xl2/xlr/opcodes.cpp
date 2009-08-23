@@ -42,7 +42,7 @@ longlong xl_integer_arg(Tree *value)
 {
     if (Integer *ival = value->AsInteger())
         return ival->value;
-    Context::context->Error("Value '$1' is not an integer", value);
+    Error("Value '$1' is not an integer", value);
     return 0;
 }
 
@@ -54,7 +54,7 @@ double xl_real_arg(Tree *value)
 {
     if (Real *rval = value->AsReal())
         return rval->value;
-    Context::context->Error("Value '$1' is not a real", value);
+    Error("Value '$1' is not a real", value);
     return 0.0;
 }
 
@@ -67,7 +67,7 @@ text xl_text_arg(Tree *value)
     if (Text *tval = value->AsText())
         if (tval->opening != "'")
             return tval->value;
-    Context::context->Error("Value '$1' is not a text", value);
+    Error("Value '$1' is not a text", value);
     return "";
 }
 
@@ -80,7 +80,7 @@ int xl_character_arg(Tree *value)
     if (Text *tval = value->AsText())
         if (tval->opening == "'" && tval->value.length() == 1)
             return tval->value[0];
-    Context::context->Error("Value '$1' is not a character", value);
+    Error("Value '$1' is not a character", value);
     return 0;
 }
 
@@ -94,7 +94,7 @@ bool xl_boolean_arg(Tree *value)
         return true;
     else if (value == xl_false)
         return false;
-    Context::context->Error("Value '$1' is not a boolean value", value);
+    Error("Value '$1' is not a boolean value", value);
     return false;
 }
 

@@ -172,6 +172,17 @@ PREFIX("year_day",, SystemYearDay,
        time_t t; struct tm tm;
        time (&t); localtime_r(&t, &tm); RINT(tm.tm_yday))
 
+// Random number generator
+PREFIX("random", , RandomNumber, RREAL(drand48()))
+PREFIX("random", PARM(low, real) PARM(high, real),
+       RandomNumber2, RREAL(drand48() * (high - low) + low))
+PREFIX("random", PARM(low, integer) PARM(high, integer),
+       RandomNumber2i, RINT((longlong) (drand48() * (high - low) + low)))
+
+// Executing some code
+PREFIX("do", PARM(code, tree), DoCode, return xl_evaluate(&code))
+PREFIX("load", PARM(file, text), LoadFile, return xl_load(file))
+
 // Debugging code
 PREFIX("debug", PARM(toDebug, tree), DebugTree,
        std::cerr << "DEBUG: " << &toDebug << "\n"; return &toDebug)

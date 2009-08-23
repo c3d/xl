@@ -82,6 +82,8 @@ Tree *xl_block(Tree *value);
 Tree *xl_call(text name);
 Tree *xl_call(text name, double x, double y, double w, double h);
 
+Tree *xl_load(text name);
+
 XL_END
 
 #endif // RUNTIME_H

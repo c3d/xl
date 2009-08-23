@@ -232,7 +232,6 @@ struct Context : Symbols
 public:
     static ulong        gc_increment;
     static ulong        gc_growth_percent;
-    static Context *    context;
 
     Errors &            errors;
     Tree *              error_handler;
@@ -462,6 +461,17 @@ struct LocalSave
     T&  reference;
     T   original;
 };
+
+
+
+// ============================================================================
+// 
+//    Global error handler
+// 
+// ============================================================================
+
+extern Tree *Error (text message, Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
+
 
 
 // ============================================================================

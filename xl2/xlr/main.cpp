@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <map>
 #include <iostream>
+#include "main.h"
 #include "scanner.h"
 #include "parser.h"
 #include "renderer.h"
@@ -39,40 +40,47 @@
 #include "basics.h"
 
 
-int main(int argc, char **argv)
+XL_BEGIN
+
+Main *MAIN = NULL;
+
+
+Main::Main(int inArgc, char **inArgv)
 // ----------------------------------------------------------------------------
-//   Parse the command line and run the compiler phases
+//   Initialization of the globals
+// ----------------------------------------------------------------------------
+    : argc(inArgc), argv(inArgv),
+      positions(),
+      errors(&positions),
+      syntax("xl.syntax"),
+      options(errors),
+      compiler("xl_tao"),
+      context(errors, &compiler),
+      renderer(std::cout, "xl.stylesheet", syntax)
+{}
+
+
+int Main::Run()
+// ----------------------------------------------------------------------------
+//   The main exection loop
 // ----------------------------------------------------------------------------
 {
-#if CONFIG_USE_SBRK
-    char *low_water = (char *) sbrk(0);
-#endif
-    XL::Syntax syntax;
-    XL::Positions positions;
-    XL::Errors errors(&positions);
-    XL::Options options(errors);
-    XL::command_line_options = &options;
-    XL::Compiler compiler("xl_tao");
-    XL::Context context(errors, &compiler);
     text cmd, end = "";
     std::vector<text> files;
     std::vector<text>::iterator file;
     bool hadError = false;
 
     // Make sure debug function is linked in...
-    if (!low_water)
+    if (getenv("SHOW_INITIAL_DEBUG"))
         debug(NULL);
 
-    // Initialize basic XL syntax from syntax description file
-    syntax.ReadSyntaxFile("xl.syntax");
-
-    // Initialize basic rendering engine
-    XL::Renderer renderer(std::cout, "xl.stylesheet", syntax);
-    XL::Renderer::renderer = &renderer;
-    XL::Context::context = &context;
+    // Initialize the locale
+    if (!setlocale(LC_CTYPE, ""))
+        std::cerr << "WARNING: Cannot set locale.\n"
+                  << "         Check LANG, LC_CTYPE, LC_ALL.\n";
 
     // Initialize basics
-    XL::EnterBasics(&context);
+    EnterBasics(&context);
 
     // Scan options and build list of files we need to process
     files.push_back("builtins.xl");
@@ -86,15 +94,15 @@ int main(int argc, char **argv)
         cmd = *file;
 
         // Parse and execute program
-        XL::Parser parser (cmd.c_str(), syntax, positions, errors);
-        XL::Tree *tree = parser.Parse();
+        Parser parser (cmd.c_str(), syntax, positions, errors);
+        Tree *tree = parser.Parse();
         if (!tree)
         {
             hadError = true;
             break;           // File read error, message already emitted
         }
 
-        new XL::TreeRoot(tree);
+        new TreeRoot(tree);
         context.CollectGarbage();
         IFTRACE(source)
             std::cout << "SOURCE:\n" << tree << "\n";
@@ -114,7 +122,7 @@ int main(int argc, char **argv)
         }
         else if (tree)
         {
-            XL::Tree *runnable = context.CompileAll(tree);
+            Tree *runnable = context.CompileAll(tree);
             if (!runnable)
             {
                 hadError = true;
@@ -124,6 +132,8 @@ int main(int argc, char **argv)
             tree = context.Run(runnable);
         }
 
+        if (isBuiltin)
+            isBuiltin = false;
         if (file != files.begin() || options.verbose)
         {
             if (options.verbose)
@@ -133,11 +143,31 @@ int main(int argc, char **argv)
         }
     }
 
+    return 0;
+}
+
+XL_END
+
+
+int main(int argc, char **argv)
+// ----------------------------------------------------------------------------
+//   Parse the command line and run the compiler phases
+// ----------------------------------------------------------------------------
+{
 #if CONFIG_USE_SBRK
-        IFTRACE(memory)
-            fprintf(stderr, "Total memory usage: %ldK\n",
-                    long ((char *) malloc(1) - low_water) / 1024);
+    char *low_water = (char *) sbrk(0);
 #endif
 
-    return 0;
+    using namespace XL;
+    MAIN = new Main(argc, argv);
+    int rc = MAIN->Run();
+    delete MAIN;
+
+#if CONFIG_USE_SBRK
+    IFTRACE(memory)
+        fprintf(stderr, "Total memory usage: %ldK\n",
+                long ((char *) malloc(1) - low_water) / 1024);
+#endif
+
+    return rc;
 }

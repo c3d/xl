@@ -47,6 +47,7 @@ namespace llvm
 XL_BEGIN
 
 struct CompiledUnit;
+struct Options;
 typedef std::map<Tree *, llvm::Value *>         value_map;
 typedef std::map<Tree *, llvm::Function *>      function_map;
 typedef std::map<uint, eval_fn>                 closure_map;
@@ -59,7 +60,7 @@ struct Compiler
 //   Just-in-time compiler data
 // ----------------------------------------------------------------------------
 {
-    Compiler(kstring moduleName = "xl");
+    Compiler(kstring moduleName = "xl", uint optimize_level = 999);
 
     llvm::Function *          EnterBuiltin(text name,
                                            Tree *from, Tree *to,
