@@ -149,12 +149,11 @@ Tree *Symbols::Compile(Tree *source, CompiledUnit &unit, bool nullIfBad)
 // ----------------------------------------------------------------------------
 {
     // Record rewrites and data declarations in the current context
-    Symbols parms(this);
-    DeclarationAction declare(&parms);
+    DeclarationAction declare(this);
     Tree *result = source->Do(declare);
 
     // Compile code for that tree
-    CompileAction compile(&parms, unit, nullIfBad);
+    CompileAction compile(this, unit, nullIfBad);
     result = source->Do(compile);
 
     // If we didn't compile successfully, report
