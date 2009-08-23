@@ -373,7 +373,7 @@ void Compiler::FreeResources(Tree *tree)
 //   Free the LLVM resources associated to the tree, if any
 // ----------------------------------------------------------------------------
 {
-    if (functions.count(tree) > 0 && closet.count(tree) == 0)
+    if (false && functions.count(tree) > 0 && closet.count(tree) == 0)
     {
         Function *f = functions[tree];
         runtime->freeMachineCodeForFunction(f);
@@ -862,7 +862,7 @@ Value *CompiledUnit::CallNewBlock(Block *block)
 //    Compile code generating the children of the block
 // ----------------------------------------------------------------------------
 {
-    Value *blockValue = Known(block);
+    Value *blockValue = ConstantTree(block);
     Value *childValue = Known(block->child);
     Value *result = code->CreateCall2(compiler->xl_new_block,
                                       blockValue, childValue);
@@ -876,7 +876,7 @@ Value *CompiledUnit::CallNewPrefix(Prefix *prefix)
 //    Compile code generating the children of a prefix
 // ----------------------------------------------------------------------------
 {
-    Value *prefixValue = Known(prefix);
+    Value *prefixValue = ConstantTree(prefix);
     Value *leftValue = Known(prefix->left);
     Value *rightValue = Known(prefix->right);
     Value *result = code->CreateCall3(compiler->xl_new_prefix,
@@ -891,7 +891,7 @@ Value *CompiledUnit::CallNewPostfix(Postfix *postfix)
 //    Compile code generating the children of a postfix
 // ----------------------------------------------------------------------------
 {
-    Value *postfixValue = Known(postfix);
+    Value *postfixValue = ConstantTree(postfix);
     Value *leftValue = Known(postfix->left);
     Value *rightValue = Known(postfix->right);
     Value *result = code->CreateCall3(compiler->xl_new_postfix,
@@ -906,7 +906,7 @@ Value *CompiledUnit::CallNewInfix(Infix *infix)
 //    Compile code generating the children of an infix
 // ----------------------------------------------------------------------------
 {
-    Value *infixValue = Known(infix);
+    Value *infixValue = ConstantTree(infix);
     Value *leftValue = Known(infix->left);
     Value *rightValue = Known(infix->right);
     Value *result = code->CreateCall3(compiler->xl_new_infix,
@@ -1287,10 +1287,13 @@ void ExpressionReduction::Failed()
 {
     CompiledUnit &u = unit;
 
+    u.CallTypeError(source);
     u.code->CreateUnreachable();
     if (u.failbb)
     {
         IRBuilder<> failTail(u.failbb);
+        u.code->SetInsertPoint(u.failbb);
+        u.CallTypeError(source);
         failTail.CreateUnreachable();
         u.failbb = NULL;
     }
