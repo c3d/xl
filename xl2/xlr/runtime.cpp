@@ -69,7 +69,7 @@ Tree *xl_evaluate(Tree *what)
             if (!symbols)
             {
                 std::cerr << "WARNING: No symbols for '" << what << "'\n";
-                symbols = Context::context;
+                symbols = Symbols::symbols;
             }
             what = symbols->CompileAll(what);
         }
@@ -392,7 +392,7 @@ Tree *xl_call(text name)
 // ----------------------------------------------------------------------------
 {
     tree_list args;
-    Tree *callee = Context::context->CompileCall(name, args);
+    Tree *callee = Symbols::symbols->CompileCall(name, args);
     if (callee && callee->code)
         callee = callee->code(callee);
     return callee;
@@ -409,7 +409,7 @@ Tree *xl_call(text name, double x, double y, double w, double h)
     args.push_back(new Real(y));
     args.push_back(new Real(w));
     args.push_back(new Real(h));
-    Tree *callee = Context::context->CompileCall(name, args);
+    Tree *callee = Symbols::symbols->CompileCall(name, args);
     if (callee && callee->code)
         callee = callee->code(callee);
     return callee;
@@ -423,7 +423,7 @@ Tree *xl_call(text name, text arg)
 {
     tree_list args;
     args.push_back(new Text(arg));
-    Tree *callee = Context::context->CompileCall(name, args);
+    Tree *callee = Symbols::symbols->CompileCall(name, args);
     if (callee && callee->code)
         callee = callee->code(callee);
     return callee;

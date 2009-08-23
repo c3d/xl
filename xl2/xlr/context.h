@@ -200,6 +200,8 @@ public:
     symbol_table        names;
     Rewrite *           rewrites;
     symbol_table        calls;
+
+    static Symbols *    symbols;
 };
 
 

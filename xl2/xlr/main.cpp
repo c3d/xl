@@ -60,6 +60,7 @@ Main::Main(int inArgc, char **inArgv)
 {
     Options::options = &options;
     Context::context = &context;
+    Symbols::symbols = &context;
     Renderer::renderer = &renderer;
     Syntax::syntax = &syntax;
 }
@@ -97,6 +98,8 @@ int Main::Run()
     {
         // Get the individual command line file
         cmd = *file;
+        if (files.count(cmd) > 0)
+            continue;
 
         // Parse and execute program
         Parser parser (cmd.c_str(), syntax, positions, errors);
@@ -106,8 +109,9 @@ int Main::Run()
             hadError = true;
             break;           // File read error, message already emitted
         }
+        Symbols *syms = new Symbols(context);
+        files[cmd] = SourceFile (cmd, tree, syms);
 
-        new TreeRoot(tree);
         context.CollectGarbage();
         IFTRACE(source)
             std::cout << "SOURCE:\n" << tree << "\n";

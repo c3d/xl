@@ -43,6 +43,8 @@ XL_BEGIN
 // 
 // ============================================================================
 
+Symbols *Symbols::symbols = NULL;
+
 void Symbols::EnterName(text name, Tree *value)
 // ----------------------------------------------------------------------------
 //   Enter a value in the namespace
@@ -765,7 +767,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     {
         Tree *name = (*c).first;
         Symbols *where = (*c).second;
-        if (where == context)
+        if (where == context || where == Symbols::symbols)
         {
             // This is a global, we'll find it running the target.
         }

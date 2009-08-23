@@ -44,6 +44,7 @@ struct SourceFile
 // ----------------------------------------------------------------------------
 {
     SourceFile(text n, Tree *t, Symbols *s): name(n), tree(t), symbols(s) {}
+    SourceFile(): name(""), tree(NULL), symbols(NULL) {}
     text        name;
     TreeRoot    tree;
     Symbols *   symbols;
