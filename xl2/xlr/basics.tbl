@@ -110,6 +110,13 @@ INFIX(boolean, "=", boolean, BinaryEQBool, RBOOL(BOOL(l) == BOOL(r)))
 
 // Text operations
 INFIX(text, "&", text, BinaryTextConcatenate, RTEXT(TEXT(l) + TEXT(r)))
+INFIX(text, "<", text, BinaryLTText, RBOOL(TEXT(l) < TEXT(r)))
+INFIX(text, ">", text, BinaryGTText, RBOOL(TEXT(l) > TEXT(r)))
+INFIX(text, "<=", text, BinaryLEText, RBOOL(TEXT(l) <= TEXT(r)))
+INFIX(text, ">=", text, BinaryGEText, RBOOL(TEXT(l) >= TEXT(r)))
+INFIX(text, "<>", text, BinaryNEText, RBOOL(TEXT(l) != TEXT(r)))
+INFIX(text, "=", text, BinaryEQText, RBOOL(TEXT(l) == TEXT(r)))
+
 
 // Conversions
 PREFIX("real", PARM(x, integer), IntToReal, RREAL((real_t) x))
