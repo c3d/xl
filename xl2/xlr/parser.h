@@ -88,7 +88,8 @@ class Parser
 public:
     Parser(kstring name, Syntax &stx, Positions &pos, Errors &err):
         scanner(name, stx, pos, err),
-        syntax(stx), errors(err), pending(tokNONE) {}
+        syntax(stx), errors(err), pending(tokNONE),
+        openquote(), closequote() {}
 
 public:
     Tree *              Parse(text closing_paren = "");
@@ -100,6 +101,7 @@ private:
     Syntax &            syntax;
     Errors &            errors;
     token_t             pending;
+    text                openquote, closequote;
 };
 
 XL_END

@@ -38,3 +38,7 @@ indents = "    "
 "infix ," = separator left "," space right separator
 "infix ;" = separator left ";" space right separator
 "infix :" = separator left ":" right separator
+"text "" """ = """" self """"
+"text << >>" = "<<" self ">>"
+"longtext "" """ = "<<" self ">>"
+"longtext << >>" = "<<" self ">>"

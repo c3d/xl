@@ -103,17 +103,21 @@ token_t Parser::NextToken()
             else if (syntax.IsTextDelimiter(opening, closing))
             {
                 text longText = scanner.Comment(closing);
-                ulong tLen = closing.length();
-                longText.erase(longText.length() - tLen, tLen);
+                ulong cLen = closing.length();
+                ulong oLen = opening.length();
+                longText.erase(longText.length() - cLen, cLen);
+                longText.erase(oLen, 0);
                 scanner.SetTextValue(longText);
+                openquote = opening;
+                closequote = closing;
                 if (pend == tokNEWLINE)
                 {
-                    pending = tokSTRING;
+                    pending = tokLONGSTRING;
                     return tokNEWLINE;
                 }
                 if (closing == "\n" && pend == tokNONE)
                     pending = tokNEWLINE;
-                return tokSTRING;
+                return tokLONGSTRING;
             }
 
             // If the next token has a substatement infix priority,
@@ -253,6 +257,11 @@ Tree *Parser::Parse(text closing)
         case tokREAL:
             right = new Real(scanner.RealValue(), pos);
             prefix_priority = function_priority;
+            break;
+        case tokLONGSTRING:
+            right = new Text(scanner.TextValue(), openquote, closequote, pos);
+            if (!result && new_statement)
+                is_expression = false;
             break;
         case tokSTRING:
         case tokQUOTE:

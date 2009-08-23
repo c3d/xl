@@ -436,18 +436,26 @@ void Renderer::RenderOne(Tree *what)
         RenderFormat (t, t, "integer");
         break;
     case REAL:
-        toText << std::showpoint << ((Real *) what)->value;
+        toText << ((Real *) what)->value;
         t = toText.str();
+        if (t.find(".") == t.npos)
+        {
+            size_t exponent = t.find("e");
+            if (exponent == t.npos)
+                t += ".0";
+            else
+                t.insert(exponent, ".0");
+        }
         RenderFormat (t, t, "real");
         break;
     case TEXT: {
         Text *w = (Text *) what;
         t = w->value;
-
-        text q0 = "text ";
+        text q0 = t.find("\n") != t.npos ? "longtext " : "text ";
         text q1 = q0 + w->opening;
-        text q2 = q1 + w->closing;
+        text q2 = q1 + " " + w->closing;
         text saveq = this->current_quote;
+        this->current_quote = w->opening;
 
         if (formats.count(q2) > 0)
         {

@@ -113,6 +113,7 @@ enum token_t
     tokREAL,                    // Real number,
     tokSTRING,                  // Double-quoted string
     tokQUOTE,                   // Single-quoted string
+    tokLONGSTRING,              // Specially quoted string
     tokNAME,                    // Alphanumeric name
     tokSYMBOL,                  // Punctuation symbol
     tokNEWLINE,                 // New line
