@@ -63,6 +63,7 @@ struct Compiler
 
     llvm::Function *          EnterBuiltin(text name,
                                            Tree *from, Tree *to,
+                                           tree_list parms,
                                            eval_fn code);
     llvm::Function *          ExternFunction(kstring name, void *address,
                                              const llvm::Type *retType,

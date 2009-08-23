@@ -91,6 +91,7 @@ void Tree::SetSymbols(Symbols *s)
         debugsc(s);
     }
     symbols = s;
+    Context::context->active_symbols.insert(s);
 }
 
 

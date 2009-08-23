@@ -147,6 +147,7 @@ struct CompiledUnit;                            // Compilation unit
 
 typedef std::map<text, Tree *>    symbol_table; // Symbol table in context
 typedef std::set<Tree *>          active_set;   // Not to be garbage collected
+typedef std::set<Symbols*>        active_syms;  // Not to be garbage collected
 typedef std::map<ulong, Rewrite*> rewrite_table;// Hashing of rewrites
 typedef symbol_table::iterator    symbol_iter;  // Iterator over sym table
 typedef std::vector<Tree **>      globals_table;// Table of LLVM globals
@@ -189,7 +190,6 @@ struct Symbols
     Tree *              Compile(Tree *s, CompiledUnit &, bool nullIfBad=false);
     Tree *              CompileAll(Tree *s);
     Tree *              Run(Tree *t);
-    void                ParameterList(Tree *form, std::vector<Tree *> &list);
 
 public:
     Symbols *           parent;
@@ -208,7 +208,8 @@ struct Context : Symbols
         Symbols(NULL),
         errors(err), error_handler(NULL),       // Error management
         compiler(comp),                         // Tree compilation
-        active(), roots(), gc_threshold(200) {} // Garbage collection
+        active(), roots(),                      // Garbage collection
+        active_symbols(), gc_threshold(200) {}  // More garbage collection
     ~Context();
 
     // Context properties
@@ -235,6 +236,7 @@ public:
     Compiler *          compiler;
     active_set          active;
     active_set          roots;
+    active_syms         active_symbols;
     ulong               gc_threshold;
     globals_table       globals;
 };
@@ -247,7 +249,7 @@ struct Rewrite
 //   Note that a rewrite with 'to' = NULL is used for 'data' statements
 {
     Rewrite (Symbols *s, Tree *f, Tree *t):
-        symbols(s), from(f), to(t), hash() {}
+        symbols(s), from(f), to(t), hash(), parameters() {}
     ~Rewrite();
 
     Rewrite *           Add (Rewrite *rewrite);
@@ -259,6 +261,7 @@ public:
     Tree *              from;
     Tree *              to;
     rewrite_table       hash;
+    tree_list           parameters;
 };
 
 

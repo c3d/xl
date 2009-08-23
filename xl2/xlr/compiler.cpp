@@ -248,6 +248,7 @@ Compiler::Compiler(kstring moduleName)
 
 Function *Compiler::EnterBuiltin(text name,
                                  Tree *from, Tree *to,
+                                 tree_list parms,
                                  eval_fn code)
 // ----------------------------------------------------------------------------
 //   Declare a built-in function
@@ -255,11 +256,6 @@ Function *Compiler::EnterBuiltin(text name,
 //   The input is not technically an eval_fn, but has as many parameters as
 //   there are variables in the form
 {
-    // Find the parameters
-    tree_list parms;
-    Context *context = Context::context;
-    context->ParameterList (from, parms);
-
     // Create the LLVM function
     std::vector<const Type *> parmTypes;
     parmTypes.push_back(treePtrTy); // First arg is self

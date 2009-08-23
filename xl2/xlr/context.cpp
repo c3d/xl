@@ -75,18 +75,26 @@ Rewrite *Symbols::EnterRewrite(Rewrite *rw)
 //   Enter the given rewrite in the rewrites table
 // ----------------------------------------------------------------------------
 {
-    Symbols locals(this);
-    ParameterMatch parms(&locals);
+    // Create symbol table for this rewrite
+    Symbols *locals = new Symbols(this);
+    rw->from->SetSymbols(locals);
+
+    // Enter parameters in the symbol table
+    ParameterMatch parms(locals);
     Tree *check = rw->from->Do(parms);
     if (!check)
         Context::context->Error("Parameter error for '$1'", rw->from);
+    rw->parameters = parms.order;
 
     // If we are defining a name, store the definition in the symbols
     if (Name *name = parms.defined->AsName())
         Allocate(name);
 
     if (rewrites)
-        return rewrites->Add(rw);
+    {
+        /* Returns parent */ rewrites->Add(rw);
+        return rw;
+    }
     rewrites = rw;
     return rw;
 }
@@ -122,26 +130,6 @@ void Symbols::Clear()
 //    Evaluation of trees
 // 
 // ============================================================================
-
-void Symbols::ParameterList(Tree *form, tree_list &list)
-// ----------------------------------------------------------------------------
-//    List the parameters for the form and add them to the list
-// ----------------------------------------------------------------------------
-{
-    // Identify all parameters in 'from'
-    Symbols parms(this);
-    ParameterMatch matchParms(&parms);
-    Tree *parmsOK = form->Do(matchParms);
-    if (!parmsOK)
-    {
-        Context *context = Context::context;
-        context->Error("Internal: what parameter list in '$1'?", form);
-    }
-
-    // Build the parameter list for 'to'
-    list = matchParms.order;
-}
-
 
 Tree *Symbols::Compile(Tree *source, CompiledUnit &unit, bool nullIfBad)
 // ----------------------------------------------------------------------------
@@ -212,7 +200,10 @@ Tree *Symbols::Run(Tree *code)
         {
             Symbols *symbols = result->symbols;
             if (!symbols)
+            {
+                std::cerr << "WARNING: Tree '" << code << "' has no symbols\n";
                 symbols = this;
+            }
             result = symbols->CompileAll(result);
         }
 
@@ -269,6 +260,7 @@ struct GCAction : Action
     {
         typedef std::pair<active_set::iterator, bool> inserted;
         inserted ins = alive.insert(what);
+        if (what->symbols) alive_symbols.insert(what->symbols);
         return ins.second;
     }
     Tree *Do(Tree *what)
@@ -301,6 +293,7 @@ struct GCAction : Action
         return what;
     }
     active_set  alive;
+    active_syms alive_symbols;
 };
 
 
@@ -336,7 +329,9 @@ void Context::CollectGarbage ()
             (**g)->Do(gc);
 
         // Then delete all trees in active set that are no longer referenced
-        for (active_set::iterator a = active.begin(); a != active.end(); a++)
+        for (active_set::iterator a = active.begin();
+             a != active.end();
+             a++)
         {
             activeCount++;
             if (!gc.alive.count(*a))
@@ -347,11 +342,27 @@ void Context::CollectGarbage ()
                 delete *a;
             }
         }
+
+        // Same with the symbol tables
+        for (active_syms::iterator a = active_symbols.begin();
+             a != active_symbols.end();
+             a++)
+        {
+            if (!gc.alive_symbols.count(*a))
+            {
+                delete *a;
+            }
+        }
+
+        // Record new state
         active = gc.alive;
+        active_symbols = gc.alive_symbols;
+
+        // Update statistics
         gc_threshold = active.size() * gc_growth_percent / 100 + gc_increment;
         IFTRACE(memory)
             std::cerr << "done: Purged " << deletedCount
-                      << " out of " << activeCount
+                      << " trees out of " << activeCount
                       << " threshold " << gc_threshold << "\n";
     }
 }
@@ -602,7 +613,7 @@ Tree *ParameterMatch::DoPostfix(Postfix *what)
 
 // ============================================================================
 // 
-//    Argument matching - Test input parameters
+//    Argument matching - Test input arguments against parameters
 // 
 // ============================================================================
 
@@ -800,7 +811,7 @@ Tree *ArgumentMatch::DoText(Text *what)
 
 Tree *ArgumentMatch::DoName(Name *what)
 // ----------------------------------------------------------------------------
-//    Identify the parameters being defined in the shape
+//    Bind arguments to parameters being defined in the shape
 // ----------------------------------------------------------------------------
 {
     if (!defined)
@@ -1514,7 +1525,6 @@ Tree * CompileAction::Rewrites(Tree *what)
     bool foundSomething = false;
     ExpressionReduction reduction (unit, what);
 
-    Context *context = Context::context;
     for (Symbols *s = symbols; s && !foundUnconditional; s = s->Parent())
     {
         Rewrite *candidate = s->Rewrites();
@@ -1528,15 +1538,6 @@ Tree * CompileAction::Rewrites(Tree *what)
             // If we have an exact match for the keys, we may have a winner
             if (testKey == formKey)
             {
-                // If we find a real match, identify its parameters
-                Symbols parms(candidate->symbols);
-                ParameterMatch matchParms(&parms);
-                Tree *parmsTest = candidate->from->Do(matchParms);
-                if (!parmsTest)
-                    return context->Error(
-                        "Internal: Invokation parameters for '$1'?",
-                        candidate->from);
-
                 // Create the invokation point
                 reduction.NewForm();
                 Symbols args(symbols);
@@ -1562,6 +1563,7 @@ Tree * CompileAction::Rewrites(Tree *what)
                     else
                     {
                         // We should have same number of args and parms
+                        Symbols &parms = *candidate->from->symbols;
                         ulong parmCount = parms.names.size();
                         if (args.names.size() != parmCount)
                         {
@@ -1593,7 +1595,7 @@ Tree * CompileAction::Rewrites(Tree *what)
                         // (actually, in reverse order, which is what we want)
                         tree_list argsList;
                         tree_list::iterator p;
-                        tree_list &order = matchParms.order;
+                        tree_list &order = candidate->parameters;
                         for (p = order.begin(); p != order.end(); p++)
                         {
                             Name *name = (*p)->AsName();
@@ -1740,15 +1742,16 @@ Rewrite *Rewrite::Add (Rewrite *rewrite)
 
 Tree *Rewrite::Do(Action &a)
 // ----------------------------------------------------------------------------
-//   Apply an action to the 'from' and 'to' fields and all hash entries
+//   Apply an action to the 'from' and 'to' fields and all referenced trees
 // ----------------------------------------------------------------------------
 {
-    rewrite_table::iterator i;
     Tree *result = from->Do(a);
     if (to)
         result = to->Do(a);
-    for (i = hash.begin(); i != hash.end(); i++)
+    for (rewrite_table::iterator i = hash.begin(); i != hash.end(); i++)
         result = (*i).second->Do(a);
+    for (tree_list::iterator p=parameters.begin(); p!=parameters.end(); p++)
+        result = (*p)->Do(a);
     return result;
 }
 
@@ -1768,24 +1771,20 @@ Tree *Rewrite::Compile(void)
     Context *context = Context::context;
     Compiler *compiler = context->compiler;
 
-    // Identify all parameters in 'from'
-    Symbols parms(symbols);
-    ParameterMatch matchParms(&parms);
-    Tree *parmsOK = from->Do(matchParms);
-    if (!parmsOK)
-        return context->Error("Internal: what parameters in '$1'?", from);
-
     // Create the compilation unit and check if we are already compiling this
-    CompiledUnit unit(compiler, to, matchParms.order);
+    CompiledUnit unit(compiler, to, parameters);
     if (unit.IsForwardCall())
     {
         // Recursive compilation of that form
-        // REVISIT: Can this happen?
         return to;              // We know how to invoke it anyway
     }
 
+    // Check that we had symbols defined for the 'from' tree
+    if (!from->symbols)
+        return context->Error("Internal: No symbols for '$1'", from);
+
     // Compile the body of the rewrite
-    CompileAction compile(&parms, unit, false);
+    CompileAction compile(from->symbols, unit, false);
     Tree *result = to->Do(compile);
     if (!result)
         return context->Error("Unable to compile '$1'", to);

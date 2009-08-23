@@ -39,17 +39,18 @@
         Infix *from = new Infix(symbol, ldecl, rdecl);                  \
         Name *to = new Name(symbol);                                    \
         eval_fn fn = (eval_fn) xl_##name;                               \
-        c->EnterRewrite(from, to);                                      \
+        Rewrite *rw = c->EnterRewrite(from, to);                        \
         to->code = fn;                                                  \
         to->symbols = c;                                                \
-        compiler->EnterBuiltin("xl_" #name, from, to, fn);              \
+        compiler->EnterBuiltin("xl_" #name,                             \
+                               from, to, rw->parameters, fn);           \
     } while(0);
 
 #define PARM(symbol, type)                                      \
         if (text(#type) == "tree")                              \
         {                                                       \
             Name *symbol##_decl = new Name(#symbol);            \
-            parameters.push_back(symbol##_decl);                 \
+            parameters.push_back(symbol##_decl);                \
         }                                                       \
         else                                                    \
         {                                                       \
@@ -70,10 +71,11 @@
             Tree *parmtree = ParametersTree(parameters);                \
             Prefix *from = new Prefix(new Name(symbol), parmtree);      \
             Name *to = new Name(symbol);                                \
-            c->EnterRewrite(from, to);                                  \
+            Rewrite *rw = c->EnterRewrite(from, to);                    \
             to->code = fn;                                              \
             to->symbols = c;                                            \
-            compiler->EnterBuiltin("xl_" #name, from, to, fn);          \
+            compiler->EnterBuiltin("xl_" #name,                         \
+                                   from, to, rw->parameters, fn);       \
         }                                                               \
         else                                                            \
         {                                                               \
@@ -81,7 +83,8 @@
             n->code = fn;                                               \
             n->symbols = c;                                             \
             c->EnterName(symbol, n);                                    \
-            compiler->EnterBuiltin("xl_" #name, n, n, fn);              \
+            tree_list noparms;                                          \
+            compiler->EnterBuiltin("xl_" #name, n, n, noparms, fn);     \
         }                                                               \
     } while(0);
 
@@ -94,10 +97,11 @@
         Prefix *from = new Postfix(parmtree, new Name(symbol));         \
         Name *to = new Name(symbol);                                    \
         eval_fn fn = (eval_fn) xl_##name;                               \
-        c->EnterRewrite(from, to);                                      \
+        Rewrite *rw = c->EnterRewrite(from, to);                        \
         to->code = fn;                                                  \
         to->symbols = c;                                                \
-        compiler->EnterBuiltin("xl_" #name, from, to, to->code);        \
+        compiler->EnterBuiltin("xl_" #name,                             \
+                               from, to, rw->parameters, to->code);     \
     } while(0);
 
 #define NAME(symbol)                            \
