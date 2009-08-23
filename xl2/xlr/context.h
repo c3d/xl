@@ -138,6 +138,7 @@ XL_BEGIN
 struct Tree;                                    // Abstract syntax tree
 struct Name;                                    // Name node, e.g. ABC or +
 struct Action;                                  // Action on trees
+struct TreeRoot;                                // Prevent GC from killing tree
 struct Context;                                 // Compile-time context
 struct Rewrite;                                 // Tree rewrite data
 struct Runtime;                                 // Runtime context
@@ -147,6 +148,7 @@ struct CompiledUnit;                            // Compilation unit
 
 typedef std::map<text, Tree *>    symbol_table; // Symbol table in context
 typedef std::set<Tree *>          active_set;   // Not to be garbage collected
+typedef std::set<TreeRoot *>      root_set;     // Set of tree roots
 typedef std::set<Symbols*>        active_syms;  // Not to be garbage collected
 typedef std::map<ulong, Rewrite*> rewrite_table;// Hashing of rewrites
 typedef symbol_table::iterator    symbol_iter;  // Iterator over sym table
@@ -217,7 +219,6 @@ struct Context : Symbols
     void                SetErrorHandler(Tree *e){ error_handler = e; }
 
     // Garbage collection
-    void                Root(Tree *t)           { roots.insert(t); }
     void                Mark(Tree *t)           { active.insert(t); }
     void                CollectGarbage();
 
@@ -235,7 +236,7 @@ public:
     Tree *              error_handler;
     Compiler *          compiler;
     active_set          active;
-    active_set          roots;
+    root_set            roots;
     active_syms         active_symbols;
     ulong               gc_threshold;
     globals_table       globals;

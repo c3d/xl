@@ -311,8 +311,8 @@ void Context::CollectGarbage ()
             std::cerr << "Garbage collecting...";
 
         // Mark roots, names, rewrites and stack
-        for (active_set::iterator a = roots.begin(); a != roots.end(); a++)
-            (*a)->Do(gc);
+        for (root_set::iterator a = roots.begin(); a != roots.end(); a++)
+            (*a)->tree->Do(gc);
         for (symbol_iter y = names.begin(); y != names.end(); y++)
             if (Tree *named = (*y).second)
                 named->Do(gc);

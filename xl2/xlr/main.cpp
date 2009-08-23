@@ -94,7 +94,7 @@ int main(int argc, char **argv)
             break;           // File read error, message already emitted
         }
 
-        context.Root(tree);
+        new XL::TreeRoot(tree);
         context.CollectGarbage();
         IFTRACE(source)
             std::cout << "SOURCE:\n" << tree << "\n";
@@ -120,7 +120,7 @@ int main(int argc, char **argv)
                 hadError = true;
                 break;
             }
-            context.Root(runnable);
+            new XL::TreeRoot(runnable);
             tree = context.Run(runnable);
         }
 

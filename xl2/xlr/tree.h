@@ -148,6 +148,19 @@ struct Action
 };
 
 
+struct TreeRoot
+// ----------------------------------------------------------------------------
+//    A tree that shouldn't be garbage collected until the root dies
+// ----------------------------------------------------------------------------
+{
+    TreeRoot(Tree *t);
+    ~TreeRoot();
+    operator Tree *(void) { return tree; }
+public:
+    Tree *      tree;
+};
+
+
 
 // ============================================================================
 //
