@@ -145,6 +145,7 @@ Tree *Tree::Do(Action *action)
     case INFIX:         return action->DoInfix((Infix *) this);
     default:            assert(!"Unexpected tree kind");
     }
+    return NULL;
 }
 
 

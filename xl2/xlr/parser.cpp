@@ -195,7 +195,7 @@ Tree *Parser::Parse(text closing)
     bool                 line_continuation  = false;
     ulong                pos                = 0;
     uint                 extra_indents      = 0;
-    uint                 old_indent;
+    uint                 old_indent         = 0;
     text                 infix, name, spelling;
     text                 comment_end;
     token_t              tok;
