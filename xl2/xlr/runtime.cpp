@@ -35,6 +35,7 @@
 #include "options.h"
 #include "opcodes.h"
 #include "compiler.h"
+#include "main.h"
 
 
 XL_BEGIN
@@ -435,7 +436,30 @@ Tree *xl_load(text name)
 //    Load a file from disk
 // ----------------------------------------------------------------------------
 {
-    return NULL;
+    // Check if the file has already been loaded somehwere.
+    // If so, return the loaded file
+    if (MAIN->files.count(name) > 0)
+    {
+        SourceFile &sf = MAIN->files[name];
+        Symbols::symbols->Import(sf.symbols);
+        return sf.tree.tree;
+    }
+
+    Parser parser(name.c_str(), MAIN->syntax, MAIN->positions, MAIN->errors);
+    Tree *tree = parser.Parse();
+    if (!tree)
+        return NULL;
+
+    Symbols *old = Symbols::symbols;
+    Symbols *syms = new Symbols(Context::context);
+    MAIN->files[name] = SourceFile(name, tree, syms);
+    Symbols::symbols = syms;
+    tree->SetSymbols(syms);
+    tree = syms->CompileAll(tree);
+    Symbols::symbols = old;
+    old->Import(syms);
+
+    return tree;
 }
 
 XL_END

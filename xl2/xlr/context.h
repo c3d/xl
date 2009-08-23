@@ -149,7 +149,8 @@ struct CompiledUnit;                            // Compilation unit
 typedef std::map<text, Tree *>    symbol_table; // Symbol table in context
 typedef std::set<Tree *>          active_set;   // Not to be garbage collected
 typedef std::set<TreeRoot *>      root_set;     // Set of tree roots
-typedef std::set<Symbols*>        active_syms;  // Not to be garbage collected
+typedef std::set<Symbols *>       symbols_set;  // Set of symbol tables
+typedef std::vector<Symbols *>    symbols_list; // List of symbols table
 typedef std::map<ulong, Rewrite*> rewrite_table;// Hashing of rewrites
 typedef symbol_table::iterator    symbol_iter;  // Iterator over sym table
 typedef std::vector<Tree **>      globals_table;// Table of LLVM globals
@@ -174,6 +175,7 @@ struct Symbols
     // Symbols properties
     Symbols *           Parent()                { return parent; }
     ulong               Depth();
+    void                Import (Symbols *other) { imported.insert(other); }
 
     // Symbol management
     Tree *              Named (text name, bool deep = true);
@@ -200,6 +202,7 @@ public:
     symbol_table        names;
     Rewrite *           rewrites;
     symbol_table        calls;
+    symbols_set         imported;
 
     static Symbols *    symbols;
 };
@@ -242,7 +245,7 @@ public:
     Compiler *          compiler;
     active_set          active;
     root_set            roots;
-    active_syms         active_symbols;
+    symbols_set         active_symbols;
     ulong               gc_threshold;
     globals_table       globals;
 };
@@ -501,18 +504,6 @@ inline Symbols::~Symbols()
     if (rewrites)
         delete rewrites;
  }
-
-
-inline Tree *Symbols::Named(text name, bool deep)
-// ----------------------------------------------------------------------------
-//   Find the name in the current context
-// ----------------------------------------------------------------------------
-{
-    for (Symbols *s = this; s; s = deep ? s->parent : NULL)
-        if (s->names.count(name) > 0)
-            return s->names[name];
-    return NULL;
-}
 
 
 inline ulong Symbols::Depth()

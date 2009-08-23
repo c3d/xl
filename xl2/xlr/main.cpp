@@ -72,7 +72,7 @@ int Main::Run()
 // ----------------------------------------------------------------------------
 {
     text cmd, end = "";
-    std::vector<text> files;
+    std::vector<text> filelist;
     std::vector<text>::iterator file;
     bool hadError = false;
 
@@ -89,21 +89,29 @@ int Main::Run()
     EnterBasics(&context);
 
     // Scan options and build list of files we need to process
-    files.push_back("builtins.xl");
+    filelist.push_back("builtins.xl");
     for (cmd = options.Parse(argc, argv); cmd != end; cmd = options.ParseNext())
-        files.push_back(cmd);
+        filelist.push_back(cmd);
 
     // Loop over files we will process
-    for (file = files.begin(); file != files.end(); file++)
+    for (file = filelist.begin(); file != filelist.end(); file++)
     {
+        Tree *tree = NULL;
+
         // Get the individual command line file
         cmd = *file;
         if (files.count(cmd) > 0)
+        {
             continue;
-
-        // Parse and execute program
-        Parser parser (cmd.c_str(), syntax, positions, errors);
-        Tree *tree = parser.Parse();
+        }
+        else
+        {
+            // Parse program - Local parser to delete scanner and close file
+            // This ensures positions are updated even if there is a 'load'
+            // being called during execution.
+            Parser parser (cmd.c_str(), syntax, positions, errors);
+            tree = parser.Parse();
+        }
         if (!tree)
         {
             hadError = true;
@@ -111,6 +119,9 @@ int Main::Run()
         }
         Symbols *syms = new Symbols(context);
         files[cmd] = SourceFile (cmd, tree, syms);
+        Symbols::symbols = syms;
+        tree->SetSymbols(syms);
+        new XL::TreeRoot(tree);
 
         context.CollectGarbage();
         IFTRACE(source)
@@ -119,9 +130,9 @@ int Main::Run()
         {
             if (!options.parseOnly)
             {
-                tree = context.CompileAll(tree);
+                tree = syms->CompileAll(tree);
                 if (tree && !options.compileOnly)
-                    tree = context.Run(tree);
+                    tree = syms->Run(tree);
                 if (!tree)
                 {
                     hadError = true;
@@ -131,23 +142,24 @@ int Main::Run()
         }
         else if (tree)
         {
-            Tree *runnable = context.CompileAll(tree);
+            Tree *runnable = syms->CompileAll(tree);
             if (!runnable)
             {
                 hadError = true;
                 break;
             }
-            new XL::TreeRoot(runnable);
             tree = context.Run(runnable);
         }
 
-        if (file != files.begin() || options.verbose)
+        if (file != filelist.begin() || options.verbose)
         {
             if (options.verbose)
                 debugp(tree);
             else
                 std::cout << tree << "\n";
         }
+
+        Symbols::symbols = Context::context;
     }
 
     return 0;

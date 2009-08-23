@@ -45,6 +45,24 @@ XL_BEGIN
 
 Symbols *Symbols::symbols = NULL;
 
+Tree *Symbols::Named(text name, bool deep)
+// ----------------------------------------------------------------------------
+//   Find the name in the current context
+// ----------------------------------------------------------------------------
+{
+    for (Symbols *s = this; s; s = deep ? s->parent : NULL)
+    {
+        if (s->names.count(name) > 0)
+            return s->names[name];
+        symbols_set::iterator it;
+        for (it = s->imported.begin(); it != s->imported.end(); it++)
+            if ((*it)->names.count(name) > 0)
+                return (*it)->names[name];
+    }
+    return NULL;
+}
+
+
 void Symbols::EnterName(text name, Tree *value)
 // ----------------------------------------------------------------------------
 //   Enter a value in the namespace
@@ -125,6 +143,7 @@ void Symbols::Clear()
         rewrites = NULL;
     }
 }
+
 
 
 // ============================================================================
@@ -243,9 +262,7 @@ Tree *Symbols::CompileCall(text callee, tree_list &arglist)
         return previous;
     }
 
-    Tree *call = Named(callee);
-    if (!call)
-        call = new Name(callee);
+    Tree *call = new Name(callee);
     if (arity)
     {
         Tree *args = arglist[0];
@@ -371,7 +388,7 @@ struct GCAction : Action
         return what;
     }
     active_set  alive;
-    active_syms alive_symbols;
+    symbols_set alive_symbols;
 };
 
 
@@ -425,15 +442,10 @@ void Context::CollectGarbage ()
         }
 
         // Same with the symbol tables
-        for (active_syms::iterator a = active_symbols.begin();
-             a != active_symbols.end();
-             a++)
-        {
-            if (!gc.alive_symbols.count(*a))
-            {
-                delete *a;
-            }
-        }
+        symbols_set::iterator as;
+        for (as = active_symbols.begin(); as != active_symbols.end(); as++)
+            if (!gc.alive_symbols.count(*as))
+                delete *as;
 
         // Record new state
         active = gc.alive;
@@ -1374,13 +1386,21 @@ Tree *DeclarationAction::DoPrefix(Prefix *what)
 //    All prefix operations translate into a rewrite
 // ----------------------------------------------------------------------------
 {
-    // Deal with 'data' declarations
+    // Deal with 'data' declarations and 'load' statements
     if (Name *name = what->left->AsName())
     {
         if (name->value == "data")
         {
             EnterRewrite(what->right, NULL);
             return what;
+        }
+        if (name->value == "load")
+        {
+            Text *file = what->right->AsText();
+            if (!file)
+                return Error("Argument '$1' to 'load' is not a text",
+                             what->right);
+            return xl_load(file->value);
         }
     }
 
@@ -1630,9 +1650,29 @@ Tree * CompileAction::Rewrites(Tree *what)
     bool foundUnconditional = false;
     bool foundSomething = false;
     ExpressionReduction reduction (unit, what);
+    symbols_set visited;
+    symbols_list lookups;
 
     for (Symbols *s = symbols; s && !foundUnconditional; s = s->Parent())
     {
+        if (!visited.count(s))
+        {
+            lookups.push_back(s);
+            visited.insert(s);
+            symbols_set::iterator si;
+            for (si = s->imported.begin(); si != s->imported.end(); si++)
+            {
+                visited.insert(*si);
+                lookups.push_back(*si);
+            }
+        }
+    }
+
+    symbols_list::iterator li;
+    for (li = lookups.begin(); !foundUnconditional && li != lookups.end(); li++)
+    {
+        Symbols *s = *li;
+
         Rewrite *candidate = s->Rewrites();
         while (candidate && !foundUnconditional)
         {
