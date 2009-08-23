@@ -435,12 +435,13 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *src, tree_list parms)
     storage[src] = result_storage;
 
     // Associate the value for the additional arguments (read-only, no alloca)
-    tree_list::iterator parm;
     ulong parmsCount = 0;
-    for (parm = parms.begin(); parm != parms.end(); parm++)
+    for (tree_list::iterator p = parms.begin(); p != parms.end(); p++)
     {
+        Tree *parm = *p;
         inputArg = args++;
-        value[*parm] = inputArg;
+        value[parm] = inputArg;
+        canEval.insert(parm);
         parmsCount++;
     }
 
@@ -505,9 +506,15 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
         result = data->CreateAlloca(compiler->treePtrTy, 0, clabel);
         storage[tree] = result;
         if (value.count(tree))
+        {
             data->CreateStore(value[tree], result);
+            canEval.insert(tree);
+        }
         else if (Value *global = compiler->Known(tree))
+        {
             data->CreateStore(data->CreateLoad(global), result);
+            canEval.insert(tree);
+        }
     }
 
     return result;
@@ -854,12 +861,13 @@ Value *CompiledUnit::CallEvaluate(Tree *tree)
 // ----------------------------------------------------------------------------
 {
     Value *treeValue = Known(tree); assert(treeValue);
-    if (noeval.count(tree))
-        return treeValue;
-
-    Value *evaluated = code->CreateCall(compiler->xl_evaluate, treeValue);
-    MarkComputed(tree, evaluated);
-    return evaluated;
+    if (canEval.count(tree))
+    {
+        Value *evaluated = code->CreateCall(compiler->xl_evaluate, treeValue);
+        MarkComputed(tree, evaluated);
+        treeValue = evaluated;
+    }
+    return treeValue;
 }
 
 
