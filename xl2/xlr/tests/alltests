@@ -1,0 +1,194 @@
+#!/bin/bash
+#******************************************************************************
+#  Christophe de Dinechin                                          XL PROJECT
+#  XL COMPILER TESTS: alltests
+#******************************************************************************
+#
+#  File Description:
+#
+#    Script for testing the compiler
+#
+#    This file runs through every possible test. It looks for all files
+#    ending in .test below the current directory, and executes them.
+#
+#
+#
+#
+#
+#******************************************************************************
+#This document is distributed under the GNU General Public License
+#See the enclosed COPYING file or http://www.gnu.org for information
+#******************************************************************************
+#* File       : $RCSFile$
+#* Revision   : $Revision$
+#* Date       : $Date$
+#******************************************************************************
+
+# Environment - Note that 'xl' is typically a symbolic link to real compiler
+TESTDIR=$(pwd)
+SUBDIRS="[0-9]*"
+XL=./xl
+SUCCESS=$TESTDIR/success.out
+FAILURE=$TESTDIR/failure.out
+PASS="pass"
+ONE_FAILED=
+PATTERN='[A-Za-z]*'
+UPDATE=
+NOCACHE=
+RUNTIME=default
+POSITIVE_MISMATCHES=0
+NEGATIVE_MISMATCHES=0
+UNEXPECTED_SUCCESSES=0
+UNEXPECTED_FAILURES=0
+MISSING_PATTERN=0
+MISSING_REFERENCE=0
+EXCLUDED=0
+TOTAL_TESTS=0
+
+if [ "$1" == '-xl' ]; then XL="$2"; shift; shift; fi
+if [ "$1" == "-update" -o "$1" == "-u" ]; then
+   shift; UPDATE='*'$1'*'; PATTERN="$UPDATE"; shift;
+fi
+if [ "$1" == "-r" -o "$1" == "-runtime" ]; then
+    shift; RUNTIME="$1"; shift;
+fi
+if [ "$1" == "-dir" -o "$1" == "-d" ]; then
+    SUBDIRS="$2"; shift; shift;
+fi
+if [ ! -z "$1" ]; then PATTERN='*'"$1"'*'; shift; fi
+
+export TESTDIR XL SUCCESS FAILURE PASS UPDATE
+export CCOPTS="-Agcc"
+
+# Make sure the proper files are linked in place
+ln -sf ../xlr ./xl
+ln -sf ../*.stylesheet .
+ln -sf ../xl.syntax .
+ln -sf ../builtins.xl .
+
+# Cleanup the test results
+echo Tests successfully run on $(date) on $HOSTNAME > $SUCCESS
+echo Failed tests on $(date) on $HOSTNAME > $FAILURE
+export XL
+
+# Look for all possible tests in the test directory
+for SUBDIR in "$(find $TESTDIR -type d -a -name '*'$SUBDIRS'*')"
+do
+for TEST in $(find $SUBDIR -name "$PATTERN".xl -print)
+do
+    TESTNAME=${TEST/$TESTDIR\/}
+    echo -n Test: $TESTNAME...
+
+    # Setup useful variables - These can be set in the test files
+    BASE=${TESTNAME/\.xl}                           # Basename
+    DIR="$(dirname $TEST)"                          # Directory
+    REF=$BASE.ref                                   # Reference file
+    LOG=$BASE.log                                   # Log file
+    CMD=                                            # Command to execute
+    EXIT=0                                          # Expected exit code
+    RUN=                                            # What to run afterwards
+    COMPILE=                                        # Compile command
+    OPT=                                            # XL compiler options
+    #INC="-I $DIR -I $TESTDIR/library"              # XL include directory
+    EXT=                                            # Extension for output
+    EXCLUDE=                                        # Runtimes to exclude
+    CACHED=
+
+    # Extract interesting variables from the test
+    eval $(./alltests.awk $TESTNAME)
+
+    # Defaults if not set by the test
+    eval $(grep TO_REMOVE alltests_$RUNTIME)
+    if [ -z "$CMD" ]; then
+        CMD="$XL $OPT $TESTNAME";
+        [ -z "$EXT" ] && { eval $(grep EXT alltests_$RUNTIME); }
+        [ -z "$COMPILE" ] && { eval $(grep COMPILE alltests_$RUNTIME); }
+        [ -z "$RUN" ] && { eval $(grep RUN alltests_$RUNTIME); }
+    fi
+
+    # Run the XL compiler on the test
+    THIS_FAILED=
+    TOTAL_TESTS=$(($TOTAL_TESTS+1))
+    if (echo $EXCLUDE | grep -q $RUNTIME) then
+        CACHED="(Excluded)"
+        EXCLUDED=$(($EXCLUDED+1))
+        RC=$EXIT
+    else
+        ( $CMD ) > $LOG 2>&1
+        RC=$?
+
+        # Analyze the results
+        if [ $RC -ne $EXIT ]; then
+            THIS_FAILED="Exit code $RC, expected $EXIT"
+            if [ $RC -eq 0 ]; then
+                UNEXPECTED_SUCCESSES=$(($UNEXPECTED_SUCCESSES+1))
+            else
+                UNEXPECTED_FAILURES=$(($UNEXPECTED_FAILURES+1))
+            fi
+        elif [ ! -z "$REF" ]; then
+            sed 's@'$TESTDIR'@TESTS@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
+            sed 's@'library/runtime/$RUNTIME'@library/runtime/default@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
+            if diff $REF $LOG > /dev/null 2>&1; then
+                THIS=ok
+            elif [ ! -z "$UPDATE" ]; then
+                echo -n "Updating reference... "
+                mv -f $REF $REF.old
+                cp $LOG $REF
+            elif [ -f $REF ]; then
+                THIS_FAILED="Output mismatch"
+                if [ $RC -eq 0 ]; then
+                    POSITIVE_MISMATCHES=$(($POSITIVE_MISMATCHES+1))
+                else
+                    NEGATIVE_MISMATCHES=$(($NEGATIVE_MISMATCHES+1))
+                fi
+                diff $REF $LOG > $LOG.diff
+                mv $LOG.diff $LOG
+                rm -f $BASE$EXT
+            else
+                THIS_FAILED="Missing reference"
+                MISSING_REFERENCE=$(($MISSING_REFERENCE+1))
+            fi
+        elif [ ! -z "$GREP" ]; then
+            if $GREP $LOG; then
+                THIS=ok
+            else
+                THIS_FAILED="No pattern match"
+                MISSING_PATTERN=$(($MISSING_PATTERN+1))
+            fi
+        fi
+    fi
+
+    if [ -z "$THIS_FAILED" ]; then
+        echo $TEST >> $SUCCESS
+        if [ "$RC" -ne "0" ] ; then
+            echo Success - negative test;
+        else
+            echo Success $CACHED;
+        fi
+        rm -f $LOG
+    else
+        echo "********************************************************************************" >> $FAILURE
+        echo "*** FAILED:" $TESTNAME: >> $FAILURE
+        echo "*** REASON:" $THIS_FAILED >> $FAILURE
+        echo "********************************************************************************" >> $FAILURE
+        cat $LOG >> $FAILURE
+        echo '*** FAILURE ('$THIS_FAILED') ***'
+        ONE_FAILED=1
+    fi
+    rm -f $TO_REMOVE
+done
+done
+
+if [ "$ONE_FAILED" ]; then
+    echo "*** SUMMARY OF" $TOTAL_TESTS "TESTS: FAILURE ***"
+    echo "  Unexpected failures : " $UNEXPECTED_FAILURES
+    echo "  Unexpected successes: " $UNEXPECTED_SUCCESSES
+    echo "  Positive mismatches : " $POSITIVE_MISMATCHES
+    echo "  Negative mismatches : " $NEGATIVE_MISMATCHES
+    echo "  Missing references  : " $MISSING_REFERENCE
+    echo "  Missing patterns    : " $MISSING_PATTERN
+    echo "  Excluded from run   : " $EXCLUDED
+else
+    echo "*** SUMMARY OF" $TOTAL_TESTS "TESTS: SUCCESS ***"
+    echo "  Excluded from run   : " $EXCLUDED
+fi

@@ -1,0 +1,8 @@
+if 3 > 5 then
+    "Wrong answer 1"
+else 
+    "Right answer"
+    if 3 < 5 then
+        "Two good answers"
+    else
+        "Wrong Answer 2"
