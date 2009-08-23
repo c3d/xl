@@ -605,6 +605,26 @@ Tree *ArgumentMatch::Compile(Tree *source)
 }
 
 
+Tree *ArgumentMatch::CompileValue(Tree *source)
+// ----------------------------------------------------------------------------
+//   Compile the source and make sure we evaluate it
+// ----------------------------------------------------------------------------
+{
+    source = Compile(source);
+
+    if (source)
+    {
+        if (Name *name = source->AsName())
+        {
+            llvm::BasicBlock *bb = unit.BeginLazy(name);
+            unit.CallEvaluate(name);
+            unit.EndLazy(name, bb);
+        }
+    }
+    return source;
+}
+
+
 Tree *ArgumentMatch::CompileClosure(Tree *source)
 // ----------------------------------------------------------------------------
 //    Compile the source tree for lazy evaluation, i.e. wrap in code
@@ -687,7 +707,7 @@ Tree *ArgumentMatch::DoInteger(Integer *what)
     }
 
     // Compile the test tree
-    Tree *compiled = Compile(test);
+    Tree *compiled = CompileValue(test);
     if (!compiled)
         return NULL;
 
@@ -712,7 +732,7 @@ Tree *ArgumentMatch::DoReal(Real *what)
     }
 
     // Compile the test tree
-    Tree *compiled = Compile(test);
+    Tree *compiled = CompileValue(test);
     if (!compiled)
         return NULL;
 
@@ -737,7 +757,7 @@ Tree *ArgumentMatch::DoText(Text *what)
     }
 
     // Compile the test tree
-    Tree *compiled = Compile(test);
+    Tree *compiled = CompileValue(test);
     if (!compiled)
         return NULL;
 
@@ -768,10 +788,10 @@ Tree *ArgumentMatch::DoName(Name *what)
         if (Tree *existing = rewrite->Named(what->value))
         {
             // Insert a dynamic tree comparison test
-            Tree *testCode = Compile(test);
+            Tree *testCode = CompileValue(test);
             if (!testCode)
                 return NULL;
-            Tree *thisCode = Compile(existing);
+            Tree *thisCode = CompileValue(existing);
             if (!thisCode)
                 return NULL;
             unit.ShapeTest(testCode, thisCode);
@@ -867,7 +887,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
             return NULL;
 
         // Compile what we are testing against
-        Tree *compiled = Compile(test);
+        Tree *compiled = CompileValue(test);
         if (!compiled)
             return NULL;
 

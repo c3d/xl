@@ -380,6 +380,7 @@ struct ArgumentMatch : Action
 
     // Compile a tree
     Tree *        Compile(Tree *source);
+    Tree *        CompileValue(Tree *source);
     Tree *        CompileClosure(Tree *source);
 
 public:
