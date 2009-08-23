@@ -88,13 +88,13 @@
         }                                                               \
     } while(0);
 
-#define POSTFIX(t1, symbol, name, _code)                                \
+#define POSTFIX(parms, symbol, name, _code)                             \
     do                                                                  \
     {                                                                   \
         tree_list parameters;                                           \
         parms;                                                          \
         Tree *parmtree = ParametersTree(parameters);                    \
-        Prefix *from = new Postfix(parmtree, new Name(symbol));         \
+        Postfix *from = new Postfix(parmtree, new Name(symbol));        \
         Name *to = new Name(symbol);                                    \
         eval_fn fn = (eval_fn) xl_##name;                               \
         Rewrite *rw = c->EnterRewrite(from, to);                        \

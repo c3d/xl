@@ -37,7 +37,7 @@ PREFIX
         500     &
 
 POSTFIX
-        400     ! ?
+        400     ! ? %
 
 BLOCK
         5       INDENT UNINDENT

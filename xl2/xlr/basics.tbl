@@ -44,7 +44,8 @@ INFIX(integer, "<>", integer, BinaryNEInt, RBOOL(INT(l) != INT(r)))
 INFIX(integer, "=", integer, BinaryEQInt, RBOOL(INT(l) == INT(r)))
 
 PREFIX("-", PARM(x, integer), NegateInt, RINT(-x))
-
+POSTFIX(PARM(x, real), "%", PercentReal, RREAL(x / 100.0))
+POSTFIX(PARM(x, integer), "%", PercentInteger, RREAL(x / 100.0))
 
 // Real arithmetic and comparisons
 INFIX(real, "+", real, BinaryAddReal, RREAL(REAL(l) + REAL(r)))
