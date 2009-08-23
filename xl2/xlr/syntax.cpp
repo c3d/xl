@@ -36,6 +36,8 @@ XL_BEGIN
 // 
 // ============================================================================
 
+Syntax *Syntax::syntax = NULL;
+
 int Syntax::InfixPriority(text n)
 // ----------------------------------------------------------------------------
 //   Return infix priority, which is either this or parent's

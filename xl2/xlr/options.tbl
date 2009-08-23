@@ -39,7 +39,7 @@ OPTION(help, "List usage information", Usage(argv))
 OPTVAR(stylesheet, text, "xl")
 OPTION(style, "Select the stylesheet",
        stylesheet = STRING;
-       MAIN->renderer.SelectStyleSheet(stylesheet + ".stylesheet"))
+       Renderer::renderer->SelectStyleSheet(stylesheet + ".stylesheet"))
 
 // Parse only
 OPTVAR(parseOnly, bool, false)

@@ -28,7 +28,6 @@
 #include "context.h"
 #include "renderer.h"
 #include "runtime.h"
-#include "main.h"
 
 #include <iostream>
 #include <sstream>
@@ -341,7 +340,7 @@ Value *Compiler::EnterConstant(Tree *constant)
     GlobalValue *result = new GlobalVariable (treePtrTy, isConstant,
                                               GlobalVariable::InternalLinkage,
                                               NULL, name, module);
-    Tree **address = MAIN->context.AddGlobal(constant);
+    Tree **address = Context::context->AddGlobal(constant);
     runtime->addGlobalMapping(result, address);
     globals[constant] = result;
     return result;
@@ -781,7 +780,7 @@ Value *CompiledUnit::Left(Tree *tree)
     }
     else
     {
-        MAIN->context.Error("Internal: Using left of uncompiled '$1'", tree);
+        Error("Internal: Using left of uncompiled '$1'", tree);
     }
 
     return result;
@@ -818,7 +817,7 @@ Value *CompiledUnit::Right(Tree *tree)
     }
     else
     {
-        MAIN->context.Error("Internal: Using right of uncompiled '$1'", tree);
+        Error("Internal: Using right of uncompiled '$1'", tree);
     }
     return result;
 }
@@ -1021,7 +1020,7 @@ BasicBlock *CompiledUnit::TagTest(Tree *tree, ulong tagValue)
     Value *treeValue = Known(tree);
     if (!treeValue)
     {
-        MAIN->context.Error("No value for '$1'", tree);
+        Error("No value for '$1'", tree);
         return NULL;
     }
     Value *tagPtr = code->CreateConstGEP2_32(treeValue, 0, 0, "tagPtr");

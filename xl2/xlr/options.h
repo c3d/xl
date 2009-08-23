@@ -70,6 +70,8 @@ class Options
     int                 argc;
     char **             argv;
     Errors &            errors;
+
+    static Options *    options;
 };
 
  XL_END

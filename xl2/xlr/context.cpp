@@ -33,7 +33,6 @@
 #include "renderer.h"
 #include "basics.h"
 #include "compiler.h"
-#include "main.h"
 #include <sstream>
 
 XL_BEGIN
@@ -84,7 +83,7 @@ Rewrite *Symbols::EnterRewrite(Rewrite *rw)
     ParameterMatch parms(locals);
     Tree *check = rw->from->Do(parms);
     if (!check)
-        MAIN->context.Error("Parameter error for '$1'", rw->from);
+        Error("Parameter error for '$1'", rw->from);
     rw->parameters = parms.order;
 
     // If we are defining a name, store the definition in the symbols
@@ -148,10 +147,9 @@ Tree *Symbols::Compile(Tree *source, CompiledUnit &unit, bool nullIfBad)
     // If we didn't compile successfully, report
     if (!result)
     {
-        Context &context = MAIN->context;
         if (nullIfBad)
             return result;
-        return context.Error("Couldn't compile '$1'", source);
+        return Error("Couldn't compile '$1'", source);
     }
 
     // If we compiled successfully, get the code and store it
@@ -166,8 +164,7 @@ Tree *Symbols::CompileAll(Tree *source)
 //    This associates an eval_fn to the tree, i.e. code that takes a tree
 //    as input and returns a tree as output.
 {
-    Context &context = MAIN->context;
-    Compiler *compiler = context.compiler;
+    Compiler *compiler = Context::context->compiler;
     tree_list noParms;
     CompiledUnit unit (compiler, source, noParms);
     if (unit.IsForwardCall())
@@ -277,6 +274,8 @@ Tree *Symbols::Run(Tree *code)
 
 ulong Context::gc_increment = 200;
 ulong Context::gc_growth_percent = 200;
+Context *Context::context = NULL;
+
 
 Context::~Context()
 // ----------------------------------------------------------------------------
@@ -375,7 +374,7 @@ void Context::CollectGarbage ()
             rewrites->Do(gc);
 
         formats_table::iterator f;
-        formats_table &formats = MAIN->renderer.formats;
+        formats_table &formats = Renderer::renderer->formats;
         for (f = formats.begin(); f != formats.end(); f++)
             (*f).second->Do(gc);
 
@@ -727,7 +726,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     unit.ConstantTree(source);
 
     // Record which elements of the expression are captured from context
-    Context *context = &MAIN->context;
+    Context *context = Context::context;
     Compiler *compiler = context->compiler;
     EnvironmentScan env(symbols);
     Tree *envOK = source->Do(env);
@@ -1436,7 +1435,7 @@ Tree *CompileAction::DoName(Name *what)
     if (Tree *result = symbols->Named(what->value))
     {
         // Check if there is code we need to call
-        Compiler *compiler = MAIN->context.compiler;
+        Compiler *compiler = Context::context->compiler;
         if (compiler->functions.count(result))
         {
             // Case of "Name -> Foo": Invoke Name
@@ -1827,8 +1826,7 @@ Tree *Rewrite::Compile(void)
     if (to->code)
         return to;
 
-    Context &context = MAIN->context;
-    Compiler *compiler = context.compiler;
+    Compiler *compiler = Context::context->compiler;
 
     // Create the compilation unit and check if we are already compiling this
     CompiledUnit unit(compiler, to, parameters);
@@ -1869,7 +1867,7 @@ Tree *Error (text message, Tree *a1, Tree *a2, Tree *a3)
 //    Use the error handler in the global context
 // ----------------------------------------------------------------------------
 {
-    return MAIN->context.Error(message, a1, a2, a3);
+    return Context::context->Error(message, a1, a2, a3);
 }
 
 XL_END

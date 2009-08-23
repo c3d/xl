@@ -42,7 +42,7 @@ struct Renderer
 {
     // Construction
     Renderer(std::ostream &out, text styleFile, Syntax &stx);
-    Renderer(std::ostream &out, Renderer *from = NULL);
+    Renderer(std::ostream &out, Renderer *from = renderer);
 
     // Selecting the style sheet file
     void                SelectStyleSheet(text styleFile);
@@ -72,6 +72,8 @@ struct Renderer
     bool                had_space;
     bool                had_punctuation;
     bool                need_separator;
+
+    static Renderer *   renderer;
 };
 
 XL_END

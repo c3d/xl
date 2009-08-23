@@ -232,6 +232,7 @@ struct Context : Symbols
 public:
     static ulong        gc_increment;
     static ulong        gc_growth_percent;
+    static Context *    context;
 
     Errors &            errors;
     Tree *              error_handler;

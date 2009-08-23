@@ -31,7 +31,6 @@
 #include "renderer.h"
 #include "opcodes.h"
 #include "options.h"
-#include "main.h"
 
 XL_BEGIN
 
@@ -47,8 +46,8 @@ void *Tree::operator new(size_t sz)
 // ----------------------------------------------------------------------------
 {
     void *result = ::operator new(sz);
-    if (MAIN)
-        MAIN->context.Mark((Tree *) result);
+    if (Context::context)
+        Context::context->Mark((Tree *) result);
     return result;
 }
 
@@ -92,7 +91,7 @@ void Tree::SetSymbols(Symbols *s)
         debugsc(s);
     }
     symbols = s;
-    MAIN->context.active_symbols.insert(s);
+    Context::context->active_symbols.insert(s);
 }
 
 
@@ -109,7 +108,7 @@ TreeRoot::TreeRoot(Tree *t)
 // ----------------------------------------------------------------------------
     : tree(t)
 {
-    MAIN->context.roots.insert(this);
+    Context::context->roots.insert(this);
 }
 
 
@@ -118,7 +117,7 @@ TreeRoot::~TreeRoot()
 //   Remove a root from the context
 // ----------------------------------------------------------------------------
 {
-    MAIN->context.roots.erase(this);
+    Context::context->roots.erase(this);
 }
 
 

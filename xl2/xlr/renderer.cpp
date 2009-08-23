@@ -28,7 +28,6 @@
 #include "tree.h"
 #include "syntax.h"
 #include "errors.h"
-#include "main.h"
 #include <iostream>
 #include <sstream>
 #include <cctype>
@@ -40,6 +39,8 @@ XL_BEGIN
 //   Renderer construction / initialization
 // 
 // ============================================================================
+
+Renderer *Renderer::renderer = NULL;
 
 struct EnterFormatsAction : Action
 // ----------------------------------------------------------------------------
@@ -91,19 +92,17 @@ Renderer::Renderer(std::ostream &out, text styleFile, Syntax &stx)
 }
 
 
-#define SRC (from ? from : &MAIN->renderer)
 Renderer::Renderer(std::ostream &out, Renderer *from)
 // ----------------------------------------------------------------------------
 //   Clone a renderer from some existing one
 // ----------------------------------------------------------------------------
-    : output(out), syntax(SRC->syntax), formats(SRC->formats),
-      indent(SRC->indent), self(SRC->self), 
-      left(SRC->left), right(SRC->right),
-      current_quote(SRC->current_quote), priority(SRC->priority),
-      had_space(SRC->had_space), had_punctuation(SRC->had_punctuation),
-      need_separator(SRC->need_separator)
+    : output(out), syntax(from->syntax), formats(from->formats),
+      indent(from->indent), self(from->self), 
+      left(from->left), right(from->right),
+      current_quote(from->current_quote), priority(from->priority),
+      had_space(from->had_space), had_punctuation(from->had_punctuation),
+      need_separator(from->need_separator)
 {}
-#undef SRC
 
 
 void Renderer::SelectStyleSheet(text styleFile)

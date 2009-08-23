@@ -35,7 +35,6 @@
 #include "options.h"
 #include "opcodes.h"
 #include "compiler.h"
-#include "main.h"
 
 
 XL_BEGIN
@@ -70,7 +69,7 @@ Tree *xl_evaluate(Tree *what)
             if (!symbols)
             {
                 std::cerr << "WARNING: No symbols for '" << what << "'\n";
-                symbols = &MAIN->context;
+                symbols = Context::context;
             }
             what = symbols->CompileAll(what);
         }
@@ -244,8 +243,7 @@ Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
     va_end(va);
 
     // Generate the code for the arguments
-    Context &context = MAIN->context;
-    Compiler * compiler = context.compiler;
+    Compiler * compiler = Context::context->compiler;
     eval_fn fn = compiler->closures[ntrees];
     if (!fn)
     {
@@ -393,9 +391,8 @@ Tree *xl_call(text name)
 //   Invoke the tree with the given name
 // ----------------------------------------------------------------------------
 {
-    Context &context = MAIN->context;
     tree_list args;
-    Tree *callee = context.CompileCall(name, args);
+    Tree *callee = Context::context->CompileCall(name, args);
     if (callee && callee->code)
         callee = callee->code(callee);
     return callee;
@@ -407,13 +404,12 @@ Tree *xl_call(text name, double x, double y, double w, double h)
 //   Invoke the tree with the given name
 // ----------------------------------------------------------------------------
 {
-    Context &context = MAIN->context;
     tree_list args;
     args.push_back(new Real(x));
     args.push_back(new Real(y));
     args.push_back(new Real(w));
     args.push_back(new Real(h));
-    Tree *callee = context.CompileCall(name, args);
+    Tree *callee = Context::context->CompileCall(name, args);
     if (callee && callee->code)
         callee = callee->code(callee);
     return callee;

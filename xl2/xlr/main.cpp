@@ -57,7 +57,12 @@ Main::Main(int inArgc, char **inArgv)
       compiler("xl_tao"),
       context(errors, &compiler),
       renderer(std::cout, "xl.stylesheet", syntax)
-{}
+{
+    Options::options = &options;
+    Context::context = &context;
+    Renderer::renderer = &renderer;
+    Syntax::syntax = &syntax;
+}
 
 
 int Main::Run()

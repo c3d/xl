@@ -32,7 +32,6 @@
 #include "options.h"
 #include "errors.h"
 #include "renderer.h"
-#include "main.h"
 
 XL_BEGIN
 
@@ -41,6 +40,8 @@ XL_BEGIN
 /*   The compiler options parsing                                            */
 /*                                                                           */
 /* ========================================================================= */
+
+Options *Options::options = NULL;
 
 Options::Options(Errors &err):
 /*---------------------------------------------------------------------------*/

@@ -82,6 +82,8 @@ public:
     int                 default_priority;
     int                 statement_priority;
     int                 function_priority;
+
+    static Syntax *     syntax;
 };
 
 XL_END
