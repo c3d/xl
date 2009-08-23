@@ -1556,6 +1556,7 @@ Tree * CompileAction::Rewrites(Tree *what)
                         foundUnconditional = !unit.failbb;
                         BuildChildren children(this);
                         what = what->Do(children);
+                        unit.noeval.insert(what);
                         reduction.Succeeded();
                     }
                     else

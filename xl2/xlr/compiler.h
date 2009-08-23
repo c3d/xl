@@ -175,7 +175,7 @@ public:
     value_map           value;          // Map tree -> LLVM value
     value_map           storage;        // Map tree -> LLVM alloca space
     value_map           computed;       // Map tree -> LLVM "computed" flag
-    data_set            canEval;        // Data expressions we can evaluate
+    data_set            noeval;         // Data expressions we don't evaluate
 };
 
 
