@@ -466,4 +466,10 @@ inline ulong Symbols::Depth()
 
 XL_END
 
+extern "C"
+{
+    void debugs(XL::Symbols *s);
+    void debugsc(XL::Symbols *s);
+}
+
 #endif // CONTEXT_H

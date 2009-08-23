@@ -77,6 +77,23 @@ Name::operator bool()
 }
 
 
+void Tree::SetSymbols(Symbols *s)
+// ----------------------------------------------------------------------------
+//   Change the symbols table, make sure we don't overwrite stuff
+// ----------------------------------------------------------------------------
+{
+    if (symbols && symbols != s)
+    {
+        std::cerr << "WARNING: Symbol overwritten on " << this << '\n';
+        std::cerr << "Old symbols were:\n";
+        debugsc(symbols);
+        std::cerr << "New symbols were:\n";
+        debugsc(s);
+    }
+    symbols = s;
+}
+
+
 
 // ============================================================================
 // 

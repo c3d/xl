@@ -129,9 +129,6 @@ Tree *Symbols::Compile(Tree *source, CompiledUnit &unit, bool nullIfBad)
 //    Return an optimized version of the source tree, ready to run
 // ----------------------------------------------------------------------------
 {
-    // Record the symbol table for this tree
-    source->symbols = this;
-
     // Record rewrites and data declarations in the current context
     Symbols parms(this);
     DeclarationAction declare(&parms);
@@ -173,7 +170,6 @@ Tree *Symbols::CompileAll(Tree *source)
 
     eval_fn fn = unit.Finalize();
     source->code = fn;
-    source->symbols = this;
     return source;
 }
 
@@ -723,12 +719,11 @@ Tree *ArgumentMatch::DoName(Name *what)
             return what;
         }
 
-        // Compile the evaluation of the tested value
+        // If first occurence of the name, enter it in symbol table
         Tree *compiled = Compile(test);
         if (!compiled)
             return NULL;
 
-        // If first occurence of the name, enter it in symbol table
         locals->EnterName(what->value, compiled);
         return what;
     }
@@ -1450,7 +1445,6 @@ Tree *Rewrite::Compile(void)
     // we still record it to avoid recompiling multiple times
     eval_fn fn = compile.unit.Finalize();
     to->code = fn;
-    to->symbols = symbols;
 
     return to;
 }
@@ -1483,5 +1477,3 @@ extern "C" void debugsc(XL::Symbols *s)
         debugs(s);
     }
 }
-
-

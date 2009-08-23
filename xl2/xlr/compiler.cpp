@@ -643,7 +643,8 @@ llvm::Value *CompiledUnit::Invoke(Tree *subexpr, Tree *callee, tree_list args)
     {
         Tree *arg = *a;
         Value *value = Known(arg);
-        assert(value);
+        if (!value)
+            value = ConstantTree(arg);
         argV.push_back(value);
     }
 

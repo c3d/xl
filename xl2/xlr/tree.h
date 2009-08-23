@@ -95,6 +95,7 @@ struct Tree
     tree_position       Position()            { return tag>>KINDBITS; }
     bool                IsLeaf()              { return Kind() <= NAME; }
     bool                IsConstant()          { return Kind() <= TEXT; }
+    void                SetSymbols(Symbols *s);
 
     // Safe cast to an appropriate subclass
     Integer *           AsInteger();
