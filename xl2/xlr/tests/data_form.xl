@@ -1,6 +1,3 @@
-//data X, Y
-//1,2+3,4+5,sin(3.3)
-
 data complex x,y
 
 complex 1,2+3

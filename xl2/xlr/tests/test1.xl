@@ -1,0 +1,4 @@
+foo A -> 1+A*2
+bar B -> 1+foo (B+3)
+
+bar 7

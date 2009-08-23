@@ -92,16 +92,17 @@ int main(int argc, char **argv)
                 if (tree && !options.compileOnly)
                     tree = context.Run(tree);
             }
-
-            if (options.verbose)
-                debugp(tree);
-            else
-                std::cout << tree << "\n";
         }
         else if (tree)
         {
             tree = context.CompileAll(tree);
+            tree = context.Run(tree);
         }
+
+        if (options.verbose)
+            debugp(tree);
+        else
+            std::cout << tree << "\n";
     }
 
 #if CONFIG_USE_SBRK
