@@ -1448,24 +1448,16 @@ Tree *CompileAction::DoInfix(Infix *what)
             return NULL;
         if (unit.IsKnown(what->left))
         {
-            if (false && !what->left->code)
-            {
-                Tree *left = symbols->CompileAll(what->left);
-                assert (left == what->left);
-                assert (left->code);
-            }
+            if (!what->left->symbols)
+                what->left->SetSymbols(symbols);
             unit.CallEvaluate(what->left);
         }
         if (!what->right->Do(this))
             return NULL;
         if (unit.IsKnown(what->right))
         {
-            if (false && !what->right->code)
-            {
-                Tree *right = symbols->CompileAll(what->right);
-                assert(right == what->right);
-                assert (right->code);
-            }                
+            if (!what->right->symbols)
+                what->right->SetSymbols(symbols);
             unit.CallEvaluate(what->right);
             unit.Copy(what->right, what);
         }
