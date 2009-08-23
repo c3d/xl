@@ -108,12 +108,22 @@ bool xl_type_check(Tree *value, Tree *type)
 // ----------------------------------------------------------------------------
 {
     IFTRACE(typecheck)
-        std::cerr << "Type check " << value << " against " << type << '\n';
+        std::cerr << "Type check " << value << " against " << type << ':';
     if (!value || !type->code)
+    {
+        IFTRACE(typecheck)
+            std::cerr << "Failed (no value / no code)\n";
         return false;
+    }
     Tree *afterTypeCast = type->code(value);
     if (afterTypeCast != value)
+    {
+        IFTRACE(typecheck)
+            std::cerr << "Failed (not same type)\n";
         return false;
+    }
+    IFTRACE(typecheck)
+        std::cerr << "Success\n";
     return true;
 }
 
