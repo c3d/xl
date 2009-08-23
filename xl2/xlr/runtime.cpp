@@ -417,6 +417,21 @@ Tree *xl_call(text name, double x, double y, double w, double h)
 }
 
 
+Tree *xl_call(text name, double x, double y)
+// ----------------------------------------------------------------------------
+//   Invoke the tree with the given name
+// ----------------------------------------------------------------------------
+{
+    tree_list args;
+    args.push_back(new Real(x));
+    args.push_back(new Real(y));
+    Tree *callee = Symbols::symbols->CompileCall(name, args);
+    if (callee && callee->code)
+        callee = callee->code(callee);
+    return callee;
+}
+
+
 Tree *xl_call(text name, text arg)
 // ----------------------------------------------------------------------------
 //   Invoke the tree with the given name
