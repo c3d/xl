@@ -199,6 +199,7 @@ Tree *Parser::Parse(text closing)
     text                 infix, name, spelling;
     text                 comment_end;
     token_t              tok;
+    char                 separator;
     text                 blk_opening, blk_closing;
     std::vector<Pending> stack;
 
@@ -255,7 +256,7 @@ Tree *Parser::Parse(text closing)
             break;
         case tokSTRING:
         case tokQUOTE:
-            char separator = scanner.TokenText()[0];
+            separator = scanner.TokenText()[0];
             name = text(1, separator);
             right = new Text(scanner.TextValue(), name, name, pos);
             if (!result && new_statement)
