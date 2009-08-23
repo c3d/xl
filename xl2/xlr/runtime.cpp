@@ -65,7 +65,10 @@ Tree *xl_evaluate(Tree *what)
         {
             Symbols *symbols = what->symbols;
             if (!symbols)
+            {
+                std::cerr << "WARNING: No symbols for '" << what << "'\n";
                 symbols = Context::context;
+            }
             what = symbols->CompileAll(what);
         }
 
@@ -137,43 +140,61 @@ bool xl_type_check(Tree *value, Tree *type)
 
 Tree *xl_new_integer(longlong value)
 {
-    return new Integer(value);
+    Tree *result = new Integer(value);
+    result->code = xl_identity;
+    return result;
 }
 
 Tree *xl_new_real(double value)
 {
-    return new Real (value);
+    Tree *result = new Real (value);
+    result->code = xl_identity;
+    return result;
 }
 
 Tree *xl_new_character(kstring value)
 {
-    return new Text(value, "'", "'");
+    Tree *result = new Text(value, "'", "'");
+    result->code = xl_identity;
+    return result;
 }
 
 Tree *xl_new_text(kstring value)
 {
-    return new Text(text(value));
+    Tree *result = new Text(text(value));
+    result->code = xl_identity;
+    return result;
 }
 
 Tree *xl_new_xtext(kstring value, kstring open, kstring close)
 {
-    return new Text(value, open, close);
+    Tree *result = new Text(value, open, close);
+    result->code = xl_identity;
+    return result;
 }
 Tree *xl_new_block(Block *source, Tree *child)
 {
-    return new Block(source, child);
+    Tree *result = new Block(source, child);
+    result->code = xl_identity;
+    return result;
 }
 Tree *xl_new_prefix(Prefix *source, Tree *left, Tree *right)
 {
-    return new Prefix(source, left, right);
+    Tree *result = new Prefix(source, left, right);
+    result->code = xl_identity;
+    return result;
 }
 Tree *xl_new_postfix(Postfix *source, Tree *left, Tree *right)
 {
-    return new Postfix(source, left, right);
+    Tree *result = new Postfix(source, left, right);
+    result->code = xl_identity;
+    return result;
 }
 Tree *xl_new_infix(Infix *source, Tree *left, Tree *right)
 {
-    return new Infix(source, left, right);
+    Tree *result = new Infix(source, left, right);
+    result->code = xl_identity;
+    return result;
 }
 
 
