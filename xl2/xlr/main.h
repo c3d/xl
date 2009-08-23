@@ -43,11 +43,13 @@ struct SourceFile
 //    A source file and associated data
 // ----------------------------------------------------------------------------
 {
-    SourceFile(text n, Tree *t, Symbols *s): name(n), tree(t), symbols(s) {}
-    SourceFile(): name(""), tree(NULL), symbols(NULL) {}
+    SourceFile(text n, Tree *t, Symbols *s):
+        name(n), tree(t), symbols(s), changed(false) {}
+    SourceFile(): name(""), tree(NULL), symbols(NULL), changed(false) {}
     text        name;
     TreeRoot    tree;
     Symbols *   symbols;
+    bool        changed;
 };
 typedef std::map<text, SourceFile> source_files;
 

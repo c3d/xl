@@ -436,7 +436,7 @@ void Renderer::RenderOne(Tree *what)
         RenderFormat (t, t, "integer");
         break;
     case REAL:
-        toText << ((Real *) what)->value;
+        toText << std::showpoint << ((Real *) what)->value;
         t = toText.str();
         RenderFormat (t, t, "real");
         break;
