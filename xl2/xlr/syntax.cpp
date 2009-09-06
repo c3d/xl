@@ -113,6 +113,15 @@ void Syntax::SetPostfixPriority(text n, int p)
 }
 
 
+bool Syntax::KnownToken(text n)
+// ----------------------------------------------------------------------------
+//   Check if the given symbol is known in any of the priority tables
+// ----------------------------------------------------------------------------
+{
+    return known_tokens.count(n) > 0;
+}
+
+
 void Syntax::CommentDelimiter(text Begin, text End)
 // ----------------------------------------------------------------------------
 //   Define comment syntax
@@ -218,7 +227,19 @@ void Syntax::ReadSyntaxFile(kstring filename)
 
     while(tok != tokEOF)
     {
-        tok = scanner.NextToken();
+        tok = scanner.NextToken(true);
+
+        if (tok == tokSYMBOL)
+        {
+            text t = scanner.TextValue();
+            uint i, len = t.length();
+            for (i = 1; i < len; i++)
+            {
+                text sub = t.substr(0, i);
+                known_tokens.insert(sub);
+            }
+        }
+
         switch(tok)
         {
         case tokEOF:

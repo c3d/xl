@@ -33,6 +33,7 @@
 #include "renderer.h"
 #include "basics.h"
 #include "compiler.h"
+#include "runtime.h"
 #include <sstream>
 
 XL_BEGIN

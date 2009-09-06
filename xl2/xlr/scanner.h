@@ -169,7 +169,7 @@ public:
     
 public:
     // Scanning
-    token_t     NextToken();
+    token_t     NextToken(bool hungry = false);
     text        Comment(text EndOfComment);
     
     // Access to scanned data

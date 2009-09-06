@@ -136,7 +136,7 @@ do {                                            \
 } while (0)
 
 
-token_t Scanner::NextToken()
+token_t Scanner::NextToken(bool hungry)
 // ----------------------------------------------------------------------------
 //   Return the next token, and compute the token text and value
 // ----------------------------------------------------------------------------
@@ -445,10 +445,13 @@ token_t Scanner::NextToken()
     }
 
     // Look for other symbols
-    while (ispunct(c) &&
-           c != '\'' && c != '"' && c != EOF &&
+    while (ispunct(c) && c != '\'' && c != '"' && c != EOF &&
            !syntax.IsBlock(c, endMarker))
+    {
         NEXT_CHAR(c);
+        if (!hungry && !syntax.KnownToken(textValue))
+            break;
+    }
     ungetc(c, file);
     position--;
     if (syntax.IsBlock(textValue, endMarker))

@@ -22,6 +22,7 @@
 // ****************************************************************************
 
 #include <map>
+#include <set>
 #include "base.h"
 
 XL_BEGIN
@@ -30,6 +31,7 @@ struct Tree;
 
 typedef std::map<text, int>             priority_table;
 typedef std::map<text, text>            delimiter_table;
+typedef std::set<text>                  token_set;
 
 
 class Syntax
@@ -56,6 +58,7 @@ public:
     void                SetPrefixPriority(text n, int p);
     int                 PostfixPriority(text n);
     void                SetPostfixPriority(text n, int p);
+    bool                KnownToken(text n);
 
     // Read a complete syntax file (xl.syntax)
     void                ReadSyntaxFile (kstring filename);
@@ -77,6 +80,7 @@ public:
     delimiter_table     comment_delimiters;
     delimiter_table     text_delimiters;
     delimiter_table     block_delimiters;
+    token_set           known_tokens;
     int                 priority;
 
     int                 default_priority;
