@@ -169,7 +169,7 @@ module XL.TEXT_IO with
     //    Write the appropriate amount of indentation
     // ------------------------------------------------------------------------
         I : integer
-        delta : integer := integer(direction)
+        delta : integer := integer(long(direction))
 
         current_tree_indent += delta
         IO.writeln ()
