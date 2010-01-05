@@ -263,6 +263,27 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 }
 
 
+Compiler::~Compiler()
+// ----------------------------------------------------------------------------
+//    Destructor deletes the various things we had created
+// ----------------------------------------------------------------------------
+{
+    delete context;
+}
+
+
+void Compiler::Reset()
+// ----------------------------------------------------------------------------
+//    Clear the contents of a compiler
+// ----------------------------------------------------------------------------
+{
+    functions.clear();
+    globals.clear();
+    closures.clear();
+    closet.clear();
+}
+
+
 Function *Compiler::EnterBuiltin(text name,
                                  Tree *from, Tree *to,
                                  tree_list parms,
@@ -273,20 +294,29 @@ Function *Compiler::EnterBuiltin(text name,
 //   The input is not technically an eval_fn, but has as many parameters as
 //   there are variables in the form
 {
-    // Create the LLVM function
-    std::vector<const Type *> parmTypes;
-    parmTypes.push_back(treePtrTy); // First arg is self
-    for (tree_list::iterator p = parms.begin(); p != parms.end(); p++)
-        parmTypes.push_back(treePtrTy);
-    FunctionType *fnTy = FunctionType::get(treePtrTy, parmTypes, false);
-    Function *result = Function::Create(fnTy, Function::ExternalLinkage,
-                                        name, module);
+    Function *result = builtins[name];
+    if (result)
+    {
+        functions[to] = result;
+    }
+    else
+    {
+        // Create the LLVM function
+        std::vector<const Type *> parmTypes;
+        parmTypes.push_back(treePtrTy); // First arg is self
+        for (tree_list::iterator p = parms.begin(); p != parms.end(); p++)
+            parmTypes.push_back(treePtrTy);
+        FunctionType *fnTy = FunctionType::get(treePtrTy, parmTypes, false);
+        result = Function::Create(fnTy, Function::ExternalLinkage,
+                                  name, module);
 
-    // Record the runtime symbol address
-    sys::DynamicLibrary::AddSymbol(name, (void*) code);
+        // Record the runtime symbol address
+        sys::DynamicLibrary::AddSymbol(name, (void*) code);
 
-    // Associate the function with the tree form
-    functions[to] = result;
+        // Associate the function with the tree form
+        functions[to] = result;
+        builtins[name] = result;
+    }
 
     return result;    
 }

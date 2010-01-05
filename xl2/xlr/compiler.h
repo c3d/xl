@@ -49,6 +49,7 @@ XL_BEGIN
 
 struct CompiledUnit;
 struct Options;
+typedef std::map<text, llvm::Function *>        builtins_map;
 typedef std::map<Tree *, llvm::Value *>         value_map;
 typedef std::map<Tree *, llvm::Function *>      function_map;
 typedef std::map<uint, eval_fn>                 closure_map;
@@ -62,6 +63,7 @@ struct Compiler
 // ----------------------------------------------------------------------------
 {
     Compiler(kstring moduleName = "xl", uint optimize_level = 999);
+    ~Compiler();
 
     llvm::Function *          EnterBuiltin(text name,
                                            Tree *from, Tree *to,
@@ -76,6 +78,8 @@ struct Compiler
     llvm::Value *             Known(Tree *value);
 
     void                      FreeResources(Tree *tree);
+
+    void                      Reset();
 
 public:
     llvm::LLVMContext         *context;
@@ -111,10 +115,12 @@ public:
     llvm::Function            *xl_new_postfix;
     llvm::Function            *xl_new_infix;
     llvm::Function            *xl_new_closure;
+    builtins_map               builtins;
     function_map               functions;
     value_map                  globals;
     closure_map                closures;
     closure_set                closet;
+
 };
 
 

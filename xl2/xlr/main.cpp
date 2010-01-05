@@ -45,7 +45,7 @@ XL_BEGIN
 Main *MAIN = NULL;
 
 
-Main::Main(int inArgc, char **inArgv)
+Main::Main(int inArgc, char **inArgv, Compiler &comp)
 // ----------------------------------------------------------------------------
 //   Initialization of the globals
 // ----------------------------------------------------------------------------
@@ -54,7 +54,7 @@ Main::Main(int inArgc, char **inArgv)
       errors(&positions),
       syntax("xl.syntax"),
       options(errors),
-      compiler("xl_tao"),
+      compiler(comp),
       context(errors, &compiler),
       renderer(std::cout, "xl.stylesheet", syntax)
 {
@@ -186,7 +186,8 @@ int main(int argc, char **argv)
 #endif
 
     using namespace XL;
-    MAIN = new Main(argc, argv);
+    Compiler compiler("xl_tao");
+    MAIN = new Main(argc, argv, compiler);
     int rc = MAIN->Run();
     delete MAIN;
 

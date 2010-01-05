@@ -59,7 +59,7 @@ struct Main
 //    The main entry point and associated data
 // ----------------------------------------------------------------------------
 {
-    Main(int argc, char **argv);
+    Main(int argc, char **argv, Compiler &comp);
     ~Main();
 
     int          argc;
@@ -69,7 +69,7 @@ struct Main
     Errors       errors;
     Syntax       syntax;
     Options      options;
-    Compiler     compiler;
+    Compiler    &compiler;
     Context      context;
     Renderer     renderer;
     source_files files;
