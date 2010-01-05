@@ -1,20 +1,20 @@
 // ****************************************************************************
-//  context.cpp                     (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  context.cpp                     (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     The execution environment for XL
 //
 //     This defines both the compile-time environment (Context), where we
 //     keep symbolic information, e.g. how to rewrite trees, and the
 //     runtime environment (Runtime), which we use while executing trees
-// 
+//
 //     See comments at beginning of context.h for details
-// 
-// 
-// 
+//
+//
+//
 // ****************************************************************************
 // This document is confidential.
 // Do not redistribute without written permission
@@ -39,9 +39,9 @@
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //   Symbols: symbols management
-// 
+//
 // ============================================================================
 
 Symbols *Symbols::symbols = NULL;
@@ -148,9 +148,9 @@ void Symbols::Clear()
 
 
 // ============================================================================
-// 
+//
 //    Evaluation of trees
-// 
+//
 // ============================================================================
 
 Tree *Symbols::Compile(Tree *source, CompiledUnit &unit,
@@ -237,25 +237,31 @@ Tree *Symbols::CompileCall(text callee, tree_list &arglist)
                     Infix *infix = existing->AsInfix();
                     args = &infix->left;
                     existing = infix->right;
-                } 
+                }
                 if (Real *rs = value->AsReal())
+                {
                     if (Real *rt = existing->AsReal())
                         rt->value = rs->value;
                     else
                         Error("Real '$1' cannot replace non-real '$2'",
                               value, existing);
+                }
                 else if (Integer *is = value->AsInteger())
+                {
                     if (Integer *it = existing->AsInteger())
                         it->value = is->value;
                     else
                         Error("Integer '$1' cannot replace non-integer '$2'",
                               value, existing);
+                }
                 else if (Text *ts = value->AsText())
+                {
                     if (Text *tt = existing->AsText())
                         tt->value = ts->value;
                     else
                         Error("Text '$1' cannot replace non-text '$2'",
                               value, existing);
+                }
             }
         }
 
@@ -311,9 +317,9 @@ Tree *Symbols::Run(Tree *code)
 
 
 // ============================================================================
-// 
+//
 //   Garbage collection
-// 
+//
 // ============================================================================
 //   This is just a rather simple mark and sweep garbage collector.
 
@@ -465,9 +471,9 @@ void Context::CollectGarbage ()
 
 
 // ============================================================================
-// 
+//
 //    Hash key for tree rewrite
-// 
+//
 // ============================================================================
 //    We use this hashing key to quickly determine if two trees "look the same"
 
@@ -549,9 +555,9 @@ struct RewriteKey : Action
 
 
 // ============================================================================
-// 
+//
 //    Parameter match - Isolate parameters in an rewrite source
-// 
+//
 // ============================================================================
 
 Tree *ParameterMatch::Do(Tree *what)
@@ -705,9 +711,9 @@ Tree *ParameterMatch::DoPostfix(Postfix *what)
 
 
 // ============================================================================
-// 
+//
 //    Argument matching - Test input arguments against parameters
-// 
+//
 // ============================================================================
 
 Tree *ArgumentMatch::Compile(Tree *source)
@@ -799,7 +805,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
             // We don't need to pass these around.
         }
     }
-    
+
     // Create the compilation unit and check if we are already compiling this
     // Can this happen for a closure?
     CompiledUnit subUnit(compiler, source, parms);
@@ -988,7 +994,7 @@ Tree *ArgumentMatch::DoBlock(Block *what)
     {
         return what->child->Do(this);
     }
-    
+
     return NULL;
 }
 
@@ -1047,7 +1053,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
 
         // Enter the compiled expression in the symbol table
         locals->EnterName(varName->value, compiled);
-        
+
         return what;
     }
 
@@ -1115,9 +1121,9 @@ Tree *ArgumentMatch::DoPostfix(Postfix *what)
 
 
 // ============================================================================
-// 
+//
 //    Environment scan - Identify which names are imported from context
-// 
+//
 // ============================================================================
 
 Tree *EnvironmentScan::Do(Tree *what)
@@ -1221,9 +1227,9 @@ Tree *EnvironmentScan::DoPostfix(Postfix *what)
 
 
 // ============================================================================
-// 
+//
 //   BuildChildren action: Build a non-leaf after evaluating children
-// 
+//
 // ============================================================================
 
 BuildChildren::BuildChildren(CompileAction *comp)
@@ -1300,9 +1306,9 @@ Tree *BuildChildren::DoBlock(Block *what)
 
 
 // ============================================================================
-// 
+//
 //   Declaration action - Enter all tree rewrites in the current symbols
-// 
+//
 // ============================================================================
 
 Tree *DeclarationAction::Do(Tree *what)
@@ -1440,9 +1446,9 @@ void DeclarationAction::EnterRewrite(Tree *defined, Tree *definition)
 
 
 // ============================================================================
-// 
+//
 //   Compilation action - Generation of "optimized" native trees
-// 
+//
 // ============================================================================
 
 CompileAction::CompileAction(Symbols *s, CompiledUnit &u, bool nib, bool ka)
@@ -1568,7 +1574,7 @@ Tree *CompileAction::DoBlock(Block *what)
         unit.Copy(result, what);
         return what;
     }
-    
+
     // In other cases, we need to evaluate rewrites
     return Rewrites(what);
 }
@@ -1762,7 +1768,7 @@ Tree * CompileAction::Rewrites(Tree *what)
 
                         // If there was no test code, don't keep testing further
                         foundUnconditional = !unit.failbb;
-                        
+
                         // This is the end of a successful invokation
                         reduction.Succeeded();
                     } // if (data form)
@@ -1804,9 +1810,9 @@ Tree * CompileAction::Rewrites(Tree *what)
 
 
 // ============================================================================
-// 
+//
 //    Error handling
-// 
+//
 // ============================================================================
 
 Tree * Context::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
@@ -1846,9 +1852,9 @@ Tree *Context::ErrorHandler()
 
 
 // ============================================================================
-// 
+//
 //    Tree rewrites
-// 
+//
 // ============================================================================
 
 Rewrite::~Rewrite()
@@ -1962,9 +1968,9 @@ Tree *Rewrite::Compile(void)
 
 
 // ============================================================================
-// 
+//
 //   Global error handler
-// 
+//
 // ============================================================================
 
 Tree *Error (text message, Tree *a1, Tree *a2, Tree *a3)

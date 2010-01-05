@@ -1,0 +1,40 @@
+#******************************************************************************
+# Makefile.config.linux             (C) 1992-2009 Christophe de Dinechin (ddd) 
+#                                                                  XL2 project 
+#******************************************************************************
+#
+#  File Description:
+#
+#   Setting for building Tao under Linux (tested on Ubuntu)
+#
+#
+#
+#
+#
+#
+#
+#
+#******************************************************************************
+#This document is released under the GNU General Public License.
+#See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+#******************************************************************************
+#* File       : $RCSFile$
+#* Revision   : $Revision$
+#* Date       : $Date$
+#******************************************************************************
+
+LLVM_FLAGS = `llvm-config --cppflags | sed -e s/-DNDEBUG//g`
+LLVM_LIBS = `llvm-config --ldflags --libs all`
+
+DEFAULT_FONT=/usr/share/fonts/truetype/freefont/FreeSans.ttf
+
+CPPFLAGS+=	-I/usr/include/X11				\
+                -I/usr/include/freetype2                        \
+                -I.                                             \
+		$(LLVM_FLAGS)                                   \
+                -DFONT_FILE=\"$(DEFAULT_FONT)\"                 \
+                -DLINUX
+
+LDFLAGS=	-L/usr/local/lib -lftgl -ljpeg -lfontconfig	\
+		 $(LLVM_LIBS)                                   \
+                -L/usr/lib -lglut

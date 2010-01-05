@@ -25,6 +25,8 @@
 
 #include <iostream>
 #include <cstdarg>
+#include <cstdio>
+#include <sys/stat.h>
 
 #include "runtime.h"
 #include "tree.h"
@@ -622,7 +624,7 @@ Tree *xl_load_tsv(text name)
         {
             text token;
             Tree *child = NULL;
-            if (ptr > buffer + 1 & buffer[0] == '"' && ptr[-2] == '"')
+            if (ptr > buffer + 1 && buffer[0] == '"' && ptr[-2] == '"')
             {
                 token = text(buffer+1, ptr-buffer-2);
                 child = new Text(token);

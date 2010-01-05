@@ -132,7 +132,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
         optimizer->add(createInstructionCombiningPass());
 
         // Inlining of tails
-        optimizer->add(createTailDuplicationPass());
+        // optimizer->add(createTailDuplicationPass());
         optimizer->add(createTailCallEliminationPass());
 
         // Re-order blocks to eliminate branches
@@ -1137,7 +1137,7 @@ BasicBlock *CompiledUnit::TextTest(Tree *tree, text value)
     assert(treeValue);
     Constant *refVal = ConstantArray::get(*context, value);
     const Type *refValTy = refVal->getType();
-    GlobalVariable *gvar = new GlobalVariable(*context, refValTy, true,
+    GlobalVariable *gvar = new GlobalVariable(*compiler->module, refValTy, true,
                                               GlobalValue::InternalLinkage,
                                               refVal, "str");
     Value *refPtr = code->CreateConstGEP2_32(gvar, 0, 0);

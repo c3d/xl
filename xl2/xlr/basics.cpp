@@ -33,6 +33,7 @@
 #include <iostream>
 #include <sstream>
 #include <ctime>
+#include <cstdio>
 
 
 XL_BEGIN
