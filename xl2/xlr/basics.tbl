@@ -44,6 +44,7 @@ INFIX(integer, "<>", integer, BinaryNEInt, RBOOL(INT(l) != INT(r)))
 INFIX(integer, "=", integer, BinaryEQInt, RBOOL(INT(l) == INT(r)))
 
 PREFIX("-", PARM(x, integer), NegateInt, RINT(-x))
+PREFIX("not", PARM(x, integer), NotInt, RINT(~x))
 POSTFIX(PARM(x, real), "%", PercentReal, RREAL(x / 100.0))
 POSTFIX(PARM(x, integer), "%", PercentInteger, RREAL(x / 100.0))
 
@@ -104,6 +105,7 @@ PREFIX("pi", , PiConstant, RREAL(M_PI))
 INFIX(boolean, "and", boolean, BinaryAndBool, RBOOL(BOOL(l) & BOOL(r)))
 INFIX(boolean, "or", boolean, BinaryOrBool, RBOOL(BOOL(l) | BOOL(r)))
 INFIX(boolean, "xor", boolean, BinaryXorBool, RBOOL(BOOL(l) ^ BOOL(r)))
+PREFIX("not", PARM(x, boolean), NotBool, RBOOL(!x))
 
 INFIX(boolean, "<>", boolean, BinaryNEBool, RBOOL(BOOL(l) != BOOL(r)))
 INFIX(boolean, "=", boolean, BinaryEQBool, RBOOL(BOOL(l) == BOOL(r)))
