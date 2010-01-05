@@ -572,7 +572,7 @@ Tree *xl_load_csv(text name)
     stat(name.c_str(), &st);
     Symbols *old = Symbols::symbols;
     Symbols *syms = new Symbols(Context::context);
-    MAIN->files[name] = SourceFile(name, tree, syms, st.st_mtime);
+    MAIN->files[name] = SourceFile(name, tree, syms);
     Symbols::symbols = syms;
     tree->SetSymbols(syms);
     tree = syms->CompileAll(tree);
@@ -683,7 +683,7 @@ Tree *xl_load_tsv(text name)
     stat(name.c_str(), &st);
     Symbols *old = Symbols::symbols;
     Symbols *syms = new Symbols(Context::context);
-    MAIN->files[name] = SourceFile(name, tree, syms, st.st_mtime);
+    MAIN->files[name] = SourceFile(name, tree, syms);
     Symbols::symbols = syms;
     tree->SetSymbols(syms);
     tree = syms->CompileAll(tree);

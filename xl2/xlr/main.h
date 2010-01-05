@@ -60,6 +60,7 @@ struct Main
 // ----------------------------------------------------------------------------
 {
     Main(int argc, char **argv);
+    ~Main();
 
     int          argc;
     char **      argv;
