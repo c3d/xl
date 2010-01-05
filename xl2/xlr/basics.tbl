@@ -189,6 +189,8 @@ PREFIX("random", PARM(low, integer) PARM(high, integer),
 // Executing some code
 PREFIX("do", PARM(code, tree), DoCode, return xl_evaluate(&code))
 PREFIX("load", PARM(file, text), LoadFile, return xl_load(file))
+PREFIX("load_csv", PARM(file, text), LoadCSVFile, return xl_load_csv(file))
+PREFIX("load_tsv", PARM(file, text), LoadTSVFile, return xl_load_tsv(file))
 
 // Debugging code
 PREFIX("debug", PARM(toDebug, tree), DebugTree,

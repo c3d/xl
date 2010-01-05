@@ -29,6 +29,7 @@
 #include "base.h"
 #include <map>
 #include <vector>
+#include <cassert>
 
 
 XL_BEGIN

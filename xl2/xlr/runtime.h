@@ -85,6 +85,8 @@ Tree *xl_call(text name, double x, double y);
 Tree *xl_call(text name, double x, double y, double w, double h);
 
 Tree *xl_load(text name);
+Tree *xl_load_csv(text name);
+Tree *xl_load_tsv(text name);
 
 XL_END
 
