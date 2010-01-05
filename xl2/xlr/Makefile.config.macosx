@@ -1,0 +1,45 @@
+#******************************************************************************
+# Makefile.config.macosx            (C) 1992-2009 Christophe de Dinechin (ddd) 
+#                                                                  XL2 project 
+#******************************************************************************
+#
+#  File Description:
+#
+#   Setting for building Tao under MacOSX
+#
+#
+#
+#
+#
+#
+#
+#
+#******************************************************************************
+#This document is released under the GNU General Public License.
+#See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+#******************************************************************************
+#* File       : $RCSFile$
+#* Revision   : $Revision$
+#* Date       : $Date$
+#******************************************************************************
+
+LLVM_FLAGS = `llvm-config --cppflags | sed -e s/-DNDEBUG//g`
+LLVM_LIBS = `llvm-config --ldflags --libs core jit native`
+
+DEFAULT_FONT=/Library/Fonts/Arial.ttf
+
+CPPFLAGS+=	-I/usr/X11R6/include				\
+		-I/usr/X11R6/include/freetype2			\
+		$(LLVM_FLAGS)					\
+                -I/opt/local/include                            \
+                -DFONT_FILE=\"$(DEFAULT_FONT)\"                 \
+                -DMACOSX
+
+LDFLAGS=	-Wl,-framework -Wl,ApplicationServices 		\
+		-Wl,-framework -Wl,OpenGL 			\
+		-Wl,-framework -Wl,GLUT 			\
+                -L/usr/X11R6/lib                                \
+		-L/usr/local/lib -L/opt/local/lib               \
+                -lftgl -lfontconfig                             \
+                -ljpeg -lpng                                    \
+		 $(LLVM_LIBS)
