@@ -36,6 +36,7 @@
 #include <llvm/Analysis/Verifier.h>
 #include <llvm/CallingConv.h>
 #include "llvm/Constants.h"
+#include "llvm/LLVMContext.h"
 #include "llvm/DerivedTypes.h"
 #include "llvm/ExecutionEngine/JIT.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
@@ -48,8 +49,10 @@
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/System/DynamicLibrary.h>
 #include <llvm/Target/TargetData.h>
+#include <llvm/Target/TargetSelect.h>
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/Utils/BasicBlockUtils.h>
+#include <llvm/Support/raw_ostream.h>
 
 XL_BEGIN
 
@@ -94,16 +97,27 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 {
     // Thanks to Dr. Albert Graef (pure programming language) for inspiration
 
+    // Initialize native target (new features)
+    InitializeNativeTarget();
+
+    // LLVM Context (new feature)
+    context = new llvm::LLVMContext();
+
     // Create module where we will build the code
-    module = new Module(moduleName);
+    module = new Module(moduleName, *context);
     provider = new ExistingModuleProvider(module);
 
     // Select "fast JIT" if optimize level is 0, optimizing JIT otherwise
+#if 0
     if (optimize_level == 0)
         runtime = ExecutionEngine::create(provider, false, NULL,
                                           /* false */ CodeGenOpt::None);
     else
-        runtime = ExecutionEngine::create(provider);
+        runtime = ExecutionEngine::create(provider, false, NULL,
+                                          /* false */ CodeGenOpt::None);
+#else
+    runtime = EngineBuilder(module).create();
+#endif
 
     // Setup the optimizer - REVISIT: Adjust with optimization level
     optimizer = new FunctionPassManager(provider);
@@ -125,7 +139,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
         optimizer->add(createBlockPlacementPass());
 
         // Collapse duplicate variables into canonical form
-        optimizer->add(createPredicateSimplifierPass());
+        // optimizer->add(createPredicateSimplifierPass());
 
         // Reassociate expression for better constant propagation
         optimizer->add(createReassociatePass());
@@ -154,11 +168,11 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     runtime->InstallLazyFunctionCreator(unresolved_external);
 
     // Create the Symbol pointer type
-    PATypeHolder structSymbolsTy = OpaqueType::get();   // struct Symbols
+    PATypeHolder structSymbolsTy = OpaqueType::get(*context); // struct Symbols
     symbolsPtrTy = PointerType::get(structSymbolsTy, 0);// Symbols *
 
     // Create the eval_fn type
-    PATypeHolder structTreeTy = OpaqueType::get();      // struct Tree
+    PATypeHolder structTreeTy = OpaqueType::get(*context); // struct Tree
     treePtrTy = PointerType::get(structTreeTy, 0);      // Tree *
     treePtrPtrTy = PointerType::get(treePtrTy, 0);      // Tree **
     std::vector<const Type *> evalParms;
@@ -168,11 +182,11 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 
     // Create the Tree type
     std::vector<const Type *> treeElements;
-    treeElements.push_back(LLVM_INTTYPE(ulong));        // tag
-    treeElements.push_back(evalFnTy);			// code
-    treeElements.push_back(symbolsPtrTy);               // symbols
-    treeElements.push_back(treePtrTy);			// type
-    treeTy = StructType::get(treeElements);		// struct Tree {}
+    treeElements.push_back(LLVM_INTTYPE(ulong));           // tag
+    treeElements.push_back(evalFnTy);                      // code
+    treeElements.push_back(symbolsPtrTy);                  // symbols
+    treeElements.push_back(treePtrTy);                     // type
+    treeTy = StructType::get(*context, treeElements);      // struct Tree {}
     cast<OpaqueType>(structTreeTy.get())->refineAbstractTypeTo(treeTy);
     treeTy = cast<StructType> (structTreeTy.get());
 #define TAG_INDEX       0
@@ -183,22 +197,22 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     // Create the Integer type
     std::vector<const Type *> integerElements = treeElements;
     integerElements.push_back(LLVM_INTTYPE(longlong));  // value
-    integerTreeTy = StructType::get(integerElements);   // struct Integer{}
+    integerTreeTy = StructType::get(*context, integerElements);   // struct Integer{}
     integerTreePtrTy = PointerType::get(integerTreeTy,0); // Integer *
 #define INTEGER_VALUE_INDEX     4
 
     // Create the Real type
     std::vector<const Type *> realElements = treeElements;
-    realElements.push_back(Type::DoubleTy);             // value
-    realTreeTy = StructType::get(realElements);         // struct Real{}
-    realTreePtrTy = PointerType::get(realTreeTy, 0);    // Real *
+    realElements.push_back(Type::getDoubleTy(*context));  // value
+    realTreeTy = StructType::get(*context, realElements); // struct Real{}
+    realTreePtrTy = PointerType::get(realTreeTy, 0);      // Real *
 #define REAL_VALUE_INDEX        4
 
     // Create the Prefix type (which we also use for Infix and Block)
     std::vector<const Type *> prefixElements = treeElements;
     prefixElements.push_back(treePtrTy);                // Tree *
     prefixElements.push_back(treePtrTy);                // Tree *
-    prefixTreeTy = StructType::get(prefixElements);     // struct Prefix {}
+    prefixTreeTy = StructType::get(*context, prefixElements); // struct Prefix
     prefixTreePtrTy = PointerType::get(prefixTreeTy, 0);// Prefix *
 #define LEFT_VALUE_INDEX        4
 #define RIGHT_VALUE_INDEX       5
@@ -213,7 +227,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 
     // Create a reference to the evaluation function
     charPtrTy = PointerType::get(LLVM_INTTYPE(char), 0);
-    const Type *boolTy = Type::Int1Ty;
+    const Type *boolTy = Type::getInt1Ty(*context);
 #define FN(x) #x, (void *) XL::x
     xl_evaluate = ExternFunction(FN(xl_evaluate),
                                  treePtrTy, 1, treePtrTy);
@@ -228,7 +242,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     xl_new_integer = ExternFunction(FN(xl_new_integer),
                                     treePtrTy, 1, LLVM_INTTYPE(longlong));
     xl_new_real = ExternFunction(FN(xl_new_real),
-                                 treePtrTy, 1, Type::DoubleTy);
+                                 treePtrTy, 1, Type::getDoubleTy(*context));
     xl_new_character = ExternFunction(FN(xl_new_character),
                                       treePtrTy, 1, charPtrTy);
     xl_new_text = ExternFunction(FN(xl_new_text),
@@ -312,9 +326,9 @@ Value *Compiler::EnterGlobal(Name *name, Name **address)
 {
     Constant *null = ConstantPointerNull::get(treePtrTy);
     bool isConstant = false;
-    GlobalValue *result = new GlobalVariable (treePtrTy, isConstant,
+    GlobalValue *result = new GlobalVariable (*module, treePtrTy, isConstant,
                                               GlobalVariable::ExternalLinkage,
-                                              null, name->value, module);
+                                              null, name->value);
     runtime->addGlobalMapping(result, address);
     globals[name] = result;
     return result;
@@ -337,9 +351,9 @@ Value *Compiler::EnterConstant(Tree *constant)
     }
     IFTRACE(labels)
         name += "[" + text(*constant) + "]";
-    GlobalValue *result = new GlobalVariable (treePtrTy, isConstant,
+    GlobalValue *result = new GlobalVariable (*module, treePtrTy, isConstant,
                                               GlobalVariable::InternalLinkage,
-                                              NULL, name, module);
+                                              NULL, name);
     Tree **address = Context::context->AddGlobal(constant);
     runtime->addGlobalMapping(result, address);
     globals[constant] = result;
@@ -394,7 +408,7 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *src, tree_list parms)
 // ----------------------------------------------------------------------------
 //   CompiledUnit constructor
 // ----------------------------------------------------------------------------
-    : compiler(comp), source(src),
+    : compiler(comp), context(comp->context), source(src),
       code(NULL), data(NULL), function(NULL),
       allocabb(NULL), entrybb(NULL), exitbb(NULL), failbb(NULL)
 {
@@ -418,11 +432,11 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *src, tree_list parms)
     compiler->functions[src] = function;
 
     // Create function entry point, where we will have all allocas
-    allocabb = BasicBlock::Create("allocas", function);
+    allocabb = BasicBlock::Create(*context, "allocas", function);
     data = new IRBuilder<> (allocabb);
 
     // Create entry block for the function
-    entrybb = BasicBlock::Create("entry", function);
+    entrybb = BasicBlock::Create(*context, "entry", function);
     code = new IRBuilder<> (entrybb);
 
     // Associate the value for the input tree
@@ -443,7 +457,7 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *src, tree_list parms)
     }
 
     // Create the exit basic block and return statement
-    exitbb = BasicBlock::Create("exit", function);
+    exitbb = BasicBlock::Create(*context, "exit", function);
     IRBuilder<> exitcode(exitbb);
     Value *retVal = exitcode.CreateLoad(result_storage, "retval");
     exitcode.CreateRet(retVal);
@@ -480,7 +494,10 @@ eval_fn CompiledUnit::Finalize()
         compiler->optimizer->run(*function);
 
     IFTRACE(code)
-        function->print(std::cerr);
+    {
+        llvm::raw_stderr_ostream llvmstderr;
+        function->print(llvmstderr);
+    }
 
     void *result = compiler->runtime->getPointerToFunction(function);
     return (eval_fn) result;
@@ -634,8 +651,9 @@ Value *CompiledUnit::NeedLazy(Tree *subexpr)
         text label = "computed";
         IFTRACE(labels)
             label += "[" + text(*subexpr) + "]";
-        result = data->CreateAlloca(Type::Int1Ty, 0, label.c_str());
-        Value *falseFlag = ConstantInt::get(Type::Int1Ty, 0);
+        
+        result = data->CreateAlloca(LLVM_BOOLTYPE, 0, label.c_str());
+        Value *falseFlag = ConstantInt::get(LLVM_BOOLTYPE, 0);
         data->CreateStore(falseFlag, result);
         computed[subexpr] = result;
     }
@@ -657,7 +675,7 @@ llvm::Value *CompiledUnit::MarkComputed(Tree *subexpr, Value *val)
 
     // Set the 'lazy' flag or lazy evaluation
     Value *result = NeedLazy(subexpr);
-    Value *trueFlag = ConstantInt::get(Type::Int1Ty, 1);
+    Value *trueFlag = ConstantInt::get(LLVM_BOOLTYPE, 1);
     code->CreateStore(trueFlag, result);
 
     // Return the test flag
@@ -670,8 +688,8 @@ BasicBlock *CompiledUnit::BeginLazy(Tree *subexpr)
 //    Begin lazy evaluation of a block of code
 // ----------------------------------------------------------------------------
 {
-    BasicBlock *skip = BasicBlock::Create("skip", function);
-    BasicBlock *work = BasicBlock::Create("work", function);
+    BasicBlock *skip = BasicBlock::Create(*context, "skip", function);
+    BasicBlock *work = BasicBlock::Create(*context, "work", function);
 
     Value *lazyFlagPtr = NeedLazy(subexpr);
     Value *lazyFlag = code->CreateLoad(lazyFlagPtr, "lazy");
@@ -744,7 +762,7 @@ BasicBlock *CompiledUnit::NeedTest()
 // ----------------------------------------------------------------------------
 {
     if (!failbb)
-        failbb = BasicBlock::Create("fail", function);
+        failbb = BasicBlock::Create(*context, "fail", function);
     return failbb;
 }
 
@@ -834,7 +852,7 @@ Value *CompiledUnit::Copy(Tree *source, Tree *dest, bool markDone)
     if (markDone)
     {
         Value *doneFlag = NeedLazy(dest);
-        Value *trueFlag = ConstantInt::get(Type::Int1Ty, 1);
+        Value *trueFlag = ConstantInt::get(LLVM_BOOLTYPE, 1);
         code->CreateStore(trueFlag, doneFlag);
     }
 
@@ -1028,7 +1046,8 @@ BasicBlock *CompiledUnit::TagTest(Tree *tree, ulong tagValue)
     Value *kind = code->CreateAnd(tag, mask, "tagAndMask");
     Constant *refTag = ConstantInt::get(tag->getType(), tagValue);
     Value *isRightTag = code->CreateICmpEQ(kind, refTag, "isRightTag");
-    BasicBlock *isRightKindBB = BasicBlock::Create("isRightKind", function);
+    BasicBlock *isRightKindBB = BasicBlock::Create(*context,
+                                                   "isRightKind", function);
     code->CreateCondBr(isRightTag, isRightKindBB, notGood);
 
     code->SetInsertPoint(isRightKindBB);
@@ -1058,7 +1077,8 @@ BasicBlock *CompiledUnit::IntegerTest(Tree *tree, longlong value)
     Value *tval = code->CreateLoad(valueFieldPtr, "treeValue");
     Constant *rval = ConstantInt::get(tval->getType(), value, "refValue");
     Value *isGood = code->CreateICmpEQ(tval, rval, "isGood");
-    BasicBlock *isGoodBB = BasicBlock::Create("isGood", function);
+    BasicBlock *isGoodBB = BasicBlock::Create(*context,
+                                              "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
@@ -1089,7 +1109,8 @@ BasicBlock *CompiledUnit::RealTest(Tree *tree, double value)
     Value *tval = code->CreateLoad(valueFieldPtr, "treeValue");
     Constant *rval = ConstantFP::get(tval->getType(), value);
     Value *isGood = code->CreateFCmpOEQ(tval, rval, "isGood");
-    BasicBlock *isGoodBB = BasicBlock::Create("isGood", function);
+    BasicBlock *isGoodBB = BasicBlock::Create(*context,
+                                              "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
@@ -1114,15 +1135,15 @@ BasicBlock *CompiledUnit::TextTest(Tree *tree, text value)
     // Check if the value is the same, call xl_same_text
     Value *treeValue = Known(tree);
     assert(treeValue);
-    Constant *refVal = ConstantArray::get(value);
+    Constant *refVal = ConstantArray::get(*context, value);
     const Type *refValTy = refVal->getType();
-    GlobalVariable *gvar = new GlobalVariable(refValTy, true,
+    GlobalVariable *gvar = new GlobalVariable(*context, refValTy, true,
                                               GlobalValue::InternalLinkage,
                                               refVal, "str");
     Value *refPtr = code->CreateConstGEP2_32(gvar, 0, 0);
     Value *isGood = code->CreateCall2(compiler->xl_same_text,
                                       treeValue, refPtr);
-    BasicBlock *isGoodBB = BasicBlock::Create("isGood", function);
+    BasicBlock *isGoodBB = BasicBlock::Create(*context, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
@@ -1147,7 +1168,7 @@ BasicBlock *CompiledUnit::ShapeTest(Tree *left, Tree *right)
     BasicBlock *notGood = NeedTest();
     Value *isGood = code->CreateCall2(compiler->xl_same_shape,
                                       leftVal, rightVal);
-    BasicBlock *isGoodBB = BasicBlock::Create("isGood", function);
+    BasicBlock *isGoodBB = BasicBlock::Create(*context, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
@@ -1168,7 +1189,7 @@ BasicBlock *CompiledUnit::TypeTest(Tree *value, Tree *type)
     BasicBlock *notGood = NeedTest();
     Value *isGood = code->CreateCall2(compiler->xl_type_check,
                                       valueVal, typeVal);
-    BasicBlock *isGoodBB = BasicBlock::Create("isGood", function);
+    BasicBlock *isGoodBB = BasicBlock::Create(*context, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
@@ -1194,7 +1215,7 @@ ExpressionReduction::ExpressionReduction(CompiledUnit &u, Tree *src)
 // ----------------------------------------------------------------------------
 //    Snapshot current basic blocks in the compiled unit
 // ----------------------------------------------------------------------------
-    : unit(u), source(src),
+    : unit(u), source(src), context(u.context),
       storage(NULL), computed(NULL),
       savedfailbb(NULL),
       entrybb(NULL), savedbb(NULL), successbb(NULL),
@@ -1241,7 +1262,7 @@ void ExpressionReduction::NewForm ()
     assert(savedbb || !"NewForm called after unconditional success");
 
     // Create entry / exit basic blocks for this expression
-    entrybb = BasicBlock::Create("subexpr", u.function);
+    entrybb = BasicBlock::Create(*context, "subexpr", u.function);
     u.failbb = NULL;
 
     // Set the insertion point to the new invokation code
@@ -1273,7 +1294,7 @@ void ExpressionReduction::Succeeded(void)
     else
     {
         // Create a fake basic block in case someone decides to add code
-        BasicBlock *empty = BasicBlock::Create("empty", u.function);
+        BasicBlock *empty = BasicBlock::Create(*context, "empty", u.function);
         u.code->SetInsertPoint(empty);
     }
     u.failbb = NULL;
@@ -1317,8 +1338,9 @@ void debugm(XL::value_map &m)
 // ----------------------------------------------------------------------------
 {
     XL::value_map::iterator i;
+    llvm::raw_stderr_ostream llvmstderr;
     for (i = m.begin(); i != m.end(); i++)
-        std::cerr << "map[" << (*i).first << "]=" << *(*i).second << '\n';
+        llvmstderr << "map[" << (*i).first << "]=" << *(*i).second << '\n';
 }
 
 
@@ -1328,5 +1350,6 @@ void debugv(void *v)
 // ----------------------------------------------------------------------------
 {
     llvm::Value *value = (llvm::Value *) v;
-    std::cerr << *value << "\n";
+    llvm::raw_stderr_ostream llvmstderr;
+    llvmstderr << *value << "\n";
 }

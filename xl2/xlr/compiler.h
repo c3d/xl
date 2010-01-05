@@ -33,6 +33,7 @@
 
 namespace llvm
 {
+    class LLVMContext;
     class Module;
     class ModuleProvider;
     class ExecutionEngine;
@@ -77,6 +78,7 @@ struct Compiler
     void                      FreeResources(Tree *tree);
 
 public:
+    llvm::LLVMContext         *context;
     llvm::Module              *module;
     llvm::ModuleProvider      *provider;
     llvm::ExecutionEngine     *runtime;
@@ -166,6 +168,7 @@ struct CompiledUnit
 
 public:
     Compiler *          compiler;       // The compiler environment we use
+    llvm::LLVMContext * context;        // The context we got from compiler
     Tree *              source;         // The original source we compile
 
     llvm::IRBuilder<> * code;           // Instruction builder for code
@@ -199,6 +202,7 @@ struct ExpressionReduction
 public:
     CompiledUnit &      unit;           // Compilation unit we use
     Tree *              source;         // Tree we build (mostly for debugging)
+    llvm::LLVMContext * context;        // Inherited context
 
     llvm::Value *       storage;        // Storage for expression value
     llvm::Value *       computed;       // Flag telling if value was computed
@@ -213,7 +217,8 @@ public:
 };
 
 
-#define LLVM_INTTYPE(t)         llvm::IntegerType::get(sizeof(t) * 8)
+#define LLVM_INTTYPE(t)         llvm::IntegerType::get(*context, sizeof(t) * 8)
+#define LLVM_BOOLTYPE           llvm::Type::getInt1Ty(*context)
 
 XL_END
 
