@@ -4,7 +4,7 @@
 library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
 |     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
 |______________________________________________________________________________^
-10.Generics/minimax_vararg_generic_mismatch.xl:17: Error instantiating 'Max' with '...' set to 'var_661 : real'
+10.Generics/minimax_vararg_generic_mismatch.xl:17: Error instantiating 'Max' with '...' set to 'var_674 : real'
 | Test_bad     : integer := Max(1, 2.5)
 |_____________________________^
 10.Generics/minimax_vararg_generic_mismatch.xl:12: No translation for 'result := Max ( ... )'

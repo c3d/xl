@@ -55,7 +55,7 @@ library/runtime/default/./xl_builtins.xs:34: Its type is 'integer'
 09.Modules/nested_import_nonmodule.xl:27: but is used as a submodule of 'SIMPLE_IMPORTED . NESTED1'
 | import SIMPLE_IMPORTED.NESTED1.NESTED2
 |_______________________^
-[Compiler generated] No translation for 'invalid_submodule_601 := Simple_imported . Nested_1 . nested2 . HasKlaxon (0.54)'
+[Compiler generated] No translation for 'invalid_submodule_614 := Simple_imported . Nested_1 . nested2 . HasKlaxon (0.54)'
 library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
 |     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
 |______________________________________________________________________________^

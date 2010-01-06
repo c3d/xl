@@ -46,7 +46,7 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 library/runtime/default/./xl_builtins.xs:64: Form ''X' + 'Y'' could not be selected
 |     function Add(X, Y : integer) return integer                 written X+Y                     is XL.BYTECODE.add_int
 |__________________________________________________________________________^
-10.Generics/deduction_conflict.xl:9: Cannot convert 'a_628' from 'something' to 'integer'
+10.Generics/deduction_conflict.xl:9: Cannot convert 'a_641' from 'something' to 'integer'
 | function Pong (A : something; B : integer) return something is
 |________________^
 10.Generics/deduction_conflict.xl:22: No translation for 'K := Ping (1 , 2)'

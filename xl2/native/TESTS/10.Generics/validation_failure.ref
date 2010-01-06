@@ -22,7 +22,7 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 library/runtime/default/./xl_builtins.xs:73: Form ''X' < 'Y'' could not be selected
 |     function LessThan(X, Y : integer) return boolean            written X<Y                     is XL.BYTECODE.lt_int
 |__________________________________________________________________________^
-10.Generics/validation_failure.xl:4: Cannot convert 'a_620' from 'ordered' to 'integer'
+10.Generics/validation_failure.xl:4: Cannot convert 'a_633' from 'ordered' to 'integer'
 |     A, B : ordered
 |_____^
 10.Generics/validation_failure.xl:7: 'F (A : ordered) return ordered' could not be selected because
