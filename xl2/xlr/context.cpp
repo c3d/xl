@@ -820,6 +820,11 @@ Tree *InterpretedArgumentMatch::DoInfix(Infix *what)
     // Check if we match a type, e.g. 2 vs. 'K : integer'
     if (what->name == ":")
     {
+        // We can't recursively test a type
+        if (Symbols::symbols->in_type_check)
+            return NULL;
+        LocalSave<bool> save(Symbols::symbols->in_type_check, true);
+
         // Check the variable name, e.g. K in example above
         Name *varName = what->left->AsName();
         if (!varName)
