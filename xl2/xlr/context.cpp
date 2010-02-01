@@ -97,6 +97,7 @@ Rewrite *Symbols::EnterRewrite(Rewrite *rw)
 // ----------------------------------------------------------------------------
 {
     // Create symbol table for this rewrite
+    rw->from->symbols = NULL;
     Symbols *locals = new Symbols(this);
     rw->from->SetSymbols(locals);
 
@@ -349,7 +350,10 @@ Tree *Symbols::Run(Tree *code)
             Tree *named = s->Named(name->value, false);
             if (named)
             {
-                result = named;
+                if (named->code)
+                    result = named->code(named);
+                else
+                    result = named;
                 found = true;
                 break;
             }
