@@ -285,32 +285,139 @@ Tree *Symbols::CompileCall(text callee, tree_list &arglist)
 
 Tree *Symbols::Run(Tree *code)
 // ----------------------------------------------------------------------------
-//   Execute a compiled code tree - Very similar to xl_evaluate
+//   Execute a tree by applying the rewrites in the current context
 // ----------------------------------------------------------------------------
 {
+    // Trace what we are doing
     Tree *result = code;
-    if (!result)
+    IFTRACE(eval)
+        std::cerr << "RUN: " << code << '\n';
+    
+    // If the input is NULL, that's it
+    if (!code)
         return result;
 
-     IFTRACE(eval)
-        std::cerr << "RUN: " << code << '\n';
-
-   if (!result->IsConstant())
+    // If there is compiled code (generated or built-in), use it to evaluate
+    if (code->code)
     {
-        if (!result->code)
-        {
-            Symbols *symbols = result->symbols;
-            if (!symbols)
-            {
-                std::cerr << "WARNING: Tree '" << code << "' has no symbols\n";
-                symbols = this;
-            }
-            result = symbols->CompileAll(result);
-        }
-
-        assert(result->code);
-        result = result->code(code);
+        result = code->code(code);
+        IFTRACE(eval)
+            std::cerr << "CODE " << code->code << ": " << result << '\n';
+        return result;
     }
+
+    // Compute the hash key for the form we have to match
+    RewriteKey   formKeyHash;
+    code->Do(formKeyHash);
+
+    ulong formKey = formKeyHash.Key();
+    bool  found   = false;
+
+
+    // Copmute the set of symbol tables we need to visit
+    symbols_set  visited;
+    symbols_list lookups;
+    for (Symbols *s = this; s; s = s->Parent())
+    {
+        if (!visited.count(s))
+        {
+            lookups.push_back(s);
+            visited.insert(s);
+            symbols_set::iterator si;
+            for (si = s->imported.begin(); si != s->imported.end(); si++)
+            {
+                if (!visited.count(*si))
+                {
+                    visited.insert(*si);
+                    lookups.push_back(*si);
+                }
+            }
+        }
+    }
+
+    // Lookup all the symbol tables for the appropriate rewrite
+    symbols_list::iterator li;
+    for (li = lookups.begin(); !found && li != lookups.end(); li++)
+    {
+        Symbols *s = *li;
+
+        Rewrite *candidate = s->Rewrites();
+        while (candidate && !found)
+        {
+            // Compute the hash key for the 'from' of the current rewrite
+            RewriteKey testKeyHash;
+            candidate->from->Do(testKeyHash);
+            ulong testKey = testKeyHash.Key();
+
+            // If we have an exact match for the keys, we may have a winner
+            if (testKey == formKey)
+            {
+                // Check if we can match the arguments
+                Symbols args(symbols);
+                InterpretedArgumentMatch matchArgs(code, symbols,
+                                                   &args, candidate->symbols);
+                Tree *argsTest = candidate->from->Do(matchArgs);
+                if (argsTest)
+                {
+                    // Record that we found something
+                    found = true;
+
+                    // If there is a rewrite form
+                    if (!candidate->to)
+                    {
+                        result = argsTest;
+                    }
+                    else
+                    {
+                        // We should have same number of args and parms
+                        Symbols &parms = *candidate->from->symbols;
+                        ulong parmCount = parms.names.size();
+                        if (args.names.size() != parmCount)
+                        {
+                            symbol_iter a, p;
+                            std::cerr << "Args/parms mismatch:\n";
+                            std::cerr << "Parms:\n";
+                            for (p = parms.names.begin();
+                                 p != parms.names.end();
+                                 p++)
+                            {
+                                text name = (*p).first;
+                                Tree *parm = parms.Named(name);
+                                std::cerr << "   " << name
+                                          << " = " << parm << "\n";
+                            }
+                            std::cerr << "Args:\n";
+                            for (a = args.names.begin();
+                                 a != args.names.end();
+                                 a++)
+                            {
+                                text name = (*a).first;
+                                Tree *arg = args.Named(name);
+                                std::cerr << "   " << name
+                                          << " = " << arg << "\n";
+                            }
+                        }
+
+                        // Evaluate the target with the args set
+                        result = args.Run(candidate->to);
+
+
+                    } // if (data form)
+                } // Match args
+            } // Match test key
+
+            // Otherwise, go deeper in the hash table
+            if (!found && candidate->hash.count(formKey) > 0)
+                candidate = candidate->hash[formKey];
+            else
+                candidate = NULL;
+        } // while(candidate)
+    } // for(namespaces)
+
+    // If we didn't find anything, report it
+    if (!found)
+        return Error("No rewrite candidate for '$1'", code);
+
     return result;
 }
 
@@ -514,85 +621,261 @@ void Context::CollectGarbage ()
 
 // ============================================================================
 //
-//    Hash key for tree rewrite
+//    Interpreted Argument matching - Test input arguments against parameters
 //
 // ============================================================================
-//    We use this hashing key to quickly determine if two trees "look the same"
 
-struct RewriteKey : Action
+Tree *InterpretedArgumentMatch::Do(Tree *what)
 // ----------------------------------------------------------------------------
-//   Compute a hashing key for a rewrite
+//   Default is to return failure
 // ----------------------------------------------------------------------------
 {
-    RewriteKey (ulong base = 0): key(base) {}
-    ulong Key()  { return key; }
+    return NULL;
+}
 
-    ulong Hash(ulong id, text t)
+
+Tree *InterpretedArgumentMatch::DoInteger(Integer *what)
+// ----------------------------------------------------------------------------
+//   An integer argument matches the exact value
+// ----------------------------------------------------------------------------
+{
+    // Evaluate the test value
+    Tree *value = xl_evaluate(test);
+
+    // If this is an integer, compare the values
+    Integer *it = value->AsInteger();
+    if (!it)
+        return NULL;
+    if (it->value == what->value)
+        return what;
+
+    return NULL;
+}
+
+
+Tree *InterpretedArgumentMatch::DoReal(Real *what)
+// ----------------------------------------------------------------------------
+//   A real matches the exact value
+// ----------------------------------------------------------------------------
+{
+    // Evaluate the test value
+    Tree *value = xl_evaluate(test);
+
+    // If this is an integer, compare the values
+    Real *rt = value->AsReal();
+    if (!rt)
+        return NULL;
+    if (rt->value == what->value)
+        return what;
+
+    return NULL;
+}
+
+
+Tree *InterpretedArgumentMatch::DoText(Text *what)
+// ----------------------------------------------------------------------------
+//   A text matches the exact value
+// ----------------------------------------------------------------------------
+{
+    // Evaluate the test value
+    Tree *value = xl_evaluate(test);
+
+    // If this is an integer, compare the values
+    Text *tt = value->AsText();
+    if (!tt)
+        return NULL;
+    if (tt->value == what->value)
+        return what;
+
+    return NULL;
+}
+
+
+Tree *InterpretedArgumentMatch::DoName(Name *what)
+// ----------------------------------------------------------------------------
+//    Bind arguments to parameters being defined in the shape
+// ----------------------------------------------------------------------------
+{
+    if (!defined)
     {
-        ulong result = 0xC0DED;
-        text::iterator p;
-        for (p = t.begin(); p != t.end(); p++)
-            result = (result * 0x301) ^ *p;
-        return id | (result << 3);
+        // The first name we see must match exactly, e.g. 'sin' in 'sin X'
+        defined = what;
+        if (Name *nt = test->AsName())
+            if (nt->value == what->value)
+                return what;
+        return NULL;
     }
-    ulong Hash(ulong id, ulong value)
+    else
     {
-        return id | (value << 3);
+        // Check if the name already exists, e.g. 'false' or 'A+A'
+        // If it does, verify equality with the one that already exists
+        if (Tree *existing = rewrite->Named(what->value))
+        {
+            TreeMatch match(test);
+            if (existing->Do(match))
+                return existing;
+            return NULL;
+        }
+
+        // First occurence of the name: enter it in the symbol table
+        locals->EnterName(what->value, test);
+        return what;
+    }
+}
+
+
+Tree *InterpretedArgumentMatch::DoBlock(Block *what)
+// ----------------------------------------------------------------------------
+//   Check if we match a block
+// ----------------------------------------------------------------------------
+{
+    // Test if we exactly match the block, i.e. the reference is a block
+    if (Block *bt = test->AsBlock())
+    {
+        if (bt->opening == what->opening &&
+            bt->closing == what->closing)
+        {
+            test = bt->child;
+            Tree *br = what->child->Do(this);
+            test = bt;
+            if (br)
+                return br;
+        }
     }
 
-    Tree *DoInteger(Integer *what)
+    // Otherwise, if the block is an indent or parenthese, optimize away
+    if ((what->opening == "(" && what->closing == ")") ||
+        (what->opening == Block::indent && what->closing == Block::unindent))
     {
-        key = (key << 3) ^ Hash(0, what->value);
-        return what;
+        return what->child->Do(this);
     }
-    Tree *DoReal(Real *what)
+
+    return NULL;
+}
+
+
+Tree *InterpretedArgumentMatch::DoInfix(Infix *what)
+// ----------------------------------------------------------------------------
+//   Check if we match an infix operator
+// ----------------------------------------------------------------------------
+{
+    if (Infix *it = test->AsInfix())
     {
-        key = (key << 3) ^ Hash(1, *((ulong *) &what->value));
-        return what;
+        // Check if we match the tree, e.g. A+B vs 2+3
+        if (it->name == what->name)
+        {
+            if (!defined)
+                defined = what;
+            test = it->left;
+            Tree *lr = what->left->Do(this);
+            test = it;
+            if (!lr)
+                return NULL;
+            test = it->right;
+            Tree *rr = what->right->Do(this);
+            test = it;
+            if (!rr)
+                return NULL;
+            return what;
+        }
     }
-    Tree *DoText(Text *what)
+
+    // Check if we match a type, e.g. 2 vs. 'K : integer'
+    if (what->name == ":")
     {
-        key = (key << 3) ^ Hash(2, what->value);
-        return what;
-    }
-    Tree *DoName(Name *what)
-    {
-        key = (key << 3) ^ Hash(3, what->value);
+        // Check the variable name, e.g. K in example above
+        Name *varName = what->left->AsName();
+        if (!varName)
+            return Error("Expected a name, got '$1' ", what->left);
+
+        // Check if the name already exists
+        if (Tree *existing = rewrite->Named(varName->value))
+            return Error("Name '$1' already exists as '$2'",
+                         what->left, existing);
+
+        // Evaluate type expression, e.g. 'integer' in example above
+        Tree *typeExpr = xl_evaluate(what->right);
+        if (!typeExpr)
+            return NULL;
+
+        // Evaluate the value we are testing
+        Tree *value = xl_evaluate(test);
+        if (!value)
+            return NULL;
+
+        // Check if the type matches the value
+        Prefix *typeTest = new Prefix(typeExpr, value, what->right->Position());
+        typeTest->symbols = symbols;
+        Tree *afterCast = xl_evaluate(typeTest);
+        if (!afterCast)
+            return NULL;
+
+        // Enter the compiled expression in the symbol table
+        locals->EnterName(varName->value, afterCast);
+
         return what;
     }
 
-    Tree *DoBlock(Block *what)
-    {
-        key = (key << 3) ^ Hash(4, what->opening + what->closing);
-        return what;
-    }
-    Tree *DoInfix(Infix *what)
-    {
-        key = (key << 3) ^ Hash(5, what->name);
-        return what;
-    }
-    Tree *DoPrefix(Prefix *what)
-    {
-        ulong old = key;
-        key = 0; what->left->Do(this);
-        key = (old << 3) ^ Hash(6, key);
-        return what;
-    }
-    Tree *DoPostfix(Postfix *what)
-    {
-        ulong old = key;
-        key = 0; what->right->Do(this);
-        key = (old << 3) ^ Hash(7, key);
-        return what;
-    }
-    Tree *Do(Tree *what)
-    {
-        key = (key << 3) ^ Hash(1, (ulong) what);
-        return what;
-    }
+    // Otherwise, this is a mismatch
+    return NULL;
+}
 
-    ulong key;
-};
+
+Tree *InterpretedArgumentMatch::DoPrefix(Prefix *what)
+// ----------------------------------------------------------------------------
+//   For prefix expressions, simply test left then right
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *pt = test->AsPrefix())
+    {
+        // Check if we match the tree, e.g. f(A) vs. f(2)
+        // Note that we must test left first to define 'f' in above case
+        Infix *defined_infix = defined->AsInfix();
+        if (defined_infix)
+            defined = NULL;
+
+        test = pt->left;
+        Tree *lr = what->left->Do(this);
+        test = pt;
+        if (!lr)
+            return NULL;
+        test = pt->right;
+        Tree *rr = what->right->Do(this);
+        test = pt;
+        if (!rr)
+            return NULL;
+        if (!defined && defined_infix)
+            defined = defined_infix;
+        return what;
+    }
+    return NULL;
+}
+
+
+Tree *InterpretedArgumentMatch::DoPostfix(Postfix *what)
+// ----------------------------------------------------------------------------
+//    For postfix expressions, simply test right, then left
+// ----------------------------------------------------------------------------
+{
+    if (Postfix *pt = test->AsPostfix())
+    {
+        // Check if we match the tree, e.g. A! vs 2!
+        // Note that ordering is reverse compared to prefix, so that
+        // the 'defined' names is set correctly
+        test = pt->right;
+        Tree *rr = what->right->Do(this);
+        test = pt;
+        if (!rr)
+            return NULL;
+        test = pt->left;
+        Tree *lr = what->left->Do(this);
+        test = pt;
+        if (!lr)
+            return NULL;
+        return what;
+    }
+    return NULL;
+}
 
 
 
@@ -1706,7 +1989,7 @@ Tree * CompileAction::Rewrites(Tree *what)
     symbols_set visited;
     symbols_list lookups;
 
-    for (Symbols *s = symbols; s && !foundUnconditional; s = s->Parent())
+    for (Symbols *s = symbols; s; s = s->Parent())
     {
         if (!visited.count(s))
         {
@@ -1715,8 +1998,11 @@ Tree * CompileAction::Rewrites(Tree *what)
             symbols_set::iterator si;
             for (si = s->imported.begin(); si != s->imported.end(); si++)
             {
-                visited.insert(*si);
-                lookups.push_back(*si);
+                if (!visited.count(*si))
+                {
+                    visited.insert(*si);
+                    lookups.push_back(*si);
+                }
             }
         }
     }

@@ -277,6 +277,43 @@ public:
 
 // ============================================================================
 // 
+//    Actions used in interpretation
+// 
+// ============================================================================
+
+struct InterpretedArgumentMatch : Action
+// ----------------------------------------------------------------------------
+//   Check if a tree matches the form of the left of a rewrite
+// ----------------------------------------------------------------------------
+{
+    InterpretedArgumentMatch (Tree *t,
+                              Symbols *s, Symbols *l, Symbols *r) :
+        symbols(s), locals(l), rewrite(r),
+        test(t), defined(NULL) {}
+
+    // Action callbacks
+    virtual Tree *Do(Tree *what);
+    virtual Tree *DoInteger(Integer *what);
+    virtual Tree *DoReal(Real *what);
+    virtual Tree *DoText(Text *what);
+    virtual Tree *DoName(Name *what);
+    virtual Tree *DoPrefix(Prefix *what);
+    virtual Tree *DoPostfix(Postfix *what);
+    virtual Tree *DoInfix(Infix *what);
+    virtual Tree *DoBlock(Block *what);
+
+public:
+    Symbols *     symbols;      // Context in which we evaluate values
+    Symbols *     locals;       // Symbols where we declare arguments
+    Symbols *     rewrite;      // Symbols in which the rewrite was declared
+    Tree *        test;         // Tree we test
+    Tree *        defined;      // Tree beind defined, e.g. 'sin' in 'sin X'
+};
+
+
+
+// ============================================================================
+// 
 //    Compilation actions
 // 
 // ============================================================================
