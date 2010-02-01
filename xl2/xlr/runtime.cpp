@@ -128,7 +128,8 @@ bool xl_type_check(Tree *value, Tree *type)
     if (!value->IsConstant() && value->code)
         value = value->code(value);
 
-    Tree *afterTypeCast = type->code(value);
+    Tree *typeExpr = new Infix(":", value, type);
+    Tree *afterTypeCast = xl_evaluate(typeExpr);
     if (afterTypeCast != value)
     {
         IFTRACE(typecheck)
