@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  runtime.cpp                     (C) 1992-2009 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  runtime.cpp                     (C) 1992-2009 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Runtime functions necessary to execute XL programs
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
@@ -143,9 +143,9 @@ bool xl_type_check(Tree *value, Tree *type)
 
 
 // ========================================================================
-// 
+//
 //    Creating entities (callbacks for compiled code)
-// 
+//
 // ========================================================================
 
 Tree *xl_new_integer(longlong value)
@@ -210,9 +210,9 @@ Tree *xl_new_infix(Infix *source, Tree *left, Tree *right)
 
 
 // ============================================================================
-// 
+//
 //    Closure management
-// 
+//
 // ============================================================================
 
 Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
@@ -226,7 +226,7 @@ Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
 
     IFTRACE(closure)
         std::cerr << "CLOSURE: Arity " << ntrees
-                  << " code " << (void *) expr->code 
+                  << " code " << (void *) expr->code
                   << " [" << expr << "]\n";
 
     // Build the prefix with all the arguments
@@ -274,12 +274,12 @@ Tree *xl_type_error(Tree *what)
 
 
 // ========================================================================
-// 
+//
 //    Type matching
-// 
+//
 // ========================================================================
 
-Tree *xl_boolean(Tree *value)
+Tree *xl_boolean_cast(Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a boolean value (true/false)
 // ----------------------------------------------------------------------------
@@ -288,9 +288,9 @@ Tree *xl_boolean(Tree *value)
         return value;
     return NULL;
 }
-    
-    
-Tree *xl_integer(Tree *value)
+
+
+Tree *xl_integer_cast(Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as an integer
 // ----------------------------------------------------------------------------
@@ -299,9 +299,9 @@ Tree *xl_integer(Tree *value)
         return it;
     return NULL;
 }
-    
-    
-Tree *xl_real(Tree *value)
+
+
+Tree *xl_real_cast(Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a real
 // ----------------------------------------------------------------------------
@@ -310,9 +310,9 @@ Tree *xl_real(Tree *value)
         return rt;
     return NULL;
 }
-    
-    
-Tree *xl_text(Tree *value)
+
+
+Tree *xl_text_cast(Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a text
 // ----------------------------------------------------------------------------
@@ -322,9 +322,9 @@ Tree *xl_text(Tree *value)
             return tt;
     return NULL;
 }
-    
-    
-Tree *xl_character(Tree *value)
+
+
+Tree *xl_character_cast(Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a character
 // ----------------------------------------------------------------------------
@@ -334,9 +334,9 @@ Tree *xl_character(Tree *value)
             return tt;
     return NULL;
 }
-    
-    
-Tree *xl_tree(Tree *value)
+
+
+Tree *xl_tree_cast(Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 //   Don't really check the argument
 // ----------------------------------------------------------------------------
@@ -344,8 +344,8 @@ Tree *xl_tree(Tree *value)
     return value;
 }
 
-    
-Tree *xl_infix(Tree *value)
+
+Tree *xl_infix_cast(Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as an infix
 // ----------------------------------------------------------------------------
@@ -354,9 +354,9 @@ Tree *xl_infix(Tree *value)
         return it;
     return NULL;
 }
-    
-    
-Tree *xl_prefix(Tree *value)
+
+
+Tree *xl_prefix_cast(Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a prefix
 // ----------------------------------------------------------------------------
@@ -365,9 +365,9 @@ Tree *xl_prefix(Tree *value)
         return it;
     return NULL;
 }
-    
-    
-Tree *xl_postfix(Tree *value)
+
+
+Tree *xl_postfix_cast(Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a postfix
 // ----------------------------------------------------------------------------
@@ -376,9 +376,9 @@ Tree *xl_postfix(Tree *value)
         return it;
     return NULL;
 }
-    
-    
-Tree *xl_block(Tree *value)
+
+
+Tree *xl_block_cast(Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a block
 // ----------------------------------------------------------------------------
@@ -386,6 +386,44 @@ Tree *xl_block(Tree *value)
     if (Block *it = value->AsBlock())
         return it;
     return NULL;
+}
+
+
+Tree *xl_invoke(eval_fn toCall, Tree *src, tree_list &args)
+// ----------------------------------------------------------------------------
+//   Invoke a callback with the right number of arguments
+// ----------------------------------------------------------------------------
+{
+    typedef Tree *(*eval0_fn) (Tree *);
+    typedef Tree *(*eval1_fn) (Tree *, Tree *);
+    typedef Tree *(*eval2_fn) (Tree *, Tree *, Tree *);
+    typedef Tree *(*eval3_fn) (Tree *, Tree *, Tree *, Tree *);
+    typedef Tree *(*eval4_fn) (Tree *, Tree *, Tree *, Tree *, Tree *);
+
+    Tree *result = src;
+    switch(args.size())
+    {
+    case 0:
+        result = ((eval0_fn) toCall) (src);
+        break;
+    case 1:
+        result = ((eval1_fn) toCall) (src, args[0]);
+        break;
+    case 2:
+        result = ((eval2_fn) toCall) (src, args[0], args[1]);
+        break;
+    case 3:
+        result = ((eval3_fn) toCall) (src, args[0], args[1], args[2]);
+        break;
+    case 4:
+        result = ((eval4_fn) toCall) (src, args[0], args[1], args[2], args[3]);
+        break;
+    default:
+        result =
+        Context::context->Error("Too many arguments evaluating '$1'", src);
+        break;
+    }
+    return result;
 }
 
 

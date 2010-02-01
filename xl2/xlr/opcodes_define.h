@@ -115,14 +115,26 @@
         compiler->EnterGlobal(n, &xl_##symbol); \
     } while (0);
 
-#define TYPE(symbol)                                    \
-    do                                                  \
-    {                                                   \
-        Name *n = new Name(#symbol);                    \
-        eval_fn fn = (eval_fn) xl_##symbol;             \
-        n->code = fn;                                   \
-        n-> symbols = c;                                \
-        c->EnterName(#symbol, n);                       \
-        xl_##symbol##_name = n;                         \
-        compiler->EnterGlobal(n, &xl_##symbol##_name);  \
+#define TYPE(symbol)                                                    \
+    do                                                                  \
+    {                                                                   \
+        /* Type alone evaluates as self */                              \
+        Name *n = new Name(#symbol);                                    \
+        eval_fn fn = (eval_fn) xl_identity;                             \
+        n->code = fn;                                                   \
+        n-> symbols = c;                                                \
+        c->EnterName(#symbol, n);                                       \
+        xl_##symbol##_name = n;                                         \
+        compiler->EnterGlobal(n, &xl_##symbol##_name);                  \
+                                                                        \
+        /* Type as prefix evaluates to type check, e.g. integer 0 */    \
+        Prefix *from = new Prefix(new Name(#symbol), new Name("Val"));  \
+        Name *to = new Name(#symbol);                                   \
+        Rewrite *rw = c->EnterRewrite(from, to);                        \
+        eval_fn typeTestFn = (eval_fn) xl_##symbol##_cast;              \
+        to->code = typeTestFn;                                          \
+        to->symbols = c;                                                \
+        compiler->EnterBuiltin("xl_" #symbol,                           \
+                               from, to, rw->parameters, typeTestFn);   \
+                                                                        \
     } while(0);

@@ -410,8 +410,27 @@ Tree *Symbols::Run(Tree *code)
                             }
                         }
 
-                        // Evaluate the target with the args set
-                        result = args.Run(candidate->to);
+                        if (eval_fn toCall = candidate->to->code)
+                        {
+                            // Map the arguments we found in parameter order
+                            tree_list argsList;
+                            tree_list::iterator p;
+                            tree_list &order = candidate->parameters;
+                            for (p = order.begin(); p != order.end(); p++)
+                            {
+                                Name *name = (*p)->AsName();
+                                Tree *argValue = args.Named(name->value);
+                                argsList.push_back(argValue);
+                            }
+                            result = xl_invoke(toCall, code, argsList);
+                        }
+                        else
+                        {
+                            // Simply evaluate the target with the args set
+                            // We will lookup symbols in local symbol table
+                            LocalSave<Symbols *> save(Symbols::symbols, &args);
+                            result = args.Run(candidate->to);
+                        }
 
 
                     } // if (data form)
@@ -810,13 +829,9 @@ Tree *InterpretedArgumentMatch::DoInfix(Infix *what)
         if (!typeExpr)
             return NULL;
 
-        // Evaluate the value we are testing
-        Tree *value = xl_evaluate(test);
-        if (!value)
-            return NULL;
-
         // Check if the type matches the value
-        Prefix *typeTest = new Prefix(typeExpr, value, what->right->Position());
+        Prefix *typeTest = new Prefix(typeExpr, test,
+                                      what->right->Position());
         typeTest->symbols = symbols;
         Tree *afterCast = xl_evaluate(typeTest);
         if (!afterCast)
