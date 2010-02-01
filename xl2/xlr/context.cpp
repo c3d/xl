@@ -839,6 +839,7 @@ Tree *InterpretedArgumentMatch::DoInfix(Infix *what)
         if (!typeExpr)
             return NULL;
 
+        // REVISIT: Very slow and leaking memory
         // Check if the type matches the value
         Infix *typeTest = new Infix(":", test, typeExpr,
                                     what->right->Position());
