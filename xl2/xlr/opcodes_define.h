@@ -27,9 +27,11 @@
 #undef INFIX
 #undef PREFIX
 #undef POSTFIX
+#undef BLOCK
 #undef NAME
 #undef TYPE
 #undef PARM
+
 
 #define INFIX(t1, symbol, t2, name, _code)                              \
     do                                                                  \
@@ -46,6 +48,7 @@
                                from, to, rw->parameters, fn);           \
     } while(0);
 
+
 #define PARM(symbol, type)                                      \
         if (text(#type) == "tree")                              \
         {                                                       \
@@ -59,6 +62,7 @@
                                              new Name(#type));  \
             parameters.push_back(symbol##_decl);                \
         }
+
 
 #define PREFIX(symbol, parms, name, _code)                              \
     do                                                                  \
@@ -88,6 +92,7 @@
         }                                                               \
     } while(0);
 
+
 #define POSTFIX(parms, symbol, name, _code)                             \
     do                                                                  \
     {                                                                   \
@@ -104,6 +109,23 @@
                                from, to, rw->parameters, to->code);     \
     } while(0);
 
+
+#define BLOCK(open, type, close, name, _code)                           \
+    do                                                                  \
+    {                                                                   \
+        Infix *parms = new Infix(":", new Name("V"), new Name(#type));  \
+        Block *from = new Block(parms, open, close);                    \
+        Name *to = new Name(#name);                                     \
+        eval_fn fn = (eval_fn) xl_##name;                               \
+        Rewrite *rw = c->EnterRewrite(from, to);                        \
+        to->code = fn;                                                  \
+        to->symbols = c;                                                \
+        compiler->EnterBuiltin("xl_" #name, from, to,                   \
+                               rw->parameters, to->code);               \
+    } while (0);
+
+
+
 #define NAME(symbol)                            \
     do                                          \
     {                                           \
@@ -114,6 +136,7 @@
         xl_##symbol = n;                        \
         compiler->EnterGlobal(n, &xl_##symbol); \
     } while (0);
+
 
 #define TYPE(symbol)                                                    \
     do                                                                  \
