@@ -337,9 +337,21 @@ Tree *Symbols::Run(Tree *code)
 
     // Lookup all the symbol tables for the appropriate rewrite
     symbols_list::iterator li;
+    Name *name = code->AsName();
     for (li = lookups.begin(); !found && li != lookups.end(); li++)
     {
         Symbols *s = *li;
+
+        if (name)
+        {
+            Tree *named = s->Named(name->value, false);
+            if (named)
+            {
+                result = named;
+                found = true;
+                break;
+            }
+        }
 
         Rewrite *candidate = s->Rewrites();
         while (candidate && !found)
