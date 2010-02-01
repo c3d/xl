@@ -302,7 +302,9 @@ Tree *Symbols::Run(Tree *code)
     {
         result = code->code(code);
         IFTRACE(eval)
-            std::cerr << "CODE " << code->code << ": " << result << '\n';
+            std::cerr << "CODE "
+                      << (void *) code->code << ": "
+                      << result << '\n';
         return result;
     }
 
@@ -444,6 +446,10 @@ Tree *Symbols::Run(Tree *code)
                 candidate = NULL;
         } // while(candidate)
     } // for(namespaces)
+
+
+    IFTRACE(eval)
+        std::cerr << "VALUE: " << result << '\n';
 
     // If we didn't find anything, report it
     if (!found && !code->IsConstant())
