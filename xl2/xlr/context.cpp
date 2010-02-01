@@ -293,7 +293,7 @@ Tree *Symbols::Run(Tree *code)
     IFTRACE(eval)
         std::cerr << "RUN: " << code << '\n';
     
-    // If the input is NULL, that's it
+    // If the input is NULL or constant, that's it
     if (!code)
         return result;
 
@@ -415,7 +415,7 @@ Tree *Symbols::Run(Tree *code)
     } // for(namespaces)
 
     // If we didn't find anything, report it
-    if (!found)
+    if (!found && !code->IsConstant())
         return Error("No rewrite candidate for '$1'", code);
 
     return result;
