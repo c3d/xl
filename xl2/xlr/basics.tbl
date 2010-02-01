@@ -1,3 +1,7 @@
+// Sequences
+INFIX(tree,";",tree, SemicolonSequence, xl_evaluate(&l);RTREE(xl_evaluate(&r)))
+INFIX(tree,"\n",tree, Newlineequence, xl_evaluate(&l);RTREE(xl_evaluate(&r)))
+
 // Integer arithmetic and comparisons
 INFIX(integer, "+", integer, BinaryAddInt, RINT(INT(l) + INT(r)))
 INFIX(integer, "-", integer, BinarySubInt, RINT(INT(l) - INT(r)))
