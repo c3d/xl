@@ -284,6 +284,7 @@ Tree *xl_boolean_cast(Tree *source, Tree *value)
 //   Check if argument can be evaluated as a boolean value (true/false)
 // ----------------------------------------------------------------------------
 {
+    value = xl_evaluate(value);
     if (value == xl_true || value == xl_false)
         return value;
     return NULL;
@@ -295,6 +296,7 @@ Tree *xl_integer_cast(Tree *source, Tree *value)
 //   Check if argument can be evaluated as an integer
 // ----------------------------------------------------------------------------
 {
+    value = xl_evaluate(value);
     if (Integer *it = value->AsInteger())
         return it;
     return NULL;
@@ -306,6 +308,7 @@ Tree *xl_real_cast(Tree *source, Tree *value)
 //   Check if argument can be evaluated as a real
 // ----------------------------------------------------------------------------
 {
+    value = xl_evaluate(value);
     if (Real *rt = value->AsReal())
         return rt;
     return NULL;
@@ -317,6 +320,7 @@ Tree *xl_text_cast(Tree *source, Tree *value)
 //   Check if argument can be evaluated as a text
 // ----------------------------------------------------------------------------
 {
+    value = xl_evaluate(value);
     if (Text *tt = value->AsText())
         if (tt->opening != "'")
             return tt;
@@ -329,6 +333,7 @@ Tree *xl_character_cast(Tree *source, Tree *value)
 //   Check if argument can be evaluated as a character
 // ----------------------------------------------------------------------------
 {
+    value = xl_evaluate(value);
     if (Text *tt = value->AsText())
         if (tt->opening == "'")
             return tt;
@@ -342,6 +347,17 @@ Tree *xl_tree_cast(Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 {
     return value;
+}
+
+
+Tree *xl_symbolicname_cast(Tree *source, Tree *value)
+// ----------------------------------------------------------------------------
+//   Check if argument can be evaluated as a name
+// ----------------------------------------------------------------------------
+{
+    if (Name *nt = value->AsName())
+        return nt;
+    return NULL;
 }
 
 

@@ -128,7 +128,7 @@
         compiler->EnterGlobal(n, &xl_##symbol##_name);                  \
                                                                         \
         /* Type as prefix evaluates to type check, e.g. integer 0 */    \
-        Prefix *from = new Prefix(new Name(#symbol), new Name("Val"));  \
+        Infix *from = new Infix(":", new Name("V"), new Name(#symbol)); \
         Name *to = new Name(#symbol);                                   \
         Rewrite *rw = c->EnterRewrite(from, to);                        \
         eval_fn typeTestFn = (eval_fn) xl_##symbol##_cast;              \

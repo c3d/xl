@@ -219,6 +219,7 @@ TYPE(real);
 TYPE(text);
 TYPE(character);
 TYPE(tree);
+TYPE(symbolicname);
 TYPE(infix);
 TYPE(prefix);
 TYPE(postfix);

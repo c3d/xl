@@ -820,11 +820,6 @@ Tree *InterpretedArgumentMatch::DoInfix(Infix *what)
     // Check if we match a type, e.g. 2 vs. 'K : integer'
     if (what->name == ":")
     {
-        // We can't recursively test a type
-        if (Symbols::symbols->in_type_check)
-            return NULL;
-        LocalSave<bool> save(Symbols::symbols->in_type_check, true);
-
         // Check the variable name, e.g. K in example above
         Name *varName = what->left->AsName();
         if (!varName)
@@ -841,8 +836,8 @@ Tree *InterpretedArgumentMatch::DoInfix(Infix *what)
             return NULL;
 
         // Check if the type matches the value
-        Prefix *typeTest = new Prefix(typeExpr, test,
-                                      what->right->Position());
+        Infix *typeTest = new Infix(":", test, typeExpr,
+                                    what->right->Position());
         typeTest->symbols = symbols;
         Tree *afterCast = xl_evaluate(typeTest);
         if (!afterCast)
@@ -2308,6 +2303,21 @@ Tree *Error (text message, Tree *a1, Tree *a2, Tree *a3)
 XL_END
 
 
+extern "C" void debugrw(XL::Rewrite *r)
+// ----------------------------------------------------------------------------
+//   For the debugger, dump a rewrite
+// ----------------------------------------------------------------------------
+{
+    if (r)
+    {
+        std::cerr << r->from << " -> " << r->to << "\n";
+        XL::rewrite_table::iterator i;
+        for (i = r->hash.begin(); i != r->hash.end(); i++)
+            debugrw((*i).second);
+    }
+}
+
+
 extern "C" void debugs(XL::Symbols *s)
 // ----------------------------------------------------------------------------
 //   For the debugger, dump a symbol table
@@ -2315,9 +2325,14 @@ extern "C" void debugs(XL::Symbols *s)
 {
     using namespace XL;
     std::cerr << "SYMBOLS AT " << s << "\n";
+
+    std::cerr << "NAMES:\n";
     symbol_table::iterator i;
     for (i = s->names.begin(); i != s->names.end(); i++)
         std::cerr << (*i).first << ": " << (*i).second << "\n";
+
+    std::cerr << "REWRITES:\n";
+    debugrw(s->rewrites);
 }
 
 
