@@ -322,7 +322,7 @@ Infix *Symbols::CompileTypeTest(Tree *type)
         Error("Internal: Declaration error for call '$1'", callDecls);
 
     // Compile the body of the rewrite, keep all alternatives open
-    CompileAction compile(locals, unit, false, true);
+    CompileAction compile(locals, unit, false, false);
     Tree *result = callDecls->Do(compile);
     if (!result)
         Error("Unable to compile '$1'", callDecls);
