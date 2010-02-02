@@ -428,7 +428,8 @@ Tree *Symbols::Run(Tree *code)
                                 Tree *argValue = args.Named(name->value);
                                 argsList.push_back(argValue);
                             }
-                            result = xl_invoke(toCall, code, argsList);
+                            result = xl_invoke(toCall, code,
+                                               argsList.size(), &argsList[0]);
                         }
                         else
                         {

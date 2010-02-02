@@ -406,41 +406,15 @@ Tree *xl_block_cast(Tree *source, Tree *value)
 }
 
 
-Tree *xl_invoke(eval_fn toCall, Tree *src, tree_list &args)
+Tree *xl_invoke(eval_fn toCall, Tree *src, uint numargs, Tree **args)
 // ----------------------------------------------------------------------------
 //   Invoke a callback with the right number of arguments
 // ----------------------------------------------------------------------------
+//   We generate a function with the right signature using LLVM
 {
-    typedef Tree *(*eval0_fn) (Tree *);
-    typedef Tree *(*eval1_fn) (Tree *, Tree *);
-    typedef Tree *(*eval2_fn) (Tree *, Tree *, Tree *);
-    typedef Tree *(*eval3_fn) (Tree *, Tree *, Tree *, Tree *);
-    typedef Tree *(*eval4_fn) (Tree *, Tree *, Tree *, Tree *, Tree *);
-
-    Tree *result = src;
-    switch(args.size())
-    {
-    case 0:
-        result = ((eval0_fn) toCall) (src);
-        break;
-    case 1:
-        result = ((eval1_fn) toCall) (src, args[0]);
-        break;
-    case 2:
-        result = ((eval2_fn) toCall) (src, args[0], args[1]);
-        break;
-    case 3:
-        result = ((eval3_fn) toCall) (src, args[0], args[1], args[2]);
-        break;
-    case 4:
-        result = ((eval4_fn) toCall) (src, args[0], args[1], args[2], args[3]);
-        break;
-    default:
-        result =
-        Context::context->Error("Too many arguments evaluating '$1'", src);
-        break;
-    }
-    return result;
+    Compiler * compiler = Context::context->compiler;
+    adapter_fn fn = compiler->EnterArrayToArgsAdapter(numargs);
+    return fn (toCall, src, args);
 }
 
 

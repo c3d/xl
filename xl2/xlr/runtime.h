@@ -26,7 +26,6 @@
 // ****************************************************************************
 
 #include "base.h"
-#include <vector>
 
 
 XL_BEGIN
@@ -82,8 +81,7 @@ Tree *xl_postfix_cast(Tree *source, Tree *value);
 Tree *xl_block_cast(Tree *source, Tree *value);
 
 Tree *xl_invoke(Tree *(*toCall)(Tree *),
-                Tree *source,
-                std::vector<Tree *> &args);
+                Tree *source, uint numarg, Tree **args);
 
 Tree *xl_call(text name);
 Tree *xl_call(text name, text arg);
