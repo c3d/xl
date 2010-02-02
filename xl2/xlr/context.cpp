@@ -344,10 +344,34 @@ Tree *Symbols::Run(Tree *code)
     Tree *result = code;
     IFTRACE(eval)
         std::cerr << "RUN: " << code << '\n';
-    
+
     // If the input is NULL or constant, that's it
     if (!code)
         return result;
+
+    // Optimized mode (compiled)
+    uint opt = Options::options->optimize_level;
+    if (opt)
+    {
+        if (!result->IsConstant())
+        {
+            if (!result->code)
+            {
+                Symbols *symbols = result->symbols;
+                if (!symbols)
+                {
+                    std::cerr << "WARNING: Tree '" << code
+                              << "' has no symbols\n";
+                    symbols = this;
+                }
+                result = symbols->CompileAll(result);
+            }
+            assert(result->code);
+            result = result->code(code);
+        }
+        return result;
+    }
+    
 
     // If there is compiled code (generated or built-in), use it to evaluate
     if (code->code)
