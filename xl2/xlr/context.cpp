@@ -1363,6 +1363,17 @@ Tree *ArgumentMatch::DoName(Name *what)
         // If it does, we generate a run-time check to verify equality
         if (Tree *existing = rewrite->Named(what->value))
         {
+            // Check if the test is an identity
+            if (Name *nt = test->AsName())
+            {
+                if (nt->code == xl_identity)
+                {
+                    if (nt->value == what->value)
+                        return what;
+                    return NULL;
+                }
+            }
+
             // Insert a dynamic tree comparison test
             Tree *testCode = CompileValue(test);
             if (!testCode)
