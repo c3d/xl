@@ -96,6 +96,10 @@ Rewrite *Symbols::EnterRewrite(Rewrite *rw)
 //   Enter the given rewrite in the rewrites table
 // ----------------------------------------------------------------------------
 {
+    // Record if we ever rewrite 0 or "ABC" in that scope
+    if (rw->from->IsConstant())
+        has_rewrites_for_constants = true;
+
     // Create symbol table for this rewrite
     rw->from->symbols = NULL;
     Symbols *locals = new Symbols(this);
@@ -345,15 +349,18 @@ Tree *Symbols::Run(Tree *code)
     IFTRACE(eval)
         std::cerr << "RUN: " << code << '\n';
 
+    // Check trees that we won't rewrite
+    bool isConstant = !has_rewrites_for_constants && code->IsConstant();
+
     // If the input is NULL or constant, that's it
-    if (!code)
+    if (!code || isConstant)
         return result;
 
     // Optimized mode (compiled)
     uint opt = Options::options->optimize_level;
     if (opt)
     {
-        if (!result->IsConstant())
+        if (!isConstant)
         {
             if (!result->code)
             {

@@ -215,6 +215,7 @@ public:
     value_table         type_tests;
     symbols_set         imported;
     Tree *              error_handler;
+    bool                has_rewrites_for_constants;
 
     static Symbols *    symbols;
 };
@@ -534,7 +535,8 @@ inline Symbols::Symbols(Symbols *s)
 // ----------------------------------------------------------------------------
 //   Create a "child" symbol table
 // ----------------------------------------------------------------------------
-    : parent(s), rewrites(NULL), error_handler(NULL)
+    : parent(s), rewrites(NULL), error_handler(NULL),
+      has_rewrites_for_constants(false)
 {}
 
 
