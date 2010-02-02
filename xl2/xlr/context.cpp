@@ -344,10 +344,12 @@ Tree *Symbols::Run(Tree *code)
 //   Execute a tree by applying the rewrites in the current context
 // ----------------------------------------------------------------------------
 {
+    static uint index = 0;
+
     // Trace what we are doing
     Tree *result = code;
     IFTRACE(eval)
-        std::cerr << "RUN: " << code << '\n';
+        std::cerr << "RUN" << ++index << ": " << code << '\n';
 
     // Check trees that we won't rewrite
     bool isConstant = !has_rewrites_for_constants && code->IsConstant();
@@ -385,7 +387,7 @@ Tree *Symbols::Run(Tree *code)
     {
         result = code->code(code);
         IFTRACE(eval)
-            std::cerr << "CODE "
+            std::cerr << "CODE" << index-- << " at "
                       << (void *) code->code << ": "
                       << result << '\n';
         return result;
@@ -536,7 +538,7 @@ Tree *Symbols::Run(Tree *code)
 
 
     IFTRACE(eval)
-        std::cerr << "VALUE: " << result << '\n';
+        std::cerr << "VALUE" << index-- << ": " << result << '\n';
 
     // If we didn't find anything, report it
     if (!found && !code->IsConstant())
