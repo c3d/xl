@@ -40,6 +40,7 @@ SOURCES     =					\
 	runtime.cpp				\
 	basics.cpp				\
 	types.cpp				\
+        sha1.cpp				\
 	opcodes.cpp
 
 PRODUCT=xlr$(EXE)
