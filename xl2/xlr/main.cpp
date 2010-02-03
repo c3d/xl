@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <map>
 #include <iostream>
+#include <stdio.h>
 #include "main.h"
 #include "scanner.h"
 #include "parser.h"
