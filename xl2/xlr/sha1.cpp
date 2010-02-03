@@ -340,4 +340,31 @@ sha1_read( SHA1_CONTEXT *hd )
     return hd->buf;
 }
 
+#ifdef UNIT_TEST
+
+#include <cassert>
+
+void
+sha1_test()
+{
+  char msg[] = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
+  SHA1_CONTEXT ctx;
+  byte *hash;
+  char out[2*SHA1_SIZE + 1] = "";
+  char expected[] = "84983e441c3bd26ebaae4aa1f95129e5e54670f1";
+
+  sha1_init(&ctx);
+  sha1_write(&ctx, (byte *)msg, sizeof(msg)-1);
+  sha1_final(&ctx);
+  hash = sha1_read(&ctx);
+
+  for (int i = 0; i < SHA1_SIZE; i++)
+    snprintf(out, sizeof(out), "%s%02x", out, hash[i]);
+
+  if(strncmp(out, expected, 2*SHA1_SIZE + 1))
+    assert(!"SHA-1 implementation does not work!");
+}
+
+#endif
+
 XL_END
