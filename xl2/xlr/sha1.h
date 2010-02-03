@@ -39,13 +39,11 @@
 
 XL_BEGIN
 
-typedef unsigned int u32;
-
 typedef struct {
-    u32  h0,h1,h2,h3,h4;
-    u32  nblocks;
-    byte buf[64];
-    int  count;
+    uint32 h0,h1,h2,h3,h4;
+    uint32 nblocks;
+    byte   buf[64];
+    int    count;
 } SHA1_CONTEXT;
 
 #define SHA1_SIZE 20  /* 20 bytes = 160 bits */

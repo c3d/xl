@@ -23,6 +23,7 @@
 // * Date       : $Date$
 // ****************************************************************************
 
+#include <string.h>
 #include "sha1.h"
 
 #define wipememory2(_ptr,_set,_len) do {                             \
@@ -34,8 +35,8 @@
  * Rotate a 32 bit integer by n bytes
  */
 #if defined(__GNUC__) && defined(__i386__)
-static inline u32
-rol( u32 x, int n)
+static inline uint32
+rol( uint32 x, int n)
 {
 	__asm__("roll %%cl,%0"
 		:"=r" (x)
@@ -95,8 +96,8 @@ sha1_init( SHA1_CONTEXT *hd )
 static void
 transform( SHA1_CONTEXT *hd, byte *data )
 {
-    u32 a,b,c,d,e,tm;
-    u32 x[16];
+    uint32 a,b,c,d,e,tm;
+    uint32 x[16];
 
     /* get values from the chaining vars */
     a = hd->h0;
@@ -275,7 +276,7 @@ sha1_write( SHA1_CONTEXT *hd, byte *inbuf, size_t inlen)
 void
 sha1_final(SHA1_CONTEXT *hd)
 {
-    u32 t, msb, lsb;
+    uint32 t, msb, lsb;
     byte *p;
 
     sha1_write(hd, NULL, 0); /* flush */;
@@ -320,7 +321,7 @@ sha1_final(SHA1_CONTEXT *hd)
 
     p = hd->buf;
 #ifdef BIG_ENDIAN_HOST
-#define X(a) do { *(u32*)p = hd->h##a ; p += 4; } while(0)
+#define X(a) do { *(uint32*)p = hd->h##a ; p += 4; } while(0)
 #else /* little endian */
 #define X(a) do { *p++ = hd->h##a >> 24; *p++ = hd->h##a >> 16;	 \
 		      *p++ = hd->h##a >> 8; *p++ = hd->h##a; } while(0)
