@@ -118,6 +118,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 #else
     runtime = EngineBuilder(module).create();
 #endif
+    runtime->DisableLazyCompilation(false);
 
     // Setup the optimizer - REVISIT: Adjust with optimization level
     optimizer = new FunctionPassManager(provider);
