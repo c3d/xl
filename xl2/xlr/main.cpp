@@ -75,9 +75,9 @@ Main::~Main()
 }
 
 
-int Main::Run()
+int Main::LoadFiles()
 // ----------------------------------------------------------------------------
-//   The main exection loop
+//   Load all files given on the command line and compile them
 // ----------------------------------------------------------------------------
 {
     text cmd, end = "";
@@ -100,7 +100,10 @@ int Main::Run()
     // Scan options and build list of files we need to process
     filelist.push_back("builtins.xl");
     for (cmd = options.Parse(argc, argv); cmd != end; cmd = options.ParseNext())
+    {
         filelist.push_back(cmd);
+        file_names.push_back(cmd);
+    }
 
     // Loop over files we will process
     for (file = filelist.begin(); file != filelist.end(); file++)
@@ -109,73 +112,93 @@ int Main::Run()
 
         // Get the individual command line file
         cmd = *file;
-        if (files.count(cmd) > 0)
-        {
-            continue;
-        }
-        else
-        {
-            // Parse program - Local parser to delete scanner and close file
-            // This ensures positions are updated even if there is a 'load'
-            // being called during execution.
-            Parser parser (cmd.c_str(), syntax, positions, errors);
-            tree = parser.Parse();
-        }
+
+        // Parse program - Local parser to delete scanner and close file
+        // This ensures positions are updated even if there is a 'load'
+        // being called during execution.
+        Parser parser (cmd.c_str(), syntax, positions, errors);
+        tree = parser.Parse();
+
         if (!tree)
         {
             hadError = true;
             break;           // File read error, message already emitted
         }
-        Symbols *syms = new Symbols(context);
-        files[cmd] = SourceFile (cmd, tree, syms);
+        Symbols *syms = new Symbols(&context);
         Symbols::symbols = syms;
         tree->SetSymbols(syms);
-        new XL::TreeRoot(tree);
 
+        files[cmd] = SourceFile (cmd, tree, syms);
         context.CollectGarbage();
+
         IFTRACE(source)
             std::cout << "SOURCE:\n" << tree << "\n";
-        if (options.parseOnly || options.compileOnly)
+
+        if (!options.parseOnly)
         {
-            if (!options.parseOnly)
-            {
-                if (options.optimize_level)
-                    tree = syms->CompileAll(tree);
-                if (tree && !options.compileOnly)
-                    tree = syms->Run(tree);
-                if (!tree)
-                {
-                    hadError = true;
-                    break;
-                }
-            }
-        }
-        else if (tree)
-        {
-            Tree *runnable = tree;
             if (options.optimize_level)
-                runnable = syms->CompileAll(runnable);
-            if (!runnable)
-            {
+                tree = syms->CompileAll(tree);
+            if (!tree)
                 hadError = true;
-                break;
-            }
-            tree = context.Run(runnable);
+            else
+                files[cmd].tree.tree = tree;
         }
 
-        if (file != filelist.begin() || options.verbose)
+        if (options.verbose)
+            debugp(tree);
+        else if (options.parseOnly)
+            std::cout << tree << "\n";
+
+        Symbols::symbols = Context::context;
+    }
+
+    return hadError;
+}
+
+
+int Main::Run()
+// ----------------------------------------------------------------------------
+//   Run all files given on the command line
+// ----------------------------------------------------------------------------
+{
+    text cmd, end = "";
+    source_names::iterator file;
+    bool hadError = false;
+
+    // If we only parse or compile, return
+    if (options.parseOnly || options.compileOnly)
+        return -1;
+
+    // Loop over files we will process
+    for (file = file_names.begin(); file != file_names.end(); file++)
+    {
+        SourceFile &sf = files[*file];
+        Symbols::symbols = sf.symbols;
+
+        // Evaluate the given tree
+        Tree *result = sf.symbols->Run(sf.tree.tree);
+        if (!result)
         {
+            hadError = true;
+        }
+        else
+        {
+#ifdef TAO
             if (options.verbose)
-                debugp(tree);
-            else
-                std::cout << tree << "\n";
+                std::cout << "RESULT of " << sf.name << "\n" << result << "\n";
+#else // XLR without TAO
+            std::cout << result << "\n";
+#endif // TAO
         }
 
         Symbols::symbols = Context::context;
     }
 
-    return 0;
+    return hadError;
 }
+
+
+
 
 XL_END
 
@@ -192,7 +215,9 @@ int main(int argc, char **argv)
     using namespace XL;
     Compiler compiler("xl_tao");
     MAIN = new Main(argc, argv, compiler);
-    int rc = MAIN->Run();
+    int rc = MAIN->LoadFiles();
+    if (!rc)
+        rc = MAIN->Run();
     delete MAIN;
 
 #if CONFIG_USE_SBRK
