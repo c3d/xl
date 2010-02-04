@@ -31,6 +31,9 @@
 #include <vector>
 #include <cassert>
 
+#include "sha1.h"
+#define HASH_SIZE    SHA1_SIZE
+#define HASH_CONTEXT SHA1_CONTEXT
 
 XL_BEGIN
 
@@ -125,6 +128,7 @@ public:
     eval_fn     code;                           // Compiled code
     Symbols *   symbols;                        // Local symbols
     Tree *      type;                           // Type information
+    byte        hash[HASH_SIZE];                // Cryptographic hash
 };
 
 
