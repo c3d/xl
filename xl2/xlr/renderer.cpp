@@ -28,6 +28,7 @@
 #include "tree.h"
 #include "syntax.h"
 #include "errors.h"
+#include "hash.h"
 #include <iostream>
 #include <sstream>
 #include <cctype>
@@ -660,7 +661,6 @@ void debug(XL::Tree *tree)
     std::cout << "\n";
 }
 
-
 void debugp(XL::Tree *tree)
 // ----------------------------------------------------------------------------
 //    Emit for debugging purpose
@@ -669,5 +669,12 @@ void debugp(XL::Tree *tree)
     XL::Renderer render(std::cout);
     render.SelectStyleSheet("debug.stylesheet");
     render.Render(tree);
+
+    XL::TreeHashAction h_action;
+    tree->Do(h_action);
+    std::cout << "SHA-1: ";
+    for (int i = 0; i < HASH_SIZE; i++)
+      printf("%02x", tree->hash[i]);
+
     std::cout << "\n";
 }
