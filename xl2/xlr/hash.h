@@ -30,6 +30,70 @@
 
 XL_BEGIN
 
+struct TreeHashPruneAction : Action
+// ----------------------------------------------------------------------------
+//   Delete and reset all the hash pointers of a tree
+// ----------------------------------------------------------------------------
+{
+#define ZAP(h) do { if ((h)) { delete[] (h); (h) = NULL; } } while (0)
+
+    TreeHashPruneAction () {}
+    Tree *DoInteger(Integer *what)
+    {
+        ZAP(what->hash);
+        return what;
+    }
+    Tree *DoReal(Real *what)
+    {
+        ZAP(what->hash);
+        return what;
+    }
+    Tree *DoText(Text *what)
+    {
+        ZAP(what->hash);
+        return what;
+    }
+    Tree *DoName(Name *what)
+    {
+        ZAP(what->hash);
+        return what;
+    }
+
+    Tree *DoBlock(Block *what)
+    {
+        ZAP(what->hash);
+        what->child->Do(this);
+        return what;
+    }
+    Tree *DoInfix(Infix *what)
+    {
+        ZAP(what->hash);
+        what->left->Do(this);
+        what->right->Do(this);
+        return what;
+    }
+    Tree *DoPrefix(Prefix *what)
+    {
+        ZAP(what->hash);
+        what->left->Do(this);
+        what->right->Do(this);
+        return what;
+    }
+    Tree *DoPostfix(Postfix *what)
+    {
+        ZAP(what->hash);
+        what->left->Do(this);
+        what->right->Do(this);
+        return what;
+    }
+    Tree *Do(Tree *what)
+    {
+        return NULL;
+    }
+
+#undef ZAP
+};
+
 struct TreeHashAction : Action
 // ----------------------------------------------------------------------------
 //   Apply hash algorithm recursively on tree, updating each node's hash values
@@ -42,6 +106,8 @@ struct TreeHashAction : Action
     {
       Default = 0,
       Force = 1,   // Hash all nodes even those with a non-null hash
+      Prune = 2,   // When done, clear hash values of children to save memory
+      ForceAndPrune = 3,
     };
 
     TreeHashAction () : mode(0) {}
@@ -119,6 +185,8 @@ struct TreeHashAction : Action
         sha1_final(&ctx);
         ALLOC(what->hash);
         memcpy(what->hash, sha1_read(&ctx), HASH_SIZE);
+        if ((mode & Prune) == Prune)
+            what->child->Do(pruneAction);
         return what;
     }
     Tree *DoInfix(Infix *what)
@@ -139,6 +207,11 @@ struct TreeHashAction : Action
         sha1_final(&ctx);
         ALLOC(what->hash);
         memcpy(what->hash, sha1_read(&ctx), HASH_SIZE);
+        if ((mode & Prune) == Prune)
+        {
+            what->left->Do(pruneAction);
+            what->right->Do(pruneAction);
+        }
         return what;
     }
     Tree *DoPrefix(Prefix *what)
@@ -158,6 +231,11 @@ struct TreeHashAction : Action
         sha1_final(&ctx);
         ALLOC(what->hash);
         memcpy(what->hash, sha1_read(&ctx), HASH_SIZE);
+        if ((mode & Prune) == Prune)
+        {
+            what->left->Do(pruneAction);
+            what->right->Do(pruneAction);
+        }
         return what;
     }
     Tree *DoPostfix(Postfix *what)
@@ -177,6 +255,11 @@ struct TreeHashAction : Action
         sha1_final(&ctx);
         ALLOC(what->hash);
         memcpy(what->hash, sha1_read(&ctx), HASH_SIZE);
+        if ((mode & Prune) == Prune)
+        {
+            what->left->Do(pruneAction);
+            what->right->Do(pruneAction);
+        }
         return what;
     }
     Tree *Do(Tree *what)
@@ -185,6 +268,7 @@ struct TreeHashAction : Action
     }
 
     int mode;
+    TreeHashPruneAction pruneAction;
 
 #undef NEED_HASH
 #undef ALLOC
