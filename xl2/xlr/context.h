@@ -197,12 +197,19 @@ struct Symbols
     Tree *              CompileCall(text callee, tree_list &args);
     Tree *              Run(Tree *t);
 
+    // Error handling
+    Tree *              ErrorHandler();
+    void                SetErrorHandler(Tree *e){ error_handler = e; }
+    Tree *              Error (text message,
+                               Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
+
 public:
     Symbols *           parent;
     symbol_table        names;
     Rewrite *           rewrites;
     symbol_table        calls;
     symbols_set         imported;
+    Tree *              error_handler;
 
     static Symbols *    symbols;
 };
@@ -216,23 +223,17 @@ struct Context : Symbols
     // Constructors and destructors
     Context(Errors &err, Compiler *comp):
         Symbols(NULL),
-        errors(err), error_handler(NULL),       // Error management
+        errors(err),                            // Global error list
         compiler(comp),                         // Tree compilation
         active(), roots(),                      // Garbage collection
         active_symbols(), gc_threshold(200) {}  // More garbage collection
     ~Context();
-
-    // Context properties
-    Tree *              ErrorHandler();
-    void                SetErrorHandler(Tree *e){ error_handler = e; }
 
     // Garbage collection
     void                Mark(Tree *t)           { active.insert(t); }
     void                CollectGarbage();
 
     // Helpers for compilation of trees
-    Tree *              Error (text message,
-                               Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
     Tree **             AddGlobal(Tree *value);
 
 public:
@@ -241,7 +242,6 @@ public:
     static Context *    context;
 
     Errors &            errors;
-    Tree *              error_handler;
     Compiler *          compiler;
     active_set          active;
     root_set            roots;
@@ -492,7 +492,7 @@ inline Symbols::Symbols(Symbols *s)
 // ----------------------------------------------------------------------------
 //   Create a "child" symbol table
 // ----------------------------------------------------------------------------
-    : parent(s), rewrites(NULL)
+    : parent(s), rewrites(NULL), error_handler(NULL)
 {}
 
 

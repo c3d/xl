@@ -318,6 +318,48 @@ Tree *Symbols::Run(Tree *code)
 
 // ============================================================================
 //
+//    Error handling
+//
+// ============================================================================
+
+Tree * Symbols::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
+// ----------------------------------------------------------------------------
+//   Execute the innermost error handler
+// ----------------------------------------------------------------------------
+{
+    Tree *handler = ErrorHandler();
+    if (handler)
+    {
+        Tree *arg0 = new Text (message);
+        Tree *info = arg3;
+        if (arg2)
+            info = info ? new Infix(",", arg2, info) : arg2;
+        if (arg1)
+            info = info ? new Infix(",", arg1, info) : arg1;
+        info = info ? new Infix(",", arg0, info) : arg0;
+
+        Prefix *errorCall = new Prefix(handler, info);
+        return Run(errorCall);
+    }
+
+    // No handler: terminate
+    Context::context->errors.Error(message, arg1, arg2, arg3);
+    std::exit(1);
+}
+
+
+Tree *Symbols::ErrorHandler()
+// ----------------------------------------------------------------------------
+//    Return the innermost error handler
+// ----------------------------------------------------------------------------
+{
+    return error_handler;
+}
+
+
+
+// ============================================================================
+//
 //   Garbage collection
 //
 // ============================================================================
@@ -1805,48 +1847,6 @@ Tree * CompileAction::Rewrites(Tree *what)
         return Error("No rewrite candidate for '$1'", what);
     }
     return what;
-}
-
-
-
-// ============================================================================
-//
-//    Error handling
-//
-// ============================================================================
-
-Tree * Context::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
-// ----------------------------------------------------------------------------
-//   Execute the innermost error handler
-// ----------------------------------------------------------------------------
-{
-    Tree *handler = ErrorHandler();
-    if (handler)
-    {
-        Tree *arg0 = new Text (message);
-        Tree *info = arg3;
-        if (arg2)
-            info = info ? new Infix(",", arg2, info) : arg2;
-        if (arg1)
-            info = info ? new Infix(",", arg1, info) : arg1;
-        info = info ? new Infix(",", arg0, info) : arg0;
-
-        Prefix *errorCall = new Prefix(handler, info);
-        return Run(errorCall);
-    }
-
-    // No handler: terminate
-    errors.Error(message, arg1, arg2, arg3);
-    std::exit(1);
-}
-
-
-Tree *Context::ErrorHandler()
-// ----------------------------------------------------------------------------
-//    Return the innermost error handler
-// ----------------------------------------------------------------------------
-{
-    return error_handler;
 }
 
 
