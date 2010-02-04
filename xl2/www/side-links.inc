@@ -12,8 +12,8 @@
 <a href="http://xlr.sourceforge.net/Concept%20Programming%20Presentation.pdf">Concept Programming</a>
 
 <P><B>In depth</B><BR>
-<A href="http://xlr.svn.sourceforge.net/viewvc/xlr">Browse SVN</A><br>
-<A href="http://xlr.cvs.sourceforge.net/xlr/xl2/">Browse CVS (deprecated)</A><br>
+<A href="http://xlr.git.sourceforge.net/git/gitweb.cgi?p=xlr/xlr;a=summary">Browse GIT</A><br/>
+<A href="https://sourceforge.net/tracker/?group_id=54212&atid=473031">Bugs</A><br/>
 <A href="http://sourceforge.net/projects/xlr">SourceForge Info</A><br>
 <A href="mailto:{email}">Contact</A><br>
 
