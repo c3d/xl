@@ -13,6 +13,7 @@
 
 <P><B>In depth</B><BR>
 <A href="http://xlr.git.sourceforge.net/git/gitweb.cgi?p=xlr/xlr;a=summary">Browse GIT</A><br/>
+<A href="https://sourceforge.net/tracker/?group_id=54212&atid=473031">Bugs</A><br/>
 <A href="http://sourceforge.net/projects/xlr">SourceForge Info</A><br>
 <A href="mailto:{email}">Contact</A><br>
 
