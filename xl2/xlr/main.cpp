@@ -139,7 +139,8 @@ int Main::Run()
         {
             if (!options.parseOnly)
             {
-                tree = syms->CompileAll(tree);
+                if (options.optimize_level)
+                    tree = syms->CompileAll(tree);
                 if (tree && !options.compileOnly)
                     tree = syms->Run(tree);
                 if (!tree)
@@ -151,7 +152,9 @@ int Main::Run()
         }
         else if (tree)
         {
-            Tree *runnable = syms->CompileAll(tree);
+            Tree *runnable = tree;
+            if (options.optimize_level)
+                runnable = syms->CompileAll(runnable);
             if (!runnable)
             {
                 hadError = true;

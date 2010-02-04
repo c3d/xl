@@ -263,6 +263,10 @@ Tree *Symbols::CompileCall(text callee, tree_list &arglist)
                         Error("Text '$1' cannot replace non-text '$2'",
                               value, existing);
                 }
+                else
+                {
+                    Error("Call has unsupported type for '$1'", value);
+                }
             }
         }
 
@@ -280,6 +284,53 @@ Tree *Symbols::CompileCall(text callee, tree_list &arglist)
     }
     call = CompileAll(call, true);
     calls[key] = call;
+    return call;
+}
+
+
+Infix *Symbols::CompileTypeTest(Tree *type)
+// ----------------------------------------------------------------------------
+//   Compile a top-level infix, reusing code if possible
+// ----------------------------------------------------------------------------
+{
+    // Check if we already have a call compiled for that type
+    if (Tree *previous = type_tests[type])
+        if (Infix *infix = previous->AsInfix())
+            if (infix->code)
+                return infix;
+
+    // Create an infix node with two parameters for left and right
+    Name *valueParm = new Name("xl_value_to_typecheck");
+    Infix *call = new Infix(":", valueParm, type);
+    tree_list parameters;
+    parameters.push_back(valueParm);
+    type_tests[type] = call;
+
+    // Create the compilation unit for the infix with two parms
+    Compiler *compiler = Context::context->compiler;
+    CompiledUnit unit(compiler, call, parameters);
+    if (unit.IsForwardCall())
+        return call;
+
+    // Create local symbols
+    Symbols *locals = new Symbols (Symbols::symbols);
+
+    // Record rewrites and data declarations in the current context
+    DeclarationAction declare(locals);
+    Tree *callDecls = call->Do(declare);
+    if (!callDecls)
+        Error("Internal: Declaration error for call '$1'", callDecls);
+
+    // Compile the body of the rewrite, keep all alternatives open
+    CompileAction compile(locals, unit, false, true);
+    Tree *result = callDecls->Do(compile);
+    if (!result)
+        Error("Unable to compile '$1'", callDecls);
+
+    // Even if technically, this is not an 'eval_fn' (it has more args),
+    // we still record it to avoid recompiling multiple times
+    eval_fn fn = compile.unit.Finalize();
+    call->code = fn;
     return call;
 }
 
@@ -613,6 +664,9 @@ void Context::CollectGarbage ()
         for (symbol_iter call = calls.begin(); call != calls.end(); call++)
             if (Tree *named = (*call).second)
                 named->Do(gc);
+        for (value_iter tt = type_tests.begin(); tt != type_tests.end(); tt++)
+            if (Tree *typecheck = (*tt).second)
+                typecheck->Do(gc);
         if (rewrites)
             rewrites->Do(gc);
 

@@ -155,6 +155,9 @@ typedef std::map<ulong, Rewrite*> rewrite_table;// Hashing of rewrites
 typedef symbol_table::iterator    symbol_iter;  // Iterator over sym table
 typedef std::vector<Tree **>      globals_table;// Table of LLVM globals
 typedef std::map<Tree*, Symbols*> capture_table;// Symbol capture table
+typedef std::map<Tree *, Tree *>  value_table;  // Used for value caching
+typedef value_table::iterator     value_iter;   // Used to iterate over values
+typedef Tree *(*typecheck_fn) (Tree *src, Tree *value);
 
 
 
@@ -195,6 +198,7 @@ struct Symbols
                                 bool nullIfBad = false, bool keepAlt = false);
     Tree *              CompileAll(Tree *s, bool keepOtherConstants = false);
     Tree *              CompileCall(text callee, tree_list &args);
+    Infix *             CompileTypeTest(Tree *type);
     Tree *              Run(Tree *t);
 
     // Error handling
@@ -208,6 +212,7 @@ public:
     symbol_table        names;
     Rewrite *           rewrites;
     symbol_table        calls;
+    value_table         type_tests;
     symbols_set         imported;
     Tree *              error_handler;
 

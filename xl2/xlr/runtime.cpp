@@ -103,9 +103,12 @@ bool xl_same_shape(Tree *left, Tree *right)
 //   Check equality of two trees
 // ----------------------------------------------------------------------------
 {
-    XL::TreeMatch compareForEquality(right);
-    if (left->Do(compareForEquality))
-        return true;
+    if (right)
+    {
+        XL::TreeMatch compareForEquality(right);
+        if (left && left->Do(compareForEquality))
+            return true;
+    }
     return false;
 }
 
@@ -128,8 +131,9 @@ bool xl_type_check(Tree *value, Tree *type)
     if (!value->IsConstant() && value->code)
         value = value->code(value);
 
-    Infix *typeExpr = new Infix(":", value, type);
-    Tree *afterTypeCast = xl_evaluate(typeExpr);
+    Infix *typeExpr = Symbols::symbols->CompileTypeTest(type);
+    typecheck_fn typecheck = (typecheck_fn) typeExpr->code;
+    Tree *afterTypeCast = typecheck(typeExpr, value);
     if (afterTypeCast != value)
     {
         IFTRACE(typecheck)
