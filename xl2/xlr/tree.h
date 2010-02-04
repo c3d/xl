@@ -40,7 +40,6 @@ XL_BEGIN
 //
 // ============================================================================
 
-struct Context;                                 // Execution context
 struct Tree;                                    // Base tree
 struct Integer;                                 // Integer: 0, 3, 8
 struct Real;                                    // Real: 3.2, 1.6e4
