@@ -181,12 +181,16 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     evalTy = FunctionType::get(treePtrTy, evalParms, false);
     evalFnTy = PointerType::get(evalTy, 0);
 
+    // Create a hash byte array
+    ArrayType *byteArrayTy = ArrayType::get(LLVM_INTTYPE(byte), 20);
+
     // Create the Tree type
     std::vector<const Type *> treeElements;
     treeElements.push_back(LLVM_INTTYPE(ulong));           // tag
     treeElements.push_back(evalFnTy);                      // code
     treeElements.push_back(symbolsPtrTy);                  // symbols
     treeElements.push_back(treePtrTy);                     // type
+    treeElements.push_back(byteArrayTy);                   // hash
     treeTy = StructType::get(*context, treeElements);      // struct Tree {}
     cast<OpaqueType>(structTreeTy.get())->refineAbstractTypeTo(treeTy);
     treeTy = cast<StructType> (structTreeTy.get());
@@ -194,20 +198,21 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 #define CODE_INDEX      1
 #define SYMBOLS_INDEX   2
 #define TYPE_INDEX      3
+#define HASH_INDEX      4
 
     // Create the Integer type
     std::vector<const Type *> integerElements = treeElements;
     integerElements.push_back(LLVM_INTTYPE(longlong));  // value
     integerTreeTy = StructType::get(*context, integerElements);   // struct Integer{}
     integerTreePtrTy = PointerType::get(integerTreeTy,0); // Integer *
-#define INTEGER_VALUE_INDEX     4
+#define INTEGER_VALUE_INDEX     5
 
     // Create the Real type
     std::vector<const Type *> realElements = treeElements;
     realElements.push_back(Type::getDoubleTy(*context));  // value
     realTreeTy = StructType::get(*context, realElements); // struct Real{}
     realTreePtrTy = PointerType::get(realTreeTy, 0);      // Real *
-#define REAL_VALUE_INDEX        4
+#define REAL_VALUE_INDEX        5
 
     // Create the Prefix type (which we also use for Infix and Block)
     std::vector<const Type *> prefixElements = treeElements;
@@ -215,8 +220,8 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     prefixElements.push_back(treePtrTy);                // Tree *
     prefixTreeTy = StructType::get(*context, prefixElements); // struct Prefix
     prefixTreePtrTy = PointerType::get(prefixTreeTy, 0);// Prefix *
-#define LEFT_VALUE_INDEX        4
-#define RIGHT_VALUE_INDEX       5
+#define LEFT_VALUE_INDEX        5
+#define RIGHT_VALUE_INDEX       6
 
     // Record the type names
     module->addTypeName("tree", treeTy);
