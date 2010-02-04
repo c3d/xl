@@ -87,14 +87,15 @@ struct Tree
 
     // Constructor and destructor
     Tree (kind k, tree_position pos = NOWHERE):
-        tag((pos<<KINDBITS) | k), code(NULL), symbols(NULL), type(NULL) {}
+        tag((pos<<KINDBITS) | k), code(NULL), symbols(NULL), type(NULL),
+        hash(NULL) {}
     Tree(kind k, Tree *from):
         tag(from->tag),
-        code(from->code), symbols(from->symbols), type(from->type)
+        code(from->code), symbols(from->symbols), type(from->type), hash(NULL)
     {
         assert(k == Kind());
     }
-    ~Tree() {}
+    ~Tree() { if (hash) delete[](hash); }
 
     // Perform recursive actions on a tree
     Tree *              Do(Action *action);
@@ -128,7 +129,7 @@ public:
     eval_fn     code;                           // Compiled code
     Symbols *   symbols;                        // Local symbols
     Tree *      type;                           // Type information
-    byte        hash[HASH_SIZE];                // Cryptographic hash
+    byte *      hash;                           // Cryptographic hash or NULL
 };
 
 

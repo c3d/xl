@@ -670,7 +670,7 @@ void debugp(XL::Tree *tree)
     render.SelectStyleSheet("debug.stylesheet");
     render.Render(tree);
 
-    XL::TreeHash h_action;
+    XL::TreeHashAction h_action;
     tree->Do(h_action);
     std::cout << "SHA-1: ";
     for (int i = 0; i < HASH_SIZE; i++)

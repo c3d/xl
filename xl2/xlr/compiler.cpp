@@ -182,7 +182,8 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     evalFnTy = PointerType::get(evalTy, 0);
 
     // Create a hash byte array
-    ArrayType *byteArrayTy = ArrayType::get(LLVM_INTTYPE(byte), 20);
+    PATypeHolder byteTy = OpaqueType::get(*context);  // byte
+    llvm::PointerType * bytePtrTy = PointerType::get(byteTy, 0);  // byte *
 
     // Create the Tree type
     std::vector<const Type *> treeElements;
@@ -190,7 +191,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     treeElements.push_back(evalFnTy);                      // code
     treeElements.push_back(symbolsPtrTy);                  // symbols
     treeElements.push_back(treePtrTy);                     // type
-    treeElements.push_back(byteArrayTy);                   // hash
+    treeElements.push_back(bytePtrTy);                     // hash
     treeTy = StructType::get(*context, treeElements);      // struct Tree {}
     cast<OpaqueType>(structTreeTy.get())->refineAbstractTypeTo(treeTy);
     treeTy = cast<StructType> (structTreeTy.get());
