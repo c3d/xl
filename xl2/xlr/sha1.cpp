@@ -382,6 +382,7 @@ XL_END
 
 #include <cassert>
 #include <sstream>
+#include "sha1_ostream.h"
 
 
 int main (int argc, char **argv)
