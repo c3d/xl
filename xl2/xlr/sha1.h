@@ -8,22 +8,14 @@
 // 
 //     Function prototypes for the SHA-1 algorithm.
 //
-//   Usage:
 //
-//     char msg[] = "Message to hash";
-//     SHA1_CONTEXT ctx;
-//     byte *hash;
 //
-//     sha1_init(&ctx);
-//     sha1_write(&ctx, (byte *)msg, sizeof(msg)-1);
-//     sha1_final(&ctx);
-//     hash = sha1_read(&ctx);
-//     printf("SHA-1 hash of '%s' is ", msg);
-//     for (int i = 0; i < SHA1_SIZE; i++)
-//       printf("%02x", hash[i]);
-//     printf("\n");
-// 
-// 
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
@@ -38,6 +30,7 @@
 
 #include "base.h"
 #include <stddef.h>
+#include <string.h>
 #include <iostream>
 
 

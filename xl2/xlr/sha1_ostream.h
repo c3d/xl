@@ -27,6 +27,7 @@
 // ****************************************************************************
 
 #include <iostream>
+#include <stdio.h>
 #include "sha1.h"
 
 inline std::ostream &operator <<(std::ostream &out, const XL::Sha1 &sha)
