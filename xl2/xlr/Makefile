@@ -52,3 +52,11 @@ LLVM_LIBS=`llvm-config --ldflags --libs core jit native interpreter`
 
 CPPFLAGS+=$(LLVM_FLAGS)
 LDFLAGS=-L/usr/local/lib $(LLVM_LIBS)
+
+test: sha1_test xl_tests
+
+sha1_test: sha1.cpp
+	$(CXX) -DUNIT_TEST $(CXXFLAGS) -o sha1 sha1.cpp && ./sha1 && rm ./sha1
+
+xl_tests:
+	cd tests; ./alltests

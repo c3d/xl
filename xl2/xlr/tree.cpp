@@ -31,6 +31,8 @@
 #include "renderer.h"
 #include "opcodes.h"
 #include "options.h"
+#include "sha1.h"
+#include "hash.h"
 
 XL_BEGIN
 
@@ -39,6 +41,16 @@ XL_BEGIN
 //    Class Tree
 //
 // ============================================================================
+
+Tree::~Tree()
+// ----------------------------------------------------------------------------
+//   Delete the hash if we have one
+// ----------------------------------------------------------------------------
+{
+    if (hash)
+        delete hash;
+}
+
 
 void *Tree::operator new(size_t sz)
 // ----------------------------------------------------------------------------
@@ -232,6 +244,26 @@ text Block::indent   = "I+";
 text Block::unindent = "I-";
 text Text::textQuote = "\"";
 text Text::charQuote = "'";
+
+
+#include "sha1_ostream.h"
+
+text sha1(Tree *t)
+// ----------------------------------------------------------------------------
+//    Compute the SHA-1 for a tree and return it
+// ----------------------------------------------------------------------------
+{
+    text result;
+    if (t)
+    {
+        TreeHashAction<> sha1;
+        t->Do(sha1);
+        std::ostringstream os;
+        os << *t->hash;
+        result = os.str();
+    }
+    return result;
+}
 
 XL_END
 

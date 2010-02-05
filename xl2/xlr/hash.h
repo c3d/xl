@@ -41,190 +41,216 @@ struct TreeHashPruneAction : Action
     TreeHashPruneAction () {}
     Tree *Do(Tree *what)
     {
-        if (what->hash) { delete[] what->hash; what->hash = NULL; }
+        if (what->hash) { delete what->hash; what->hash = NULL; }
         return what;
     }
 };
 
 
+
+template <class Hash = Sha1>
 struct TreeHashAction : Action
 // ----------------------------------------------------------------------------
 //   Apply hash algorithm recursively on tree, updating each node's hash values
 // ----------------------------------------------------------------------------
 {
-#define NEED_HASH(h) ((h) == NULL || (mode & Force) == Force)
-#define ALLOC(h) do { if (!(h)) (h) = new byte[HASH_SIZE]; } while (0)
-
     enum Mode
     {
       Default = 0,
-      Force = 1,   // Hash all nodes even those with a non-null hash
-      Prune = 2,   // When done, clear hash values of children to save memory
-      ForceAndPrune = 3,
-    };
+      Force   = 1,   // Hash all nodes even those with a non-null hash
+      Prune   = 2,   // When done, clear hash values of children to save memory
+      Eager   = 4    // Prune even if something existed before
+    } mode;
 
-    TreeHashAction () : mode(0) {}
-    TreeHashAction (int mode) : mode(mode) {}
+    typename Hash::Computation compute;
+
+public:
+    TreeHashAction (Mode mode = Default) : mode(mode), compute() {}
+
+    bool NeedHash(Tree *t)      { return t->hash==NULL || (mode&Force)==Force; }
+    void Allocate(Tree *t)      { delete t->hash; t->hash = new Hash(compute); }
+
+
+    void Compute(uint64 v)
+    // ------------------------------------------------------------------------
+    //   Compute the hash for integer values 
+    // ------------------------------------------------------------------------
+    {
+        byte   buf[sizeof v];
+        for (uint i = 0; i < sizeof v; i++)
+        {
+            buf[i] = (byte) v;
+            v >>= 8;
+        }
+        compute(buf, sizeof v);
+    }
+
+
+    void ComputeReal (double v)
+    // ------------------------------------------------------------------------
+    //    A very ugly way to compute a hash for douvble values
+    // ------------------------------------------------------------------------
+    {
+        Compute(*((uint64 *) &v));
+    }
+
+
+    void Compute (text t)
+    // ------------------------------------------------------------------------
+    //    Compute the hash for a text value
+    // ------------------------------------------------------------------------
+    {
+        size_t len = t.length();
+        Compute(len);
+        compute(t.data(), len);
+    }
+
+
+    void SubTree(Tree *sub)
+    // ------------------------------------------------------------------------
+    //   Compute the hash for a sub-tree, reusing existing hash if possible
+    // ------------------------------------------------------------------------
+    {
+        if (sub)
+        {
+            bool needsHash = sub->hash == NULL;
+            if (needsHash)
+            {
+                TreeHashAction hashSubTree(mode);
+                sub->Do(hashSubTree);
+            }
+            compute(sub->hash->hash, sub->hash->SIZE);
+            if ((mode & Prune) && ((mode & Eager) || needsHash))
+            {
+                delete sub->hash;
+                sub->hash = NULL;
+            }
+        }
+        else
+        {
+            Compute(0);
+        }
+    }
+
+
+    Tree *Do(Tree *what)
+    // ------------------------------------------------------------------------
+    //   Part that is common between all trees
+    // ------------------------------------------------------------------------
+    {
+        if (NeedHash(what))
+        {
+            Compute(what->Kind());
+            Allocate(what);
+        }
+        return what;
+
+    }
+
     Tree *DoInteger(Integer *what)
+    // ------------------------------------------------------------------------
+    //    Hash integer values
+    // ------------------------------------------------------------------------
     {
-        if (!NEED_HASH(what->hash))
-            return what;
-        kind k = what->Kind();
-        HASH_CONTEXT ctx;
-        sha1_init(&ctx);
-        sha1_write(&ctx, (byte *)&k, sizeof(k));
-        sha1_write(&ctx, (byte *)&what->value, sizeof(what->value));
-        sha1_final(&ctx);
-        ALLOC(what->hash);
-        memcpy(what->hash, sha1_read(&ctx), HASH_SIZE);
-        return what;
+        if (NeedHash(what))
+            Compute(what->value);
+        return Do(what);
     }
+
+
     Tree *DoReal(Real *what)
+    // ------------------------------------------------------------------------
+    //   Hash rwal values
+    // ------------------------------------------------------------------------
     {
-        if (!NEED_HASH(what->hash))
-            return what;
-        kind k = what->Kind();
-        HASH_CONTEXT ctx;
-        sha1_init(&ctx);
-        sha1_write(&ctx, (byte *)&k, sizeof(k));
-        sha1_write(&ctx, (byte *)&what->value, sizeof(what->value));
-        sha1_final(&ctx);
-        ALLOC(what->hash);
-        memcpy(what->hash, sha1_read(&ctx), HASH_SIZE);
-        return what;
+        if (NeedHash(what))
+            ComputeReal(what->value);
+        return Do(what);
     }
+
+
     Tree *DoText(Text *what)
+    // ------------------------------------------------------------------------
+    //   Hash text values
+    // ------------------------------------------------------------------------
     {
-        if (!NEED_HASH(what->hash))
-            return what;
-        kind k = what->Kind();
-        HASH_CONTEXT ctx;
-        sha1_init(&ctx);
-        sha1_write(&ctx, (byte *)&k, sizeof(k));
-        sha1_write(&ctx, (byte *)what->value.c_str(), what->value.length());
-        sha1_final(&ctx);
-        ALLOC(what->hash);
-        memcpy(what->hash, sha1_read(&ctx), HASH_SIZE);
-        return what;
+        if (NeedHash(what))
+        {
+            Compute(what->opening);
+            Compute(what->value);
+            Compute(what->closing);
+        }
+        return Do(what);
     }
+
+
     Tree *DoName(Name *what)
+    // ------------------------------------------------------------------------
+    //   Compute the hash for a name
+    // ------------------------------------------------------------------------
     {
-        if (!NEED_HASH(what->hash))
-            return what;
-        kind k = what->Kind();
-        HASH_CONTEXT ctx;
-        sha1_init(&ctx);
-        sha1_write(&ctx, (byte *)&k, sizeof(k));
-        sha1_write(&ctx, (byte *)what->value.c_str(), what->value.length());
-        sha1_final(&ctx);
-        ALLOC(what->hash);
-        memcpy(what->hash, sha1_read(&ctx), HASH_SIZE);
-        return what;
-   }
+        if (NeedHash(what))
+            Compute(what->value);
+        return Do(what);
+    }
+
 
     Tree *DoBlock(Block *what)
+    // ------------------------------------------------------------------------
+    //   Compute the hash for a block
+    // ------------------------------------------------------------------------
     {
-        if (!NEED_HASH(what->hash))
-            return what;
-        kind k = what->Kind();
-        HASH_CONTEXT ctx;
-        sha1_init(&ctx);
-        sha1_write(&ctx, (byte *)&k, sizeof(k));
-        sha1_write(&ctx, (byte *)what->opening.c_str(), what->opening.length());
-        if (NEED_HASH(what->child->hash))
-            what->child->Do(this);
-        sha1_write(&ctx, (byte *)what->child->hash, HASH_SIZE);
-        sha1_write(&ctx, (byte *)what->closing.c_str(), what->closing.length());
-        sha1_final(&ctx);
-        ALLOC(what->hash);
-        memcpy(what->hash, sha1_read(&ctx), HASH_SIZE);
-        if ((mode & Prune) == Prune)
-            what->child->Do(pruneAction);
-        return what;
+        if (NeedHash(what))
+        {
+            Compute(what->opening);
+            SubTree(what->child);
+            Compute(what->closing);
+        }
+        return Do(what);
     }
+
+
     Tree *DoInfix(Infix *what)
+    // ------------------------------------------------------------------------
+    //    Compute the hash for an infix tree
+    // ------------------------------------------------------------------------
     {
-        if (!NEED_HASH(what->hash))
-            return what;
-        kind k = what->Kind();
-        HASH_CONTEXT ctx;
-        sha1_init(&ctx);
-        sha1_write(&ctx, (byte *)&k, sizeof(k));
-        if (NEED_HASH(what->left->hash))
-            what->left->Do(this);
-        sha1_write(&ctx, (byte *)what->left->hash, HASH_SIZE);
-        if (NEED_HASH(what->right->hash))
-            what->right->Do(this);
-        sha1_write(&ctx, (byte *)what->right->hash, HASH_SIZE);
-        sha1_write(&ctx, (byte *)what->name.c_str(), what->name.length());
-        sha1_final(&ctx);
-        ALLOC(what->hash);
-        memcpy(what->hash, sha1_read(&ctx), HASH_SIZE);
-        if ((mode & Prune) == Prune)
+        if (NeedHash(what))
         {
-            what->left->Do(pruneAction);
-            what->right->Do(pruneAction);
+            SubTree(what->left);
+            Compute(what->name);
+            SubTree(what->right);
         }
-        return what;
+        return Do(what);
     }
+
+
     Tree *DoPrefix(Prefix *what)
+    // ------------------------------------------------------------------------
+    //    Compute the hash for a prefix tree
+    // ------------------------------------------------------------------------
     {
-        if (what->hash && (mode & Force) != Force)
-            return what;
-        kind k = what->Kind();
-        HASH_CONTEXT ctx;
-        sha1_init(&ctx);
-        sha1_write(&ctx, (byte *)&k, sizeof(k));
-        if (NEED_HASH(what->left->hash))
-            what->left->Do(this);
-        sha1_write(&ctx, (byte *)what->left->hash, HASH_SIZE);
-        if (NEED_HASH(what->right->hash))
-            what->right->Do(this);
-        sha1_write(&ctx, (byte *)what->right->hash, HASH_SIZE);
-        sha1_final(&ctx);
-        ALLOC(what->hash);
-        memcpy(what->hash, sha1_read(&ctx), HASH_SIZE);
-        if ((mode & Prune) == Prune)
+        if (NeedHash(what))
         {
-            what->left->Do(pruneAction);
-            what->right->Do(pruneAction);
+            SubTree(what->left);
+            SubTree(what->right);
         }
-        return what;
+        return Do(what);
     }
+
+
     Tree *DoPostfix(Postfix *what)
+    // ------------------------------------------------------------------------
+    //    Compute the hash for a postfix tree
+    // ------------------------------------------------------------------------
     {
-        if (what->hash && (mode & Force) != Force)
-            return what;
-        kind k = what->Kind();
-        HASH_CONTEXT ctx;
-        sha1_init(&ctx);
-        sha1_write(&ctx, (byte *)&k, sizeof(k));
-        if (NEED_HASH(what->left->hash))
-            what->left->Do(this);
-        sha1_write(&ctx, (byte *)what->left->hash, HASH_SIZE);
-        if (NEED_HASH(what->right->hash))
-            what->right->Do(this);
-        sha1_write(&ctx, (byte *)what->right->hash, HASH_SIZE);
-        sha1_final(&ctx);
-        ALLOC(what->hash);
-        memcpy(what->hash, sha1_read(&ctx), HASH_SIZE);
-        if ((mode & Prune) == Prune)
+        if (NeedHash(what))
         {
-            what->left->Do(pruneAction);
-            what->right->Do(pruneAction);
+            SubTree(what->right);
+            SubTree(what->left);
         }
-        return what;
+        return Do(what);
     }
-    Tree *Do(Tree *what)
-    {
-        return NULL;
-    }
-
-    int mode;
-    TreeHashPruneAction pruneAction;
-
-#undef NEED_HASH
-#undef ALLOC
 };
 
 XL_END
