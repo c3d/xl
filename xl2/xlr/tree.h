@@ -43,7 +43,6 @@ XL_BEGIN
 //
 // ============================================================================
 
-struct Context;                                 // Execution context
 struct Tree;                                    // Base tree
 struct Integer;                                 // Integer: 0, 3, 8
 struct Real;                                    // Real: 3.2, 1.6e4
@@ -574,6 +573,89 @@ struct TreeMatch : Action
     }
 
     Tree *      test;
+};
+
+
+// ============================================================================
+//
+//    Hash key for tree rewrite
+//
+// ============================================================================
+//  We use this hashing key to quickly determine if two trees "look the same"
+
+struct RewriteKey : Action
+// ----------------------------------------------------------------------------
+//   Compute a hashing key for a rewrite
+// ----------------------------------------------------------------------------
+{
+    RewriteKey (ulong base = 0): key(base) {}
+    ulong Key()  { return key; }
+
+    ulong Hash(ulong id, text t)
+    {
+        ulong result = 0xC0DED;
+        text::iterator p;
+        for (p = t.begin(); p != t.end(); p++)
+            result = (result * 0x301) ^ *p;
+        return id | (result << 3);
+    }
+    ulong Hash(ulong id, ulong value)
+    {
+        return id | (value << 3);
+    }
+
+    Tree *DoInteger(Integer *what)
+    {
+        key = (key << 3) ^ Hash(0, what->value);
+        return what;
+    }
+    Tree *DoReal(Real *what)
+    {
+        key = (key << 3) ^ Hash(1, *((ulong *) &what->value));
+        return what;
+    }
+    Tree *DoText(Text *what)
+    {
+        key = (key << 3) ^ Hash(2, what->value);
+        return what;
+    }
+    Tree *DoName(Name *what)
+    {
+        key = (key << 3) ^ Hash(3, what->value);
+        return what;
+    }
+
+    Tree *DoBlock(Block *what)
+    {
+        key = (key << 3) ^ Hash(4, what->opening + what->closing);
+        return what;
+    }
+    Tree *DoInfix(Infix *what)
+    {
+        key = (key << 3) ^ Hash(5, what->name);
+        return what;
+    }
+    Tree *DoPrefix(Prefix *what)
+    {
+        ulong old = key;
+        key = 0; what->left->Do(this);
+        key = (old << 3) ^ Hash(6, key);
+        return what;
+    }
+    Tree *DoPostfix(Postfix *what)
+    {
+        ulong old = key;
+        key = 0; what->right->Do(this);
+        key = (old << 3) ^ Hash(7, key);
+        return what;
+    }
+    Tree *Do(Tree *what)
+    {
+        key = (key << 3) ^ Hash(1, (ulong) what);
+        return what;
+    }
+
+    ulong key;
 };
 
 XL_END

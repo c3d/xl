@@ -1,21 +1,21 @@
 #ifndef RUNTIME_H
 #define RUNTIME_H
 // ****************************************************************************
-//  runtime.h                       (C) 1992-2009 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  runtime.h                       (C) 1992-2009 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Functions required for proper run-time execution of XL programs
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
@@ -30,9 +30,9 @@
 
 XL_BEGIN
 // ============================================================================
-// 
+//
 //    Forward declarations
-// 
+//
 // ============================================================================
 
 struct Tree;
@@ -44,9 +44,9 @@ struct Postfix;
 
 
 // ============================================================================
-// 
+//
 //    Runtime functions with C interface
-// 
+//
 // ============================================================================
 
 Tree *xl_identity(Tree *);
@@ -68,16 +68,20 @@ Tree *xl_new_infix(Infix *source, Tree *left, Tree *right);
 Tree *xl_new_closure(Tree *expr, uint ntrees, ...);
 Tree *xl_type_error(Tree *tree);
 
-Tree *xl_boolean(Tree *value);    
-Tree *xl_integer(Tree *value);
-Tree *xl_real(Tree *value);
-Tree *xl_text(Tree *value);
-Tree *xl_character(Tree *value);
-Tree *xl_tree(Tree *value);
-Tree *xl_infix(Tree *value);
-Tree *xl_prefix(Tree *value);
-Tree *xl_postfix(Tree *value);
-Tree *xl_block(Tree *value);
+Tree *xl_boolean_cast(Tree *source, Tree *value);
+Tree *xl_integer_cast(Tree *source, Tree *value);
+Tree *xl_real_cast(Tree *source, Tree *value);
+Tree *xl_text_cast(Tree *source, Tree *value);
+Tree *xl_character_cast(Tree *source, Tree *value);
+Tree *xl_tree_cast(Tree *source, Tree *value);
+Tree *xl_symbolicname_cast(Tree *source, Tree *value);
+Tree *xl_infix_cast(Tree *source, Tree *value);
+Tree *xl_prefix_cast(Tree *source, Tree *value);
+Tree *xl_postfix_cast(Tree *source, Tree *value);
+Tree *xl_block_cast(Tree *source, Tree *value);
+
+Tree *xl_invoke(Tree *(*toCall)(Tree *),
+                Tree *source, uint numarg, Tree **args);
 
 Tree *xl_call(text name);
 Tree *xl_call(text name, text arg);

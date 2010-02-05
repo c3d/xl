@@ -25,6 +25,7 @@
 // ****************************************************************************
 
 #include "tree.h"
+#include "context.h"
 #include <cmath>
 
 XL_BEGIN

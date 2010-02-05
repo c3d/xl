@@ -52,6 +52,7 @@ struct SourceFile
     bool        changed;
 };
 typedef std::map<text, SourceFile> source_files;
+typedef std::vector<text> source_names;
 
 
 struct Main
@@ -73,7 +74,9 @@ struct Main
     Context      context;
     Renderer     renderer;
     source_files files;
+    source_names file_names;
 
+    int LoadFiles();
     int Run();
 };
 

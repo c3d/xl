@@ -108,16 +108,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     provider = new ExistingModuleProvider(module);
 
     // Select "fast JIT" if optimize level is 0, optimizing JIT otherwise
-#if 0
-    if (optimize_level == 0)
-        runtime = ExecutionEngine::create(provider, false, NULL,
-                                          /* false */ CodeGenOpt::None);
-    else
-        runtime = ExecutionEngine::create(provider, false, NULL,
-                                          /* false */ CodeGenOpt::None);
-#else
     runtime = EngineBuilder(module).create();
-#endif
     runtime->DisableLazyCompilation(false);
 
     // Setup the optimizer - REVISIT: Adjust with optimization level
@@ -326,6 +317,82 @@ Function *Compiler::EnterBuiltin(text name,
     }
 
     return result;    
+}
+
+
+adapter_fn Compiler::EnterArrayToArgsAdapter(uint numargs)
+// ----------------------------------------------------------------------------
+//   Generate code to call a function with N arguments
+// ----------------------------------------------------------------------------
+//   The generated code serves as an adapter between code that has
+//   tree arguments in a C array and code that expects them as an arg-list.
+//   For example, it allows you to call foo(Tree *src, Tree *a1, Tree *a2)
+//   by calling generated_adapter(foo, Tree *src, Tree *args[2])
+{
+    // Check if we already computed it
+    eval_fn result = array_to_args_adapters[numargs];
+    if (result)
+        return (adapter_fn) result;
+
+    // Generate the function type: Tree *generated(eval_fn, Tree *, Tree **)
+    std::vector<const Type *> parms;
+    parms.push_back(evalFnTy);
+    parms.push_back(treePtrTy);
+    parms.push_back(treePtrPtrTy);
+    FunctionType *fnType = FunctionType::get(treePtrTy, parms, false);
+    Function *adapter = Function::Create(fnType, Function::InternalLinkage,
+                                        "xl_adapter", module);
+
+    // Generate the function type for the called function
+    std::vector<const Type *> called;
+    called.push_back(treePtrTy);
+    for (uint a = 0; a < numargs; a++)
+        called.push_back(treePtrTy);
+    FunctionType *calledType = FunctionType::get(treePtrTy, called, false);
+    PointerType *calledPtrType = PointerType::get(calledType, 0);
+
+    // Create the entry for the function we generate
+    BasicBlock *entry = BasicBlock::Create(*context, "adapt", adapter);
+    IRBuilder<> code(entry);
+
+    // Read the arguments from the function we are generating
+    Function::arg_iterator inArgs = adapter->arg_begin();
+    Value *fnToCall = inArgs++;
+    Value *sourceTree = inArgs++;
+    Value *treeArray = inArgs++;
+
+    // Cast the input function pointer to right type
+    Value *fnTyped = code.CreateBitCast(fnToCall, calledPtrType, "fnCast");
+
+    // Add source as first argument to output arguments
+    std::vector<Value *> outArgs;
+    outArgs.push_back (sourceTree);
+
+    // Read other arguments from the input array
+    for (uint a = 0; a < numargs; a++)
+    {
+        Value *elementPtr = code.CreateConstGEP1_32(treeArray, a);
+        Value *fromArray = code.CreateLoad(elementPtr, "arg");
+        outArgs.push_back(fromArray);
+    }
+
+    // Call the function
+    Value *retVal = code.CreateCall(fnTyped, outArgs.begin(), outArgs.end());
+
+    // Return the result
+    code.CreateRet(retVal);
+
+    // Verify the function and optimize it.
+    verifyFunction (*adapter);
+    if (optimizer)
+        optimizer->run(*adapter);
+
+    // Enter the result in the map
+    result = (eval_fn) runtime->getPointerToFunction(adapter);
+    array_to_args_adapters[numargs] = result;
+
+    // And return it to the caller
+    return (adapter_fn) result;
 }
 
 

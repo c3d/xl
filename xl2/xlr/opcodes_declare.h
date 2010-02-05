@@ -27,6 +27,7 @@
 #undef INFIX
 #undef PREFIX
 #undef POSTFIX
+#undef BLOCK
 #undef NAME
 #undef TYPE
 #undef PARM
@@ -46,6 +47,9 @@
 
 #define POSTFIX(parms, symbol, name, code)       \
     Tree *xl_##name(Tree *self parms) { DS(symbol) code; RS; }
+
+#define BLOCK(open, type, close, name, code)                     \
+    Tree *xl_##name(Tree *self, type##_r child) { DS(symbol) code; RS; }
 
 #define NAME(symbol)    \
     Name *xl_##symbol;

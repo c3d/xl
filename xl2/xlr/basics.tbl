@@ -1,3 +1,18 @@
+// Basic language features
+INFIX(tree,";",tree, SemicolonSequence,
+      xl_evaluate(&l);
+      RTREE(xl_evaluate(&r)))
+INFIX(tree,"\n",tree, NewlineSequence,
+      xl_evaluate(&l);
+      RTREE(xl_evaluate(&r)))
+INFIX(tree,"->", tree, EnterRewrite,
+      Symbols::symbols->EnterRewrite(&l,&r);
+      RTREE(self))
+BLOCK("(", tree, ")", EvaluateParentheses,
+      RTREE(xl_evaluate(&child)))
+BLOCK(Block::indent, tree, Block::unindent, EvaluateBlock,
+      RTREE(xl_evaluate(&child)))
+
 // Integer arithmetic and comparisons
 INFIX(integer, "+", integer, BinaryAddInt, RINT(INT(l) + INT(r)))
 INFIX(integer, "-", integer, BinarySubInt, RINT(INT(l) - INT(r)))
@@ -208,6 +223,7 @@ TYPE(real);
 TYPE(text);
 TYPE(character);
 TYPE(tree);
+TYPE(symbolicname);
 TYPE(infix);
 TYPE(prefix);
 TYPE(postfix);

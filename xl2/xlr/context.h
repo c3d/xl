@@ -155,6 +155,9 @@ typedef std::map<ulong, Rewrite*> rewrite_table;// Hashing of rewrites
 typedef symbol_table::iterator    symbol_iter;  // Iterator over sym table
 typedef std::vector<Tree **>      globals_table;// Table of LLVM globals
 typedef std::map<Tree*, Symbols*> capture_table;// Symbol capture table
+typedef std::map<Tree *, Tree *>  value_table;  // Used for value caching
+typedef value_table::iterator     value_iter;   // Used to iterate over values
+typedef Tree *(*typecheck_fn) (Tree *src, Tree *value);
 
 
 
@@ -195,14 +198,24 @@ struct Symbols
                                 bool nullIfBad = false, bool keepAlt = false);
     Tree *              CompileAll(Tree *s, bool keepOtherConstants = false);
     Tree *              CompileCall(text callee, tree_list &args);
+    Infix *             CompileTypeTest(Tree *type);
     Tree *              Run(Tree *t);
+
+    // Error handling
+    Tree *              ErrorHandler();
+    void                SetErrorHandler(Tree *e){ error_handler = e; }
+    Tree *              Error (text message,
+                               Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
 
 public:
     Symbols *           parent;
     symbol_table        names;
     Rewrite *           rewrites;
     symbol_table        calls;
+    value_table         type_tests;
     symbols_set         imported;
+    Tree *              error_handler;
+    bool                has_rewrites_for_constants;
 
     static Symbols *    symbols;
 };
@@ -216,23 +229,17 @@ struct Context : Symbols
     // Constructors and destructors
     Context(Errors &err, Compiler *comp):
         Symbols(NULL),
-        errors(err), error_handler(NULL),       // Error management
+        errors(err),                            // Global error list
         compiler(comp),                         // Tree compilation
         active(), roots(),                      // Garbage collection
         active_symbols(), gc_threshold(200) {}  // More garbage collection
     ~Context();
-
-    // Context properties
-    Tree *              ErrorHandler();
-    void                SetErrorHandler(Tree *e){ error_handler = e; }
 
     // Garbage collection
     void                Mark(Tree *t)           { active.insert(t); }
     void                CollectGarbage();
 
     // Helpers for compilation of trees
-    Tree *              Error (text message,
-                               Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
     Tree **             AddGlobal(Tree *value);
 
 public:
@@ -241,7 +248,6 @@ public:
     static Context *    context;
 
     Errors &            errors;
-    Tree *              error_handler;
     Compiler *          compiler;
     active_set          active;
     root_set            roots;
@@ -271,6 +277,43 @@ public:
     Tree *              to;
     rewrite_table       hash;
     tree_list           parameters;
+};
+
+
+
+// ============================================================================
+// 
+//    Actions used in interpretation
+// 
+// ============================================================================
+
+struct InterpretedArgumentMatch : Action
+// ----------------------------------------------------------------------------
+//   Check if a tree matches the form of the left of a rewrite
+// ----------------------------------------------------------------------------
+{
+    InterpretedArgumentMatch (Tree *t,
+                              Symbols *s, Symbols *l, Symbols *r) :
+        symbols(s), locals(l), rewrite(r),
+        test(t), defined(NULL) {}
+
+    // Action callbacks
+    virtual Tree *Do(Tree *what);
+    virtual Tree *DoInteger(Integer *what);
+    virtual Tree *DoReal(Real *what);
+    virtual Tree *DoText(Text *what);
+    virtual Tree *DoName(Name *what);
+    virtual Tree *DoPrefix(Prefix *what);
+    virtual Tree *DoPostfix(Postfix *what);
+    virtual Tree *DoInfix(Infix *what);
+    virtual Tree *DoBlock(Block *what);
+
+public:
+    Symbols *     symbols;      // Context in which we evaluate values
+    Symbols *     locals;       // Symbols where we declare arguments
+    Symbols *     rewrite;      // Symbols in which the rewrite was declared
+    Tree *        test;         // Tree we test
+    Tree *        defined;      // Tree beind defined, e.g. 'sin' in 'sin X'
 };
 
 
@@ -492,7 +535,8 @@ inline Symbols::Symbols(Symbols *s)
 // ----------------------------------------------------------------------------
 //   Create a "child" symbol table
 // ----------------------------------------------------------------------------
-    : parent(s), rewrites(NULL)
+    : parent(s), rewrites(NULL), error_handler(NULL),
+      has_rewrites_for_constants(false)
 {}
 
 
