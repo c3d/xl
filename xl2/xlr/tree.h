@@ -31,9 +31,6 @@
 #include <vector>
 #include <cassert>
 
-#include "sha1.h"
-#define HASH_SIZE    SHA1_SIZE
-#define HASH_CONTEXT SHA1_CONTEXT
 
 XL_BEGIN
 
@@ -54,6 +51,7 @@ struct Infix;                                   // Infix: A+B, newline
 struct Block;                                   // Block: (A), {A}
 struct Action;                                  // Action on trees
 struct Symbols;                                 // Symbol table
+struct Sha1;                                    // Hash used for id-ing trees
 typedef ulong tree_position;                    // Position in context
 typedef std::vector<Tree *> tree_list;          // A list of trees
 typedef Tree *(*eval_fn) (Tree *);              // Compiled evaluation code
@@ -94,7 +92,7 @@ struct Tree
     {
         assert(k == Kind());
     }
-    ~Tree() { if (hash) delete[](hash); }
+    ~Tree();
 
     // Perform recursive actions on a tree
     Tree *              Do(Action *action);
@@ -128,7 +126,7 @@ public:
     eval_fn     code;                           // Compiled code
     Symbols *   symbols;                        // Local symbols
     Tree *      type;                           // Type information
-    byte *      hash;                           // Cryptographic hash or NULL
+    Sha1 *      hash;                           // Cryptographic hash or NULL
 };
 
 
@@ -657,6 +655,9 @@ struct RewriteKey : Action
 
     ulong key;
 };
+
+
+extern text sha1(Tree *t);
 
 XL_END
 

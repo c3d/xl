@@ -211,7 +211,10 @@ PREFIX("load_tsv", PARM(file, text), LoadTSVFile, return xl_load_tsv(file))
 
 // Debugging code
 PREFIX("debug", PARM(toDebug, tree), DebugTree,
-       std::cerr << "DEBUG: " << &toDebug << "\n"; return &toDebug)
+       std::cerr << "DEBUG: " << (Tree *) &toDebug << "\n"; return &toDebug)
+
+// Compute the sha1 of a tree
+PREFIX("sha1", PARM(t, tree), ComputeSha1, RTEXT(sha1(&t)))
 
 NAME(nil);
 NAME(true);

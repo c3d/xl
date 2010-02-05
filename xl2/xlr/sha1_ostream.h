@@ -1,15 +1,16 @@
+#ifndef SHA1_OSTREAM_H
+#define SHA1_OSTREAM_H
 // ****************************************************************************
-//  basics.cpp                      (C) 1992-2009 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  sha1_ostream.h                                                  XLR project
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Basic operations (arithmetic, ...)
+//     Ostream operations on a SHA-1 class
 // 
-// 
-// 
-// 
+//     The only reasons they are not in sha1.h is because putthing them
+//     at that spot apparently 'disables' another operator<< (os&, Tree *)
+//     I have not spent enough time to know if it's a GCC bug or a C++ feature
 // 
 // 
 // 
@@ -17,6 +18,8 @@
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+//  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2010 Taodyne SAS
 // ****************************************************************************
 // * File       : $RCSFile$
 // * Revision   : $Revision$
@@ -24,38 +27,19 @@
 // ****************************************************************************
 
 #include <iostream>
-#include <sstream>
-#include <ctime>
-#include <cstdio>
+#include "sha1.h"
 
-#include "basics.h"
-#include "context.h"
-#include "renderer.h"
-#include "opcodes.h"
-#include "compiler.h"
-#include "options.h"
-#include "runtime.h"
-
-XL_BEGIN
-
-// ============================================================================
-// 
-//    Top-level operation
-// 
-// ============================================================================
-
-#include "opcodes_declare.h"
-#include "basics.tbl"
-
-
-void EnterBasics(Context *c)
+inline std::ostream &operator <<(std::ostream &out, const XL::Sha1 &sha)
 // ----------------------------------------------------------------------------
-//   Enter all the basic operations defined in basics.tbl
+//    Display a hex digest for the given input
 // ----------------------------------------------------------------------------
 {
-    Compiler *compiler = c->compiler;
-#include "opcodes_define.h"
-#include "basics.tbl"
+    char buffer[sha.SIZE * 2 + 1];
+    for (uint i = 0; i < sha.SIZE; i++)
+        sprintf(buffer + 2 * i, "%02x", sha.hash[i]);
+    buffer[sha.SIZE*2] = 0;
+    out << buffer;
+    return out;
 }
 
-XL_END
+#endif // SHA1_OSTREAM_H

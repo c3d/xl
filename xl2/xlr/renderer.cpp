@@ -661,6 +661,9 @@ void debug(XL::Tree *tree)
     std::cout << "\n";
 }
 
+
+#include "sha1_ostream.h"
+
 void debugp(XL::Tree *tree)
 // ----------------------------------------------------------------------------
 //    Emit for debugging purpose
@@ -670,11 +673,7 @@ void debugp(XL::Tree *tree)
     render.SelectStyleSheet("debug.stylesheet");
     render.Render(tree);
 
-    XL::TreeHashAction h_action;
+    XL::TreeHashAction<> h_action;
     tree->Do(h_action);
-    std::cout << "SHA-1: ";
-    for (int i = 0; i < HASH_SIZE; i++)
-      printf("%02x", tree->hash[i]);
-
-    std::cout << "\n";
+    std::cout << "SHA-1: " << *tree->hash << '\n';
 }
