@@ -1,23 +1,26 @@
 #ifndef HASH_H
 #define HASH_H
-
 // ****************************************************************************
-//  hash.h                                                    (C) Taodyne
-//                                                            XL2 project
+//  hash.h                                                          XLR project
 // ****************************************************************************
-//
+// 
 //   File Description:
-//
+// 
 //     Tools to run cryptographic hash functions over XL trees.
 //     Hashing is a convenient way to verify the integrity of a tree.
-//
-//
-//
-//
-//
+// 
+// 
+// 
+// 
+// 
+// 
+// 
 // ****************************************************************************
-// This program is released under the GNU General Public License.
-// See http://www.gnu.org/copyleft/gpl.html for details
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+//  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2010 Jérôme Forissier <jerome@taodyne.com>
+//  (C) 2010 Taodyne SAS
 // ****************************************************************************
 // * File       : $RCSFile$
 // * Revision   : $Revision$
@@ -35,64 +38,14 @@ struct TreeHashPruneAction : Action
 //   Delete and reset all the hash pointers of a tree
 // ----------------------------------------------------------------------------
 {
-#define ZAP(h) do { if ((h)) { delete[] (h); (h) = NULL; } } while (0)
-
     TreeHashPruneAction () {}
-    Tree *DoInteger(Integer *what)
-    {
-        ZAP(what->hash);
-        return what;
-    }
-    Tree *DoReal(Real *what)
-    {
-        ZAP(what->hash);
-        return what;
-    }
-    Tree *DoText(Text *what)
-    {
-        ZAP(what->hash);
-        return what;
-    }
-    Tree *DoName(Name *what)
-    {
-        ZAP(what->hash);
-        return what;
-    }
-
-    Tree *DoBlock(Block *what)
-    {
-        ZAP(what->hash);
-        what->child->Do(this);
-        return what;
-    }
-    Tree *DoInfix(Infix *what)
-    {
-        ZAP(what->hash);
-        what->left->Do(this);
-        what->right->Do(this);
-        return what;
-    }
-    Tree *DoPrefix(Prefix *what)
-    {
-        ZAP(what->hash);
-        what->left->Do(this);
-        what->right->Do(this);
-        return what;
-    }
-    Tree *DoPostfix(Postfix *what)
-    {
-        ZAP(what->hash);
-        what->left->Do(this);
-        what->right->Do(this);
-        return what;
-    }
     Tree *Do(Tree *what)
     {
-        return NULL;
+        if (what->hash) { delete[] what->hash; what->hash = NULL; }
+        return what;
     }
-
-#undef ZAP
 };
+
 
 struct TreeHashAction : Action
 // ----------------------------------------------------------------------------
