@@ -242,7 +242,7 @@ void Serializer::WriteReal(double value)
         exponent = ~exponent;
     mantissa |= longlong(cvt.ieee.mantissa1) << 32;
     WriteSigned (exponent);
-    WriteSigned (mantissa);
+    WriteUnsigned (mantissa);
 }
 
 
@@ -424,8 +424,8 @@ double Deserializer::ReadReal()
 // ----------------------------------------------------------------------------
 {
     ieee754_double cvt;
-    longlong exponent = ReadSigned();
-    longlong mantissa = ReadSigned();
+    longlong  exponent = ReadSigned();
+    ulonglong mantissa = ReadUnsigned();
     if (exponent < 0)
     {
         cvt.ieee.negative = 1;
