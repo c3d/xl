@@ -25,6 +25,7 @@
 // ****************************************************************************
 
 #include "serializer.h"
+#include "renderer.h"
 #include <machine/endian.h>
 
 
@@ -84,6 +85,17 @@ Serializer::Serializer(std::ostream &out)
 {
     WriteUnsigned(serialMAGIC);
     WriteUnsigned(serialVERSION);
+}
+
+
+Tree *Serializer::Do(Tree *what)
+// ----------------------------------------------------------------------------
+//   The default is to write an invalid tree, we should not be here
+// ----------------------------------------------------------------------------
+{
+    WriteUnsigned(serialINVALID); // Make stream invalid
+    assert(!"We should not reach Serializer::Do");
+    return what;
 }
 
 
@@ -288,50 +300,61 @@ Tree *Deserializer::ReadTree()
     Tree *           left;
     Tree *           right;
     Tree *           child;
-
+    Tree *           result = NULL;
 
     switch(tag)
     {
     case serialNULL:
-        return NULL;
+        result = NULL;
+        break;
 
     case serialINTEGER:
         ivalue = ReadSigned();
-        return new Integer(ivalue, pos);
+        result = new Integer(ivalue, pos);
+        break;
     case serialREAL:
         rvalue = ReadReal();
-        return new Real(rvalue, pos);
+        result = new Real(rvalue, pos);
+        break;
     case serialTEXT:
         opening = ReadText();
         tvalue = ReadText();
         closing = ReadText();
-        return new Text(tvalue, opening, closing, pos);
+        result = new Text(tvalue, opening, closing, pos);
+        break;
     case serialNAME:
         tvalue = ReadText();
-        return new Name(tvalue, pos);
+        result = new Name(tvalue, pos);
+        break;
 
     case serialBLOCK:
         opening = ReadText();
         child = ReadTree();
         closing = ReadText();
-        return new Block(child, opening, closing, pos);
+        result = new Block(child, opening, closing, pos);
+        break;
     case serialINFIX:
         left = ReadTree();
         tvalue = ReadText();
         right = ReadTree();
-        return new Infix(tvalue, left, right, pos);
+        result = new Infix(tvalue, left, right, pos);
+        break;
     case serialPREFIX:
         left = ReadTree();
         right = ReadTree();
-        return new Prefix(left, right, pos);
+        result = new Prefix(left, right, pos);
+        break;
     case serialPOSTFIX:
         left = ReadTree();
         right = ReadTree();
-        return new Postfix(left, right, pos);
+        result = new Postfix(left, right, pos);
+        break;
 
     default:
         throw Error(this, tag);
     }
+
+    return result;
 }
 
 
@@ -346,7 +369,7 @@ longlong Deserializer::ReadSigned()
     uint     shift = 0;
     do
     {
-        in >> b;
+        b = in.get();
         shifted = longlong(b & 0x7f) << shift;
         value |= shifted;
         if ((shifted >> shift) != (b & 0x7f))
@@ -373,7 +396,7 @@ ulonglong Deserializer::ReadUnsigned()
     uint      shift   = 0;
     do
     {
-        in >> b;
+        b = in.get();
         shifted = ulonglong(b & 0x7f) << shift;
         value |= shifted;
         if ((shifted >> shift) != (b & 0x7f))
@@ -406,6 +429,7 @@ double Deserializer::ReadReal()
     }
     cvt.ieee.mantissa1 = mantissa >> 32;
     cvt.ieee.mantissa0 = mantissa;
+
     return cvt.value;
 }
 
@@ -421,8 +445,9 @@ text Deserializer::ReadText()
     in.read(buffer, length);
     result.insert(0, buffer, length);
     delete[] buffer;
+
     return result;
 }
 
-
 XL_END
+

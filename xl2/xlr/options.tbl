@@ -45,6 +45,12 @@ OPTION(style, "Select the stylesheet",
 OPTVAR(parseOnly, bool, false)
 OPTION(parse, "Only parse file, do not compile nor run", parseOnly = true)
 
+// Read or write from serialized format
+OPTVAR(readSerialized, bool, false)
+OPTION(read, "Read file from serialized input", readSerialized = true)
+OPTVAR(writeSerialized, bool, false)
+OPTION(write, "Write file to serialized output", writeSerialized = true)
+
 // Compile only
 OPTVAR(compileOnly, bool, false)
 OPTION(compile, "Only compile file, do not run", compileOnly = true)

@@ -39,6 +39,7 @@
 #include "compiler.h"
 #include "options.h"
 #include "basics.h"
+#include "serializer.h"
 
 
 XL_BEGIN
@@ -80,10 +81,12 @@ int Main::LoadFiles()
 //   Load all files given on the command line and compile them
 // ----------------------------------------------------------------------------
 {
-    text cmd, end = "";
-    std::vector<text> filelist;
-    std::vector<text>::iterator file;
-    bool hadError = false;
+    text                         cmd, end = "";
+    std::vector<text>            filelist;
+    std::vector<text>::iterator  file;
+    bool                         hadError = false;
+    Deserializer                *reader   = NULL;
+    Serializer                  *writer   = NULL;
 
     // Make sure debug function is linked in...
     if (getenv("SHOW_INITIAL_DEBUG"))
@@ -116,8 +119,34 @@ int Main::LoadFiles()
         // Parse program - Local parser to delete scanner and close file
         // This ensures positions are updated even if there is a 'load'
         // being called during execution.
-        Parser parser (cmd.c_str(), syntax, positions, errors);
-        tree = parser.Parse();
+        if (options.readSerialized)
+        {
+            if (!reader)
+                reader = new Deserializer(std::cin);
+            try
+            {
+                tree = reader->ReadTree();
+            }
+            catch (Deserializer::Error &e)
+            {
+                std::cerr << "Error in input stream, tag=" << e.tag << '\n';
+                hadError = true;
+                continue;
+            }
+        }
+        else
+        {
+            Parser parser (cmd.c_str(), syntax, positions, errors);
+            tree = parser.Parse();
+        }
+
+        if (options.writeSerialized)
+        {
+            if (!writer)
+                writer = new Serializer(std::cout);
+            if (tree)
+                tree->Do(writer);
+        }
 
         if (!tree)
         {
@@ -146,7 +175,7 @@ int Main::LoadFiles()
 
         if (options.verbose)
             debugp(tree);
-        else if (options.parseOnly)
+        else if (options.parseOnly && !options.writeSerialized)
             std::cout << tree << "\n";
 
         Symbols::symbols = Context::context;
@@ -216,7 +245,7 @@ int main(int argc, char **argv)
     Compiler compiler("xl_tao");
     MAIN = new Main(argc, argv, compiler);
     int rc = MAIN->LoadFiles();
-    if (!rc)
+    if (!rc && !Options::options->parseOnly)
         rc = MAIN->Run();
     delete MAIN;
 

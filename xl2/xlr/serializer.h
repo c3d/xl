@@ -67,6 +67,7 @@ struct Serializer : Action
     Tree *DoInfix(Infix *what);
     Tree *DoBlock(Block *what);
     Tree *DoChild(Tree *child);
+    Tree *Do(Tree *what);
 
 protected:
     // Writing data (low level)
