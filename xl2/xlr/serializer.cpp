@@ -251,8 +251,17 @@ void Serializer::WriteText(text value)
 //   Write the length followed by data bytes
 // ----------------------------------------------------------------------------
 {
-    WriteUnsigned(value.length());
-    out.write(value.data(), value.length());
+    longlong exists = texts[value];
+    if (exists)
+    {
+        WriteSigned(-exists);
+    }
+    else
+    {
+        WriteUnsigned(value.length());
+        out.write(value.data(), value.length());
+        texts[value] = texts.size();
+    }
 }
 
 
@@ -439,12 +448,22 @@ text Deserializer::ReadText()
 //   Read a text from the input stream
 // ----------------------------------------------------------------------------
 {
-    ulonglong length = ReadUnsigned();
+    longlong  length = ReadSigned();
     text      result;
-    char *    buffer = new char[length];
-    in.read(buffer, length);
-    result.insert(0, buffer, length);
-    delete[] buffer;
+
+    if (length < 0)
+    {
+        result = texts[-length];
+    }
+    else
+    {
+        char *    buffer = new char[length];
+        in.read(buffer, length);
+        result.insert(0, buffer, length);
+        delete[] buffer;
+
+        texts[texts.size()+1] = result;
+    }
 
     return result;
 }

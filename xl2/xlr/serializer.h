@@ -49,6 +49,10 @@ enum SerializationTag
 };
 
 
+typedef std::map<text, longlong>        text_map;
+typedef std::map<longlong, text>        text_ids;
+
+
 struct Serializer : Action
 // ----------------------------------------------------------------------------
 //    Serialize a tree to a stream
@@ -79,6 +83,7 @@ protected:
 
 protected:
     std::ostream &      out;
+    text_map            texts;
 };
 
 
@@ -112,6 +117,7 @@ protected:
 protected:
     std::istream &      in;
     tree_position       pos;
+    text_ids            texts;
 };
 
 XL_END
