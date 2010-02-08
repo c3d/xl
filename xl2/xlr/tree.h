@@ -157,6 +157,7 @@ struct TreeRoot
 // ----------------------------------------------------------------------------
 {
     TreeRoot(Tree *t);
+    TreeRoot(const TreeRoot &o);
     ~TreeRoot();
     operator Tree *(void) { return tree; }
 public:

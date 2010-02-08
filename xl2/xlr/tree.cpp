@@ -124,6 +124,16 @@ TreeRoot::TreeRoot(Tree *t)
 }
 
 
+TreeRoot::TreeRoot(const TreeRoot &o)
+// ----------------------------------------------------------------------------
+//   Record the root in the current context
+// ----------------------------------------------------------------------------
+    : tree(o.tree)
+{
+    Context::context->roots.insert(this);
+}
+
+
 TreeRoot::~TreeRoot()
 // ----------------------------------------------------------------------------
 //   Remove a root from the context
