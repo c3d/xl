@@ -1,0 +1,118 @@
+#ifndef SERIALIZER_H
+#define SERIALIZER_H
+// ****************************************************************************
+//  serializer.h                                                    XLR project
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     A couple of classes used to serialize and read-back XL trees
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+//  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2010 Taodyne SAS
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+#include "base.h"
+#include "tree.h"
+#include <iostream>
+
+
+XL_BEGIN
+
+enum SerializationTag
+// ----------------------------------------------------------------------------
+//   Kind used for serialization (numerically independent from Tree kind)
+// ----------------------------------------------------------------------------
+{
+    serialNULL,                 // NULL tree
+
+    serialINTEGER, serialREAL, serialTEXT, serialNAME,
+    serialBLOCK, serialPREFIX, serialPOSTFIX, serialINFIX,
+    serialINVALID,
+
+    serialVERSION = 0x0101,
+    serialMAGIC   = 0x05121968
+};
+
+
+struct Serializer : Action
+// ----------------------------------------------------------------------------
+//    Serialize a tree to a stream
+// ----------------------------------------------------------------------------
+{
+    Serializer(std::ostream &out);
+    ~Serializer() {}
+
+    // Serialization of the canonical nodes
+    Tree *DoInteger(Integer *what);
+    Tree *DoReal(Real *what);
+    Tree *DoText(Text *what);
+    Tree *DoName(Name *what);
+    Tree *DoPrefix(Prefix *what);
+    Tree *DoPostfix(Postfix *what);
+    Tree *DoInfix(Infix *what);
+    Tree *DoBlock(Block *what);
+    Tree *DoChild(Tree *child);
+
+protected:
+    // Writing data (low level)
+    void        WriteSigned(longlong);
+    void        WriteUnsigned(ulonglong);
+    void        WriteReal(double);
+    void        WriteText(text);
+    void        WriteChild(Tree *child);
+
+protected:
+    std::ostream &      out;
+};
+
+
+struct Deserializer
+// ----------------------------------------------------------------------------
+//   Reconstruct a tree from its serialized form
+// ----------------------------------------------------------------------------
+{
+    Deserializer(std::istream &in, tree_position pos = Tree::NOWHERE);
+    ~Deserializer();
+
+    // Deserialize a tree from the input and return it
+    Tree *      ReadTree();
+
+    // Exception thrown in case a value doesn't fit
+    struct Error
+    {
+        Error(Deserializer *ds, SerializationTag tag):
+            deserializer(ds), tag(tag) {}
+        Deserializer *    deserializer;
+        SerializationTag  tag;
+    };
+
+protected:
+    // Reading low-level data
+    longlong    ReadSigned();
+    ulonglong   ReadUnsigned();
+    double      ReadReal();
+    text        ReadText();
+
+protected:
+    std::istream &      in;
+    tree_position       pos;
+};
+
+XL_END
+
+#endif // SERIALIZE_H

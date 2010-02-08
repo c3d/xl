@@ -41,6 +41,7 @@ SOURCES     =					\
 	basics.cpp				\
 	types.cpp				\
         sha1.cpp				\
+	serializer.cpp				\
 	opcodes.cpp
 
 PRODUCT=xlr$(EXE)
