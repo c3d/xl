@@ -1,0 +1,370 @@
+0000000      b2e8    28c8    0281    0808    0107    0400    2101    2d02
+0000020      013e    0101    080a    0708    0104    044e    7e7f    0408
+0000040      017c    072a    0105    0828    7c04    2d01    0101    2901
+0000060      7f04    087d    0808    0608    0204    6669    0404    7274
+0000100      6575    7404    6568    046e    5408    7572    4265    646f
+0000120      0479    6c65    6573    0904    6146    736c    4265    646f
+0000140      7e79    7404    087d    0808    0608    7704    0504    6166
+0000160      736c    7565    7404    0473    7e72    7204    087d    0808
+0000200      0406    0477    7576    7404    047e    7d74    0808    0406
+0000220      0477    7571    7404    047e    0871    0406    6906    706d
+0000240      726f    0874    0204    4353    3d01    0408    5802    014c
+0000260      042e    5307    4143    4e4e    5245    087d    0406    0870
+0000300      0204    5343    086e    0408    6c6d    0204    4955    046c
+0000320      4307    4e4f    4f53    454c    087d    0406    0870    0204
+0000340      5450    086e    0408    6c6d    0604    4150    5352    5245
+0000360      046c    5404    4552    7d45    0608    7004    0408    5002
+0000400      6e52    0408    6c6d    6604    087d    0406    0870    0204
+0000420      4f49    086e    6d04    046c    5407    5845    5f54    4f49
+0000440      087d    0406    0870    0304    4c58    6e54    0408    6c6d
+0000460      0a04    5254    4e41    4c53    5441    524f    087d    0406
+0000500      0870    0204    4743    086e    6d04    046c    430e    444f
+0000520      5f45    4547    454e    4152    4f54    7d52    0608    7004
+0000540      0408    5303    4d59    086e    6d04    046c    5307    4d59
+0000560      4f42    534c    087d    0406    0870    0204    4452    086e
+0000600      6d04    046c    5208    4e45    4544    4552    7d52    0608
+0000620      7004    0408    4105    4353    4949    086e    0808    6d04
+0000640      046c    6c62    0804    4e45    4f43    4944    474e    046c
+0000660      7d59    0608    7004    0408    4503    5252    086e    6d04
+0000700      046c    4506    5252    524f    7d53    0608    7004    0408
+0000720      4d03    4c44    086e    0408    6c6d    0904    4553    414d
+0000740      544e    4349    6c53    0704    4f4d    5544    454c    7d53
+0000760      0608    7004    0408    4303    5453    086e    6d04    046c
+0001000      4309    4e4f    5453    4e41    5354    087d    0406    0870
+0001020      0408    6c6d    5404    046c    5405    5059    5345    087d
+0001040      0406    0870    0408    6c6d    5404    046c    440c    4345
+0001060      414c    4152    4954    4e4f    7d53    0608    7004    0808
+0001100      0408    6c6d    5404    046c    6c50    0904    5546    434e
+0001120      4954    4e4f    7d53    0608    7004    0808    0408    6c6d
+0001140      5404    046c    6c50    0704    4552    4f43    4452    7d53
+0001160      0608    7004    0808    0408    6c6d    5404    046c    6c50
+0001200      0c04    4e45    4d55    5245    5441    4f49    534e    087d
+0001220      0406    0870    0808    6d04    046c    6c54    5004    046c
+0001240      4708    4e45    5245    4349    7d53    0608    7004    0808
+0001260      6d04    046c    6c54    4e04    087d    0406    0870    0408
+0001300      6c6d    5404    046c    4909    4554    4152    4f54    5352
+0001320      087d    0406    0870    0408    6c6d    5404    046c    4f08
+0001340      4556    4c52    414f    7d44    0608    7004    0808    6d04
+0001360      046c    6c54    4b04    087d    0406    0870    0408    6c6d
+0001400      5404    046c    570d    4952    5454    4e45    465f    524f
+0001420      534d    087d    0406    0870    0408    6c6d    5404    046c
+0001440      490c    534e    5254    4355    4954    4e4f    7d53    0608
+0001460      7004    0808    6d04    046c    6c54    0704    5250    4741
+0001500      414d    7d53    0608    7004    0408    5003    5250    086e
+0001520      0408    6c6d    5404    046c    4d06    4341    4f52    7d53
+0001540      0608    7004    0808    6d04    046c    5006    554c    4947
+0001560      6c4e    0f04    4944    4646    5245    4e45    4954    5441
+0001600      4f49    7d4e    0608    7004    0808    6d04    046c    6c43
+0001620      0c04    4f43    534e    4154    544e    4f46    444c    087d
+0001640      0406    0870    0408    6c6d    4304    046c    4c07    5349
+0001660      4954    474e    087d    0406    0870    0408    6c6d    4304
+0001700      046c    4a04    4e55    7d4b    0608    7004    0808    6d04
+0001720      046c    6c43    0a04    5254    4e41    4653    524f    534d
+0001740      087d    0406    0870    0408    6c6d    4304    046c    4907
+0001760      434e    554c    4544    087d    0406    0870    0408    6c6d
+0002000      4304    046c    4406    4645    4e49    7d45    0608    7004
+0002020      0808    6d04    046c    6c43    0904    4649    4544    4946
+0002040      454e    7d44    0608    7004    0808    6d04    046c    6c43
+0002060      0304    4649    7d50    0608    7004    0808    6d04    046c
+0002100      6c43    0404    4c58    4332    087d    0406    7009    6f72
+0002120      6563    7564    6572    0408    4d04    6961    026e    7369
+0002140      0205    2b49    0808    0104    0149    043a    6907    746e
+0002160      6765    7265    087d    0808    0304    614d    b378    047f
+0002200      7fb2    3a02    063d    0404    6973    657a    0408    6c6a
+0002220      0904    7261    7567    656d    746e    7d73    0808    0408
+0002240      5001    7fb3    6404    046c    7006    7261    6573    7d72
+0002260      0808    0808    0a04    6874    5065    6f72    7267    6d61
+0002300      7fb3    6704    046c    7404    6572    b065    047f    6e03
+0002320      6c69    087d    0808    0704    6f63    706d    6c69    b365
+0002340      047f    6207    6f6f    656c    6e61    7fb0    7604    087d
+0002360      0808    0904    7274    6e61    6373    646f    b365    047f
+0002400      7fa7    7fb0    7604    087d    0808    5b04    046c    440f
+0002420      6665    7561    746c    6552    646e    7265    7265    7fb0
+0002440      0806    5b04    046c    4f04    6570    056e    067a    0408
+0002460      6c61    0b04    7552    746e    6d69    5065    7461    0568
+0002500      087a    6104    046c    730a    7974    656c    665f    6c69
+0002520      7865    7d78    0608    0408    6c5f    1504    6e49    7469
+0002540      6169    696c    657a    7942    6574    6f63    6564    614d
+0002560      0570    047a    7800    087d    0608    0304    6f66    0872
+0002600      b404    027f    6e69    0108    0201    2e2e    0408    7fb1
+0002620      0179    0401    6f6c    706f    b505    087f    0808    0404
+0002640      616e    656d    7fb3    0404    6574    7478    7fb0    0806
+0002660      6a04    046c    7fae    0105    045b    6901    5d01    087d
+0002700      0608    7704    0408    7f9b    036e    2201    2d05    6873
+0002720      776f    7f96    0575    7fb5    0806    6304    046c    5707
+0002740      6972    6574    6e4c    ab04    027f    2d49    0873    0608
+0002760      7704    0608    9b04    057f    7f99    0001    7f97    036e
+0003000      2701    2b01    7f92    0575    7fb5    0808    0408    7006
+0003020      756c    6967    b36e    047f    7f9a    7fb0    0406    7f9b
+0003040      9905    087f    0101    7f9d    0608    0604    656c    676e
+0003060      6874    7a05    9b04    787f    0179    9701    7d7f    0808
+0003100      a804    b07f    047f    7d71    0608    0408    6c5d    0704
+0003120      6553    5474    7865    0874    0808    6104    046c    6307
+0003140      6e6f    6574    7478    2c01    9603    057f    4850    5341
+0003160      9645    8c7f    037f    7f96    7809    636c    6d6f    616d
+0003200      646e    7f96    087d    0806    5d04    046c    530b    7465
+0003220      7250    706f    7265    7974    0808    0408    6c61    8d04
+0003240      8c7f    037f    7f96    5006    4152    4d47    9641    8c7f
+0003260      067f    0408    6c67    0704    654e    5477    7865    0574
+0003300      087a    9004    8c7f    037f    7f92    7f96    7f92    7d78
+0003320      0408    7fab    7fb0    0806    5d04    046c    4c0d    6f6f
+0003340      756b    5270    7765    6972    6574    7a05    0808    0408
+0003360      6c61    8d04    8c7f    047f    7f90    7f8c    ab04    787f
+0003400      7f93    0873    0608    7704    0808    0408    7f9b    036e
+0003420      7f96    2d06    7473    6c79    9665    027f    726f    0408
+0003440      7f9b    036e    7f96    2d07    7973    746e    7861    7f96
+0003460      7f84    0408    7f9b    036e    7f96    2d09    7962    6574
+0003500      6f63    6564    7f96    0575    7fb5    0608    7704    0808
+0003520      b404    917f    017f    0201    3d3c    0408    7fb1    0179
+0003540      7501    b505    087f    0408    7fb4    2b02    013d    7d01
+0003560      0808    0408    6e07    7765    6966    656c    7fb3    9a04
+0003600      b07f    067f    0408    6c6a    ae04    057f    7f99    b404
+0003620      977f    7d7f    0808    0608    7704    0408    7f9b    036e
+0003640      7f96    7f85    7f96    0575    7fb5    0808    6104    046c
+0003660      7fa2    7fb0    0408    7eff    7f91    9603    0b7f    732e
+0003700      7974    656c    6873    6565    9674    937f    737f    0808
+0003720      0406    0877    9b04    6e7f    9603    837f    967f    757f
+0003740      b505    087f    0408    6c61    0b04    7973    746e    7861
+0003760      665f    6c69    b065    087f    ff04    917e    037f    7f96
+0004000      2e07    7973    746e    7861    7f96    7f93    0873    0406
+0004020      0877    9b04    6e7f    9603    827f    967f    757f    b505
+0004040      087f    0408    6c61    0d04    7962    6574    6f63    6564
+0004060      665f    6c69    b065    087f    ff04    917e    037f    7f96
+0004100      2e09    7962    6574    6f63    6564    7f96    7f93    087d
+0004120      0806    5b04    046c    4305    6f6c    6573    0408    6c5b
+0004140      a504    7d7f    0808    5b04    046c    7fa5    7fb0    0806
+0004160      5b04    046c    7fa4    7a05    0608    0408    6c61    a304
+0004200      057f    087a    6104    046c    7fa2    8c78    067f    0408
+0004220      6c61    a304    057f    087a    6104    046c    7efd    7878
+0004240      7f93    7f93    0873    0608    7704    0408    7f9b    036e
+0004260      7f96    2d06    6170    7372    9665    757f    b505    087f
+0004300      0408    7fa8    7fb0    7104    087d    a604    b07f    047f
+0004320      9371    737f    0808    0406    0877    9b04    6e7f    9603
+0004340      047f    732d    6d65    7f96    0575    7fb5    0808    0408
+0004360      6c61    0c04    7566    6c6c    635f    6d6f    6970    656c
+0004400      7fb0    7604    087d    0408    7fa8    7fb0    7104    087d
+0004420      0408    7fab    7fb0    0806    5504    046c    410b    6464
+0004440      7542    6c69    6974    736e    7a05    ab04    787f    087d
+0004460      ab04    b07f    067f    0408    6c61    0e04    6353    706f
+0004500      5365    6d65    6e61    6974    7363    7a05    0408    7fab
+0004520      7f8c    0408    6c61    0904    6373    706f    4d65    6961
+0004540      786e    7f93    0873    0608    7704    0408    7f9b    036e
+0004560      7f96    2d04    706f    9674    757f    b505    087f    0408
+0004600      7fa8    7fb0    7104    087d    ab04    b07f    067f    0408
+0004620      6c61    0f04    4c58    704f    6974    696d    617a    6974
+0004640      6e6f    0573    047a    7fab    9378    737f    0808    0406
+0004660      0877    9b04    6e7f    9603    0a7f    622d    6f6f    7374
+0004700      7274    7061    7f96    0575    7fb5    0808    a804    b07f
+0004720      047f    7d71    0408    7fa6    7fb0    7604    7f93    0873
+0004740      0608    7704    0408    7f9b    036e    7f96    2d06    6378
+0004760      646f    9665    757f    b505    087f    0408    7fa8    7fb0
+0005000      7104    087d    0408    7fa6    7fb0    7104    067d    0408
+0005020      6c5f    0904    7254    6e61    6373    646f    0865    ab04
+0005040      8c7f    087f    6304    046c    730f    6174    646e    7261
+0005060      5f64    756f    7074    7475    7f93    0873    0608    7704
+0005100      0408    7f9b    036e    7f96    2d06    6363    646f    9665
+0005120      757f    b505    087f    0408    7fa8    7fb0    7104    087d
+0005140      0408    7fa6    7fb0    7104    067d    0408    6c5f    0804
+0005160      6547    656e    6172    6574    0408    7fab    7f8c    0408
+0005200      6c63    ed04    937e    737f    0808    0406    0877    9b04
+0005220      6e7f    9603    057f    662d    6c75    966c    757f    b505
+0005240      087f    a804    b07f    047f    9376    737f    0808    0406
+0005260      0877    9b04    6e7f    9603    027f    492d    7f96    0575
+0005300      7fb5    0608    7704    0808    b404    917f    017f    8101
+0005320      087f    b104    797f    0101    0575    7fb5    0808    b404
+0005340      807f    017f    7d01    0608    0408    6c55    0704    6441
+0005360      5064    7461    0668    0408    6c6a    ae04    057f    7f99
+0005400      b404    977f    7d7f    0806    4504    046c    7ee8    0806
+0005420      6a04    046c    7fae    9905    047f    7fb4    7f97    7f93
+0005440      7f93    0873    0608    7704    0408    7f9b    036e    7f96
+0005460      2d02    9672    757f    b505    087f    0406    0877    0408
+0005500      7fb4    7f91    0101    7f81    0408    7fb1    0179    7501
+0005520      b505    087f    0408    7fb4    7f80    0101    067d    0408
+0005540      6c61    0d04    6843    6e61    6567    7552    746e    6d69
+0005560      0665    0408    6c6a    ae04    057f    7f99    b404    977f
+0005600      937f    937f    737f    0808    0406    0877    9b04    6e7f
+0005620      9603    027f    672d    7f96    0575    7fb5    0808    5f04
+0005640      046c    6405    6265    6775    7fb0    7604    7f93    0873
+0005660      0608    7704    0408    7f9b    036e    7f96    2d02    9676
+0005700      757f    b505    087f    0408    6c61    0704    6576    6272
+0005720      736f    b065    047f    9376    737f    b505    087f    0408
+0005740      7fad    7fb0    0806    6404    046c    7fa4    7a05    9b04
+0005760      787f    087d    0408    7fab    7fb0    0806    6404    046c
+0006000      5005    7261    6573    7a05    ad04    787f    087d    0608
+0006020      7704    0408    7fab    046e    7fa9    0575    7fb5    0806
+0006040      5704    046c    4505    7272    726f    0808    9603    187f
+0006060      6946    656c    2720    3124    2027    6163    6e6e    746f
+0006100      6220    2065    6572    6461    7f96    7f8c    0406    0179
+0006120      8c01    047f    7f9b    7f93    087d    0806    6404    046c
+0006140      7ef9    ad04    7d7f    0808    0406    0877    a804    037f
+0006160      6e61    0864    0408    6c57    0b04    7265    6f72    5f72
+0006200      6f63    6e75    6e74    0001    0575    7fb5    0808    ab04
+0006220      b07f    067f    0408    6c55    f504    057e    047a    7fab
+0006240      7d78    0806    6104    046c    4307    6d6f    6970    656c
+0006260      ab04    937f    737f    0608    7704    0408    7fa6    7ede
+0006300      0808    5704    046c    7edd    016e    7500    b505    067f
+0006320      0408    6c5f    ee04    087e    ab04    8c7f    087f    6304
+0006340      046c    7eed    7f93    7f93    7f93    087d    0406    0877
+0006360      0408    6c57    dd04    017e    013e    7500    b505    067f
+0006400      0404    7865    7469    0201    7f93    7f93    087d    0406
+0006420      7fb8    0608    0704    7953    626d    6c6f    0573    087a
+0006440      0808    0104    b353    047f    6c5d    0c04    7973    626d
+0006460      6c6f    745f    6261    656c    3b01    0808    0104    b34b
+0006500      047f    6c5d    0b04    6f6c    6b6f    7075    6b5f    6e69
+0006520      7864    7fb6    b505    087f    0608    7704    0408    7ed8
+0006540      046e    7fa9    0575    7fb5    0408    7ed8    7fb0    0408
+0006560      6c61    8d04    937f    7d7f    0806    5d04    046c    4405
+0006600      6265    6775    0408    7ed8    7f8c    d504    937e    7d7f
+0006620      0608    b804    087f    0406    7ed9    7a05    0808    d804
+0006640      b37e    047f    6c5d    d704    787e    7fb6    b505    067f
+0006660      d904    087e    d804    8c7e    087f    5d04    046c    6c0f
+0006700      6f6f    756b    4c70    636f    6c61    6e4f    796c    7f93
+0006720      067d    b804    087f    0406    7ed9    7a05    a004    787f
+0006740      7fb6    b505    067f    d904    047e    7fa9    7f93        
+0006756
+0! -> 1 
+N! -> N * (N - 1)! 
+if true then TrueBody else FalseBody -> TrueBody 
+if false then TrueBody else FalseBody -> FalseBody 
+if true then TrueBody -> TrueBody 
+if false then TrueBody -> false
+import SC = XL . SCANNER 
+import CS = XL . UI . CONSOLE 
+import PT = XL . PARSER . TREE 
+import PR = XL . PARSER 
+import IO = XL . TEXT_IO 
+import XLT = XL . TRANSLATOR 
+import CG = XL . CODE_GENERATOR 
+import SYM = XL . SYMBOLS 
+import RD = XL . RENDERER 
+import ASCII = XL . TEXT_IO . ENCODING . ASCII 
+import ERR = XL . ERRORS 
+import MDL = XL . SEMANTICS . MODULES 
+import CST = XL . CONSTANTS 
+import XL . SEMANTICS . TYPES 
+import XL . SEMANTICS . DECLARATIONS 
+import XL . SEMANTICS . TYPES . FUNCTIONS 
+import XL . SEMANTICS . TYPES . RECORDS 
+import XL . SEMANTICS . TYPES . ENUMERATIONS 
+import XL . SEMANTICS . TYPES . GENERICS 
+import XL . SEMANTICS . FUNCTIONS 
+import XL . SEMANTICS . ITERATORS 
+import XL . SEMANTICS . OVERLOAD 
+import XL . SEMANTICS . GENERICS 
+import XL . SEMANTICS . WRITTEN_FORMS 
+import XL . SEMANTICS . INSTRUCTIONS 
+import XL . SEMANTICS . PRAGMAS 
+import PPR = XL . SEMANTICS . MACROS 
+import XL . PLUGIN . DIFFERENTIATION 
+import XL . PLUGIN . CONSTANTFOLD 
+import XL . PLUGIN . LISTING 
+import XL . PLUGIN . JUNK 
+import XL . PLUGIN . TRANSFORMS 
+import XL . PLUGIN . INCLUDE 
+import XL . PLUGIN . DEFINE 
+import XL . PLUGIN . IFDEFINED 
+import XL . PLUGIN . IFP 
+import XL . PLUGIN . XL2C 
+procedure Main is 
+    I:integer 
+    Max:integer := size CS . arguments 
+    P:PR . parser 
+    theProgram:PT . tree := nil 
+    compile:boolean := true 
+    transcode:boolean := true 
+    RD . DefaultRenderer := RD . Open (XLT . RuntimePath (XLT . style_file) ) 
+    CG . InitializeBytecodeMap ( ) 
+    for I in 1 .. Max - 1 loop 
+        name:text := CS . arguments [i] 
+        if name = "-show" then 
+            IO . WriteLn theProgram
+        else if name [0] = '+' then 
+            plugin:text := name [1 .. length (name) - 1] 
+            compile := false 
+            SYM . SetText XLT . context, "PHASE", "xlcommand" 
+            SYM . SetProperty XLT . context, "PRAGMA", PT . NewText (plugin, '"' ) 
+            theProgram := SYM . LookupRewrite (XLT . context, plugin, theProgram)
+        else if name = "-style" or name = "-syntax" or name = "-bytecode" then 
+            if I + 1 <= Max - 1 then 
+                I += 1 
+                newfile:text := CS . arguments [I] 
+                if name = "-style" then 
+                    XLT . style_file := newfile + ".stylesheet"
+                else if name = "-syntax" then 
+                    XLT . syntax_file := newfile + ".syntax"
+                else if name = "-bytecode" then 
+                    XLT . bytecode_file := newfile + ".bytecode"
+                
+                RD . Close RD . DefaultRenderer 
+                RD . DefaultRenderer := RD . Open (XLT . RuntimePath (XLT . style_file), XLT . RuntimePath (XLT . syntax_file) )
+            
+        else if name = "-parse" then 
+            compile := false 
+            transcode := false
+        else if name = "-sem" then 
+            XLT . full_compile := true 
+            compile := false 
+            theProgram := MDL . AddBuiltins (theProgram) 
+            theProgram := XLT . ScopeSemantics (theProgram, XLT . scopeMain)
+        else if name = "-opt" then 
+            compile := false 
+            theProgram := XLT . XLOptimizations (theProgram)
+        else if name = "-bootstrap" then 
+            compile := false 
+            transcode := true
+        else if name = "-xcode" then 
+            compile := false 
+            transcode := false 
+            CG . Transcode theProgram, IO . standard_output
+        else if name = "-ccode" then 
+            compile := false 
+            transcode := false 
+            CG . Generate theProgram, IO . standard_output
+        else if name = "-full" then 
+            compile := true
+        else if name = "-I" then 
+            if I + 1 <= Max - 1 then 
+                I += 1 
+                MDL . AddPath CS . arguments [I] 
+                PPR . AddPath CS . arguments [I]
+            
+        else if name = "-r" then 
+            if I + 1 <= Max - 1 then 
+                I += 1 
+                XLT . ChangeRuntime CS . arguments [I]
+            
+        else if name = "-g" then 
+            CG . debug := true
+        else if name = "-v" then 
+            XLT . verbose := true
+        else 
+            P := PR . Open (name) 
+            theProgram := PR . Parse (P) 
+            if theProgram = nil then 
+                ERR . Error "File '$1' cannot be read", - 1, name
+            
+            PR . Close P 
+            if compile and ERR . error_count = 0 then 
+                theProgram := MDL . AddBuiltins (theProgram) 
+                XLT . Compile theProgram
+            else if transcode and ERR . error_count = 0 then 
+                CG . Transcode theProgram, IO . standard_output
+            
+        
+    
+    if ERR . error_count > 0 then 
+        exit 2
+    
+
+procedure Symbols (S:SYM . symbol_table; K:SYM . lookup_kind) is 
+    if S = nil then 
+        S := XLT . context
+    
+    SYM . Debug S, K
+
+procedure Symbols (S:SYM . symbol_table) is 
+    Symbols S, SYM . lookupLocalOnly
+
+procedure Symbols ( ) is 
+    Symbols nil
+
