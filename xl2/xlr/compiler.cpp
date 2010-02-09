@@ -87,7 +87,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
       integerTreeTy(NULL), integerTreePtrTy(NULL),
       realTreeTy(NULL), realTreePtrTy(NULL),
       prefixTreeTy(NULL), prefixTreePtrTy(NULL),
-      evalTy(NULL), evalFnTy(NULL), symbolsPtrTy(NULL), charPtrTy(NULL),
+      evalTy(NULL), evalFnTy(NULL), infoPtrTy(NULL), charPtrTy(NULL),
       xl_evaluate(NULL), xl_same_text(NULL), xl_same_shape(NULL),
       xl_type_check(NULL), xl_type_error(NULL),
       xl_new_integer(NULL), xl_new_real(NULL), xl_new_character(NULL),
@@ -160,8 +160,8 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     runtime->InstallLazyFunctionCreator(unresolved_external);
 
     // Create the Symbol pointer type
-    PATypeHolder structSymbolsTy = OpaqueType::get(*context); // struct Symbols
-    symbolsPtrTy = PointerType::get(structSymbolsTy, 0);// Symbols *
+    PATypeHolder structInfoTy = OpaqueType::get(*context); // struct Info
+    infoPtrTy = PointerType::get(structInfoTy, 0);         // Info *
 
     // Create the eval_fn type
     PATypeHolder structTreeTy = OpaqueType::get(*context); // struct Tree
@@ -172,39 +172,31 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     evalTy = FunctionType::get(treePtrTy, evalParms, false);
     evalFnTy = PointerType::get(evalTy, 0);
 
-    // Create a hash byte array
-    PATypeHolder byteTy = OpaqueType::get(*context);  // byte
-    llvm::PointerType * bytePtrTy = PointerType::get(byteTy, 0);  // byte *
-
     // Create the Tree type
     std::vector<const Type *> treeElements;
     treeElements.push_back(LLVM_INTTYPE(ulong));           // tag
     treeElements.push_back(evalFnTy);                      // code
-    treeElements.push_back(symbolsPtrTy);                  // symbols
-    treeElements.push_back(treePtrTy);                     // type
-    treeElements.push_back(bytePtrTy);                     // hash
+    treeElements.push_back(infoPtrTy);                     // symbols
     treeTy = StructType::get(*context, treeElements);      // struct Tree {}
     cast<OpaqueType>(structTreeTy.get())->refineAbstractTypeTo(treeTy);
     treeTy = cast<StructType> (structTreeTy.get());
 #define TAG_INDEX       0
 #define CODE_INDEX      1
-#define SYMBOLS_INDEX   2
-#define TYPE_INDEX      3
-#define HASH_INDEX      4
+#define INFO_INDEX      2
 
     // Create the Integer type
     std::vector<const Type *> integerElements = treeElements;
     integerElements.push_back(LLVM_INTTYPE(longlong));  // value
     integerTreeTy = StructType::get(*context, integerElements);   // struct Integer{}
     integerTreePtrTy = PointerType::get(integerTreeTy,0); // Integer *
-#define INTEGER_VALUE_INDEX     5
+#define INTEGER_VALUE_INDEX     3
 
     // Create the Real type
     std::vector<const Type *> realElements = treeElements;
     realElements.push_back(Type::getDoubleTy(*context));  // value
     realTreeTy = StructType::get(*context, realElements); // struct Real{}
     realTreePtrTy = PointerType::get(realTreeTy, 0);      // Real *
-#define REAL_VALUE_INDEX        5
+#define REAL_VALUE_INDEX        3
 
     // Create the Prefix type (which we also use for Infix and Block)
     std::vector<const Type *> prefixElements = treeElements;
@@ -212,8 +204,8 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     prefixElements.push_back(treePtrTy);                // Tree *
     prefixTreeTy = StructType::get(*context, prefixElements); // struct Prefix
     prefixTreePtrTy = PointerType::get(prefixTreeTy, 0);// Prefix *
-#define LEFT_VALUE_INDEX        5
-#define RIGHT_VALUE_INDEX       6
+#define LEFT_VALUE_INDEX        3
+#define RIGHT_VALUE_INDEX       4
 
     // Record the type names
     module->addTypeName("tree", treeTy);
@@ -221,7 +213,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     module->addTypeName("real", realTreeTy);
     module->addTypeName("eval", evalTy);
     module->addTypeName("prefix", prefixTreeTy);
-    module->addTypeName("symbols*", symbolsPtrTy);
+    module->addTypeName("info*", infoPtrTy);
 
     // Create a reference to the evaluation function
     charPtrTy = PointerType::get(LLVM_INTTYPE(char), 0);

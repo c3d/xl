@@ -100,7 +100,7 @@ public:
     llvm::PointerType         *prefixTreePtrTy;
     llvm::FunctionType        *evalTy;
     llvm::PointerType         *evalFnTy;
-    llvm::PointerType         *symbolsPtrTy;
+    llvm::PointerType         *infoPtrTy;
     llvm::PointerType         *charPtrTy;
     llvm::Function            *xl_evaluate;
     llvm::Function            *xl_same_text;

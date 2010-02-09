@@ -292,9 +292,9 @@ struct SymbolsInfo : Info
 //    Record the symbol associated with a tree
 // ----------------------------------------------------------------------------
 {
+    SymbolsInfo(Symbols *syms) : symbols(syms) {}
     typedef Symbols *   data_t;
-                        SymbolsInfo(Symbols *syms) : symbols(syms) {}
-                        operator data_t()  { return symbols; }
+    operator            data_t()  { return symbols; }
     SymbolsInfo *       Copy();
     Symbols *           symbols;
 };
