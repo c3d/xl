@@ -165,7 +165,7 @@ typedef const wchar *   wkstring;
 
 #ifdef XL_DEBUG
 #define XL_ASSERT(x)   { if (!(x)) xl_assert_failed(#x, __FILE__, __LINE__); }
-#define XL_CASSERT(x)  char __dummy[((int) (x))*2-1]
+#define XL_CASSERT(x)  struct __dummy { char foo[((int) (x))*2-1]; }
 externc void xl_assert_failed(kstring msg, kstring file, uint line);
 
 #else

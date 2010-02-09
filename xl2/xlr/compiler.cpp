@@ -172,6 +172,18 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     evalTy = FunctionType::get(treePtrTy, evalParms, false);
     evalFnTy = PointerType::get(evalTy, 0);
 
+    // Verify that there wasn't a change in the Tree type invalidating us
+    struct LocalTree
+    {
+        LocalTree (const Tree &o) :
+            tag(o.tag), code(o.code), info(o.info) {}
+        ulong    tag;
+        eval_fn  code;
+        Info    *info;
+    };
+    // If this assert fails, you changed struct tree and need to modify here
+    XL_CASSERT(sizeof(LocalTree) == sizeof(Tree));
+               
     // Create the Tree type
     std::vector<const Type *> treeElements;
     treeElements.push_back(LLVM_INTTYPE(ulong));           // tag
@@ -183,6 +195,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 #define TAG_INDEX       0
 #define CODE_INDEX      1
 #define INFO_INDEX      2
+
 
     // Create the Integer type
     std::vector<const Type *> integerElements = treeElements;
