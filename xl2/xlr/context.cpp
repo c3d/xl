@@ -156,7 +156,7 @@ SymbolsInfo *SymbolsInfo::Copy()
 // ----------------------------------------------------------------------------
 {
     SymbolsInfo *copy = new SymbolsInfo(symbols);
-    copy->next = next->Copy();
+    copy->next = next ? next->Copy() : NULL;
     return copy;
 }
 

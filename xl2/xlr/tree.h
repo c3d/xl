@@ -99,7 +99,8 @@ struct Tree
     Tree (kind k, tree_position pos = NOWHERE):
         tag((pos<<KINDBITS) | k), code(NULL), info(NULL) {}
     Tree(kind k, Tree *from):
-        tag(from->tag), code(from->code), info(from->info->Copy())
+        tag(from->tag), code(from->code),
+        info(from->info ? from->info->Copy() : NULL)
     {
         assert(k == Kind());
     }
