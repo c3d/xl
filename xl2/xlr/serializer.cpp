@@ -1,18 +1,18 @@
 // ****************************************************************************
 //  serializer.cpp                                                  XLR project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     A couple of classes used to serialize and deserialize XL trees
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
@@ -33,9 +33,9 @@
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //    Internal format for IEEE-754 double type
-// 
+//
 // ============================================================================
 
 union ieee754_double
@@ -72,9 +72,9 @@ union ieee754_double
 
 
 // ============================================================================
-// 
+//
 //   Class Serializer : Convert trees to serialized form
-// 
+//
 // ============================================================================
 
 Serializer::Serializer(std::ostream &out)
@@ -155,7 +155,7 @@ Tree *Serializer::DoPrefix(Prefix *what)
     WriteChild(what->right);
     return what;
 }
-    
+
 
 Tree *Serializer::DoPostfix(Postfix *what)
 // ----------------------------------------------------------------------------
@@ -279,9 +279,9 @@ void Serializer::WriteChild(Tree *child)
 
 
 // ============================================================================
-// 
+//
 //   Class Deserializer : Read back serialized data from a stream
-// 
+//
 // ============================================================================
 
 Deserializer::Deserializer(std::istream &in, tree_position pos)
@@ -382,7 +382,7 @@ longlong Deserializer::ReadSigned()
         shifted = longlong(b & 0x7f) << shift;
         value |= shifted;
         if ((shifted >> shift) != (b & 0x7f))
-            throw Error(this, serialINTEGER);            
+            throw Error(this, serialINTEGER);
         shift += 7;
     }
     while (b & 0x80);
