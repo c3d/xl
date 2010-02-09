@@ -33,6 +33,19 @@
 
 XL_BEGIN
 
+template <class Hash = Sha1>
+struct HashInfo : Info, Hash
+// ----------------------------------------------------------------------------
+//   Information in a tree about the hash
+// ----------------------------------------------------------------------------
+{
+    typedef Hash data_t;
+    HashInfo (const Hash &h) : Hash(h) {}
+    operator data_t () { return *this; }
+};
+
+
+template <class Hash = Sha1>
 struct TreeHashPruneAction : Action
 // ----------------------------------------------------------------------------
 //   Delete and reset all the hash pointers of a tree
@@ -41,11 +54,10 @@ struct TreeHashPruneAction : Action
     TreeHashPruneAction () {}
     Tree *Do(Tree *what)
     {
-        if (what->hash) { delete what->hash; what->hash = NULL; }
+        what->Purge < HashInfo<Hash> >();
         return what;
     }
 };
-
 
 
 template <class Hash = Sha1>
@@ -63,12 +75,30 @@ struct TreeHashAction : Action
     } mode;
 
     typename Hash::Computation compute;
+    typedef HashInfo<Hash> HInfo;
 
 public:
     TreeHashAction (Mode mode = Default) : mode(mode), compute() {}
 
-    bool NeedHash(Tree *t)      { return t->hash==NULL || (mode&Force)==Force; }
-    void Allocate(Tree *t)      { delete t->hash; t->hash = new Hash(compute); }
+    bool NeedHash(Tree *t)
+    // ------------------------------------------------------------------------
+    //   Decide if we need to hash for that tree
+    // ------------------------------------------------------------------------
+    {
+        if (mode & Force)
+            return true;
+        return !t->Exists<HInfo>();
+    }
+
+
+    void Allocate(Tree *t)
+    // ------------------------------------------------------------------------
+    //    Create an info entry for the given tree
+    // ------------------------------------------------------------------------
+    {
+        t->Purge<HInfo>();
+        t->Set<HInfo>(Hash(compute));
+    }
 
 
     void Compute(uint64 v)
@@ -113,18 +143,21 @@ public:
     {
         if (sub)
         {
-            bool needsHash = sub->hash == NULL;
+            // Check if we need to copmute some hash
+            bool needsHash = !sub->Exists<HInfo>();
             if (needsHash)
             {
                 TreeHashAction hashSubTree(mode);
                 sub->Do(hashSubTree);
             }
-            compute(sub->hash->hash, sub->hash->SIZE);
+
+            // Copmute the hash at this level from children's hash
+            HInfo subHash = sub->Get<HInfo>();
+            compute(subHash.hash, subHash.SIZE);
+
+            // If we want to prune hash information after the fact
             if ((mode & Prune) && ((mode & Eager) || needsHash))
-            {
-                delete sub->hash;
-                sub->hash = NULL;
-            }
+                sub->Purge<HInfo>();
         }
         else
         {

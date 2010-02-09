@@ -50,6 +50,7 @@ struct Postfix;                                 // Postfix: 3!
 struct Infix;                                   // Infix: A+B, newline
 struct Block;                                   // Block: (A), {A}
 struct Action;                                  // Action on trees
+struct Info;                                    // Information in trees
 struct Symbols;                                 // Symbol table
 struct Sha1;                                    // Hash used for id-ing trees
 typedef ulong tree_position;                    // Position in context
@@ -74,6 +75,18 @@ enum kind
 };
 
 
+struct Info
+// ----------------------------------------------------------------------------
+//   Information associated with a tree
+// ----------------------------------------------------------------------------
+{
+                        Info() {}
+    virtual             ~Info() {}
+    virtual Info *      Copy() { return next ? next->Copy() : NULL; }
+    Info *next;
+};
+
+
 struct Tree
 // ----------------------------------------------------------------------------
 //   The base class for all XL trees
@@ -84,11 +97,9 @@ struct Tree
 
     // Constructor and destructor
     Tree (kind k, tree_position pos = NOWHERE):
-        tag((pos<<KINDBITS) | k), code(NULL), symbols(NULL), type(NULL),
-        hash(NULL) {}
+        tag((pos<<KINDBITS) | k), code(NULL), info(NULL) {}
     Tree(kind k, Tree *from):
-        tag(from->tag),
-        code(from->code), symbols(from->symbols), type(from->type), hash(NULL)
+        tag(from->tag), code(from->code), info(from->info->Copy())
     {
         assert(k == Kind());
     }
@@ -103,7 +114,16 @@ struct Tree
     tree_position       Position()            { return tag>>KINDBITS; }
     bool                IsLeaf()              { return Kind() <= NAME; }
     bool                IsConstant()          { return Kind() <= TEXT; }
-    void                SetSymbols(Symbols *s);
+
+    // Info
+    template<class I>
+    typename I::data_t  Get();
+    template<class I>
+    bool                Exists();
+    template<class I>
+    void                Set(typename I::data_t data);
+    template <class I>
+    void                Purge();
 
     // Safe cast to an appropriate subclass
     Integer *           AsInteger();
@@ -124,9 +144,7 @@ struct Tree
 public:
     ulong       tag;                            // Position + kind
     eval_fn     code;                           // Compiled code
-    Symbols *   symbols;                        // Local symbols
-    Tree *      type;                           // Type information
-    Sha1 *      hash;                           // Cryptographic hash or NULL
+    Info *      info;                           // Information for tree
 };
 
 
@@ -149,6 +167,65 @@ struct Action
     virtual Tree *DoInfix(Infix *what);
     virtual Tree *DoBlock(Block *what);
 };
+
+
+template <class I> inline typename I::data_t Tree::Get()
+// ----------------------------------------------------------------------------
+//   Find if we have an information of the right type in 'info'
+// ----------------------------------------------------------------------------
+{
+    for (Info *i = info; i; i = i->next)
+        if (I *ic = dynamic_cast<I *> (i))
+            return (typename I::data_t) *ic;
+    return typename I::data_t();
+}
+
+
+template <class I> inline bool Tree::Exists()
+// ----------------------------------------------------------------------------
+//   Verifies if the tree already has information of the given type
+// ----------------------------------------------------------------------------
+{
+    for (Info *i = info; i; i = i->next)
+        if (dynamic_cast<I *> (i))
+            return true;
+    return false;
+}
+
+
+template <class I> inline void Tree::Set(typename I::data_t data)
+// ----------------------------------------------------------------------------
+//   Set the information given as an argument
+// ----------------------------------------------------------------------------
+{
+    Info *i = new I(data);
+    i->next = info;
+    info = i;
+}
+
+
+template <class I> inline void Tree::Purge()
+// ----------------------------------------------------------------------------
+//   Find and purge information of the given type
+// ----------------------------------------------------------------------------
+{
+    Info *last = NULL;
+    for (Info *i = info; i; i = i->next)
+    {
+        if (I *ic = dynamic_cast<I *> (i))
+        {
+            if (last)
+                last->next = ic->next;
+            else
+                info = ic->next;
+            delete ic;
+        }
+        else
+        {
+            last = i;
+        }
+    }
+}
 
 
 struct TreeRoot
@@ -294,6 +371,7 @@ struct Infix : Tree
 };
 
 
+
 // ============================================================================
 //
 //    Safe casts
@@ -386,6 +464,8 @@ inline Postfix *Tree::AsPostfix()
         return (Postfix *) this;
     return NULL;
 }
+
+
 
 // ============================================================================
 // 

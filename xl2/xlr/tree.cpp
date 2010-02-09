@@ -47,8 +47,8 @@ Tree::~Tree()
 //   Delete the hash if we have one
 // ----------------------------------------------------------------------------
 {
-    if (hash)
-        delete hash;
+    for (Info *i = info; i; i = i->next)
+        delete i;
 }
 
 
@@ -86,24 +86,6 @@ Name::operator bool()
         return false;
     Error("Value '$1' is not a boolean value", this);
     return false;
-}
-
-
-void Tree::SetSymbols(Symbols *s)
-// ----------------------------------------------------------------------------
-//   Change the symbols table, make sure we don't overwrite stuff
-// ----------------------------------------------------------------------------
-{
-    if (symbols && symbols != s)
-    {
-        std::cerr << "WARNING: Symbol overwritten on " << this << '\n';
-        std::cerr << "Old symbols were:\n";
-        debugsc(symbols);
-        std::cerr << "New symbols were:\n";
-        debugsc(s);
-    }
-    symbols = s;
-    Context::context->active_symbols.insert(s);
 }
 
 
@@ -266,10 +248,12 @@ text sha1(Tree *t)
     text result;
     if (t)
     {
-        TreeHashAction<> sha1;
-        t->Do(sha1);
+        TreeHashAction<> hash;
+        t->Do(hash);
+
         std::ostringstream os;
-        os << *t->hash;
+        os << t->Get< HashInfo<> > ();
+
         result = os.str();
     }
     return result;

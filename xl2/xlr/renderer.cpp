@@ -675,5 +675,6 @@ void debugp(XL::Tree *tree)
 
     XL::TreeHashAction<> h_action;
     tree->Do(h_action);
-    std::cout << "SHA-1: " << *tree->hash << '\n';
+    if (tree->Exists< XL::HashInfo<> >())
+        std::cout << "HASH: " << tree->Get< XL::HashInfo<> >() << '\n';
 }

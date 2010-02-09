@@ -82,6 +82,7 @@ public:
     byte hash[SIZE];
 };
 
+
 XL_END
 
 #endif // SHA1_H

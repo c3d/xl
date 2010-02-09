@@ -68,7 +68,7 @@ Tree *xl_evaluate(Tree *what)
     {
         if (!what->code)
         {
-            Symbols *symbols = what->symbols;
+            Symbols *symbols = what->Get<SymbolsInfo>();
             if (!symbols)
             {
                 std::cerr << "WARNING: No symbols for '" << what << "'\n";
@@ -504,7 +504,7 @@ Tree *xl_load(text name)
     Symbols *syms = new Symbols(Context::context);
     MAIN->files[name] = SourceFile(name, tree, syms);
     Symbols::symbols = syms;
-    tree->SetSymbols(syms);
+    tree->Set<SymbolsInfo>(syms);
     tree = syms->CompileAll(tree);
     Symbols::symbols = old;
     old->Import(syms);
@@ -607,7 +607,7 @@ Tree *xl_load_csv(text name)
     Symbols *syms = new Symbols(Context::context);
     MAIN->files[name] = SourceFile(name, tree, syms);
     Symbols::symbols = syms;
-    tree->SetSymbols(syms);
+    tree->Set<SymbolsInfo>(syms);
     tree = syms->CompileAll(tree);
     Symbols::symbols = old;
     old->Import(syms);
@@ -718,7 +718,7 @@ Tree *xl_load_tsv(text name)
     Symbols *syms = new Symbols(Context::context);
     MAIN->files[name] = SourceFile(name, tree, syms);
     Symbols::symbols = syms;
-    tree->SetSymbols(syms);
+    tree->Set<SymbolsInfo>(syms);
     tree = syms->CompileAll(tree);
     Symbols::symbols = old;
     old->Import(syms);

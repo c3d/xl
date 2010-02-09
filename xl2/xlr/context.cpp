@@ -101,9 +101,8 @@ Rewrite *Symbols::EnterRewrite(Rewrite *rw)
         has_rewrites_for_constants = true;
 
     // Create symbol table for this rewrite
-    rw->from->symbols = NULL;
     Symbols *locals = new Symbols(this);
-    rw->from->SetSymbols(locals);
+    rw->from->Set<SymbolsInfo>(locals);
 
     // Enter parameters in the symbol table
     ParameterMatch parms(locals);
@@ -148,6 +147,17 @@ void Symbols::Clear()
         delete rewrites;
         rewrites = NULL;
     }
+}
+
+
+SymbolsInfo *SymbolsInfo::Copy()
+// ----------------------------------------------------------------------------
+//   Symbol information is copied when a tree is copied
+// ----------------------------------------------------------------------------
+{
+    SymbolsInfo *copy = new SymbolsInfo(symbols);
+    copy->next = next->Copy();
+    return copy;
 }
 
 
@@ -366,7 +376,7 @@ Tree *Symbols::Run(Tree *code)
         {
             if (!result->code)
             {
-                Symbols *symbols = result->symbols;
+                Symbols *symbols = result->Get<SymbolsInfo> ();
                 if (!symbols)
                 {
                     std::cerr << "WARNING: Tree '" << code
@@ -472,7 +482,7 @@ Tree *Symbols::Run(Tree *code)
                     else
                     {
                         // We should have same number of args and parms
-                        Symbols &parms = *candidate->from->symbols;
+                        Symbols &parms = *candidate->from->Get<SymbolsInfo>();
                         ulong parmCount = parms.names.size();
                         if (args.names.size() != parmCount)
                         {
@@ -637,7 +647,8 @@ struct GCAction : Action
     {
         typedef std::pair<active_set::iterator, bool> inserted;
         inserted ins = alive.insert(what);
-        if (what->symbols) alive_symbols.insert(what->symbols);
+        if (Symbols *syms = what->Get<SymbolsInfo> ())
+            alive_symbols.insert(syms);
         return ins.second;
     }
     Tree *Do(Tree *what)
@@ -931,7 +942,7 @@ Tree *InterpretedArgumentMatch::DoInfix(Infix *what)
         // Check if the type matches the value
         Infix *typeTest = new Infix(":", test, typeExpr,
                                     what->right->Position());
-        typeTest->symbols = symbols;
+        typeTest->Set<SymbolsInfo> (symbols);
         Tree *afterCast = xl_evaluate(typeTest);
         if (!afterCast)
             return NULL;
@@ -1203,8 +1214,8 @@ Tree *ArgumentMatch::CompileValue(Tree *source)
         {
             llvm::BasicBlock *bb = unit.BeginLazy(name);
             unit.NeedStorage(name);
-            if (!name->symbols)
-                name->SetSymbols(symbols);
+            if (!name->Exists<SymbolsInfo>())
+                name->Set<SymbolsInfo>(symbols);
             unit.CallEvaluate(name);
             unit.EndLazy(name, bb);
         }
@@ -1972,8 +1983,8 @@ Tree *CompileAction::DoName(Name *what)
         if (!result->AsName())
         {
             Rewrite rw(symbols, what, result);
-            if (!what->symbols)
-                what->SetSymbols(symbols);
+            if (!what->Exists<SymbolsInfo>())
+                what->Set<SymbolsInfo>(symbols);
             result = rw.Compile();
         }
 
@@ -1999,8 +2010,8 @@ Tree *CompileAction::DoName(Name *what)
             // Return the name itself by default
             unit.ConstantTree(result);
             unit.Copy(result, what);
-            if (!result->symbols)
-                result->SetSymbols(symbols);
+            if (!result->Exists<SymbolsInfo>())
+                result->Set<SymbolsInfo>(symbols);
         }
 
         return result;
@@ -2029,8 +2040,8 @@ Tree *CompileAction::DoBlock(Block *what)
             return NULL;
         if (unit.IsKnown(what->child))
         {
-            if (!what->child->symbols)
-                what->child->SetSymbols(symbols);
+            if (!what->child->Exists<SymbolsInfo>())
+                what->child->Set<SymbolsInfo>(symbols);
             unit.CallEvaluate(what->child);
         }
         unit.Copy(result, what);
@@ -2055,16 +2066,16 @@ Tree *CompileAction::DoInfix(Infix *what)
             return NULL;
         if (unit.IsKnown(what->left))
         {
-            if (!what->left->symbols)
-                what->left->SetSymbols(symbols);
+            if (!what->left->Exists<SymbolsInfo>())
+                what->left->Set<SymbolsInfo>(symbols);
             unit.CallEvaluate(what->left);
         }
         if (!what->right->Do(this))
             return NULL;
         if (unit.IsKnown(what->right))
         {
-            if (!what->right->symbols)
-                what->right->SetSymbols(symbols);
+            if (!what->right->Exists<SymbolsInfo>())
+                what->right->Set<SymbolsInfo>(symbols);
             unit.CallEvaluate(what->right);
             unit.Copy(what->right, what);
         }
@@ -2185,7 +2196,7 @@ Tree * CompileAction::Rewrites(Tree *what)
                     else
                     {
                         // We should have same number of args and parms
-                        Symbols &parms = *candidate->from->symbols;
+                        Symbols &parms = *candidate->from->Get<SymbolsInfo>();
                         ulong parmCount = parms.names.size();
                         if (args.names.size() != parmCount)
                         {
@@ -2362,11 +2373,11 @@ Tree *Rewrite::Compile(void)
     }
 
     // Check that we had symbols defined for the 'from' tree
-    if (!from->symbols)
+    if (!from->Exists<SymbolsInfo>())
         return Error("Internal: No symbols for '$1'", from);
 
     // Create local symbols
-    Symbols *locals = new Symbols (from->symbols);
+    Symbols *locals = new Symbols (from->Get<SymbolsInfo>());
 
     // Record rewrites and data declarations in the current context
     DeclarationAction declare(locals);
