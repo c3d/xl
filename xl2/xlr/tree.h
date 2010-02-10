@@ -80,7 +80,8 @@ struct Info
 //   Information associated with a tree
 // ----------------------------------------------------------------------------
 {
-                        Info() {}
+                        Info(): next(NULL) {}
+                        Info(const Info &o) : next(NULL) {}
     virtual             ~Info() {}
     virtual Info *      Copy() { return next ? next->Copy() : NULL; }
     Info *next;
@@ -120,9 +121,13 @@ struct Tree
     template<class I>
     typename I::data_t  Get();
     template<class I>
-    bool                Exists();
-    template<class I>
     void                Set(typename I::data_t data);
+    template<class I>
+    I*                  GetInfo();
+    template<class I>
+    void                SetInfo(I *);
+    template<class I>
+    bool                Exists();
     template <class I>
     void                Purge();
 
@@ -182,6 +187,42 @@ template <class I> inline typename I::data_t Tree::Get()
 }
 
 
+template <class I> inline void Tree::Set(typename I::data_t data)
+// ----------------------------------------------------------------------------
+//   Set the information given as an argument
+// ----------------------------------------------------------------------------
+{
+    Info *i = new I(data);
+    i->next = info;
+    info = i;
+}
+
+
+template <class I> inline I* Tree::GetInfo()
+// ----------------------------------------------------------------------------
+//   Find if we have an information of the right type in 'info'
+// ----------------------------------------------------------------------------
+{
+    for (Info *i = info; i; i = i->next)
+        if (I *ic = dynamic_cast<I *> (i))
+            return ic;
+    return NULL;
+}
+
+
+template <class I> inline void Tree::SetInfo(I *i)
+// ----------------------------------------------------------------------------
+//   Set the information given as an argument
+// ----------------------------------------------------------------------------
+{
+    Info *last = i;
+    while(last->next)
+        last = last->next;
+    last->next = info;
+    info = i;
+}
+
+
 template <class I> inline bool Tree::Exists()
 // ----------------------------------------------------------------------------
 //   Verifies if the tree already has information of the given type
@@ -191,17 +232,6 @@ template <class I> inline bool Tree::Exists()
         if (dynamic_cast<I *> (i))
             return true;
     return false;
-}
-
-
-template <class I> inline void Tree::Set(typename I::data_t data)
-// ----------------------------------------------------------------------------
-//   Set the information given as an argument
-// ----------------------------------------------------------------------------
-{
-    Info *i = new I(data);
-    i->next = info;
-    info = i;
 }
 
 
