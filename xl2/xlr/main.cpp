@@ -233,7 +233,7 @@ int Main::Run()
         {
             result = sf.symbols->Run(sf.tree.tree);
         }
-        catch (struct Error e)
+        catch (XL::Error &e)
         {
             e.Display();
             result = NULL;

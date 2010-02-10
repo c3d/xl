@@ -586,7 +586,7 @@ Tree * Symbols::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
     }
 
     // No handler: throw the error as en exception
-    throw Error(message, arg1, arg2, arg3);
+    throw XL::Error(message, arg1, arg2, arg3);
 }
 
 
