@@ -101,8 +101,10 @@ int Main::LoadFiles()
     EnterBasics(&context);
 
     // Scan options and build list of files we need to process
-    filelist.push_back("builtins.xl");
-    for (cmd = options.Parse(argc, argv); cmd != end; cmd = options.ParseNext())
+    cmd = options.Parse(argc, argv);
+    if (options.builtins)
+        filelist.push_back("builtins.xl");
+    for (; cmd != end; cmd = options.ParseNext())
     {
         filelist.push_back(cmd);
         file_names.push_back(cmd);
