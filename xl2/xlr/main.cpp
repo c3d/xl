@@ -183,7 +183,7 @@ int Main::LoadFile(text file)
     context.CollectGarbage();
 
     IFTRACE(source)
-        std::cout << "SOURCE:\n" << tree << "\n";
+        std::cout << "SOURCE: " << file << "\n" << tree << "\n";
 
     if (!options.parseOnly)
     {
