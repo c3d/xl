@@ -1,4 +1,4 @@
-// CMD= %x -parse -write %f > %f.ser && od -x %f.ser && %x -parse -read %f < %f.ser
+// CMD= %x -parse -write %f > %f.ser && od -x %f.ser && %x -parse -read /dev/null < %f.ser
 // ****************************************************************************
 //  compiler.xl                     (C) 1992-2003 Christophe de Dinechin (ddd)
 //                                                                 XL2 project
