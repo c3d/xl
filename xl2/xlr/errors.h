@@ -58,6 +58,29 @@ struct Errors
     Positions * positions;
 };
 
+
+struct Error
+// ----------------------------------------------------------------------------
+//   Encapsulate a single error
+// ----------------------------------------------------------------------------
+{
+    Error (text message, Tree *arg1, Tree *arg2, Tree *arg3):
+        message(message), arg1(arg1), arg2(arg2), arg3(arg3), handled(false) {}
+    Error (const Error &o):
+        message(o.message), arg1(o.arg1), arg2(o.arg2), arg3(o.arg3),
+        handled(false) { ((Error *) &o)->handled = true; }
+    ~Error() { if (!handled) Display(); }
+
+    void        Display();
+    bool        Handled() { bool old = handled; handled = true; return old; }
+
+    text        message;
+    Tree *      arg1;
+    Tree *      arg2;
+    Tree *      arg3;
+    bool        handled;
+};
+
 XL_END
 
 #endif /* XL_ERRORS_H */

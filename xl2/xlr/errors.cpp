@@ -27,6 +27,7 @@
 #include "errors.h"
 #include "options.h"
 #include "scanner.h" // for Positions
+#include "context.h" // For error display
 #include "tree.h"
 
 XL_BEGIN
@@ -143,7 +144,31 @@ void Errors::Error(text err, Tree *arg1, Tree *arg2, Tree *arg3)
 }
 
 
+
+// ============================================================================
+// 
+//   Display an error
+// 
+// ============================================================================
+
+void Error::Display()
+// ----------------------------------------------------------------------------
+//   Display an error on the error output
+// ----------------------------------------------------------------------------
+{
+    Context::context->errors.Error(message, arg1, arg2, arg3);
+    handled = true;
+}
+
 XL_END
+
+
+
+// ============================================================================
+// 
+//    Runtime support (in global namespace)
+// 
+// ============================================================================
 
 
 void xl_assert_failed(kstring msg, kstring file, uint line)

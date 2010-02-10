@@ -585,9 +585,8 @@ Tree * Symbols::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
         return Run(errorCall);
     }
 
-    // No handler: terminate
-    Context::context->errors.Error(message, arg1, arg2, arg3);
-    std::exit(1);
+    // No handler: throw the error as en exception
+    throw Error(message, arg1, arg2, arg3);
 }
 
 
@@ -926,11 +925,11 @@ Tree *InterpretedArgumentMatch::DoInfix(Infix *what)
         // Check the variable name, e.g. K in example above
         Name *varName = what->left->AsName();
         if (!varName)
-            return Error("Expected a name, got '$1' ", what->left);
+            return Ooops("Expected a name, got '$1' ", what->left);
 
         // Check if the name already exists
         if (Tree *existing = rewrite->Named(varName->value))
-            return Error("Name '$1' already exists as '$2'",
+            return Ooops("Name '$1' already exists as '$2'",
                          what->left, existing);
 
         // Evaluate type expression, e.g. 'integer' in example above
@@ -1103,11 +1102,11 @@ Tree *ParameterMatch::DoInfix(Infix *what)
         // Check the variable name, e.g. K in example above
         Name *varName = what->left->AsName();
         if (!varName)
-            return Error("Expected a name, got '$1' ", what->left);
+            return Ooops("Expected a name, got '$1' ", what->left);
 
         // Check if the name already exists
         if (Tree *existing = symbols->Named(varName->value))
-            return Error("Typed name '$1' already exists as '$2'",
+            return Ooops("Typed name '$1' already exists as '$2'",
                          what->left, existing);
 
         // Enter the name in symbol table
@@ -1242,7 +1241,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     EnvironmentScan env(symbols);
     Tree *envOK = source->Do(env);
     if (!envOK)
-        return Error("Internal: what environment in '$1'?", source);
+        return Ooops("Internal: what environment in '$1'?", source);
 
     // Create the parameter list with all imported locals
     tree_list parms, args;
@@ -1504,11 +1503,11 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         // Check the variable name, e.g. K in example above
         Name *varName = what->left->AsName();
         if (!varName)
-            return Error("Expected a name, got '$1' ", what->left);
+            return Ooops("Expected a name, got '$1' ", what->left);
 
         // Check if the name already exists
         if (Tree *existing = rewrite->Named(varName->value))
-            return Error("Name '$1' already exists as '$2'",
+            return Ooops("Name '$1' already exists as '$2'",
                          what->left, existing);
 
         // Evaluate type expression, e.g. 'integer' in example above
@@ -1881,7 +1880,7 @@ Tree *DeclarationAction::DoPrefix(Prefix *what)
         {
             Text *file = what->right->AsText();
             if (!file)
-                return Error("Argument '$1' to 'load' is not a text",
+                return Ooops("Argument '$1' to 'load' is not a text",
                              what->right);
             return xl_load(file->value);
         }
@@ -2021,7 +2020,7 @@ Tree *CompileAction::DoName(Name *what)
         unit.ConstantTree(what);
         return what;
     }
-    return Error("Name '$1' does not exist", what);
+    return Ooops("Name '$1' does not exist", what);
 }
 
 
@@ -2278,7 +2277,7 @@ Tree * CompileAction::Rewrites(Tree *what)
             what = what->Do(children);
             return NULL;
         }
-        return Error("No rewrite candidate for '$1'", what);
+        return Ooops("No rewrite candidate for '$1'", what);
     }
     return what;
 }
@@ -2374,7 +2373,7 @@ Tree *Rewrite::Compile(void)
 
     // Check that we had symbols defined for the 'from' tree
     if (!from->Exists<SymbolsInfo>())
-        return Error("Internal: No symbols for '$1'", from);
+        return Ooops("Internal: No symbols for '$1'", from);
 
     // Create local symbols
     Symbols *locals = new Symbols (from->Get<SymbolsInfo>());
@@ -2383,13 +2382,13 @@ Tree *Rewrite::Compile(void)
     DeclarationAction declare(locals);
     Tree *toDecl = to->Do(declare);
     if (!toDecl)
-        return Error("Internal: Declaration error for '$1'", to);
+        return Ooops("Internal: Declaration error for '$1'", to);
 
     // Compile the body of the rewrite
     CompileAction compile(locals, unit, false, false);
     Tree *result = to->Do(compile);
     if (!result)
-        return Error("Unable to compile '$1'", to);
+        return Ooops("Unable to compile '$1'", to);
 
     // Even if technically, this is not an 'eval_fn' (it has more args),
     // we still record it to avoid recompiling multiple times
@@ -2397,22 +2396,6 @@ Tree *Rewrite::Compile(void)
     to->code = fn;
 
     return to;
-}
-
-
-
-// ============================================================================
-//
-//   Global error handler
-//
-// ============================================================================
-
-Tree *Error (text message, Tree *a1, Tree *a2, Tree *a3)
-// ----------------------------------------------------------------------------
-//    Use the error handler in the global context
-// ----------------------------------------------------------------------------
-{
-    return Context::context->Error(message, a1, a2, a3);
 }
 
 XL_END

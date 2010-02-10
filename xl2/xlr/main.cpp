@@ -228,7 +228,17 @@ int Main::Run()
         Symbols::symbols = sf.symbols;
 
         // Evaluate the given tree
-        Tree *result = sf.symbols->Run(sf.tree.tree);
+        Tree *result = sf.tree.tree;
+        try
+        {
+            result = sf.symbols->Run(sf.tree.tree);
+        }
+        catch (struct Error e)
+        {
+            e.Display();
+            result = NULL;
+        }
+
         if (!result)
         {
             hadError = true;
@@ -248,9 +258,6 @@ int Main::Run()
 
     return hadError;
 }
-
-
-
 
 XL_END
 
