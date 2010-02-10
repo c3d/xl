@@ -17,6 +17,7 @@
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
 //  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2010 Jerome Forissier <jerome@taodyne.com>
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
@@ -25,6 +26,7 @@
 #include <stdlib.h>
 #include <map>
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
 #include "main.h"
 #include "scanner.h"
@@ -142,8 +144,22 @@ int Main::LoadFile(text file)
     }
     else
     {
-        Parser parser (file.c_str(), syntax, positions, errors);
-        tree = parser.Parse();
+        std::string nt = "";
+        try
+        {
+            std::ifstream ifs(file.c_str(), std::ifstream::in);
+            Deserializer ds(ifs);
+            tree = ds.ReadTree();
+        }
+        catch (Deserializer::Error &e)
+        {
+            // File is not in serialized format, try to parse it as XL source
+            nt = "not ";
+            Parser parser (file.c_str(), syntax, positions, errors);
+            tree = parser.Parse();
+        }
+        if (options.verbose)
+            std::cout << "Info: file " << file << " is " << nt << "in serialized format" << '\n';
     }
 
     if (options.writeSerialized)
