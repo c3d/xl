@@ -1,6 +1,5 @@
 // ****************************************************************************
-//  main.cpp                       (C) 1992-2003 Christophe de Dinechin (ddd)
-//                                                                XL2 project
+//  main.cpp                                                        XLR project
 // ****************************************************************************
 //
 //   File Description:
@@ -15,12 +14,10 @@
 //
 //
 // ****************************************************************************
-// This program is released under the GNU General Public License.
-// See http://www.gnu.org/copyleft/gpl.html for details
-// ****************************************************************************
-// * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+//  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
 #include "configuration.h"
@@ -58,7 +55,8 @@ Main::Main(int inArgc, char **inArgv, Compiler &comp)
       options(errors),
       compiler(comp),
       context(errors, &compiler),
-      renderer(std::cout, "xl.stylesheet", syntax)
+      renderer(std::cout, "xl.stylesheet", syntax),
+      reader(NULL), writer(NULL)
 {
     Options::options = &options;
     Context::context = &context;
@@ -73,6 +71,8 @@ Main::~Main()
 //   Destructor
 // ----------------------------------------------------------------------------
 {
+    delete reader;
+    delete writer;
 }
 
 
@@ -85,8 +85,6 @@ int Main::LoadFiles()
     std::vector<text>            filelist;
     std::vector<text>::iterator  file;
     bool                         hadError = false;
-    Deserializer                *reader   = NULL;
-    Serializer                  *writer   = NULL;
 
     // Make sure debug function is linked in...
     if (getenv("SHOW_INITIAL_DEBUG"))
@@ -110,76 +108,83 @@ int Main::LoadFiles()
 
     // Loop over files we will process
     for (file = filelist.begin(); file != filelist.end(); file++)
+        hadError |= LoadFile(*file);
+
+    return hadError;
+}
+
+
+int Main::LoadFile(text file)
+// ----------------------------------------------------------------------------
+//   Load an individual file
+// ----------------------------------------------------------------------------
+{
+    Tree *tree = NULL;
+    bool hadError = false;
+
+    // Parse program - Local parser to delete scanner and close file
+    // This ensures positions are updated even if there is a 'load'
+    // being called during execution.
+    if (options.readSerialized)
     {
-        Tree *tree = NULL;
-
-        // Get the individual command line file
-        cmd = *file;
-
-        // Parse program - Local parser to delete scanner and close file
-        // This ensures positions are updated even if there is a 'load'
-        // being called during execution.
-        if (options.readSerialized)
+        if (!reader)
+            reader = new Deserializer(std::cin);
+        try
         {
-            if (!reader)
-                reader = new Deserializer(std::cin);
-            try
-            {
-                tree = reader->ReadTree();
-            }
-            catch (Deserializer::Error &e)
-            {
-                std::cerr << "Error in input stream, tag=" << e.tag << '\n';
-                hadError = true;
-                continue;
-            }
+            tree = reader->ReadTree();
         }
-        else
+        catch (Deserializer::Error &e)
         {
-            Parser parser (cmd.c_str(), syntax, positions, errors);
-            tree = parser.Parse();
-        }
-
-        if (options.writeSerialized)
-        {
-            if (!writer)
-                writer = new Serializer(std::cout);
-            if (tree)
-                tree->Do(writer);
-        }
-
-        if (!tree)
-        {
+            std::cerr << "Error in input stream, tag=" << e.tag << '\n';
             hadError = true;
-            break;           // File read error, message already emitted
+            return hadError;
         }
-        Symbols *syms = new Symbols(&context);
-        Symbols::symbols = syms;
-        tree->Set<SymbolsInfo>(syms);
-
-        files[cmd] = SourceFile (cmd, tree, syms);
-        context.CollectGarbage();
-
-        IFTRACE(source)
-            std::cout << "SOURCE:\n" << tree << "\n";
-
-        if (!options.parseOnly)
-        {
-            if (options.optimize_level)
-                tree = syms->CompileAll(tree);
-            if (!tree)
-                hadError = true;
-            else
-                files[cmd].tree.tree = tree;
-        }
-
-        if (options.verbose)
-            debugp(tree);
-        else if (options.parseOnly && !options.writeSerialized)
-            std::cout << tree << "\n";
-
-        Symbols::symbols = Context::context;
     }
+    else
+    {
+        Parser parser (file.c_str(), syntax, positions, errors);
+        tree = parser.Parse();
+    }
+
+    if (options.writeSerialized)
+    {
+        if (!writer)
+            writer = new Serializer(std::cout);
+        if (tree)
+            tree->Do(writer);
+    }
+
+    if (!tree)
+    {
+        hadError = true;
+        return hadError;
+    }
+    Symbols *syms = new Symbols(&context);
+    Symbols::symbols = syms;
+    tree->Set<SymbolsInfo>(syms);
+
+    files[file] = SourceFile (file, tree, syms);
+    context.CollectGarbage();
+
+    IFTRACE(source)
+        std::cout << "SOURCE:\n" << tree << "\n";
+
+    if (!options.parseOnly)
+    {
+        if (options.optimize_level)
+            tree = syms->CompileAll(tree);
+        if (!tree)
+            hadError = true;
+        else
+            files[file].tree.tree = tree;
+    }
+
+    if (options.verbose)
+        debugp(tree);
+    else if (options.parseOnly && !options.writeSerialized)
+        std::cout << tree << "\n";
+
+    Symbols::symbols = Context::context;
 
     return hadError;
 }

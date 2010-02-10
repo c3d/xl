@@ -297,6 +297,13 @@ Deserializer::Deserializer(std::istream &in, tree_position pos)
 }
 
 
+Deserializer::~Deserializer()
+// ----------------------------------------------------------------------------
+//   No-op destructor
+// ----------------------------------------------------------------------------
+{}
+
+
 Tree *Deserializer::ReadTree()
 // ----------------------------------------------------------------------------
 //   Read back data from input stream and build tree from it

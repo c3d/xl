@@ -38,6 +38,10 @@
 
 XL_BEGIN
 
+struct Serializer;
+struct Deserializer;
+
+
 struct SourceFile
 // ----------------------------------------------------------------------------
 //    A source file and associated data
@@ -63,6 +67,11 @@ struct Main
     Main(int argc, char **argv, Compiler &comp);
     ~Main();
 
+    int LoadFiles();
+    int LoadFile (text file);
+    int Run();
+
+public:
     int          argc;
     char **      argv;
 
@@ -75,9 +84,9 @@ struct Main
     Renderer     renderer;
     source_files files;
     source_names file_names;
+    Deserializer *reader;
+    Serializer   *writer;
 
-    int LoadFiles();
-    int Run();
 };
 
 extern Main *MAIN;
