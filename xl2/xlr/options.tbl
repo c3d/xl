@@ -45,6 +45,11 @@ OPTION(style, "Select the stylesheet",
 OPTVAR(parseOnly, bool, false)
 OPTION(parse, "Only parse file, do not compile nor run", parseOnly = true)
 
+// Do not load builtins.xl
+OPTVAR(builtins, bool, true)
+OPTION(nobuiltins, "Do not load builtins", builtins = false)
+OPTION(nb, "Short form for -nobuiltins", builtins = false)
+
 // Read or write from serialized format
 OPTVAR(readSerialized, bool, false)
 OPTION(read, "Read file from serialized input", readSerialized = true)
