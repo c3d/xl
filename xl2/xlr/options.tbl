@@ -83,6 +83,10 @@ OPTION(v, "Short form for -verbose.", verbose = true)
 OPTVAR(output_file, std::string, "")
 OPTION(o, "Select output file", output_file = STRING)
 
+// Debug controlling options
+OPTVAR(doDiff, bool, false)
+OPTION(diff, "Compute difference of two parse trees (you must give exactly two input files)", doDiff=true)
+
 // Traces. The first ones must match the MzTrace definition in base.h
 // We use lower-case names here to avoid duplicate definition and be able
 // to reuse the IFTRACE macro as is.
