@@ -80,7 +80,8 @@ struct Info
 //   Information associated with a tree
 // ----------------------------------------------------------------------------
 {
-                        Info() {}
+                        Info(): next(NULL) {}
+                        Info(const Info &o) : next(NULL) {}
     virtual             ~Info() {}
     virtual Info *      Copy() { return next ? next->Copy() : NULL; }
     Info *next;
