@@ -26,7 +26,7 @@
 
 #include "serializer.h"
 #include "renderer.h"
-#include <machine/endian.h>
+#include <endian.h>
 
 
 
@@ -395,7 +395,7 @@ longlong Deserializer::ReadSigned()
     while (b & 0x80);
 
     if (b & 0x40)
-        value |= ~0UL << shift;
+        value |= ~0ULL << shift;
 
     return value;
 }

@@ -190,7 +190,16 @@ int Main::LoadFile(text file)
     if (!options.parseOnly)
     {
         if (options.optimize_level)
-            tree = syms->CompileAll(tree);
+        {
+            try
+            {
+                tree = syms->CompileAll(tree);
+            }
+            catch (Error &e)
+            {
+                e.Display();
+            }
+        }
         if (!tree)
             hadError = true;
         else
