@@ -238,6 +238,11 @@ int Main::Run()
             e.Display();
             result = NULL;
         }
+        catch (...)
+        {
+            std::cerr << "Got unknown exception.\n";
+            result = NULL;
+        }
 
         if (!result)
         {
