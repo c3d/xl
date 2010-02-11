@@ -25,6 +25,7 @@
 
 #include <sstream>
 #include <iostream>
+#include <stdio.h>
 #include "errors.h"
 #include "options.h"
 #include "scanner.h" // for Positions
