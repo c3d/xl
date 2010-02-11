@@ -23,7 +23,8 @@
 // * Date       : $Date$
 // ****************************************************************************
 
-#include <stdio.h>
+#include <sstream>
+#include <iostream>
 #include "errors.h"
 #include "options.h"
 #include "scanner.h" // for Positions
@@ -38,11 +39,13 @@ XL_BEGIN
 // 
 // ============================================================================
 
-void Errors::Error(text errMsg, ulong pos, Errors::Arguments &args)
+text Errors::Error(text errMsg, ulong pos, Errors::Arguments &args)
 // ----------------------------------------------------------------------------
 //   Emit an error message
 // ----------------------------------------------------------------------------
 {
+    std::ostringstream out;
+
     for (uint i = 0; i < args.size(); i++)
     {
         char buffer[10];
@@ -56,43 +59,38 @@ void Errors::Error(text errMsg, ulong pos, Errors::Arguments &args)
         text  file, source;
         ulong line, column;
         positions->GetInfo(pos, &file, &line, &column, &source);
-        fprintf(stderr, "%s:%lu: %s\n",
-                file.c_str(), line, errMsg.c_str());
+        out << file << ":" << line << ": " << errMsg;
     }
     else
     {
-        fprintf(stderr, "At offset %lu: %s\n", pos, errMsg.c_str());
+        out << "At offset " << pos << ": " << errMsg;
     }
+    return out.str();
 }
 
 
-// ----------------------------------------------------------------------------
-//   The general routine
-// ----------------------------------------------------------------------------
-
-
-void Errors::Error(text err, ulong pos)
+text Errors::Error(text err, ulong pos)
 // ----------------------------------------------------------------------------
 //    Default error, no arguments
 // ----------------------------------------------------------------------------
 {
     Arguments args;
-    Error(err, pos, args);
+    return Error(err, pos, args);
 }
        
 
-void Errors::Error(text err, ulong pos, text arg1)
+text Errors::Error(text err, ulong pos, text arg1)
 // ----------------------------------------------------------------------------
 //   Default error, one argument
 // ----------------------------------------------------------------------------
 {
     Arguments args;
     args.push_back(arg1);
-    Error(err, pos, args);
+    return Error(err, pos, args);
 }
        
 
-void Errors::Error(text err, ulong pos, text arg1, text arg2)
+text Errors::Error(text err, ulong pos, text arg1, text arg2)
 // ----------------------------------------------------------------------------
 //   Default error, one argument
 // ----------------------------------------------------------------------------
@@ -100,11 +98,11 @@ void Errors::Error(text err, ulong pos, text arg1, text arg2)
     Arguments args;
     args.push_back(arg1);
     args.push_back(arg2);
-    Error(err, pos, args);
+    return Error(err, pos, args);
 }
        
 
-void Errors::Error(text err, ulong pos, text arg1, text arg2, text arg3)
+text Errors::Error(text err, ulong pos, text arg1, text arg2, text arg3)
 // ----------------------------------------------------------------------------
 //   Default error, one argument
 // ----------------------------------------------------------------------------
@@ -113,34 +111,34 @@ void Errors::Error(text err, ulong pos, text arg1, text arg2, text arg3)
     args.push_back(arg1);
     args.push_back(arg2);
     args.push_back(arg3);
-    Error(err, pos, args);
+    return Error(err, pos, args);
 }
 
 
-void Errors::Error(text err, Tree *arg1)
+text Errors::Error(text err, Tree *arg1)
 // ----------------------------------------------------------------------------
 //   Emit an error at a tree position
 // ----------------------------------------------------------------------------
 {
-    Error (err, arg1->Position(), text(*arg1));
+    return Error (err, arg1->Position(), text(*arg1));
 }
 
 
-void Errors::Error(text err, Tree *arg1, Tree *arg2)
+text Errors::Error(text err, Tree *arg1, Tree *arg2)
 // ----------------------------------------------------------------------------
 //   Emit an error at a tree position
 // ----------------------------------------------------------------------------
 {
-    Error (err, arg1->Position(), text(*arg1), text(*arg2));
+    return Error (err, arg1->Position(), text(*arg1), text(*arg2));
 }
 
 
-void Errors::Error(text err, Tree *arg1, Tree *arg2, Tree *arg3)
+text Errors::Error(text err, Tree *arg1, Tree *arg2, Tree *arg3)
 // ----------------------------------------------------------------------------
 //   Emit an error at a tree position
 // ----------------------------------------------------------------------------
 {
-    Error (err, arg1->Position(), text(*arg1), text(*arg2), text(*arg3));
+    return Error (err, arg1->Position(), text(*arg1), text(*arg2), text(*arg3));
 }
 
 
@@ -156,8 +154,18 @@ void Error::Display()
 //   Display an error on the error output
 // ----------------------------------------------------------------------------
 {
-    Context::context->errors.Error(message, arg1, arg2, arg3);
+    std:: cerr << Message() << '\n';
+}
+
+
+text Error::Message()
+// ----------------------------------------------------------------------------
+//    Return the error message for an error
+// ----------------------------------------------------------------------------
+{
+    Errors &errs = Context::context->errors;
     handled = true;
+    return errs.Error(message, arg1, arg2, arg3);
 }
 
 XL_END

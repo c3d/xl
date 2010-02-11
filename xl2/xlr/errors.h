@@ -46,16 +46,16 @@ struct Errors
     Errors (Positions *pos): positions(pos) {}
 
     typedef std::vector<std::string> Arguments;
-    void Error(text err, ulong pos, Arguments &args);
-    void Error(text err, ulong pos);
-    void Error(text err, ulong pos, text arg1);
-    void Error(text err, ulong pos, text arg1, text arg2);
-    void Error(text err, ulong pos, text arg1, text arg2, text arg3);
-    void Error(text err, Tree *arg1);
-    void Error(text err, Tree *arg1, Tree *arg2);
-    void Error(text err, Tree *arg1, Tree *arg2, Tree *arg3);
+    text Error(text err, ulong pos, Arguments &args);
+    text Error(text err, ulong pos);
+    text Error(text err, ulong pos, text arg1);
+    text Error(text err, ulong pos, text arg1, text arg2);
+    text Error(text err, ulong pos, text arg1, text arg2, text arg3);
+    text Error(text err, Tree *arg1);
+    text Error(text err, Tree *arg1, Tree *arg2);
+    text Error(text err, Tree *arg1, Tree *arg2, Tree *arg3);
 
-    Positions * positions;
+    Positions *         positions;
 };
 
 
@@ -72,6 +72,7 @@ struct Error
     ~Error() { if (!handled) Display(); }
 
     void        Display();
+    text        Message();
     bool        Handled() { bool old = handled; handled = true; return old; }
 
     text        message;
