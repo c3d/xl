@@ -26,7 +26,11 @@
 
 #include "serializer.h"
 #include "renderer.h"
+#ifdef CONFIG_MACOSX
+#include <machine/endian.h>
+#else
 #include <endian.h>
+#endif
 
 
 
