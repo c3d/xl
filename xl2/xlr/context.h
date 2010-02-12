@@ -541,7 +541,13 @@ struct LocalSave
 // 
 // ============================================================================
 
-extern Tree *Error (text message, Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
+inline Tree *Ooops (text msg, Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL)
+// ----------------------------------------------------------------------------
+//   Error using the global context
+// ----------------------------------------------------------------------------
+{
+    return Context::context->Error(msg, a1, a2, a3);
+}
 
 
 

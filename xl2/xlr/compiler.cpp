@@ -47,9 +47,11 @@
 #include <llvm/PassManager.h>
 #include "llvm/Support/raw_ostream.h"
 #include <llvm/Support/IRBuilder.h>
+#include <llvm/Support/StandardPasses.h>
 #include <llvm/System/DynamicLibrary.h>
 #include <llvm/Target/TargetData.h>
 #include <llvm/Target/TargetSelect.h>
+#include <llvm/Target/TargetOptions.h>
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/Utils/BasicBlockUtils.h>
 #include <llvm/Support/raw_ostream.h>
@@ -112,7 +114,9 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     runtime->DisableLazyCompilation(false);
 
     // Setup the optimizer - REVISIT: Adjust with optimization level
+    uint optLevel = 2;
     optimizer = new FunctionPassManager(provider);
+    createStandardFunctionPasses(optimizer, optLevel);
     {
         // Register target data structure layout info
         optimizer->add(new TargetData(*runtime->getTargetData()));
@@ -154,6 +158,13 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
         // Unroll loops (can it help in our case?)
         optimizer->add(createLoopUnrollPass());
     }
+
+    // Other target options
+    DwarfExceptionHandling = true;
+    JITEmitDebugInfo = true;
+    UnwindTablesMandatory = true;
+    PerformTailCallOpt = true;
+    // NoFramePointerElim = true;
 
     // Install a fallback mechanism to resolve references to the runtime, on
     // systems which do not allow the program to dlopen itself.
@@ -906,7 +917,7 @@ Value *CompiledUnit::Left(Tree *tree)
     }
     else
     {
-        Error("Internal: Using left of uncompiled '$1'", tree);
+        Ooops("Internal: Using left of uncompiled '$1'", tree);
     }
 
     return result;
@@ -943,7 +954,7 @@ Value *CompiledUnit::Right(Tree *tree)
     }
     else
     {
-        Error("Internal: Using right of uncompiled '$1'", tree);
+        Ooops("Internal: Using right of uncompiled '$1'", tree);
     }
     return result;
 }
@@ -1146,7 +1157,7 @@ BasicBlock *CompiledUnit::TagTest(Tree *tree, ulong tagValue)
     Value *treeValue = Known(tree);
     if (!treeValue)
     {
-        Error("No value for '$1'", tree);
+        Ooops("No value for '$1'", tree);
         return NULL;
     }
     Value *tagPtr = code->CreateConstGEP2_32(treeValue, 0, 0, "tagPtr");

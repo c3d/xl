@@ -190,7 +190,16 @@ int Main::LoadFile(text file)
     if (!options.parseOnly)
     {
         if (options.optimize_level)
-            tree = syms->CompileAll(tree);
+        {
+            try
+            {
+                tree = syms->CompileAll(tree);
+            }
+            catch (Error &e)
+            {
+                e.Display();
+            }
+        }
         if (!tree)
             hadError = true;
         else
@@ -228,7 +237,22 @@ int Main::Run()
         Symbols::symbols = sf.symbols;
 
         // Evaluate the given tree
-        Tree *result = sf.symbols->Run(sf.tree.tree);
+        Tree *result = sf.tree.tree;
+        try
+        {
+            result = sf.symbols->Run(sf.tree.tree);
+        }
+        catch (XL::Error &e)
+        {
+            e.Display();
+            result = NULL;
+        }
+        catch (...)
+        {
+            std::cerr << "Got unknown exception.\n";
+            result = NULL;
+        }
+
         if (!result)
         {
             hadError = true;
@@ -248,9 +272,6 @@ int Main::Run()
 
     return hadError;
 }
-
-
-
 
 XL_END
 

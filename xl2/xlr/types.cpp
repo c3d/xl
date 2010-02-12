@@ -34,7 +34,7 @@ Tree *InferTypes::Do (Tree *what)
 // ----------------------------------------------------------------------------
 {
     // Otherwise, we don't know how to deal with it
-    return Error("Cannot infer the type of '$1'", what);
+    return Ooops("Cannot infer the type of '$1'", what);
 }
 
 
@@ -78,9 +78,9 @@ Tree *InferTypes::DoName(Name *what)
     {
         if (Tree *t = types[value])
             return t;
-        return Error("Unknown type for '$1'", what);
+        return Ooops("Unknown type for '$1'", what);
     }
-    return Error("Unknown name '$1'", what);
+    return Ooops("Unknown name '$1'", what);
 }
 
 
