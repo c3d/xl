@@ -737,6 +737,10 @@ void Context::CollectGarbage ()
             }
         }
 
+        // If we have deleted any tree, then perform final cleanup
+        if (deletedCount)
+            compiler->FreeResources();
+
         // Same with the symbol tables
         symbols_set::iterator as;
         for (as = active_symbols.begin(); as != active_symbols.end(); as++)
