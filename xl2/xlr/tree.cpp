@@ -84,7 +84,7 @@ Name::operator bool()
         return true;
     else if (this == xl_false)
         return false;
-    Error("Value '$1' is not a boolean value", this);
+    Ooops("Value '$1' is not a boolean value", this);
     return false;
 }
 

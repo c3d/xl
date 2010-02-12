@@ -273,7 +273,7 @@ Tree *xl_type_error(Tree *what)
 //   Display message if we have a type error
 // ----------------------------------------------------------------------------
 {
-    return Error("No form matches '$1'", what);
+    return Ooops("No form matches '$1'", what);
 }
 
 

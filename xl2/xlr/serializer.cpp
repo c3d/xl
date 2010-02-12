@@ -26,7 +26,11 @@
 
 #include "serializer.h"
 #include "renderer.h"
+#ifdef CONFIG_MACOSX
 #include <machine/endian.h>
+#else
+#include <endian.h>
+#endif
 
 
 
@@ -395,7 +399,7 @@ longlong Deserializer::ReadSigned()
     while (b & 0x80);
 
     if (b & 0x40)
-        value |= ~0UL << shift;
+        value |= ~0ULL << shift;
 
     return value;
 }
