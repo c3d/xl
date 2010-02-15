@@ -385,7 +385,8 @@ Tree *Symbols::Run(Tree *code)
                 }
                 result = symbols->CompileAll(result);
             }
-            assert(result->code);
+            if (!result->code)
+                return Ooops("Unable to compile '$1'", result);
             result = result->code(code);
         }
         return result;
