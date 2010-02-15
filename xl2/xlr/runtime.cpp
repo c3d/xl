@@ -57,34 +57,10 @@ Tree *xl_evaluate(Tree *what)
 // ----------------------------------------------------------------------------
 // This is similar to Context::Run, but we save stack space for recursion
 {
-    if (!what)
-        return what;
-
-    IFTRACE(eval)
-        std::cerr << "EVAL: " << what << '\n';
-
-    Tree *result = what;
-    if (!result->IsConstant())
-    {
-        if (!what->code)
-        {
-            Symbols *symbols = what->Get<SymbolsInfo>();
-            if (!symbols)
-            {
-                std::cerr << "WARNING: No symbols for '" << what << "'\n";
-                symbols = Symbols::symbols;
-            }
-            what = symbols->CompileAll(what);
-        }
-
-        assert(what->code);
-        result = what->code(what);
-
-        IFTRACE(eval)
-            std::cerr << "EVAL= " << result << '\n';
-    }
-
-    return result;
+    Symbols *symbols = what->Get<SymbolsInfo>();
+    if (!symbols)
+        symbols = Symbols::symbols;
+    return symbols->Run(what);
 }
 
 
