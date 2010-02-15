@@ -57,6 +57,8 @@ Tree *xl_evaluate(Tree *what)
 // ----------------------------------------------------------------------------
 // This is similar to Context::Run, but we save stack space for recursion
 {
+    if (!what)
+        return what;
     Symbols *symbols = what->Get<SymbolsInfo>();
     if (!symbols)
         symbols = Symbols::symbols;
