@@ -43,7 +43,6 @@
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include "llvm/Instructions.h"
 #include "llvm/Module.h"
-#include <llvm/ModuleProvider.h>
 #include <llvm/PassManager.h>
 #include "llvm/Support/raw_ostream.h"
 #include <llvm/Support/IRBuilder.h>
@@ -84,7 +83,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 // ----------------------------------------------------------------------------
 //   Initialize the various instances we may need
 // ----------------------------------------------------------------------------
-    : module(NULL), provider(NULL), runtime(NULL), optimizer(NULL),
+    : module(NULL), runtime(NULL), optimizer(NULL),
       treeTy(NULL), treePtrTy(NULL), treePtrPtrTy(NULL),
       integerTreeTy(NULL), integerTreePtrTy(NULL),
       realTreeTy(NULL), realTreePtrTy(NULL),
@@ -97,8 +96,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
       xl_new_prefix(NULL), xl_new_postfix(NULL), xl_new_infix(NULL),
       functions()
 {
-    // Thanks to Dr. Albert Graef (pure programming language) for inspiration
-
+    
     // Initialize native target (new features)
     InitializeNativeTarget();
 
@@ -107,7 +105,6 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 
     // Create module where we will build the code
     module = new Module(moduleName, *context);
-    provider = new ExistingModuleProvider(module);
 
     // Select "fast JIT" if optimize level is 0, optimizing JIT otherwise
     runtime = EngineBuilder(module).create();
@@ -115,7 +112,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 
     // Setup the optimizer - REVISIT: Adjust with optimization level
     uint optLevel = 2;
-    optimizer = new FunctionPassManager(provider);
+    optimizer = new FunctionPassManager(module);
     createStandardFunctionPasses(optimizer, optLevel);
     {
         // Register target data structure layout info
@@ -163,7 +160,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     DwarfExceptionHandling = true;
     JITEmitDebugInfo = true;
     UnwindTablesMandatory = true;
-    PerformTailCallOpt = true;
+    // PerformTailCallOpt = true;
     // NoFramePointerElim = true;
 
     // Install a fallback mechanism to resolve references to the runtime, on
