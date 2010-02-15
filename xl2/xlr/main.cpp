@@ -161,7 +161,8 @@ int Main::LoadFile(text file)
             tree = parser.Parse();
         }
         if (options.verbose)
-            std::cout << "Info: file " << file << " is " << nt << "in serialized format" << '\n';
+            std::cout << "Info: file " << file << " is "
+                      << nt << "in serialized format" << '\n';
     }
 
     if (options.writeSerialized)
