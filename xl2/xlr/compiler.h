@@ -32,6 +32,9 @@
 
 
 namespace llvm
+// ----------------------------------------------------------------------------
+//   Forward classes from LLVM
+// ----------------------------------------------------------------------------
 {
     class LLVMContext;
     class Module;
@@ -55,6 +58,7 @@ typedef std::map<Tree *, llvm::Function *>      function_map;
 typedef std::map<uint, eval_fn>                 closure_map;
 typedef std::set<Tree *>                        closure_set;
 typedef std::set<Tree *>                        data_set;
+typedef std::set<Tree *>                        deleted_set;
 typedef Tree *(*adapter_fn) (eval_fn callee, Tree *src, Tree **args);
 
 
@@ -80,6 +84,7 @@ struct Compiler
     llvm::Value *             Known(Tree *value);
 
     void                      FreeResources(Tree *tree);
+    void                      FreeResources();
 
     void                      Reset();
 
@@ -122,6 +127,7 @@ public:
     value_map                  globals;
     closure_map                closures;
     closure_set                closet;
+    deleted_set                deleted;
     closure_map                array_to_args_adapters;
 };
 
