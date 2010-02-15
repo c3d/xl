@@ -366,7 +366,10 @@ Tree *Symbols::Run(Tree *code)
     if (opt)
     {
         // Check trees that we won't rewrite
-        bool more = has_rewrites_for_constants || !code->IsConstant();
+        bool more =
+            has_rewrites_for_constants || 
+            !code ||
+            !code->IsConstant();
 
         // Repeat until we get a stable result
         while (more)
@@ -385,7 +388,7 @@ Tree *Symbols::Run(Tree *code)
             if (!result->code)
                 return Ooops("Unable to compile '$1'", result);
             result = result->code(code);
-            more = (result != code &&
+            more = (result != code && result &&
                     (has_rewrites_for_constants || !result->IsConstant())) ;
             code = result;
         }
