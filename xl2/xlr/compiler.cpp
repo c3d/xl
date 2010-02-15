@@ -160,8 +160,8 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     }
 
     // Other target options
-    DwarfExceptionHandling = true;
-    // JITEmitDebugInfo = true; // Post 2.6
+    // DwarfExceptionHandling = true;   // Present in 2.6, but crashes
+    // JITEmitDebugInfo = true;         // Not present in 2.6
     UnwindTablesMandatory = true;
     PerformTailCallOpt = true;
     // NoFramePointerElim = true;
