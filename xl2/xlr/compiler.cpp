@@ -295,6 +295,7 @@ void Compiler::Reset()
     globals.clear();
     closures.clear();
     closet.clear();
+    deleted.clear();
 }
 
 
@@ -506,13 +507,37 @@ void Compiler::FreeResources(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Free the LLVM resources associated to the tree, if any
 // ----------------------------------------------------------------------------
+//   In the first pass, we need to clear the body and machine code for all
+//   functions. This is because if we have foo() calling bar() and bar()
+//   calling foo(), we will get an LLVM assert deleting one while the
+//   other's body still makes a reference.
 {
-    if (false && functions.count(tree) > 0 && closet.count(tree) == 0)
+    if (functions.count(tree) > 0 && closet.count(tree) == 0)
     {
+        std::cerr << "Freed one tree\n";
         Function *f = functions[tree];
+        f->deleteBody();
         runtime->freeMachineCodeForFunction(f);
-        // delete f;  Seems to crash, not sure why
+        deleted.insert(tree);
+    }
+}
+
+
+void Compiler::FreeResources()
+// ----------------------------------------------------------------------------
+//   Delete LLVM functions for all trees we want to erase
+// ----------------------------------------------------------------------------
+//   At this stage, we have deleted all the bodies
+{
+    while (!deleted.empty())
+    {
+        std::cerr << "Freed functions\n";
+        deleted_set::iterator i = deleted.begin();
+        Tree *tree = *i;
+        Function *f = functions[tree];
+        delete f;               // Now safe to do
         functions.erase(tree);
+        deleted.erase(tree);
     }
 }
 
