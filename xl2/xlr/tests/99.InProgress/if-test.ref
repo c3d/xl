@@ -1,8 +1,0 @@
-
-    "Right answer" 
-    if 3 < 5 then 
-        "Two good answers"
-    else 
-        "Wrong Answer 2"
-    
-

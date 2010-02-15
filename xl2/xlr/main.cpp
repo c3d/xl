@@ -178,7 +178,9 @@ int Main::LoadFile(text file)
         hadError = true;
         return hadError;
     }
-    Symbols *syms = new Symbols(&context);
+    Symbols *syms = &context;
+    if (file != "builtins.xl")
+        syms = new Symbols(syms);
     Symbols::symbols = syms;
     tree->Set<SymbolsInfo>(syms);
 
