@@ -360,19 +360,16 @@ Tree *Symbols::Run(Tree *code)
     Tree *result = code;
     IFTRACE(eval)
         std::cerr << "RUN" << ++index << ": " << code << '\n';
-
-    // Check trees that we won't rewrite
-    bool isConstant = !has_rewrites_for_constants && code->IsConstant();
-
-    // If the input is NULL or constant, that's it
-    if (!code || isConstant)
-        return result;
+    uint opt = Options::options->optimize_level;
 
     // Optimized mode (compiled)
-    uint opt = Options::options->optimize_level;
     if (opt)
     {
-        if (!isConstant)
+        // Check trees that we won't rewrite
+        bool more = has_rewrites_for_constants || !code->IsConstant();
+
+        // Repeat until we get a stable result
+        while (more)
         {
             if (!result->code)
             {
@@ -388,9 +385,12 @@ Tree *Symbols::Run(Tree *code)
             if (!result->code)
                 return Ooops("Unable to compile '$1'", result);
             result = result->code(code);
+            more = (result != code &&
+                    (has_rewrites_for_constants || !result->IsConstant())) ;
+            code = result;
         }
         return result;
-    }
+    } // if (opt)
     
 
     // If there is compiled code (generated or built-in), use it to evaluate
