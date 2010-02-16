@@ -37,14 +37,15 @@ struct LCS
     virtual ~LCS() {}
 
     void Compute (T &x, T &y);
-    T&   Extract(T &x, T& out);
+    T&   Extract(T &x, T &out);
+    void Extract2(T &x, T& outx, T &y, T &outy);
     int  Length();
 
 protected:
 
     enum Arrows
     {
-        None     = 0,
+        None = 0,
         Up   = 1,
         Left = 2,
         Both = 3
@@ -121,12 +122,42 @@ T& LCS<T>::Extract(T &x, T& out)
 
     while (i && j)
         if (b[i][j] == Both)
-            i--, j--, out = x[i] + out;
+        {
+            i--;
+            j--;
+            typename T::iterator it = out.begin();
+            out.insert(it, x[i]);
+        }
         else if (b[i][j] == Up)
             i--;
         else
             j--;
     return out;
+}
+
+template <typename T>
+void LCS<T>::Extract2(T &x, T& outx, T&y, T&outy)
+// ----------------------------------------------------------------------------
+//    Extract the LCS by appending elements from x to outx and from y to outy
+// ----------------------------------------------------------------------------
+{
+    int i = m, j = n;
+
+    while (i && j)
+        if (b[i][j] == Both)
+        {
+            i--;
+            j--;
+            typename T::iterator it;
+            it = outx.begin();
+            outx.insert(it, x[i]);
+            it = outy.begin();
+            outy.insert(it, y[j]);
+        }
+        else if (b[i][j] == Up)
+            i--;
+        else
+            j--;
 }
 
 XL_END
