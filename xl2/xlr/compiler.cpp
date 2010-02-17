@@ -1,11 +1,10 @@
 // ****************************************************************************
-//  compiler.cpp                    (C) 1992-2009 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  compiler.cpp                                                    XLR project
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Just-in-time compilation of XL trees
+//    Just-in-time (JIT) compilation of XL trees
 // 
 // 
 // 
@@ -17,10 +16,8 @@
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
-// ****************************************************************************
-// * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+//  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
 #include "compiler.h"
@@ -96,7 +93,6 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
       xl_new_prefix(NULL), xl_new_postfix(NULL), xl_new_infix(NULL),
       functions()
 {
-    
     // Initialize native target (new features)
     InitializeNativeTarget();
 
@@ -247,7 +243,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     xl_same_shape = ExternFunction(FN(xl_same_shape),
                                    boolTy, 2, treePtrTy, treePtrTy);
     xl_type_check = ExternFunction(FN(xl_type_check),
-                                   boolTy, 2, treePtrTy, treePtrTy);
+                                   treePtrTy, 2, treePtrTy, treePtrTy);
     xl_type_error = ExternFunction(FN(xl_type_error),
                                    treePtrTy, 1, treePtrTy);
     xl_new_integer = ExternFunction(FN(xl_new_integer),
@@ -1329,13 +1325,20 @@ BasicBlock *CompiledUnit::TypeTest(Tree *value, Tree *type)
 
     // Where we go if the tests fail
     BasicBlock *notGood = NeedTest();
-    Value *isGood = code->CreateCall2(compiler->xl_type_check,
-                                      valueVal, typeVal);
+    Value *afterCast = code->CreateCall2(compiler->xl_type_check,
+                                         valueVal, typeVal);
+    Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
+    Value *isGood = code->CreateICmpNE(afterCast, null, "isGoodType");
     BasicBlock *isGoodBB = BasicBlock::Create(*context, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
     code->SetInsertPoint(isGoodBB);
+
+    // And update the value to be the value after cast
+    Value *ptr = NeedStorage(value);
+    code->CreateStore(afterCast, ptr);
+
     return isGoodBB;
 }
 
