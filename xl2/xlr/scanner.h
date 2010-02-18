@@ -186,6 +186,8 @@ public:
     uint        Indent()                { return indent; }
     void        SetPosition(ulong pos)  { position = pos; }
     ulong       Position()              { return position; }
+    bool        HadSpaceBefore()        { return hadSpaceBefore; }
+    bool        HadSpaceAfter()         { return hadSpaceAfter; }
 
     // Indent management
     uint        OpenParen();
@@ -210,6 +212,8 @@ private:
     ulong       lineStart;
     Positions & positions;
     Errors &    errors;
+    bool        hadSpaceBefore;
+    bool        hadSpaceAfter;
 };
 
 XL_END

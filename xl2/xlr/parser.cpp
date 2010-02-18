@@ -26,6 +26,7 @@
 
 #include <vector>
 #include <stdio.h>
+#include <iostream>
 #include "parser.h"
 #include "scanner.h"
 #include "errors.h"
@@ -85,8 +86,11 @@ token_t Parser::NextToken()
         }
 
         // Here, there's nothing pending or only a newline
-        token_t result = scanner.NextToken();
         text opening, closing;
+        token_t result = scanner.NextToken();
+        hadSpaceBefore = scanner.HadSpaceBefore();
+        hadSpaceAfter = scanner.HadSpaceAfter();
+
         switch(result)
         {
         case tokNAME:
@@ -191,6 +195,7 @@ Tree *Parser::Parse(text closing)
     int                  statement_priority = syntax.statement_priority;
     int                  result_priority    = default_priority;
     int                  prefix_priority    = 0;
+    int                  prefix_vs_infix    = 0;
     int                  postfix_priority   = 0;
     int                  infix_priority     = 0;
     int                  paren_priority     = syntax.InfixPriority(closing);
@@ -300,7 +305,10 @@ Tree *Parser::Parse(text closing)
             {
                 // Complicated case: need to discriminate infix and prefix
                 infix_priority = syntax.InfixPriority(name);
-                if (infix_priority != default_priority)
+                prefix_vs_infix = syntax.PrefixPriority(name);
+                if (infix_priority != default_priority &&
+                    (prefix_vs_infix == default_priority ||
+                     !hadSpaceBefore || hadSpaceAfter))
                 {
                     // We got an infix
                     left = result;
@@ -320,8 +328,8 @@ Tree *Parser::Parse(text closing)
                     else
                     {
                         // No priority: take this as a prefix by default
-                        prefix_priority = syntax.PrefixPriority(name);
                         right = new Name(spelling, pos);
+                        prefix_priority = prefix_vs_infix;
                         if (prefix_priority == default_priority)
                         {
                             prefix_priority = function_priority;

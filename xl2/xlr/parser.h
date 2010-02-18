@@ -89,7 +89,8 @@ public:
     Parser(kstring name, Syntax &stx, Positions &pos, Errors &err):
         scanner(name, stx, pos, err),
         syntax(stx), errors(err), pending(tokNONE),
-        openquote(), closequote() {}
+        openquote(), closequote(),
+        hadSpaceBefore(false), hadSpaceAfter(false) {}
 
 public:
     Tree *              Parse(text closing_paren = "");
@@ -102,6 +103,7 @@ private:
     Errors &            errors;
     token_t             pending;
     text                openquote, closequote;
+    bool                hadSpaceBefore, hadSpaceAfter;
 };
 
 XL_END

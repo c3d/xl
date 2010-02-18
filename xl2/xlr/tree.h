@@ -274,6 +274,7 @@ struct TreeRoot
     TreeRoot(const TreeRoot &o);
     ~TreeRoot();
     operator Tree *(void) { return tree; }
+    bool operator< (const TreeRoot &o) const { return tree < o.tree; }
 public:
     Tree *      tree;
 };
