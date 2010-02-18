@@ -52,13 +52,13 @@ XL_BEGIN
 
 struct CompiledUnit;
 struct Options;
-typedef std::map<text, llvm::Function *>        builtins_map;
-typedef std::map<Tree *, llvm::Value *>         value_map;
-typedef std::map<Tree *, llvm::Function *>      function_map;
-typedef std::map<uint, eval_fn>                 closure_map;
-typedef std::set<Tree *>                        closure_set;
-typedef std::set<Tree *>                        data_set;
-typedef std::set<Tree *>                        deleted_set;
+typedef std::map<text, llvm::Function *>     builtins_map;
+typedef std::map<TreeRoot, llvm::Value *>    value_map;
+typedef std::map<TreeRoot, llvm::Function *> function_map;
+typedef std::map<uint, eval_fn>              closure_map;
+typedef std::set<TreeRoot>                   closure_set;
+typedef std::set<TreeRoot>                   data_set;
+typedef std::set<Tree *>                     deleted_set;
 typedef Tree *(*adapter_fn) (eval_fn callee, Tree *src, Tree **args);
 
 
