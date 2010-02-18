@@ -39,7 +39,7 @@
 #include "options.h"
 #include "basics.h"
 #include "serializer.h"
-
+#include "diff.h"
 
 XL_BEGIN
 
@@ -87,6 +87,7 @@ int Main::LoadFiles()
     std::vector<text>            filelist;
     std::vector<text>::iterator  file;
     bool                         hadError = false;
+    int                          filenum = 0;
 
     // Make sure debug function is linked in...
     if (getenv("SHOW_INITIAL_DEBUG"))
@@ -106,6 +107,12 @@ int Main::LoadFiles()
         filelist.push_back("builtins.xl");
     for (; cmd != end; cmd = options.ParseNext())
     {
+        if (options.doDiff && ++filenum > 2)
+        {
+          std::cerr << "Error: -diff option needs exactly 2 files" << std::endl;
+          hadError = true;
+          return hadError;
+        }
         filelist.push_back(cmd);
         file_names.push_back(cmd);
     }
@@ -230,7 +237,7 @@ int Main::Run()
     bool hadError = false;
 
     // If we only parse or compile, return
-    if (options.parseOnly || options.compileOnly)
+    if (options.parseOnly || options.compileOnly || options.doDiff)
         return -1;
 
     // Loop over files we will process
@@ -276,6 +283,29 @@ int Main::Run()
     return hadError;
 }
 
+int Main::Diff()
+// ----------------------------------------------------------------------------
+//   Perform a tree diff between the two loaded files
+// ----------------------------------------------------------------------------
+{
+    source_names::iterator file;
+    bool hadError = false;
+
+    file = file_names.begin();
+    SourceFile &sf1 = files[*file];
+    file++;
+    SourceFile &sf2 = files[*file];
+
+    Tree *t1 = sf1.tree.tree;
+    Tree *t2 = sf2.tree.tree;
+
+    TreeDiff d(t1, t2);
+    d.Diff();
+
+    return hadError;
+}
+
+
 XL_END
 
 
@@ -292,6 +322,9 @@ int main(int argc, char **argv)
     Compiler compiler("xl_tao");
     MAIN = new Main(argc, argv, compiler);
     int rc = MAIN->LoadFiles();
+    if (!rc && Options::options->doDiff)
+        rc = MAIN->Diff();
+    else
     if (!rc && !Options::options->parseOnly)
         rc = MAIN->Run();
     delete MAIN;
