@@ -129,58 +129,97 @@ Tree *xl_type_check(Tree *value, Tree *type)
 // ========================================================================
 
 Tree *xl_new_integer(longlong value)
+// ----------------------------------------------------------------------------
+//    Called by generated code to build a new Integer
+// ----------------------------------------------------------------------------
 {
     Tree *result = new Integer(value);
     result->code = xl_identity;
     return result;
 }
 
+
 Tree *xl_new_real(double value)
+// ----------------------------------------------------------------------------
+//    Called by generated code to build a new Real
+// ----------------------------------------------------------------------------
 {
     Tree *result = new Real (value);
     result->code = xl_identity;
     return result;
 }
 
+
 Tree *xl_new_character(kstring value)
+// ----------------------------------------------------------------------------
+//    Called by generated code to build a new single-quoted Text
+// ----------------------------------------------------------------------------
 {
     Tree *result = new Text(value, "'", "'");
     result->code = xl_identity;
     return result;
 }
 
+
 Tree *xl_new_text(kstring value)
+// ----------------------------------------------------------------------------
+//    Called by generated code to build a new double-quoted Text
+// ----------------------------------------------------------------------------
 {
     Tree *result = new Text(text(value));
     result->code = xl_identity;
     return result;
 }
 
+
 Tree *xl_new_xtext(kstring value, kstring open, kstring close)
+// ----------------------------------------------------------------------------
+//    Called by generated code to build a new arbitrarily-quoted Text
+// ----------------------------------------------------------------------------
 {
     Tree *result = new Text(value, open, close);
     result->code = xl_identity;
     return result;
 }
+
+
 Tree *xl_new_block(Block *source, Tree *child)
+// ----------------------------------------------------------------------------
+//    Called by generated code to build a new block
+// ----------------------------------------------------------------------------
 {
     Tree *result = new Block(source, child);
     result->code = xl_identity;
     return result;
 }
+
+
 Tree *xl_new_prefix(Prefix *source, Tree *left, Tree *right)
+// ----------------------------------------------------------------------------
+//    Called by generated code to build a new Prefix
+// ----------------------------------------------------------------------------
 {
     Tree *result = new Prefix(source, left, right);
     result->code = xl_identity;
     return result;
 }
+
+
 Tree *xl_new_postfix(Postfix *source, Tree *left, Tree *right)
+// ----------------------------------------------------------------------------
+//    Called by generated code to build a new Postfix
+// ----------------------------------------------------------------------------
 {
     Tree *result = new Postfix(source, left, right);
     result->code = xl_identity;
     return result;
 }
+
+
 Tree *xl_new_infix(Infix *source, Tree *left, Tree *right)
+// ----------------------------------------------------------------------------
+//    Called by generated code to build a new Infix
+// ----------------------------------------------------------------------------
 {
     Tree *result = new Infix(source, left, right);
     result->code = xl_identity;
