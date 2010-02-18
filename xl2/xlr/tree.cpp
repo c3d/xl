@@ -121,7 +121,8 @@ TreeRoot::~TreeRoot()
 //   Remove a root from the context
 // ----------------------------------------------------------------------------
 {
-    Context::context->roots.erase(this);
+    if (Context *context = Context::context)
+        context->roots.erase(this);
 }
 
 

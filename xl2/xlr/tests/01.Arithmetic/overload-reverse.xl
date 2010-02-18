@@ -1,0 +1,5 @@
+machin x:real, y:real, z:real   -> 3
+machin x:real, y:real           -> 2
+machin x:real                   -> 1
+
+machin 2.2, 3.3
