@@ -624,6 +624,8 @@ Context::~Context()
     globals_table::iterator g;
     for (g = globals.begin(); g != globals.end(); g++)
         delete *g;
+    if (context == this)
+        context = NULL;
 }
 
 
