@@ -49,6 +49,9 @@ TreeDiff::~TreeDiff()
             tab[i]->Purge<LeafCountInfo>();
             tab[i]->Purge<ParentInfo>();
         }
+    matching::iterator it;
+    for (it = m.begin(); it != m.end(); it++)
+        delete (*it);
 }
 
 node_id TreeDiff::AssignNodeIds(Tree *t, node_table &m, node_id from_id)
