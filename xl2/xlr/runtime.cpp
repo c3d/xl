@@ -263,6 +263,7 @@ Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
         parent = item;
     }
     va_end(va);
+    parent->right = xl_false;
 
     // Generate the code for the arguments
     Compiler * compiler = Context::context->compiler;
