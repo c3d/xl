@@ -359,20 +359,20 @@ Tree *Symbols::Run(Tree *code)
     // Trace what we are doing
     Tree *result = code;
     IFTRACE(eval)
-        std::cerr << "RUN" << ++index << ": " << code << '\n';
-
-    // Check trees that we won't rewrite
-    bool isConstant = !has_rewrites_for_constants && code->IsConstant();
-
-    // If the input is NULL or constant, that's it
-    if (!code || isConstant)
-        return result;
+        std::cerr << "EVAL" << ++index << ": " << code << '\n';
+    uint opt = Options::options->optimize_level;
 
     // Optimized mode (compiled)
-    uint opt = Options::options->optimize_level;
     if (opt)
     {
-        if (!isConstant)
+        // Check trees that we won't rewrite
+        bool more =
+            has_rewrites_for_constants || 
+            !code ||
+            !code->IsConstant();
+
+        // Repeat until we get a stable result
+        while (more)
         {
             if (!result->code)
             {
@@ -385,11 +385,20 @@ Tree *Symbols::Run(Tree *code)
                 }
                 result = symbols->CompileAll(result);
             }
-            assert(result->code);
+            if (!result->code)
+                return Ooops("Unable to compile '$1'", result);
             result = result->code(code);
+            more = (result != code && result &&
+                    (has_rewrites_for_constants || !result->IsConstant())) ;
+            if (more)
+                IFTRACE(eval)
+                    std::cerr << "LOOP" << index << ": " << result << '\n';
+            code = result;
         }
+        IFTRACE(eval)
+            std::cerr << "RSLT" << index-- << ": " << result << '\n';
         return result;
-    }
+    } // if (opt)
     
 
     // If there is compiled code (generated or built-in), use it to evaluate
@@ -620,6 +629,8 @@ Context::~Context()
     globals_table::iterator g;
     for (g = globals.begin(); g != globals.end(); g++)
         delete *g;
+    if (context == this)
+        context = NULL;
 }
 
 

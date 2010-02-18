@@ -53,7 +53,7 @@ Tree *xl_identity(Tree *);
 Tree *xl_evaluate(Tree *);
 bool  xl_same_text(Tree *, const char *);
 bool  xl_same_shape(Tree *t1, Tree *t2);
-bool  xl_type_check(Tree *value, Tree *type);
+Tree *xl_type_check(Tree *value, Tree *type);
 
 Tree *xl_new_integer(longlong value);
 Tree *xl_new_real(double value);

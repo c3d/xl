@@ -168,7 +168,8 @@ int Main::LoadFile(text file)
             tree = parser.Parse();
         }
         if (options.verbose)
-            std::cout << "Info: file " << file << " is " << nt << "in serialized format" << '\n';
+            std::cout << "Info: file " << file << " is "
+                      << nt << "in serialized format" << '\n';
     }
 
     if (options.writeSerialized)
@@ -184,7 +185,9 @@ int Main::LoadFile(text file)
         hadError = true;
         return hadError;
     }
-    Symbols *syms = new Symbols(&context);
+    Symbols *syms = &context;
+    if (file != "builtins.xl")
+        syms = new Symbols(syms);
     Symbols::symbols = syms;
     tree->Set<SymbolsInfo>(syms);
 

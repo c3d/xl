@@ -247,14 +247,16 @@ template <class I> inline void Tree::Purge()
 // ----------------------------------------------------------------------------
 {
     Info *last = NULL;
-    for (Info *i = info; i; i = i->next)
+    Info *next = NULL;
+    for (Info *i = info; i; i = next)
     {
+        next = i->next;
         if (I *ic = dynamic_cast<I *> (i))
         {
             if (last)
-                last->next = ic->next;
+                last->next = next;
             else
-                info = ic->next;
+                info = next;
             delete ic;
         }
         else
@@ -262,6 +264,8 @@ template <class I> inline void Tree::Purge()
             last = i;
         }
     }
+    if (last)
+        last->next = NULL;
 }
 
 
@@ -274,6 +278,7 @@ struct TreeRoot
     TreeRoot(const TreeRoot &o);
     ~TreeRoot();
     operator Tree *(void) { return tree; }
+    bool operator< (const TreeRoot &o) const { return tree < o.tree; }
 public:
     Tree *      tree;
 };

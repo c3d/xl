@@ -88,7 +88,8 @@ Scanner::Scanner(kstring name, Syntax &stx, Positions &pos, Errors &err)
       indents(), indent(0), indentChar(0),
       checkingIndent(false), settingIndent(false),
       position(0), lineStart(0),
-      positions(pos), errors(err)
+      positions(pos), errors(err),
+      hadSpaceBefore(false), hadSpaceAfter(false)
 {
     file = fopen(name, "r");
     indents.push_back(0);       // We start with an indent of 0
@@ -152,6 +153,7 @@ token_t Scanner::NextToken(bool hungry)
         return tokEOF;
 
     // Check if we unindented far enough for multiple indents
+    hadSpaceBefore = true;
     while (indents.back() > indent)
     {
         indents.pop_back();
@@ -162,10 +164,11 @@ token_t Scanner::NextToken(bool hungry)
     int c = fgetc(file);
     position++;
 
-
     // Skip spaces and check indendation
+    hadSpaceBefore = false;
     while (isspace(c) && c != EOF)
     {
+        hadSpaceBefore = true;
         if (c == '\n')
         {
             // New line: start counting indentation
@@ -302,6 +305,7 @@ token_t Scanner::NextToken(bool hungry)
                 ungetc(c, file);
                 ungetc('.', file);
                 position -= 2;
+                hadSpaceAfter = false;
                 return tokINTEGER;
             }
             else
@@ -382,6 +386,7 @@ token_t Scanner::NextToken(bool hungry)
         // Return the token
         ungetc(c, file);
         position--;
+        hadSpaceAfter = isspace(c);
         return floating_point ? tokREAL : tokINTEGER;
     } // Numbers
 
@@ -397,6 +402,7 @@ token_t Scanner::NextToken(bool hungry)
         }
         ungetc(c, file);
         position--;
+        hadSpaceAfter = isspace(c);
         if (syntax.IsBlock(textValue, endMarker))
             return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
         return tokNAME;
@@ -421,6 +427,7 @@ token_t Scanner::NextToken(bool hungry)
                 {
                     ungetc(c, file);
                     position--;
+                    hadSpaceAfter = isspace(c);
                     return eos == '"' ? tokSTRING : tokQUOTE;
                 }
 
@@ -430,6 +437,7 @@ token_t Scanner::NextToken(bool hungry)
             {
                 errors.Error("End of input in the middle of a text",
                              position);
+                hadSpaceAfter = false;
                 return tokERROR;
             }
             NEXT_CHAR(c);
@@ -441,6 +449,7 @@ token_t Scanner::NextToken(bool hungry)
     {
         textValue = c;
         tokenText = c;
+        hadSpaceAfter = false;
         return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
     }
 
@@ -454,6 +463,7 @@ token_t Scanner::NextToken(bool hungry)
     }
     ungetc(c, file);
     position--;
+    hadSpaceAfter = isspace(c);
     if (syntax.IsBlock(textValue, endMarker))
         return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
     return tokSYMBOL;
