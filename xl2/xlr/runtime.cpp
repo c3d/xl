@@ -59,32 +59,10 @@ Tree *xl_evaluate(Tree *what)
 {
     if (!what)
         return what;
-
-    IFTRACE(eval)
-        std::cerr << "EVAL: " << what << '\n';
-
-    Tree *result = what;
-    if (!result->IsConstant())
-    {
-        if (!what->code)
-        {
-            Symbols *symbols = what->Get<SymbolsInfo>();
-            if (!symbols)
-            {
-                std::cerr << "WARNING: No symbols for '" << what << "'\n";
-                symbols = Symbols::symbols;
-            }
-            what = symbols->CompileAll(what);
-        }
-
-        assert(what->code);
-        result = what->code(what);
-
-        IFTRACE(eval)
-            std::cerr << "EVAL= " << result << '\n';
-    }
-
-    return result;
+    Symbols *symbols = what->Get<SymbolsInfo>();
+    if (!symbols)
+        symbols = Symbols::symbols;
+    return symbols->Run(what);
 }
 
 
@@ -113,7 +91,7 @@ bool xl_same_shape(Tree *left, Tree *right)
 }
 
 
-bool xl_type_check(Tree *value, Tree *type)
+Tree *xl_type_check(Tree *value, Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if value has the type of 'type'
 // ----------------------------------------------------------------------------
@@ -134,15 +112,12 @@ bool xl_type_check(Tree *value, Tree *type)
     Infix *typeExpr = Symbols::symbols->CompileTypeTest(type);
     typecheck_fn typecheck = (typecheck_fn) typeExpr->code;
     Tree *afterTypeCast = typecheck(typeExpr, value);
-    if (afterTypeCast != value)
-    {
-        IFTRACE(typecheck)
-            std::cerr << "Failed (not same type)\n";
-        return false;
-    }
     IFTRACE(typecheck)
-        std::cerr << "Success\n";
-    return true;
+        if (afterTypeCast)
+            std::cerr << "Success\n";
+        else
+            std::cerr << "Failed (not same type)\n";
+    return afterTypeCast;
 }
 
 
@@ -316,6 +291,8 @@ Tree *xl_real_cast(Tree *source, Tree *value)
     value = xl_evaluate(value);
     if (Real *rt = value->AsReal())
         return rt;
+    if (Integer *it = value->AsInteger())
+        return new Real(it->value);
     return NULL;
 }
 
