@@ -657,11 +657,11 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
         const char *clabel = label.c_str();
         result = data->CreateAlloca(compiler->treePtrTy, 0, clabel);
         storage[tree] = result;
-        if (value.count(tree))
-            data->CreateStore(value[tree], result);
-        else if (Value *global = compiler->Known(tree))
-            data->CreateStore(data->CreateLoad(global), result);
     }
+    if (value.count(tree))
+        data->CreateStore(value[tree], result);
+    else if (Value *global = compiler->Known(tree))
+        data->CreateStore(data->CreateLoad(global), result);
 
     return result;
 }
