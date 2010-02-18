@@ -38,17 +38,20 @@ XL_BEGIN
 
 TreeDiff::~TreeDiff()
 {
-    Tree *tab[] = { t1, t2 };
+    node_table *tab[] = { &nodes1, &nodes2 };
 
-    for (unsigned i = 0; i < (sizeof(tab)/sizeof(Tree *)); i++)
-        if (tab[i])
+    for (unsigned i = 0; i < (sizeof(tab)/sizeof(node_table *)); i++)
+    {
+        node_table::iterator it;
+        for (it = tab[i]->begin(); it != tab[i]->end(); it++)
         {
-            tab[i]->Purge<NodeIdInfo>();
-            tab[i]->Purge<MatchedInfo>();
-            tab[i]->Purge<TreeDiffInfo>();
-            tab[i]->Purge<LeafCountInfo>();
-            tab[i]->Purge<ParentInfo>();
+            (*it).second.GetTree()->Purge<NodeIdInfo>();
+            (*it).second.GetTree()->Purge<MatchedInfo>();
+            (*it).second.GetTree()->Purge<TreeDiffInfo>();
+            (*it).second.GetTree()->Purge<LeafCountInfo>();
+            (*it).second.GetTree()->Purge<ParentInfo>();
         }
+    }
     matching::iterator it;
     for (it = m.begin(); it != m.end(); it++)
         delete (*it);
