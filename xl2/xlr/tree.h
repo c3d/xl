@@ -70,8 +70,14 @@ enum kind
 //   The kinds of tree that compose an XL parse tree
 // ----------------------------------------------------------------------------
 {
-    INTEGER, REAL, TEXT, NAME,                  // Leaf nodes
-    BLOCK, PREFIX, POSTFIX, INFIX               // Non-leaf nodes
+    KIND_FIRST,
+    INTEGER = KIND_FIRST, REAL, TEXT, NAME,     // Leaf nodes
+    KIND_LEAF_FIRST = INTEGER,
+    KIND_LEAF_LAST = NAME,
+    BLOCK, PREFIX, POSTFIX, INFIX,              // Non-leaf nodes
+    KIND_NLEAF_FIRST = BLOCK,
+    KIND_NLEAF_LAST = INFIX,
+    KIND_LAST = KIND_NLEAF_LAST
 };
 
 

@@ -99,6 +99,7 @@ TRACE(typecheck)
 TRACE(labels)
 TRACE(builtins)
 TRACE(closure)
+TRACE(diff)
 
 // Undefine for next use...
 #undef OPTVAR

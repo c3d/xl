@@ -39,7 +39,7 @@
 #include "options.h"
 #include "basics.h"
 #include "serializer.h"
-
+#include "diff.h"
 
 XL_BEGIN
 
@@ -296,8 +296,8 @@ int Main::Diff()
     Tree *t1 = sf1.tree.tree;
     Tree *t2 = sf2.tree.tree;
 
-    std::cout << "T1:" << std::endl << t1 << std::endl << "----" << std::endl;
-    std::cout << "T2:" << std::endl << t2 << std::endl << "----" << std::endl;
+    TreeDiff d(t1, t2);
+    d.Diff();
 
     return hadError;
 }
