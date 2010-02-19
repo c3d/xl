@@ -184,6 +184,9 @@ int Main::LoadFile(text file)
     Symbols::symbols = syms;
     tree->Set<SymbolsInfo>(syms);
 
+    if (options.fileLoad)
+        std::cout << "Loading: " << file << "\n";
+
     files[file] = SourceFile (file, tree, syms);
     context.CollectGarbage();
 
