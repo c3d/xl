@@ -462,7 +462,7 @@ operator <<(std::ostream &out, XL::TreeDiff::node_table &m)
     if (m.empty())
         return out;
 
-    XL::PrintNode pn(out);
+    XL::PrintNode pn(out, true);
     XL::TreeDiff::node_table::iterator it;
     if ((*m.begin()).first >= 0)
     {
@@ -489,7 +489,7 @@ operator <<(std::ostream &out, XL::TreeDiff::node_vector &m)
 //    Display a vector of nodes
 // ----------------------------------------------------------------------------
 {
-    XL::PrintNode pn(out);
+    XL::PrintNode pn(out, true);
     for (unsigned i = 0; i < m.size(); i++)
         m[i]->Do(pn);
 
