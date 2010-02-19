@@ -57,7 +57,8 @@ TreeDiff::~TreeDiff()
         delete (*it);
 }
 
-node_id TreeDiff::AssignNodeIds(Tree *t, node_table &m, node_id from_id)
+node_id TreeDiff::AssignNodeIds(Tree *t, node_table &m, node_id from_id,
+                                node_id step)
 // ----------------------------------------------------------------------------
 //    Assign a node_id identifier to each node of a tree and build a node map
 // ----------------------------------------------------------------------------
@@ -65,7 +66,7 @@ node_id TreeDiff::AssignNodeIds(Tree *t, node_table &m, node_id from_id)
     // Nodes are numbered in breadth-first order
     // Any other unique numbering would be OK
 
-    TreeDiff::SetNodeIdAction action(m, from_id);
+    TreeDiff::SetNodeIdAction action(m, from_id, step);
     BreadthFirstSearch bfs(action);
     t->Do(bfs);
     return action.id;
@@ -356,11 +357,9 @@ void TreeDiff::Diff()
 {
     // First, assign some IDs to tree nodes and build node tables.
     // The first tree is numbered starting from 1, while the second one
-    // is numbered starting with the next hundred + 1
-    node_id id;
-    id = AssignNodeIds(t1, nodes1, 1);
-    id = 100 * ceil((float)id/100) + 1;
-    AssignNodeIds(t2, nodes2, id);
+    // is numbered with negative integers (-1, -2, etc.)
+    AssignNodeIds(t1, nodes1);
+    AssignNodeIds(t2, nodes2, -1, -1);
 
     if (!nodes1.size())
         return;
@@ -443,12 +442,21 @@ operator <<(std::ostream &out, XL::TreeDiff::node_table &m)
 //    Display a collection of nodes indexed by node_id
 // ----------------------------------------------------------------------------
 {
+    if (m.empty())
+        return out;
+
     XL::PrintNode pn(out);
     XL::TreeDiff::node_table::iterator it;
-    for (it = m.begin(); it != m.end(); it++)
+    if ((*m.begin()).first >= 0)
     {
-        (*it).second->Do(pn);
+        for (it = m.begin(); it != m.end(); it++)
+            (*it).second->Do(pn);
+        return out;
     }
+
+    XL::TreeDiff::node_table::reverse_iterator rit;
+    for (rit = m.rbegin(); rit != m.rend(); rit++)
+        (*rit).second->Do(pn);
     return out;
 }
 

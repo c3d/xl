@@ -45,7 +45,7 @@ XL_BEGIN
 
 struct TreeDiff;                        // The main class to do diff operations
 struct NodePair;                        // Two node identifiers
-typedef ulonglong node_id;              // A node identifier
+typedef longlong node_id;              // A node identifier
 typedef std::set<NodePair *> matching;  // A correspondence between tree nodes
 
 
@@ -344,16 +344,18 @@ protected:
     //   Set an integer node ID to each node. Append node to a table.
     // ------------------------------------------------------------------------
     {
-        SetNodeIdAction(node_table &tab, node_id from_id = 1)
-          : tab(tab), id(from_id) {}
+        SetNodeIdAction(node_table &tab, node_id from_id = 1, node_id step = 1)
+          : tab(tab), id(from_id), step(step) {}
         virtual Tree *Do(Tree *what)
         {
             what->Set<NodeIdInfo>(id);
-            tab[id++] = what;
+            tab[id] = what;
+            id += step;
             return NULL;
         }
         node_table &tab;
         node_id id;
+        node_id step;
     };
 
     struct StoreNodeIntoChainArray : SimpleAction
@@ -389,7 +391,8 @@ protected:
 
     void DoFastMatch();
 
-    node_id AssignNodeIds(Tree *t, node_table &m, node_id from_id = 1);
+    node_id AssignNodeIds(Tree *t, node_table &m, node_id from_id = 1,
+                          node_id step = 1);
     void SetParentPointers(Tree *t);
     void BuildChains(Tree *allnodes, node_vector *out);
     void MatchOneKind(matching &M, node_vector &S1, node_vector &S2);
