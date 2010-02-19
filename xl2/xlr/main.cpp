@@ -187,8 +187,8 @@ int Main::LoadFile(text file)
     files[file] = SourceFile (file, tree, syms);
     context.CollectGarbage();
 
-    IFTRACE(source)
-        std::cout << "SOURCE: " << file << "\n" << tree << "\n";
+    if (options.showSource)
+        std::cout << tree << "\n";
 
     if (!options.parseOnly)
     {
@@ -211,8 +211,6 @@ int Main::LoadFile(text file)
 
     if (options.verbose)
         debugp(tree);
-    else if (options.parseOnly && !options.writeSerialized)
-        std::cout << tree << "\n";
 
     Symbols::symbols = Context::context;
 
