@@ -103,6 +103,8 @@ int Main::LoadFiles()
 
     // Scan options and build list of files we need to process
     cmd = options.Parse(argc, argv);
+    if (options.doDiff)
+        options.parseOnly = true;
     if (options.builtins)
         filelist.push_back("builtins.xl");
     for (; cmd != end; cmd = options.ParseNext())
