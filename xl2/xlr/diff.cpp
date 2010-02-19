@@ -377,6 +377,23 @@ void TreeDiff::Diff()
                 << "T2:\n" << nodes2 << "\n"
                 << "Matching:\n" << m << "\n";
     }
+
+// TEST
+    EditOperation::Insert ins(t1, 1, 4);
+    std::cout << ins << std::endl;
+    EditOperation::Move mov(5, 1, 4);
+    std::cout << mov << std::endl;
+    EditOperation::Delete del(2);
+    std::cout << del << std::endl;
+    EditOperation::Update upd(9, t2);
+    std::cout << upd << std::endl;
+
+    EditScript s;
+    s.push_back(&ins);
+    s.push_back(&del);
+    s.push_back(&upd);
+    s.push_back(&mov);
+    std::cout << s << std::endl;
 }
 
 bool TreeDiff::Node::operator ==(const TreeDiff::Node &n)
@@ -450,13 +467,19 @@ operator <<(std::ostream &out, XL::TreeDiff::node_table &m)
     if ((*m.begin()).first >= 0)
     {
         for (it = m.begin(); it != m.end(); it++)
+        {
             (*it).second->Do(pn);
+            out << std::endl;
+        }
         return out;
     }
 
     XL::TreeDiff::node_table::reverse_iterator rit;
     for (rit = m.rbegin(); rit != m.rend(); rit++)
+    {
         (*rit).second->Do(pn);
+        out << std::endl;
+    }
     return out;
 }
 
@@ -483,5 +506,90 @@ operator <<(std::ostream &out, XL::TreeDiff::matching &m)
     for (it = m.begin(); it != m.end(); it++)
         out << (*it)->x << " -> " << (*it)->y << std::endl;
 
+    return out;
+}
+
+std::ostream&
+// ----------------------------------------------------------------------------
+//    Display an insert operation
+// ----------------------------------------------------------------------------
+operator <<(std::ostream &out, XL::EditOperation::Insert &op)
+{
+    XL::PrintNode pn(out);
+    out << "INS(" ;
+    op.leaf->Do(pn);
+    out << ", " << op.parent << ", " << op.pos << ")";
+    return out;
+}
+
+std::ostream&
+// ----------------------------------------------------------------------------
+//    Display a delete operation
+// ----------------------------------------------------------------------------
+operator <<(std::ostream &out, XL::EditOperation::Delete &op)
+{
+    out << "DEL(" << op.leaf << ")";
+    return out;
+}
+
+std::ostream&
+// ----------------------------------------------------------------------------
+//    Display an update operation
+// ----------------------------------------------------------------------------
+operator <<(std::ostream &out, XL::EditOperation::Update &op)
+{
+    XL::PrintNode pn(out);
+    out << "UPD(" << op.leaf << ", ";
+    op.value->Do(pn);
+    out << ")";
+    return out;
+}
+
+std::ostream&
+// ----------------------------------------------------------------------------
+//    Display a move operation
+// ----------------------------------------------------------------------------
+operator <<(std::ostream &out, XL::EditOperation::Move &op)
+{
+    out << "MOV(" << op.subtree
+        << ", "   << op.parent
+        << ", "   << op.pos     << ")";
+    return out;
+}
+
+std::ostream&
+// ----------------------------------------------------------------------------
+//    Display an edit script
+// ----------------------------------------------------------------------------
+operator <<(std::ostream &out, XL::EditScript &s)
+{
+    std::list<XL::EditOperation::Base *>::iterator it;
+
+    for (it = s.begin(); it != s.end();)
+    {
+        XL::EditOperation::Insert *ins;
+        XL::EditOperation::Delete *del;
+        XL::EditOperation::Update *upd;
+        XL::EditOperation::Move   *mov;
+        if ((ins = dynamic_cast<XL::EditOperation::Insert *>(*it)))
+        {
+            out << *ins;
+        }
+        else if ((del = dynamic_cast<XL::EditOperation::Delete *>(*it)))
+        {
+            out << *del;
+        }
+        else if ((upd = dynamic_cast<XL::EditOperation::Update *>(*it)))
+        {
+            out << *upd;
+        }
+        else if ((mov = dynamic_cast<XL::EditOperation::Move *>(*it)))
+        {
+            out << *mov;
+        }
+        it++;
+        if (it != s.end())
+            out << ", ";
+    }
     return out;
 }
