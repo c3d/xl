@@ -511,8 +511,8 @@ void Compiler::FreeResources(Tree *tree)
         Function *f = functions[tree];
         f->deleteBody();
         runtime->freeMachineCodeForFunction(f);
-        deleted.insert(tree);
     }
+    deleted.insert(tree);
 }
 
 
@@ -530,6 +530,8 @@ void Compiler::FreeResources()
         Function *f = functions[tree];
         delete f;               // Now safe to do
         functions.erase(tree);
+        globals.erase(tree);
+        closet.erase(tree);
         deleted.erase(tree);
     }
 }
@@ -1485,8 +1487,7 @@ void debugm(XL::value_map &m)
     XL::value_map::iterator i;
     llvm::raw_stderr_ostream llvmstderr;
     for (i = m.begin(); i != m.end(); i++)
-        llvmstderr << "map[" << (*i).first.tree << "]="
-                   << *(*i).second << '\n';
+        llvmstderr << "map[" << (*i).first << "]=" << *(*i).second << '\n';
 }
 
 
