@@ -91,6 +91,18 @@ bool xl_same_shape(Tree *left, Tree *right)
 }
 
 
+bool  xl_infix_match_check(Tree *value, Infix *ref)
+// ----------------------------------------------------------------------------
+//   Check if the value is matching the given infix
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = value->AsInfix())
+        if (infix->name == ref->name)
+            return true;
+    return false;
+}
+
+
 Tree *xl_type_check(Tree *value, Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if value has the type of 'type'

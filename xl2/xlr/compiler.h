@@ -110,6 +110,7 @@ public:
     llvm::Function            *xl_evaluate;
     llvm::Function            *xl_same_text;
     llvm::Function            *xl_same_shape;
+    llvm::Function            *xl_infix_match_check;
     llvm::Function            *xl_type_check;
     llvm::Function            *xl_type_error;
     llvm::Function            *xl_new_integer;
@@ -178,6 +179,7 @@ struct CompiledUnit
     llvm::BasicBlock *  RealTest(Tree *code, double value);
     llvm::BasicBlock *  TextTest(Tree *code, text value);
     llvm::BasicBlock *  ShapeTest(Tree *code, Tree *other);
+    llvm::BasicBlock *  InfixMatchTest(Tree *code, Infix *ref);
     llvm::BasicBlock *  TypeTest(Tree *code, Tree *type);
 
 public:
