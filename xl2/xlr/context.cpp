@@ -1492,23 +1492,26 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
 // ----------------------------------------------------------------------------
 {
     // Check if we match an infix tree like 'x,y' with a name like 'A'
-    if (Name *name = test->AsName())
+    if (what->name != ":")
     {
-        // Evaluate 'A' to see if we will get something like x,y
-        Tree *compiled = CompileValue(name);
-        if (!compiled)
-            return NULL;
+        if (Name *name = test->AsName())
+        {
+            // Evaluate 'A' to see if we will get something like x,y
+            Tree *compiled = CompileValue(name);
+            if (!compiled)
+                return NULL;
 
-        // Build an infix tree corresponding to what we extract
-        Name *left = new Name("left");
-        Name *right = new Name("right");
-        Infix *extracted = new Infix(what->name, left, right);
+            // Build an infix tree corresponding to what we extract
+            Name *left = new Name("left");
+            Name *right = new Name("right");
+            Infix *extracted = new Infix(what->name, left, right);
 
-        // Extract the infix parameters from actual value
-        unit.InfixMatchTest(compiled, extracted);
+            // Extract the infix parameters from actual value
+            unit.InfixMatchTest(compiled, extracted);
 
-        // Proceed with the infix we extracted to map the remaining args
-        test = extracted;
+            // Proceed with the infix we extracted to map the remaining args
+            test = extracted;
+        }
     }
 
     if (Infix *it = test->AsInfix())
