@@ -46,7 +46,6 @@ XL_BEGIN
 
 struct TreeDiff;                        // The main class to do diff operations
 struct NodePair;                        // Two node identifiers
-typedef longlong node_id;              // A node identifier
 typedef std::set<NodePair *> matching;  // A correspondence between tree nodes
 
 
@@ -66,17 +65,6 @@ struct NodePair
     virtual ~NodePair() {}
 
     node_id x, y;
-};
-
-struct NodeIdInfo : Info
-// ----------------------------------------------------------------------------
-//   Node identifier information
-// ----------------------------------------------------------------------------
-{
-    typedef node_id data_t;
-    NodeIdInfo(node_id id): id(id) {}
-    operator data_t() { return id; }
-    data_t id;
 };
 
 struct MatchedInfo : Info
@@ -120,32 +108,6 @@ struct ParentInfo : Info
     ParentInfo(data_t p): p(p) {}
     operator data_t() { return p; }
     data_t p;
-};
-
-struct SimpleAction : Action
-// ----------------------------------------------------------------------------
-//   Holds a method to be run on any kind of tree node
-// ----------------------------------------------------------------------------
-{
-    SimpleAction() {}
-    virtual ~SimpleAction() {}
-    Tree *DoBlock(Block *what)
-    {
-        return Do(what);
-    }
-    Tree *DoInfix(Infix *what)
-    {
-        return Do(what);
-    }
-    Tree *DoPrefix(Prefix *what)
-    {
-        return Do(what);
-    }
-    Tree *DoPostfix(Postfix *what)
-    {
-        return Do(what);
-    }
-    virtual Tree * Do(Tree *what) = 0;
 };
 
 struct PrintNode : Action
