@@ -87,7 +87,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
       prefixTreeTy(NULL), prefixTreePtrTy(NULL),
       evalTy(NULL), evalFnTy(NULL), infoPtrTy(NULL), charPtrTy(NULL),
       xl_evaluate(NULL), xl_same_text(NULL), xl_same_shape(NULL),
-      xl_type_check(NULL), xl_type_error(NULL),
+      xl_infix_match_check(NULL), xl_type_check(NULL), xl_type_error(NULL),
       xl_new_integer(NULL), xl_new_real(NULL), xl_new_character(NULL),
       xl_new_text(NULL), xl_new_xtext(NULL), xl_new_block(NULL),
       xl_new_prefix(NULL), xl_new_postfix(NULL), xl_new_infix(NULL),
@@ -242,6 +242,8 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
                                   boolTy, 2, treePtrTy, charPtrTy);
     xl_same_shape = ExternFunction(FN(xl_same_shape),
                                    boolTy, 2, treePtrTy, treePtrTy);
+    xl_infix_match_check = ExternFunction(FN(xl_infix_match_check),
+                                          boolTy, 2, treePtrTy, treePtrTy);
     xl_type_check = ExternFunction(FN(xl_type_check),
                                    treePtrTy, 2, treePtrTy, treePtrTy);
     xl_type_error = ExternFunction(FN(xl_type_error),
@@ -1313,6 +1315,35 @@ BasicBlock *CompiledUnit::ShapeTest(Tree *left, Tree *right)
 
     // If the value is the same, then go on, switch to the isGood basic block
     code->SetInsertPoint(isGoodBB);
+    return isGoodBB;
+}
+
+
+BasicBlock *CompiledUnit::InfixMatchTest(Tree *actual, Infix *reference)
+// ----------------------------------------------------------------------------
+//   Test if the actual tree has the same shape as the given infix
+// ----------------------------------------------------------------------------
+{
+    // Check that we know how to evaluate both 
+    Value *actualVal = Known(actual);           assert(actualVal);
+    Value *refVal = NeedStorage(reference);     assert (refVal);
+    Value *refCst = ConstantTree(reference);    assert(refCst);
+
+    // Where we go if the tests fail
+    BasicBlock *notGood = NeedTest();
+    Value *isGood = code->CreateCall2(compiler->xl_infix_match_check,
+                                      actualVal, refCst);
+    BasicBlock *isGoodBB = BasicBlock::Create(*context, "isGood", function);
+    code->CreateCondBr(isGood, isGoodBB, notGood);
+
+    // If the value is the same, then go on, switch to the isGood basic block
+    code->SetInsertPoint(isGoodBB);
+
+    // We are on the right path: extract left and right
+    Copy(actual, reference);
+    Left(reference);
+    Right(reference);
+
     return isGoodBB;
 }
 

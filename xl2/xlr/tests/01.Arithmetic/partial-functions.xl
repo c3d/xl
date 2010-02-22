@@ -1,0 +1,6 @@
+badabaf x,y,z -> debug "Three arguments: ", x, y, z
+
+bidibif a -> badabaf a, 3
+
+bidibif 2,3
+badabaf 1,2,3
