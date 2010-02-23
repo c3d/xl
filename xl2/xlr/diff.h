@@ -40,7 +40,6 @@ XL_BEGIN
 // ============================================================================
 
 struct NodePair;                        // Two node identifiers
-typedef ulonglong node_id;              // A node identifier
 typedef std::set<NodePair *> matching;  // A correspondence between tree nodes
 
 
@@ -60,18 +59,6 @@ struct NodePair
     virtual ~NodePair() {}
 
     node_id x, y;
-};
-
-struct NodeIdInfo : Info
-// ----------------------------------------------------------------------------
-//   Node identifier information
-// ----------------------------------------------------------------------------
-{
-    NodeIdInfo(node_id id): id(id) {}
-
-    typedef node_id data_t;
-    operator data_t() { return id; }
-    node_id id;
 };
 
 struct TreeDiff
