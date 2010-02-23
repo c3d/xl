@@ -247,14 +247,16 @@ template <class I> inline void Tree::Purge()
 // ----------------------------------------------------------------------------
 {
     Info *last = NULL;
-    for (Info *i = info; i; i = i->next)
+    Info *next = NULL;
+    for (Info *i = info; i; i = next)
     {
+        next = i->next;
         if (I *ic = dynamic_cast<I *> (i))
         {
             if (last)
-                last->next = ic->next;
+                last->next = next;
             else
-                info = ic->next;
+                info = next;
             delete ic;
         }
         else
@@ -262,6 +264,8 @@ template <class I> inline void Tree::Purge()
             last = i;
         }
     }
+    if (last)
+        last->next = NULL;
 }
 
 
@@ -777,6 +781,63 @@ struct RewriteKey : Action
 
 
 extern text sha1(Tree *t);
+
+typedef long node_id;              // A node identifier
+
+struct NodeIdInfo : Info
+// ----------------------------------------------------------------------------
+//   Node identifier information
+// ----------------------------------------------------------------------------
+{
+    NodeIdInfo(node_id id): id(id) {}
+
+    typedef node_id data_t;
+    operator data_t() { return id; }
+    node_id id;
+};
+
+struct SimpleAction : Action
+// ----------------------------------------------------------------------------
+//   Holds a method to be run on any kind of tree node
+// ----------------------------------------------------------------------------
+{
+    SimpleAction() {}
+    virtual ~SimpleAction() {}
+    Tree *DoBlock(Block *what)
+    {
+        return Do(what);
+    }
+    Tree *DoInfix(Infix *what)
+    {
+        return Do(what);
+    }
+    Tree *DoPrefix(Prefix *what)
+    {
+        return Do(what);
+    }
+    Tree *DoPostfix(Postfix *what)
+    {
+        return Do(what);
+    }
+    virtual Tree * Do(Tree *what) = 0;
+};
+
+struct SetNodeIdAction : SimpleAction
+// ------------------------------------------------------------------------
+//   Set an integer node ID to each node.
+// ------------------------------------------------------------------------
+{
+	SetNodeIdAction(node_id from_id = 1, node_id step = 1)
+	: id(from_id), step(step) {}
+	virtual Tree *Do(Tree *what)
+	{
+		what->Set<NodeIdInfo>(id);
+		id += step;
+		return NULL;
+	}
+	node_id id;
+	node_id step;
+};
 
 XL_END
 

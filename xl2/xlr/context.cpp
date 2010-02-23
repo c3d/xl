@@ -359,7 +359,7 @@ Tree *Symbols::Run(Tree *code)
     // Trace what we are doing
     Tree *result = code;
     IFTRACE(eval)
-        std::cerr << "RUN" << ++index << ": " << code << '\n';
+        std::cerr << "EVAL" << ++index << ": " << code << '\n';
     uint opt = Options::options->optimize_level;
 
     // Optimized mode (compiled)
@@ -390,8 +390,13 @@ Tree *Symbols::Run(Tree *code)
             result = result->code(code);
             more = (result != code && result &&
                     (has_rewrites_for_constants || !result->IsConstant())) ;
+            if (more)
+                IFTRACE(eval)
+                    std::cerr << "LOOP" << index << ": " << result << '\n';
             code = result;
         }
+        IFTRACE(eval)
+            std::cerr << "RSLT" << index-- << ": " << result << '\n';
         return result;
     } // if (opt)
     

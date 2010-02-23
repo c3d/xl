@@ -28,6 +28,7 @@
 #include "renderer.h"
 #include <set>
 #include <map>
+#include <list>
 #include <iostream>
 #include <math.h>
 
@@ -45,7 +46,6 @@ XL_BEGIN
 
 struct TreeDiff;                        // The main class to do diff operations
 struct NodePair;                        // Two node identifiers
-typedef ulonglong node_id;              // A node identifier
 typedef std::set<NodePair *> matching;  // A correspondence between tree nodes
 
 
@@ -65,17 +65,6 @@ struct NodePair
     virtual ~NodePair() {}
 
     node_id x, y;
-};
-
-struct NodeIdInfo : Info
-// ----------------------------------------------------------------------------
-//   Node identifier information
-// ----------------------------------------------------------------------------
-{
-    typedef node_id data_t;
-    NodeIdInfo(node_id id): id(id) {}
-    operator data_t() { return id; }
-    data_t id;
 };
 
 struct MatchedInfo : Info
@@ -121,87 +110,70 @@ struct ParentInfo : Info
     data_t p;
 };
 
-struct SimpleAction : Action
-// ----------------------------------------------------------------------------
-//   Holds a method to be run on any kind of tree node
-// ----------------------------------------------------------------------------
-{
-    SimpleAction() {}
-    virtual ~SimpleAction() {}
-    Tree *DoBlock(Block *what)
-    {
-        return Do(what);
-    }
-    Tree *DoInfix(Infix *what)
-    {
-        return Do(what);
-    }
-    Tree *DoPrefix(Prefix *what)
-    {
-        return Do(what);
-    }
-    Tree *DoPostfix(Postfix *what)
-    {
-        return Do(what);
-    }
-    virtual Tree * Do(Tree *what) = 0;
-};
-
 struct PrintNode : Action
 // ----------------------------------------------------------------------------
 //   Display a node
 // ----------------------------------------------------------------------------
 {
-    PrintNode(std::ostream &out): out(out) {}
+    PrintNode(std::ostream &out, bool showInfos = false):
+        out(out), showInfos(showInfos) {}
 
     Tree *DoInteger(Integer *what)
     {
-        DisplayInfos(what);
-        out << "[Integer] " << what->value << std::endl;
+        if (showInfos)
+            ShowInfos(what);
+        out << "[Integer] " << what->value;
         return NULL;
     }
     Tree *DoReal(Real *what)
     {
-        DisplayInfos(what);
-        out << "[Real] " << what->value << std::endl;
+        if (showInfos)
+            ShowInfos(what);
+        out << "[Real] " << what->value;
         return NULL;
     }
     Tree *DoText(Text *what)
     {
-        DisplayInfos(what);
-        out << "[Text] " << what->value << std::endl;
+        if (showInfos)
+            ShowInfos(what);
+        out << "[Text] " << what->value;
         return NULL;
     }
     Tree *DoName(Name *what)
     {
-        DisplayInfos(what);
-        out << "[Name] " << what->value << std::endl;
+        if (showInfos)
+            ShowInfos(what);
+        out << "[Name] " << what->value;
         return NULL;
     }
     Tree *DoBlock(Block *what)
     {
-        DisplayInfos(what);
+        if (showInfos)
+            ShowInfos(what);
         out << "[Block] " << what->opening
-                         << " " << what->closing << std::endl;
+                         << " " << what->closing;
         return NULL;
     }
     Tree *DoInfix(Infix *what)
     {
-        DisplayInfos(what);
+        if (showInfos)
+            ShowInfos(what);
         std::string name = (!what->name.compare("\n")) ?  "<CR>" : what->name;
-        out << "[Infix] " << name << std::endl;
+        out << "[Infix] " << name;
         return NULL;
     }
     Tree *DoPrefix(Prefix *what)
     {
-        DisplayInfos(what);
-        out << "[Prefix] " << std::endl;
+        if (showInfos)
+            ShowInfos(what);
+        out << "[Prefix] ";
         return NULL;
     }
     Tree *DoPostfix(Postfix *what)
     {
-        DisplayInfos(what);
-        out << "[Postfix] " << std::endl;
+        if (showInfos)
+            ShowInfos(what);
+        out << "[Postfix] ";
         return NULL;
     }
     Tree *Do(Tree *what)
@@ -211,7 +183,7 @@ struct PrintNode : Action
 
 protected:
 
-    void DisplayInfos(Tree *what)
+    void ShowInfos(Tree *what)
     {
         if (what->Exists<NodeIdInfo>())
             out << "ID: " << what->Get<NodeIdInfo>() << " ";
@@ -222,6 +194,7 @@ protected:
 protected:
 
     std::ostream &out;
+    bool          showInfos;
 };
 
 struct SetParentInfo : Action
@@ -344,16 +317,18 @@ protected:
     //   Set an integer node ID to each node. Append node to a table.
     // ------------------------------------------------------------------------
     {
-        SetNodeIdAction(node_table &tab, node_id from_id = 1)
-          : tab(tab), id(from_id) {}
+        SetNodeIdAction(node_table &tab, node_id from_id = 1, node_id step = 1)
+          : tab(tab), id(from_id), step(step) {}
         virtual Tree *Do(Tree *what)
         {
             what->Set<NodeIdInfo>(id);
-            tab[id++] = what;
+            tab[id] = what;
+            id += step;
             return NULL;
         }
         node_table &tab;
         node_id id;
+        node_id step;
     };
 
     struct StoreNodeIntoChainArray : SimpleAction
@@ -389,7 +364,8 @@ protected:
 
     void DoFastMatch();
 
-    node_id AssignNodeIds(Tree *t, node_table &m, node_id from_id = 1);
+    node_id AssignNodeIds(Tree *t, node_table &m, node_id from_id = 1,
+                          node_id step = 1);
     void SetParentPointers(Tree *t);
     void BuildChains(Tree *allnodes, node_vector *out);
     void MatchOneKind(matching &M, node_vector &S1, node_vector &S2);
@@ -405,6 +381,87 @@ protected:
     matching m;
 };
 
+struct EditOperation
+// ----------------------------------------------------------------------------
+//   An operation on a tree. Edit scripts generated by TreeDiff are made of EO.
+// ----------------------------------------------------------------------------
+{
+    EditOperation() {}
+    virtual ~EditOperation() {}
+
+    struct Base;
+    struct Insert;
+    struct Delete;
+    struct Update;
+    struct Move;
+};
+
+struct EditOperation::Base
+// ----------------------------------------------------------------------------
+//   Unspecified edit operation.
+// ----------------------------------------------------------------------------
+{
+    Base() {}
+    virtual ~Base() {}
+};
+
+struct EditOperation::Insert : EditOperation::Base
+// ----------------------------------------------------------------------------
+//   The operation of inserting a new leaf node into a tree.
+// ----------------------------------------------------------------------------
+{
+    Insert(Tree *leaf, node_id parent, unsigned pos):
+        leaf(leaf), parent(parent), pos(pos) {}
+    virtual ~Insert() {}
+
+    Tree *   leaf;
+    node_id  parent;
+    unsigned pos;
+};
+
+struct EditOperation::Delete : EditOperation::Base
+// ----------------------------------------------------------------------------
+//   The operation of deleting a leaf node of a tree.
+// ----------------------------------------------------------------------------
+{
+    Delete(node_id leaf): leaf(leaf) {}
+    virtual ~Delete() {}
+
+    node_id leaf;
+};
+
+struct EditOperation::Update : EditOperation::Base
+// ----------------------------------------------------------------------------
+//   The operation of inserting a new leaf node into a tree.
+// ----------------------------------------------------------------------------
+{
+    Update(node_id leaf, Tree *value): leaf(leaf), value(value) {}
+    virtual ~Update() {}
+
+    node_id leaf;
+    Tree *  value;
+};
+
+struct EditOperation::Move : EditOperation::Base
+// ----------------------------------------------------------------------------
+//   The operation of moving a subtree from one parent to another.
+// ----------------------------------------------------------------------------
+{
+    Move(node_id subtree, node_id parent, unsigned pos):
+        subtree(subtree), parent(parent), pos(pos) {}
+    virtual ~Move() {}
+
+    node_id subtree;
+    node_id parent;
+    unsigned pos;
+};
+
+struct EditScript : std::list<EditOperation::Base *>
+{
+    EditScript() {}
+    virtual ~EditScript() {}
+};
+
 XL_END
 
 std::ostream&
@@ -416,4 +473,18 @@ operator <<(std::ostream &out, XL::TreeDiff::node_vector &m);
 std::ostream&
 operator <<(std::ostream &out, XL::TreeDiff::matching &m);
 
+std::ostream&
+operator <<(std::ostream &out, XL::EditOperation::Insert &op);
+
+std::ostream&
+operator <<(std::ostream &out, XL::EditOperation::Delete &op);
+
+std::ostream&
+operator <<(std::ostream &out, XL::EditOperation::Update &op);
+
+std::ostream&
+operator <<(std::ostream &out, XL::EditOperation::Move &op);
+
+std::ostream&
+operator <<(std::ostream &out, XL::EditScript &s);
 #endif // DIFF_H

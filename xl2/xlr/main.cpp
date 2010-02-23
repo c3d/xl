@@ -40,6 +40,8 @@
 #include "basics.h"
 #include "serializer.h"
 #include "diff.h"
+#include "bfs.h"
+#include "gv.h"
 
 XL_BEGIN
 
@@ -103,6 +105,8 @@ int Main::LoadFiles()
 
     // Scan options and build list of files we need to process
     cmd = options.Parse(argc, argv);
+    if (options.doDiff)
+        options.parseOnly = true;
     if (options.builtins)
         filelist.push_back("builtins.xl");
     for (; cmd != end; cmd = options.ParseNext())
@@ -194,8 +198,17 @@ int Main::LoadFile(text file)
     files[file] = SourceFile (file, tree, syms);
     context.CollectGarbage();
 
-    IFTRACE(source)
-        std::cout << "SOURCE: " << file << "\n" << tree << "\n";
+    if (options.showGV)
+	{
+		SetNodeIdAction sni;
+		BreadthFirstSearch bfs(sni);
+		tree->Do(bfs);
+		GvOutput gvout(std::cout);
+		tree->Do(gvout);
+	}
+
+    if (options.showSource)
+        std::cout << tree << "\n";
 
     if (!options.parseOnly)
     {
@@ -218,8 +231,6 @@ int Main::LoadFile(text file)
 
     if (options.verbose)
         debugp(tree);
-    else if (options.parseOnly && !options.writeSerialized)
-        std::cout << tree << "\n";
 
     Symbols::symbols = Context::context;
 
