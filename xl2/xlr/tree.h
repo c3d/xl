@@ -123,6 +123,8 @@ struct Tree
     template<class I>
     void                Set(typename I::data_t data);
     template<class I>
+    void                Set2(typename I::data_t data);
+    template<class I>
     I*                  GetInfo();
     template<class I>
     void                SetInfo(I *);
@@ -207,6 +209,19 @@ template <class I> inline I* Tree::GetInfo()
         if (I *ic = dynamic_cast<I *> (i))
             return ic;
     return NULL;
+}
+
+
+template <class I> inline void Tree::Set2(typename I::data_t data)
+// ----------------------------------------------------------------------------
+//   Set the information given as an argument. Do not add new info if exists.
+// ----------------------------------------------------------------------------
+{
+    I *i = GetInfo<I>();
+    if (i)
+        (*i) = data;
+    else
+        Set<I>(data);
 }
 
 
