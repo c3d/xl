@@ -91,15 +91,18 @@ bool xl_same_shape(Tree *left, Tree *right)
 }
 
 
-bool  xl_infix_match_check(Tree *value, Infix *ref)
+Tree *xl_infix_match_check(Tree *value, Infix *ref)
 // ----------------------------------------------------------------------------
 //   Check if the value is matching the given infix
 // ----------------------------------------------------------------------------
 {
+    while (Block *block = value->AsBlock())
+        if (block->opening == "(" && block->closing == ")")
+            value = block->child;
     if (Infix *infix = value->AsInfix())
         if (infix->name == ref->name)
-            return true;
-    return false;
+            return infix;
+    return NULL;
 }
 
 
