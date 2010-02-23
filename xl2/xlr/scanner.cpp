@@ -29,6 +29,7 @@
 #include "scanner.h"
 #include "errors.h"
 #include "syntax.h"
+#include "utf8.h"
 
 
 XL_BEGIN
@@ -69,6 +70,7 @@ public:
 private:
     uint value[SIZE];
 } digit_values;
+
 
 
 // ============================================================================
@@ -391,9 +393,9 @@ token_t Scanner::NextToken(bool hungry)
     } // Numbers
 
     // Look for names
-    else if (isalpha(c))
+    else if (IS_UTF8_OR_ALPHA(c))
     {
-        while (isalnum(c) || c == '_')
+        while (isalnum(c) || c == '_' || IS_UTF8_FIRST(c) || IS_UTF8_NEXT(c))
         {
             if (c == '_')
                 IGNORE_CHAR(c);
