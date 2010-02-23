@@ -53,7 +53,7 @@ XL_BEGIN
 struct CompiledUnit;
 struct Options;
 typedef std::map<text, llvm::Function *>   builtins_map;
-typedef std::map<Tree *, llvm::Value *>    value_map;
+typedef std::map<TreeRoot, llvm::Value *>  value_map;
 typedef std::map<Tree *, llvm::Function *> function_map;
 typedef std::map<uint, eval_fn>            closure_map;
 typedef std::set<Tree *>                   closure_set;
