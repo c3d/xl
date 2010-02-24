@@ -39,6 +39,8 @@
 #include "options.h"
 #include "basics.h"
 #include "serializer.h"
+#include "bfs.h"
+#include "gv.h"
 
 
 XL_BEGIN
@@ -184,8 +186,20 @@ int Main::LoadFile(text file)
     Symbols::symbols = syms;
     tree->Set<SymbolsInfo>(syms);
 
+    if (options.fileLoad)
+        std::cout << "Loading: " << file << "\n";
+
     files[file] = SourceFile (file, tree, syms);
     context.CollectGarbage();
+
+    if (options.showGV)
+	{
+		SetNodeIdAction sni;
+		BreadthFirstSearch bfs(sni);
+		tree->Do(bfs);
+		GvOutput gvout(std::cout);
+		tree->Do(gvout);
+	}
 
     if (options.showSource)
         std::cout << tree << "\n";

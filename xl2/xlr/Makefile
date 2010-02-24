@@ -42,6 +42,7 @@ SOURCES     =					\
 	types.cpp				\
         sha1.cpp				\
 	serializer.cpp				\
+        diff.cpp				\
 	opcodes.cpp
 
 PRODUCT=xlr$(EXE)
