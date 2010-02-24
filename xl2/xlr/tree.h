@@ -529,7 +529,7 @@ struct TreeClone : Action
 //   Clone a tree
 // ----------------------------------------------------------------------------
 {
-    TreeClone() {}
+    TreeClone(bool recursive = true): r(recursive) {}
 
     Tree *DoInteger(Integer *what)
     {
@@ -552,29 +552,33 @@ struct TreeClone : Action
 
     Tree *DoBlock(Block *what)
     {
-        return new Block(what->child->Do(this),
+        return new Block(r ? what->child->Do(this) : NULL,
                          what->opening, what->closing, what->Position());
     }
     Tree *DoInfix(Infix *what)
     {
         return new Infix (what->name,
-                          what->left->Do(this), what->right->Do(this),
+                          r ? what->left->Do(this)   : NULL,
+                          r ?  what->right->Do(this) : NULL,
                           what->Position());
     }
     Tree *DoPrefix(Prefix *what)
     {
-        return new Prefix(what->left->Do(this), what->right->Do(this),
+        return new Prefix(r ? what->left->Do(this)  : NULL,
+                          r ? what->right->Do(this) : NULL,
                           what->Position());
     }
     Tree *DoPostfix(Postfix *what)
     {
-        return new Postfix(what->left->Do(this), what->right->Do(this),
+        return new Postfix(r ? what->left->Do(this)  : NULL,
+                           r ? what->right->Do(this) : NULL,
                            what->Position());
     }
     Tree *Do(Tree *what)
     {
         return what;            // ??? Should not happen
     }
+    bool r;
 };
 
 
