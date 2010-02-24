@@ -35,8 +35,8 @@
 //  - boolean, type of true and false
 //
 //  The type constructors are:
-//  - T1 <nl> T2: Values of either type T1 or T2 (<nl> is infix newline)
-//  - T1 -> T2: A function taking T1 and returning T2
+//  - T1 |  T2 : Values of either type T1 or T2
+//  - T1 -> T2 : A function taking T1 and returning T2
 //  - expr: A tree with the given shape, e.g  (T1, T2), T1+T2
 //
 //  The type analysis phase consists in scanning the input tree,
@@ -49,7 +49,17 @@
 
 XL_BEGIN
 
-typedef std::map<Tree *, Tree *>        type_map;
+struct TypeInfo : Info
+// ----------------------------------------------------------------------------
+//    Information recording the type of a given tree
+// ----------------------------------------------------------------------------
+{
+    typedef Tree *      data_t;
+    TypeInfo(Tree *type): type(type) {}
+    operator            data_t()  { return type; }
+    Tree *              type;
+};
+
 
 struct InferTypes : Action
 // ----------------------------------------------------------------------------
@@ -69,7 +79,6 @@ struct InferTypes : Action
     Tree *DoBlock(Block *what);
 
     Symbols *   symbols;
-    type_map    types;
 };
 
 extern Tree * integer_type;

@@ -128,10 +128,12 @@ Tree *xl_type_check(Tree *value, Tree *type)
     typecheck_fn typecheck = (typecheck_fn) typeExpr->code;
     Tree *afterTypeCast = typecheck(typeExpr, value);
     IFTRACE(typecheck)
+    {
         if (afterTypeCast)
             std::cerr << "Success\n";
         else
             std::cerr << "Failed (not same type)\n";
+    }
     return afterTypeCast;
 }
 

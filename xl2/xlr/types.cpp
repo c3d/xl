@@ -43,7 +43,7 @@ Tree *InferTypes::DoInteger(Integer *what)
 //   Return the integer type
 // ----------------------------------------------------------------------------
 {
-    types[what] = integer_type;
+    what->Set<TypeInfo> (integer_type);
     return integer_type;
 }
 
@@ -53,7 +53,7 @@ Tree *InferTypes::DoReal(Real *what)
 //   Return the real type
 // ----------------------------------------------------------------------------
 {
-    types[what] = real_type;
+    what->Set<TypeInfo> (real_type);
     return real_type;
 }
 
@@ -63,9 +63,9 @@ Tree *InferTypes::DoText(Text *what)
 //   Return text or character type
 // ----------------------------------------------------------------------------
 {
-    Tree *t = what->opening == "'" ? character_type : text_type;
-    types[what] = t;
-    return t;
+    Tree *type = what->opening == "'" ? character_type : text_type;
+    what->Set<TypeInfo> (type);
+    return type;
 }
 
 
@@ -76,8 +76,8 @@ Tree *InferTypes::DoName(Name *what)
 {
     if (Tree *value = symbols->Named(what->value))
     {
-        if (Tree *t = types[value])
-            return t;
+        if (Tree *type = value->Get<TypeInfo>())
+            return type;
         return Ooops("Unknown type for '$1'", what);
     }
     return Ooops("Unknown name '$1'", what);
