@@ -521,16 +521,22 @@ struct LocalSave
 //    Save a variable locally
 // ----------------------------------------------------------------------------
 {
-    LocalSave (T &source, T value): reference(source), original(source)
+    LocalSave (T &source, T value): reference(source), saved(source)
     {
         reference = value;
     }
+    LocalSave(const LocalSave &o): reference(o.reference), saved(o.saved) {}
+    LocalSave (T &source): reference(source), saved(source)
+    {
+    }
     ~LocalSave()
     {
-        reference = original;
+        reference = saved;
     }
+    operator T()        { return saved; }
+
     T&  reference;
-    T   original;
+    T   saved;
 };
 
 
