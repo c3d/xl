@@ -639,7 +639,6 @@ void Renderer::Render(Tree *what)
     RenderFormat("", "end ");
 }
 
-XL_END
 
 std::ostream& operator<< (std::ostream &out, XL::Tree *t)
 // ----------------------------------------------------------------------------
@@ -650,6 +649,9 @@ std::ostream& operator<< (std::ostream &out, XL::Tree *t)
     render.Render(t);
     return out;
 }
+
+XL_END
+
 
 void debug(XL::Tree *tree)
 // ----------------------------------------------------------------------------

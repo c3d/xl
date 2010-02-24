@@ -31,6 +31,7 @@
 #include "tree.h"
 #include <set>
 
+
 XL_BEGIN
 
 // ============================================================================
@@ -81,9 +82,9 @@ protected:
 
 protected:
 
-    matching * FastMatch(Tree *t1, Tree *t2);
-    void AssignNodeIds(Tree *t);
-
+    matching *  FastMatch(Tree *t1, Tree *t2);
+    void        AssignNodeIds(Tree *t);
+    
 protected:
 
     node_id next_node_id;
