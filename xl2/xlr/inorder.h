@@ -103,4 +103,4 @@ struct InOrderTraversal : Action
 
 XL_END
 
-#endif INORDER_H
+#endif // INORDER_H
