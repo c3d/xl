@@ -451,7 +451,6 @@ bool TreeDiff::Node::ContainsLeaf(Tree *leaf) const
     return false;
 }
 
-XL_END
 
 std::ostream&
 operator <<(std::ostream &out, XL::TreeDiff::node_table &m)
@@ -593,3 +592,5 @@ operator <<(std::ostream &out, XL::EditScript &s)
     }
     return out;
 }
+
+XL_END

@@ -76,9 +76,9 @@ struct Renderer
     static Renderer *   renderer;
 };
 
-XL_END
+std::ostream& operator<< (std::ostream&out, XL::Tree *t);
 
-extern std::ostream& operator<< (std::ostream&out, XL::Tree *t);
+XL_END
 
 // For use in a debugger
 extern "C" void debug(XL::Tree *);
