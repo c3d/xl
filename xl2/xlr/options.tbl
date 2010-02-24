@@ -48,6 +48,8 @@ OPTVAR(showGV, bool, false)
 OPTION(showgv, "Generate Graphviz output", showGV = true)
 OPTVAR(showSource, bool, false)
 OPTION(show, "Show source file", showSource = true)
+OPTVAR(fileLoad, bool, false)
+OPTION(fileload, "Show paths as files are loaded", fileLoad = true)
 
 // Do not load builtins.xl
 OPTVAR(builtins, bool, true)

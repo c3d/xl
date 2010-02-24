@@ -129,6 +129,8 @@ struct Tree
     template<class I>
     void                Set(typename I::data_t data);
     template<class I>
+    void                Set2(typename I::data_t data);
+    template<class I>
     I*                  GetInfo();
     template<class I>
     void                SetInfo(I *);
@@ -213,6 +215,19 @@ template <class I> inline I* Tree::GetInfo()
         if (I *ic = dynamic_cast<I *> (i))
             return ic;
     return NULL;
+}
+
+
+template <class I> inline void Tree::Set2(typename I::data_t data)
+// ----------------------------------------------------------------------------
+//   Set the information given as an argument. Do not add new info if exists.
+// ----------------------------------------------------------------------------
+{
+    I *i = GetInfo<I>();
+    if (i)
+        (*i) = data;
+    else
+        Set<I>(data);
 }
 
 
@@ -520,7 +535,7 @@ struct TreeClone : Action
 //   Clone a tree
 // ----------------------------------------------------------------------------
 {
-    TreeClone() {}
+    TreeClone(bool recursive = true): r(recursive) {}
 
     Tree *DoInteger(Integer *what)
     {
@@ -543,29 +558,33 @@ struct TreeClone : Action
 
     Tree *DoBlock(Block *what)
     {
-        return new Block(what->child->Do(this),
+        return new Block(r ? what->child->Do(this) : NULL,
                          what->opening, what->closing, what->Position());
     }
     Tree *DoInfix(Infix *what)
     {
         return new Infix (what->name,
-                          what->left->Do(this), what->right->Do(this),
+                          r ? what->left->Do(this)   : NULL,
+                          r ?  what->right->Do(this) : NULL,
                           what->Position());
     }
     Tree *DoPrefix(Prefix *what)
     {
-        return new Prefix(what->left->Do(this), what->right->Do(this),
+        return new Prefix(r ? what->left->Do(this)  : NULL,
+                          r ? what->right->Do(this) : NULL,
                           what->Position());
     }
     Tree *DoPostfix(Postfix *what)
     {
-        return new Postfix(what->left->Do(this), what->right->Do(this),
+        return new Postfix(r ? what->left->Do(this)  : NULL,
+                           r ? what->right->Do(this) : NULL,
                            what->Position());
     }
     Tree *Do(Tree *what)
     {
         return what;            // ??? Should not happen
     }
+    bool r;
 };
 
 

@@ -47,8 +47,12 @@ Tree::~Tree()
 //   Delete the hash if we have one
 // ----------------------------------------------------------------------------
 {
-    for (Info *i = info; i; i = i->next)
+    Info *next = NULL;
+    for (Info *i = info; i; i = next)
+    {
+        next = i->next;
         delete i;
+    }
 }
 
 

@@ -36,6 +36,7 @@
 // Use plain string comparison instead (much faster)
 #define NO_LCS_STRCMP 1
 
+
 XL_BEGIN
 
 // ============================================================================
@@ -462,7 +463,6 @@ struct EditScript : std::list<EditOperation::Base *>
     virtual ~EditScript() {}
 };
 
-XL_END
 
 std::ostream&
 operator <<(std::ostream &out, XL::TreeDiff::node_table &m);
@@ -487,4 +487,7 @@ operator <<(std::ostream &out, XL::EditOperation::Move &op);
 
 std::ostream&
 operator <<(std::ostream &out, XL::EditScript &s);
+
+XL_END
+
 #endif // DIFF_H
