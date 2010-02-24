@@ -36,20 +36,18 @@ text            xl_text_arg(Tree *arg);
 int             xl_character_arg(Tree *arg);
 bool            xl_boolean_arg(Tree *arg);
 Tree *          ParametersTree(tree_list parameters);
-extern Name *   xl_true;
-extern Name *   xl_false;
 
-#define TREE(v)         (v)
-#define INT(v)          ((integer_t) (v))
-#define CHAR(v)         xl_character_arg(v)
-#define REAL(v)         ((real_t) (v))
-#define TEXT(v)         ((text_t) (v))
-#define BOOL(v)         ((boolean_t) (v))
-#define RINT(val)       return new Integer(val)
-#define RREAL(val)      return new Real(val)
-#define RTEXT(val)      return new Text(val)
-#define RBOOL(val)      return (val) ? xl_true : xl_false
-#define RTREE(val)      return (val)
+#define XL_TREE(v)      (v)
+#define XL_INT(v)       ((integer_t) (v))
+#define XL_CHAR(v)      xl_character_arg(v)
+#define XL_REAL(v)      ((real_t) (v))
+#define XL_TEXT(v)      ((text_t) (v))
+#define XL_BOOL(v)      ((boolean_t) (v))
+#define XL_R_TREE(val)  return (val)
+#define XL_R_INT(val)   return new XL::Integer(val)
+#define XL_R_REAL(val)  return new XL::Real(val)
+#define XL_R_TEXT(val)  return new XL::Text(val)
+#define XL_R_BOOL(val)  return (val) ? XL::xl_true : XL::xl_false
 
 typedef Integer &       integer_r;
 typedef Real &          real_r;

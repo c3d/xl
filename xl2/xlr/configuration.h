@@ -61,10 +61,6 @@
 #define CONFIG_LEADING_UNDERSCORE_IN_NM 0
 #define CONFIG_DIRENT_HAS_TYPE          1
 #define CONFIG_USE_SBRK                 1
-#define CONFIG_C_COMPILER               "cc -g"
-#define CONFIG_OBJ_EXT                  ".o"
-#define CONFIG_EXE_EXT                  ""
-#define CONFIG_DEFAULT_EXE              "a.out"
 
 #endif /* LINUX */
 
@@ -83,13 +79,7 @@
 #define CONFIG_HAS_USHORT               0
 #define CONFIG_HAS_LONGLONG             1
 #define CONFIG_HAS_INT64                0
-#define CONFIG_LEADING_UNDERSCORE_IN_NM 1
-#define CONFIG_DIRENT_HAS_TYPE          1
 #define CONFIG_USE_SBRK                 1
-#define CONFIG_C_COMPILER               "cc -g"
-#define CONFIG_OBJ_EXT                  ".o"
-#define CONFIG_EXE_EXT                  ""
-#define CONFIG_DEFAULT_EXE              "a.out"
 
 #endif /* MACOSX */
 
@@ -107,14 +97,7 @@
 #define CONFIG_HAS_USHORT               0
 #define CONFIG_HAS_LONGLONG             1
 #define CONFIG_HAS_INT64                0
-#define CONFIG_LEADING_UNDERSCORE_IN_NM 0
-#define CONFIG_NM_DASH_P                1
-#define CONFIG_DIRENT_HAS_TYPE          1
 #define CONFIG_USE_SBRK                 1
-#define CONFIG_C_COMPILER               "cc -g"
-#define CONFIG_OBJ_EXT                  ".o"
-#define CONFIG_EXE_EXT                  ""
-#define CONFIG_DEFAULT_EXE              "a.out"
 
 #endif /* HPUX */
 
@@ -132,14 +115,7 @@
 #define CONFIG_HAS_USHORT               0
 #define CONFIG_HAS_LONGLONG             1
 #define CONFIG_HAS_INT64                0
-#define CONFIG_LEADING_UNDERSCORE_IN_NM 0
-#define CONFIG_NM_DASH_P                1
-#define CONFIG_DIRENT_HAS_TYPE          0
 #define CONFIG_USE_SBRK                 1
-#define CONFIG_C_COMPILER               "gcc -g"
-#define CONFIG_OBJ_EXT                  ".o"
-#define CONFIG_EXE_EXT                  ""
-#define CONFIG_DEFAULT_EXE              "a.out"
 
 #endif /* HPUX */
 
@@ -157,13 +133,7 @@
 #define CONFIG_HAS_USHORT               0
 #define CONFIG_HAS_LONGLONG             1
 #define CONFIG_HAS_INT64                0
-#define CONFIG_LEADING_UNDERSCORE_IN_NM 0
-#define CONFIG_DIRENT_HAS_TYPE          1
 #define CONFIG_USE_SBRK                 1
-#define CONFIG_C_COMPILER               "cc -g"
-#define CONFIG_OBJ_EXT                  ".o"
-#define CONFIG_EXE_EXT                  ""
-#define CONFIG_DEFAULT_EXE              "a.out"
 
 #endif /* BEOS */
 
@@ -181,15 +151,27 @@
 #define CONFIG_HAS_USHORT               0
 #define CONFIG_HAS_LONGLONG             1
 #define CONFIG_HAS_INT64                0
-#define CONFIG_LEADING_UNDERSCORE_IN_NM 1
-#define CONFIG_DIRENT_HAS_TYPE          0
 #define CONFIG_USE_SBRK                 1
-#define CONFIG_C_COMPILER               "gcc"
-#define CONFIG_OBJ_EXT                  ".o"
-#define CONFIG_EXE_EXT                  ".exe"
-#define CONFIG_DEFAULT_EXE              "a.exe"
 
 #endif /* CYGWIN */
+
+
+#ifdef CONFIG_MINGW
+/* ========================================================================= */
+/*                                                                           */
+/*   MinGW configuration                                                     */
+/*                                                                           */
+/* ========================================================================= */
+
+#define CONFIG_HAS_UCHAR                1
+#define CONFIG_HAS_UINT                 1
+#define CONFIG_HAS_ULONG                1
+#define CONFIG_HAS_USHORT               1
+#define CONFIG_HAS_LONGLONG             0
+#define CONFIG_HAS_INT64                1
+#define CONFIG_USE_SBRK                 0
+
+#endif /* MINGW */
 
 
 #ifdef CONFIG_MSVC
@@ -205,13 +187,7 @@
 #define CONFIG_HAS_USHORT               1
 #define CONFIG_HAS_LONGLONG             0
 #define CONFIG_HAS_INT64                1
-#define CONFIG_LEADING_UNDERSCORE_IN_NM 1
-#define CONFIG_DIRENT_HAS_TYPE          0
 #define CONFIG_USE_SBRK                 0
-#define CONFIG_C_COMPILER               "cl /nologo"
-#define CONFIG_OBJ_EXT                  ".obj"
-#define CONFIG_EXE_EXT                  ".exe"
-#define CONFIG_DEFAULT_EXE              "a.exe"
 
 #endif /* MSVC */
 
@@ -244,12 +220,4 @@
 #define CONFIG_NAME_ULONGLONG           "unsigned long"
 #endif
 
-#if CONFIG_DIRENT_HAS_TYPE
-#define CONFIG_DIRENT_ISFILE(entry)     ((entry)->d_type == DT_REG || \
-                                         (entry)->d_type == DT_LNK)
-#define CONFIG_DIRENT_ISDIR(entry)      ((entry)->d_type == DT_DIR)
-#else
-#define CONFIG_DIRENT_ISFILE(entry)     true
-#define CONFIG_DIRENT_ISDIR(entry)      true
-#endif
 #endif /* CONFIGURATION_H */
