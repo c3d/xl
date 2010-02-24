@@ -100,4 +100,4 @@ struct BreadthFirstSearch : Action
 
 XL_END
 
-#endif BFS_H
+#endif // BFS_H
