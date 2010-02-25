@@ -219,7 +219,11 @@ template <class I> inline void Tree::Set2(typename I::data_t data)
 {
     I *i = GetInfo<I>();
     if (i)
+    {
+        Info *n = i->next;
         (*i) = data;
+        i->next = n;
+    }
     else
         Set<I>(data);
 }
