@@ -27,15 +27,18 @@
 
 #include "diff.h"
 
+
 XL_BEGIN
 
-
 Tree *TreeDiff::SetNodeIdAction::Do(Tree *what)
+// ----------------------------------------------------------------------------
+//    Assign a unique node ID to the 'what' tree
+// ----------------------------------------------------------------------------
 {
     what->Set<NodeIdInfo>(current_id++);
-
     return what;
 }
+
 
 void TreeDiff::AssignNodeIds(Tree *t)
 // ----------------------------------------------------------------------------
@@ -49,6 +52,7 @@ void TreeDiff::AssignNodeIds(Tree *t)
 
     next_node_id = action.current_id;
 }
+
 
 matching *TreeDiff::FastMatch(Tree *t1, Tree *t2)
 // ----------------------------------------------------------------------------

@@ -35,7 +35,7 @@
 #undef RS
 
 #define DS(n) IFTRACE(builtins) std::cerr << "Builtin " #n ": " << self << '\n';
-#define RS return NULL
+#define RS return xl_false
 
 #define INFIX(t1, symbol, t2, name, code)       \
     Tree *xl_##name(Tree*self, t1##_r l, t2##_r r) { DS(symbol) code; RS; }

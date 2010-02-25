@@ -1,35 +1,35 @@
 // Basic language features
 INFIX(tree,";",tree, SemicolonSequence,
       xl_evaluate(&l);
-      RTREE(xl_evaluate(&r)))
+      XL_R_TREE(xl_evaluate(&r)))
 INFIX(tree,"\n",tree, NewlineSequence,
       xl_evaluate(&l);
-      RTREE(xl_evaluate(&r)))
+      XL_R_TREE(xl_evaluate(&r)))
 INFIX(tree,"->", tree, EnterRewrite,
       Symbols::symbols->EnterRewrite(&l,&r);
-      RTREE(self))
+      XL_R_TREE(self))
 BLOCK("(", tree, ")", EvaluateParentheses,
-      RTREE(xl_evaluate(&child)))
+      XL_R_TREE(xl_evaluate(&child)))
 BLOCK(Block::indent, tree, Block::unindent, EvaluateBlock,
-      RTREE(xl_evaluate(&child)))
+      XL_R_TREE(xl_evaluate(&child)))
 
 // Integer arithmetic and comparisons
-INFIX(integer, "+", integer, BinaryAddInt, RINT(INT(l) + INT(r)))
-INFIX(integer, "-", integer, BinarySubInt, RINT(INT(l) - INT(r)))
-INFIX(integer, "*", integer, BinaryMulInt, RINT(INT(l) * INT(r)))
-INFIX(integer, "/", integer, BinaryDivInt, RINT(INT(l) / INT(r)))
-INFIX(integer, "rem", integer, BinaryRemInt, RINT(INT(l) % INT(r)))
+INFIX(integer, "+", integer, BinaryAddInt, XL_R_INT(XL_INT(l) + XL_INT(r)))
+INFIX(integer, "-", integer, BinarySubInt, XL_R_INT(XL_INT(l) - XL_INT(r)))
+INFIX(integer, "*", integer, BinaryMulInt, XL_R_INT(XL_INT(l) * XL_INT(r)))
+INFIX(integer, "/", integer, BinaryDivInt, XL_R_INT(XL_INT(l) / XL_INT(r)))
+INFIX(integer, "rem", integer, BinaryRemInt, XL_R_INT(XL_INT(l) % XL_INT(r)))
 INFIX(integer, "mod", integer, BinaryModInt,
-      integer_t x = INT(l);
-      integer_t y = INT(r);
+      integer_t x = XL_INT(l);
+      integer_t y = XL_INT(r);
       integer_t tmp = x % y;
       if (tmp && (x^y) < 0)
           tmp += y;
-      RINT(tmp);
+      XL_R_INT(tmp);
       )
 INFIX(integer, "^", integer, BinaryPowerInt,
-      integer_t x = INT(l);
-      integer_t y = INT(r);
+      integer_t x = XL_INT(l);
+      integer_t y = XL_INT(r);
       integer_t tmp = 0;
       if (y >= 0)
       {
@@ -42,43 +42,43 @@ INFIX(integer, "^", integer, BinaryPowerInt,
               y >>= 1;
           }
       }
-      RINT(tmp);)
+      XL_R_INT(tmp);)
 
-INFIX(integer, "<<", integer, BinaryLeftShift, RINT(INT(l) << INT(r)))
-INFIX(integer, ">>", integer, BinaryRightShift, RINT(INT(l) >> INT(r)))
+INFIX(integer, "<<", integer, BinaryLeftShift, XL_R_INT(XL_INT(l) << XL_INT(r)))
+INFIX(integer, ">>", integer, BinaryRightShift, XL_R_INT(XL_INT(l) >> XL_INT(r)))
 
-INFIX(integer, "and", integer, BinaryAnd, RINT(INT(l) & INT(r)))
-INFIX(integer, "or", integer, BinaryOr, RINT(INT(l) | INT(r)))
-INFIX(integer, "xor", integer, BinaryXor, RINT(INT(l) ^ INT(r)))
+INFIX(integer, "and", integer, BinaryAnd, XL_R_INT(XL_INT(l) & XL_INT(r)))
+INFIX(integer, "or", integer, BinaryOr, XL_R_INT(XL_INT(l) | XL_INT(r)))
+INFIX(integer, "xor", integer, BinaryXor, XL_R_INT(XL_INT(l) ^ XL_INT(r)))
 
-INFIX(integer, "<", integer, BinaryLTInt, RBOOL(INT(l) < INT(r)))
-INFIX(integer, ">", integer, BinaryGTInt, RBOOL(INT(l) > INT(r)))
-INFIX(integer, "<=", integer, BinaryLEInt, RBOOL(INT(l) <= INT(r)))
-INFIX(integer, ">=", integer, BinaryGEInt, RBOOL(INT(l) >= INT(r)))
-INFIX(integer, "<>", integer, BinaryNEInt, RBOOL(INT(l) != INT(r)))
-INFIX(integer, "=", integer, BinaryEQInt, RBOOL(INT(l) == INT(r)))
+INFIX(integer, "<", integer, BinaryLTInt, XL_R_BOOL(XL_INT(l) < XL_INT(r)))
+INFIX(integer, ">", integer, BinaryGTInt, XL_R_BOOL(XL_INT(l) > XL_INT(r)))
+INFIX(integer, "<=", integer, BinaryLEInt, XL_R_BOOL(XL_INT(l) <= XL_INT(r)))
+INFIX(integer, ">=", integer, BinaryGEInt, XL_R_BOOL(XL_INT(l) >= XL_INT(r)))
+INFIX(integer, "<>", integer, BinaryNEInt, XL_R_BOOL(XL_INT(l) != XL_INT(r)))
+INFIX(integer, "=", integer, BinaryEQInt, XL_R_BOOL(XL_INT(l) == XL_INT(r)))
 
-PREFIX("-", PARM(x, integer), NegateInt, RINT(-x))
-PREFIX("not", PARM(x, integer), NotInt, RINT(~x))
-POSTFIX(PARM(x, real), "%", PercentReal, RREAL(x / 100.0))
-POSTFIX(PARM(x, integer), "%", PercentInteger, RREAL(x / 100.0))
+PREFIX("-", PARM(x, integer), NegateInt, XL_R_INT(-x))
+PREFIX("not", PARM(x, integer), NotInt, XL_R_INT(~x))
+POSTFIX(PARM(x, real), "%", PercentReal, XL_R_REAL(x / 100.0))
+POSTFIX(PARM(x, integer), "%", PercentInteger, XL_R_REAL(x / 100.0))
 
 // Real arithmetic and comparisons
-INFIX(real, "+", real, BinaryAddReal, RREAL(REAL(l) + REAL(r)))
-INFIX(real, "-", real, BinarySubReal, RREAL(REAL(l) - REAL(r)))
-INFIX(real, "*", real, BinaryMulReal, RREAL(REAL(l) * REAL(r)))
-INFIX(real, "/", real, BinaryDivReal, RREAL(REAL(l) / REAL(r)))
-INFIX(real, "rem", real, BinaryRemReal, RREAL(fmod(REAL(l), REAL(r))))
+INFIX(real, "+", real, BinaryAddReal, XL_R_REAL(XL_REAL(l) + XL_REAL(r)))
+INFIX(real, "-", real, BinarySubReal, XL_R_REAL(XL_REAL(l) - XL_REAL(r)))
+INFIX(real, "*", real, BinaryMulReal, XL_R_REAL(XL_REAL(l) * XL_REAL(r)))
+INFIX(real, "/", real, BinaryDivReal, XL_R_REAL(XL_REAL(l) / XL_REAL(r)))
+INFIX(real, "rem", real, BinaryRemReal, XL_R_REAL(fmod(XL_REAL(l), XL_REAL(r))))
 INFIX(real, "mod", real, BinaryModReal,
-      real_t x = REAL(l);
-      real_t y = REAL(r);
+      real_t x = XL_REAL(l);
+      real_t y = XL_REAL(r);
       real_t tmp = fmod(x,y);
       if (tmp != 0.0 && x*y < 0.0)
           tmp += y;
-      RREAL(tmp);)
+      XL_R_REAL(tmp);)
 INFIX(real, "^", integer, BinaryPowRealInt,
-      real_t x = REAL(l);
-      integer_t y = INT(r);
+      real_t x = XL_REAL(l);
+      integer_t y = XL_INT(r);
       boolean_t negative = y < 0;
       real_t tmp = 1.0;
       if (negative) y = -y;
@@ -90,118 +90,120 @@ INFIX(real, "^", integer, BinaryPowRealInt,
           y >>= 1;
       }
       if (negative) tmp = 1.0/tmp;
-      RREAL(tmp);)
-INFIX(real, "^", real, BinaryPowReal, RREAL(pow(REAL(l), REAL(r))))
+      XL_R_REAL(tmp);)
+INFIX(real, "^", real, BinaryPowReal, XL_R_REAL(pow(XL_REAL(l), XL_REAL(r))))
 
-INFIX(real, "<", real, BinaryLTReal, RBOOL(REAL(l) < REAL(r)))
-INFIX(real, ">", real, BinaryGTReal, RBOOL(REAL(l) > REAL(r)))
-INFIX(real, "<=", real, BinaryLEReal, RBOOL(REAL(l) <= REAL(r)))
-INFIX(real, ">=", real, BinaryGEReal, RBOOL(REAL(l) >= REAL(r)))
-INFIX(real, "<>", real, BinaryNEReal, RBOOL(REAL(l) != REAL(r)))
-INFIX(real, "=", real, BinaryEQReal, RBOOL(REAL(l) == REAL(r)))
+INFIX(real, "<", real, BinaryLTReal, XL_R_BOOL(XL_REAL(l) < XL_REAL(r)))
+INFIX(real, ">", real, BinaryGTReal, XL_R_BOOL(XL_REAL(l) > XL_REAL(r)))
+INFIX(real, "<=", real, BinaryLEReal, XL_R_BOOL(XL_REAL(l) <= XL_REAL(r)))
+INFIX(real, ">=", real, BinaryGEReal, XL_R_BOOL(XL_REAL(l) >= XL_REAL(r)))
+INFIX(real, "<>", real, BinaryNEReal, XL_R_BOOL(XL_REAL(l) != XL_REAL(r)))
+INFIX(real, "=", real, BinaryEQReal, XL_R_BOOL(XL_REAL(l) == XL_REAL(r)))
 
-PREFIX("-", PARM(r, real), NegateReal, RREAL(-r))
-PREFIX("sin", PARM(x, real), SinReal, RREAL(sin(x)))
-PREFIX("cos", PARM(x, real), CosReal, RREAL(cos(x)))
-PREFIX("tan", PARM(x, real), TanReal, RREAL(tan(x)))
-PREFIX("asin", PARM(x, real), ArcSinReal, RREAL(asin(x)))
-PREFIX("acos", PARM(x, real), ArcCosReal, RREAL(acos(x)))
-PREFIX("atan", PARM(x, real), ArcTanReal, RREAL(atan(x)))
-PREFIX("atan", PARM(y, real) PARM(x, real), ArcTanReal2, RREAL(atan2(y,x)))
-PREFIX("exp", PARM(x, real), ExpReal, RREAL(exp(x)))
-PREFIX("expm1", PARM(x, real), ExpRealMinus1, RREAL(expm1(x)))
-PREFIX("log", PARM(x, real), LogReal, RREAL(log(x)))
-PREFIX("log2", PARM(x, real), Log2Real, RREAL(log2(x)))
-PREFIX("log10", PARM(x, real), Log10Real, RREAL(log10(x)))
-PREFIX("log1p", PARM(x, real), LogPlus1Real, RREAL(log1p(x)))
-PREFIX("pi", , PiConstant, RREAL(M_PI))
+PREFIX("-", PARM(r, real), NegateReal, XL_R_REAL(-r))
+PREFIX("sin", PARM(x, real), SinReal, XL_R_REAL(sin(x)))
+PREFIX("cos", PARM(x, real), CosReal, XL_R_REAL(cos(x)))
+PREFIX("tan", PARM(x, real), TanReal, XL_R_REAL(tan(x)))
+PREFIX("asin", PARM(x, real), ArcSinReal, XL_R_REAL(asin(x)))
+PREFIX("acos", PARM(x, real), ArcCosReal, XL_R_REAL(acos(x)))
+PREFIX("atan", PARM(x, real), ArcTanReal, XL_R_REAL(atan(x)))
+PREFIX("atan", PARM(y, real) PARM(x, real), ArcTanReal2, XL_R_REAL(atan2(y,x)))
+PREFIX("exp", PARM(x, real), ExpReal, XL_R_REAL(exp(x)))
+PREFIX("expm1", PARM(x, real), ExpRealMinus1, XL_R_REAL(expm1(x)))
+PREFIX("log", PARM(x, real), LogReal, XL_R_REAL(log(x)))
+PREFIX("log2", PARM(x, real), Log2Real, XL_R_REAL(log2(x)))
+PREFIX("log10", PARM(x, real), Log10Real, XL_R_REAL(log10(x)))
+PREFIX("log1p", PARM(x, real), LogPlus1Real, XL_R_REAL(log1p(x)))
+PREFIX("pi", , PiConstant, XL_R_REAL(M_PI))
 
 // Boolean operations
-INFIX(boolean, "and", boolean, BinaryAndBool, RBOOL(BOOL(l) & BOOL(r)))
-INFIX(boolean, "or", boolean, BinaryOrBool, RBOOL(BOOL(l) | BOOL(r)))
-INFIX(boolean, "xor", boolean, BinaryXorBool, RBOOL(BOOL(l) ^ BOOL(r)))
-PREFIX("not", PARM(x, boolean), NotBool, RBOOL(!x))
+INFIX(boolean, "and", boolean, BinaryAndBool, XL_R_BOOL(XL_BOOL(l) & XL_BOOL(r)))
+INFIX(boolean, "or", boolean, BinaryOrBool, XL_R_BOOL(XL_BOOL(l) | XL_BOOL(r)))
+INFIX(boolean, "xor", boolean, BinaryXorBool, XL_R_BOOL(XL_BOOL(l) ^ XL_BOOL(r)))
+PREFIX("not", PARM(x, boolean), NotBool, XL_R_BOOL(!x))
 
-INFIX(boolean, "<>", boolean, BinaryNEBool, RBOOL(BOOL(l) != BOOL(r)))
-INFIX(boolean, "=", boolean, BinaryEQBool, RBOOL(BOOL(l) == BOOL(r)))
+INFIX(boolean, "<>", boolean, BinaryNEBool, XL_R_BOOL(XL_BOOL(l) != XL_BOOL(r)))
+INFIX(boolean, "=", boolean, BinaryEQBool, XL_R_BOOL(XL_BOOL(l) == XL_BOOL(r)))
 
 // Text operations
-INFIX(text, "&", text, BinaryTextConcatenate, RTEXT(TEXT(l) + TEXT(r)))
-INFIX(text, "<", text, BinaryLTText, RBOOL(TEXT(l) < TEXT(r)))
-INFIX(text, ">", text, BinaryGTText, RBOOL(TEXT(l) > TEXT(r)))
-INFIX(text, "<=", text, BinaryLEText, RBOOL(TEXT(l) <= TEXT(r)))
-INFIX(text, ">=", text, BinaryGEText, RBOOL(TEXT(l) >= TEXT(r)))
-INFIX(text, "<>", text, BinaryNEText, RBOOL(TEXT(l) != TEXT(r)))
-INFIX(text, "=", text, BinaryEQText, RBOOL(TEXT(l) == TEXT(r)))
+INFIX(text, "&", text, BinaryTextConcatenate, XL_R_TEXT(XL_TEXT(l) + XL_TEXT(r)))
+INFIX(text, "<", text, BinaryLTText, XL_R_BOOL(XL_TEXT(l) < XL_TEXT(r)))
+INFIX(text, ">", text, BinaryGTText, XL_R_BOOL(XL_TEXT(l) > XL_TEXT(r)))
+INFIX(text, "<=", text, BinaryLEText, XL_R_BOOL(XL_TEXT(l) <= XL_TEXT(r)))
+INFIX(text, ">=", text, BinaryGEText, XL_R_BOOL(XL_TEXT(l) >= XL_TEXT(r)))
+INFIX(text, "<>", text, BinaryNEText, XL_R_BOOL(XL_TEXT(l) != XL_TEXT(r)))
+INFIX(text, "=", text, BinaryEQText, XL_R_BOOL(XL_TEXT(l) == XL_TEXT(r)))
 
 
 // Conversions
-PREFIX("real", PARM(x, integer), IntToReal, RREAL((real_t) x))
-PREFIX("integer", PARM(x, real), RealToInt, RINT((integer_t) x))
+PREFIX("real", PARM(x, integer), IntToReal, XL_R_REAL((real_t) x))
+PREFIX("integer", PARM(x, real), RealToInt, XL_R_INT((integer_t) x))
 PREFIX("text", PARM(x, integer), IntToText,
-       std::ostringstream out; out << x; RTEXT(out.str()))
+       std::ostringstream out; out << x; XL_R_TEXT(out.str()))
 PREFIX("text", PARM(x, real), RealToText,
-       std::ostringstream out; out << x; RTEXT(out.str()))
+       std::ostringstream out; out << x; XL_R_TEXT(out.str()))
 
 // Time computations
-PREFIX("time",,    SystemTime,    time_t t; time(&t); RINT(t))
+PREFIX("system_time",,    SystemTime,    time_t t; time(&t); XL_R_INT(t))
 PREFIX("hours", PARM(t, integer),   TimeHours,
        struct tm tm; time_t clock = t;
-       localtime_r(&clock, &tm); RINT(tm.tm_hour))
+       localtime_r(&clock, &tm); XL_R_INT(tm.tm_hour))
 PREFIX("minutes", PARM(t, integer), TimeMinutes,
        struct tm tm; time_t clock = t;
-       localtime_r(&clock, &tm); RINT(tm.tm_min))
+       localtime_r(&clock, &tm); XL_R_INT(tm.tm_min))
 PREFIX("seconds", PARM(t, integer), TimeSeconds,
        struct tm tm; time_t clock = t;
-       localtime_r(&clock, &tm); RINT(tm.tm_sec))
+       localtime_r(&clock, &tm); XL_R_INT(tm.tm_sec))
 PREFIX("year", PARM(t, integer), TimeYear,
        struct tm tm; time_t clock = t;
-       localtime_r(&clock, &tm); RINT(tm.tm_year + 1900))
+       localtime_r(&clock, &tm); XL_R_INT(tm.tm_year + 1900))
 PREFIX("month", PARM(t, integer), TimeMonth,
        struct tm tm; time_t clock = t;
-       localtime_r(&clock, &tm); RINT(tm.tm_mon))
+       localtime_r(&clock, &tm); XL_R_INT(tm.tm_mon))
 PREFIX("day", PARM(t, integer), TimeMonthDay,
        struct tm tm; time_t clock = t;
-       localtime_r(&clock, &tm); RINT(tm.tm_mday))
+       localtime_r(&clock, &tm); XL_R_INT(tm.tm_mday))
 PREFIX("week_day", PARM(t, integer), TimeWeekDay,
        struct tm tm; time_t clock = t;
-       localtime_r(&clock, &tm); RINT(tm.tm_wday))
+       localtime_r(&clock, &tm); XL_R_INT(tm.tm_wday))
 PREFIX("year_day", PARM(t, integer), TimeYearDay,
        struct tm tm; time_t clock = t;
-       localtime_r(&clock, &tm); RINT(tm.tm_yday))
+       localtime_r(&clock, &tm); XL_R_INT(tm.tm_yday))
 
 // Return hour, minutes, seconds
 PREFIX("hours",,   SystemHours,
        time_t t; struct tm tm;
-       time (&t); localtime_r(&t, &tm); RINT(tm.tm_hour))
+       time (&t); localtime_r(&t, &tm); XL_R_INT(tm.tm_hour))
 PREFIX("minutes",, SystemMinutes,
        time_t t; struct tm tm;
-       time (&t); localtime_r(&t, &tm); RINT(tm.tm_min))
+       time (&t); localtime_r(&t, &tm); XL_R_INT(tm.tm_min))
 PREFIX("seconds",, SystemSeconds,
        time_t t; struct tm tm;
-       time (&t); localtime_r(&t, &tm); RINT(tm.tm_sec))
+       time (&t); localtime_r(&t, &tm); XL_R_INT(tm.tm_sec))
 PREFIX("year",, SystemYear,
        time_t t; struct tm tm;
-       time (&t); localtime_r(&t, &tm); RINT(tm.tm_year + 1900))
+       time (&t); localtime_r(&t, &tm); XL_R_INT(tm.tm_year + 1900))
 PREFIX("month",, SystemMonth,
        time_t t; struct tm tm;
-       time (&t); localtime_r(&t, &tm); RINT(tm.tm_mon))
+       time (&t); localtime_r(&t, &tm); XL_R_INT(tm.tm_mon))
 PREFIX("day",, SystemMonthDay,
        time_t t; struct tm tm;
-       time (&t); localtime_r(&t, &tm); RINT(tm.tm_mday))
+       time (&t); localtime_r(&t, &tm); XL_R_INT(tm.tm_mday))
 PREFIX("week_day",, SystemWeekDay,
        time_t t; struct tm tm;
-       time (&t); localtime_r(&t, &tm); RINT(tm.tm_wday))
+       time (&t); localtime_r(&t, &tm); XL_R_INT(tm.tm_wday))
 PREFIX("year_day",, SystemYearDay,
        time_t t; struct tm tm;
-       time (&t); localtime_r(&t, &tm); RINT(tm.tm_yday))
+       time (&t); localtime_r(&t, &tm); XL_R_INT(tm.tm_yday))
 
 // Random number generator
-PREFIX("random", , RandomNumber, RREAL(drand48()))
+#ifndef CONFIG_MINGW
+PREFIX("random", , RandomNumber, XL_R_REAL(drand48()))
 PREFIX("random", PARM(low, real) PARM(high, real),
-       RandomNumber2, RREAL(drand48() * (high - low) + low))
+       RandomNumber2, XL_R_REAL(drand48() * (high - low) + low))
 PREFIX("random", PARM(low, integer) PARM(high, integer),
-       RandomNumber2i, RINT((longlong) (drand48() * (high - low) + low)))
+       RandomNumber2i, XL_R_INT((longlong) (drand48() * (high - low) + low)))
+#endif // CONFIG_MINGW
 
 // Executing some code
 PREFIX("do", PARM(code, tree), DoCode, return xl_evaluate(&code))
@@ -214,7 +216,7 @@ PREFIX("debug", PARM(toDebug, tree), DebugTree,
        std::cerr << "DEBUG: " << (Tree *) &toDebug << "\n"; return &toDebug)
 
 // Compute the sha1 of a tree
-PREFIX("sha1", PARM(t, tree), ComputeSha1, RTEXT(sha1(&t)))
+PREFIX("sha1", PARM(t, tree), ComputeSha1, XL_R_TEXT(sha1(&t)))
 
 NAME(nil);
 NAME(true);

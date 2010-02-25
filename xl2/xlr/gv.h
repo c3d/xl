@@ -35,42 +35,44 @@ struct GvOutput : Action
 // ----------------------------------------------------------------------------
 {
     GvOutput(std::ostream &out): out(out)
-	{
-	  out << "graph {\nnode [style=filled];\n";
-	}
+    {
+        out << "graph {\nnode [style=filled];\n";
+    }
     virtual ~GvOutput() { out << "\n};\n"; }
 
-	struct GvNodeName
-// ----------------------------------------------------------------------------
-//   Utility class to format a graph node name
-// ----------------------------------------------------------------------------
-	{
-		GvNodeName(XL::Tree *t) : t(t) {}
-		std::ostream &operator()(std::ostream &out) const
-		{
-		    char buf[10];
-			snprintf(buf, 10, "n%lx", (long)t);
-			out << buf;
-			return out;
-		};
-		XL::Tree * t;
-	};
 
-	struct Id
-// ----------------------------------------------------------------------------
-//   Utility class to format a node ID
-// ----------------------------------------------------------------------------
-	{
-		Id(XL::Tree *t) : t(t) {}
-		std::ostream &operator()(std::ostream &out) const
-		{
-			bool present = t->Exists<NodeIdInfo>();
-			if (present)
-				out << t->Get<NodeIdInfo>() << "\\n";
-			return out;
-		};
-		XL::Tree * t;
-	};
+    struct GvNodeName
+    // ------------------------------------------------------------------------
+    //   Utility class to format a graph node name
+    // ------------------------------------------------------------------------
+    {
+        GvNodeName(XL::Tree *t) : t(t) {}
+        std::ostream &operator()(std::ostream &out) const
+        {
+            char buf[10];
+            snprintf(buf, 10, "n%lx", (long)t);
+            out << buf;
+            return out;
+        };
+        XL::Tree * t;
+    };
+
+
+    struct Id
+    // ------------------------------------------------------------------------
+    //   Utility class to format a node ID
+    // ------------------------------------------------------------------------
+    {
+        Id(XL::Tree *t) : t(t) {}
+        std::ostream &operator()(std::ostream &out) const
+        {
+            bool present = t->Exists<NodeIdInfo>();
+            if (present)
+                out << t->Get<NodeIdInfo>() << "\\n";
+            return out;
+        };
+        XL::Tree * t;
+    };
 
     Tree *DoInteger(Integer *what);
     Tree *DoReal(Real *what);
@@ -84,6 +86,7 @@ struct GvOutput : Action
 
     std::ostream &out;
 };
+
 
 std::ostream &operator<<(std::ostream &out, XL::GvOutput::GvNodeName gvnn)
 {

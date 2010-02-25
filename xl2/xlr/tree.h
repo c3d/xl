@@ -794,8 +794,12 @@ struct RewriteKey : Action
 
 
 extern text sha1(Tree *t);
+extern Name *   xl_true;
+extern Name *   xl_false;
+
 
 typedef long node_id;              // A node identifier
+
 
 struct NodeIdInfo : Info
 // ----------------------------------------------------------------------------
@@ -808,6 +812,7 @@ struct NodeIdInfo : Info
     operator data_t() { return id; }
     node_id id;
 };
+
 
 struct SimpleAction : Action
 // ----------------------------------------------------------------------------
@@ -834,6 +839,7 @@ struct SimpleAction : Action
     }
     virtual Tree * Do(Tree *what) = 0;
 };
+
 
 struct SetNodeIdAction : SimpleAction
 // ------------------------------------------------------------------------

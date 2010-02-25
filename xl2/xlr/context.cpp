@@ -1491,6 +1491,29 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
 //   Check if we match an infix operator
 // ----------------------------------------------------------------------------
 {
+    // Check if we match an infix tree like 'x,y' with a name like 'A'
+    if (what->name != ":")
+    {
+        if (Name *name = test->AsName())
+        {
+            // Evaluate 'A' to see if we will get something like x,y
+            Tree *compiled = CompileValue(name);
+            if (!compiled)
+                return NULL;
+
+            // Build an infix tree corresponding to what we extract
+            Name *left = new Name("left");
+            Name *right = new Name("right");
+            Infix *extracted = new Infix(what->name, left, right);
+
+            // Extract the infix parameters from actual value
+            unit.InfixMatchTest(compiled, extracted);
+
+            // Proceed with the infix we extracted to map the remaining args
+            test = extracted;
+        }
+    }
+
     if (Infix *it = test->AsInfix())
     {
         // Check if we match the tree, e.g. A+B vs 2+3
@@ -1942,7 +1965,7 @@ CompileAction::CompileAction(Symbols *s, CompiledUnit &u, bool nib, bool ka)
 // ----------------------------------------------------------------------------
 //   Constructor
 // ----------------------------------------------------------------------------
-    : symbols(s), unit(u), needed(), nullIfBad(nib), keepAlternatives(ka)
+    : symbols(s), unit(u), nullIfBad(nib), keepAlternatives(ka)
 {}
 
 
@@ -2151,6 +2174,7 @@ Tree * CompileAction::Rewrites(Tree *what)
     symbols_set visited;
     symbols_list lookups;
 
+    // Build all the symbol tables that we are going to look into
     for (Symbols *s = symbols; s; s = s->Parent())
     {
         if (!visited.count(s))
@@ -2169,6 +2193,7 @@ Tree * CompileAction::Rewrites(Tree *what)
         }
     }
 
+    // Iterate over all symbol tables listed above
     symbols_list::iterator li;
     for (li = lookups.begin(); !foundUnconditional && li != lookups.end(); li++)
     {
@@ -2190,7 +2215,7 @@ Tree * CompileAction::Rewrites(Tree *what)
                 Symbols args(symbols);
                 ArgumentMatch matchArgs(what,
                                         symbols, &args, candidate->symbols,
-                                        this, needed);
+                                        this);
                 Tree *argsTest = candidate->from->Do(matchArgs);
                 if (argsTest)
                 {
