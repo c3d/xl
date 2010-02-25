@@ -540,12 +540,12 @@ enum CloneMode
     NODE_ONLY         // Child nodes are left NULL
 };
 
-template <CloneMode> struct TreeCloneTemplate : Action
+template <CloneMode mode> struct TreeCloneTemplate : Action
 // ----------------------------------------------------------------------------
 //   Clone a tree
 // ----------------------------------------------------------------------------
 {
-    TreeCloneTemplate(CloneMode mode): mode(mode)
+    TreeCloneTemplate()
     {
         switch (mode)
         {
@@ -588,6 +588,8 @@ template <CloneMode> struct TreeCloneTemplate : Action
         case SHALLOW_COPY:
             child = what->child;
             break;
+        case NODE_ONLY:
+            break;
         }
         return new Block(child, what->opening, what->closing, what->Position());
     }
@@ -603,6 +605,8 @@ template <CloneMode> struct TreeCloneTemplate : Action
         case SHALLOW_COPY:
             left  = what->left;
             right = what->right;
+            break;
+        case NODE_ONLY:
             break;
         }
         return new Infix (what->name, left, right, what->Position());
@@ -620,6 +624,8 @@ template <CloneMode> struct TreeCloneTemplate : Action
             left  = what->left;
             right = what->right;
             break;
+        case NODE_ONLY:
+            break;
         }
         return new Prefix(left, right, what->Position());
     }
@@ -636,6 +642,8 @@ template <CloneMode> struct TreeCloneTemplate : Action
             left  = what->left;
             right = what->right;
             break;
+        case NODE_ONLY:
+            break;
         }
         return new Postfix(left, right, what->Position());
     }
@@ -643,7 +651,6 @@ template <CloneMode> struct TreeCloneTemplate : Action
     {
         return what;            // ??? Should not happen
     }
-    CloneMode mode;
 };
 
 typedef struct TreeCloneTemplate<DEEP_COPY> TreeClone;
