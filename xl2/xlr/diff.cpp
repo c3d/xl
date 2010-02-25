@@ -110,18 +110,18 @@ void TreeDiff::MatchOneKind(matching &M, node_vector &S1, node_vector &S2)
         return;
 
     IFTRACE(diff)
-        std::cout << "Matching nodes, kind = " << S1.front().Id() << std::endl;
+        std::cout << "  Matching (kind = " << S1.front().GetTree()->Kind() << ")\n";
 
     // Compute the Longest Common Subsequence in the node chains of
     // both trees...
     IFTRACE(diff)
-        std::cout << "Running LCS...";
+        std::cout << "   Running LCS...";
     node_vector lcs1, lcs2;
     LCS<node_vector> lcs_algo;
     lcs_algo.Compute(S1, S2);
     lcs_algo.Extract2(S1, lcs1, S2, lcs2);
     IFTRACE(diff)
-        std::cout << " done." << std::endl;
+        std::cout << " done.\n";
 
     // ...add node pairs to matching...
     for (unsigned int i = 0; i < lcs1.size(); i++)
@@ -136,7 +136,7 @@ void TreeDiff::MatchOneKind(matching &M, node_vector &S1, node_vector &S2)
     // Nodes still unmatched after the call to LCS are processed using
     // linear search
     IFTRACE(diff)
-        std::cout << "Running linear matching...";
+        std::cout << "   Running linear matching...";
     node_vector::iterator x, y;
     for (x = S1.begin(); x != S1.end(); x++)
     {
@@ -162,7 +162,7 @@ void TreeDiff::MatchOneKind(matching &M, node_vector &S1, node_vector &S2)
         }
     }
     IFTRACE(diff)
-        std::cout << " done." << std::endl;
+        std::cout << " done.\n";
 }
 
 void TreeDiff::DoFastMatch()
@@ -174,14 +174,14 @@ void TreeDiff::DoFastMatch()
     node_vector chains2[KIND_LAST + 1];  // All nodes of T2, per kind
 
     IFTRACE(diff)
-       std::cout << "Entering DoFastMatch" << std::endl;
+       std::cout << "Entering DoFastMatch\n";
 
     // For each tree, sort the nodes into node chains (one for each node kind).
     BuildChains(t1, chains1);
     BuildChains(t2, chains2);
 
     IFTRACE(diff)
-        std::cout << "Matching leaves" << std::endl;
+        std::cout << " Matching leaves\n";
     for (int k = KIND_LEAF_FIRST; k <= KIND_LEAF_LAST; k++)
     {
         node_vector &S1 = chains1[k], &S2 = chains2[k];
@@ -196,7 +196,7 @@ void TreeDiff::DoFastMatch()
         (*it).second.GetTree()->Set2<TreeDiffInfo>(this);
 
     IFTRACE(diff)
-        std::cout << "Matching internal nodes" << std::endl;
+        std::cout << " Matching internal nodes\n";
     for (int k = KIND_NLEAF_FIRST; k <= KIND_NLEAF_LAST; k++)
     {
         node_vector &S1 = chains1[k], &S2 = chains2[k];
@@ -206,8 +206,7 @@ void TreeDiff::DoFastMatch()
     IFTRACE(diff)
         std::cout << "Matching done. " << m.size()
                   << "/" << nodes1.size() << " nodes ("
-                  << (float)m.size()*100/nodes1.size() << "%) matched."
-                  << std::endl;
+                  << (float)m.size()*100/nodes1.size() << "%) matched.\n";
 }
 
 float TreeDiff::Similarity(std::string s1, std::string s2)
@@ -360,7 +359,7 @@ void TreeDiff::DoEditScript()
 // ----------------------------------------------------------------------------
 {
     IFTRACE(diff)
-       std::cout << "Entering DoEditScript" << std::endl;
+       std::cout << "Entering DoEditScript\n";
 
     // 1.
     escript = new EditScript;
@@ -384,21 +383,22 @@ void TreeDiff::DoEditScript()
         if (!nodes2[x].IsMatched())
         {
             // (b) x has no partner in M'
-            // (i)
-            unsigned k = 1; // k = FindPos(x) // TODO FIXME
+            //  i. k <- FindPos(x);
+            unsigned k = FindPos(x);
+
             TreeCloneTemplate<NODE_ONLY> clone;
             Tree *t = xptr->Do(clone);
             EditOperation::Insert *ins;
             ins = new EditOperation::Insert(t, z, k);
 
-            // (ii) Append INS to E
+            // ii. Append INS to E
             E.push_back(ins);
 
-            // (iii) Apply INS to T1
+            // iii. Apply INS to T1
             ins->Apply(nodes1);
-            w = t->Get<NodeIdInfo>();
 
-            // (iii) Add (w, x) to M'
+            // iii. Add (w, x) to M'
+            w = t->Get<NodeIdInfo>();
             NodePair *p = new NodePair(w, x);
             Mprime.insert(p);
             nodes1[w].SetMatched();
@@ -410,18 +410,83 @@ void TreeDiff::DoEditScript()
             if (px_ptr)
             {
                 // (c) x is not the root
+				//  i. Let w be the partner of x in M' and let v = p(w)
+				//     in T1 [p(x) is the parent of x]
                 Tree * wptr = nodes1[w].GetTree();
                 assert(wptr);
                 Tree * vptr = wptr->Get<ParentInfo>();
-            }
+                assert(vptr);
+                node_id v = vptr->Get<NodeIdInfo>();
+
+                TreeMatchTemplate<TM_NODE_ONLY> compareNodes(wptr);
+                if (!xptr->Do(compareNodes))
+                {
+                    // ii. If v(w) != v(x)
+                    
+                    TreeCloneTemplate<NODE_ONLY> clone;
+                    Tree *t = xptr->Do(clone);
+                    EditOperation::Update *upd;
+                    upd = new EditOperation::Update(w, t);
+
+                    // A. Append UPD(w, v(x)) to E
+                    E.push_back(upd);
+                    
+                    // B. Apply UPD(w, v(x)) to T1
+                    upd->Apply(nodes1);
+                }
+                if (y != PartnerInFirstTree(v, Mprime))
+                {
+                    // iii. If (y, v) not in M'
+                    
+                    // A. Let z be the partner of y in M'
+                    node_id z = PartnerInFirstTree(y, Mprime);
+                    
+                    // B. k <- FindPos(x)
+                    unsigned k = FindPos(x);
+                    
+                    EditOperation::Move *mov;
+                    mov = new EditOperation::Move(w, z, k);
+
+                    // C. Append MOV(w, z, k) to E
+                    E.push_back(mov);
+
+                    // D. Apply MOV(w, z, k) to T1
+                    mov->Apply(nodes1);
+                }
+			}
+        }
+        
+        // (d) AlignChildren(w, x)
+        AlignChildren(w, x);
+    }
+    
+    // 3. Do a post-order traversal of T1
+    std::list<Tree *> list;
+    AddPtr< std::list<Tree *> > act(list);
+    PostOrderTraversal pot(act);
+    t1->Do(pot);
+    std::list<Tree *>::iterator it;
+    for (it = list.begin(); it != list.end(); it++)
+    {
+        // (a) Let w be the current node in the post-order traversal of T1.
+        Node wn(*it);
+        node_id w = wn.Id();
+        if (!wn.IsMatched())
+        {
+            // (b) If w has no partner in M' then append DEL(w) to E
+            //     and apply DEL(w) to T1
+            EditOperation::Delete *del;
+            del = new EditOperation::Delete(w);
+            E.push_back(del);
+            del->Apply(nodes1);
         }
     }
 
     IFTRACE(diff)
-       std::cout << "DoEditScript done" << std::endl;
+       std::cout << "DoEditScript done\n";
 }
 
-// TODO: the matching type should be a class such that this can be implemented
+// TODO: find a better type for 'matching' so that this can be implemented
 // with a direct access
 node_id TreeDiff::PartnerInFirstTree(node_id id, const matching &M)
 {
@@ -431,6 +496,19 @@ node_id TreeDiff::PartnerInFirstTree(node_id id, const matching &M)
             return (*it)->x;
 
     return 0;
+}
+
+#warning("FindPos() not implemented");
+unsigned TreeDiff::FindPos(node_id x)
+{
+    // TODO
+    return 1;
+}
+
+#warning("AlignChildren() not implemented");
+void TreeDiff::AlignChildren(node_id w, node_id x)
+{
+    // TODO
 }
 
 void TreeDiff::Diff()
@@ -461,30 +539,22 @@ void TreeDiff::Diff()
     SetParentPointers(t1);
     SetParentPointers(t2);
 
+    IFTRACE(diff)
+        std::cout << "T1:\n" << nodes1 << "\n"
+                  << "T2:\n" << nodes2 << "\n";
+
     // Find a "good" matching between t1 and t2
     DoFastMatch();
 
     IFTRACE(diff)
-    {
-        std::cout << "T1:\n" << nodes1 << "\n"
-                  << "T2:\n" << nodes2 << "\n"
-                  << "Matching:\n" << m << "\n";
-    }
+        std::cout << "Matching:\n" << m << "\n";
 
     // Generate list of operations to transform t1 into t2
     DoEditScript();
 
     IFTRACE(diff)
-        std::cout << "Edit script:" << std::endl
-                  << *escript << std::endl;
-
-    IFTRACE(diff)
-    {
-        std::cout << "T1:\n" << nodes1 << "\n"
-                  << "T2:\n" << nodes2 << "\n"
-                  << "Matching:\n" << m << "\n";
-    }
-
+        std::cout << "Edit script:\n" << *escript << "\n"
+                  << "T1 (after transformation):\n" << nodes1 << "\n";
 }
 
 bool TreeDiff::Node::operator ==(const TreeDiff::Node &n)
@@ -542,6 +612,7 @@ bool TreeDiff::Node::ContainsLeaf(Tree *leaf) const
     return false;
 }
 
+#warning("Insert::Apply() implementation incomplete");
 void EditOperation::Insert::Apply(TreeDiff::node_table &table)
 // ----------------------------------------------------------------------------
 //    Apply an Insert operation on a node table and the underlying tree
@@ -561,6 +632,7 @@ void EditOperation::Insert::Apply(TreeDiff::node_table &table)
     // TODO parent_ptr->InsertChild(leaf, pos);
 }
 
+#warning("Delete::Apply() implementation incomplete");
 void EditOperation::Delete::Apply(TreeDiff::node_table &table)
 // ----------------------------------------------------------------------------
 //    Apply a Delete operation on a node table and the underlying tree
@@ -581,6 +653,7 @@ void EditOperation::Delete::Apply(TreeDiff::node_table &table)
     table.erase(leaf);
 }
 
+#warning("Update::Apply() implementation incomplete");
 void EditOperation::Update::Apply(TreeDiff::node_table &table)
 // ----------------------------------------------------------------------------
 //    Apply an Update operation on a node table and the underlying tree
@@ -593,9 +666,10 @@ void EditOperation::Update::Apply(TreeDiff::node_table &table)
     if (!leaf_ptr)
         return;
 
-    *leaf_ptr = *(this->value);
+    // TODO update only value -- *leaf_ptr = *(this->value);
 }
 
+#warning("Move::Apply() implementation incomplete");
 void EditOperation::Move::Apply(TreeDiff::node_table &table)
 // ----------------------------------------------------------------------------
 //    Apply a Move operation on a node table and the underlying tree
@@ -689,9 +763,9 @@ std::ostream&
 operator <<(std::ostream &out, XL::EditOperation::Insert &op)
 {
     XL::PrintNode pn(out);
-    out << "INS(" ;
+    out << "INS((" << op.leaf->Get<NodeIdInfo>() << ", ";
     op.leaf->Do(pn);
-    out << ", " << op.parent << ", " << op.pos << ")";
+    out << "), " << op.parent << ", " << op.pos << ")";
     return out;
 }
 

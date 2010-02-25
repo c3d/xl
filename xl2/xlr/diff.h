@@ -32,9 +32,15 @@
 #include <iostream>
 #include <math.h>
 
-// Do not use LCS to compare text leaves and obtain a similarity score
-// Use plain string comparison instead (much faster)
-#define NO_LCS_STRCMP 1
+#include <typeinfo> // Debug
+
+// When this macro is set, we use plain string comparison to determine whether
+// two text leaves should be matched (i.e., considered equal during the matching
+// phase).
+// When unset, leaves with strings that are just "similar enough" may be
+// matched.
+// FIXME: Longest Common Subsequence comparison is SLOW!
+//#define NO_LCS_STRCMP 1
 
 
 XL_BEGIN
@@ -372,10 +378,27 @@ protected:
         unsigned int nb_leaves;
     };
 
+    template <typename I>
+    struct AddPtr : SimpleAction
+    // ------------------------------------------------------------------------
+    //   Append node pointer to a container using push_back.
+    // ------------------------------------------------------------------------
+    {
+        AddPtr(I &container): container(container) {}
+        virtual Tree *Do(Tree *what)
+        {
+            container.push_back(what);
+            return NULL;
+        }
+        I &container;
+    };
+
 protected:
 
-    void DoFastMatch();
-    void DoEditScript();
+    void     DoFastMatch();
+    void     DoEditScript();
+    unsigned FindPos(node_id x);                   // TODO
+    void     AlignChildren(node_id w, node_id x);  // TODO
 
     node_id AssignNodeIds(Tree *t, node_table &m, node_id from_id = 1,
                           node_id step = 1);
@@ -396,6 +419,23 @@ protected:
     matching m;
     EditScript *escript;
 };
+
+std::ostream&
+operator <<(std::ostream &out, XL::TreeDiff::node_table &m);
+
+std::ostream&
+operator <<(std::ostream &out, XL::TreeDiff::node_vector &m);
+
+std::ostream&
+operator <<(std::ostream &out, XL::TreeDiff::matching &m);
+
+
+// ============================================================================
+//
+//    The EditOperation and EditScript classes
+//
+// ============================================================================
+
 
 struct EditOperation
 // ----------------------------------------------------------------------------
@@ -492,15 +532,6 @@ struct EditScript : EditScriptBase
     void Apply(TreeDiff::node_table &table);
 };
 
-
-std::ostream&
-operator <<(std::ostream &out, XL::TreeDiff::node_table &m);
-
-std::ostream&
-operator <<(std::ostream &out, XL::TreeDiff::node_vector &m);
-
-std::ostream&
-operator <<(std::ostream &out, XL::TreeDiff::matching &m);
 
 std::ostream&
 operator <<(std::ostream &out, XL::EditOperation::Insert &op);
