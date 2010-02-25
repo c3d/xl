@@ -48,7 +48,7 @@ XL_BEGIN
 struct TreeDiff;                        // The main class to do diff operations
 struct NodePair;                        // Two node identifiers
 typedef std::set<NodePair *> matching;  // A correspondence between tree nodes
-
+struct EditScript;                      // A list of edit operations
 
 // ============================================================================
 //
@@ -224,25 +224,25 @@ struct SetParentInfo : Action
     }
     Tree *DoBlock(Block *what)
     {
-        what->child->Set<ParentInfo>(what);
+        what->child->Set2<ParentInfo>(what);
         return NULL;
     }
     Tree *DoInfix(Infix *what)
     {
-        what->left->Set<ParentInfo>(what);
-        what->right->Set<ParentInfo>(what);
+        what->left->Set2<ParentInfo>(what);
+        what->right->Set2<ParentInfo>(what);
         return NULL;
     }
     Tree *DoPrefix(Prefix *what)
     {
-        what->left->Set<ParentInfo>(what);
-        what->right->Set<ParentInfo>(what);
+        what->left->Set2<ParentInfo>(what);
+        what->right->Set2<ParentInfo>(what);
         return NULL;
     }
     Tree *DoPostfix(Postfix *what)
     {
-        what->left->Set<ParentInfo>(what);
-        what->right->Set<ParentInfo>(what);
+        what->left->Set2<ParentInfo>(what);
+        what->right->Set2<ParentInfo>(what);
         return NULL;
     }
     Tree *Do(Tree *what)
@@ -256,7 +256,7 @@ struct TreeDiff
 //   All you need to compare and patch parse trees
 // ----------------------------------------------------------------------------
 {
-    TreeDiff (Tree *t1, Tree *t2): t1(t1), t2(t2) {}
+    TreeDiff (Tree *t1, Tree *t2): t1(t1), t2(t2), escript(NULL) {}
     virtual ~TreeDiff();
 
     void Diff();
@@ -292,7 +292,7 @@ protected:
         {
             if (!t)
                 return;
-            t->Set<MatchedInfo>(true);
+            t->Set2<MatchedInfo>(true);
         }
         unsigned int CountLeaves();
         bool ContainsLeaf(Tree *leaf) const;
@@ -307,7 +307,18 @@ protected:
 
 public: // FIXME public for operator <<
 
-    typedef std::map<node_id, TreeDiff::Node> node_table;
+    struct node_table : public std::map<node_id, TreeDiff::Node>
+    {
+        node_table() {}
+        virtual ~node_table() {}
+        node_id NewId() { next_id += step; return next_id; }
+        void SetNextId(node_id next_id) { this->next_id = next_id; }
+        void SetStep(node_id step) { this->step = step; }
+
+        node_id next_id;
+        node_id step;
+    };
+
     typedef std::vector<TreeDiff::Node> node_vector;
     typedef std::set<NodePair *> matching;
 
@@ -322,7 +333,7 @@ protected:
           : tab(tab), id(from_id), step(step) {}
         virtual Tree *Do(Tree *what)
         {
-            what->Set<NodeIdInfo>(id);
+            what->Set2<NodeIdInfo>(id);
             tab[id] = what;
             id += step;
             return NULL;
@@ -364,6 +375,7 @@ protected:
 protected:
 
     void DoFastMatch();
+    void DoEditScript();
 
     node_id AssignNodeIds(Tree *t, node_table &m, node_id from_id = 1,
                           node_id step = 1);
@@ -371,6 +383,7 @@ protected:
     void BuildChains(Tree *allnodes, node_vector *out);
     void MatchOneKind(matching &M, node_vector &S1, node_vector &S2);
 
+    static node_id PartnerInFirstTree(node_id id, const matching &m);  // FIXME
     static bool LeafEqual(Tree *t1, Tree *t2);
     static bool NonLeafEqual(Tree *t1, Tree *t2, TreeDiff &m);
     static float Similarity(std::string s1, std::string s2);
@@ -379,7 +392,9 @@ protected:
 
     Tree *t1, *t2;
     node_table nodes1, nodes2;  // To access nodes by ID
+    node_id t1_lastnodeid, t2_lastnodeid;
     matching m;
+    EditScript *escript;
 };
 
 struct EditOperation
@@ -404,6 +419,8 @@ struct EditOperation::Base
 {
     Base() {}
     virtual ~Base() {}
+
+    virtual void Apply(TreeDiff::node_table &table) = 0;
 };
 
 struct EditOperation::Insert : EditOperation::Base
@@ -414,6 +431,8 @@ struct EditOperation::Insert : EditOperation::Base
     Insert(Tree *leaf, node_id parent, unsigned pos):
         leaf(leaf), parent(parent), pos(pos) {}
     virtual ~Insert() {}
+
+    virtual void Apply(TreeDiff::node_table &table);
 
     Tree *   leaf;
     node_id  parent;
@@ -428,6 +447,8 @@ struct EditOperation::Delete : EditOperation::Base
     Delete(node_id leaf): leaf(leaf) {}
     virtual ~Delete() {}
 
+    virtual void Apply(TreeDiff::node_table &table);
+
     node_id leaf;
 };
 
@@ -438,6 +459,8 @@ struct EditOperation::Update : EditOperation::Base
 {
     Update(node_id leaf, Tree *value): leaf(leaf), value(value) {}
     virtual ~Update() {}
+
+    virtual void Apply(TreeDiff::node_table &table);
 
     node_id leaf;
     Tree *  value;
@@ -452,15 +475,21 @@ struct EditOperation::Move : EditOperation::Base
         subtree(subtree), parent(parent), pos(pos) {}
     virtual ~Move() {}
 
+    virtual void Apply(TreeDiff::node_table &table);
+
     node_id subtree;
     node_id parent;
     unsigned pos;
 };
 
-struct EditScript : std::list<EditOperation::Base *>
+typedef std::list<EditOperation::Base *> EditScriptBase;
+
+struct EditScript : EditScriptBase
 {
     EditScript() {}
     virtual ~EditScript() {}
+
+    void Apply(TreeDiff::node_table &table);
 };
 
 
