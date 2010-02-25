@@ -35,26 +35,23 @@
 #undef RS
 
 #define DS(n) IFTRACE(builtins) std::cerr << "Builtin " #n ": " << self << '\n';
-#define RS return xl_false
 
-#define INFIX(t1, symbol, t2, name, code)       \
-    Tree *xl_##name(Tree*self, t1##_r l, t2##_r r) { DS(symbol) code; RS; }
+#define INFIX(name, rtype, t1, symbol, t2, code)                   \
+    rtype##_p xl_##name(Tree*self, t1##_r l, t2##_r r) { DS(symbol) code; }
 
 #define PARM(symbol, type)      , type##_r symbol
 
-#define PREFIX(symbol, parms, name, code)       \
-    Tree *xl_##name(Tree *self parms) { DS(symbol) code; RS; }
+#define PREFIX(name, rtype, symbol, parms, code)           \
+    rtype##_p xl_##name(Tree *self parms) { DS(symbol) code; }
 
-#define POSTFIX(parms, symbol, name, code)       \
-    Tree *xl_##name(Tree *self parms) { DS(symbol) code; RS; }
+#define POSTFIX(name, rtype, parms, symbol, code)                  \
+    rtype##_p xl_##name(Tree *self parms) { DS(symbol) code; }
 
-#define BLOCK(open, type, close, name, code)                     \
-    Tree *xl_##name(Tree *self, type##_r child) { DS(symbol) code; RS; }
+#define BLOCK(name, rtype, open, type, close, code)                \
+    rtype##_p xl_##name(Tree *self, type##_r child) { DS(symbol) code; }
 
 #define NAME(symbol)    \
     Name *xl_##symbol;
 
-#define TYPE(symbol)                            \
-    Name *xl_##symbol##_name;                   \
-    extern Tree *xl_##symbol(Tree *value);
+#define TYPE(symbol)    Name *symbol##_type;
 

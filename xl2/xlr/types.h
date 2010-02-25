@@ -135,31 +135,33 @@ public:
     Tree *         defined;     // Tree we define
 };
 
+
+
+// ============================================================================
+// 
+//   Declare the basic types
+// 
+// ============================================================================
+
+#undef INFIX
+#undef PREFIX
+#undef POSTFIX
+#undef BLOCK
+#undef NAME
+#undef TYPE
+#undef PARM
+#undef DS
+#undef RS
+
+#define INFIX(name, rtype, t1, symbol, t2, code)
+#define PARM(symbol, type)
+#define PREFIX(name, rtype, symbol, parms, code)
+#define POSTFIX(name, rtype, parms, symbol, code)
+#define BLOCK(name, rtype, open, type, close, code)
+#define NAME(symbol)
+#define TYPE(symbol)    extern Name *symbol##_type;
+#include "basics.tbl"
+
 XL_END
 
 #endif // TYPES_H
-
-
-
-// ============================================================================
-//
-//    Define the built-in types - This may be included multiple times
-//
-// ============================================================================
-
-#ifndef DEFINE_TYPE(n)
-#define DEFINE_TYPE(n)  extern XL::Tree *n##_type
-#endif // DEFINE_TYPE
-
-DEFINE_TYPE(integer);
-DEFINE_TYPE(real);
-DEFINE_TYPE(text);
-DEFINE_TYPE(character);
-DEFINE_TYPE(boolean);
-DEFINE_TYPE(nil);
-DEFINE_TYPE(symbol);
-DEFINE_TYPE(infix);
-DEFINE_TYPE(prefix);
-DEFINE_TYPE(postfix);
-DEFINE_TYPE(block);
-DEFINE_TYPE(tree);

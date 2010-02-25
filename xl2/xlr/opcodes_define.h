@@ -33,7 +33,7 @@
 #undef PARM
 
 
-#define INFIX(t1, symbol, t2, name, _code)                              \
+#define INFIX(name, rtype, t1, symbol, t2, _code)                       \
     do                                                                  \
     {                                                                   \
         Infix *ldecl = new Infix(":", new Name("l"), new Name(#t1));    \
@@ -44,6 +44,7 @@
         Rewrite *rw = c->EnterRewrite(from, to);                        \
         to->code = fn;                                                  \
         to->Set<SymbolsInfo>(c);                                        \
+        to->Set<TypeInfo> (rtype##_type);                               \
         compiler->EnterBuiltin("xl_" #name,                             \
                                from, to, rw->parameters, fn);           \
     } while(0);
@@ -64,7 +65,7 @@
         }
 
 
-#define PREFIX(symbol, parms, name, _code)                              \
+#define PREFIX(name, rtype, symbol, parms, _code)                       \
     do                                                                  \
     {                                                                   \
         tree_list parameters;                                           \
@@ -78,6 +79,7 @@
             Rewrite *rw = c->EnterRewrite(from, to);                    \
             to->code = fn;                                              \
             to->Set<SymbolsInfo> (c);                                   \
+            to->Set<TypeInfo> (rtype##_type);                           \
             compiler->EnterBuiltin("xl_" #name,                         \
                                    from, to, rw->parameters, fn);       \
         }                                                               \
@@ -86,6 +88,7 @@
             Name *n  = new Name(symbol);                                \
             n->code = fn;                                               \
             n->Set<SymbolsInfo> (c);                                    \
+            n ->Set<TypeInfo> (rtype##_type);                           \
             c->EnterName(symbol, n);                                    \
             tree_list noparms;                                          \
             compiler->EnterBuiltin("xl_" #name, n, n, noparms, fn);     \
@@ -93,7 +96,7 @@
     } while(0);
 
 
-#define POSTFIX(parms, symbol, name, _code)                             \
+#define POSTFIX(name, rtype, parms, symbol, _code)                      \
     do                                                                  \
     {                                                                   \
         tree_list parameters;                                           \
@@ -105,12 +108,13 @@
         Rewrite *rw = c->EnterRewrite(from, to);                        \
         to->code = fn;                                                  \
         to->Set<SymbolsInfo> (c);                                       \
+        to->Set<TypeInfo> (rtype##_type);                               \
         compiler->EnterBuiltin("xl_" #name,                             \
                                from, to, rw->parameters, to->code);     \
     } while(0);
 
 
-#define BLOCK(open, type, close, name, _code)                           \
+#define BLOCK(name, rtype, open, type, close, _code)                    \
     do                                                                  \
     {                                                                   \
         Infix *parms = new Infix(":", new Name("V"), new Name(#type));  \
@@ -120,6 +124,7 @@
         Rewrite *rw = c->EnterRewrite(from, to);                        \
         to->code = fn;                                                  \
         to->Set<SymbolsInfo> (c);                                       \
+        to->Set<TypeInfo> (rtype##_type);                               \
         compiler->EnterBuiltin("xl_" #name, from, to,                   \
                                rw->parameters, to->code);               \
     } while (0);
@@ -147,10 +152,10 @@
         n->code = fn;                                                   \
         n->Set<SymbolsInfo> (c);                                        \
         c->EnterName(#symbol, n);                                       \
-        xl_##symbol##_name = n;                                         \
-        compiler->EnterGlobal(n, &xl_##symbol##_name);                  \
+        symbol##_type = n;                                              \
+        compiler->EnterGlobal(n, &symbol##_type);                       \
                                                                         \
-        /* Type as prefix evaluates to type check, e.g. integer 0 */    \
+        /* Type as infix : evaluates to type check, e.g. 0 : integer */ \
         Infix *from = new Infix(":", new Name("V"), new Name(#symbol)); \
         Name *to = new Name(#symbol);                                   \
         Rewrite *rw = c->EnterRewrite(from, to);                        \

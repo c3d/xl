@@ -43,11 +43,11 @@ Tree *          ParametersTree(tree_list parameters);
 #define XL_REAL(v)      ((real_t) (v))
 #define XL_TEXT(v)      ((text_t) (v))
 #define XL_BOOL(v)      ((boolean_t) (v))
-#define XL_R_TREE(val)  return (val)
-#define XL_R_INT(val)   return new XL::Integer(val)
-#define XL_R_REAL(val)  return new XL::Real(val)
-#define XL_R_TEXT(val)  return new XL::Text(val)
-#define XL_R_BOOL(val)  return (val) ? XL::xl_true : XL::xl_false
+#define XL_RTREE(val)   return (val)
+#define XL_RINT(val)    return new XL::Integer(val)
+#define XL_RREAL(val)   return new XL::Real(val)
+#define XL_RTEXT(val)   return new XL::Text(val)
+#define XL_RBOOL(val)   return (val) ? XL::xl_true : XL::xl_false
 
 typedef Integer &       integer_r;
 typedef Real &          real_r;
@@ -58,6 +58,16 @@ typedef Infix &         infix_r;
 typedef Prefix &        prefix_r;
 typedef Postfix &       postfix_r;
 typedef Block &         block_r;
+
+typedef Integer *       integer_p;
+typedef Real *          real_p;
+typedef Text *          text_p;
+typedef Name *          boolean_p;
+typedef Tree *          tree_p;
+typedef Infix *         infix_p;
+typedef Prefix *        prefix_p;
+typedef Postfix *       postfix_p;
+typedef Block *         block_p;
 
 typedef longlong        integer_t;
 typedef double          real_t;

@@ -20,10 +20,6 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
-#define DEFINE_TYPE(n)                                  \
-    XL::Name n##_type_implementation(#n);               \
-    XL::Tree *n##_type = &n##_type_implementation
-
 #include "types.h"
 #include "tree.h"
 #include "runtime.h"
@@ -218,7 +214,7 @@ Tree *MatchType::DoName(Name *what)
 // ----------------------------------------------------------------------------
 {
     Normalize();
-    if (type == symbol_type)
+    if (type == symbolicname_type)
         return what;
     if (Tree *value = symbols->Named(what->value))
         return value->Do(this);
@@ -494,11 +490,26 @@ Tree *MatchType::Normalize()
         else
         {
             // Check built-in types
-#undef DEFINE_TYPE
-#define DEFINE_TYPE(t)                          \
-            if (name == #t)                     \
-                type = t##_type;
-#include "types.h"
+#undef INFIX
+#undef PREFIX
+#undef POSTFIX
+#undef BLOCK
+#undef NAME
+#undef TYPE
+#undef PARM
+#undef DS
+#undef RS
+
+#define INFIX(name, rtype, t1, symbol, t2, code)
+#define PARM(symbol, type)
+#define PREFIX(name, rtype, symbol, parms, code)
+#define POSTFIX(name, rtype, parms, symbol, code)
+#define BLOCK(name, rtype, open, type, close, code)
+#define NAME(symbol)
+#define TYPE(symbol)                            \
+            if (name == #symbol)                \
+                type = symbol##_type;
+#include "basics.tbl"
         }
     }
 
