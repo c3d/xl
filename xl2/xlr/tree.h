@@ -609,12 +609,21 @@ typedef struct TreeCloneTemplate<DEEP_COPY> TreeClone;
 // 
 // ============================================================================
 
-struct TreeMatch : Action
+enum TreeMatchMode
+// ----------------------------------------------------------------------------
+//   The ways of comparing trees
+// ----------------------------------------------------------------------------
+{
+    TM_RECURSIVE = 1,  // Compare whole tree
+    TM_NODE_ONLY       // Compare one node only
+};
+
+template <TreeMatchMode mode> struct TreeMatchTemplate : Action
 // ----------------------------------------------------------------------------
 //   Check if two trees match in structure
 // ----------------------------------------------------------------------------
 {
-    TreeMatch (Tree *t): test(t) {}
+    TreeMatchTemplate (Tree *t): test(t) {}
     Tree *DoInteger(Integer *what)
     {
         if (Integer *it = test->AsInteger())
@@ -652,6 +661,8 @@ struct TreeMatch : Action
             if (bt->opening == what->opening &&
                 bt->closing == what->closing)
             {
+                if (mode == TM_NODE_ONLY)
+                    return what;
                 test = bt->child;
                 Tree *br = what->child->Do(this);
                 test = bt;
@@ -668,6 +679,8 @@ struct TreeMatch : Action
             // Check if we match the tree, e.g. A+B vs 2+3
             if (it->name == what->name)
             {
+                if (mode == TM_NODE_ONLY)
+                    return what;
                 test = it->left;
                 Tree *lr = what->left->Do(this);
                 test = it;
@@ -687,6 +700,8 @@ struct TreeMatch : Action
     {
         if (Prefix *pt = test->AsPrefix())
         {
+            if (mode == TM_NODE_ONLY)
+                return what;
             // Check if we match the tree, e.g. f(A) vs. f(2)
             test = pt->left;
             Tree *lr = what->left->Do(this);
@@ -706,6 +721,8 @@ struct TreeMatch : Action
     {
         if (Postfix *pt = test->AsPostfix())
         {
+            if (mode == TM_NODE_ONLY)
+                return what;
             // Check if we match the tree, e.g. A! vs 2!
             test = pt->right;
             Tree *rr = what->right->Do(this);
@@ -729,6 +746,7 @@ struct TreeMatch : Action
     Tree *      test;
 };
 
+typedef struct TreeMatchTemplate<TM_RECURSIVE> TreeMatch;
 
 // ============================================================================
 //
