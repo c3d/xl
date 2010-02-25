@@ -524,12 +524,33 @@ inline Postfix *Tree::AsPostfix()
 // 
 // ============================================================================
 
-struct TreeClone : Action
+enum CloneMode
+// ----------------------------------------------------------------------------
+//   Several ways of cloning a tree
+// ----------------------------------------------------------------------------
+{
+    DEEP_COPY = 1,    // Child nodes are cloned, too
+    SHALLOW_COPY,     // Child nodes are referenced
+    NODE_ONLY         // Child nodes are left NULL
+};
+
+template <CloneMode> struct TreeCloneTemplate : Action
 // ----------------------------------------------------------------------------
 //   Clone a tree
 // ----------------------------------------------------------------------------
 {
-    TreeClone(bool recursive = true): r(recursive) {}
+    TreeCloneTemplate(CloneMode mode): mode(mode)
+    {
+        switch (mode)
+        {
+        case DEEP_COPY:
+        case SHALLOW_COPY:
+        case NODE_ONLY:
+            break;
+        default:
+            assert(!"Unknown CloneMode");
+       }
+    }
 
     Tree *DoInteger(Integer *what)
     {
@@ -552,35 +573,74 @@ struct TreeClone : Action
 
     Tree *DoBlock(Block *what)
     {
-        return new Block(r ? what->child->Do(this) : NULL,
-                         what->opening, what->closing, what->Position());
+        Tree *child = NULL;
+        switch (mode)
+        {
+        case DEEP_COPY:
+            child = what->child->Do(this);
+            break;
+        case SHALLOW_COPY:
+            child = what->child;
+            break;
+        }
+        return new Block(child, what->opening, what->closing, what->Position());
     }
     Tree *DoInfix(Infix *what)
     {
-        return new Infix (what->name,
-                          r ? what->left->Do(this)   : NULL,
-                          r ?  what->right->Do(this) : NULL,
-                          what->Position());
+        Tree *right = NULL, *left = NULL;
+        switch (mode)
+        {
+        case DEEP_COPY:
+            left  = what->left->Do(this);
+            right = what->right->Do(this);
+            break;
+        case SHALLOW_COPY:
+            left  = what->left;
+            right = what->right;
+            break;
+        }
+        return new Infix (what->name, left, right, what->Position());
     }
     Tree *DoPrefix(Prefix *what)
     {
-        return new Prefix(r ? what->left->Do(this)  : NULL,
-                          r ? what->right->Do(this) : NULL,
-                          what->Position());
+        Tree *right = NULL, *left = NULL;
+        switch (mode)
+        {
+        case DEEP_COPY:
+            left  = what->left->Do(this);
+            right = what->right->Do(this);
+            break;
+        case SHALLOW_COPY:
+            left  = what->left;
+            right = what->right;
+            break;
+        }
+        return new Prefix(left, right, what->Position());
     }
     Tree *DoPostfix(Postfix *what)
     {
-        return new Postfix(r ? what->left->Do(this)  : NULL,
-                           r ? what->right->Do(this) : NULL,
-                           what->Position());
+        Tree *right = NULL, *left = NULL;
+        switch (mode)
+        {
+        case DEEP_COPY:
+            left  = what->left->Do(this);
+            right = what->right->Do(this);
+            break;
+        case SHALLOW_COPY:
+            left  = what->left;
+            right = what->right;
+            break;
+        }
+        return new Postfix(left, right, what->Position());
     }
     Tree *Do(Tree *what)
     {
         return what;            // ??? Should not happen
     }
-    bool r;
+    CloneMode mode;
 };
 
+typedef struct TreeCloneTemplate<DEEP_COPY> TreeClone;
 
 
 // ============================================================================
