@@ -1965,7 +1965,7 @@ CompileAction::CompileAction(Symbols *s, CompiledUnit &u, bool nib, bool ka)
 // ----------------------------------------------------------------------------
 //   Constructor
 // ----------------------------------------------------------------------------
-    : symbols(s), unit(u), needed(), nullIfBad(nib), keepAlternatives(ka)
+    : symbols(s), unit(u), nullIfBad(nib), keepAlternatives(ka)
 {}
 
 
@@ -2174,6 +2174,7 @@ Tree * CompileAction::Rewrites(Tree *what)
     symbols_set visited;
     symbols_list lookups;
 
+    // Build all the symbol tables that we are going to look into
     for (Symbols *s = symbols; s; s = s->Parent())
     {
         if (!visited.count(s))
@@ -2192,6 +2193,7 @@ Tree * CompileAction::Rewrites(Tree *what)
         }
     }
 
+    // Iterate over all symbol tables listed above
     symbols_list::iterator li;
     for (li = lookups.begin(); !foundUnconditional && li != lookups.end(); li++)
     {
@@ -2213,7 +2215,7 @@ Tree * CompileAction::Rewrites(Tree *what)
                 Symbols args(symbols);
                 ArgumentMatch matchArgs(what,
                                         symbols, &args, candidate->symbols,
-                                        this, needed);
+                                        this);
                 Tree *argsTest = candidate->from->Do(matchArgs);
                 if (argsTest)
                 {

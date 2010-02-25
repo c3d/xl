@@ -530,12 +530,23 @@ inline Postfix *Tree::AsPostfix()
 // 
 // ============================================================================
 
-struct TreeClone : Action
+enum CloneMode
+// ----------------------------------------------------------------------------
+//   Several ways of cloning a tree
+// ----------------------------------------------------------------------------
+{
+    DEEP_COPY = 1,    // Child nodes are cloned, too
+    SHALLOW_COPY,     // Child nodes are referenced
+    NODE_ONLY         // Child nodes are left NULL
+};
+
+template <CloneMode mode> struct TreeCloneTemplate : Action
 // ----------------------------------------------------------------------------
 //   Clone a tree
 // ----------------------------------------------------------------------------
 {
-    TreeClone(bool recursive = true): r(recursive) {}
+    TreeCloneTemplate() {}
+    virtual ~TreeCloneTemplate() {}
 
     Tree *DoInteger(Integer *what)
     {
@@ -558,35 +569,44 @@ struct TreeClone : Action
 
     Tree *DoBlock(Block *what)
     {
-        return new Block(r ? what->child->Do(this) : NULL,
-                         what->opening, what->closing, what->Position());
+        return new Block(Clone(what->child), what->opening, what->closing,
+                         what->Position());
     }
     Tree *DoInfix(Infix *what)
     {
-        return new Infix (what->name,
-                          r ? what->left->Do(this)   : NULL,
-                          r ?  what->right->Do(this) : NULL,
+        return new Infix (what->name, Clone(what->left), Clone(what->right),
                           what->Position());
     }
     Tree *DoPrefix(Prefix *what)
     {
-        return new Prefix(r ? what->left->Do(this)  : NULL,
-                          r ? what->right->Do(this) : NULL,
+        return new Prefix(Clone(what->left), Clone(what->right),
                           what->Position());
     }
     Tree *DoPostfix(Postfix *what)
     {
-        return new Postfix(r ? what->left->Do(this)  : NULL,
-                           r ? what->right->Do(this) : NULL,
+        return new Postfix(Clone(what->left), Clone(what->right),
                            what->Position());
     }
     Tree *Do(Tree *what)
     {
         return what;            // ??? Should not happen
     }
-    bool r;
+protected:
+    Tree * Clone(Tree *t)
+    {
+        switch (mode)
+        {
+        case DEEP_COPY:
+            return t->Do(this);
+        case SHALLOW_COPY:
+            return t;
+        case NODE_ONLY:
+            return NULL;
+        }
+    }
 };
 
+typedef struct TreeCloneTemplate<DEEP_COPY> TreeClone;
 
 
 // ============================================================================
@@ -800,8 +820,12 @@ struct RewriteKey : Action
 
 
 extern text sha1(Tree *t);
+extern Name *   xl_true;
+extern Name *   xl_false;
+
 
 typedef long node_id;              // A node identifier
+
 
 struct NodeIdInfo : Info
 // ----------------------------------------------------------------------------
@@ -814,6 +838,7 @@ struct NodeIdInfo : Info
     operator data_t() { return id; }
     node_id id;
 };
+
 
 struct SimpleAction : Action
 // ----------------------------------------------------------------------------
@@ -840,6 +865,7 @@ struct SimpleAction : Action
     }
     virtual Tree * Do(Tree *what) = 0;
 };
+
 
 struct SetNodeIdAction : SimpleAction
 // ------------------------------------------------------------------------

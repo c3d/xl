@@ -36,6 +36,15 @@
 #include "options.h"
 #include "runtime.h"
 
+#ifdef CONFIG_MINGW
+static struct tm *
+localtime_r (const time_t * timep, struct tm * result)
+{
+  *result = *localtime (timep);
+  return result;
+}
+#endif // CONFIG_MINGW
+
 XL_BEGIN
 
 // ============================================================================
