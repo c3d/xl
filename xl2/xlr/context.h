@@ -344,9 +344,6 @@ public:
 // 
 // ============================================================================
 
-typedef std::map<Tree *, ulong> eval_cache;
-
-
 struct DeclarationAction : Action
 // ----------------------------------------------------------------------------
 //   Record data and rewrite declarations in the input tree
@@ -392,7 +389,6 @@ struct CompileAction : Action
 
     Symbols *     symbols;
     CompiledUnit &unit;
-    eval_cache    needed;
     bool          nullIfBad;
     bool          keepAlternatives;
 };
@@ -429,7 +425,7 @@ struct ArgumentMatch : Action
 {
     ArgumentMatch (Tree *t,
                    Symbols *s, Symbols *l, Symbols *r,
-                   CompileAction *comp, eval_cache &evals):
+                   CompileAction *comp):
         symbols(s), locals(l), rewrite(r),
         test(t), defined(NULL), compile(comp), unit(comp->unit) {}
 
@@ -450,13 +446,13 @@ struct ArgumentMatch : Action
     Tree *        CompileClosure(Tree *source);
 
 public:
-    Symbols *     symbols;      // Context in which we evaluate values
-    Symbols *     locals;       // Symbols where we declare arguments
-    Symbols *     rewrite;      // Symbols in which the rewrite was declared
-    Tree *        test;         // Tree we test
-    Tree *        defined;      // Tree beind defined, e.g. 'sin' in 'sin X'
+    Symbols *      symbols;     // Context in which we evaluate values
+    Symbols *      locals;      // Symbols where we declare arguments
+    Symbols *      rewrite;     // Symbols in which the rewrite was declared
+    Tree *         test;        // Tree we test
+    Tree *         defined;     // Tree beind defined, e.g. 'sin' in 'sin X'
     CompileAction *compile;     // Action in which we are compiling
-    CompiledUnit &unit;         // JIT compiler compilation unit
+    CompiledUnit  &unit;        // JIT compiler compilation unit
 };
 
 

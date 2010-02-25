@@ -26,6 +26,7 @@
 
 #include "types.h"
 #include "tree.h"
+#include "runtime.h"
 
 XL_BEGIN
 
@@ -406,9 +407,72 @@ Tree *MatchType::MatchStructuredType(Tree *what, Tree *kind)
 
 Tree * MatchType::Rewrites(Tree *what)
 // ----------------------------------------------------------------------------
-//   Build code selecting among rewrites in current context
+//   Check the various rewrites and see if there is one where types match
 // ----------------------------------------------------------------------------
 {
+    // Compute the hash key for the form we have to match
+    ulong formKey, testKey;
+    RewriteKey formKeyHash;
+    what->Do(formKeyHash);
+    formKey = formKeyHash.Key();
+    symbols_set visited;
+    symbols_list lookups;
+
+    // Build all the symbol tables that we are going to look into
+    for (Symbols *s = symbols; s; s = s->Parent())
+    {
+        if (!visited.count(s))
+        {
+            lookups.push_back(s);
+            visited.insert(s);
+            symbols_set::iterator si;
+            for (si = s->imported.begin(); si != s->imported.end(); si++)
+            {
+                if (!visited.count(*si))
+                {
+                    visited.insert(*si);
+                    lookups.push_back(*si);
+                }
+            }
+        }
+    }
+
+    // Iterate over all symbol tables listed above
+    symbols_list::iterator li;
+    for (li = lookups.begin(); li != lookups.end(); li++)
+    {
+        Symbols *s = *li;
+
+        Rewrite *candidate = s->Rewrites();
+        while (candidate)
+        {
+            // Compute the hash key for the 'from' of the current rewrite
+            RewriteKey testKeyHash;
+            candidate->from->Do(testKeyHash);
+            testKey = testKeyHash.Key();
+
+            // If we have an exact match for the keys, we may have a winner
+            if (testKey == formKey)
+            {
+                // Create the invokation point
+                Symbols args(symbols);
+                ArgumentTypeMatch matchArgs(what, symbols,
+                                            &args, candidate->symbols);
+                Tree *argsTest = candidate->from->Do(matchArgs);
+
+                // If we found something, type matched
+                if (argsTest)
+                    return what;
+            } // Match test key
+
+            // Otherwise, follow the hash chain for the next candidate
+            if (candidate->hash.count(formKey) > 0)
+                candidate = candidate->hash[formKey];
+            else
+                candidate = NULL;
+        } // while(candidate)
+    } // for(namespaces)
+
     return NULL;
 }
 
@@ -460,5 +524,260 @@ Tree *MatchType::NameMatch(Tree *what)
     return what->Do(this);
 }
 
-XL_END
 
+
+// ============================================================================
+//
+//    Argument matching - Test input arguments against parameters
+//
+// ============================================================================
+
+Tree *ArgumentTypeMatch::Do(Tree *what)
+// ----------------------------------------------------------------------------
+//   Default is to return failure
+// ----------------------------------------------------------------------------
+{
+    return NULL;
+}
+
+
+Tree *ArgumentTypeMatch::DoInteger(Integer *what)
+// ----------------------------------------------------------------------------
+//   An integer argument matches the exact value
+// ----------------------------------------------------------------------------
+{
+    // If the tested tree is a constant, it must be an integer with same value
+    if (test->IsConstant())
+    {
+        Integer *it = test->AsInteger();
+        if (!it)
+            return NULL;
+        if (it->value == what->value)
+            return what;
+    }
+
+    return NULL;
+}
+
+
+Tree *ArgumentTypeMatch::DoReal(Real *what)
+// ----------------------------------------------------------------------------
+//   A real matches the exact value
+// ----------------------------------------------------------------------------
+{
+    // If the tested tree is a constant, it must be an integer with same value
+    if (test->IsConstant())
+    {
+        Real *rt = test->AsReal();
+        if (!rt)
+            return NULL;
+        if (rt->value == what->value)
+            return what;
+    }
+
+    return NULL;
+}
+
+
+Tree *ArgumentTypeMatch::DoText(Text *what)
+// ----------------------------------------------------------------------------
+//   A text matches the exact value
+// ----------------------------------------------------------------------------
+{
+    // If the tested tree is a constant, it must be an integer with same value
+    if (test->IsConstant())
+    {
+        Text *tt = test->AsText();
+        if (!tt)
+            return NULL;
+        if (tt->value == what->value)
+            return what;
+    }
+
+    return NULL;
+}
+
+
+Tree *ArgumentTypeMatch::DoName(Name *what)
+// ----------------------------------------------------------------------------
+//    Bind arguments to parameters being defined in the shape
+// ----------------------------------------------------------------------------
+{
+    if (!defined)
+    {
+        // The first name we see must match exactly, e.g. 'sin' in 'sin X'
+        defined = what;
+        if (Name *nt = test->AsName())
+            if (nt->value == what->value)
+                return what;
+        return NULL;
+    }
+    else
+    {
+        // Check if the name already exists, e.g. 'false' or 'A+A'
+        // If it does, we generate a run-time check to verify equality
+        if (Tree *existing = rewrite->Named(what->value))
+        {
+            // Check if the test is an identity
+            if (Name *nt = test->AsName())
+            {
+                if (nt->code == xl_identity)
+                {
+                    if (nt->value == what->value)
+                        return what;
+                    if (Name *existingName = existing->AsName())
+                        if (existingName->value == nt->value)
+                            return what;
+                    return NULL;
+                }
+            }
+        }
+
+        return what;
+    }
+}
+
+
+Tree *ArgumentTypeMatch::DoBlock(Block *what)
+// ----------------------------------------------------------------------------
+//   Check if we match a block
+// ----------------------------------------------------------------------------
+{
+    // Test if we exactly match the block, i.e. the reference is a block
+    if (Block *bt = test->AsBlock())
+    {
+        if (bt->opening == what->opening &&
+            bt->closing == what->closing)
+        {
+            test = bt->child;
+            Tree *br = what->child->Do(this);
+            test = bt;
+            if (br)
+                return br;
+        }
+    }
+
+    // Otherwise, if the block is an indent or parenthese, optimize away
+    if ((what->opening == "(" && what->closing == ")") ||
+        (what->opening == Block::indent && what->closing == Block::unindent))
+    {
+        return what->child->Do(this);
+    }
+
+    return NULL;
+}
+
+
+Tree *ArgumentTypeMatch::DoInfix(Infix *what)
+// ----------------------------------------------------------------------------
+//   Check if we match an infix operator
+// ----------------------------------------------------------------------------
+{
+    // Check if we match an infix tree like 'x,y' with a name like 'A'
+    if (what->name != ":")
+    {
+        if (Name *name = test->AsName())
+        {
+            name = name;
+        }
+    }
+
+    if (Infix *it = test->AsInfix())
+    {
+        // Check if we match the tree, e.g. A+B vs 2+3
+        if (it->name == what->name)
+        {
+            if (!defined)
+                defined = what;
+            test = it->left;
+            Tree *lr = what->left->Do(this);
+            test = it;
+            if (!lr)
+                return NULL;
+            test = it->right;
+            Tree *rr = what->right->Do(this);
+            test = it;
+            if (!rr)
+                return NULL;
+            return what;
+        }
+    }
+
+    // Check if we match a type, e.g. 2 vs. 'K : integer'
+    if (what->name == ":")
+    {
+        // Check the variable name, e.g. K in example above
+        Name *varName = what->left->AsName();
+        if (!varName)
+            return Ooops("Expected a name, got '$1' ", what->left);
+
+        // Check if the name already exists
+        if (Tree *existing = rewrite->Named(varName->value))
+            return Ooops("Name '$1' already exists as '$2'",
+                         what->left, existing);
+
+        return what;
+    }
+
+    // Otherwise, this is a mismatch
+    return NULL;
+}
+
+
+Tree *ArgumentTypeMatch::DoPrefix(Prefix *what)
+// ----------------------------------------------------------------------------
+//   For prefix expressions, simply test left then right
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *pt = test->AsPrefix())
+    {
+        // Check if we match the tree, e.g. f(A) vs. f(2)
+        // Note that we must test left first to define 'f' in above case
+        Infix *defined_infix = defined->AsInfix();
+        if (defined_infix)
+            defined = NULL;
+
+        test = pt->left;
+        Tree *lr = what->left->Do(this);
+        test = pt;
+        if (!lr)
+            return NULL;
+        test = pt->right;
+        Tree *rr = what->right->Do(this);
+        test = pt;
+        if (!rr)
+            return NULL;
+        if (!defined && defined_infix)
+            defined = defined_infix;
+        return what;
+    }
+    return NULL;
+}
+
+
+Tree *ArgumentTypeMatch::DoPostfix(Postfix *what)
+// ----------------------------------------------------------------------------
+//    For postfix expressions, simply test right, then left
+// ----------------------------------------------------------------------------
+{
+    if (Postfix *pt = test->AsPostfix())
+    {
+        // Check if we match the tree, e.g. A! vs 2!
+        // Note that ordering is reverse compared to prefix, so that
+        // the 'defined' names is set correctly
+        test = pt->right;
+        Tree *rr = what->right->Do(this);
+        test = pt;
+        if (!rr)
+            return NULL;
+        test = pt->left;
+        Tree *lr = what->left->Do(this);
+        test = pt;
+        if (!lr)
+            return NULL;
+        return what;
+    }
+    return NULL;
+}
+
+XL_END
