@@ -899,6 +899,7 @@ Tree *InterpretedArgumentMatch::DoBlock(Block *what)
 
     // Otherwise, if the block is an indent or parenthese, optimize away
     if ((what->opening == "(" && what->closing == ")") ||
+        (what->opening == "{" && what->closing == "}") ||
         (what->opening == Block::indent && what->closing == Block::unindent))
     {
         return what->child->Do(this);
@@ -1477,6 +1478,7 @@ Tree *ArgumentMatch::DoBlock(Block *what)
 
     // Otherwise, if the block is an indent or parenthese, optimize away
     if ((what->opening == "(" && what->closing == ")") ||
+        (what->opening == "{" && what->closing == "}") ||
         (what->opening == Block::indent && what->closing == Block::unindent))
     {
         return what->child->Do(this);
@@ -2068,6 +2070,7 @@ Tree *CompileAction::DoBlock(Block *what)
 // ----------------------------------------------------------------------------
 {
     if ((what->opening == Block::indent && what->closing == Block::unindent) ||
+        (what->opening == "{" && what->closing == "}") ||
         (what->opening == "(" && what->closing == ")"))
     {
         if (unit.IsKnown(what))
