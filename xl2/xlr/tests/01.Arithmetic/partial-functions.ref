@@ -2,4 +2,4 @@ DEBUG: ("Three arguments: ",x, y, z) 2 3 3 false
 DEBUG: ("Three arguments: ",x, y, z) 1 2 3 false
 DEBUG: ("Machin 3", a, b, x) 2.0 1.0 3.0 false
 DEBUG: ("Machin 5", a, b, x, y, z) 6.0 4.0 777.0 222.0 2.0 false
-"Machin 5", 777.0, 222.0, 6.0, 4.0, 2.0
+true

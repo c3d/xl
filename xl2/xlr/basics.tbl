@@ -138,7 +138,7 @@ PREFIX(LoadTSV,  tree, "load_tsv", PARM(file, text), return xl_load_tsv(file))
 // Debugging code
 PREFIX(DebugTree, tree, "debug", PARM(toDebug, tree),
        std::cerr << "DEBUG: " << (Tree *) &toDebug << "\n";
-       return &toDebug)
+       return xl_true)
 
 // Compute the sha1 of a tree
 PREFIX(ComputeSha1, text, "sha1", PARM(t, tree), XL_RTEXT(sha1(&t)))
