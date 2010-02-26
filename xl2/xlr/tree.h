@@ -219,7 +219,11 @@ template <class I> inline void Tree::Set2(typename I::data_t data)
 {
     I *i = GetInfo<I>();
     if (i)
+    {
+        Info *n = i->next;
         (*i) = data;
+        i->next = n;
+    }
     else
         Set<I>(data);
 }
@@ -524,12 +528,23 @@ inline Postfix *Tree::AsPostfix()
 // 
 // ============================================================================
 
-struct TreeClone : Action
+enum CloneMode
+// ----------------------------------------------------------------------------
+//   Several ways of cloning a tree
+// ----------------------------------------------------------------------------
+{
+    DEEP_COPY = 1,    // Child nodes are cloned, too
+    SHALLOW_COPY,     // Child nodes are referenced
+    NODE_ONLY         // Child nodes are left NULL
+};
+
+template <CloneMode mode> struct TreeCloneTemplate : Action
 // ----------------------------------------------------------------------------
 //   Clone a tree
 // ----------------------------------------------------------------------------
 {
-    TreeClone() {}
+    TreeCloneTemplate() {}
+    virtual ~TreeCloneTemplate() {}
 
     Tree *DoInteger(Integer *what)
     {
@@ -552,31 +567,44 @@ struct TreeClone : Action
 
     Tree *DoBlock(Block *what)
     {
-        return new Block(what->child->Do(this),
-                         what->opening, what->closing, what->Position());
+        return new Block(Clone(what->child), what->opening, what->closing,
+                         what->Position());
     }
     Tree *DoInfix(Infix *what)
     {
-        return new Infix (what->name,
-                          what->left->Do(this), what->right->Do(this),
+        return new Infix (what->name, Clone(what->left), Clone(what->right),
                           what->Position());
     }
     Tree *DoPrefix(Prefix *what)
     {
-        return new Prefix(what->left->Do(this), what->right->Do(this),
+        return new Prefix(Clone(what->left), Clone(what->right),
                           what->Position());
     }
     Tree *DoPostfix(Postfix *what)
     {
-        return new Postfix(what->left->Do(this), what->right->Do(this),
+        return new Postfix(Clone(what->left), Clone(what->right),
                            what->Position());
     }
     Tree *Do(Tree *what)
     {
         return what;            // ??? Should not happen
     }
+protected:
+    Tree * Clone(Tree *t)
+    {
+        switch (mode)
+        {
+        case DEEP_COPY:
+            return t->Do(this);
+        case SHALLOW_COPY:
+            return t;
+        case NODE_ONLY:
+            return NULL;
+        }
+    }
 };
 
+typedef struct TreeCloneTemplate<DEEP_COPY> TreeClone;
 
 
 // ============================================================================
@@ -585,12 +613,21 @@ struct TreeClone : Action
 // 
 // ============================================================================
 
-struct TreeMatch : Action
+enum TreeMatchMode
+// ----------------------------------------------------------------------------
+//   The ways of comparing trees
+// ----------------------------------------------------------------------------
+{
+    TM_RECURSIVE = 1,  // Compare whole tree
+    TM_NODE_ONLY       // Compare one node only
+};
+
+template <TreeMatchMode mode> struct TreeMatchTemplate : Action
 // ----------------------------------------------------------------------------
 //   Check if two trees match in structure
 // ----------------------------------------------------------------------------
 {
-    TreeMatch (Tree *t): test(t) {}
+    TreeMatchTemplate (Tree *t): test(t) {}
     Tree *DoInteger(Integer *what)
     {
         if (Integer *it = test->AsInteger())
@@ -628,6 +665,8 @@ struct TreeMatch : Action
             if (bt->opening == what->opening &&
                 bt->closing == what->closing)
             {
+                if (mode == TM_NODE_ONLY)
+                    return what;
                 test = bt->child;
                 Tree *br = what->child->Do(this);
                 test = bt;
@@ -644,6 +683,8 @@ struct TreeMatch : Action
             // Check if we match the tree, e.g. A+B vs 2+3
             if (it->name == what->name)
             {
+                if (mode == TM_NODE_ONLY)
+                    return what;
                 test = it->left;
                 Tree *lr = what->left->Do(this);
                 test = it;
@@ -663,6 +704,8 @@ struct TreeMatch : Action
     {
         if (Prefix *pt = test->AsPrefix())
         {
+            if (mode == TM_NODE_ONLY)
+                return what;
             // Check if we match the tree, e.g. f(A) vs. f(2)
             test = pt->left;
             Tree *lr = what->left->Do(this);
@@ -682,6 +725,8 @@ struct TreeMatch : Action
     {
         if (Postfix *pt = test->AsPostfix())
         {
+            if (mode == TM_NODE_ONLY)
+                return what;
             // Check if we match the tree, e.g. A! vs 2!
             test = pt->right;
             Tree *rr = what->right->Do(this);
@@ -705,6 +750,7 @@ struct TreeMatch : Action
     Tree *      test;
 };
 
+typedef struct TreeMatchTemplate<TM_RECURSIVE> TreeMatch;
 
 // ============================================================================
 //
