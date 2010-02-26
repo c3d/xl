@@ -96,7 +96,12 @@ token_t Parser::NextToken()
         case tokNAME:
         case tokSYMBOL:
             opening = scanner.TokenText();
-            if (syntax.IsComment(opening, closing))
+            if (opening == "syntax")
+            {
+                syntax.ReadSyntaxFile(scanner, 0);
+                continue;
+            }
+            else if (syntax.IsComment(opening, closing))
             {
                 // Skip comments, keep looking to get the right indentation
                 text comment = scanner.Comment(closing);

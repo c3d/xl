@@ -111,10 +111,11 @@ void Renderer::SelectStyleSheet(text styleFile)
 //   Select an arbitrary style sheet
 // ----------------------------------------------------------------------------
 {
-    Syntax defaultSyntax;
+    Syntax defaultSyntax, emptySyntax;
     Positions positions;
     Errors errors(&positions);
-    defaultSyntax.ReadSyntaxFile("xl.syntax");
+    Scanner scanner("xl.syntax", emptySyntax, positions, errors);
+    defaultSyntax.ReadSyntaxFile(scanner);
     Parser p(styleFile.c_str(), defaultSyntax, positions, errors);
 
     // Some defaults

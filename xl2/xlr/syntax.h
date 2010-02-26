@@ -28,6 +28,7 @@
 XL_BEGIN
 
 struct Tree;
+struct Scanner;
 
 typedef std::map<text, int>             priority_table;
 typedef std::map<text, text>            delimiter_table;
@@ -43,12 +44,13 @@ public:
     Syntax():
         priority(0), default_priority(0),
         statement_priority(100), function_priority(200) {}
-    Syntax(kstring filename):
+    Syntax(Scanner &scanner):
         priority(0), default_priority(0),
         statement_priority(100), function_priority(200)
     {
-        ReadSyntaxFile(filename);
+        ReadSyntaxFile(scanner);
     }
+    Syntax(kstring name);
 
 public:
     // Managing priorities
@@ -61,7 +63,7 @@ public:
     bool                KnownToken(text n);
 
     // Read a complete syntax file (xl.syntax)
-    void                ReadSyntaxFile (kstring filename);
+    void                ReadSyntaxFile (Scanner &scanner, uint indents = 1);
 
     // Defining delimiters
     void                CommentDelimiter(text Begin, text End);

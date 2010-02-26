@@ -38,6 +38,22 @@ XL_BEGIN
 
 Syntax *Syntax::syntax = NULL;
 
+
+Syntax::Syntax(kstring name)
+// ----------------------------------------------------------------------------
+//    Read the given syntax file
+// ----------------------------------------------------------------------------
+    : priority(0), default_priority(0),
+      statement_priority(100), function_priority(200)
+{
+    Syntax    baseSyntax;
+    Positions basePositions;
+    Errors    errors(&basePositions);
+    Scanner   scanner(name, baseSyntax, basePositions, errors);
+    ReadSyntaxFile(scanner);
+}
+
+
 int Syntax::InfixPriority(text n)
 // ----------------------------------------------------------------------------
 //   Return infix priority, which is either this or parent's
@@ -203,7 +219,7 @@ bool Syntax::IsBlock(char Begin, text &End)
 }
 
 
-void Syntax::ReadSyntaxFile(kstring filename)
+void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
 // ----------------------------------------------------------------------------
 //   Parse the syntax description table
 // ----------------------------------------------------------------------------
@@ -220,16 +236,13 @@ void Syntax::ReadSyntaxFile(kstring filename)
     text        txt, entry;
     token_t     tok = tokNAME;
     int         priority = 0;
-    Syntax      baseSyntax;
-    Positions   basePositions;
-    Errors      errors(&basePositions);
-    Scanner     scanner(filename, baseSyntax, basePositions, errors);
+    bool        done = false;
 
-    while(tok != tokEOF)
+    while(tok != tokEOF && !done)
     {
         tok = scanner.NextToken(true);
 
-        if (tok == tokSYMBOL)
+        if (tok == tokSYMBOL || state >= inComment)
         {
             text t = scanner.TextValue();
             uint i, len = t.length();
@@ -246,6 +259,16 @@ void Syntax::ReadSyntaxFile(kstring filename)
             break;
         case tokINTEGER:
             priority = scanner.IntegerValue();
+            break;
+        case tokINDENT:
+        case tokPAROPEN:
+            indents++;
+            break;
+        case tokUNINDENT:
+        case tokPARCLOSE:
+            indents--;
+            if (!indents)
+                done = true;
             break;
         case tokNAME:
         case tokSYMBOL:

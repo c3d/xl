@@ -460,7 +460,7 @@ token_t Scanner::NextToken(bool hungry)
            !syntax.IsBlock(c, endMarker))
     {
         NEXT_CHAR(c);
-        if (!hungry && !syntax.KnownToken(textValue))
+        if (!hungry && !syntax.KnownToken(tokenText))
             break;
     }
     ungetc(c, file);

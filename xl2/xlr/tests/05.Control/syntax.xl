@@ -1,0 +1,8 @@
+syntax
+    COMMENT "\*" "*\"
+    POSTFIX 300 trucmachinbidule
+
+\* This is a Pascal-like comment *\
+N trucmachinbidule -> 33 + N
+
+2 trucmachinbidule + 5 trucmachinbidule
