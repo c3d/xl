@@ -317,7 +317,7 @@ public: // FIXME public for operator <<
     {
         node_table() {}
         virtual ~node_table() {}
-        node_id NewId() { next_id += step; return next_id; }
+        node_id NewId() { node_id n = next_id; next_id += step; return n; }
         void SetNextId(node_id next_id) { this->next_id = next_id; }
         void SetStep(node_id step) { this->step = step; }
 
