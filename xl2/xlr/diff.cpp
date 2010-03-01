@@ -36,25 +36,27 @@
 
 XL_BEGIN
 
+TreeDiff::TreeDiff(Tree *t1, Tree *t2) : t1(NULL), t2(t2), escript(NULL)
+{
+    // Make a deep copy because the diff algorithm needs to modify the tree
+    TreeClone clone;
+    this->t1 = t1->Do(clone);
+}
+
 TreeDiff::~TreeDiff()
 {
-    node_table *tab[] = { &nodes1, &nodes2 };
+    // t1 is a clone of the first tree passed to CTOR -> delete it
+    delete t1;
 
-    for (unsigned i = 0; i < (sizeof(tab)/sizeof(node_table *)); i++)
-    {
-        node_table::iterator it;
-        for (it = tab[i]->begin(); it != tab[i]->end(); it++)
-        {
-            (*it).second.GetTree()->Purge<NodeIdInfo>();
-            (*it).second.GetTree()->Purge<MatchedInfo>();
-            (*it).second.GetTree()->Purge<TreeDiffInfo>();
-            (*it).second.GetTree()->Purge<LeafCountInfo>();
-            (*it).second.GetTree()->Purge<ParentInfo>();
-        }
-    }
+    // t2 is the second tree passed to CTOR -> clean it
+    PurgeDiffInfos purge;
+    InOrderTraversal iot(purge);
+    t2->Do(iot);
+
     matching::iterator it;
     for (it = m.begin(); it != m.end(); it++)
         delete (*it);
+
     if (escript)
         delete escript;
 }
@@ -84,6 +86,16 @@ void TreeDiff::SetParentPointers(Tree *t)
     SetParentInfo action;
     BreadthFirstSearch bfs(action);
     t->Do(bfs);
+}
+
+void TreeDiff::PrepareForEditing(Tree *t)
+// ----------------------------------------------------------------------------
+//    Prepare tree so that EditOperations may be applied to it
+// ----------------------------------------------------------------------------
+{
+    SetChildVectorInfo action;
+    InOrderTraversal iot(action);
+    t->Do(iot);
 }
 
 void TreeDiff::BuildChains(Tree *t, node_vector *out)
@@ -364,6 +376,9 @@ void TreeDiff::DoEditScript()
     IFTRACE(diff)
        std::cout << "Entering DoEditScript\n";
 
+    // Prepare T1 for applying EditOperation
+    PrepareForEditing(t1);
+
     // 1.
     escript = new EditScript;
     EditScript &E = *escript;
@@ -519,8 +534,6 @@ void TreeDiff::Diff()
 //    Compute the difference between the two trees. Returns an Edit Script.
 // ----------------------------------------------------------------------------
 {
-    // TODO Clone t1 (will be modified by DoEditscript)
-
     // We first add a dummy root node (a block) to both trees so that the
     // following statement always holds true:
     // [CDHSI] We assume, without loss of generality, that the roots of T1 and

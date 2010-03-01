@@ -117,6 +117,17 @@ struct ParentInfo : Info
     data_t p;
 };
 
+struct ChildVectorInfo : Info
+// ----------------------------------------------------------------------------
+//   A pointer to a child vector
+// ----------------------------------------------------------------------------
+{
+    typedef std::vector<Tree *> * data_t;
+    ChildVectorInfo(data_t p): p(p) {}
+    operator data_t() { return p; }
+    data_t p;
+};
+
 struct PrintNode : Action
 // ----------------------------------------------------------------------------
 //   Display a node
@@ -257,12 +268,73 @@ struct SetParentInfo : Action
     }
 };
 
+struct SetChildVectorInfo : Action
+// ----------------------------------------------------------------------------
+//   Create a child vector in the Info list of internal nodes
+// ----------------------------------------------------------------------------
+{
+    SetChildVectorInfo() {}
+    virtual ~SetChildVectorInfo() {}
+
+    Tree *DoInteger(Integer *what)
+    {
+        return NULL;
+    }
+    Tree *DoReal(Real *what)
+    {
+        return NULL;
+    }
+    Tree *DoText(Text *what)
+    {
+        return NULL;
+    }
+    Tree *DoName(Name *what)
+    {
+        return NULL;
+    }
+    Tree *DoBlock(Block *what)
+    {
+        std::vector<Tree *> *v = new std::vector<Tree *>(5);
+        (*v)[0] = what->child;
+        what->Set2<ChildVectorInfo>(v);
+        return NULL;
+    }
+    Tree *DoInfix(Infix *what)
+    {
+        std::vector<Tree *> *v = new std::vector<Tree *>(5);
+        (*v)[0] = what->left;
+        (*v)[1] = what->right;
+        what->Set2<ChildVectorInfo>(v);
+        return NULL;
+    }
+    Tree *DoPrefix(Prefix *what)
+    {
+        std::vector<Tree *> *v = new std::vector<Tree *>(5);
+        (*v)[0] = what->left;
+        (*v)[1] = what->right;
+        what->Set2<ChildVectorInfo>(v);
+        return NULL;
+    }
+    Tree *DoPostfix(Postfix *what)
+    {
+        std::vector<Tree *> *v = new std::vector<Tree *>(5);
+        (*v)[0] = what->left;
+        (*v)[1] = what->right;
+        what->Set2<ChildVectorInfo>(v);
+        return NULL;
+    }
+    Tree *Do(Tree *what)
+    {
+        return NULL;
+    }
+};
+
 struct TreeDiff
 // ----------------------------------------------------------------------------
 //   All you need to compare and patch parse trees
 // ----------------------------------------------------------------------------
 {
-    TreeDiff (Tree *t1, Tree *t2): t1(t1), t2(t2), escript(NULL) {}
+    TreeDiff (Tree *t1, Tree *t2);
     virtual ~TreeDiff();
 
     void Diff();
@@ -393,6 +465,23 @@ protected:
         I &container;
     };
 
+    struct PurgeDiffInfos : SimpleAction
+    // ------------------------------------------------------------------------
+    //   Purge all Info pointers that may have been added to T2 by TreeDiff
+    // ------------------------------------------------------------------------
+    {
+        PurgeDiffInfos() {}
+        virtual Tree *Do(Tree *what)
+        {
+            what->Purge<NodeIdInfo>();
+            what->Purge<MatchedInfo>();
+            what->Purge<TreeDiffInfo>();
+            what->Purge<LeafCountInfo>();
+            what->Purge<ParentInfo>();
+            return NULL;
+        }
+    };
+
 protected:
 
     void     DoFastMatch();
@@ -405,6 +494,7 @@ protected:
     void SetParentPointers(Tree *t);
     void BuildChains(Tree *allnodes, node_vector *out);
     void MatchOneKind(matching &M, node_vector &S1, node_vector &S2);
+    void PrepareForEditing(Tree *t);
 
     static node_id PartnerInFirstTree(node_id id, const matching &m);  // FIXME
     static bool LeafEqual(Tree *t1, Tree *t2);
