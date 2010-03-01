@@ -329,6 +329,67 @@ struct SetChildVectorInfo : Action
     }
 };
 
+struct SyncWithChildVectorInfo : Action
+// ----------------------------------------------------------------------------
+//   Update the child pointers with values from ChildVectorInfo
+// ----------------------------------------------------------------------------
+{
+    SyncWithChildVectorInfo() {}
+    virtual ~SyncWithChildVectorInfo() {}
+
+    Tree *DoInteger(Integer *what)
+    {
+        return NULL;
+    }
+    Tree *DoReal(Real *what)
+    {
+        return NULL;
+    }
+    Tree *DoText(Text *what)
+    {
+        return NULL;
+    }
+    Tree *DoName(Name *what)
+    {
+        return NULL;
+    }
+    Tree *DoBlock(Block *what)
+    {
+        std::vector<Tree *> *v = what->Get<ChildVectorInfo>();
+        what->child = (*v)[0];
+        assert((*v)[1] == NULL);
+        return NULL;
+    }
+    Tree *DoInfix(Infix *what)
+    {
+        std::vector<Tree *> *v = what->Get<ChildVectorInfo>();
+        what->left = (*v)[0];
+        what->right = (*v)[1];
+        assert((*v)[2] == NULL);
+        return NULL;
+    }
+    Tree *DoPrefix(Prefix *what)
+    {
+        std::vector<Tree *> *v = what->Get<ChildVectorInfo>();
+        what->left = (*v)[0];
+        what->right = (*v)[1];
+        assert((*v)[2] == NULL);
+        return NULL;
+    }
+    Tree *DoPostfix(Postfix *what)
+    {
+        std::vector<Tree *> *v = what->Get<ChildVectorInfo>();
+        what->left = (*v)[0];
+        what->right = (*v)[1];
+        assert((*v)[2] == NULL);
+        return NULL;
+    }
+    Tree *Do(Tree *what)
+    {
+        return NULL;
+    }
+};
+
 struct TreeDiff
 // ----------------------------------------------------------------------------
 //   All you need to compare and patch parse trees
@@ -495,6 +556,7 @@ protected:
     void BuildChains(Tree *allnodes, node_vector *out);
     void MatchOneKind(matching &M, node_vector &S1, node_vector &S2);
     void PrepareForEditing(Tree *t);
+    void FinishEditing(Tree *t);
 
     static node_id PartnerInFirstTree(node_id id, const matching &m);  // FIXME
     static bool LeafEqual(Tree *t1, Tree *t2);

@@ -98,6 +98,16 @@ void TreeDiff::PrepareForEditing(Tree *t)
     t->Do(iot);
 }
 
+void TreeDiff::FinishEditing(Tree *t)
+// ----------------------------------------------------------------------------
+//    Sync child pointers after an edit operation
+// ----------------------------------------------------------------------------
+{
+    SyncWithChildVectorInfo action;
+    InOrderTraversal iot(action);
+    t->Do(iot);
+}
+
 void TreeDiff::BuildChains(Tree *t, node_vector *out)
 // ----------------------------------------------------------------------------
 //    Build per-kind node tables for a tree
@@ -500,6 +510,8 @@ void TreeDiff::DoEditScript()
         }
     }
 
+    FinishEditing(t1);
+
     IFTRACE(diff)
        std::cout << "DoEditScript done\n";
 }
@@ -629,7 +641,6 @@ bool TreeDiff::Node::ContainsLeaf(Tree *leaf) const
     return false;
 }
 
-#warning("Insert::Apply() implementation incomplete");
 void EditOperation::Insert::Apply(TreeDiff::node_table &table)
 // ----------------------------------------------------------------------------
 //    Apply an Insert operation on a node table and the underlying tree
@@ -646,10 +657,10 @@ void EditOperation::Insert::Apply(TreeDiff::node_table &table)
     table[new_id] = leaf;
     leaf->Set2<ParentInfo>(parent_ptr);
     leaf->Set2<NodeIdInfo>(new_id);
-    // TODO parent_ptr->InsertChild(leaf, pos);
+    std::vector<Tree *> *v = parent_ptr->Get<ChildVectorInfo>();
+    v->insert(v->begin() + pos - 1, leaf);
 }
 
-#warning("Delete::Apply() implementation incomplete");
 void EditOperation::Delete::Apply(TreeDiff::node_table &table)
 // ----------------------------------------------------------------------------
 //    Apply a Delete operation on a node table and the underlying tree
@@ -658,15 +669,21 @@ void EditOperation::Delete::Apply(TreeDiff::node_table &table)
     if (table.find(leaf) == table.end())
         return;
 
-    // FIXME: update tree
     Tree *parent_ptr = NULL, *leaf_ptr = table[leaf].GetTree();
     if (leaf_ptr)
         parent_ptr = leaf_ptr->Get<ParentInfo>();
     if (parent_ptr)
     {
-        // TODO parent_ptr->DeleteChild(leaf_ptr);
+        std::vector<Tree *> *v = parent_ptr->Get<ChildVectorInfo>();
+        std::vector<Tree *>::iterator it;
+        for (it = v->begin(); it != v->end(); it++)
+            if ((*it) == leaf_ptr)
+            {
+                v->erase(it);
+                break;
+            }
     }
-
+    delete leaf_ptr;
     table.erase(leaf);
 }
 
@@ -686,7 +703,6 @@ void EditOperation::Update::Apply(TreeDiff::node_table &table)
     this->value->Do(copy);
 }
 
-#warning("Move::Apply() implementation incomplete");
 void EditOperation::Move::Apply(TreeDiff::node_table &table)
 // ----------------------------------------------------------------------------
 //    Apply a Move operation on a node table and the underlying tree
@@ -696,14 +712,28 @@ void EditOperation::Move::Apply(TreeDiff::node_table &table)
         table.find(parent)  == table.end())
         return;
 
-    Tree *subtree_ptr = table[subtree].GetTree();
-    Tree *parent_ptr = table[parent].GetTree();
+    Tree *subtree_ptr = table[subtree].GetTree();         // subtree
+    Tree *psubtree_ptr = subtree_ptr->Get<ParentInfo>();  // parent of subtree
+    Tree *parent_ptr = table[parent].GetTree();           // new parent
 
     if (!subtree_ptr || !parent_ptr)
         return;
 
+    // Update parent pointer of subtree
     subtree_ptr->Set2<ParentInfo>(parent_ptr);
-    // TODO parent_ptr->InsertChild(subtree_ptr, pos);
+    // Insert subtree_ptr in child vector of new parent 
+    std::vector<Tree *> *v;
+    v = parent_ptr->Get<ChildVectorInfo>();
+    v->insert(v->begin() + pos - 1, subtree_ptr);
+    // Remove subtree_ptr from child vector of old parent
+    v = psubtree_ptr->Get<ChildVectorInfo>();
+    std::vector<Tree *>::iterator it;
+    for (it = v->begin(); it != v->end(); it++)
+        if ((*it) == subtree_ptr)
+        {
+            v->erase(it);
+            break;
+        }
 }
 
 void EditScript::Apply(TreeDiff::node_table &table)
