@@ -127,10 +127,13 @@ void TreeDiff::MatchOneKind(matching &M, node_vector &S1, node_vector &S2)
     for (unsigned int i = 0; i < lcs1.size(); i++)
     {
         Node &x = lcs1[i], &y = lcs2[i];
-        NodePair *p = new NodePair(x.Id(), y.Id());
-        M.insert(p);
-        x.SetMatched();
-        y.SetMatched();
+        if (!x.IsMatched())
+        {
+            NodePair *p = new NodePair(x.Id(), y.Id());
+            M.insert(p);
+            x.SetMatched();
+            y.SetMatched();
+        }
     }
 
     // Nodes still unmatched after the call to LCS are processed using
@@ -522,16 +525,17 @@ void TreeDiff::Diff()
     // following statement always holds true:
     // [CDHSI] We assume, without loss of generality, that the roots of T1 and
     //   T2 are matched in M.
+    // The dummy root nodes have ID 0
     t1 = new Block(t1, "<", ">");
     t2 = new Block(t2, "<", ">");
-    m.insert(new NodePair(1, -1));
+    m.insert(new NodePair(0, 0));
     t1->Set2<MatchedInfo>(true);
     t2->Set2<MatchedInfo>(true);
 
     // First, assign some IDs to tree nodes and build node tables.
     // The first tree is numbered starting from 1, while the second one
     // is numbered with negative integers (-1, -2, etc.)
-    // However, for convenience the dummy root node takes id 0
+    // Start from 0 to account for the dummy root nodes
     AssignNodeIds(t1, nodes1, 0);
     AssignNodeIds(t2, nodes2, 0, -1);
 
@@ -653,7 +657,6 @@ void EditOperation::Delete::Apply(TreeDiff::node_table &table)
     table.erase(leaf);
 }
 
-#warning("Update::Apply() implementation incomplete");
 void EditOperation::Update::Apply(TreeDiff::node_table &table)
 // ----------------------------------------------------------------------------
 //    Apply an Update operation on a node table and the underlying tree
@@ -666,7 +669,8 @@ void EditOperation::Update::Apply(TreeDiff::node_table &table)
     if (!leaf_ptr)
         return;
 
-    // TODO update only value -- *leaf_ptr = *(this->value);
+    TreeCopyTemplate<CM_NODE_ONLY> copy(leaf_ptr);
+    this->value->Do(copy);
 }
 
 #warning("Move::Apply() implementation incomplete");
