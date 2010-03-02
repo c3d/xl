@@ -85,6 +85,17 @@ struct MatchedInfo : Info
     data_t matched;
 };
 
+struct InOrderInfo : Info
+// ----------------------------------------------------------------------------
+//   In order/out of order marker for the FindPos and AlignChildren algorithms
+// ----------------------------------------------------------------------------
+{
+    typedef bool data_t;
+    InOrderInfo(bool inorder = false): inorder(inorder) {}
+    operator data_t() { return inorder; }
+    data_t inorder;
+};
+
 // FIXME
 struct TreeDiffInfo : Info
 {
@@ -207,6 +218,15 @@ protected:
             out << "ID: " << what->Get<NodeIdInfo>() << " ";
         bool m = (what->Exists<MatchedInfo>() && what->Get<MatchedInfo>());
         out << (m ? "" : "un") << "matched" << " ";
+        bool io = (what->Exists<InOrderInfo>() && what->Get<InOrderInfo>());
+        out << (io ? "in" : "out-of") << "-order" << " ";
+if (what->Exists<ChildVectorInfo>())
+{
+    out << "cv=";
+    std::vector<Tree *> *cv = what->Get<ChildVectorInfo>();
+    for (unsigned i = 0; i < cv->size(); i++)
+        out << (void*)(*cv)[i] << " ";
+}
     }
 
 protected:
@@ -270,7 +290,7 @@ struct SetParentInfo : Action
 
 struct SetChildVectorInfo : Action
 // ----------------------------------------------------------------------------
-//   Create a child vector in the Info list of internal nodes
+//   Create (and fill) a child vector in the Info list of internal nodes
 // ----------------------------------------------------------------------------
 {
     SetChildVectorInfo() {}
@@ -294,32 +314,39 @@ struct SetChildVectorInfo : Action
     }
     Tree *DoBlock(Block *what)
     {
-        std::vector<Tree *> *v = new std::vector<Tree *>(5);
-        (*v)[0] = what->child;
+        std::vector<Tree *> *v = new std::vector<Tree *>;
+        if (what->child)
+            v->push_back(what->child);
         what->Set2<ChildVectorInfo>(v);
         return NULL;
     }
     Tree *DoInfix(Infix *what)
     {
-        std::vector<Tree *> *v = new std::vector<Tree *>(5);
-        (*v)[0] = what->left;
-        (*v)[1] = what->right;
+        std::vector<Tree *> *v = new std::vector<Tree *>;
+        if (what->left)
+            v->push_back(what->left);
+        if (what->right)
+            v->push_back(what->right);
         what->Set2<ChildVectorInfo>(v);
         return NULL;
     }
     Tree *DoPrefix(Prefix *what)
     {
-        std::vector<Tree *> *v = new std::vector<Tree *>(5);
-        (*v)[0] = what->left;
-        (*v)[1] = what->right;
+        std::vector<Tree *> *v = new std::vector<Tree *>;
+        if (what->left)
+            v->push_back(what->left);
+        if (what->right)
+            v->push_back(what->right);
         what->Set2<ChildVectorInfo>(v);
         return NULL;
     }
     Tree *DoPostfix(Postfix *what)
     {
-        std::vector<Tree *> *v = new std::vector<Tree *>(5);
-        (*v)[0] = what->left;
-        (*v)[1] = what->right;
+        std::vector<Tree *> *v = new std::vector<Tree *>;
+        if (what->left)
+            v->push_back(what->left);
+        if (what->right)
+            v->push_back(what->right);
         what->Set2<ChildVectorInfo>(v);
         return NULL;
     }
@@ -331,7 +358,7 @@ struct SetChildVectorInfo : Action
 
 struct SyncWithChildVectorInfo : Action
 // ----------------------------------------------------------------------------
-//   Update the child pointers with values from ChildVectorInfo
+//   Update the child pointers with values from ChildVectorInfo, and recurse
 // ----------------------------------------------------------------------------
 {
     SyncWithChildVectorInfo() {}
@@ -357,7 +384,8 @@ struct SyncWithChildVectorInfo : Action
     {
         std::vector<Tree *> *v = what->Get<ChildVectorInfo>();
         what->child = (*v)[0];
-        assert((*v)[1] == NULL);
+        assert(v->size() == 1);
+        what->child->Do(this);
         return NULL;
     }
     Tree *DoInfix(Infix *what)
@@ -365,7 +393,9 @@ struct SyncWithChildVectorInfo : Action
         std::vector<Tree *> *v = what->Get<ChildVectorInfo>();
         what->left = (*v)[0];
         what->right = (*v)[1];
-        assert((*v)[2] == NULL);
+        assert(v->size() == 2);
+        what->left->Do(this);
+        what->right->Do(this);
         return NULL;
     }
     Tree *DoPrefix(Prefix *what)
@@ -373,7 +403,9 @@ struct SyncWithChildVectorInfo : Action
         std::vector<Tree *> *v = what->Get<ChildVectorInfo>();
         what->left = (*v)[0];
         what->right = (*v)[1];
-        assert((*v)[2] == NULL);
+        assert(v->size() == 2);
+        what->left->Do(this);
+        what->right->Do(this);
         return NULL;
     }
     Tree *DoPostfix(Postfix *what)
@@ -381,7 +413,9 @@ struct SyncWithChildVectorInfo : Action
         std::vector<Tree *> *v = what->Get<ChildVectorInfo>();
         what->left = (*v)[0];
         what->right = (*v)[1];
-        assert((*v)[2] == NULL);
+        assert(v->size() == 2);
+        what->left->Do(this);
+        what->right->Do(this);
         return NULL;
     }
     Tree *Do(Tree *what)
@@ -412,10 +446,11 @@ protected:
         virtual ~Node() {}
 
         Tree * GetTree() const { return t; }
-        Tree * operator ->() { return t; }
+        // Tree * operator ->() { return t; }
         const Node & operator = (Tree *t) { this->t = t; return *this; }
+        Node & operator = (const Node &n) { t = n.t; return *this; }
         bool operator == (const Node &n);
-        node_id Id()
+        node_id Id() const
         {
             if (t && t->Exists<NodeIdInfo>())
                 return t->Get<NodeIdInfo>();
@@ -462,6 +497,29 @@ public: // FIXME public for operator <<
     typedef std::set<NodePair *> matching;
 
 protected:
+
+    struct NodeForAlign : Node
+    {
+        NodeForAlign(matching &m): Node(), m(m) {}
+        NodeForAlign(matching &m, Tree *t): Node(t), m(m) {}
+        bool operator == (const NodeForAlign &n);
+        void SetInOrder(bool b = true)
+        {
+            t->Set2<InOrderInfo>(b);
+        }
+        bool InOrder()
+        {
+            if (!t->Exists<InOrderInfo>())
+                return false;
+            return t->Get<InOrderInfo>();
+        }
+
+        // FIXME: call Node::operator= (?)
+        NodeForAlign &operator =(const NodeForAlign &n) { m=n.m; t=n.t; return *this; }
+        matching &m;
+    };
+    typedef std::vector<TreeDiff::NodeForAlign> node_vector_align;
+
 
     struct SetNodeIdAction : SimpleAction
     // ------------------------------------------------------------------------
@@ -539,6 +597,7 @@ protected:
             what->Purge<TreeDiffInfo>();
             what->Purge<LeafCountInfo>();
             what->Purge<ParentInfo>();
+            what->Purge<ChildVectorInfo>();
             return NULL;
         }
     };
@@ -555,10 +614,13 @@ protected:
     void SetParentPointers(Tree *t);
     void BuildChains(Tree *allnodes, node_vector *out);
     void MatchOneKind(matching &M, node_vector &S1, node_vector &S2);
-    void PrepareForEditing(Tree *t);
-    void FinishEditing(Tree *t);
+    void CreateChildVectors(Tree *t);
+    void UpdateChildren(Tree *t);
+    bool FindPair(node_id a, node_id b,
+                  node_vector_align s1, node_vector_align s2);
 
     static node_id PartnerInFirstTree(node_id id, const matching &m);  // FIXME
+    static node_id PartnerInSecondTree(node_id id, const matching &m); // FIXME
     static bool LeafEqual(Tree *t1, Tree *t2);
     static bool NonLeafEqual(Tree *t1, Tree *t2, TreeDiff &m);
     static float Similarity(std::string s1, std::string s2);
@@ -621,7 +683,7 @@ struct EditOperation::Insert : EditOperation::Base
 // ----------------------------------------------------------------------------
 {
     Insert(Tree *leaf, node_id parent, unsigned pos):
-        leaf(leaf), parent(parent), pos(pos) {}
+        leaf(leaf), parent(parent), pos(pos) { assert(leaf); }
     virtual ~Insert() {}
 
     virtual void Apply(TreeDiff::node_table &table);
@@ -649,7 +711,8 @@ struct EditOperation::Update : EditOperation::Base
 //   The operation of inserting a new leaf node into a tree.
 // ----------------------------------------------------------------------------
 {
-    Update(node_id leaf, Tree *value): leaf(leaf), value(value) {}
+    Update(node_id leaf, Tree *value): leaf(leaf), value(value)
+        { assert(value); }
     virtual ~Update() {}
 
     virtual void Apply(TreeDiff::node_table &table);

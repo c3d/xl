@@ -88,7 +88,7 @@ void TreeDiff::SetParentPointers(Tree *t)
     t->Do(bfs);
 }
 
-void TreeDiff::PrepareForEditing(Tree *t)
+void TreeDiff::CreateChildVectors(Tree *t)
 // ----------------------------------------------------------------------------
 //    Prepare tree so that EditOperations may be applied to it
 // ----------------------------------------------------------------------------
@@ -98,14 +98,13 @@ void TreeDiff::PrepareForEditing(Tree *t)
     t->Do(iot);
 }
 
-void TreeDiff::FinishEditing(Tree *t)
+void TreeDiff::UpdateChildren(Tree *t)
 // ----------------------------------------------------------------------------
 //    Sync child pointers after an edit operation
 // ----------------------------------------------------------------------------
 {
     SyncWithChildVectorInfo action;
-    InOrderTraversal iot(action);
-    t->Do(iot);
+    t->Do(action);
 }
 
 void TreeDiff::BuildChains(Tree *t, node_vector *out)
@@ -386,8 +385,9 @@ void TreeDiff::DoEditScript()
     IFTRACE(diff)
        std::cout << "Entering DoEditScript\n";
 
-    // Prepare T1 for applying EditOperation
-    PrepareForEditing(t1);
+    // Prepare T1 and T2
+    CreateChildVectors(t1);
+    CreateChildVectors(t2);
 
     // 1.
     escript = new EditScript;
@@ -462,7 +462,7 @@ void TreeDiff::DoEditScript()
                     // B. Apply UPD(w, v(x)) to T1
                     upd->Apply(nodes1);
                 }
-                if (y != PartnerInFirstTree(v, Mprime))
+                if (y != PartnerInSecondTree(v, Mprime))
                 {
                     // iii. If (y, v) not in M'
                     
@@ -481,7 +481,7 @@ void TreeDiff::DoEditScript()
                     // D. Apply MOV(w, z, k) to T1
                     mov->Apply(nodes1);
                 }
-			}
+		    }
         }
         
         // (d) AlignChildren(w, x)
@@ -510,7 +510,7 @@ void TreeDiff::DoEditScript()
         }
     }
 
-    FinishEditing(t1);
+    UpdateChildren(t1);
 
     IFTRACE(diff)
        std::cout << "DoEditScript done\n";
@@ -528,17 +528,193 @@ node_id TreeDiff::PartnerInFirstTree(node_id id, const matching &M)
     return 0;
 }
 
-#warning("FindPos() not implemented");
-unsigned TreeDiff::FindPos(node_id x)
+// TODO: find a better type for 'matching' so that this can be implemented
+// with a direct access
+node_id TreeDiff::PartnerInSecondTree(node_id id, const matching &M)
 {
-    // TODO
-    return 1;
+    XL::TreeDiff::matching::iterator it;
+    for (it = M.begin(); it != M.end(); it++)
+        if ((*it)->x == id)
+            return (*it)->y;
+
+    return 0;
 }
 
-#warning("AlignChildren() not implemented");
-void TreeDiff::AlignChildren(node_id w, node_id x)
+unsigned TreeDiff::FindPos(node_id x)
 {
-    // TODO
+    // 1. Let y = p(x) in T2 and let w be the partner of x
+    Tree *yptr = nodes2[x].GetTree()->Get<ParentInfo>();
+    assert(yptr);
+
+    // 2. If x is the leftmost child of y that is marked "in order", return 1
+    std::vector<Tree *> *cv = yptr->Get<ChildVectorInfo>();
+    assert(cv);
+    bool in_order_found = false;
+    for (unsigned i = 0; i < cv->size(); i++)
+    {
+        Tree *cur = (*cv)[i];
+        if (cur->Get<InOrderInfo>() == true)
+        {
+            if (cur->Get<NodeIdInfo>() == x)
+                return 1;
+            else
+            {
+                in_order_found = true;
+                break;
+            }
+        }
+    }
+    if (!in_order_found)    // FIXME - CHECK
+        return 1;
+
+    // 3. Find v in T2 where v is the rightmost sibling of x that is to the left
+    //    of x and is marked "in order"
+    Tree *vptr = NULL;
+    bool found_x = false;
+    for (unsigned i = cv->size() - 1; ; i--)
+    {
+        Tree *cur = (*cv)[i];
+        if (found_x && cur->Get<InOrderInfo>() == true)
+        {
+            vptr = cur;
+            break;
+        }
+        if (cur->Get<NodeIdInfo>() == x)
+            found_x = true;
+        if (i == 0)
+            break;
+    }
+    if (!vptr)  // FIXME - CHECK
+        return 1;
+    node_id v = vptr->Get<NodeIdInfo>();
+
+    // 4. Let u be the partner of v in T1
+    node_id u = PartnerInFirstTree(v, m);
+
+    // 5. Suppose u is the ith child of its parent that is marked "in order."
+    //    Return i+1.
+    Tree *pu_ptr = nodes1[u].GetTree()->Get<ParentInfo>();
+    assert (pu_ptr);
+    cv = pu_ptr->Get<ChildVectorInfo>();
+    unsigned count = 0;
+    for (unsigned i = 0; i < cv->size(); i++)
+    {
+        Tree *cur = (*cv)[i];
+        if (cur->Get<InOrderInfo>())
+            count++;
+        if (cur->Get<NodeIdInfo>() == u)
+            break;
+    }
+    return count + 1;
+}
+
+void TreeDiff::AlignChildren(node_id w, node_id x)
+// ----------------------------------------------------------------------------
+//    Generate Move operations if children of w and x are mis-aligned
+// ----------------------------------------------------------------------------
+{
+    IFTRACE(diff)
+       std::cout << " Entering AlignChildren(" << w << ", " << x << ")\n";
+
+    Tree * wptr = nodes1[w].GetTree();
+    assert(wptr);
+    if (wptr->IsLeaf())
+        return;
+    Tree * xptr = nodes2[x].GetTree();
+    assert(xptr);
+
+    std::vector<Tree *> *cv;
+    std::vector<Tree *>::iterator it;
+
+    // 1. Mark all children of w and all children of x "out of order"
+    // (Nothing to do, it's the default state)
+
+    // 2. Let S1 be the sequence of children of w whose partners are
+    // children of x...
+    node_vector_align S1;
+    cv = wptr->Get<ChildVectorInfo>();
+    assert(cv);
+    for (it = cv->begin(); it != cv->end() && (*it); it++)
+    {
+        node_id child = (*it)->Get<NodeIdInfo>();
+        node_id partner = PartnerInSecondTree(child, m);
+        if (nodes2[partner].GetTree()->Get<ParentInfo>() == xptr)
+            S1.push_back(NodeForAlign(m, nodes1[child].GetTree()));
+    }
+
+    // 2. ...and lest S2 be the sequence of children of x whose partners are
+    // children of w.
+    node_vector_align S2;
+    cv = xptr->Get<ChildVectorInfo>();
+    for (it = cv->begin(); it != cv->end() && (*it); it++)
+    {
+        node_id child = (*it)->Get<NodeIdInfo>();
+        node_id partner = PartnerInFirstTree(child, m);
+        if (nodes1[partner].GetTree()->Get<ParentInfo>() == wptr)
+            S2.push_back(NodeForAlign(m, nodes2[child].GetTree()));
+    }
+
+    // 3. Define the function equal(a, b) to be true iff (a, b) in M'
+    // (See NodeForAlign::operator ==)
+
+    // 4. Let S <- LCS(S1, S2, equal)
+    IFTRACE(diff)
+        std::cout << "  Running LCS...";
+    node_vector_align lcs1, lcs2;
+    LCS<node_vector_align> lcs_algo;
+    lcs_algo.Compute(S1, S2);
+    lcs_algo.Extract2(S1, lcs1, S2, lcs2);
+    IFTRACE(diff)
+        std::cout << " done.\n";
+
+    // 5. For each (a,b) in S, mark nodes a and b "in order"
+    for (unsigned int i = 0; i < lcs1.size(); i++)
+    {
+        NodeForAlign &a = lcs1[i], &b = lcs2[i];
+        a.SetInOrder();
+        b.SetInOrder();
+    }
+
+
+    // 6. For each a in S1, b in S2 such that (a, b) in M but (a, b) not in S
+    for (unsigned int i = 0; i < S1.size(); i++)
+    {
+        for (unsigned int j = 0; j < S2.size(); j++)
+        {
+            node_id a = S1[i].Id(), b = S2[j].Id();
+
+            if (PartnerInSecondTree(a, m) == b)
+                if (!FindPair(a, b, lcs1, lcs2))
+                {
+                    // (a) k <- FindPos(b)
+                    unsigned k = FindPos(b);
+
+                    EditOperation::Move *mov;
+                    mov = new EditOperation::Move(a, w, k);
+
+                    // (b) Append MOV(a, w, k) to E...
+                    escript->push_back(mov);
+
+                    // (b) Apply MOV(a, w, k) to T1
+                    mov->Apply(nodes1);
+
+                    // (c) Mark a and b "in order"
+                    S1[i].SetInOrder();
+                    S2[j].SetInOrder();
+                }
+        }
+    }
+    IFTRACE(diff)
+       std::cout << " AlignChildren done.\n";
+}
+
+bool TreeDiff::FindPair(node_id a, node_id b,
+                        node_vector_align s1, node_vector_align s2)
+{
+   for (unsigned int i = 0; i < s1.size(); i++)
+       if (s1[i].Id() == a && s2[i].Id() == b)
+           return true;
+   return false;
 }
 
 void TreeDiff::Diff()
@@ -569,8 +745,14 @@ void TreeDiff::Diff()
     SetParentPointers(t2);
 
     IFTRACE(diff)
-        std::cout << "T1:\n" << nodes1 << "\n"
-                  << "T2:\n" << nodes2 << "\n";
+    {
+        std::cout << "T1:";
+        debugp(t1);
+        std::cout << "T1 nodes:\n" << nodes1 << "\n";
+        std::cout << "T2:";
+        debugp(t2);
+        std::cout << "T2 nodes:\n" << nodes2 << "\n";
+    }
 
     // Find a "good" matching between t1 and t2
     DoFastMatch();
@@ -582,8 +764,11 @@ void TreeDiff::Diff()
     DoEditScript();
 
     IFTRACE(diff)
+    {
         std::cout << "Edit script:\n" << *escript << "\n"
-                  << "T1 (after transformation):\n" << nodes1 << "\n";
+                  << "T1 (after transformation):";
+        debugp(t1);
+    }
 }
 
 bool TreeDiff::Node::operator ==(const TreeDiff::Node &n)
@@ -598,6 +783,13 @@ bool TreeDiff::Node::operator ==(const TreeDiff::Node &n)
         return LeafEqual(t1, t2);
     else
         return NonLeafEqual(t1, t2, *(t1->Get<TreeDiffInfo>()));
+}
+
+bool TreeDiff::NodeForAlign::operator ==(const TreeDiff::NodeForAlign &n)
+{
+    if (!IsMatched())
+        return false;
+    return (PartnerInSecondTree(Id(), m) == n.Id());
 }
 
 unsigned int TreeDiff::Node::CountLeaves()
@@ -657,6 +849,8 @@ void EditOperation::Insert::Apply(TreeDiff::node_table &table)
     table[new_id] = leaf;
     leaf->Set2<ParentInfo>(parent_ptr);
     leaf->Set2<NodeIdInfo>(new_id);
+    SetChildVectorInfo scvi;
+    leaf->Do(scvi);
     std::vector<Tree *> *v = parent_ptr->Get<ChildVectorInfo>();
     v->insert(v->begin() + pos - 1, leaf);
 }
@@ -762,7 +956,7 @@ operator <<(std::ostream &out, XL::TreeDiff::node_table &m)
     {
         for (it = m.begin(); it != m.end(); it++)
         {
-            (*it).second->Do(pn);
+            (*it).second.GetTree()->Do(pn);
             out << std::endl;
         }
         return out;
@@ -771,7 +965,7 @@ operator <<(std::ostream &out, XL::TreeDiff::node_table &m)
     XL::TreeDiff::node_table::reverse_iterator rit;
     for (rit = m.rbegin(); rit != m.rend(); rit++)
     {
-        (*rit).second->Do(pn);
+        (*rit).second.GetTree()->Do(pn);
         out << std::endl;
     }
     return out;
@@ -785,7 +979,7 @@ operator <<(std::ostream &out, XL::TreeDiff::node_vector &m)
 {
     XL::PrintNode pn(out, true);
     for (unsigned i = 0; i < m.size(); i++)
-        m[i]->Do(pn);
+        m[i].GetTree()->Do(pn);
 
     return out;
 }
