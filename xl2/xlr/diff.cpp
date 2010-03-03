@@ -765,10 +765,11 @@ void TreeDiff::Diff()
 
     IFTRACE(diff)
     {
-        std::cout << "Edit script:\n" << *escript << "\n"
-                  << "T1 (after transformation):";
+        std::cout << "T1 (after transformation):";
         debugp(t1);
     }
+
+    std::cout << *escript;
 }
 
 bool TreeDiff::Node::operator ==(const TreeDiff::Node &n)
@@ -1078,6 +1079,8 @@ operator <<(std::ostream &out, XL::EditScript &s)
         it++;
         if (it != s.end())
             out << ", ";
+        else
+            out << std::endl;
     }
     return out;
 }
