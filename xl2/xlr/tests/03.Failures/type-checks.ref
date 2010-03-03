@@ -1,1 +1,1 @@
-03.Failures/type-checks.xl:2: No form matches 'cos 0'
+03.Failures/type-checks.xl:2: No form matches 'cos "A"'

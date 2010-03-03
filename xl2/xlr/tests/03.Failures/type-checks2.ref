@@ -1,2 +1,2 @@
-WARNING: Tree 'cos 0' has no symbols
-03.Failures/type-checks2.xl:2: No form matches 'cos 0'
+WARNING: Tree 'cos "A"' has no symbols
+03.Failures/type-checks2.xl:2: No form matches 'cos "A"'

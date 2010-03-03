@@ -38,7 +38,6 @@ namespace llvm
 {
     class LLVMContext;
     class Module;
-    class ModuleProvider;
     class ExecutionEngine;
     class FunctionPassManager;
     class StructType;
@@ -91,7 +90,6 @@ struct Compiler
 public:
     llvm::LLVMContext         *context;
     llvm::Module              *module;
-    llvm::ModuleProvider      *provider;
     llvm::ExecutionEngine     *runtime;
     llvm::FunctionPassManager *optimizer;
     llvm::StructType          *treeTy;
