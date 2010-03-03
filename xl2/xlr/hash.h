@@ -80,6 +80,8 @@ struct TreeHashAction : Action
 public:
     TreeHashAction (Mode mode = Default) : mode(mode), compute() {}
 
+    void reset() { compute.reset(); }
+
     bool NeedHash(Tree *t)
     // ------------------------------------------------------------------------
     //   Decide if we need to hash for that tree

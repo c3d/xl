@@ -52,6 +52,7 @@ struct Sha1
         Computation();
         Computation &   operator() (const void *inbuf, size_t inlen);
         byte *          Result() { return finalize().buf; }
+        void            reset();
 
     private:
         Computation &   transform(byte *data);
