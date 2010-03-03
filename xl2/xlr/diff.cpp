@@ -31,10 +31,13 @@
 #include "postorder.h"
 #include "lcs.h"
 #include "options.h"
+#include "hash.h"
 #include <iostream>
 #include <cassert>
 
 XL_BEGIN
+
+#include "sha1_ostream.h" // Won't work outside of XL namespace
 
 TreeDiff::TreeDiff(Tree *t1, Tree *t2) : t1(NULL), t2(t2), escript(NULL)
 {
@@ -739,7 +742,12 @@ void TreeDiff::Diff()
     t1->Set2<MatchedInfo>(true);
     t2->Set2<MatchedInfo>(true);
 
-    // First, assign some IDs to tree nodes and build node tables.
+    HashInfo<>::data_t h1, h2;
+    TreeHashAction<> h_action(TreeHashAction<>::Force);
+    t2->Do(h_action);
+    h2 = t2->Get< HashInfo<> >();
+
+    // Assign some IDs to tree nodes and build node tables.
     // The first tree is numbered starting from 1, while the second one
     // is numbered with negative integers (-1, -2, etc.)
     // Start from 0 to account for the dummy root nodes
@@ -776,6 +784,14 @@ void TreeDiff::Diff()
     }
 
     std::cout << *escript;
+
+    h_action.reset();
+    t1->Do(h_action);
+    h1 = t1->Get< HashInfo<> >();
+    if (h1 != h2)
+        std::cerr << "Error: T2 and T1 (after transformation) "
+                  << "are not identical!\n"
+                  << "Error: [" << h2 << " / " << h1 << "]\n";
 }
 
 bool TreeDiff::Node::operator ==(const TreeDiff::Node &n)
