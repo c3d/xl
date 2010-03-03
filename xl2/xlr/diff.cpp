@@ -39,8 +39,11 @@ XL_BEGIN
 TreeDiff::TreeDiff(Tree *t1, Tree *t2) : t1(NULL), t2(t2), escript(NULL)
 {
     // Make a deep copy because the diff algorithm needs to modify the tree
-    TreeClone clone;
-    this->t1 = t1->Do(clone);
+    if (t1)
+    {
+        TreeClone clone;
+        this->t1 = t1->Do(clone);
+    }
 }
 
 TreeDiff::~TreeDiff()
@@ -100,7 +103,7 @@ void TreeDiff::CreateChildVectors(Tree *t)
 
 void TreeDiff::UpdateChildren(Tree *t)
 // ----------------------------------------------------------------------------
-//    Sync child pointers after an edit operation
+//    Sync child pointers after an edit operation and check tree consistency
 // ----------------------------------------------------------------------------
 {
     SyncWithChildVectorInfo action;
@@ -510,7 +513,10 @@ void TreeDiff::DoEditScript()
         }
     }
 
-    UpdateChildren(t1);
+    if (t1->Get<ChildVectorInfo>()->size())
+        UpdateChildren(t1);
+    else
+        ((Block *)t1)->child = NULL;
 
     IFTRACE(diff)
        std::cout << "DoEditScript done\n";

@@ -186,7 +186,15 @@ int Main::LoadFile(text file)
 
     if (!tree)
     {
-        hadError = true;
+        if (options.doDiff)
+        {
+            files[file] = SourceFile (file, NULL, NULL);
+            hadError = false;
+        }
+        else
+        {
+            hadError = true;
+        }
         return hadError;
     }
     Symbols *syms = &context;

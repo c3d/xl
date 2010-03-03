@@ -261,7 +261,8 @@ struct SetParentInfo : Action
     }
     Tree *DoBlock(Block *what)
     {
-        what->child->Set2<ParentInfo>(what);
+        if (what->child)
+            what->child->Set2<ParentInfo>(what);
         return NULL;
     }
     Tree *DoInfix(Infix *what)

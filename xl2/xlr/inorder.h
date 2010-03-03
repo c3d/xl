@@ -41,8 +41,9 @@ struct InOrderTraversal : Action
         action(action), fullScan(fullScan) {}
     Tree *DoBlock(Block *what)
     {
-        Tree * ret;
-        ret = Do(what->child);
+        Tree * ret = NULL;
+        if (what->child)
+            ret = Do(what->child);
         if (!fullScan && ret)
             return ret;
         return what->Do(action);
