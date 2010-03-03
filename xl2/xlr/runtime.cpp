@@ -292,9 +292,9 @@ Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
         unit.CallClosure(result, ntrees);
         fn = unit.Finalize();
         compiler->closures[ntrees] = fn;
+        compiler->functions.erase(result);
     }
     result->code = fn;
-    compiler->closet.insert(result);
 
     return result;
 }

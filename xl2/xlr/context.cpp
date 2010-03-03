@@ -626,9 +626,6 @@ Context::~Context()
 //   Delete all globals allocated by that context
 // ----------------------------------------------------------------------------
 {
-    globals_table::iterator g;
-    for (g = globals.begin(); g != globals.end(); g++)
-        delete *g;
     if (context == this)
         context = NULL;
 }
@@ -643,56 +640,6 @@ Tree **Context::AddGlobal(Tree *value)
     *ptr = value;
     return ptr;
 }
-
-
-struct GCAction : Action
-// ----------------------------------------------------------------------------
-//   Mark trees for garbage collection and compute active set
-// ----------------------------------------------------------------------------
-{
-    GCAction (): alive() {}
-    ~GCAction () {}
-
-    bool Mark(Tree *what)
-    {
-        typedef std::pair<active_set::iterator, bool> inserted;
-        inserted ins = alive.insert(what);
-        if (Symbols *syms = what->Get<SymbolsInfo> ())
-            alive_symbols.insert(syms);
-        return ins.second;
-    }
-    Tree *Do(Tree *what)
-    {
-        Mark(what);
-        return what;
-    }
-    Tree *DoBlock(Block *what)
-    {
-        if (Mark(what))
-            Action::DoBlock(what);              // Do child
-        return what;
-    }
-    Tree *DoInfix(Infix *what)
-    {
-        if (Mark(what))
-            Action::DoInfix(what);              // Do children
-        return what;
-    }
-    Tree *DoPrefix(Prefix *what)
-    {
-        if (Mark(what))
-            Action::DoPrefix(what);             // Do children
-        return what;
-    }
-    Tree *DoPostfix(Postfix *what)
-    {
-        if (Mark(what))
-            Action::DoPostfix(what);            // Do children
-        return what;
-    }
-    active_set  alive;
-    symbols_set alive_symbols;
-};
 
 
 void Context::CollectGarbage ()
@@ -729,28 +676,27 @@ void Context::CollectGarbage ()
         for (f = formats.begin(); f != formats.end(); f++)
             (*f).second->Do(gc);
 
-        globals_table::iterator g;
-        for (g = globals.begin(); g != globals.end(); g++)
-            (**g)->Do(gc);
+        // Mark all resources in the LLVM generated code that want to free
+        // (this may mark some trees as not eligible for deletion)
+        active_set::iterator a;
+        if (compiler)
+        {
+            for (a = active.begin(); a != active.end(); a++)
+                if (!gc.alive.count(*a))
+                    compiler->FreeResources(gc, *a);
+            compiler->FreeResources(gc);
+        }
 
         // Then delete all trees in active set that are no longer referenced
-        for (active_set::iterator a = active.begin();
-             a != active.end();
-             a++)
+        for (a = active.begin(); a != active.end(); a++)
         {
             activeCount++;
             if (!gc.alive.count(*a))
             {
                 deletedCount++;
-                if (compiler)
-                    compiler->FreeResources(*a);
                 delete *a;
             }
         }
-
-        // If we have deleted any tree, then perform final cleanup
-        if (deletedCount)
-            compiler->FreeResources();
 
         // Same with the symbol tables
         symbols_set::iterator as;

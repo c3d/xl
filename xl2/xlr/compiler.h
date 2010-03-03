@@ -51,8 +51,9 @@ XL_BEGIN
 
 struct CompiledUnit;
 struct Options;
+struct GCAction;
 typedef std::map<text, llvm::Function *>   builtins_map;
-typedef std::map<TreeRoot, llvm::Value *>  value_map;
+typedef std::map<Tree *, llvm::Value *>    value_map;
 typedef std::map<Tree *, llvm::Function *> function_map;
 typedef std::map<uint, eval_fn>            closure_map;
 typedef std::set<Tree *>                   closure_set;
@@ -82,8 +83,8 @@ struct Compiler
     bool                      IsKnown(Tree *value);
     llvm::Value *             Known(Tree *value);
 
-    void                      FreeResources(Tree *tree);
-    void                      FreeResources();
+    void                      FreeResources(GCAction &gc, Tree *tree);
+    void                      FreeResources(GCAction &gc);
 
     void                      Reset();
 
@@ -125,7 +126,6 @@ public:
     function_map               functions;
     value_map                  globals;
     closure_map                closures;
-    closure_set                closet;
     deleted_set                deleted;
     closure_map                array_to_args_adapters;
 };

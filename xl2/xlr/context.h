@@ -153,7 +153,6 @@ typedef std::set<Symbols *>       symbols_set;  // Set of symbol tables
 typedef std::vector<Symbols *>    symbols_list; // List of symbols table
 typedef std::map<ulong, Rewrite*> rewrite_table;// Hashing of rewrites
 typedef symbol_table::iterator    symbol_iter;  // Iterator over sym table
-typedef std::vector<Tree **>      globals_table;// Table of LLVM globals
 typedef std::map<Tree*, Symbols*> capture_table;// Symbol capture table
 typedef std::map<Tree *, Tree *>  value_table;  // Used for value caching
 typedef value_table::iterator     value_iter;   // Used to iterate over values
@@ -253,7 +252,6 @@ public:
     root_set            roots;
     symbols_set         active_symbols;
     ulong               gc_threshold;
-    globals_table       globals;
 };
 
 
@@ -503,6 +501,62 @@ public:
     bool           saveNullIfBad;       // Unit original "nib" settings
 };
 
+
+
+// ============================================================================
+// 
+//   Garbage collection of trees - Mark trees that are alive from root
+// 
+// ============================================================================
+
+struct GCAction : Action
+// ----------------------------------------------------------------------------
+//   Mark trees for garbage collection and compute active set
+// ----------------------------------------------------------------------------
+{
+    GCAction (): alive(), alive_symbols() {}
+    ~GCAction () {}
+
+    bool Mark(Tree *what)
+    {
+        typedef std::pair<active_set::iterator, bool> inserted;
+        inserted ins = alive.insert(what);
+        if (Symbols *syms = what->Get<SymbolsInfo> ())
+            alive_symbols.insert(syms);
+        return ins.second;
+    }
+    Tree *Do(Tree *what)
+    {
+        Mark(what);
+        return what;
+    }
+    Tree *DoBlock(Block *what)
+    {
+        if (Mark(what))
+            Action::DoBlock(what);              // Do child
+        return what;
+    }
+    Tree *DoInfix(Infix *what)
+    {
+        if (Mark(what))
+            Action::DoInfix(what);              // Do children
+        return what;
+    }
+    Tree *DoPrefix(Prefix *what)
+    {
+        if (Mark(what))
+            Action::DoPrefix(what);             // Do children
+        return what;
+    }
+    Tree *DoPostfix(Postfix *what)
+    {
+        if (Mark(what))
+            Action::DoPostfix(what);            // Do children
+        return what;
+    }
+    active_set  alive;
+    symbols_set alive_symbols;
+};
 
 
 // ============================================================================

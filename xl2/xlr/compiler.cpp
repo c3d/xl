@@ -156,6 +156,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     DwarfExceptionHandling = true;   // Present in 2.6, but crashes
     JITEmitDebugInfo = true;         // Not present in 2.6
     UnwindTablesMandatory = true;
+    // PerformTailCallOpt = true;
     NoFramePointerElim = true;
 
     // Install a fallback mechanism to resolve references to the runtime, on
@@ -288,7 +289,6 @@ void Compiler::Reset()
     functions.clear();
     globals.clear();
     closures.clear();
-    closet.clear();
     deleted.clear();
 }
 
@@ -497,7 +497,7 @@ Value *Compiler::Known(Tree *tree)
 }
 
 
-void Compiler::FreeResources(Tree *tree)
+void Compiler::FreeResources(GCAction &gc, Tree *tree)
 // ----------------------------------------------------------------------------
 //   Free the LLVM resources associated to the tree, if any
 // ----------------------------------------------------------------------------
@@ -506,9 +506,8 @@ void Compiler::FreeResources(Tree *tree)
 //   calling foo(), we will get an LLVM assert deleting one while the
 //   other's body still makes a reference.
 {
-    if (functions.count(tree) > 0 && closet.count(tree) == 0)
+    if (functions.count(tree) > 0)
     {
-        std::cerr << "Freed one tree\n";
         Function *f = functions[tree];
         f->deleteBody();
         runtime->freeMachineCodeForFunction(f);
@@ -517,7 +516,7 @@ void Compiler::FreeResources(Tree *tree)
 }
 
 
-void Compiler::FreeResources()
+void Compiler::FreeResources(GCAction &gc)
 // ----------------------------------------------------------------------------
 //   Delete LLVM functions for all trees we want to erase
 // ----------------------------------------------------------------------------
@@ -528,11 +527,38 @@ void Compiler::FreeResources()
         std::cerr << "Freed functions\n";
         deleted_set::iterator i = deleted.begin();
         Tree *tree = *i;
-        Function *f = functions[tree];
-        delete f;               // Now safe to do
-        functions.erase(tree);
-        globals.erase(tree);
-        closet.erase(tree);
+        if (functions.count(tree) > 0)
+        {
+            Function *f = functions[tree];
+            if (f->use_empty())
+            {
+                // Delete the LLVM function now that it's safe to do
+                delete f;
+                functions.erase(tree);
+            }
+            else
+            {
+                // Mark the tree back in XLR so that we keep it around
+                tree->Do(gc);
+            }
+        }
+        if (globals.count(tree) > 0)
+        {
+            Value *v = globals[tree];
+            if (v->use_empty())
+            {
+                // Delete the LLVM function now that it's safe to do
+                delete v;
+                globals.erase(tree);
+            }
+            else
+            {
+                // Mark the tree back in XLR so that we keep it around
+                tree->Do(gc);
+            }
+        }
+
+        // This tree has been analyzed
         deleted.erase(tree);
     }
 }
@@ -1522,7 +1548,7 @@ void debugm(XL::value_map &m)
     XL::value_map::iterator i;
     llvm::raw_stderr_ostream llvmstderr;
     for (i = m.begin(); i != m.end(); i++)
-        llvmstderr << "map[" << (*i).first.tree << "]=" << *(*i).second << '\n';
+        llvmstderr << "map[" << (*i).first << "]=" << *(*i).second << '\n';
 }
 
 
