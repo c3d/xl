@@ -1380,7 +1380,7 @@ Tree *ArgumentMatch::DoName(Name *what)
             }
 
             // Insert a dynamic tree comparison test
-            Tree *testCode = CompileValue(test);
+            Tree *testCode = Compile(test);
             if (!testCode)
                 return NULL;
             Tree *thisCode = Compile(existing);
