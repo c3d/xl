@@ -311,7 +311,6 @@ int Main::Diff()
 // ----------------------------------------------------------------------------
 {
     source_names::iterator file;
-    bool hadError = false;
 
     file = file_names.begin();
     SourceFile &sf1 = files[*file];
@@ -322,9 +321,7 @@ int Main::Diff()
     Tree *t2 = sf2.tree.tree;
 
     TreeDiff d(t1, t2);
-    d.Diff();
-
-    return hadError;
+    return d.Diff(std::cout);
 }
 
 

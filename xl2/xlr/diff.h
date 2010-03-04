@@ -433,7 +433,7 @@ struct TreeDiff
     TreeDiff (Tree *t1, Tree *t2);
     virtual ~TreeDiff();
 
-    void Diff();
+    bool Diff(std::ostream& os);
 
 protected:
 
@@ -605,10 +605,11 @@ protected:
 
 protected:
 
+    bool     Diff();
     void     DoFastMatch();
     void     DoEditScript();
-    unsigned FindPos(node_id x);                   // TODO
-    void     AlignChildren(node_id w, node_id x);  // TODO
+    unsigned FindPos(node_id x);
+    void     AlignChildren(node_id w, node_id x);
 
     node_id AssignNodeIds(Tree *t, node_table &m, node_id from_id = 1,
                           node_id step = 1);

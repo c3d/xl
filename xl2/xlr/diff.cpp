@@ -726,9 +726,9 @@ bool TreeDiff::FindPair(node_id a, node_id b,
    return false;
 }
 
-void TreeDiff::Diff()
+bool TreeDiff::Diff()
 // ----------------------------------------------------------------------------
-//    Compute the difference between the two trees. Returns an Edit Script.
+//    Compute the difference between the two trees (Edit Script)
 // ----------------------------------------------------------------------------
 {
     // We first add a dummy root node (a block) to both trees so that the
@@ -783,15 +783,28 @@ void TreeDiff::Diff()
         debugp(t1);
     }
 
-    std::cout << *escript;
-
     h_action.reset();
     t1->Do(h_action);
     h1 = t1->Get< HashInfo<> >();
     if (h1 != h2)
-        std::cerr << "Error: T2 and T1 (after transformation) "
+    {
+        std::cerr << "Diff error: T2 and T1 (after transformation) "
                   << "are not identical!\n"
-                  << "Error: [" << h2 << " / " << h1 << "]\n";
+                  << "Diff error: [" << h2 << " / " << h1 << "]\n";
+        return true;
+    }
+
+    return false;
+}
+
+bool TreeDiff::Diff(std::ostream &os)
+// ----------------------------------------------------------------------------
+//    Compute tree diff and display it to os. Return true if error.
+// ----------------------------------------------------------------------------
+{
+    bool hadError = Diff();
+    os << *escript;
+    return hadError;
 }
 
 bool TreeDiff::Node::operator ==(const TreeDiff::Node &n)
