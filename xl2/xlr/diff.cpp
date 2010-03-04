@@ -437,6 +437,10 @@ void TreeDiff::DoEditScript()
             Mprime.insert(p);
             nodes1[w].SetMatched();
             nodes2[x].SetMatched();
+
+            // FIXME - Check this (not in [CDHSI])
+            t->Set<InOrderInfo>(true);
+            xptr->Set<InOrderInfo>(true);
         }
         else
         {
@@ -486,8 +490,12 @@ void TreeDiff::DoEditScript()
 
                     // D. Apply MOV(w, z, k) to T1
                     mov->Apply(nodes1);
+
+                    // FIXME - Check this (not in [CDHSI])
+                    xptr->Set<InOrderInfo>(true);
+                    wptr->Set<InOrderInfo>(true);
                 }
-		    }
+            }
         }
         
         // (d) AlignChildren(w, x)
