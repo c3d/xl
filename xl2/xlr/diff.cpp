@@ -251,22 +251,19 @@ float TreeDiff::Similarity(std::string s1, std::string s2)
     // This yields a score of 0 if the strings have nothing in common, and 1
     // if they are identical.
 
-    std::string *small = &s1;
-    std::string *big = &s2;
-
+    Words S1(s1), S2(s2), *small = &S1, *big   = &S2;
     if (s1.length() > s2.length())
     {
-        small = &s2;
-        big = &s1;
+        small = &S2;
+        big = &S1;
     }
 
-    if (big->length() == 0)
+    if (big->size() == 0)
         return 1.0;
 
-
-    LCS<std::string> lcs;
+    LCS<Words> lcs;
     lcs.Compute(*small, *big);
-    float ret = (float)lcs.Length() / big->length();
+    float ret = (float)lcs.Length() / big->size();
 
     return ret;
 #endif

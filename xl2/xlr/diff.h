@@ -31,15 +31,14 @@
 #include <list>
 #include <iostream>
 #include <math.h>
-
-#include <typeinfo> // Debug
+#include <sstream>
+#include <iterator>
 
 // When this macro is set, we use plain string comparison to determine whether
 // two text leaves should be matched (i.e., considered equal during the matching
 // phase).
 // When unset, leaves with strings that are just "similar enough" may be
 // matched.
-// FIXME: Longest Common Subsequence comparison is SLOW!
 //#define NO_LCS_STRCMP 1
 
 
@@ -605,6 +604,21 @@ protected:
             what->Purge<ChildVectorInfo>();
             return NULL;
         }
+    };
+
+    struct Words
+    {
+        Words(std::string &s)
+        {
+            std::istringstream iss(s);
+            std::copy(std::istream_iterator<std::string>(iss),
+                      std::istream_iterator<std::string>(),
+                      std::back_inserter< std::vector<std::string> >(words));
+        }
+        std::string& operator[] (size_t pos) { return words[pos]; }
+        size_t size() { return words.size(); }
+
+        std::vector<std::string> words;
     };
 
 protected:
