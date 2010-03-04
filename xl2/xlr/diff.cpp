@@ -59,10 +59,6 @@ TreeDiff::~TreeDiff()
     InOrderTraversal iot(purge);
     t2->Do(iot);
 
-    matching::iterator it;
-    for (it = m.begin(); it != m.end(); it++)
-        delete (*it);
-
     if (escript)
         delete escript;
 }
@@ -128,7 +124,7 @@ void TreeDiff::BuildChains(Tree *t, node_vector *out)
     t->Do(iot);
 }
 
-void TreeDiff::MatchOneKind(matching &M, node_vector &S1, node_vector &S2)
+void TreeDiff::MatchOneKind(Matching &M, node_vector &S1, node_vector &S2)
 // ----------------------------------------------------------------------------
 //    Find a matching between two series of nodes of the same kind
 // ----------------------------------------------------------------------------
@@ -156,8 +152,7 @@ void TreeDiff::MatchOneKind(matching &M, node_vector &S1, node_vector &S2)
         Node &x = lcs1[i], &y = lcs2[i];
         if (!x.IsMatched())
         {
-            NodePair *p = new NodePair(x.Id(), y.Id());
-            M.insert(p);
+            M.insert(x.Id(), y.Id());
             x.SetMatched();
             y.SetMatched();
         }
@@ -182,8 +177,7 @@ void TreeDiff::MatchOneKind(matching &M, node_vector &S1, node_vector &S2)
             if ((*x) == (*y))
             {
                 // A. Add (x,y) to M
-                NodePair *p = new NodePair((*x).Id(), (*y).Id());
-                M.insert(p);
+                M.insert((*x).Id(), (*y).Id());
                 // B. Mark x and y "matched".
                 (*x).SetMatched();
                 (*y).SetMatched();
@@ -366,11 +360,11 @@ bool TreeDiff::NonLeafEqual(Tree *t1, Tree *t2, TreeDiff &td)
     max = (c2 > c1) ? c2 : c1;
 
    // FIXME: this loop is quite time-consuming
-    matching &M = td.m;
-    matching::iterator it;
+    Matching &M = td.m;
+    Matching::iterator it;
     for (it = M.begin(); it != M.end(); it++)
     {
-        node_id wid = (*it)->x, zid = (*it)->y;
+        node_id wid = (*it).first, zid = (*it).second;
         const Node &x = Node(t1), &y = Node(t2);
         Tree *w = td.nodes1[wid].GetTree(), *z = td.nodes2[zid].GetTree();
 
@@ -398,7 +392,7 @@ void TreeDiff::DoEditScript()
     // 1.
     escript = new EditScript;
     EditScript &E = *escript;
-    matching &Mprime = m;
+    Matching &Mprime = m;
 
     // 2. Visit the nodes of T2 in breadth-first order
     XL::TreeDiff::node_table::reverse_iterator rit;
@@ -412,8 +406,8 @@ void TreeDiff::DoEditScript()
         node_id y = 0;
         if (px_ptr)
             y = px_ptr->Get<NodeIdInfo>();
-        node_id w = PartnerInFirstTree(x, Mprime);
-        node_id z = PartnerInFirstTree(y, Mprime);
+        node_id w = Mprime.fro[x];
+        node_id z = Mprime.fro[y];
         if (!nodes2[x].IsMatched())
         {
             // (b) x has no partner in M'
@@ -433,8 +427,7 @@ void TreeDiff::DoEditScript()
 
             // iii. Add (w, x) to M'
             w = t->Get<NodeIdInfo>();
-            NodePair *p = new NodePair(w, x);
-            Mprime.insert(p);
+            Mprime.insert(w, x);
             nodes1[w].SetMatched();
             nodes2[x].SetMatched();
 
@@ -472,12 +465,12 @@ void TreeDiff::DoEditScript()
                     // B. Apply UPD(w, v(x)) to T1
                     upd->Apply(nodes1);
                 }
-                if (y != PartnerInSecondTree(v, Mprime))
+                if (y != Mprime.to[v])
                 {
                     // iii. If (y, v) not in M'
                     
                     // A. Let z be the partner of y in M'
-                    node_id z = PartnerInFirstTree(y, Mprime);
+                    node_id z = Mprime.fro[y];
                     
                     // B. k <- FindPos(x)
                     unsigned k = FindPos(x);
@@ -533,30 +526,6 @@ void TreeDiff::DoEditScript()
        std::cout << "DoEditScript done\n";
 }
 
-// TODO: find a better type for 'matching' so that this can be implemented
-// with a direct access
-node_id TreeDiff::PartnerInFirstTree(node_id id, const matching &M)
-{
-    XL::TreeDiff::matching::iterator it;
-    for (it = M.begin(); it != M.end(); it++)
-        if ((*it)->y == id)
-            return (*it)->x;
-
-    return 0;
-}
-
-// TODO: find a better type for 'matching' so that this can be implemented
-// with a direct access
-node_id TreeDiff::PartnerInSecondTree(node_id id, const matching &M)
-{
-    XL::TreeDiff::matching::iterator it;
-    for (it = M.begin(); it != M.end(); it++)
-        if ((*it)->x == id)
-            return (*it)->y;
-
-    return 0;
-}
-
 unsigned TreeDiff::FindPos(node_id x)
 {
     // 1. Let y = p(x) in T2 and let w be the partner of x
@@ -606,7 +575,7 @@ unsigned TreeDiff::FindPos(node_id x)
     node_id v = vptr->Get<NodeIdInfo>();
 
     // 4. Let u be the partner of v in T1
-    node_id u = PartnerInFirstTree(v, m);
+    node_id u = m.fro[v];
 
     // 5. Suppose u is the ith child of its parent that is marked "in order."
     //    Return i+1.
@@ -654,7 +623,7 @@ void TreeDiff::AlignChildren(node_id w, node_id x)
     for (it = cv->begin(); it != cv->end() && (*it); it++)
     {
         node_id child = (*it)->Get<NodeIdInfo>();
-        node_id partner = PartnerInSecondTree(child, m);
+        node_id partner = m.to[child];
         if (nodes2[partner].GetTree()->Get<ParentInfo>() == xptr)
             S1.push_back(NodeForAlign(m, nodes1[child].GetTree()));
     }
@@ -666,7 +635,7 @@ void TreeDiff::AlignChildren(node_id w, node_id x)
     for (it = cv->begin(); it != cv->end() && (*it); it++)
     {
         node_id child = (*it)->Get<NodeIdInfo>();
-        node_id partner = PartnerInFirstTree(child, m);
+        node_id partner = m.fro[child];
         if (nodes1[partner].GetTree()->Get<ParentInfo>() == wptr)
             S2.push_back(NodeForAlign(m, nodes2[child].GetTree()));
     }
@@ -700,7 +669,7 @@ void TreeDiff::AlignChildren(node_id w, node_id x)
         {
             node_id a = S1[i].Id(), b = S2[j].Id();
 
-            if (PartnerInSecondTree(a, m) == b)
+            if (m.to[a] == b)
                 if (!FindPair(a, b, lcs1, lcs2))
                 {
                     // (a) k <- FindPos(b)
@@ -746,7 +715,7 @@ bool TreeDiff::Diff()
     // The dummy root nodes have ID 0
     t1 = new Block(t1, "<", ">");
     t2 = new Block(t2, "<", ">");
-    m.insert(new NodePair(0, 0));
+    m.insert(0, 0);
     t1->Set2<MatchedInfo>(true);
     t2->Set2<MatchedInfo>(true);
 
@@ -833,7 +802,7 @@ bool TreeDiff::NodeForAlign::operator ==(const TreeDiff::NodeForAlign &n)
 {
     if (!IsMatched())
         return false;
-    return (PartnerInSecondTree(Id(), m) == n.Id());
+    return (m.to[Id()] == n.Id());
 }
 
 unsigned int TreeDiff::Node::CountLeaves()
@@ -1029,14 +998,14 @@ operator <<(std::ostream &out, XL::TreeDiff::node_vector &m)
 }
 
 std::ostream&
-operator <<(std::ostream &out, XL::TreeDiff::matching &m)
+operator <<(std::ostream &out, XL::TreeDiff::Matching &m)
 // ----------------------------------------------------------------------------
 //    Display a matching (correspondence between nodes of two trees)
 // ----------------------------------------------------------------------------
 {
-    XL::TreeDiff::matching::iterator it;
+    XL::TreeDiff::Matching::iterator it;
     for (it = m.begin(); it != m.end(); it++)
-        out << (*it)->x << " -> " << (*it)->y << std::endl;
+        out << (*it).first << " -> " << (*it).second << std::endl;
 
     return out;
 }

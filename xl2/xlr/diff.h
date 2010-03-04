@@ -52,8 +52,7 @@ XL_BEGIN
 // ============================================================================
 
 struct TreeDiff;                        // The main class to do diff operations
-struct NodePair;                        // Two node identifiers
-typedef std::set<NodePair *> matching;  // A correspondence between tree nodes
+struct Matching;                        // Map tree nodes
 struct EditScript;                      // A list of edit operations
 
 // ============================================================================
@@ -62,17 +61,6 @@ struct EditScript;                      // A list of edit operations
 //
 // ============================================================================
 
-
-struct NodePair
-// ----------------------------------------------------------------------------
-//   A pair of node identifiers
-// ----------------------------------------------------------------------------
-{
-    NodePair(node_id x, node_id y): x(x), y(y) {}
-    virtual ~NodePair() {}
-
-    node_id x, y;
-};
 
 struct MatchedInfo : Info
 // ----------------------------------------------------------------------------
@@ -477,7 +465,7 @@ protected:
         Tree *t;
 
     public:
-        matching *m;
+        Matching *m;
     };
 
 public: // FIXME public for operator <<
@@ -495,14 +483,30 @@ public: // FIXME public for operator <<
     };
 
     typedef std::vector<TreeDiff::Node> node_vector;
-    typedef std::set<NodePair *> matching;
+
+    struct Matching
+    // ------------------------------------------------------------------------
+    //   Map some nodes back and forth between two trees
+    // ------------------------------------------------------------------------
+    {
+        typedef std::map<node_id, node_id>::iterator  iterator;
+        typedef std::map<node_id, node_id>::size_type size_type;
+
+        void insert(node_id x, node_id y) { to[x] = y; fro[y] = x; }
+        iterator begin() { return to.begin(); }
+        iterator end()   { return to.end(); }
+        size_type size() { return to.size(); }
+
+        std::map<node_id, node_id> to;
+        std::map<node_id, node_id> fro;
+    };
 
 protected:
 
     struct NodeForAlign : Node
     {
-        NodeForAlign(matching &m): Node(), m(m) {}
-        NodeForAlign(matching &m, Tree *t): Node(t), m(m) {}
+        NodeForAlign(Matching &m): Node(), m(m) {}
+        NodeForAlign(Matching &m, Tree *t): Node(t), m(m) {}
         bool operator == (const NodeForAlign &n);
         void SetInOrder(bool b = true)
         {
@@ -517,7 +521,7 @@ protected:
 
         // FIXME: call Node::operator= (?)
         NodeForAlign &operator =(const NodeForAlign &n) { m=n.m; t=n.t; return *this; }
-        matching &m;
+        Matching &m;
     };
     typedef std::vector<TreeDiff::NodeForAlign> node_vector_align;
 
@@ -615,14 +619,12 @@ protected:
                           node_id step = 1);
     void SetParentPointers(Tree *t);
     void BuildChains(Tree *allnodes, node_vector *out);
-    void MatchOneKind(matching &M, node_vector &S1, node_vector &S2);
+    void MatchOneKind(Matching &M, node_vector &S1, node_vector &S2);
     void CreateChildVectors(Tree *t);
     void UpdateChildren(Tree *t);
     bool FindPair(node_id a, node_id b,
                   node_vector_align s1, node_vector_align s2);
 
-    static node_id PartnerInFirstTree(node_id id, const matching &m);  // FIXME
-    static node_id PartnerInSecondTree(node_id id, const matching &m); // FIXME
     static bool LeafEqual(Tree *t1, Tree *t2);
     static bool NonLeafEqual(Tree *t1, Tree *t2, TreeDiff &m);
     static float Similarity(std::string s1, std::string s2);
@@ -632,7 +634,7 @@ protected:
     Tree *t1, *t2;
     node_table nodes1, nodes2;  // To access nodes by ID
     node_id t1_lastnodeid, t2_lastnodeid;
-    matching m;
+    Matching m;
     EditScript *escript;
 };
 
@@ -643,7 +645,7 @@ std::ostream&
 operator <<(std::ostream &out, XL::TreeDiff::node_vector &m);
 
 std::ostream&
-operator <<(std::ostream &out, XL::TreeDiff::matching &m);
+operator <<(std::ostream &out, XL::TreeDiff::Matching &m);
 
 
 // ============================================================================
