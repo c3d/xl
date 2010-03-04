@@ -1,0 +1,1 @@
+// CMD= %x -parse -diff %d/prefix-name-text.src /dev/null >/dev/null
