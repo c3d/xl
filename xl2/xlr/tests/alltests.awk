@@ -7,6 +7,8 @@ BEGIN {
     sub("[.]xl", "", base);
     csource=file;
     sub("[.]xl", ".c", csource);
+    subdir=file;
+    sub("/[^/]*$", "", subdir);
 }
 /\/\/ [A-Z]+=/ {
     name=substr($1, 4);
@@ -15,6 +17,7 @@ BEGIN {
     gsub("%f", file, value);
     gsub("%b", base, value);
     gsub("%c", csource, value);
+    gsub("%d", subdir, value);
     print name "='" value "'";
 }
 
