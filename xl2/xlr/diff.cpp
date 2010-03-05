@@ -156,6 +156,34 @@ void TreeDiff::DoFastMatch()
         MatchOneKind(m, S1, S2);
     }
 
+    // In order to match internal nodes, we need to count common leaves (given
+    // the leaf matching)
+    IFTRACE(diff)
+        std::cout << " Counting common leaves..." << std::flush;
+    Matching::iterator mit;
+    for (mit = m.begin(); mit != m.end(); mit++)
+    {
+        node_id a = (*mit).first, b = (*mit).second;
+        for (Tree *x = nodes1[a].Parent(); x; x = x->Get<ParentInfo>())
+        {
+            std::map<node_id, unsigned int> * c;
+            CommonLeavesInfo *i = x->GetInfo<CommonLeavesInfo>();
+            if (!i)
+            {
+                c = new std::map<node_id, unsigned int>;
+                x->Set2<CommonLeavesInfo>(c);
+                (*c)[0] = 0;
+            }
+            else
+              c = (CommonLeavesInfo::data_t) *i;
+
+            for (Tree *y = nodes2[b].Parent(); y; y = y->Get<ParentInfo>())
+                (*c)[y->Get<NodeIdInfo>()]++;
+        }
+    }
+    IFTRACE(diff)
+        std::cout << " done\n";
+
     // FIXME:
     // TreeDiff object (this) must be available to each Node of first tree
     // because it is used by Node::operator== for internal nodes.
@@ -299,20 +327,13 @@ bool TreeDiff::NonLeafEqual(Tree *t1, Tree *t2, TreeDiff &td)
     c1 = n1.LeafCount();
     c2 = n2.LeafCount();
     max = (c2 > c1) ? c2 : c1;
-
-   // FIXME: this loop is quite time-consuming
-    Matching &M = td.m;
-    Matching::iterator it;
-    for (it = M.begin(); it != M.end(); it++)
+    CommonLeavesInfo::map * cmn = t1->Get<CommonLeavesInfo>();
+    if (cmn)
     {
-        node_id wid = (*it).first, zid = (*it).second;
-        const Node &x = Node(t1), &y = Node(t2);
-        Tree *w = td.nodes1[wid].GetTree(), *z = td.nodes2[zid].GetTree();
-
-        if (x.ContainsLeaf(w) && y.ContainsLeaf(z))
-            common++;
+        CommonLeavesInfo::map::iterator it = cmn->find(n2.Id());
+        if (it != cmn->end())
+            common = (*it).second;
     }
-
     float percent = (float)common / max;
 
     return (percent > 0.5);
@@ -477,7 +498,7 @@ void TreeDiff::DoEditScript()
 unsigned TreeDiff::FindPos(node_id x)
 {
     // 1. Let y = p(x) in T2 and let w be the partner of x
-    Tree *yptr = nodes2[x].GetTree()->Get<ParentInfo>();
+    Tree *yptr = nodes2[x].Parent();
     assert(yptr);
 
     // 2. If x is the leftmost child of y that is marked "in order", return 1
@@ -527,7 +548,7 @@ unsigned TreeDiff::FindPos(node_id x)
 
     // 5. Suppose u is the ith child of its parent that is marked "in order."
     //    Return i+1.
-    Tree *pu_ptr = nodes1[u].GetTree()->Get<ParentInfo>();
+    Tree *pu_ptr = nodes1[u].Parent();
     assert (pu_ptr);
     cv = pu_ptr->Get<ChildVectorInfo>();
     unsigned count = 0;
@@ -572,7 +593,7 @@ void TreeDiff::AlignChildren(node_id w, node_id x)
     {
         node_id child = (*it)->Get<NodeIdInfo>();
         node_id partner = m.to[child];
-        if (nodes2[partner].GetTree()->Get<ParentInfo>() == xptr)
+        if (nodes2[partner].Parent() == xptr)
             S1.push_back(NodeForAlign(m, nodes1[child].GetTree()));
     }
 
@@ -584,7 +605,7 @@ void TreeDiff::AlignChildren(node_id w, node_id x)
     {
         node_id child = (*it)->Get<NodeIdInfo>();
         node_id partner = m.fro[child];
-        if (nodes1[partner].GetTree()->Get<ParentInfo>() == wptr)
+        if (nodes1[partner].Parent() == wptr)
             S2.push_back(NodeForAlign(m, nodes2[child].GetTree()));
     }
 
@@ -773,31 +794,6 @@ bool TreeDiff::NodeForAlign::operator ==(const TreeDiff::NodeForAlign &n)
     if (!IsMatched())
         return false;
     return (m.to[Id()] == n.Id());
-}
-
-bool TreeDiff::Node::ContainsLeaf(Tree *leaf) const
-// ----------------------------------------------------------------------------
-//    Return true if node_id is a leaf and a child of current node
-// ----------------------------------------------------------------------------
-{
-   // FIXME: optimize? A std::map<Tree *, bool> in each leaf (so that
-   // tab[parent_ptr] is true if parent_ptr is a parent node of leaf)
-   // does not improve performance (36.95s to FastMatch 8lorem vs. 36.14s
-   // without optimization...)
-
-    if (!leaf->IsLeaf())
-        return false;
-
-    Tree *cur = leaf;
-    while (cur)
-    {
-        if (cur == t)
-            return true;
-        if (!cur->Exists<ParentInfo>())
-            return false;
-        cur = cur->Get<ParentInfo>();
-    }
-    return false;
 }
 
 void EditOperation::Insert::Apply(TreeDiff::node_table &table)

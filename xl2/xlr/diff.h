@@ -126,6 +126,21 @@ struct ChildVectorInfo : Info
     data_t p;
 };
 
+struct CommonLeavesInfo : Info
+// ----------------------------------------------------------------------------
+//   A pointer to map that stores a leaf count
+// ----------------------------------------------------------------------------
+{
+    // For a given node in tree T1, the following map is indexed by nodes in T2
+    // The value is the number of leaves that the two nodes have in common
+    // with respect to the current leaf matching in the TreeDiff class
+    typedef std::map<node_id, unsigned int> map;
+    typedef map * data_t;
+    CommonLeavesInfo(data_t p): p(p) {}
+    operator data_t() { return p; }
+    data_t p;
+};
+
 struct PrintNode : Action
 // ----------------------------------------------------------------------------
 //   Display a node
@@ -527,9 +542,16 @@ protected:
         }
         unsigned int LeafCount()
         {
+            if (!t)
+                return 0;
             return t->Get<LeafCountInfo>();
         }
-        bool ContainsLeaf(Tree *leaf) const;
+        Tree * Parent()
+        {
+            if (!t || !t->Exists<ParentInfo>())
+                return NULL;
+            return (t->Get<ParentInfo>());
+        }
 
     protected:
 
@@ -660,6 +682,7 @@ protected:
             what->Purge<LeafCountInfo>();
             what->Purge<ParentInfo>();
             what->Purge<ChildVectorInfo>();
+            what->Purge<CommonLeavesInfo>();
             return NULL;
         }
     };
