@@ -77,13 +77,13 @@ void TreeDiff::MatchOneKind(Matching &M, node_vector &S1, node_vector &S2)
     // Compute the Longest Common Subsequence in the node chains of
     // both trees...
     IFTRACE(diff)
-        std::cout << "   Running LCS...";
+        std::cout << "   Running LCS..." << std::flush;
     node_vector lcs1, lcs2;
     LCS<node_vector> lcs_algo;
     lcs_algo.Compute(S1, S2);
     lcs_algo.Extract2(S1, lcs1, S2, lcs2);
     IFTRACE(diff)
-        std::cout << " done.\n";
+        std::cout << " done, " << lcs1.size() << " node(s)\n";
 
     // ...add node pairs to matching...
     for (unsigned int i = 0; i < lcs1.size(); i++)
@@ -100,7 +100,8 @@ void TreeDiff::MatchOneKind(Matching &M, node_vector &S1, node_vector &S2)
     // Nodes still unmatched after the call to LCS are processed using
     // linear search
     IFTRACE(diff)
-        std::cout << "   Running linear matching...";
+        std::cout << "   Running linear matching..." << std::flush;
+    unsigned count = 0;
     node_vector::iterator x, y;
     for (x = S1.begin(); x != S1.end(); x++)
     {
@@ -120,12 +121,13 @@ void TreeDiff::MatchOneKind(Matching &M, node_vector &S1, node_vector &S2)
                 // B. Mark x and y "matched".
                 (*x).SetMatched();
                 (*y).SetMatched();
+                count++;
                 break;
             }
         }
     }
     IFTRACE(diff)
-        std::cout << " done.\n";
+        std::cout << " done, " << count << " node(s)\n";
 }
 
 void TreeDiff::DoFastMatch()
@@ -545,15 +547,15 @@ void TreeDiff::AlignChildren(node_id w, node_id x)
 //    Generate Move operations if children of w and x are mis-aligned
 // ----------------------------------------------------------------------------
 {
-    IFTRACE(diff)
-       std::cout << " Entering AlignChildren(" << w << ", " << x << ")\n";
-
     Tree * wptr = nodes1[w].GetTree();
     assert(wptr);
     if (wptr->IsLeaf())
         return;
     Tree * xptr = nodes2[x].GetTree();
     assert(xptr);
+
+    IFTRACE(diff)
+       std::cout << " Entering AlignChildren(" << w << ", " << x << ")\n";
 
     std::vector<Tree *> *cv;
     std::vector<Tree *>::iterator it;
@@ -597,7 +599,7 @@ void TreeDiff::AlignChildren(node_id w, node_id x)
     lcs_algo.Compute(S1, S2);
     lcs_algo.Extract2(S1, lcs1, S2, lcs2);
     IFTRACE(diff)
-        std::cout << " done.\n";
+        std::cout << " done, " << lcs1.size() << " node(s)\n";
 
     // 5. For each (a,b) in S, mark nodes a and b "in order"
     for (unsigned int i = 0; i < lcs1.size(); i++)
@@ -608,6 +610,9 @@ void TreeDiff::AlignChildren(node_id w, node_id x)
     }
 
 
+    IFTRACE(diff)
+        std::cout << "  Moving nodes..." << std::flush;
+    unsigned count = 0;
     // 6. For each a in S1, b in S2 such that (a, b) in M but (a, b) not in S
     for (unsigned int i = 0; i < S1.size(); i++)
     {
@@ -633,9 +638,13 @@ void TreeDiff::AlignChildren(node_id w, node_id x)
                     // (c) Mark a and b "in order"
                     S1[i].SetInOrder();
                     S2[j].SetInOrder();
+
+                    count++;
                 }
         }
     }
+    IFTRACE(diff)
+        std::cout << " done, " << count << " node(s)\n";
     IFTRACE(diff)
        std::cout << " AlignChildren done.\n";
 }
