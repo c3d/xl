@@ -63,67 +63,6 @@ TreeDiff::~TreeDiff()
         delete escript;
 }
 
-node_id TreeDiff::AssignNodeIds(Tree *t, node_table &m, node_id from_id,
-                                node_id step)
-// ----------------------------------------------------------------------------
-//    Assign a node_id identifier to each node of a tree and build a node map
-// ----------------------------------------------------------------------------
-{
-    // Nodes are numbered in breadth-first order
-    // This is important for the edit script generation algorithm
-
-    TreeDiff::SetNodeIdAction action(m, from_id, step);
-    BreadthFirstSearch bfs(action);
-    t->Do(bfs);
-    m.SetNextId(action.id);
-    m.SetStep(step);
-    return action.id;
-}
-
-void TreeDiff::SetParentPointers(Tree *t)
-// ----------------------------------------------------------------------------
-//    Set ParentInfo (pointer to parent node) in each node of t 
-// ----------------------------------------------------------------------------
-{
-    SetParentInfo action;
-    BreadthFirstSearch bfs(action);
-    t->Do(bfs);
-}
-
-void TreeDiff::CreateChildVectors(Tree *t)
-// ----------------------------------------------------------------------------
-//    Prepare tree so that EditOperations may be applied to it
-// ----------------------------------------------------------------------------
-{
-    SetChildVectorInfo action;
-    InOrderTraversal iot(action);
-    t->Do(iot);
-}
-
-void TreeDiff::UpdateChildren(Tree *t)
-// ----------------------------------------------------------------------------
-//    Sync child pointers after an edit operation and check tree consistency
-// ----------------------------------------------------------------------------
-{
-    SyncWithChildVectorInfo action;
-    t->Do(action);
-}
-
-void TreeDiff::BuildChains(Tree *t, node_vector *out)
-// ----------------------------------------------------------------------------
-//    Build per-kind node tables for a tree
-// ----------------------------------------------------------------------------
-{
-    // This method performs an in-order traversal of the tree (siblings are
-    // visited from left to right) and stores the nodes into per-label tables.
-    // It is assumed that 'out' is a pre-allocated array of KIND_LAST + 1
-    // node_vector elements.
-
-    StoreNodeIntoChainArray action(out);
-    InOrderTraversal iot(action);
-    t->Do(iot);
-}
-
 void TreeDiff::MatchOneKind(Matching &M, node_vector &S1, node_vector &S2)
 // ----------------------------------------------------------------------------
 //    Find a matching between two series of nodes of the same kind
@@ -201,8 +140,11 @@ void TreeDiff::DoFastMatch()
        std::cout << "Entering DoFastMatch\n";
 
     // For each tree, sort the nodes into node chains (one for each node kind).
-    BuildChains(t1, chains1);
-    BuildChains(t2, chains2);
+    StoreNodeIntoChainArray action(chains1);
+    InOrderTraversal iot(action);
+    t1->Do(iot);
+    action.SetChains(chains2);
+    t2->Do(iot);
 
     IFTRACE(diff)
         std::cout << " Matching leaves\n";
@@ -382,9 +324,12 @@ void TreeDiff::DoEditScript()
     IFTRACE(diff)
        std::cout << "Entering DoEditScript\n";
 
-    // Prepare T1 and T2
-    CreateChildVectors(t1);
-    CreateChildVectors(t2);
+    // Prepare T1 and T2: create a child vector in each node so that edit
+    // operations may be applied
+    SetChildVectorInfo action;
+    InOrderTraversal iot(action);
+    t1->Do(iot);
+    t2->Do(iot);
 
     // 1.
     escript = new EditScript;
@@ -515,7 +460,11 @@ void TreeDiff::DoEditScript()
     }
 
     if (t1->Get<ChildVectorInfo>()->size())
-        UpdateChildren(t1);
+    {
+        // Sync child pointers and check tree consistency
+        SyncWithChildVectorInfo action;
+        t1->Do(action);
+    }
     else
         ((Block *)t1)->child = NULL;
 
@@ -716,21 +665,26 @@ bool TreeDiff::Diff()
     t1->Set2<MatchedInfo>(true);
     t2->Set2<MatchedInfo>(true);
 
-    HashInfo<>::data_t h1, h2;
-    TreeHashAction<> h_action(TreeHashAction<>::Force);
-    t2->Do(h_action);
-    h2 = t2->Get< HashInfo<> >();
-
     // Assign some IDs to tree nodes and build node tables.
     // The first tree is numbered starting from 1, while the second one
     // is numbered with negative integers (-1, -2, etc.)
     // Start from 0 to account for the dummy root nodes
-    AssignNodeIds(t1, nodes1, 0);
-    AssignNodeIds(t2, nodes2, 0, -1);
+    TreeDiff::SetNodeIdAction sni1(nodes1, 0, 1);
+    BreadthFirstSearch bfs_sni1(sni1);
+    t1->Do(bfs_sni1);
+    nodes1.SetNextId(sni1.id);
+    nodes1.SetStep(1);
+    TreeDiff::SetNodeIdAction sni2(nodes2, 0, -1);
+    BreadthFirstSearch bfs_sni2(sni2);
+    t2->Do(bfs_sni2);
+    nodes2.SetNextId(sni2.id);
+    nodes2.SetStep(-1);
 
     // Set 'parent' pointers in each node of each tree
-    SetParentPointers(t1);
-    SetParentPointers(t2);
+    SetParentInfo spi;
+    BreadthFirstSearch bfs_spi(spi);
+    t1->Do(bfs_spi);
+    t2->Do(bfs_spi);
 
     // Count the number of leaves under each node
     CountLeaves cnt;
@@ -762,9 +716,14 @@ bool TreeDiff::Diff()
         debugp(t1);
     }
 
-    h_action.reset();
+    // Use hash to check that transformed tree is identical to target
+    HashInfo<>::data_t h1, h2;
+    TreeHashAction<> h_action(TreeHashAction<>::Force);
     t1->Do(h_action);
     h1 = t1->Get< HashInfo<> >();
+    h_action.reset();
+    t2->Do(h_action);
+    h2 = t2->Get< HashInfo<> >();
     if (h1 != h2)
     {
         std::cerr << "Diff error: T2 and T1 (after transformation) "

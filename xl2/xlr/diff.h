@@ -627,6 +627,7 @@ protected:
             chains[what->Kind()].push_back(what);
             return NULL;
         }
+        void SetChains(node_vector *c) { chains = c; }
         node_vector *chains;
     };
 
@@ -686,13 +687,7 @@ protected:
     unsigned FindPos(node_id x);
     void     AlignChildren(node_id w, node_id x);
 
-    node_id AssignNodeIds(Tree *t, node_table &m, node_id from_id = 1,
-                          node_id step = 1);
-    void SetParentPointers(Tree *t);
-    void BuildChains(Tree *allnodes, node_vector *out);
     void MatchOneKind(Matching &M, node_vector &S1, node_vector &S2);
-    void CreateChildVectors(Tree *t);
-    void UpdateChildren(Tree *t);
     bool FindPair(node_id a, node_id b,
                   node_vector_align s1, node_vector_align s2);
 
