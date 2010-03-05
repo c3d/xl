@@ -412,6 +412,75 @@ struct SyncWithChildVectorInfo : Action
     }
 };
 
+struct CountLeaves : Action
+// ------------------------------------------------------------------------
+//   Recursively count and store the number of leaves under a node
+// ------------------------------------------------------------------------
+{
+    Tree *DoInteger(Integer *what)
+    {
+        what->Set2<LeafCountInfo>(1);
+        return NULL;
+    }
+    Tree *DoReal(Real *what)
+    {
+        what->Set2<LeafCountInfo>(1);
+        return NULL;
+    }
+    Tree *DoText(Text *what)
+    {
+        what->Set2<LeafCountInfo>(1);
+        return NULL;
+    }
+    Tree *DoName(Name *what)
+    {
+        what->Set2<LeafCountInfo>(1);
+        return NULL;
+    }
+    Tree *DoBlock(Block *what)
+    {
+        unsigned cc = 0;
+        if (what->child)
+        {
+            what->child->Do(this);
+            cc = what->child->Get<LeafCountInfo>();
+        }
+        what->Set2<LeafCountInfo>(cc);
+        return NULL;
+    }
+    Tree *DoInfix(Infix *what)
+    {
+        what->left->Do(this);
+        what->right->Do(this);
+        unsigned lc = what->left->Get<LeafCountInfo>();
+        unsigned rc = what->left->Get<LeafCountInfo>();
+        what->Set2<LeafCountInfo>(lc + rc);
+        return NULL;
+    }
+    Tree *DoPrefix(Prefix *what)
+    {
+        what->left->Do(this);
+        what->right->Do(this);
+        unsigned lc = what->left->Get<LeafCountInfo>();
+        unsigned rc = what->left->Get<LeafCountInfo>();
+        what->Set2<LeafCountInfo>(lc + rc);
+        return NULL;
+    }
+    Tree *DoPostfix(Postfix *what)
+    {
+        what->left->Do(this);
+        what->right->Do(this);
+        unsigned lc = what->left->Get<LeafCountInfo>();
+        unsigned rc = what->left->Get<LeafCountInfo>();
+        what->Set2<LeafCountInfo>(lc + rc);
+        return NULL;
+    }
+    Tree *Do(Tree *what)
+    {
+        return NULL;
+    }
+};
+
 struct TreeDiff
 // ----------------------------------------------------------------------------
 //   All you need to compare and patch parse trees
@@ -456,7 +525,10 @@ protected:
                 return;
             t->Set2<MatchedInfo>(true);
         }
-        unsigned int CountLeaves();
+        unsigned int LeafCount()
+        {
+            return t->Get<LeafCountInfo>();
+        }
         bool ContainsLeaf(Tree *leaf) const;
 
     protected:
@@ -556,21 +628,6 @@ protected:
             return NULL;
         }
         node_vector *chains;
-    };
-
-    struct CountLeaves : SimpleAction
-    // ------------------------------------------------------------------------
-    //   Increment a counter if node is a leaf
-    // ------------------------------------------------------------------------
-    {
-        CountLeaves(): nb_leaves(0) {}
-        virtual Tree *Do(Tree *what)
-        {
-            if (what->IsLeaf())
-                nb_leaves++;
-            return NULL;
-        }
-        unsigned int nb_leaves;
     };
 
     template <typename I>

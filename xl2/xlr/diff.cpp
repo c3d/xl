@@ -352,8 +352,8 @@ bool TreeDiff::NonLeafEqual(Tree *t1, Tree *t2, TreeDiff &td)
     unsigned c1, c2, max, common = 0;
     Node n1(t1), n2(t2);
 
-    c1 = n1.CountLeaves();
-    c2 = n2.CountLeaves();
+    c1 = n1.LeafCount();
+    c2 = n2.LeafCount();
     max = (c2 > c1) ? c2 : c1;
 
    // FIXME: this loop is quite time-consuming
@@ -732,6 +732,11 @@ bool TreeDiff::Diff()
     SetParentPointers(t1);
     SetParentPointers(t2);
 
+    // Count the number of leaves under each node
+    CountLeaves cnt;
+    t1->Do(cnt);
+    t2->Do(cnt);
+
     IFTRACE(diff)
     {
         std::cout << "T1:";
@@ -800,22 +805,6 @@ bool TreeDiff::NodeForAlign::operator ==(const TreeDiff::NodeForAlign &n)
     if (!IsMatched())
         return false;
     return (m.to[Id()] == n.Id());
-}
-
-unsigned int TreeDiff::Node::CountLeaves()
-// ----------------------------------------------------------------------------
-//    Return the number of leaves under a node; cache it for subsequent calls.
-// ----------------------------------------------------------------------------
-{
-    Tree *t = GetTree();
-    if (t->Exists<LeafCountInfo>())
-        return t->Get<LeafCountInfo>();
-
-    TreeDiff::CountLeaves act;
-    PostOrderTraversal pot(act);
-    t->Do(pot);
-    t->Set2<LeafCountInfo>(act.nb_leaves);
-    return act.nb_leaves;
 }
 
 bool TreeDiff::Node::ContainsLeaf(Tree *leaf) const
