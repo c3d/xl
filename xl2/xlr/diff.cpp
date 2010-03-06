@@ -873,21 +873,42 @@ static float Similarity(std::string s1, std::string s2)
     // two strings, divided by the length of the longest string.
     // This yields a score of 0 if the strings have nothing in common, and 1
     // if they are identical.
+    // Longest strings are compared word by word, shortest ones char by char.
 
-    Words S1(s1), S2(s2), *small = &S1, *big   = &S2;
-    if (s1.length() > s2.length())
+    float ret;
+    size_t len1 = s1.length(), len2 = s2.length();
+    if (len1 + len2 > 200)
     {
-        small = &S2;
-        big = &S1;
+        Words S1(s1), S2(s2), *small = &S1, *big   = &S2;
+        if (len1 > len2)
+        {
+            small = &S2;
+            big = &S1;
+        }
+
+        if (big->size() == 0)
+            return 1.0;
+
+        LCS<Words> lcs;
+        lcs.Compute(*small, *big);
+        ret = (float)lcs.Length() / big->size();
     }
+    else
+    {
+        std::string *small = &s1, *big = &s2;
+        if (len1 > len2)
+        {
+            small = &s2;
+            big = &s1;
+        }
 
-    if (big->size() == 0)
-        return 1.0;
+        if (big->size() == 0)
+            return 1.0;
 
-    LCS<Words> lcs;
-    lcs.Compute(*small, *big);
-    float ret = (float)lcs.Length() / big->size();
-
+        LCS<std::string> lcs;
+        lcs.Compute(*small, *big);
+        ret = (float)lcs.Length() / big->size();
+    }
     return ret;
 #endif
 }
