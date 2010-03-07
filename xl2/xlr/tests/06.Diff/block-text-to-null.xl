@@ -1,1 +1,0 @@
-// CMD= %x -parse -diff %d/block-text.src /dev/null >/dev/null

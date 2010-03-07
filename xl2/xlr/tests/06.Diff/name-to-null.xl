@@ -1,1 +1,0 @@
-// CMD= %x -parse -diff %d/name.src /dev/null >/dev/null

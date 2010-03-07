@@ -1,1 +1,0 @@
-// CMD=%x -parse -diff %d/text-infix-text.src /dev/null >/dev/null
