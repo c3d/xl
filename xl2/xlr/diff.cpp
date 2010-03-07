@@ -1505,9 +1505,21 @@ void EditOperation::Delete::Apply(NodeTable &table)
     for (it = v->begin(); it != v->end(); it++)
         if ((*it) == lp)
         {
-            v->erase(it);
             break;
         }
+    std::vector<Tree *> *vl = lp->Get<ChildVectorInfo>();
+    if (vl && vl->size() != 0)
+    {
+        // If deleted node had ONE child, replace deleted node by child
+        assert(vl->size() == 1);
+        v->erase(it);
+        v->insert(it, (*vl)[0]);
+        (*vl)[0]->Set2<ParentInfo>(pp);
+    }
+    else
+    {
+      v->erase(it);
+    }
     delete lp;
     table.erase(leaf);
 }
