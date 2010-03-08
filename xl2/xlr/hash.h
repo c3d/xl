@@ -146,7 +146,7 @@ public:
         if (sub)
         {
             // Check if we need to copmute some hash
-            bool needsHash = !sub->Exists<HInfo>();
+            bool needsHash = NeedHash(sub);
             if (needsHash)
             {
                 TreeHashAction hashSubTree(mode);
