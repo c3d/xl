@@ -2028,7 +2028,6 @@ Tree *CompileAction::DoBlock(Block *what)
         {
             if (!what->child->Exists<SymbolsInfo>())
                 what->child->Set<SymbolsInfo>(symbols);
-            unit.CallEvaluate(what->child);
         }
         unit.Copy(result, what);
         return what;
@@ -2054,7 +2053,6 @@ Tree *CompileAction::DoInfix(Infix *what)
         {
             if (!what->left->Exists<SymbolsInfo>())
                 what->left->Set<SymbolsInfo>(symbols);
-            unit.CallEvaluate(what->left);
         }
         if (!what->right->Do(this))
             return NULL;
@@ -2062,7 +2060,6 @@ Tree *CompileAction::DoInfix(Infix *what)
         {
             if (!what->right->Exists<SymbolsInfo>())
                 what->right->Set<SymbolsInfo>(symbols);
-            unit.CallEvaluate(what->right);
             unit.Copy(what->right, what);
         }
         else if (unit.IsKnown(what->left))
