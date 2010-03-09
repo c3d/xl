@@ -162,8 +162,7 @@ struct CompiledUnit
     llvm::Value *       Left(Tree *);
     llvm::Value *       Right(Tree *);
     llvm::Value *       Copy(Tree *src, Tree *dst, bool markDone=true);
-    llvm::Value *       Invoke(Tree *subexpr, Tree *callee,
-                               tree_list args, tree_list parms);
+    llvm::Value *       Invoke(Tree *subexpr, Tree *callee, tree_list args);
     llvm::Value *       CallEvaluate(Tree *);
     llvm::Value *       CallNewBlock(Block *);
     llvm::Value *       CallNewPrefix(Prefix *);
@@ -179,7 +178,7 @@ struct CompiledUnit
     llvm::BasicBlock *  TextTest(Tree *code, text value);
     llvm::BasicBlock *  ShapeTest(Tree *code, Tree *other);
     llvm::BasicBlock *  InfixMatchTest(Tree *code, Infix *ref);
-    llvm::BasicBlock *  TypeTest(Tree *code, Tree *type, Tree *parm);
+    llvm::BasicBlock *  TypeTest(Tree *code, Tree *type);
 
 public:
     Compiler *          compiler;       // The compiler environment we use
@@ -198,7 +197,6 @@ public:
     value_map           value;          // Map tree -> LLVM value
     value_map           storage;        // Map tree -> LLVM alloca space
     value_map           computed;       // Map tree -> LLVM "computed" flag
-    value_map           typecast;       // Map parm -> LLVM type cast value
     data_set            noeval;         // Data expressions we don't evaluate
 };
 

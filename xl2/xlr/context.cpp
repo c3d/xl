@@ -1507,7 +1507,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
             return NULL;
 
         // Insert a run-time type test
-        unit.TypeTest(compiled, typeExpr, varName);
+        unit.TypeTest(compiled, typeExpr);
 
         // Enter the compiled expression in the symbol table
         locals->EnterName(varName->value, compiled);
@@ -1979,9 +1979,9 @@ Tree *CompileAction::DoName(Name *what)
             compiler->functions[result] != unit.function)
         {
             // Case of "Name -> Foo": Invoke Name
-            tree_list noArgs, noParms;
+            tree_list noArgs;
             unit.NeedStorage(what);
-            unit.Invoke(what, result, noArgs, noParms);
+            unit.Invoke(what, result, noArgs);
             return what;
         }
         else if (unit.value.count(result))
@@ -2227,7 +2227,7 @@ Tree * CompileAction::Rewrites(Tree *what)
                         Tree *code = candidate->Compile();
 
                         // Invoke the candidate
-                        unit.Invoke(what, code, argsList, order);
+                        unit.Invoke(what, code, argsList);
 
                         // If there was no test code, don't keep testing further
                         foundUnconditional = !unit.failbb;

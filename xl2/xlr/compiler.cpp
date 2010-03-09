@@ -883,8 +883,7 @@ void CompiledUnit::EndLazy(Tree *subexpr,
 }
 
 
-llvm::Value *CompiledUnit::Invoke(Tree *subexpr, Tree *callee,
-                                  tree_list args, tree_list parms)
+llvm::Value *CompiledUnit::Invoke(Tree *subexpr, Tree *callee, tree_list args)
 // ----------------------------------------------------------------------------
 //    Generate a call with the given arguments
 // ----------------------------------------------------------------------------
@@ -910,15 +909,11 @@ llvm::Value *CompiledUnit::Invoke(Tree *subexpr, Tree *callee,
     Value *defaultVal = ConstantTree(subexpr);
     argV.push_back(defaultVal);
 
-    tree_list::iterator a, p;
-    p = parms.begin();
-    for (a = args.begin(); a != args.end(); a++, p++)
+    tree_list::iterator a;
+    for (a = args.begin(); a != args.end(); a++)
     {
-        Tree *parm = *p;
         Tree *arg = *a;
-        Value *value = typecast[parm];
-        if (!value)
-            value = Known(arg);
+        Value *value = Known(arg);
         if (!value)
             value = ConstantTree(arg);
         argV.push_back(value);
@@ -1388,7 +1383,7 @@ BasicBlock *CompiledUnit::InfixMatchTest(Tree *actual, Infix *reference)
 }
 
 
-BasicBlock *CompiledUnit::TypeTest(Tree *value, Tree *type, Tree *param)
+BasicBlock *CompiledUnit::TypeTest(Tree *value, Tree *type)
 // ----------------------------------------------------------------------------
 //   Test if the given value has the given type
 // ----------------------------------------------------------------------------
@@ -1407,8 +1402,8 @@ BasicBlock *CompiledUnit::TypeTest(Tree *value, Tree *type, Tree *param)
 
     // If the value matched, we may have a type cast, remember it
     code->SetInsertPoint(isGoodBB);
-    typecast[param] = afterCast;
-    NeedStorage(value);
+    Value *ptr = NeedStorage(value);
+    code->CreateStore(afterCast, ptr);
 
     return isGoodBB;
 }
