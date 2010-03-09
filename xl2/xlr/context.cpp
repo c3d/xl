@@ -1507,7 +1507,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
             return NULL;
 
         // Insert a run-time type test
-        unit.TypeTest(compiled, typeExpr);
+        unit.TypeTest(compiled, typeExpr, varName);
 
         // Enter the compiled expression in the symbol table
         locals->EnterName(varName->value, compiled);
@@ -1979,9 +1979,9 @@ Tree *CompileAction::DoName(Name *what)
             compiler->functions[result] != unit.function)
         {
             // Case of "Name -> Foo": Invoke Name
-            tree_list noArgs;
+            tree_list noArgs, noParms;
             unit.NeedStorage(what);
-            unit.Invoke(what, result, noArgs);
+            unit.Invoke(what, result, noArgs, noParms);
             return what;
         }
         else if (unit.value.count(result))
@@ -2213,7 +2213,6 @@ Tree * CompileAction::Rewrites(Tree *what)
                         }
 
                         // Map the arguments we found in parameter order
-                        // (actually, in reverse order, which is what we want)
                         tree_list argsList;
                         tree_list::iterator p;
                         tree_list &order = candidate->parameters;
@@ -2228,7 +2227,7 @@ Tree * CompileAction::Rewrites(Tree *what)
                         Tree *code = candidate->Compile();
 
                         // Invoke the candidate
-                        unit.Invoke(what, code, argsList);
+                        unit.Invoke(what, code, argsList, order);
 
                         // If there was no test code, don't keep testing further
                         foundUnconditional = !unit.failbb;
