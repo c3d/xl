@@ -80,6 +80,8 @@ struct TreeHashAction : Action
 public:
     TreeHashAction (Mode mode = Default) : mode(mode), compute() {}
 
+    void reset() { compute.reset(); }
+
     bool NeedHash(Tree *t)
     // ------------------------------------------------------------------------
     //   Decide if we need to hash for that tree
@@ -144,7 +146,7 @@ public:
         if (sub)
         {
             // Check if we need to copmute some hash
-            bool needsHash = !sub->Exists<HInfo>();
+            bool needsHash = NeedHash(sub);
             if (needsHash)
             {
                 TreeHashAction hashSubTree(mode);

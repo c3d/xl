@@ -676,7 +676,7 @@ void debugp(XL::Tree *tree)
     render.SelectStyleSheet("debug.stylesheet");
     render.Render(tree);
 
-    XL::TreeHashAction<> h_action;
+    XL::TreeHashAction<> h_action(XL::TreeHashAction<>::Force);
     tree->Do(h_action);
     if (tree->Exists< XL::HashInfo<> >())
         std::cout << "HASH: " << tree->Get< XL::HashInfo<> >() << '\n';

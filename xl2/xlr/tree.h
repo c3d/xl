@@ -70,8 +70,14 @@ enum kind
 //   The kinds of tree that compose an XL parse tree
 // ----------------------------------------------------------------------------
 {
-    INTEGER, REAL, TEXT, NAME,                  // Leaf nodes
-    BLOCK, PREFIX, POSTFIX, INFIX               // Non-leaf nodes
+    KIND_FIRST,
+    INTEGER = KIND_FIRST, REAL, TEXT, NAME,     // Leaf nodes
+    KIND_LEAF_FIRST = INTEGER,
+    KIND_LEAF_LAST = NAME,
+    BLOCK, PREFIX, POSTFIX, INFIX,              // Non-leaf nodes
+    KIND_NLEAF_FIRST = BLOCK,
+    KIND_NLEAF_LAST = INFIX,
+    KIND_LAST = KIND_NLEAF_LAST
 };
 
 
@@ -605,6 +611,163 @@ protected:
 };
 
 typedef struct TreeCloneTemplate<DEEP_COPY> TreeClone;
+
+
+// ============================================================================
+//
+//    Tree copying
+//
+// ============================================================================
+
+enum CopyMode
+// ----------------------------------------------------------------------------
+//   Several ways of copying a tree.
+// ----------------------------------------------------------------------------
+{
+    CM_RECURSIVE = 1,    // Copy child nodes (as long as their kind match)
+    CM_NODE_ONLY         // Copy only one node
+};
+
+template <CopyMode mode> struct TreeCopyTemplate : Action
+// ----------------------------------------------------------------------------
+//   Copy a tree into another tree. Node values are copied, infos are not.
+// ----------------------------------------------------------------------------
+{
+    TreeCopyTemplate(Tree *dest): dest(dest) {}
+    virtual ~TreeCopyTemplate() {}
+
+    Tree *DoInteger(Integer *what)
+    {
+        if (Integer *it = dest->AsInteger())
+        {
+            it->value = what->value;
+            it->tag = ((what->Position()<<Tree::KINDBITS) | it->Kind());
+            return what;
+        }
+        return NULL;
+    }
+    Tree *DoReal(Real *what)
+    {
+        if (Real *rt = dest->AsReal())
+        {
+            rt->value = what->value;
+            rt->tag = ((what->Position()<<Tree::KINDBITS) | rt->Kind());
+            return what;
+        }
+        return NULL;
+    }
+    Tree *DoText(Text *what)
+    {
+        if (Text *tt = dest->AsText())
+        {
+            tt->value = what->value;
+            tt->tag = ((what->Position()<<Tree::KINDBITS) | tt->Kind());
+            return what;
+        }
+        return NULL;
+    }
+    Tree *DoName(Name *what)
+    {
+        if (Name *nt = dest->AsName())
+        {
+            nt->value = what->value;
+            nt->tag = ((what->Position()<<Tree::KINDBITS) | nt->Kind());
+            return what;
+        }
+        return NULL;
+    }
+
+    Tree *DoBlock(Block *what)
+    {
+        if (Block *bt = dest->AsBlock())
+        {
+            bt->opening = what->opening;
+            bt->closing = what->closing;
+            bt->tag = ((what->Position()<<Tree::KINDBITS) | bt->Kind());
+            if (mode == CM_RECURSIVE)
+            {
+                dest = bt->child;
+                Tree * br = what->child->Do(this);
+                dest = bt;
+                return br;
+            }
+            return what;
+        }
+        return NULL;
+    }
+    Tree *DoInfix(Infix *what)
+    {
+        if (Infix *it = dest->AsInfix())
+        {
+            it->name = what->name;
+            it->tag = ((what->Position()<<Tree::KINDBITS) | it->Kind());
+            if (mode == CM_RECURSIVE)
+            {
+                dest = it->left;
+                Tree *lr = what->left->Do(this);
+                dest = it;
+                if (!lr)
+                    return NULL;
+                dest = it->right;
+                Tree *rr = what->right->Do(this);
+                dest = it;
+                if (!rr)
+                    return NULL;
+            }
+            return what;
+        }
+        return NULL;
+    }
+    Tree *DoPrefix(Prefix *what)
+    {
+        if (Prefix *pt = dest->AsPrefix())
+        {
+            pt->tag = ((what->Position()<<Tree::KINDBITS) | pt->Kind());
+            if (mode == CM_RECURSIVE)
+            {
+                dest = pt->left;
+                Tree *lr = what->left->Do(this);
+                dest = pt;
+                if (!lr)
+                    return NULL;
+                dest = pt->right;
+                Tree *rr = what->right->Do(this);
+                dest = pt;
+                if (!rr)
+                    return NULL;
+            }
+            return what;
+        }
+        return NULL;
+    }
+    Tree *DoPostfix(Postfix *what)
+    {
+        if (Postfix *pt = dest->AsPostfix())
+        {
+            pt->tag = ((what->Position()<<Tree::KINDBITS) | pt->Kind());
+            if (mode == CM_RECURSIVE)
+            {
+                dest = pt->left;
+                Tree *lr = what->left->Do(this);
+                dest = pt;
+                if (!lr)
+                    return NULL;
+                dest = pt->right;
+                Tree *rr = what->right->Do(this);
+                dest = pt;
+                if (!rr)
+                    return NULL;
+            }
+            return what;
+        }
+        return NULL;
+    }
+    Tree *Do(Tree *what)
+    {
+        return what;            // ??? Should not happen
+    }
+    Tree *dest;
+};
 
 
 // ============================================================================

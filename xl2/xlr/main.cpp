@@ -28,6 +28,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
+#include <sys/stat.h>
 #include "main.h"
 #include "scanner.h"
 #include "parser.h"
@@ -39,9 +40,9 @@
 #include "options.h"
 #include "basics.h"
 #include "serializer.h"
+#include "diff.h"
 #include "bfs.h"
 #include "gv.h"
-
 
 XL_BEGIN
 
@@ -89,6 +90,7 @@ int Main::LoadFiles()
     std::vector<text>            filelist;
     std::vector<text>::iterator  file;
     bool                         hadError = false;
+    int                          filenum = 0;
 
     // Make sure debug function is linked in...
     if (getenv("SHOW_INITIAL_DEBUG"))
@@ -104,10 +106,18 @@ int Main::LoadFiles()
 
     // Scan options and build list of files we need to process
     cmd = options.Parse(argc, argv);
+    if (options.doDiff)
+        options.parseOnly = true;
     if (options.builtins)
         filelist.push_back("builtins.xl");
     for (; cmd != end; cmd = options.ParseNext())
     {
+        if (options.doDiff && ++filenum > 2)
+        {
+          std::cerr << "Error: -diff option needs exactly 2 files" << std::endl;
+          hadError = true;
+          return hadError;
+        }
         filelist.push_back(cmd);
         file_names.push_back(cmd);
     }
@@ -127,6 +137,14 @@ int Main::LoadFile(text file)
 {
     Tree *tree = NULL;
     bool hadError = false;
+    FILE *f;
+
+    if ((f = fopen(file.c_str(), "r")) == NULL)
+    {
+        perror(std::string(argv[0]).append(": ").append(file).c_str());
+        return true;
+    }
+    fclose(f);
 
     // Parse program - Local parser to delete scanner and close file
     // This ensures positions are updated even if there is a 'load'
@@ -177,7 +195,15 @@ int Main::LoadFile(text file)
 
     if (!tree)
     {
-        hadError = true;
+        if (options.doDiff)
+        {
+            files[file] = SourceFile (file, NULL, NULL);
+            hadError = false;
+        }
+        else
+        {
+            hadError = true;
+        }
         return hadError;
     }
     Symbols *syms = &context;
@@ -242,7 +268,7 @@ int Main::Run()
     bool hadError = false;
 
     // If we only parse or compile, return
-    if (options.parseOnly || options.compileOnly)
+    if (options.parseOnly || options.compileOnly || options.doDiff)
         return -1;
 
     // Loop over files we will process
@@ -288,6 +314,26 @@ int Main::Run()
     return hadError;
 }
 
+int Main::Diff()
+// ----------------------------------------------------------------------------
+//   Perform a tree diff between the two loaded files
+// ----------------------------------------------------------------------------
+{
+    source_names::iterator file;
+
+    file = file_names.begin();
+    SourceFile &sf1 = files[*file];
+    file++;
+    SourceFile &sf2 = files[*file];
+
+    Tree *t1 = sf1.tree.tree;
+    Tree *t2 = sf2.tree.tree;
+
+    TreeDiff d(t1, t2);
+    return d.Diff(std::cout);
+}
+
+
 XL_END
 
 
@@ -304,6 +350,9 @@ int main(int argc, char **argv)
     Compiler compiler("xl_tao");
     MAIN = new Main(argc, argv, compiler);
     int rc = MAIN->LoadFiles();
+    if (!rc && Options::options->doDiff)
+        rc = MAIN->Diff();
+    else
     if (!rc && !Options::options->parseOnly)
         rc = MAIN->Run();
     delete MAIN;

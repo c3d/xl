@@ -70,6 +70,7 @@ struct Main
     int LoadFiles();
     int LoadFile (text file);
     int Run();
+    int Diff();
 
 public:
     int          argc;

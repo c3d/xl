@@ -65,6 +65,11 @@ struct BreadthFirstSearch : Action
             Tree * curr, * res;
 
             curr = nodes.front();
+            if (!curr)
+            {
+                nodes.pop();
+                continue;
+            }
             res = curr->Do(action);
             if (!fullScan && res)
                 return res;
