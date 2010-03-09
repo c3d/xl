@@ -1,6 +1,7 @@
+dbg N : integer -> debug N
 rect x, y -> 
-    debug x
-    debug y
+    dbg x
+    dbg y
 
 rects 0,0 ->
     rect 0,0

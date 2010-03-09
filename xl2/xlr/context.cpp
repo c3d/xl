@@ -1988,7 +1988,7 @@ Tree *CompileAction::DoName(Name *what)
         {
             // Case of "Foo(A,B) -> B" with B: evaluate B lazily
             unit.Copy(result, what, false);
-            return result;
+            return what;
         }
         else
         {

@@ -860,11 +860,21 @@ BasicBlock *CompiledUnit::BeginLazy(Tree *subexpr)
 //    Begin lazy evaluation of a block of code
 // ----------------------------------------------------------------------------
 {
-    BasicBlock *skip = BasicBlock::Create(*context, "skip", function);
-    BasicBlock *work = BasicBlock::Create(*context, "work", function);
+    text lskip = "skip";
+    text lwork = "work";
+    text llazy = "lazy";
+    IFTRACE(labels)
+    {
+        text lbl = text("[") + text(*subexpr) + "]";
+        lskip += lbl;
+        lwork += lbl;
+        llazy += lbl;
+    }
+    BasicBlock *skip = BasicBlock::Create(*context, lskip, function);
+    BasicBlock *work = BasicBlock::Create(*context, lwork, function);
 
     Value *lazyFlagPtr = NeedLazy(subexpr);
-    Value *lazyFlag = code->CreateLoad(lazyFlagPtr, "lazy");
+    Value *lazyFlag = code->CreateLoad(lazyFlagPtr, llazy);
     code->CreateCondBr(lazyFlag, skip, work);
 
     code->SetInsertPoint(work);
