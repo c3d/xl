@@ -115,7 +115,6 @@ token_t Parser::NextToken()
                 ulong cLen = closing.length();
                 ulong oLen = opening.length();
                 longText.erase(longText.length() - cLen, cLen);
-                longText.erase(oLen, 0);
                 scanner.SetTextValue(longText);
                 openquote = opening;
                 closequote = closing;
