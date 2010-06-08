@@ -4,7 +4,7 @@
 //
 //   File Description:
 //
-//      Main entry point of the compiler
+//    Main entry point of the XL runtime and compiler
 //
 //
 //
@@ -43,31 +43,59 @@
 #include "diff.h"
 #include "bfs.h"
 #include "gv.h"
+#include "runtime.h"
 
 XL_BEGIN
 
 Main *MAIN = NULL;
 
+SourceFile::SourceFile(text n, Tree *t, Symbols *s, bool ro)
+// ----------------------------------------------------------------------------
+//   Construct a source file given a name
+// ----------------------------------------------------------------------------
+    : name(n), tree(t), symbols(s),
+      modified(0), changed(false), readOnly(ro)
+{
+    struct stat st;
+    stat (n.c_str(), &st);
+    modified = st.st_mtime;
+    if (access(n.c_str(), W_OK) != 0)
+        readOnly = true;
+}
 
-Main::Main(int inArgc, char **inArgv, Compiler &comp)
+
+SourceFile::SourceFile()
+// ----------------------------------------------------------------------------
+//   Default constructor
+// ----------------------------------------------------------------------------
+    : name(""), tree(NULL), symbols(NULL),
+      modified(0), changed(false)
+{}
+
+
+Main::Main(int inArgc, char **inArgv, Compiler &comp,
+           text syntaxName, text styleSheetName, text builtinsName)
 // ----------------------------------------------------------------------------
 //   Initialization of the globals
 // ----------------------------------------------------------------------------
     : argc(inArgc), argv(inArgv),
       positions(),
       errors(&positions),
-      syntax("xl.syntax"),
-      options(errors),
+      syntax(syntaxName.c_str()),
+      options(errors, inArgc, inArgv),
       compiler(comp),
-      context(errors, &compiler),
-      renderer(std::cout, "xl.stylesheet", syntax),
+      context(new Context(errors, &compiler)),
+      renderer(std::cout, styleSheetName, syntax),
       reader(NULL), writer(NULL)
 {
     Options::options = &options;
-    Context::context = &context;
-    Symbols::symbols = &context;
+    Context::context = context;
+    Symbols::symbols = context;
     Renderer::renderer = &renderer;
     Syntax::syntax = &syntax;
+    options.builtins = builtinsName;
+
+    ParseOptions();
 }
 
 
@@ -81,16 +109,13 @@ Main::~Main()
 }
 
 
-int Main::LoadFiles()
+int Main::ParseOptions()
 // ----------------------------------------------------------------------------
 //   Load all files given on the command line and compile them
 // ----------------------------------------------------------------------------
 {
-    text                         cmd, end = "";
-    std::vector<text>            filelist;
-    std::vector<text>::iterator  file;
-    bool                         hadError = false;
-    int                          filenum = 0;
+    text cmd, end = "";
+    int  filenum  = 0;
 
     // Make sure debug function is linked in...
     if (getenv("SHOW_INITIAL_DEBUG"))
@@ -102,40 +127,108 @@ int Main::LoadFiles()
                   << "         Check LANG, LC_CTYPE, LC_ALL.\n";
 
     // Initialize basics
-    EnterBasics(&context);
+    EnterBasics(context);
 
     // Scan options and build list of files we need to process
-    cmd = options.Parse(argc, argv);
+    cmd = options.ParseNext();
     if (options.doDiff)
         options.parseOnly = true;
-    if (options.builtins)
-        filelist.push_back("builtins.xl");
+
     for (; cmd != end; cmd = options.ParseNext())
     {
         if (options.doDiff && ++filenum > 2)
         {
           std::cerr << "Error: -diff option needs exactly 2 files" << std::endl;
-          hadError = true;
-          return hadError;
+          return true;
         }
-        filelist.push_back(cmd);
         file_names.push_back(cmd);
     }
+    return false;
+}
+
+
+int Main::LoadFiles()
+// ----------------------------------------------------------------------------
+//   Load all files given on the command line and compile them
+// ----------------------------------------------------------------------------
+{
+    source_names::iterator  file;
+    bool hadError = false;
 
     // Loop over files we will process
-    for (file = filelist.begin(); file != filelist.end(); file++)
+    for (file = file_names.begin(); file != file_names.end(); file++)
         hadError |= LoadFile(*file);
 
     return hadError;
 }
 
 
-int Main::LoadFile(text file)
+SourceFile *Main::NewFile(text path)
+// ----------------------------------------------------------------------------
+//   Allocate an entry for updating programs (untitled)
+// ----------------------------------------------------------------------------
+{
+    files[path] = SourceFile(path, NULL, new Symbols(Symbols::symbols), true);
+    return &files[path];
+}
+
+
+int Main::LoadContextFiles(source_names &ctxFiles)
+// ----------------------------------------------------------------------------
+//   Load all files given on the command line and compile them
+// ----------------------------------------------------------------------------
+{
+    source_names::iterator file;
+    bool hadError = false;
+
+    // Load builtins
+    if (!options.builtins.empty())
+        hadError |= LoadFile(options.builtins, true);
+
+    // Loop over files we will process
+    for (file = ctxFiles.begin(); file != ctxFiles.end(); file++)
+        hadError |= LoadFile(*file, true);
+
+    return hadError;
+}
+
+
+void Main::EvalContextFiles(source_names &ctxFiles)
+// ----------------------------------------------------------------------------
+//   Evaluate the context files
+// ----------------------------------------------------------------------------
+{
+    source_names::iterator  file;
+
+    // Execute builtins.xl file first
+    if (!options.builtins.empty())
+        if (Tree *builtins_file = files[options.builtins].tree)
+            xl_evaluate(builtins_file);
+
+    // Execute other context files (user.xl, theme.xl)
+    for (file = ctxFiles.begin(); file != ctxFiles.end(); file++)
+        if (Tree *context_file = files[*file].tree)
+            xl_evaluate(context_file);
+}
+
+
+#ifndef TAO
+text Main::SearchFile(text file)
+// ----------------------------------------------------------------------------
+//   Default is to use the file name directly
+// ----------------------------------------------------------------------------
+{
+    return file;
+}
+#endif // TAO
+
+
+int Main::LoadFile(text file, bool updateContext)
 // ----------------------------------------------------------------------------
 //   Load an individual file
 // ----------------------------------------------------------------------------
 {
-    Tree *tree = NULL;
+    Tree_p tree = NULL;
     bool hadError = false;
     FILE *f;
 
@@ -153,13 +246,10 @@ int Main::LoadFile(text file)
     {
         if (!reader)
             reader = new Deserializer(std::cin);
-        try
+        tree = reader->ReadTree();
+        if (!reader->IsValid())
         {
-            tree = reader->ReadTree();
-        }
-        catch (Deserializer::Error &e)
-        {
-            std::cerr << "Error in input stream, tag=" << e.tag << '\n';
+            std::cerr << "Error in input stream '" << file << "'\n";
             hadError = true;
             return hadError;
         }
@@ -167,13 +257,10 @@ int Main::LoadFile(text file)
     else
     {
         std::string nt = "";
-        try
-        {
-            std::ifstream ifs(file.c_str(), std::ifstream::in);
-            Deserializer ds(ifs);
-            tree = ds.ReadTree();
-        }
-        catch (Deserializer::Error &e)
+        std::ifstream ifs(file.c_str(), std::ifstream::in);
+        Deserializer ds(ifs);
+        tree = ds.ReadTree();
+        if (!ds.IsValid())
         {
             // File is not in serialized format, try to parse it as XL source
             nt = "not ";
@@ -200,59 +287,49 @@ int Main::LoadFile(text file)
             files[file] = SourceFile (file, NULL, NULL);
             hadError = false;
         }
-        else
-        {
-            hadError = true;
-        }
-        return hadError;
     }
-    Symbols *syms = &context;
-    if (file != "builtins.xl")
-        syms = new Symbols(syms);
+
+    Symbols *syms = Symbols::symbols;
+    Symbols *savedSyms = syms;
+    syms = new Symbols(syms);
     Symbols::symbols = syms;
-    tree->Set<SymbolsInfo>(syms);
+    if (tree)
+        tree->SetSymbols(syms);
 
     if (options.fileLoad)
         std::cout << "Loading: " << file << "\n";
 
     files[file] = SourceFile (file, tree, syms);
-    context.CollectGarbage();
 
-    if (options.showGV)
-	{
-		SetNodeIdAction sni;
-		BreadthFirstSearch bfs(sni);
-		tree->Do(bfs);
-		GvOutput gvout(std::cout);
-		tree->Do(gvout);
-	}
+    if (options.showGV && tree)
+    {
+        SetNodeIdAction sni;
+        BreadthFirstSearch bfs(sni);
+        tree->Do(bfs);
+        GvOutput gvout(std::cout);
+        tree->Do(gvout);
+    }
 
     if (options.showSource)
         std::cout << tree << "\n";
 
     if (!options.parseOnly)
     {
-        if (options.optimize_level)
+        if (options.optimize_level && tree)
         {
-            try
-            {
-                tree = syms->CompileAll(tree);
-            }
-            catch (Error &e)
-            {
-                e.Display();
-            }
+            tree = syms->CompileAll(tree);
+            if (!tree)
+                hadError = true;
+            else
+                files[file].tree = tree;
         }
-        if (!tree)
-            hadError = true;
-        else
-            files[file].tree.tree = tree;
     }
 
     if (options.verbose)
         debugp(tree);
 
-    Symbols::symbols = Context::context;
+    // Decide if we update symbols for next run
+    Symbols::symbols = updateContext ? syms : savedSyms;
 
     return hadError;
 }
@@ -278,10 +355,10 @@ int Main::Run()
         Symbols::symbols = sf.symbols;
 
         // Evaluate the given tree
-        Tree *result = sf.tree.tree;
+        Tree_p result = sf.tree;
         try
         {
-            result = sf.symbols->Run(sf.tree.tree);
+            result = sf.symbols->Run(sf.tree);
         }
         catch (XL::Error &e)
         {
@@ -314,6 +391,7 @@ int Main::Run()
     return hadError;
 }
 
+
 int Main::Diff()
 // ----------------------------------------------------------------------------
 //   Perform a tree diff between the two loaded files
@@ -326,8 +404,8 @@ int Main::Diff()
     file++;
     SourceFile &sf2 = files[*file];
 
-    Tree *t1 = sf1.tree.tree;
-    Tree *t2 = sf2.tree.tree;
+    Tree_p t1 = sf1.tree;
+    Tree_p t2 = sf2.tree;
 
     TreeDiff d(t1, t2);
     return d.Diff(std::cout);
@@ -337,6 +415,7 @@ int Main::Diff()
 XL_END
 
 
+#ifndef TAO
 int main(int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Parse the command line and run the compiler phases
@@ -347,9 +426,16 @@ int main(int argc, char **argv)
 #endif
 
     using namespace XL;
+    source_names noSpecificContext;
     Compiler compiler("xl_tao");
     MAIN = new Main(argc, argv, compiler);
-    int rc = MAIN->LoadFiles();
+    int rc = MAIN->LoadContextFiles(noSpecificContext);
+    if (rc)
+    {
+        delete MAIN;
+        return rc;
+    }
+    rc = MAIN->LoadFiles();
     if (!rc && Options::options->doDiff)
         rc = MAIN->Diff();
     else
@@ -365,3 +451,5 @@ int main(int argc, char **argv)
 
     return rc;
 }
+
+#endif // TAO

@@ -50,11 +50,11 @@ struct GvOutput : Action
         std::ostream &operator()(std::ostream &out) const
         {
             char buf[10];
-            snprintf(buf, 10, "n%lx", (long)t);
+            snprintf(buf, 10, "n%lx", (long)(const Tree *) t);
             out << buf;
             return out;
         };
-        XL::Tree * t;
+        XL::Tree_p  t;
     };
 
 
@@ -71,7 +71,7 @@ struct GvOutput : Action
                 out << t->Get<NodeIdInfo>() << "\\n";
             return out;
         };
-        XL::Tree * t;
+        XL::Tree_p  t;
     };
 
     Tree *DoInteger(Integer *what);
@@ -82,7 +82,7 @@ struct GvOutput : Action
     Tree *DoInfix(Infix *what);
     Tree *DoPrefix(Prefix *what);
     Tree *DoPostfix(Postfix *what);
-    Tree *Do(Tree *what) { return NULL; }
+    Tree *Do(Tree *) { return NULL; }
 
     std::ostream &out;
 };

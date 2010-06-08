@@ -5,9 +5,11 @@ INFIX
         30      loop when
         35      else into
         40      then require ensure
+        41      with
         100     STATEMENT
         110     is as  while until
-        120     with written
+        120     written
+        130     where
         200     DEFAULT
         210     ,
         221     := += -= *= /= ^= |= &=
@@ -37,8 +39,7 @@ PREFIX
         500     &
 
 POSTFIX
-        400     ! ? %
-
+        400     ! ? % cm inch mm pt px
 BLOCK
         5       INDENT UNINDENT
         21      '{' '}'

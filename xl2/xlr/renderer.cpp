@@ -386,7 +386,7 @@ int Renderer::InfixPriority(Tree *test)
 //    Return infix priority for infix trees, "infinity" otherwise
 // ----------------------------------------------------------------------------
 {
-    if (Infix *it = test->AsInfix())
+    if (Infix_p it = test->AsInfix())
         if (syntax.infix_priority.count(it->name) > 0)
             return syntax.infix_priority[it->name];
     return 9997;                                // Approximate infinity
@@ -394,6 +394,26 @@ int Renderer::InfixPriority(Tree *test)
 
 
 void Renderer::RenderOne(Tree *what)
+// ----------------------------------------------------------------------------
+//   Render to given stream (taking care of selected items highlighting)
+// ----------------------------------------------------------------------------
+{
+    text hname;
+    if (highlights.count(what))
+        hname = highlights[what];
+
+    bool highlight = !hname.empty();
+
+    if (highlight)
+        RenderFormat("", "highlight_begin_" + hname + " ");
+
+    DoRenderOne(what);
+
+    if (highlight)
+        RenderFormat("", "highlight_end_" + hname + " ");
+}
+
+void Renderer::DoRenderOne(Tree *what)
 // ----------------------------------------------------------------------------
 //   Render to given stream
 // ----------------------------------------------------------------------------
@@ -433,12 +453,12 @@ void Renderer::RenderOne(Tree *what)
     else switch (what->Kind())
     {
     case INTEGER:
-        toText << ((Integer *) what)->value;
+        toText << what->AsInteger()->value;
         t = toText.str();
-        RenderFormat (t, t, "integer");
+        RenderFormat (t, t, "integer ");
         break;
     case REAL:
-        toText << ((Real *) what)->value;
+        toText << what->AsReal()->value;
         t = toText.str();
         if (t.find(".") == t.npos)
         {
@@ -448,10 +468,10 @@ void Renderer::RenderOne(Tree *what)
             else
                 t.insert(exponent, ".0");
         }
-        RenderFormat (t, t, "real");
+        RenderFormat (t, t, "real ");
         break;
     case TEXT: {
-        Text *w = (Text *) what;
+        Text *w = what->AsText();
         t = w->value;
         text q0 = t.find("\n") != t.npos ? "longtext " : "text ";
         text q1 = q0 + w->opening;
@@ -482,11 +502,11 @@ void Renderer::RenderOne(Tree *what)
         this->current_quote = saveq;
     }   break;
     case NAME:
-        t = ((Name *) what)->value;
+        t = what->AsName()->value;
         RenderFormat (t, t, "name ");
         break;
     case PREFIX: {
-        Prefix *w = (Prefix *) what;
+        Prefix *w = what->AsPrefix();
         Tree *l = w->left;
         Tree *r = w->right;
 
@@ -524,7 +544,7 @@ void Renderer::RenderOne(Tree *what)
         }
     }   break;
     case POSTFIX: {
-        Postfix *w = (Postfix *) what;
+        Postfix *w = what->AsPostfix();
         Tree *l = w->left;
         Tree *r = w->right;
 
@@ -562,9 +582,12 @@ void Renderer::RenderOne(Tree *what)
         }
     }   break;
     case INFIX: {
-        Infix *w = (Infix *) what;
+        Infix *w = what->AsInfix();
+        text in = w->name;
+        if (in == "\n")
+            in = "cr";
         text n0 = "infix ";
-        text n = n0 + w->name;
+        text n = n0 + in;
         Tree *l = w->left;
         Tree *r = w->right;
 
@@ -597,10 +620,10 @@ void Renderer::RenderOne(Tree *what)
         }
     }   break;
     case BLOCK: {
-        Block *w  = (Block *) what;
+        Block *w  = what->AsBlock();
         text   n0 = "block ";
         text   n  = n0 + w->opening + " " + w->closing;
-        Tree  *l  = w->child;
+        Tree *l  = w->child;
         this->left = l;
         this->right = w;
         this->self = w->opening + w->closing;

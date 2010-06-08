@@ -61,8 +61,12 @@ struct BreadthFirstSearch : Action
         nodes.push(what);
         do
         {
-            Block * bl; Infix * in; Prefix * pr; Postfix  * po;
-            Tree * curr, * res;
+            Block   *bl;
+            Infix   *in;
+            Prefix  *pr;
+            Postfix *po;
+            Tree    *curr;
+            Tree    *res;
 
             curr = nodes.front();
             if (!curr)
@@ -74,21 +78,21 @@ struct BreadthFirstSearch : Action
             if (!fullScan && res)
                 return res;
             nodes.pop();
-            if ((bl = curr->AsBlock()) != NULL)
+            if ((bl = curr->AsBlock()))
             {
               nodes.push(bl->child);
             }
-            if ((in = curr->AsInfix()) != NULL)
+            if ((in = curr->AsInfix()))
             {
               nodes.push(in->left);
               nodes.push(in->right);
             }
-            if ((pr = curr->AsPrefix()) != NULL)
+            if ((pr = curr->AsPrefix()))
             {
               nodes.push(pr->left);
               nodes.push(pr->right);
             }
-            if ((po = curr->AsPostfix()) != NULL)
+            if ((po = curr->AsPostfix()))
             {
               nodes.push(po->left);
               nodes.push(po->right);
@@ -100,7 +104,7 @@ struct BreadthFirstSearch : Action
 
     Action & action;
     bool fullScan;
-    std::queue<Tree *> nodes;
+    std::queue<Tree_p> nodes;
 };
 
 XL_END

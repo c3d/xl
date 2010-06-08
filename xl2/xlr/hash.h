@@ -123,7 +123,8 @@ public:
     //    A very ugly way to compute a hash for douvble values
     // ------------------------------------------------------------------------
     {
-        Compute(*((uint64 *) &v));
+        uint64 *val = (uint64 *) &v;
+        Compute(*val);
     }
 
 

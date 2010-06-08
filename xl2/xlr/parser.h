@@ -91,6 +91,11 @@ public:
         syntax(stx), errors(err), pending(tokNONE),
         openquote(), closequote(),
         hadSpaceBefore(false), hadSpaceAfter(false) {}
+    Parser(std::istream &input, Syntax &stx, Positions &pos, Errors &err):
+        scanner(input, stx, pos, err),
+        syntax(stx), errors(err), pending(tokNONE),
+        openquote(), closequote(),
+        hadSpaceBefore(false), hadSpaceAfter(false) {}
 
 public:
     Tree *              Parse(text closing_paren = "");

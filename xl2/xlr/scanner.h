@@ -93,9 +93,11 @@
   multi-line comments are evil, that's why. See this comment for example.
 */
 
+#include "base.h"
 #include <string>
 #include <vector>
-#include "base.h"
+#include <iostream>
+#include <fstream>
 
 XL_BEGIN
 
@@ -165,6 +167,7 @@ class Scanner
 {
 public:
     Scanner(kstring fileName, Syntax &stx, Positions &pos, Errors &err);
+    Scanner(std::istream &input, Syntax &stx, Positions &pos, Errors &err);
     ~Scanner();
     
 public:
@@ -194,26 +197,26 @@ public:
     void        CloseParen(uint old);
 
 private:
-    Syntax &    syntax;
-
-    FILE *      file;
-    text        tokenText;
-    text        textValue;
-    double      realValue;
-    ulong       intValue;
-    uint        base;
-    indent_list indents;
-    uint        indent;
-    int         indentChar;
-    bool        checkingIndent;
-    bool        settingIndent;
-    text        endMarker;
-    ulong       position;
-    ulong       lineStart;
-    Positions & positions;
-    Errors &    errors;
-    bool        hadSpaceBefore;
-    bool        hadSpaceAfter;
+    Syntax &       syntax;
+    std::istream & input;
+    text           tokenText;
+    text           textValue;
+    double         realValue;
+    ulong          intValue;
+    uint           base;
+    indent_list    indents;
+    uint           indent;
+    int            indentChar;
+    bool           checkingIndent;
+    bool           settingIndent;
+    text           endMarker;
+    ulong          position;
+    ulong          lineStart;
+    Positions &    positions;
+    Errors &       errors;
+    bool           hadSpaceBefore;
+    bool           hadSpaceAfter;
+    bool           mustDeleteInput;
 };
 
 XL_END

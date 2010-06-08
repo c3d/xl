@@ -36,10 +36,8 @@
   Also, because the language is designed to manipulate program trees, which
   server as the primary data structure, this implies that the program trees
   will exist at run-time as well. There needs to be a garbage collection
-  phase. The chosen garbage collection technique is mark and sweep, so that we
-  can deal with cyclic data structures. This allows us to replace a name with
-  what it references, even in cases such as X->1,X, an infinite
-  comma-separated tree of 1s.
+  phase. The chosen garbage collection technique is based on reference counting
+  because we know we won't have cyclic data structure.
 
   The chosen approach is to add an evaluation function pointer to each tree,
   the field being called 'code' in struct Tree. This function pointer is
@@ -95,7 +93,7 @@
   facilitate the interaction with other code.
 
   At top-level, the compiler generates only functions with the same
-  prototype as eval_fn, i.e. Tree *(Tree *). The code is being
+  prototype as eval_fn, i.e. Tree * (Tree *). The code is being
   generated on invokation of a form, and helps rewriting it, although
   attempts are made to leverage existing rewrites. This is implemented
   in Context::CompileAll.
@@ -135,10 +133,6 @@ XL_BEGIN
 // 
 // ============================================================================
 
-struct Tree;                                    // Abstract syntax tree
-struct Name;                                    // Name node, e.g. ABC or +
-struct Action;                                  // Action on trees
-struct TreeRoot;                                // Prevent GC from killing tree
 struct Context;                                 // Compile-time context
 struct Rewrite;                                 // Tree rewrite data
 struct Runtime;                                 // Runtime context
@@ -146,17 +140,19 @@ struct Errors;                                  // Error handlers
 struct Compiler;                                // JIT compiler
 struct CompiledUnit;                            // Compilation unit
 
-typedef std::map<text, Tree *>    symbol_table; // Symbol table in context
-typedef std::set<Tree *>          active_set;   // Not to be garbage collected
-typedef std::set<TreeRoot *>      root_set;     // Set of tree roots
-typedef std::set<Symbols *>       symbols_set;  // Set of symbol tables
-typedef std::vector<Symbols *>    symbols_list; // List of symbols table
-typedef std::map<ulong, Rewrite*> rewrite_table;// Hashing of rewrites
-typedef symbol_table::iterator    symbol_iter;  // Iterator over sym table
-typedef std::map<Tree*, Symbols*> capture_table;// Symbol capture table
-typedef std::map<Tree *, Tree *>  value_table;  // Used for value caching
-typedef value_table::iterator     value_iter;   // Used to iterate over values
-typedef Tree *(*typecheck_fn) (Tree *src, Tree *value);
+typedef GCPtr<Rewrite>             Rewrite_p;
+typedef GCPtr<Context>             Context_p;
+
+typedef std::map<text, Tree_p>     symbol_table; // Symbol table in context
+typedef std::set<Tree_p>           active_set;   // Not to be garbage collected
+typedef std::set<Symbols_p>        symbols_set;  // Set of symbol tables
+typedef std::vector<Symbols_p>     symbols_list; // List of symbols table
+typedef std::map<ulong, Rewrite_p> rewrite_table;// Hashing of rewrites
+typedef symbol_table::iterator     symbol_iter;  // Iterator over sym table
+typedef std::map<Tree_p, Symbols_p>capture_table;// Symbol capture table
+typedef std::map<Tree_p, Tree_p>   value_table;  // Used for value caching
+typedef value_table::iterator      value_iter;   // Used to iterate over values
+typedef Tree * (*typecheck_fn) (Tree *src, Tree *value);
 
 
 
@@ -181,10 +177,11 @@ struct Symbols
 
     // Symbol management
     Tree *              Named (text name, bool deep = true);
+    Tree *              Defined (text name, bool deep = true);
     Rewrite *           Rewrites()              { return rewrites; }
 
     // Entering symbols in the symbol table
-    void                EnterName (text name, Tree *value);
+    void                EnterName (text name, Tree *value, Tree *def = NULL);
     Rewrite *           EnterRewrite(Rewrite *r);
     Rewrite *           EnterRewrite(Tree *from, Tree *to);
     Name *              Allocate(Name *varName);
@@ -194,29 +191,34 @@ struct Symbols
 
     // Compiling and evaluating a tree in scope defined by these symbols
     Tree *              Compile(Tree *s, CompiledUnit &,
-                                bool nullIfBad = false, bool keepAlt = false);
-    Tree *              CompileAll(Tree *s, bool keepOtherConstants = false);
-    Tree *              CompileCall(text callee, tree_list &args);
-    Infix *             CompileTypeTest(Tree *type);
-    Tree *              Run(Tree *t);
+                                bool nullIfBad = false,
+                                bool keepOtherConstants = false);
+    Tree *              CompileAll(Tree *s,
+                                   bool nullIfBad = false,
+                                   bool keepOtherConstants = false);
+    Tree *               CompileCall(text callee, TreeList &args,
+                                     bool nullIfBad=false, bool cached = true);
+    Infix *              CompileTypeTest(Tree *type);
+    Tree *               Run(Tree *t);
 
     // Error handling
-    Tree *              ErrorHandler();
-    void                SetErrorHandler(Tree *e){ error_handler = e; }
-    Tree *              Error (text message,
-                               Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
+    Tree *               Error (text message,
+                                Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
 
 public:
-    Symbols *           parent;
+    Symbols_p           parent;
     symbol_table        names;
-    Rewrite *           rewrites;
+    symbol_table        definitions;
+    Rewrite_p           rewrites;
     symbol_table        calls;
     value_table         type_tests;
     symbols_set         imported;
-    Tree *              error_handler;
+    Tree_p              error_handler;
     bool                has_rewrites_for_constants;
 
-    static Symbols *    symbols;
+    static Symbols_p    symbols;
+
+    GARBAGE_COLLECT(Symbols);
 };
 
 
@@ -229,29 +231,16 @@ struct Context : Symbols
     Context(Errors &err, Compiler *comp):
         Symbols(NULL),
         errors(err),                            // Global error list
-        compiler(comp),                         // Tree compilation
-        active(), roots(),                      // Garbage collection
-        active_symbols(), gc_threshold(200) {}  // More garbage collection
+        compiler(comp)                          // Tree compilation
+    {}
     ~Context();
 
-    // Garbage collection
-    void                Mark(Tree *t)           { active.insert(t); }
-    void                CollectGarbage();
-
-    // Helpers for compilation of trees
-    Tree **             AddGlobal(Tree *value);
-
 public:
-    static ulong        gc_increment;
-    static ulong        gc_growth_percent;
     static Context *    context;
-
     Errors &            errors;
     Compiler *          compiler;
-    active_set          active;
-    root_set            roots;
-    symbols_set         active_symbols;
-    ulong               gc_threshold;
+
+    GARBAGE_COLLECT(Context);
 };
 
 
@@ -270,31 +259,13 @@ struct Rewrite
     Tree *              Compile(void);
 
 public:
-    Symbols *           symbols;
-    Tree *              from;
-    Tree *              to;
+    Symbols_p           symbols;
+    Tree_p              from;
+    Tree_p              to;
     rewrite_table       hash;
-    tree_list           parameters;
-};
+    TreeList            parameters;
 
-
-
-// ============================================================================
-// 
-//    Symbol information associated with a tree
-// 
-// ============================================================================
-
-struct SymbolsInfo : Info
-// ----------------------------------------------------------------------------
-//    Record the symbol associated with a tree
-// ----------------------------------------------------------------------------
-{
-    SymbolsInfo(Symbols *syms) : symbols(syms) {}
-    typedef Symbols *   data_t;
-    operator            data_t()  { return symbols; }
-    SymbolsInfo *       Copy();
-    Symbols *           symbols;
+    GARBAGE_COLLECT(Rewrite);
 };
 
 
@@ -327,11 +298,11 @@ struct InterpretedArgumentMatch : Action
     virtual Tree *DoBlock(Block *what);
 
 public:
-    Symbols *     symbols;      // Context in which we evaluate values
-    Symbols *     locals;       // Symbols where we declare arguments
-    Symbols *     rewrite;      // Symbols in which the rewrite was declared
-    Tree *        test;         // Tree we test
-    Tree *        defined;      // Tree beind defined, e.g. 'sin' in 'sin X'
+    Symbols_p     symbols;      // Context in which we evaluate values
+    Symbols_p     locals;       // Symbols where we declare arguments
+    Symbols_p     rewrite;      // Symbols in which the rewrite was declared
+    Tree_p        test;         // Tree we test
+    Tree_p        defined;      // Tree beind defined, e.g. 'sin' in 'sin X'
 };
 
 
@@ -359,9 +330,9 @@ struct DeclarationAction : Action
     virtual Tree *DoInfix(Infix *what);
     virtual Tree *DoBlock(Block *what);
 
-    void        EnterRewrite(Tree *defined, Tree *definition);
+    void        EnterRewrite(Tree *defined, Tree *definition, Tree *where);
 
-    Symbols *symbols;
+    Symbols_p symbols;
 };
 
 
@@ -383,9 +354,9 @@ struct CompileAction : Action
     virtual Tree *DoBlock(Block *what);
 
     // Build code selecting among rewrites in current context
-    Tree *        Rewrites(Tree *what);
+    Tree *         Rewrites(Tree *what);
 
-    Symbols *     symbols;
+    Symbols_p     symbols;
     CompiledUnit &unit;
     bool          nullIfBad;
     bool          keepAlternatives;
@@ -410,9 +381,9 @@ struct ParameterMatch : Action
     virtual Tree *DoInfix(Infix *what);
     virtual Tree *DoBlock(Block *what);
 
-    Symbols * symbols;          // Symbols in which we test
-    Tree *    defined;          // Tree beind defined, e.g. 'sin' in 'sin X'
-    tree_list order;            // Record order of parameters
+    Symbols_p symbols;          // Symbols in which we test
+    Tree_p    defined;          // Tree beind defined, e.g. 'sin' in 'sin X'
+    TreeList  order;            // Record order of parameters
 };
 
 
@@ -423,9 +394,9 @@ struct ArgumentMatch : Action
 {
     ArgumentMatch (Tree *t,
                    Symbols *s, Symbols *l, Symbols *r,
-                   CompileAction *comp):
+                   CompileAction *comp, bool data):
         symbols(s), locals(l), rewrite(r),
-        test(t), defined(NULL), compile(comp), unit(comp->unit) {}
+        test(t), defined(NULL), compile(comp), unit(comp->unit), data(data) {}
 
     // Action callbacks
     virtual Tree *Do(Tree *what);
@@ -439,18 +410,19 @@ struct ArgumentMatch : Action
     virtual Tree *DoBlock(Block *what);
 
     // Compile a tree
-    Tree *        Compile(Tree *source);
-    Tree *        CompileValue(Tree *source);
-    Tree *        CompileClosure(Tree *source);
+    Tree *         Compile(Tree *source);
+    Tree *         CompileValue(Tree *source);
+    Tree *         CompileClosure(Tree *source);
 
 public:
-    Symbols *      symbols;     // Context in which we evaluate values
-    Symbols *      locals;      // Symbols where we declare arguments
-    Symbols *      rewrite;     // Symbols in which the rewrite was declared
-    Tree *         test;        // Tree we test
-    Tree *         defined;     // Tree beind defined, e.g. 'sin' in 'sin X'
+    Symbols_p      symbols;     // Context in which we evaluate values
+    Symbols_p      locals;      // Symbols where we declare arguments
+    Symbols_p      rewrite;     // Symbols in which the rewrite was declared
+    Tree_p         test;        // Tree we test
+    Tree_p         defined;     // Tree beind defined, e.g. 'sin' in 'sin X'
     CompileAction *compile;     // Action in which we are compiling
     CompiledUnit  &unit;        // JIT compiler compilation unit
+    bool           data;        // Is a data form
 };
 
 
@@ -472,18 +444,18 @@ struct EnvironmentScan : Action
     virtual Tree *DoBlock(Block *what);
 
 public:
-    Symbols *           symbols;        // Symbols in which we test
+    Symbols_p           symbols;        // Symbols in which we test
     capture_table       captured;       // Captured symbols
 };
 
 
-struct BuildChildren : Action
+struct EvaluateChildren : Action
 // ----------------------------------------------------------------------------
 //   Build a clone of a tree, evaluating its children
 // ----------------------------------------------------------------------------
 {
-    BuildChildren(CompileAction *comp);
-    ~BuildChildren();
+    EvaluateChildren(Symbols *s): symbols(s)    { assert(s); }
+    ~EvaluateChildren()                         {}
 
     virtual Tree *Do(Tree *what)                { return what; }
     virtual Tree *DoInteger(Integer *what)      { return what; }
@@ -494,69 +466,12 @@ struct BuildChildren : Action
     virtual Tree *DoPostfix(Postfix *what);
     virtual Tree *DoInfix(Infix *what);
     virtual Tree *DoBlock(Block *what);
- 
+
+    Tree *        Try(Tree *what);
 public:
-    CompileAction *compile;             // Compilation in progress
-    CompiledUnit & unit;                // JIT compiler compilation unit
-    bool           saveNullIfBad;       // Unit original "nib" settings
+    Symbols *   symbols;
 };
 
-
-
-// ============================================================================
-// 
-//   Garbage collection of trees - Mark trees that are alive from root
-// 
-// ============================================================================
-
-struct GCAction : Action
-// ----------------------------------------------------------------------------
-//   Mark trees for garbage collection and compute active set
-// ----------------------------------------------------------------------------
-{
-    GCAction (): alive(), alive_symbols() {}
-    ~GCAction () {}
-
-    bool Mark(Tree *what)
-    {
-        typedef std::pair<active_set::iterator, bool> inserted;
-        inserted ins = alive.insert(what);
-        if (Symbols *syms = what->Get<SymbolsInfo> ())
-            alive_symbols.insert(syms);
-        return ins.second;
-    }
-    Tree *Do(Tree *what)
-    {
-        Mark(what);
-        return what;
-    }
-    Tree *DoBlock(Block *what)
-    {
-        if (Mark(what))
-            Action::DoBlock(what);              // Do child
-        return what;
-    }
-    Tree *DoInfix(Infix *what)
-    {
-        if (Mark(what))
-            Action::DoInfix(what);              // Do children
-        return what;
-    }
-    Tree *DoPrefix(Prefix *what)
-    {
-        if (Mark(what))
-            Action::DoPrefix(what);             // Do children
-        return what;
-    }
-    Tree *DoPostfix(Postfix *what)
-    {
-        if (Mark(what))
-            Action::DoPostfix(what);            // Do children
-        return what;
-    }
-    active_set  alive;
-    symbols_set alive_symbols;
-};
 
 
 // ============================================================================
@@ -602,7 +517,10 @@ inline Tree *Ooops (text msg, Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL)
 //   Error using the global context
 // ----------------------------------------------------------------------------
 {
-    return Context::context->Error(msg, a1, a2, a3);
+    Symbols *syms = Symbols::symbols;
+    if (!syms)
+        syms = Context::context;
+    return syms->Error(msg, a1, a2, a3);
 }
 
 
@@ -626,10 +544,7 @@ inline Symbols::~Symbols()
 // ----------------------------------------------------------------------------
 //   Delete all included rewrites if necessary and unlink from context
 // ----------------------------------------------------------------------------
-{
-    if (rewrites)
-        delete rewrites;
- }
+{}
 
 
 inline ulong Symbols::Depth()

@@ -84,21 +84,44 @@ Scanner::Scanner(kstring name, Syntax &stx, Positions &pos, Errors &err)
 //   Open the file and make sure it's readable
 // ----------------------------------------------------------------------------
     : syntax(stx),
-      file(NULL),
+      input(*new std::ifstream(name)),
       tokenText(""),
       textValue(""), realValue(0.0), intValue(0),
       indents(), indent(0), indentChar(0),
       checkingIndent(false), settingIndent(false),
       position(0), lineStart(0),
       positions(pos), errors(err),
-      hadSpaceBefore(false), hadSpaceAfter(false)
+      hadSpaceBefore(false), hadSpaceAfter(false),
+      mustDeleteInput(true)
 {
-    file = fopen(name, "r");
     indents.push_back(0);       // We start with an indent of 0
     position = positions.OpenFile(name);
-    if (!file)
+    if (input.fail())
         err.Error("File '$1' cannot be read: $2",
                   0, name, strerror(errno));
+}
+
+
+Scanner::Scanner(std::istream &input, Syntax &stx, Positions &pos, Errors &err)
+// ----------------------------------------------------------------------------
+//   Open the file and make sure it's readable
+// ----------------------------------------------------------------------------
+    : syntax(stx),
+      input(input),
+      tokenText(""),
+      textValue(""), realValue(0.0), intValue(0),
+      indents(), indent(0), indentChar(0),
+      checkingIndent(false), settingIndent(false),
+      position(0), lineStart(0),
+      positions(pos), errors(err),
+      hadSpaceBefore(false), hadSpaceAfter(false),
+      mustDeleteInput(false)
+{
+    indents.push_back(0);       // We start with an indent of 0
+    position = positions.OpenFile("<stream>");
+    if (input.fail())
+        err.Error("Input stream cannot be read: $1",
+                  0, strerror(errno));
 }
 
 
@@ -107,8 +130,8 @@ Scanner::~Scanner()
 //   XLScanner destructor closes the file
 // ----------------------------------------------------------------------------
 {
-    if (file)
-        fclose(file);
+    if (mustDeleteInput)
+        delete &input;
     positions.CloseFile(position);
 }
 
@@ -117,7 +140,7 @@ Scanner::~Scanner()
 do {                                            \
     tokenText += c;                             \
     textValue += c;                             \
-    c = fgetc(file);                            \
+    c = input.get();                            \
     position++;                                 \
 } while(0)
 
@@ -126,7 +149,7 @@ do {                                            \
 do {                                            \
     tokenText += tolower(c);                    \
     textValue += c;                             \
-    c = fgetc(file);                            \
+    c = input.get();                            \
     position++;                                 \
 } while(0)
 
@@ -134,7 +157,7 @@ do {                                            \
 #define IGNORE_CHAR(c)                          \
 do {                                            \
     textValue += c;                             \
-    c = fgetc(file);                            \
+    c = input.get();                            \
     position++;                                 \
 } while (0)
 
@@ -150,8 +173,8 @@ token_t Scanner::NextToken(bool hungry)
     realValue = 0.0;
     base = 0;
 
-    // Check if file was opened correctly
-    if (!file)
+    // Check if input was opened correctly
+    if (!input.good())
         return tokEOF;
 
     // Check if we unindented far enough for multiple indents
@@ -163,7 +186,7 @@ token_t Scanner::NextToken(bool hungry)
     }
 
     // Read next character
-    int c = fgetc(file);
+    int c = input.get();
     position++;
 
     // Skip spaces and check indendation
@@ -191,14 +214,14 @@ token_t Scanner::NextToken(bool hungry)
         }
 
         // Keep looking for more spaces
-        c = fgetc(file);
+        c = input.get();
         position++;
     } // End of space testing
 
     // Stop counting indentation
     if (checkingIndent)
     {
-        ungetc(c, file);
+        input.unget();
         position--;
         checkingIndent = false;
         ulong column = position - lineStart;
@@ -245,8 +268,8 @@ token_t Scanner::NextToken(bool hungry)
         }
     }
 
-    // Report end of file if that's what we've got
-    if (c == EOF)
+    // Report end of input if that's what we've got
+    if (input.eof())
 	return tokEOF;
 
 
@@ -299,13 +322,13 @@ token_t Scanner::NextToken(bool hungry)
         realValue = intValue;
         if (c == '.')
         {
-            c = fgetc(file);
+            c = input.get();
             position++;
             if (digit_values[c] >= base)
             {
                 // This is something else following an integer: 1..3, 1.(3)
-                ungetc(c, file);
-                ungetc('.', file);
+                input.unget();
+                input.unget();
                 position -= 2;
                 hadSpaceAfter = false;
                 return tokINTEGER;
@@ -386,7 +409,7 @@ token_t Scanner::NextToken(bool hungry)
         }
 
         // Return the token
-        ungetc(c, file);
+        input.unget();
         position--;
         hadSpaceAfter = isspace(c);
         return floating_point ? tokREAL : tokINTEGER;
@@ -402,7 +425,7 @@ token_t Scanner::NextToken(bool hungry)
             else
                 NEXT_LOWER_CHAR(c);
         }
-        ungetc(c, file);
+        input.unget();
         position--;
         hadSpaceAfter = isspace(c);
         if (syntax.IsBlock(textValue, endMarker))
@@ -415,7 +438,7 @@ token_t Scanner::NextToken(bool hungry)
     {
         char eos = c;
         tokenText = c;
-        c = fgetc(file);
+        c = input.get();
         position++;
         for(;;)
         {
@@ -423,11 +446,11 @@ token_t Scanner::NextToken(bool hungry)
             if (c == eos)
             {
                 tokenText += c;
-                c = fgetc(file);
+                c = input.get();
                 position++;
                 if (c != eos)
                 {
-                    ungetc(c, file);
+                    input.unget();
                     position--;
                     hadSpaceAfter = isspace(c);
                     return eos == '"' ? tokSTRING : tokQUOTE;
@@ -463,7 +486,7 @@ token_t Scanner::NextToken(bool hungry)
         if (!hungry && !syntax.KnownToken(tokenText))
             break;
     }
-    ungetc(c, file);
+    input.unget();
     position--;
     hadSpaceAfter = isspace(c);
     if (syntax.IsBlock(textValue, endMarker))
@@ -486,7 +509,7 @@ text Scanner::Comment(text EOC)
 
     while (*match && c != EOF)
     {
-        c = fgetc(file);
+        c = input.get();
         position++;
         skip = false;
 

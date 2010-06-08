@@ -1,28 +1,25 @@
-/* ************************************************************************* */
-/*   Christophe de Dinechin                                     XL2 PROJECT  */
-/*   XL COMPILER: options.tbl                                                */
-/* ************************************************************************* */
-/*                                                                           */
-/*   File Description:                                                       */
-/*                                                                           */
-/*     This table defines the options known to the compiler                  */
-/*                                                                           */
-/*                                                                           */
-/*                                                                           */
-/*                                                                           */
-/*                                                                           */
-/*                                                                           */
-/*                                                                           */
-/*                                                                           */
-/*                                                                           */
-/* ************************************************************************* */
-/* This document is distributed under the GNU general public license.        */
-/* See the accompanying license file for information                         */
-/* ****************************************************************************
-   * File       : $RCSFile$
-   * Revision   : $Revision $
-   * Date       : $Date $
-   ************************************************************************* */
+// ****************************************************************************
+//  options.tbl                                                     XLR project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     This table defines the options known to the compiler.
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+//  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2010 Jerome Forissier <jerome@taodyne.com>
+//  (C) 2010 Taodyne SAS
+// ****************************************************************************
 // Keywords:
 // OPTVAR defines an option-controlling variable
 // OPTION defines an option and associated code
@@ -32,8 +29,14 @@
 // matching option is considered good, so short options should be first
 
 
+// ============================================================================
+//
+//    XLR options
+//
+// ============================================================================
+
 // Getting help on options
-OPTION(help, "List usage information", Usage(argv))
+OPTION(h, "List usage information and exit", Usage(argv); exit(0))
 
 // Rendering control
 OPTVAR(stylesheet, text, "xl")
@@ -51,10 +54,13 @@ OPTION(show, "Show source file", showSource = true)
 OPTVAR(fileLoad, bool, false)
 OPTION(fileload, "Show paths as files are loaded", fileLoad = true)
 
-// Do not load builtins.xl
-OPTVAR(builtins, bool, true)
-OPTION(nobuiltins, "Do not load builtins", builtins = false)
-OPTION(nb, "Short form for -nobuiltins", builtins = false)
+// Builtins file
+OPTVAR(builtins, text, "builtins.xl")
+OPTION(builtins, "Select the builtins file", builtins = STRING)
+
+// Do not load builtins file
+OPTION(nobuiltins, "Do not load builtins", builtins = "")
+OPTION(nb, "Short form for -nobuiltins", builtins = "")
 
 // Read or write from serialized format
 OPTVAR(readSerialized, bool, false)
@@ -85,13 +91,53 @@ OPTVAR(verbose,bool,false)
 OPTION(verbose, "Select more verbose error messages.", verbose = true)
 OPTION(v, "Short form for -verbose.", verbose = true)
 
+// Stack depth
+OPTVAR(stack_depth, uint, 1000)
+OPTION(stack, "Select the evaluation stack depth",
+       stack_depth = INTEGER(50,25000)) // Experimentally, 52K max on MacOSX
+
 // Output file
 OPTVAR(output_file, std::string, "")
 OPTION(o, "Select output file", output_file = STRING)
 
 // Debug controlling options
 OPTVAR(doDiff, bool, false)
-OPTION(diff, "Compute difference of two parse trees (you must give exactly two input files)", doDiff=true)
+OPTION(diff,
+       "Compute difference of two parse trees "
+       "(you must give exactly two input files)", doDiff=true)
+
+
+#ifdef TAO
+// ============================================================================
+//
+//   Tao options
+//
+// ============================================================================
+
+OPTVAR(sync_interval, ulong,   500)
+OPTVAR(save_interval, ulong,   1000)
+OPTVAR(commit_interval, ulong, 5000)
+OPTVAR(pull_interval, ulong, 5000)
+OPTION(autosync, "Interval for automatic file sync in milliseconds",
+       sync_interval = INTEGER)
+OPTION(autosave, "Interval for automatic save in milliseconds",
+       save_interval = INTEGER)
+OPTION(autocommit, "Interval for automatic commit in milliseconds",
+       commit_interval = INTEGER)
+OPTION(autopull, "Interval for automatic pull in milliseconds",
+       pull_interval = INTEGER)
+
+OPTVAR(prefer_opengl, bool, false)
+OPTION(gl, "Prefer OpenGL for rendering", prefer_opengl = true)
+
+TRACE(filesync)
+TRACE(menus)
+TRACE(process)
+TRACE(drag)
+TRACE(focus)
+TRACE(undo)
+TRACE(widgets)
+#endif // TAO
 
 // Traces. The first ones must match the MzTrace definition in base.h
 // We use lower-case names here to avoid duplicate definition and be able
@@ -100,11 +146,15 @@ TRACE(memory)
 TRACE(rewrite)
 TRACE(eval)
 TRACE(code)
+TRACE(llvm)
 TRACE(typecheck)
 TRACE(labels)
 TRACE(builtins)
 TRACE(closure)
 TRACE(diff)
+TRACE(calls2xl)
+TRACE(clipboard)
+TRACE(srcview)
 
 // Undefine for next use...
 #undef OPTVAR

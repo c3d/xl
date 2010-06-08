@@ -85,14 +85,28 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
       integerTreeTy(NULL), integerTreePtrTy(NULL),
       realTreeTy(NULL), realTreePtrTy(NULL),
       prefixTreeTy(NULL), prefixTreePtrTy(NULL),
-      evalTy(NULL), evalFnTy(NULL), infoPtrTy(NULL), charPtrTy(NULL),
+      evalTy(NULL), evalFnTy(NULL),
+      infoPtrTy(NULL), symbolsPtrTy(NULL), charPtrTy(NULL),
       xl_evaluate(NULL), xl_same_text(NULL), xl_same_shape(NULL),
       xl_infix_match_check(NULL), xl_type_check(NULL), xl_type_error(NULL),
       xl_new_integer(NULL), xl_new_real(NULL), xl_new_character(NULL),
       xl_new_text(NULL), xl_new_xtext(NULL), xl_new_block(NULL),
       xl_new_prefix(NULL), xl_new_postfix(NULL), xl_new_infix(NULL),
-      functions()
+      xl_new_closure(NULL), xl_evaluate_children()
 {
+    // Register a listener with the garbage collector
+    CompilerGarbageCollectionListener *cgcl =
+        new CompilerGarbageCollectionListener(this);
+    Allocator<Tree>     ::Singleton()->AddListener(cgcl);
+    Allocator<Integer>  ::Singleton()->AddListener(cgcl);
+    Allocator<Real>     ::Singleton()->AddListener(cgcl);
+    Allocator<Text>     ::Singleton()->AddListener(cgcl);
+    Allocator<Name>     ::Singleton()->AddListener(cgcl);
+    Allocator<Infix>    ::Singleton()->AddListener(cgcl);
+    Allocator<Prefix>   ::Singleton()->AddListener(cgcl);
+    Allocator<Postfix>  ::Singleton()->AddListener(cgcl);
+    Allocator<Block>    ::Singleton()->AddListener(cgcl);
+
     // Initialize native target (new features)
     InitializeNativeTarget();
 
@@ -107,9 +121,8 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     runtime->DisableLazyCompilation(false);
 
     // Setup the optimizer - REVISIT: Adjust with optimization level
-    uint optLevel = 2;
     optimizer = new FunctionPassManager(module);
-    createStandardFunctionPasses(optimizer, optLevel);
+    createStandardFunctionPasses(optimizer, optimize_level);
     {
         // Register target data structure layout info
         optimizer->add(new TargetData(*runtime->getTargetData()));
@@ -121,7 +134,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
         optimizer->add(createInstructionCombiningPass());
 
         // Inlining of tails
-        // optimizer->add(createTailDuplicationPass());
+        optimizer->add(createTailDuplicationPass());
         optimizer->add(createTailCallEliminationPass());
 
         // Re-order blocks to eliminate branches
@@ -163,9 +176,11 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     // systems which do not allow the program to dlopen itself.
     runtime->InstallLazyFunctionCreator(unresolved_external);
 
-    // Create the Symbol pointer type
+    // Create the Info and Symbol pointer types
     PATypeHolder structInfoTy = OpaqueType::get(*context); // struct Info
     infoPtrTy = PointerType::get(structInfoTy, 0);         // Info *
+    PATypeHolder structSymTy = OpaqueType::get(*context);  // struct Symbols
+    symbolsPtrTy = PointerType::get(structSymTy, 0);       // Symbols *
 
     // Create the eval_fn type
     PATypeHolder structTreeTy = OpaqueType::get(*context); // struct Tree
@@ -183,7 +198,9 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
             tag(o.tag), code(o.code), info(o.info) {}
         ulong    tag;
         eval_fn  code;
-        Info    *info;
+        Symbols *symbols;       // The original definitions have _p
+        XL::Info*info;          // We check that the size is the same
+        Tree    *source;
     };
     // If this assert fails, you changed struct tree and need to modify here
     XL_CASSERT(sizeof(LocalTree) == sizeof(Tree));
@@ -192,13 +209,17 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     std::vector<const Type *> treeElements;
     treeElements.push_back(LLVM_INTTYPE(ulong));           // tag
     treeElements.push_back(evalFnTy);                      // code
-    treeElements.push_back(infoPtrTy);                     // symbols
+    treeElements.push_back(symbolsPtrTy);                  // symbols
+    treeElements.push_back(infoPtrTy);                     // info
+    treeElements.push_back(treePtrTy);                     // source
     treeTy = StructType::get(*context, treeElements);      // struct Tree {}
     cast<OpaqueType>(structTreeTy.get())->refineAbstractTypeTo(treeTy);
     treeTy = cast<StructType> (structTreeTy.get());
 #define TAG_INDEX       0
 #define CODE_INDEX      1
-#define INFO_INDEX      2
+#define SYMBOLS_INDEX   2
+#define INFO_INDEX      3
+#define SOURCE_INDEX    4
 
 
     // Create the Integer type
@@ -206,14 +227,14 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     integerElements.push_back(LLVM_INTTYPE(longlong));  // value
     integerTreeTy = StructType::get(*context, integerElements);   // struct Integer{}
     integerTreePtrTy = PointerType::get(integerTreeTy,0); // Integer *
-#define INTEGER_VALUE_INDEX     3
+#define INTEGER_VALUE_INDEX     5
 
     // Create the Real type
     std::vector<const Type *> realElements = treeElements;
     realElements.push_back(Type::getDoubleTy(*context));  // value
     realTreeTy = StructType::get(*context, realElements); // struct Real{}
     realTreePtrTy = PointerType::get(realTreeTy, 0);      // Real *
-#define REAL_VALUE_INDEX        3
+#define REAL_VALUE_INDEX        5
 
     // Create the Prefix type (which we also use for Infix and Block)
     std::vector<const Type *> prefixElements = treeElements;
@@ -221,8 +242,8 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     prefixElements.push_back(treePtrTy);                // Tree *
     prefixTreeTy = StructType::get(*context, prefixElements); // struct Prefix
     prefixTreePtrTy = PointerType::get(prefixTreeTy, 0);// Prefix *
-#define LEFT_VALUE_INDEX        3
-#define RIGHT_VALUE_INDEX       4
+#define LEFT_VALUE_INDEX        5
+#define RIGHT_VALUE_INDEX       6
 
     // Record the type names
     module->addTypeName("tree", treeTy);
@@ -243,7 +264,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     xl_same_shape = ExternFunction(FN(xl_same_shape),
                                    boolTy, 2, treePtrTy, treePtrTy);
     xl_infix_match_check = ExternFunction(FN(xl_infix_match_check),
-                                          treePtrTy, 2, treePtrTy, treePtrTy);
+                                          treePtrTy, 2, treePtrTy, charPtrTy);
     xl_type_check = ExternFunction(FN(xl_type_check),
                                    treePtrTy, 2, treePtrTy, treePtrTy);
     xl_type_error = ExternFunction(FN(xl_type_error),
@@ -258,9 +279,6 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
                                  treePtrTy, 1, charPtrTy);
     xl_new_xtext = ExternFunction(FN(xl_new_xtext),
                                  treePtrTy, 3, charPtrTy, charPtrTy, charPtrTy);
-    xl_new_closure = ExternFunction(FN(xl_new_closure),
-                                    treePtrTy, -2,
-                                    treePtrTy, LLVM_INTTYPE(uint));
     xl_new_block = ExternFunction(FN(xl_new_block),
                                   treePtrTy, 2, treePtrTy,treePtrTy);
     xl_new_prefix = ExternFunction(FN(xl_new_prefix),
@@ -269,6 +287,11 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
                                     treePtrTy, 3,treePtrTy,treePtrTy,treePtrTy);
     xl_new_infix = ExternFunction(FN(xl_new_infix),
                                   treePtrTy, 3, treePtrTy,treePtrTy,treePtrTy);
+    xl_new_closure = ExternFunction(FN(xl_new_closure),
+                                    treePtrTy, -2,
+                                    treePtrTy, LLVM_INTTYPE(uint));
+    xl_evaluate_children = ExternFunction(FN(xl_evaluate_children),
+                                          treePtrTy, -1, treePtrTy);
 }
 
 
@@ -286,16 +309,69 @@ void Compiler::Reset()
 //    Clear the contents of a compiler
 // ----------------------------------------------------------------------------
 {
-    functions.clear();
-    globals.clear();
     closures.clear();
-    deleted.clear();
+}
+
+
+CompilerInfo *Compiler::Info(Tree *tree, bool create)
+// ----------------------------------------------------------------------------
+//   Find or create the compiler-related info for a given tree
+// ----------------------------------------------------------------------------
+{
+    CompilerInfo *result = tree->GetInfo<CompilerInfo>();
+    if (!result && create)
+    {
+        result = new CompilerInfo(tree);
+        tree->SetInfo<CompilerInfo>(result);
+    }
+    return result;
+}
+
+
+llvm::Function * Compiler::TreeFunction(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Return the function associated to the tree
+// ----------------------------------------------------------------------------
+{
+    CompilerInfo *info = Info(tree);
+    return info ? info->function : NULL;
+}
+
+
+void Compiler::SetTreeFunction(Tree *tree, llvm::Function *function)
+// ----------------------------------------------------------------------------
+//   Associate a function to the given tree
+// ----------------------------------------------------------------------------
+{
+    CompilerInfo *info = Info(tree, true);
+    info->function = function;
+}
+
+
+llvm::GlobalValue * Compiler::TreeGlobal(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Return the global value associated to the tree, if any
+// ----------------------------------------------------------------------------
+{
+    CompilerInfo *info = Info(tree);
+    return info ? info->global : NULL;
+}
+
+
+void Compiler::SetTreeGlobal(Tree *tree, llvm::GlobalValue *global, void *addr)
+// ----------------------------------------------------------------------------
+//   Set the global value associated to the tree
+// ----------------------------------------------------------------------------
+{
+    CompilerInfo *info = Info(tree, true);
+    info->global = global;
+    runtime->addGlobalMapping(global, addr ? addr : &info->tree);
 }
 
 
 Function *Compiler::EnterBuiltin(text name,
-                                 Tree *from, Tree *to,
-                                 tree_list parms,
+                                 Tree *to,
+                                 TreeList parms,
                                  eval_fn code)
 // ----------------------------------------------------------------------------
 //   Declare a built-in function
@@ -303,17 +379,24 @@ Function *Compiler::EnterBuiltin(text name,
 //   The input is not technically an eval_fn, but has as many parameters as
 //   there are variables in the form
 {
+    IFTRACE(llvm)
+        std::cerr << "EnterBuiltin " << name
+                  << " C" << (void *) code << " T" << (void *) to;
+
     Function *result = builtins[name];
     if (result)
     {
-        functions[to] = result;
+        IFTRACE(llvm)
+            std::cerr << " existing F " << result
+                      << " replaces F" << TreeFunction(to) << "\n";
+        SetTreeFunction(to, result);
     }
     else
     {
         // Create the LLVM function
         std::vector<const Type *> parmTypes;
         parmTypes.push_back(treePtrTy); // First arg is self
-        for (tree_list::iterator p = parms.begin(); p != parms.end(); p++)
+        for (TreeList::iterator p = parms.begin(); p != parms.end(); p++)
             parmTypes.push_back(treePtrTy);
         FunctionType *fnTy = FunctionType::get(treePtrTy, parmTypes, false);
         result = Function::Create(fnTy, Function::ExternalLinkage,
@@ -322,8 +405,12 @@ Function *Compiler::EnterBuiltin(text name,
         // Record the runtime symbol address
         sys::DynamicLibrary::AddSymbol(name, (void*) code);
 
+        IFTRACE(llvm)
+            std::cerr << " new F " << result
+                      << "replaces F" << TreeFunction(to) << "\n";
+
         // Associate the function with the tree form
-        functions[to] = result;
+        SetTreeFunction(to, result);
         builtins[name] = result;
     }
 
@@ -340,10 +427,17 @@ adapter_fn Compiler::EnterArrayToArgsAdapter(uint numargs)
 //   For example, it allows you to call foo(Tree *src, Tree *a1, Tree *a2)
 //   by calling generated_adapter(foo, Tree *src, Tree *args[2])
 {
+    IFTRACE(llvm)
+        std::cerr << "EnterArrayToArgsAdapater " << numargs;
+
     // Check if we already computed it
     eval_fn result = array_to_args_adapters[numargs];
     if (result)
+    {
+        IFTRACE(llvm)
+            std::cerr << " existing C" << (void *) result << "\n";
         return (adapter_fn) result;
+    }
 
     // Generate the function type: Tree *generated(eval_fn, Tree *, Tree **)
     std::vector<const Type *> parms;
@@ -402,6 +496,9 @@ adapter_fn Compiler::EnterArrayToArgsAdapter(uint numargs)
     result = (eval_fn) runtime->getPointerToFunction(adapter);
     array_to_args_adapters[numargs] = result;
 
+    IFTRACE(llvm)
+        std::cerr << " new C" << (void *) result << "\n";
+
     // And return it to the caller
     return (adapter_fn) result;
 }
@@ -413,6 +510,11 @@ Function *Compiler::ExternFunction(kstring name, void *address,
 //   Return a Function for some given external symbol
 // ----------------------------------------------------------------------------
 {
+    IFTRACE(llvm)
+        std::cerr << "ExternFunction " << name
+                  << " has " << parmCount << " parameters "
+                  << " C" << address;
+
     va_list va;
     std::vector<const Type *> parms;
     bool isVarArg = parmCount < 0;
@@ -430,11 +532,15 @@ Function *Compiler::ExternFunction(kstring name, void *address,
     Function *result = Function::Create(fnType, Function::ExternalLinkage,
                                         name, module);
     sys::DynamicLibrary::AddSymbol(name, address);
+
+    IFTRACE(llvm)
+        std::cerr << " F" << result << "\n";
+
     return result;
 }
 
 
-Value *Compiler::EnterGlobal(Name *name, Name **address)
+Value *Compiler::EnterGlobal(Name *name, Name_p *address)
 // ----------------------------------------------------------------------------
 //   Enter a global variable in the symbol table
 // ----------------------------------------------------------------------------
@@ -444,8 +550,15 @@ Value *Compiler::EnterGlobal(Name *name, Name **address)
     GlobalValue *result = new GlobalVariable (*module, treePtrTy, isConstant,
                                               GlobalVariable::ExternalLinkage,
                                               null, name->value);
-    runtime->addGlobalMapping(result, address);
-    globals[name] = result;
+    SetTreeGlobal(name, result, address);
+
+    IFTRACE(llvm)
+        std::cerr << "EnterGlobal " << name->value
+                  << " name T" << (void *) name
+                  << " A" << address
+                  << " address T" << (void *) address->Pointer()
+                  << "\n";
+
     return result;
 }
 
@@ -469,9 +582,12 @@ Value *Compiler::EnterConstant(Tree *constant)
     GlobalValue *result = new GlobalVariable (*module, treePtrTy, isConstant,
                                               GlobalVariable::InternalLinkage,
                                               NULL, name);
-    Tree **address = Context::context->AddGlobal(constant);
-    runtime->addGlobalMapping(result, address);
-    globals[constant] = result;
+    SetTreeGlobal(constant, result, NULL);
+
+    IFTRACE(llvm)
+        std::cerr << "EnterConstant T" << (void *) constant
+                  << " A" << (void *) &Info(constant)->tree << "\n";
+
     return result;
 }
 
@@ -481,23 +597,11 @@ bool Compiler::IsKnown(Tree *tree)
 //    Test if global is known
 // ----------------------------------------------------------------------------
 {
-    return globals.count(tree) > 0;
+    return TreeGlobal(tree) != NULL;
 }
 
 
-Value *Compiler::Known(Tree *tree)
-// ----------------------------------------------------------------------------
-//    Return the known global value of the tree if it exists
-// ----------------------------------------------------------------------------
-{
-    Value *result = NULL;
-    if (globals.count(tree) > 0)
-        result = globals[tree];
-    return result;
-}
-
-
-void Compiler::FreeResources(GCAction &gc, Tree *tree)
+bool Compiler::FreeResources(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Free the LLVM resources associated to the tree, if any
 // ----------------------------------------------------------------------------
@@ -506,61 +610,68 @@ void Compiler::FreeResources(GCAction &gc, Tree *tree)
 //   calling foo(), we will get an LLVM assert deleting one while the
 //   other's body still makes a reference.
 {
-    if (functions.count(tree) > 0)
+    bool result = true;
+
+    IFTRACE(llvm)
+        std::cerr << "FreeResources T" << (void *) tree;
+
+    CompilerInfo *info = Info(tree);
+    if (!info)
     {
-        Function *f = functions[tree];
-        f->deleteBody();
-        runtime->freeMachineCodeForFunction(f);
+        IFTRACE(llvm)
+            std::cerr << " has no info\n";
+        return true;
     }
-    deleted.insert(tree);
-}
 
-
-void Compiler::FreeResources(GCAction &gc)
-// ----------------------------------------------------------------------------
-//   Delete LLVM functions for all trees we want to erase
-// ----------------------------------------------------------------------------
-//   At this stage, we have deleted all the bodies
-{
-    while (!deleted.empty())
+    // Drop function reference if any
+    if (Function *f = info->function)
     {
-        std::cerr << "Freed functions\n";
-        deleted_set::iterator i = deleted.begin();
-        Tree *tree = *i;
-        if (functions.count(tree) > 0)
+        bool inUse = !f->use_empty();
+        
+        IFTRACE(llvm)
+            std::cerr << " function F" << f
+                      << (inUse ? " in use" : " unused");
+        
+        if (inUse)
         {
-            Function *f = functions[tree];
-            if (f->use_empty())
-            {
-                // Delete the LLVM function now that it's safe to do
-                delete f;
-                functions.erase(tree);
-            }
-            else
-            {
-                // Mark the tree back in XLR so that we keep it around
-                tree->Do(gc);
-            }
+            // Defer deletion until later
+            result = false;
         }
-        if (globals.count(tree) > 0)
+        else
         {
-            Value *v = globals[tree];
-            if (v->use_empty())
-            {
-                // Delete the LLVM function now that it's safe to do
-                delete v;
-                globals.erase(tree);
-            }
-            else
-            {
-                // Mark the tree back in XLR so that we keep it around
-                tree->Do(gc);
-            }
+            // Not in use, we can delete it directly
+            f->eraseFromParent();
+            info->function = NULL;
         }
-
-        // This tree has been analyzed
-        deleted.erase(tree);
     }
+    
+    // Drop any global reference
+    if (GlobalValue *v = info->global)
+    {
+        bool inUse = !v->use_empty();
+        
+        IFTRACE(llvm)
+            std::cerr << " global V" << v
+                      << (inUse ? " in use" : " unused");
+        
+        if (inUse)
+        {
+            // Defer deletion until later
+            result = false;
+        }
+        else
+        {
+            // Delete the LLVM value immediately if it's safe to do it.
+            runtime->updateGlobalMapping(v, NULL);
+            v->eraseFromParent();
+            info->global = NULL;
+        }
+    }
+
+    IFTRACE(llvm)
+        std::cerr << (result ? " Delete\n" : "Preserved\n");
+
+    return result;
 }
 
 
@@ -571,7 +682,7 @@ void Compiler::FreeResources(GCAction &gc)
 // 
 // ============================================================================
 
-CompiledUnit::CompiledUnit(Compiler *comp, Tree *src, tree_list parms)
+CompiledUnit::CompiledUnit(Compiler *comp, Tree *src, TreeList parms)
 // ----------------------------------------------------------------------------
 //   CompiledUnit constructor
 // ----------------------------------------------------------------------------
@@ -579,9 +690,17 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *src, tree_list parms)
       code(NULL), data(NULL), function(NULL),
       allocabb(NULL), entrybb(NULL), exitbb(NULL), failbb(NULL)
 {
+    IFTRACE(llvm)
+        std::cerr << "CompiledUnit T" << (void *) src;
+
     // If a compilation for that tree is alread in progress, fwd decl
-    if (compiler->functions[src])
+    if (llvm::Function *function = compiler->TreeFunction(src))
+    {
+        // We exit here without setting entrybb (see IsForward())
+        IFTRACE(llvm)
+            std::cerr << " exists F" << function << "\n";
         return;
+    }
 
     // Create the function signature, one entry per parameter + one for source
     std::vector<const Type *> signature;
@@ -596,7 +715,9 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *src, tree_list parms)
                                 label.c_str(), compiler->module);
 
     // Save it in the compiler
-    compiler->functions[src] = function;
+    compiler->SetTreeFunction(src, function);
+    IFTRACE(llvm)
+        std::cerr << " new F" << function << "\n";
 
     // Create function entry point, where we will have all allocas
     allocabb = BasicBlock::Create(*context, "allocas", function);
@@ -614,7 +735,7 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *src, tree_list parms)
     storage[src] = result_storage;
 
     // Associate the value for the additional arguments (read-only, no alloca)
-    tree_list::iterator parm;
+    TreeList::iterator parm;
     ulong parmsCount = 0;
     for (parm = parms.begin(); parm != parms.end(); parm++)
     {
@@ -639,6 +760,15 @@ CompiledUnit::~CompiledUnit()
 //   Delete what we must...
 // ----------------------------------------------------------------------------
 {
+    if (entrybb && exitbb)
+    {
+        // If entrybb is clear, we may be looking at a forward declaration
+        // Otherwise, if exitbb was not cleared by Finalize(), this means we
+        // failed to compile. Make sure the compiler forgets the function
+        compiler->SetTreeFunction(source, NULL);
+        function->eraseFromParent();
+    }
+
     delete code;
     delete data;
 }    
@@ -649,6 +779,10 @@ eval_fn CompiledUnit::Finalize()
 //   Finalize the build of the current function
 // ----------------------------------------------------------------------------
 {
+    IFTRACE(llvm)
+        std::cerr << "CompiledUnit Finalize T" << (void *) source
+                  << " F" << function;
+
     // Branch to the exit block from the last test we did
     code->CreateBr(exitbb);
 
@@ -667,6 +801,10 @@ eval_fn CompiledUnit::Finalize()
     }
 
     void *result = compiler->runtime->getPointerToFunction(function);
+    IFTRACE(llvm)
+        std::cerr << " C" << (void *) result << "\n";
+
+    exitbb = NULL;              // Tell destructor we were successful
     return (eval_fn) result;
 }
 
@@ -689,7 +827,7 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
     }
     if (value.count(tree))
         data->CreateStore(value[tree], result);
-    else if (Value *global = compiler->Known(tree))
+    else if (Value *global = compiler->TreeGlobal(tree))
         data->CreateStore(data->CreateLoad(global), result);
 
     return result;
@@ -731,7 +869,7 @@ Value *CompiledUnit::Known(Tree *tree, uint which)
     else if (which & knowGlobals)
     {
         // Check if this is a global
-        result = compiler->Known(tree);
+        result = compiler->TreeGlobal(tree);
         if (result)
         {
             text label = "glob";
@@ -888,12 +1026,13 @@ void CompiledUnit::EndLazy(Tree *subexpr,
 //   Finish lazy evaluation of a block of code
 // ----------------------------------------------------------------------------
 {
+    (void) subexpr;
     code->CreateBr(skip);
     code->SetInsertPoint(skip);
 }
 
 
-llvm::Value *CompiledUnit::Invoke(Tree *subexpr, Tree *callee, tree_list args)
+llvm::Value *CompiledUnit::Invoke(Tree *subexpr, Tree *callee, TreeList args)
 // ----------------------------------------------------------------------------
 //    Generate a call with the given arguments
 // ----------------------------------------------------------------------------
@@ -912,14 +1051,14 @@ llvm::Value *CompiledUnit::Invoke(Tree *subexpr, Tree *callee, tree_list args)
         }
     }
 
-    Function *toCall = compiler->functions[callee]; assert(toCall);
+    Function *toCall = compiler->TreeFunction(callee); assert(toCall);
 
     // Add the 'self' argument
     std::vector<Value *> argV;
     Value *defaultVal = ConstantTree(subexpr);
     argV.push_back(defaultVal);
 
-    tree_list::iterator a;
+    TreeList::iterator a;
     for (a = args.begin(); a != args.end(); a++)
     {
         Tree *arg = *a;
@@ -958,6 +1097,8 @@ Value *CompiledUnit::Left(Tree *tree)
     assert (tree->Kind() >= BLOCK);
 
     // Check if we already know the result, if so just return it
+    // HACK: The following code assumes Prefix, Infix and Postfix have the
+    // same layout for their pointers.
     Prefix *prefix = (Prefix *) tree;
     Value *result = Known(prefix->left);
     if (result)
@@ -995,6 +1136,8 @@ Value *CompiledUnit::Right(Tree *tree)
     assert(tree->Kind() > BLOCK);
 
     // Check if we already known the result, if so just return it
+    // HACK: The following code assumes Prefix, Infix and Postfix have the
+    // same layout for their pointers.
     Prefix *prefix = (Prefix *) tree;
     Value *result = Known(prefix->right);
     if (result)
@@ -1116,15 +1259,17 @@ Value *CompiledUnit::CallNewInfix(Infix *infix)
 }
 
 
-Value *CompiledUnit::CreateClosure(Tree *callee, tree_list &args)
+Value *CompiledUnit::CreateClosure(Tree *callee, TreeList &args)
 // ----------------------------------------------------------------------------
 //   Create a closure for an expression we want to evaluate later
 // ----------------------------------------------------------------------------
 {
     std::vector<Value *> argV;
-    Value *calleeVal = Known(callee); assert(calleeVal);
+    Value *calleeVal = Known(callee);
+    if (!calleeVal)
+        return NULL;
     Value *countVal = ConstantInt::get(LLVM_INTTYPE(uint), args.size());
-    tree_list::iterator a;
+    TreeList::iterator a;
 
     argV.push_back(calleeVal);
     argV.push_back(countVal);
@@ -1202,6 +1347,18 @@ Value *CompiledUnit::CallTypeError(Tree *what)
 {
     Value *ptr = ConstantTree(what); assert(what);
     Value *callVal = code->CreateCall(compiler->xl_type_error, ptr);
+    MarkComputed(what, callVal);
+    return callVal;
+}
+
+
+Value *CompiledUnit::CallEvaluateChildren(Tree *what)
+// ----------------------------------------------------------------------------
+//   Evaluate all children for a tree
+// ----------------------------------------------------------------------------
+{
+    Value *ptr = ConstantTree(what); assert(what);
+    Value *callVal = code->CreateCall(compiler->xl_evaluate_children, ptr);
     MarkComputed(what, callVal);
     return callVal;
 }
@@ -1367,12 +1524,19 @@ BasicBlock *CompiledUnit::InfixMatchTest(Tree *actual, Infix *reference)
     // Check that we know how to evaluate both 
     Value *actualVal = Known(actual);           assert(actualVal);
     Value *refVal = NeedStorage(reference);     assert (refVal);
-    Value *refCst = ConstantTree(reference);    assert(refCst);
+
+    // Extract the name of the reference
+    Constant *refNameVal = ConstantArray::get(*context, reference->name);
+    const Type *refNameTy = refNameVal->getType();
+    GlobalVariable *gvar = new GlobalVariable(*compiler->module,refNameTy,true,
+                                              GlobalValue::InternalLinkage,
+                                              refNameVal, "infix_name");
+    Value *refNamePtr = code->CreateConstGEP2_32(gvar, 0, 0);
 
     // Where we go if the tests fail
     BasicBlock *notGood = NeedTest();
     Value *afterExtract = code->CreateCall2(compiler->xl_infix_match_check,
-                                            actualVal, refCst);
+                                            actualVal, refNamePtr);
     Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
     Value *isGood = code->CreateICmpNE(afterExtract, null, "isGoodInfix");
     BasicBlock *isGoodBB = BasicBlock::Create(*context, "isGood", function);
@@ -1530,19 +1694,61 @@ void ExpressionReduction::Failed()
     CompiledUnit &u = unit;
 
     u.CallTypeError(source);
-    u.code->CreateUnreachable();
+    u.code->CreateBr(successbb);
     if (u.failbb)
     {
         IRBuilder<> failTail(u.failbb);
         u.code->SetInsertPoint(u.failbb);
         u.CallTypeError(source);
-        failTail.CreateUnreachable();
+        failTail.CreateBr(successbb);
         u.failbb = NULL;
     }
 
     u.code->SetInsertPoint(savedbb);
 }
 
+
+// ============================================================================
+// 
+//   Compiler and garbage collection
+// 
+// ============================================================================
+
+CompilerInfo::~CompilerInfo()
+// ----------------------------------------------------------------------------
+//   Notice when we lose a compiler info
+// ----------------------------------------------------------------------------
+{
+    IFTRACE(llvm)
+        std::cerr << "CompilerInfo deleted F" << (void *) function
+                  << " G" << (void *) global
+                  << " T" << (void *) tree
+                  << "\n";
+}
+
+
+void CompilerGarbageCollectionListener::BeginCollection()
+// ----------------------------------------------------------------------------
+//   Begin the collection - Nothing to do here?
+// ----------------------------------------------------------------------------
+{}
+
+
+bool CompilerGarbageCollectionListener::CanDelete(void *obj)
+// ----------------------------------------------------------------------------
+//   Tell the compiler to free the resources associated with the tree
+// ----------------------------------------------------------------------------
+{
+    Tree *tree = (Tree *) obj;
+    return compiler->FreeResources(tree);
+}
+
+
+void CompilerGarbageCollectionListener::EndCollection()
+// ----------------------------------------------------------------------------
+//   Finalize the collection - Nothing to do here?
+// ----------------------------------------------------------------------------
+{}
 
 XL_END
 

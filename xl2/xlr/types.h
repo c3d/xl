@@ -52,10 +52,10 @@ struct TypeInfo : Info
 //    Information recording the type of a given tree
 // ----------------------------------------------------------------------------
 {
-    typedef Tree *      data_t;
+    typedef Tree_p       data_t;
     TypeInfo(Tree *type): type(type) {}
     operator            data_t()  { return type; }
-    Tree *              type;
+    Tree_p               type;
 };
 
 
@@ -76,7 +76,7 @@ struct InferTypes : Action
     Tree *DoInfix(Infix *what);
     Tree *DoBlock(Block *what);
 
-    Symbols *   symbols;
+    Symbols_p   symbols;
 };
 
 
@@ -102,8 +102,8 @@ struct MatchType : Action
     Tree *Normalize();
     Tree *NameMatch(Tree *what);
 
-    Symbols *symbols;
-    Tree    *type;
+    Symbols_p symbols;
+    Tree_p    type;
 };
 
 
@@ -128,11 +128,11 @@ struct ArgumentTypeMatch : Action
     virtual Tree *DoBlock(Block *what);
 
 public:
-    Symbols *      symbols;     // Context in which we evaluate values
-    Symbols *      locals;      // Symbols where we declare arguments
-    Symbols *      rewrite;     // Symbols in which the rewrite was declared
-    Tree *         test;        // Tree we test
-    Tree *         defined;     // Tree we define
+    Symbols_p      symbols;     // Context in which we evaluate values
+    Symbols_p      locals;      // Symbols where we declare arguments
+    Symbols_p      rewrite;     // Symbols in which the rewrite was declared
+    Tree_p         test;        // Tree we test
+    Tree_p         defined;     // Tree we define
 };
 
 
@@ -159,7 +159,7 @@ public:
 #define POSTFIX(name, rtype, parms, symbol, code)
 #define BLOCK(name, rtype, open, type, close, code)
 #define NAME(symbol)
-#define TYPE(symbol)    extern Name *symbol##_type;
+#define TYPE(symbol)    extern Name_p symbol##_type;
 #include "basics.tbl"
 
 XL_END

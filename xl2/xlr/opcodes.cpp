@@ -99,7 +99,7 @@ bool xl_boolean_arg(Tree *value)
 }
 
 
-Tree *ParametersTree(tree_list parameters)
+Tree *ParametersTree(TreeList parameters)
 // ----------------------------------------------------------------------------
 //   Create a comma-separated parameter list
 // ----------------------------------------------------------------------------

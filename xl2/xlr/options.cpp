@@ -43,7 +43,7 @@ XL_BEGIN
 
 Options *Options::options = NULL;
 
-Options::Options(Errors &err):
+Options::Options(Errors &err, int argc, char **argv):
 /*---------------------------------------------------------------------------*/
 /*  Set the default values for all options                                   */
 /*---------------------------------------------------------------------------*/
@@ -51,8 +51,10 @@ Options::Options(Errors &err):
 #define OPTION(name, descr, code)
 #define TRACE(name)
 #include "options.tbl"
-    arg(0), argc(0), argv(NULL), errors(err)
-{}
+    arg(0), argc(argc), argv(argv), errors(err)
+{
+    Parse(argc, argv, false);
+}
 
 
 static void Usage(char **argv)
@@ -156,7 +158,7 @@ static ulong OptionInteger(kstring &command_line, Options &opt,
 }
 
 
-text Options::Parse(int argc, char **argv)
+text Options::Parse(int argc, char **argv, bool consumeFile)
 // ----------------------------------------------------------------------------
 //   Start parsing options, return first non-option
 // ----------------------------------------------------------------------------
@@ -169,11 +171,11 @@ text Options::Parse(int argc, char **argv)
         this->argv[0] = envopt;
         this->arg = 0;
     }
-    return ParseNext();
+    return ParseNext(consumeFile);
 }
 
 
-text Options::ParseNext()
+text Options::ParseNext(bool consumeFiles)
 // ----------------------------------------------------------------------------
 //   Parse the command line, looking for known options, return first unknown
 // ----------------------------------------------------------------------------
@@ -199,7 +201,7 @@ text Options::ParseNext()
 #if XL_DEBUG
 #define TRACE(name)                                 \
             if (OptionMatches(argval, "t" #name))   \
-                xl_traces |= 1 << XL::TRACE_##name; \
+                traces.name = true;                 \
             else
 #else
 #define TRACE(name)
@@ -216,7 +218,10 @@ text Options::ParseNext()
         }
         else
         {
-            return text(argv[arg++]);
+            text fileName = text(argv[arg]);
+            if (consumeFiles)
+                arg++;
+            return fileName;
         }
     }
     return text("");

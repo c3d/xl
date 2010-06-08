@@ -1,4 +1,3 @@
-// For GNUers only... this is really -*- C++ -*-
 #ifndef XL_ERRORS_H
 #define XL_ERRORS_H
 /* ************************************************************************* */
@@ -31,12 +30,11 @@
 #include <string>
 #include <vector>
 #include "base.h"
+#include "tree.h"
 
 XL_BEGIN
 
-class Positions;
-class Tree;
-
+struct Positions;
 
 struct Errors
 // ----------------------------------------------------------------------------
@@ -76,9 +74,9 @@ struct Error
     bool        Handled() { bool old = handled; handled = true; return old; }
 
     text        message;
-    Tree *      arg1;
-    Tree *      arg2;
-    Tree *      arg3;
+    Tree_p      arg1;
+    Tree_p      arg2;
+    Tree_p      arg3;
     bool        handled;
 };
 

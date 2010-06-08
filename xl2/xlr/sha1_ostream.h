@@ -30,6 +30,8 @@
 #include <stdio.h>
 #include "sha1.h"
 
+XL_BEGIN
+
 inline std::ostream &operator <<(std::ostream &out, const XL::Sha1 &sha)
 // ----------------------------------------------------------------------------
 //    Display a hex digest for the given input
@@ -42,5 +44,7 @@ inline std::ostream &operator <<(std::ostream &out, const XL::Sha1 &sha)
     out << buffer;
     return out;
 }
+
+XL_END
 
 #endif // SHA1_OSTREAM_H

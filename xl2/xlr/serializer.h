@@ -62,16 +62,18 @@ struct Serializer : Action
     ~Serializer() {}
 
     // Serialization of the canonical nodes
-    Tree *DoInteger(Integer *what);
-    Tree *DoReal(Real *what);
-    Tree *DoText(Text *what);
-    Tree *DoName(Name *what);
-    Tree *DoPrefix(Prefix *what);
-    Tree *DoPostfix(Postfix *what);
-    Tree *DoInfix(Infix *what);
-    Tree *DoBlock(Block *what);
-    Tree *DoChild(Tree *child);
-    Tree *Do(Tree *what);
+    Tree *      DoInteger(Integer *what);
+    Tree *      DoReal(Real *what);
+    Tree *      DoText(Text *what);
+    Tree *      DoName(Name *what);
+    Tree *      DoPrefix(Prefix *what);
+    Tree *      DoPostfix(Postfix *what);
+    Tree *      DoInfix(Infix *what);
+    Tree *      DoBlock(Block *what);
+    Tree *      DoChild(Tree *child);
+    Tree *      Do(Tree *what);
+
+    bool        IsValid()       { return out.good(); }
 
 protected:
     // Writing data (low level)
@@ -92,20 +94,12 @@ struct Deserializer
 //   Reconstruct a tree from its serialized form
 // ----------------------------------------------------------------------------
 {
-    Deserializer(std::istream &in, tree_position pos = Tree::NOWHERE);
+    Deserializer(std::istream &in, TreePosition pos = Tree::NOWHERE);
     ~Deserializer();
 
-    // Deserialize a tree from the input and return it
+    // Deserialize a tree from the input and return it, or return NULL
     Tree *      ReadTree();
-
-    // Exception thrown in case a value doesn't fit
-    struct Error
-    {
-        Error(Deserializer *ds, SerializationTag tag):
-            deserializer(ds), tag(tag) {}
-        Deserializer *    deserializer;
-        SerializationTag  tag;
-    };
+    bool        IsValid()       { return in.good(); }
 
 protected:
     // Reading low-level data
@@ -116,7 +110,7 @@ protected:
 
 protected:
     std::istream &      in;
-    tree_position       pos;
+    TreePosition        pos;
     text_ids            texts;
 };
 

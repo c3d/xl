@@ -31,6 +31,7 @@ SOURCES     =					\
 	options.cpp				\
 	errors.cpp				\
 	tree.cpp				\
+	gc.cpp					\
 	syntax.cpp				\
 	scanner.cpp				\
 	parser.cpp				\
@@ -51,10 +52,11 @@ PRODUCT=xlr$(EXE)
 include $(BROOT)Makefile.config
 
 LLVM_FLAGS=`llvm-config --cppflags | sed -e s/-DNDEBUG//g`
-LLVM_LIBS=`llvm-config --ldflags --libs core jit native interpreter`
+LLVM_LIBS=`llvm-config --libs core jit native interpreter`
+LLVM_LDFLAGS=`llvm-config --ldflags`
 
 CPPFLAGS+=$(LLVM_FLAGS)
-LDFLAGS=-L/usr/local/lib $(LLVM_LIBS)
+LDFLAGS=-L/usr/local/lib $(LLVM_LIBS) $(LLVM_LDFLAGS)
 
 test: unit_tests xl_tests
 

@@ -32,7 +32,8 @@
 XL_BEGIN
 
 class Syntax;
-typedef std::map<text,Tree*>    formats_table;
+typedef std::map<text,Tree_p>    formats_table;
+typedef std::map<Tree_p,text>    highlights_table;
 
 
 struct Renderer
@@ -50,6 +51,7 @@ struct Renderer
     // Rendering proper
     void                Render (Tree *what);
     void                RenderOne(Tree *what);
+    void                DoRenderOne(Tree *what);
     void                RenderText(text format);
     void                RenderFormat(Tree *format);
     void                RenderFormat(text self, text format);
@@ -63,10 +65,11 @@ struct Renderer
     std::ostream &      output;
     Syntax &            syntax;
     formats_table       formats;
+    highlights_table    highlights;
     uint                indent;
     text                self;
-    Tree *              left;
-    Tree *              right;
+    Tree_p              left;
+    Tree_p              right;
     text                current_quote;
     int                 priority;
     bool                had_space;
@@ -83,6 +86,5 @@ XL_END
 // For use in a debugger
 extern "C" void debug(XL::Tree *);
 extern "C" void debugp(XL::Tree *);
-extern "C" void debugc(XL::Tree *);
 
 #endif // RENDERER_H

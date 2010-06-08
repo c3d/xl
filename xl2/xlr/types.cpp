@@ -82,9 +82,11 @@ Tree *InferTypes::DoName(Name *what)
     {
         if (Tree *type = value->Get<TypeInfo>())
             return type;
-        return Ooops("Unknown type for '$1'", what);
+        Ooops("Unknown type for '$1'", what);
+        return NULL;
     }
-    return Ooops("Unknown name '$1'", what);
+    Ooops("Unknown name '$1'", what);
+    return NULL;
 }
 
 
@@ -230,7 +232,7 @@ Tree *MatchType::DoPrefix(Prefix *what)
     // Check if we match a prefix with the same shape
     if (Prefix *prefixType = type->AsPrefix())
     {
-        LocalSave<Tree *> saveType = type;
+        LocalSave<Tree_p> saveType(type);
 
         type = prefixType->left;
         Tree *leftValue = NameMatch(what->left);
@@ -261,10 +263,10 @@ Tree *MatchType::DoPostfix(Postfix *what)
     // Check if we match a postfix with the same shape
     if (Postfix *postfixType = type->AsPostfix())
     {
-        LocalSave<Tree *> saveType = type;
+        LocalSave<Tree_p> saveType(type);
 
         type = postfixType->right;
-        Tree *rightValue = NameMatch(what->right);
+        Tree_p rightValue = NameMatch(what->right);
         if (rightValue)
         {
             type = postfixType->left;
@@ -294,7 +296,7 @@ Tree *MatchType::DoInfix(Infix *what)
     {
         if (infixType->name == what->name)
         {
-            LocalSave<Tree *> saveType = type;
+            LocalSave<Tree_p> saveType(type);
 
             type = infixType->left;
             Tree *leftValue = what->left->Do(this);
@@ -329,7 +331,7 @@ Tree *MatchType::DoBlock(Block *what)
         if (blockType->opening == what->opening &&
             blockType->closing == what->closing)
         {
-            LocalSave<Tree *> saveType = type;
+            LocalSave<Tree_p> saveType(type);
 
             type = blockType->child;
             Tree *childValue = what->child->Do(this);
@@ -363,7 +365,7 @@ Tree *MatchType::MatchStructuredType(Tree *what, Tree *kind)
     {
         if (infixType->name == "|")
         {
-            LocalSave<Tree *> saveType = type;
+            LocalSave<Tree_p> saveType(type);
 
             type = infixType->left;
             Tree *leftValue = what->Do(this);
@@ -382,7 +384,7 @@ Tree *MatchType::MatchStructuredType(Tree *what, Tree *kind)
     {
         if (blockType->opening == "(" && blockType->closing == ")")
         {
-            LocalSave<Tree *> saveType = type;
+            LocalSave<Tree_p> saveType(type);
             type = blockType->child;
             Tree *childValue = what->Do(this);
             if (childValue)
@@ -401,7 +403,7 @@ Tree *MatchType::MatchStructuredType(Tree *what, Tree *kind)
 }
 
 
-Tree * MatchType::Rewrites(Tree *what)
+Tree *  MatchType::Rewrites(Tree *what)
 // ----------------------------------------------------------------------------
 //   Check the various rewrites and see if there is one where types match
 // ----------------------------------------------------------------------------
@@ -720,12 +722,17 @@ Tree *ArgumentTypeMatch::DoInfix(Infix *what)
         // Check the variable name, e.g. K in example above
         Name *varName = what->left->AsName();
         if (!varName)
-            return Ooops("Expected a name, got '$1' ", what->left);
+        {
+            Ooops("Expected a name, got '$1' ", what->left);
+            return NULL;
+        }
 
         // Check if the name already exists
         if (Tree *existing = rewrite->Named(varName->value))
-            return Ooops("Name '$1' already exists as '$2'",
-                         what->left, existing);
+        {
+            Ooops("Name '$1' already exists as '$2'", what->left, existing);
+            return NULL;
+        }
 
         return what;
     }

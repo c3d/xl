@@ -41,7 +41,7 @@ struct PostOrderTraversal : Action
         action(action), fullScan(fullScan) {}
     Tree *DoBlock(Block *what)
     {
-        Tree * ret = NULL;
+        Tree *ret = NULL;
         if (what->child)
             ret = Do(what->child);
         if (!fullScan && ret)
@@ -50,7 +50,7 @@ struct PostOrderTraversal : Action
     }
     Tree *DoInfix(Infix *what)
     {
-        Tree * ret;
+        Tree *  ret;
         ret = Do(what->left);
         if (!fullScan && ret)
             return ret;
@@ -61,7 +61,7 @@ struct PostOrderTraversal : Action
     }
     Tree *DoPrefix(Prefix *what)
     {
-        Tree * ret;
+        Tree *  ret;
         ret = Do(what->left);
         if (!fullScan && ret)
             return ret;
@@ -72,7 +72,7 @@ struct PostOrderTraversal : Action
     }
     Tree *DoPostfix(Postfix *what)
     {
-        Tree * ret;
+        Tree *  ret;
         ret = Do(what->left);
         if (!fullScan && ret)
             return ret;
@@ -89,10 +89,10 @@ struct PostOrderTraversal : Action
         case REAL:
         case TEXT:
         case NAME:          return what->Do(action);
-        case BLOCK:         return DoBlock((Block *) what);
-        case PREFIX:        return DoPrefix((Prefix *) what);
-        case POSTFIX:       return DoPostfix((Postfix *) what);
-        case INFIX:         return DoInfix((Infix *) what);
+        case BLOCK:         return DoBlock(what->AsBlock());
+        case PREFIX:        return DoPrefix(what->AsPrefix());
+        case POSTFIX:       return DoPostfix(what->AsPostfix());
+        case INFIX:         return DoInfix(what->AsInfix());
         default:            assert(!"Unexpected tree kind");
         }
         return NULL;

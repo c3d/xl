@@ -50,16 +50,15 @@ namespace llvm
 XL_BEGIN
 
 struct CompiledUnit;
+struct CompilerInfo;
 struct Options;
-struct GCAction;
-typedef std::map<text, llvm::Function *>   builtins_map;
-typedef std::map<Tree *, llvm::Value *>    value_map;
-typedef std::map<Tree *, llvm::Function *> function_map;
-typedef std::map<uint, eval_fn>            closure_map;
-typedef std::set<Tree *>                   closure_set;
-typedef std::set<Tree *>                   data_set;
-typedef std::set<Tree *>                   deleted_set;
-typedef Tree *(*adapter_fn) (eval_fn callee, Tree *src, Tree **args);
+typedef std::map<text, llvm::Function *>    builtins_map;
+typedef std::map<Tree *, llvm::Value *>     value_map;
+typedef std::map<Tree *, Tree **>           address_map;
+typedef std::map<uint, eval_fn>             closure_map;
+typedef std::set<Tree *>                    closure_set;
+typedef std::set<Tree *>                    data_set;
+typedef Tree * (*adapter_fn) (eval_fn callee, Tree *src, Tree **args);
 
 
 struct Compiler
@@ -70,23 +69,26 @@ struct Compiler
     Compiler(kstring moduleName = "xl", uint optimize_level = 999);
     ~Compiler();
 
+    void                      Reset();
+    CompilerInfo *            Info(Tree *tree, bool create = false);
+    llvm::Function *          TreeFunction(Tree *tree);
+    void                      SetTreeFunction(Tree *tree, llvm::Function *);
+    llvm::GlobalValue *       TreeGlobal(Tree *tree);
+    void                      SetTreeGlobal(Tree*, llvm::GlobalValue*, void*);
     llvm::Function *          EnterBuiltin(text name,
-                                           Tree *from, Tree *to,
-                                           tree_list parms,
+                                           Tree *to,
+                                           TreeList parms,
                                            eval_fn code);
     llvm::Function *          ExternFunction(kstring name, void *address,
                                              const llvm::Type *retType,
                                              int parmCount, ...);
     adapter_fn                EnterArrayToArgsAdapter(uint numtrees);
-    llvm::Value *             EnterGlobal(Name *name, Name **address);
+    llvm::Value *             EnterGlobal(Name *name, Name_p *address);
     llvm::Value *             EnterConstant(Tree *constant);
     bool                      IsKnown(Tree *value);
-    llvm::Value *             Known(Tree *value);
 
-    void                      FreeResources(GCAction &gc, Tree *tree);
-    void                      FreeResources(GCAction &gc);
+    bool                      FreeResources(Tree *tree);
 
-    void                      Reset();
 
 public:
     llvm::LLVMContext         *context;
@@ -105,6 +107,7 @@ public:
     llvm::FunctionType        *evalTy;
     llvm::PointerType         *evalFnTy;
     llvm::PointerType         *infoPtrTy;
+    llvm::PointerType         *symbolsPtrTy;
     llvm::PointerType         *charPtrTy;
     llvm::Function            *xl_evaluate;
     llvm::Function            *xl_same_text;
@@ -122,11 +125,9 @@ public:
     llvm::Function            *xl_new_postfix;
     llvm::Function            *xl_new_infix;
     llvm::Function            *xl_new_closure;
+    llvm::Function            *xl_evaluate_children;;
     builtins_map               builtins;
-    function_map               functions;
-    value_map                  globals;
     closure_map                closures;
-    deleted_set                deleted;
     closure_map                array_to_args_adapters;
 };
 
@@ -136,7 +137,7 @@ struct CompiledUnit
 //  A compilation unit, which typically corresponds to an expression
 // ----------------------------------------------------------------------------
 {
-    CompiledUnit(Compiler *comp, Tree *source, tree_list parms);
+    CompiledUnit(Compiler *comp, Tree *source, TreeList parms);
     ~CompiledUnit();
 
     bool                IsForwardCall()         { return entrybb == NULL; }
@@ -162,15 +163,16 @@ struct CompiledUnit
     llvm::Value *       Left(Tree *);
     llvm::Value *       Right(Tree *);
     llvm::Value *       Copy(Tree *src, Tree *dst, bool markDone=true);
-    llvm::Value *       Invoke(Tree *subexpr, Tree *callee, tree_list args);
+    llvm::Value *       Invoke(Tree *subexpr, Tree *callee, TreeList args);
     llvm::Value *       CallEvaluate(Tree *);
     llvm::Value *       CallNewBlock(Block *);
     llvm::Value *       CallNewPrefix(Prefix *);
     llvm::Value *       CallNewPostfix(Postfix *);
     llvm::Value *       CallNewInfix(Infix *);
-    llvm::Value *       CreateClosure(Tree *callee, tree_list &args);
+    llvm::Value *       CreateClosure(Tree *callee, TreeList &args);
     llvm::Value *       CallClosure(Tree *callee, uint ntrees);
     llvm::Value *       CallTypeError(Tree *what);
+    llvm::Value *       CallEvaluateChildren(Tree *what);
 
     llvm::BasicBlock *  TagTest(Tree *code, ulong tag);
     llvm::BasicBlock *  IntegerTest(Tree *code, longlong value);
@@ -183,7 +185,7 @@ struct CompiledUnit
 public:
     Compiler *          compiler;       // The compiler environment we use
     llvm::LLVMContext * context;        // The context we got from compiler
-    Tree *              source;         // The original source we compile
+    Tree_p              source;         // The original source we compile
 
     llvm::IRBuilder<> * code;           // Instruction builder for code
     llvm::IRBuilder<> * data;           // Instruction builder for data
@@ -231,10 +233,40 @@ public:
 };
 
 
+struct CompilerGarbageCollectionListener : TypeAllocator::Listener
+// ----------------------------------------------------------------------------
+//   Listen to the garbage collection to put away LLVM data structures
+// ----------------------------------------------------------------------------
+{
+    CompilerGarbageCollectionListener(Compiler *compiler)
+        : compiler(compiler) {}
+
+    virtual void BeginCollection();
+    virtual bool CanDelete (void *obj);
+    virtual void EndCollection();
+
+    Compiler *compiler;
+};
+
+
+struct CompilerInfo : Info
+// ----------------------------------------------------------------------------
+//   Information about compiler-related data structures
+// ----------------------------------------------------------------------------
+{
+    CompilerInfo(Tree *tree): tree(tree), global(0), function(0) {}
+    ~CompilerInfo();
+    Tree *                      tree;
+    llvm::GlobalValue *         global;
+    llvm::Function *            function;
+};
+
+
 #define LLVM_INTTYPE(t)         llvm::IntegerType::get(*context, sizeof(t) * 8)
 #define LLVM_BOOLTYPE           llvm::Type::getInt1Ty(*context)
 
 XL_END
 
-#endif // COMPILER_H
+extern void debugv(void *);
 
+#endif // COMPILER_H

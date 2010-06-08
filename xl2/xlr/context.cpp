@@ -44,32 +44,64 @@ XL_BEGIN
 //
 // ============================================================================
 
-Symbols *Symbols::symbols = NULL;
+Symbols_p Symbols::symbols;
 
 Tree *Symbols::Named(text name, bool deep)
 // ----------------------------------------------------------------------------
 //   Find the name in the current context
 // ----------------------------------------------------------------------------
 {
-    for (Symbols *s = this; s; s = deep ? s->parent : NULL)
+    for (Symbols *s = this; s; s = deep ? s->parent.Pointer() : NULL)
     {
-        if (s->names.count(name) > 0)
-            return s->names[name];
+        symbol_table::iterator found = s->names.find(name);
+        if (found != s->names.end())
+            return (*found).second;
+
         symbols_set::iterator it;
         for (it = s->imported.begin(); it != s->imported.end(); it++)
-            if ((*it)->names.count(name) > 0)
-                return (*it)->names[name];
+        {
+            Symbols *syms = (*it);
+            found = syms->names.find(name);
+            if (found != syms->names.end())
+                return (*found).second;
+        }
     }
     return NULL;
 }
 
 
-void Symbols::EnterName(text name, Tree *value)
+Tree *Symbols::Defined(text name, bool deep)
+// ----------------------------------------------------------------------------
+//   Find the definition for the name in the current context
+// ----------------------------------------------------------------------------
+{
+    for (Symbols *s = this; s; s = deep ? s->parent.Pointer() : NULL)
+    {
+        symbol_table::iterator found = s->definitions.find(name);
+        if (found != s->definitions.end())
+            return (*found).second;
+
+        symbols_set::iterator it;
+        for (it = s->imported.begin(); it != s->imported.end(); it++)
+        {
+            Symbols *syms = (*it);
+            found = syms->definitions.find(name);
+            if (found != syms->definitions.end())
+                return (*found).second;
+        }
+    }
+    return NULL;
+}
+
+
+void Symbols::EnterName(text name, Tree *value, Tree *def)
 // ----------------------------------------------------------------------------
 //   Enter a value in the namespace
 // ----------------------------------------------------------------------------
 {
     names[name] = value;
+    if (def)
+        definitions[name] = def;
 }
 
 
@@ -102,7 +134,7 @@ Rewrite *Symbols::EnterRewrite(Rewrite *rw)
 
     // Create symbol table for this rewrite
     Symbols *locals = new Symbols(this);
-    rw->from->Set<SymbolsInfo>(locals);
+    rw->from->SetSymbols(locals);
 
     // Enter parameters in the symbol table
     ParameterMatch parms(locals);
@@ -145,19 +177,8 @@ void Symbols::Clear()
     if (rewrites)
     {
         delete rewrites;
-        rewrites = NULL;
+        rewrites = NULL;        // Decrease reference count
     }
-}
-
-
-SymbolsInfo *SymbolsInfo::Copy()
-// ----------------------------------------------------------------------------
-//   Symbol information is copied when a tree is copied
-// ----------------------------------------------------------------------------
-{
-    SymbolsInfo *copy = new SymbolsInfo(symbols);
-    copy->next = next ? next->Copy() : NULL;
-    return copy;
 }
 
 
@@ -169,11 +190,14 @@ SymbolsInfo *SymbolsInfo::Copy()
 // ============================================================================
 
 Tree *Symbols::Compile(Tree *source, CompiledUnit &unit,
-                       bool nullIfBad, bool keepAlternatives)
+                        bool nullIfBad, bool keepAlternatives)
 // ----------------------------------------------------------------------------
 //    Return an optimized version of the source tree, ready to run
 // ----------------------------------------------------------------------------
 {
+    // Make sure that errors are shown in the proper context
+    LocalSave<Symbols_p> saveSyms(symbols, this);
+
     // Record rewrites and data declarations in the current context
     DeclarationAction declare(this);
     Tree *result = source->Do(declare);
@@ -195,7 +219,9 @@ Tree *Symbols::Compile(Tree *source, CompiledUnit &unit,
 }
 
 
-Tree *Symbols::CompileAll(Tree *source, bool keepAlternatives)
+Tree *Symbols::CompileAll(Tree *source,
+                          bool nullIfBad,
+                          bool keepAlternatives)
 // ----------------------------------------------------------------------------
 //   Compile a top-level tree
 // ----------------------------------------------------------------------------
@@ -209,12 +235,12 @@ Tree *Symbols::CompileAll(Tree *source, bool keepAlternatives)
 //    (it's more difficult to avoid leaking memory from LLVM)
 {
     Compiler *compiler = Context::context->compiler;
-    tree_list noParms;
+    TreeList noParms;
     CompiledUnit unit (compiler, source, noParms);
     if (unit.IsForwardCall())
         return source;
 
-    Tree *result = Compile(source, unit, false, keepAlternatives);
+    Tree *result = Compile(source, unit, nullIfBad, keepAlternatives);
     if (!result)
         return result;
 
@@ -224,68 +250,76 @@ Tree *Symbols::CompileAll(Tree *source, bool keepAlternatives)
 }
 
 
-Tree *Symbols::CompileCall(text callee, tree_list &arglist)
+Tree *Symbols::CompileCall(text callee, TreeList &arglist,
+                           bool nullIfBad, bool cached)
 // ----------------------------------------------------------------------------
 //   Compile a top-level call, reusing calls if possible
 // ----------------------------------------------------------------------------
 {
-    // Build key for this call
     uint arity = arglist.size();
-    std::ostringstream keyBuilder;
-    keyBuilder << callee << ":" << arity;
-    text key = keyBuilder.str();
-
-    // Check if we already have a call compiled
-    if (Tree *previous = calls[key])
+    text key = "";
+    if (cached)
     {
-        if (arity)
+        // Build key for this call
+        const char keychars[] = "IRTN.[]|";
+        std::ostringstream keyBuilder;
+        keyBuilder << callee << ":";
+        for (uint i = 0; i < arity; i++)
+            keyBuilder << keychars[arglist[i]->Kind()];
+        key = keyBuilder.str();
+
+        // Check if we already have a call compiled
+        if (Tree *previous = calls[key])
         {
-            // Replace arguments in place if necessary
-            Prefix *pfx = previous->AsPrefix();
-            Tree **args = &pfx->right;
-            while (*args && arity--)
+            if (arity)
             {
-                Tree *value = arglist[arity];
-                Tree *existing = *args;
-                if (arity)
+                // Replace arguments in place if necessary
+                Prefix *pfx = previous->AsPrefix();
+                Tree_p *args = &pfx->right;
+                while (*args && arity--)
                 {
-                    Infix *infix = existing->AsInfix();
-                    args = &infix->left;
-                    existing = infix->right;
-                }
-                if (Real *rs = value->AsReal())
-                {
-                    if (Real *rt = existing->AsReal())
-                        rt->value = rs->value;
+                    Tree *value = arglist[arity];
+                    Tree *existing = *args;
+                    if (arity)
+                    {
+                        Infix *infix = existing->AsInfix();
+                        args = &infix->left;
+                        existing = infix->right;
+                    }
+                    if (Real *rs = value->AsReal())
+                    {
+                        if (Real *rt = existing->AsReal())
+                            rt->value = rs->value;
+                        else
+                            Error("Real '$1' cannot replace non-real '$2'",
+                                  value, existing);
+                    }
+                    else if (Integer *is = value->AsInteger())
+                    {
+                        if (Integer *it = existing->AsInteger())
+                            it->value = is->value;
+                        else
+                            Error("Integer '$1' cannot replace "
+                                  "non-integer '$2'", value, existing);
+                    }
+                    else if (Text *ts = value->AsText())
+                    {
+                        if (Text *tt = existing->AsText())
+                            tt->value = ts->value;
+                        else
+                            Error("Text '$1' cannot replace non-text '$2'",
+                                  value, existing);
+                    }
                     else
-                        Error("Real '$1' cannot replace non-real '$2'",
-                              value, existing);
-                }
-                else if (Integer *is = value->AsInteger())
-                {
-                    if (Integer *it = existing->AsInteger())
-                        it->value = is->value;
-                    else
-                        Error("Integer '$1' cannot replace non-integer '$2'",
-                              value, existing);
-                }
-                else if (Text *ts = value->AsText())
-                {
-                    if (Text *tt = existing->AsText())
-                        tt->value = ts->value;
-                    else
-                        Error("Text '$1' cannot replace non-text '$2'",
-                              value, existing);
-                }
-                else
-                {
-                    Error("Call has unsupported type for '$1'", value);
+                    {
+                        Error("Call has unsupported type for '$1'", value);
+                    }
                 }
             }
-        }
 
-        // Call the previously compiled code
-        return previous;
+            // Call the previously compiled code
+            return previous;
+        }
     }
 
     Tree *call = new Name(callee);
@@ -296,8 +330,9 @@ Tree *Symbols::CompileCall(text callee, tree_list &arglist)
             args = new Infix(",", args, arglist[a]);
         call = new Prefix(call, args);
     }
-    call = CompileAll(call, true);
-    calls[key] = call;
+    call = CompileAll(call, nullIfBad, true);
+    if (cached)
+        calls[key] = call;
     return call;
 }
 
@@ -314,9 +349,9 @@ Infix *Symbols::CompileTypeTest(Tree *type)
                 return infix;
 
     // Create an infix node with two parameters for left and right
-    Name *valueParm = new Name("xl_value_to_typecheck");
+    Name *valueParm = new Name("_");
     Infix *call = new Infix(":", valueParm, type);
-    tree_list parameters;
+    TreeList parameters;
     parameters.push_back(valueParm);
     type_tests[type] = call;
 
@@ -376,7 +411,7 @@ Tree *Symbols::Run(Tree *code)
         {
             if (!result->code)
             {
-                Symbols *symbols = result->Get<SymbolsInfo> ();
+                Symbols *symbols = result->Symbols();
                 if (!symbols)
                 {
                     std::cerr << "WARNING: Tree '" << code
@@ -384,9 +419,13 @@ Tree *Symbols::Run(Tree *code)
                     symbols = this;
                 }
                 result = symbols->CompileAll(result);
+
+                if (!result->code)
+                {
+                    Ooops("Unable to compile '$1'", result);
+                    return NULL;
+                }
             }
-            if (!result->code)
-                return Ooops("Unable to compile '$1'", result);
             result = result->code(code);
             more = (result != code && result &&
                     (has_rewrites_for_constants || !result->IsConstant())) ;
@@ -491,7 +530,7 @@ Tree *Symbols::Run(Tree *code)
                     else
                     {
                         // We should have same number of args and parms
-                        Symbols &parms = *candidate->from->Get<SymbolsInfo>();
+                        Symbols &parms = *candidate->from->Symbols();
                         ulong parmCount = parms.names.size();
                         if (args.names.size() != parmCount)
                         {
@@ -522,23 +561,22 @@ Tree *Symbols::Run(Tree *code)
                         if (eval_fn toCall = candidate->to->code)
                         {
                             // Map the arguments we found in parameter order
-                            tree_list argsList;
-                            tree_list::iterator p;
-                            tree_list &order = candidate->parameters;
+                            TreeList argsList;
+                            TreeList::iterator p;
+                            TreeList &order = candidate->parameters;
                             for (p = order.begin(); p != order.end(); p++)
                             {
                                 Name *name = (*p)->AsName();
                                 Tree *argValue = args.Named(name->value);
                                 argsList.push_back(argValue);
                             }
-                            result = xl_invoke(toCall, code,
-                                               argsList.size(), &argsList[0]);
+                            result = xl_invoke(toCall, code, argsList);
                         }
                         else
                         {
                             // Simply evaluate the target with the args set
                             // We will lookup symbols in local symbol table
-                            LocalSave<Symbols *> save(Symbols::symbols, &args);
+                            LocalSave<Symbols_p> save(Symbols::symbols, &args);
                             result = args.Run(candidate->to);
                         }
 
@@ -574,52 +612,40 @@ Tree *Symbols::Run(Tree *code)
 //
 // ============================================================================
 
-Tree * Symbols::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
+Tree *  Symbols::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
 // ----------------------------------------------------------------------------
 //   Execute the innermost error handler
 // ----------------------------------------------------------------------------
 {
-    Tree *handler = ErrorHandler();
-    if (handler)
+    XLCall call("error");
+    call, message;
+    if (arg1)
+        call, arg1;
+    if (arg2)
+        call, arg2;
+    if (arg3)
+        call, arg3;
+
+    Tree *result = call(this, true, false);
+    if (!result)
     {
-        Tree *arg0 = new Text (message);
-        Tree *info = arg3;
-        if (arg2)
-            info = info ? new Infix(",", arg2, info) : arg2;
-        if (arg1)
-            info = info ? new Infix(",", arg1, info) : arg1;
-        info = info ? new Infix(",", arg0, info) : arg0;
-
-        Prefix *errorCall = new Prefix(handler, info);
-        return Run(errorCall);
+        // Fallback to displaying error on std::err
+        XL::Error err(message, arg1, arg2, arg3);
+        err.Display();
+        return XL::xl_false;
     }
-
-    // No handler: throw the error as en exception
-    throw XL::Error(message, arg1, arg2, arg3);
-}
-
-
-Tree *Symbols::ErrorHandler()
-// ----------------------------------------------------------------------------
-//    Return the innermost error handler
-// ----------------------------------------------------------------------------
-{
-    return error_handler;
+    return result;
 }
 
 
 
 // ============================================================================
 //
-//   Garbage collection
+//   Context
 //
 // ============================================================================
-//   This is just a rather simple mark and sweep garbage collector.
 
-ulong Context::gc_increment = 200;
-ulong Context::gc_growth_percent = 200;
 Context *Context::context = NULL;
-
 
 Context::~Context()
 // ----------------------------------------------------------------------------
@@ -631,93 +657,6 @@ Context::~Context()
 }
 
 
-Tree **Context::AddGlobal(Tree *value)
-// ----------------------------------------------------------------------------
-//   Create a global, immutable address for LLVM
-// ----------------------------------------------------------------------------
-{
-    Tree **ptr = new Tree*;
-    *ptr = value;
-    return ptr;
-}
-
-
-void Context::CollectGarbage ()
-// ----------------------------------------------------------------------------
-//   Mark all active trees
-// ----------------------------------------------------------------------------
-{
-    if (active.size() > gc_threshold)
-    {
-        GCAction gc;
-        ulong deletedCount = 0, activeCount = 0;
-
-        IFTRACE(memory)
-            std::cerr << "Garbage collecting...";
-
-        // Mark roots, names, rewrites and stack
-        for (root_set::iterator a = roots.begin(); a != roots.end(); a++)
-            if ((*a)->tree)
-                (*a)->tree->Do(gc);
-        for (symbol_iter y = names.begin(); y != names.end(); y++)
-            if (Tree *named = (*y).second)
-                named->Do(gc);
-        for (symbol_iter call = calls.begin(); call != calls.end(); call++)
-            if (Tree *named = (*call).second)
-                named->Do(gc);
-        for (value_iter tt = type_tests.begin(); tt != type_tests.end(); tt++)
-            if (Tree *typecheck = (*tt).second)
-                typecheck->Do(gc);
-        if (rewrites)
-            rewrites->Do(gc);
-
-        formats_table::iterator f;
-        formats_table &formats = Renderer::renderer->formats;
-        for (f = formats.begin(); f != formats.end(); f++)
-            (*f).second->Do(gc);
-
-        // Mark all resources in the LLVM generated code that want to free
-        // (this may mark some trees as not eligible for deletion)
-        active_set::iterator a;
-        if (compiler)
-        {
-            for (a = active.begin(); a != active.end(); a++)
-                if (!gc.alive.count(*a))
-                    compiler->FreeResources(gc, *a);
-            compiler->FreeResources(gc);
-        }
-
-        // Then delete all trees in active set that are no longer referenced
-        for (a = active.begin(); a != active.end(); a++)
-        {
-            activeCount++;
-            if (!gc.alive.count(*a))
-            {
-                deletedCount++;
-                delete *a;
-            }
-        }
-
-        // Same with the symbol tables
-        symbols_set::iterator as;
-        for (as = active_symbols.begin(); as != active_symbols.end(); as++)
-            if (!gc.alive_symbols.count(*as))
-                delete *as;
-
-        // Record new state
-        active = gc.alive;
-        active_symbols = gc.alive_symbols;
-
-        // Update statistics
-        gc_threshold = active.size() * gc_growth_percent / 100 + gc_increment;
-        IFTRACE(memory)
-            std::cerr << "done: Purged " << deletedCount
-                      << " trees out of " << activeCount
-                      << " threshold " << gc_threshold << "\n";
-    }
-}
-
-
 
 // ============================================================================
 //
@@ -725,7 +664,7 @@ void Context::CollectGarbage ()
 //
 // ============================================================================
 
-Tree *InterpretedArgumentMatch::Do(Tree *what)
+Tree *InterpretedArgumentMatch::Do(Tree *)
 // ----------------------------------------------------------------------------
 //   Default is to return failure
 // ----------------------------------------------------------------------------
@@ -887,12 +826,17 @@ Tree *InterpretedArgumentMatch::DoInfix(Infix *what)
         // Check the variable name, e.g. K in example above
         Name *varName = what->left->AsName();
         if (!varName)
-            return Ooops("Expected a name, got '$1' ", what->left);
+        {
+            Ooops("Expected a name, got '$1' ", what->left);
+            return NULL;
+        }
 
         // Check if the name already exists
         if (Tree *existing = rewrite->Named(varName->value))
-            return Ooops("Name '$1' already exists as '$2'",
-                         what->left, existing);
+        {
+            Ooops("Name '$1' already exists as '$2'", what->left, existing);
+            return NULL;
+        }
 
         // Evaluate type expression, e.g. 'integer' in example above
         Tree *typeExpr = xl_evaluate(what->right);
@@ -903,7 +847,7 @@ Tree *InterpretedArgumentMatch::DoInfix(Infix *what)
         // Check if the type matches the value
         Infix *typeTest = new Infix(":", test, typeExpr,
                                     what->right->Position());
-        typeTest->Set<SymbolsInfo> (symbols);
+        typeTest->SetSymbols (symbols);
         Tree *afterCast = xl_evaluate(typeTest);
         if (!afterCast)
             return NULL;
@@ -1064,12 +1008,18 @@ Tree *ParameterMatch::DoInfix(Infix *what)
         // Check the variable name, e.g. K in example above
         Name *varName = what->left->AsName();
         if (!varName)
-            return Ooops("Expected a name, got '$1' ", what->left);
+        {
+            Ooops("Expected a name, got '$1' ", what->left);
+            return NULL;
+        }
 
         // Check if the name already exists
         if (Tree *existing = symbols->Named(varName->value))
-            return Ooops("Typed name '$1' already exists as '$2'",
-                         what->left, existing);
+        {
+            Ooops("Typed name '$1' already exists as '$2'",
+                  what->left, existing);
+            return NULL;
+        }
 
         // Enter the name in symbol table
         Tree *result = symbols->Allocate(varName);
@@ -1175,8 +1125,8 @@ Tree *ArgumentMatch::CompileValue(Tree *source)
         {
             llvm::BasicBlock *bb = unit.BeginLazy(name);
             unit.NeedStorage(name);
-            if (!name->Exists<SymbolsInfo>())
-                name->Set<SymbolsInfo>(symbols);
+            if (!name->Symbols())
+                name->SetSymbols(symbols);
             unit.CallEvaluate(name);
             unit.EndLazy(name, bb);
         }
@@ -1203,10 +1153,13 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     EnvironmentScan env(symbols);
     Tree *envOK = source->Do(env);
     if (!envOK)
-        return Ooops("Internal: what environment in '$1'?", source);
+    {
+        Ooops("Internal: what environment in '$1'?", source);
+        return NULL;
+    }
 
     // Create the parameter list with all imported locals
-    tree_list parms, args;
+    TreeList parms, args;
     capture_table::iterator c;
     for (c = env.captured.begin(); c != env.captured.end(); c++)
     {
@@ -1249,7 +1202,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
 }
 
 
-Tree *ArgumentMatch::Do(Tree *what)
+Tree *ArgumentMatch::Do(Tree *)
 // ----------------------------------------------------------------------------
 //   Default is to return failure
 // ----------------------------------------------------------------------------
@@ -1371,7 +1324,7 @@ Tree *ArgumentMatch::DoName(Name *what)
             // Check if the test is an identity
             if (Name *nt = test->AsName())
             {
-                if (nt->code == xl_identity)
+                if (nt->code == xl_identity || data)
                 {
                     if (nt->value == what->value)
                         return what;
@@ -1489,22 +1442,44 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         // Check the variable name, e.g. K in example above
         Name *varName = what->left->AsName();
         if (!varName)
-            return Ooops("Expected a name, got '$1' ", what->left);
+        {
+            Ooops("Expected a name, got '$1' ", what->left);
+            return NULL;
+        }
 
         // Check if the name already exists
         if (Tree *existing = rewrite->Named(varName->value))
-            return Ooops("Name '$1' already exists as '$2'",
-                         what->left, existing);
+        {
+            Ooops("Name '$1' already exists as '$2'",
+                  what->left, existing);
+            return NULL;
+        }
 
         // Evaluate type expression, e.g. 'integer' in example above
         Tree *typeExpr = Compile(what->right);
         if (!typeExpr)
             return NULL;
 
+        // Check if this is a case where we don't compile the value
+        bool needEvaluation = true;
+        if (Name *name = typeExpr->AsName())
+            if (name->value == "tree" || name->value == "symbolicname")
+                needEvaluation = false;
+
         // Compile what we are testing against
-        Tree *compiled = CompileValue(test);
-        if (!compiled)
-            return NULL;
+        Tree *compiled = test;
+        if (needEvaluation)
+        {
+            compiled = Compile(compiled);
+            if (!compiled)
+                return NULL;
+        }
+        else
+        {
+            unit.ConstantTree(compiled);
+            if (!compiled->Symbols())
+                compiled->SetSymbols(symbols);
+        }
 
         // Insert a run-time type test
         unit.TypeTest(compiled, typeExpr);
@@ -1686,81 +1661,94 @@ Tree *EnvironmentScan::DoPostfix(Postfix *what)
 
 // ============================================================================
 //
-//   BuildChildren action: Build a non-leaf after evaluating children
+//   EvaluateChildren action: Build a non-leaf after evaluating children
 //
 // ============================================================================
 
-BuildChildren::BuildChildren(CompileAction *comp)
-// ----------------------------------------------------------------------------
-//   Constructor saves the unit's nullIfBad and sets it
-// ----------------------------------------------------------------------------
-    : compile(comp), unit(comp->unit), saveNullIfBad(comp->nullIfBad)
-{
-    comp->nullIfBad = true;
-}
-
-
-BuildChildren::~BuildChildren()
-// ----------------------------------------------------------------------------
-//   Destructor restores the original nullIfBad settigns
-// ----------------------------------------------------------------------------
-{
-    compile->nullIfBad = saveNullIfBad;
-}
-
-
-Tree *BuildChildren::DoPrefix(Prefix *what)
+Tree *EvaluateChildren::DoPrefix(Prefix *what)
 // ----------------------------------------------------------------------------
 //   Evaluate children, then build a prefix
 // ----------------------------------------------------------------------------
 {
-    unit.Left(what);
-    what->left->Do(compile);
-    unit.Right(what);
-    what->right->Do(compile);
-    unit.CallNewPrefix(what);
-    return what;
+    Tree *left = Try(what->left);
+    Tree *right = Try(what->right);
+    Tree *result = what;
+    if (left != what->left || right != what->right)
+        result = new Prefix(left, right, what->Position());
+    if (!result->code)
+        result->code = xl_evaluate_children;
+    return result;
 }
 
 
-Tree *BuildChildren::DoPostfix(Postfix *what)
+Tree *EvaluateChildren::DoPostfix(Postfix *what)
 // ----------------------------------------------------------------------------
 //   Evaluate children, then build a postfix
 // ----------------------------------------------------------------------------
 {
-    unit.Left(what);
-    what->left->Do(compile);
-    unit.Right(what);
-    what->right->Do(compile);
-    unit.CallNewPostfix(what);
-    return what;
+    Tree *left = Try(what->left);
+    Tree *right = Try(what->right);
+    Tree *result = what;
+    if (left != what->left || right != what->right)
+        result = new Postfix(left, right, what->Position());
+    if (!result->code)
+        result->code = xl_evaluate_children;
+    return result;
 }
 
 
-Tree *BuildChildren::DoInfix(Infix *what)
+Tree *EvaluateChildren::DoInfix(Infix *what)
 // ----------------------------------------------------------------------------
 //   Evaluate children, then build an infix
 // ----------------------------------------------------------------------------
 {
-    unit.Left(what);
-    what->left->Do(compile);
-    unit.Right(what);
-    what->right->Do(compile);
-    unit.CallNewInfix(what);
-    return what;
+    Tree *left = Try(what->left);
+    Tree *right = Try(what->right);
+    Tree *result = what;
+    if (left != what->left || right != what->right)
+        result = new Infix(what->name, left, right, what->Position());
+    if (!result->code)
+        result->code = xl_evaluate_children;
+    return result;
 }
 
 
-Tree *BuildChildren::DoBlock(Block *what)
+Tree *EvaluateChildren::DoBlock(Block *what)
 // ----------------------------------------------------------------------------
 //   Evaluate children, then build a new block
 // ----------------------------------------------------------------------------
 {
-    unit.Left(what);
-    what->child->Do(compile);
-    unit.CallNewBlock(what);
-    return what;
+    Tree *child = Try(what->child);
+    Tree *result = what;
+    if (child != what->child)
+        result = new Block(child, what->opening,what->closing,
+                           what->Position());
+    if (!result->code)
+        result->code = xl_evaluate_children;
+    return result;
 }
+
+
+Tree *EvaluateChildren::Try(Tree *what)
+// ----------------------------------------------------------------------------
+//   Try to evaluate a child, otherwise recurse on children
+// ----------------------------------------------------------------------------
+{
+    if (!what->Symbols())
+        what->SetSymbols(symbols);
+    if (!what->code)
+    {
+        Tree *compiled = symbols->CompileAll(what, true);
+        if (!compiled)
+        {
+            what->code = xl_evaluate_children;
+            return what->Do(this);
+        }
+        compiled = what;
+    }
+    return symbols->Run(what);
+}
+
 
 
 // ============================================================================
@@ -1841,7 +1829,7 @@ Tree *DeclarationAction::DoInfix(Infix *what)
     if (what->name == "->")
     {
         // Enter the rewrite
-        EnterRewrite(what->left, what->right);
+        EnterRewrite(what->left, what->right, what);
         return what;
     }
 
@@ -1859,16 +1847,14 @@ Tree *DeclarationAction::DoPrefix(Prefix *what)
     {
         if (name->value == "data")
         {
-            EnterRewrite(what->right, NULL);
+            EnterRewrite(what->right, NULL, NULL);
             return what;
         }
         if (name->value == "load")
         {
             Text *file = what->right->AsText();
-            if (!file)
-                return Ooops("Argument '$1' to 'load' is not a text",
-                             what->right);
-            return xl_load(file->value);
+            if (file)
+                return xl_load(file->value);
         }
     }
 
@@ -1885,14 +1871,18 @@ Tree *DeclarationAction::DoPostfix(Postfix *what)
 }
 
 
-void DeclarationAction::EnterRewrite(Tree *defined, Tree *definition)
+void DeclarationAction::EnterRewrite(Tree *defined,
+                                     Tree *definition,
+                                     Tree *where)
 // ----------------------------------------------------------------------------
 //   Add a definition in the current context
 // ----------------------------------------------------------------------------
 {
     if (Name *name = defined->AsName())
     {
-        symbols->EnterName(name->value, definition ? definition : name);
+        symbols->EnterName(name->value,
+                           definition ? (Tree *) definition : (Tree *) name,
+                           where);
     }
     else
     {
@@ -1968,18 +1958,20 @@ Tree *CompileAction::DoName(Name *what)
         if (!result->AsName())
         {
             Rewrite rw(symbols, what, result);
-            if (!what->Exists<SymbolsInfo>())
-                what->Set<SymbolsInfo>(symbols);
+            if (!what->Symbols())
+                what->SetSymbols(symbols);
             result = rw.Compile();
+            if (!result)
+                return result;
         }
 
         // Check if there is code we need to call
         Compiler *compiler = Context::context->compiler;
-        if (compiler->functions.count(result) &&
-            compiler->functions[result] != unit.function)
+        llvm::Function *function = compiler->TreeFunction(result);
+        if (function && function != unit.function)
         {
             // Case of "Name -> Foo": Invoke Name
-            tree_list noArgs;
+            TreeList noArgs;
             unit.NeedStorage(what);
             unit.Invoke(what, result, noArgs);
             return what;
@@ -1995,8 +1987,8 @@ Tree *CompileAction::DoName(Name *what)
             // Return the name itself by default
             unit.ConstantTree(result);
             unit.Copy(result, what);
-            if (!result->Exists<SymbolsInfo>())
-                result->Set<SymbolsInfo>(symbols);
+            if (!result->Symbols())
+                result->SetSymbols(symbols);
         }
 
         return result;
@@ -2006,7 +1998,8 @@ Tree *CompileAction::DoName(Name *what)
         unit.ConstantTree(what);
         return what;
     }
-    return Ooops("Name '$1' does not exist", what);
+    Ooops("Name '$1' does not exist", what);
+    return NULL;
 }
 
 
@@ -2026,8 +2019,8 @@ Tree *CompileAction::DoBlock(Block *what)
             return NULL;
         if (unit.IsKnown(what->child))
         {
-            if (!what->child->Exists<SymbolsInfo>())
-                what->child->Set<SymbolsInfo>(symbols);
+            if (!what->child->Symbols())
+                what->child->SetSymbols(symbols);
         }
         unit.Copy(result, what);
         return what;
@@ -2051,15 +2044,15 @@ Tree *CompileAction::DoInfix(Infix *what)
             return NULL;
         if (unit.IsKnown(what->left))
         {
-            if (!what->left->Exists<SymbolsInfo>())
-                what->left->Set<SymbolsInfo>(symbols);
+            if (!what->left->Symbols())
+                what->left->SetSymbols(symbols);
         }
         if (!what->right->Do(this))
             return NULL;
         if (unit.IsKnown(what->right))
         {
-            if (!what->right->Exists<SymbolsInfo>())
-                what->right->Set<SymbolsInfo>(symbols);
+            if (!what->right->Symbols())
+                what->right->SetSymbols(symbols);
             unit.Copy(what->right, what);
         }
         else if (unit.IsKnown(what->left))
@@ -2089,7 +2082,15 @@ Tree *CompileAction::DoPrefix(Prefix *what)
     if (Name *name = what->left->AsName())
     {
         if (name->value == "data")
+        {
+            if (!what->right->Symbols())
+                what->right->SetSymbols(symbols);
+            unit.CallEvaluateChildren(what->right);
+            unit.Copy(what->right, what);
+            if (!what->right->code)
+                what->right->code = xl_evaluate_children;
             return what;
+        }
     }
     return Rewrites(what);
 }
@@ -2104,7 +2105,7 @@ Tree *CompileAction::DoPostfix(Postfix *what)
 }
 
 
-Tree * CompileAction::Rewrites(Tree *what)
+Tree *  CompileAction::Rewrites(Tree *what)
 // ----------------------------------------------------------------------------
 //   Build code selecting among rewrites in current context
 // ----------------------------------------------------------------------------
@@ -2161,7 +2162,7 @@ Tree * CompileAction::Rewrites(Tree *what)
                 Symbols args(symbols);
                 ArgumentMatch matchArgs(what,
                                         symbols, &args, candidate->symbols,
-                                        this);
+                                        this, !candidate->to);
                 Tree *argsTest = candidate->from->Do(matchArgs);
                 if (argsTest)
                 {
@@ -2171,17 +2172,18 @@ Tree * CompileAction::Rewrites(Tree *what)
                     // If this is a data form, we are done
                     if (!candidate->to)
                     {
-                        unit.ConstantTree(what);
+                        // Set the symbols for the result
+                        if (!what->Symbols())
+                            what->SetSymbols(symbols);
+                        unit.CallEvaluateChildren(what);
                         foundUnconditional = !unit.failbb;
-                        BuildChildren children(this);
-                        what = what->Do(children);
                         unit.noeval.insert(what);
                         reduction.Succeeded();
                     }
                     else
                     {
                         // We should have same number of args and parms
-                        Symbols &parms = *candidate->from->Get<SymbolsInfo>();
+                        Symbols &parms = *candidate->from->Symbols();
                         ulong parmCount = parms.names.size();
                         if (args.names.size() != parmCount)
                         {
@@ -2210,9 +2212,9 @@ Tree * CompileAction::Rewrites(Tree *what)
                         }
 
                         // Map the arguments we found in parameter order
-                        tree_list argsList;
-                        tree_list::iterator p;
-                        tree_list &order = candidate->parameters;
+                        TreeList argsList;
+                        TreeList::iterator p;
+                        TreeList &order = candidate->parameters;
                         for (p = order.begin(); p != order.end(); p++)
                         {
                             Name *name = (*p)->AsName();
@@ -2222,15 +2224,21 @@ Tree * CompileAction::Rewrites(Tree *what)
 
                         // Compile the candidate
                         Tree *code = candidate->Compile();
+                        if (code)
+                        {
+                            // Invoke the candidate
+                            unit.Invoke(what, code, argsList);
 
-                        // Invoke the candidate
-                        unit.Invoke(what, code, argsList);
+                            // If there was no test code, don't keep testing
+                            foundUnconditional = !unit.failbb;
 
-                        // If there was no test code, don't keep testing further
-                        foundUnconditional = !unit.failbb;
-
-                        // This is the end of a successful invokation
-                        reduction.Succeeded();
+                            // This is the end of a successful invokation
+                            reduction.Succeeded();
+                        }
+                        else
+                        {
+                            reduction.Failed();
+                        }
                     } // if (data form)
                 } // Match args
                 else
@@ -2258,12 +2266,20 @@ Tree * CompileAction::Rewrites(Tree *what)
     {
         if (nullIfBad)
         {
-            BuildChildren children(this);
-            what = what->Do(children);
+            // Set the symbols for the result
+            if (!what->Symbols())
+                what->SetSymbols(symbols);
+            unit.CallEvaluateChildren(what);
             return NULL;
         }
-        return Ooops("No rewrite candidate for '$1'", what);
+        Ooops("No rewrite candidate for '$1'", what);
+        return NULL;
     }
+
+    // Set the symbols for the result
+    if (!what->Symbols())
+        what->SetSymbols(symbols);
+
     return what;
 }
 
@@ -2280,9 +2296,6 @@ Rewrite::~Rewrite()
 //   Deletes all children rewrite if any
 // ----------------------------------------------------------------------------
 {
-    rewrite_table::iterator it;
-    for (it = hash.begin(); it != hash.end(); it++)
-        delete ((*it).second);
 }
 
 
@@ -2328,7 +2341,7 @@ Tree *Rewrite::Do(Action &a)
         result = to->Do(a);
     for (rewrite_table::iterator i = hash.begin(); i != hash.end(); i++)
         result = (*i).second->Do(a);
-    for (tree_list::iterator p=parameters.begin(); p!=parameters.end(); p++)
+    for (TreeList::iterator p=parameters.begin(); p!=parameters.end(); p++)
         result = (*p)->Do(a);
     return result;
 }
@@ -2339,7 +2352,7 @@ Tree *Rewrite::Compile(void)
 //   Compile code for the 'to' form
 // ----------------------------------------------------------------------------
 //   This is similar to Context::Compile, except that it may generate a
-//   function with more parameters, i.e. Tree *f(Tree *, Tree *, ...),
+//   function with more parameters, i.e. Tree *f(Tree * , Tree * , ...),
 //   where there is one input arg per variable in the 'from' tree
 {
     assert (to || !"Rewrite::Compile called for data rewrite?");
@@ -2357,27 +2370,36 @@ Tree *Rewrite::Compile(void)
     }
 
     // Check that we had symbols defined for the 'from' tree
-    if (!from->Exists<SymbolsInfo>())
-        return Ooops("Internal: No symbols for '$1'", from);
+    if (!from->Symbols())
+    {
+        Ooops("Internal: No symbols for '$1'", from);
+        return NULL;
+    }
 
     // Create local symbols
-    Symbols *locals = new Symbols (from->Get<SymbolsInfo>());
+    Symbols_p locals = new Symbols (from->Symbols());
 
     // Record rewrites and data declarations in the current context
     DeclarationAction declare(locals);
     Tree *toDecl = to->Do(declare);
     if (!toDecl)
-        return Ooops("Internal: Declaration error for '$1'", to);
+    {
+        Ooops("Internal: Declaration error for '$1'", to);
+        return NULL;
+    }
 
     // Compile the body of the rewrite
     CompileAction compile(locals, unit, false, false);
     Tree *result = to->Do(compile);
     if (!result)
-        return Ooops("Unable to compile '$1'", to);
+    {
+        Ooops("Unable to compile '$1'", to);
+        return NULL;
+    }
 
     // Even if technically, this is not an 'eval_fn' (it has more args),
     // we still record it to avoid recompiling multiple times
-    eval_fn fn = compile.unit.Finalize();
+    eval_fn fn = unit.Finalize();
     to->code = fn;
 
     return to;

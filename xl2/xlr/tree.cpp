@@ -56,18 +56,6 @@ Tree::~Tree()
 }
 
 
-void *Tree::operator new(size_t sz)
-// ----------------------------------------------------------------------------
-//    Record the tree in the garbage collector
-// ----------------------------------------------------------------------------
-{
-    void *result = ::operator new(sz);
-    if (Context::context)
-        Context::context->Mark((Tree *) result);
-    return result;
-}
-
-
 Tree::operator text()
 // ----------------------------------------------------------------------------
 //   Conversion of a tree to text
@@ -90,43 +78,6 @@ Name::operator bool()
         return false;
     Ooops("Value '$1' is not a boolean value", this);
     return false;
-}
-
-
-
-// ============================================================================
-// 
-//   TreeRoot - Protect a tree against garbage collection
-// 
-// ============================================================================
-
-TreeRoot::TreeRoot(Tree *t)
-// ----------------------------------------------------------------------------
-//   Record the root in the current context
-// ----------------------------------------------------------------------------
-    : tree(t)
-{
-    Context::context->roots.insert(this);
-}
-
-
-TreeRoot::TreeRoot(const TreeRoot &o)
-// ----------------------------------------------------------------------------
-//   Record the root in the current context
-// ----------------------------------------------------------------------------
-    : tree(o.tree)
-{
-    Context::context->roots.insert(this);
-}
-
-
-TreeRoot::~TreeRoot()
-// ----------------------------------------------------------------------------
-//   Remove a root from the context
-// ----------------------------------------------------------------------------
-{
-    if (Context *context = Context::context)
-        context->roots.erase(this);
 }
 
 
@@ -242,8 +193,11 @@ text Block::unindent = "I-";
 text Text::textQuote = "\"";
 text Text::charQuote = "'";
 
+XL_END
 
 #include "sha1_ostream.h"
+
+XL_BEGIN
 
 text sha1(Tree *t)
 // ----------------------------------------------------------------------------

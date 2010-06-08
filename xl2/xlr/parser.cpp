@@ -27,10 +27,10 @@
 #include <vector>
 #include <stdio.h>
 #include <iostream>
-#include "parser.h"
 #include "scanner.h"
 #include "errors.h"
 #include "tree.h"
+#include "parser.h"
 
 
 XL_BEGIN
@@ -48,7 +48,7 @@ struct Pending
     Pending(text o, Tree *a, int p, ulong pos):
         opcode(o), argument(a), priority(p), position(pos) {}
     text   opcode;
-    Tree  *argument;
+    Tree_p argument;
     int    priority;
     ulong  position;
 };
@@ -113,7 +113,6 @@ token_t Parser::NextToken()
             {
                 text longText = scanner.Comment(closing);
                 ulong cLen = closing.length();
-                ulong oLen = opening.length();
                 longText.erase(longText.length() - cLen, cLen);
                 scanner.SetTextValue(longText);
                 openquote = opening;

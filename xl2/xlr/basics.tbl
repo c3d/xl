@@ -96,13 +96,14 @@ INFIX(EQText, boolean, text, "=", text, XL_RBOOL(XL_TEXT(l) == XL_TEXT(r)))
 
 
 // Conversions
-PREFIX(IntToReal, real, "real", PARM(x, integer), XL_RREAL((real_t) x))
+PREFIX(IntToReal,  real, "real", PARM(x, integer), XL_RREAL((real_t) x))
+PREFIX(TextToReal, real, "real", PARM(x, text), XL_RREAL(xl_text2real(x)))
 PREFIX(RealToInt, integer, "integer", PARM(x, real), XL_RINT((integer_t) x))
+PREFIX(TextToInt, integer, "integer", PARM(x, text), XL_RINT(xl_text2int(x)))
 PREFIX(IntToText, text, "text", PARM(x, integer), XL_RTEXT((text) x))
 PREFIX(RealToText, text, "text", PARM(x, real), XL_RTEXT((text) x))
 
 // Time computations
-PREFIX(SystemTime, integer, "system_time",, XL_RINT(xl_time()))
 PREFIX(TimeHours, integer, "hours", PARM(t, integer), XL_RTIME(tm.tm_hour))
 PREFIX(TimeMinutes, integer, "minutes", PARM(t, integer), XL_RTIME(tm.tm_min))
 PREFIX(TimeSeconds, integer, "seconds", PARM(t, integer), XL_RTIME(tm.tm_sec))
@@ -113,14 +114,15 @@ PREFIX(TimeWeekDay, integer, "week_day", PARM(t, integer), XL_RTIME(tm.tm_wday))
 PREFIX(TimeYearDay, integer, "year_day", PARM(t, integer), XL_RTIME(tm.tm_yday))
 
 // Return hour, minutes, seconds for the current time
-PREFIX(SystemHours, integer, "hours",, XL_RCTIME(tm.tm_hour))
-PREFIX(SystemMinutes, integer, "minutes",, XL_RCTIME(tm.tm_min))
-PREFIX(SystemSeconds, integer, "seconds",, XL_RCTIME(tm.tm_sec))
-PREFIX(SystemYear, integer, "year",, XL_RCTIME(tm.tm_year + 1900))
-PREFIX(SystemMonth, integer, "month",, XL_RCTIME(tm.tm_mon))
-PREFIX(SystemMonthDay, integer, "day",, XL_RCTIME(tm.tm_mday))
-PREFIX(SystemWeekDay, integer, "week_day",, XL_RCTIME(tm.tm_wday))
-PREFIX(SystemYearDay, integer, "year_day",, XL_RCTIME(tm.tm_yday))
+PREFIX(SystemTime, integer, "system_time",, XL_RINT(xl_time(1)))
+PREFIX(SystemHours, integer, "hours",, XL_RCTIME(tm.tm_hour, 10))
+PREFIX(SystemMinutes, integer, "minutes",, XL_RCTIME(tm.tm_min, 2))
+PREFIX(SystemSeconds, integer, "seconds",, XL_RCTIME(tm.tm_sec, 0.5))
+PREFIX(SystemYear, integer, "year",, XL_RCTIME(tm.tm_year + 1900, 10))
+PREFIX(SystemMonth, integer, "month",, XL_RCTIME(tm.tm_mon, 10))
+PREFIX(SystemMonthDay, integer, "day",, XL_RCTIME(tm.tm_mday, 10))
+PREFIX(SystemWeekDay, integer, "week_day",, XL_RCTIME(tm.tm_wday, 10))
+PREFIX(SystemYearDay, integer, "year_day",, XL_RCTIME(tm.tm_yday, 10))
 
 // Random number generator
 PREFIX(RandomNumber, real, "random", , XL_RREAL(xl_random(0.0, 1.0)))
@@ -130,10 +132,20 @@ PREFIX(RandomNumber2i, integer, "random", PARM(low,integer) PARM(high,integer),
        XL_RINT(xl_random(XL_INT(low), XL_INT(high))))
 
 // Executing some code
-PREFIX(DoCode,   tree, "do", PARM(code, tree), return xl_evaluate(&code))
+PREFIX(Identity,  tree, "identity", PARM(code, tree), return xl_identity(&code))
+PREFIX(DoCode,    tree, "do", PARM(code, tree), return xl_evaluate(&code))
+PREFIX(RepeatCode,tree, "repeat", PARM(n, integer) PARM(code, tree),
+       return xl_repeat(self, &code, n))
 PREFIX(LoadFile, tree, "load", PARM(file, text), return xl_load(file))
-PREFIX(LoadCSV,  tree, "load_csv", PARM(file, text), return xl_load_csv(file))
-PREFIX(LoadTSV,  tree, "load_tsv", PARM(file, text), return xl_load_tsv(file))
+PREFIX(LoadCSV,  tree, "load_csv", PARM(f, text) PARM(p, text),
+       return xl_load_data(f, p, ",;", "\n\f\r"))
+PREFIX(LoadTSV,  tree, "load_tsv", PARM(f, text) PARM(p, text),
+       return xl_load_data(f, p, "\t", "\n\f\r"))
+PREFIX(LoadData,  tree, "load_data",
+       PARM(f, text) PARM(p, text) PARM(fs, text) PARM(rs, text),
+       return xl_load_data(f, p, fs, rs))
+INFIX(Apply, tree, tree, "with", tree,
+      return xl_apply(&l, &r))
 
 // Debugging code
 PREFIX(DebugTree, tree, "debug", PARM(toDebug, tree),
