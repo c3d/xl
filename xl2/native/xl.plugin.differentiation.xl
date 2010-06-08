@@ -85,22 +85,22 @@ module XL.PLUGIN.DIFFERENTIATION is
                 dX : PT.tree := Differentiate(X, dv)
                 return parse_tree('N' * 'dX' * ('X' ^ ('N' - 1)))
 
-            when (exp('X')) then
+            when (exp 'X') then
                 dX : PT.tree := Differentiate(X, dv)
                 return parse_tree('dX' * exp('X'))
-            when (log('X')) then
+            when (log 'X') then
                 dX : PT.tree := Differentiate(X, dv)
                 return parse_tree('dX' / 'X')
-            when (sqrt('X')) then
+            when (sqrt 'X') then
                 dX : PT.tree := Differentiate(X, dv)
                 return parse_tree(-'dX' / (2.0 * sqrt('X')))
-            when (sin('X')) then
+            when (sin 'X') then
                 dX : PT.tree := Differentiate(X, dv)
                 return parse_tree('dX' * cos('X'))
-            when (cos('X')) then
+            when (cos 'X') then
                 dX : PT.tree := Differentiate(X, dv)
                 return parse_tree(-'dX' * sin('X'))
-            when (tan('X')) then
+            when (tan 'X') then
                 dX : PT.tree := Differentiate(X, dv)
                 return parse_tree('dX' / (cos('X') ^ 2))
 
