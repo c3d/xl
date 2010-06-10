@@ -68,7 +68,7 @@ export TESTDIR XL SUCCESS FAILURE PASS UPDATE
 export CCOPTS="-Agcc"
 
 # Make sure the proper files are linked in place
-rm -rf library $XL
+rm -rf library
 ln -sf ../library .
 ln -sf ../$XL .
 
