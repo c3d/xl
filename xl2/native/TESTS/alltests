@@ -29,8 +29,10 @@ TESTDIR=$(pwd)
 SUBDIRS="[0-9]*"
 if [ "$BUILDENV" == "mingw" ]; then
     XL=./nxl.exe
+    SED="sed -c"
 else
     XL=./nxl
+    SED=sed
 fi
 SUCCESS=$TESTDIR/success.out
 FAILURE=$TESTDIR/failure.out
@@ -171,8 +173,8 @@ do
                 UNEXPECTED_FAILURES=$(($UNEXPECTED_FAILURES+1))
             fi
         elif [ ! -z "$REF" ]; then
-            sed 's@'$TESTDIR'@TESTS@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
-            sed 's@'library/runtime/$RUNTIME'@library/runtime/default@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
+            $SED 's@'$TESTDIR'@TESTS@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
+            $SED 's@'library/runtime/$RUNTIME'@library/runtime/default@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
             if diff $REF $LOG > /dev/null 2>&1; then
                 THIS=ok
             elif [ ! -z "$UPDATE" ]; then

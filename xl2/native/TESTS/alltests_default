@@ -24,6 +24,6 @@
 # *****************************************************************************
 
 EXT=".c"
-COMPILE="cc -I. -lm $BASE.c"
-RUN="./a.out"
-TO_REMOVE="./a.out"
+COMPILE="gcc -I. -lm $BASE.c -o xltest.exe"
+RUN="./xltest.exe"
+TO_REMOVE="./xltest.exe"
