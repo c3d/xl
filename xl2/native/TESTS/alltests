@@ -62,8 +62,8 @@ export TESTDIR XL SUCCESS FAILURE PASS UPDATE
 export CCOPTS="-Agcc"
 
 # Make sure the proper files are linked in place
-ln -sf ../library .
-ln -sf ../nxl .
+cp ../library .
+cp ../nxl .
 
 # Cleanup the test results
 echo Tests successfully run on $(date) on $HOSTNAME > $SUCCESS

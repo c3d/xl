@@ -39,7 +39,8 @@
 #include <string.h>
 
 #ifndef _MSC_VER
-#if !defined(CONFIG_HPUX) && !defined(__hpux)
+#if !defined(CONFIG_HPUX)   && !defined(__hpux)      && \
+    !defined(CONFIG_CYGWIN) && !defined(CONFIG_MINGW)
 #include <sys/dir.h>
 #else
 #include <dirent.h>
@@ -354,7 +355,7 @@ namespace xl
             {
                 while(struct dirent *dp = readdir(dirp))
                 {
-#ifdef linux
+#if defined(linux) || defined(CONFIG_CYGWIN)
                     int len = strlen(dp->d_name);
 #else
                     int len = dp->d_namlen;

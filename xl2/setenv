@@ -1,7 +1,0 @@
-export CVS_RSH=ssh
-export CVSROOT=:ext:descubes@cvs.sourceforge.net:/cvsroot/xlr
-export BUILDENV=linux
-
-ssh-agent > /tmp/glop
-source /tmp/glop
-ssh-add 

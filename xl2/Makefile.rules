@@ -50,6 +50,9 @@ OBJLIBRARIES=	$(LIBRARIES:%.a=$(OBJROOT)/%.a)
 OBJLIBDEP=	$(filter %.a, $(OBJLIBRARIES))
 GARBAGE=	*~ *.bak
 
+BOOTSTRAPDIR= $(BROOT)bootstrap
+NATIVEDIR= $(BROOT)native
+
 # Default target
 all: debug
 
@@ -60,7 +63,12 @@ debug opt:
 
 clean: dirclean
 	rm -rf $(BROOT)obj
-
+	rm -f $(BROOT)/xl.exe
+	rm -f $(BOOTSTRAPDIR)/xl_lib.h $(BOOTSTRAPDIR)/xl.syntax $(BOOTSTRAPDIR)/bxl.exe $(BOOTSTRAPDIR)/bbxl.exe $(BOOTSTRAPDIR)/bbbxl.exe $(BOOTSTRAPDIR)/bbbbxl.exe
+	rm -f $(NATIVEDIR)/xl_lib.h $(NATIVEDIR)/xl.syntax $(NATIVEDIR)/nxl.exe
+	rm -f $(NATIVEDIR)/TEST/failure.out $(NATIVEDIR)/TEST/success.out $(NATIVEDIR)/TEST/nxl.exe
+	rm -f `find $(NATIVEDIR)/TESTS -name *.log` 
+	
 dirclean:
 	rm -f $(GARBAGE) $(TOCLEAN)
 	$(MAKE) recurse RECURSE=dirclean

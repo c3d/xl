@@ -61,10 +61,11 @@ export TESTDIR XL SUCCESS FAILURE PASS UPDATE
 export CCOPTS="-Agcc"
 
 # Make sure the proper files are linked in place
-ln -sf ../xlr ./xl
-ln -sf ../*.stylesheet .
-ln -sf ../xl.syntax .
-ln -sf ../builtins.xl .
+# MinGW's unable to follow symlinks, so we have to copy dependencies
+cp ../xlr ./xl
+cp ../*.stylesheet .
+cp ../xl.syntax .
+cp ../builtins.xl .
 
 # Cleanup the test results
 echo Tests successfully run on $(date) on $HOSTNAME > $SUCCESS

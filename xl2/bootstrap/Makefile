@@ -62,10 +62,11 @@ bootstrap_stability_test:
 
 
 prebuild: xl_lib.h xl.syntax
+# MinGW's unable to follow symlinks, so we have to copy dependencies
 xl_lib.h:
-	ln -sf ../xl_lib.h .
+	cp ../xl_lib.h .
 xl.syntax:
-	ln -sf ../xl.syntax .
+	cp ../xl.syntax .
 
 .PRECIOUS: $(OBJDIR)/%.xl.C
 

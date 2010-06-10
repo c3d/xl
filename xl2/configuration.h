@@ -216,6 +216,31 @@
 #endif /* MSVC */
 
 
+#ifdef CONFIG_MINGW
+/* ========================================================================= */
+/*                                                                           */
+/*   MinGW32 configuration                                                   */
+/*                                                                           */
+/* ========================================================================= */
+
+#define CONFIG_HAS_UCHAR                1
+#define CONFIG_HAS_UINT                 1
+#define CONFIG_HAS_ULONG                1
+#define CONFIG_HAS_USHORT               1
+#define CONFIG_HAS_LONGLONG             0
+#define CONFIG_HAS_INT64                0
+#define CONFIG_LEADING_UNDERSCORE_IN_NM 1
+#define CONFIG_DIRENT_HAS_TYPE          0
+#define CONFIG_USE_SBRK                 0
+#define CONFIG_C_COMPILER               "gcc"
+#define CONFIG_OBJ_EXT                  ".o"
+#define CONFIG_EXE_EXT                  ".exe"
+#define CONFIG_DEFAULT_EXE              "a.exe"
+
+#endif /* MinGW32 */
+
+
+
 #define CONFIG_HAS_NAMESPACE            1
 
 #if CONFIG_HAS_LONGLONG
