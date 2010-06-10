@@ -27,7 +27,11 @@
 # Environment - Note that 'xl' is typically a symbolic link to real compiler
 TESTDIR=$(pwd)
 SUBDIRS="[0-9]*"
-XL=./nxl
+if [ "$BUILDENV" == "mingw" ]; then
+    XL=./nxl.exe
+else
+    XL=./nxl
+fi
 SUCCESS=$TESTDIR/success.out
 FAILURE=$TESTDIR/failure.out
 PASS="pass"
@@ -62,8 +66,9 @@ export TESTDIR XL SUCCESS FAILURE PASS UPDATE
 export CCOPTS="-Agcc"
 
 # Make sure the proper files are linked in place
-cp ../library .
-cp ../nxl .
+rm -rf library $XL
+ln -sf ../library .
+ln -sf ../$XL .
 
 # Cleanup the test results
 echo Tests successfully run on $(date) on $HOSTNAME > $SUCCESS
