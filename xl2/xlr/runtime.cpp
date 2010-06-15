@@ -890,6 +890,20 @@ Tree *xl_apply(Tree *code, Tree *data)
 }
 
 
+Tree *xl_range(longlong low, longlong high)
+// ----------------------------------------------------------------------------
+//   Return a range of values between low and high
+// ----------------------------------------------------------------------------
+//   This is so ugly, but lazy evalation doesn't work quite right yet
+{
+    Tree *result = new Integer(low);
+    for (longlong i = low+1; i < high; i++)
+        result = new Infix(",", result, new Integer(i));
+    result->code = xl_identity;
+    return result;
+}
+
+
 
 // ============================================================================
 // 
