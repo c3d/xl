@@ -94,6 +94,7 @@ INFIX(LEText, boolean, text, "<=", text, XL_RBOOL(XL_TEXT(l) <= XL_TEXT(r)))
 INFIX(GEText, boolean, text, ">=", text, XL_RBOOL(XL_TEXT(l) >= XL_TEXT(r)))
 INFIX(NEText, boolean, text, "<>", text, XL_RBOOL(XL_TEXT(l) != XL_TEXT(r)))
 INFIX(EQText, boolean, text, "=", text, XL_RBOOL(XL_TEXT(l) == XL_TEXT(r)))
+PREFIX(TextLength, integer, "length", PARM(t,text), XL_RINT(t.value.length()))
 
 
 // Conversions
