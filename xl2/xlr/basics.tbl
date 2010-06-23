@@ -95,6 +95,9 @@ INFIX(GEText, boolean, text, ">=", text, XL_RBOOL(XL_TEXT(l) >= XL_TEXT(r)))
 INFIX(NEText, boolean, text, "<>", text, XL_RBOOL(XL_TEXT(l) != XL_TEXT(r)))
 INFIX(EQText, boolean, text, "=", text, XL_RBOOL(XL_TEXT(l) == XL_TEXT(r)))
 PREFIX(TextLength, integer, "length", PARM(t,text), XL_RINT(t.value.length()))
+INFIX(TextAt, text, text, "at", integer,
+      text t = l; longlong i = r;
+      XL_RTEXT((i >= 0 && i < (longlong) t.length()) ? text(t[i],1) : text("")))
 
 
 // Conversions
