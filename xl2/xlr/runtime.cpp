@@ -577,6 +577,9 @@ Tree *xl_load(text name)
         return sf.tree;
     }
 
+    if (MAIN->options.fileLoad)
+        std::cout << "Loading: " << path << "\n";
+
     Parser parser(path.c_str(), MAIN->syntax, MAIN->positions, MAIN->errors);
     Tree *tree = parser.Parse();
     if (!tree)
