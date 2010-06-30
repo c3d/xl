@@ -137,6 +137,11 @@ TRACE(drag)
 TRACE(focus)
 TRACE(undo)
 TRACE(widgets)
+TRACE(resources)
+TRACE(clipboard)
+TRACE(srcview)
+TRACE(fonts)
+TRACE(textselect)
 #endif // TAO
 
 // Traces. The first ones must match the MzTrace definition in base.h
