@@ -25,6 +25,7 @@
 #******************************************************************************
 
 # Environment - Note that 'xl' is typically a symbolic link to real compiler
+OS=$(uname)
 TESTDIR=$(pwd)
 SUBDIRS="[0-9]*"
 XL=./xl
@@ -62,10 +63,12 @@ export CCOPTS="-Agcc"
 
 # Make sure the proper files are linked in place
 # MinGW's unable to follow symlinks, so we have to copy dependencies
-cp ../xlr ./xl
-cp ../*.stylesheet .
-cp ../xl.syntax .
-cp ../builtins.xl .
+LN="ln -sf"
+if (echo "$OS" | grep -iq "mingw"); then LN="cp"; fi
+$LN ../xlr ./xl
+$LN ../*.stylesheet .
+$LN ../xl.syntax .
+$LN ../builtins.xl .
 
 # Cleanup the test results
 echo Tests successfully run on $(date) on $HOSTNAME > $SUCCESS
