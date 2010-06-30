@@ -959,7 +959,7 @@ Tree *xl_nth(Tree *data, longlong index)
     {
         TreeList list;
         xl_infix_to_list(infix, list);
-        if (index < 1 || index > list.size())
+        if (index < 1 || index > (longlong) list.size())
             return Ooops("Index '$2' for '$1' out of range",
                          source, new Integer(index));
         result = list[index-1];
