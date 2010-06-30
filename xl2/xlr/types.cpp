@@ -216,7 +216,7 @@ Tree *MatchType::DoName(Name *what)
 // ----------------------------------------------------------------------------
 {
     Normalize();
-    if (type == symbolicname_type)
+    if (type == symbol_type)
         return what;
     if (Tree *value = symbols->Named(what->value))
         return value->Do(this);

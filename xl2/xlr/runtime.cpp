@@ -448,7 +448,7 @@ Tree *xl_tree_cast(Tree *source, Tree *value)
 }
 
 
-Tree *xl_symbolicname_cast(Tree *source, Tree *value)
+Tree *xl_symbol_cast(Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a name
 // ----------------------------------------------------------------------------

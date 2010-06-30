@@ -1463,7 +1463,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         // Check if this is a case where we don't compile the value
         bool needEvaluation = true;
         if (Name *name = typeExpr->AsName())
-            if (name->value == "tree" || name->value == "symbolicname")
+            if (name->value == "tree" || name->value == "symbol")
                 needEvaluation = false;
 
         // Compile what we are testing against
