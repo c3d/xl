@@ -28,6 +28,8 @@
 
 #include "base.h"
 #include "gc.h"
+#include "info.h"
+#include "action.h"
 #include <map>
 #include <vector>
 #include <cassert>
@@ -77,26 +79,6 @@ typedef GCPtr<Symbols>                  Symbols_p;
 typedef ulong TreePosition;                     // Position in context
 typedef std::vector<Tree_p> TreeList;           // A list of trees
 typedef Tree *(*eval_fn) (Tree *);              // Compiled evaluation code
-
-
-
-// ============================================================================
-//
-//    Info class: data that can be associated to trees
-//
-// ============================================================================
-
-struct Info
-// ----------------------------------------------------------------------------
-//   Information associated with a tree
-// ----------------------------------------------------------------------------
-{
-                        Info(): next(NULL) {}
-                        Info(const Info &) : next(NULL) {}
-    virtual             ~Info() {}
-    virtual Info *      Copy() { return next ? next->Copy() : NULL; }
-    Info *next;
-};
 
 
 
@@ -203,176 +185,6 @@ public:
 private:
     Tree (const Tree &);
 };
-
-
-struct Action
-// ----------------------------------------------------------------------------
-//   An operation we do recursively on trees
-// ----------------------------------------------------------------------------
-{
-    Action () {}
-    virtual ~Action() {}
-    virtual Tree *Do (Tree *what) = 0;
-
-    // Specialization for the canonical nodes, default is to run them
-    virtual Tree *DoInteger(Integer *what);
-    virtual Tree *DoReal(Real *what);
-    virtual Tree *DoText(Text *what);
-    virtual Tree *DoName(Name *what);
-    virtual Tree *DoPrefix(Prefix *what);
-    virtual Tree *DoPostfix(Postfix *what);
-    virtual Tree *DoInfix(Infix *what);
-    virtual Tree *DoBlock(Block *what);
-};
-
-
-template <class I> inline typename I::data_t Tree::Get() const
-// ----------------------------------------------------------------------------
-//   Find if we have an information of the right type in 'info'
-// ----------------------------------------------------------------------------
-{
-    for (Info *i = info; i; i = i->next)
-        if (I *ic = dynamic_cast<I *> (i))
-            return (typename I::data_t) *ic;
-    return typename I::data_t();
-}
-
-
-template <class I> inline void Tree::Set(typename I::data_t data)
-// ----------------------------------------------------------------------------
-//   Set the information given as an argument
-// ----------------------------------------------------------------------------
-{
-    Info *i = new I(data);
-    i->next = info;
-    info = i;
-}
-
-
-template <class I> inline I* Tree::GetInfo() const
-// ----------------------------------------------------------------------------
-//   Find if we have an information of the right type in 'info'
-// ----------------------------------------------------------------------------
-{
-    for (Info *i = info; i; i = i->next)
-        if (I *ic = dynamic_cast<I *> (i))
-            return ic;
-    return NULL;
-}
-
-
-template <class I> inline void Tree::Set2(typename I::data_t data)
-// ----------------------------------------------------------------------------
-//   Set the information given as an argument. Do not add new info if exists.
-// ----------------------------------------------------------------------------
-{
-    I *i = GetInfo<I>();
-    if (i)
-        (*i) = data;
-    else
-        Set<I>(data);
-}
-
-
-template <class I> inline void Tree::SetInfo(I *i)
-// ----------------------------------------------------------------------------
-//   Set the information given as an argument
-// ----------------------------------------------------------------------------
-{
-    Info *last = i;
-    while(last->next)
-        last = last->next;
-    last->next = info;
-    info = i;
-}
-
-
-template <class I> inline bool Tree::Exists() const
-// ----------------------------------------------------------------------------
-//   Verifies if the tree already has information of the given type
-// ----------------------------------------------------------------------------
-{
-    for (Info *i = info; i; i = i->next)
-        if (dynamic_cast<I *> (i))
-            return true;
-    return false;
-}
-
-
-template <class I> inline bool Tree::Purge()
-// ----------------------------------------------------------------------------
-//   Find and purge information of the given type
-// ----------------------------------------------------------------------------
-{
-    Info *last = NULL;
-    Info *next = NULL;
-    bool purged = false;
-    for (Info *i = info; i; i = next)
-    {
-        next = i->next;
-        if (I *ic = dynamic_cast<I *> (i))
-        {
-            if (last)
-                last->next = next;
-            else
-                info = next;
-            delete ic;
-            purged = true;
-        }
-        else
-        {
-            last = i;
-        }
-    }
-    return purged;
-}
-
-
-template <class I> inline I* Tree::Remove()
-// ----------------------------------------------------------------------------
-//   Find information and unlinks it if it exists
-// ----------------------------------------------------------------------------
-{
-    Info *prev = NULL;
-    for (Info *i = info; i; i = i->next)
-    {
-        if (I *ic = dynamic_cast<I *> (i))
-        {
-            if (prev)
-                prev->next = i->next;
-            else
-                info = i->next;
-            i->next = NULL;
-            return ic;
-        }
-        prev = i;
-    }
-    return NULL;
-}
-
-
-template <class I> inline I* Tree::Remove(I *toFind)
-// ----------------------------------------------------------------------------
-//   Find information matching input and remove it if it exists
-// ----------------------------------------------------------------------------
-{
-    Info *prev = NULL;
-    for (Info *i = info; i; i = i->next)
-    {
-        I *ic = dynamic_cast<I *> (i);
-        if (ic == toFind)
-        {
-            if (prev)
-                prev->next = i->next;
-            else
-                info = i->next;
-            i->next = NULL;
-            return ic;
-        }
-        prev = i;
-    }
-    return NULL;
-}
 
 
 
@@ -624,6 +436,165 @@ inline Infix *Infix::LastStatement()
            (next->name == "\n" || next->name == ";"))
         last = next;
     return last;
+}
+
+
+
+
+
+
+// ============================================================================
+// 
+//    Template members for info management
+// 
+// ============================================================================
+
+template <class I> inline typename I::data_t Tree::Get() const
+// ----------------------------------------------------------------------------
+//   Find if we have an information of the right type in 'info'
+// ----------------------------------------------------------------------------
+{
+    for (Info *i = info; i; i = i->next)
+        if (I *ic = dynamic_cast<I *> (i))
+            return (typename I::data_t) *ic;
+    return typename I::data_t();
+}
+
+
+template <class I> inline void Tree::Set(typename I::data_t data)
+// ----------------------------------------------------------------------------
+//   Set the information given as an argument
+// ----------------------------------------------------------------------------
+{
+    Info *i = new I(data);
+    i->next = info;
+    info = i;
+}
+
+
+template <class I> inline I* Tree::GetInfo() const
+// ----------------------------------------------------------------------------
+//   Find if we have an information of the right type in 'info'
+// ----------------------------------------------------------------------------
+{
+    for (Info *i = info; i; i = i->next)
+        if (I *ic = dynamic_cast<I *> (i))
+            return ic;
+    return NULL;
+}
+
+
+template <class I> inline void Tree::Set2(typename I::data_t data)
+// ----------------------------------------------------------------------------
+//   Set the information given as an argument. Do not add new info if exists.
+// ----------------------------------------------------------------------------
+{
+    I *i = GetInfo<I>();
+    if (i)
+        (*i) = data;
+    else
+        Set<I>(data);
+}
+
+
+template <class I> inline void Tree::SetInfo(I *i)
+// ----------------------------------------------------------------------------
+//   Set the information given as an argument
+// ----------------------------------------------------------------------------
+{
+    Info *last = i;
+    while(last->next)
+        last = last->next;
+    last->next = info;
+    info = i;
+}
+
+
+template <class I> inline bool Tree::Exists() const
+// ----------------------------------------------------------------------------
+//   Verifies if the tree already has information of the given type
+// ----------------------------------------------------------------------------
+{
+    for (Info *i = info; i; i = i->next)
+        if (dynamic_cast<I *> (i))
+            return true;
+    return false;
+}
+
+
+template <class I> inline bool Tree::Purge()
+// ----------------------------------------------------------------------------
+//   Find and purge information of the given type
+// ----------------------------------------------------------------------------
+{
+    Info *last = NULL;
+    Info *next = NULL;
+    bool purged = false;
+    for (Info *i = info; i; i = next)
+    {
+        next = i->next;
+        if (I *ic = dynamic_cast<I *> (i))
+        {
+            if (last)
+                last->next = next;
+            else
+                info = next;
+            delete ic;
+            purged = true;
+        }
+        else
+        {
+            last = i;
+        }
+    }
+    return purged;
+}
+
+
+template <class I> inline I* Tree::Remove()
+// ----------------------------------------------------------------------------
+//   Find information and unlinks it if it exists
+// ----------------------------------------------------------------------------
+{
+    Info *prev = NULL;
+    for (Info *i = info; i; i = i->next)
+    {
+        if (I *ic = dynamic_cast<I *> (i))
+        {
+            if (prev)
+                prev->next = i->next;
+            else
+                info = i->next;
+            i->next = NULL;
+            return ic;
+        }
+        prev = i;
+    }
+    return NULL;
+}
+
+
+template <class I> inline I* Tree::Remove(I *toFind)
+// ----------------------------------------------------------------------------
+//   Find information matching input and remove it if it exists
+// ----------------------------------------------------------------------------
+{
+    Info *prev = NULL;
+    for (Info *i = info; i; i = i->next)
+    {
+        I *ic = dynamic_cast<I *> (i);
+        if (ic == toFind)
+        {
+            if (prev)
+                prev->next = i->next;
+            else
+                info = i->next;
+            i->next = NULL;
+            return ic;
+        }
+        prev = i;
+    }
+    return NULL;
 }
 
 
