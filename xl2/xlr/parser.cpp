@@ -160,7 +160,7 @@ token_t Parser::NextToken()
             break;
         case tokNEWLINE:
             // If we get two newlines in a row, record the additional ones
-            if (pending != tokNONE)
+            if (pending == tokNEWLINE)
                 AddComment("\n");
 
             // Combine newline with any previous pending indent
@@ -195,18 +195,24 @@ token_t Parser::NextToken()
 }
 
 
-void Parser::AddComment(text what)
+void Parser::AddComments(Tree *what, bool before)
 // ----------------------------------------------------------------------------
-//    Record a comment, position it before or after depending on pos in line
+//   Add the pending comments to the given tree
 // ----------------------------------------------------------------------------
 {
-    if (!comments)
-        comments = new CommentsInfo();
-    if (beginningLine)
-        comments->before.push_back(what);
+    CommentsInfo *cinfo = what->GetInfo<CommentsInfo>();
+    if (!cinfo)
+    {
+        cinfo =  new CommentsInfo();
+        what->SetInfo<CommentsInfo> (cinfo);
+    }
+    if (before)
+        cinfo->before = comments;
     else
-        comments->after.push_back(what);
+        cinfo->after = comments;
+    comments.clear();
 }
+
 
 
 Tree *Parser::Parse(text closing)
@@ -254,6 +260,7 @@ Tree *Parser::Parse(text closing)
     char                 separator;
     text                 blk_opening, blk_closing;
     std::vector<Pending> stack;
+    CommentsList         pendingComments;
 
     // When inside a () block, we are in 'expression' mode right away
     if (closing != "" && paren_priority > statement_priority)
@@ -264,10 +271,16 @@ Tree *Parser::Parse(text closing)
 
     while (!done)
     {
+        bool wasBeginningLine = beginningLine;
+
         // Scan next token
         right = NULL;
         prefix_priority = infix_priority = default_priority;
         tok = NextToken();
+
+        // If we had comments after a token, add them to that token
+        if (!wasBeginningLine && comments.size() && commented)
+            AddComments(commented, false);
 
         // Check if we are dealing with a trailing operator (at end of line)
         if (line_continuation)
@@ -420,12 +433,15 @@ Tree *Parser::Parse(text closing)
             // Just like for names, parse the contents of the parentheses
             prefix_priority = paren_priority;
             infix_priority = default_priority;
+            pendingComments = comments;
+            comments.clear();
             right = Parse(blk_closing);
             if (tok == tokPAROPEN)
                 scanner.CloseParen(old_indent);
             if (!right)
                 right = new Name("", pos); // Case where we have ()
             right = new Block(right, blk_opening, blk_closing, pos);
+            comments = pendingComments;
             break;
         default:
             if (true)
@@ -437,6 +453,23 @@ Tree *Parser::Parse(text closing)
             }
             break;
         } // switch(tok)
+
+
+        // Attach any comments we may have had and return the result
+        if (right)
+        {
+            commented = right;
+            if (comments.size())
+                AddComments(commented, true);
+        }
+        else if (left)
+        {
+            // We just got 'then', but 'then' will be an infix
+            // so we can't really attach comments to it.
+            // Instead, we defer the comment to the next 'right'
+            commented = NULL;
+        }
+            
 
         // Check what is the current result
         line_continuation = false;
@@ -593,13 +626,6 @@ Tree *Parser::Parse(text closing)
                                    result, prev.position);
             stack.pop_back();
         }
-    }
-
-    // Attach any comments we may have had and return the result
-    if (comments)
-    {
-        result->SetInfo<CommentsInfo> (comments);
-        comments = NULL;
     }
 
     return result;

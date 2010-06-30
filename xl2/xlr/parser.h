@@ -86,6 +86,7 @@ XL_BEGIN
 
 class Errors;
 struct CommentsInfo;
+typedef std::vector<text> CommentsList;
 
 
 class Parser
@@ -97,19 +98,20 @@ public:
     Parser(kstring name, Syntax &stx, Positions &pos, Errors &err):
         scanner(name, stx, pos, err),
         syntax(stx), errors(err), pending(tokNONE),
-        openquote(), closequote(), comments(NULL),
+        openquote(), closequote(), comments(), commented(NULL),
         hadSpaceBefore(false), hadSpaceAfter(false), beginningLine(true) {}
     Parser(std::istream &input, Syntax &stx, Positions &pos, Errors &err):
         scanner(input, stx, pos, err),
         syntax(stx), errors(err), pending(tokNONE),
-        openquote(), closequote(), comments(NULL),
+        openquote(), closequote(), comments(NULL), commented(NULL),
         hadSpaceBefore(false), hadSpaceAfter(false), beginningLine(true) {}
 
 public:
     Tree *              Parse(text closing_paren = "");
-    Scanner *           ParserScanner() { return &scanner; }
+    Scanner *           ParserScanner()         { return &scanner; }
     token_t             NextToken();
-    void                AddComment(text comment);
+    void                AddComment(text c)      { comments.push_back(c); }
+    void                AddComments(Tree *, bool before);
 
 private:
     Scanner             scanner;
@@ -117,7 +119,8 @@ private:
     Errors &            errors;
     token_t             pending;
     text                openquote, closequote;
-    CommentsInfo *      comments;
+    CommentsList        comments;
+    Tree *              commented;
     bool                hadSpaceBefore, hadSpaceAfter, beginningLine;
 };
 
@@ -131,9 +134,7 @@ struct CommentsInfo : Info
     ~CommentsInfo() {}
 
 public:
-    typedef std::vector<text>   comment_list;
-    comment_list        before;
-    comment_list        after;
+    CommentsList before, after;
 };
 
 XL_END

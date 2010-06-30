@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  renderer.cpp                    (C) 1992-2009 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  renderer.cpp                    (C) 1992-2009 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Rendering of XL trees
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
@@ -36,9 +36,9 @@
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //   Renderer construction / initialization
-// 
+//
 // ============================================================================
 
 Renderer *Renderer::renderer = NULL;
@@ -98,7 +98,7 @@ Renderer::Renderer(std::ostream &out, Renderer *from)
 //   Clone a renderer from some existing one
 // ----------------------------------------------------------------------------
     : output(out), syntax(from->syntax), formats(from->formats),
-      indent(from->indent), self(from->self), 
+      indent(from->indent), self(from->self),
       left(from->left), right(from->right),
       current_quote(from->current_quote), priority(from->priority),
       had_space(from->had_space), had_punctuation(from->had_punctuation),
@@ -134,9 +134,9 @@ void Renderer::SelectStyleSheet(text styleFile, text syntaxFile)
 
 
 // ============================================================================
-// 
+//
 //   Rendering proper
-// 
+//
 // ============================================================================
 
 void Renderer::RenderText(text format)
@@ -417,24 +417,33 @@ void Renderer::RenderOne(Tree *what)
     if (highlight)
         hname = highlights[what];
     CommentsInfo *cinfo = what ? what->GetInfo<CommentsInfo>() : NULL;
-    CommentsInfo::comment_list::iterator ci;
+    CommentsList::iterator ci;
 
     if (highlight)
         RenderFormat("", "highlight_begin_" + hname + " ");
 
     if (cinfo)
+    {
+        text saveSelf = self;
         for (ci = cinfo->before.begin(); ci != cinfo->before.end(); ci++)
             RenderFormat(*ci, "comment_before", "comment");
+        self = saveSelf;
+    }
 
     DoRenderOne(what);
 
     if (cinfo)
+    {
+        text saveSelf = self;
         for (ci = cinfo->after.begin(); ci != cinfo->after.end(); ci++)
             RenderFormat(*ci, "comment_after", "comment");
+        self = saveSelf;
+    }
 
     if (highlight)
         RenderFormat("", "highlight_end_" + hname + " ");
 }
+
 
 void Renderer::DoRenderOne(Tree *what)
 // ----------------------------------------------------------------------------
@@ -547,7 +556,7 @@ void Renderer::DoRenderOne(Tree *what)
         {
             text n = n0 + lf->value;
             if (formats.count(n) > 0)
-                RenderFormat (formats[n]); 
+                RenderFormat (formats[n]);
             else if (formats.count(n0) > 0)
                 RenderFormat (formats[n0]);
             else
@@ -555,7 +564,7 @@ void Renderer::DoRenderOne(Tree *what)
                 RenderOne (l);
                 RenderOne (r);
             }
-        }            
+        }
         else if (formats.count(n0) > 0)
         {
             RenderFormat (formats[n0]);
@@ -585,7 +594,7 @@ void Renderer::DoRenderOne(Tree *what)
         {
             text n = n0 + rf->value;
             if (formats.count(n) > 0)
-                RenderFormat (formats[n]); 
+                RenderFormat (formats[n]);
             else if (formats.count(n0) > 0)
                 RenderFormat (formats[n0]);
             else
@@ -593,7 +602,7 @@ void Renderer::DoRenderOne(Tree *what)
                 RenderOne (l);
                 RenderOne (r);
             }
-        }            
+        }
         else if (formats.count(n0) > 0)
         {
             RenderFormat (formats[n0]);
