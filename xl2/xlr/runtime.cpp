@@ -904,6 +904,68 @@ Tree *xl_range(longlong low, longlong high)
 }
 
 
+void xl_infix_to_list(Infix *infix, TreeList &list)
+// ----------------------------------------------------------------------------
+//   Convert an infix to a list, whether left or right associative
+// ----------------------------------------------------------------------------
+{
+    Infix *left = infix->left->AsInfix();
+    if (left && left->name == infix->name)
+        xl_infix_to_list(left, list);
+    else
+        list.push_back(infix->left);
+    
+    Infix *right = infix->right->AsInfix();
+    if (right && right->name == infix->name)
+        xl_infix_to_list(right, list);
+    else
+        list.push_back(infix->right);
+}
+            
+
+Tree *xl_nth(Tree *data, longlong index)
+// ----------------------------------------------------------------------------
+//   Find the nth element in a data set
+// ----------------------------------------------------------------------------
+{
+    Tree *source = data;
+
+    // Check if we got (1,2,3,4) or something like f(3) as 'data'
+    Block *block = data->AsBlock();
+    if (!block)
+    {
+        // We got f(3) or Hello as input: evaluate it
+        data = xl_evaluate(data);
+
+        // The returned data may itself be something like (1,2,3,4,5)
+        block = data->AsBlock();
+    }
+    if (block)
+    {
+        // We got (1,2,3,4): Extract 1,2,3,4
+        data = block->child;
+        if (!data->Symbols())
+            data->SetSymbols(block->Symbols());
+        if (!data->code)
+            data->code = xl_evaluate_children;
+    }
+
+    // Now loop on the top-level infix
+    Tree *result = data;
+    if (Infix *infix = result->AsInfix())
+    {
+        TreeList list;
+        xl_infix_to_list(infix, list);
+        if (index < 1 || index > list.size())
+            return Ooops("Index '$2' for '$1' out of range",
+                         source, new Integer(index));
+        result = list[index-1];
+    }
+
+    return result;
+}
+
+
 
 // ============================================================================
 // 

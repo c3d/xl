@@ -148,6 +148,7 @@ PREFIX(LoadData,  tree, "load_data",
 INFIX(Apply, tree, tree, "with", tree,
       return xl_apply(&l, &r))
 INFIX(Range, tree, integer, "..", integer, return xl_range(l, r))
+INFIX(Index, tree, tree, "at", integer, return xl_nth(&l, r))
 
 // Debugging code
 PREFIX(DebugTree, tree, "debug", PARM(toDebug, tree),
