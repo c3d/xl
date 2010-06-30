@@ -94,7 +94,6 @@ Main::Main(int inArgc, char **inArgv, Compiler &comp,
     Renderer::renderer = &renderer;
     Syntax::syntax = &syntax;
     options.builtins = builtinsName;
-
     ParseOptions();
 }
 
@@ -116,6 +115,9 @@ int Main::ParseOptions()
 {
     text cmd, end = "";
     int  filenum  = 0;
+
+    // Read initial options
+    options.Parse(argc, argv, false);
 
     // Make sure debug function is linked in...
     if (getenv("SHOW_INITIAL_DEBUG"))

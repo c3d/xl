@@ -52,9 +52,7 @@ Options::Options(Errors &err, int argc, char **argv):
 #define TRACE(name)
 #include "options.tbl"
     arg(0), argc(argc), argv(argv), errors(err)
-{
-    Parse(argc, argv, false);
-}
+{}
 
 
 static void Usage(char **argv)
