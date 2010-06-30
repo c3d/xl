@@ -51,7 +51,7 @@ struct Renderer
 
     // Rendering proper
     void                Render (Tree *what);
-    void                RenderOne(Tree *what);
+    void                RenderOne (Tree *what);
     void                DoRenderOne(Tree *what);
     void                RenderText(text format);
     void                RenderFormat(Tree *format);

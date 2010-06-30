@@ -104,9 +104,17 @@ token_t Parser::NextToken()
             else if (syntax.IsComment(opening, closing))
             {
                 // Skip comments, keep looking to get the right indentation
-                text comment = scanner.Comment(closing);
+                text comment = opening + scanner.Comment(closing);
+                AddComment(comment);
                 if (closing == "\n" && pend == tokNONE)
+                {
                     pending = tokNEWLINE;
+                    beginningLine = true;
+                }
+                else
+                {
+                    // Don't change beginningLine in: /* ... */ /* ... */
+                }
                 continue;
             }
             else if (syntax.IsTextDelimiter(opening, closing))
@@ -123,7 +131,14 @@ token_t Parser::NextToken()
                     return tokNEWLINE;
                 }
                 if (closing == "\n" && pend == tokNONE)
+                {
                     pending = tokNEWLINE;
+                    beginningLine = true;
+                }
+                else
+                {
+                    beginningLine = false;
+                }
                 return tokLONGSTRING;
             }
 
@@ -137,22 +152,33 @@ token_t Parser::NextToken()
                     int infixPrio = syntax.InfixPriority(opening);
                     if (infixPrio < syntax.statement_priority)
                         pending = pend = tokNONE;
-                }    
+                }
             }
+
+            // All comments after this will be following the token
+            beginningLine = false;
             break;
         case tokNEWLINE:
-            // Combined with any previous pending indent
+            // If we get two newlines in a row, record the additional ones
+            if (pending != tokNONE)
+                AddComment("\n");
+
+            // Combine newline with any previous pending indent
             pending = tokNEWLINE;
+            beginningLine = true;
             continue;
         case tokUNINDENT:
-            // Add newline if no infix
+            // Add newline if what comes next isn't an infix like 'else'
             pending = tokNEWLINE;
+            beginningLine = true;
             return result;
         case tokINDENT:
-            // Ignore pending newline when indenting
+            // If we had a new-line followed by indent, ignore the new line
             pending = tokNONE;
+            beginningLine = true;
             return result;
         default:
+            beginningLine = false;
             break;
         } // switch (result)
 
@@ -166,6 +192,20 @@ token_t Parser::NextToken()
 
         return result;
     } // While loop
+}
+
+
+void Parser::AddComment(text what)
+// ----------------------------------------------------------------------------
+//    Record a comment, position it before or after depending on pos in line
+// ----------------------------------------------------------------------------
+{
+    if (!comments)
+        comments = new CommentsInfo();
+    if (beginningLine)
+        comments->before.push_back(what);
+    else
+        comments->after.push_back(what);
 }
 
 
@@ -554,6 +594,14 @@ Tree *Parser::Parse(text closing)
             stack.pop_back();
         }
     }
+
+    // Attach any comments we may have had and return the result
+    if (comments)
+    {
+        result->SetInfo<CommentsInfo> (comments);
+        comments = NULL;
+    }
+
     return result;
 }
 

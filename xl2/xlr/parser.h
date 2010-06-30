@@ -65,10 +65,16 @@
   Any name or symbol is valid to identify a prefix or infix operator.
 
   Operator precedence is defined by the xl.syntax file.
- */
+
+  Comments and extraneous line separators are preserved in CommentsInfo nodes
+  attached to the returned parse trees.
+*/
 
 #include "scanner.h"
 #include "syntax.h"
+#include "info.h"
+#include <vector>
+
 
 XL_BEGIN
 
@@ -79,6 +85,8 @@ XL_BEGIN
 // ============================================================================
 
 class Errors;
+struct CommentsInfo;
+
 
 class Parser
 // ----------------------------------------------------------------------------
@@ -89,18 +97,19 @@ public:
     Parser(kstring name, Syntax &stx, Positions &pos, Errors &err):
         scanner(name, stx, pos, err),
         syntax(stx), errors(err), pending(tokNONE),
-        openquote(), closequote(),
-        hadSpaceBefore(false), hadSpaceAfter(false) {}
+        openquote(), closequote(), comments(NULL),
+        hadSpaceBefore(false), hadSpaceAfter(false), beginningLine(true) {}
     Parser(std::istream &input, Syntax &stx, Positions &pos, Errors &err):
         scanner(input, stx, pos, err),
         syntax(stx), errors(err), pending(tokNONE),
-        openquote(), closequote(),
-        hadSpaceBefore(false), hadSpaceAfter(false) {}
+        openquote(), closequote(), comments(NULL),
+        hadSpaceBefore(false), hadSpaceAfter(false), beginningLine(true) {}
 
 public:
     Tree *              Parse(text closing_paren = "");
     Scanner *           ParserScanner() { return &scanner; }
     token_t             NextToken();
+    void                AddComment(text comment);
 
 private:
     Scanner             scanner;
@@ -108,7 +117,23 @@ private:
     Errors &            errors;
     token_t             pending;
     text                openquote, closequote;
-    bool                hadSpaceBefore, hadSpaceAfter;
+    CommentsInfo *      comments;
+    bool                hadSpaceBefore, hadSpaceAfter, beginningLine;
+};
+
+
+struct CommentsInfo : Info
+// ----------------------------------------------------------------------------
+//   Information recorded about comments
+// ----------------------------------------------------------------------------
+{
+    CommentsInfo() {}
+    ~CommentsInfo() {}
+
+public:
+    typedef std::vector<text>   comment_list;
+    comment_list        before;
+    comment_list        after;
 };
 
 XL_END

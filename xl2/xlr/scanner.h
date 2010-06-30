@@ -109,6 +109,8 @@ enum token_t
 //   Possible token types
 // ----------------------------------------------------------------------------
 {
+    tokNONE = 0,
+
     // Normal conditions
     tokEOF,                     // End of file marker
     tokINTEGER,                 // Integer number
@@ -125,8 +127,7 @@ enum token_t
     tokUNINDENT,                // Unindentation (one per indentation)
 
     // Error conditions
-    tokERROR,                   // Some error happened (normally hard to reach)
-    tokNONE = 0
+    tokERROR                    // Some error happened (normally hard to reach)
 };
 
 

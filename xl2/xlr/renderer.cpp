@@ -413,15 +413,24 @@ void Renderer::RenderOne(Tree *what)
 // ----------------------------------------------------------------------------
 {
     text hname;
-    if (highlights.count(what))
+    bool highlight = what && highlights.count(what) > 0;
+    if (highlight)
         hname = highlights[what];
-
-    bool highlight = !hname.empty();
+    CommentsInfo *cinfo = what ? what->GetInfo<CommentsInfo>() : NULL;
+    CommentsInfo::comment_list::iterator ci;
 
     if (highlight)
         RenderFormat("", "highlight_begin_" + hname + " ");
 
+    if (cinfo)
+        for (ci = cinfo->before.begin(); ci != cinfo->before.end(); ci++)
+            RenderFormat(*ci, "comment_before", "comment");
+
     DoRenderOne(what);
+
+    if (cinfo)
+        for (ci = cinfo->after.begin(); ci != cinfo->after.end(); ci++)
+            RenderFormat(*ci, "comment_after", "comment");
 
     if (highlight)
         RenderFormat("", "highlight_end_" + hname + " ");
