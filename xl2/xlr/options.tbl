@@ -142,6 +142,7 @@ TRACE(clipboard)
 TRACE(srcview)
 TRACE(fonts)
 TRACE(textselect)
+TRACE(paths)
 #endif // TAO
 
 // Traces. The first ones must match the MzTrace definition in base.h
