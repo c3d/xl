@@ -46,7 +46,8 @@ struct Renderer
     Renderer(std::ostream &out, Renderer *from = renderer);
 
     // Selecting the style sheet file
-    void                SelectStyleSheet(text styleFile);
+    void                SelectStyleSheet(text styleFile,
+                                         text syntaxFile = "xl.syntax");
 
     // Rendering proper
     void                Render (Tree *what);

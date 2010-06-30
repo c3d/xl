@@ -106,7 +106,7 @@ Renderer::Renderer(std::ostream &out, Renderer *from)
 {}
 
 
-void Renderer::SelectStyleSheet(text styleFile)
+void Renderer::SelectStyleSheet(text styleFile, text syntaxFile)
 // ----------------------------------------------------------------------------
 //   Select an arbitrary style sheet
 // ----------------------------------------------------------------------------
@@ -114,7 +114,7 @@ void Renderer::SelectStyleSheet(text styleFile)
     Syntax defaultSyntax, emptySyntax;
     Positions positions;
     Errors errors(&positions);
-    Scanner scanner("xl.syntax", emptySyntax, positions, errors);
+    Scanner scanner(syntaxFile.c_str(), emptySyntax, positions, errors);
     defaultSyntax.ReadSyntaxFile(scanner);
     Parser p(styleFile.c_str(), defaultSyntax, positions, errors);
 
