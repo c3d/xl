@@ -231,6 +231,20 @@ void Renderer::RenderFormat(Tree *format)
         {
             RenderText(self);
         }
+        else if (n == "quoted_self")
+        {
+            text escaped;
+            uint i;
+            uint length = self.length();
+            for (i = 0; i < length; i++)
+            {
+                text t = text(1, self[i]);
+                escaped += t;
+                if (t == current_quote)
+                    escaped += t;
+            }
+            RenderText(escaped);
+        }
         else if (n ==  "left" || n == "child")
         {
             RenderOne(left);

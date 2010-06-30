@@ -80,3 +80,8 @@ function        = "<FONT color=""#00C080""><B>" self "</B></FONT>"
 "log"           = function
 
 "?wildcard?"    = "<FONT color=""#808000"">" self "</FONT>"
+
+"text "" """ = """" quoted_self """"
+"text << >>" = "<<" self ">>"
+"longtext "" """ = "<<" self ">>"
+"longtext << >>" = "<<" self ">>"
