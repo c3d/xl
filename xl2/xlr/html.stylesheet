@@ -31,6 +31,7 @@ indents = nbsp nbsp nbsp nbsp
 "block I+ I-" = indent cr child unindent cr
 "block  ( ) " = "<FONT COLOR=""#707070"">(</FONT>" child "<FONT COLOR=""#707070"">)</FONT>"
 "block { }" = "<FONT COLOR=""#C00000"">{" child "}</FONT>"
+"infix cr" = separator left right separator
 
 begin         = "<HTML><BODY>" newline
 end           = newline "</BODY></HTML>"

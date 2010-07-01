@@ -35,6 +35,7 @@ indents = "    "
 "infix ," = separator left "," space right separator
 "infix ;" = separator left ";" space right separator
 "infix :" = separator left ":" right separator
+"infix cr" = separator left right separator
 "postfix %" = separator left "%" separator
 "postfix !" = separator left "!" separator
 "text "" """ = """" quoted_self """"
