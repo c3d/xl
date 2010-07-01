@@ -312,17 +312,13 @@ void Renderer::RenderFormat(Tree *format)
         {
             need_separator = true;
         }
-        else if (n == "newline")
+        else if (n == "newline" || n == "cr")
         {
             need_newline = true;
         }
         else if (formats.count(m) > 0)
         {
             RenderFormat (formats[m]);
-        }
-        else if (n == "cr")
-        {
-            need_newline = true;
         }
         else
         {
@@ -467,7 +463,7 @@ void Renderer::Render(Tree *what)
     {
         text saveSelf = self;
         for (ci = cinfo->before.begin(); ci != cinfo->before.end(); ci++)
-            RenderFormat(*ci, "comment_before", "comment");
+            RenderFormat(*ci, "comment_before ", "comment ");
         self = saveSelf;
     }
 
@@ -477,7 +473,7 @@ void Renderer::Render(Tree *what)
     {
         text saveSelf = self;
         for (ci = cinfo->after.begin(); ci != cinfo->after.end(); ci++)
-            RenderFormat(*ci, "comment_after", "comment");
+            RenderFormat(*ci, "comment_after ", "comment ");
         self = saveSelf;
     }
 
