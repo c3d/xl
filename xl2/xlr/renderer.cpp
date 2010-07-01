@@ -87,7 +87,8 @@ Renderer::Renderer(std::ostream &out, text styleFile, Syntax &stx)
     : output(out), syntax(stx), formats(),
       indent(0), self(""), left(NULL), right(NULL), current_quote("\""),
       priority(0),
-      had_space(true), had_punctuation(false), need_separator(false)
+      had_space(true), had_punctuation(false),
+      need_separator(false), need_newline(false)
 {
     SelectStyleSheet(styleFile);
 }
@@ -101,8 +102,10 @@ Renderer::Renderer(std::ostream &out, Renderer *from)
       indent(from->indent), self(from->self),
       left(from->left), right(from->right),
       current_quote(from->current_quote), priority(from->priority),
-      had_space(from->had_space), had_punctuation(from->had_punctuation),
-      need_separator(from->need_separator)
+      had_space(from->had_space),
+      had_punctuation(from->had_punctuation),
+      need_separator(from->need_separator),
+      need_newline(from->need_newline)
 {}
 
 
@@ -146,14 +149,29 @@ void Renderer::RenderText(text format)
 {
     char c;
     uint i;
-    uint length  = format.length();
-    bool quoted  = false;
-    bool needsep = need_separator;
+    uint length   = format.length();
+    bool quoted   = false;
 
     for (i = 0; i < length; i++)
     {
         c = format[i];
-        if (needsep)
+        if (need_newline)
+        {
+            text cr = "\n";
+            if (formats.count(cr) > 0)
+                RenderFormat(formats[cr]);
+            else
+                output << cr;
+
+            had_space = true;
+            need_newline = false;
+            need_separator = false;
+
+            if (c != '\n')
+                RenderIndents();
+        }
+
+        if (need_separator)
         {
             if (!had_space && !isspace(c))
             {
@@ -166,22 +184,50 @@ void Renderer::RenderText(text format)
                         output << ' ';
                 }
             }
-            needsep = false;
+            need_separator = false;
         }
-        text t = text(1, c);
-        quoted = i > 0 && i < length-1 && t == current_quote;
-        if (quoted)
-            t += " quoted";
-        if (formats.count(t) > 0)
-            RenderFormat(formats[t]);
-        else if (!quoted)
-            output << c;
+
+        if (c == '\n')
+        {
+            need_newline = true;
+            need_separator = false;
+        }
         else
-            output << c << c;   // Quoted char, as in  """Hello"""
+        {
+            text t = text(1, c);
+            quoted = i > 0 && i < length-1 && t == current_quote;
+            if (quoted)
+                t += " quoted";
+            if (formats.count(t) > 0)
+                RenderFormat(formats[t]);
+            else if (!quoted)
+                output << c;
+            else
+                output << c << c;   // Quoted char, as in  """Hello"""
+        }
         had_space = isspace(c);
         had_punctuation = ispunct(c);
     }
-    need_separator = needsep;
+}
+
+
+void Renderer::RenderIndents()
+// ----------------------------------------------------------------------------
+//   Render the indents at the beginning of a line
+// ----------------------------------------------------------------------------
+{
+    text k0 = "indents ";
+    if (formats.count(k0) > 0)
+    {
+        Tree *fmt = formats[k0];
+        for (uint i = 0; i < indent; i++)
+            RenderFormat(fmt);
+    }
+    else
+    {
+        for (uint i = 0; i < indent; i++)
+            RenderText(" ");
+    }
 }
 
 
@@ -214,18 +260,7 @@ void Renderer::RenderFormat(Tree *format)
         }
         else if (n == "indents")
         {
-            text k0 = "indents ";
-            if (formats.count(k0) > 0)
-            {
-                Tree *fmt = formats[k0];
-                for (uint i = 0; i < indent; i++)
-                    RenderFormat(fmt);
-            }
-            else
-            {
-                for (uint i = 0; i < indent; i++)
-                    RenderText(" ");
-            }
+            RenderIndents();
         }
         else if (n == "self")
         {
@@ -276,12 +311,15 @@ void Renderer::RenderFormat(Tree *format)
         }
         else if (n == "newline")
         {
-            output << '\n';
-            had_space = true;
+            need_newline = true;
         }
         else if (formats.count(m) > 0)
         {
             RenderFormat (formats[m]);
+        }
+        else if (n == "cr")
+        {
+            need_newline = true;
         }
         else
         {

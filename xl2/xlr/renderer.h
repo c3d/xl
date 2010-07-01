@@ -54,6 +54,7 @@ struct Renderer
     void                Render (Tree *what);
     void                RenderBody(Tree *what);
     void                RenderText(text format);
+    void                RenderIndents();
     void                RenderFormat(Tree *format);
     void                RenderFormat(text self, text format);
     void                RenderFormat(text self, text format, text generic);
@@ -76,6 +77,7 @@ struct Renderer
     bool                had_space;
     bool                had_punctuation;
     bool                need_separator;
+    bool                need_newline;
 
     static Renderer *   renderer;
 };
