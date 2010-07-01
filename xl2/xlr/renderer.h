@@ -50,9 +50,9 @@ struct Renderer
                                          text syntaxFile = "xl.syntax");
 
     // Rendering proper
+    void                RenderFile (Tree *what);
     void                Render (Tree *what);
-    void                RenderOne (Tree *what);
-    void                DoRenderOne(Tree *what);
+    void                RenderBody(Tree *what);
     void                RenderText(text format);
     void                RenderFormat(Tree *format);
     void                RenderFormat(text self, text format);

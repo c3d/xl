@@ -247,11 +247,11 @@ void Renderer::RenderFormat(Tree *format)
         }
         else if (n ==  "left" || n == "child")
         {
-            RenderOne(left);
+            Render(left);
         }
         else if (n == "right")
         {
-            RenderOne(right);
+            Render(right);
         }
         else if (n == "opening")
         {
@@ -407,7 +407,7 @@ int Renderer::InfixPriority(Tree *test)
 }
 
 
-void Renderer::RenderOne(Tree *what)
+void Renderer::Render(Tree *what)
 // ----------------------------------------------------------------------------
 //   Render to given stream (taking care of selected items highlighting)
 // ----------------------------------------------------------------------------
@@ -430,7 +430,7 @@ void Renderer::RenderOne(Tree *what)
         self = saveSelf;
     }
 
-    DoRenderOne(what);
+    RenderBody(what);
 
     if (cinfo)
     {
@@ -445,7 +445,7 @@ void Renderer::RenderOne(Tree *what)
 }
 
 
-void Renderer::DoRenderOne(Tree *what)
+void Renderer::RenderBody(Tree *what)
 // ----------------------------------------------------------------------------
 //   Render to given stream
 // ----------------------------------------------------------------------------
@@ -561,8 +561,8 @@ void Renderer::DoRenderOne(Tree *what)
                 RenderFormat (formats[n0]);
             else
             {
-                RenderOne (l);
-                RenderOne (r);
+                Render (l);
+                Render (r);
             }
         }
         else if (formats.count(n0) > 0)
@@ -571,8 +571,8 @@ void Renderer::DoRenderOne(Tree *what)
         }
         else
         {
-            RenderOne (l);
-            RenderOne (r);
+            Render (l);
+            Render (r);
         }
     }   break;
     case POSTFIX: {
@@ -599,8 +599,8 @@ void Renderer::DoRenderOne(Tree *what)
                 RenderFormat (formats[n0]);
             else
             {
-                RenderOne (l);
-                RenderOne (r);
+                Render (l);
+                Render (r);
             }
         }
         else if (formats.count(n0) > 0)
@@ -609,8 +609,8 @@ void Renderer::DoRenderOne(Tree *what)
         }
         else
         {
-            RenderOne (l);
-            RenderOne (r);
+            Render (l);
+            Render (r);
         }
     }   break;
     case INFIX: {
@@ -646,9 +646,9 @@ void Renderer::DoRenderOne(Tree *what)
             RenderFormat(formats[n0]);
         else
         {
-            RenderOne (l);
+            Render (l);
             RenderFormat (w->name, w->name);
-            RenderOne (r);
+            Render (r);
         }
     }   break;
     case BLOCK: {
@@ -667,7 +667,7 @@ void Renderer::DoRenderOne(Tree *what)
         else
         {
             RenderFormat (w->opening, w->opening, "opening ");
-            RenderOne (w->child);
+            Render (w->child);
             RenderFormat (w->closing, w->closing, "closing ");
         }
     }   break;
@@ -680,7 +680,7 @@ void Renderer::DoRenderOne(Tree *what)
 }
 
 
-void Renderer::Render(Tree *what)
+void Renderer::RenderFile(Tree *what)
 // ----------------------------------------------------------------------------
 //   Output the tree, including begin and end formats if any
 // ----------------------------------------------------------------------------
@@ -691,7 +691,7 @@ void Renderer::Render(Tree *what)
     need_separator = false;
     priority = 0;
     RenderFormat("", "begin ");
-    RenderOne(what);
+    Render(what);
     RenderFormat("", "end ");
 }
 
@@ -702,7 +702,7 @@ std::ostream& operator<< (std::ostream &out, XL::Tree *t)
 // ----------------------------------------------------------------------------
 {
     XL::Renderer render(out);
-    render.Render(t);
+    render.RenderFile(t);
     return out;
 }
 
@@ -715,7 +715,7 @@ void debug(XL::Tree *tree)
 // ----------------------------------------------------------------------------
 {
     XL::Renderer render(std::cout);
-    render.Render(tree);
+    render.RenderFile(tree);
     std::cout << "\n";
 }
 
@@ -729,7 +729,7 @@ void debugp(XL::Tree *tree)
 {
     XL::Renderer render(std::cout);
     render.SelectStyleSheet("debug.stylesheet");
-    render.Render(tree);
+    render.RenderFile(tree);
 
     XL::TreeHashAction<> h_action(XL::TreeHashAction<>::Force);
     tree->Do(h_action);
