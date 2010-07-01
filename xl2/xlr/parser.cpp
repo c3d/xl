@@ -186,6 +186,19 @@ token_t Parser::NextToken()
             beginningLine = true;
             continue;
         case tokUNINDENT:
+            opening = scanner.TextValue();
+            if (!opening.empty())
+            {
+                AddComment(opening);
+
+                // If we had comments after a token, add them to that token
+                if (!beginningLine && comments.size() && commented)
+                {
+                    AddComments(commented, false);
+                    commented = NULL;
+                }
+            }
+
             // Add newline if what comes next isn't an infix like 'else'
             pending = tokNEWLINE;
             beginningLine = true;
@@ -460,7 +473,8 @@ Tree *Parser::Parse(text closing)
             if (!right)
                 right = new Name("", pos); // Case where we have ()
             right = new Block(right, blk_opening, blk_closing, pos);
-            comments = pendingComments;
+            comments.insert(comments.end(),
+                            pendingComments.begin(), pendingComments.end());
             break;
         default:
             if (true)
