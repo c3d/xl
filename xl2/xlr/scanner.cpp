@@ -214,7 +214,10 @@ token_t Scanner::NextToken(bool hungry)
         }
 
         // Keep looking for more spaces
-        IGNORE_CHAR(c);
+        if (c == '\n')
+            textValue += c;
+        c = input.get();
+        position++;
     } // End of space testing
 
     // Stop counting indentation
