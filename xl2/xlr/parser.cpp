@@ -159,11 +159,8 @@ token_t Parser::NextToken()
             beginningLine = false;
             break;
         case tokNEWLINE:
-            // If we get two newlines in a row, record the additional ones
-            if (closing == "\n")
-                closing = "";
-            else
-                AddComment("\n");
+            // Record actual new-lines
+            AddComment(scanner.TextValue());
 
             // Combine newline with any previous pending indent
             pending = tokNEWLINE;

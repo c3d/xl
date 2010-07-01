@@ -214,8 +214,7 @@ token_t Scanner::NextToken(bool hungry)
         }
 
         // Keep looking for more spaces
-        c = input.get();
-        position++;
+        IGNORE_CHAR(c);
     } // End of space testing
 
     // Stop counting indentation
@@ -272,6 +271,8 @@ token_t Scanner::NextToken(bool hungry)
     if (input.eof())
 	return tokEOF;
 
+    // Clear spelling from whitespaces
+    textValue = "";
 
     // Look for numbers
     if (isdigit(c))
