@@ -42,4 +42,5 @@ indents = "    "
 "text << >>" = "<<" self ">>"
 "longtext "" """ = "<<" self ">>"
 "longtext << >>" = "<<" self ">>"
-"comment_after " = space self
+"comment " = ""
+
