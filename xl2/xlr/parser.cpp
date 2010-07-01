@@ -83,6 +83,7 @@ token_t Parser::NextToken()
         if (pend != tokNONE && pend != tokNEWLINE)
         {
             pending = tokNONE;
+            beginningLine = false;
             return pend;
         }
 
@@ -108,6 +109,13 @@ token_t Parser::NextToken()
                 AddComment(comment);
                 if (closing == "\n" && pend == tokNONE)
                 {
+                    // If we had comments after a token, add them to that token
+                    if (!beginningLine && comments.size() && commented)
+                    {
+                        AddComments(commented, false);
+                        commented = NULL;
+                    }
+
                     pending = tokNEWLINE;
                     beginningLine = true;
                 }
@@ -159,8 +167,19 @@ token_t Parser::NextToken()
             beginningLine = false;
             break;
         case tokNEWLINE:
-            // Record actual new-lines
-            AddComment(scanner.TextValue());
+            // Record actual new-lines and preceding comment
+            opening = scanner.TextValue();
+            if (!opening.empty())
+            {
+                AddComment(opening);
+
+                // If we had comments after a token, add them to that token
+                if (!beginningLine && comments.size() && commented)
+                {
+                    AddComments(commented, false);
+                    commented = NULL;
+                }
+            }
 
             // Combine newline with any previous pending indent
             pending = tokNEWLINE;
@@ -186,6 +205,7 @@ token_t Parser::NextToken()
         if (pend != tokNONE)
         {
             pending = result;
+            beginningLine = true;
             return pend;
         }
 
@@ -461,7 +481,7 @@ Tree *Parser::Parse(text closing)
             if (comments.size())
                 AddComments(commented, true);
         }
-        else if (left)
+        else if (left && (pending == tokNONE || pending == tokNEWLINE))
         {
             // We just got 'then', but 'then' will be an infix
             // so we can't really attach comments to it.

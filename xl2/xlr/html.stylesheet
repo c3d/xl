@@ -47,7 +47,7 @@ cr              = "<BR>"
 
 // Colorization of comments
 "comment_before "= "<FONT color=""#800000"">" self "</FONT>"
-"comment_after " = "<FONT color=""#804000"">" space self "</FONT>"
+"comment_after " = "<FONT color=""#806020"">" space self "</FONT>"
 
 // Colorization of numbers
 integer         = "<FONT color=""#008080"">" self "</FONT>"
