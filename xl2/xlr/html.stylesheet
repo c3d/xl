@@ -39,7 +39,7 @@ end           = newline "</BODY></HTML>"
 // Character remapping
 nbsp            = "&nbsp;"
 space           = nbsp
-cr              = "<BR>" indents
+cr              = "<BR>" 
 '<'             = "&lt;"
 '>'             = "&gt;"
 '&'             = "&amper;"
