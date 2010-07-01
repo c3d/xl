@@ -157,15 +157,15 @@ void Renderer::RenderText(text format)
         c = format[i];
         if (need_newline)
         {
+            had_space = true;
+            need_newline = false;
+            need_separator = false;
+
             text cr = "\n";
             if (formats.count(cr) > 0)
                 RenderFormat(formats[cr]);
             else
                 output << cr;
-
-            had_space = true;
-            need_newline = false;
-            need_separator = false;
 
             if (c != '\n')
                 RenderIndents();
@@ -248,7 +248,10 @@ void Renderer::RenderFormat(Tree *format)
         text n = nf->value;
         text m = n + " ";
         if (n == "cr")
+        {
             m = "\n";
+            need_newline = true;
+        }
 
         if (n == "indent")
         {

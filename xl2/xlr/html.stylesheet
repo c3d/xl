@@ -28,13 +28,13 @@ prefix = separator left space right separator
 block  = separator opening separator child separator closing separator
 
 indents = nbsp nbsp nbsp nbsp
-"block I+ I-" = indent cr child unindent cr
+"block I+ I-" = indent cr child unindent newline
 "block  ( ) " = "<FONT COLOR=""#707070"">(</FONT>" child "<FONT COLOR=""#707070"">)</FONT>"
 "block { }" = "<FONT COLOR=""#C00000"">{" child "}</FONT>"
 "infix cr" = separator left right separator
 
-begin         = "<HTML><BODY>" newline
-end           = newline "</BODY></HTML>"
+begin         = "<HTML><BODY>"
+end           = "</BODY></HTML>"
 
 
 // Character remapping
@@ -45,9 +45,12 @@ cr              = "<BR>"
 '>'             = "&gt;"
 '&'             = "&amper;"
 
+// Colorization of comments
+"comment_before"= "<FONT color=""#800000"">" self "</FONT>"
+"comment_after" = "<FONT color=""#804000"">" space self "</FONT>"
 
 // Colorization of numbers
-integer         = "<FONT color=""#800000"">" self "</FONT>"
+integer         = "<FONT color=""#008080"">" self "</FONT>"
 real            = "<FONT color=""#008000"">" self "</FONT>"
 
 // Basic keywords
