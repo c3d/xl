@@ -76,6 +76,7 @@ token_t Parser::NextToken()
 //    Return the next token, skipping comments and gathering long text
 // ----------------------------------------------------------------------------
 {
+    text opening, closing;
     while (true)
     {
         token_t pend = pending;
@@ -86,7 +87,6 @@ token_t Parser::NextToken()
         }
 
         // Here, there's nothing pending or only a newline
-        text opening, closing;
         token_t result = scanner.NextToken();
         hadSpaceBefore = scanner.HadSpaceBefore();
         hadSpaceAfter = scanner.HadSpaceAfter();
@@ -160,7 +160,9 @@ token_t Parser::NextToken()
             break;
         case tokNEWLINE:
             // If we get two newlines in a row, record the additional ones
-            if (pending == tokNEWLINE)
+            if (closing == "\n")
+                closing = "";
+            else
                 AddComment("\n");
 
             // Combine newline with any previous pending indent
