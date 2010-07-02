@@ -1515,6 +1515,14 @@ Tree *ArgumentMatch::DoPrefix(Prefix *what)
             return NULL;
         test = pt->right;
         Tree *rr = what->right->Do(this);
+        if (!rr)
+        {
+            if (Block *br = test->AsBlock())
+            {
+                test = br->child;
+                rr = what->right->Do(this);
+            }
+        }
         test = pt;
         if (!rr)
             return NULL;
@@ -1543,6 +1551,14 @@ Tree *ArgumentMatch::DoPostfix(Postfix *what)
             return NULL;
         test = pt->left;
         Tree *lr = what->left->Do(this);
+        if (!lr)
+        {
+            if (Block *br = test->AsBlock())
+            {
+                test = br->child;
+                lr = what->right->Do(this);
+            }
+        }
         test = pt;
         if (!lr)
             return NULL;
