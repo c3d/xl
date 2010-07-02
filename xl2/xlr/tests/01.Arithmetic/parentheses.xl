@@ -1,0 +1,4 @@
+// Test the fix for Bug #1
+foo x:integer, y:integer -> x + y
+
+foo (1+1), 2
