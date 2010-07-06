@@ -24,20 +24,14 @@
 // ****************************************************************************
 
 // Display in lispish notation
-infix  = "(infix " self indent nl left nl right unindent ")"
-prefix = "(prefix" indent nl left nl right unindent ")"
-postfix = "(postfix" indent nl left nl right unindent ")"
-block  = "(block" opening " " closing indent nl child unindent ")"
+infix  = "(infix " self indent newline left newline right unindent ")"
+prefix = "(prefix" indent newline left newline right unindent ")"
+postfix = "(postfix" indent newline left newline right unindent ")"
+block  = "(block" opening " " closing indent newline child unindent ")"
 
-cr     = "<CR>"
-nl     = newline indents
-indent = indent nl
-unindent = unindent nl
 indents = " "
-"block I+ I-" = "(block indent" indent nl child unindent ")"
-"block  ( ) " = "(implicit ()" indent nl child unindent ")"
-
-begin = newline
-end = newline newline
+"block I+ I-" = "(block indent" indent newline child unindent ")"
+"block  ( ) " = "(implicit ()" indent newline child unindent ")"
+"infix cr" = "(infix CR" indent newline left newline right unindent ")"
 
 "?wildcard?" = "(wildcard " self ")"

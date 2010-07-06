@@ -142,6 +142,47 @@ void Renderer::SelectStyleSheet(text styleFile, text syntaxFile)
 //
 // ============================================================================
 
+bool Renderer::RenderSeparators(char c)
+// ----------------------------------------------------------------------------
+//   Render space and newline separators as required before char c
+// ----------------------------------------------------------------------------
+{
+    if (need_newline)
+    {
+        had_space = true;
+        need_newline = false;
+        need_separator = false;
+
+        text cr = "\n";
+        if (formats.count(cr) > 0)
+            RenderFormat(formats[cr]);
+        else
+            output << cr;
+
+        if (c == '\n')
+            return true;
+        RenderIndents();
+    }
+
+    if (need_separator)
+    {
+        if (!had_space && !isspace(c))
+        {
+            if (had_punctuation == ispunct(c))
+            {
+                text space = " ";
+                if (formats.count(space) > 0)
+                    RenderFormat(formats[space]);
+                else
+                    output << ' ';
+            }
+        }
+        need_separator = false;
+    }
+    return false;
+}
+
+
 void Renderer::RenderText(text format)
 // ----------------------------------------------------------------------------
 //   Render as text, reformatting character as required by style sheet
@@ -155,38 +196,9 @@ void Renderer::RenderText(text format)
     for (i = 0; i < length; i++)
     {
         c = format[i];
-        if (need_newline)
-        {
-            had_space = true;
-            need_newline = false;
-            need_separator = false;
-
-            text cr = "\n";
-            if (formats.count(cr) > 0)
-                RenderFormat(formats[cr]);
-            else
-                output << cr;
-
-            if (c == '\n')
+        if (need_newline || need_separator)
+            if (RenderSeparators(c) && i==0)
                 continue;
-            RenderIndents();
-        }
-
-        if (need_separator)
-        {
-            if (!had_space && !isspace(c))
-            {
-                if (had_punctuation == ispunct(c))
-                {
-                    text space = " ";
-                    if (formats.count(space) > 0)
-                        RenderFormat(formats[space]);
-                    else
-                        output << ' ';
-                }
-            }
-            need_separator = false;
-        }
 
         if (c == '\n')
         {
@@ -240,9 +252,14 @@ void Renderer::RenderFormat(Tree *format)
     if (Text *tf = format->AsText())
     {
         if (tf->opening == Text::textQuote)
+        {
+            RenderSeparators(tf->value.length() ? tf->value[0] : 0);
             output << tf->value;                // As is, no formatting
+        }
         else
+        {
             RenderText(tf->value);              // Format contents
+        }
     }
     else if (Name *nf = format->AsName())
     {

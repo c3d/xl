@@ -53,6 +53,7 @@ struct Renderer
     void                RenderFile (Tree *what);
     void                Render (Tree *what);
     void                RenderBody(Tree *what);
+    bool                RenderSeparators(char c);
     void                RenderText(text format);
     void                RenderIndents();
     void                RenderFormat(Tree *format);
