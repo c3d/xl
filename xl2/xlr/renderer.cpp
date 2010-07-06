@@ -167,8 +167,9 @@ void Renderer::RenderText(text format)
             else
                 output << cr;
 
-            if (c != '\n')
-                RenderIndents();
+            if (c == '\n')
+                continue;
+            RenderIndents();
         }
 
         if (need_separator)
