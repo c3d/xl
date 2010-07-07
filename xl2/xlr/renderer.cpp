@@ -166,6 +166,7 @@ bool Renderer::RenderSeparators(char c)
 
     if (need_separator)
     {
+        need_separator = false;
         if (!had_space && !isspace(c))
         {
             if (had_punctuation == ispunct(c))
@@ -177,7 +178,6 @@ bool Renderer::RenderSeparators(char c)
                     output << ' ';
             }
         }
-        need_separator = false;
     }
     return false;
 }
