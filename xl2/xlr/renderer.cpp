@@ -163,8 +163,7 @@ bool Renderer::RenderSeparators(char c)
             return true;
         RenderIndents();
     }
-
-    if (need_separator)
+    else if (need_separator)
     {
         need_separator = false;
         if (!had_space && !isspace(c))
