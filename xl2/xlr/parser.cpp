@@ -355,6 +355,7 @@ Tree *Parser::Parse(text closing)
             right = new Text(scanner.TextValue(), openquote, closequote, pos);
             if (!result && new_statement)
                 is_expression = false;
+            prefix_priority = function_priority;
             break;
         case tokSTRING:
         case tokQUOTE:
@@ -363,6 +364,7 @@ Tree *Parser::Parse(text closing)
             right = new Text(scanner.TextValue(), name, name, pos);
             if (!result && new_statement)
                 is_expression = false;
+            prefix_priority = function_priority;
             break;
         case tokNAME:
         case tokSYMBOL:
