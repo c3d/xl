@@ -467,7 +467,9 @@ token_t Scanner::NextToken(bool hungry)
                 errors.Error("End of input in the middle of a text",
                              position);
                 hadSpaceAfter = false;
-                return tokERROR;
+                if (c == '\n')
+                    input.unget();
+                return eos == '"' ? tokSTRING : tokQUOTE;
             }
             NEXT_CHAR(c);
         }
