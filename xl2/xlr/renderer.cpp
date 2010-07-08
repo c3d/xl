@@ -87,7 +87,7 @@ Renderer::Renderer(std::ostream &out, text styleFile, Syntax &stx)
     : output(out), syntax(stx), formats(),
       indent(0), self(""), left(NULL), right(NULL), current_quote("\""),
       priority(0),
-      had_space(true), had_punctuation(false),
+      had_space(true), had_newline(false), had_punctuation(false),
       need_separator(false), need_newline(false)
 {
     SelectStyleSheet(styleFile);
@@ -103,6 +103,7 @@ Renderer::Renderer(std::ostream &out, Renderer *from)
       left(from->left), right(from->right),
       current_quote(from->current_quote), priority(from->priority),
       had_space(from->had_space),
+      had_newline(from->had_newline),
       had_punctuation(from->had_punctuation),
       need_separator(from->need_separator),
       need_newline(from->need_newline)
@@ -142,43 +143,48 @@ void Renderer::SelectStyleSheet(text styleFile, text syntaxFile)
 //
 // ============================================================================
 
-bool Renderer::RenderSeparators(char c)
+void Renderer::RenderSeparators(char c)
 // ----------------------------------------------------------------------------
 //   Render space and newline separators as required before char c
 // ----------------------------------------------------------------------------
 {
     if (need_newline)
     {
-        had_space = true;
+        had_newline = true;
         need_newline = false;
-        need_separator = false;
 
         text cr = "\n";
         if (formats.count(cr) > 0)
             RenderFormat(formats[cr]);
         else
             output << cr;
-
-        if (c == '\n')
-            return true;
-        RenderIndents();
     }
-    else if (need_separator)
+
+    if (c != '\n')
     {
-        need_separator = false;
-        if (!had_space && !isspace(c))
+        if (had_newline && c != 0)
         {
-            if (had_punctuation == ispunct(c))
+            had_newline = false;
+            need_separator = false;
+            RenderIndents();
+        }
+
+        if (need_separator)
+        {
+            need_separator = false;
+            if (!had_space && !isspace(c))
             {
-                text space = " ";
-                if (formats.count(space) > 0)
-                    RenderFormat(formats[space]);
-                else
-                    output << ' ';
+                if (had_punctuation == ispunct(c))
+                {
+                    text space = " ";
+                    if (formats.count(space) > 0)
+                        RenderFormat(formats[space]);
+                    else
+                        output << ' ';
+                }
             }
         }
     }
-    return false;
 }
 
 
@@ -195,9 +201,12 @@ void Renderer::RenderText(text format)
     for (i = 0; i < length; i++)
     {
         c = format[i];
-        if (need_newline || need_separator)
-            if (RenderSeparators(c) && i==0)
+        if (need_newline || need_separator || had_newline)
+        {
+            RenderSeparators(c);
+            if (had_newline && i == 0 && c == '\n')
                 continue;
+        }
 
         if (c == '\n')
         {
@@ -250,15 +259,11 @@ void Renderer::RenderFormat(Tree *format)
 {
     if (Text *tf = format->AsText())
     {
+        text t = tf->value;
         if (tf->opening == Text::textQuote)
-        {
-            RenderSeparators(tf->value.length() ? tf->value[0] : 0);
-            output << tf->value;                // As is, no formatting
-        }
+            output << t;                        // As is, no formatting
         else
-        {
-            RenderText(tf->value);              // Format contents
-        }
+            RenderText(t);                      // Format contents
     }
     else if (Name *nf = format->AsName())
     {
@@ -351,7 +356,6 @@ void Renderer::RenderFormat(Tree *format)
     {
         output << "** Unkown kind of format directive **\n";
     }
-
 }
 
 
