@@ -1321,7 +1321,7 @@ Tree *ArgumentMatch::DoName(Name *what)
     {
         // Check if the name already exists, e.g. 'false' or 'A+A'
         // If it does, we generate a run-time check to verify equality
-        if (Tree *existing = rewrite->Named(what->value))
+        if (Tree *existing = locals->Named(what->value))
         {
             // Check if the test is an identity
             if (Name *nt = test->AsName())
