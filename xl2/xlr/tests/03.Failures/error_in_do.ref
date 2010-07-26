@@ -7,9 +7,6 @@
 DEBUG: "1"
 DEBUG: "2"
 03.Failures/error_in_do.xl:5: No form matches 'error_because_this_does_not_exist "3"'
-DEBUG: "1"
-DEBUG: "2"
-03.Failures/error_in_do.xl:5: No form matches 'error_because_this_does_not_exist "3"'
 
     debug "1"
     debug "2"

@@ -2,8 +2,8 @@
 N! -> N * (N-1)!
 
 // If-then-else statement
-if true then TrueBody else FalseBody -> TrueBody
-if false then TrueBody else FalseBody -> FalseBody
+if true then TrueBody else FalseBody -> do TrueBody
+if false then TrueBody else FalseBody -> do FalseBody
 
-if true then TrueBody -> TrueBody
+if true then TrueBody -> do TrueBody
 if false then TrueBody -> false

@@ -401,13 +401,7 @@ Tree *Symbols::Run(Tree *code)
     if (opt)
     {
         // Check trees that we won't rewrite
-        bool more =
-            has_rewrites_for_constants || 
-            !code ||
-            !code->IsConstant();
-
-        // Repeat until we get a stable result
-        while (more)
+        if (has_rewrites_for_constants || !code || !code->IsConstant())
         {
             if (!result->code)
             {
@@ -427,12 +421,6 @@ Tree *Symbols::Run(Tree *code)
                 }
             }
             result = result->code(code);
-            more = (result != code && result &&
-                    (has_rewrites_for_constants || !result->IsConstant())) ;
-            if (more)
-                IFTRACE(eval)
-                    std::cerr << "LOOP" << index << ": " << result << '\n';
-            code = result;
         }
         IFTRACE(eval)
             std::cerr << "RSLT" << index-- << ": " << result << '\n';

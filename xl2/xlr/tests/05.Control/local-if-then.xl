@@ -1,5 +1,5 @@
-if true then TrueBody else FalseBody -> TrueBody
-if false then TrueBody else FalseBody -> FalseBody
+if true then TrueBody else FalseBody -> do TrueBody
+if false then TrueBody else FalseBody -> do FalseBody
 
 if 3 > 5 then
     "Wrong answer 1"
