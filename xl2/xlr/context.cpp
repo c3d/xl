@@ -1191,10 +1191,16 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     {
         Tree *result = symbols->Compile(source, subUnit, true);
         if (!result)
+        {
             unit.ConstantTree(source);
-
-        eval_fn fn = subUnit.Finalize();
-        source->code = fn;
+        }
+        else
+        {
+            eval_fn fn = subUnit.Finalize();
+            source->code = fn;
+        }
+        if (!source->Symbols())
+            source->SetSymbols(symbols);
     }
 
     // Create a call to xl_new_closure to save the required trees

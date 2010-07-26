@@ -8,6 +8,8 @@ machin x:real, a:real, b:real -> debug "Machin 3", a, b, x
 müsli {x:integer/y:integer},z -> machin z, x, y
 
 
+data x,y
+
 bidibif 2,3
 badabaf 1,2,3
 müsli {1/3},2
