@@ -1,0 +1,5 @@
+// This is Lionel's style
+polygon a, b, n -> (a + b) * n
+diamond t -> polygon t,4
+
+diamond 2, 3, 5

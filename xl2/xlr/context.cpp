@@ -964,6 +964,10 @@ Tree *ParameterMatch::DoName(Name *what)
     }
     else
     {
+        // We only allow names here, not symbols (bug #154)
+        if (what->value.length() == 0 || !isalpha(what->value[0]))
+            Ooops("The pattern variable '$1' is not a name", what);
+
         // Check if the name already exists, e.g. 'false' or 'A+A'
         if (Tree *existing = symbols->Named(what->value))
             return existing;
