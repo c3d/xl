@@ -438,11 +438,15 @@ int main(int argc, char **argv)
         return rc;
     }
     rc = MAIN->LoadFiles();
+
     if (!rc && Options::options->doDiff)
         rc = MAIN->Diff();
-    else
-    if (!rc && !Options::options->parseOnly)
+    else if (!rc && !Options::options->parseOnly)
         rc = MAIN->Run();
+
+    if (!rc && MAIN->errors.count)
+        rc = 1;
+    
     delete MAIN;
 
 #if CONFIG_USE_SBRK

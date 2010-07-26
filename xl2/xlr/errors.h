@@ -41,7 +41,7 @@ struct Errors
 //   Structure used to report errors
 // ----------------------------------------------------------------------------
 {
-    Errors (Positions *pos): positions(pos) {}
+    Errors (Positions *pos): positions(pos), count(0) {}
 
     typedef std::vector<std::string> Arguments;
     text Error(text err, ulong pos, Arguments &args);
@@ -54,6 +54,7 @@ struct Errors
     text Error(text err, Tree *arg1, Tree *arg2, Tree *arg3);
 
     Positions *         positions;
+    uint                count;
 };
 
 

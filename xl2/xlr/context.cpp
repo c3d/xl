@@ -612,7 +612,7 @@ Tree *Symbols::Run(Tree *code)
 //
 // ============================================================================
 
-Tree *  Symbols::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
+Tree *Symbols::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
 // ----------------------------------------------------------------------------
 //   Execute the innermost error handler
 // ----------------------------------------------------------------------------

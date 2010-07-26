@@ -1,2 +1,5 @@
-WARNING: Tree 'cos "A"' has no symbols
 03.Failures/type-checks2.xl:2: No form matches 'cos "A"'
+03.Failures/type-checks2.xl:2: No form matches 'cos "A"'
+03.Failures/type-checks2.xl:2: No form matches '2.6 * cos "A"'
+03.Failures/type-checks2.xl:2: No form matches '3.3 - 2.6 * cos "A"'
+false

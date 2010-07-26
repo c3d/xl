@@ -47,6 +47,7 @@ text Errors::Error(text errMsg, ulong pos, Errors::Arguments &args)
 {
     std::ostringstream out;
 
+    count++;
     for (uint i = 0; i < args.size(); i++)
     {
         char buffer[10];
