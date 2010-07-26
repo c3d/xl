@@ -2177,7 +2177,7 @@ Tree *  CompileAction::Rewrites(Tree *what)
             {
                 // Create the invokation point
                 reduction.NewForm();
-                Symbols args(symbols);
+                Symbols args(candidate->symbols);
                 ArgumentMatch matchArgs(what,
                                         symbols, &args, candidate->symbols,
                                         this, !candidate->to);
