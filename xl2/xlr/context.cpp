@@ -1014,10 +1014,12 @@ Tree *ParameterMatch::DoInfix(Infix *what)
         }
 
         // Check if the name already exists
-        if (Tree *existing = symbols->Named(varName->value))
+        if (Tree *existing = symbols->Named(varName->value, false))
         {
             Ooops("Typed name '$1' already exists as '$2'",
                   what->left, existing);
+            Ooops("This is the previous declaration of '$1'",
+                  existing);
             return NULL;
         }
 
