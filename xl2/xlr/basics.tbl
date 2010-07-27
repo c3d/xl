@@ -159,6 +159,10 @@ INFIX(Index, tree, tree, "at", integer, return xl_nth(&l, r))
 PREFIX(DebugTree, tree, "debug", PARM(toDebug, tree),
        std::cerr << "DEBUG: " << (Tree *) &toDebug << "\n";
        return xl_true)
+PREFIX(WriteTree, tree, "write", PARM(toWrite, tree),
+       return xl_write(self->Symbols(), &toWrite, ""))
+PREFIX(WriteLnTree, tree, "writeln", PARM(toWrite, tree),
+       return xl_write(self->Symbols(), &toWrite, "\n"))
 
 // Compute the sha1 of a tree
 PREFIX(ComputeSha1, text, "sha1", PARM(t, tree), XL_RTEXT(sha1(&t)))

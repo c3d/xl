@@ -555,6 +555,60 @@ Tree *xl_invoke(eval_fn toCall, Tree *src, TreeList &args)
 
 // ============================================================================
 //
+//   Write a tree to standard output (temporary hack)
+//
+// ============================================================================
+
+Tree *xl_write(Symbols *symbols, Tree *tree, text sep)
+// ----------------------------------------------------------------------------
+//   Write elements of the tree to the console
+// ----------------------------------------------------------------------------
+{
+    // Special case when we have no argument
+    if (!tree)
+    {
+        std::cout << "NULL" << sep;
+        return XL::xl_false;
+    }
+
+    // Format contents
+    switch(tree->Kind())
+    {
+    case INTEGER: std::cout << tree->AsInteger()->value << sep; break;
+    case REAL:    std::cout << tree->AsReal()->value << sep;    break;
+    case TEXT:    std::cout << tree->AsText()->value << sep;    break;
+
+    case INFIX:
+    {
+        Infix *infix = tree->AsInfix();
+        if (infix->name == ",")
+        {
+            xl_write(symbols, infix->left, "");
+            xl_write(symbols, infix->right, sep);
+            break;
+        }
+    }
+    default:
+    {
+        // Evaluate argument
+        if (!tree->Symbols())
+            tree->SetSymbols(symbols);
+        Tree *result = xl_evaluate(tree);
+        if (result != tree)
+            return xl_write(symbols, result, sep);
+
+        std::cout << "Unknown tree " << tree << sep;
+        return XL::xl_false;
+    }
+    }
+
+    return XL::xl_true;
+}
+
+
+
+// ============================================================================
+//
 //    Loading trees from external files
 //
 // ============================================================================
