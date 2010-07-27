@@ -1,0 +1,2 @@
+// Compute the sum of all factorials whose value is below 100 
+(x,y->x+y) with (x where x < 100) with (x->x!) with 1..10
