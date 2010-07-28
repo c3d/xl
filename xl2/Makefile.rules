@@ -186,6 +186,7 @@ predepend:
 %.s.mkdepend:
 	$V $(AS_DEPEND) $*.s && $(CAT_DEPEND)
 %.xl.mkdepend:
+	$V echo No dependency for %
 
 
 # Include dependencies from current directory
