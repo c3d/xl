@@ -27,15 +27,15 @@
 #undef TYPE
 #undef PARM
 
-#define INFIX(name, rtype, t1, symbol, t2, _code)
+#define INFIX(name, rtype, t1, symbol, t2, _code, doc)
 
 #define PARM(symbol, type)
 
-#define PREFIX(name, rtype, symbol, parms, _code)
+#define PREFIX(name, rtype, symbol, parms, _code, doc)
 
-#define POSTFIX(name, rtype, parms, symbol, _code)
+#define POSTFIX(name, rtype, parms, symbol, _code, doc)
 
-#define BLOCK(name, rtype, open, type, close, _code)
+#define BLOCK(name, rtype, open, type, close, _code, doc)
 
 #define NAME(symbol)    xl_##symbol = 0;
 
