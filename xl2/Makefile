@@ -23,7 +23,7 @@
 #* Date       : $Date$
 #******************************************************************************
 
-# List of directories to process
+# List of source files to process
 SOURCES     =					\
 	main.cpp				\
 	scanner.cpp				\

@@ -1,6 +1,6 @@
 #******************************************************************************
 # Makefile                          (C) 1992-2003 Christophe de Dinechin (ddd) 
-#                                                                  XL2 project 
+#                                                                  XLR project 
 #******************************************************************************
 #
 #  File Description:
@@ -23,9 +23,7 @@
 #* Date       : $Date$
 #******************************************************************************
 
-BROOT=../
-
-# List of directories to process
+# List of source files to process
 SOURCES     =					\
 	main.cpp				\
 	options.cpp				\
