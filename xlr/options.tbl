@@ -107,44 +107,6 @@ OPTION(diff,
        "(you must give exactly two input files)", doDiff=true)
 
 
-#ifdef TAO
-// ============================================================================
-//
-//   Tao options
-//
-// ============================================================================
-
-OPTVAR(sync_interval, ulong,   500)
-OPTVAR(save_interval, ulong,   1000)
-OPTVAR(commit_interval, ulong, 5000)
-OPTVAR(pull_interval, ulong, 5000)
-OPTION(autosync, "Interval for automatic file sync in milliseconds",
-       sync_interval = INTEGER)
-OPTION(autosave, "Interval for automatic save in milliseconds",
-       save_interval = INTEGER)
-OPTION(autocommit, "Interval for automatic commit in milliseconds",
-       commit_interval = INTEGER)
-OPTION(autopull, "Interval for automatic pull in milliseconds",
-       pull_interval = INTEGER)
-
-OPTVAR(prefer_opengl, bool, false)
-OPTION(gl, "Prefer OpenGL for rendering", prefer_opengl = true)
-
-TRACE(filesync)
-TRACE(menus)
-TRACE(process)
-TRACE(drag)
-TRACE(focus)
-TRACE(undo)
-TRACE(widgets)
-TRACE(resources)
-TRACE(clipboard)
-TRACE(srcview)
-TRACE(fonts)
-TRACE(textselect)
-TRACE(paths)
-#endif // TAO
-
 // Traces. The first ones must match the MzTrace definition in base.h
 // We use lower-case names here to avoid duplicate definition and be able
 // to reuse the IFTRACE macro as is.
@@ -159,6 +121,14 @@ TRACE(builtins)
 TRACE(closure)
 TRACE(diff)
 TRACE(calls2xl)
+
+// ============================================================================
+//
+//   Additional options
+//
+// ============================================================================
+
+#include <options2.tbl>
 
 // Undefine for next use...
 #undef OPTVAR
