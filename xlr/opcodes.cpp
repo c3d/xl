@@ -25,6 +25,7 @@
 
 #include "opcodes.h"
 #include "basics.h"
+#include "parser.h"
 #include <typeinfo>
 
 XL_BEGIN
@@ -117,6 +118,18 @@ Tree *ParametersTree(TreeList parameters)
     return result;
 }
 
+void setDocumentation(Tree *node, text doc)
+// ----------------------------------------------------------------------------
+//   attach the documentation to the node as a comment
+// ----------------------------------------------------------------------------
+{
+    if (doc.empty()) return;
+
+    std::vector<text> com(1,doc);
+    CommentsInfo *cinfo = new CommentsInfo();
+    cinfo->after = com;
+    node->SetInfo<CommentsInfo> (cinfo);
+}
 
 XL_END
 

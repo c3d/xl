@@ -36,6 +36,7 @@ text            xl_text_arg(Tree *arg);
 int             xl_character_arg(Tree *arg);
 bool            xl_boolean_arg(Tree *arg);
 Tree *          ParametersTree(TreeList parameters);
+void            setDocumentation(Tree *node, text doc);
 
 #define XL_TREE(v)      (v)
 #define XL_INT(v)       ((integer_t) (v))

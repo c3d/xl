@@ -138,9 +138,9 @@ public:
 
 
 // ============================================================================
-// 
+//
 //   Declare the basic types
-// 
+//
 // ============================================================================
 
 #undef INFIX
@@ -153,11 +153,11 @@ public:
 #undef DS
 #undef RS
 
-#define INFIX(name, rtype, t1, symbol, t2, code)
+#define INFIX(name, rtype, t1, symbol, t2, code, doc)
 #define PARM(symbol, type)
-#define PREFIX(name, rtype, symbol, parms, code)
-#define POSTFIX(name, rtype, parms, symbol, code)
-#define BLOCK(name, rtype, open, type, close, code)
+#define PREFIX(name, rtype, symbol, parms, code, doc)
+#define POSTFIX(name, rtype, parms, symbol, code, doc)
+#define BLOCK(name, rtype, open, type, close, code, doc)
 #define NAME(symbol)
 #define TYPE(symbol)    extern Name_p symbol##_type;
 #include "basics.tbl"

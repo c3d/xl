@@ -1,20 +1,20 @@
 // ****************************************************************************
-//  opcodes_define.h               (C) 1992-2009 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  opcodes_define.h               (C) 1992-2009 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Macros used to declare built-ins.
-// 
+//
 //     Usage:
 //     #include "opcodes_declare.h"
 //     #include "builtins.tbl"
-// 
+//
 //     #include "opcodes_define.h"
 //     #include "builtins.tbl"
 //
-// 
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
@@ -37,7 +37,7 @@
 #endif // XL_SCOPE
 
 
-#define INFIX(name, rtype, t1, symbol, t2, _code)       \
+#define INFIX(name, rtype, t1, symbol, t2, _code, doc)       \
     xl_enter_infix_##name(c, compiler);
 
 
@@ -57,7 +57,7 @@
         }
 
 
-#define PREFIX(name, rtype, symbol, parms, _code)               \
+#define PREFIX(name, rtype, symbol, parms, _code, doc)               \
     do                                                          \
     {                                                           \
         TreeList parameters;                                    \
@@ -66,7 +66,7 @@
     } while(0);
 
 
-#define POSTFIX(name, rtype, parms, symbol, _code)              \
+#define POSTFIX(name, rtype, parms, symbol, _code, doc)              \
     do                                                          \
     {                                                           \
         TreeList  parameters;                                   \
@@ -75,7 +75,7 @@
     } while(0);
 
 
-#define BLOCK(name, rtype, open, type, close, _code)    \
+#define BLOCK(name, rtype, open, type, close, _code, doc)    \
     xl_enter_block_##name(c, compiler);
 
 
