@@ -502,11 +502,11 @@ Tree *MatchType::Normalize()
 #undef DS
 #undef RS
 
-#define INFIX(name, rtype, t1, symbol, t2, code)
-#define PARM(symbol, type)
-#define PREFIX(name, rtype, symbol, parms, code)
-#define POSTFIX(name, rtype, parms, symbol, code)
-#define BLOCK(name, rtype, open, type, close, code)
+#define INFIX(name, rtype, t1, symbol, t2, code,doc)
+#define PARM(symbol, type,doc)
+#define PREFIX(name, rtype, symbol, parms, code,doc)
+#define POSTFIX(name, rtype, parms, symbol, code,doc)
+#define BLOCK(name, rtype, open, type, close, code,doc)
 #define NAME(symbol)
 #define TYPE(symbol)                            \
             if (name == #symbol)                \
