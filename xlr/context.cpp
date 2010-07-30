@@ -913,11 +913,12 @@ Tree *ArgumentMatch::DoName(Name *what)
             return what;
         }
 
-        // If first occurence of the name, enter it in symbol table
+        // Bind expression to name, not value of expression (create a closure)
         Tree *compiled = CompileClosure(test);
         if (!compiled)
             return NULL;
 
+        // If first occurence of the name, enter it in symbol table
         locals->EnterName(what->value, compiled);
         return what;
     }
