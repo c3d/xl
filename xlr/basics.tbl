@@ -143,6 +143,7 @@ PREFIX(DoCode,    tree, "do", PARM(code, tree), return xl_evaluate(&code), "")
 PREFIX(RepeatCode,tree, "repeat", PARM(n, integer) PARM(code, tree),
        return xl_repeat(self, &code, n), "")
 PREFIX(LoadFile, tree, "load", PARM(file, text), return xl_load(file), "")
+PREFIX(ImportFile, tree, "import", PARM(file, text), return xl_import(file), "")
 PREFIX(LoadCSV,  tree, "load_csv", PARM(f, text) PARM(p, text),
        return xl_load_data(f, p, ",;", "\n\f\r"), "")
 PREFIX(LoadTSV,  tree, "load_tsv", PARM(f, text) PARM(p, text),

@@ -305,6 +305,7 @@ Tree *xl_write(Symbols *symbols, Tree *what, text sep = "");
 // ============================================================================
 
 Tree *xl_load(text name);
+Tree *xl_import(text name);
 Tree *xl_load_data(text name, text prefix,
                    text fieldSeps = ",;", text recordSeps = "\n");
 

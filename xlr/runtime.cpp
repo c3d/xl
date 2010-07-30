@@ -615,7 +615,7 @@ Tree *xl_write(Symbols *symbols, Tree *tree, text sep)
 
 Tree *xl_load(text name)
 // ----------------------------------------------------------------------------
-//    Load a file from disk
+//    Load a file from disk without evaluating it
 // ----------------------------------------------------------------------------
 {
     text path = MAIN->SearchFile(name);
@@ -649,6 +649,17 @@ Tree *xl_load(text name)
     old->Import(syms);
 
     return tree;
+}
+
+
+Tree *xl_import(text name)
+// ----------------------------------------------------------------------------
+//   Load a tree and evaluate the result
+// ----------------------------------------------------------------------------
+{
+    Tree *result = xl_load(name);
+    result = xl_evaluate(result);
+    return result;
 }
 
 
