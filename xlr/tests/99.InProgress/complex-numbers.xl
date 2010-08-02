@@ -1,3 +1,6 @@
+// Data declaration
+data complex(x,y)
+
 // Basic notations
 i -> complex(0,1)
 a + i * b -> complex(a,b)
