@@ -36,7 +36,7 @@ all:	debug
 
 %:
 	@echo The BUILDENV environment variable is not set
-	@echo You accelerating it by setting it as appropriate for
+	@echo You will accelerate builds by setting it as appropriate for
 	@echo your system. The best guess is BUILDENV=$(BUILDENV)
 	@echo Attempting to build $* with $(BUILDENV)
 	@sleep 1
