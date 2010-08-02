@@ -34,10 +34,11 @@
   fly, not statically.
 
   Also, because the language is designed to manipulate program trees, which
-  server as the primary data structure, this implies that the program trees
-  will exist at run-time as well. There needs to be a garbage collection
-  phase. The chosen garbage collection technique is based on reference counting
-  because we know we won't have cyclic data structure.
+  serve as the primary data structure, this implies that the program trees
+  will exist at run-time as well. As a resut, there needs to be a
+  garbage collection phase. The chosen garbage collection technique is
+  based on reference counting because trees are not cyclic, so that
+  ref-counting is both faster and simpler.
 
   The chosen approach is to add an evaluation function pointer to each tree,
   the field being called 'code' in struct Tree. This function pointer is
@@ -48,11 +49,8 @@
   In some cases, the compiler may want to choose a more efficient data
   structure layout for the tree being represented. For example, we may decide
   to use an memory-contiguous array to represent [ 1, 2, 3, 4 ], even if the
-  native tree representation not memory contiguous nor easy to access. The
-  above technique makes this possible too. For such cases, we generate the
-  data, and prefix it with a very small code thunk that simply returns the
-  result of a call to xl_data(). xl_data() can get the address of the data
-  from its return address. See xl_data() for details.
+  original tree representation is not memory contiguous nor easy to access.
+  The chosen technique makes this possible too.
 
   
   PREDEFINED FORMS:
@@ -67,7 +65,8 @@
           and the same holds for A in an indentation (indent block)
     "A;B" is a sequence, evaluating A, then B, the value being B.
           The newline infix operator plays the same role.
-    "data A" declares A as a form that cannot be reduced further
+    "data A" declares A as a form that cannot be reduced further.
+          This can be used to declare data structures.
 
   The XL type system is itself based on tree shapes. For example, "integer" is
   a type that covers all Integer trees. "integer+integer" is a type that
@@ -102,7 +101,7 @@
   specific rewrite can invoke multiple candidates. For example,
   consider the following factorial declaration:
      0! -> 1
-     N! when N>0 -> N * (N-1)!
+     N! where N>0 -> N * (N-1)!
 
   In that case, code invoking N! will generate a test to check if N is 0, and
   if so invoke the first rule, otherwise invoke the second rule. The same
