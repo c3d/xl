@@ -121,6 +121,9 @@ TRACE(builtins)
 TRACE(closure)
 TRACE(diff)
 TRACE(calls2xl)
+TRACE(symbols)
+
+
 
 // ============================================================================
 //
