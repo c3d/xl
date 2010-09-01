@@ -26,16 +26,22 @@
 //  except that it's based on the shape of trees.
 //
 //  The fundamental types are:
-//  - integer, type of 0, 1, 2, ...
-//  - real, type of 0.3, 4.2, 6.3e21
-//  - text, type of "ABC" and "Hello World"
-//  - character, type of 'A' and ' '
+//  - Literals, which match only their exact value
 //  - boolean, type of true and false
+//  - integer, type of integer literals such as 0, 1, 2, ...
+//  - real, type of real literals such as 0.3, 4.2, 6.3e21
+//  - text, type of double-quoted text literals such as "ABC" and "Hello World"
+//  - character, type of single-quoted text literals such as 'A' and ' '
+//  - name, type of names (not symbols) such as A or Toto2
+//  - symbol, type of symbols (not names) such as + or **
+//  - infix, prefix, postfix, block, type of corresponding structured types
 //
 //  The type constructors are:
+//  - (T): Values from T
 //  - T1 |  T2 : Values of either type T1 or T2
-//  - T1 -> T2 : A function taking T1 and returning T2
-//  - expr: A tree with the given shape, e.g  (T1, T2), T1+T2
+//  - T1 -> T2 : A transformation taking T1 and returning T2
+//  - type(pattern): A type matching the pattern, e.g. type(X+Y:integer)
+//                   matches 2.3+5 or A+3
 //
 //  The type analysis phase consists in scanning the input tree,
 //  recording type information and returning typed trees.
@@ -47,6 +53,27 @@
 
 XL_BEGIN
 
+// ============================================================================
+// 
+//   High-level entry points for type management
+// 
+// ============================================================================
+
+Tree *ValueMatchesType(Tree *type, Tree *value, bool conversions);
+Tree *TypeCoversType(Tree *type, Tree *test, bool conversions);
+Tree *TypeIntersectsType(Tree *type, Tree *test, bool conversions);
+Tree *UnionType(Tree *t1, Tree *t2);
+Tree *CanonicalType(Tree *value);
+Tree *StructuredType(Tree *value);
+
+
+
+// ============================================================================
+// 
+//    Representation of types
+// 
+// ============================================================================
+
 struct TypeInfo : Info
 // ----------------------------------------------------------------------------
 //    Information recording the type of a given tree
@@ -56,27 +83,6 @@ struct TypeInfo : Info
     TypeInfo(Tree *type): type(type) {}
     operator            data_t()  { return type; }
     Tree_p               type;
-};
-
-
-struct InferTypes : Action
-// ----------------------------------------------------------------------------
-//    Infer the types in an expression
-// ----------------------------------------------------------------------------
-{
-    InferTypes(Symbols *s): Action(), symbols(s) {}
-
-    Tree *Do (Tree *what);
-    Tree *DoInteger(Integer *what);
-    Tree *DoReal(Real *what);
-    Tree *DoText(Text *what);
-    Tree *DoName(Name *what);
-    Tree *DoPrefix(Prefix *what);
-    Tree *DoPostfix(Postfix *what);
-    Tree *DoInfix(Infix *what);
-    Tree *DoBlock(Block *what);
-
-    Symbols_p   symbols;
 };
 
 

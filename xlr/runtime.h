@@ -81,6 +81,8 @@ Tree *xl_text_cast(Tree *source, Tree *value);
 Tree *xl_character_cast(Tree *source, Tree *value);
 Tree *xl_tree_cast(Tree *source, Tree *value);
 Tree *xl_symbol_cast(Tree *source, Tree *value);
+Tree *xl_name_symbol_cast(Tree *source, Tree *value);
+Tree *xl_operator_symbol_cast(Tree *source, Tree *value);
 Tree *xl_infix_cast(Tree *source, Tree *value);
 Tree *xl_prefix_cast(Tree *source, Tree *value);
 Tree *xl_postfix_cast(Tree *source, Tree *value);

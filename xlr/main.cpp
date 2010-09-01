@@ -73,7 +73,7 @@ SourceFile::SourceFile()
 {}
 
 
-Main::Main(int inArgc, char **inArgv, Compiler &comp,
+Main::Main(int inArgc, char **inArgv, Compiler *comp,
            text syntaxName, text styleSheetName, text builtinsName)
 // ----------------------------------------------------------------------------
 //   Initialization of the globals
@@ -84,15 +84,15 @@ Main::Main(int inArgc, char **inArgv, Compiler &comp,
       syntax(syntaxName.c_str()),
       options(errors, inArgc, inArgv),
       compiler(comp),
-      context(new Context(errors, &compiler)),
+      globals(new Symbols(NULL)),
       renderer(std::cout, styleSheetName, syntax),
       reader(NULL), writer(NULL)
 {
     Options::options = &options;
-    Context::context = context;
-    Symbols::symbols = context;
+    Symbols::symbols = globals;
     Renderer::renderer = &renderer;
     Syntax::syntax = &syntax;
+    MAIN = this;
     options.builtins = builtinsName;
     ParseOptions();
 }
@@ -129,7 +129,7 @@ int Main::ParseOptions()
                   << "         Check LANG, LC_CTYPE, LC_ALL.\n";
 
     // Initialize basics
-    EnterBasics(context);
+    EnterBasics(globals);
 
     // Scan options and build list of files we need to process
     cmd = options.ParseNext();
@@ -387,7 +387,7 @@ int Main::Run()
 #endif // TAO
         }
 
-        Symbols::symbols = Context::context;
+        Symbols::symbols = globals;
     }
 
     return hadError;
@@ -430,7 +430,7 @@ int main(int argc, char **argv)
     using namespace XL;
     source_names noSpecificContext;
     Compiler compiler("xl_tao");
-    MAIN = new Main(argc, argv, compiler);
+    Main main(argc, argv, &compiler);
     int rc = MAIN->LoadContextFiles(noSpecificContext);
     if (rc)
     {
@@ -447,8 +447,6 @@ int main(int argc, char **argv)
     if (!rc && MAIN->errors.count)
         rc = 1;
     
-    delete MAIN;
-
 #if CONFIG_USE_SBRK
     IFTRACE(memory)
         fprintf(stderr, "Total memory usage: %ldK\n",

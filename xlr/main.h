@@ -68,7 +68,7 @@ struct Main
 //    The main entry point and associated data
 // ----------------------------------------------------------------------------
 {
-    Main(int argc, char **argv, Compiler &comp,
+    Main(int argc, char **argv, Compiler *comp,
          text syntax = "xl.syntax",
          text style = "xl.stylesheet",
          text builtins = "builtins.xl");
@@ -92,8 +92,8 @@ public:
     Errors       errors;
     Syntax       syntax;
     Options      options;
-    Compiler    &compiler;
-    Context_p    context;
+    Compiler    *compiler;
+    Symbols_p    globals;
     Renderer     renderer;
     source_files files;
     source_names file_names;

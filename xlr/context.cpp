@@ -34,6 +34,7 @@
 #include "basics.h"
 #include "compiler.h"
 #include "runtime.h"
+#include "main.h"
 #include <sstream>
 
 XL_BEGIN
@@ -102,6 +103,33 @@ void Symbols::EnterName(text name, Tree *value, Tree *def)
     names[name] = value;
     if (def)
         definitions[name] = def;
+}
+
+
+void Symbols::ExtendName(text name, Tree *value)
+// ----------------------------------------------------------------------------
+//   Extend a named value as part of a rewrite
+// ----------------------------------------------------------------------------
+{
+    Tree_p &entry = names[name];
+    if (entry)
+    {
+        if (Block *block = entry->AsBlock())
+            block->child = new Infix("\n", block->child, value,
+                                     value->Position());
+        else
+            entry = new Block(new Infix("\n", entry, value,
+                                        value->Position()),
+                              Block::indent, Block::unindent,
+                              value->Position());                              
+    }
+    else
+    {
+        entry = value;
+    }
+
+    if (value && !value->Symbols())
+        value->SetSymbols(this);
 }
 
 
@@ -234,7 +262,7 @@ Tree *Symbols::CompileAll(Tree *source,
 //    to avoid re-generating LLVM code for each and every call
 //    (it's more difficult to avoid leaking memory from LLVM)
 {
-    Compiler *compiler = Context::context->compiler;
+    Compiler *compiler = MAIN->compiler;
     TreeList noParms;
     CompiledUnit unit (compiler, source, noParms);
     if (unit.IsForwardCall())
@@ -356,7 +384,7 @@ Infix *Symbols::CompileTypeTest(Tree *type)
     type_tests[type] = call;
 
     // Create the compilation unit for the infix with two parms
-    Compiler *compiler = Context::context->compiler;
+    Compiler *compiler = MAIN->compiler;
     CompiledUnit unit(compiler, call, parameters);
     if (unit.IsForwardCall())
         return call;
@@ -454,25 +482,6 @@ Tree *Symbols::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
         return XL::xl_false;
     }
     return result;
-}
-
-
-
-// ============================================================================
-//
-//   Context
-//
-// ============================================================================
-
-Context *Context::context = NULL;
-
-Context::~Context()
-// ----------------------------------------------------------------------------
-//   Delete all globals allocated by that context
-// ----------------------------------------------------------------------------
-{
-    if (context == this)
-        context = NULL;
 }
 
 
@@ -710,8 +719,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     unit.ConstantTree(source);
 
     // Record which elements of the expression are captured from context
-    Context *context = Context::context;
-    Compiler *compiler = context->compiler;
+    Compiler *compiler = MAIN->compiler;
     EnvironmentScan env(symbols);
     Tree *envOK = source->Do(env);
     if (!envOK)
@@ -727,7 +735,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     {
         Tree *name = (*c).first;
         Symbols *where = (*c).second;
-        if (where == context || where == Symbols::symbols)
+        if (where == MAIN->globals || where == Symbols::symbols)
         {
             // This is a global, we'll find it running the target.
         }
@@ -1551,7 +1559,7 @@ Tree *CompileAction::DoName(Name *what)
         }
 
         // Check if there is code we need to call
-        Compiler *compiler = Context::context->compiler;
+        Compiler *compiler = MAIN->compiler;
         llvm::Function *function = compiler->TreeFunction(result);
         if (function && function != unit.function)
         {
@@ -1944,7 +1952,7 @@ Tree *Rewrite::Compile(void)
     if (to->code)
         return to;
 
-    Compiler *compiler = Context::context->compiler;
+    Compiler *compiler = MAIN->compiler;
 
     // Create the compilation unit and check if we are already compiling this
     CompiledUnit unit(compiler, to, parameters);

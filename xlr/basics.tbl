@@ -1,17 +1,21 @@
-// Basic language features
-INFIX(SemiColonSequence, tree, tree,";",tree,
-      xl_evaluate(&l);
-      XL_RTREE(xl_evaluate(&r)), "")
-INFIX(NewlineSequence, tree, tree,"\n",tree,
-      xl_evaluate(&l);
-      XL_RTREE(xl_evaluate(&r)), "")
-INFIX(EnterRewrite, tree, tree,"->", tree,
-      Symbols::symbols->EnterRewrite(&l,&r);
-      XL_RTREE(self), "")
-BLOCK(EvaluateParentheses, tree, "(", tree, ")",
-      XL_RTREE(xl_evaluate(&child)), "")
-BLOCK(EvaluateBlock, tree, Block::indent, tree, Block::unindent,
-      XL_RTREE(xl_evaluate(&child)), "")
+// Types must come first for type info to be initialized correctly
+NAME(empty);
+NAME(true);
+NAME(false);
+
+TYPE(boolean);
+TYPE(integer);
+TYPE(real);
+TYPE(text);
+TYPE(character);
+TYPE(tree);
+TYPE(symbol);
+TYPE(name_symbol);
+TYPE(operator_symbol);
+TYPE(infix);
+TYPE(prefix);
+TYPE(postfix);
+TYPE(block);
 
 // Integer arithmetic and comparisons
 INFIX(AddInt,integer, integer,"+",integer, XL_RINT(XL_INT(l) + XL_INT(r)), "")
@@ -167,19 +171,3 @@ PREFIX(WriteLnTree, tree, "writeln", PARM(toWrite, tree),
 
 // Compute the sha1 of a tree
 PREFIX(ComputeSha1, text, "sha1", PARM(t, tree), XL_RTEXT(sha1(&t)), "")
-
-NAME(empty);
-NAME(true);
-NAME(false);
-
-TYPE(boolean);
-TYPE(integer);
-TYPE(real);
-TYPE(text);
-TYPE(character);
-TYPE(tree);
-TYPE(symbol);
-TYPE(infix);
-TYPE(prefix);
-TYPE(postfix);
-TYPE(block);

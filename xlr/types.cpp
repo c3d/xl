@@ -23,106 +23,449 @@
 #include "types.h"
 #include "tree.h"
 #include "runtime.h"
+#include "errors.h"
+#include "options.h"
+#include <iostream>
 
 XL_BEGIN
 
 // ============================================================================
 //
-//    Infer types by scanning source code for type information
+//   High-level type functions
 //
 // ============================================================================
 
-Tree *InferTypes::Do (Tree *what)
+Tree *ValueMatchesType(Tree *type, Tree *value, bool conversions)
 // ----------------------------------------------------------------------------
-//   Infer the type of some arbitrary tree
-// ----------------------------------------------------------------------------
-{
-    // Otherwise, we don't know how to deal with it
-    return Ooops("Cannot infer the type of '$1'", what);
-}
-
-
-Tree *InferTypes::DoInteger(Integer *what)
-// ----------------------------------------------------------------------------
-//   Return the integer type
+//   Checks if a value matches a type, return value or NULL if no match
 // ----------------------------------------------------------------------------
 {
-    what->Set<TypeInfo> (integer_type);
-    return integer_type;
-}
-
-
-Tree *InferTypes::DoReal(Real *what)
-// ----------------------------------------------------------------------------
-//   Return the real type
-// ----------------------------------------------------------------------------
-{
-    what->Set<TypeInfo> (real_type);
-    return real_type;
-}
-
-
-Tree *InferTypes::DoText(Text *what)
-// ----------------------------------------------------------------------------
-//   Return text or character type
-// ----------------------------------------------------------------------------
-{
-    Tree *type = what->opening == "'" ? character_type : text_type;
-    what->Set<TypeInfo> (type);
-    return type;
-}
-
-
-Tree *InferTypes::DoName(Name *what)
-// ----------------------------------------------------------------------------
-//   Return the type of the value of the name
-// ----------------------------------------------------------------------------
-{
-    if (Tree *value = symbols->Named(what->value))
+    // Check if we match some of the built-in leaf types
+    if (type == integer_type)
+        if (Integer *iv = value->AsInteger())
+            return iv;
+    if (type == real_type)
     {
-        if (Tree *type = value->Get<TypeInfo>())
-            return type;
-        Ooops("Unknown type for '$1'", what);
-        return NULL;
+        if (Real *rv = value->AsReal())
+            return rv;
+        if (conversions)
+        {
+            if (Integer *iv = value->AsInteger())
+                return iv;
+        }
     }
-    Ooops("Unknown name '$1'", what);
+    if (type == text_type)
+        if (Text *tv = value->AsText())
+            if (tv->opening == "\"" && tv->closing == "\"")
+                return tv;
+    if (type == character_type)
+        if (Text *cv = value->AsText())
+            if (cv->opening == "'" && cv->closing == "'")
+                return cv;
+    if (type == boolean_type)
+        if (Name *nv = value->AsName())
+            if (nv->value == "true" || nv->value == "false")
+                return nv;
+    if (type == tree_type)
+        return value;
+    if (type == symbol_type)
+        if (Name *nv = value->AsName())
+            return nv;
+    if (type == name_symbol_type)
+        if (Name *nv = value->AsName())
+            if (nv->value.length() && isalpha(nv->value[0]))
+                return nv;
+    if (type == operator_symbol_type)
+        if (Name *nv = value->AsName())
+            if (nv->value.length() && !isalpha(nv->value[0]))
+                return nv;
+    if (type == infix_type)
+        if (Infix *iv = value->AsInfix())
+            return iv;
+    if (type == prefix_type)
+        if (Prefix *pv = value->AsPrefix())
+            return pv;
+    if (type == postfix_type)
+        if (Postfix *pv = value->AsPostfix())
+            return pv;
+    if (type == block_type)
+        if (Block *bv = value->AsBlock())
+            return bv;
+
+    // Check if we match constant values
+    if (Integer *it = type->AsInteger())
+        if (Integer *iv = value->AsInteger())
+            if (iv->value == it->value)
+                return iv;
+    if (Real *rt = type->AsReal())
+        if (Real *rv = value->AsReal())
+            if (rv->value == rt->value)
+                return rv;
+    if (Text *tt = type->AsText())
+        if (Text *tv = value->AsText())
+            if (tv->value == tt->value &&
+                tv->opening == tt->opening &&
+                tv->closing == tt->closing)
+                return tv;
+    if (Name *nt = type->AsName())
+        if (value == nt)
+            return value;
+    
+    // Check if we match one of the constructed types
+    if (Block *bt = type->AsBlock())
+        return ValueMatchesType(bt->child, value, conversions);
+    if (Infix *it = type->AsInfix())
+    {
+        if (it->name == "|")
+        {
+            if (Tree *leftOK = ValueMatchesType(it->left, value, conversions))
+                return leftOK;
+            if (Tree *rightOK = ValueMatchesType(it->right, value, conversions))
+                return rightOK;
+        }
+        else if (it->name == "->")
+        {
+            if (Infix *iv = value->AsInfix())
+                if (iv->name == "->")
+                {
+                    // REVISIT: Compare function signatures
+                    Ooops("Unimplemented: "
+                          "signature comparison of '$1' and '$2'",
+                          value, type);
+                    return iv;
+                }
+        }
+    }
+    if (Prefix *pt = type->AsPrefix())
+    {
+        if (Name *typeKeyword = pt->left->AsName())
+        {
+            if (typeKeyword->value == "type")
+            {
+                if (Block *block = pt->right->AsBlock())
+                {
+                    if (block->child)
+                    {
+                        // REVISIT: Match value with pattern
+                        Ooops("Unimplemented: "
+                              "testing '$1' against pattern-based type '$2'",
+                              value, type);
+                        return value;
+                    }
+                }
+            }
+        }
+    }
+
+    // Failed to match type
     return NULL;
 }
 
 
-Tree *InferTypes::DoPrefix(Prefix *what)
+Tree *TypeCoversType(Tree *type, Tree *test, bool conversions)
 // ----------------------------------------------------------------------------
-//   Infer all the possible types for a prefix expression
+//   Check if type 'test' is covered by 'type'
 // ----------------------------------------------------------------------------
 {
-    return what;
+    // Quick exit when types are the same or the tree type is used
+    if (type == test)
+        return test;
+    if (type == tree_type)
+        return test;
+    if (conversions)
+    {
+        // REVISIT: Could we deduce this without knowing xl_real_cast?
+        if (type == real_type && test == integer_type)
+            return test;
+    }
+
+    // Check if test is constructed
+    if (Infix *itst = test->AsInfix())
+    {
+        if (itst->name == "|")
+        {
+            // Does 'integer' cover 0 | 1 ? Yes if it covers both
+            if (TypeCoversType(type, itst->left, conversions) &&
+                TypeCoversType(type, itst->right, conversions))
+                return test;
+        }
+        else if (itst->name == "->")
+        {
+            if (Infix *it = type->AsInfix())
+            {
+                if (it->name == "->")
+                {
+                    // REVISIT: Coverage of function types
+                    Ooops("Unimplemented: "
+                          "Coverage of function '$1' by '$2'",
+                          test, type);
+                    return test;
+                }
+            }
+        }
+    }
+    if (Block *btst = test->AsBlock())
+        return TypeCoversType(type, btst->child, conversions);
+
+    // General case where the tested type is a value of the type
+    if (test->IsConstant())
+        if (ValueMatchesType(type, test, conversions))
+            return test;
+    
+    // Check if we match one of the constructed types
+    if (Block *bt = type->AsBlock())
+        return TypeCoversType(bt->child, test, conversions);
+    if (Infix *it = type->AsInfix())
+    {
+        if (it->name == "|")
+        {
+            if (Tree *leftOK = TypeCoversType(it->left, test, conversions))
+                return leftOK;
+            if (Tree *rightOK = TypeCoversType(it->right, test, conversions))
+                return rightOK;
+        }
+        else if (it->name == "->")
+        {
+            if (Infix *iv = test->AsInfix())
+                if (iv->name == "->")
+                {
+                    // REVISIT: Compare function signatures
+                    Ooops("Unimplemented: "
+                          "Signature comparison of '$1' against '$2'",
+                          test, type);
+                    return iv;
+                }
+        }
+    }
+    if (Prefix *pt = type->AsPrefix())
+    {
+        if (Name *typeKeyword = pt->left->AsName())
+        {
+            if (typeKeyword->value == "type")
+            {
+                if (Block *block = pt->right->AsBlock())
+                {
+                    if (block->child)
+                    {
+                        // REVISIT: Match test with pattern
+                        Ooops("Unimplemented: "
+                              "Pattern type comparison of '$1' against '$2'",
+                              test, type);
+                        return test;
+                    }
+                }
+            }
+        }
+    }
+
+    // Failed to match type
+    return NULL;
 }
 
 
-Tree *InferTypes::DoPostfix(Postfix *what)
+Tree *TypeIntersectsType(Tree *type, Tree *test, bool conversions)
 // ----------------------------------------------------------------------------
-//
+//   Check if type 'test' intersects 'type'
 // ----------------------------------------------------------------------------
 {
-    return what;
+    // Quick exit when types are the same or the tree type is used
+    if (type == test)
+        return test;
+    if (type == tree_type || test == tree_type)
+        return test;
+    if (conversions)
+    {
+        if (type == real_type && test == integer_type)
+            return test;
+        if (test == real_type && type == integer_type)
+            return test;
+    }
+
+    // Check if test is constructed
+    if (Infix *itst = test->AsInfix())
+    {
+        if (itst->name == "|")
+        {
+            // Does 'integer' intersect 0 | 1 ? Yes if it intersects either
+            if (TypeIntersectsType(type, itst->left, conversions) ||
+                TypeIntersectsType(type, itst->right, conversions))
+                return test;
+        }
+        else if (itst->name == "->")
+        {
+            if (Infix *it = type->AsInfix())
+            {
+                if (it->name == "->")
+                {
+                    // REVISIT: Coverage of function types
+                    Ooops("Unimplemented: "
+                          "Coverage of function '$1' by '$2'",
+                          test, type);
+                    return test;
+                }
+            }
+        }
+    }
+    if (Block *btst = test->AsBlock())
+        return TypeIntersectsType(type, btst->child, conversions);
+
+    // General case where the tested type is a value of the type
+    if (test->IsConstant())
+        if (ValueMatchesType(type, test, conversions))
+            return test;
+    
+    // Check if we match one of the constructed types
+    if (Block *bt = type->AsBlock())
+        return TypeIntersectsType(bt->child, test, conversions);
+    if (Infix *it = type->AsInfix())
+    {
+        if (it->name == "|")
+        {
+            if (Tree *leftOK = TypeIntersectsType(it->left, test, conversions))
+                return leftOK;
+            if (Tree *rightOK = TypeIntersectsType(it->right,test,conversions))
+                return rightOK;
+        }
+        else if (it->name == "->")
+        {
+            if (Infix *iv = test->AsInfix())
+                if (iv->name == "->")
+                {
+                    // REVISIT: Compare function signatures
+                    Ooops("Unimplemented: "
+                          "Signature comparison of '$1' against '$2'",
+                          test, type);
+                    return iv;
+                }
+        }
+    }
+    if (Prefix *pt = type->AsPrefix())
+    {
+        if (Name *typeKeyword = pt->left->AsName())
+        {
+            if (typeKeyword->value == "type")
+            {
+                if (Block *block = pt->right->AsBlock())
+                {
+                    if (block->child)
+                    {
+                        // REVISIT: Match test with pattern
+                        Ooops("Unimplemented: "
+                              "Pattern type comparison of '$1' against '$2'",
+                              test, type);
+                        return test;
+                    }
+                }
+            }
+        }
+    }
+
+    // Failed to match type
+    return NULL;
 }
 
 
-Tree *InferTypes::DoInfix(Infix *what)
+Tree *UnionType(Tree *t1, Tree *t2)
 // ----------------------------------------------------------------------------
-//
+//    Create the union of two types
 // ----------------------------------------------------------------------------
 {
-    return what;
+    if (t1 == NULL)
+        return t2;
+    if (t2 == NULL)
+        return t1;
+    if (TypeCoversType(t1, t2, false))
+        return t1;
+    if (TypeCoversType(t2, t1, false))
+        return t2;
+    return new Infix("|", t1, t2);
 }
 
 
-Tree *InferTypes::DoBlock(Block *what)
+Tree *CanonicalType(Tree *value)
 // ----------------------------------------------------------------------------
-//
+//   Return the canonical type for the given value
 // ----------------------------------------------------------------------------
 {
-    return what;
+    Tree *type = tree_type;
+    switch (value->Kind())
+    {
+    case INTEGER:
+    case REAL:
+    case TEXT:          type = value; break;
+    case NAME:          type = symbol_type; break;
+    case INFIX:         type = infix_type; break;
+    case PREFIX:        type = prefix_type; break;
+    case POSTFIX:       type = postfix_type; break;
+    case BLOCK:         type = block_type; break;
+    }
+    return type;    
+}
+
+
+Tree *StructuredType(Tree *value)
+// ----------------------------------------------------------------------------
+//   Return the type of a structured value
+// ----------------------------------------------------------------------------
+{
+    // First check if we already figured out the type for this
+    Tree *type = value->Get<TypeInfo>();
+    if (type)
+        return type;
+
+    // If there is no type, we need to be pessimistic
+    type = tree_type;
+
+    switch(value->Kind())
+    {
+    case INTEGER:
+    case REAL:
+    case TEXT:
+        // Constants have themselves as type
+        type = value;
+        break;
+
+    case NAME:
+        // For names, we may be lucky and have a name in the value
+        if (Symbols *syms = value->Symbols())
+            if (Name *name = (Name *) value)
+                if (Tree *ref = syms->Named(name->value, true))
+                    if (ref != name)
+                        type = StructuredType(ref);
+        break;
+
+    case INFIX:
+        if (Infix *infix = (Infix *) value)
+        {
+            Tree *lt = StructuredType(infix->left);
+            Tree *rt = StructuredType(infix->right);
+            type = new Infix(infix->name, lt, rt, infix->Position());
+        }
+        break;
+
+    case PREFIX:
+        type = prefix_type;
+        break;
+
+    case POSTFIX:
+        type = postfix_type;
+        break;
+
+    case BLOCK:
+        if (Block *block = (Block *) value)
+            type = StructuredType(block->child);
+        break;
+    }
+
+    // Memorize the type for next time
+    if (type && type != tree_type)
+    {
+        IFTRACE(types)
+            std::cerr << "Caching type " << type << " for " << value << '\n';
+        value->Set<TypeInfo>(type);
+    }
+
+    return type;    
 }
 
 
@@ -403,7 +746,7 @@ Tree *MatchType::MatchStructuredType(Tree *what, Tree *kind)
 }
 
 
-Tree *  MatchType::Rewrites(Tree *what)
+Tree *MatchType::Rewrites(Tree *what)
 // ----------------------------------------------------------------------------
 //   Check the various rewrites and see if there is one where types match
 // ----------------------------------------------------------------------------
@@ -545,7 +888,7 @@ Tree *MatchType::NameMatch(Tree *what)
 //
 // ============================================================================
 
-Tree *ArgumentTypeMatch::Do(Tree *what)
+Tree *ArgumentTypeMatch::Do(Tree *)
 // ----------------------------------------------------------------------------
 //   Default is to return failure
 // ----------------------------------------------------------------------------

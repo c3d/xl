@@ -36,6 +36,7 @@
 #include "options.h"
 #include "runtime.h"
 #include "types.h"
+#include "main.h"
 
 
 XL_BEGIN
@@ -50,12 +51,12 @@ XL_BEGIN
 #include "basics.tbl"
 
 
-void EnterBasics(Context *c)
+void EnterBasics(Symbols *c)
 // ----------------------------------------------------------------------------
 //   Enter all the basic operations defined in basics.tbl
 // ----------------------------------------------------------------------------
 {
-    Compiler *compiler = c->compiler;
+    Compiler *compiler = MAIN->compiler;
 #include "opcodes_define.h"
 #include "basics.tbl"
 }

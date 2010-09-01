@@ -315,7 +315,7 @@ Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
     parent->right = xl_false;
 
     // Generate the code for the arguments
-    Compiler *compiler = Context::context->compiler;
+    Compiler *compiler = MAIN->compiler;
     eval_fn fn = compiler->closures[ntrees];
     if (!fn)
     {
@@ -450,7 +450,7 @@ Tree *xl_tree_cast(Tree *source, Tree *value)
 
 Tree *xl_symbol_cast(Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
-//   Check if argument can be evaluated as a name
+//   Check if argument can be evaluated as a symbol
 // ----------------------------------------------------------------------------
 {
     if (Name *nt = value->AsName())
@@ -458,6 +458,38 @@ Tree *xl_symbol_cast(Tree *source, Tree *value)
     value = xl_evaluate(value);
     if (Name *afterEval = value->AsName())
         return afterEval;
+    return NULL;
+}
+
+
+Tree *xl_name_symbol_cast(Tree *source, Tree *value)
+// ----------------------------------------------------------------------------
+//   Check if argument can be evaluated as a name
+// ----------------------------------------------------------------------------
+{
+    if (Name *nt = value->AsName())
+        if (nt->value.length() && isalpha(nt->value[0]))
+            return nt;
+    value = xl_evaluate(value);
+    if (Name *afterEval = value->AsName())
+        if (afterEval->value.length() && isalpha(afterEval->value[0]))
+            return afterEval;
+    return NULL;
+}
+
+
+Tree *xl_operator_symbol_cast(Tree *source, Tree *value)
+// ----------------------------------------------------------------------------
+//   Check if argument can be evaluated as an operator symbol
+// ----------------------------------------------------------------------------
+{
+    if (Name *nt = value->AsName())
+        if (nt->value.length() && !isalpha(nt->value[0]))
+            return nt;
+    value = xl_evaluate(value);
+    if (Name *afterEval = value->AsName())
+        if (afterEval->value.length() && !isalpha(afterEval->value[0]))
+            return afterEval;
     return NULL;
 }
 
@@ -543,7 +575,7 @@ Tree *xl_invoke(eval_fn toCall, Tree *src, TreeList &args)
 // ----------------------------------------------------------------------------
 //   We generate a function with the right signature using LLVM
 {
-    Compiler *compiler = Context::context->compiler;
+    Compiler *compiler = MAIN->compiler;
     adapter_fn fn = compiler->EnterArrayToArgsAdapter(args.size());
 
     // REVISIT: The following assumes that Tree_p and Tree * have the
@@ -908,7 +940,7 @@ Tree *xl_apply(Tree *code, Tree *data)
                 symbols->Allocate(parmName);
 
         // Create a compile unit with the right number of parameters
-        Compiler *compiler = Context::context->compiler;
+        Compiler *compiler = MAIN->compiler;
         CompiledUnit unit(compiler, toCompile, parameters);
         assert (!unit.IsForwardCall() || !"Forward call in map/reduce code");
 

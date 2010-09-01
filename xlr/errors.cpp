@@ -31,6 +31,7 @@
 #include "scanner.h" // for Positions
 #include "context.h" // For error display
 #include "tree.h"
+#include "main.h"
 
 XL_BEGIN
 
@@ -165,7 +166,7 @@ text Error::Message()
 //    Return the error message for an error
 // ----------------------------------------------------------------------------
 {
-    Errors &errs = Context::context->errors;
+    Errors &errs = MAIN->errors;
     handled = true;
     return errs.Error(message, arg1, arg2, arg3);
 }
