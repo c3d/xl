@@ -154,7 +154,7 @@ struct CompiledUnit
     llvm::Value *       ConstantText(Text *what);
     llvm::Value *       ConstantTree(Tree *what);
 
-    llvm::Value *       NeedLazy(Tree *subexpr);
+    llvm::Value *       NeedLazy(Tree *subexpr, bool allocate = true);
     llvm::Value *       MarkComputed(Tree *subexpr, llvm::Value *value);
     llvm::BasicBlock *  BeginLazy(Tree *subexpr);
     void                EndLazy(Tree *subexpr, llvm::BasicBlock *skip);
@@ -199,7 +199,7 @@ public:
     value_map           value;          // Map tree -> LLVM value
     value_map           storage;        // Map tree -> LLVM alloca space
     value_map           computed;       // Map tree -> LLVM "computed" flag
-    data_set            noeval;         // Data expressions we don't evaluate
+    data_set            dataForm;       // Data expressions we don't evaluate
 };
 
 

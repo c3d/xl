@@ -951,13 +951,13 @@ Value *CompiledUnit::ConstantTree(Tree *what)
 }
 
 
-Value *CompiledUnit::NeedLazy(Tree *subexpr)
+Value *CompiledUnit::NeedLazy(Tree *subexpr, bool allocate)
 // ----------------------------------------------------------------------------
 //   Record that we need a 'computed' flag for lazy evaluation of the subexpr
 // ----------------------------------------------------------------------------
 {
     Value *result = computed[subexpr];
-    if (!result)
+    if (!result && allocate)
     {
         text label = "computed";
         IFTRACE(labels)
@@ -1177,9 +1177,17 @@ Value *CompiledUnit::Copy(Tree *source, Tree *dest, bool markDone)
 
     if (markDone)
     {
+        // Set the target flag to 'done'
         Value *doneFlag = NeedLazy(dest);
         Value *trueFlag = ConstantInt::get(LLVM_BOOLTYPE, 1);
         code->CreateStore(trueFlag, doneFlag);
+    }
+    else if (Value *oldDoneFlag = NeedLazy(source, false))
+    {
+        // Copy the flag from the source
+        Value *newDoneFlag = NeedLazy(dest);
+        Value *computed = code->CreateLoad(oldDoneFlag);
+        code->CreateStore(computed, newDoneFlag);
     }
 
     return result;
@@ -1192,7 +1200,7 @@ Value *CompiledUnit::CallEvaluate(Tree *tree)
 // ----------------------------------------------------------------------------
 {
     Value *treeValue = Known(tree); assert(treeValue);
-    if (noeval.count(tree))
+    if (dataForm.count(tree))
         return treeValue;
 
     Value *evaluated = code->CreateCall(compiler->xl_evaluate, treeValue);
@@ -1299,11 +1307,14 @@ Value *CompiledUnit::CallClosure(Tree *callee, uint ntrees)
 // ----------------------------------------------------------------------------
 //   We build it with an indirect call so that we generate one closure call
 //   subroutine per number of arguments only.
+//   The input is a prefix of the form E X1 X2 X3 false, where E is the
+//   expression to evaluate, and X1, X2, X3 are the arguments it needs.
+//   The generated function takes the 'code' field of E, and calls it
+//   using C conventions with arguments (E, X1, X2, X3).
 {
     // Load left tree and get its code tag
     Type *treePtrTy = compiler->treePtrTy;
     Value *ptr = Known(callee); assert(ptr);
-    Value *topPtr = ptr;
     Value *pfx = code->CreateBitCast(ptr,compiler->prefixTreePtrTy);
     Value *lf = code->CreateConstGEP2_32(pfx, 0, LEFT_VALUE_INDEX);
     Value *callTree = code->CreateLoad(lf);
@@ -1313,7 +1324,7 @@ Value *CompiledUnit::CallClosure(Tree *callee, uint ntrees)
     // Build argument list
     std::vector<Value *> argV;
     std::vector<const Type *> signature;
-    argV.push_back(topPtr);     // Self argument
+    argV.push_back(callTree);     // Self is the original expression
     signature.push_back(treePtrTy);
     for (uint i = 0; i < ntrees; i++)
     {
