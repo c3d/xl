@@ -286,7 +286,7 @@ Tree *Symbols::CompileAll(Tree *source,
                   << " compiled top-level " << source
                   << " code=" << (void *) fn << "\n";
 
-    return result;
+    return source;
 }
 
 
@@ -451,10 +451,7 @@ Tree *Symbols::Run(Tree *code)
             }
             result = symbols->CompileAll(result);
             if (!result->code || errors.Count())
-            {
-                Ooops("Unable to compile $1", result);
-                return NULL;
-            }
+                return Ooops("Unable to compile $1", result);
         }
         result = result->code(code);
     }
