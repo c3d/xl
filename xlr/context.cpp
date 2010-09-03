@@ -143,8 +143,8 @@ Name *Symbols::Allocate(Name *n)
         if (Name *name = existing->AsName())
             if (name->value == n->value)
                 return name;
-        existing = Error("Redefining '$1' as data, was '$2'", n, existing);
-        return existing->AsName();
+        Ooops("Internal error: parameter '$1' previously had value '$2'",
+              n, existing);
     }
     names[n->value] = n;
     return n;
@@ -168,7 +168,7 @@ Rewrite *Symbols::EnterRewrite(Rewrite *rw)
     ParameterMatch parms(locals);
     Tree *check = rw->from->Do(parms);
     if (!check)
-        Error("Parameter error for '$1'", rw->from);
+        Ooops("Parameter error for '$1'", rw->from);
     rw->parameters = parms.order;
 
     // If we are defining a name, store the definition in the symbols
@@ -239,7 +239,7 @@ Tree *Symbols::Compile(Tree *source, CompiledUnit &unit,
     {
         if (nullIfBad)
             return result;
-        return Error("Couldn't compile '$1'", source);
+        return Ooops("Couldn't compile '$1'", source);
     }
 
     // If we compiled successfully, get the code and store it
@@ -330,7 +330,7 @@ Tree *Symbols::CompileCall(text callee, TreeList &arglist,
                         if (Real *rt = existing->AsReal())
                             rt->value = rs->value;
                         else
-                            Error("Real '$1' cannot replace non-real '$2'",
+                            Ooops("Real '$1' cannot replace non-real '$2'",
                                   value, existing);
                     }
                     else if (Integer *is = value->AsInteger())
@@ -338,7 +338,7 @@ Tree *Symbols::CompileCall(text callee, TreeList &arglist,
                         if (Integer *it = existing->AsInteger())
                             it->value = is->value;
                         else
-                            Error("Integer '$1' cannot replace "
+                            Ooops("Integer '$1' cannot replace "
                                   "non-integer '$2'", value, existing);
                     }
                     else if (Text *ts = value->AsText())
@@ -346,12 +346,12 @@ Tree *Symbols::CompileCall(text callee, TreeList &arglist,
                         if (Text *tt = existing->AsText())
                             tt->value = ts->value;
                         else
-                            Error("Text '$1' cannot replace non-text '$2'",
+                            Ooops("Text '$1' cannot replace non-text '$2'",
                                   value, existing);
                     }
                     else
                     {
-                        Error("Call has unsupported type for '$1'", value);
+                        Ooops("Call has unsupported type for '$1'", value);
                     }
                 }
             }
@@ -407,13 +407,13 @@ Infix *Symbols::CompileTypeTest(Tree *type)
     DeclarationAction declare(locals);
     Tree *callDecls = call->Do(declare);
     if (!callDecls)
-        Error("Internal: Declaration error for call '$1'", callDecls);
+        Ooops("Internal: Declaration error for call '$1'", callDecls);
 
     // Compile the body of the rewrite, keep all alternatives open
     CompileAction compile(locals, unit, false, false);
     Tree *result = callDecls->Do(compile);
     if (!result)
-        Error("Unable to compile '$1'", callDecls);
+        Ooops("Unable to compile '$1'", callDecls);
 
     // Even if technically, this is not an 'eval_fn' (it has more args),
     // we still record it to avoid recompiling multiple times
@@ -470,7 +470,7 @@ Tree *Symbols::Run(Tree *code)
 //
 // ============================================================================
 
-Tree *Symbols::Error(text message, Tree *arg1, Tree *arg2, Tree *arg3)
+Tree *Symbols::Ooops(text message, Tree *arg1, Tree *arg2, Tree *arg3)
 // ----------------------------------------------------------------------------
 //   Execute the innermost error handler
 // ----------------------------------------------------------------------------
@@ -1790,7 +1790,7 @@ Tree *CompileAction::Rewrites(Tree *what)
                             what->SetSymbols(symbols);
                         unit.CallEvaluateChildren(what);
                         foundUnconditional = !unit.failbb;
-                        unit.noeval.insert(what);
+                        unit.dataForm.insert(what);
                         reduction.Succeeded();
                     }
                     else

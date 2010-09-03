@@ -263,7 +263,7 @@ struct Symbols
     Tree *               Run(Tree *t);
 
     // Error handling
-    Tree *               Error (text message,
+    Tree *               Ooops (text message,
                                 Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
 
 public:
