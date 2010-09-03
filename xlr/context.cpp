@@ -100,7 +100,13 @@ void Symbols::EnterName(text name, Tree *value, Tree *def)
 //   Enter a value in the namespace
 // ----------------------------------------------------------------------------
 {
-    names[name] = value;
+    Tree_p &entry = names[name];
+    if (entry)
+    {
+        Ooops("Name '$1' already exists", new Name(name, value->Position()));
+        Ooops("Previous value was '$1'", entry);
+    }
+    entry = value;
     if (def)
         definitions[name] = def;
 }

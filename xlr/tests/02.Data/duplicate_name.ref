@@ -1,0 +1,4 @@
+02.Data/duplicate_name.xl:2: Name '1' already exists
+02.Data/duplicate_name.xl:2: Previous value was '1'
+foo -> 1
+foo -> 2
