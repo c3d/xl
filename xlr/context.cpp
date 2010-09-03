@@ -280,7 +280,7 @@ Tree *Symbols::CompileAll(Tree *source,
         return result;
 
     eval_fn fn = unit.Finalize();
-    result->code = fn;
+    source->code = fn;
     IFTRACE(compile)
         std::cerr << "In " << this
                   << " compiled top-level " << source
