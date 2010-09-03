@@ -1121,7 +1121,7 @@ Value *CompiledUnit::Left(Tree *tree)
     }
     else
     {
-        Ooops("Internal: Using left of uncompiled '$1'", tree);
+        Ooops("Internal: Using left of uncompiled $1", tree);
     }
 
     return result;
@@ -1160,7 +1160,7 @@ Value *CompiledUnit::Right(Tree *tree)
     }
     else
     {
-        Ooops("Internal: Using right of uncompiled '$1'", tree);
+        Ooops("Internal: Using right of uncompiled $14", tree);
     }
     return result;
 }
@@ -1388,7 +1388,7 @@ BasicBlock *CompiledUnit::TagTest(Tree *tree, ulong tagValue)
     Value *treeValue = Known(tree);
     if (!treeValue)
     {
-        Ooops("No value for '$1'", tree);
+        Ooops("No value for $1", tree);
         return NULL;
     }
     Value *tagPtr = code->CreateConstGEP2_32(treeValue, 0, 0, "tagPtr");

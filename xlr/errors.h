@@ -96,6 +96,9 @@ Error &Ooops (text m, Tree *a);
 Error &Ooops (text m, Tree *a, Tree *b);
 Error &Ooops (text m, Tree *a, Tree *b, Tree *c);
 
+// Formatting a tree for error reporting
+Text *FormatTreeForError(Tree *tree);
+
 XL_END
 
 #endif /* XL_ERRORS_H */

@@ -340,7 +340,7 @@ Tree *Parser::Parse(text closing)
         case tokERROR:
             done = true;
             if (closing != "" && closing != Block::unindent)
-                errors.Log(Error("Unexpected end of text, expected '$1'",
+                errors.Log(Error("Unexpected end of text, expected $1",
                                  scanner.Position()).Arg(closing));
             break;
         case tokINTEGER:
@@ -441,14 +441,14 @@ Tree *Parser::Parse(text closing)
             // Check for mismatched parenthese here
             if (scanner.TokenText() != closing)
                 errors.Log(Error("Mismatched parentheses: "
-                                 "got '$1', expected '$2'",
+                                 "got $1, expected $2",
                                  pos).Arg(scanner.TokenText()).Arg(closing));
             done = true;
             break;
         case tokUNINDENT:
             // Check for mismatched blocks here
             if (closing != Block::unindent)
-                errors.Log(Error("Mismatched identation, expected '$1'",
+                errors.Log(Error("Mismatched identation, expected $1",
                                  pos).Arg(closing));
             done = true;
             break;
@@ -458,7 +458,7 @@ Tree *Parser::Parse(text closing)
         case tokPAROPEN:
             blk_opening = scanner.TokenText();
             if (!syntax.IsBlock(blk_opening, blk_closing))
-                errors.Log(Error("Unknown parenthese type: '$1' (internal)",
+                errors.Log(Error("Unknown parenthese type: $1 (internal)",
                                  pos).Arg(blk_opening));
             if (tok == tokPAROPEN)
                 old_indent = scanner.OpenParen();
@@ -636,7 +636,7 @@ Tree *Parser::Parse(text closing)
         {
             Pending &last = stack.back();
             if (last.opcode != text("\n"))
-                errors.Log(Error("Trailing opcode '$1' ignored",
+                errors.Log(Error("Trailing opcode $1 ignored",
                                  pos).Arg(last.opcode));
             result = last.argument;
             stack.pop_back();

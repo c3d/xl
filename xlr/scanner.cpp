@@ -97,7 +97,7 @@ Scanner::Scanner(kstring name, Syntax &stx, Positions &pos, Errors &err)
     indents.push_back(0);       // We start with an indent of 0
     position = positions.OpenFile(name);
     if (input.fail())
-        err.Log(Error("File '$1' cannot be read: $2", position).
+        err.Log(Error("File $1 cannot be read: $2", position).
                 Arg(name).Arg(strerror(errno)));
 }
 
@@ -309,7 +309,7 @@ token_t Scanner::NextToken(bool hungry)
                 if (base < 2 || base > 36)
                 {
                     base = 36;
-                    errors.Log(Error("The base '$1' is not valid, not in 2..36",
+                    errors.Log(Error("The base $1 is not valid, not in 2..36",
                                      position).Arg(textValue));
                 }
                 NEXT_CHAR(c);

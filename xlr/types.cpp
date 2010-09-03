@@ -130,7 +130,7 @@ Tree *ValueMatchesType(Tree *type, Tree *value, bool conversions)
                 {
                     // REVISIT: Compare function signatures
                     Ooops("Unimplemented: "
-                          "signature comparison of '$1' and '$2'",
+                          "signature comparison of $1 and $2",
                           value, type);
                     return iv;
                 }
@@ -148,7 +148,7 @@ Tree *ValueMatchesType(Tree *type, Tree *value, bool conversions)
                     {
                         // REVISIT: Match value with pattern
                         Ooops("Unimplemented: "
-                              "testing '$1' against pattern-based type '$2'",
+                              "testing $1 against pattern-based type $2",
                               value, type);
                         return value;
                     }
@@ -197,7 +197,7 @@ Tree *TypeCoversType(Tree *type, Tree *test, bool conversions)
                 {
                     // REVISIT: Coverage of function types
                     Ooops("Unimplemented: "
-                          "Coverage of function '$1' by '$2'",
+                          "Coverage of function $1 by $2",
                           test, type);
                     return test;
                 }
@@ -231,7 +231,7 @@ Tree *TypeCoversType(Tree *type, Tree *test, bool conversions)
                 {
                     // REVISIT: Compare function signatures
                     Ooops("Unimplemented: "
-                          "Signature comparison of '$1' against '$2'",
+                          "Signature comparison of $1 against $2",
                           test, type);
                     return iv;
                 }
@@ -249,7 +249,7 @@ Tree *TypeCoversType(Tree *type, Tree *test, bool conversions)
                     {
                         // REVISIT: Match test with pattern
                         Ooops("Unimplemented: "
-                              "Pattern type comparison of '$1' against '$2'",
+                              "Pattern type comparison of $1 against $2",
                               test, type);
                         return test;
                     }
@@ -299,7 +299,7 @@ Tree *TypeIntersectsType(Tree *type, Tree *test, bool conversions)
                 {
                     // REVISIT: Coverage of function types
                     Ooops("Unimplemented: "
-                          "Coverage of function '$1' by '$2'",
+                          "Coverage of function $1 by $2",
                           test, type);
                     return test;
                 }
@@ -333,7 +333,7 @@ Tree *TypeIntersectsType(Tree *type, Tree *test, bool conversions)
                 {
                     // REVISIT: Compare function signatures
                     Ooops("Unimplemented: "
-                          "Signature comparison of '$1' against '$2'",
+                          "Signature comparison of $1 against $2",
                           test, type);
                     return iv;
                 }
@@ -351,7 +351,7 @@ Tree *TypeIntersectsType(Tree *type, Tree *test, bool conversions)
                     {
                         // REVISIT: Match test with pattern
                         Ooops("Unimplemented: "
-                              "Pattern type comparison of '$1' against '$2'",
+                              "Pattern type comparison of $1 against $2",
                               test, type);
                         return test;
                     }
@@ -1066,14 +1066,14 @@ Tree *ArgumentTypeMatch::DoInfix(Infix *what)
         Name *varName = what->left->AsName();
         if (!varName)
         {
-            Ooops("Expected a name, got '$1' ", what->left);
+            Ooops("Expected a name, got $1 ", what->left);
             return NULL;
         }
 
         // Check if the name already exists
         if (Tree *existing = rewrite->Named(varName->value))
         {
-            Ooops("Name '$1' already exists as '$2'", what->left, existing);
+            Ooops("Name $1 already exists as $2", what->left, existing);
             return NULL;
         }
 

@@ -257,7 +257,7 @@ Error &Ooops (text m, Tree *a)
 //   Report an error message with one tree argument
 // ----------------------------------------------------------------------------
 {
-    return MAIN->errors->Log(Error(m, a));
+    return MAIN->errors->Log(Error(m, FormatTreeForError(a)));
 }
 
 
@@ -266,7 +266,9 @@ Error &Ooops (text m, Tree *a, Tree *b)
 //   Report an error message with two tree arguments
 // ----------------------------------------------------------------------------
 {
-    return MAIN->errors->Log(Error(m, a, b));
+    return MAIN->errors->Log(Error(m,
+                                   FormatTreeForError(a),
+                                   FormatTreeForError(b)));
 }
 
 
@@ -275,7 +277,22 @@ Error &Ooops (text m, Tree *a, Tree *b, Tree *c)
 //   Report an error message with three tree arguments
 // ----------------------------------------------------------------------------
 {
-    return MAIN->errors->Log(Error(m, a, b, c));
+    return MAIN->errors->Log(Error(m,
+                                   FormatTreeForError(a),
+                                   FormatTreeForError(b),
+                                   FormatTreeForError(c)));
+}
+
+
+Text *FormatTreeForError(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Format a tree for error reporting
+// ----------------------------------------------------------------------------
+{
+    // Max length in error messages
+    text t = *tree;
+    Text *result = new Text(t, "'", "'", tree->Position());
+    return result;
 }
 
 XL_END

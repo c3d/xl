@@ -356,7 +356,7 @@ Tree *xl_type_error(Tree *what)
     if (!syms)
         syms = Symbols::symbols;
     LocalSave<Symbols_p> saveSyms(Symbols::symbols, syms);
-    return Ooops("No form matches '$1'", what);
+    return Ooops("No form matches $1", what);
 }
 
 
@@ -663,7 +663,7 @@ Tree *xl_load(text name)
 {
     text path = MAIN->SearchFile(name);
     if (path == "")
-        return Ooops("Source file '$1' not found", new Text(name));
+        return Ooops("Source file $1 not found", new Text(name));
 
     // Check if the file has already been loaded somehwere.
     // If so, return the loaded file
@@ -680,7 +680,7 @@ Tree *xl_load(text name)
     Parser parser(path.c_str(), MAIN->syntax, MAIN->positions, *MAIN->errors);
     Tree *tree = parser.Parse();
     if (!tree)
-        return Ooops("Unable to load file '$1'", new Text(path));
+        return Ooops("Unable to load file $1", new Text(path));
 
     Symbols_p old = Symbols::symbols;
     Symbols_p syms = new Symbols(old);
@@ -713,7 +713,7 @@ Tree *xl_load_data(text name, text prefix, text fieldSeps, text recordSeps)
 {
     text path = MAIN->SearchFile(name);
     if (path == "")
-        return Ooops("CSV file '$1' not found", new Text(name));
+        return Ooops("CSV file $1 not found", new Text(name));
 
     // Check if the file has already been loaded somehwere.
     // If so, return the loaded file
@@ -808,7 +808,7 @@ Tree *xl_load_data(text name, text prefix, text fieldSeps, text recordSeps)
     }
     fclose(f);
     if (!tree)
-        return Ooops("Unable to load data from '$1'", new Text(path));
+        return Ooops("Unable to load data from $1", new Text(path));
 
     // Store that we use the file
     struct stat st;
@@ -938,7 +938,7 @@ Tree *xl_apply(Tree *code, Tree *data)
         else
         {
             // OK, we don't know what to do with this stuff...
-            return Ooops("Malformed map/reduce code '$1'", code);
+            return Ooops("Malformed map/reduce code $1", code);
         }
 
         // We have now decided what this is, so we compile the code
@@ -985,7 +985,7 @@ Tree *xl_apply(Tree *code, Tree *data)
 
         // Report compile error the first time
         if (!compiled)
-            return Ooops("Cannot compile map/reduce code '$1'", code);
+            return Ooops("Cannot compile map/reduce code $1", code);
 
         if (!toCompile->code)
             toCompile->code = xl_evaluate_children;
@@ -996,7 +996,7 @@ Tree *xl_apply(Tree *code, Tree *data)
     if (fninfo->function)
         result = fninfo->Apply(result);
     else
-        result = Ooops("Invalid map/reduce code '$1'", code);
+        result = Ooops("Invalid map/reduce code $1", code);
     return result;
 }
 
@@ -1068,7 +1068,7 @@ Tree *xl_nth(Tree *data, longlong index)
         TreeList list;
         xl_infix_to_list(infix, list);
         if (index < 1 || index > (longlong) list.size())
-            return Ooops("Index '$2' for '$1' out of range",
+            return Ooops("Index $2 for $1 out of range",
                          source, new Integer(index));
         result = list[index-1];
     }
@@ -1337,7 +1337,7 @@ void StackDepthCheck::StackOverflow(Tree *what)
     }
     if (in_error_handler)
     {
-        Error("Double stack overflow in '$1'", what, NULL, NULL).Display();
+        Error("Double stack overflow in $1", what, NULL, NULL).Display();
         in_error_handler = false;
     }
     else
@@ -1345,7 +1345,7 @@ void StackDepthCheck::StackOverflow(Tree *what)
         in_error = true;
         LocalSave<bool> overflow(in_error_handler, true);
         LocalSave<uint> depth(stack_depth, 1);
-        Ooops("Stack overflow evaluating '$1'", what);
+        Ooops("Stack overflow evaluating $1", what);
     }
 }
 

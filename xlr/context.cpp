@@ -103,8 +103,8 @@ void Symbols::EnterName(text name, Tree *value, Tree *def)
     Tree_p &entry = names[name];
     if (entry)
     {
-        Ooops("Name '$1' already exists", new Name(name, value->Position()));
-        Ooops("Previous value was '$1'", entry);
+        Ooops("Name $1 already exists", new Name(name, value->Position()));
+        Ooops("Previous value was $1", entry);
     }
     entry = value;
     if (def)
@@ -149,7 +149,7 @@ Name *Symbols::Allocate(Name *n)
         if (Name *name = existing->AsName())
             if (name->value == n->value)
                 return name;
-        Ooops("Parameter '$1' previously had value '$2'", n, existing);
+        Ooops("Parameter $1 previously had value $2", n, existing);
     }
     names[n->value] = n;
     return n;
@@ -173,7 +173,7 @@ Rewrite *Symbols::EnterRewrite(Rewrite *rw)
     ParameterMatch parms(locals);
     Tree *check = rw->from->Do(parms);
     if (!check)
-        Ooops("Parameter error for '$1'", rw->from);
+        Ooops("Parameter error for $1", rw->from);
     rw->parameters = parms.order;
 
     if (rewrites)
@@ -240,7 +240,7 @@ Tree *Symbols::Compile(Tree *source, CompiledUnit &unit,
     {
         if (nullIfBad)
             return result;
-        return Ooops("Couldn't compile '$1'", source);
+        return Ooops("Couldn't compile $1", source);
     }
 
     // If we compiled successfully, get the code and store it
@@ -331,7 +331,7 @@ Tree *Symbols::CompileCall(text callee, TreeList &arglist,
                         if (Real *rt = existing->AsReal())
                             rt->value = rs->value;
                         else
-                            Ooops("Real '$1' cannot replace non-real '$2'",
+                            Ooops("Real $1 cannot replace non-real $2",
                                   value, existing);
                     }
                     else if (Integer *is = value->AsInteger())
@@ -339,20 +339,20 @@ Tree *Symbols::CompileCall(text callee, TreeList &arglist,
                         if (Integer *it = existing->AsInteger())
                             it->value = is->value;
                         else
-                            Ooops("Integer '$1' cannot replace "
-                                  "non-integer '$2'", value, existing);
+                            Ooops("Integer $1 cannot replace "
+                                  "non-integer $2", value, existing);
                     }
                     else if (Text *ts = value->AsText())
                     {
                         if (Text *tt = existing->AsText())
                             tt->value = ts->value;
                         else
-                            Ooops("Text '$1' cannot replace non-text '$2'",
+                            Ooops("Text $1 cannot replace non-text $2",
                                   value, existing);
                     }
                     else
                     {
-                        Ooops("Call has unsupported type for '$1'", value);
+                        Ooops("Call has unsupported type for $1", value);
                     }
                 }
             }
@@ -408,13 +408,13 @@ Infix *Symbols::CompileTypeTest(Tree *type)
     DeclarationAction declare(locals);
     Tree *callDecls = call->Do(declare);
     if (!callDecls)
-        Ooops("Internal: Declaration error for call '$1'", callDecls);
+        Ooops("Internal: Declaration error for call $1", callDecls);
 
     // Compile the body of the rewrite, keep all alternatives open
     CompileAction compile(locals, unit, false, false);
     Tree *result = callDecls->Do(compile);
     if (!result)
-        Ooops("Unable to compile '$1'", callDecls);
+        Ooops("Unable to compile $1", callDecls);
 
     // Even if technically, this is not an 'eval_fn' (it has more args),
     // we still record it to avoid recompiling multiple times
@@ -452,7 +452,7 @@ Tree *Symbols::Run(Tree *code)
             result = symbols->CompileAll(result);
             if (!result->code || errors.Count())
             {
-                Ooops("Unable to compile '$1'", result);
+                Ooops("Unable to compile $1", result);
                 return NULL;
             }
         }
@@ -479,11 +479,11 @@ Tree *Symbols::Ooops(text message, Tree *arg1, Tree *arg2, Tree *arg3)
     XLCall call("error");
     call, message;
     if (arg1)
-        call, arg1;
+        call, FormatTreeForError(arg1);
     if (arg2)
-        call, arg2;
+        call, FormatTreeForError(arg2);
     if (arg3)
-        call, arg3;
+        call, FormatTreeForError(arg3);
 
     Tree *result = call(this, true, false);
     if (!result)
@@ -555,7 +555,7 @@ Tree *ParameterMatch::DoName(Name *what)
     {
         // We only allow names here, not symbols (bug #154)
         if (what->value.length() == 0 || !isalpha(what->value[0]))
-            Ooops("The pattern variable '$1' is not a name", what);
+            Ooops("The pattern variable $1 is not a name", what);
 
         // Check if the name already exists, e.g. 'false' or 'A+A'
         if (Tree *existing = symbols->Named(what->value))
@@ -590,16 +590,16 @@ Tree *ParameterMatch::DoInfix(Infix *what)
         Name *varName = what->left->AsName();
         if (!varName)
         {
-            Ooops("Expected a name, got '$1' ", what->left);
+            Ooops("Expected a name, got $1 ", what->left);
             return NULL;
         }
 
         // Check if the name already exists
         if (Tree *existing = symbols->Named(varName->value, false))
         {
-            Ooops("Typed name '$1' already exists as '$2'",
+            Ooops("Typed name $1 already exists as $2",
                   what->left, existing);
-            Ooops("This is the previous declaration of '$1'",
+            Ooops("This is the previous declaration of $1",
                   existing);
             return NULL;
         }
@@ -735,7 +735,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     Tree *envOK = source->Do(env);
     if (!envOK)
     {
-        Ooops("Internal: what environment in '$1'?", source);
+        Ooops("Internal: what environment in $1?", source);
         return NULL;
     }
 
@@ -1034,14 +1034,14 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         Name *varName = what->left->AsName();
         if (!varName)
         {
-            Ooops("Expected a name, got '$1' ", what->left);
+            Ooops("Expected a name, got $1 ", what->left);
             return NULL;
         }
 
         // Check if the name already exists
         if (Tree *existing = rewrite->Named(varName->value))
         {
-            Ooops("Name '$1' already exists as '$2'",
+            Ooops("Name $1 already exists as $2",
                   what->left, existing);
             return NULL;
         }
@@ -1653,7 +1653,7 @@ Tree *CompileAction::DoName(Name *what)
         unit.ConstantTree(what);
         return what;
     }
-    Ooops("Name '$1' does not exist", what);
+    Ooops("Name $1 does not exist", what);
     return NULL;
 }
 
@@ -1934,7 +1934,7 @@ Tree *CompileAction::Rewrites(Tree *what)
             unit.CallEvaluateChildren(what);
             return NULL;
         }
-        Ooops("No rewrite candidate for '$1'", what);
+        Ooops("No rewrite candidate for $1", what);
         return NULL;
     }
 
@@ -2033,7 +2033,7 @@ Tree *Rewrite::Compile(void)
 
     // Check that we had symbols defined for the 'from' tree
     if (!from->Symbols())
-        Ooops("Internal: No symbols for '$1'", from);
+        Ooops("Internal: No symbols for $1", from);
 
     // Create local symbols
     Symbols_p locals = new Symbols (from->Symbols());
@@ -2042,14 +2042,14 @@ Tree *Rewrite::Compile(void)
     DeclarationAction declare(locals);
     Tree *toDecl = to->Do(declare);
     if (!toDecl)
-        Ooops("Internal: Declaration error for '$1'", to);
+        Ooops("Internal: Declaration error for $1", to);
 
     // Compile the body of the rewrite
     CompileAction compile(locals, unit, false, false);
     Tree *result = to->Do(compile);
     if (!result)
     {
-        Ooops("Unable to compile '$1'", to);
+        Ooops("Unable to compile $1", to);
         return NULL;
     }
 

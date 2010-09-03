@@ -127,7 +127,7 @@ static ulong OptionInteger(kstring &command_line, Options &opt,
         if (isdigit(*command_line))
             result = strtol(command_line, (char**) &command_line, 10);
         else
-            Ooops("Option '$1' is not an integer value", Error::COMMAND_LINE)
+            Ooops("Option $1 is not an integer value", Error::COMMAND_LINE)
                 .Arg(command_line);
     }
     else
@@ -137,7 +137,7 @@ static ulong OptionInteger(kstring &command_line, Options &opt,
             result = strtol(old = opt.argv[opt.arg],
                             (char **) &command_line, 10);
         else
-            Ooops("Option '$1' is not an integer value", Error::COMMAND_LINE)
+            Ooops("Option $1 is not an integer value", Error::COMMAND_LINE)
                 .Arg(old);
     }
     if (result < low || result > high)
@@ -145,7 +145,7 @@ static ulong OptionInteger(kstring &command_line, Options &opt,
         char lowstr[15], highstr[15];
         sprintf(lowstr, "%lu", low);
         sprintf(highstr, "%lu", high);
-        Ooops("Option '$1' is out of range $2..$3", Error::COMMAND_LINE)
+        Ooops("Option $1 is out of range $2..$3", Error::COMMAND_LINE)
             .Arg(old).Arg(lowstr).Arg(highstr);
         if (result < low)
             result = low;
@@ -192,7 +192,7 @@ text Options::ParseNext(bool consumeFiles)
                 code;                                           \
                                                                 \
                 if (*argval)                                    \
-                    Ooops("Garbage found after option '$1'",    \
+                    Ooops("Garbage found after option $1",      \
                           Error::COMMAND_LINE).Arg(argval);     \
             }                                                   \
             else
@@ -209,7 +209,7 @@ text Options::ParseNext(bool consumeFiles)
 #include "options.tbl"
             {
                 // Default: Output usage
-                Ooops("Unknown option '$1' ignored", Error::COMMAND_LINE)
+                Ooops("Unknown option $1 ignored", Error::COMMAND_LINE)
                     .Arg(argval);
                 Usage(argv);
             }
