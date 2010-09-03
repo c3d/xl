@@ -111,12 +111,14 @@ OPTION(diff,
 // We use lower-case names here to avoid duplicate definition and be able
 // to reuse the IFTRACE macro as is.
 TRACE(memory)
-TRACE(rewrite)
 TRACE(eval)
-TRACE(code)
-TRACE(types)
 TRACE(compile)
+TRACE(parmatch)
+TRACE(argmatch)
+TRACE(rewrites)
+TRACE(types)
 TRACE(llvm)
+TRACE(code)
 TRACE(typecheck)
 TRACE(labels)
 TRACE(builtins)

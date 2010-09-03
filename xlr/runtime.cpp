@@ -51,6 +51,17 @@ Tree *xl_identity(Tree *what)
 }
 
 
+Tree *xl_error(text msg, Tree *a1, Tree *a2, Tree *a3)
+// ----------------------------------------------------------------------------
+//   The default runtime error message mechanism (if not overriden)
+// ----------------------------------------------------------------------------
+{
+    Error err(msg, a1, a2, a3);
+    err.Display();
+    return xl_false;
+}
+
+
 Tree *xl_evaluate(Tree *what)
 // ----------------------------------------------------------------------------
 //   Compile the tree if necessary, then evaluate it

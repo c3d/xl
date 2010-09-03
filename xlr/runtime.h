@@ -51,6 +51,7 @@ struct Postfix;
 // ============================================================================
 
 Tree *xl_identity(Tree *);
+Tree *xl_error(text msg, Tree *a1=0, Tree *a2=0, Tree *a3=0);
 Tree *xl_evaluate(Tree *);
 Tree *xl_repeat(Tree *self, Tree *code, longlong count);
 Tree *xl_source(Tree *);
