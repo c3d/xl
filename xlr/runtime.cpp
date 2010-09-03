@@ -57,7 +57,7 @@ Tree *xl_error(text msg, Tree *a1, Tree *a2, Tree *a3)
 // ----------------------------------------------------------------------------
 {
     Error err(msg, a1, a2, a3);
-    err.Display();
+    MAIN->errors->Log(err);
     return xl_false;
 }
 
