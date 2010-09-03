@@ -143,8 +143,7 @@ Name *Symbols::Allocate(Name *n)
         if (Name *name = existing->AsName())
             if (name->value == n->value)
                 return name;
-        Ooops("Internal error: parameter '$1' previously had value '$2'",
-              n, existing);
+        Ooops("Parameter '$1' previously had value '$2'", n, existing);
     }
     names[n->value] = n;
     return n;
@@ -170,10 +169,6 @@ Rewrite *Symbols::EnterRewrite(Rewrite *rw)
     if (!check)
         Ooops("Parameter error for '$1'", rw->from);
     rw->parameters = parms.order;
-
-    // If we are defining a name, store the definition in the symbols
-    if (Name *name = parms.defined->AsName())
-        Allocate(name);
 
     if (rewrites)
     {
@@ -1484,6 +1479,52 @@ void DeclarationAction::EnterRewrite(Tree *defined,
 //   Add a definition in the current context
 // ----------------------------------------------------------------------------
 {
+    if (definition)
+    {
+        // When entering 'foo X,Y -> bar', also update the definition of 'foo'
+        if (Prefix *prefix = defined->AsPrefix())
+        {
+            if (Name *left = prefix->left->AsName())
+            {
+                Infix *redef = new Infix("->",
+                                         prefix->right, definition,
+                                         prefix->Position());
+                symbols->ExtendName(left->value, redef);
+            }
+        }
+
+        // Same thing for a postfix
+        if (Postfix *postfix = defined->AsPostfix())
+        {
+            if (Name *right = postfix->right->AsName())
+            {
+                Infix *redef = new Infix("->",
+                                         postfix->left, definition,
+                                         postfix->Position());
+                symbols->ExtendName(right->value, redef);
+            }
+        }
+
+        // Same thing for an infix, but use X,Y on the left of the rewrite
+        if (Infix *infix = defined->AsInfix())
+        {
+            if (infix->name != "," && infix->name != ";" && infix->name != "\n")
+            {
+                if (Name *left = infix->left->AsName())
+                {
+                    if (Name *right = infix->right->AsName())
+                    {
+                        Infix *comma = new Infix(",", left, right,
+                                                 infix->Position());
+                        Infix *redef = new Infix("->", comma, definition,
+                                                 infix->Position());
+                        symbols->ExtendName(infix->name, redef);
+                    }
+                }
+            }
+        }
+    }
+
     if (Name *name = defined->AsName())
     {
         symbols->EnterName(name->value,
