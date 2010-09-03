@@ -21,9 +21,15 @@ TYPE(block);
 INFIX(AddInt,integer, integer,"+",integer, XL_RINT(XL_INT(l) + XL_INT(r)), "")
 INFIX(SubInt,integer, integer,"-",integer, XL_RINT(XL_INT(l) - XL_INT(r)), "")
 INFIX(MulInt,integer, integer,"*",integer, XL_RINT(XL_INT(l) * XL_INT(r)), "")
-INFIX(DivInt,integer, integer,"/",integer, XL_RINT(XL_INT(l) / XL_INT(r)), "")
-INFIX(RemInt,integer, integer,"rem",integer, XL_RINT(XL_INT(l) % XL_INT(r)), "")
-INFIX(ModInt,integer, integer,"mod",integer, XL_RINT(xl_mod(l, r)), "")
+INFIX(DivInt,integer, integer,"/",integer,
+      if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RINT(0LL); }
+      XL_RINT(XL_INT(l) / XL_INT(r)), "")
+INFIX(RemInt,integer, integer,"rem",integer,
+      if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RINT(0LL); }
+      XL_RINT(XL_INT(l) % XL_INT(r)), "")
+INFIX(ModInt,integer, integer,"mod",integer,
+      if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RINT(0LL); }
+      XL_RINT(xl_mod(l, r)), "")
 INFIX(PowerInt, integer, integer, "^", integer, XL_RINT(xl_pow(l,r)), "")
 
 INFIX(LShift, integer, integer,"<<",integer, XL_RINT(XL_INT(l) << XL_INT(r)), "")
@@ -51,9 +57,15 @@ POSTFIX(PercentReal, real, PARM(x, real), "%", XL_RREAL(x / 100.0), "")
 INFIX(AddReal, real, real, "+", real, XL_RREAL(XL_REAL(l) + XL_REAL(r)), "")
 INFIX(SubReal, real, real, "-", real, XL_RREAL(XL_REAL(l) - XL_REAL(r)), "")
 INFIX(MulReal, real, real, "*", real, XL_RREAL(XL_REAL(l) * XL_REAL(r)), "")
-INFIX(DivReal, real, real, "/", real, XL_RREAL(XL_REAL(l) / XL_REAL(r)), "")
-INFIX(RemReal, real, real, "rem", real, XL_RREAL(fmod(XL_REAL(l), XL_REAL(r))), "")
-INFIX(ModReal, real, real, "mod", real, XL_RREAL(xl_modf(l,r)), "")
+INFIX(DivReal, real, real, "/", real,
+      if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RREAL(0.0); }
+      XL_RREAL(XL_REAL(l) / XL_REAL(r)), "")
+INFIX(RemReal, real, real, "rem", real,
+      if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RREAL(0.0); }
+      XL_RREAL(fmod(XL_REAL(l), XL_REAL(r))), "")
+INFIX(ModReal, real, real, "mod", real,
+      if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RREAL(0.0); }
+      XL_RREAL(xl_modf(l,r)), "")
 INFIX(PowRealInt, real, real, "^", integer, XL_RREAL(xl_powf(l,r)), "")
 INFIX(PowReal, real, real, "^", real, XL_RREAL(pow(XL_REAL(l), XL_REAL(r))), "")
 
