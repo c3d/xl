@@ -57,7 +57,7 @@ class Options
 /*---------------------------------------------------------------------------*/
 {
   public:
-    Options(Errors &err, int argc, char **argv);
+    Options(int argc, char **argv);
     text                Parse(int argc, char **argv, bool consumeFile);
     text                ParseNext(bool consumeFile = true);
 
@@ -75,7 +75,6 @@ class Options
     int                 arg;
     int                 argc;
     char **             argv;
-    Errors &            errors;
 
     static Options *    options;
 };

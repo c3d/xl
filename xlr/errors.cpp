@@ -1,19 +1,19 @@
 // ****************************************************************************
-//   Christophe de Dinechin                                       XL2 PROJECT  
+//   Christophe de Dinechin                                       XL2 PROJECT
 //   XL COMPILER: errors.cpp
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
-//    Handling the compiler errors 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//    Handling the compiler errors
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is distributed under the GNU General Public License
 // See the enclosed COPYING file or http://www.gnu.org for information
@@ -36,128 +36,109 @@
 XL_BEGIN
 
 // ============================================================================
-// 
-//   Table of all error messages
-// 
+//
+//   Encapsulating an error message
+//
 // ============================================================================
 
-text Errors::Error(text errMsg, ulong pos, Errors::Arguments &args)
+Error::Error(text m, ulong p)
 // ----------------------------------------------------------------------------
-//   Emit an error message
+//   Error without arguments
+// ----------------------------------------------------------------------------
+    : message(m), position(p)
+{}
+
+
+Error::Error(text m, Tree *a)
+// ----------------------------------------------------------------------------
+//   Error with a tree argument
+// ----------------------------------------------------------------------------
+    : message(m), position(UNKNOWN_POSITION)
+{
+    Arg(a);
+}
+
+
+Error::Error(text m, Tree *a, Tree *b)
+// ----------------------------------------------------------------------------
+//   Error with two tree arguments
+// ----------------------------------------------------------------------------
+    : message(m), position(UNKNOWN_POSITION)
+{
+    Arg(a); Arg(b);
+}
+
+
+Error::Error(text m, Tree *a, Tree *b, Tree *c)
+// ----------------------------------------------------------------------------
+//   Error with three tree arguments
+// ----------------------------------------------------------------------------
+    : message(m), position(UNKNOWN_POSITION)
+{
+    Arg(a); Arg(b); Arg(c);
+}
+
+
+Error &Error::Arg(text t)
+// ----------------------------------------------------------------------------
+//   Add an argument to the message, replacing $1, $2, ...
+// ----------------------------------------------------------------------------
+{
+    arguments.push_back(t);
+    return *this;
+}
+
+
+Error &Error::Arg(long value)
+// ----------------------------------------------------------------------------
+//   Add an argument to the message, replacing $1, $2, ...
 // ----------------------------------------------------------------------------
 {
     std::ostringstream out;
-
-    count++;
-    for (uint i = 0; i < args.size(); i++)
-    {
-        char buffer[10];
-        sprintf(buffer, "$%d", i+1);
-        size_t found = errMsg.find(buffer);
-        if (found != errMsg.npos)
-            errMsg.replace(found, strlen(buffer), args[i]);
-    }
-    if (positions)
-    {
-        text  file, source;
-        ulong line, column;
-        positions->GetInfo(pos, &file, &line, &column, &source);
-        out << file << ":" << line << ": " << errMsg;
-    }
-    else
-    {
-        out << "At offset " << pos << ": " << errMsg;
-    }
-    return out.str();
+    out << value;
+    arguments.push_back(out.str());
+    return *this;
 }
 
 
-text Errors::Error(text err, ulong pos)
+Error &Error::Arg(Tree *arg)
 // ----------------------------------------------------------------------------
-//    Default error, no arguments
+//   Add a tree argument, using its position if applicable
 // ----------------------------------------------------------------------------
 {
-    Arguments args;
-    return Error(err, pos, args);
-}
-       
-
-text Errors::Error(text err, ulong pos, text arg1)
-// ----------------------------------------------------------------------------
-//   Default error, one argument
-// ----------------------------------------------------------------------------
-{
-    Arguments args;
-    args.push_back(arg1);
-    return Error(err, pos, args);
-}
-       
-
-text Errors::Error(text err, ulong pos, text arg1, text arg2)
-// ----------------------------------------------------------------------------
-//   Default error, one argument
-// ----------------------------------------------------------------------------
-{
-    Arguments args;
-    args.push_back(arg1);
-    args.push_back(arg2);
-    return Error(err, pos, args);
-}
-       
-
-text Errors::Error(text err, ulong pos, text arg1, text arg2, text arg3)
-// ----------------------------------------------------------------------------
-//   Default error, one argument
-// ----------------------------------------------------------------------------
-{
-    Arguments args;
-    args.push_back(arg1);
-    args.push_back(arg2);
-    args.push_back(arg3);
-    return Error(err, pos, args);
+    if (arg && position == UNKNOWN_POSITION)
+        position = arg->Position();
+    arguments.push_back(text(*arg));
+    return *this;
 }
 
-
-text Errors::Error(text err, Tree *arg1)
-// ----------------------------------------------------------------------------
-//   Emit an error at a tree position
-// ----------------------------------------------------------------------------
-{
-    return Error (err, arg1->Position(), text(*arg1));
-}
-
-
-text Errors::Error(text err, Tree *arg1, Tree *arg2)
-// ----------------------------------------------------------------------------
-//   Emit an error at a tree position
-// ----------------------------------------------------------------------------
-{
-    return Error (err, arg1->Position(), text(*arg1), text(*arg2));
-}
-
-
-text Errors::Error(text err, Tree *arg1, Tree *arg2, Tree *arg3)
-// ----------------------------------------------------------------------------
-//   Emit an error at a tree position
-// ----------------------------------------------------------------------------
-{
-    return Error (err, arg1->Position(), text(*arg1), text(*arg2), text(*arg3));
-}
-
-
-
-// ============================================================================
-// 
-//   Display an error
-// 
-// ============================================================================
 
 void Error::Display()
 // ----------------------------------------------------------------------------
 //   Display an error on the error output
 // ----------------------------------------------------------------------------
 {
-    std:: cerr << Message() << '\n';
+    std::cerr << Position() << ": " << Message() << '\n';
+}
+
+
+text Error::Position()
+// ----------------------------------------------------------------------------
+//   Emit the position in a human-readable form
+// ----------------------------------------------------------------------------
+{
+    switch (position)
+    {
+    case UNKNOWN_POSITION:      return "<Unknown position>";
+    case COMMAND_LINE:          return "<Command line>";
+    }
+
+    text  file, source;
+    ulong line, column;
+    std::ostringstream out;
+    MAIN->positions.GetInfo(position, &file, &line, &column, &source);
+    out << file << ":" << line;
+    return out.str();
 }
 
 
@@ -166,9 +147,135 @@ text Error::Message()
 //    Return the error message for an error
 // ----------------------------------------------------------------------------
 {
-    Errors &errs = MAIN->errors;
-    handled = true;
-    return errs.Error(message, arg1, arg2, arg3);
+    text result = message;
+    for (uint i = 0; i < arguments.size(); i++)
+    {
+        char buffer[10];
+        sprintf(buffer, "$%d", i+1);
+        size_t found = result.find(buffer);
+        if (found != result.npos)
+            result.replace(found, strlen(buffer), arguments[i]);
+    }
+    return result;
+}
+
+
+Error::operator Tree *()
+// ----------------------------------------------------------------------------
+//   Convert an error message to a tree encapsulating the error
+// ----------------------------------------------------------------------------
+{
+    Text *msg = new Text(Message(), "\"", "\"", position);
+    Name *name = new Name("error", position);
+    Prefix *result = new Prefix(name, msg, position);
+    return result;
+}
+
+
+
+// ============================================================================
+//
+//   Table of all error messages
+//
+// ============================================================================
+
+Errors::Errors()
+// ----------------------------------------------------------------------------
+//   Save errors from the top-level error handler
+// ----------------------------------------------------------------------------
+    : parent(MAIN->errors), count(0)
+{
+    MAIN->errors = this;
+}
+
+
+Errors::~Errors()
+// ----------------------------------------------------------------------------
+//   Display errors to top-levle handler
+// ----------------------------------------------------------------------------
+{
+    assert (MAIN->errors == this);
+    MAIN->errors = parent;
+
+    if (ulong sz = errors.size())
+    {
+        if (parent)
+            parent->count += sz;
+        Display();
+    }
+}
+
+
+void Errors::Clear()
+// ----------------------------------------------------------------------------
+//   Clear error messages at the current level
+// ----------------------------------------------------------------------------
+{
+    errors.clear();
+}
+
+
+void Errors::Display()
+// ----------------------------------------------------------------------------
+//   Display pending error messages
+// ----------------------------------------------------------------------------
+{
+    std::vector<Error>::iterator e;
+    for (e = errors.begin(); e != errors.end(); e++)
+        (*e).Display();
+}
+
+
+Error &Errors::Log(const Error &e)
+// ----------------------------------------------------------------------------
+//   Log an error
+// ----------------------------------------------------------------------------
+{
+    errors.push_back(e);
+    return errors.back();
+}
+
+
+
+// ============================================================================
+//
+//   Quick error reporting functions
+//
+// ============================================================================
+
+Error &Ooops (text m, ulong pos)
+// ----------------------------------------------------------------------------
+//   Report an error message without arguments
+// ----------------------------------------------------------------------------
+{
+    return MAIN->errors->Log(Error(m, pos));
+}
+
+
+Error &Ooops (text m, Tree *a)
+// ----------------------------------------------------------------------------
+//   Report an error message with one tree argument
+// ----------------------------------------------------------------------------
+{
+    return MAIN->errors->Log(Error(m, a));
+}
+
+
+Error &Ooops (text m, Tree *a, Tree *b)
+// ----------------------------------------------------------------------------
+//   Report an error message with two tree arguments
+// ----------------------------------------------------------------------------
+{
+    return MAIN->errors->Log(Error(m, a, b));
+}
+
+
+Error &Ooops (text m, Tree *a, Tree *b, Tree *c)
+// ----------------------------------------------------------------------------
+//   Report an error message with three tree arguments
+// ----------------------------------------------------------------------------
+{
+    return MAIN->errors->Log(Error(m, a, b, c));
 }
 
 XL_END
@@ -176,9 +283,9 @@ XL_END
 
 
 // ============================================================================
-// 
+//
 //    Runtime support (in global namespace)
-// 
+//
 // ============================================================================
 
 

@@ -36,50 +36,65 @@ XL_BEGIN
 
 struct Positions;
 
-struct Errors
-// ----------------------------------------------------------------------------
-//   Structure used to report errors
-// ----------------------------------------------------------------------------
-{
-    Errors (Positions *pos): positions(pos), count(0) {}
-
-    typedef std::vector<std::string> Arguments;
-    text Error(text err, ulong pos, Arguments &args);
-    text Error(text err, ulong pos);
-    text Error(text err, ulong pos, text arg1);
-    text Error(text err, ulong pos, text arg1, text arg2);
-    text Error(text err, ulong pos, text arg1, text arg2, text arg3);
-    text Error(text err, Tree *arg1);
-    text Error(text err, Tree *arg1, Tree *arg2);
-    text Error(text err, Tree *arg1, Tree *arg2, Tree *arg3);
-
-    Positions *         positions;
-    uint                count;
-};
-
 
 struct Error
 // ----------------------------------------------------------------------------
 //   Encapsulate a single error
 // ----------------------------------------------------------------------------
 {
-    Error (text message, Tree *arg1, Tree *arg2, Tree *arg3):
-        message(message), arg1(arg1), arg2(arg2), arg3(arg3), handled(false) {}
-    Error (const Error &o):
-        message(o.message), arg1(o.arg1), arg2(o.arg2), arg3(o.arg3),
-        handled(false) { ((Error *) &o)->handled = true; }
-    ~Error() { if (!handled) Display(); }
+    enum { UNKNOWN_POSITION = ~0UL, COMMAND_LINE=~1UL };
 
-    void        Display();
-    text        Message();
-    bool        Handled() { bool old = handled; handled = true; return old; }
+    Error (text m, ulong pos = UNKNOWN_POSITION);
+    Error (text m, Tree *a);
+    Error (text m, Tree *a, Tree *b);
+    Error (text m, Tree *a, Tree *b, Tree *c);
+    ~Error() {}
 
-    text        message;
-    Tree_p      arg1;
-    Tree_p      arg2;
-    Tree_p      arg3;
-    bool        handled;
+    // Adding arguments to an error message
+    Error &             Arg(text t);
+    Error &             Arg(long value);
+    Error &             Arg(Tree *arg);
+
+    // Displaying the message
+    void                Display();
+    text                Position();
+    text                Message();
+
+    // Converting to an error tree
+    operator Tree *     ();
+    operator Tree_p     ()      { return Tree_p((Tree *) *this); }
+    Tree *operator ->   ()      { return (Tree *) *this; }
+
+    text                message;
+    std::vector<text>   arguments;
+    ulong               position;
 };
+
+
+struct Errors
+// ----------------------------------------------------------------------------
+//   Structure used to log errors and display them if necessary
+// ----------------------------------------------------------------------------
+{
+    Errors();
+    ~Errors();
+
+    void Clear();
+    void Display();
+    Error &Log(const Error &e);
+    uint Count()        { return errors.size() + count; }
+
+    std::vector<Error>  errors;
+    Errors *            parent;
+    ulong               count;
+};
+
+
+// Helper to quickly report errors
+Error &Ooops (text m, ulong pos = Error::UNKNOWN_POSITION);
+Error &Ooops (text m, Tree *a);
+Error &Ooops (text m, Tree *a, Tree *b);
+Error &Ooops (text m, Tree *a, Tree *b, Tree *c);
 
 XL_END
 

@@ -97,8 +97,8 @@ Scanner::Scanner(kstring name, Syntax &stx, Positions &pos, Errors &err)
     indents.push_back(0);       // We start with an indent of 0
     position = positions.OpenFile(name);
     if (input.fail())
-        err.Error("File '$1' cannot be read: $2",
-                  0, name, strerror(errno));
+        err.Log(Error("File '$1' cannot be read: $2", position).
+                Arg(name).Arg(strerror(errno)));
 }
 
 
@@ -120,8 +120,8 @@ Scanner::Scanner(std::istream &input, Syntax &stx, Positions &pos, Errors &err)
     indents.push_back(0);       // We start with an indent of 0
     position = positions.OpenFile("<stream>");
     if (input.fail())
-        err.Error("Input stream cannot be read: $1",
-                  0, strerror(errno));
+        err.Log(Error("Input stream cannot be read: $1", position)
+                .Arg(strerror(errno)));
 }
 
 
@@ -208,8 +208,8 @@ token_t Scanner::NextToken(bool hungry)
                 if (!indentChar)
                     indentChar = c;
                 else if (indentChar != c)
-                    errors.Error("Mixed tabs and spaces in indentation",
-                                 position);
+                    errors.Log(Error("Mixed tabs and spaces in indentation",
+                                     position));
             }
         }
 
@@ -254,8 +254,8 @@ token_t Scanner::NextToken(bool hungry)
             // most recent indent, report inconsistency.
             if (indents.back() < column)
             {
-                errors.Error("Unindenting to the right of previous indentation",
-                             position);
+                errors.Log(Error("Unindenting to the right "
+                                 "of previous indentation", position));
                 return tokERROR;
             }
 
@@ -297,8 +297,8 @@ token_t Scanner::NextToken(bool hungry)
                 {
                     IGNORE_CHAR(c);
                     if (c == '_')
-                        errors.Error("Two _ characters in a row look ugly",
-                                     position);
+                        errors.Log(Error("Two _ characters in a row look ugly",
+                                         position));
                 }
             }
 
@@ -309,8 +309,8 @@ token_t Scanner::NextToken(bool hungry)
                 if (base < 2 || base > 36)
                 {
                     base = 36;
-                    errors.Error("The base '$1' is not valid, not in 2..36",
-                                 position, textValue);
+                    errors.Log(Error("The base '$1' is not valid, not in 2..36",
+                                     position).Arg(textValue));
                 }
                 NEXT_CHAR(c);
                 intValue = 0;
@@ -353,8 +353,9 @@ token_t Scanner::NextToken(bool hungry)
                     {
                         IGNORE_CHAR(c);
                         if (c == '_')
-                            errors.Error("Two _ characters in a row look ugly",
-                                         position);
+                            errors.Log(Error("Two _ characters in a row "
+                                             "look really ugly",
+                                             position));
                     }
                 }
             }
@@ -464,8 +465,8 @@ token_t Scanner::NextToken(bool hungry)
             }
             if (c == EOF || c == '\n')
             {
-                errors.Error("End of input in the middle of a text",
-                             position);
+                errors.Log(Error("End of input in the middle of a text",
+                                 position));
                 hadSpaceAfter = false;
                 if (c == '\n')
                     input.unget();

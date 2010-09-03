@@ -118,7 +118,7 @@ void Renderer::SelectStyleSheet(text styleFile, text syntaxFile)
 {
     Syntax defaultSyntax, emptySyntax;
     Positions positions;
-    Errors errors(&positions);
+    Errors errors;
     Scanner scanner(syntaxFile.c_str(), emptySyntax, positions, errors);
     defaultSyntax.ReadSyntaxFile(scanner);
     Parser p(styleFile.c_str(), defaultSyntax, positions, errors);

@@ -262,6 +262,12 @@ Tree *Symbols::CompileAll(Tree *source,
 //    to avoid re-generating LLVM code for each and every call
 //    (it's more difficult to avoid leaking memory from LLVM)
 {
+    Errors errors;
+
+    IFTRACE(compile)
+        std::cerr << "In " << this
+                  << " compiling top-level " << source << "\n";
+
     Compiler *compiler = MAIN->compiler;
     TreeList noParms;
     CompiledUnit unit (compiler, source, noParms);
@@ -273,8 +279,13 @@ Tree *Symbols::CompileAll(Tree *source,
         return result;
 
     eval_fn fn = unit.Finalize();
-    source->code = fn;
-    return source;
+    result->code = fn;
+    IFTRACE(compile)
+        std::cerr << "In " << this
+                  << " compiled top-level " << source
+                  << " code=" << (void *) fn << "\n";
+
+    return result;
 }
 
 
@@ -429,6 +440,7 @@ Tree *Symbols::Run(Tree *code)
     {
         if (!result->code)
         {
+            Errors errors;
             Symbols *symbols = result->Symbols();
             if (!symbols)
             {
@@ -437,8 +449,7 @@ Tree *Symbols::Run(Tree *code)
                 symbols = this;
             }
             result = symbols->CompileAll(result);
-            
-            if (!result->code)
+            if (!result->code || errors.Count())
             {
                 Ooops("Unable to compile '$1'", result);
                 return NULL;
@@ -689,7 +700,6 @@ Tree *ArgumentMatch::CompileValue(Tree *source)
 // ----------------------------------------------------------------------------
 {
     Tree *result = Compile(source);
-
     if (result)
     {
         if (Name *name = result->AsName())
@@ -749,6 +759,9 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
         {
             // This is a local 'name' like a form definition
             // We don't need to pass these around.
+            IFTRACE(closure)
+                std::cerr << "WARNING: Tree '" << name
+                          << "' not allocated in LLVM\n";
         }
     }
 
@@ -1698,7 +1711,30 @@ Tree *CompileAction::DoPostfix(Postfix *what)
 }
 
 
-Tree *  CompileAction::Rewrites(Tree *what)
+static void BuildSymbolsList(Symbols *s,
+                             symbols_set &visited,
+                             symbols_list &lookups)
+// ----------------------------------------------------------------------------
+//   Build the list of symbols to visit
+// ----------------------------------------------------------------------------
+{
+    while (s)
+    {
+        if (!visited.count(s))
+        {
+            lookups.push_back(s);
+            visited.insert(s);
+            
+            symbols_set::iterator si;
+            for (si = s->imported.begin(); si != s->imported.end(); si++)
+                BuildSymbolsList(*si, visited, lookups);
+        }
+        s = s->parent;
+    }
+}
+
+
+Tree *CompileAction::Rewrites(Tree *what)
 // ----------------------------------------------------------------------------
 //   Build code selecting among rewrites in current context
 // ----------------------------------------------------------------------------
@@ -1715,23 +1751,7 @@ Tree *  CompileAction::Rewrites(Tree *what)
     symbols_list lookups;
 
     // Build all the symbol tables that we are going to look into
-    for (Symbols *s = symbols; s; s = s->Parent())
-    {
-        if (!visited.count(s))
-        {
-            lookups.push_back(s);
-            visited.insert(s);
-            symbols_set::iterator si;
-            for (si = s->imported.begin(); si != s->imported.end(); si++)
-            {
-                if (!visited.count(*si))
-                {
-                    visited.insert(*si);
-                    lookups.push_back(*si);
-                }
-            }
-        }
-    }
+    BuildSymbolsList(symbols, visited, lookups);
 
     // Iterate over all symbol tables listed above
     symbols_list::iterator li;
@@ -1964,10 +1984,7 @@ Tree *Rewrite::Compile(void)
 
     // Check that we had symbols defined for the 'from' tree
     if (!from->Symbols())
-    {
         Ooops("Internal: No symbols for '$1'", from);
-        return NULL;
-    }
 
     // Create local symbols
     Symbols_p locals = new Symbols (from->Symbols());
@@ -1976,10 +1993,7 @@ Tree *Rewrite::Compile(void)
     DeclarationAction declare(locals);
     Tree *toDecl = to->Do(declare);
     if (!toDecl)
-    {
         Ooops("Internal: Declaration error for '$1'", to);
-        return NULL;
-    }
 
     // Compile the body of the rewrite
     CompileAction compile(locals, unit, false, false);

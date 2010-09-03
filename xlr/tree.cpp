@@ -33,6 +33,7 @@
 #include "options.h"
 #include "sha1.h"
 #include "hash.h"
+#include "errors.h"
 
 XL_BEGIN
 

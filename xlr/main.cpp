@@ -80,9 +80,10 @@ Main::Main(int inArgc, char **inArgv, Compiler *comp,
 // ----------------------------------------------------------------------------
     : argc(inArgc), argv(inArgv),
       positions(),
-      errors(&positions),
+      errors(InitErrorsAndMAIN()),
+      topLevelErrors(),
       syntax(syntaxName.c_str()),
-      options(errors, inArgc, inArgv),
+      options(inArgc, inArgv),
       compiler(comp),
       globals(new Symbols(NULL)),
       renderer(std::cout, styleSheetName, syntax),
@@ -105,6 +106,16 @@ Main::~Main()
 {
     delete reader;
     delete writer;
+}
+
+
+Errors *Main::InitErrorsAndMAIN()
+// ----------------------------------------------------------------------------
+//   Make sure MAIN is set so that its globals can be accessed
+// ----------------------------------------------------------------------------
+{
+    MAIN = this;
+    return NULL;
 }
 
 
@@ -266,7 +277,7 @@ int Main::LoadFile(text file, bool updateContext)
         {
             // File is not in serialized format, try to parse it as XL source
             nt = "not ";
-            Parser parser (file.c_str(), syntax, positions, errors);
+            Parser parser (file.c_str(), syntax, positions, topLevelErrors);
             tree = parser.Parse();
         }
         if (options.verbose)
@@ -444,7 +455,7 @@ int main(int argc, char **argv)
     else if (!rc && !Options::options->parseOnly)
         rc = MAIN->Run();
 
-    if (!rc && MAIN->errors.count)
+    if (!rc && MAIN->errors->Count())
         rc = 1;
     
 #if CONFIG_USE_SBRK

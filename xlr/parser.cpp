@@ -340,8 +340,8 @@ Tree *Parser::Parse(text closing)
         case tokERROR:
             done = true;
             if (closing != "" && closing != Block::unindent)
-                errors.Error("Unexpected end of text, expected '$1'",
-                             scanner.Position(), closing);
+                errors.Log(Error("Unexpected end of text, expected '$1'",
+                                 scanner.Position()).Arg(closing));
             break;
         case tokINTEGER:
             right = new Integer(scanner.IntegerValue(), pos);
@@ -440,15 +440,16 @@ Tree *Parser::Parse(text closing)
         case tokPARCLOSE:
             // Check for mismatched parenthese here
             if (scanner.TokenText() != closing)
-                errors.Error("Mismatched parentheses: got '$1', expected '$2'",
-                             pos, scanner.TokenText(), closing);
+                errors.Log(Error("Mismatched parentheses: "
+                                 "got '$1', expected '$2'",
+                                 pos).Arg(scanner.TokenText()).Arg(closing));
             done = true;
             break;
         case tokUNINDENT:
             // Check for mismatched blocks here
             if (closing != Block::unindent)
-                errors.Error("Mismatched identation, expected '$1'",
-                             pos, closing);
+                errors.Log(Error("Mismatched identation, expected '$1'",
+                                 pos).Arg(closing));
             done = true;
             break;
         case tokINDENT:
@@ -457,8 +458,8 @@ Tree *Parser::Parse(text closing)
         case tokPAROPEN:
             blk_opening = scanner.TokenText();
             if (!syntax.IsBlock(blk_opening, blk_closing))
-                errors.Error("Unknown parenthese type: '$1' (internal)",
-                             pos, blk_opening);
+                errors.Log(Error("Unknown parenthese type: '$1' (internal)",
+                                 pos).Arg(blk_opening));
             if (tok == tokPAROPEN)
                 old_indent = scanner.OpenParen();
             name = blk_opening;
@@ -483,8 +484,8 @@ Tree *Parser::Parse(text closing)
             {
                 char buffer[20];
                 sprintf(buffer, "%u", tok);
-                errors.Error("Internal error: unknown token $1 ($2)",
-                             pos, scanner.TokenText(), buffer);
+                errors.Log(Error("Internal error: unknown token $1 ($2)",
+                                 pos).Arg(scanner.TokenText()).Arg(buffer));
             }
             break;
         } // switch(tok)
@@ -635,8 +636,8 @@ Tree *Parser::Parse(text closing)
         {
             Pending &last = stack.back();
             if (last.opcode != text("\n"))
-                errors.Error("Trailing opcode '$1' ignored",
-                             pos, last.opcode);
+                errors.Log(Error("Trailing opcode '$1' ignored",
+                                 pos).Arg(last.opcode));
             result = last.argument;
             stack.pop_back();
         }

@@ -48,7 +48,7 @@ Syntax::Syntax(kstring name)
 {
     Syntax    baseSyntax;
     Positions basePositions;
-    Errors    errors(&basePositions);
+    Errors    errors;
     Scanner   scanner(name, baseSyntax, basePositions, errors);
     ReadSyntaxFile(scanner);
 }

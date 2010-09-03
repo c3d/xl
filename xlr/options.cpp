@@ -43,7 +43,7 @@ XL_BEGIN
 
 Options *Options::options = NULL;
 
-Options::Options(Errors &err, int argc, char **argv):
+Options::Options(int argc, char **argv):
 /*---------------------------------------------------------------------------*/
 /*  Set the default values for all options                                   */
 /*---------------------------------------------------------------------------*/
@@ -51,7 +51,7 @@ Options::Options(Errors &err, int argc, char **argv):
 #define OPTION(name, descr, code)
 #define TRACE(name)
 #include "options.tbl"
-    arg(0), argc(argc), argv(argv), errors(err)
+    arg(0), argc(argc), argv(argv)
 {}
 
 
@@ -108,8 +108,8 @@ static kstring OptionString(kstring &command_line, Options &opt)
         command_line = "";
         return opt.argv[opt.arg];
     }
-    opt.errors.Error("Option '$1' is not an integer value",
-                     opt.arg, command_line);
+    Ooops("Option #$1 does not exist", Error::COMMAND_LINE)
+        .Arg(opt.arg);
     return "";
 }
 
@@ -127,8 +127,8 @@ static ulong OptionInteger(kstring &command_line, Options &opt,
         if (isdigit(*command_line))
             result = strtol(command_line, (char**) &command_line, 10);
         else
-            opt.errors.Error("Option '$1' is not an integer value",
-                             opt.arg, command_line);
+            Ooops("Option '$1' is not an integer value", Error::COMMAND_LINE)
+                .Arg(command_line);
     }
     else
     {
@@ -137,16 +137,16 @@ static ulong OptionInteger(kstring &command_line, Options &opt,
             result = strtol(old = opt.argv[opt.arg],
                             (char **) &command_line, 10);
         else
-            opt.errors.Error("Option '$1' is not an integer value",
-                             opt.arg, command_line);
+            Ooops("Option '$1' is not an integer value", Error::COMMAND_LINE)
+                .Arg(old);
     }
     if (result < low || result > high)
     {
         char lowstr[15], highstr[15];
         sprintf(lowstr, "%lu", low);
         sprintf(highstr, "%lu", high);
-        opt.errors.Error("Option '$1' is out of range $2..$3",
-                         opt.arg, old, lowstr, highstr);
+        Ooops("Option '$1' is out of range $2..$3", Error::COMMAND_LINE)
+            .Arg(old).Arg(lowstr).Arg(highstr);
         if (result < low)
             result = low;
         else
@@ -186,15 +186,15 @@ text Options::ParseNext(bool consumeFiles)
             kstring argval = argv[arg] + 1;
 
 #define OPTVAR(name, type, value)
-#define OPTION(name, descr, code)                                       \
-            if (OptionMatches(argval, #name))                           \
-            {                                                           \
-                code;                                                   \
-                                                                        \
-                if (*argval)                                            \
-                    errors.Error("Garbage found after option '$1'",     \
-                                 arg, argval);                          \
-            }                                                           \
+#define OPTION(name, descr, code)                               \
+            if (OptionMatches(argval, #name))                   \
+            {                                                   \
+                code;                                           \
+                                                                \
+                if (*argval)                                    \
+                    Ooops("Garbage found after option '$1'",    \
+                          Error::COMMAND_LINE).Arg(argval);     \
+            }                                                   \
             else
 #if XL_DEBUG
 #define TRACE(name)                                 \
@@ -209,7 +209,8 @@ text Options::ParseNext(bool consumeFiles)
 #include "options.tbl"
             {
                 // Default: Output usage
-                errors.Error("Unknown option '$1' ignored", arg, argval);
+                Ooops("Unknown option '$1' ignored", Error::COMMAND_LINE)
+                    .Arg(argval);
                 Usage(argv);
             }
             arg++;

@@ -74,22 +74,25 @@ struct Main
          text builtins = "builtins.xl");
     ~Main();
 
-    int        ParseOptions();
-    int        LoadContextFiles(source_names &context_file_names);
-    void       EvalContextFiles(source_names &context_file_names);
-    int        LoadFiles();
-    int        LoadFile(text file, bool updateContext = false);
+    int         ParseOptions();
+    int         LoadContextFiles(source_names &context_file_names);
+    void        EvalContextFiles(source_names &context_file_names);
+    int         LoadFiles();
+    int         LoadFile(text file, bool updateContext = false);
     SourceFile *NewFile(text path);
-    text       SearchFile(text input);
-    int        Run();
-    int        Diff();
+    text        SearchFile(text input);
+    int         Run();
+    int         Diff();
+    void        Log(Error &e)   { errors->Log(e); }
+    Errors *    InitErrorsAndMAIN();
 
 public:
     int          argc;
     char **      argv;
 
     Positions    positions;
-    Errors       errors;
+    Errors *     errors;
+    Errors       topLevelErrors;
     Syntax       syntax;
     Options      options;
     Compiler    *compiler;
@@ -99,7 +102,6 @@ public:
     source_names file_names;
     Deserializer *reader;
     Serializer   *writer;
-
 };
 
 extern Main *MAIN;

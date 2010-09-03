@@ -25,6 +25,7 @@
 #include "context.h"
 #include "renderer.h"
 #include "runtime.h"
+#include "errors.h"
 
 #include <iostream>
 #include <sstream>

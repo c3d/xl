@@ -666,7 +666,7 @@ Tree *xl_load(text name)
     if (MAIN->options.fileLoad)
         std::cout << "Loading: " << path << "\n";
 
-    Parser parser(path.c_str(), MAIN->syntax, MAIN->positions, MAIN->errors);
+    Parser parser(path.c_str(), MAIN->syntax, MAIN->positions, *MAIN->errors);
     Tree *tree = parser.Parse();
     if (!tree)
         return Ooops("Unable to load file '$1'", new Text(path));

@@ -26,6 +26,7 @@
 #include "opcodes.h"
 #include "basics.h"
 #include "parser.h"
+#include "errors.h"
 #include <typeinfo>
 
 XL_BEGIN
