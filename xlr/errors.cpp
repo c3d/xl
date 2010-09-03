@@ -290,7 +290,20 @@ Text *FormatTreeForError(Tree *tree)
 // ----------------------------------------------------------------------------
 {
     // Max length in error messages
+    const size_t max = 30;
+
     text t = *tree;
+    size_t first = t.find("\n");
+    if (first != text::npos)
+    {
+        size_t last = t.find("\n");
+        t.erase(first, last - first);
+        t.insert(first, "...");
+    }
+    size_t length = t.length();
+    if (length > max + 3)
+        t.replace(max/2, length - max, "...");
+
     Text *result = new Text(t, "'", "'", tree->Position());
     return result;
 }

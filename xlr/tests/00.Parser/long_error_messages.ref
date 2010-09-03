@@ -1,0 +1,2 @@
+error "No form matches 'cos ''This is a ...ened in errors'''"
+00.Parser/long_error_messages.xl:2: No form matches 'cos ''This is a ...ened in errors'''
