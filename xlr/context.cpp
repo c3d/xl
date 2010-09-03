@@ -1493,6 +1493,7 @@ void DeclarationAction::EnterRewrite(Tree *defined,
             }
         }
 
+#if CREATE_NAMES_FOR_POSTFIX_AND_INFIX
         // Same thing for a postfix
         if (Postfix *postfix = defined->AsPostfix())
         {
@@ -1523,6 +1524,7 @@ void DeclarationAction::EnterRewrite(Tree *defined,
                 }
             }
         }
+#endif // CREATE_NAMES_FOR_POSTFIX_AND_INFIX
     }
 
     if (Name *name = defined->AsName())
