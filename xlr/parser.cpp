@@ -636,9 +636,10 @@ Tree *Parser::Parse(text closing)
         {
             Pending &last = stack.back();
             if (last.opcode != text("\n"))
-                errors.Log(Error("Trailing opcode $1 ignored",
-                                 pos).Arg(last.opcode));
-            result = last.argument;
+                result = new Postfix(last.argument,
+                                     new Name(last.opcode, last.position));
+            else
+                result = last.argument;
             stack.pop_back();
         }
 
