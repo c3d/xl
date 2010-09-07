@@ -61,7 +61,7 @@ if [ "$1" == "-update" -o "$1" == "-u" ]; then
    shift; UPDATE='*'$1'*'; PATTERN="$UPDATE"; shift;
 fi
 if [ "$1" == "-baseline" -o "$1" == "-b" ]; then
-   shift; BASELINE='*'$1'*'; PATTERN="$BASELINE"; shift;
+   shift; BASELINE='*'; PATTERN="$BASELINE";
 fi
 if [ "$1" == "-r" -o "$1" == "-runtime" ]; then
     shift; RUNTIME="$1"; shift;
