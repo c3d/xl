@@ -35,9 +35,356 @@
 #include "compiler.h"
 #include "runtime.h"
 #include "main.h"
+#include "types.h"
 #include <sstream>
 
 XL_BEGIN
+
+// ============================================================================
+//
+//   Context: Representation of execution context
+//
+// ============================================================================
+
+Context::Context(Context *parent)
+// ----------------------------------------------------------------------------
+//   Constructor for an execution context
+// ----------------------------------------------------------------------------
+    : parent(parent), rewrotes(),
+      hasConstants(parent ? parent->hasConstants : false)
+{}
+
+
+Context::~Context()
+// ----------------------------------------------------------------------------
+//   Destructor for execution context
+// ----------------------------------------------------------------------------
+{}
+
+
+Rewrote *Context::Define(Tree *form, Tree *value)
+// ----------------------------------------------------------------------------
+//   Enter a rewrite in the context
+// ----------------------------------------------------------------------------
+{
+    // Check if we rewrite a constant. If so, remember it
+    if (form->IsConstant())
+        hasConstants = true;
+
+    // Create a rewrite and add it to the table
+    Rewrote *rewrote = new Rewrote(form, value);
+    ulong key = Hash(form);
+    Rewrote_p *parent = &rewrotes[key];
+    while (Rewrote *where = *parent)
+        parent = &where->hash[key];
+    *parent = rewrote;
+
+    return rewrote;
+}
+
+
+Tree *Context::Evaluate(Tree *what)
+// ----------------------------------------------------------------------------
+//   Evaluate 'what' in the given context
+// ----------------------------------------------------------------------------
+{
+    // Quick optimization for constants
+    if (!hasConstants && what->IsConstant())
+        return what;
+
+    // Build the hash key for the tree to evaluate
+    ulong key = Hash(what);
+
+    // Loop over all contexts
+    for (Context *context = this; context; context = context->parent)
+    {
+        rewrote_table &rwt = context->rewrotes;
+        rewrote_table::iterator found = rwt.find(key);
+        if (found != rwt.end())
+        {
+            Rewrote *candidate = (*found).second;
+            while (candidate)
+            {
+                ulong formKey = Hash(candidate->from);
+                if (formKey == key)
+                {
+                    // If this is native C code, invoke it.
+                    if (candidate->native)
+                    {
+                        // Bind native context
+                        TreeList args;
+                        if (Bind(candidate->from, what, &args))
+                            return candidate->native(this, what, args);
+                    }
+                    else
+                    {
+                        // Keep evaluating
+                        Context *formContext = new Context(this);
+                        if (formContext->Bind(candidate->from, what))
+                            return formContext->Evaluate(candidate->to);
+                    }
+                }
+
+                rewrote_table &rwh = candidate->hash;
+                found = rwh.find(key);
+                candidate = found == rwh.end() ? NULL : (*found).second;
+            }
+        }
+    }
+
+    // Error case - Should we raise some error here?
+    return what;
+}
+
+
+ulong Context::Hash(Tree *what)
+// ----------------------------------------------------------------------------
+//   Compute the hash code in the rewrite table
+// ----------------------------------------------------------------------------
+{
+    kind  k = what->Kind();
+    ulong h = 0;
+    text  t;
+
+    switch(k)
+    {
+    case INTEGER:
+        h = ((Integer *) what)->value;
+        break;
+    case REAL:
+        h = *((ulong *) &((Real *) what)->value);
+        break;
+    case TEXT:
+        t = ((Text *) what)->value;
+        break;
+    case NAME:
+        t = ((Name *) what)->value;
+        break;
+    case BLOCK:
+        t = ((Block *) what)->opening + ((Block *) what)->closing;
+        break;
+    case INFIX:
+        t = ((Infix *) what)->name;
+        break;
+    case PREFIX:
+        h = Hash(((Prefix *) what)->left);
+        break;
+    case POSTFIX:
+        h = Hash(((Postfix *) what)->right);
+        break;
+    }
+
+    if (t.length())
+    {
+        h = 0xC0DED;
+        for (text::iterator p = t.begin(); p != t.end(); p++)
+            h = (h * 0x301) ^ *p;
+    }
+
+    h = (h << 4) | (ulong) k;
+
+    return h;
+}
+
+
+bool Context::Bind(Tree *form, Tree *value, TreeList *args)
+// ----------------------------------------------------------------------------
+//   Test if we can match arguments to values
+// ----------------------------------------------------------------------------
+{
+    kind k = form->Kind();
+    switch(k)
+    {
+    case INTEGER:
+        if (Integer *iv = value->AsInteger())
+            return iv->value == ((Integer *) form)->value;
+        return false;
+    case REAL:
+        if (Real *rv = value->AsReal())
+            return rv->value == ((Real *) form)->value;
+        return false;
+    case TEXT:
+        if (Text *tv = value->AsText())
+            return (tv->value == ((Text *) form)->value &&
+                    tv->opening == ((Text *) form)->opening &&
+                    tv->closing == ((Text *) form)->closing);
+        return false;
+
+
+    case NAME:
+        // Test if the name is already bound, and if so, if trees match
+        if (Tree *bound = Bound((Name *) form))
+        {
+            value = parent->Evaluate(value);
+            return EqualTrees(bound, value);
+        }
+
+        // Define the name in the given context
+        if (args)
+            args->push_back(value);
+        else
+            Define(form, value);
+        return true;
+
+    case INFIX:
+        // Check type declarations
+        if (((Infix *) form)->name == ":")
+        {
+            // Evaluate the type
+            Tree *type = ((Infix *) form)->right;
+            type = parent->Evaluate(type);
+
+            // We need to evaluate the value
+            value = parent->Evaluate(value);
+
+            // Check if the value matches the type
+            if (!ValueMatchesType(type, value, false))
+                return false;
+
+            return Bind(((Infix *) form)->left, value);
+        }
+
+        // If we match the infix name, we can bind left and right
+        if (Infix *infix = value->AsInfix())
+            if (((Infix *) form)->name == infix->name)
+                return (Bind(((Infix *) form)->left, infix->left) &&
+                        Bind(((Infix *) form)->right, infix->right));
+
+        // Otherwise, we don't have a match
+        return false;
+
+    case PREFIX:
+        // If the left side is a name, make sure it's an exact match
+        if (Prefix *prefix = value->AsPrefix())
+        {
+            if (Name *name = ((Prefix *) form)->left->AsName())
+            {
+                Tree *vname = prefix->left;
+                if (vname->Kind() != NAME)
+                    vname = parent->Evaluate(vname);
+                if (Name *vn = vname->AsName())
+                    if (name->value != vn->value)
+                        return false;
+            }
+            else
+            {
+                if (!Bind(((Prefix *) form)->left, prefix->left))
+                    return false;
+            }
+            return Bind(((Prefix *) form)->right, prefix->right);
+        }
+        return false;
+
+    case POSTFIX:
+        // If the right side is a name, make sure it's an exact match
+        if (Postfix *postfix = value->AsPostfix())
+        {
+            if (Name *name = ((Postfix *) form)->right->AsName())
+            {
+                Tree *vname = postfix->right;
+                if (vname->Kind() != NAME)
+                    vname = parent->Evaluate(vname);
+                if (Name *vn = vname->AsName())
+                    if (name->value != vn->value)
+                        return false;
+            }
+            else
+            {
+                if (!Bind(((Postfix *) form)->right, postfix->right))
+                    return false;
+            }
+            return Bind(((Postfix *) form)->left, postfix->left);
+        }
+        return false;
+
+    case BLOCK:
+        return Bind(((Block *) form)->child, value);        
+    }
+
+    // Default is to return false
+    return false;
+}
+
+
+Tree *Context::Bound(Name *name)
+// ----------------------------------------------------------------------------
+//   Return the value a name is bound to, or NULL if none...
+// ----------------------------------------------------------------------------
+{
+    // Build the hash key for the tree to evaluate
+    ulong key = Hash(name);
+
+    // Loop over all contexts
+    for (Context *context = this; context; context = context->parent)
+    {
+        rewrote_table &rwt = context->rewrotes;
+        rewrote_table::iterator found = rwt.find(key);
+        if (found != rwt.end())
+        {
+            Rewrote *candidate = (*found).second;
+            while (candidate)
+            {
+                if (Name *from = candidate->from->AsName())
+                    if (name->value == from->value)
+                        return candidate->to ? candidate->to : name;
+
+                rewrote_table &rwh = candidate->hash;
+                found = rwh.find(key);
+                candidate = found == rwh.end() ? NULL : (*found).second;
+            }
+        }
+    }
+
+    // Not bound
+    return NULL;
+}
+
+
+bool Context::EqualTrees(Tree *left, Tree *right)
+// ----------------------------------------------------------------------------
+//   Return true if two trees are equal
+// ----------------------------------------------------------------------------
+{
+    if (left == right)
+        return true;
+
+    kind lk = left->Kind();
+    kind rk = right->Kind();
+    if (lk != rk)
+        return false;
+
+    switch(lk)
+    {
+    case INTEGER:
+        return ((Integer *) left)->value == ((Integer *) right)->value;
+    case REAL:
+        return ((Real *) left)->value == ((Real *) right)->value;
+    case TEXT:
+        return (((Text *) left)->value == ((Text *) right)->value ||
+                ((Text *) left)->opening == ((Text *) right)->opening ||
+                ((Text *) left)->closing == ((Text *) right)->closing);
+    case NAME:
+        return ((Name *) left)->value == ((Name *) right)->value;
+    case INFIX:
+        return (((Infix *) left)->name == ((Infix *) right)->name &&
+                EqualTrees(((Infix *) left)->left, ((Infix *) right)->left) &&
+                EqualTrees(((Infix *) left)->right, ((Infix *) right)->right));
+    case PREFIX:
+        return (EqualTrees(((Prefix *)left)->left,  ((Prefix *)right)->left) &&
+                EqualTrees(((Prefix *)left)->right, ((Prefix *)right)->right));
+    case POSTFIX:
+        return (EqualTrees(((Postfix *)left)->left, ((Postfix *)right)->left) &&
+                EqualTrees(((Postfix *)left)->right,((Postfix *)right)->right));
+    case BLOCK:
+        return (((Block *) left)->opening == ((Block *) right)->opening &&
+                ((Block *) left)->closing == ((Block *) right)->closing &&
+                EqualTrees(((Block *)left)->child,((Block *)right)->child));
+    }
+
+    return false;
+}
+
+
 
 // ============================================================================
 //
@@ -191,7 +538,7 @@ Rewrite *Symbols::EnterRewrite(Tree *from, Tree *to)
 //   Create a rewrite for the current context and enter it
 // ----------------------------------------------------------------------------
 {
-    Rewrite *rewrite = new Rewrite(this, from, to);
+    Rewrite *rewrite = new Rewrite(from, to, this);
     return EnterRewrite(rewrite);
 }
 
@@ -1538,7 +1885,7 @@ void DeclarationAction::EnterRewrite(Tree *defined,
     }
     else
     {
-        Rewrite *rewrite = new Rewrite(symbols, defined, definition);
+        Rewrite *rewrite = new Rewrite(defined, definition, symbols);
         symbols->EnterRewrite(rewrite);
     }
 }
@@ -1609,7 +1956,7 @@ Tree *CompileAction::DoName(Name *what)
         // Try to compile the definition of the name
         if (!result->AsName())
         {
-            Rewrite rw(symbols, what, result);
+            Rewrite rw(what, result, symbols);
             if (!what->Symbols())
                 what->SetSymbols(symbols);
             result = rw.Compile();

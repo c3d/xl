@@ -31,7 +31,7 @@
   on tree rewrites, designed to serve as a dynamic document description
   language (DDD), as well as a tool to implement the "larger" XL in a more
   dynamic way. Both usage models imply that the language is compiled on the
-  fly, not statically.
+  fly, not statically. We use LLVM as a back-end, see compiler.h.
 
   Also, because the language is designed to manipulate program trees, which
   serve as the primary data structure, this implies that the program trees
@@ -40,19 +40,7 @@
   based on reference counting because trees are not cyclic, so that
   ref-counting is both faster and simpler.
 
-  The chosen approach is to add an evaluation function pointer to each tree,
-  the field being called 'code' in struct Tree. This function pointer is
-  filled in by the compiler as a result of compilation. This means that it is
-  possible to render the source tree as well as to execute optimized code
-  when we evaluate it.
 
-  In some cases, the compiler may want to choose a more efficient data
-  structure layout for the tree being represented. For example, we may decide
-  to use an memory-contiguous array to represent [ 1, 2, 3, 4 ], even if the
-  original tree representation is not memory contiguous nor easy to access.
-  The chosen technique makes this possible too.
-
-  
   PREDEFINED FORMS:
 
   XL is really built on a very small number of predefined forms recognized by
@@ -195,16 +183,20 @@ XL_BEGIN
 // 
 // ============================================================================
 
+struct Context;                                 // Execution context
 struct Rewrite;                                 // Tree rewrite data
-struct Runtime;                                 // Runtime context
+struct Rewrote;                                 // Tree rewrite data
 struct Errors;                                  // Error handlers
 struct Compiler;                                // JIT compiler
 struct CompiledUnit;                            // Compilation unit
 
+typedef GCPtr<Context>             Context_p;
+typedef GCPtr<Rewrote>             Rewrote_p;
+typedef std::map<ulong, Rewrote_p> rewrote_table;// Hashing of rewrites
+
 typedef GCPtr<Rewrite>             Rewrite_p;
 
 typedef std::map<text, Tree_p>     symbol_table; // Symbol table in context
-typedef std::set<Tree_p>           active_set;   // Not to be garbage collected
 typedef std::set<Symbols_p>        symbols_set;  // Set of symbol tables
 typedef std::vector<Symbols_p>     symbols_list; // List of symbols table
 typedef std::map<ulong, Rewrite_p> rewrite_table;// Hashing of rewrites
@@ -221,6 +213,61 @@ typedef Tree * (*typecheck_fn) (Tree *src, Tree *value);
 //    Compile-time symbols and rewrites management
 // 
 // ============================================================================
+
+struct Context
+// ----------------------------------------------------------------------------
+//   The evaluation context for a given tree
+// ----------------------------------------------------------------------------
+{
+    Context(Context *parent = NULL);
+    ~Context();
+
+    // Adding definitions to the context
+    Rewrote *           Define(Tree *form, Tree *value);
+
+    // Rewriting things in the context
+    Tree *              Evaluate(Tree *input);
+
+    // The hash code used in the rewrite table
+    static ulong        Hash(Tree *input);
+
+    // Bind parameters in context based on arguments in form
+    bool                Bind(Tree *form, Tree *value, TreeList *args = NULL);
+
+    // Find the value that a name is bound to, or returns NULL
+    Tree *              Bound(Name *name);
+
+    // Check if two trees are equal
+    static bool         EqualTrees(Tree *left, Tree *right);
+
+public:
+    Context_p           parent;
+    rewrote_table       rewrotes;
+    bool                hasConstants;
+
+    GARBAGE_COLLECT(Context);
+};
+
+
+struct Rewrote
+// ----------------------------------------------------------------------------
+//   Information about a rewrite, e.g fact N -> N * fact(N-1)
+// ----------------------------------------------------------------------------
+//   Note that a rewrite with 'to' = NULL is used for 'data' statements
+{
+    Rewrote (Tree *f, Tree *t): from(f), to(t), hash(), native(NULL) {}
+    ~Rewrote() {}
+
+public:
+    typedef Tree *      (*native_fn) (Context *ctx, Tree *self, TreeList &args);
+    Tree_p              from;
+    Tree_p              to;
+    rewrote_table       hash;
+    native_fn           native;
+
+    GARBAGE_COLLECT(Rewrote);
+};
+
 
 struct Symbols
 // ----------------------------------------------------------------------------
@@ -289,8 +336,8 @@ struct Rewrite
 // ----------------------------------------------------------------------------
 //   Note that a rewrite with 'to' = NULL is used for 'data' statements
 {
-    Rewrite (Symbols *s, Tree *f, Tree *t):
-        symbols(s), from(f), to(t), hash(), parameters() {}
+    Rewrite (Tree *f, Tree *t, Symbols *s = NULL):
+        from(f), to(t), hash(), parameters(), symbols(s) {}
     ~Rewrite();
 
     Rewrite *           Add (Rewrite *rewrite);
@@ -298,11 +345,11 @@ struct Rewrite
     Tree *              Compile(void);
 
 public:
-    Symbols_p           symbols;
     Tree_p              from;
     Tree_p              to;
     rewrite_table       hash;
     TreeList            parameters;
+    Symbols_p           symbols;
 
     GARBAGE_COLLECT(Rewrite);
 };
