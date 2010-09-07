@@ -31,14 +31,17 @@ SUBDIRS="[0-9]*"
 XL=./xl
 SUCCESS=$TESTDIR/success.out
 FAILURE=$TESTDIR/failure.out
+BASEFILE=$TESTDIR/baseline.txt
 PASS="pass"
 ONE_FAILED=
 PATTERN='[A-Za-z]*'
 UPDATE=
+BASELINE=
 NOCACHE=
 RUNTIME=default
 POSITIVE_MISMATCHES=0
 NEGATIVE_MISMATCHES=0
+EXPECTED_FAILURES=0
 UNEXPECTED_SUCCESSES=0
 UNEXPECTED_FAILURES=0
 MISSING_PATTERN=0
@@ -50,6 +53,9 @@ if [ "$1" == '-xl' ]; then XL="$2"; shift; shift; fi
 if [ "$1" == "-update" -o "$1" == "-u" ]; then
    shift; UPDATE='*'$1'*'; PATTERN="$UPDATE"; shift;
 fi
+if [ "$1" == "-baseline" -o "$1" == "-b" ]; then
+   shift; BASELINE='*'$1'*'; PATTERN="$BASELINE"; shift;
+fi
 if [ "$1" == "-r" -o "$1" == "-runtime" ]; then
     shift; RUNTIME="$1"; shift;
 fi
@@ -58,8 +64,7 @@ if [ "$1" == "-dir" -o "$1" == "-d" ]; then
 fi
 if [ ! -z "$1" ]; then PATTERN='*'"$1"'*'; shift; fi
 
-export TESTDIR XL SUCCESS FAILURE PASS UPDATE
-export CCOPTS="-Agcc"
+export TESTDIR XL SUCCESS FAILURE PASS UPDATE BASELINE
 
 # Make sure the proper files are linked in place
 # MinGW's unable to follow symlinks, so we have to copy dependencies
@@ -74,6 +79,12 @@ $LN ../builtins.xl .
 echo Tests successfully run on $(date) on $HOSTNAME > $SUCCESS
 echo Failed tests on $(date) on $HOSTNAME > $FAILURE
 export XL
+
+# Clear the baseline if we are updating it
+if [ ! -z "$BASELINE" ]; then
+    rm -f $BASEFILE
+    touch $BASEFILE
+fi
 
 # Look for all possible tests in the test directory
 for SUBDIR in "$(find $TESTDIR -type d -a -name '*'$SUBDIRS'*')"
@@ -123,6 +134,8 @@ do
 
         # Analyze the results
         if [ $RC -ne $EXIT ]; then
+
+            # Check if we set the baseline
             THIS_FAILED="Exit code $RC, expected $EXIT"
             if [ $RC -eq 0 ]; then
                 UNEXPECTED_SUCCESSES=$(($UNEXPECTED_SUCCESSES+1))
@@ -176,8 +189,19 @@ do
         echo "*** REASON:" $THIS_FAILED >> $FAILURE
         echo "********************************************************************************" >> $FAILURE
         cat $LOG >> $FAILURE
-        echo '*** FAILURE ('$THIS_FAILED') ***'
-        ONE_FAILED=1
+
+        if [ ! -z "$BASELINE" ]; then
+            echo $TESTNAME >> $BASEFILE
+        elif grep -q "$TESTNAME" $BASEFILE; then
+            EXPECTED_FAILURES=$(($EXPECTED_FAILURES+1))
+            echo 'Expected failure ('$THIS_FAILED')'
+        else
+            echo '*** FAILURE ('$THIS_FAILED') ***'
+            if [ -z "$THIS_KNOWN_FAILURE" ]; then
+                ONE_FAILED=1
+            fi
+        fi
+
     fi
     rm -f $TO_REMOVE
 done
@@ -187,6 +211,7 @@ if [ "$ONE_FAILED" ]; then
     echo "*** SUMMARY OF" $TOTAL_TESTS "TESTS: FAILURE ***"
     echo "  Unexpected failures : " $UNEXPECTED_FAILURES
     echo "  Unexpected successes: " $UNEXPECTED_SUCCESSES
+    echo "  Expected failures   : " $EXPECTED_FAILURES
     echo "  Positive mismatches : " $POSITIVE_MISMATCHES
     echo "  Negative mismatches : " $NEGATIVE_MISMATCHES
     echo "  Missing references  : " $MISSING_REFERENCE
@@ -195,4 +220,5 @@ if [ "$ONE_FAILED" ]; then
 else
     echo "*** SUMMARY OF" $TOTAL_TESTS "TESTS: SUCCESS ***"
     echo "  Excluded from run   : " $EXCLUDED
+    echo "  Expected failures   : " $EXPECTED_FAILURES
 fi
