@@ -236,6 +236,8 @@ do
 
         if [ ! -z "$BASELINE" ]; then
             echo $TESTNAME >> $BASEFILE
+            EXPECTED_FAILURES=$(($EXPECTED_FAILURES+1))
+            echo 'Updated failure ('$THIS_FAILED')'
         elif grep -q "$TESTNAME" $BASEFILE; then
             EXPECTED_FAILURES=$(($EXPECTED_FAILURES+1))
             echo 'Expected failure ('$THIS_FAILED')'
