@@ -97,6 +97,7 @@ public:
     Options      options;
     Compiler    *compiler;
     Symbols_p    globals;
+    Context_p    context;
     Renderer     renderer;
     source_files files;
     source_names file_names;

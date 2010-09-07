@@ -38,7 +38,7 @@
 
 
 #define INFIX(name, rtype, t1, symbol, t2, _code, doc)       \
-    xl_enter_infix_##name(c, compiler);
+    xl_enter_infix_##name(c, context, compiler);
 
 
 
@@ -57,26 +57,26 @@
         }
 
 
-#define PREFIX(name, rtype, symbol, parms, _code, doc)               \
-    do                                                          \
-    {                                                           \
-        TreeList parameters;                                    \
-        parms;                                                  \
-        xl_enter_prefix_##name(c, compiler, parameters);        \
+#define PREFIX(name, rtype, symbol, parms, _code, doc)                  \
+    do                                                                  \
+    {                                                                   \
+        TreeList parameters;                                            \
+        parms;                                                          \
+        xl_enter_prefix_##name(c, context, compiler, parameters);       \
     } while(0);
 
 
-#define POSTFIX(name, rtype, parms, symbol, _code, doc)              \
-    do                                                          \
-    {                                                           \
-        TreeList  parameters;                                   \
-        parms;                                                  \
-        xl_enter_postfix_##name(c, compiler, parameters);       \
+#define POSTFIX(name, rtype, parms, symbol, _code, doc)                 \
+    do                                                                  \
+    {                                                                   \
+        TreeList  parameters;                                           \
+        parms;                                                          \
+        xl_enter_postfix_##name(c, context, compiler, parameters);      \
     } while(0);
 
 
 #define BLOCK(name, rtype, open, type, close, _code, doc)    \
-    xl_enter_block_##name(c, compiler);
+    xl_enter_block_##name(c, context, compiler);
 
 
 #define NAME(symbol)                            \
@@ -88,6 +88,8 @@
         c->EnterName(#symbol, n);               \
         xl_##symbol = n;                        \
         compiler->EnterGlobal(n, &xl_##symbol); \
+                                                \
+        context->Define(n, n);                  \
     } while (0);
 
 
@@ -113,4 +115,5 @@
         compiler->EnterBuiltin(XL_SCOPE #symbol,                        \
                                to, rw->parameters, typeTestFn);         \
                                                                         \
+        context->Define(n, n);                                          \
     } while(0);

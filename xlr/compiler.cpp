@@ -87,7 +87,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
       realTreeTy(NULL), realTreePtrTy(NULL),
       prefixTreeTy(NULL), prefixTreePtrTy(NULL),
       evalTy(NULL), evalFnTy(NULL),
-      infoPtrTy(NULL), symbolsPtrTy(NULL), charPtrTy(NULL),
+      infoPtrTy(NULL), symbolsPtrTy(NULL), contextPtrTy(NULL), charPtrTy(NULL),
       xl_evaluate(NULL), xl_same_text(NULL), xl_same_shape(NULL),
       xl_infix_match_check(NULL), xl_type_check(NULL), xl_type_error(NULL),
       xl_new_integer(NULL), xl_new_real(NULL), xl_new_character(NULL),
@@ -182,6 +182,8 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     infoPtrTy = PointerType::get(structInfoTy, 0);         // Info *
     PATypeHolder structSymTy = OpaqueType::get(*context);  // struct Symbols
     symbolsPtrTy = PointerType::get(structSymTy, 0);       // Symbols *
+    PATypeHolder structCtxTy = OpaqueType::get(*context);  // struct Context
+    contextPtrTy = PointerType::get(structCtxTy, 0);       // Context *
 
     // Create the eval_fn type
     PATypeHolder structTreeTy = OpaqueType::get(*context); // struct Tree
@@ -419,7 +421,7 @@ Function *Compiler::EnterBuiltin(text name,
 }
 
 
-adapter_fn Compiler::EnterArrayToArgsAdapter(uint numargs)
+adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
 // ----------------------------------------------------------------------------
 //   Generate code to call a function with N arguments
 // ----------------------------------------------------------------------------
@@ -440,8 +442,10 @@ adapter_fn Compiler::EnterArrayToArgsAdapter(uint numargs)
         return (adapter_fn) result;
     }
 
-    // Generate the function type: Tree *generated(eval_fn, Tree *, Tree **)
+    // Generate the function type:
+    // Tree *generated(Context *, eval_fn, Tree *, Tree **)
     std::vector<const Type *> parms;
+    parms.push_back(contextPtrTy);
     parms.push_back(evalFnTy);
     parms.push_back(treePtrTy);
     parms.push_back(treePtrPtrTy);
@@ -451,6 +455,7 @@ adapter_fn Compiler::EnterArrayToArgsAdapter(uint numargs)
 
     // Generate the function type for the called function
     std::vector<const Type *> called;
+    called.push_back(contextPtrTy);
     called.push_back(treePtrTy);
     for (uint a = 0; a < numargs; a++)
         called.push_back(treePtrTy);
@@ -463,6 +468,7 @@ adapter_fn Compiler::EnterArrayToArgsAdapter(uint numargs)
 
     // Read the arguments from the function we are generating
     Function::arg_iterator inArgs = adapter->arg_begin();
+    Value *contextPtr = inArgs++;
     Value *fnToCall = inArgs++;
     Value *sourceTree = inArgs++;
     Value *treeArray = inArgs++;
@@ -472,6 +478,7 @@ adapter_fn Compiler::EnterArrayToArgsAdapter(uint numargs)
 
     // Add source as first argument to output arguments
     std::vector<Value *> outArgs;
+    outArgs.push_back (contextPtr);
     outArgs.push_back (sourceTree);
 
     // Read other arguments from the input array

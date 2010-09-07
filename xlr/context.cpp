@@ -114,7 +114,14 @@ Tree *Context::Evaluate(Tree *what)
                         // Bind native context
                         TreeList args;
                         if (Bind(candidate->from, what, &args))
-                            return candidate->native(this, what, args);
+                        {
+                            uint ary = args.size();
+                            Compiler *compiler = MAIN->compiler;
+                            adapter_fn adj = compiler->ArrayToArgsAdapter(ary);
+                            Tree **args0 = (Tree **) &args[0];
+                            eval_fn toCall = (eval_fn) candidate->native;
+                            return adj(this, toCall, what, args0);
+                        }
                     }
                     else
                     {

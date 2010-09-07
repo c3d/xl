@@ -51,6 +51,7 @@ XL_BEGIN
 
 struct CompiledUnit;
 struct CompilerInfo;
+struct Context;
 struct Options;
 typedef std::map<text, llvm::Function *>    builtins_map;
 typedef std::map<Tree *, llvm::Value *>     value_map;
@@ -58,7 +59,8 @@ typedef std::map<Tree *, Tree **>           address_map;
 typedef std::map<uint, eval_fn>             closure_map;
 typedef std::set<Tree *>                    closure_set;
 typedef std::set<Tree *>                    data_set;
-typedef Tree * (*adapter_fn) (eval_fn callee, Tree *src, Tree **args);
+typedef Tree * (*adapter_fn) (Context *ctx, eval_fn callee,
+                              Tree *src, Tree **args);
 
 
 struct Compiler
@@ -82,7 +84,7 @@ struct Compiler
     llvm::Function *          ExternFunction(kstring name, void *address,
                                              const llvm::Type *retType,
                                              int parmCount, ...);
-    adapter_fn                EnterArrayToArgsAdapter(uint numtrees);
+    adapter_fn                ArrayToArgsAdapter(uint numtrees);
     llvm::Value *             EnterGlobal(Name *name, Name_p *address);
     llvm::Value *             EnterConstant(Tree *constant);
     bool                      IsKnown(Tree *value);
@@ -108,6 +110,7 @@ public:
     llvm::PointerType         *evalFnTy;
     llvm::PointerType         *infoPtrTy;
     llvm::PointerType         *symbolsPtrTy;
+    llvm::PointerType         *contextPtrTy;
     llvm::PointerType         *charPtrTy;
     llvm::Function            *xl_evaluate;
     llvm::Function            *xl_same_text;

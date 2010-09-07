@@ -203,5 +203,9 @@ PREFIX(WriteTree, tree, "write", PARM(toWrite, tree),
 PREFIX(WriteLnTree, tree, "writeln", PARM(toWrite, tree),
        return xl_write(self->Symbols(), &toWrite, "\n"), "")
 
+// Interpret a tree
+PREFIX(Interpret, tree, "interpret", PARM(value, tree),
+       return MAIN->context->Evaluate(&value), "")
+
 // Compute the sha1 of a tree
 PREFIX(ComputeSha1, text, "sha1", PARM(t, tree), XL_RTEXT(sha1(&t)), "")

@@ -86,6 +86,7 @@ Main::Main(int inArgc, char **inArgv, Compiler *comp,
       options(inArgc, inArgv),
       compiler(comp),
       globals(new Symbols(NULL)),
+      context(new Context(NULL)),
       renderer(std::cout, styleSheetName, syntax),
       reader(NULL), writer(NULL)
 {

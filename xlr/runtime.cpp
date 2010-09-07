@@ -609,21 +609,6 @@ Tree *XLCall::build(Symbols *syms)
 }
 
 
-Tree *xl_invoke(eval_fn toCall, Tree *src, TreeList &args)
-// ----------------------------------------------------------------------------
-//   Invoke a callback with the right number of arguments
-// ----------------------------------------------------------------------------
-//   We generate a function with the right signature using LLVM
-{
-    Compiler *compiler = MAIN->compiler;
-    adapter_fn fn = compiler->EnterArrayToArgsAdapter(args.size());
-
-    // REVISIT: The following assumes that Tree_p and Tree * have the
-    // same memory representation in a std::vector<Tree_p>
-    return fn (toCall, src, (Tree **) &args[0]);
-}
-
-
 
 // ============================================================================
 //

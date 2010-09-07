@@ -193,6 +193,7 @@ struct CompiledUnit;                            // Compilation unit
 typedef GCPtr<Context>             Context_p;
 typedef GCPtr<Rewrote>             Rewrote_p;
 typedef std::map<ulong, Rewrote_p> rewrote_table;// Hashing of rewrites
+typedef Tree *(*native_fn) (Context *ctx, Tree *self, TreeList &args);
 
 typedef GCPtr<Rewrite>             Rewrite_p;
 
@@ -259,7 +260,6 @@ struct Rewrote
     ~Rewrote() {}
 
 public:
-    typedef Tree *      (*native_fn) (Context *ctx, Tree *self, TreeList &args);
     Tree_p              from;
     Tree_p              to;
     rewrote_table       hash;

@@ -57,6 +57,7 @@ void EnterBasics(Symbols *c)
 // ----------------------------------------------------------------------------
 {
     Compiler *compiler = MAIN->compiler;
+    Context *context = MAIN->context;
 #include "opcodes_define.h"
 #include "basics.tbl"
 }

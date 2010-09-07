@@ -46,7 +46,14 @@
     {                                                                   \
         DS(symbol) _code;                                               \
     }                                                                   \
-    static void xl_enter_infix_##name(Symbols *c, Compiler *compiler)   \
+    rtype##_nkp xli_##name(Context *context, Tree *self,                \
+                           t1##_r l,t2##_r r)                           \
+    {                                                                   \
+        (void) context; DS(symbol) _code;                               \
+    }                                                                   \
+    static void xl_enter_infix_##name(Symbols *c,                       \
+                                      Context *context,                 \
+                                      Compiler *compiler)               \
     {                                                                   \
         Infix *ldecl = new Infix(":", new Name("l"), new Name(#t1));    \
         Infix *rdecl = new Infix(":", new Name("r"), new Name(#t2));    \
@@ -60,6 +67,9 @@
         to->Set<TypeInfo> (rtype##_type);                               \
         compiler->EnterBuiltin(XL_SCOPE #name,                          \
                                to, rw->parameters, fn);                 \
+                                                                        \
+        Rewrote *rwo = context->Define(from, to);                       \
+        rwo->native = (native_fn) xli_##name;                           \
     }
 
 #define PARM(symbol, type)      , type##_r symbol
@@ -69,7 +79,12 @@
     {                                                                   \
         DS(symbol) _code;                                               \
     }                                                                   \
+    rtype##_nkp xli_##name(Context *context, Tree *self parms)          \
+    {                                                                   \
+        (void) context; DS(symbol) _code;                               \
+    }                                                                   \
     static void xl_enter_prefix_##name(Symbols *c,                      \
+                                       Context *context,                \
                                        Compiler *compiler,              \
                                        TreeList &parameters)            \
     {                                                                   \
@@ -79,13 +94,16 @@
             Tree *parmtree = ParametersTree(parameters);                \
             Prefix *from = new Prefix(new Name(symbol), parmtree);      \
             Name *to = new Name(symbol);                                \
-            setDocumentation(from, doc);                                      \
+            setDocumentation(from, doc);                                \
             Rewrite *rw = c->EnterRewrite(from, to);                    \
             to->code = fn;                                              \
             to->SetSymbols(c);                                          \
             to->Set<TypeInfo> (rtype##_type);                           \
             compiler->EnterBuiltin(XL_SCOPE #name,                      \
                                    to, rw->parameters, fn);             \
+                                                                        \
+            Rewrote *rwo = context->Define(from, to);                   \
+            rwo->native = (native_fn) xli_##name;                       \
         }                                                               \
         else                                                            \
         {                                                               \
@@ -97,6 +115,9 @@
             c->EnterName(symbol, n);                                    \
             TreeList noparms;                                           \
             compiler->EnterBuiltin(XL_SCOPE #name, n, noparms, fn);     \
+                                                                        \
+            Rewrote *rwo = context->Define(n, n);                       \
+            rwo->native = (native_fn) xli_##name;                       \
         }                                                               \
     }
 
@@ -106,8 +127,13 @@
     {                                                                   \
         DS(symbol) _code;                                               \
     }                                                                   \
+    rtype##_nkp xli_##name(Context *context, Tree *self parms)          \
+    {                                                                   \
+        (void) context; DS(symbol) _code;                               \
+    }                                                                   \
                                                                         \
     static void xl_enter_postfix_##name(Symbols *c,                     \
+                                        Context *context,               \
                                         Compiler *compiler,             \
                                         TreeList &parameters)           \
     {                                                                   \
@@ -122,15 +148,25 @@
         to->Set<TypeInfo> (rtype##_type);                               \
         compiler->EnterBuiltin(XL_SCOPE #name,                          \
                                to, rw->parameters, to->code);           \
+                                                                        \
+        Rewrote *rwo = context->Define(from, to);                       \
+        rwo->native = (native_fn) xli_##name;                           \
     }
 
 
-#define BLOCK(name, rtype, open, type, close, _code, doc)                \
+#define BLOCK(name, rtype, open, type, close, _code, doc)               \
     rtype##_nkp xl_##name(Tree *self, type##_r child)                   \
     {                                                                   \
         DS(symbol) _code;                                               \
     }                                                                   \
-    static void xl_enter_block_##name(Symbols *c, Compiler *compiler)   \
+    rtype##_nkp xli_##name(Context *context,                            \
+                          Tree *self, type##_r child)                   \
+    {                                                                   \
+        (void) context; DS(symbol) _code;                               \
+    }                                                                   \
+    static void xl_enter_block_##name(Symbols *c,                       \
+                                      Context *context,                 \
+                                      Compiler *compiler)               \
     {                                                                   \
         Infix *parms = new Infix(":", new Name("V"), new Name(#type));  \
         Block *from = new Block(parms, open, close);                    \
@@ -143,10 +179,12 @@
         to->Set<TypeInfo> (rtype##_type);                               \
         compiler->EnterBuiltin(XL_SCOPE #name, to,                      \
                                rw->parameters, to->code);               \
+                                                                        \
+        Rewrote *rwo = context->Define(from, to);                       \
+        rwo->native = (native_fn) xli_##name;                           \
     }
 
-#define NAME(symbol)    \
-    Name_p xl_##symbol;
+#define NAME(symbol)    Name_p xl_##symbol;
 
 #define TYPE(symbol)    Name_p symbol##_type;
 

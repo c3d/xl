@@ -100,8 +100,6 @@ Real *xl_springify(Real &value, Real &target, Real &time,
 //
 // ============================================================================
 
-Tree *xl_invoke(eval_fn toCall, Tree *source, TreeList &args);
-
 struct XLCall
 // ----------------------------------------------------------------------------
 //    A structure that encapsulates a call to an XL tree
