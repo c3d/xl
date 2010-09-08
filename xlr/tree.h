@@ -187,6 +187,10 @@ private:
 };
 
 
+int  CompareTrees(Tree *t1, Tree *t2);
+inline bool EqualTrees(Tree *t1, Tree *t2) { return CompareTrees(t1, t2) == 0; }
+
+
 
 // ============================================================================
 //
@@ -437,9 +441,6 @@ inline Infix *Infix::LastStatement()
         last = next;
     return last;
 }
-
-
-
 
 
 

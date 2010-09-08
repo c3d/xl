@@ -356,51 +356,6 @@ Tree *Context::Bound(Name *name)
 }
 
 
-bool Context::EqualTrees(Tree *left, Tree *right)
-// ----------------------------------------------------------------------------
-//   Return true if two trees are equal
-// ----------------------------------------------------------------------------
-{
-    if (left == right)
-        return true;
-
-    kind lk = left->Kind();
-    kind rk = right->Kind();
-    if (lk != rk)
-        return false;
-
-    switch(lk)
-    {
-    case INTEGER:
-        return ((Integer *) left)->value == ((Integer *) right)->value;
-    case REAL:
-        return ((Real *) left)->value == ((Real *) right)->value;
-    case TEXT:
-        return (((Text *) left)->value == ((Text *) right)->value ||
-                ((Text *) left)->opening == ((Text *) right)->opening ||
-                ((Text *) left)->closing == ((Text *) right)->closing);
-    case NAME:
-        return ((Name *) left)->value == ((Name *) right)->value;
-    case INFIX:
-        return (((Infix *) left)->name == ((Infix *) right)->name &&
-                EqualTrees(((Infix *) left)->left, ((Infix *) right)->left) &&
-                EqualTrees(((Infix *) left)->right, ((Infix *) right)->right));
-    case PREFIX:
-        return (EqualTrees(((Prefix *)left)->left,  ((Prefix *)right)->left) &&
-                EqualTrees(((Prefix *)left)->right, ((Prefix *)right)->right));
-    case POSTFIX:
-        return (EqualTrees(((Postfix *)left)->left, ((Postfix *)right)->left) &&
-                EqualTrees(((Postfix *)left)->right,((Postfix *)right)->right));
-    case BLOCK:
-        return (((Block *) left)->opening == ((Block *) right)->opening &&
-                ((Block *) left)->closing == ((Block *) right)->closing &&
-                EqualTrees(((Block *)left)->child,((Block *)right)->child));
-    }
-
-    return false;
-}
-
-
 
 // ============================================================================
 //

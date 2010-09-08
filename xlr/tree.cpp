@@ -189,6 +189,99 @@ Tree *Action::DoInfix(Infix *what)
 }
 
 
+int CompareTrees(Tree *left, Tree *right)
+// ----------------------------------------------------------------------------
+//   Return true if two trees are equal
+// ----------------------------------------------------------------------------
+{
+    if (left == right)
+        return 0;
+
+    kind lk = left->Kind();
+    kind rk = right->Kind();
+    if (lk != rk)
+        return lk < rk ? -3 : 3;
+
+    switch(lk)
+    {
+    case INTEGER:
+    {
+        Integer *li = (Integer *) left;
+        Integer *ri = (Integer *) right;
+        return li->value < ri->value ? -1 : li->value > ri->value ? 1 : 0;
+    }
+    case REAL:
+    {
+        Real *lr = (Real *) left;
+        Real *rr = (Real *) right;
+        return lr->value < rr->value ? -1 : lr->value > rr->value ? 1 : 0;
+    }
+    case TEXT:
+    {
+        Text *lt = (Text *) left;
+        Text *rt = (Text *) right;
+        if (lt->opening < rt->opening || lt->closing < rt->closing)
+            return -2;
+        if (lt->opening > rt->opening || lt->closing > rt->closing)
+            return  2;
+        return lt->value < rt->value ? -1 : lt->value > rt->value ? 1 : 0;
+    }
+    case NAME:
+    {
+        Name *ln = (Name *) left;
+        Name *rn = (Name *) right;
+        return ln->value < rn->value ? -1 : ln->value > rn->value ? 1 : 0;
+    }
+    case INFIX:
+    {
+        Infix *li = (Infix *) left;
+        Infix *ri = (Infix *) right;
+        if (li->name < ri->name)
+            return -2;
+        else if (li->name > ri->name)
+            return 2;
+        if (int cmpLeft = CompareTrees(li->left, ri->left))
+            return cmpLeft;
+        if (int cmpRight = CompareTrees(li->right, ri->right))
+            return cmpRight;
+        return 0;
+    }
+    case PREFIX:
+    {
+        Prefix *lp = (Prefix *) left;
+        Prefix *rp = (Prefix *) right;
+        if (int cmpLeft = CompareTrees(lp->left, rp->left))
+            return cmpLeft;
+        if (int cmpRight = CompareTrees(lp->right, rp->right))
+            return cmpRight;
+        return 0;
+    }
+    case POSTFIX:
+    {
+        Postfix *lp = (Postfix *) left;
+        Postfix *rp = (Postfix *) right;
+        if (int cmpLeft = CompareTrees(lp->left, rp->left))
+            return cmpLeft;
+        if (int cmpRight = CompareTrees(lp->right, rp->right))
+            return cmpRight;
+        return 0;
+    }
+    case BLOCK:
+    {
+        Block *lb = (Block *) left;
+        Block *rb = (Block *) right;
+        if (lb->opening < rb->opening || lb->closing < rb->closing)
+            return -2;
+        if (lb->opening > rb->opening || lb->closing > rb->closing)
+            return  2;
+        return CompareTrees(lb->child, rb->child);
+    }
+    }
+
+    return 0;
+}
+
+
 text Block::indent   = "I+";
 text Block::unindent = "I-";
 text Text::textQuote = "\"";

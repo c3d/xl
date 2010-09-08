@@ -238,9 +238,6 @@ struct Context
     // Find the value that a name is bound to, or returns NULL
     Tree *              Bound(Name *name);
 
-    // Check if two trees are equal
-    static bool         EqualTrees(Tree *left, Tree *right);
-
 public:
     Context_p           parent;
     rewrote_table       rewrotes;
