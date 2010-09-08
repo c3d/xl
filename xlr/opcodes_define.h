@@ -96,6 +96,7 @@
         Name *n = new Name(#symbol);                                    \
         symbol##_type = n;                                              \
         compiler->EnterGlobal(n, &symbol##_type);                       \
+        context->Define(n, n);                                          \
                                                                         \
         /* Type as infix : evaluates to type check, e.g. 0 : integer */ \
         Infix *from = new Infix(":", new Name("V"), new Name(#symbol)); \
