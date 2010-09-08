@@ -17,6 +17,20 @@ TYPE(prefix);
 TYPE(postfix);
 TYPE(block);
 
+// Basic units
+INFIX(DefineRewrite, tree, tree, "->", tree,
+      context->Define(&l, &r);
+      return self,
+      "")
+INFIX(SequenceNewLine, tree, tree, "\n", tree,
+      context->Evaluate(&l);
+      return context->Evaluate(&r),
+      "")
+INFIX(SequenceSemicolon, tree, tree, ";", tree,
+      context->Evaluate(&l);
+      return context->Evaluate(&r),
+      "")
+
 // Integer arithmetic and comparisons
 INFIX(SetInt, integer,integer,":=",integer,XL_RINT(l.value = XL_INT(r)), "")
 INFIX(AddInt,integer, integer,"+",integer, XL_RINT(XL_INT(l) + XL_INT(r)), "")
