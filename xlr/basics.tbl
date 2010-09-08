@@ -30,6 +30,10 @@ INFIX(SequenceSemicolon, tree, tree, ";", tree,
       context->Evaluate(&l);
       return context->Evaluate(&r),
       "")
+PREFIX(DataDefinition, tree, "data", PARM(d, tree),
+       context->DefineData(&d);
+       return self,
+       "")
 
 // Integer arithmetic and comparisons
 INFIX(SetInt, integer,integer,":=",integer,XL_RINT(l.value = XL_INT(r)), "")

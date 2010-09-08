@@ -43,13 +43,61 @@
 
 XL_BEGIN
 
-Tree *xl_evaluate(Context *c, Tree *what)
+Tree *xl_evaluate(Context *context, Tree *what)
 // ----------------------------------------------------------------------------
 //   Compile the tree if necessary, then evaluate it
 // ----------------------------------------------------------------------------
 // This is similar to Context::Run, but we save stack space for recursion
 {
-    return c->Evaluate(what);
+    return context->Evaluate(what);
+}
+
+
+Tree *xl_evaluate_children(Context *context, Tree *what)
+// ----------------------------------------------------------------------------
+//   Evaluate the children for a given node
+// ----------------------------------------------------------------------------
+{
+    switch(what->Kind())
+    {
+    case INTEGER:
+    case REAL:
+    case TEXT:
+    case NAME:
+        return context->Evaluate(what);
+    case INFIX:
+    {
+        Infix *infix = (Infix *) what;
+        Tree *left = context->Evaluate(infix->left);
+        Tree *right = context->Evaluate(infix->right);
+        Infix *result = new Infix(infix, left, right);
+        return result;
+    }
+    case PREFIX:
+    {
+        Prefix *prefix = (Prefix *) what;
+        Tree *left = context->Evaluate(prefix->left);
+        Tree *right = context->Evaluate(prefix->right);
+        Prefix *result = new Prefix(prefix, left, right);
+        return result;
+    }
+    case POSTFIX:
+    {
+        Postfix *postfix = (Postfix *) what;
+        Tree *left = context->Evaluate(postfix->left);
+        Tree *right = context->Evaluate(postfix->right);
+        Postfix *result = new Postfix(postfix, left, right);
+        return result;
+    }
+    case BLOCK:
+    {
+        Block *block = (Block *) what;
+        Tree *child = context->Evaluate(block->child);
+        Block *result = new Block(block, child);
+        return result;
+    }
+    }
+    return NULL;
 }
 
 

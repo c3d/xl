@@ -52,6 +52,7 @@ struct Context;
 // ============================================================================
 
 Tree *xl_evaluate(Context *, Tree *);
+Tree *xl_evaluate_children(Context *, Tree *);
 Tree *xl_error(text msg, Tree *a1=0, Tree *a2=0, Tree *a3=0);
 Tree *xl_form_error(Tree *tree);
 

@@ -141,6 +141,17 @@ Rewrite *Context::Define(Tree *form, Tree *value)
 }
 
 
+Rewrite *Context::DefineData(Tree *data)
+// ----------------------------------------------------------------------------
+//   Enter a data declaration
+// ----------------------------------------------------------------------------
+{
+    Rewrite *result = Define(data, data);
+    result->native = xl_evaluate_children;
+    return result;
+}
+
+
 Tree *Context::Evaluate(Tree *what)
 // ----------------------------------------------------------------------------
 //   Evaluate 'what' in the given context

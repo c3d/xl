@@ -210,6 +210,7 @@ struct Context
 
     // Adding definitions to the context
     Rewrite *           Define(Tree *form, Tree *value);
+    Rewrite *           DefineData(Tree *form);
 
     // Rewriting things in the context
     Tree *              Evaluate(Tree *input);
