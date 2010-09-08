@@ -118,7 +118,7 @@ Tree *Context::Evaluate(Tree *what)
                 if (formKey == key)
                 {
                     // If this is native C code, invoke it.
-                    if (candidate->native)
+                    if (native_fn fn = candidate->native)
                     {
                         // Bind native context
                         TreeList args;
@@ -128,9 +128,19 @@ Tree *Context::Evaluate(Tree *what)
                             Compiler *comp = MAIN->compiler;
                             adapter_fn adj = comp->ArrayToArgsAdapter(arity);
                             Tree **args0 = (Tree **) &args[0];
-                            native_fn fn = candidate->native;
                             Tree *result = adj(fn, this, what, args0);
                             depth--;
+                            return result;
+                        }
+                    }
+                    else if (Name *name = candidate->from->AsName())
+                    {
+                        Name *vname = what->AsName();
+                        if (name->value == vname->value)
+                        {
+                            Tree *result = candidate->to;
+                            if (result != candidate->from)
+                                result = Evaluate(result);
                             return result;
                         }
                     }
@@ -264,11 +274,14 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
             type = eval->Evaluate(type);
 
             // We need to evaluate the value
-            value = eval->Evaluate(value);
+            if (type != tree_type)
+            {
+                value = eval->Evaluate(value);
 
-            // Check if the value matches the type
-            if (!ValueMatchesType(this, type, value, false))
-                return false;
+                // Check if the value matches the type
+                if (!ValueMatchesType(this, type, value, false))
+                    return false;
+            }
 
             return Bind(((Infix *) form)->left, value, args);
         }
