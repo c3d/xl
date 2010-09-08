@@ -49,11 +49,11 @@ XL_BEGIN
 
 Main *MAIN = NULL;
 
-SourceFile::SourceFile(text n, Tree *t, Symbols *s, bool ro)
+SourceFile::SourceFile(text n, Tree *t, Context *c, bool ro)
 // ----------------------------------------------------------------------------
 //   Construct a source file given a name
 // ----------------------------------------------------------------------------
-    : name(n), tree(t), symbols(s),
+    : name(n), tree(t), context(c),
       modified(0), changed(false), readOnly(ro)
 {
     struct stat st;
@@ -68,7 +68,7 @@ SourceFile::SourceFile()
 // ----------------------------------------------------------------------------
 //   Default constructor
 // ----------------------------------------------------------------------------
-    : name(""), tree(NULL), symbols(NULL),
+    : name(""), tree(NULL), context(NULL),
       modified(0), changed(false)
 {}
 
@@ -85,13 +85,11 @@ Main::Main(int inArgc, char **inArgv, Compiler *comp,
       syntax(syntaxName.c_str()),
       options(inArgc, inArgv),
       compiler(comp),
-      globals(new Symbols(NULL)),
       context(new Context(NULL)),
       renderer(std::cout, styleSheetName, syntax),
       reader(NULL), writer(NULL)
 {
     Options::options = &options;
-    Symbols::symbols = globals;
     Renderer::renderer = &renderer;
     Syntax::syntax = &syntax;
     MAIN = this;
@@ -141,7 +139,7 @@ int Main::ParseOptions()
                   << "         Check LANG, LC_CTYPE, LC_ALL.\n";
 
     // Initialize basics
-    EnterBasics(globals);
+    EnterBasics();
 
     // Scan options and build list of files we need to process
     cmd = options.ParseNext();
@@ -182,7 +180,7 @@ SourceFile *Main::NewFile(text path)
 //   Allocate an entry for updating programs (untitled)
 // ----------------------------------------------------------------------------
 {
-    files[path] = SourceFile(path, NULL, new Symbols(Symbols::symbols), true);
+    files[path] = SourceFile(path, NULL, new Context(MAIN->context), true);
     return &files[path];
 }
 
@@ -216,13 +214,19 @@ void Main::EvalContextFiles(source_names &ctxFiles)
 
     // Execute builtins.xl file first
     if (!options.builtins.empty())
-        if (Tree *builtins_file = files[options.builtins].tree)
-            xl_evaluate(builtins_file);
+    {
+        SourceFile &sf = files[options.builtins];
+        if (sf.tree)
+            sf.context->Evaluate(sf.tree);
+    }
 
     // Execute other context files (user.xl, theme.xl)
     for (file = ctxFiles.begin(); file != ctxFiles.end(); file++)
-        if (Tree *context_file = files[*file].tree)
-            xl_evaluate(context_file);
+    {
+        SourceFile &sf = files[*file];
+        if (sf.tree)
+            sf.context->Evaluate(sf.tree);
+    }
 }
 
 
@@ -303,14 +307,12 @@ int Main::LoadFile(text file, bool updateContext)
         }
     }
 
-    Symbols *syms = Symbols::symbols;
-    Symbols *savedSyms = syms;
-    syms = new Symbols(syms);
-    Symbols::symbols = syms;
-    if (tree)
-        tree->SetSymbols(syms);
+    Context *syms = MAIN->context;
+    Context *savedSyms = syms;
+    syms = new Context(syms);
+    MAIN->context = syms;
 
-    if (options.fileLoad)
+    IFTRACE(fileLoad)
         std::cout << "Loading: " << file << "\n";
 
     files[file] = SourceFile (file, tree, syms);
@@ -327,23 +329,12 @@ int Main::LoadFile(text file, bool updateContext)
     if (options.showSource)
         std::cout << tree << "\n";
 
-    if (!options.parseOnly)
-    {
-        if (options.optimize_level && tree)
-        {
-            tree = syms->CompileAll(tree);
-            if (!tree)
-                hadError = true;
-            else
-                files[file].tree = tree;
-        }
-    }
-
     if (options.verbose)
         debugp(tree);
 
     // Decide if we update symbols for next run
-    Symbols::symbols = updateContext ? syms : savedSyms;
+    if (!updateContext)
+        MAIN->context = savedSyms;
 
     return hadError;
 }
@@ -366,16 +357,12 @@ int Main::Run()
     for (file = file_names.begin(); file != file_names.end(); file++)
     {
         SourceFile &sf = files[*file];
-        Symbols::symbols = sf.symbols;
 
         // Evaluate the given tree
         Tree_p result = sf.tree;
         try
         {
-            if (options.interpreted)
-                result = MAIN->context->Evaluate(sf.tree);
-            else
-                result = sf.symbols->Run(sf.tree);
+            result = sf.context->Evaluate(sf.tree);
         }
         catch (XL::Error &e)
         {
@@ -401,8 +388,6 @@ int Main::Run()
             std::cout << result << "\n";
 #endif // TAO
         }
-
-        Symbols::symbols = globals;
     }
 
     return hadError;

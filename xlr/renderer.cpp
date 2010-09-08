@@ -491,14 +491,6 @@ void Renderer::Render(Tree *what)
 
     RenderBody(what);
 
-    // Emit symbols if required (feature #259)
-    if (XLTRACE(symbols) && what && what->Symbols())
-    {
-        std::ostringstream out;
-        out << "@" << (void *) what->Symbols();
-        RenderText(out.str());
-    }        
-
     if (cinfo)
     {
         text saveSelf = self;

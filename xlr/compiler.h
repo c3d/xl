@@ -113,7 +113,6 @@ public:
     llvm::FunctionType        *evalTy;
     llvm::PointerType         *evalFnTy;
     llvm::PointerType         *infoPtrTy;
-    llvm::PointerType         *symbolsPtrTy;
     llvm::PointerType         *contextPtrTy;
     llvm::PointerType         *charPtrTy;
     llvm::Function            *xl_evaluate;
@@ -121,7 +120,7 @@ public:
     llvm::Function            *xl_same_shape;
     llvm::Function            *xl_infix_match_check;
     llvm::Function            *xl_type_check;
-    llvm::Function            *xl_type_error;
+    llvm::Function            *xl_form_error;
     llvm::Function            *xl_new_integer;
     llvm::Function            *xl_new_real;
     llvm::Function            *xl_new_character;
@@ -132,7 +131,6 @@ public:
     llvm::Function            *xl_new_postfix;
     llvm::Function            *xl_new_infix;
     llvm::Function            *xl_new_closure;
-    llvm::Function            *xl_evaluate_children;;
     builtins_map               builtins;
     closure_map                closures;
     adapter_map                array_to_args_adapters;
@@ -178,8 +176,7 @@ struct CompiledUnit
     llvm::Value *       CallNewInfix(Infix *);
     llvm::Value *       CreateClosure(Tree *callee, TreeList &args);
     llvm::Value *       CallClosure(Tree *callee, uint ntrees);
-    llvm::Value *       CallTypeError(Tree *what);
-    llvm::Value *       CallEvaluateChildren(Tree *what);
+    llvm::Value *       CallFormError(Tree *what);
 
     llvm::BasicBlock *  TagTest(Tree *code, ulong tag);
     llvm::BasicBlock *  IntegerTest(Tree *code, longlong value);

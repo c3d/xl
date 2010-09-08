@@ -88,13 +88,13 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
       prefixTreeTy(NULL), prefixTreePtrTy(NULL),
       nativeTy(NULL), nativeFnTy(NULL),
       evalTy(NULL), evalFnTy(NULL),
-      infoPtrTy(NULL), symbolsPtrTy(NULL), contextPtrTy(NULL), charPtrTy(NULL),
+      infoPtrTy(NULL), contextPtrTy(NULL), charPtrTy(NULL),
       xl_evaluate(NULL), xl_same_text(NULL), xl_same_shape(NULL),
-      xl_infix_match_check(NULL), xl_type_check(NULL), xl_type_error(NULL),
+      xl_infix_match_check(NULL), xl_type_check(NULL), xl_form_error(NULL),
       xl_new_integer(NULL), xl_new_real(NULL), xl_new_character(NULL),
       xl_new_text(NULL), xl_new_xtext(NULL), xl_new_block(NULL),
       xl_new_prefix(NULL), xl_new_postfix(NULL), xl_new_infix(NULL),
-      xl_new_closure(NULL), xl_evaluate_children()
+      xl_new_closure(NULL)
 {
     // Register a listener with the garbage collector
     CompilerGarbageCollectionListener *cgcl =
@@ -181,8 +181,6 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     // Create the Info and Symbol pointer types
     PATypeHolder structInfoTy = OpaqueType::get(*context); // struct Info
     infoPtrTy = PointerType::get(structInfoTy, 0);         // Info *
-    PATypeHolder structSymTy = OpaqueType::get(*context);  // struct Symbols
-    symbolsPtrTy = PointerType::get(structSymTy, 0);       // Symbols *
     PATypeHolder structCtxTy = OpaqueType::get(*context);  // struct Context
     contextPtrTy = PointerType::get(structCtxTy, 0);       // Context *
 
@@ -207,13 +205,9 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     // Verify that there wasn't a change in the Tree type invalidating us
     struct LocalTree
     {
-        LocalTree (const Tree &o) :
-            tag(o.tag), code(o.code), info(o.info) {}
+        LocalTree (const Tree &o): tag(o.tag), info(o.info) {}
         ulong    tag;
-        eval_fn  code;
-        Symbols *symbols;       // The original definitions have _p
         XL::Info*info;          // We check that the size is the same
-        Tree    *source;
     };
     // If this assert fails, you changed struct tree and need to modify here
     XL_CASSERT(sizeof(LocalTree) == sizeof(Tree));
@@ -221,33 +215,26 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     // Create the Tree type
     std::vector<const Type *> treeElements;
     treeElements.push_back(LLVM_INTTYPE(ulong));           // tag
-    treeElements.push_back(evalFnTy);                      // code
-    treeElements.push_back(symbolsPtrTy);                  // symbols
     treeElements.push_back(infoPtrTy);                     // info
-    treeElements.push_back(treePtrTy);                     // source
     treeTy = StructType::get(*context, treeElements);      // struct Tree {}
     cast<OpaqueType>(structTreeTy.get())->refineAbstractTypeTo(treeTy);
     treeTy = cast<StructType> (structTreeTy.get());
 #define TAG_INDEX       0
-#define CODE_INDEX      1
-#define SYMBOLS_INDEX   2
-#define INFO_INDEX      3
-#define SOURCE_INDEX    4
-
+#define INFO_INDEX      1
 
     // Create the Integer type
     std::vector<const Type *> integerElements = treeElements;
     integerElements.push_back(LLVM_INTTYPE(longlong));  // value
     integerTreeTy = StructType::get(*context, integerElements);   // struct Integer{}
     integerTreePtrTy = PointerType::get(integerTreeTy,0); // Integer *
-#define INTEGER_VALUE_INDEX     5
+#define INTEGER_VALUE_INDEX     2
 
     // Create the Real type
     std::vector<const Type *> realElements = treeElements;
     realElements.push_back(Type::getDoubleTy(*context));  // value
     realTreeTy = StructType::get(*context, realElements); // struct Real{}
     realTreePtrTy = PointerType::get(realTreeTy, 0);      // Real *
-#define REAL_VALUE_INDEX        5
+#define REAL_VALUE_INDEX        2
 
     // Create the Prefix type (which we also use for Infix and Block)
     std::vector<const Type *> prefixElements = treeElements;
@@ -255,8 +242,8 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     prefixElements.push_back(treePtrTy);                // Tree *
     prefixTreeTy = StructType::get(*context, prefixElements); // struct Prefix
     prefixTreePtrTy = PointerType::get(prefixTreeTy, 0);// Prefix *
-#define LEFT_VALUE_INDEX        5
-#define RIGHT_VALUE_INDEX       6
+#define LEFT_VALUE_INDEX        2
+#define RIGHT_VALUE_INDEX       3
 
     // Record the type names
     module->addTypeName("tree", treeTy);
@@ -271,16 +258,16 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     const Type *boolTy = Type::getInt1Ty(*context);
 #define FN(x) #x, (void *) XL::x
     xl_evaluate = ExternFunction(FN(xl_evaluate),
-                                 treePtrTy, 1, treePtrTy);
+                                 treePtrTy, 2, contextPtrTy, treePtrTy);
     xl_same_text = ExternFunction(FN(xl_same_text),
                                   boolTy, 2, treePtrTy, charPtrTy);
     xl_same_shape = ExternFunction(FN(xl_same_shape),
                                    boolTy, 2, treePtrTy, treePtrTy);
     xl_infix_match_check = ExternFunction(FN(xl_infix_match_check),
                                           treePtrTy, 2, treePtrTy, charPtrTy);
-    xl_type_check = ExternFunction(FN(xl_type_check),
-                                   treePtrTy, 2, treePtrTy, treePtrTy);
-    xl_type_error = ExternFunction(FN(xl_type_error),
+    xl_type_check = ExternFunction(FN(xl_type_check), treePtrTy,
+                                   3, contextPtrTy, treePtrTy, treePtrTy);
+    xl_form_error = ExternFunction(FN(xl_form_error),
                                    treePtrTy, 1, treePtrTy);
     xl_new_integer = ExternFunction(FN(xl_new_integer),
                                     treePtrTy, 1, LLVM_INTTYPE(longlong));
@@ -303,8 +290,6 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     xl_new_closure = ExternFunction(FN(xl_new_closure),
                                     treePtrTy, -2,
                                     treePtrTy, LLVM_INTTYPE(uint));
-    xl_evaluate_children = ExternFunction(FN(xl_evaluate_children),
-                                          treePtrTy, -1, treePtrTy);
 }
 
 
@@ -1335,6 +1320,7 @@ Value *CompiledUnit::CallClosure(Tree *callee, uint ntrees)
     Value *pfx = code->CreateBitCast(ptr,compiler->prefixTreePtrTy);
     Value *lf = code->CreateConstGEP2_32(pfx, 0, LEFT_VALUE_INDEX);
     Value *callTree = code->CreateLoad(lf);
+#define CODE_INDEX 0
     Value *callCode = code->CreateConstGEP2_32(callTree, 0, CODE_INDEX);
     callCode = code->CreateLoad(callCode);
     
@@ -1366,28 +1352,17 @@ Value *CompiledUnit::CallClosure(Tree *callee, uint ntrees)
     MarkComputed(callee, callVal);
 
     return callVal;
+
 }
 
 
-Value *CompiledUnit::CallTypeError(Tree *what)
+Value *CompiledUnit::CallFormError(Tree *what)
 // ----------------------------------------------------------------------------
 //   Report a type error trying to evaluate some argument
 // ----------------------------------------------------------------------------
 {
     Value *ptr = ConstantTree(what); assert(what);
-    Value *callVal = code->CreateCall(compiler->xl_type_error, ptr);
-    MarkComputed(what, callVal);
-    return callVal;
-}
-
-
-Value *CompiledUnit::CallEvaluateChildren(Tree *what)
-// ----------------------------------------------------------------------------
-//   Evaluate all children for a tree
-// ----------------------------------------------------------------------------
-{
-    Value *ptr = ConstantTree(what); assert(what);
-    Value *callVal = code->CreateCall(compiler->xl_evaluate_children, ptr);
+    Value *callVal = code->CreateCall(compiler->xl_form_error, ptr);
     MarkComputed(what, callVal);
     return callVal;
 }
@@ -1722,13 +1697,13 @@ void ExpressionReduction::Failed()
 {
     CompiledUnit &u = unit;
 
-    u.CallTypeError(source);
+    u.CallFormError(source);
     u.code->CreateBr(successbb);
     if (u.failbb)
     {
         IRBuilder<> failTail(u.failbb);
         u.code->SetInsertPoint(u.failbb);
-        u.CallTypeError(source);
+        u.CallFormError(source);
         failTail.CreateBr(successbb);
         u.failbb = NULL;
     }

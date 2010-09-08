@@ -161,23 +161,19 @@ PREFIX(RandomNumber2i, integer, "random", PARM(low,integer) PARM(high,integer),
        XL_RINT(xl_random(XL_INT(low), XL_INT(high))), "")
 
 // Executing some code
-PREFIX(Identity,  tree, "identity", PARM(code, tree), return xl_identity(&code), "")
-PREFIX(DoCode,    tree, "do", PARM(code, tree), return xl_evaluate(&code), "")
-PREFIX(RepeatCode,tree, "repeat", PARM(n, integer) PARM(code, tree),
-       return xl_repeat(self, &code, n), "")
-PREFIX(LoadFile, tree, "load", PARM(file, text), return xl_load(file), "")
-PREFIX(ImportFile, tree, "import", PARM(file, text), return xl_import(file), "")
+PREFIX(DoCode,    tree, "do", PARM(code, tree),
+       return xl_evaluate(context, &code), "")
+PREFIX(LoadFile, tree, "load", PARM(file, text),
+       return xl_load(context, file), "")
+PREFIX(ImportFile, tree, "import", PARM(file, text),
+       return xl_import(context, file), "")
 PREFIX(LoadCSV,  tree, "load_csv", PARM(f, text) PARM(p, text),
-       return xl_load_data(f, p, ",;", "\n\f\r"), "")
+       return xl_load_data(context, f, p, ",;", "\n\f\r"), "")
 PREFIX(LoadTSV,  tree, "load_tsv", PARM(f, text) PARM(p, text),
-       return xl_load_data(f, p, "\t", "\n\f\r"), "")
+       return xl_load_data(context, f, p, "\t", "\n\f\r"), "")
 PREFIX(LoadData,  tree, "load_data",
        PARM(f, text) PARM(p, text) PARM(fs, text) PARM(rs, text),
-       return xl_load_data(f, p, fs, rs), "")
-INFIX(Apply, tree, tree, "with", tree,
-      return xl_apply(&l, &r), "")
-INFIX(Range, tree, integer, "..", integer, return xl_range(l, r), "")
-INFIX(Index, tree, tree, "at", integer, return xl_nth(&l, r), "")
+       return xl_load_data(context, f, p, fs, rs), "")
 
 PREFIX(Springify, real, "springify",
        PARM(v, real) PARM(tgt, real) PARM(t, real)
@@ -199,9 +195,9 @@ PREFIX(ErrorMsg1, tree, "error", PARM(m, text) PARM(a,tree),
 PREFIX(ErrorMsg0, tree, "error", PARM(m, text),
        return xl_error(m), "")
 PREFIX(WriteTree, tree, "write", PARM(toWrite, tree),
-       return xl_write(self->Symbols(), &toWrite, ""), "")
+       return xl_write(context, &toWrite, ""), "")
 PREFIX(WriteLnTree, tree, "writeln", PARM(toWrite, tree),
-       return xl_write(self->Symbols(), &toWrite, "\n"), "")
+       return xl_write(context, &toWrite, "\n"), "")
 
 // Interpret a tree
 PREFIX(Interpret, tree, "interpret", PARM(value, tree),

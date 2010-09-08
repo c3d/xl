@@ -51,8 +51,6 @@ OPTVAR(showGV, bool, false)
 OPTION(showgv, "Generate Graphviz output", showGV = true)
 OPTVAR(showSource, bool, false)
 OPTION(show, "Show source file", showSource = true)
-OPTVAR(fileLoad, bool, false)
-OPTION(fileload, "Show paths as files are loaded", fileLoad = true)
 
 // Builtins file
 OPTVAR(builtins, text, "builtins.xl")
@@ -128,6 +126,7 @@ TRACE(closure)
 TRACE(diff)
 TRACE(calls2xl)
 TRACE(symbols)
+TRACE(fileLoad)
 
 
 

@@ -54,7 +54,6 @@ struct Infix;                                   // Infix: A+B, newline
 struct Block;                                   // Block: (A), {A}
 struct Action;                                  // Action on trees
 struct Info;                                    // Information in trees
-struct Symbols;                                 // Symbol table
 struct Sha1;                                    // Hash used for id-ing trees
 
 
@@ -74,7 +73,6 @@ typedef GCPtr<Prefix>                   Prefix_p;
 typedef GCPtr<Postfix>                  Postfix_p;
 typedef GCPtr<Infix>                    Infix_p;
 typedef GCPtr<Block>                    Block_p;
-typedef GCPtr<Symbols>                  Symbols_p;
 
 typedef ulong TreePosition;                     // Position in context
 typedef std::vector<Tree_p> TreeList;           // A list of trees
@@ -115,12 +113,9 @@ struct Tree
 
     // Constructor and destructor
     Tree (kind k, TreePosition pos = NOWHERE):
-        tag((pos<<KINDBITS) | k),
-        code(NULL), symbols(NULL), info(NULL), source(NULL) {}
+        tag((pos<<KINDBITS) | k), info(NULL) {}
     Tree(kind k, Tree *from):
-        tag(from->tag),
-        code(from->code), symbols(from->symbols),
-        info(from->info ? from->info->Copy() : NULL), source(from)
+        tag(from->tag), info(from->info ? from->info->Copy() : NULL)
     {
         assert(k == Kind());
     }
@@ -135,11 +130,18 @@ struct Tree
     TreePosition        Position()            { return (long) tag>>KINDBITS; }
     bool                IsLeaf()              { return Kind() <= NAME; }
     bool                IsConstant()          { return Kind() <= TEXT; }
-    XL::Symbols *       Symbols()             { return symbols; }
-    void                SetSymbols(XL::Symbols *s) { symbols = s; }
 
+    // Safe cast to an appropriate subclass
+    Integer *           AsInteger();
+    Real *              AsReal();
+    Text *              AsText();
+    Name *              AsName();
+    Block *             AsBlock();
+    Infix *             AsInfix();
+    Prefix *            AsPrefix();
+    Postfix *           AsPostfix();
 
-    // Info
+    // Info management
     template<class I>
     typename I::data_t  Get() const;
     template<class I>
@@ -160,25 +162,12 @@ struct Tree
     I*                  Remove(I *);
 
 
-    // Safe cast to an appropriate subclass
-    Integer *           AsInteger();
-    Real *              AsReal();
-    Text *              AsText();
-    Name *              AsName();
-    Block *             AsBlock();
-    Infix *             AsInfix();
-    Prefix *            AsPrefix();
-    Postfix *           AsPostfix();
-
     // Conversion to text
                         operator text();
 
 public:
     ulong       tag;                            // Position + kind
-    eval_fn     code;                           // Compiled code
-    Symbols_p   symbols;                        // Symbol table for evaluation
     Info *      info;                           // Information for tree
-    Tree_p      source;                         // Source for the tree
 
     GARBAGE_COLLECT(Tree);
 

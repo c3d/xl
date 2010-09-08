@@ -59,12 +59,12 @@ XL_BEGIN
 // 
 // ============================================================================
 
-Tree *ValueMatchesType(Tree *type, Tree *value, bool conversions);
-Tree *TypeCoversType(Tree *type, Tree *test, bool conversions);
-Tree *TypeIntersectsType(Tree *type, Tree *test, bool conversions);
-Tree *UnionType(Tree *t1, Tree *t2);
-Tree *CanonicalType(Tree *value);
-Tree *StructuredType(Tree *value);
+Tree *ValueMatchesType(Context *, Tree *type, Tree *value, bool conversions);
+Tree *TypeCoversType(Context *, Tree *type, Tree *test, bool conversions);
+Tree *TypeIntersectsType(Context *, Tree *type, Tree *test, bool conversions);
+Tree *UnionType(Context *, Tree *t1, Tree *t2);
+Tree *CanonicalType(Context *, Tree *value);
+Tree *StructuredType(Context *, Tree *value);
 
 
 
@@ -83,62 +83,6 @@ struct TypeInfo : Info
     TypeInfo(Tree *type): type(type) {}
     operator            data_t()  { return type; }
     Tree_p               type;
-};
-
-
-struct MatchType : Action
-// ----------------------------------------------------------------------------
-//   An action that checks if a value matches a type
-// ----------------------------------------------------------------------------
-{
-    MatchType(Symbols *s, Tree *t): symbols(s), type(t) {}
-
-    Tree *Do(Tree *what);
-    Tree *DoInteger(Integer *what);
-    Tree *DoReal(Real *what);
-    Tree *DoText(Text *what);
-    Tree *DoName(Name *what);
-    Tree *DoPrefix(Prefix *what);
-    Tree *DoPostfix(Postfix *what);
-    Tree *DoInfix(Infix *what);
-    Tree *DoBlock(Block *what);
-
-    Tree *MatchStructuredType(Tree *what, Tree *kind = NULL);
-    Tree *Rewrites(Tree *what);
-    Tree *Normalize();
-    Tree *NameMatch(Tree *what);
-
-    Symbols_p symbols;
-    Tree_p    type;
-};
-
-
-struct ArgumentTypeMatch : Action
-// ----------------------------------------------------------------------------
-//   Check if a tree matches the form of the left of a rewrite
-// ----------------------------------------------------------------------------
-{
-    ArgumentTypeMatch (Tree *t,
-                       Symbols *s, Symbols *l, Symbols *r) :
-        symbols(s), locals(l), rewrite(r), test(t), defined(NULL) {}
-
-    // Action callbacks
-    virtual Tree *Do(Tree *what);
-    virtual Tree *DoInteger(Integer *what);
-    virtual Tree *DoReal(Real *what);
-    virtual Tree *DoText(Text *what);
-    virtual Tree *DoName(Name *what);
-    virtual Tree *DoPrefix(Prefix *what);
-    virtual Tree *DoPostfix(Postfix *what);
-    virtual Tree *DoInfix(Infix *what);
-    virtual Tree *DoBlock(Block *what);
-
-public:
-    Symbols_p      symbols;     // Context in which we evaluate values
-    Symbols_p      locals;      // Symbols where we declare arguments
-    Symbols_p      rewrite;     // Symbols in which the rewrite was declared
-    Tree_p         test;        // Tree we test
-    Tree_p         defined;     // Tree we define
 };
 
 

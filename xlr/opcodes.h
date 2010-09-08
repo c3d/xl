@@ -45,9 +45,9 @@ void            setDocumentation(Tree *node, text doc);
 #define XL_TEXT(v)      ((text_t) (v))
 #define XL_BOOL(v)      ((boolean_t) (v))
 #define XL_RTREE(val)   return (val)
-#define XL_RINT(val)    return (XL::Integer *) xl_set_source(new XL::Integer(val), self)
-#define XL_RREAL(val)   return (XL::Real *) xl_set_source(new XL::Real(val), self)
-#define XL_RTEXT(val)   return (XL::Text *) xl_set_source(new XL::Text(val), self);
+#define XL_RINT(val)    return new XL::Integer(val)
+#define XL_RREAL(val)   return new XL::Real(val)
+#define XL_RTEXT(val)   return new XL::Text(val)
 #define XL_RBOOL(val)   return (val) ? XL::xl_true : XL::xl_false
 
 typedef Integer &       integer_r;

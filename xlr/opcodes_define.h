@@ -38,7 +38,7 @@
 
 
 #define INFIX(name, rtype, t1, symbol, t2, _code, doc)       \
-    xl_enter_infix_##name(c, context, compiler);
+    xl_enter_infix_##name(context);
 
 
 
@@ -62,7 +62,7 @@
     {                                                                   \
         TreeList parameters;                                            \
         parms;                                                          \
-        xl_enter_prefix_##name(c, context, compiler, parameters);       \
+        xl_enter_prefix_##name(context, parameters);                    \
     } while(0);
 
 
@@ -71,24 +71,20 @@
     {                                                                   \
         TreeList  parameters;                                           \
         parms;                                                          \
-        xl_enter_postfix_##name(c, context, compiler, parameters);      \
+        xl_enter_postfix_##name(context, parameters);                   \
     } while(0);
 
 
 #define BLOCK(name, rtype, open, type, close, _code, doc)    \
-    xl_enter_block_##name(c, context, compiler);
+    xl_enter_block_##name(c, context);
 
 
 #define NAME(symbol)                            \
     do                                          \
     {                                           \
         Name *n = new Name(#symbol);            \
-        n->code = xl_identity;                  \
-        n->SetSymbols(c);                       \
-        c->EnterName(#symbol, n);               \
         xl_##symbol = n;                        \
         compiler->EnterGlobal(n, &xl_##symbol); \
-                                                \
         context->Define(n, n);                  \
     } while (0);
 
@@ -98,22 +94,12 @@
     {                                                                   \
         /* Type alone evaluates as self */                              \
         Name *n = new Name(#symbol);                                    \
-        eval_fn fn = (eval_fn) xl_identity;                             \
-        n->code = fn;                                                   \
-        n->SetSymbols(c);                                               \
-        c->EnterName(#symbol, n);                                       \
         symbol##_type = n;                                              \
         compiler->EnterGlobal(n, &symbol##_type);                       \
                                                                         \
         /* Type as infix : evaluates to type check, e.g. 0 : integer */ \
         Infix *from = new Infix(":", new Name("V"), new Name(#symbol)); \
         Name *to = new Name(#symbol);                                   \
-        Rewrote *rw = c->EnterRewrite(from, to);                        \
-        eval_fn typeTestFn = (eval_fn) xl_##symbol##_cast;              \
-        to->code = typeTestFn;                                          \
-        to->SetSymbols(c);                                              \
-        compiler->EnterBuiltin(XL_SCOPE #symbol,                        \
-                               to, rw->parameters, typeTestFn);         \
-                                                                        \
-        context->Define(n, n);                                          \
+        Rewrite *rw = context->Define(from, to);                        \
+        rw->native = (native_fn) xl_##symbol##_cast;                    \
     } while(0);

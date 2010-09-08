@@ -51,7 +51,7 @@ XL_BEGIN
 #include "basics.tbl"
 
 
-void EnterBasics(Symbols *c)
+void EnterBasics()
 // ----------------------------------------------------------------------------
 //   Enter all the basic operations defined in basics.tbl
 // ----------------------------------------------------------------------------
