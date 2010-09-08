@@ -187,8 +187,15 @@ private:
 };
 
 
-int  CompareTrees(Tree *t1, Tree *t2);
-inline bool EqualTrees(Tree *t1, Tree *t2) { return CompareTrees(t1, t2) == 0; }
+int  CompareTrees(Tree *t1, Tree *t2, bool recurse = true);
+
+inline bool EqualTrees(Tree *t1, Tree *t2, bool recurse = true)
+// ----------------------------------------------------------------------------
+//   Compare for equality
+// ----------------------------------------------------------------------------
+{
+    return CompareTrees(t1, t2, recurse) == 0;
+}
 
 
 
@@ -850,154 +857,6 @@ template <CopyMode mode> struct TreeCopyTemplate : Action
     }
     Tree *dest;
 };
-
-
-
-// ============================================================================
-//
-//    Tree shape equality comparison
-//
-// ============================================================================
-
-enum TreeMatchMode
-// ----------------------------------------------------------------------------
-//   The ways of comparing trees
-// ----------------------------------------------------------------------------
-{
-    TM_RECURSIVE = 1,  // Compare whole tree
-    TM_NODE_ONLY       // Compare one node only
-};
-
-
-template <TreeMatchMode mode> struct TreeMatchTemplate : Action
-// ----------------------------------------------------------------------------
-//   Check if two trees match in structure
-// ----------------------------------------------------------------------------
-{
-    TreeMatchTemplate (Tree *t): test(t) {}
-    Tree *DoInteger(Integer *what)
-    {
-        if (Integer *it = test->AsInteger())
-            if (it->value == what->value)
-                return what;
-        return NULL;
-    }
-    Tree *DoReal(Real *what)
-    {
-        if (Real *rt = test->AsReal())
-            if (rt->value == what->value)
-                return what;
-        return NULL;
-    }
-    Tree *DoText(Text *what)
-    {
-        if (Text *tt = test->AsText())
-            if (tt->value == what->value)
-                return what;
-        return NULL;
-    }
-    Tree *DoName(Name *what)
-    {
-        if (Name *nt = test->AsName())
-            if (nt->value == what->value)
-                return what;
-        return NULL;
-    }
-
-    Tree *DoBlock(Block *what)
-    {
-        // Test if we exactly match the block, i.e. the reference is a block
-        if (Block *bt = test->AsBlock())
-        {
-            if (bt->opening == what->opening &&
-                bt->closing == what->closing)
-            {
-                if (mode == TM_NODE_ONLY)
-                    return what;
-                test = bt->child;
-                Tree *br = what->child->Do(this);
-                test = bt;
-                if (br)
-                    return br;
-            }
-        }
-        return NULL;
-    }
-    Tree *DoInfix(Infix *what)
-    {
-        if (Infix *it = test->AsInfix())
-        {
-            // Check if we match the tree, e.g. A+B vs 2+3
-            if (it->name == what->name)
-            {
-                if (mode == TM_NODE_ONLY)
-                    return what;
-                test = it->left;
-                Tree *lr = what->left->Do(this);
-                test = it;
-                if (!lr)
-                    return NULL;
-                test = it->right;
-                Tree *rr = what->right->Do(this);
-                test = it;
-                if (!rr)
-                    return NULL;
-                return what;
-            }
-        }
-        return NULL;
-    }
-    Tree *DoPrefix(Prefix *what)
-    {
-        if (Prefix *pt = test->AsPrefix())
-        {
-            if (mode == TM_NODE_ONLY)
-                return what;
-            // Check if we match the tree, e.g. f(A) vs. f(2)
-            test = pt->left;
-            Tree *lr = what->left->Do(this);
-            test = pt;
-            if (!lr)
-                return NULL;
-            test = pt->right;
-            Tree *rr = what->right->Do(this);
-            test = pt;
-            if (!rr)
-                return NULL;
-            return what;
-        }
-        return NULL;
-    }
-    Tree *DoPostfix(Postfix *what)
-    {
-        if (Postfix *pt = test->AsPostfix())
-        {
-            if (mode == TM_NODE_ONLY)
-                return what;
-            // Check if we match the tree, e.g. A! vs 2!
-            test = pt->right;
-            Tree *rr = what->right->Do(this);
-            test = pt;
-            if (!rr)
-                return NULL;
-            test = pt->left;
-            Tree *lr = what->left->Do(this);
-            test = pt;
-            if (!lr)
-                return NULL;
-            return what;
-        }
-        return NULL;
-    }
-    Tree *Do(Tree *)
-    {
-        return NULL;
-    }
-
-    Tree *       test;
-};
-
-typedef struct TreeMatchTemplate<TM_RECURSIVE> TreeMatch;
 
 
 

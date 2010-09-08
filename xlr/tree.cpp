@@ -189,13 +189,17 @@ Tree *Action::DoInfix(Infix *what)
 }
 
 
-int CompareTrees(Tree *left, Tree *right)
+int CompareTrees(Tree *left, Tree *right, bool recurse)
 // ----------------------------------------------------------------------------
 //   Return true if two trees are equal
 // ----------------------------------------------------------------------------
 {
     if (left == right)
         return 0;
+    if (!left)
+        return -4;
+    if (!right)
+        return 4;
 
     kind lk = left->Kind();
     kind rk = right->Kind();
@@ -240,30 +244,39 @@ int CompareTrees(Tree *left, Tree *right)
             return -2;
         else if (li->name > ri->name)
             return 2;
-        if (int cmpLeft = CompareTrees(li->left, ri->left))
-            return cmpLeft;
-        if (int cmpRight = CompareTrees(li->right, ri->right))
-            return cmpRight;
+        if (recurse)
+        {
+            if (int cmpLeft = CompareTrees(li->left, ri->left))
+                return cmpLeft;
+            if (int cmpRight = CompareTrees(li->right, ri->right))
+                return cmpRight;
+        }
         return 0;
     }
     case PREFIX:
     {
         Prefix *lp = (Prefix *) left;
         Prefix *rp = (Prefix *) right;
-        if (int cmpLeft = CompareTrees(lp->left, rp->left))
-            return cmpLeft;
-        if (int cmpRight = CompareTrees(lp->right, rp->right))
-            return cmpRight;
+        if (recurse)
+        {
+            if (int cmpLeft = CompareTrees(lp->left, rp->left))
+                return cmpLeft;
+            if (int cmpRight = CompareTrees(lp->right, rp->right))
+                return cmpRight;
+        }
         return 0;
     }
     case POSTFIX:
     {
         Postfix *lp = (Postfix *) left;
         Postfix *rp = (Postfix *) right;
-        if (int cmpLeft = CompareTrees(lp->left, rp->left))
-            return cmpLeft;
-        if (int cmpRight = CompareTrees(lp->right, rp->right))
-            return cmpRight;
+        if (recurse)
+        {
+            if (int cmpLeft = CompareTrees(lp->left, rp->left))
+                return cmpLeft;
+            if (int cmpRight = CompareTrees(lp->right, rp->right))
+                return cmpRight;
+        }
         return 0;
     }
     case BLOCK:
@@ -274,6 +287,8 @@ int CompareTrees(Tree *left, Tree *right)
             return -2;
         if (lb->opening > rb->opening || lb->closing > rb->closing)
             return  2;
+        if (!recurse)
+            return 0;
         return CompareTrees(lb->child, rb->child);
     }
     }

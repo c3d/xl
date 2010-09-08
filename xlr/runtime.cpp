@@ -120,13 +120,7 @@ bool xl_same_shape(Tree *left, Tree *right)
 //   Check equality of two trees
 // ----------------------------------------------------------------------------
 {
-    if (right)
-    {
-        XL::TreeMatch compareForEquality(right);
-        if (left && left->Do(compareForEquality))
-            return true;
-    }
-    return false;
+    return EqualTrees(left, right);
 }
 
 

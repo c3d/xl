@@ -1111,8 +1111,7 @@ void TreeDiff::DoEditScript()
                 assert(vptr);
                 node_id v = vptr->Get<NodeIdInfo>();
 
-                TreeMatchTemplate<TM_NODE_ONLY> compareNodes(wptr);
-                if (!xptr->Do(compareNodes))
+                if (!EqualTrees(wptr, xptr, false))
                 {
                     // ii. If v(w) != v(x)
                     
