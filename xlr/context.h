@@ -185,22 +185,22 @@ XL_BEGIN
 
 struct Context;                                 // Execution context
 struct Rewrite;                                 // Tree rewrite data
-struct Rewrote;                                 // Tree rewrite data
+struct Rewrote;                                 // Tree rewrite data (old)
 struct Errors;                                  // Error handlers
 struct Compiler;                                // JIT compiler
 struct CompiledUnit;                            // Compilation unit
 
 typedef GCPtr<Context>             Context_p;
-typedef GCPtr<Rewrote>             Rewrote_p;
-typedef std::map<ulong, Rewrote_p> rewrote_table;// Hashing of rewrites
+typedef GCPtr<Rewrite>             Rewrite_p;
+typedef std::map<ulong, Rewrite_p> rewrite_table;// Hashing of rewrites
 typedef Tree *(*native_fn) (Context *ctx, Tree *self);
 
-typedef GCPtr<Rewrite>             Rewrite_p;
+typedef GCPtr<Rewrote>             Rewrote_p;
 
 typedef std::map<text, Tree_p>     symbol_table; // Symbol table in context
 typedef std::set<Symbols_p>        symbols_set;  // Set of symbol tables
 typedef std::vector<Symbols_p>     symbols_list; // List of symbols table
-typedef std::map<ulong, Rewrite_p> rewrite_table;// Hashing of rewrites
+typedef std::map<ulong, Rewrote_p> rewrote_table;// Hashing of rewrites
 typedef symbol_table::iterator     symbol_iter;  // Iterator over sym table
 typedef std::map<Tree_p, Symbols_p>capture_table;// Symbol capture table
 typedef std::map<Tree_p, Tree_p>   value_table;  // Used for value caching
@@ -224,7 +224,7 @@ struct Context
     ~Context();
 
     // Adding definitions to the context
-    Rewrote *           Define(Tree *form, Tree *value);
+    Rewrite *           Define(Tree *form, Tree *value);
 
     // Rewriting things in the context
     Tree *              Evaluate(Tree *input);
@@ -240,29 +240,29 @@ struct Context
 
 public:
     Context_p           parent;
-    rewrote_table       rewrotes;
+    rewrite_table       rewrites;
     bool                hasConstants;
 
     GARBAGE_COLLECT(Context);
 };
 
 
-struct Rewrote
+struct Rewrite
 // ----------------------------------------------------------------------------
 //   Information about a rewrite, e.g fact N -> N * fact(N-1)
 // ----------------------------------------------------------------------------
 //   Note that a rewrite with 'to' = NULL is used for 'data' statements
 {
-    Rewrote (Tree *f, Tree *t): from(f), to(t), hash(), native(NULL) {}
-    ~Rewrote() {}
+    Rewrite (Tree *f, Tree *t): from(f), to(t), hash(), native(NULL) {}
+    ~Rewrite() {}
 
 public:
     Tree_p              from;
     Tree_p              to;
-    rewrote_table       hash;
+    rewrite_table       hash;
     native_fn           native;
 
-    GARBAGE_COLLECT(Rewrote);
+    GARBAGE_COLLECT(Rewrite);
 };
 
 
@@ -282,13 +282,13 @@ struct Symbols
     // Symbol management
     Tree *              Named (text name, bool deep = true);
     Tree *              Defined (text name, bool deep = true);
-    Rewrite *           Rewrites()              { return rewrites; }
+    Rewrote *           Rewrites()              { return rewrites; }
 
     // Entering symbols in the symbol table
     void                EnterName (text name, Tree *value, Tree *def = NULL);
     void                ExtendName (text name, Tree *value);
-    Rewrite *           EnterRewrite(Rewrite *r);
-    Rewrite *           EnterRewrite(Tree *from, Tree *to);
+    Rewrote *           EnterRewrite(Rewrote *r);
+    Rewrote *           EnterRewrite(Tree *from, Tree *to);
     Name *              Allocate(Name *varName);
 
     // Clearing symbol tables
@@ -314,7 +314,7 @@ public:
     Symbols_p           parent;
     symbol_table        names;
     symbol_table        definitions;
-    Rewrite_p           rewrites;
+    Rewrote_p           rewrites;
     symbol_table        calls;
     value_table         type_tests;
     symbols_set         imported;
@@ -327,28 +327,28 @@ public:
 };
 
 
-struct Rewrite
+struct Rewrote
 // ----------------------------------------------------------------------------
 //   Information about a rewrite, e.g fact N -> N * fact(N-1)
 // ----------------------------------------------------------------------------
 //   Note that a rewrite with 'to' = NULL is used for 'data' statements
 {
-    Rewrite (Tree *f, Tree *t, Symbols *s = NULL):
+    Rewrote (Tree *f, Tree *t, Symbols *s = NULL):
         from(f), to(t), hash(), parameters(), symbols(s) {}
-    ~Rewrite();
+    ~Rewrote();
 
-    Rewrite *           Add (Rewrite *rewrite);
+    Rewrote *           Add (Rewrote *rewrote);
     Tree *              Do(Action &a);
     Tree *              Compile(void);
 
 public:
     Tree_p              from;
     Tree_p              to;
-    rewrite_table       hash;
+    rewrote_table       hash;
     TreeList            parameters;
     Symbols_p           symbols;
 
-    GARBAGE_COLLECT(Rewrite);
+    GARBAGE_COLLECT(Rewrote);
 };
 
 

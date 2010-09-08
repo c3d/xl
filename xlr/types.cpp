@@ -784,7 +784,7 @@ Tree *MatchType::Rewrites(Tree *what)
     {
         Symbols *s = *li;
 
-        Rewrite *candidate = s->Rewrites();
+        Rewrote *candidate = s->Rewrites();
         while (candidate)
         {
             // Compute the hash key for the 'from' of the current rewrite

@@ -108,7 +108,7 @@
         /* Type as infix : evaluates to type check, e.g. 0 : integer */ \
         Infix *from = new Infix(":", new Name("V"), new Name(#symbol)); \
         Name *to = new Name(#symbol);                                   \
-        Rewrite *rw = c->EnterRewrite(from, to);                        \
+        Rewrote *rw = c->EnterRewrite(from, to);                        \
         eval_fn typeTestFn = (eval_fn) xl_##symbol##_cast;              \
         to->code = typeTestFn;                                          \
         to->SetSymbols(c);                                              \

@@ -61,14 +61,14 @@
         Name *to = new Name(symbol);                                    \
         eval_fn fn = (eval_fn) xl_##name;                               \
         setDocumentation(from, doc);                                    \
-        Rewrite *rw = c->EnterRewrite(from, to);                        \
+        Rewrote *rw = c->EnterRewrite(from, to);                        \
         to->code = fn;                                                  \
         to->SetSymbols(c);                                              \
         to->Set<TypeInfo> (rtype##_type);                               \
         compiler->EnterBuiltin(XL_SCOPE #name,                          \
                                to, rw->parameters, fn);                 \
                                                                         \
-        Rewrote *rwo = context->Define(from, to);                       \
+        Rewrite *rwo = context->Define(from, to);                       \
         rwo->native = (native_fn) xli_##name;                           \
     }
 
@@ -95,14 +95,14 @@
             Prefix *from = new Prefix(new Name(symbol), parmtree);      \
             Name *to = new Name(symbol);                                \
             setDocumentation(from, doc);                                \
-            Rewrite *rw = c->EnterRewrite(from, to);                    \
+            Rewrote *rw = c->EnterRewrite(from, to);                    \
             to->code = fn;                                              \
             to->SetSymbols(c);                                          \
             to->Set<TypeInfo> (rtype##_type);                           \
             compiler->EnterBuiltin(XL_SCOPE #name,                      \
                                    to, rw->parameters, fn);             \
                                                                         \
-            Rewrote *rwo = context->Define(from, to);                   \
+            Rewrite *rwo = context->Define(from, to);                   \
             rwo->native = (native_fn) xli_##name;                       \
         }                                                               \
         else                                                            \
@@ -116,7 +116,7 @@
             TreeList noparms;                                           \
             compiler->EnterBuiltin(XL_SCOPE #name, n, noparms, fn);     \
                                                                         \
-            Rewrote *rwo = context->Define(n, n);                       \
+            Rewrite *rwo = context->Define(n, n);                       \
             rwo->native = (native_fn) xli_##name;                       \
         }                                                               \
     }
@@ -142,14 +142,14 @@
         Name *to = new Name(symbol);                                    \
         eval_fn fn = (eval_fn) xl_##name;                               \
         setDocumentation(from, doc);                                    \
-        Rewrite *rw = c->EnterRewrite(from, to);                        \
+        Rewrote *rw = c->EnterRewrite(from, to);                        \
         to->code = fn;                                                  \
         to->SetSymbols(c);                                              \
         to->Set<TypeInfo> (rtype##_type);                               \
         compiler->EnterBuiltin(XL_SCOPE #name,                          \
                                to, rw->parameters, to->code);           \
                                                                         \
-        Rewrote *rwo = context->Define(from, to);                       \
+        Rewrite *rwo = context->Define(from, to);                       \
         rwo->native = (native_fn) xli_##name;                           \
     }
 
@@ -173,14 +173,14 @@
         Name *to = new Name(#name);                                     \
         eval_fn fn = (eval_fn) xl_##name;                               \
         setDocumentation(from, doc);                                    \
-        Rewrite *rw = c->EnterRewrite(from, to);                        \
+        Rewrote *rw = c->EnterRewrite(from, to);                        \
         to->code = fn;                                                  \
         to->SetSymbols(c);                                              \
         to->Set<TypeInfo> (rtype##_type);                               \
         compiler->EnterBuiltin(XL_SCOPE #name, to,                      \
                                rw->parameters, to->code);               \
                                                                         \
-        Rewrote *rwo = context->Define(from, to);                       \
+        Rewrite *rwo = context->Define(from, to);                       \
         rwo->native = (native_fn) xli_##name;                           \
     }
 

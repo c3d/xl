@@ -50,7 +50,7 @@ Context::Context(Context *parent)
 // ----------------------------------------------------------------------------
 //   Constructor for an execution context
 // ----------------------------------------------------------------------------
-    : parent(parent), rewrotes(),
+    : parent(parent), rewrites(),
       hasConstants(parent ? parent->hasConstants : false)
 {}
 
@@ -62,7 +62,7 @@ Context::~Context()
 {}
 
 
-Rewrote *Context::Define(Tree *form, Tree *value)
+Rewrite *Context::Define(Tree *form, Tree *value)
 // ----------------------------------------------------------------------------
 //   Enter a rewrite in the context
 // ----------------------------------------------------------------------------
@@ -72,14 +72,14 @@ Rewrote *Context::Define(Tree *form, Tree *value)
         hasConstants = true;
 
     // Create a rewrite and add it to the table
-    Rewrote *rewrote = new Rewrote(form, value);
+    Rewrite *rewrite = new Rewrite(form, value);
     ulong key = Hash(form);
-    Rewrote_p *parent = &rewrotes[key];
-    while (Rewrote *where = *parent)
+    Rewrite_p *parent = &rewrites[key];
+    while (Rewrite *where = *parent)
         parent = &where->hash[key];
-    *parent = rewrote;
+    *parent = rewrite;
 
-    return rewrote;
+    return rewrite;
 }
 
 
@@ -98,11 +98,11 @@ Tree *Context::Evaluate(Tree *what)
     // Loop over all contexts
     for (Context *context = this; context; context = context->parent)
     {
-        rewrote_table &rwt = context->rewrotes;
-        rewrote_table::iterator found = rwt.find(key);
+        rewrite_table &rwt = context->rewrites;
+        rewrite_table::iterator found = rwt.find(key);
         if (found != rwt.end())
         {
-            Rewrote *candidate = (*found).second;
+            Rewrite *candidate = (*found).second;
             while (candidate)
             {
                 ulong formKey = Hash(candidate->from);
@@ -137,7 +137,7 @@ Tree *Context::Evaluate(Tree *what)
                     }
                 }
 
-                rewrote_table &rwh = candidate->hash;
+                rewrite_table &rwh = candidate->hash;
                 found = rwh.find(key);
                 candidate = found == rwh.end() ? NULL : (*found).second;
             }
@@ -333,18 +333,18 @@ Tree *Context::Bound(Name *name)
     // Loop over all contexts
     for (Context *context = this; context; context = context->parent)
     {
-        rewrote_table &rwt = context->rewrotes;
-        rewrote_table::iterator found = rwt.find(key);
+        rewrite_table &rwt = context->rewrites;
+        rewrite_table::iterator found = rwt.find(key);
         if (found != rwt.end())
         {
-            Rewrote *candidate = (*found).second;
+            Rewrite *candidate = (*found).second;
             while (candidate)
             {
                 if (Name *from = candidate->from->AsName())
                     if (name->value == from->value)
                         return candidate->to ? candidate->to : name;
 
-                rewrote_table &rwh = candidate->hash;
+                rewrite_table &rwh = candidate->hash;
                 found = rwh.find(key);
                 candidate = found == rwh.end() ? NULL : (*found).second;
             }
@@ -474,7 +474,7 @@ Name *Symbols::Allocate(Name *n)
 }
 
 
-Rewrite *Symbols::EnterRewrite(Rewrite *rw)
+Rewrote *Symbols::EnterRewrite(Rewrote *rw)
 // ----------------------------------------------------------------------------
 //   Enter the given rewrite in the rewrites table
 // ----------------------------------------------------------------------------
@@ -504,12 +504,12 @@ Rewrite *Symbols::EnterRewrite(Rewrite *rw)
 }
 
 
-Rewrite *Symbols::EnterRewrite(Tree *from, Tree *to)
+Rewrote *Symbols::EnterRewrite(Tree *from, Tree *to)
 // ----------------------------------------------------------------------------
 //   Create a rewrite for the current context and enter it
 // ----------------------------------------------------------------------------
 {
-    Rewrite *rewrite = new Rewrite(from, to, this);
+    Rewrote *rewrite = new Rewrote(from, to, this);
     return EnterRewrite(rewrite);
 }
 
@@ -537,7 +537,7 @@ void Symbols::Clear()
 // ============================================================================
 
 Tree *Symbols::Compile(Tree *source, CompiledUnit &unit,
-                        bool nullIfBad, bool keepAlternatives)
+                       bool nullIfBad, bool keepAlternatives)
 // ----------------------------------------------------------------------------
 //    Return an optimized version of the source tree, ready to run
 // ----------------------------------------------------------------------------
@@ -1856,7 +1856,7 @@ void DeclarationAction::EnterRewrite(Tree *defined,
     }
     else
     {
-        Rewrite *rewrite = new Rewrite(defined, definition, symbols);
+        Rewrote *rewrite = new Rewrote(defined, definition, symbols);
         symbols->EnterRewrite(rewrite);
     }
 }
@@ -1927,7 +1927,7 @@ Tree *CompileAction::DoName(Name *what)
         // Try to compile the definition of the name
         if (!result->AsName())
         {
-            Rewrite rw(what, result, symbols);
+            Rewrote rw(what, result, symbols);
             if (!what->Symbols())
                 what->SetSymbols(symbols);
             result = rw.Compile();
@@ -2123,7 +2123,7 @@ Tree *CompileAction::Rewrites(Tree *what)
     {
         Symbols *s = *li;
 
-        Rewrite *candidate = s->Rewrites();
+        Rewrote *candidate = s->Rewrites();
         while (candidate && !foundUnconditional)
         {
             // Compute the hash key for the 'from' of the current rewrite
@@ -2268,7 +2268,7 @@ Tree *CompileAction::Rewrites(Tree *what)
 //
 // ============================================================================
 
-Rewrite::~Rewrite()
+Rewrote::~Rewrote()
 // ----------------------------------------------------------------------------
 //   Deletes all children rewrite if any
 // ----------------------------------------------------------------------------
@@ -2276,17 +2276,17 @@ Rewrite::~Rewrite()
 }
 
 
-Rewrite *Rewrite::Add (Rewrite *rewrite)
+Rewrote *Rewrote::Add (Rewrote *rewrote)
 // ----------------------------------------------------------------------------
 //   Add a new rewrite at the right place in an existing rewrite
 // ----------------------------------------------------------------------------
 {
-    Rewrite *parent = this;
+    Rewrote *parent = this;
     ulong formKey;
 
     // Compute the hash key for the form we have to match
     RewriteKey formKeyHash;
-    rewrite->from->Do(formKeyHash);
+    rewrote->from->Do(formKeyHash);
     formKey = formKeyHash.Key();
 
     while (parent)
@@ -2299,7 +2299,7 @@ Rewrite *Rewrite::Add (Rewrite *rewrite)
         }
         else
         {
-            parent->hash[formKey] = rewrite;
+            parent->hash[formKey] = rewrote;
             return parent;
         }
     }
@@ -2308,7 +2308,7 @@ Rewrite *Rewrite::Add (Rewrite *rewrite)
 }
 
 
-Tree *Rewrite::Do(Action &a)
+Tree *Rewrote::Do(Action &a)
 // ----------------------------------------------------------------------------
 //   Apply an action to the 'from' and 'to' fields and all referenced trees
 // ----------------------------------------------------------------------------
@@ -2316,7 +2316,7 @@ Tree *Rewrite::Do(Action &a)
     Tree *result = from->Do(a);
     if (to)
         result = to->Do(a);
-    for (rewrite_table::iterator i = hash.begin(); i != hash.end(); i++)
+    for (rewrote_table::iterator i = hash.begin(); i != hash.end(); i++)
         result = (*i).second->Do(a);
     for (TreeList::iterator p=parameters.begin(); p!=parameters.end(); p++)
         result = (*p)->Do(a);
@@ -2324,7 +2324,7 @@ Tree *Rewrite::Do(Action &a)
 }
 
 
-Tree *Rewrite::Compile(void)
+Tree *Rewrote::Compile(void)
 // ----------------------------------------------------------------------------
 //   Compile code for the 'to' form
 // ----------------------------------------------------------------------------
@@ -2332,7 +2332,7 @@ Tree *Rewrite::Compile(void)
 //   function with more parameters, i.e. Tree *f(Tree * , Tree * , ...),
 //   where there is one input arg per variable in the 'from' tree
 {
-    assert (to || !"Rewrite::Compile called for data rewrite?");
+    assert (to || !"Rewrote::Compile called for data rewrite?");
     if (to->code)
         return to;
 
@@ -2379,7 +2379,7 @@ Tree *Rewrite::Compile(void)
 XL_END
 
 
-extern "C" void debugrw(XL::Rewrite *r)
+extern "C" void debugrw(XL::Rewrote *r)
 // ----------------------------------------------------------------------------
 //   For the debugger, dump a rewrite
 // ----------------------------------------------------------------------------
@@ -2387,7 +2387,7 @@ extern "C" void debugrw(XL::Rewrite *r)
     if (r)
     {
         std::cerr << r->from << " -> " << r->to << "\n";
-        XL::rewrite_table::iterator i;
+        XL::rewrote_table::iterator i;
         for (i = r->hash.begin(); i != r->hash.end(); i++)
             debugrw((*i).second);
     }
