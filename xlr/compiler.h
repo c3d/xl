@@ -26,6 +26,7 @@
 // ****************************************************************************
 
 #include "tree.h"
+#include "context.h"
 #include <map>
 #include <set>
 #include <llvm/Support/IRBuilder.h>
@@ -53,14 +54,15 @@ struct CompiledUnit;
 struct CompilerInfo;
 struct Context;
 struct Options;
+typedef Tree * (*adapter_fn) (native_fn callee, Context *ctx,
+                              Tree *src, Tree **args);
 typedef std::map<text, llvm::Function *>    builtins_map;
 typedef std::map<Tree *, llvm::Value *>     value_map;
 typedef std::map<Tree *, Tree **>           address_map;
 typedef std::map<uint, eval_fn>             closure_map;
+typedef std::map<uint, adapter_fn>          adapter_map;
 typedef std::set<Tree *>                    closure_set;
 typedef std::set<Tree *>                    data_set;
-typedef Tree * (*adapter_fn) (Context *ctx, eval_fn callee,
-                              Tree *src, Tree **args);
 
 
 struct Compiler
@@ -106,6 +108,8 @@ public:
     llvm::PointerType         *realTreePtrTy;
     llvm::StructType          *prefixTreeTy;
     llvm::PointerType         *prefixTreePtrTy;
+    llvm::FunctionType        *nativeTy;
+    llvm::PointerType         *nativeFnTy;
     llvm::FunctionType        *evalTy;
     llvm::PointerType         *evalFnTy;
     llvm::PointerType         *infoPtrTy;
@@ -131,7 +135,7 @@ public:
     llvm::Function            *xl_evaluate_children;;
     builtins_map               builtins;
     closure_map                closures;
-    closure_map                array_to_args_adapters;
+    adapter_map                array_to_args_adapters;
 };
 
 

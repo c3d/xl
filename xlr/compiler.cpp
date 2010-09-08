@@ -86,6 +86,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
       integerTreeTy(NULL), integerTreePtrTy(NULL),
       realTreeTy(NULL), realTreePtrTy(NULL),
       prefixTreeTy(NULL), prefixTreePtrTy(NULL),
+      nativeTy(NULL), nativeFnTy(NULL),
       evalTy(NULL), evalFnTy(NULL),
       infoPtrTy(NULL), symbolsPtrTy(NULL), contextPtrTy(NULL), charPtrTy(NULL),
       xl_evaluate(NULL), xl_same_text(NULL), xl_same_shape(NULL),
@@ -185,10 +186,19 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     PATypeHolder structCtxTy = OpaqueType::get(*context);  // struct Context
     contextPtrTy = PointerType::get(structCtxTy, 0);       // Context *
 
-    // Create the eval_fn type
+    // Create the Tree and Tree pointer types
     PATypeHolder structTreeTy = OpaqueType::get(*context); // struct Tree
     treePtrTy = PointerType::get(structTreeTy, 0);      // Tree *
     treePtrPtrTy = PointerType::get(treePtrTy, 0);      // Tree **
+
+    // Create the native_fn type
+    std::vector<const Type *> nativeParms;
+    nativeParms.push_back(contextPtrTy);
+    nativeParms.push_back(treePtrTy);
+    nativeTy = FunctionType::get(treePtrTy, nativeParms, false);
+    nativeFnTy = PointerType::get(nativeTy, 0);
+
+    // Create the eval_fn type
     std::vector<const Type *> evalParms;
     evalParms.push_back(treePtrTy);
     evalTy = FunctionType::get(treePtrTy, evalParms, false);
@@ -434,19 +444,19 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
         std::cerr << "EnterArrayToArgsAdapater " << numargs;
 
     // Check if we already computed it
-    eval_fn result = array_to_args_adapters[numargs];
+    adapter_fn result = array_to_args_adapters[numargs];
     if (result)
     {
         IFTRACE(llvm)
             std::cerr << " existing C" << (void *) result << "\n";
-        return (adapter_fn) result;
+        return result;
     }
 
     // Generate the function type:
-    // Tree *generated(Context *, eval_fn, Tree *, Tree **)
+    // Tree *generated(Context *, native_fn, Tree *, Tree **)
     std::vector<const Type *> parms;
+    parms.push_back(nativeFnTy);
     parms.push_back(contextPtrTy);
-    parms.push_back(evalFnTy);
     parms.push_back(treePtrTy);
     parms.push_back(treePtrPtrTy);
     FunctionType *fnType = FunctionType::get(treePtrTy, parms, false);
@@ -468,8 +478,8 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
 
     // Read the arguments from the function we are generating
     Function::arg_iterator inArgs = adapter->arg_begin();
-    Value *contextPtr = inArgs++;
     Value *fnToCall = inArgs++;
+    Value *contextPtr = inArgs++;
     Value *sourceTree = inArgs++;
     Value *treeArray = inArgs++;
 
@@ -501,14 +511,14 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
         optimizer->run(*adapter);
 
     // Enter the result in the map
-    result = (eval_fn) runtime->getPointerToFunction(adapter);
+    result = (adapter_fn) runtime->getPointerToFunction(adapter);
     array_to_args_adapters[numargs] = result;
 
     IFTRACE(llvm)
         std::cerr << " new C" << (void *) result << "\n";
 
     // And return it to the caller
-    return (adapter_fn) result;
+    return result;
 }
 
 

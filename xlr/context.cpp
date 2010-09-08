@@ -119,8 +119,7 @@ Tree *Context::Evaluate(Tree *what)
                             Compiler *compiler = MAIN->compiler;
                             adapter_fn adj = compiler->ArrayToArgsAdapter(ary);
                             Tree **args0 = (Tree **) &args[0];
-                            eval_fn toCall = (eval_fn) candidate->native;
-                            return adj(this, toCall, what, args0);
+                            return adj(candidate->native, this, what, args0);
                         }
                     }
                     else
