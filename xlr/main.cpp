@@ -372,7 +372,10 @@ int Main::Run()
         Tree_p result = sf.tree;
         try
         {
-            result = sf.symbols->Run(sf.tree);
+            if (options.interpreted)
+                result = MAIN->context->Evaluate(sf.tree);
+            else
+                result = sf.symbols->Run(sf.tree);
         }
         catch (XL::Error &e)
         {

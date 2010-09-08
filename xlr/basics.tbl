@@ -205,7 +205,11 @@ PREFIX(WriteLnTree, tree, "writeln", PARM(toWrite, tree),
 
 // Interpret a tree
 PREFIX(Interpret, tree, "interpret", PARM(value, tree),
-       return MAIN->context->Evaluate(&value), "")
+       Tree *v = &value;
+       if (Block *b = v->AsBlock())
+           v = b->child;
+       return MAIN->context->Evaluate(v),
+       "")
 
 // Compute the sha1 of a tree
 PREFIX(ComputeSha1, text, "sha1", PARM(t, tree), XL_RTEXT(sha1(&t)), "")

@@ -128,7 +128,13 @@ Tree *Context::Evaluate(Tree *what)
                         // Keep evaluating
                         Context *formContext = new Context(this);
                         if (formContext->Bind(candidate->from, what))
+                        {
+                            if (!candidate->to)
+                                return candidate->from;
+                            else if (candidate->to == candidate->from)
+                                return candidate->from;
                             return formContext->Evaluate(candidate->to);
+                        }
                     }
                 }
 
@@ -200,6 +206,8 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
 // ----------------------------------------------------------------------------
 {
     kind k = form->Kind();
+    Context *eval = args ? this : (Context *) parent;
+
     switch(k)
     {
     case INTEGER:
@@ -222,7 +230,9 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
         // Test if the name is already bound, and if so, if trees match
         if (Tree *bound = Bound((Name *) form))
         {
-            value = parent->Evaluate(value);
+            if (bound == form)
+                return true;
+            value = eval->Evaluate(value);
             return EqualTrees(bound, value);
         }
 
@@ -239,23 +249,23 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
         {
             // Evaluate the type
             Tree *type = ((Infix *) form)->right;
-            type = parent->Evaluate(type);
+            type = eval->Evaluate(type);
 
             // We need to evaluate the value
-            value = parent->Evaluate(value);
+            value = eval->Evaluate(value);
 
             // Check if the value matches the type
             if (!ValueMatchesType(type, value, false))
                 return false;
 
-            return Bind(((Infix *) form)->left, value);
+            return Bind(((Infix *) form)->left, value, args);
         }
 
         // If we match the infix name, we can bind left and right
         if (Infix *infix = value->AsInfix())
             if (((Infix *) form)->name == infix->name)
-                return (Bind(((Infix *) form)->left, infix->left) &&
-                        Bind(((Infix *) form)->right, infix->right));
+                return (Bind(((Infix *) form)->left, infix->left, args) &&
+                        Bind(((Infix *) form)->right, infix->right, args));
 
         // Otherwise, we don't have a match
         return false;
@@ -268,17 +278,17 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
             {
                 Tree *vname = prefix->left;
                 if (vname->Kind() != NAME)
-                    vname = parent->Evaluate(vname);
+                    vname = eval->Evaluate(vname);
                 if (Name *vn = vname->AsName())
                     if (name->value != vn->value)
                         return false;
             }
             else
             {
-                if (!Bind(((Prefix *) form)->left, prefix->left))
+                if (!Bind(((Prefix *) form)->left, prefix->left, args))
                     return false;
             }
-            return Bind(((Prefix *) form)->right, prefix->right);
+            return Bind(((Prefix *) form)->right, prefix->right, args);
         }
         return false;
 
@@ -290,22 +300,22 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
             {
                 Tree *vname = postfix->right;
                 if (vname->Kind() != NAME)
-                    vname = parent->Evaluate(vname);
+                    vname = eval->Evaluate(vname);
                 if (Name *vn = vname->AsName())
                     if (name->value != vn->value)
                         return false;
             }
             else
             {
-                if (!Bind(((Postfix *) form)->right, postfix->right))
+                if (!Bind(((Postfix *) form)->right, postfix->right, args))
                     return false;
             }
-            return Bind(((Postfix *) form)->left, postfix->left);
+            return Bind(((Postfix *) form)->left, postfix->left, args);
         }
         return false;
 
     case BLOCK:
-        return Bind(((Block *) form)->child, value);        
+        return Bind(((Block *) form)->child, value, args);
     }
 
     // Default is to return false

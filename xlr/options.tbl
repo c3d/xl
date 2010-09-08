@@ -90,6 +90,8 @@ OPTION(O, "Set the optimization level, from 0 to 3",
 OPTVAR(verbose,bool,false)
 OPTION(verbose, "Select more verbose error messages.", verbose = true)
 OPTION(v, "Short form for -verbose.", verbose = true)
+OPTVAR(interpreted, bool, false)
+OPTION(i, "Select interpreted mode", interpreted = true)
 
 // Stack depth
 OPTVAR(stack_depth, uint, 1000)
