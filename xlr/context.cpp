@@ -97,7 +97,7 @@ Tree *Context::Evaluate(Tree *what)
     depth++;
     if (depth > MAIN->options.stack_depth)
     {
-        Ooops("Stack depth exceeded evaluating $1", what);
+        Ooops("Recursed too deep evaluating $1", what);
         return what;
     }
 
@@ -124,12 +124,12 @@ Tree *Context::Evaluate(Tree *what)
                         TreeList args;
                         if (Bind(candidate->from, what, &args))
                         {
-                            uint ary = args.size();
-                            Compiler *compiler = MAIN->compiler;
-                            adapter_fn adj = compiler->ArrayToArgsAdapter(ary);
+                            uint arity = args.size();
+                            Compiler *comp = MAIN->compiler;
+                            adapter_fn adj = comp->ArrayToArgsAdapter(arity);
                             Tree **args0 = (Tree **) &args[0];
-                            Tree *result = adj(candidate->native, this,
-                                               what, args0);
+                            native_fn fn = candidate->native;
+                            Tree *result = adj(fn, this, what, args0);
                             depth--;
                             return result;
                         }
@@ -406,9 +406,9 @@ extern "C" void debugsc(XL::Context *c)
 // ----------------------------------------------------------------------------
 {
     using namespace XL;
-    if (c)
+    while (c)
     {
         debugs(c);
-        debugs(c->parent);
+        c = c->parent;
     }
 }
