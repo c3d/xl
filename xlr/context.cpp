@@ -62,6 +62,57 @@ Context::~Context()
 {}
 
 
+static void ValidateNames(Tree *form)
+// ----------------------------------------------------------------------------
+//   Check that we have only valid names in the pattern
+// ----------------------------------------------------------------------------
+{
+    switch(form->Kind())
+    {
+    case INTEGER:
+    case REAL:
+    case TEXT:
+        break;
+    case NAME:
+    {
+        Name *name = (Name *) form;
+        if (name->value.length() && !isalpha(name->value[0]))
+            Ooops("The pattern variable $1 is not a name", name);
+        break;
+    }
+    case INFIX:
+    {
+        Infix *infix = (Infix *) form;
+        ValidateNames(infix->left);
+        ValidateNames(infix->right);
+        break;
+    }
+    case PREFIX:
+    {
+        Prefix *prefix = (Prefix *) form;
+        if (prefix->left->Kind() != NAME)
+            ValidateNames(prefix->left);
+        ValidateNames(prefix->right);
+        break;
+    }
+    case POSTFIX:
+    {
+        Postfix *postfix = (Postfix *) form;
+        if (postfix->right->Kind() != NAME)
+            ValidateNames(postfix->right);
+        ValidateNames(postfix->left);
+        break;
+    }
+    case BLOCK:
+    {
+        Block *block = (Block *) form;
+        ValidateNames(block->child);
+        break;
+    }
+    }
+}
+
+
 Rewrite *Context::Define(Tree *form, Tree *value)
 // ----------------------------------------------------------------------------
 //   Enter a rewrite in the context
@@ -70,6 +121,13 @@ Rewrite *Context::Define(Tree *form, Tree *value)
     // Check if we rewrite a constant. If so, remember it
     if (form->IsConstant())
         hasConstants = true;
+
+    // If we have a block on the left, define the child of that block
+    if (Block *block = form->AsBlock())
+        form = block->child;
+
+    // Check that we have only names in the pattern
+    ValidateNames(form);
 
     // Create a rewrite and add it to the table
     Rewrite *rewrite = new Rewrite(form, value);
