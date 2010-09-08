@@ -146,9 +146,7 @@ Rewrite *Context::DefineData(Tree *data)
 //   Enter a data declaration
 // ----------------------------------------------------------------------------
 {
-    Rewrite *result = Define(data, data);
-    result->native = xl_evaluate_children;
-    return result;
+    return Define(data, NULL);
 }
 
 
@@ -221,8 +219,15 @@ Tree *Context::Evaluate(Tree *what)
                         {
                             Tree *result = candidate->from;
                             if (Tree *to = candidate->to)
+                            {
                                 if (to != result)
                                     result = formContext->Evaluate(to);
+                            }
+                            else
+                            {
+                                result = xl_evaluate_children(formContext,
+                                                              result);
+                            }
                             depth--;
                             return result;
                         }
@@ -323,6 +328,8 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
         {
             if (bound == form)
                 return true;
+            if (EqualTrees(bound, form))
+                return true;
             value = eval->Evaluate(value);
             return EqualTrees(bound, value);
         }
@@ -409,7 +416,14 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
         return false;
 
     case BLOCK:
-        return Bind(((Block *) form)->child, value, args);
+    {
+        Block *block = (Block *) form;
+        if (Block *bval = value->AsBlock())
+            if (bval->opening == block->opening &&
+                bval->closing == block->closing)
+                return Bind(block->child, bval->child, args);
+        return Bind(block->child, value, args);
+    }
     }
 
     // Default is to return false
@@ -417,7 +431,7 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
 }
 
 
-Tree *Context::Bound(Name *name)
+Tree *Context::Bound(Name *name, bool recurse)
 // ----------------------------------------------------------------------------
 //   Return the value a name is bound to, or NULL if none...
 // ----------------------------------------------------------------------------
@@ -444,6 +458,8 @@ Tree *Context::Bound(Name *name)
                 candidate = found == rwh.end() ? NULL : (*found).second;
             }
         }
+        if (!recurse)
+            break;
     }
 
     // Not bound

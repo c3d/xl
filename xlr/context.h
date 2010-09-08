@@ -222,7 +222,7 @@ struct Context
     bool                Bind(Tree *form, Tree *value, TreeList *args = NULL);
 
     // Find the value that a name is bound to, or returns NULL
-    Tree *              Bound(Name *name);
+    Tree *              Bound(Name *name, bool recurse = true);
 
 public:
     Context_p           parent;

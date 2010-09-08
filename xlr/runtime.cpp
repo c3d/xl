@@ -63,36 +63,39 @@ Tree *xl_evaluate_children(Context *context, Tree *what)
     case INTEGER:
     case REAL:
     case TEXT:
+        return what;
     case NAME:
-        return context->Evaluate(what);
+        if (Tree *bound = context->Bound((Name *) what, false))
+            return context->Evaluate(bound);
+        return what;
     case INFIX:
     {
         Infix *infix = (Infix *) what;
-        Tree *left = context->Evaluate(infix->left);
-        Tree *right = context->Evaluate(infix->right);
+        Tree *left = xl_evaluate_children(context, infix->left);
+        Tree *right = xl_evaluate_children(context, infix->right);
         Infix *result = new Infix(infix, left, right);
         return result;
     }
     case PREFIX:
     {
         Prefix *prefix = (Prefix *) what;
-        Tree *left = context->Evaluate(prefix->left);
-        Tree *right = context->Evaluate(prefix->right);
+        Tree *left = xl_evaluate_children(context, prefix->left);
+        Tree *right = xl_evaluate_children(context, prefix->right);
         Prefix *result = new Prefix(prefix, left, right);
         return result;
     }
     case POSTFIX:
     {
         Postfix *postfix = (Postfix *) what;
-        Tree *left = context->Evaluate(postfix->left);
-        Tree *right = context->Evaluate(postfix->right);
+        Tree *left = xl_evaluate_children(context, postfix->left);
+        Tree *right = xl_evaluate_children(context, postfix->right);
         Postfix *result = new Postfix(postfix, left, right);
         return result;
     }
     case BLOCK:
     {
         Block *block = (Block *) what;
-        Tree *child = context->Evaluate(block->child);
+        Tree *child = xl_evaluate_children(context, block->child);
         Block *result = new Block(block, child);
         return result;
     }

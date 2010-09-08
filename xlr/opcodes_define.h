@@ -76,7 +76,7 @@
 
 
 #define BLOCK(name, rtype, open, type, close, _code, doc)    \
-    xl_enter_block_##name(c, context);
+    xl_enter_block_##name(context);
 
 
 #define NAME(symbol)                            \

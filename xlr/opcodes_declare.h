@@ -121,6 +121,8 @@
         Name *to = new Name(#name);                                     \
         setDocumentation(from, doc);                                    \
         to->Set<TypeInfo> (rtype##_type);                               \
+        /* Need an extra block that gets removed by Define */           \
+        from = new Block(from, open, close);                            \
         Rewrite *rw = context->Define(from, to);                        \
         rw->native = (native_fn) xl_##name;                             \
     }

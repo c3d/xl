@@ -34,6 +34,9 @@ PREFIX(DataDefinition, tree, "data", PARM(d, tree),
        context->DefineData(&d);
        return self,
        "")
+BLOCK(Parentheses, tree, "(", tree, ")",
+      return context->Evaluate(&child),
+      "")
 
 // Integer arithmetic and comparisons
 INFIX(SetInt, integer,integer,":=",integer,XL_RINT(l.value = XL_INT(r)), "")
