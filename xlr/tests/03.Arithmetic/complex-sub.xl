@@ -29,4 +29,5 @@ complex(rx,ix) >  complex(ry, iy) -> error "No order for complex"
 complex(rx,ix) <= complex(ry, iy) -> error "No order for complex"
 complex(rx,ix) >= complex(ry, iy) -> error "No order for complex"
 
-complex(2,3) * complex(5,2)
+complex(2,3) - complex(5,2)
+

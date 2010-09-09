@@ -1,0 +1,33 @@
+// Data declaration
+data complex(x,y)
+
+// Basic notations
+i -> complex(0,1)
+a + i * b -> complex(a,b)
+a + b * i -> complex(a,b)
+
+// Basic arithmetic
+complex(rx,ix) + complex(ry,iy) -> complex (rx+ry, ix+iy)
+complex(rx,ix) - complex(ry,iy) -> complex (rx-ry, ix-iy)
+complex(rx,ix) * complex(ry,iy) -> complex (rx*ry-ix*iy, rx*iy+ry*ix)
+complex(rx,ix) / complex(ry,iy) ->
+    denom -> ry*ry+iy*iy
+    rr -> (rx * ry + ix * iy) / denom
+    ir -> (ix * ry - rx * iy) / denom
+    complex(rr, ir)
+
+// Optimized arithmetic with scalar
+complex(rx,ix) * s -> complex(rx*s, ix*s)
+complex(rx,ix) / s -> complex(rx/s, ix/s)
+s * complex(rx,ix) -> complex(s*rx, s*ix)
+
+// Comparisons
+complex(rx,ix) =  complex(ry, iy)  -> rx = ry and ix = iy
+complex(rx,ix) <> complex(ry, iy) -> rx <> ry or ix <> iy
+complex(rx,ix) <  complex(ry, iy) -> error "No order for complex"
+complex(rx,ix) >  complex(ry, iy) -> error "No order for complex"
+complex(rx,ix) <= complex(ry, iy) -> error "No order for complex"
+complex(rx,ix) >= complex(ry, iy) -> error "No order for complex"
+
+complex(2.0,3.0) / complex(5.0,2.0)
+
