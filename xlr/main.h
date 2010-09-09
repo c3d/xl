@@ -76,7 +76,7 @@ struct Main
 
     int         ParseOptions();
     int         LoadContextFiles(source_names &context_file_names);
-    void        EvalContextFiles(source_names &context_file_names);
+    void        EvaluateContextFiles(source_names &context_file_names);
     int         LoadFiles();
     int         LoadFile(text file, bool updateContext = false);
     SourceFile *NewFile(text path);

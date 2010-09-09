@@ -205,7 +205,7 @@ int Main::LoadContextFiles(source_names &ctxFiles)
 }
 
 
-void Main::EvalContextFiles(source_names &ctxFiles)
+void Main::EvaluateContextFiles(source_names &ctxFiles)
 // ----------------------------------------------------------------------------
 //   Evaluate the context files
 // ----------------------------------------------------------------------------
@@ -352,6 +352,10 @@ int Main::Run()
     // If we only parse or compile, return
     if (options.parseOnly || options.compileOnly || options.doDiff)
         return -1;
+
+    // Evaluate builtins
+    source_names none;
+    EvaluateContextFiles(none);
 
     // Loop over files we will process
     for (file = file_names.begin(); file != file_names.end(); file++)
