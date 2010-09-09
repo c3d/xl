@@ -118,13 +118,13 @@ Rewrite *Context::Define(Tree *form, Tree *value)
 //   Enter a rewrite in the context
 // ----------------------------------------------------------------------------
 {
-    // Check if we rewrite a constant. If so, remember it
-    if (form->IsConstant())
-        hasConstants = true;
-
     // If we have a block on the left, define the child of that block
     if (Block *block = form->AsBlock())
         form = block->child;
+
+    // Check if we rewrite a constant. If so, remember it
+    if (form->IsConstant())
+        hasConstants = true;
 
     // Check that we have only names in the pattern
     ValidateNames(form);
