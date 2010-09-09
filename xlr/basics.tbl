@@ -150,12 +150,20 @@ INFIX(LEText, boolean, text, "<=", text, XL_RBOOL(XL_TEXT(l) <= XL_TEXT(r)), "")
 INFIX(GEText, boolean, text, ">=", text, XL_RBOOL(XL_TEXT(l) >= XL_TEXT(r)), "")
 INFIX(NEText, boolean, text, "<>", text, XL_RBOOL(XL_TEXT(l) != XL_TEXT(r)), "")
 INFIX(EQText, boolean, text, "=", text, XL_RBOOL(XL_TEXT(l) == XL_TEXT(r)), "")
-PREFIX(TextLength, integer, "length", PARM(t,text), XL_RINT(t.value.length()), "")
-INFIX(TextAt, text, text, "at", integer,
-      text t = l; longlong i = r;
-      XL_RTEXT((i >= 1 && i <= (longlong) t.length()) ?
-               text(t[i-1],1) : text("")), "")
 
+// Some other text primitives
+PREFIX(TextLength, integer, "text_length", PARM(t,text),
+       XL_RINT(t.value.length()), "")
+PREFIX(TextRange, text, "text_range",
+       PARM(txt, text) PARM(pos, integer) PARM(sz, integer),
+       text t = txt; size_t p = pos; size_t s = sz;
+       XL_RTEXT(t.substr(p, s)),
+       "")
+PREFIX(TextFind, integer, "text_find",
+       PARM(txt, text) PARM(fnd, text),
+       text t = txt; text f = fnd;
+       XL_RINT(t.find(f)),
+       "")
 
 // Conversions
 PREFIX(IntToReal,  real, "real", PARM(x, integer), XL_RREAL((real_t) x), "")
