@@ -324,7 +324,7 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                             Tree *result = candidate->to;
                             if (result != candidate->from)
                             {
-                                next = new Context(context, this);
+                                next = new Context(this, this);
                                 result = next->Evaluate(result);
                             }
                             return result;
@@ -497,7 +497,17 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
                 type = eval->Evaluate(type);
 
                 // Evaluate the value and match its type if the type is not tree
-                if (type != tree_type)
+                if (type == parse_tree_type)
+                {
+                    // We want a 'naked' parse tree. Eliminate names, closures
+                    if (Prefix *prefix = value->AsPrefix())
+                        if (prefix->Get<ClosureInfo>())
+                            value = prefix->right;
+                    if (Name *nval = value->AsName())
+                        if (Tree *bound = eval->Bound(nval))
+                            value = bound;
+                }
+                else if (type != tree_type)
                 {
                     value = eval->Evaluate(value);
                     value = ValueMatchesType(this, type, value, true);
@@ -715,7 +725,7 @@ extern "C" void debugsc(XL::Context *c)
 // ----------------------------------------------------------------------------
 {
     using namespace XL;
-    while (c)
+    while (c && c != XL::MAIN->context)
     {
         debugs(c);
         c = c->scope;
@@ -729,7 +739,7 @@ extern "C" void debugst(XL::Context *c)
 // ----------------------------------------------------------------------------
 {
     using namespace XL;
-    while (c)
+    while (c && c != XL::MAIN->context)
     {
         debugs(c);
         c = c->stack;

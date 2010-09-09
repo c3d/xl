@@ -9,6 +9,7 @@ TYPE(real);
 TYPE(text);
 TYPE(character);
 TYPE(tree);
+TYPE(parse_tree);
 TYPE(symbol);
 TYPE(name_symbol);
 TYPE(operator_symbol);
@@ -52,6 +53,9 @@ PREFIX(EvaluatedClosure, tree, "<evaluated>", PARM(c, tree),
 INFIX(Assignment, tree, tree, ":=", tree,
       return context->Assign(&l, &r),
       "")
+PREFIX(AnyLookup, tree, "any", PARM(t, tree),
+       return context->Evaluate(&t, Context::STACK_LOOKUP),
+       "")
 
 // Integer arithmetic and comparisons
 INFIX(SetInt, integer,integer,":=",integer,XL_RINT(l.value = XL_INT(r)), "")

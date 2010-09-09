@@ -1,0 +1,12 @@
+In Boo
+In foo
+In foo: 1
+Exit foo
+After foo
+In bar
+In bar: 2
+Exit bar
+After bar
+Globally: 3
+Done with boo
+true

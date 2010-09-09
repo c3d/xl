@@ -1,0 +1,36 @@
+// Test the various scoping rules
+
+// This is a global declaration of 'show'
+show X -> writeln "Globally: ", X
+
+// This is a transformation with a local definition
+foo Code:parse_tree ->
+    show X -> writeln "In foo: ", X
+    writeln "In foo"
+    Code
+    writeln "Exit foo"
+
+// This is another transformation with another local definition
+bar Code:parse_tree ->
+    show X -> writeln "In bar: ", X
+    writeln "In bar"
+    Code
+    writeln "Exit bar"
+
+// Multiple uses of the same code
+boo Code:parse_tree ->
+    writeln "In Boo"
+    foo Code
+    writeln "After foo"
+    bar Code
+    writeln "After bar"
+    Code
+    writeln "Done with boo"
+
+// Global counter
+counter := 0
+
+// Multiple calls with the same code
+boo
+    counter := counter + 1
+    show counter

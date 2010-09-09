@@ -426,6 +426,15 @@ Tree *xl_tree_cast(Context *context, Tree *source, Tree *value)
 }
 
 
+Tree *xl_parse_tree_cast(Context *context, Tree *source, Tree *value)
+// ----------------------------------------------------------------------------
+//   Don't really check the argument
+// ----------------------------------------------------------------------------
+{
+    return value;
+}
+
+
 Tree *xl_symbol_cast(Context *context, Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a symbol

@@ -80,6 +80,7 @@ Tree *xl_real_cast(Context *, Tree *source, Tree *value);
 Tree *xl_text_cast(Context *, Tree *source, Tree *value);
 Tree *xl_character_cast(Context *, Tree *source, Tree *value);
 Tree *xl_tree_cast(Context *, Tree *source, Tree *value);
+Tree *xl_parse_tree_cast(Context *, Tree *source, Tree *value);
 Tree *xl_symbol_cast(Context *, Tree *source, Tree *value);
 Tree *xl_name_symbol_cast(Context *, Tree *source, Tree *value);
 Tree *xl_operator_symbol_cast(Context *, Tree *source, Tree *value);
