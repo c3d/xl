@@ -419,7 +419,7 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
                 if (args)
                     args->push_back(value);
                 else
-                    Define(form, value);
+                    Define(name, value);
                 return true;
             } // We have a name on the left
         } // We have an infix :
