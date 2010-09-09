@@ -129,12 +129,39 @@ Rewrite *Context::Define(Tree *form, Tree *value)
     // Check that we have only names in the pattern
     ValidateNames(form);
 
-    // Create a rewrite and add it to the table
+    // Check if we insert a name. If so, we shouldn't redefine
+    Name *name = form->AsName();
+
+    // Create a rewrite
     Rewrite *rewrite = new Rewrite(form, value);
     ulong key = Hash(form);
-    Rewrite_p *parent = &rewrites[key];
-    while (Rewrite *where = *parent)
-        parent = &where->hash[key];
+
+    // Walk through existing rewrites
+    Rewrite_p *parent = &rewrites[key]; 
+    if (name)
+    {
+        // Name: check for redefinitions
+        while (Rewrite *where = *parent)
+        {
+            if (Name *existing = where->from->AsName())
+            {
+                if (existing->value == name->value)
+                {
+                    Ooops("Name $1 already exists", name);
+                    Ooops("Previous definition was $1", existing);
+                }
+            }
+            parent = &where->hash[key];
+        }
+    }           
+    else
+    {
+        // Not a name, won't check for redefinitions
+        while (Rewrite *where = *parent)
+            parent = &where->hash[key];
+    }
+
+    // Create the rewrite
     *parent = rewrite;
 
     return rewrite;
@@ -245,6 +272,17 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
     } // Loop on contexts
 
     // Error case - Should we raise some error here?
+    return what;
+}
+
+
+Tree *Context::EvaluateBlock(Tree *what)
+// ----------------------------------------------------------------------------
+//   Create a new inner scope for evaluating the value
+// ----------------------------------------------------------------------------
+{
+    Context *block = new Context(this, stack);
+    what = block->Evaluate(what);
     return what;
 }
 

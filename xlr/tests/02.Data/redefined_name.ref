@@ -1,4 +1,3 @@
-02.Data/redefined_name.xl:3: Name 'foo' already exists
-02.Data/redefined_name.xl:2: Previous value was '1'
-foo -> 1
 foo -> 2
+02.Data/redefined_name.xl:3: Name 'foo' already exists
+02.Data/redefined_name.xl:2: Previous definition was 'foo'

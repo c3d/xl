@@ -35,7 +35,13 @@ PREFIX(DataDefinition, tree, "data", PARM(d, tree),
        return self,
        "")
 BLOCK(Parentheses, tree, "(", tree, ")",
-      return context->Evaluate(&child),
+      return context->EvaluateBlock(&child),
+      "")
+BLOCK(CurlyBraces, tree, "{", tree, "}",
+      return context->EvaluateBlock(&child),
+      "")
+BLOCK(IntentationBlock, tree, Block::indent, tree, Block::unindent,
+      return context->EvaluateBlock(&child),
       "")
 PREFIX(Closure, tree, "<closure>", PARM(c, tree),
        return context->EvaluateClosure(self, &c),

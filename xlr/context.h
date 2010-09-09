@@ -218,6 +218,7 @@ struct Context
 
     // Rewriting things in the context
     Tree *              Evaluate(Tree *what, lookup_mode lookup = SCOPE_LOOKUP);
+    Tree *              EvaluateBlock(Tree *child);
 
     // The hash code used in the rewrite table
     static ulong        Hash(Tree *input);
