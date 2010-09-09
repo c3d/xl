@@ -49,10 +49,8 @@ Tree *ValueMatchesType(Context *ctx, Tree *type, Tree *value, bool convert)
         if (Real *rv = value->AsReal())
             return rv;
         if (convert)
-        {
             if (Integer *iv = value->AsInteger())
-                return iv;
-        }
+                return new Real(iv->value);
     }
     if (type == text_type)
         if (Text *tv = value->AsText())

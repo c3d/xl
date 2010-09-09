@@ -10,3 +10,11 @@ if false then TrueBody -> false
 
 // Building lists, notably lists of arguments
 data x,y
+first x,y -> x
+rest  x,y -> y
+
+// Range of values
+data low..high
+
+// Apply 
+code with 

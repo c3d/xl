@@ -412,7 +412,8 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
                 if (type != tree_type)
                 {
                     value = eval->Evaluate(value);
-                    if (!ValueMatchesType(this, type, value, false))
+                    value = ValueMatchesType(this, type, value, true);
+                    if (!value)
                         return false;
                 }
 

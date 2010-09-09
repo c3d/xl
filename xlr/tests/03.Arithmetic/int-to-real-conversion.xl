@@ -1,0 +1,2 @@
+foo x:real -> write "Hello, x=", x, " half=", x/2
+foo 1
