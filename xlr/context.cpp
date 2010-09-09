@@ -430,6 +430,13 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
                 return (Bind(((Infix *) form)->left, infix->left, args) &&
                         Bind(((Infix *) form)->right, infix->right, args));
 
+        // If direct binding failed, evaluate and try again ("diamond")
+        value = eval->Evaluate(value);
+        if (Infix *infix = value->AsInfix())
+            if (((Infix *) form)->name == infix->name)
+                return (Bind(((Infix *) form)->left, infix->left, args) &&
+                        Bind(((Infix *) form)->right, infix->right, args));
+
         // Otherwise, we don't have a match
         return false;
     }
