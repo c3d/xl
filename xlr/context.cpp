@@ -161,7 +161,7 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
 
     // Depth check
     static uint depth = 0;
-    depth++;
+    XL::LocalSave<uint> save(depth, depth+1);
     if (depth > MAIN->options.stack_depth)
     {
         Ooops("Recursed too deep evaluating $1", what);
@@ -197,7 +197,6 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                             adapter_fn adj = comp->ArrayToArgsAdapter(arity);
                             Tree **args0 = (Tree **) &args[0];
                             Tree *result = adj(fn, this, what, args0);
-                            depth--;
                             return result;
                         }
                     }
@@ -227,7 +226,6 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                                 result = eval->Evaluate(to);
                             else
                                 result = xl_evaluate_children(eval, result);
-                            depth--;
                             return result;
                         }
                     }
