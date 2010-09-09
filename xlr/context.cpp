@@ -375,6 +375,7 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
             if (EqualTrees(bound, form))
                 return true;
             value = eval->Evaluate(value);
+            bound = eval->Evaluate(bound);
             return EqualTrees(bound, value);
         }
 
