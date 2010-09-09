@@ -65,7 +65,7 @@ Tree *xl_evaluate_children(Context *context, Tree *what)
     case TEXT:
         return what;
     case NAME:
-        if (Tree *bound = context->Bound((Name *) what, false))
+        if (Tree *bound = context->Bound((Name *) what, Context::LOCAL_LOOKUP))
             return context->Evaluate(bound);
         return what;
     case INFIX:
@@ -617,7 +617,7 @@ Tree *xl_load(Context *context, text name)
     if (!tree)
         return Ooops("Unable to load file $1", new Text(path));
 
-    context = new Context(context);
+    context = new Context(context, NULL);
     MAIN->files[path] = SourceFile(path, tree, context);
 
     return tree;
@@ -742,7 +742,7 @@ Tree *xl_load_data(Context *context,
     // Store that we use the file
     struct stat st;
     stat(path.c_str(), &st);
-    context = new Context(context);
+    context = new Context(context, NULL);
     MAIN->files[path] = SourceFile(path, tree, context);
 
     return tree;

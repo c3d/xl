@@ -206,15 +206,18 @@ struct Context
 //   The evaluation context for a given tree
 // ----------------------------------------------------------------------------
 {
-    Context(Context *parent = NULL);
+    Context(Context *scope, Context *stack);
     ~Context();
+
+    // Type of lookup: scope-based, stack-based, or current context only
+    enum lookup_mode    { LOCAL_LOOKUP, SCOPE_LOOKUP, STACK_LOOKUP };
 
     // Adding definitions to the context
     Rewrite *           Define(Tree *form, Tree *value);
     Rewrite *           DefineData(Tree *form);
 
     // Rewriting things in the context
-    Tree *              Evaluate(Tree *input);
+    Tree *              Evaluate(Tree *what, lookup_mode lookup = SCOPE_LOOKUP);
 
     // The hash code used in the rewrite table
     static ulong        Hash(Tree *input);
@@ -223,10 +226,11 @@ struct Context
     bool                Bind(Tree *form, Tree *value, TreeList *args = NULL);
 
     // Find the value that a name is bound to, or returns NULL
-    Tree *              Bound(Name *name, bool recurse = true);
+    Tree *              Bound(Name *name, lookup_mode lookup = SCOPE_LOOKUP);
 
 public:
-    Context_p           parent;
+    Context_p           scope;
+    Context_p           stack;
     rewrite_table       rewrites;
     bool                hasConstants;
 
@@ -290,6 +294,7 @@ extern "C"
 {
     void debugs(XL::Context *s);
     void debugsc(XL::Context *s);
+    void debugst(XL::Context *s);
 }
 
 #endif // CONTEXT_H

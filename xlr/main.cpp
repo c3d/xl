@@ -85,7 +85,7 @@ Main::Main(int inArgc, char **inArgv, Compiler *comp,
       syntax(syntaxName.c_str()),
       options(inArgc, inArgv),
       compiler(comp),
-      context(new Context(NULL)),
+      context(new Context(NULL, NULL)),
       renderer(std::cout, styleSheetName, syntax),
       reader(NULL), writer(NULL)
 {
@@ -180,7 +180,7 @@ SourceFile *Main::NewFile(text path)
 //   Allocate an entry for updating programs (untitled)
 // ----------------------------------------------------------------------------
 {
-    files[path] = SourceFile(path, NULL, new Context(MAIN->context), true);
+    files[path] = SourceFile(path,NULL, new Context(MAIN->context,NULL), true);
     return &files[path];
 }
 
@@ -309,7 +309,7 @@ int Main::LoadFile(text file, bool updateContext)
 
     Context *syms = MAIN->context;
     Context *savedSyms = syms;
-    syms = new Context(syms);
+    syms = new Context(syms, NULL);
     MAIN->context = syms;
 
     IFTRACE(fileLoad)

@@ -46,12 +46,12 @@ XL_BEGIN
 //
 // ============================================================================
 
-Context::Context(Context *parent)
+Context::Context(Context *scope, Context *stack)
 // ----------------------------------------------------------------------------
 //   Constructor for an execution context
 // ----------------------------------------------------------------------------
-    : parent(parent), rewrites(),
-      hasConstants(parent ? parent->hasConstants : false)
+    : scope(scope), stack(stack), rewrites(),
+      hasConstants(scope ? scope->hasConstants : false)
 {}
 
 
@@ -150,7 +150,7 @@ Rewrite *Context::DefineData(Tree *data)
 }
 
 
-Tree *Context::Evaluate(Tree *what)
+Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
 // ----------------------------------------------------------------------------
 //   Evaluate 'what' in the given context
 // ----------------------------------------------------------------------------
@@ -172,7 +172,8 @@ Tree *Context::Evaluate(Tree *what)
     ulong key = Hash(what);
 
     // Loop over all contexts
-    for (Context *context = this; context; context = context->parent)
+    Context *next = NULL;
+    for (Context *context = this; context; context = next)
     {
         rewrite_table &rwt = context->rewrites;
         rewrite_table::iterator found = rwt.find(key);
@@ -203,31 +204,29 @@ Tree *Context::Evaluate(Tree *what)
                     else if (Name *name = candidate->from->AsName())
                     {
                         Name *vname = what->AsName();
+                        assert(vname || !"Hash function is broken");
                         if (name->value == vname->value)
                         {
                             Tree *result = candidate->to;
                             if (result != candidate->from)
-                                result = Evaluate(result);
+                            {
+                                next = new Context(context->scope, this);
+                                result = next->Evaluate(result);
+                            }
                             return result;
                         }
                     }
                     else
                     {
                         // Keep evaluating
-                        Context *formContext = new Context(this);
-                        if (formContext->Bind(candidate->from, what))
+                        Context *eval = new Context(context->scope, this);
+                        if (eval->Bind(candidate->from, what))
                         {
                             Tree *result = candidate->from;
                             if (Tree *to = candidate->to)
-                            {
-                                if (to != result)
-                                    result = formContext->Evaluate(to);
-                            }
+                                result = eval->Evaluate(to);
                             else
-                            {
-                                result = xl_evaluate_children(formContext,
-                                                              result);
-                            }
+                                result = xl_evaluate_children(eval, result);
                             depth--;
                             return result;
                         }
@@ -237,9 +236,15 @@ Tree *Context::Evaluate(Tree *what)
                 rewrite_table &rwh = candidate->hash;
                 found = rwh.find(key);
                 candidate = found == rwh.end() ? NULL : (*found).second;
-            }
-        }
-    }
+            } // Loop on candidates
+        } // If found candidate
+
+        // Select which scope to use next
+        if (lookup == SCOPE_LOOKUP)
+            next = context->scope;
+        else if (STACK_LOOKUP)
+            next = context->stack;
+    } // Loop on contexts
 
     // Error case - Should we raise some error here?
     return what;
@@ -302,22 +307,22 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
 // ----------------------------------------------------------------------------
 {
     kind k = form->Kind();
-    Context *eval = args ? this : (Context *) parent;
+    Context *eval = args ? this : (Context *) stack;
 
     switch(k)
     {
     case INTEGER:
-        value = Evaluate(value);
+        value = eval->Evaluate(value);
         if (Integer *iv = value->AsInteger())
             return iv->value == ((Integer *) form)->value;
         return false;
     case REAL:
-        value = Evaluate(value);
+        value = eval->Evaluate(value);
         if (Real *rv = value->AsReal())
             return rv->value == ((Real *) form)->value;
         return false;
     case TEXT:
-        value = Evaluate(value);
+        value = eval->Evaluate(value);
         if (Text *tv = value->AsText())
             return (tv->value == ((Text *) form)->value &&
                     tv->opening == ((Text *) form)->opening &&
@@ -327,7 +332,7 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
 
     case NAME:
         // Test if the name is already bound, and if so, if trees match
-        if (Tree *bound = Bound((Name *) form))
+        if (Tree *bound = Bound((Name *) form, SCOPE_LOOKUP))
         {
             if (bound == form)
                 return true;
@@ -434,7 +439,7 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
 }
 
 
-Tree *Context::Bound(Name *name, bool recurse)
+Tree *Context::Bound(Name *name, lookup_mode lookup)
 // ----------------------------------------------------------------------------
 //   Return the value a name is bound to, or NULL if none...
 // ----------------------------------------------------------------------------
@@ -443,7 +448,8 @@ Tree *Context::Bound(Name *name, bool recurse)
     ulong key = Hash(name);
 
     // Loop over all contexts
-    for (Context *context = this; context; context = context->parent)
+    Context *next = NULL;
+    for (Context *context = this; context; context = next)
     {
         rewrite_table &rwt = context->rewrites;
         rewrite_table::iterator found = rwt.find(key);
@@ -454,15 +460,22 @@ Tree *Context::Bound(Name *name, bool recurse)
             {
                 if (Name *from = candidate->from->AsName())
                     if (name->value == from->value)
-                        return candidate->to ? candidate->to : name;
+                        if (Tree *to = candidate->to)
+                            return to;
+                        else
+                            return from;
 
                 rewrite_table &rwh = candidate->hash;
                 found = rwh.find(key);
                 candidate = found == rwh.end() ? NULL : (*found).second;
             }
-        }
-        if (!recurse)
-            break;
+        } 
+
+        // Select which scope to use next
+        if (lookup == SCOPE_LOOKUP)
+            next = context->scope;
+        else if (STACK_LOOKUP)
+            next = context->stack;
     }
 
     // Not bound
@@ -503,13 +516,27 @@ extern "C" void debugs(XL::Context *c)
 
 extern "C" void debugsc(XL::Context *c)
 // ----------------------------------------------------------------------------
-//   For the debugger, dump a symbol table
+//   For the debugger, dump a symbol table along the scope
 // ----------------------------------------------------------------------------
 {
     using namespace XL;
     while (c)
     {
         debugs(c);
-        c = c->parent;
+        c = c->scope;
+    }
+}
+
+
+extern "C" void debugst(XL::Context *c)
+// ----------------------------------------------------------------------------
+//   For the debugger, dump a symbol table along the stack
+// ----------------------------------------------------------------------------
+{
+    using namespace XL;
+    while (c)
+    {
+        debugs(c);
+        c = c->stack;
     }
 }
