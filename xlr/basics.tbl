@@ -49,6 +49,9 @@ PREFIX(Closure, tree, "<closure>", PARM(c, tree),
 PREFIX(EvaluatedClosure, tree, "<evaluated>", PARM(c, tree),
        return &c,
        "")
+INFIX(Assignment, tree, tree, ":=", tree,
+      return context->Assign(&l, &r),
+      "")
 
 // Integer arithmetic and comparisons
 INFIX(SetInt, integer,integer,":=",integer,XL_RINT(l.value = XL_INT(r)), "")

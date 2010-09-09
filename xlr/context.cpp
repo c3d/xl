@@ -177,6 +177,90 @@ Rewrite *Context::DefineData(Tree *data)
 }
 
 
+Tree *Context::Assign(Tree *target, Tree *source, lookup_mode lookup)
+// ----------------------------------------------------------------------------
+//   Perform an assignment in the given context
+// ----------------------------------------------------------------------------
+{
+    Tree *value = Evaluate(source);
+
+    // If the target is not a name, evaluate it
+    if (target->Kind() != NAME)
+    {
+        target = Evaluate(target);
+        if (target->Kind() != NAME)
+            Ooops("Assignment target $1 is not a name", target);
+    }
+
+    if (Name *name = target->AsName())
+    {
+        // Build the hash key for the tree to evaluate
+        ulong key = Hash(name);
+
+        // Loop over all contexts, searching for a pre-existing assignment
+        Context *next = NULL;
+        for (Context *context = this; context; context = next)
+        {
+            rewrite_table &rwt = context->rewrites;
+            rewrite_table::iterator found = rwt.find(key);
+            if (found != rwt.end())
+            {
+                Rewrite *candidate = (*found).second;
+                while (candidate)
+                {
+                    if (Name *from = candidate->from->AsName())
+                    {
+                        if (name->value == from->value)
+                        {
+                            if (candidate->native == xl_assigned_value)
+                            {
+                                // This was an assigned value, replace it
+                                candidate->to = value;
+                                return value;
+                            }
+
+                            // Can't assign if this existed
+                            Ooops("Assigning to $1", name);
+                            Ooops("previously defined as $1",
+                                  candidate->from);
+                            return value;
+                        }
+                    }
+                    
+                    rewrite_table &rwh = candidate->hash;
+                    found = rwh.find(key);
+                    candidate = found == rwh.end() ? NULL : (*found).second;
+                }
+            } 
+
+            // Select which scope to use next
+            if (lookup == SCOPE_LOOKUP)
+                next = context->scope;
+            else if (STACK_LOOKUP)
+                next = context->stack;
+        } // Context loop
+
+        // Check that we have only names in the pattern
+        ValidateNames(name);
+
+        // Create a rewrite
+        Rewrite *rewrite = new Rewrite(name, value);
+
+        // Walk through existing rewrites (we already checked for redefinitions)
+        Rewrite_p *parent = &rewrites[key]; 
+        while (Rewrite *where = *parent)
+            parent = &where->hash[key];
+
+        // Insert the rewrite
+        *parent = rewrite;
+
+        // Mark the rewrite as an assignment
+        rewrite->native = xl_assigned_value;
+    }
+    return value;
+}
+
+
 Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
 // ----------------------------------------------------------------------------
 //   Evaluate 'what' in the given context
@@ -215,6 +299,10 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                     // If this is native C code, invoke it.
                     if (native_fn fn = candidate->native)
                     {
+                        // Case where we have an assigned value
+                        if (fn == xl_assigned_value)
+                            return candidate->to;
+
                         // Bind native context
                         TreeList args;
                         if (Bind(candidate->from, what, &args))
@@ -596,7 +684,10 @@ extern "C" void debugrw(XL::Rewrite *r)
 {
     if (r)
     {
-        std::cerr << r->from << " -> " << r->to << "\n";
+        if (r->native == XL::xl_assigned_value)
+            std::cerr << r->from << " := " << r->to << "\n";
+        else
+            std::cerr << r->from << " -> " << r->to << "\n";
         XL::rewrite_table::iterator i;
         for (i = r->hash.begin(); i != r->hash.end(); i++)
             debugrw((*i).second);

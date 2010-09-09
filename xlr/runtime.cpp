@@ -104,6 +104,16 @@ Tree *xl_evaluate_children(Context *context, Tree *what)
 }
 
 
+Tree *xl_assigned_value(Context *context, Tree *value)
+// ----------------------------------------------------------------------------
+//   An assigned value is returned as is
+// ----------------------------------------------------------------------------
+{
+    (void) context;
+    return value;
+}
+
+
 Tree *xl_error(text msg, Tree *a1, Tree *a2, Tree *a3)
 // ----------------------------------------------------------------------------
 //   The default runtime error message mechanism (if not overriden)

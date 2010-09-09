@@ -215,6 +215,8 @@ struct Context
     // Adding definitions to the context
     Rewrite *           Define(Tree *form, Tree *value);
     Rewrite *           DefineData(Tree *form);
+    Tree *              Assign(Tree *target, Tree *source,
+                               lookup_mode lookup = SCOPE_LOOKUP);
 
     // Rewriting things in the context
     Tree *              Evaluate(Tree *what, lookup_mode lookup = SCOPE_LOOKUP);
