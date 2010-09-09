@@ -210,7 +210,7 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                             Tree *result = candidate->to;
                             if (result != candidate->from)
                             {
-                                next = new Context(context->scope, this);
+                                next = new Context(context, this);
                                 result = next->Evaluate(result);
                             }
                             return result;
@@ -219,7 +219,7 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                     else
                     {
                         // Keep evaluating
-                        Context *eval = new Context(context->scope, this);
+                        Context *eval = new Context(context, this);
                         if (eval->Bind(candidate->from, what))
                         {
                             Tree *result = candidate->from;
@@ -343,6 +343,7 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
         }
 
         // Define the name in the given context
+        value = eval->CreateClosure(value);
         if (args)
             args->push_back(value);
         else
@@ -350,25 +351,42 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
         return true;
 
     case INFIX:
+    {
+        Infix *fi = (Infix *) form;
+
         // Check type declarations
-        if (((Infix *) form)->name == ":")
+        if (fi->name == ":")
         {
-            // Evaluate the type
-            Tree *type = ((Infix *) form)->right;
-            type = eval->Evaluate(type);
-
-            // We need to evaluate the value
-            if (type != tree_type)
+            if (Name *name = fi->left->AsName())
             {
-                value = eval->Evaluate(value);
-
-                // Check if the value matches the type
-                if (!ValueMatchesType(this, type, value, false))
+                // This is always an error if the name is bound in this scope
+                if (Tree *existing = Bound(name, LOCAL_LOOKUP))
+                {
+                    Ooops("Name $1 was already defined", name);
+                    Ooops("with value $1", existing);
                     return false;
-            }
+                }
 
-            return Bind(((Infix *) form)->left, value, args);
-        }
+                // Evaluate the type
+                Tree *type = ((Infix *) form)->right;
+                type = eval->Evaluate(type);
+
+                // Evaluate the value and match its type if the type is not tree
+                if (type != tree_type)
+                {
+                    value = eval->Evaluate(value);
+                    if (!ValueMatchesType(this, type, value, false))
+                        return false;
+                }
+
+                // Define the name locally, do not create a closure
+                if (args)
+                    args->push_back(value);
+                else
+                    Define(form, value);
+                return true;
+            } // We have a name on the left
+        } // We have an infix :
 
         // If we match the infix name, we can bind left and right
         if (Infix *infix = value->AsInfix())
@@ -378,6 +396,7 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
 
         // Otherwise, we don't have a match
         return false;
+    }
 
     case PREFIX:
         // If the left side is a name, make sure it's an exact match
@@ -480,6 +499,46 @@ Tree *Context::Bound(Name *name, lookup_mode lookup)
 
     // Not bound
     return NULL;
+}
+
+
+Tree *Context::CreateClosure(Tree *value)
+// ----------------------------------------------------------------------------
+//   Create a closure to record the current context
+// ----------------------------------------------------------------------------
+{
+    // Quick optimization for constants
+    if (!hasConstants && value->IsConstant())
+        return value;
+    static Name_p closureName = new Name("<closure>");
+    Prefix *result = new Prefix(closureName, value);
+    result->Set<ClosureInfo>(this);
+    return result;
+}
+
+
+Tree *Context::EvaluateClosure(Tree *closure, Tree *value)
+// ----------------------------------------------------------------------------
+//   Evaluate the closure in the recorded context
+// ----------------------------------------------------------------------------
+{
+    Context *context = closure->Get<ClosureInfo>();
+    if (!context)
+    {
+        Ooops("Internal: Where did the closure $1 come from?", value);
+        context = this;
+    }
+
+    // Evaluate the result
+    Tree *result = context->Evaluate(value);
+
+    // Cache evaluation result in case we evaluate the closure again
+    static Name_p evaluatedName = new Name("<evaluated>");
+    Prefix *prefix = closure->AsPrefix(); assert(prefix || !"Invalid closure");
+    prefix->left = evaluatedName;
+    prefix->right = result;
+
+    return result;
 }
 
 XL_END

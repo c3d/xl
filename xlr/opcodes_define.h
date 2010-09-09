@@ -43,7 +43,7 @@
 
 
 #define PARM(symbol, type)                                      \
-        if (text(#type) == "tree")                              \
+        if (text(#type) == "closure")                           \
         {                                                       \
             Name *symbol##_decl = new Name(#symbol);            \
             parameters.push_back(symbol##_decl);                \

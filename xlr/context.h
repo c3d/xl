@@ -228,6 +228,10 @@ struct Context
     // Find the value that a name is bound to, or returns NULL
     Tree *              Bound(Name *name, lookup_mode lookup = SCOPE_LOOKUP);
 
+    // Create a closure in this context
+    Tree *              CreateClosure(Tree *value);
+    Tree *              EvaluateClosure(Tree *closure, Tree *value);
+
 public:
     Context_p           scope;
     Context_p           stack;
@@ -255,6 +259,19 @@ public:
 
     GARBAGE_COLLECT(Rewrite);
 };
+
+
+struct ClosureInfo : Info
+// ----------------------------------------------------------------------------
+//    Information recording the context in which we evaluate a given tree
+// ----------------------------------------------------------------------------
+{
+    typedef Context_p data_t;
+    ClosureInfo(Context *context): context(context) {}
+    operator data_t() { return context; }
+    Context_p context;
+};
+
 
 
 // ============================================================================
