@@ -307,14 +307,17 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
     switch(k)
     {
     case INTEGER:
+        value = Evaluate(value);
         if (Integer *iv = value->AsInteger())
             return iv->value == ((Integer *) form)->value;
         return false;
     case REAL:
+        value = Evaluate(value);
         if (Real *rv = value->AsReal())
             return rv->value == ((Real *) form)->value;
         return false;
     case TEXT:
+        value = Evaluate(value);
         if (Text *tv = value->AsText())
             return (tv->value == ((Text *) form)->value &&
                     tv->opening == ((Text *) form)->opening &&

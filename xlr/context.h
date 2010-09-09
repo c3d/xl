@@ -190,6 +190,7 @@ struct Errors;                                  // Error handlers
 typedef GCPtr<Context>             Context_p;
 typedef GCPtr<Rewrite>             Rewrite_p;
 typedef std::map<ulong, Rewrite_p> rewrite_table;// Hashing of rewrites
+typedef std::map<Tree_p, Tree_p>   value_cache;
 typedef Tree *(*native_fn) (Context *ctx, Tree *self);
 
 
