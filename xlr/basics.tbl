@@ -208,9 +208,14 @@ PREFIX(RandomNumber2, real, "random", PARM(low, real) PARM(high, real),
 PREFIX(RandomNumber2i, integer, "random", PARM(low,integer) PARM(high,integer),
        XL_RINT(xl_random(XL_INT(low), XL_INT(high))), "")
 
-// Executing some code
+// Tree manipulations
 PREFIX(DoCode,    tree, "do", PARM(code, tree),
        return xl_evaluate(context, &code), "")
+PREFIX(ParseTree, tree, "parse_tree", PARM(c, tree),
+       Tree *code = &c;
+       if (Block *block = code->AsBlock())
+           code = block->child;
+       return xl_parse_tree(context, code), "")
 PREFIX(LoadFile, tree, "load", PARM(file, text),
        return xl_load(context, file), "")
 PREFIX(ImportFile, tree, "import", PARM(file, text),

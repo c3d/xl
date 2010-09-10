@@ -58,6 +58,7 @@ Tree *xl_named_value(Context *, Tree *);
 Tree *xl_error(text msg, Tree *a1=0, Tree *a2=0, Tree *a3=0);
 Tree *xl_form_error(Context *c, Tree *tree);
 
+Tree *xl_parse_tree(Context *, Tree *tree);
 bool  xl_same_text(Tree * , const char *);
 bool  xl_same_shape(Tree *t1, Tree *t2);
 Tree *xl_infix_match_check(Tree *value, kstring name);

@@ -167,6 +167,73 @@ Tree *xl_form_error(Context *context, Tree *what)
 }
 
 
+Tree *xl_parse_tree(Context *context, Tree *tree)
+// ----------------------------------------------------------------------------
+//   Build a parse tree in the current context
+// ----------------------------------------------------------------------------
+{
+    switch(tree->Kind())
+    {
+    case INTEGER:
+    case REAL:
+    case TEXT:
+    case NAME:
+        return tree;
+    case INFIX:
+    {
+        Infix *infix = (Infix *) tree;
+        Tree *left = xl_parse_tree(context, infix->left);
+        Tree *right = xl_parse_tree(context, infix->right);
+        Infix *result = new Infix(infix, left, right);
+        return result;
+    }
+    case PREFIX:
+    {
+        Prefix *prefix = (Prefix *) tree;
+        Tree *left = xl_parse_tree(context, prefix->left);
+        Tree *right = xl_parse_tree(context, prefix->right);
+        Prefix *result = new Prefix(prefix, left, right);
+        return result;
+    }
+    case POSTFIX:
+    {
+        Postfix *postfix = (Postfix *) tree;
+        Tree *left = xl_parse_tree(context, postfix->left);
+        Tree *right = xl_parse_tree(context, postfix->right);
+        Postfix *result = new Postfix(postfix, left, right);
+        return result;
+    }
+    case BLOCK:
+    {
+        Block *block = (Block *) tree;
+        Tree *result = block->child;
+        if (block->opening == "{" && block->closing == "}")
+        {
+            Block *child = result->AsBlock();
+            if (child && child->opening == "{" && child->closing == "}")
+            {
+                // Case where we have parse_tree {{x}}: Return {x}
+                result = xl_parse_tree(context, child->child);
+                result = new Block(block, result);
+                return result;
+            }
+
+            // Name or expression in { }
+            if (Name *name = result->AsName())
+                if (Tree *bound = context->Bound(name))
+                    return bound;
+            result = context->Evaluate(result);
+            return result;
+        }
+        result = xl_parse_tree(context, result);
+        result = new Block(block, result);
+        return result;
+    }
+    }
+    return tree;
+}
+
+
 bool xl_same_text(Tree *what, const char *ref)
 // ----------------------------------------------------------------------------
 //   Compile the tree if necessary, then evaluate it
