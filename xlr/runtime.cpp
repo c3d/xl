@@ -119,6 +119,9 @@ Tree *xl_error(text msg, Tree *a1, Tree *a2, Tree *a3)
 //   The default runtime error message mechanism (if not overriden)
 // ----------------------------------------------------------------------------
 {
+    if (a1) a1 = FormatTreeForError(a1);
+    if (a2) a2 = FormatTreeForError(a2);
+    if (a3) a3 = FormatTreeForError(a3);
     Error err(msg, a1, a2, a3);
     MAIN->errors->Log(err);
     return xl_false;
