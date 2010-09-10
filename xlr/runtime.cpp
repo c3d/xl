@@ -71,6 +71,8 @@ Tree *xl_evaluate_children(Context *context, Tree *what)
     case INFIX:
     {
         Infix *infix = (Infix *) what;
+        if (infix->name == ":")
+            return xl_evaluate_children(context, infix->left);
         Tree *left = xl_evaluate_children(context, infix->left);
         Tree *right = xl_evaluate_children(context, infix->right);
         Infix *result = new Infix(infix, left, right);
@@ -107,6 +109,16 @@ Tree *xl_evaluate_children(Context *context, Tree *what)
 Tree *xl_assigned_value(Context *context, Tree *value)
 // ----------------------------------------------------------------------------
 //   An assigned value is returned as is
+// ----------------------------------------------------------------------------
+{
+    (void) context;
+    return value;
+}
+
+
+Tree *xl_named_value(Context *context, Tree *value)
+// ----------------------------------------------------------------------------
+//   An named value is returned as is
 // ----------------------------------------------------------------------------
 {
     (void) context;

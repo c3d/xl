@@ -522,6 +522,34 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
         {
             if (Name *name = fi->left->AsName())
             {
+                if (Name *typeName = fi->right->AsName())
+                {
+                    if (name->value == typeName->value)
+                    {
+                        // Got x:x in the interface: accept only identical name
+                        if (value->Kind() != NAME)
+                            value = eval->Evaluate(value);
+                        if (Name *nval = value->AsName())
+                        {
+                            if (nval->value == name->value)
+                            {
+                                if (args)
+                                {
+                                    args->push_back(value);
+                                }
+                                else
+                                {
+                                    Rewrite *rw = Define(name, name);
+                                    rw->native = xl_named_value;
+                                }
+                                return true;
+                            }
+                        }
+                        // Name or form mismatch, don't accept it
+                        return false;
+                    }
+                }
+
                 // This is always an error if the name is bound in this scope
                 if (Tree *existing = Bound(name, LOCAL_LOOKUP))
                 {
