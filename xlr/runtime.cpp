@@ -125,15 +125,19 @@ Tree *xl_error(text msg, Tree *a1, Tree *a2, Tree *a3)
 }
 
 
-Tree *xl_form_error(Tree *what)
+Tree *xl_form_error(Context *context, Tree *what)
 // ----------------------------------------------------------------------------
-//   Display message if we have a type error
+//   Raise an error if we have a form error
 // ----------------------------------------------------------------------------
 {
     bool quickExit = false;
     if (quickExit)
         return what;
-    return Ooops("No form matches $1", what);
+    static Name_p errorName = new Name("error");
+    static Text_p errorText = new Text("No form matches $1");
+    Infix *args = new Infix(",", errorText, what, what->Position());
+    Prefix *error = new Prefix(errorName, args, what->Position());
+    return context->Evaluate(error);
 }
 
 

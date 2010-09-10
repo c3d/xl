@@ -232,6 +232,9 @@ PREFIX(Springify, real, "springify",
 PREFIX(DebugTree, tree, "debug", PARM(toDebug, tree),
        std::cerr << "DEBUG: " << (Tree *) &toDebug << "\n";
        return xl_true, "")
+PREFIX(EvaluationError, tree, "evaluation_error", PARM(e, tree),
+       return xl_form_error(context, &e),
+       "")
 PREFIX(ErrorMsg3, tree, "error",
        PARM(m, text) PARM(a,tree) PARM(b,tree) PARM(c, tree),
        return xl_error(m, &a, &b, &c), "")

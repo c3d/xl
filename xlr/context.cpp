@@ -359,7 +359,19 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
             next = context->stack;
     } // Loop on contexts
 
-    // Error case - Should we raise some error here?
+    // Error case - Raise an error
+    static bool inError = false;
+    if (inError)
+    {
+        Ooops("An error happened while processing error $1", what);
+    }
+    else
+    {
+        static Name_p evaluationError = new Name("evaluation_error");
+        LocalSave<bool> saveInError(inError, true);
+        Prefix *errorForm = new Prefix(evaluationError, what, what->Position());
+        what = Evaluate(errorForm);
+    }
     return what;
 }
 

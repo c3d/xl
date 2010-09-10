@@ -16,5 +16,3 @@ rest  x,y -> y
 // Range of values
 data low..high
 
-// Apply 
-code with 
