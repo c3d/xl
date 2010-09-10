@@ -366,6 +366,7 @@ int Main::Run()
         Tree_p result = sf.tree;
         try
         {
+            Errors errors;
             result = sf.context->Evaluate(sf.tree);
         }
         catch (XL::Error &e)

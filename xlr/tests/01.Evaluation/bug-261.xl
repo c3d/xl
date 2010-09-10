@@ -1,0 +1,8 @@
+foo x ->
+   writeln x
+
+bar x ->
+   y -> "Hello " & x
+   foo y
+
+bar "Christophe" 
