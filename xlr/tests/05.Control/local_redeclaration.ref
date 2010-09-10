@@ -1,2 +1,1 @@
-a b:real -> b
 b a:real -> a
