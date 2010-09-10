@@ -26,7 +26,7 @@
 // ****************************************************************************
 /*
   COMPILATION STRATEGY:
-  
+
   The version of XL implemented here is a very simple language based
   on tree rewrites, designed to serve as a dynamic document description
   language (DDD), as well as a tool to implement the "larger" XL in a more
@@ -178,9 +178,9 @@
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //    Forward type declarations
-// 
+//
 // ============================================================================
 
 struct Context;                                 // Execution context
@@ -190,15 +190,15 @@ struct Errors;                                  // Error handlers
 typedef GCPtr<Context>             Context_p;
 typedef GCPtr<Rewrite>             Rewrite_p;
 typedef std::map<ulong, Rewrite_p> rewrite_table;// Hashing of rewrites
-typedef std::map<Tree_p, Tree_p>   value_cache;
+typedef std::map<Tree_p, Tree_p>   tree_map;
 typedef Tree *(*native_fn) (Context *ctx, Tree *self);
 
 
 
 // ============================================================================
-// 
+//
 //    Compile-time symbols and rewrites management
-// 
+//
 // ============================================================================
 
 struct Context
@@ -220,13 +220,15 @@ struct Context
 
     // Rewriting things in the context
     Tree *              Evaluate(Tree *what, lookup_mode lookup = SCOPE_LOOKUP);
+    Tree *              Evaluate(Tree *, tree_map &, lookup_mode=SCOPE_LOOKUP);
     Tree *              EvaluateBlock(Tree *child);
 
     // The hash code used in the rewrite table
     static ulong        Hash(Tree *input);
 
     // Bind parameters in context based on arguments in form
-    bool                Bind(Tree *form, Tree *value, TreeList *args = NULL);
+    bool                Bind(Tree *form, Tree *value, tree_map &values,
+                             TreeList *args = NULL);
 
     // Find the value that a name is bound to, or returns NULL
     Tree *              Bound(Name *name, lookup_mode lookup = SCOPE_LOOKUP);
@@ -278,9 +280,9 @@ struct ClosureInfo : Info
 
 
 // ============================================================================
-// 
+//
 //   LocalSave helper class
-// 
+//
 // ============================================================================
 
 template <class T>
@@ -307,6 +309,22 @@ struct LocalSave
     T   saved;
 };
 
+
+
+// ============================================================================
+//
+//   Inline functions
+//
+// ============================================================================
+
+inline Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
+// ----------------------------------------------------------------------------
+//   Evaluate 'what' in the given context
+// ----------------------------------------------------------------------------
+{
+    tree_map empty;
+    return Evaluate(what, empty, lookup);
+}
 
 XL_END
 
