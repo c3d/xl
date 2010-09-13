@@ -143,6 +143,9 @@ Rewrite *Context::Define(Tree *form, Tree *value)
         // Name: check for redefinitions
         while (Rewrite *where = *parent)
         {
+            if (where->from == form && where->to == value)
+                return where;
+
             if (Name *existing = where->from->AsName())
             {
                 if (existing->value == name->value)
@@ -158,7 +161,11 @@ Rewrite *Context::Define(Tree *form, Tree *value)
     {
         // Not a name, won't check for redefinitions
         while (Rewrite *where = *parent)
+        {
+            if (where->from == form && where->to == value)
+                return where;
             parent = &where->hash[key];
+        }
     }
 
     // Create the rewrite
