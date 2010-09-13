@@ -333,7 +333,7 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                         if (name->value == vname->value)
                         {
                             Tree *result = candidate->to;
-                            if (result != candidate->from)
+                            if (result && result != candidate->from)
                             {
                                 next = new Context(this, this);
                                 result = next->Evaluate(result);
