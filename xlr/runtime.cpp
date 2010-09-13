@@ -126,6 +126,15 @@ Tree *xl_named_value(Context *context, Tree *value)
 }
 
 
+Tree *xl_source(Tree *value)
+// ----------------------------------------------------------------------------
+//   Return the source for the given value
+// ----------------------------------------------------------------------------
+{
+    return value;
+}
+
+
 Tree *xl_error(text msg, Tree *a1, Tree *a2, Tree *a3)
 // ----------------------------------------------------------------------------
 //   The default runtime error message mechanism (if not overriden)

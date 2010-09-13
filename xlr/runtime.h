@@ -55,6 +55,7 @@ Tree *xl_evaluate(Context *, Tree *);
 Tree *xl_evaluate_children(Context *, Tree *);
 Tree *xl_assigned_value(Context *, Tree *);
 Tree *xl_named_value(Context *, Tree *);
+Tree *xl_source(Tree *);
 Tree *xl_error(text msg, Tree *a1=0, Tree *a2=0, Tree *a3=0);
 Tree *xl_form_error(Context *c, Tree *tree);
 
@@ -131,6 +132,9 @@ struct XLCall
             call = new Prefix(call, arguments);
         return xl_evaluate(context, call);
     }
+
+    // Compile in the given context
+    void build(Context *context) { (void) context; }
 
 public:
     Name_p      name;
