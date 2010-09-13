@@ -758,6 +758,39 @@ Tree *Context::EvaluateClosure(Tree *closure, Tree *value)
     return result;
 }
 
+
+static void ListNameRewrites(rewrite_table &table,
+                             text prefix,
+                             rewrite_list &list)
+// ----------------------------------------------------------------------------
+//    List all the names matching in the given rewrite table
+// ----------------------------------------------------------------------------
+{
+    rewrite_table::iterator i;
+    for (i = table.begin(); i != table.end(); i++)
+    {
+        Rewrite *rw = (*i).second;
+        Tree *from = rw->from;
+        if (Name *name = from->AsName())
+        {
+            if (name->value.find(prefix) == 0)
+            {
+                list.push_back(rw);
+                ListNameRewrites(rw->hash, prefix, list);
+            }
+        }
+    }
+}
+
+
+void Context::ListNames(text prefix, rewrite_list &list)
+// ----------------------------------------------------------------------------
+//   List all names that begin with the given text
+// ----------------------------------------------------------------------------
+{
+    ListNameRewrites(rewrites, prefix, list);
+}
+
 XL_END
 
 

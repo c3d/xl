@@ -35,6 +35,7 @@
 #include "compiler.h"
 #include "options.h"
 #include <map>
+#include <set>
 #include <time.h>
 
 

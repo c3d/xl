@@ -190,6 +190,7 @@ struct Errors;                                  // Error handlers
 typedef GCPtr<Context>             Context_p;
 typedef GCPtr<Rewrite>             Rewrite_p;
 typedef std::map<ulong, Rewrite_p> rewrite_table;// Hashing of rewrites
+typedef std::vector<Rewrite_p>     rewrite_list;
 typedef std::map<Tree_p, Tree_p>   tree_map;
 typedef Tree *(*native_fn) (Context *ctx, Tree *self);
 
@@ -234,6 +235,9 @@ struct Context
     // Create a closure in this context
     Tree *              CreateClosure(Tree *value);
     Tree *              EvaluateClosure(Tree *closure, Tree *value);
+
+    // List rewrites of a given type
+    void                ListNames(text begin, rewrite_list &list);
 
 public:
     Context_p           scope;
