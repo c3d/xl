@@ -112,7 +112,6 @@ OPTION(diff,
 // to reuse the IFTRACE macro as is.
 TRACE(memory)
 TRACE(eval)
-TRACE(cache)
 TRACE(compile)
 TRACE(parmatch)
 TRACE(argmatch)

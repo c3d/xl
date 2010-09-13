@@ -281,7 +281,7 @@ Tree *Context::Assign(Tree *target, Tree *source, lookup_mode lookup)
 }
 
 
-Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
+Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
 // ----------------------------------------------------------------------------
 //   Check if something is in the cache, otherwise evaluate it
 // ----------------------------------------------------------------------------
@@ -290,15 +290,10 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
     if (!hasConstants && what->IsConstant())
         return what;
 
-    // Check if we already evaluated this in that context
-    tree_map::iterator cached = cache.find(what);
-    if (cached != cache.end())
-    {
-        IFTRACE(cache)
-            std::cerr << "Cached value for " << what
-                      << " is " << (*cached).second << "\n";
+    // Check if we already evaluated this
+    tree_map::iterator cached = values.find(what);
+    if (cached != values.end())
         return (*cached).second;
-    }
 
     // Depth check
     static uint depth = 0;
@@ -334,14 +329,14 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
 
                         // Bind native context
                         TreeList args;
-                        if (Bind(candidate->from, what, &args))
+                        if (Bind(candidate->from, what, values, &args))
                         {
                             uint arity = args.size();
                             Compiler *comp = MAIN->compiler;
                             adapter_fn adj = comp->ArrayToArgsAdapter(arity);
                             Tree **args0 = (Tree **) &args[0];
                             Tree *result = adj(fn, this, what, args0);
-                            cache[what] = result;
+                            values[what] = result;
                             return result;
                         }
                     }
@@ -357,7 +352,7 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                                 next = new Context(this, this);
                                 result = next->Evaluate(result);
                             }
-                            cache[what] = result;
+                            values[what] = result;
                             return result;
                         }
                     }
@@ -365,14 +360,14 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                     {
                         // Keep evaluating
                         Context *eval = new Context(context, this);
-                        if (eval->Bind(candidate->from, what))
+                        if (eval->Bind(candidate->from, what, values))
                         {
                             Tree *result = candidate->from;
                             if (Tree *to = candidate->to)
                                 result = eval->Evaluate(to);
                             else
                                 result = xl_evaluate_children(eval, result);
-                            cache[what] = result;
+                            values[what] = result;
                             return result;
                         }
                     }
@@ -409,7 +404,8 @@ Tree *Context::EvaluateBlock(Tree *what)
 // ----------------------------------------------------------------------------
 {
     Context *block = new Context(this, stack);
-    what = block->Evaluate(what);
+    tree_map cache;
+    what = block->Evaluate(what, cache);
     return what;
 }
 
@@ -464,7 +460,7 @@ ulong Context::Hash(Tree *what)
 }
 
 
-bool Context::Bind(Tree *form, Tree *value, TreeList *args)
+bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
 // ----------------------------------------------------------------------------
 //   Test if we can match arguments to values
 // ----------------------------------------------------------------------------
@@ -477,7 +473,7 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
     case INTEGER:
     {
         Integer *f = (Integer *) form;
-        value = eval->Evaluate(value);
+        value = eval->Evaluate(value, cache);
         if (Integer *iv = value->AsInteger())
             return iv->value == f->value;
         return false;
@@ -485,7 +481,7 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
     case REAL:
     {
         Real *f = (Real *) form;
-        value = eval->Evaluate(value);
+        value = eval->Evaluate(value, cache);
         if (Real *rv = value->AsReal())
             return rv->value == f->value;
         return false;
@@ -493,7 +489,7 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
     case TEXT:
     {
         Text *f = (Text *) form;
-        value = eval->Evaluate(value);
+        value = eval->Evaluate(value, cache);
         if (Text *tv = value->AsText())
             return (tv->value == f->value &&
                     tv->opening == f->opening &&
@@ -513,8 +509,8 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
                 return true;
             if (EqualTrees(bound, value))
                 return true;
-            value = eval->Evaluate(value);
-            bound = eval->Evaluate(bound);
+            value = eval->Evaluate(value, cache);
+            bound = eval->Evaluate(bound, cache);
             return EqualTrees(bound, value);
         }
 
@@ -574,7 +570,7 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
 
                 // Evaluate the type
                 Tree *type = fi->right;
-                type = eval->Evaluate(type);
+                type = eval->Evaluate(type, cache);
 
                 // Evaluate the value and match its type if the type is not tree
                 if (type == parse_tree_type)
@@ -589,7 +585,7 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
                 }
                 else if (type != tree_type)
                 {
-                    value = eval->Evaluate(value);
+                    value = eval->Evaluate(value, cache);
                     value = ValueMatchesType(this, type, value, true);
                     if (!value)
                         return false;
@@ -607,15 +603,15 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
         // If we match the infix name, we can bind left and right
         if (Infix *infix = value->AsInfix())
             if (fi->name == infix->name)
-                return (Bind(fi->left,  infix->left,  args) &&
-                        Bind(fi->right, infix->right, args));
+                return (Bind(fi->left,  infix->left,  cache, args) &&
+                        Bind(fi->right, infix->right, cache, args));
 
         // If direct binding failed, evaluate and try again ("diamond")
-        value = eval->Evaluate(value);
+        value = eval->Evaluate(value, cache);
         if (Infix *infix = value->AsInfix())
             if (fi->name == infix->name)
-                return (Bind(fi->left,  infix->left,  args) &&
-                        Bind(fi->right, infix->right, args));
+                return (Bind(fi->left,  infix->left,  cache, args) &&
+                        Bind(fi->right, infix->right, cache, args));
 
         // Otherwise, we don't have a match
         return false;
@@ -632,17 +628,17 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
             {
                 Tree *vname = prefix->left;
                 if (vname->Kind() != NAME)
-                    vname = eval->Evaluate(vname);
+                    vname = eval->Evaluate(vname, cache);
                 if (Name *vn = vname->AsName())
                     if (name->value != vn->value)
                         return false;
             }
             else
             {
-                if (!Bind(pf->left, prefix->left, args))
+                if (!Bind(pf->left, prefix->left, cache, args))
                     return false;
             }
-            return Bind(pf->right, prefix->right, args);
+            return Bind(pf->right, prefix->right, cache, args);
         }
         return false;
     }
@@ -658,17 +654,17 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
             {
                 Tree *vname = postfix->right;
                 if (vname->Kind() != NAME)
-                    vname = eval->Evaluate(vname);
+                    vname = eval->Evaluate(vname, cache);
                 if (Name *vn = vname->AsName())
                     if (name->value != vn->value)
                         return false;
             }
             else
             {
-                if (!Bind(pf->right, postfix->right, args))
+                if (!Bind(pf->right, postfix->right, cache, args))
                     return false;
             }
-            return Bind(pf->left, postfix->left, args);
+            return Bind(pf->left, postfix->left, cache, args);
         }
         return false;
     }
@@ -679,8 +675,8 @@ bool Context::Bind(Tree *form, Tree *value, TreeList *args)
         if (Block *bval = value->AsBlock())
             if (bval->opening == block->opening &&
                 bval->closing == block->closing)
-                return Bind(block->child, bval->child, args);
-        return Bind(block->child, value, args);
+                return Bind(block->child, bval->child, cache, args);
+        return Bind(block->child, value, cache, args);
     }
     }
 

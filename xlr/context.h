@@ -229,13 +229,15 @@ struct Context
 
     // Rewriting things in the context
     Tree *              Evaluate(Tree *what, lookup_mode lookup = SCOPE_LOOKUP);
+    Tree *              Evaluate(Tree *, tree_map &, lookup_mode=SCOPE_LOOKUP);
     Tree *              EvaluateBlock(Tree *child);
 
     // The hash code used in the rewrite table
     static ulong        Hash(Tree *input);
 
     // Bind parameters in context based on arguments in form
-    bool                Bind(Tree *form, Tree *value, TreeList *args = NULL);
+    bool                Bind(Tree *form, Tree *value, tree_map &values,
+                             TreeList *args = NULL);
 
     // Find the value that a name is bound to, or returns NULL
     Tree *              Bound(Name *name, lookup_mode lookup = SCOPE_LOOKUP);
@@ -255,7 +257,6 @@ public:
     Context_p           scope;
     Context_p           stack;
     rewrite_table       rewrites;
-    tree_map            cache;
     context_set         imported;
     bool                hasConstants;
 
@@ -324,6 +325,23 @@ struct LocalSave
     T&  reference;
     T   saved;
 };
+
+
+
+// ============================================================================
+//
+//   Inline functions
+//
+// ============================================================================
+
+inline Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
+// ----------------------------------------------------------------------------
+//   Evaluate 'what' in the given context
+// ----------------------------------------------------------------------------
+{
+    tree_map empty;
+    return Evaluate(what, empty, lookup);
+}
 
 XL_END
 
