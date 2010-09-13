@@ -177,6 +177,33 @@ Rewrite *Context::DefineData(Tree *data)
 }
 
 
+// Macro to lookup over all contexts
+#define FOR_CONTEXTS(context)                                   \
+{                                                               \
+    context_set  set;                                           \
+    context_list list;                                          \
+    context_list::iterator iter;                                \
+    if (lookup & IMPORTED_LOOKUP)                               \
+    {                                                           \
+        Contexts(lookup, set, list);                            \
+        iter = list.begin();                                    \
+    }                                                           \
+    Context *next = NULL;                                       \
+    for (Context *context = this; context; context = next)      \
+    {
+
+#define END_FOR_CONTEXTS                                \
+        if (lookup & IMPORTED_LOOKUP)                   \
+            next = iter == list.end() ? NULL : *iter++; \
+        else if (lookup & SCOPE_LOOKUP)                 \
+            next = context->scope;                      \
+        else if (lookup & STACK_LOOKUP)                 \
+            next = context->stack;                      \
+    }                                                   \
+}
+        
+
+
 Tree *Context::Assign(Tree *target, Tree *source, lookup_mode lookup)
 // ----------------------------------------------------------------------------
 //   Perform an assignment in the given context
@@ -198,8 +225,7 @@ Tree *Context::Assign(Tree *target, Tree *source, lookup_mode lookup)
         ulong key = Hash(name);
 
         // Loop over all contexts, searching for a pre-existing assignment
-        Context *next = NULL;
-        for (Context *context = this; context; context = next)
+        FOR_CONTEXTS(context)
         {
             rewrite_table &rwt = context->rewrites;
             rewrite_table::iterator found = rwt.find(key);
@@ -219,10 +245,9 @@ Tree *Context::Assign(Tree *target, Tree *source, lookup_mode lookup)
                                 return value;
                             }
 
-                            // Can't assign if this existed
+                            // Can't assign if this already existed
                             Ooops("Assigning to $1", name);
-                            Ooops("previously defined as $1",
-                                  candidate->from);
+                            Ooops("previously defined as $1", from);
                             return value;
                         }
                     }
@@ -232,13 +257,8 @@ Tree *Context::Assign(Tree *target, Tree *source, lookup_mode lookup)
                     candidate = found == rwh.end() ? NULL : (*found).second;
                 }
             } 
-
-            // Select which scope to use next
-            if (lookup == SCOPE_LOOKUP)
-                next = context->scope;
-            else if (STACK_LOOKUP)
-                next = context->stack;
-        } // Context loop
+        }
+        END_FOR_CONTEXTS;
 
         // Check that we have only names in the pattern
         ValidateNames(name);
@@ -293,8 +313,7 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
     ulong key = Hash(what);
 
     // Loop over all contexts
-    Context *next = NULL;
-    for (Context *context = this; context; context = next)
+    FOR_CONTEXTS(context)
     {
         rewrite_table &rwt = context->rewrites;
         rewrite_table::iterator found = rwt.find(key);
@@ -364,13 +383,8 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                 candidate = found == rwh.end() ? NULL : (*found).second;
             } // Loop on candidates
         } // If found candidate
-
-        // Select which scope to use next
-        if (lookup == SCOPE_LOOKUP)
-            next = context->scope;
-        else if (STACK_LOOKUP)
-            next = context->stack;
-    } // Loop on contexts
+    }
+    END_FOR_CONTEXTS;
 
     // Error case - Raise an error
     static bool inError = false;
@@ -684,8 +698,7 @@ Tree *Context::Bound(Name *name, lookup_mode lookup)
     ulong key = Hash(name);
 
     // Loop over all contexts
-    Context *next = NULL;
-    for (Context *context = this; context; context = next)
+    FOR_CONTEXTS(context)
     {
         rewrite_table &rwt = context->rewrites;
         rewrite_table::iterator found = rwt.find(key);
@@ -705,14 +718,9 @@ Tree *Context::Bound(Name *name, lookup_mode lookup)
                 found = rwh.find(key);
                 candidate = found == rwh.end() ? NULL : (*found).second;
             }
-        } 
-
-        // Select which scope to use next
-        if (lookup == SCOPE_LOOKUP)
-            next = context->scope;
-        else if (STACK_LOOKUP)
-            next = context->stack;
+        }
     }
+    END_FOR_CONTEXTS;
 
     // Not bound
     return NULL;
@@ -783,12 +791,46 @@ static void ListNameRewrites(rewrite_table &table,
 }
 
 
-void Context::ListNames(text prefix, rewrite_list &list)
+void Context::ListNames(text prefix, rewrite_list &list, lookup_mode lookup)
 // ----------------------------------------------------------------------------
 //   List all names that begin with the given text
 // ----------------------------------------------------------------------------
 {
-    ListNameRewrites(rewrites, prefix, list);
+    Context *next = NULL;
+    for (Context *context = this; context; context = next)
+    {
+        // List names in the given context
+        ListNameRewrites(context->rewrites, prefix, list);
+
+        // Select which scope to use next
+        if (lookup & SCOPE_LOOKUP)
+            next = context->scope;
+        else if (lookup & STACK_LOOKUP)
+            next = context->stack;
+    }
+}
+
+
+void Context::Contexts(lookup_mode lookup, context_set &set,context_list &list)
+// ----------------------------------------------------------------------------
+//   List all the contexts we need to lookup for a given lookup mode
+// ----------------------------------------------------------------------------
+{
+    // Check if this is already a known context
+    if (set.count(this))
+        return;
+
+    // Insert self in the set and in the ordered list
+    set.insert(this);
+    list.push_back(this);
+
+    if (lookup & SCOPE_LOOKUP)
+        scope->Contexts(lookup, set, list);
+    if (lookup & STACK_LOOKUP)
+        scope->Contexts(lookup, set, list);
+    if (lookup & IMPORTED_LOOKUP)
+        for (context_set::iterator i = imported.begin(); i!=imported.end(); i++)
+            (*i)->Contexts(lookup, set, list);
 }
 
 XL_END

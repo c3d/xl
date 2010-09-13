@@ -191,6 +191,8 @@ typedef GCPtr<Context>             Context_p;
 typedef GCPtr<Rewrite>             Rewrite_p;
 typedef std::map<ulong, Rewrite_p> rewrite_table;// Hashing of rewrites
 typedef std::vector<Rewrite_p>     rewrite_list;
+typedef std::set<Context_p>        context_set;
+typedef std::vector<Context_p>     context_list;
 typedef std::map<Tree_p, Tree_p>   tree_map;
 typedef Tree *(*native_fn) (Context *ctx, Tree *self);
 
@@ -210,8 +212,14 @@ struct Context
     Context(Context *scope, Context *stack);
     ~Context();
 
-    // Type of lookup: scope-based, stack-based, or current context only
-    enum lookup_mode    { LOCAL_LOOKUP, SCOPE_LOOKUP, STACK_LOOKUP };
+    // Type of lookup
+    enum lookup_mode
+    {
+        LOCAL_LOOKUP = 0,       // Only in the local context
+        SCOPE_LOOKUP = 1,       // Lexical lookup
+        STACK_LOOKUP = 2,       // Along the execution stack
+        IMPORTED_LOOKUP = 4     // Lookup in imported scopes
+    };
 
     // Adding definitions to the context
     Rewrite *           Define(Tree *form, Tree *value);
@@ -237,13 +245,18 @@ struct Context
     Tree *              EvaluateClosure(Tree *closure, Tree *value);
 
     // List rewrites of a given type
-    void                ListNames(text begin, rewrite_list &list);
+    void                ListNames(text begin, rewrite_list &list,
+                                  lookup_mode lookup = SCOPE_LOOKUP);
+
+    // List the set of contexts to lookup (necessary for imported case)
+    void                Contexts(lookup_mode, context_set &, context_list &);
 
 public:
     Context_p           scope;
     Context_p           stack;
     rewrite_table       rewrites;
     tree_map            cache;
+    context_set         imported;
     bool                hasConstants;
 
     GARBAGE_COLLECT(Context);
