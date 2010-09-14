@@ -474,6 +474,7 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
 {
     kind k = form->Kind();
     Context *eval = args ? this : (Context *) stack;
+    Errors errors;
 
     switch(k)
     {
@@ -481,6 +482,8 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
     {
         Integer *f = (Integer *) form;
         value = eval->Evaluate(value, cache);
+        if (errors.Swallowed())
+            return false;
         if (Integer *iv = value->AsInteger())
             return iv->value == f->value;
         return false;
@@ -489,6 +492,8 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
     {
         Real *f = (Real *) form;
         value = eval->Evaluate(value, cache);
+        if (errors.Swallowed())
+            return false;
         if (Real *rv = value->AsReal())
             return rv->value == f->value;
         return false;
@@ -497,6 +502,8 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
     {
         Text *f = (Text *) form;
         value = eval->Evaluate(value, cache);
+        if (errors.Swallowed())
+            return false;
         if (Text *tv = value->AsText())
             return (tv->value == f->value &&
                     tv->opening == f->opening &&
@@ -518,6 +525,8 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
                 return true;
             value = eval->Evaluate(value, cache);
             bound = eval->Evaluate(bound, cache);
+            if (errors.Swallowed())
+                return false;
             return EqualTrees(bound, value);
         }
 
@@ -545,7 +554,11 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
                     {
                         // Got x:x in the interface: accept only identical name
                         if (value->Kind() != NAME)
+                        {
                             value = eval->Evaluate(value);
+                            if (errors.Swallowed())
+                                return false;
+                        }
                         if (Name *nval = value->AsName())
                         {
                             if (nval->value == name->value)
@@ -578,6 +591,8 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
                 // Evaluate the type
                 Tree *type = fi->right;
                 type = eval->Evaluate(type, cache);
+                if (errors.Swallowed())
+                    return false;
 
                 // Evaluate the value and match its type if the type is not tree
                 if (type == parse_tree_type)
@@ -593,6 +608,8 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
                 else if (type != tree_type)
                 {
                     value = eval->Evaluate(value, cache);
+                    if (errors.Swallowed())
+                        return false;
                     value = ValueMatchesType(this, type, value, true);
                     if (!value)
                         return false;
@@ -615,6 +632,8 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
 
         // If direct binding failed, evaluate and try again ("diamond")
         value = eval->Evaluate(value, cache);
+        if (errors.Swallowed())
+            return false;
         if (Infix *infix = value->AsInfix())
             if (fi->name == infix->name)
                 return (Bind(fi->left,  infix->left,  cache, args) &&
@@ -635,7 +654,11 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
             {
                 Tree *vname = prefix->left;
                 if (vname->Kind() != NAME)
+                {
                     vname = eval->Evaluate(vname, cache);
+                    if (errors.Swallowed())
+                        return false;
+                }
                 if (Name *vn = vname->AsName())
                     if (name->value != vn->value)
                         return false;
@@ -661,7 +684,11 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
             {
                 Tree *vname = postfix->right;
                 if (vname->Kind() != NAME)
+                {
                     vname = eval->Evaluate(vname, cache);
+                    if (errors.Swallowed())
+                        return false;
+                }
                 if (Name *vn = vname->AsName())
                     if (name->value != vn->value)
                         return false;

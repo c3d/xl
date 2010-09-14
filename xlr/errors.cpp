@@ -215,6 +215,18 @@ void Errors::Clear()
 }
 
 
+bool Errors::Swallowed()
+// ----------------------------------------------------------------------------
+//   Return true if we swallowed errors
+// ----------------------------------------------------------------------------
+{
+    bool result = !errors.empty();
+    if (result)
+        errors.clear();
+    return result;
+}
+
+
 void Errors::Display()
 // ----------------------------------------------------------------------------
 //   Display pending error messages

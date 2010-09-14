@@ -80,6 +80,7 @@ struct Errors
     ~Errors();
 
     void Clear();
+    bool Swallowed();
     void Display();
     Error &Log(const Error &e);
     uint Count()        { return errors.size() + count; }
