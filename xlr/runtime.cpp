@@ -679,31 +679,23 @@ Tree *xl_write(Context *context, Tree *tree, text sep)
     }
 
     // Format contents
-    switch(tree->Kind())
+    if (Infix *infix = tree->AsInfix())
     {
-    case INTEGER: std::cout << tree->AsInteger()->value << sep; break;
-    case REAL:    std::cout << tree->AsReal()->value << sep;    break;
-    case TEXT:    std::cout << tree->AsText()->value << sep;    break;
-
-    case INFIX:
-    {
-        Infix *infix = tree->AsInfix();
         if (infix->name == ",")
         {
             xl_write(context, infix->left, "");
-            xl_write(context, infix->right, sep);
-            break;
+            return xl_write(context, infix->right, sep);
         }
     }
-    default:
+
+    // Evaluate the input argument
+    tree = context->Evaluate(tree);
+    switch(tree->Kind())
     {
-        // Evaluate argument
-        Tree *value = context->Evaluate(tree);
-        if (value != tree)
-            return xl_write(context, value, sep);
-        std::cout << "Unknown tree " << tree << sep;
-        return XL::xl_false;
-    }
+    case INTEGER: std::cout << ((Integer *) tree)->value << sep; break;
+    case REAL:    std::cout << ((Real *) tree)->value << sep; break;
+    case TEXT:    std::cout << ((Text *) tree)->value << sep; break;
+    default:      std::cout << tree << sep; break;
     }
 
     return XL::xl_true;
