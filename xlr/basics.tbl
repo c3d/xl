@@ -18,6 +18,7 @@ TYPE(postfix);
 TYPE(block);
 
 // Integer arithmetic and comparisons
+INFIX(SetInt, integer,integer,":=",integer,XL_RINT(l.value = XL_INT(r)), "")
 INFIX(AddInt,integer, integer,"+",integer, XL_RINT(XL_INT(l) + XL_INT(r)), "")
 INFIX(SubInt,integer, integer,"-",integer, XL_RINT(XL_INT(l) - XL_INT(r)), "")
 INFIX(MulInt,integer, integer,"*",integer, XL_RINT(XL_INT(l) * XL_INT(r)), "")
@@ -54,6 +55,7 @@ POSTFIX(PercentInt, real, PARM(x, integer), "%", XL_RREAL(x / 100.0), "")
 POSTFIX(PercentReal, real, PARM(x, real), "%", XL_RREAL(x / 100.0), "")
 
 // Real arithmetic and comparisons
+INFIX(SetReal, real, real, ":=",real, XL_RREAL(l.value = XL_REAL(r)), "")
 INFIX(AddReal, real, real, "+", real, XL_RREAL(XL_REAL(l) + XL_REAL(r)), "")
 INFIX(SubReal, real, real, "-", real, XL_RREAL(XL_REAL(l) - XL_REAL(r)), "")
 INFIX(MulReal, real, real, "*", real, XL_RREAL(XL_REAL(l) * XL_REAL(r)), "")
@@ -94,6 +96,10 @@ PREFIX(LogPlus1, real, "log1p", PARM(x, real), XL_RREAL(log1p(x)), "")
 PREFIX(PiConstant, real, "pi", , XL_RREAL(M_PI), "")
 
 // Boolean operations
+INFIX(SetBool, boolean, boolean, ":=",boolean,
+      bool val = XL_BOOL(r);
+      l.value = val ? "true" : "false";
+      XL_RBOOL(val), "")
 INFIX(AndBool, boolean, boolean, "and", boolean, XL_RBOOL(XL_BOOL(l) & XL_BOOL(r)), "")
 INFIX(OrBool, boolean, boolean, "or", boolean, XL_RBOOL(XL_BOOL(l) | XL_BOOL(r)), "")
 INFIX(XorBool, boolean, boolean, "xor", boolean, XL_RBOOL(XL_BOOL(l) ^ XL_BOOL(r)), "")
@@ -103,6 +109,7 @@ INFIX(NEBool, boolean, boolean, "<>", boolean, XL_RBOOL(XL_BOOL(l) != XL_BOOL(r)
 INFIX(EQBool, boolean, boolean, "=", boolean, XL_RBOOL(XL_BOOL(l) == XL_BOOL(r)), "")
 
 // Text operations
+INFIX(SetText, text, text,":=", text, XL_RTEXT(l.value = XL_TEXT(r)), "")
 INFIX(TextConcatenate, text, text, "&", text, XL_RTEXT(XL_TEXT(l) + XL_TEXT(r)), "")
 INFIX(LTText, boolean, text, "<", text, XL_RBOOL(XL_TEXT(l) < XL_TEXT(r)), "")
 INFIX(GTText, boolean, text, ">", text, XL_RBOOL(XL_TEXT(l) > XL_TEXT(r)), "")
