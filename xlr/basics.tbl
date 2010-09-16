@@ -172,6 +172,11 @@ INFIX(Apply, tree, tree, "with", tree,
 INFIX(Range, tree, integer, "..", integer, return xl_range(l, r), "")
 INFIX(Index, tree, tree, "at", integer, return xl_nth(&l, r), "")
 
+PREFIX(Springify, real, "springify",
+       PARM(v, real) PARM(tgt, real) PARM(t, real)
+       PARM(d, real) PARM(k, real) PARM(lt, real) PARM(ls, real),
+       return xl_springify(v, tgt, t, d, k, lt, ls), "")
+
 // Debugging code
 PREFIX(DebugTree, tree, "debug", PARM(toDebug, tree),
        std::cerr << "DEBUG: " << (Tree *) &toDebug << "\n";
