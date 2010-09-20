@@ -854,10 +854,10 @@ void Context::Contexts(lookup_mode lookup, context_set &set,context_list &list)
     set.insert(this);
     list.push_back(this);
 
-    if (lookup & SCOPE_LOOKUP)
+    if (scope && (lookup & SCOPE_LOOKUP))
         scope->Contexts(lookup, set, list);
-    if (lookup & STACK_LOOKUP)
-        scope->Contexts(lookup, set, list);
+    if (stack && (lookup & STACK_LOOKUP))
+        stack->Contexts(lookup, set, list);
     if (lookup & IMPORTED_LOOKUP)
         for (context_set::iterator i = imported.begin(); i!=imported.end(); i++)
             (*i)->Contexts(lookup, set, list);
