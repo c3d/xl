@@ -552,6 +552,35 @@ Tree *xl_block_cast(Tree *source, Tree *value)
 
 // ============================================================================
 //
+//   Animation utilities
+//
+// ============================================================================
+
+Real *xl_springify(Real &value, Real &target, Real &time,
+                   Real &damp, Real &kspring, Real &lt, Real &ls)
+// ----------------------------------------------------------------------------
+//   Add a "spring" effect to a value
+// ----------------------------------------------------------------------------
+{
+    double distance = target.value - value.value;
+    double t = time.value;
+    double interval = t - lt.value;
+    if (interval > 1.0)
+        interval = 1.0;
+    double v = value.value + ls.value * interval;
+    double accel = kspring * distance;
+    ls.value *= (1.0 - interval * damp.value);
+    ls.value += accel * interval;
+    lt.value = t;
+    value.value = v;
+
+    return &value;
+}
+
+
+
+// ============================================================================
+//
 //   Managing calls to/from XL
 //
 // ============================================================================

@@ -89,6 +89,9 @@ Tree *xl_prefix_cast(Tree *source, Tree *value);
 Tree *xl_postfix_cast(Tree *source, Tree *value);
 Tree *xl_block_cast(Tree *source, Tree *value);
 
+Real *xl_springify(Real &value, Real &target, Real &time,
+                   Real &damp, Real &kspring, Real &lt, Real &ls);
+
 
 
 // ============================================================================
