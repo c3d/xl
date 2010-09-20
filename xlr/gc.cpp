@@ -326,6 +326,13 @@ GarbageCollector::~GarbageCollector()
     std::vector<TypeAllocator *>::iterator i;
     for (i = allocators.begin(); i != allocators.end(); i++)
         delete *i;
+
+    // Make sure that destructors down the line won't try something silly
+    TypeAllocator::lowestAddress = (void *) ~0;
+    TypeAllocator::highestAddress = (void *) 0;
+    TypeAllocator::lowestAllocatorAddress = (void *) ~0;
+    TypeAllocator::highestAllocatorAddress = (void *) 0;
+
 }
 
 
@@ -413,7 +420,10 @@ void GarbageCollector::Delete()
 // ----------------------------------------------------------------------------
 {
     if (gc)
+    {
         delete gc;
+        gc = NULL;
+    }
 }
 
 
