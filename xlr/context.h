@@ -218,18 +218,21 @@ struct Context
         LOCAL_LOOKUP = 0,       // Only in the local context
         SCOPE_LOOKUP = 1,       // Lexical lookup
         STACK_LOOKUP = 2,       // Along the execution stack
-        IMPORTED_LOOKUP = 4     // Lookup in imported scopes
+        IMPORTED_LOOKUP = 4,    // Lookup in imported scopes
+
+        NORMAL_LOOKUP = SCOPE_LOOKUP | IMPORTED_LOOKUP
     };
 
     // Adding definitions to the context
     Rewrite *           Define(Tree *form, Tree *value);
     Rewrite *           DefineData(Tree *form);
     Tree *              Assign(Tree *target, Tree *source,
-                               lookup_mode lookup = SCOPE_LOOKUP);
+                               lookup_mode mode = SCOPE_LOOKUP);
 
     // Rewriting things in the context
-    Tree *              Evaluate(Tree *what, lookup_mode lookup = SCOPE_LOOKUP);
-    Tree *              Evaluate(Tree *, tree_map &, lookup_mode=SCOPE_LOOKUP);
+    Tree *              Evaluate(Tree *what, lookup_mode mode = NORMAL_LOOKUP);
+    Tree *              Evaluate(Tree *, tree_map &,
+                                 lookup_mode mode = NORMAL_LOOKUP);
     Tree *              EvaluateBlock(Tree *child);
 
     // The hash code used in the rewrite table
@@ -240,7 +243,7 @@ struct Context
                              TreeList *args = NULL);
 
     // Find the value that a name is bound to, or returns NULL
-    Tree *              Bound(Name *name, lookup_mode lookup = SCOPE_LOOKUP);
+    Tree *              Bound(Name *name, lookup_mode mode = SCOPE_LOOKUP);
 
     // Create a closure in this context
     Tree *              CreateClosure(Tree *value);
