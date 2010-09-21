@@ -444,9 +444,9 @@ inline Infix *Infix::LastStatement()
 
 
 // ============================================================================
-// 
+//
 //    Template members for info management
-// 
+//
 // ============================================================================
 
 template <class I> inline typename I::data_t Tree::Get() const
@@ -1149,58 +1149,141 @@ struct SetNodeIdAction : SimpleAction
     node_id step;
 };
 
-#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 struct FindParentAction : Action
+// ------------------------------------------------------------------------
+//   Find an ancestor of a node
+// ------------------------------------------------------------------------
+// "level" gives the depth of the parent. 0 means the node itself, 1 is the
+// parent, 2 the grand-parent, etc...
+// "path" is a string containing the path between the node and its ancestor:
+// l means left, r means right and c means child of block.
 {
-    FindParentAction(Tree *self) : child(self){}
+    FindParentAction(Tree *self, uint level = 1) :
+            child(self), level(level), path(new text){}
 
     Tree *DoInteger(Integer *what)
     {
+        if (child == what)
+            return what;
         return NULL;
     }
     Tree *DoReal(Real *what)
     {
+        if (child == what)
+            return what;
         return NULL;
     }
     Tree *DoText(Text *what)
     {
+        if (child == what)
+            return what;
         return NULL;
     }
     Tree *DoName(Name *what)
     {
+        if (child == what)
+            return what;
         return NULL;
     }
 
     Tree *DoPrefix(Prefix *what)
     {
-        Tree * parent = NULL;
-        if (what->right == child) return what;
-        if (what->left == child) return what;
-        if ((parent = Do(what->right))) return parent;
-        return Do(what->left);
+        if (child == what)
+        {
+            return what;
+        }
+        Tree *parent = NULL;
+        if ((parent = Do(what->left)))
+        {
+            if (level <= 0)
+                return parent;
+            if (path) path->append("l");
+            level--;
+            return what;
+        }
+        if ((parent = Do(what->right)))
+        {
+            if (level <= 0)
+                return parent;
+            if (path) path->append("r");
+            level--;
+            return what;
+        }
+
+        return NULL;
     }
 
     Tree *DoPostfix(Postfix *what)
     {
-        Tree * parent = NULL;
-        if (what->right == child) return what;
-        if (what->left == child) return what;
-        if ((parent = Do(what->right))) return parent;
-        return Do(what->left);
+        if (child == what)
+        {
+            return what;
+        }
+        Tree *parent = NULL;
+        if ((parent = Do(what->left)))
+        {
+            if (level <= 0)
+                return parent;
+            if (path) path->append("l");
+            level--;
+            return what;
+        }
+        if ((parent = Do(what->right)))
+        {
+            if (level <= 0)
+                return parent;
+            if (path) path->append("r");
+            level--;
+            return what;
+        }
+
+        return NULL;
     }
 
     Tree *DoInfix(Infix *what)
     {
-        Tree * parent = NULL;
-        if (what->right == child) return what;
-        if (what->left == child) return what;
-        if ((parent = Do(what->right))) return parent;
-        return Do(what->left);
+        if (child == what)
+        {
+            return what;
+        }
+        Tree *parent = NULL;
+        if ((parent = Do(what->left)))
+        {
+            if (level <= 0)
+                return parent;
+            if (path) path->append("l");
+            level--;
+            return what;
+        }
+        if ((parent = Do(what->right)))
+        {
+            if (level <= 0)
+                return parent;
+            if (path) path->append("r");
+            level--;
+            return what;
+        }
+
+        return NULL;
     }
     Tree *DoBlock(Block *what)
     {
-        if (what->child == child) return what;
-        return Do(what->child);
+        if (child == what)
+        {
+            return what;
+        }
+        Tree *parent = NULL;
+        if ((parent = Do(what->child)))
+        {
+            if (level <= 0)
+                return parent;
+            if (path) path->append("c");
+            level--;
+            return what;
+        }
+
+        return NULL;
     }
 
     Tree *  Do(Tree *what)
@@ -1209,8 +1292,9 @@ struct FindParentAction : Action
     }
 
     Tree_p child;
+    uint level;
+    text *path;
 };
-#pragma GCC diagnostic warning "-Wunused-parameter"
 
 XL_END
 
