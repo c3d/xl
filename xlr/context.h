@@ -256,6 +256,9 @@ struct Context
     // List the set of contexts to lookup (necessary for imported case)
     void                Contexts(lookup_mode, context_set &, context_list &);
 
+    // Clear the symbol table
+    void                Clear();
+
 public:
     Context_p           scope;
     Context_p           stack;

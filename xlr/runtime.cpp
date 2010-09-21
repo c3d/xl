@@ -726,7 +726,7 @@ Tree *xl_load(Context *context, text name)
         return sf.tree;
     }
 
-    IFTRACE(fileLoad)
+    IFTRACE(fileload)
         std::cout << "Loading: " << path << "\n";
 
     Parser parser(path.c_str(), MAIN->syntax, MAIN->positions, *MAIN->errors);

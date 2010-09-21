@@ -126,7 +126,7 @@ TRACE(closure)
 TRACE(diff)
 TRACE(calls2xl)
 TRACE(symbols)
-TRACE(fileLoad)
+TRACE(fileload)
 
 
 

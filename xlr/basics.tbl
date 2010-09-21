@@ -20,19 +20,19 @@ TYPE(block);
 
 // Basic units
 INFIX(DefineRewrite, tree, tree, "->", tree,
-      context->Define(&l, &r);
+      context->scope->Define(&l, &r);
       return self,
       "")
 INFIX(SequenceNewLine, tree, tree, "\n", tree,
-      context->Evaluate(&l);
-      return context->Evaluate(&r),
+      context->scope->Evaluate(&l);
+      return context->scope->Evaluate(&r),
       "")
 INFIX(SequenceSemicolon, tree, tree, ";", tree,
-      context->Evaluate(&l);
-      return context->Evaluate(&r),
+      context->scope->Evaluate(&l);
+      return context->scope->Evaluate(&r),
       "")
 PREFIX(DataDefinition, tree, "data", PARM(d, tree),
-       context->DefineData(&d);
+       context->scope->DefineData(&d);
        return self,
        "")
 BLOCK(Parentheses, tree, "(", tree, ")",
@@ -51,10 +51,10 @@ PREFIX(EvaluatedClosure, tree, "<evaluated>", PARM(c, tree),
        return &c,
        "")
 INFIX(Assignment, tree, tree, ":=", tree,
-      return context->Assign(&l, &r),
+      return context->scope->Assign(&l, &r),
       "")
 PREFIX(AnyLookup, tree, "any", PARM(t, tree),
-       return context->Evaluate(&t, Context::STACK_LOOKUP),
+       return context->scope->Evaluate(&t, Context::STACK_LOOKUP),
        "")
 
 // Integer arithmetic and comparisons
@@ -210,7 +210,7 @@ PREFIX(RandomNumber2i, integer, "random", PARM(low,integer) PARM(high,integer),
 
 // Tree manipulations
 PREFIX(DoCode,    tree, "do", PARM(code, tree),
-       return xl_evaluate(context, &code), "")
+       return context->scope->Evaluate(&code), "")
 PREFIX(ParseTree, tree, "parse_tree", PARM(c, tree),
        Tree *code = &c;
        if (Block *block = code->AsBlock())

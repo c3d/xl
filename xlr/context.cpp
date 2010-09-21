@@ -870,6 +870,16 @@ void Context::Contexts(lookup_mode lookup, context_set &set,context_list &list)
             (*i)->Contexts(lookup, set, list);
 }
 
+
+void Context::Clear()
+// ----------------------------------------------------------------------------
+//   Clear the symbol table
+// ----------------------------------------------------------------------------
+{
+    rewrites.clear();
+    imported.clear();
+}
+
 XL_END
 
 

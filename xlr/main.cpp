@@ -217,7 +217,12 @@ void Main::EvaluateContextFiles(source_names &ctxFiles)
     {
         SourceFile &sf = files[options.builtins];
         if (sf.tree)
+        {
+            IFTRACE(symbols)
+                std::cerr << "Evaluating builtins in context "
+                          << sf.context << '\n';
             sf.context->Evaluate(sf.tree);
+        }
     }
 
     // Execute other context files (user.xl, theme.xl)
@@ -249,6 +254,9 @@ int Main::LoadFile(text file, bool updateContext)
     Tree_p tree = NULL;
     bool hadError = false;
     FILE *f;
+
+    IFTRACE(fileload)
+        std::cout << "Loading: " << file << "\n";
 
     if ((f = fopen(file.c_str(), "r")) == NULL)
     {
@@ -307,15 +315,26 @@ int Main::LoadFile(text file, bool updateContext)
         }
     }
 
+    // Find which source file we are referencing
+    SourceFile &sf = files[file];
+
+    // Create new symbol table for the file, or clear it if we had one
     Context *syms = MAIN->context;
     Context *savedSyms = syms;
-    syms = new Context(syms, NULL);
+    if (sf.context)
+    {
+        updateContext = false;
+        syms = sf.context;
+        sf.context->Clear();
+    }
+    else
+    {
+        syms = new Context(syms, NULL);
+    }
     MAIN->context = syms;
 
-    IFTRACE(fileLoad)
-        std::cout << "Loading: " << file << "\n";
-
-    files[file] = SourceFile (file, tree, syms);
+    // Register the source file we had
+    sf = SourceFile (file, tree, syms);
 
     if (options.showGV && tree)
     {
@@ -335,6 +354,10 @@ int Main::LoadFile(text file, bool updateContext)
     // Decide if we update symbols for next run
     if (!updateContext)
         MAIN->context = savedSyms;
+
+    IFTRACE(symbols)
+        std::cerr << "Loaded file " << file
+                  << " with context " << MAIN->context << '\n';
 
     return hadError;
 }
