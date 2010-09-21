@@ -99,6 +99,7 @@ Error &Ooops (text m, Tree *a, Tree *b, Tree *c);
 
 // Formatting a tree for error reporting
 Text *FormatTreeForError(Tree *tree);
+text ShortTreeForm(Tree *tree, uint maxWidth = 30);
 
 XL_END
 

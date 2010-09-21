@@ -296,14 +296,11 @@ Error &Ooops (text m, Tree *a, Tree *b, Tree *c)
 }
 
 
-Text *FormatTreeForError(Tree *tree)
+text ShortTreeForm(Tree *tree, uint maxWidth)
 // ----------------------------------------------------------------------------
 //   Format a tree for error reporting
 // ----------------------------------------------------------------------------
 {
-    // Max length in error messages
-    const size_t max = 30;
-
     text t = *tree;
     size_t first = t.find("\n");
     if (first != text::npos)
@@ -313,9 +310,19 @@ Text *FormatTreeForError(Tree *tree)
         t.insert(first, "...");
     }
     size_t length = t.length();
-    if (length > max + 3)
-        t.replace(max/2, length - max, "...");
+    if (length > maxWidth + 3)
+        t.replace(maxWidth/2, length - maxWidth, "...");
 
+    return t;
+}
+
+
+Text *FormatTreeForError(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Format a tree for error reporting
+// ----------------------------------------------------------------------------
+{
+    text t = ShortTreeForm(tree);
     Text *result = new Text(t, "'", "'", tree->Position());
     return result;
 }
