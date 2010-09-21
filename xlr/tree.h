@@ -1159,8 +1159,8 @@ struct FindParentAction : Action
 // "path" is a string containing the path between the node and its ancestor:
 // l means left, r means right and c means child of block.
 {
-    FindParentAction(Tree *self, uint level = 1) :
-            child(self), level(level), path(new text){}
+    FindParentAction(Tree *self, uint level = 1):
+        child(self), level(level), path() {}
 
     Tree *DoInteger(Integer *what)
     {
@@ -1186,114 +1186,70 @@ struct FindParentAction : Action
             return what;
         return NULL;
     }
+    Tree *FindParent(Tree *child, kstring subpath)
+    {
+        if (Tree *parent = Do(child))
+        {
+            if (level <= 0)
+                return parent;
+            path.append(subpath);
+            level--;
+            return child;
+        }
+        return NULL;
+    }
 
     Tree *DoPrefix(Prefix *what)
     {
         if (child == what)
-        {
             return what;
-        }
-        Tree *parent = NULL;
-        if ((parent = Do(what->left)))
-        {
-            if (level <= 0)
-                return parent;
-            if (path) path->append("l");
-            level--;
-            return what;
-        }
-        if ((parent = Do(what->right)))
-        {
-            if (level <= 0)
-                return parent;
-            if (path) path->append("r");
-            level--;
-            return what;
-        }
-
+        if (Tree *left = FindParent(what->left, "l"))
+            return left;
+        if (Tree *right = FindParent(what->right, "r"))
+            return right;
         return NULL;
     }
 
     Tree *DoPostfix(Postfix *what)
     {
         if (child == what)
-        {
             return what;
-        }
-        Tree *parent = NULL;
-        if ((parent = Do(what->left)))
-        {
-            if (level <= 0)
-                return parent;
-            if (path) path->append("l");
-            level--;
-            return what;
-        }
-        if ((parent = Do(what->right)))
-        {
-            if (level <= 0)
-                return parent;
-            if (path) path->append("r");
-            level--;
-            return what;
-        }
-
+        if (Tree *left = FindParent(what->left, "l"))
+            return left;
+        if (Tree *right = FindParent(what->right, "r"))
+            return right;
         return NULL;
     }
 
     Tree *DoInfix(Infix *what)
     {
         if (child == what)
-        {
             return what;
-        }
-        Tree *parent = NULL;
-        if ((parent = Do(what->left)))
-        {
-            if (level <= 0)
-                return parent;
-            if (path) path->append("l");
-            level--;
-            return what;
-        }
-        if ((parent = Do(what->right)))
-        {
-            if (level <= 0)
-                return parent;
-            if (path) path->append("r");
-            level--;
-            return what;
-        }
-
+        if (Tree *left = FindParent(what->left, "l"))
+            return left;
+        if (Tree *right = FindParent(what->right, "r"))
+            return right;
         return NULL;
     }
     Tree *DoBlock(Block *what)
     {
         if (child == what)
-        {
             return what;
-        }
-        Tree *parent = NULL;
-        if ((parent = Do(what->child)))
-        {
-            if (level <= 0)
-                return parent;
-            if (path) path->append("c");
-            level--;
-            return what;
-        }
-
+        if (Tree *child = FindParent(what->child, "c"))
+            return child;
         return NULL;
     }
 
-    Tree *  Do(Tree *what)
+    Tree *Do(Tree *what)
     {
-        return what->Do(this);
+        if (child == what)
+            return what;
+        return NULL;
     }
 
     Tree_p child;
-    uint level;
-    text *path;
+    int    level;
+    text   path;
 };
 
 XL_END
