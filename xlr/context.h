@@ -219,8 +219,10 @@ struct Context
         SCOPE_LOOKUP = 1,       // Lexical lookup
         STACK_LOOKUP = 2,       // Along the execution stack
         IMPORTED_LOOKUP = 4,    // Lookup in imported scopes
+        AVOID_ERRORS = 8,       // During binding, avoid errors
 
-        NORMAL_LOOKUP = SCOPE_LOOKUP | IMPORTED_LOOKUP
+        NORMAL_LOOKUP = SCOPE_LOOKUP | IMPORTED_LOOKUP,
+        BIND_LOOKUP = NORMAL_LOOKUP | AVOID_ERRORS
     };
 
     // Adding definitions to the context
