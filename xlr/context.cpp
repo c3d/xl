@@ -342,7 +342,7 @@ Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
 
                         // Bind native context
                         TreeList args;
-                        Context *eval = new Context(context, this);
+                        Context *eval = new Context(this, this);
                         if (eval->Bind(candidate->from, what, values, &args))
                         {
                             uint arity = args.size();
@@ -373,7 +373,7 @@ Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
                     else
                     {
                         // Keep evaluating
-                        Context *eval = new Context(context, this);
+                        Context *eval = new Context(this, this);
                         if (eval->Bind(candidate->from, what, values))
                         {
                             Tree *result = candidate->from;
@@ -916,6 +916,10 @@ extern "C" void debugsc(XL::Context *c)
         debugs(c);
         c = c->scope;
     }
+    if (c == XL::MAIN->context)
+        std::cerr << "(MAIN CONTEXT: " << c << ")\n";
+    else
+        std::cerr << "(FINISHED AT NON-MAIN CONTEXT " << c << ")\n";
 }
 
 
