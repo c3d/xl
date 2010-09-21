@@ -327,6 +327,12 @@ Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
                 ulong formKey = Hash(candidate->from);
                 if (formKey == key)
                 {
+                    IFTRACE(eval)
+                        std::cerr << "Tree " << ShortTreeForm(what)
+                                  << " candidate in " << context
+                                  << " is " << ShortTreeForm(candidate->from)
+                                  << "\n";
+
                     // If this is native C code, invoke it.
                     if (native_fn fn = candidate->native)
                     {
@@ -336,13 +342,14 @@ Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
 
                         // Bind native context
                         TreeList args;
-                        if (Bind(candidate->from, what, values, &args))
+                        Context *eval = new Context(context, this);
+                        if (eval->Bind(candidate->from, what, values, &args))
                         {
                             uint arity = args.size();
                             Compiler *comp = MAIN->compiler;
                             adapter_fn adj = comp->ArrayToArgsAdapter(arity);
                             Tree **args0 = (Tree **) &args[0];
-                            Tree *result = adj(fn, this, what, args0);
+                            Tree *result = adj(fn, eval, what, args0);
                             values[what] = result;
                             return result;
                         }
