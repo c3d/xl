@@ -16,12 +16,10 @@
 //
 //
 // ****************************************************************************
-// This document is confidential.
-// Do not redistribute without written permission
-// ****************************************************************************
-// * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+//  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
 #include <iostream>
@@ -342,7 +340,7 @@ Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
 
                         // Bind native context
                         TreeList args;
-                        Context *eval = new Context(this, this);
+                        Context *eval = new Context(context, this);
                         if (eval->Bind(candidate->from, what, values, &args))
                         {
                             uint arity = args.size();
@@ -363,7 +361,7 @@ Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
                             Tree *result = candidate->to;
                             if (result && result != candidate->from)
                             {
-                                next = new Context(this, this);
+                                next = new Context(context, this);
                                 result = next->Evaluate(result);
                             }
                             values[what] = result;
@@ -373,7 +371,7 @@ Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
                     else
                     {
                         // Keep evaluating
-                        Context *eval = new Context(this, this);
+                        Context *eval = new Context(context, this);
                         if (eval->Bind(candidate->from, what, values))
                         {
                             Tree *result = candidate->from;
@@ -421,7 +419,7 @@ Tree *Context::EvaluateBlock(Tree *what)
 //   Create a new inner scope for evaluating the value
 // ----------------------------------------------------------------------------
 {
-    Context *block = new Context(this, stack);
+    Context *block = new Context(scope, stack);
     tree_map cache;
     what = block->Evaluate(what, cache);
     return what;

@@ -20,41 +20,41 @@ TYPE(block);
 
 // Basic units
 INFIX(DefineRewrite, tree, tree, "->", tree,
-      context->scope->Define(&l, &r);
+      context->stack->Define(&l, &r);
       return self,
       "")
 INFIX(SequenceNewLine, tree, tree, "\n", tree,
-      context->scope->Evaluate(&l);
-      return context->scope->Evaluate(&r),
+      context->stack->Evaluate(&l);
+      return context->stack->Evaluate(&r),
       "")
 INFIX(SequenceSemicolon, tree, tree, ";", tree,
-      context->scope->Evaluate(&l);
-      return context->scope->Evaluate(&r),
+      context->stack->Evaluate(&l);
+      return context->stack->Evaluate(&r),
       "")
 PREFIX(DataDefinition, tree, "data", PARM(d, tree),
-       context->scope->DefineData(&d);
+       context->stack->DefineData(&d);
        return self,
        "")
 BLOCK(Parentheses, tree, "(", tree, ")",
-      return context->EvaluateBlock(&child),
+      return context->stack->EvaluateBlock(&child),
       "")
 BLOCK(CurlyBraces, tree, "{", tree, "}",
-      return context->EvaluateBlock(&child),
+      return context->stack->EvaluateBlock(&child),
       "")
 BLOCK(IntentationBlock, tree, Block::indent, tree, Block::unindent,
-      return context->EvaluateBlock(&child),
+      return context->stack->EvaluateBlock(&child),
       "")
 PREFIX(Closure, tree, "<closure>", PARM(c, tree),
-       return context->EvaluateClosure(self, &c),
+       return context->stack->EvaluateClosure(self, &c),
        "")
 PREFIX(EvaluatedClosure, tree, "<evaluated>", PARM(c, tree),
        return &c,
        "")
 INFIX(Assignment, tree, tree, ":=", tree,
-      return context->scope->Assign(&l, &r),
+      return context->stack->Assign(&l, &r),
       "")
 PREFIX(AnyLookup, tree, "any", PARM(t, tree),
-       return context->scope->Evaluate(&t, Context::STACK_LOOKUP),
+       return context->stack->Evaluate(&t, Context::STACK_LOOKUP),
        "")
 
 // Integer arithmetic and comparisons
@@ -210,23 +210,23 @@ PREFIX(RandomNumber2i, integer, "random", PARM(low,integer) PARM(high,integer),
 
 // Tree manipulations
 PREFIX(DoCode,    tree, "do", PARM(code, tree),
-       return context->scope->Evaluate(&code), "")
+       return context->stack->Evaluate(&code), "")
 PREFIX(ParseTree, tree, "parse_tree", PARM(c, tree),
        Tree *code = &c;
        if (Block *block = code->AsBlock())
            code = block->child;
-       return xl_parse_tree(context, code), "")
+       return xl_parse_tree(context->stack, code), "")
 PREFIX(LoadFile, tree, "load", PARM(file, text),
-       return xl_load(context, file), "")
+       return xl_load(context->stack, file), "")
 PREFIX(ImportFile, tree, "import", PARM(file, text),
-       return xl_import(context, file), "")
+       return xl_import(context->stack, file), "")
 PREFIX(LoadCSV,  tree, "load_csv", PARM(f, text) PARM(p, text),
-       return xl_load_data(context, f, p, ",;", "\n\f\r"), "")
+       return xl_load_data(context->stack, f, p, ",;", "\n\f\r"), "")
 PREFIX(LoadTSV,  tree, "load_tsv", PARM(f, text) PARM(p, text),
-       return xl_load_data(context, f, p, "\t", "\n\f\r"), "")
+       return xl_load_data(context->stack, f, p, "\t", "\n\f\r"), "")
 PREFIX(LoadData,  tree, "load_data",
        PARM(f, text) PARM(p, text) PARM(fs, text) PARM(rs, text),
-       return xl_load_data(context, f, p, fs, rs), "")
+       return xl_load_data(context->stack, f, p, fs, rs), "")
 
 PREFIX(Springify, real, "springify",
        PARM(v, real) PARM(tgt, real) PARM(t, real)
@@ -238,7 +238,7 @@ PREFIX(DebugTree, tree, "debug", PARM(toDebug, tree),
        std::cerr << "DEBUG: " << (Tree *) &toDebug << "\n";
        return xl_true, "")
 PREFIX(EvaluationError, tree, "evaluation_error", PARM(e, tree),
-       return xl_form_error(context, &e),
+       return xl_form_error(context->stack, &e),
        "")
 PREFIX(ErrorMsg3, tree, "error",
        PARM(m, text) PARM(a,tree) PARM(b,tree) PARM(c, tree),
@@ -251,9 +251,9 @@ PREFIX(ErrorMsg1, tree, "error", PARM(m, text) PARM(a,tree),
 PREFIX(ErrorMsg0, tree, "error", PARM(m, text),
        return xl_error(m), "")
 PREFIX(WriteTree, tree, "write", PARM(toWrite, tree),
-       return xl_write(context, &toWrite, ""), "")
+       return xl_write(context->stack, &toWrite, ""), "")
 PREFIX(WriteLnTree, tree, "writeln", PARM(toWrite, tree),
-       return xl_write(context, &toWrite, "\n"), "")
+       return xl_write(context->stack, &toWrite, "\n"), "")
 
 // Interpret a tree
 PREFIX(Interpret, tree, "interpret", PARM(value, tree),

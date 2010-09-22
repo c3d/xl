@@ -19,11 +19,9 @@
 /* ************************************************************************* */
 /* This document is distributed under the GNU General Public License         */
 /* See the enclosed COPYING file or http://www.gnu.org for information       */
-/* ****************************************************************************
-   * File       : $RCSFile$
-   * Revision   : $Revision$
-   * Date       : $Date$
-   ************************************************************************* */
+/*  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>            */
+/*  (C) 2010 Taodyne SAS                                                     */
+/* ***************************************************************************/
 
 #include <stdlib.h>
 #include <string.h>

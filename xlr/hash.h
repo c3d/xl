@@ -22,10 +22,6 @@
 //  (C) 2010 Jérôme Forissier <jerome@taodyne.com>
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
-// * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
-// ****************************************************************************
 
 #include "tree.h"
 #include "sha1.h"
