@@ -419,7 +419,7 @@ Tree *Context::EvaluateBlock(Tree *what)
 //   Create a new inner scope for evaluating the value
 // ----------------------------------------------------------------------------
 {
-    Context *block = new Context(scope, stack);
+    Context *block = new Context(this, this);
     tree_map cache;
     what = block->Evaluate(what, cache);
     return what;
@@ -482,7 +482,7 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
 // ----------------------------------------------------------------------------
 {
     kind k = form->Kind();
-    Context *eval = args ? this : (Context *) stack;
+    Context *eval = stack;
     Errors errors;
 
     switch(k)
