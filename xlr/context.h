@@ -213,14 +213,15 @@ struct Context
     // Type of lookup
     enum lookup_mode
     {
-        LOCAL_LOOKUP = 0,       // Only in the local context
-        SCOPE_LOOKUP = 1,       // Lexical lookup
-        STACK_LOOKUP = 2,       // Along the execution stack
+        LOCAL_LOOKUP    = 0,    // Only in the local context
+        SCOPE_LOOKUP    = 1,    // Lexical lookup
+        STACK_LOOKUP    = 2,    // Along the execution stack
         IMPORTED_LOOKUP = 4,    // Lookup in imported scopes
-        AVOID_ERRORS = 8,       // During binding, avoid errors
+        AVOID_ERRORS    = 8,    // During binding, avoid errors
 
-        NORMAL_LOOKUP = SCOPE_LOOKUP | IMPORTED_LOOKUP,
-        BIND_LOOKUP = NORMAL_LOOKUP | AVOID_ERRORS
+        NORMAL_LOOKUP   = SCOPE_LOOKUP | IMPORTED_LOOKUP,
+        BIND_LOOKUP     = NORMAL_LOOKUP | AVOID_ERRORS,
+        ANY_LOOKUP      = NORMAL_LOOKUP | STACK_LOOKUP
     };
 
     // Adding definitions to the context

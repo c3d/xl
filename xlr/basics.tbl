@@ -54,7 +54,7 @@ INFIX(Assignment, tree, tree, ":=", tree,
       return context->stack->Assign(&l, &r),
       "")
 PREFIX(AnyLookup, tree, "any", PARM(t, tree),
-       return context->stack->Evaluate(&t, Context::STACK_LOOKUP),
+       return context->stack->Evaluate(&t, Context::ANY_LOOKUP),
        "")
 
 // Integer arithmetic and comparisons

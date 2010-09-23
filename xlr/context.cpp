@@ -361,8 +361,8 @@ Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
                             Tree *result = candidate->to;
                             if (result && result != candidate->from)
                             {
-                                next = new Context(context, this);
-                                result = next->Evaluate(result);
+                                Context *eval = new Context(context, this);
+                                result = eval->Evaluate(result, lookup);
                             }
                             values[what] = result;
                             return result;
@@ -376,7 +376,7 @@ Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
                         {
                             Tree *result = candidate->from;
                             if (Tree *to = candidate->to)
-                                result = eval->Evaluate(to);
+                                result = eval->Evaluate(to,lookup);
                             else
                                 result = xl_evaluate_children(eval, result);
                             values[what] = result;
