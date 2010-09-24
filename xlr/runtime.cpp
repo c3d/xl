@@ -553,7 +553,7 @@ Tree *xl_symbol_cast(Context *context, Tree *source, Tree *value)
 }
 
 
-Tree *xl_name_symbol_cast(Context *context, Tree *source, Tree *value)
+Tree *xl_name_cast(Context *context, Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a name
 // ----------------------------------------------------------------------------
@@ -569,7 +569,7 @@ Tree *xl_name_symbol_cast(Context *context, Tree *source, Tree *value)
 }
 
 
-Tree *xl_operator_symbol_cast(Context *context, Tree *source, Tree *value)
+Tree *xl_operator_cast(Context *context, Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as an operator symbol
 // ----------------------------------------------------------------------------

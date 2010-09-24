@@ -69,11 +69,11 @@ Tree *ValueMatchesType(Context *ctx, Tree *type, Tree *value, bool convert)
     if (type == symbol_type)
         if (Name *nv = value->AsName())
             return nv;
-    if (type == name_symbol_type)
+    if (type == name_type)
         if (Name *nv = value->AsName())
             if (nv->value.length() && isalpha(nv->value[0]))
                 return nv;
-    if (type == operator_symbol_type)
+    if (type == operator_type)
         if (Name *nv = value->AsName())
             if (nv->value.length() && !isalpha(nv->value[0]))
                 return nv;
