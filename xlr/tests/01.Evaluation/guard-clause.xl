@@ -1,0 +1,24 @@
+foo x:integer when x > 0 -> writeln "Positive"
+foo x:integer when x < 0 -> writeln "Negative"
+foo x:integer -> writeln "Neither positive nor negative"
+
+foo 1
+foo -3
+foo 0
+
+bar x:integer, y:integer when x > y -> writeln "X is bigger"
+bar x:integer, y:integer when x < y -> writeln "Y is bigger"
+bar x:integer, y:integer -> writeln "X and Y are not that different"
+
+bar 1,3
+bar 3,2
+bar 4,4
+
+zoo x, y, z when x < y + z -> writeln "Case 1"
+zoo x, y, z when x > y + z -> writeln "Case 2"
+zoo x, y, z -> writeln "Case 3"
+
+zoo 1, 3, 4
+zoo 5, 3, 1
+zoo 5, 3, 2
+

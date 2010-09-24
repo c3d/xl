@@ -646,6 +646,18 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
                 return true;
             } // We have a name on the left
         } // We have an infix :
+        else if (fi->name == "when")
+        {
+            // We have a guard - first test if we can bind the left part
+            if (!Bind(fi->left, value, cache, args))
+                return false;
+
+            // Now try to test the guard value
+            Tree *guard = Evaluate(fi->right, cache, BIND_LOOKUP);
+            if (errors.Swallowed())
+                return false;
+            return guard == xl_true;
+        }
 
         // If we match the infix name, we can bind left and right
         if (Infix *infix = value->AsInfix())

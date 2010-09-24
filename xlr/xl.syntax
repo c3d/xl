@@ -2,7 +2,7 @@ INFIX
         11      NEWLINE
         21      ;
         25      ->
-        30      loop when
+        30      loop
         35      else into
         40      then require ensure
         41      with
@@ -11,6 +11,7 @@ INFIX
         120     written
         130     where
         200     DEFAULT
+        205     when
         211     ,
         221     := += -= *= /= ^= |= &=
         230     return 
