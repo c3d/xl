@@ -5,7 +5,9 @@ integers n -> n, integers (n+1)
 first x,y -> x
 first x -> x
 second x, y -> first y
+third x, y, z -> first z
+fourth x, y, z, t -> first t
 
-// This should compute 4
-second  integers 3
+// This should compute 4 + 6 + 4.5 = 14.5
+{second integers 3} + {third integers 4} + {fourth{integers 1.5}}
 

@@ -632,7 +632,7 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
                     value = eval->Evaluate(value, cache, BIND_LOOKUP);
                     if (errors.Swallowed())
                         return false;
-                    if (value != value_type)
+                    if (type != value_type)
                         value = ValueMatchesType(this, type, value, true);
                     if (!value)
                         return false;

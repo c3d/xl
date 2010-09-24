@@ -1,5 +1,5 @@
 // Data declaration
-data complex(x,y)
+data complex(x:value,y:value)
 
 // Basic notations
 i -> complex(0,1)

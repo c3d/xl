@@ -1,5 +1,5 @@
 // Test that we can accommodate Lionel's style on the right
-polygon a, b, c, n -> (a + b + c) * n
+polygon (a, b, c), n -> (a + b + c) * n
 diamond t -> polygon t,4
 
 diamond 2, 3, 5
