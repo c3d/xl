@@ -539,7 +539,7 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
         }
 
         // Define the name in the given context (same as if it was 'lazy')
-        value = eval->CreateCode(value);
+        value = eval->CreateLazy(value);
         if (args)
             args->push_back(value);
         else
