@@ -39,21 +39,21 @@
 #define DS(n) IFTRACE(builtins) std::cerr << "Builtin " #n ": " << self << '\n';
 
 
-#define INFIX(name, rtype, t1, symbol, t2, _code, doc)                  \
-    rtype##_nkp xl_##name(Context *context, Tree *self,                 \
-                           t1##_r l,t2##_r r)                           \
-    {                                                                   \
-        (void) context; DS(symbol) _code;                               \
-    }                                                                   \
-    static void xl_enter_infix_##name(Context *context)                 \
-    {                                                                   \
-        Infix *ldecl = new Infix(":", new Name("l"), new Name(#t1));    \
-        Infix *rdecl = new Infix(":", new Name("r"), new Name(#t2));    \
-        Infix *from = new Infix(symbol, ldecl, rdecl);                  \
-        Name *to = new Name(symbol);                                    \
-        setDocumentation(from, doc);                                    \
-        Rewrite *rw = context->Define(from, to);                        \
-        rw->native = (native_fn) xl_##name;                             \
+#define INFIX(name, rtype, t1, symbol, t2, _code, doc)  \
+    rtype##_nkp xl_##name(Context *context, Tree *self, \
+                           t1##_r l,t2##_r r)           \
+    {                                                   \
+        (void) context; DS(symbol) _code;               \
+    }                                                   \
+    static void xl_enter_infix_##name(Context *context) \
+    {                                                   \
+        Tree *ldecl = xl_parameter("l", #t1);           \
+        Tree *rdecl = xl_parameter("r", #t2);           \
+        Infix *from = new Infix(symbol, ldecl, rdecl);  \
+        Name *to = new Name(symbol);                    \
+        setDocumentation(from, doc);                    \
+        Rewrite *rw = context->Define(from, to);        \
+        rw->native = (native_fn) xl_##name;             \
     }
 
 #define PARM(symbol, type)      , type##_r symbol
@@ -114,7 +114,7 @@
     }                                                                   \
     static void xl_enter_block_##name(Context *context)                 \
     {                                                                   \
-        Infix *parms = new Infix(":", new Name("V"), new Name(#type));  \
+        Tree *parms = xl_parameter("c", #type);                         \
         Block *from = new Block(parms, open, close);                    \
         Name *to = new Name(#name);                                     \
         setDocumentation(from, doc);                                    \

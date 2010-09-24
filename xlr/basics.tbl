@@ -1,5 +1,5 @@
 // Types must come first for type info to be initialized correctly
-NAME(empty);
+NAME(nil);
 NAME(true);
 NAME(false);
 
@@ -19,41 +19,41 @@ TYPE(postfix);
 TYPE(block);
 
 // Basic units
-INFIX(DefineRewrite, tree, tree, "->", tree,
+INFIX(DefineRewrite, tree, parse_tree, "->", parse_tree,
       context->stack->Define(&l, &r);
       return self,
       "")
-INFIX(SequenceNewLine, tree, tree, "\n", tree,
+INFIX(SequenceNewLine, tree, parse_tree, "\n", parse_tree,
       context->stack->Evaluate(&l);
       return context->stack->Evaluate(&r),
       "")
-INFIX(SequenceSemicolon, tree, tree, ";", tree,
+INFIX(SequenceSemicolon, tree, parse_tree, ";", parse_tree,
       context->stack->Evaluate(&l);
       return context->stack->Evaluate(&r),
       "")
-PREFIX(DataDefinition, tree, "data", PARM(d, tree),
+PREFIX(DataDefinition, tree, "data", PARM(d, parse_tree),
        context->stack->DefineData(&d);
        return self,
        "")
-BLOCK(Parentheses, tree, "(", tree, ")",
+BLOCK(Parentheses, tree, "(", parse_tree, ")",
       return context->stack->EvaluateBlock(&child),
       "")
-BLOCK(CurlyBraces, tree, "{", tree, "}",
+BLOCK(CurlyBraces, tree, "{", parse_tree, "}",
       return context->stack->EvaluateBlock(&child),
       "")
-BLOCK(IntentationBlock, tree, Block::indent, tree, Block::unindent,
+BLOCK(IntentationBlock, tree, Block::indent, parse_tree, Block::unindent,
       return context->stack->EvaluateBlock(&child),
       "")
-PREFIX(Closure, tree, "<closure>", PARM(c, tree),
+PREFIX(Closure, tree, "<closure>", PARM(c, parse_tree),
        return context->stack->EvaluateClosure(self, &c),
        "")
-PREFIX(EvaluatedClosure, tree, "<evaluated>", PARM(c, tree),
+PREFIX(EvaluatedClosure, tree, "<evaluated>", PARM(c, parse_tree),
        return &c,
        "")
-INFIX(Assignment, tree, tree, ":=", tree,
+INFIX(Assignment, tree, parse_tree, ":=", tree,
       return context->stack->Assign(&l, &r),
       "")
-PREFIX(AnyLookup, tree, "any", PARM(t, tree),
+PREFIX(AnyLookup, tree, "any", PARM(t, parse_tree),
        return context->stack->Evaluate(&t, Context::ANY_LOOKUP),
        "")
 
@@ -209,9 +209,9 @@ PREFIX(RandomNumber2i, integer, "random", PARM(low,integer) PARM(high,integer),
        XL_RINT(xl_random(XL_INT(low), XL_INT(high))), "")
 
 // Tree manipulations
-PREFIX(DoCode,    tree, "do", PARM(code, tree),
+PREFIX(DoCode,    tree, "do", PARM(code, parse_tree),
        return context->stack->Evaluate(&code), "")
-PREFIX(ParseTree, tree, "parse_tree", PARM(c, tree),
+PREFIX(ParseTree, tree, "parse_tree", PARM(c, parse_tree),
        Tree *code = &c;
        if (Block *block = code->AsBlock())
            code = block->child;
@@ -234,19 +234,19 @@ PREFIX(Springify, real, "springify",
        return xl_springify(v, tgt, t, d, k, lt, ls), "")
 
 // Debugging code
-PREFIX(DebugTree, tree, "debug", PARM(toDebug, tree),
+PREFIX(DebugTree, tree, "debug", PARM(toDebug, parse_tree),
        std::cerr << "DEBUG: " << (Tree *) &toDebug << "\n";
        return xl_true, "")
-PREFIX(EvaluationError, tree, "evaluation_error", PARM(e, tree),
+PREFIX(EvaluationError, tree, "evaluation_error", PARM(e, parse_tree),
        return xl_form_error(context->stack, &e),
        "")
 PREFIX(ErrorMsg3, tree, "error",
-       PARM(m, text) PARM(a,tree) PARM(b,tree) PARM(c, tree),
+       PARM(m, text) PARM(a,parse_tree) PARM(b,parse_tree) PARM(c, parse_tree),
        return xl_error(m, &a, &b, &c), "")
 PREFIX(ErrorMsg2, tree, "error",
-       PARM(m, text) PARM(a,tree) PARM(b,tree),
+       PARM(m, text) PARM(a,parse_tree) PARM(b, parse_tree),
        return xl_error(m, &a, &b), "")
-PREFIX(ErrorMsg1, tree, "error", PARM(m, text) PARM(a,tree),
+PREFIX(ErrorMsg1, tree, "error", PARM(m, text) PARM(a, parse_tree),
        return xl_error(m, &a), "")
 PREFIX(ErrorMsg0, tree, "error", PARM(m, text),
        return xl_error(m), "")
@@ -254,14 +254,6 @@ PREFIX(WriteTree, tree, "write", PARM(toWrite, tree),
        return xl_write(context->stack, &toWrite, ""), "")
 PREFIX(WriteLnTree, tree, "writeln", PARM(toWrite, tree),
        return xl_write(context->stack, &toWrite, "\n"), "")
-
-// Interpret a tree
-PREFIX(Interpret, tree, "interpret", PARM(value, tree),
-       Tree *v = &value;
-       if (Block *b = v->AsBlock())
-           v = b->child;
-       return MAIN->context->Evaluate(v),
-       "")
 
 // Compute the sha1 of a tree
 PREFIX(ComputeSha1, text, "sha1", PARM(t, tree), XL_RTEXT(sha1(&t)), "")

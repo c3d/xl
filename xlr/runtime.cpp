@@ -636,6 +636,20 @@ Tree *xl_block_cast(Context *context, Tree *source, Tree *value)
 //
 // ============================================================================
 
+Tree *xl_parameter(text symbol, text type)
+// ----------------------------------------------------------------------------
+//   Build an infix name:type, except if type is "source"
+// ----------------------------------------------------------------------------
+{
+    Name *n = new Name(symbol);
+    if (type == "source")
+        return n;
+    Name *t = new Name(type);
+    Infix *i = new Infix(":", n, t);
+    return i;
+}
+
+
 Real *xl_springify(Real &value, Real &target, Real &time,
                    Real &damp, Real &kspring, Real &lt, Real &ls)
 // ----------------------------------------------------------------------------

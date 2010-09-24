@@ -41,18 +41,7 @@
 
 
 #define PARM(symbol, type)                                      \
-        if (text(#type) == "closure")                           \
-        {                                                       \
-            Name *symbol##_decl = new Name(#symbol);            \
-            parameters.push_back(symbol##_decl);                \
-        }                                                       \
-        else                                                    \
-        {                                                       \
-            Infix *symbol##_decl = new Infix(":",               \
-                                             new Name(#symbol), \
-                                             new Name(#type));  \
-            parameters.push_back(symbol##_decl);                \
-        }
+    parameters.push_back(xl_parameter(#symbol, #type));
 
 
 #define PREFIX(name, rtype, symbol, parms, _code, doc)                  \

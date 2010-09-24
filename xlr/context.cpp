@@ -482,7 +482,7 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
 // ----------------------------------------------------------------------------
 {
     kind k = form->Kind();
-    Context *eval = stack;
+    Context *eval = stack;      // Evaluate in caller's stack
     Errors errors;
 
     switch(k)
@@ -606,15 +606,12 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
                 // Evaluate the value and match its type if the type is not tree
                 if (type == parse_tree_type)
                 {
-                    // We want a 'naked' parse tree. Eliminate names, closures
+                    // We want a 'naked' parse tree. Eliminate closures
                     if (Prefix *prefix = value->AsPrefix())
                         if (prefix->Get<ClosureInfo>())
                             value = prefix->right;
-                    if (Name *nval = value->AsName())
-                        if (Tree *bound = eval->Bound(nval))
-                            value = bound;
                 }
-                else if (type != tree_type)
+                else
                 {
                     value = eval->Evaluate(value, cache, BIND_LOOKUP);
                     if (errors.Swallowed())
@@ -775,6 +772,12 @@ Tree *Context::CreateClosure(Tree *value)
     if (!hasConstants && value->IsConstant())
         return value;
     static Name_p closureName = new Name("<closure>");
+
+    if (Prefix *prefix = value->AsPrefix())
+        if (Name *name = prefix->left->AsName())
+            if (name->value == closureName->value)
+                return value;
+
     Prefix *result = new Prefix(closureName, value);
     result->Set<ClosureInfo>(this);
     return result;

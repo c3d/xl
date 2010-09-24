@@ -90,6 +90,8 @@ Tree *xl_prefix_cast(Context *, Tree *source, Tree *value);
 Tree *xl_postfix_cast(Context *, Tree *source, Tree *value);
 Tree *xl_block_cast(Context *, Tree *source, Tree *value);
 
+Tree *xl_parameter(text name, text type);
+
 Real *xl_springify(Real &value, Real &target, Real &time,
                    Real &damp, Real &kspring, Real &lt, Real &ls);
 
