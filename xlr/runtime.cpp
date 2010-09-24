@@ -523,16 +523,43 @@ Tree *xl_character_cast(Context *context, Tree *source, Tree *value)
 
 Tree *xl_tree_cast(Context *context, Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
-//   Don't really check the argument
+//   Any input tree can be accepted
 // ----------------------------------------------------------------------------
 {
     return value;
 }
 
 
-Tree *xl_parse_tree_cast(Context *context, Tree *source, Tree *value)
+Tree *xl_source_cast(Context *context, Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
-//   Don't really check the argument
+//   Any source can be accepted
+// ----------------------------------------------------------------------------
+{
+    return value;
+}
+
+
+Tree *xl_code_cast(Context *context, Tree *source, Tree *value)
+// ----------------------------------------------------------------------------
+//   Any code can be accepted
+// ----------------------------------------------------------------------------
+{
+    return value;
+}
+
+
+Tree *xl_lazy_cast(Context *context, Tree *source, Tree *value)
+// ----------------------------------------------------------------------------
+//   Any lazy argument can be accepted
+// ----------------------------------------------------------------------------
+{
+    return value;
+}
+
+
+Tree *xl_value_cast(Context *context, Tree *source, Tree *value)
+// ----------------------------------------------------------------------------
+//   Any value can be accepted (we evaluate first)
 // ----------------------------------------------------------------------------
 {
     return value;
@@ -642,7 +669,7 @@ Tree *xl_parameter(text symbol, text type)
 // ----------------------------------------------------------------------------
 {
     Name *n = new Name(symbol);
-    if (type == "source")
+    if (type == lazy_type->value)
         return n;
     Name *t = new Name(type);
     Infix *i = new Infix(":", n, t);

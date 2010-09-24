@@ -4,33 +4,61 @@
 show X -> writeln "Globally: ", X
 
 // This is a transformation with a local definition
-foo Code:parse_tree ->
-    show X -> writeln "In foo: ", X
-    writeln "In foo"
+InnerTree1 Code:tree ->
+    show X -> writeln "In InnerTree1: ", X
+    writeln "Entering InnerTree1"
     Code
-    writeln "Exit foo"
+    writeln "Second in InnerTree1"
+    Code
+    writeln "Exiting InnerTree1"
 
 // This is another transformation with another local definition
-bar Code:parse_tree ->
-    show X -> writeln "In bar: ", X
-    writeln "In bar"
+InnerTree2 Code:tree ->
+    show X -> writeln "In InnerTree2: ", X
+    writeln "Entering InnerTree2"
     Code
-    writeln "Exit bar"
+    writeln "Second in InnerTree2"
+    Code
+    writeln "Exiting InnerTree2"
+
+// This is a declaration where we evaluate in the caller's context
+InnerWithCode Code:code ->
+    show X -> writeln "This shouldn't be used", X
+    writeln "Entering InnerWithCode"
+    Code
+    writeln "Second in InnerWithCode"
+    Code
+    writeln "Exiting InnerWithCode"
+
+// This is a declaration where we evaluate lazily in the caller's context
+InnerWithLazy Code:lazy ->
+    show X -> writeln "This shouldn't be used", X
+    writeln "Entering InnerWithLazy"
+    Code
+    writeln "Second in InnerWithLazy"
+    Code
+    writeln "Exiting InnerWithLazy"
+
+
 
 // Multiple uses of the same code
-boo Code:parse_tree ->
-    writeln "In Boo"
-    foo Code
-    writeln "After foo"
-    bar Code
-    writeln "After bar"
+Outer Code:tree ->
+    writeln "In Outer, calling InnerTree1"
+    InnerTree1 Code
+    writeln "Calling InnerTree2"
+    InnerTree2 Code
+    writeln "Evaluating in Outer"
     Code
-    writeln "Done with boo"
+    writeln "Calling InnerWithCode"
+    InnerWithCode Code
+    writeln "Calling InnerWithLazy"
+    InnerWithLazy Code
+    writeln "Done with Outer"
 
 // Global counter
 counter := 0
 
 // Multiple calls with the same code
-boo
+Outer
     counter := counter + 1
     show counter

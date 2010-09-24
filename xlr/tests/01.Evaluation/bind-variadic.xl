@@ -1,0 +1,10 @@
+// This test checks what happens if we bind things that are too big
+test A : tree, B : tree ->
+   writeln "Case 1 = ", A
+   test B
+
+test A:tree ->
+    writeln "Case 2 = ", A
+
+test 1,2,3,4,5
+

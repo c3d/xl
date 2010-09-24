@@ -247,8 +247,10 @@ struct Context
     Tree *              Bound(Name *name, lookup_mode mode = SCOPE_LOOKUP);
 
     // Create a closure in this context
-    Tree *              CreateClosure(Tree *value);
-    Tree *              EvaluateClosure(Tree *closure, Tree *value);
+    Tree *              CreateCode(Tree *value);
+    Tree *              EvaluateCode(Tree *closure, Tree *value);
+    Tree *              CreateLazy(Tree *value);
+    Tree *              EvaluateLazy(Tree *closure, Tree *value);
 
     // List rewrites of a given type
     void                ListNames(text begin, rewrite_list &list,

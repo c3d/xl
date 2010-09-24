@@ -1,12 +1,27 @@
-In Boo
-In foo
-In foo: 1
-Exit foo
-After foo
-In bar
-In bar: 2
-Exit bar
-After bar
-Globally: 3
-Done with boo
+In Outer, calling InnerTree1
+Entering InnerTree1
+In InnerTree1: 1
+Second in InnerTree1
+In InnerTree1: 2
+Exiting InnerTree1
+Calling InnerTree2
+Entering InnerTree2
+In InnerTree2: 3
+Second in InnerTree2
+In InnerTree2: 4
+Exiting InnerTree2
+Evaluating in Outer
+Globally: 5
+Calling InnerWithCode
+Entering InnerWithCode
+Globally: 6
+Second in InnerWithCode
+Globally: 7
+Exiting InnerWithCode
+Calling InnerWithLazy
+Entering InnerWithLazy
+Globally: 8
+Second in InnerWithLazy
+Exiting InnerWithLazy
+Done with Outer
 true

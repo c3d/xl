@@ -354,16 +354,15 @@ Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
                     }
                     else if (Name *name = candidate->from->AsName())
                     {
+                        // A name always evaluates in the present context,
+                        // not context of origin (we'd have a closure)
                         Name *vname = what->AsName();
                         assert(vname || !"Hash function is broken");
                         if (name->value == vname->value)
                         {
                             Tree *result = candidate->to;
                             if (result && result != candidate->from)
-                            {
-                                Context *eval = new Context(context, this);
-                                result = eval->Evaluate(result, lookup);
-                            }
+                                result = Evaluate(result, lookup);
                             values[what] = result;
                             return result;
                         }
@@ -539,8 +538,8 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
             return EqualTrees(bound, value);
         }
 
-        // Define the name in the given context
-        value = eval->CreateClosure(value);
+        // Define the name in the given context (same as if it was 'lazy')
+        value = eval->CreateCode(value);
         if (args)
             args->push_back(value);
         else
@@ -604,19 +603,37 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
                     return false;
 
                 // Evaluate the value and match its type if the type is not tree
-                if (type == parse_tree_type)
+                if (type == source_type)
                 {
-                    // We want a 'naked' parse tree. Eliminate closures
-                    if (Prefix *prefix = value->AsPrefix())
-                        if (prefix->Get<ClosureInfo>())
-                            value = prefix->right;
+                    // No evaluation at all
+                    type = tree_type;
+                }
+                else if (type == tree_type)
+                {
+                    // Evaluate to a tree if we have a name
+                    if (Name *name = value->AsName())
+                        if (Tree *bound = eval->Bound(name))
+                            value = bound;
+                    type = tree_type;
+                }
+                else if (type == code_type)
+                {
+                    // We want a code closure
+                    value = eval->CreateCode(value);
+                    type = tree_type;
+                }
+                else if (type == lazy_type)
+                {
+                    value = eval->CreateLazy(value);
+                    type = tree_type;
                 }
                 else
                 {
                     value = eval->Evaluate(value, cache, BIND_LOOKUP);
                     if (errors.Swallowed())
                         return false;
-                    value = ValueMatchesType(this, type, value, true);
+                    if (value != value_type)
+                        value = ValueMatchesType(this, type, value, true);
                     if (!value)
                         return false;
                 }
@@ -763,15 +780,15 @@ Tree *Context::Bound(Name *name, lookup_mode lookup)
 }
 
 
-Tree *Context::CreateClosure(Tree *value)
+Tree *Context::CreateCode(Tree *value)
 // ----------------------------------------------------------------------------
-//   Create a closure to record the current context
+//   Create a closure to record the current context to be evaluted once
 // ----------------------------------------------------------------------------
 {
     // Quick optimization for constants
     if (!hasConstants && value->IsConstant())
         return value;
-    static Name_p closureName = new Name("<closure>");
+    static Name_p closureName = new Name("<code>");
 
     if (Prefix *prefix = value->AsPrefix())
         if (Name *name = prefix->left->AsName())
@@ -784,7 +801,48 @@ Tree *Context::CreateClosure(Tree *value)
 }
 
 
-Tree *Context::EvaluateClosure(Tree *closure, Tree *value)
+Tree *Context::EvaluateCode(Tree *closure, Tree *value)
+// ----------------------------------------------------------------------------
+//   Evaluate the closure in the recorded context
+// ----------------------------------------------------------------------------
+{
+    Context *context = closure->Get<ClosureInfo>();
+    if (!context)
+    {
+        Ooops("Internal: Where did the closure $1 come from?", value);
+        context = this;
+    }
+
+    // Evaluate the result
+    Tree *result = context->Evaluate(value);
+
+    // Return the value
+    return result;
+}
+
+
+Tree *Context::CreateLazy(Tree *value)
+// ----------------------------------------------------------------------------
+//   Create a closure to record the current context to be evaluted once
+// ----------------------------------------------------------------------------
+{
+    // Quick optimization for constants
+    if (!hasConstants && value->IsConstant())
+        return value;
+    static Name_p closureName = new Name("<lazy>");
+
+    if (Prefix *prefix = value->AsPrefix())
+        if (Name *name = prefix->left->AsName())
+            if (name->value == closureName->value)
+                return value;
+
+    Prefix *result = new Prefix(closureName, value);
+    result->Set<ClosureInfo>(this);
+    return result;
+}
+
+
+Tree *Context::EvaluateLazy(Tree *closure, Tree *value)
 // ----------------------------------------------------------------------------
 //   Evaluate the closure in the recorded context
 // ----------------------------------------------------------------------------
@@ -800,7 +858,7 @@ Tree *Context::EvaluateClosure(Tree *closure, Tree *value)
     Tree *result = context->Evaluate(value);
 
     // Cache evaluation result in case we evaluate the closure again
-    static Name_p evaluatedName = new Name("<evaluated>");
+    static Name_p evaluatedName = new Name("<value>");
     Prefix *prefix = closure->AsPrefix(); assert(prefix || !"Invalid closure");
     prefix->left = evaluatedName;
     prefix->right = result;

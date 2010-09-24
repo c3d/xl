@@ -86,8 +86,9 @@
         context->Define(n, n);                                          \
                                                                         \
         /* Type as infix : evaluates to type check, e.g. 0 : integer */ \
-        Infix *from = new Infix(":", new Name("V"), new Name(#symbol)); \
-        Name *to = new Name(#symbol);                                   \
+        Name *x = new Name("x");                                        \
+        Prefix *from = new Prefix(n, x);                                \
+        Name *to = n;                                                   \
         Rewrite *rw = context->Define(from, to);                        \
         rw->native = (native_fn) xl_##symbol##_cast;                    \
     } while(0);

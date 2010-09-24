@@ -64,7 +64,7 @@ Tree *ValueMatchesType(Context *ctx, Tree *type, Tree *value, bool convert)
         if (Name *nv = value->AsName())
             if (nv->value == "true" || nv->value == "false")
                 return nv;
-    if (type == tree_type || type == parse_tree_type)
+    if (type == tree_type)
         return value;
     if (type == symbol_type)
         if (Name *nv = value->AsName())
@@ -168,7 +168,7 @@ Tree *TypeCoversType(Context *ctx, Tree *type, Tree *test, bool convert)
     // Quick exit when types are the same or the tree type is used
     if (type == test)
         return test;
-    if (type == tree_type || type == parse_tree_type)
+    if (type == tree_type)
         return test;
     if (convert)
     {
@@ -269,7 +269,7 @@ Tree *TypeIntersectsType(Context *ctx, Tree *type, Tree *test, bool convert)
     // Quick exit when types are the same or the tree type is used
     if (type == test)
         return test;
-    if (type == tree_type || type == parse_tree_type || test == tree_type)
+    if (type == tree_type || test == tree_type)
         return test;
     if (convert)
     {
@@ -455,7 +455,7 @@ Tree *StructuredType(Context *ctx, Tree *value)
     }
 
     // Memorize the type for next time
-    if (type && type != tree_type && type != parse_tree_type)
+    if (type && type != tree_type)
     {
         IFTRACE(types)
             std::cerr << "Caching type " << type << " for " << value << '\n';

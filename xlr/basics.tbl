@@ -9,51 +9,57 @@ TYPE(real);
 TYPE(text);
 TYPE(character);
 TYPE(tree);
-TYPE(parse_tree);
+TYPE(source);
+TYPE(code);
+TYPE(lazy);
+TYPE(value);
 TYPE(symbol);
 TYPE(name);
-TYPE(operator );
+TYPE(operator);
 TYPE(infix);
 TYPE(prefix);
 TYPE(postfix);
 TYPE(block);
 
 // Basic units
-INFIX(DefineRewrite, tree, parse_tree, "->", parse_tree,
+INFIX(DefineRewrite, tree, source, "->", source,
       context->stack->Define(&l, &r);
       return self,
       "")
-INFIX(SequenceNewLine, tree, parse_tree, "\n", parse_tree,
+INFIX(SequenceNewLine, tree, source, "\n", source,
       context->stack->Evaluate(&l);
       return context->stack->Evaluate(&r),
       "")
-INFIX(SequenceSemicolon, tree, parse_tree, ";", parse_tree,
+INFIX(SequenceSemicolon, tree, source, ";", source,
       context->stack->Evaluate(&l);
       return context->stack->Evaluate(&r),
       "")
-PREFIX(DataDefinition, tree, "data", PARM(d, parse_tree),
+PREFIX(DataDefinition, tree, "data", PARM(d, source),
        context->stack->DefineData(&d);
        return self,
        "")
-BLOCK(Parentheses, tree, "(", parse_tree, ")",
+BLOCK(Parentheses, tree, "(", source, ")",
       return context->stack->EvaluateBlock(&child),
       "")
-BLOCK(CurlyBraces, tree, "{", parse_tree, "}",
+BLOCK(CurlyBraces, tree, "{", source, "}",
       return context->stack->EvaluateBlock(&child),
       "")
-BLOCK(IntentationBlock, tree, Block::indent, parse_tree, Block::unindent,
+BLOCK(IntentationBlock, tree, Block::indent, source, Block::unindent,
       return context->stack->EvaluateBlock(&child),
       "")
-PREFIX(Closure, tree, "<closure>", PARM(c, parse_tree),
-       return context->stack->EvaluateClosure(self, &c),
+PREFIX(CodeClosure, tree, "<code>", PARM(c, source),
+       return context->stack->EvaluateCode(self, &c),
        "")
-PREFIX(EvaluatedClosure, tree, "<evaluated>", PARM(c, parse_tree),
+PREFIX(LazyClosure, tree, "<lazy>", PARM(c, source),
+       return context->stack->EvaluateLazy(self, &c),
+       "")
+PREFIX(EvaluatedClosure, tree, "<value>", PARM(c, source),
        return &c,
        "")
-INFIX(Assignment, tree, parse_tree, ":=", tree,
+INFIX(Assignment, tree, source, ":=", tree,
       return context->stack->Assign(&l, &r),
       "")
-PREFIX(AnyLookup, tree, "any", PARM(t, parse_tree),
+PREFIX(AnyLookup, tree, "any", PARM(t, source),
        return context->stack->Evaluate(&t, Context::ANY_LOOKUP),
        "")
 
@@ -209,9 +215,9 @@ PREFIX(RandomNumber2i, integer, "random", PARM(low,integer) PARM(high,integer),
        XL_RINT(xl_random(XL_INT(low), XL_INT(high))), "")
 
 // Tree manipulations
-PREFIX(DoCode,    tree, "do", PARM(code, parse_tree),
+PREFIX(DoCode,    tree, "do", PARM(code, source),
        return context->stack->Evaluate(&code), "")
-PREFIX(ParseTree, tree, "parse_tree", PARM(c, parse_tree),
+PREFIX(ParseTree, tree, "parse_tree", PARM(c, source),
        Tree *code = &c;
        if (Block *block = code->AsBlock())
            code = block->child;
@@ -234,19 +240,19 @@ PREFIX(Springify, real, "springify",
        return xl_springify(v, tgt, t, d, k, lt, ls), "")
 
 // Debugging code
-PREFIX(DebugTree, tree, "debug", PARM(toDebug, parse_tree),
+PREFIX(DebugTree, tree, "debug", PARM(toDebug, source),
        std::cerr << "DEBUG: " << (Tree *) &toDebug << "\n";
        return xl_true, "")
-PREFIX(EvaluationError, tree, "evaluation_error", PARM(e, parse_tree),
+PREFIX(EvaluationError, tree, "evaluation_error", PARM(e, source),
        return xl_form_error(context->stack, &e),
        "")
 PREFIX(ErrorMsg3, tree, "error",
-       PARM(m, text) PARM(a,parse_tree) PARM(b,parse_tree) PARM(c, parse_tree),
+       PARM(m, text) PARM(a,source) PARM(b,source) PARM(c, source),
        return xl_error(m, &a, &b, &c), "")
 PREFIX(ErrorMsg2, tree, "error",
-       PARM(m, text) PARM(a,parse_tree) PARM(b, parse_tree),
+       PARM(m, text) PARM(a,source) PARM(b, source),
        return xl_error(m, &a, &b), "")
-PREFIX(ErrorMsg1, tree, "error", PARM(m, text) PARM(a, parse_tree),
+PREFIX(ErrorMsg1, tree, "error", PARM(m, text) PARM(a, source),
        return xl_error(m, &a), "")
 PREFIX(ErrorMsg0, tree, "error", PARM(m, text),
        return xl_error(m), "")
