@@ -111,15 +111,21 @@ struct XLCall
 //    A structure that encapsulates a call to an XL tree
 // ----------------------------------------------------------------------------
 {
-    XLCall(text name): name(new Name(name)), arguments(NULL) {}
+    XLCall(text name):
+        name(new Name(name)), arguments(NULL), pointer(&arguments) {}
 
     // Adding arguments
     XLCall &operator, (Tree *tree)
     {
-        if (arguments)
-            arguments = new Infix(",", arguments, tree);
+        if (*pointer)
+        {
+            Infix *infix = new Infix(",", *pointer, tree);
+            pointer = (Tree_p *) &infix->right;
+        }
         else
-            arguments = tree;
+        {
+            *pointer = tree;
+        }
         return *this;
     }
     XLCall &operator, (Tree &tree) { return *this, &tree; }
@@ -142,6 +148,7 @@ struct XLCall
 public:
     Name_p      name;
     Tree_p      arguments;
+    Tree_p *    pointer;
 };
 
 

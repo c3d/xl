@@ -1,4 +1,4 @@
-// Test that we can accommodate Lionel's style
+// Test that we can accommodate Lionel's style on the right
 polygon a, b, c, n -> (a + b + c) * n
 diamond t -> polygon t,4
 

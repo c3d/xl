@@ -11,7 +11,7 @@ INFIX
         120     written
         130     where
         200     DEFAULT
-        210     ,
+        211     ,
         221     := += -= *= /= ^= |= &=
         230     return 
         240     and or xor

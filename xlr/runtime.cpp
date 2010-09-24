@@ -140,12 +140,12 @@ Tree *xl_error(text msg, Tree *a1, Tree *a2, Tree *a3)
 {
     static Name_p errorName = new Name("error");
     Tree *args = new Text(msg);
+    if (a3)
+        a2 = new Infix(",", a2, a3);
+    if (a2)
+        a1 = new Infix(",", a1, a2);
     if (a1)
         args = new Infix(",", args, a1);
-    if (a2)
-        args = new Infix(",", args, a2);
-    if (a3)
-        args = new Infix(",", args, a3);
     Tree *result = new Prefix(errorName, args);
 
     if (a1) a1 = FormatTreeForError(a1);
@@ -810,15 +810,17 @@ Tree *xl_load_data(Context *context,
         return sf.tree;
     }
 
-    Tree *tree = NULL;
-    Tree *line = NULL;
-    char buffer[256];
-    char *ptr = buffer;
-    char *end = buffer + sizeof(buffer) - 1;
-    bool hasQuote = false;
-    bool hasRecord = false;
-    bool hasField = false;
-    FILE *f = fopen(path.c_str(), "r");
+    char  buffer[256];
+    char   *ptr       = buffer;
+    char   *end       = buffer + sizeof(buffer) - 1;
+    Tree_p  tree      = NULL;
+    Tree_p  line      = NULL;
+    Tree_p *treePtr   = &tree;
+    Tree_p *linePtr   = &line;
+    bool    hasQuote  = false;
+    bool    hasRecord = false;
+    bool    hasField  = false;
+    FILE   *f         = fopen(path.c_str(), "r");
 
     *end = 0;
     while (!feof(f))
@@ -872,22 +874,35 @@ Tree *xl_load_data(Context *context,
                 child = new Text(buffer);
             }
 
-            // Combine to line
-            if (line)
-                line = new Infix(",", line, child);
+            // Combine data that we just read to current line
+            if (*linePtr)
+            {
+                Infix *infix = new Infix(",", *linePtr, child);
+                *linePtr = infix;
+                linePtr = &infix->right;
+            }
             else
-                line = child;
+            {
+                *linePtr = child;
+            }
 
             // Combine as line if necessary
             if (hasRecord)
             {
                 if (prefix != "")
                     line = new Prefix(new Name(prefix), line);
-                if (tree)
-                    tree = new Infix("\n", tree, line);
+                if (*treePtr)
+                {
+                    Infix *infix = new Infix("\n", *treePtr, line);
+                    *treePtr = infix;
+                    treePtr = &infix->right;
+                }
                 else
-                    tree = line;
+                {
+                    *treePtr = child;
+                }
                 line = NULL;
+                linePtr = &line;
             }
             ptr = buffer;
         }

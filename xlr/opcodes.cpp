@@ -104,13 +104,13 @@ Tree *ParametersTree(TreeList parameters)
 //   Create a comma-separated parameter list
 // ----------------------------------------------------------------------------
 {
-    ulong i, max = parameters.size();
+    ulong i, max = parameters.size(), last = max;
     Tree *result = NULL;
     for (i = 0; i < max; i++)
     {
-        Tree *parm = parameters[i];
+        Tree *parm = parameters[--last];
         if (result)
-            result = new Infix(",", result, parm);
+            result = new Infix(",", parm, result);
         else
             result = parm;
     }
