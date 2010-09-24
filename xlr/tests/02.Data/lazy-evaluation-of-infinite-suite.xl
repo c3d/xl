@@ -1,0 +1,11 @@
+// This is an infinite list
+integers n -> n, integers (n+1)
+
+// This should work
+first x,y -> x
+first x -> x
+second x, y -> first y
+
+// This should compute 4
+second  integers 3
+

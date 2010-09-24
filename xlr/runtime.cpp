@@ -64,7 +64,7 @@ Tree *xl_evaluate_children(Context *context, Tree *what)
         return what;
     case NAME:
         if (Tree *bound = context->Bound((Name *) what, Context::LOCAL_LOOKUP))
-            what = context->Evaluate(bound);
+            what = bound;
         return what;
     case INFIX:
     {
