@@ -73,31 +73,35 @@ Tree *xl_evaluate_children(Context *context, Tree *what)
             return xl_evaluate_children(context, infix->left);
         Tree *left = xl_evaluate_children(context, infix->left);
         Tree *right = xl_evaluate_children(context, infix->right);
-        Infix *result = new Infix(infix, left, right);
-        return result;
+        if (left != infix->left || right != infix->right)
+            infix = new Infix(infix, left, right);
+        return infix;
     }
     case PREFIX:
     {
         Prefix *prefix = (Prefix *) what;
         Tree *left = xl_evaluate_children(context, prefix->left);
         Tree *right = xl_evaluate_children(context, prefix->right);
-        Prefix *result = new Prefix(prefix, left, right);
-        return result;
+        if (left != prefix->left || right != prefix->right)
+            prefix = new Prefix(prefix, left, right);
+        return prefix;
     }
     case POSTFIX:
     {
         Postfix *postfix = (Postfix *) what;
         Tree *left = xl_evaluate_children(context, postfix->left);
         Tree *right = xl_evaluate_children(context, postfix->right);
-        Postfix *result = new Postfix(postfix, left, right);
-        return result;
+        if (left != postfix->left || right != postfix->right)
+            postfix = new Postfix(postfix, left, right);
+        return postfix;
     }
     case BLOCK:
     {
         Block *block = (Block *) what;
         Tree *child = xl_evaluate_children(context, block->child);
-        Block *result = new Block(block, child);
-        return result;
+        if (child != block->child)
+            block = new Block(block, child);
+        return block;
     }
     }
     return NULL;
