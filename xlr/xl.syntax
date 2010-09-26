@@ -35,7 +35,7 @@ PREFIX
         340     @ 
         380     ! ~
         390     - + * /
-        400     FUNCTION
+        401     FUNCTION
         410     function procedure to type iterator
         500     &
 

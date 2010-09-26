@@ -1,0 +1,24 @@
+data a,b
+
+first a,b  -> a
+first a    -> a
+rest a,b   -> b
+rest a     -> nil
+
+l := 1,2,3,4,5
+writeln "The list is ", l
+
+writeln "First=", first l, " Rest=", rest l, " Second=", first rest l
+
+l := rest l
+writeln "First=", first l, " Rest=", rest l, " Second=", first rest l
+
+l := rest l
+writeln "First=", first l, " Rest=", rest l, " Second=", first rest l
+
+l := rest l
+writeln "First=", first l, " Rest=", rest l, " Second=", first rest l
+
+l := rest l
+writeln "First=", first l, " Rest=", rest l, " Second=", first rest l
+
