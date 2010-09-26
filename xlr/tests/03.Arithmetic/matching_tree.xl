@@ -1,7 +1,7 @@
 // This test checks that we require evaluation for pattern matching
 // when we have the same tree twice
 A + A -> 3 * A
-data X,Y
+data X:value,Y:value
 2+2, (3-1) + (4/2), 3+2
 
 
