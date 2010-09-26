@@ -12,8 +12,8 @@ INFIX
         130     where
         200     DEFAULT
         205     when
-        211     ,
-        221     := += -= *= /= ^= |= &=
+        211     := += -= *= /= ^= |= &=
+        221     ,
         230     return 
         240     and or xor
         250     in at
