@@ -12,6 +12,8 @@ if false then TrueBody -> false
 data x,y
 first x,y -> x
 rest  x,y -> y
+first x   -> x
+rest  x   -> nil
 
 // Range of values
 data low..high
