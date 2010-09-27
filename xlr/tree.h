@@ -72,7 +72,7 @@ typedef GCPtr<Postfix>                  Postfix_p;
 typedef GCPtr<Infix>                    Infix_p;
 typedef GCPtr<Block>                    Block_p;
 
-typedef ulong TreePosition;                     // Position in context
+typedef ulong TreePosition;                     // Position in source files
 typedef std::vector<Tree_p> TreeList;           // A list of trees
 typedef Tree *(*eval_fn) (Tree *);              // Compiled evaluation code
 
