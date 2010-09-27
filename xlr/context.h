@@ -304,6 +304,16 @@ struct ClosureInfo : Info
 };
 
 
+struct PrefixDefinitionsInfo : Info
+// ----------------------------------------------------------------------------
+//   Information recording definitions associated with a prefix
+// ----------------------------------------------------------------------------
+{
+    PrefixDefinitionsInfo(): last(NULL) {}
+    Infix_p last;
+};
+
+
 
 // ============================================================================
 //

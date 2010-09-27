@@ -127,16 +127,15 @@ Rewrite *Context::Define(Tree *form, Tree *value)
     // Check that we have only names in the pattern
     ValidateNames(form);
 
-    // Check if we insert a name. If so, we shouldn't redefine
-    Name *name = form->AsName();
-
     // Create a rewrite
     Rewrite *rewrite = new Rewrite(form, value);
     ulong key = Hash(form);
 
     // Walk through existing rewrites
     Rewrite_p *parent = &rewrites[key]; 
-    if (name)
+
+    // Check if we insert a name. If so, we shouldn't redefine
+    if (Name *name = form->AsName())
     {
         // Name: check for redefinitions
         while (Rewrite *where = *parent)
@@ -148,8 +147,17 @@ Rewrite *Context::Define(Tree *form, Tree *value)
             {
                 if (existing->value == name->value)
                 {
-                    Ooops("Name $1 already exists", name);
-                    Ooops("Previous definition was $1", existing);
+                    if (where->to->GetInfo<PrefixDefinitionsInfo>())
+                    {
+                        // Implicit definition for prefix name, override
+                        where->to = value;
+                        break;
+                    }
+                    else
+                    {
+                        Ooops("Name $1 already exists", name);
+                        Ooops("Previous definition was $1", existing);
+                    }
                 }
             }
             parent = &where->hash[key];
@@ -168,6 +176,61 @@ Rewrite *Context::Define(Tree *form, Tree *value)
 
     // Create the rewrite
     *parent = rewrite;
+
+    // Check if we defined a prefix with a name on the left.
+    // If so, this also implicitly defines the associated name
+    if (Prefix *prefix = form->AsPrefix())
+    {
+        // We only do that if defining a named prefix ("function"), like "foo 0"
+        if (Name *defined = prefix->left->AsName())
+        {
+            // We don't do that for operators, e.g. "+0" will not define "+"
+            // (debatable. We'd need to selectively disable ValidateNames)
+            if (defined->value.size() && isalpha(defined->value[0]))
+            {
+                // Selector for the definition
+                Tree *selector = prefix->right;
+                typedef PrefixDefinitionsInfo PDI;
+
+                // Check whatever was already defined
+                if (Tree *existing = Bound(defined, LOCAL_LOOKUP))
+                {
+                    if (Block *block = existing->AsBlock())
+                    {
+                        // Append to last definition we had for that name
+                        if (PDI *info = block->GetInfo<PDI>())
+                        {
+                            // Extract definition for the name
+                            Infix *nameDef = new Infix("->", selector, value,
+                                                       selector->Position());
+                            Infix *last = info->last;
+                            Tree *previous = last ? last->right : block->child;
+                            Infix *cr = new Infix("\n", previous, nameDef,
+                                                  nameDef->Position());
+                            if (last)
+                                last->right = cr;
+                            else
+                                block->child = cr;
+                            info->last = cr;
+                        }
+                    }
+                }
+                else // Does not exist in current scope
+                {
+                    // First time we see this block here, just define it
+
+                    // Extract selector and build name definition
+                    Infix *nameDef = new Infix("->", selector, value,
+                                               selector->Position());
+                    Block *block = new Block(nameDef,
+                                             Block::indent, Block::unindent,
+                                             defined->Position());
+                    block->SetInfo<PDI>(new PDI());
+                    Define(defined, block);
+                }
+            } // Valid name (not operator)
+        } // Not a definition of a prefix
+    }
 
     return rewrite;
 }
@@ -455,10 +518,12 @@ ulong Context::Hash(Tree *what)
         t = ((Infix *) what)->name;
         break;
     case PREFIX:
-        h = Hash(((Prefix *) what)->left);
+        if (Name *name = ((Prefix *) what)->left->AsName())
+            h = Hash(name);
         break;
     case POSTFIX:
-        h = Hash(((Postfix *) what)->right);
+        if (Name *name = ((Postfix *) what)->right->AsName())
+            h = Hash(name);
         break;
     }
 
