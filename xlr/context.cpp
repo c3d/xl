@@ -120,7 +120,7 @@ Rewrite *Context::Define(Tree *form, Tree *value)
     if (Block *block = form->AsBlock())
         form = block->child;
 
-    // Check if we rewrite a constant. If so, remember it
+    // Check if we rewrite a constant. If so, remember that we rewrite them
     if (form->IsConstant())
         hasConstants = true;
 
@@ -380,6 +380,13 @@ Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
     {
         rewrite_table &rwt = context->rewrites;
         rewrite_table::iterator found = rwt.find(key);
+        if (found == rwt.end())
+        {
+            // Not found with exact key, check with kind alone
+            found = rwt.find(key & 0xF);
+            if (found == rwt.end())
+                found = rwt.find(0);
+        }
         if (found != rwt.end())
         {
             Rewrite *candidate = (*found).second;
@@ -516,6 +523,8 @@ ulong Context::Hash(Tree *what)
         break;
     case INFIX:
         t = ((Infix *) what)->name;
+        if (t == ":")
+            t = "";
         break;
     case PREFIX:
         if (Name *name = ((Prefix *) what)->left->AsName())

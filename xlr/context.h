@@ -310,7 +310,7 @@ struct PrefixDefinitionsInfo : Info
 // ----------------------------------------------------------------------------
 {
     PrefixDefinitionsInfo(): last(NULL) {}
-    Infix_p last;
+    Infix_p   last;
 };
 
 
