@@ -326,28 +326,28 @@ Rewrite *Context::DefineData(Tree *data)
 
 
 // Macro to lookup over all contexts
-#define FOR_CONTEXTS(context)                                   \
-{                                                               \
-    context_set  set;                                           \
-    context_list list;                                          \
-    context_list::iterator iter;                                \
-    if (lookup & IMPORTED_LOOKUP)                               \
-    {                                                           \
-        Contexts(lookup, set, list);                            \
-        iter = list.begin();                                    \
-    }                                                           \
-    Context *next = NULL;                                       \
-    for (Context *context = this; context; context = next)      \
+#define FOR_CONTEXTS(start, context)                                    \
+{                                                                       \
+    context_set  set;                                                   \
+    context_list list;                                                  \
+    context_list::iterator iter;                                        \
+    if (lookup & IMPORTED_LOOKUP)                                       \
+    {                                                                   \
+        Contexts(lookup, set, list);                                    \
+        iter = list.begin();                                            \
+    }                                                                   \
+    Context *nextContext = NULL;                                        \
+    for (Context *context = start; context; context = nextContext)      \
     {
 
-#define END_FOR_CONTEXTS                                \
-        if (lookup & IMPORTED_LOOKUP)                   \
-            next = iter == list.end() ? NULL : *iter++; \
-        else if (lookup & SCOPE_LOOKUP)                 \
-            next = context->scope;                      \
-        else if (lookup & STACK_LOOKUP)                 \
-            next = context->stack;                      \
-    }                                                   \
+#define END_FOR_CONTEXTS                                        \
+        if (lookup & IMPORTED_LOOKUP)                           \
+            nextContext = iter == list.end() ? NULL : *iter++;  \
+        else if (lookup & SCOPE_LOOKUP)                         \
+            nextContext = context->scope;                       \
+        else if (lookup & STACK_LOOKUP)                         \
+            nextContext = context->stack;                       \
+    }                                                           \
 }
         
 
@@ -373,7 +373,7 @@ Tree *Context::Assign(Tree *target, Tree *source, lookup_mode lookup)
         ulong key = Hash(name);
 
         // Loop over all contexts, searching for a pre-existing assignment
-        FOR_CONTEXTS(context)
+        FOR_CONTEXTS(this, context)
         {
             rewrite_table &rwt = context->rewrites;
             rewrite_table::iterator found = rwt.find(key);
@@ -489,7 +489,7 @@ Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
     ulong key = Hash(what);
 
     // Loop over all contexts
-    FOR_CONTEXTS(context)
+    FOR_CONTEXTS(this, context)
     {
         rewrite_table &rwt = context->rewrites;
         rewrite_table::iterator found = rwt.find(key);
@@ -950,7 +950,7 @@ Tree *Context::Bound(Name *name, lookup_mode lookup)
     ulong key = Hash(name);
 
     // Loop over all contexts
-    FOR_CONTEXTS(context)
+    FOR_CONTEXTS(this, context)
     {
         rewrite_table &rwt = context->rewrites;
         rewrite_table::iterator found = rwt.find(key);

@@ -1,10 +1,5 @@
-00.Parser/long_error_messages.xl
+02.Data/indexing.xl
 02.Data/write.xl
 03.Arithmetic/map-reduce-filter.xl
 03.Arithmetic/partial-functions.xl
 03.Arithmetic/range.xl
-05.Control/local_redeclaration.xl
-10.Serialization/serialize.xl
-20.Errors/type-checks.xl
-20.Errors/type-checks2.xl
-99.InProgress/lazy.xl
