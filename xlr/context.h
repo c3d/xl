@@ -235,8 +235,11 @@ struct Context
 
     // Rewriting things in the context
     Tree *              Evaluate(Tree *what, lookup_mode mode = NORMAL_LOOKUP);
-    Tree *              Evaluate(Tree *, tree_map &,
-                                 lookup_mode mode = NORMAL_LOOKUP);
+    Tree *              Evaluate(Tree *what,
+                                 tree_map &valueCache,
+                                 lookup_mode mode = NORMAL_LOOKUP,
+                                 Context **tailContext = NULL,
+                                 Tree **tailTree = NULL);
     Tree *              EvaluateBlock(Tree *child);
 
     // The hash code used in the rewrite table

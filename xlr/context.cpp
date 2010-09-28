@@ -435,8 +435,9 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
 // ----------------------------------------------------------------------------
 {
     // Process declarations and evaluate the rest
-    Tree *result = what;
-    Tree *instrs = ProcessDeclarations(what);
+    Tree    *result = what;
+    Tree    *instrs = ProcessDeclarations(what);
+    Context *eval   = this;
     if (instrs)
     {
         Tree *next = instrs;
@@ -447,22 +448,33 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
             {
                 what = seq->left;
                 next = seq->right;
+
+                tree_map empty;
+                result = eval->Evaluate(what, empty, lookup);
             }
             else
             {
                 what = next;
                 next = NULL;
+
+                // Opportunity for tail recursion
+                tree_map empty;
+                Tree    *tail   = NULL;
+                result = eval->Evaluate(what, empty, lookup, &eval, &tail);
+                if (tail)
+                    next = tail;
             }
-            
-            tree_map empty;
-            result = Evaluate(what, empty, lookup);
         }
     }
     return result;
 }
 
 
-Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
+Tree *Context::Evaluate(Tree *what,             // Value to evaluate
+                        tree_map &values,       // Cache of values
+                        lookup_mode lookup,     // Lookup mode
+                        Context **tailContext,  // Optional tail recursion ctxt
+                        Tree **tailTree)        // Optional tail recursion next
 // ----------------------------------------------------------------------------
 //   Check if something is in the cache, otherwise evaluate it
 // ----------------------------------------------------------------------------
@@ -545,7 +557,18 @@ Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
                         {
                             Tree *result = candidate->to;
                             if (result && result != candidate->from)
-                                result = Evaluate(result, lookup);
+                            {
+                                if (tailContext)
+                                {
+                                    *tailContext = this;
+                                    *tailTree = result;
+                                    return result;
+                                }
+                                else
+                                {
+                                    result = Evaluate(result, lookup);
+                                }
+                            }
                             values[what] = result;
                             return result;
                         }
@@ -558,9 +581,22 @@ Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
                         {
                             Tree *result = candidate->from;
                             if (Tree *to = candidate->to)
-                                result = eval->Evaluate(to,lookup);
+                            {
+                                if (tailContext)
+                                {
+                                    *tailContext = eval;
+                                    *tailTree = to;
+                                    return to;
+                                }
+                                else
+                                {
+                                    result = eval->Evaluate(to,lookup);
+                                }
+                            }
                             else
+                            {
                                 result = xl_evaluate_children(eval, result);
+                            }
                             values[what] = result;
                             return result;
                         }
@@ -602,8 +638,7 @@ Tree *Context::EvaluateBlock(Tree *what)
 // ----------------------------------------------------------------------------
 {
     Context *block = new Context(this, this);
-    tree_map cache;
-    what = block->Evaluate(what, cache);
+    what = block->Evaluate(what);
     return what;
 }
 
