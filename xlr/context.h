@@ -224,6 +224,9 @@ struct Context
         ANY_LOOKUP      = NORMAL_LOOKUP | STACK_LOOKUP
     };
 
+    // Process declarations for a given context, return non-declarations
+    Tree *              ProcessDeclarations(Tree *what);
+
     // Adding definitions to the context
     Rewrite *           Define(Tree *form, Tree *value);
     Rewrite *           DefineData(Tree *form);

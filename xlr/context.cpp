@@ -60,6 +60,86 @@ Context::~Context()
 {}
 
 
+Tree *Context::ProcessDeclarations(Tree *what)
+// ----------------------------------------------------------------------------
+//   Process all declarations, return instructions (non-declarations) or NULL
+// ----------------------------------------------------------------------------
+{
+    Tree_p  instrs = NULL;
+    Tree_p *instrP = &instrs;
+    Tree   *next   = NULL;
+
+    while (what)
+    {
+        Tree *instr = NULL;
+
+        if (Infix *infix = what->AsInfix())
+        {
+            if (infix->name == "\n")
+            {
+                // Chain of \n. Normally, we don't need to recurse,
+                // except if we have \n on the left of a \n (malformed list)
+                what = infix->left;
+                if (next)
+                    instr = ProcessDeclarations(what);
+                else
+                    next = infix->right;
+                continue;
+            }
+            else if (infix->name == "->")
+            {
+                Define(infix->left, infix->right);
+            }
+            else
+            {
+                // Other infix is an instruction
+                instr = what;
+            }
+        }
+        else if (Prefix *prefix = what->AsPrefix())
+        {
+            instr = what;
+            if (Name *pname = prefix->left->AsName())
+            {
+                if (pname->value == "data")
+                {
+                    DefineData(prefix->right);
+                    instr = NULL;
+                }
+            }
+        }
+        else
+        {
+            // Other cases are instructions
+            instr = what;
+        }
+
+        // Check if we had an instruction to append to the list
+        if (instr)
+        {
+            if (*instrP)
+            {
+                Infix *chain = new Infix("\n", *instrP, instr,
+                                         instr->Position());
+                *instrP = chain;
+                instrP = &chain->right;
+            }
+            else
+            {
+                *instrP = instr;
+            }
+        }
+
+        // Consider next in chain
+        what = next;
+        next = NULL;
+    }
+
+    return instrs;
+}
+
+
+
 static void ValidateNames(Tree *form)
 // ----------------------------------------------------------------------------
 //   Check that we have only valid names in the pattern
@@ -371,6 +451,12 @@ Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
         Ooops("Recursed too deep evaluating $1", what);
         return what;
     }
+
+    // Process declarations and evaluate the rest
+    Tree *instrs = ProcessDeclarations(what);
+    if (!instrs)
+        return what;
+    what = instrs;
 
     // Build the hash key for the tree to evaluate
     ulong key = Hash(what);
