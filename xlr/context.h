@@ -348,23 +348,6 @@ struct LocalSave
     T   saved;
 };
 
-
-
-// ============================================================================
-//
-//   Inline functions
-//
-// ============================================================================
-
-inline Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
-// ----------------------------------------------------------------------------
-//   Evaluate 'what' in the given context
-// ----------------------------------------------------------------------------
-{
-    tree_map empty;
-    return Evaluate(what, empty, lookup);
-}
-
 XL_END
 
 extern "C"

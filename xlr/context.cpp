@@ -429,6 +429,39 @@ Tree *Context::Assign(Tree *target, Tree *source, lookup_mode lookup)
 }
 
 
+Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
+// ----------------------------------------------------------------------------
+//   Evaluate 'what' in the given context
+// ----------------------------------------------------------------------------
+{
+    // Process declarations and evaluate the rest
+    Tree *result = what;
+    Tree *instrs = ProcessDeclarations(what);
+    if (instrs)
+    {
+        Tree *next = instrs;
+        while (next)
+        {
+            Infix *seq = next->AsInfix();
+            if (seq && (seq->name == "\n" || seq->name == ";"))
+            {
+                what = seq->left;
+                next = seq->right;
+            }
+            else
+            {
+                what = next;
+                next = NULL;
+            }
+            
+            tree_map empty;
+            result = Evaluate(what, empty, lookup);
+        }
+    }
+    return result;
+}
+
+
 Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
 // ----------------------------------------------------------------------------
 //   Check if something is in the cache, otherwise evaluate it
@@ -451,12 +484,6 @@ Tree *Context::Evaluate(Tree *what, tree_map &values, lookup_mode lookup)
         Ooops("Recursed too deep evaluating $1", what);
         return what;
     }
-
-    // Process declarations and evaluate the rest
-    Tree *instrs = ProcessDeclarations(what);
-    if (!instrs)
-        return what;
-    what = instrs;
 
     // Build the hash key for the tree to evaluate
     ulong key = Hash(what);
