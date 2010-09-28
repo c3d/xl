@@ -31,6 +31,7 @@ SUBDIRS="[0-9]*"
 XL=./xl
 SUCCESS=$TESTDIR/success.out
 FAILURE=$TESTDIR/failure.out
+EXPECTED=$TESTDIR/expected.out
 BASEFILE=$TESTDIR/baseline.txt
 PASS="pass"
 ONE_FAILED=
@@ -78,6 +79,7 @@ $LN ../builtins.xl .
 # Cleanup the test results
 echo Tests successfully run on $(date) on $HOSTNAME > $SUCCESS
 echo Failed tests on $(date) on $HOSTNAME > $FAILURE
+echo Expected test failures on $(date) on $HOSTNAME > $EXPECTED
 export XL
 
 # Clear the baseline if we are updating it
@@ -184,20 +186,31 @@ do
         fi
         rm -f $LOG
     else
-        echo "********************************************************************************" >> $FAILURE
-        echo "*** FAILED:" $TESTNAME: >> $FAILURE
-        echo "*** REASON:" $THIS_FAILED >> $FAILURE
-        echo "********************************************************************************" >> $FAILURE
-        cat $LOG >> $FAILURE
 
         if [ ! -z "$BASELINE" ]; then
             echo $TESTNAME >> $BASEFILE
             EXPECTED_FAILURES=$(($EXPECTED_FAILURES+1))
             echo 'Updated failure ('$THIS_FAILED')'
+            echo "*** FAILED (BASELINE):" $TESTNAME: >> $FAILURE
         elif grep -q "$TESTNAME" $BASEFILE; then
+            echo "--------------------------------------------------------------------------------" >> $EXPECTED
+            echo "|   FAILED:" $TESTNAME: >> $EXPECTED
+            echo "|   REASON:" $THIS_FAILED >> $EXPECTED
+            echo "--------------------------------------------------------------------------------" >> $EXPECTED
+            cat $LOG >> $EXPECTED
+            echo "" >> $EXPECTED
+
             EXPECTED_FAILURES=$(($EXPECTED_FAILURES+1))
             echo 'Expected failure ('$THIS_FAILED')'
+            echo "* FAILED (EXPECTED):" $TESTNAME: >> $FAILURE
         else
+            echo "********************************************************************************" >> $FAILURE
+            echo "**  FAILED:" $TESTNAME: >> $FAILURE
+            echo "**  REASON:" $THIS_FAILED >> $FAILURE
+            echo "********************************************************************************" >> $FAILURE
+            cat $LOG >> $FAILURE
+            echo "" >> $FAILURE
+
             echo '*** FAILURE ('$THIS_FAILED') ***'
             if [ -z "$THIS_KNOWN_FAILURE" ]; then
                 ONE_FAILED=1
