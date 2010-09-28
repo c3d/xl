@@ -460,9 +460,25 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                 // Opportunity for tail recursion
                 tree_map empty;
                 Tree    *tail   = NULL;
+                Context *old = eval;
                 result = eval->Evaluate(what, empty, lookup, &eval, &tail);
                 if (tail)
+                {
                     next = tail;
+
+                    // The following allows us to benefit from tail opt in
+                    // the common case where the called function is a block.
+                    // It is safe because we got a new evaluation context
+                    if (Block *block = tail->AsBlock())
+                    {
+                        if (block->IsIndent())
+                        {
+                            if (eval == old)
+                                eval = new Context(eval, eval);
+                            next = eval->ProcessDeclarations(block->child);
+                        }
+                    }
+                }
             }
         }
     }

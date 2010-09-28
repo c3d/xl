@@ -274,6 +274,10 @@ struct Block : Tree
     Block(Block *b, Tree *ch):
         Tree(BLOCK, b),
         child(ch), opening(b->opening), closing(b->closing) {}
+    bool IsIndent()     { return opening == indent && closing == unindent; }
+    bool IsParenthese() { return opening == "(" && closing == ")"; }
+    bool IsBraces()     { return opening == "{" && closing == "}"; }
+    bool IsSquare()     { return opening == "[" && closing == "]"; }
     Tree_p              child;
     text                opening, closing;
     static text         indent, unindent;
