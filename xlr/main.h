@@ -80,7 +80,7 @@ struct Main
     int         LoadFiles();
     int         LoadFile(text file, bool updateContext = false);
     SourceFile *NewFile(text path);
-    text        SearchFile(text input);
+    virtual text SearchFile(text input);
     int         Run();
     int         Diff();
     void        Log(Error &e)   { errors->Log(e); }

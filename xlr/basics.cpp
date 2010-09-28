@@ -70,4 +70,6 @@ void DeleteBasics()
 #include "basics.tbl"
 }
 
+void (*refresh_fn)(double delay) = NULL;
+
 XL_END

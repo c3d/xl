@@ -225,7 +225,6 @@ void Main::EvalContextFiles(source_names &ctxFiles)
 }
 
 
-#ifndef TAO
 text Main::SearchFile(text file)
 // ----------------------------------------------------------------------------
 //   Default is to use the file name directly
@@ -233,7 +232,6 @@ text Main::SearchFile(text file)
 {
     return file;
 }
-#endif // TAO
 
 
 int Main::LoadFile(text file, bool updateContext)
@@ -390,12 +388,12 @@ int Main::Run()
         }
         else
         {
-#ifdef TAO
+#ifdef LIBXLR
             if (options.verbose)
                 std::cout << "RESULT of " << sf.name << "\n" << result << "\n";
-#else // XLR without TAO
+#else
             std::cout << result << "\n";
-#endif // TAO
+#endif // LIBXLR
         }
 
         Symbols::symbols = globals;
@@ -428,7 +426,7 @@ int Main::Diff()
 XL_END
 
 
-#ifndef TAO
+#ifndef LIBXLR
 int main(int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Parse the command line and run the compiler phases
@@ -440,7 +438,7 @@ int main(int argc, char **argv)
 
     using namespace XL;
     source_names noSpecificContext;
-    Compiler compiler("xl_tao");
+    Compiler compiler("xl");
     Main main(argc, argv, &compiler);
     int rc = MAIN->LoadContextFiles(noSpecificContext);
     if (rc)
@@ -467,4 +465,4 @@ int main(int argc, char **argv)
     return rc;
 }
 
-#endif // TAO
+#endif // LIBXLR
