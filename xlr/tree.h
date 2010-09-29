@@ -275,7 +275,7 @@ struct Block : Tree
         Tree(BLOCK, b),
         child(ch), opening(b->opening), closing(b->closing) {}
     bool IsIndent()     { return opening == indent && closing == unindent; }
-    bool IsParenthese() { return opening == "(" && closing == ")"; }
+    bool IsParentheses(){ return opening == "(" && closing == ")"; }
     bool IsBraces()     { return opening == "{" && closing == "}"; }
     bool IsSquare()     { return opening == "[" && closing == "]"; }
     Tree_p              child;

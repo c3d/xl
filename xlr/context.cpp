@@ -471,7 +471,9 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                     // It is safe because we got a new evaluation context
                     if (Block *block = tail->AsBlock())
                     {
-                        if (block->IsIndent())
+                        if (block->IsIndent() ||
+                            block->IsParentheses() ||
+                            block->IsBraces())
                         {
                             if (eval == old)
                                 eval = new Context(eval, eval);
@@ -1055,6 +1057,9 @@ Tree *Context::CreateCode(Tree *value)
         return value;
     static Name_p closureName = new Name("<code>");
 
+    if (Name *name = value->AsName())
+        if (Tree *existing = Bound(name))
+            value = existing;
     if (Prefix *prefix = value->AsPrefix())
         if (Name *name = prefix->left->AsName())
             if (name->value == closureName->value)
@@ -1096,6 +1101,9 @@ Tree *Context::CreateLazy(Tree *value)
         return value;
     static Name_p closureName = new Name("<lazy>");
 
+    if (Name *name = value->AsName())
+        if (Tree *existing = Bound(name))
+            value = existing;
     if (Prefix *prefix = value->AsPrefix())
         if (Name *name = prefix->left->AsName())
             if (name->value == closureName->value)

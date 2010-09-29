@@ -18,7 +18,7 @@ INFIX
         240     and or xor
         250     in at
         251     of to
-        260     ..
+        260     .. step
         270     = < > <= >= <>
         280     & |
         290     + -

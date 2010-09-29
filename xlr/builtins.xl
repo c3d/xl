@@ -2,11 +2,14 @@
 N! -> N * (N-1)!
 
 // If-then-else statement
-if true then TrueBody else FalseBody -> do TrueBody
-if false then TrueBody else FalseBody -> do FalseBody
+if true then TrueBody else FalseBody    -> do TrueBody
+if false then TrueBody else FalseBody   -> do FalseBody
 
-if true then TrueBody -> do TrueBody
-if false then TrueBody -> false
+if true then TrueBody                   -> do TrueBody
+if false then TrueBody                  -> false
+
+// Loops
+loop Body:code                  -> Body; loop Body
 
 // Building lists, notably lists of arguments
 data x,y
@@ -14,7 +17,9 @@ first x,y -> x
 rest  x,y -> y
 first x   -> x
 rest  x   -> nil
+x, nil    -> x
+nil, x    -> x
 
 // Range of values
 data low..high
-
+data low..high step step
