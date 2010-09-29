@@ -28,7 +28,10 @@
 #include "tree.h"
 #include <map>
 #include <set>
+
+#if defined(LIBXLR) || defined(XLR)
 #include <llvm/Support/IRBuilder.h>
+#endif
 
 
 namespace llvm
@@ -45,6 +48,14 @@ namespace llvm
     class FunctionType;
     class BasicBlock;
     class Value;
+    class Function;
+    class GlobalValue;
+    class Type;
+#if defined(LIBXLR) || defined(XLR)
+    typedef IRBuilder<> * IRBuilder_p;
+#else
+    typedef void * IRBuilder_p;
+#endif
 };
 
 XL_BEGIN
@@ -187,8 +198,8 @@ public:
     llvm::LLVMContext * context;        // The context we got from compiler
     Tree_p              source;         // The original source we compile
 
-    llvm::IRBuilder<> * code;           // Instruction builder for code
-    llvm::IRBuilder<> * data;           // Instruction builder for data
+    llvm::IRBuilder_p   code;           // Instruction builder for code
+    llvm::IRBuilder_p   data;           // Instruction builder for data
     llvm::Function *    function;       // Function we generate
 
     llvm::BasicBlock *  allocabb;       // Function entry point, allocas

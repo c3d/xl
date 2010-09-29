@@ -53,7 +53,7 @@ LLVM_FLAGS=`llvm-config --cppflags | sed -e s/-DNDEBUG//g`
 LLVM_LIBS=`llvm-config --libs core jit native interpreter`
 LLVM_LDFLAGS=`llvm-config --ldflags`
 
-CPPFLAGS+=$(LLVM_FLAGS) -I.
+CPPFLAGS+=-DXLR $(LLVM_FLAGS) -I.
 LDFLAGS=-L/usr/local/lib $(LLVM_LIBS) $(LLVM_LDFLAGS)
 
 test: unit_tests xl_tests
