@@ -256,6 +256,8 @@ PREFIX(ErrorMsg1, tree, "error", PARM(m, text) PARM(a, source),
        return xl_error(m, &a), "")
 PREFIX(ErrorMsg0, tree, "error", PARM(m, text),
        return xl_error(m), "")
+PREFIX(ExitProgram, boolean, "exit", PARM(c, integer),
+       exit(XL_INT(c)); return xl_false, "")
 PREFIX(WriteTree, tree, "write", PARM(toWrite, tree),
        return xl_write(context->stack, &toWrite, ""), "")
 PREFIX(WriteLnTree, tree, "writeln", PARM(toWrite, tree),
