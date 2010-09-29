@@ -466,10 +466,20 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                 {
                     next = tail;
 
+                    // If we have some kind of closure, evaluate directly
+                    if (Prefix *prefix = next->AsPrefix())
+                    {
+                        if (Context *context = next->Get<ClosureInfo>())
+                        {
+                            next = prefix->right;
+                            eval = context;
+                        }
+                    }
+
                     // The following allows us to benefit from tail opt in
                     // the common case where the called function is a block.
                     // It is safe because we got a new evaluation context
-                    if (Block *block = tail->AsBlock())
+                    if (Block *block = next->AsBlock())
                     {
                         if (block->IsIndent() ||
                             block->IsParentheses() ||
