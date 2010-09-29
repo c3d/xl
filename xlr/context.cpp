@@ -443,9 +443,6 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
         Tree *next = instrs;
         while (next)
         {
-            if (MAIN->errors->Count())
-                return result;
-
             Infix *seq = next->AsInfix();
             if (seq && (seq->name == "\n" || seq->name == ";"))
             {
@@ -485,6 +482,10 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                     }
                 }
             }
+
+            // Check if we had an error. If so, abort right now
+            if (MAIN->errors->Count())
+                return result;
         }
     }
     return result;
@@ -502,8 +503,6 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
 {
     // Quick optimization for constants
     if (!hasConstants && what->IsConstant())
-        return what;
-    if (MAIN->errors->Count())
         return what;
 
     // Check if we already evaluated this
@@ -648,8 +647,9 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
     {
         static Name_p evaluationError = new Name("evaluation_error");
         LocalSave<bool> saveInError(inError, true);
+        tree_map emptyCache;
         Prefix *errorForm = new Prefix(evaluationError, what, what->Position());
-        what = Evaluate(errorForm);
+        what = Evaluate(errorForm, emptyCache);
     }
     return what;
 }
