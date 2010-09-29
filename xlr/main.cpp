@@ -73,7 +73,7 @@ SourceFile::SourceFile()
 {}
 
 
-Main::Main(int inArgc, char **inArgv, Compiler *comp,
+Main::Main(int inArgc, char **inArgv, text compilerName,
            text syntaxName, text styleSheetName, text builtinsName)
 // ----------------------------------------------------------------------------
 //   Initialization of the globals
@@ -84,7 +84,7 @@ Main::Main(int inArgc, char **inArgv, Compiler *comp,
       topLevelErrors(),
       syntax(syntaxName.c_str()),
       options(inArgc, inArgv),
-      compiler(comp),
+      compiler(new Compiler(compilerName.c_str())),
       globals(new Symbols(NULL)),
       renderer(std::cout, styleSheetName, syntax),
       reader(NULL), writer(NULL)
@@ -438,8 +438,7 @@ int main(int argc, char **argv)
 
     using namespace XL;
     source_names noSpecificContext;
-    Compiler compiler("xl");
-    Main main(argc, argv, &compiler);
+    Main main(argc, argv);
     int rc = MAIN->LoadContextFiles(noSpecificContext);
     if (rc)
     {

@@ -38,7 +38,7 @@
 
 
 #define INFIX(name, rtype, t1, symbol, t2, _code, doc)       \
-    xl_enter_infix_##name(c, compiler);
+    xl_enter_infix_##name(c, main);
 
 
 
@@ -62,7 +62,7 @@
     {                                                           \
         TreeList parameters;                                    \
         parms;                                                  \
-        xl_enter_prefix_##name(c, compiler, parameters);        \
+        xl_enter_prefix_##name(c, main, parameters);            \
     } while(0);
 
 
@@ -71,12 +71,12 @@
     {                                                           \
         TreeList  parameters;                                   \
         parms;                                                  \
-        xl_enter_postfix_##name(c, compiler, parameters);       \
+        xl_enter_postfix_##name(c, main, parameters);           \
     } while(0);
 
 
 #define BLOCK(name, rtype, open, type, close, _code, doc)    \
-    xl_enter_block_##name(c, compiler);
+    xl_enter_block_##name(c, main);
 
 
 #define NAME(symbol)                            \
@@ -87,7 +87,7 @@
         n->SetSymbols(c);                       \
         c->EnterName(#symbol, n);               \
         xl_##symbol = n;                        \
-        compiler->EnterGlobal(n, &xl_##symbol); \
+        xl_enter_global(main, n, &xl_##symbol); \
     } while (0);
 
 
@@ -101,7 +101,7 @@
         n->SetSymbols(c);                                               \
         c->EnterName(#symbol, n);                                       \
         symbol##_type = n;                                              \
-        compiler->EnterGlobal(n, &symbol##_type);                       \
+        xl_enter_global(main, n, &symbol##_type);                       \
                                                                         \
         /* Type as infix : evaluates to type check, e.g. 0 : integer */ \
         Infix *from = new Infix(":", new Name("V"), new Name(#symbol)); \
@@ -110,7 +110,7 @@
         eval_fn typeTestFn = (eval_fn) xl_##symbol##_cast;              \
         to->code = typeTestFn;                                          \
         to->SetSymbols(c);                                              \
-        compiler->EnterBuiltin(XL_SCOPE #symbol,                        \
+        xl_enter_builtin(main, XL_SCOPE #symbol,                        \
                                to, rw->parameters, typeTestFn);         \
                                                                         \
     } while(0);

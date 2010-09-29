@@ -46,7 +46,7 @@
     {                                                                   \
         DS(symbol) _code;                                               \
     }                                                                   \
-    static void xl_enter_infix_##name(Symbols *c, Compiler *compiler)   \
+    static void xl_enter_infix_##name(Symbols *c, Main *main)           \
     {                                                                   \
         Infix *ldecl = new Infix(":", new Name("l"), new Name(#t1));    \
         Infix *rdecl = new Infix(":", new Name("r"), new Name(#t2));    \
@@ -58,7 +58,7 @@
         to->code = fn;                                                  \
         to->SetSymbols(c);                                              \
         to->Set<TypeInfo> (rtype##_type);                               \
-        compiler->EnterBuiltin(XL_SCOPE #name,                          \
+        xl_enter_builtin(main, XL_SCOPE #name,                          \
                                to, rw->parameters, fn);                 \
     }
 
@@ -70,7 +70,7 @@
         DS(symbol) _code;                                               \
     }                                                                   \
     static void xl_enter_prefix_##name(Symbols *c,                      \
-                                       Compiler *compiler,              \
+                                       Main *main,                      \
                                        TreeList &parameters)            \
     {                                                                   \
         eval_fn fn = (eval_fn) xl_##name;                               \
@@ -84,7 +84,7 @@
             to->code = fn;                                              \
             to->SetSymbols(c);                                          \
             to->Set<TypeInfo> (rtype##_type);                           \
-            compiler->EnterBuiltin(XL_SCOPE #name,                      \
+            xl_enter_builtin(main, XL_SCOPE #name,                      \
                                    to, rw->parameters, fn);             \
         }                                                               \
         else                                                            \
@@ -96,7 +96,7 @@
             setDocumentation(n, doc);                                   \
             c->EnterName(symbol, n);                                    \
             TreeList noparms;                                           \
-            compiler->EnterBuiltin(XL_SCOPE #name, n, noparms, fn);     \
+            xl_enter_builtin(main, XL_SCOPE #name, n, noparms, fn);     \
         }                                                               \
     }
 
@@ -108,7 +108,7 @@
     }                                                                   \
                                                                         \
     static void xl_enter_postfix_##name(Symbols *c,                     \
-                                        Compiler *compiler,             \
+                                        Main *main,                     \
                                         TreeList &parameters)           \
     {                                                                   \
         Tree *parmtree = ParametersTree(parameters);                    \
@@ -120,7 +120,7 @@
         to->code = fn;                                                  \
         to->SetSymbols(c);                                              \
         to->Set<TypeInfo> (rtype##_type);                               \
-        compiler->EnterBuiltin(XL_SCOPE #name,                          \
+        xl_enter_builtin(main, XL_SCOPE #name,                          \
                                to, rw->parameters, to->code);           \
     }
 
@@ -130,7 +130,7 @@
     {                                                                   \
         DS(symbol) _code;                                               \
     }                                                                   \
-    static void xl_enter_block_##name(Symbols *c, Compiler *compiler)   \
+    static void xl_enter_block_##name(Symbols *c, Main *main)           \
     {                                                                   \
         Infix *parms = new Infix(":", new Name("V"), new Name(#type));  \
         Block *from = new Block(parms, open, close);                    \
@@ -141,7 +141,7 @@
         to->code = fn;                                                  \
         to->SetSymbols(c);                                              \
         to->Set<TypeInfo> (rtype##_type);                               \
-        compiler->EnterBuiltin(XL_SCOPE #name, to,                      \
+        xl_enter_builtin(main, XL_SCOPE #name, to,                      \
                                rw->parameters, to->code);               \
     }
 

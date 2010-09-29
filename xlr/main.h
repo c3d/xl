@@ -32,7 +32,6 @@
 #include "errors.h"
 #include "syntax.h"
 #include "context.h"
-#include "compiler.h"
 #include "options.h"
 #include <map>
 #include <time.h>
@@ -42,6 +41,7 @@ XL_BEGIN
 
 struct Serializer;
 struct Deserializer;
+struct Compiler;
 
 
 struct SourceFile
@@ -68,7 +68,8 @@ struct Main
 //    The main entry point and associated data
 // ----------------------------------------------------------------------------
 {
-    Main(int argc, char **argv, Compiler *comp,
+    Main(int argc, char **argv,
+         text compiler_name = "xl",
          text syntax = "xl.syntax",
          text style = "xl.stylesheet",
          text builtins = "builtins.xl");
