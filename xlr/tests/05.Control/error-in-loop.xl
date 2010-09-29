@@ -1,0 +1,7 @@
+// Test that we can have an error within a loop and will exit it
+// CMD=%x -stack 50 %f
+// EXIT=1
+X := 0
+loop
+    writeln "Hello", (X := X + 1)
+    if X >= 100 then error "Ooops, done, aborting!"

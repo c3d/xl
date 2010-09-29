@@ -443,6 +443,9 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
         Tree *next = instrs;
         while (next)
         {
+            if (MAIN->errors->Count())
+                return result;
+
             Infix *seq = next->AsInfix();
             if (seq && (seq->name == "\n" || seq->name == ";"))
             {
@@ -499,6 +502,8 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
 {
     // Quick optimization for constants
     if (!hasConstants && what->IsConstant())
+        return what;
+    if (MAIN->errors->Count())
         return what;
 
     // Check if we already evaluated this
