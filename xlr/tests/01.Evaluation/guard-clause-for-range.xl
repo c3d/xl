@@ -1,0 +1,6 @@
+a..b when a > b -> nil
+a..b when a = b -> a
+a..b when a < b -> a, a+1..b
+
+writeln "List = ", 1..5
+

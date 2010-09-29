@@ -209,7 +209,7 @@ Rewrite *Context::Define(Tree *form, Tree *value)
 
     // Create a rewrite
     Rewrite *rewrite = new Rewrite(form, value);
-    ulong key = Hash(form);
+    ulong key = HashForm(form);
 
     // Walk through existing rewrites
     Rewrite_p *parent = &rewrites[key]; 
@@ -273,7 +273,7 @@ Rewrite *Context::Define(Tree *form, Tree *value)
                 typedef PrefixDefinitionsInfo PDI;
 
                 // Check whatever was already defined
-                if (Tree *existing = Bound(defined, LOCAL_LOOKUP))
+                if (Tree *existing = Bound(defined))
                 {
                     if (Block *block = existing->AsBlock())
                     {
@@ -533,7 +533,7 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
             Rewrite *candidate = (*found).second;
             while (candidate)
             {
-                ulong formKey = Hash(candidate->from);
+                ulong formKey = HashForm(candidate->from);
                 if (formKey == key)
                 {
                     IFTRACE(eval)
@@ -656,6 +656,21 @@ Tree *Context::EvaluateBlock(Tree *what)
     Context *block = new Context(this, this);
     what = block->Evaluate(what);
     return what;
+}
+
+
+ulong Context::HashForm(Tree *form)
+// ----------------------------------------------------------------------------
+//   Eliminate the "when" clauses from the form
+// ----------------------------------------------------------------------------
+{
+    // Check if we have a guard
+    while (Infix *infix = form->AsInfix())
+        if (infix->name == "when")
+            form = infix->left;
+        else
+            break;
+    return Hash(form);
 }
 
 

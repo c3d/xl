@@ -244,6 +244,7 @@ struct Context
 
     // The hash code used in the rewrite table
     static ulong        Hash(Tree *input);
+    static ulong        HashForm(Tree *input);
 
     // Bind parameters in context based on arguments in form
     bool                Bind(Tree *form, Tree *value, tree_map &values,
