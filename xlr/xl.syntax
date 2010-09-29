@@ -1,11 +1,11 @@
 INFIX
         11      NEWLINE
-        21      ;
         25      ->
         30      loop
         35      else into
         40      then require ensure
-        41      with
+        41      ;
+        45      with
         100     STATEMENT
         110     is as  while until
         120     written

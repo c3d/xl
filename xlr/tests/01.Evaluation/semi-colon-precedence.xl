@@ -1,0 +1,7 @@
+foo x -> write "x="; write x; writeln "..."
+bar x -> if x < 0 then writeln "Negative: "; foo x else writeln "Positive: "; foo -x
+
+foo 3
+bar -5
+bar 7
+
