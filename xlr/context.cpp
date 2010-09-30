@@ -710,6 +710,26 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
     }
     END_FOR_CONTEXTS;
 
+    // If we are unable to find the right form, check standard prefix forms
+    if (Prefix *prefix = what->AsPrefix())
+    {
+        // First scenario: a prefix with a bound name (bug #458)
+        if (Name *name = prefix->left->AsName())
+        {
+            if (Tree *existing = Bound(name))
+            {
+                // Try again with the bound form
+                Errors errors;
+                Prefix *bpfx = new Prefix(prefix, existing, prefix->right);
+                Tree *rslt = Evaluate(bpfx,values,lookup,tailContext,tailTree);
+
+                // If we had error, keep the original message (clearer)
+                if (!errors.Swallowed())
+                    return rslt;
+            }
+        }
+    }
+
     // Error case - Raise an error
     static bool inError = false;
     if (lookup & AVOID_ERRORS)
