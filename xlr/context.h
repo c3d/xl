@@ -228,10 +228,12 @@ struct Context
     Tree *              ProcessDeclarations(Tree *what);
 
     // Adding definitions to the context
-    Rewrite *           Define(Tree *form, Tree *value);
+    Rewrite *           Define(Tree *form, Tree *value, Tree *type = NULL);
     Rewrite *           DefineData(Tree *form);
     Tree *              Assign(Tree *target, Tree *source,
                                lookup_mode mode = SCOPE_LOOKUP);
+    Tree *              AssignTree(Tree *target, Tree *source, Tree *type,
+                                   lookup_mode mode = SCOPE_LOOKUP);
 
     // Rewriting things in the context
     Tree *              Evaluate(Tree *what, lookup_mode mode = NORMAL_LOOKUP);
@@ -286,7 +288,8 @@ struct Rewrite
 // ----------------------------------------------------------------------------
 //   Note that a rewrite with 'to' = NULL is used for 'data' statements
 {
-    Rewrite (Tree *f, Tree *t): from(f), to(t), hash(), native(NULL) {}
+    Rewrite (Tree *f, Tree *t, Tree *tp):
+        from(f), to(t), hash(), native(NULL), type(tp) {}
     ~Rewrite() {}
 
 public:
@@ -294,6 +297,7 @@ public:
     Tree_p              to;
     rewrite_table       hash;
     native_fn           native;
+    Tree_p              type;
 
     GARBAGE_COLLECT(Rewrite);
 };

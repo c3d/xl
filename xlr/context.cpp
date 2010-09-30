@@ -191,7 +191,7 @@ static void ValidateNames(Tree *form)
 }
 
 
-Rewrite *Context::Define(Tree *form, Tree *value)
+Rewrite *Context::Define(Tree *form, Tree *value, Tree *type)
 // ----------------------------------------------------------------------------
 //   Enter a rewrite in the context
 // ----------------------------------------------------------------------------
@@ -208,7 +208,7 @@ Rewrite *Context::Define(Tree *form, Tree *value)
     ValidateNames(form);
 
     // Create a rewrite
-    Rewrite *rewrite = new Rewrite(form, value);
+    Rewrite *rewrite = new Rewrite(form, value, type);
     ulong key = HashForm(form);
 
     // Walk through existing rewrites
@@ -359,6 +359,20 @@ Tree *Context::Assign(Tree *target, Tree *source, lookup_mode lookup)
 {
     Tree *value = Evaluate(source);
 
+    // Check if we have a typed assignment
+    Tree *type = NULL;
+    if (Infix *infix = target->AsInfix())
+    {
+        if (infix->name == ":")
+        {
+            if (Name *tname = infix->left->AsName())
+            {
+                type = Evaluate(infix->right);
+                target = tname;
+            }
+        }
+    }
+
     // If the target is not a name, evaluate it
     if (target->Kind() != NAME)
     {
@@ -366,9 +380,21 @@ Tree *Context::Assign(Tree *target, Tree *source, lookup_mode lookup)
         if (target->Kind() != NAME)
             Ooops("Assignment target $1 is not a name", target);
     }
+    return AssignTree(target, value, type, lookup);
+}
 
+
+Tree *Context::AssignTree(Tree *target, Tree *value, Tree *type,
+                          lookup_mode lookup)
+// ----------------------------------------------------------------------------
+//   Perform an assignment in the given context
+// ----------------------------------------------------------------------------
+{
     if (Name *name = target->AsName())
     {
+        // Check that we have only "real" names assigned to
+        ValidateNames(name);
+
         // Build the hash key for the tree to evaluate
         ulong key = Hash(name);
 
@@ -382,37 +408,64 @@ Tree *Context::Assign(Tree *target, Tree *source, lookup_mode lookup)
                 Rewrite *candidate = (*found).second;
                 while (candidate)
                 {
-                    if (Name *from = candidate->from->AsName())
+                    // Check if this is a redefinition for the given name
+                    Name *from = candidate->from->AsName();
+                    if (from && from->value == name->value)
                     {
-                        if (name->value == from->value)
+                        if (candidate->native == xl_assigned_value)
                         {
-                            if (candidate->native == xl_assigned_value)
+                            // This was an assigned value, replace it
+                            Tree *ctype = candidate->type;
+                            if (type)
                             {
-                                // This was an assigned value, replace it
-                                candidate->to = value;
-                                return value;
+                                Ooops("Variable $1 already exists", name);
+                                Ooops("Declared as $1", from);
                             }
-
-                            // Can't assign if this already existed
-                            Ooops("Assigning to $1", name);
-                            Ooops("previously defined as $1", from);
+                            if (!ctype ||
+                                ValueMatchesType(this, ctype, value, true))
+                            {
+                                // Type compatibility checked: assign value
+                                candidate->to = value;
+                            }
+                            else
+                            {
+                                Ooops("Value $1 is not compatible", value);
+                                Ooops("with type $2 of $1",
+                                      candidate->from, candidate->type);
+                            }
                             return value;
                         }
+                        if (candidate->type == name_type)
+                            if (Name *tname = candidate->to->AsName())
+                                return context->AssignTree(tname, value, type,
+                                                           lookup);
+                        
+                        // Can't assign if this already existed
+                        Ooops("Assigning to $1", name);
+                        Ooops("previously defined as $1", from);
+                        return value;
                     }
                     
                     rewrite_table &rwh = candidate->hash;
                     found = rwh.find(key);
                     candidate = found == rwh.end() ? NULL : (*found).second;
                 }
-            } 
+            }
+
+            // If a type was specified, create variable in inner context
+            if (type)
+                break;
         }
         END_FOR_CONTEXTS;
 
-        // Check that we have only names in the pattern
-        ValidateNames(name);
+        if (type && !ValueMatchesType(this, type, value, true))
+        {
+            Ooops("Value $1 is not compatible", value);
+            Ooops("with declared type $1", type);
+        }
 
         // Create a rewrite
-        Rewrite *rewrite = new Rewrite(name, value);
+        Rewrite *rewrite = new Rewrite(name, value, type);
 
         // Walk through existing rewrites (we already checked for redefinitions)
         Rewrite_p *parent = &rewrites[key]; 
@@ -873,10 +926,21 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
                     return false;
 
                 // Evaluate the value and match its type if the type is not tree
-                if (type == source_type)
+                if (type == source_type || type == symbol_type ||
+                    type == operator_type || type == name_type)
                 {
-                    // No evaluation at all
-                    type = tree_type;
+                    // Test if we have the right type
+                    if (type != source_type)
+                    {
+                        value = ValueMatchesType(this, type, value, true);
+                        if (!value)
+                            return false;
+                    }
+                    else
+                    {
+                        // No evaluation at all
+                        type = tree_type;
+                    }
                 }
                 else if (type == tree_type)
                 {

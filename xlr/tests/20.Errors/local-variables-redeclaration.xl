@@ -1,0 +1,3 @@
+// EXIT=1
+X : integer := 5
+X : integer := 3
