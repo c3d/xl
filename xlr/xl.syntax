@@ -1,13 +1,13 @@
 INFIX
         11      NEWLINE
         25      ->
-        30      loop
         35      else into
         40      then require ensure
         41      ;
         45      with
+        90      loop while until
         100     STATEMENT
-        110     is as  while until
+        110     is as 
         120     written
         130     where
         200     DEFAULT
@@ -29,8 +29,8 @@ INFIX
 
 PREFIX
         30      data
-        120     exit loop
-        125     case if return while until yield transform
+        92      loop while until
+        125     case if return yield transform
         320     not in out constant variable const var
         340     @ 
         380     ! ~

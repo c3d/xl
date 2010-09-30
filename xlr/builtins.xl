@@ -18,6 +18,14 @@ until Cond:code loop Body:code  ->
     if not Cond then
         Body
         until Cond loop Body
+loop Body:code while Cond:code  ->
+    Body
+    if Cond then
+        loop Body while Cond
+loop Body:code until Cond:code  ->
+    Body
+    if not Cond then
+        loop Body until Cond
 for I:name in Low:integer..High:integer loop Body:code ->
     I := Low
     while I <= High loop
