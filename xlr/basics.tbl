@@ -222,6 +222,8 @@ PREFIX(ParseTree, tree, "parse_tree", PARM(c, source),
        if (Block *block = code->AsBlock())
            code = block->child;
        return xl_parse_tree(context->stack, code), "")
+PREFIX(BoundValue, tree, "bound", PARM(n, name),
+       return xl_bound(context->stack, &n), "")
 PREFIX(LoadFile, tree, "load", PARM(file, text),
        return xl_load(context->stack, file), "")
 PREFIX(ImportFile, tree, "import", PARM(file, text),

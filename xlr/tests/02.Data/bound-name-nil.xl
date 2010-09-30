@@ -1,0 +1,6 @@
+foo X:source ->
+    bound Y
+
+foo
+    writeln "Hello"
+    writeln "World"

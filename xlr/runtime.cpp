@@ -245,6 +245,17 @@ Tree *xl_parse_tree(Context *context, Tree *tree)
 }
 
 
+Tree *xl_bound(Context *context, Name *name)
+// ----------------------------------------------------------------------------
+//   Return the bound value for a name or nil
+// ----------------------------------------------------------------------------
+{
+    if (Tree *bound = context->Bound(name))
+        return bound;
+    return XL::xl_nil;
+}
+
+
 bool xl_same_text(Tree *what, const char *ref)
 // ----------------------------------------------------------------------------
 //   Compile the tree if necessary, then evaluate it

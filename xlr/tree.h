@@ -938,6 +938,7 @@ struct RewriteKey : Action
 extern text     sha1(Tree *t);
 extern Name_p   xl_true;
 extern Name_p   xl_false;
+extern Name_p   xl_nil;
 
 
 typedef long node_id;              // A node identifier
