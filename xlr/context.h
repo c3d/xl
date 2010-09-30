@@ -240,8 +240,8 @@ struct Context
     Tree *              Evaluate(Tree *what,
                                  tree_map &valueCache,
                                  lookup_mode mode = NORMAL_LOOKUP,
-                                 Context **tailContext = NULL,
-                                 Tree **tailTree = NULL);
+                                 Context_p *tailContext = NULL,
+                                 Tree_p *tailTree = NULL);
     Tree *              EvaluateBlock(Tree *child);
 
     // The hash code used in the rewrite table

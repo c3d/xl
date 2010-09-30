@@ -336,8 +336,8 @@ Rewrite *Context::DefineData(Tree *data)
         Contexts(lookup, set, list);                                    \
         iter = list.begin();                                            \
     }                                                                   \
-    Context *nextContext = NULL;                                        \
-    for (Context *context = start; context; context = nextContext)      \
+    Context_p nextContext = NULL;                                       \
+    for (Context_p context = start; context; context = nextContext)     \
     {
 
 #define END_FOR_CONTEXTS                                        \
@@ -495,12 +495,12 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
 // ----------------------------------------------------------------------------
 {
     // Process declarations and evaluate the rest
-    Tree    *result = what;
-    Tree    *instrs = ProcessDeclarations(what);
-    Context *eval   = this;
+    Tree_p   result = what;
+    Tree_p   instrs = ProcessDeclarations(what);
+    Context_p eval   = this;
     if (instrs)
     {
-        Tree *next = instrs;
+        Tree_p next = instrs;
         while (next)
         {
             Infix *seq = next->AsInfix();
@@ -519,7 +519,7 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
 
                 // Opportunity for tail recursion
                 tree_map empty;
-                Tree    *tail   = NULL;
+                Tree_p   tail   = NULL;
                 Context *old = eval;
                 result = eval->Evaluate(what, empty, lookup, &eval, &tail);
                 if (tail)
@@ -558,6 +558,9 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                 return result;
         }
     }
+
+    GarbageCollector::Collect();
+
     return result;
 }
 
@@ -565,8 +568,8 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
 Tree *Context::Evaluate(Tree *what,             // Value to evaluate
                         tree_map &values,       // Cache of values
                         lookup_mode lookup,     // Lookup mode
-                        Context **tailContext,  // Optional tail recursion ctxt
-                        Tree **tailTree)        // Optional tail recursion next
+                        Context_p *tailContext,  // Optional tail recursion ctxt
+                        Tree_p *tailTree)        // Optional tail recursion next
 // ----------------------------------------------------------------------------
 //   Check if something is in the cache, otherwise evaluate it
 // ----------------------------------------------------------------------------
