@@ -44,3 +44,16 @@ nil, x    -> x
 // Range of values
 data low..high
 data low..high step step
+
+// In-place arithmetic
+X:name += Y:value -> X := X + Y
+X:name -= Y:value -> X := X - Y
+X:name *= Y:value -> X := X * Y
+X:name /= Y:value -> X := X / Y
+++X:name -> X += 1
+--X:name -> X -= 1
+
+
+
+
+

@@ -1,0 +1,9 @@
+X := 3
+loop writeln "X1=", ++X while X < 5
+loop writeln "X2=", (X += 1) while X < 10
+loop writeln "X3=", (X *= 2) while X < 120
+loop writeln "X4=", (X -= 5) while X > 100
+loop writeln "X4=", (X /= 3) while X > 5
+loop writeln "X5=", ++X while X < 15
+loop writeln "X6=", --X until X < 5
+

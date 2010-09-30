@@ -37,10 +37,12 @@ PREFIX
         390     - + * /
         401     FUNCTION
         410     function procedure to type iterator
+        420     ++ --
         500     &
 
 POSTFIX
         400     ! ? % cm inch mm pt px
+        420     ++ --
 BLOCK
         5       INDENT UNINDENT
         21      '{' '}'
