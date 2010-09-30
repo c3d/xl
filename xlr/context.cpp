@@ -412,10 +412,12 @@ Tree *Context::AssignTree(Tree *target, Tree *value, Tree *type,
                     Name *from = candidate->from->AsName();
                     if (from && from->value == name->value)
                     {
+                        Tree *ctype = candidate->type;
+
+                        // Check if this is a value that was assigned to
                         if (candidate->native == xl_assigned_value)
                         {
                             // This was an assigned value, replace it
-                            Tree *ctype = candidate->type;
                             if (type)
                             {
                                 Ooops("Variable $1 already exists", name);
@@ -430,15 +432,20 @@ Tree *Context::AssignTree(Tree *target, Tree *value, Tree *type,
                             else
                             {
                                 Ooops("Value $1 is not compatible", value);
-                                Ooops("with type $2 of $1",
-                                      candidate->from, candidate->type);
+                                Ooops("with type $2 of $1", from, ctype);
                             }
                             return value;
                         }
-                        if (candidate->type == name_type)
+
+                        // Otherwise, check if this is a bound name
+                        if (ctype == name_type)
+                        {
                             if (Name *tname = candidate->to->AsName())
-                                return context->AssignTree(tname, value, type,
-                                                           lookup);
+                            {
+                                Context *st = context->stack;
+                                return st->AssignTree(tname,value,type,lookup);
+                            }
+                        }
                         
                         // Can't assign if this already existed
                         Ooops("Assigning to $1", name);
@@ -643,15 +650,22 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
                             Tree *result = candidate->to;
                             if (result && result != candidate->from)
                             {
+                                // In general, we evaluate names in the current
+                                // context, except when looking at name aliases
+                                Context *eval =
+                                    candidate->type == name_type
+                                    ? (Context *) context->stack
+                                    : this;
+
                                 if (tailContext)
                                 {
-                                    *tailContext = this;
+                                    *tailContext = eval;
                                     *tailTree = result;
                                     return result;
                                 }
                                 else
                                 {
-                                    result = Evaluate(result, lookup);
+                                    result = eval->Evaluate(result, lookup);
                                 }
                             }
                             values[what] = result;
@@ -976,7 +990,7 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
                 if (args)
                     args->push_back(value);
                 else
-                    Define(name, value);
+                    Define(name, value, type);
                 return true;
             } // We have a name on the left
         } // We have an infix :

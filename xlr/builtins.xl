@@ -18,6 +18,11 @@ until Cond:code loop Body:code  ->
     if not Cond then
         Body
         until Cond loop Body
+for I:name in Low:integer..High:integer loop Body:code ->
+    I := Low
+    while I <= High loop
+        Body
+        I := I + 1
 
 // Building lists, notably lists of arguments
 data x,y
