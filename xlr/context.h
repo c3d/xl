@@ -260,6 +260,7 @@ struct Context
     Tree *              EvaluateCode(Tree *closure, Tree *value);
     Tree *              CreateLazy(Tree *value);
     Tree *              EvaluateLazy(Tree *closure, Tree *value);
+    Tree *              ClosureValue(Tree *input);
 
     // List rewrites of a given type
     void                ListNames(text begin, rewrite_list &list,

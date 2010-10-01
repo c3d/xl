@@ -1270,6 +1270,25 @@ Tree *Context::EvaluateLazy(Tree *closure, Tree *value)
 }
 
 
+Tree *Context::ClosureValue(Tree *value)
+// ----------------------------------------------------------------------------
+//   If a value is a closure, return its value
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *prefix = value->AsPrefix())
+    {
+        if (Name *name = prefix->left->AsName())
+        {
+            text n = name->value;
+            if (n == "<code>" || n == "<lazy>" || n == "<value>")
+                if (prefix->Get<ClosureInfo>())
+                    return prefix->right;
+        }
+    }
+    return NULL;
+}
+
+
 static void ListNameRewrites(rewrite_table &table,
                              text prefix,
                              rewrite_list &list)
