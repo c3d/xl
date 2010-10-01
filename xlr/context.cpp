@@ -550,7 +550,11 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                             next = eval->ProcessDeclarations(block->child);
                         }
                     }
-                }
+
+                    // If we are here, pop execution stack back at this level
+                    eval->stack = this;
+                    
+                } // if(tail)
             }
 
             // Check if we had an error. If so, abort right now
