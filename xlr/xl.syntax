@@ -1,52 +1,52 @@
 INFIX
         11      NEWLINE
-        25      ->
-        35      else into
-        40      then require ensure
-        41      ;
-        45      with
-        90      loop while until
+        21      ->
+        31      else into
+        40      loop while until
+        50      then require ensure
+        61      ;
+        75      with
         100     STATEMENT
         110     is as 
         120     written
         130     where
         200     DEFAULT
-        205     when
-        211     := += -= *= /= ^= |= &=
-        221     ,
-        230     return 
-        240     and or xor
-        250     in at
-        251     of to
-        260     .. step
-        270     = < > <= >= <>
-        280     & |
-        290     + -
-        300     * / mod rem
-        395     ^
-        510     .
-        520     :
+        211     when
+        221     := += -= *= /= ^= |= &=
+        231     ,
+        240     return 
+        250     and or xor
+        260     in at
+        271     of to
+        280     .. step
+        290     = < > <= >= <>
+        300     & |
+        310     + -
+        320     * / mod rem
+        331     ^
+        500     .
+        600     :
 
 PREFIX
         30      data
-        92      loop while until
-        125     case if return yield transform
-        320     not in out constant variable const var
-        340     @ 
-        380     ! ~
-        390     - + * /
+        40      loop while until
+        121     case if return yield transform
+        350     not in out constant variable const var
+        360     ! ~
+        370     - + * /
         401     FUNCTION
         410     function procedure to type iterator
         420     ++ --
-        500     &
+        430     &
 
 POSTFIX
         400     ! ? % cm inch mm pt px
         420     ++ --
+
 BLOCK
         5       INDENT UNINDENT
-        21      '{' '}'
-        400     '(' ')' '[' ']'
+        25      '{' '}'
+        500     '(' ')' '[' ']'
 
 TEXT
         "<<" ">>"
