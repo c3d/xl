@@ -67,11 +67,11 @@ Tree *Context::ProcessDeclarations(Tree *what)
 {
     Tree_p  instrs = NULL;
     Tree_p *instrP = &instrs;
-    Tree   *next   = NULL;
+    Tree_p  next   = NULL;
 
     while (what)
     {
-        Tree *instr = NULL;
+        Tree_p instr = NULL;
 
         if (Infix *infix = what->AsInfix())
         {
@@ -352,15 +352,17 @@ Rewrite *Context::DefineData(Tree *data)
         
 
 
-Tree *Context::Assign(Tree *target, Tree *source, lookup_mode lookup)
+Tree *Context::Assign(Tree *tgt, Tree *src, lookup_mode lookup)
 // ----------------------------------------------------------------------------
 //   Perform an assignment in the given context
 // ----------------------------------------------------------------------------
 {
-    Tree *value = Evaluate(source);
+    Tree_p target = tgt;
+    Tree_p source = src;
+    Tree_p value = Evaluate(src);
 
     // Check if we have a typed assignment
-    Tree *type = NULL;
+    Tree_p type = NULL;
     if (Infix *infix = target->AsInfix())
     {
         if (infix->name == ":")
@@ -384,13 +386,16 @@ Tree *Context::Assign(Tree *target, Tree *source, lookup_mode lookup)
 }
 
 
-Tree *Context::AssignTree(Tree *target, Tree *value, Tree *type,
+Tree *Context::AssignTree(Tree *tgt, Tree *val, Tree *tp,
                           lookup_mode lookup)
 // ----------------------------------------------------------------------------
 //   Perform an assignment in the given context
 // ----------------------------------------------------------------------------
 {
-    if (Name *name = target->AsName())
+    Tree_p target = tgt;
+    Tree_p value  = val;
+    Tree_p type   = tp;
+    if (Name *name = tgt->AsName())
     {
         // Check that we have only "real" names assigned to
         ValidateNames(name);
@@ -600,6 +605,7 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
     ulong key = Hash(what);
 
     // Loop over all contexts
+    Tree_p saveWhatFromGC = what;
     FOR_CONTEXTS(this, context)
     {
         rewrite_table &rwt = context->rewrites;
@@ -634,7 +640,7 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
 
                         // Bind native context
                         TreeList args;
-                        Context *eval = new Context(context, this);
+                        Context_p eval = new Context(context, this);
                         if (eval->Bind(candidate->from, what, values, &args))
                         {
                             uint arity = args.size();
@@ -654,12 +660,12 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
                         assert(vname || !"Hash function is broken");
                         if (name->value == vname->value)
                         {
-                            Tree *result = candidate->to;
+                            Tree*result = candidate->to;
                             if (result && result != candidate->from)
                             {
                                 // In general, we evaluate names in the current
                                 // context, except when looking at name aliases
-                                Context *eval =
+                                Context_p eval =
                                     candidate->type == name_type
                                     ? (Context *) context->stack
                                     : this;
@@ -682,7 +688,7 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
                     else
                     {
                         // Keep evaluating
-                        Context *eval = new Context(context, this);
+                        Context_p eval = new Context(context, this);
                         if (eval->Bind(candidate->from, what, values))
                         {
                             Tree *result = candidate->from;
@@ -727,7 +733,7 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
             {
                 // Try again with the bound form
                 Errors errors;
-                Prefix *bpfx = new Prefix(prefix, existing, prefix->right);
+                Prefix_p bpfx = new Prefix(prefix, existing, prefix->right);
                 Tree *rslt = Evaluate(bpfx,values,lookup,tailContext,tailTree);
 
                 // If we had error, keep the original message (clearer)
@@ -752,7 +758,7 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
         static Name_p evaluationError = new Name("evaluation_error");
         LocalSave<bool> saveInError(inError, true);
         tree_map emptyCache;
-        Prefix *errorForm = new Prefix(evaluationError, what, what->Position());
+        Prefix_p errorForm = new Prefix(evaluationError,what,what->Position());
         what = Evaluate(errorForm, emptyCache);
     }
     return what;
@@ -764,9 +770,10 @@ Tree *Context::EvaluateBlock(Tree *what)
 //   Create a new inner scope for evaluating the value
 // ----------------------------------------------------------------------------
 {
-    Context *block = new Context(this, this);
-    what = block->Evaluate(what);
-    return what;
+    Tree_p result = what;
+    Context_p block = new Context(this, this);
+    result = block->Evaluate(result);
+    return result;
 }
 
 
@@ -839,20 +846,23 @@ ulong Context::Hash(Tree *what)
 }
 
 
-bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
+bool Context::Bind(Tree *formTree, Tree *valueTree,
+                   tree_map &cache, TreeList *args)
 // ----------------------------------------------------------------------------
 //   Test if we can match arguments to values
 // ----------------------------------------------------------------------------
 {
-    kind k = form->Kind();
-    Context *eval = stack;      // Evaluate in caller's stack
+    Tree_p form = formTree;
+    Tree_p value = valueTree;
+    kind k = formTree->Kind();
+    Context_p eval = stack; // Evaluate in caller's stack
     Errors errors;
 
     switch(k)
     {
     case INTEGER:
     {
-        Integer *f = (Integer *) form;
+        Integer *f = (Integer *) formTree;
         value = eval->Evaluate(value, cache, BIND_LOOKUP);
         if (errors.Swallowed())
             return false;
@@ -862,7 +872,7 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
     }
     case REAL:
     {
-        Real *f = (Real *) form;
+        Real *f = (Real *) formTree;
         value = eval->Evaluate(value, cache, BIND_LOOKUP);
         if (errors.Swallowed())
             return false;
@@ -872,7 +882,7 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
     }
     case TEXT:
     {
-        Text *f = (Text *) form;
+        Text *f = (Text *) formTree;
         value = eval->Evaluate(value, cache, BIND_LOOKUP);
         if (errors.Swallowed())
             return false;
@@ -886,7 +896,7 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
 
     case NAME:
     {
-        Name *f = (Name *) form;
+        Name *f = (Name *) formTree;
 
         // Test if the name is already bound, and if so, if trees match
         if (Tree *bound = Bound(f, SCOPE_LOOKUP))
@@ -913,7 +923,7 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
 
     case INFIX:
     {
-        Infix *fi = (Infix *) form;
+        Infix *fi = (Infix *) formTree;
 
         // Check type declarations
         if (fi->name == ":")
@@ -961,7 +971,7 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
                 }
 
                 // Evaluate the type
-                Tree *type = fi->right;
+                Tree_p type = fi->right;
                 type = eval->Evaluate(type, cache, BIND_LOOKUP);
                 if (errors.Swallowed())
                     return false;
@@ -1028,7 +1038,7 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
                 return false;
 
             // Now try to test the guard value
-            Tree *guard = Evaluate(fi->right, cache, BIND_LOOKUP);
+            Tree_p guard = Evaluate(fi->right, cache, BIND_LOOKUP);
             if (errors.Swallowed())
                 return false;
             return guard == xl_true;
@@ -1055,7 +1065,7 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
 
     case PREFIX:
     {
-        Prefix *pf = (Prefix *) form;
+        Prefix *pf = (Prefix *) formTree;
 
         // If the left side is a name, make sure it's an exact match
         if (Prefix *prefix = value->AsPrefix())
@@ -1085,7 +1095,7 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
 
     case POSTFIX:
     {
-        Postfix *pf = (Postfix *) form;
+        Postfix *pf = (Postfix *) formTree;
 
         // If the right side is a name, make sure it's an exact match
         if (Postfix *postfix = value->AsPostfix())
@@ -1115,7 +1125,7 @@ bool Context::Bind(Tree *form, Tree *value, tree_map &cache, TreeList *args)
 
     case BLOCK:
     {
-        Block *block = (Block *) form;
+        Block *block = (Block *) formTree;
         if (Block *bval = value->AsBlock())
             if (bval->opening == block->opening &&
                 bval->closing == block->closing)
