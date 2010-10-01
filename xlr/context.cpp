@@ -983,6 +983,12 @@ bool Context::Bind(Tree *formTree, Tree *valueTree,
                     // Test if we have the right type
                     if (type != source_type)
                     {
+                        // Evaluate to a tree if we have a name
+                        if (Name *name = value->AsName())
+                            if (Tree *bound = eval->Bound(name))
+                                if (Name *bname = bound->AsName())
+                                    value = bname;
+
                         value = ValueMatchesType(this, type, value, true);
                         if (!value)
                             return false;
