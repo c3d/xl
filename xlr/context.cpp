@@ -726,19 +726,44 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
     // If we are unable to find the right form, check standard prefix forms
     if (Prefix *prefix = what->AsPrefix())
     {
+        // Check what we invoke and its argument
+        Tree *invoked = prefix->left;
+        Tree *arg = prefix->right;
+
+        // If we have a block, look at what's inside
+        if (Block *block = invoked->AsBlock())
+            invoked = block->child;
+
         // First scenario: a prefix with a bound name (bug #458)
-        if (Name *name = prefix->left->AsName())
+        if (Name *name = invoked->AsName())
         {
             if (Tree *existing = Bound(name))
             {
                 // Try again with the bound form
                 Errors errors;
-                Prefix_p bpfx = new Prefix(prefix, existing, prefix->right);
-                Tree *rslt = Evaluate(bpfx,values,lookup,tailContext,tailTree);
+                Prefix_p bpfx = new Prefix(prefix, existing, arg);
+                Tree *result = Evaluate(bpfx, values, lookup,
+                                        tailContext,tailTree);
 
                 // If we had error, keep the original message (clearer)
                 if (!errors.Swallowed())
-                    return rslt;
+                    return result;
+            }
+        }
+
+        // Second scenario: a universal rewrite rule
+        if (Infix *infix = invoked->AsInfix())
+        {
+            if (infix->name == "->")
+            {
+                if (Name *defined = infix->left->AsName())
+                {
+                    Tree_p body = infix->right;
+                    Context_p eval = new Context(this, this);
+                    eval->Define(defined, arg);
+                    Tree_p result = eval->Evaluate(body);
+                    return result;
+                }
             }
         }
     }
