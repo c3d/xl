@@ -32,7 +32,6 @@
 #include "context.h"
 #include "renderer.h"
 #include "opcodes.h"
-#include "compiler.h"
 #include "options.h"
 #include "runtime.h"
 #include "types.h"
@@ -56,7 +55,7 @@ void EnterBasics(Symbols *c)
 //   Enter all the basic operations defined in basics.tbl
 // ----------------------------------------------------------------------------
 {
-    Compiler *compiler = MAIN->compiler;
+    Main *main = MAIN;
 #include "opcodes_define.h"
 #include "basics.tbl"
 }
@@ -69,5 +68,7 @@ void DeleteBasics()
 #include "opcodes_delete.h"
 #include "basics.tbl"
 }
+
+void (*refresh_fn)(double delay) = NULL;
 
 XL_END
