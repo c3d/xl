@@ -48,6 +48,7 @@ Callback:name with A,B ->
 Callback:name with nil -> nil
 Callback:name with A -> Callback A
 
+
 // Range of values
 data low..high
 data low..high step step
@@ -59,5 +60,3 @@ X:name *= Y:value -> X := X * Y
 X:name /= Y:value -> X := X / Y
 ++X:name -> X += 1
 --X:name -> X -= 1
-
-

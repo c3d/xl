@@ -739,15 +739,18 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
         {
             if (Tree *existing = Bound(name))
             {
-                // Try again with the bound form
-                Errors errors;
-                Prefix_p bpfx = new Prefix(prefix, existing, arg);
-                Tree *result = Evaluate(bpfx, values, lookup,
-                                        tailContext,tailTree);
+                if (existing != name)
+                {
+                    // Try again with the bound form
+                    Errors errors;
+                    Prefix_p bpfx = new Prefix(prefix, existing, arg);
+                    Tree *result = Evaluate(bpfx, values, lookup,
+                                            tailContext,tailTree);
 
-                // If we had error, keep the original message (clearer)
-                if (!errors.Swallowed())
-                    return result;
+                    // If we had error, keep the original message (clearer)
+                    if (!errors.Swallowed())
+                        return result;
+                }
             }
         }
 
@@ -1002,27 +1005,23 @@ bool Context::Bind(Tree *formTree, Tree *valueTree,
                     return false;
 
                 // Evaluate the value and match its type if the type is not tree
-                if (type == source_type || type == symbol_type ||
-                    type == operator_type || type == name_type)
+                if (type == source_type)
                 {
-                    // Test if we have the right type
-                    if (type != source_type)
-                    {
-                        // Evaluate to a tree if we have a name
-                        if (Name *name = value->AsName())
-                            if (Tree *bound = eval->Bound(name))
-                                if (Name *bname = bound->AsName())
-                                    value = bname;
+                    // No evaluation at all, pass data as is.
+                    type = tree_type;
+                }
+                else if (type == symbol_type ||
+                         type == operator_type || type == name_type)
+                {
+                    // Return bound name if there is one
+                    if (Name *name = value->AsName())
+                        if (Tree *bound = eval->Bound(name))
+                            if (Name *bname = bound->AsName())
+                                value = bname;
 
-                        value = ValueMatchesType(this, type, value, true);
-                        if (!value)
-                            return false;
-                    }
-                    else
-                    {
-                        // No evaluation at all
-                        type = tree_type;
-                    }
+                    value = ValueMatchesType(this, type, value, true);
+                    if (!value)
+                        return false;
                 }
                 else if (type == tree_type)
                 {
