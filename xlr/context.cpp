@@ -257,61 +257,6 @@ Rewrite *Context::Define(Tree *form, Tree *value, Tree *type)
     // Create the rewrite
     *parent = rewrite;
 
-    // Check if we defined a prefix with a name on the left.
-    // If so, this also implicitly defines the associated name
-    if (Prefix *prefix = form->AsPrefix())
-    {
-        // We only do that if defining a named prefix ("function"), like "foo 0"
-        if (Name *defined = prefix->left->AsName())
-        {
-            // We don't do that for operators, e.g. "+0" will not define "+"
-            // (debatable. We'd need to selectively disable ValidateNames)
-            if (defined->value.size() && isalpha(defined->value[0]))
-            {
-                // Selector for the definition
-                Tree *selector = prefix->right;
-                typedef PrefixDefinitionsInfo PDI;
-
-                // Check whatever was already defined
-                if (Tree *existing = Bound(defined))
-                {
-                    if (Block *block = existing->AsBlock())
-                    {
-                        // Append to last definition we had for that name
-                        if (PDI *info = block->GetInfo<PDI>())
-                        {
-                            // Extract definition for the name
-                            Infix *nameDef = new Infix("->", selector, value,
-                                                       selector->Position());
-                            Infix *last = info->last;
-                            Tree *previous = last ? last->right : block->child;
-                            Infix *cr = new Infix("\n", previous, nameDef,
-                                                  nameDef->Position());
-                            if (last)
-                                last->right = cr;
-                            else
-                                block->child = cr;
-                            info->last = cr;
-                        }
-                    }
-                }
-                else // Does not exist in current scope
-                {
-                    // First time we see this block here, just define it
-
-                    // Extract selector and build name definition
-                    Infix *nameDef = new Infix("->", selector, value,
-                                               selector->Position());
-                    Block *block = new Block(nameDef,
-                                             Block::indent, Block::unindent,
-                                             defined->Position());
-                    block->SetInfo<PDI>(new PDI());
-                    Define(defined, block);
-                }
-            } // Valid name (not operator)
-        } // Not a definition of a prefix
-    }
-
     return rewrite;
 }
 
@@ -754,7 +699,7 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
             }
         }
 
-        // Second scenario: a universal rewrite rule
+        // Second scenario: universal rewrite rules
         if (Infix *infix = invoked->AsInfix())
         {
             if (infix->name == "->")

@@ -42,11 +42,11 @@ x, nil    -> x
 nil, x    -> x
 
 // Mapping functions
-Callback:name with A,B ->
+Callback:tree with A,B ->
     data X:value, Y:value
     (Callback A), (Callback with B)
-Callback:name with nil -> nil
-Callback:name with A -> Callback A
+Callback:tree with nil -> nil
+Callback:tree with A -> Callback A
 
 
 // Range of values
