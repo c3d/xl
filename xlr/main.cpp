@@ -44,6 +44,9 @@
 #include "bfs.h"
 #include "gv.h"
 #include "runtime.h"
+#include "traces.h"
+
+XL_DEFINE_TRACES
 
 XL_BEGIN
 
@@ -89,6 +92,7 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
       renderer(std::cout, styleSheetName, syntax),
       reader(NULL), writer(NULL)
 {
+    XL_INIT_TRACES();
     Options::options = &options;
     Symbols::symbols = globals;
     Renderer::renderer = &renderer;

@@ -49,7 +49,6 @@ Options::Options(int argc, char **argv):
 /*---------------------------------------------------------------------------*/
 #define OPTVAR(name, type, value)       name(value),
 #define OPTION(name, descr, code)
-#define TRACE(name)
 #include "options.tbl"
     arg(0), argc(argc), argv(argv)
 {}
@@ -66,12 +65,20 @@ static void Usage(char **argv)
 #define OPTVAR(name, type, value)
 #define OPTION(name, descr, code)                                       \
     std::cerr << "\t-" << #name ": " descr "\n";
-#if DEBUG
-#define TRACE(name)                 std::cerr << "\t-t" #name ": Trace " #name "\n";
-#else
-#define TRACE(name)
-#endif
 #include "options.tbl"
+#if DEBUG
+    std::set<std::string> names = XL::Traces::names();
+    if (names.size())
+    {
+        std::cerr << "\t-t<name>: Enable trace <name>. ";
+        std::cerr << "Valid trace names are:\n";
+        std::cerr << "\t          ";
+        std::set<std::string>::iterator it;
+        for (it = names.begin(); it != names.end(); it++)
+            std::cerr << (*it) << " ";
+        std::cerr << "\n";
+    }
+#endif
 }
 
 
@@ -197,12 +204,12 @@ text Options::ParseNext(bool consumeFiles)
             }                                                   \
             else
 #if XL_DEBUG
-#define TRACE(name)                                 \
-            if (OptionMatches(argval, "t" #name))   \
-                traces.name = true;                 \
+            if (argval[0] == 't')
+            {
+                kstring trace_name = argval + 1;
+                Traces::enable(trace_name);
+            }
             else
-#else
-#define TRACE(name)
 #endif
 #define INTEGER(n, m)           OptionInteger(argval, *this, n, m)
 #define STRING                  OptionString(argval, *this)
