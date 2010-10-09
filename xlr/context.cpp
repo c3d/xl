@@ -699,7 +699,7 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
             }
         }
 
-        // Second scenario: universal rewrite rules
+        // Second scenario: universal rewrite rules and "when" clauses
         if (Infix *infix = invoked->AsInfix())
         {
             if (infix->name == "->")
