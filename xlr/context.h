@@ -251,6 +251,8 @@ struct Context
     // Bind parameters in context based on arguments in form
     bool                Bind(Tree *form, Tree *value, tree_map &values,
                              TreeList *args = NULL);
+    Tree_p *            NormalizeArguments(text sep, Tree_p *args);
+
 
     // Find the value that a name is bound to, or returns NULL
     Tree *              Bound(Name *name, lookup_mode mode = SCOPE_LOOKUP);

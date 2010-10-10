@@ -491,9 +491,7 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                     // It is safe because we got a new evaluation context
                     if (Block *block = next->AsBlock())
                     {
-                        if (block->IsIndent() ||
-                            block->IsParentheses() ||
-                            block->IsBraces())
+                        if (block->IsGroup())
                         {
                             if (eval == old)
                                 eval = new Context(eval, eval);
@@ -545,6 +543,10 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
         Ooops("Recursed too deep evaluating $1", what);
         return what;
     }
+
+    // Normalize arguments
+    if (Prefix *prefix = what->AsPrefix())
+        NormalizeArguments(",", &prefix->right);
 
     // Build the hash key for the tree to evaluate
     ulong key = Hash(what);
@@ -1111,6 +1113,71 @@ bool Context::Bind(Tree *formTree, Tree *valueTree,
 
     // Default is to return false
     return false;
+}
+
+
+Tree_p *Context::NormalizeArguments(text separator, Tree_p *args)
+// ----------------------------------------------------------------------------
+//   Create a comma-separated argument list in the right order
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = (*args)->AsInfix())
+    {
+        if (infix->name == separator)
+        {
+            Tree_p *last = NormalizeArguments(separator, &infix->left);
+
+            // Turn '(A,B),C' into 'A,(B,C)'
+            if (last != &infix->left)
+            {
+                *last = new Infix(infix, *last, infix->right);
+                last = NormalizeArguments(separator, last);
+                if (args != last)
+                    *args = infix->left;
+                return last;
+            }
+
+            last = NormalizeArguments(separator, &infix->right);
+            return last;
+        }
+    }
+
+    if (Prefix *prefix = (*args)->AsPrefix())
+    {
+        Tree_p *last = NormalizeArguments(separator, &prefix->left);
+        if (Block *block = prefix->right->AsBlock())
+        {
+            if (block->IsIndent())
+            {
+                Infix *infix = new Infix(separator, *last, block,
+                                         prefix->Position());
+                *last = infix;
+                if (args != last)
+                    *args = prefix->left;
+                last = &infix->right;
+                return last;
+            }
+        }
+    }
+
+    if (Block *block = (*args)->AsBlock())
+    {
+        if (block->IsParentheses())
+        {
+            if (Infix *infix = block->child->AsInfix())
+            {
+                if (infix->name == separator)
+                {
+                    Tree_p *value = &block->child;
+                    Tree_p *last = NormalizeArguments(separator, value);
+                    *args = *value;
+                    return last;
+                }
+            }
+        }
+    }
+
+    return args;
 }
 
 

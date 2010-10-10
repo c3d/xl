@@ -1,0 +1,12 @@
+// OUTLINE=Automatic generation of block arguments
+box a, b, c, d, e ->
+    writeln a
+    writeln b
+    writeln c
+    writeln d
+    e
+
+box (1,2),(3,4)
+   writeln "Hello World"
+   writeln "How are you"
+

@@ -282,7 +282,6 @@ Tree *Parser::Parse(text closing)
     bool                 new_statement      = true;
     bool                 line_continuation  = false;
     ulong                pos                = 0;
-    uint                 extra_indents      = 0;
     uint                 old_indent         = 0;
     text                 infix, name, spelling;
     text                 comment_end;
@@ -311,24 +310,6 @@ Tree *Parser::Parse(text closing)
         // If we had comments after a token, add them to that token
         if (!wasBeginningLine && comments.size() && commented)
             AddComments(commented, false);
-
-        // Check if we are dealing with a trailing operator (at end of line)
-        if (line_continuation)
-        {
-            if (tok == tokINDENT)
-            {
-                extra_indents++;
-                tok = tokNEWLINE;
-            }
-        }
-        else if (extra_indents > 0)
-        {
-            if (tok == tokUNINDENT)
-            {
-                extra_indents--;
-                tok = tokNEWLINE;
-            }
-        }
 
         // Check token result
         pos = scanner.Position();
@@ -577,7 +558,7 @@ Tree *Parser::Parse(text closing)
                     ulong st_pos = new_statement ? left->Position() : pos;
                     stack.push_back(Pending(infix,left,infix_priority,st_pos));
                     if (infix_priority > default_priority)
-                        line_continuation= true;
+                        line_continuation = true;
                     result = NULL;
                 }
                 left = NULL;
