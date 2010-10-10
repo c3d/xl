@@ -94,7 +94,6 @@ do
 for TEST in $(find $SUBDIR -name "$PATTERN".xl -print)
 do
     TESTNAME=${TEST/$TESTDIR\/}
-    echo -n Test: $TESTNAME...
 
     # Setup useful variables - These can be set in the test files
     BASE=${TESTNAME/\.xl}                           # Basename
@@ -110,9 +109,16 @@ do
     EXT=                                            # Extension for output
     EXCLUDE=                                        # Runtimes to exclude
     CACHED=
+    OUTLINE=
 
     # Extract interesting variables from the test
     eval $(./alltests.awk $TESTNAME)
+
+    echo -n Test: $TESTNAME
+    if [ ! -z "$OUTLINE" ]; then
+        echo -n " ($OUTLINE)"
+    fi
+    echo -n "..."
 
     # Defaults if not set by the test
     eval $(grep TO_REMOVE alltests_$RUNTIME)
@@ -205,8 +211,11 @@ do
             echo "* FAILED (EXPECTED):" $TESTNAME: >> $FAILURE
         else
             echo "********************************************************************************" >> $FAILURE
-            echo "**  FAILED:" $TESTNAME: >> $FAILURE
-            echo "**  REASON:" $THIS_FAILED >> $FAILURE
+            echo "**  FAILED:" $TESTNAME     >> $FAILURE
+            if [ ! -z "$OUTLINE" ]; then
+                echo "**  CHECKS:" $OUTLINE      >> $FAILURE
+            fi
+            echo "**  REASON:" $THIS_FAILED  >> $FAILURE
             echo "********************************************************************************" >> $FAILURE
             cat $LOG >> $FAILURE
             echo "" >> $FAILURE
