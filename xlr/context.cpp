@@ -957,6 +957,14 @@ bool Context::Bind(Tree *formTree, Tree *valueTree,
                     // No evaluation at all, pass data as is.
                     type = tree_type;
                 }
+                else if (type == block_type  || type == infix_type ||
+                         type == prefix_type || type == postfix_type)
+                {
+                    // No evaluation, but type check
+                    value = ValueMatchesType(this, type, value, true);
+                    if (!value)
+                        return false;
+                }
                 else if (type == symbol_type ||
                          type == operator_type || type == name_type)
                 {
@@ -1028,13 +1036,22 @@ bool Context::Bind(Tree *formTree, Tree *valueTree,
                         Bind(fi->right, infix->right, cache, args));
 
         // If direct binding failed, evaluate and try again ("diamond")
-        value = eval->Evaluate(value, cache, BIND_LOOKUP);
-        if (errors.Swallowed())
-            return false;
-        if (Infix *infix = value->AsInfix())
-            if (fi->name == infix->name)
-                return (Bind(fi->left,  infix->left,  cache, args) &&
-                        Bind(fi->right, infix->right, cache, args));
+        bool indirect = true;
+        if (value->IsConstant())
+            indirect = false;
+        if (Block *block = value->AsBlock())
+            if (block->IsIndent())
+                indirect = false;
+        if (indirect)
+        {
+            value = eval->Evaluate(value, cache, BIND_LOOKUP);
+            if (errors.Swallowed())
+                return false;
+            if (Infix *infix = value->AsInfix())
+                if (fi->name == infix->name)
+                    return (Bind(fi->left,  infix->left,  cache, args) &&
+                            Bind(fi->right, infix->right, cache, args));
+        }
 
         // Otherwise, we don't have a match
         return false;
