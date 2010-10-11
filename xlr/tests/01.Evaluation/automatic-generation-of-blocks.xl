@@ -1,4 +1,5 @@
 // OUTLINE=Automatic generation of block arguments
+// EXIT=1
 box a, b, c, d, e ->
     writeln a
     writeln b
@@ -9,4 +10,3 @@ box a, b, c, d, e ->
 box (1,2),(3,4)
    writeln "Hello World"
    writeln "How are you"
-

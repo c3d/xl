@@ -1,7 +1,4 @@
-1
-2
-3
-4
-Hello World
-How are you
-true
+01.Evaluation/automatic-generation-of-blocks.xl:10: No form matches 'box 1, 2, (3, 4...n "How are you"'
+error "No form matches $1", box (1, 2, (3, 4) 
+    writeln "Hello World"
+    writeln "How are you")

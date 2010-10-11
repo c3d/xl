@@ -1159,24 +1159,6 @@ Tree_p *Context::NormalizeArguments(text separator, Tree_p *args)
         }
     }
 
-    if (Prefix *prefix = (*args)->AsPrefix())
-    {
-        Tree_p *last = NormalizeArguments(separator, &prefix->left);
-        if (Block *block = prefix->right->AsBlock())
-        {
-            if (block->IsIndent())
-            {
-                Infix *infix = new Infix(separator, *last, block,
-                                         prefix->Position());
-                *last = infix;
-                if (args != last)
-                    *args = prefix->left;
-                last = &infix->right;
-                return last;
-            }
-        }
-    }
-
     if (Block *block = (*args)->AsBlock())
     {
         if (block->IsParentheses())
