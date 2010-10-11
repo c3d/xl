@@ -1,0 +1,7 @@
+// OUTLINE=Range map (X with Y..Z) that is locally defined
+Callback:tree with A..B when A < B ->
+    data X:value, Y:value
+    (Callback A), (Callback with A+1..B)
+Callback:tree with A..A -> Callback A
+Callback:tree with A..B -> nil
+writeln with 1..5
