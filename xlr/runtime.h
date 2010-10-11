@@ -121,6 +121,7 @@ struct XLCall
         if (*pointer)
         {
             Infix *infix = new Infix(",", *pointer, tree);
+            *pointer = infix;
             pointer = (Tree_p *) &infix->right;
         }
         else
