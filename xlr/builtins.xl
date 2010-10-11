@@ -41,16 +41,21 @@ rest  x   -> nil
 x, nil    -> x
 nil, x    -> x
 
+// Range of values
+data low..high
+data low..high step step
+
 // Mapping functions
 Callback:tree with A,B ->
     data X:value, Y:value
     (Callback A), (Callback with B)
 Callback:tree with nil -> nil
+Callback:tree with A..B when A < B ->
+    data X:value, Y:value
+    (Callback A), (Callback with A+1..B)
+Callback:tree with A..A -> Callback A
+Callback:tree with A..B -> nil
 Callback:tree with A -> Callback A
-
-// Range of values
-data low..high
-data low..high step step
 
 // In-place arithmetic
 X:name += Y:value -> X := X + Y
