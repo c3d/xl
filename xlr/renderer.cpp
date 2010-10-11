@@ -351,6 +351,10 @@ void Renderer::RenderFormat(Tree *format)
         RenderFormat (pf->left);
         RenderFormat (pf->right);
     }
+    else if (Block *bf = format->AsBlock())
+    {
+        RenderFormat(bf->child);
+    }
     else
     {
         output << "** Unkown kind of format directive **\n";
