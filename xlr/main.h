@@ -84,6 +84,7 @@ struct Main
     int         Diff();
     void        Log(Error &e)   { errors->Log(e); }
     Errors *    InitErrorsAndMAIN();
+    uint        HadErrors() { return errors->Count(); }
 
 public:
     int          argc;

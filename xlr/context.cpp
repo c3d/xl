@@ -506,7 +506,7 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
             }
 
             // Check if we had an error. If so, abort right now
-            if (MAIN->errors->Count())
+            if (MAIN->HadErrors())
                 return result;
         }
     }
@@ -684,7 +684,7 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
         // First scenario: a prefix with a bound name (bug #458)
         if (Name *name = invoked->AsName())
         {
-            if (Tree *existing = Bound(name))
+            if (Tree *existing = Bound(name, SCOPE_LOOKUP))
             {
                 if (existing != name)
                 {
@@ -723,10 +723,12 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
     if (lookup & AVOID_ERRORS)
     {
         Ooops("Bind failed to evaluate $1", what);
+        what = NULL;
     }
     else if (inError)
     {
         Ooops("An error happened while processing error $1", what);
+        what = NULL;
     }
     else
     {
@@ -997,13 +999,18 @@ bool Context::Bind(Tree *formTree, Tree *valueTree,
                     value = eval->CreateLazy(value);
                     type = tree_type;
                 }
+                else if (type == value_type)
+                {
+                    value = eval->Evaluate(value, cache);
+                    if (errors.Swallowed())
+                        return false;
+                }
                 else
                 {
                     value = eval->Evaluate(value, cache, BIND_LOOKUP);
                     if (errors.Swallowed())
                         return false;
-                    if (type != value_type)
-                        value = ValueMatchesType(this, type, value, true);
+                    value = ValueMatchesType(this, type, value, true);
                     if (!value)
                         return false;
                 }
@@ -1180,7 +1187,7 @@ Tree_p *Context::NormalizeArguments(text separator, Tree_p *args)
 }
 
 
-Tree *Context::Bound(Name *name, lookup_mode lookup)
+Tree *Context::Bound(Name *name, lookup_mode lookup, Context_p *where)
 // ----------------------------------------------------------------------------
 //   Return the value a name is bound to, or NULL if none...
 // ----------------------------------------------------------------------------
@@ -1199,11 +1206,17 @@ Tree *Context::Bound(Name *name, lookup_mode lookup)
             while (candidate)
             {
                 if (Name *from = candidate->from->AsName())
+                {
                     if (name->value == from->value)
+                    {
+                        if (where)
+                            *where = context;
                         if (Tree *to = candidate->to)
                             return to;
                         else
                             return from;
+                    }
+                }
 
                 rewrite_table &rwh = candidate->hash;
                 found = rwh.find(key);
@@ -1223,14 +1236,15 @@ Tree *Context::CreateCode(Tree *value)
 //   Create a closure to record the current context to be evaluted once
 // ----------------------------------------------------------------------------
 {
+    if (Name *name = value->AsName())
+        if (Tree *existing = Bound(name))
+            value = existing;
+
     // Quick optimization for constants
     if (!hasConstants && value->IsConstant())
         return value;
     static Name_p closureName = new Name("<code>");
 
-    if (Name *name = value->AsName())
-        if (Tree *existing = Bound(name))
-            value = existing;
     if (Prefix *prefix = value->AsPrefix())
         if (Name *name = prefix->left->AsName())
             if (name->value == closureName->value)
@@ -1267,14 +1281,15 @@ Tree *Context::CreateLazy(Tree *value)
 //   Create a closure to record the current context to be evaluted once
 // ----------------------------------------------------------------------------
 {
+    if (Name *name = value->AsName())
+        if (Tree *existing = Bound(name))
+            value = existing;
+
     // Quick optimization for constants
     if (!hasConstants && value->IsConstant())
         return value;
     static Name_p closureName = new Name("<lazy>");
 
-    if (Name *name = value->AsName())
-        if (Tree *existing = Bound(name))
-            value = existing;
     if (Prefix *prefix = value->AsPrefix())
         if (Name *name = prefix->left->AsName())
             if (name->value == closureName->value)

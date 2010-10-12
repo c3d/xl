@@ -255,7 +255,8 @@ struct Context
 
 
     // Find the value that a name is bound to, or returns NULL
-    Tree *              Bound(Name *name, lookup_mode mode = SCOPE_LOOKUP);
+    Tree *              Bound(Name *name, lookup_mode mode = SCOPE_LOOKUP,
+                              Context_p *where = NULL);
 
     // Create a closure in this context
     Tree *              CreateCode(Tree *value);

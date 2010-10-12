@@ -72,7 +72,11 @@ Tree *xl_evaluate_children(Context *context, Tree *what)
         if (infix->name == ":")
             return xl_evaluate_children(context, infix->left);
         Tree *left = xl_evaluate_children(context, infix->left);
+        if (MAIN->HadErrors())
+            return left;
         Tree *right = xl_evaluate_children(context, infix->right);
+        if (MAIN->HadErrors())
+            return right;
         if (left != infix->left || right != infix->right)
             infix = new Infix(infix, left, right);
         return infix;
@@ -81,7 +85,11 @@ Tree *xl_evaluate_children(Context *context, Tree *what)
     {
         Prefix *prefix = (Prefix *) what;
         Tree *left = xl_evaluate_children(context, prefix->left);
+        if (MAIN->HadErrors())
+            return left;
         Tree *right = xl_evaluate_children(context, prefix->right);
+        if (MAIN->HadErrors())
+            return right;
         if (left != prefix->left || right != prefix->right)
             prefix = new Prefix(prefix, left, right);
         return prefix;
@@ -90,7 +98,11 @@ Tree *xl_evaluate_children(Context *context, Tree *what)
     {
         Postfix *postfix = (Postfix *) what;
         Tree *left = xl_evaluate_children(context, postfix->left);
+        if (MAIN->HadErrors())
+            return left;
         Tree *right = xl_evaluate_children(context, postfix->right);
+        if (MAIN->HadErrors())
+            return right;
         if (left != postfix->left || right != postfix->right)
             postfix = new Postfix(postfix, left, right);
         return postfix;
@@ -99,6 +111,8 @@ Tree *xl_evaluate_children(Context *context, Tree *what)
     {
         Block *block = (Block *) what;
         Tree *child = xl_evaluate_children(context, block->child);
+        if (MAIN->HadErrors())
+            return child;
         if (child != block->child)
             block = new Block(block, child);
         return block;

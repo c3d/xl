@@ -472,7 +472,7 @@ int main(int argc, char **argv)
     else if (!rc && !Options::options->parseOnly)
         rc = MAIN->Run();
 
-    if (!rc && MAIN->errors->Count())
+    if (!rc && MAIN->HadErrors())
         rc = 1;
     
 #if CONFIG_USE_SBRK
