@@ -684,12 +684,14 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
         // First scenario: a prefix with a bound name (bug #458)
         if (Name *name = invoked->AsName())
         {
-            if (Tree *existing = Bound(name, SCOPE_LOOKUP))
+            Context_p where = NULL;
+            if (Tree *existing = Bound(name, SCOPE_LOOKUP, &where))
             {
                 if (existing != name)
                 {
                     // Try again with the bound form
                     Errors errors;
+                    arg = CreateLazy(arg);
                     Prefix_p bpfx = new Prefix(prefix, existing, arg);
                     Tree *result = Evaluate(bpfx, values, lookup,
                                             tailContext,tailTree);
@@ -1320,7 +1322,7 @@ Tree *Context::EvaluateLazy(Tree *closure, Tree *value)
 }
 
 
-Tree *Context::ClosureValue(Tree *value)
+Tree *Context::ClosureValue(Tree *value, Context_p *where)
 // ----------------------------------------------------------------------------
 //   If a value is a closure, return its value
 // ----------------------------------------------------------------------------
@@ -1331,8 +1333,14 @@ Tree *Context::ClosureValue(Tree *value)
         {
             text n = name->value;
             if (n == "<code>" || n == "<lazy>" || n == "<value>")
-                if (prefix->Get<ClosureInfo>())
+            {
+                if (Context *ctx = prefix->Get<ClosureInfo>())
+                {
+                    if (where)
+                        *where = ctx;
                     return prefix->right;
+                }
+            }
         }
     }
     return NULL;

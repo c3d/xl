@@ -746,6 +746,9 @@ Tree *xl_write(Context *context, Tree *tree, text sep)
         return XL::xl_false;
     }
 
+    // Evaluate tree (and get rid of possible closures)
+    tree = context->Evaluate(tree);
+
     // Format contents
     if (Infix *infix = tree->AsInfix())
     {
@@ -757,7 +760,6 @@ Tree *xl_write(Context *context, Tree *tree, text sep)
     }
 
     // Evaluate the input argument
-    tree = context->Evaluate(tree);
     switch(tree->Kind())
     {
     case INTEGER: std::cout << ((Integer *) tree)->value << sep; break;

@@ -1,7 +1,7 @@
-The list is 1, <lazy> (2, 3, 4, 5)
-First=1 Rest=2, <lazy> (3, 4, 5) Second=2
-First=2 Rest=3, <lazy> (4, 5) Second=3
-First=3 Rest=4, 5 Second=4
+The list is 12345
+First=1 Rest=2345 Second=2
+First=2 Rest=345 Second=3
+First=3 Rest=45 Second=4
 First=4 Rest=5 Second=5
 First=5 Rest=nil Second=nil
 true

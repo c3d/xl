@@ -1,5 +1,5 @@
 Rectangle 1: 7, 8, 9, 10
 Rectangle 2: 11, 12
-Rectangle 3: 1, error "No form matches $1", y ", "3, 4
+Rectangle 3: 1, error "No form matches $1", y ", "3
 20.Errors/error_in_write_argument.xl:6: No form matches 'y ", "'
 true
