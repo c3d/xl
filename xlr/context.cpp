@@ -1212,7 +1212,7 @@ Tree *Context::Bound(Name *name, lookup_mode lookup, Context_p *where)
                         if (where)
                             *where = context;
                         if (Tree *to = candidate->to)
-                            return to;
+                                return to;
                         else
                             return from;
                     }
@@ -1243,13 +1243,10 @@ Tree *Context::CreateCode(Tree *value)
     // Quick optimization for constants
     if (!hasConstants && value->IsConstant())
         return value;
+    if (ClosureValue(value))
+        return value;
+
     static Name_p closureName = new Name("<code>");
-
-    if (Prefix *prefix = value->AsPrefix())
-        if (Name *name = prefix->left->AsName())
-            if (name->value == closureName->value)
-                return value;
-
     Prefix *result = new Prefix(closureName, value);
     result->Set<ClosureInfo>(this);
     return result;
@@ -1288,13 +1285,10 @@ Tree *Context::CreateLazy(Tree *value)
     // Quick optimization for constants
     if (!hasConstants && value->IsConstant())
         return value;
+    if (ClosureValue(value))
+        return value;
+
     static Name_p closureName = new Name("<lazy>");
-
-    if (Prefix *prefix = value->AsPrefix())
-        if (Name *name = prefix->left->AsName())
-            if (name->value == closureName->value)
-                return value;
-
     Prefix *result = new Prefix(closureName, value);
     result->Set<ClosureInfo>(this);
     return result;
