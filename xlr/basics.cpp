@@ -53,6 +53,7 @@ void EnterBasics()
 //   Enter all the basic operations defined in basics.tbl
 // ----------------------------------------------------------------------------
 {
+    Context *context = MAIN->context;
 #include "opcodes_define.h"
 #include "basics.tbl"
 }

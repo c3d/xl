@@ -55,6 +55,7 @@ struct CompiledUnit;
 struct CompilerInfo;
 struct Context;
 struct Options;
+typedef Tree * (*eval_fn) (Tree *);
 typedef Tree * (*adapter_fn) (native_fn callee, Context *ctx,
                               Tree *src, Tree **args);
 typedef std::map<text, llvm::Function *>    builtins_map;
