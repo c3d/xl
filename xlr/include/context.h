@@ -87,7 +87,7 @@
   facilitate the interaction with other code.
 
   At top-level, the compiler generates only functions with the same
-  prototype as eval_fn, i.e. Tree * (Tree *). The code is being
+  prototype as native_fn, i.e. Tree * (Tree *). The code is being
   generated on invokation of a form, and helps rewriting it, although
   attempts are made to leverage existing rewrites.
 

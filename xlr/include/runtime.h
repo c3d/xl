@@ -40,6 +40,7 @@ struct Infix;
 struct Prefix;
 struct Postfix;
 struct Context;
+struct Main;
 
 
 
@@ -100,6 +101,16 @@ Real *xl_springify(Real &value, Real &target, Real &time,
                    Real &damp, Real &kspring, Real &lt, Real &ls);
 
 
+// ============================================================================
+//
+//   Initialization code
+//
+// ============================================================================
+
+void xl_enter_builtin(Main *main, text name, Tree *to, TreeList parms);
+void xl_enter_global(Main *main, Name *name, Name_p *address);
+
+
 
 // ============================================================================
 //
@@ -156,9 +167,9 @@ public:
 
 
 // ============================================================================
-// 
+//
 //    Basic text I/O (temporary)
-// 
+//
 // ============================================================================
 
 Tree *xl_write(Context *context, Tree *what, text sep = "");

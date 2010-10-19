@@ -44,6 +44,9 @@ namespace llvm
     class FunctionType;
     class BasicBlock;
     class Value;
+    class Function;
+    class GlobalValue;
+    class Type;
 };
 
 XL_BEGIN

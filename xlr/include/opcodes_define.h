@@ -35,34 +35,32 @@
 #endif // XL_SCOPE
 
 
-#define INFIX(name, rtype, t1, symbol, t2, _code, doc)       \
+#define INFIX(name, rtype, t1, symbol, t2, _code, doc)  \
     xl_enter_infix_##name(context);
 
-
-
-#define PARM(symbol, type)                                      \
+#define PARM(symbol, type)                              \
     parameters.push_back(xl_parameter(#symbol, #type));
 
 
-#define PREFIX(name, rtype, symbol, parms, _code, doc)                  \
-    do                                                                  \
-    {                                                                   \
-        TreeList parameters;                                            \
-        parms;                                                          \
-        xl_enter_prefix_##name(context, parameters);                    \
+#define PREFIX(name, rtype, symbol, parms, _code, doc)  \
+    do                                                  \
+    {                                                   \
+        TreeList parameters;                            \
+        parms;                                          \
+        xl_enter_prefix_##name(context, parameters);    \
     } while(0);
 
 
-#define POSTFIX(name, rtype, parms, symbol, _code, doc)                 \
-    do                                                                  \
-    {                                                                   \
-        TreeList  parameters;                                           \
-        parms;                                                          \
-        xl_enter_postfix_##name(context, parameters);                   \
+#define POSTFIX(name, rtype, parms, symbol, _code, doc) \
+    do                                                  \
+    {                                                   \
+        TreeList  parameters;                           \
+        parms;                                          \
+        xl_enter_postfix_##name(context, parameters);   \
     } while(0);
 
 
-#define BLOCK(name, rtype, open, type, close, _code, doc)    \
+#define BLOCK(name, rtype, open, type, close, _code, doc)       \
     xl_enter_block_##name(context);
 
 
@@ -71,8 +69,7 @@
     {                                           \
         Name *n = new Name(#symbol);            \
         xl_##symbol = n;                        \
-        compiler->EnterGlobal(n, &xl_##symbol); \
-        context->Define(n, n);                  \
+        xl_enter_global(MAIN, n, &xl_##symbol); \
     } while (0);
 
 
@@ -82,7 +79,7 @@
         /* Type alone evaluates as self */                              \
         Name *n = new Name(#symbol);                                    \
         symbol##_type = n;                                              \
-        compiler->EnterGlobal(n, &symbol##_type);                       \
+        xl_enter_global(MAIN, n, &symbol##_type);                       \
         context->Define(n, n);                                          \
                                                                         \
         /* Type as infix : evaluates to type check, e.g. 0 : integer */ \

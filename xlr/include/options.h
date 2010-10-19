@@ -30,24 +30,6 @@ XL_BEGIN
 
 class Errors;
 
-struct Traces
-// ----------------------------------------------------------------------------
-//   List the traces known to the compiler
-// ----------------------------------------------------------------------------
-{
-#define OPTVAR(name, type, value)
-#define OPTION(name, descr, code)
-#define TRACE(name)     bool name : 1;
-#include "options.tbl"
-
-    Traces() {
-#define OPTVAR(name, type, value)
-#define OPTION(name, descr, code)
-#define TRACE(name)     name = false;
-#include "options.tbl"
-    }
-};
-
 
 class Options
 /*---------------------------------------------------------------------------*/
@@ -63,13 +45,10 @@ class Options
     // Read options from the options.tbl file
 #define OPTVAR(name, type, value)       type name;
 #define OPTION(name, descr, code)
-#define TRACE(name)
 #include "options.tbl"
 #undef OPTVAR
 #undef OPTION
-#undef TRACE
 
-    Traces              traces;
     int                 arg;
     int                 argc;
     char **             argv;

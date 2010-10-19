@@ -44,6 +44,9 @@
 #include "bfs.h"
 #include "gv.h"
 #include "runtime.h"
+#include "traces.h"
+
+XL_DEFINE_TRACES
 
 XL_BEGIN
 
@@ -73,7 +76,7 @@ SourceFile::SourceFile()
 {}
 
 
-Main::Main(int inArgc, char **inArgv, Compiler *comp,
+Main::Main(int inArgc, char **inArgv, text compilerName,
            text syntaxName, text styleSheetName, text builtinsName)
 // ----------------------------------------------------------------------------
 //   Initialization of the globals
@@ -84,11 +87,12 @@ Main::Main(int inArgc, char **inArgv, Compiler *comp,
       topLevelErrors(),
       syntax(syntaxName.c_str()),
       options(inArgc, inArgv),
-      compiler(comp),
+      compiler(new Compiler(compilerName.c_str())),
       context(new Context(NULL, NULL)),
       renderer(std::cout, styleSheetName, syntax),
       reader(NULL), writer(NULL)
 {
+    XL_INIT_TRACES();
     Options::options = &options;
     Renderer::renderer = &renderer;
     Syntax::syntax = &syntax;
@@ -235,7 +239,6 @@ void Main::EvaluateContextFiles(source_names &ctxFiles)
 }
 
 
-#ifndef TAO
 text Main::SearchFile(text file)
 // ----------------------------------------------------------------------------
 //   Default is to use the file name directly
@@ -243,7 +246,6 @@ text Main::SearchFile(text file)
 {
     return file;
 }
-#endif // TAO
 
 
 int Main::LoadFile(text file, bool updateContext)
@@ -409,12 +411,12 @@ int Main::Run()
         }
         else
         {
-#ifdef TAO
+#ifdef LIBXLR
             if (options.verbose)
                 std::cout << "RESULT of " << sf.name << "\n" << result << "\n";
-#else // XLR without TAO
+#else
             std::cout << result << "\n";
-#endif // TAO
+#endif // LIBXLR
         }
     }
 
@@ -445,7 +447,7 @@ int Main::Diff()
 XL_END
 
 
-#ifndef TAO
+#ifndef LIBXLR
 int main(int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Parse the command line and run the compiler phases
@@ -457,8 +459,7 @@ int main(int argc, char **argv)
 
     using namespace XL;
     source_names noSpecificContext;
-    Compiler compiler("xl_tao");
-    Main main(argc, argv, &compiler);
+    Main main(argc, argv);
     int rc = MAIN->LoadContextFiles(noSpecificContext);
     if (rc)
     {
@@ -484,4 +485,4 @@ int main(int argc, char **argv)
     return rc;
 }
 
-#endif // TAO
+#endif // LIBXLR

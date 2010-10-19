@@ -107,28 +107,6 @@ OPTION(diff,
        "(you must give exactly two input files)", doDiff=true)
 
 
-// Traces. The first ones must match the MzTrace definition in base.h
-// We use lower-case names here to avoid duplicate definition and be able
-// to reuse the IFTRACE macro as is.
-TRACE(memory)
-TRACE(eval)
-TRACE(compile)
-TRACE(parmatch)
-TRACE(argmatch)
-TRACE(rewrites)
-TRACE(types)
-TRACE(llvm)
-TRACE(code)
-TRACE(typecheck)
-TRACE(labels)
-TRACE(builtins)
-TRACE(closure)
-TRACE(diff)
-TRACE(calls2xl)
-TRACE(symbols)
-TRACE(fileload)
-
-
 
 // ============================================================================
 //
