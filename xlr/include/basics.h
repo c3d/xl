@@ -25,6 +25,7 @@
 #include "tree.h"
 #include "context.h"
 #include "opcodes.h"
+#include "main.h"
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
@@ -51,14 +52,6 @@ void DeleteBasics();
 //    Some utility functions used in basics.tbl
 // 
 // ============================================================================
-
-extern void (*refresh_fn)(double delay);
-inline void call_refresh(double delay)
-{
-    if (refresh_fn)
-        refresh_fn(delay);
-}
-
 
 inline longlong xl_text2int(text_r t)
 // ----------------------------------------------------------------------------
@@ -166,7 +159,7 @@ inline integer_t xl_time(double delay)
 {
     time_t t;
     time(&t);
-    call_refresh(delay);
+    MAIN->Refresh(delay);
     return t;
 }
 
@@ -183,7 +176,7 @@ inline integer_t xl_time(double delay)
     time_t clock;                               \
     time(&clock);                               \
     localtime_r(&clock, &tm);                   \
-    call_refresh(delay);                        \
+    MAIN->Refresh(delay);                       \
     XL_RINT(tmfield)
 
 

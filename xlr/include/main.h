@@ -74,18 +74,19 @@ struct Main
          text builtins = "builtins.xl");
     ~Main();
 
-    int         ParseOptions();
-    int         LoadContextFiles(source_names &context_file_names);
-    void        EvaluateContextFiles(source_names &context_file_names);
-    int         LoadFiles();
-    int         LoadFile(text file, bool updateContext = false);
-    SourceFile *NewFile(text path);
+    int          ParseOptions();
+    int          LoadContextFiles(source_names &context_file_names);
+    void         EvaluateContextFiles(source_names &context_file_names);
+    int          LoadFiles();
+    int          LoadFile(text file, bool updateContext = false);
+    SourceFile * NewFile(text path);
     virtual text SearchFile(text input);
-    int         Run();
-    int         Diff();
-    void        Log(Error &e)   { errors->Log(e); }
-    Errors *    InitErrorsAndMAIN();
-    uint        HadErrors() { return errors->Count(); }
+    virtual bool Refresh(double delay);
+    int          Run();
+    int          Diff();
+    void         Log(Error &e)   { errors->Log(e); }
+    Errors *     InitErrorsAndMAIN();
+    uint         HadErrors() { return errors->Count(); }
 
 public:
     int          argc;

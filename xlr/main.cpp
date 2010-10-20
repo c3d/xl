@@ -248,6 +248,15 @@ text Main::SearchFile(text file)
 }
 
 
+bool Main::Refresh(double delay)
+// ----------------------------------------------------------------------------
+//   Tell that the program won't execute again after the given delay
+// ----------------------------------------------------------------------------
+{
+    return false;
+}
+
+
 int Main::LoadFile(text file, bool updateContext)
 // ----------------------------------------------------------------------------
 //   Load an individual file
