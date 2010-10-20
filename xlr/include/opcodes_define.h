@@ -70,6 +70,7 @@
         Name *n = new Name(#symbol);            \
         xl_##symbol = n;                        \
         xl_enter_global(MAIN, n, &xl_##symbol); \
+        context->Define(n, n);                  \
     } while (0);
 
 
