@@ -62,7 +62,7 @@ test: unit_tests xl_tests
 unit_tests: sha1_test lcs_test
 
 %_test: %.cpp
-	$(CXX) -DUNIT_TEST $(CPPFLAGS) $(CXXFLAGS) -o $* $*.cpp && ./$* && rm ./$*
+	$(CXX) -DUNIT_TEST $(CXXFLAGS) -o $* $*.cpp && ./$* && rm ./$*
 
 xl_tests:
 	cd tests; ./alltests
