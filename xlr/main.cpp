@@ -253,6 +253,7 @@ bool Main::Refresh(double delay)
 //   Tell that the program won't execute again after the given delay
 // ----------------------------------------------------------------------------
 {
+    (void) delay;
     return false;
 }
 
