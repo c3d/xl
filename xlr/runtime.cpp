@@ -750,6 +750,7 @@ void xl_enter_global(Main *main, Name *name, Name_p *address)
 // ----------------------------------------------------------------------------
 {
     main->compiler->EnterGlobal(name, address);
+    main->context->Define(name, name);
 }
 
 
