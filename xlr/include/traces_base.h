@@ -91,6 +91,7 @@ private:
 
     std::map<std::string, bool *>           flags;
     static std::map<std::string, Traces *>  groups;
+    static std::set<std::string>            enabledNames;
 };
 
 }
