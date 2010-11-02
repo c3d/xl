@@ -130,8 +130,8 @@ PREFIX(IntToReal,  real, "real", PARM(x, integer), XL_RREAL((real_t) x), "")
 PREFIX(TextToReal, real, "real", PARM(x, text), XL_RREAL(xl_text2real(x)), "")
 PREFIX(RealToInt, integer, "integer", PARM(x, real), XL_RINT((integer_t) x), "")
 PREFIX(TextToInt, integer, "integer", PARM(x, text), XL_RINT(xl_text2int(x)), "")
-PREFIX(IntToText, text, "text", PARM(x, integer), XL_RTEXT((text) x), "")
-PREFIX(RealToText, text, "text", PARM(x, real), XL_RTEXT((text) x), "")
+PREFIX(IntToText, text, "text", PARM(x, integer), XL_RTEXT(xl_int2text(x)), "")
+PREFIX(RealToText, text, "text", PARM(x, real), XL_RTEXT(xl_real2text(x)), "")
 
 // Time computations
 PREFIX(TimeHours, integer, "hours", PARM(t, integer), XL_RTIME(tm.tm_hour), "")
