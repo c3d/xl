@@ -77,6 +77,28 @@ inline double xl_text2real(text_r t)
 }
 
 
+inline text xl_int2text(longlong value)
+// ----------------------------------------------------------------------------
+//   Convert a numerical value to text
+// ----------------------------------------------------------------------------
+{
+    std::ostringstream out;
+    out << value;
+    return out.str();
+}
+
+
+inline text xl_real2text(double value)
+// ----------------------------------------------------------------------------
+//   Convert a numerical value to text
+// ----------------------------------------------------------------------------
+{
+    std::ostringstream out;
+    out << value;
+    return out.str();
+}
+
+
 inline integer_t xl_mod(integer_r xr, integer_r yr)
 // ----------------------------------------------------------------------------
 //   Compute a mathematical 'mod' from the C99 % operator
