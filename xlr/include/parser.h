@@ -101,7 +101,7 @@ public:
     Parser(std::istream &input, Syntax &stx, Positions &pos, Errors &err):
         scanner(input, stx, pos, err),
         syntax(stx), errors(err), pending(tokNONE),
-        openquote(), closequote(), comments(NULL), commented(NULL),
+        openquote(), closequote(), comments(), commented(NULL),
         hadSpaceBefore(false), hadSpaceAfter(false), beginningLine(true) {}
 
 public:
