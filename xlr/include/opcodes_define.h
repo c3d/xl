@@ -82,11 +82,4 @@
         symbol##_type = n;                                              \
         xl_enter_global(MAIN, n, &symbol##_type);                       \
         context->Define(n, n);                                          \
-                                                                        \
-        /* Type as infix : evaluates to type check, e.g. 0 : integer */ \
-        Name *x = new Name("x");                                        \
-        Prefix *from = new Prefix(n, x);                                \
-        Name *to = n;                                                   \
-        Rewrite *rw = context->Define(from, to);                        \
-        rw->native = (native_fn) xl_##symbol##_cast;                    \
     } while(0);

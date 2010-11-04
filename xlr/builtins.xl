@@ -32,6 +32,12 @@ for I:name in Low:integer..High:integer loop Body:code ->
         Body
         I := I + 1
 
+// Min and max functions
+min x, y -> if x < min y then x else min y
+min y    -> y
+max x, y -> if x > max y then x else max y
+max y    -> y
+
 // Building lists, notably lists of arguments
 data x,y
 first x,y -> x
