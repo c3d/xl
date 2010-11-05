@@ -55,6 +55,7 @@ typedef Real &          real_r;
 typedef Text &          text_r;
 typedef Name &          boolean_r;
 typedef Name &          symbol_r;
+typedef Name &          name_r;
 typedef Tree &          tree_r;
 typedef Infix &         infix_r;
 typedef Prefix &        prefix_r;
