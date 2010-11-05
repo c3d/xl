@@ -54,11 +54,12 @@ void DeleteBasics();
 // 
 // ============================================================================
 
-#ifdef TAO
-extern void tao_widget_refresh(double delay);
-#else
-#define tao_widget_refresh(x)    (void) (x)
-#endif
+extern void (*refresh_fn)(double delay);
+inline void call_refresh(double delay)
+{
+    if (refresh_fn)
+        refresh_fn(delay);
+}
 
 
 inline longlong xl_text2int(text_r t)
@@ -167,7 +168,7 @@ inline integer_t xl_time(double delay)
 {
     time_t t;
     time(&t);
-    tao_widget_refresh(delay);
+    call_refresh(delay);
     return t;
 }
 
@@ -184,7 +185,7 @@ inline integer_t xl_time(double delay)
     time_t clock;                               \
     time(&clock);                               \
     localtime_r(&clock, &tm);                   \
-    tao_widget_refresh(delay);                  \
+    call_refresh(delay);                        \
     XL_RINT(tmfield)
 
 

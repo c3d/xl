@@ -167,8 +167,8 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     }
 
     // Other target options
-    DwarfExceptionHandling = true;   // Present in 2.6, but crashes
-    JITEmitDebugInfo = true;         // Not present in 2.6
+    // DwarfExceptionHandling = true;// Present in LLVM 2.6, but crashes
+    JITEmitDebugInfo = true;         // Not present in LLVM 2.6
     UnwindTablesMandatory = true;
     // PerformTailCallOpt = true;
     NoFramePointerElim = true;
@@ -797,8 +797,7 @@ eval_fn CompiledUnit::Finalize()
 
     IFTRACE(code)
     {
-        llvm::raw_stderr_ostream llvmstderr;
-        function->print(llvmstderr);
+        function->print(errs());
     }
 
     void *result = compiler->runtime->getPointerToFunction(function);
@@ -1777,9 +1776,8 @@ void debugm(XL::value_map &m)
 // ----------------------------------------------------------------------------
 {
     XL::value_map::iterator i;
-    llvm::raw_stderr_ostream llvmstderr;
     for (i = m.begin(); i != m.end(); i++)
-        llvmstderr << "map[" << (*i).first << "]=" << *(*i).second << '\n';
+        llvm::errs() << "map[" << (*i).first << "]=" << *(*i).second << '\n';
 }
 
 
@@ -1789,6 +1787,5 @@ void debugv(void *v)
 // ----------------------------------------------------------------------------
 {
     llvm::Value *value = (llvm::Value *) v;
-    llvm::raw_stderr_ostream llvmstderr;
-    llvmstderr << *value << "\n";
+    llvm::errs() << *value << "\n";
 }

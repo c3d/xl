@@ -32,7 +32,6 @@
 #include "errors.h"
 #include "syntax.h"
 #include "context.h"
-#include "compiler.h"
 #include "options.h"
 #include <map>
 #include <time.h>
@@ -42,6 +41,7 @@ XL_BEGIN
 
 struct Serializer;
 struct Deserializer;
+struct Compiler;
 
 
 struct SourceFile
@@ -68,7 +68,8 @@ struct Main
 //    The main entry point and associated data
 // ----------------------------------------------------------------------------
 {
-    Main(int argc, char **argv, Compiler *comp,
+    Main(int argc, char **argv,
+         text compiler_name = "xl",
          text syntax = "xl.syntax",
          text style = "xl.stylesheet",
          text builtins = "builtins.xl");
@@ -80,7 +81,7 @@ struct Main
     int         LoadFiles();
     int         LoadFile(text file, bool updateContext = false);
     SourceFile *NewFile(text path);
-    text        SearchFile(text input);
+    virtual text SearchFile(text input);
     int         Run();
     int         Diff();
     void        Log(Error &e)   { errors->Log(e); }

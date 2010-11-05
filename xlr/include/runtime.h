@@ -41,6 +41,7 @@ struct Block;
 struct Infix;
 struct Prefix;
 struct Postfix;
+struct Main;
 
 
 
@@ -92,6 +93,9 @@ Tree *xl_block_cast(Tree *source, Tree *value);
 Real *xl_springify(Real &value, Real &target, Real &time,
                    Real &damp, Real &kspring, Real &lt, Real &ls);
 
+void xl_enter_builtin(Main *main, text name, Tree *to, TreeList parms,
+                      eval_fn code);
+void xl_enter_global(Main *main, Name *name, Name_p *address);
 
 
 // ============================================================================
