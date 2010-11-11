@@ -38,6 +38,8 @@ void Traces::groupAddTrace(std::string name, bool * flagptr)
 // ----------------------------------------------------------------------------
 {
     flags[name] = flagptr;
+    if (enabledNames.count(name))
+        groupEnableTrace(name, true);
 }
 
 
@@ -84,6 +86,10 @@ std::set<std::string> Traces::groupTraceNames()
 
 std::map<std::string, Traces *> Traces::groups;
 
+// A trace may be enabled before it is declared (for instance: enabled
+// through the command line, later declared by a dynamically loaded module).
+// This set records the names of all enabled traces.
+std::set<std::string> Traces::enabledNames;
 
 void Traces::addGroup(std::string name, Traces *inst)
 // ----------------------------------------------------------------------------
@@ -104,6 +110,12 @@ bool Traces::enable(std::string name, bool enable)
 //   Enable or disable a trace level in any group
 // ----------------------------------------------------------------------------
 {
+    if (!enabledNames.count(name) && enable)
+        enabledNames.insert(name);
+    else
+    if (enabledNames.count(name) && !enable)
+        enabledNames.erase(name);
+
     bool ok = false;
     std::map<std::string, struct Traces *>::iterator it;
     for (it = groups.begin(); it != groups.end(); it++)
@@ -118,11 +130,7 @@ bool Traces::enabled(std::string name)
 //   Check if trace level is enabled in any group
 // ----------------------------------------------------------------------------
 {
-    std::map<std::string, struct Traces *>::iterator it;
-    for (it = groups.begin(); it != groups.end(); it++)
-        if ((*it).second->groupTraceEnabled(name))
-            return true;
-    return false;
+    return (enabledNames.count(name) != 0);
 }
 
 
