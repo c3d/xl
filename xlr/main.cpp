@@ -184,7 +184,8 @@ SourceFile *Main::NewFile(text path)
 //   Allocate an entry for updating programs (untitled)
 // ----------------------------------------------------------------------------
 {
-    files[path] = SourceFile(path,NULL, new Context(MAIN->context,NULL), true);
+    Name_p nil = new Name("nil");
+    files[path] = SourceFile(path,nil, new Context(MAIN->context,NULL), true);
     return &files[path];
 }
 
