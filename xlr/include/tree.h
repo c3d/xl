@@ -34,7 +34,6 @@
 #include <vector>
 #include <cassert>
 
-
 XL_BEGIN
 
 // ============================================================================
@@ -1242,9 +1241,7 @@ struct FindParentAction : Action
 
     Tree *Do(Tree *what)
     {
-        if (child == what)
-            return what;
-        return NULL;
+        return what->Do(this);
     }
 
     Tree_p child;
