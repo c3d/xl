@@ -1349,7 +1349,8 @@ Tree *Context::ClosureValue(Tree *value, Context_p *where)
 
 static void ListNameRewrites(rewrite_table &table,
                              text prefix,
-                             rewrite_list &list)
+                             rewrite_list &list,
+                             bool prefixesOk)
 // ----------------------------------------------------------------------------
 //    List all the names matching in the given rewrite table
 // ----------------------------------------------------------------------------
@@ -1359,28 +1360,37 @@ static void ListNameRewrites(rewrite_table &table,
     {
         Rewrite *rw = (*i).second;
         Tree *from = rw->from;
-        if (Name *name = from->AsName())
+        Name *name = from->AsName();
+        if (!name && prefixesOk)
         {
+            if (Prefix *pre = from->AsPrefix())
+                name = pre->left->AsName();
+        }
+        if (name)
+        {
+
             if (name->value.find(prefix) == 0)
             {
                 list.push_back(rw);
-                ListNameRewrites(rw->hash, prefix, list);
+                ListNameRewrites(rw->hash, prefix, list, prefixesOk);
             }
         }
     }
 }
 
 
-void Context::ListNames(text prefix, rewrite_list &list, lookup_mode lookup)
+void Context::ListNames(text prefix, rewrite_list &list, lookup_mode lookup,
+                        bool prefixesOk)
 // ----------------------------------------------------------------------------
 //   List all names that begin with the given text
 // ----------------------------------------------------------------------------
+//   If prefixesOk == true, also return names that are prefixes
 {
     Context *next = NULL;
     for (Context *context = this; context; context = next)
     {
         // List names in the given context
-        ListNameRewrites(context->rewrites, prefix, list);
+        ListNameRewrites(context->rewrites, prefix, list, prefixesOk);
 
         // Select which scope to use next
         if (lookup & SCOPE_LOOKUP)
