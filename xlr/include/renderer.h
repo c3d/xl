@@ -31,9 +31,11 @@
 XL_BEGIN
 
 class Syntax;
-typedef std::map<text,Tree_p>    formats_table;
-typedef std::map<Tree_p,text>    highlights_table;
-
+typedef std::map<text,Tree_p>                      formats_table;
+typedef std::map<Tree_p,text>                      highlights_table;
+typedef std::pair<std::streampos, std::streampos>  stream_range;
+typedef std::vector<stream_range>                  stream_ranges;
+typedef std::map<text, stream_ranges>              highlight_result;
 
 struct Renderer
 // ----------------------------------------------------------------------------
@@ -68,6 +70,7 @@ struct Renderer
     Syntax &            syntax;
     formats_table       formats;
     highlights_table    highlights;
+    highlight_result    highlighted;
     uint                indent;
     text                self;
     Tree_p              left;

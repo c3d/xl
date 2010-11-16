@@ -477,11 +477,15 @@ void Renderer::Render(Tree *what)
     bool highlight = what && highlights.count(what) > 0;
     if (highlight)
         hname = highlights[what];
+    std::streampos hbegin, hend;
     CommentsInfo *cinfo = what ? what->GetInfo<CommentsInfo>() : NULL;
     CommentsList::iterator ci;
 
     if (highlight)
+    {
+        hbegin = output.tellp();
         RenderFormat("", "highlight_begin_" + hname + " ");
+    }
 
     if (cinfo)
     {
@@ -502,7 +506,13 @@ void Renderer::Render(Tree *what)
     }
 
     if (highlight)
+    {
+        hend = output.tellp();
         RenderFormat("", "highlight_end_" + hname + " ");
+
+        stream_range r(hbegin, hend);
+        highlighted[hname].push_back(r);
+    }
 }
 
 
@@ -751,6 +761,7 @@ void Renderer::RenderFile(Tree *what)
     had_punctuation = false;
     need_separator = false;
     priority = 0;
+    highlighted.clear();
     RenderFormat("", "begin ");
     Render(what);
     RenderFormat("", "end ");
