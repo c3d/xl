@@ -32,6 +32,7 @@
 #include <vector>
 #include <cassert>
 
+#include <iostream>
 
 XL_BEGIN
 
@@ -1017,47 +1018,64 @@ struct FindParentAction : Action
     Tree *DoInteger(Integer *what)
     {
         if (child == what)
+        {
             return what;
+        }
         return NULL;
     }
     Tree *DoReal(Real *what)
     {
         if (child == what)
+        {
             return what;
+        }
         return NULL;
     }
     Tree *DoText(Text *what)
     {
         if (child == what)
+        {
             return what;
+        }
         return NULL;
     }
     Tree *DoName(Name *what)
     {
         if (child == what)
+        {
             return what;
+        }
         return NULL;
     }
-    Tree *FindParent(Tree *child, kstring subpath)
+    Tree *FindParent(Tree *ancestor, Tree *aChild, kstring subpath)
     {
-        if (Tree *parent = Do(child))
+        if (Tree *result = aChild->Do(this))
         {
-            if (level <= 0)
-                return parent;
+            if (level <= 0 )
+            {
+                // The requested parent is already identified
+                // and it is the received result, so return it.
+                return result;
+            }
+            // The ancestor is on the path between the child and the requested parent
+            // so add the subpath, decrement the level and return the ancestor.
             path.append(subpath);
             level--;
-            return child;
+            return ancestor;
         }
+        // Nothing found on this path, return NULL
         return NULL;
     }
 
     Tree *DoPrefix(Prefix *what)
     {
         if (child == what)
+        {
             return what;
-        if (Tree *left = FindParent(what->left, "l"))
+        }
+        if (Tree *left = FindParent(what, what->left, "l"))
             return left;
-        if (Tree *right = FindParent(what->right, "r"))
+        if (Tree *right = FindParent(what, what->right, "r"))
             return right;
         return NULL;
     }
@@ -1065,10 +1083,12 @@ struct FindParentAction : Action
     Tree *DoPostfix(Postfix *what)
     {
         if (child == what)
+        {
             return what;
-        if (Tree *left = FindParent(what->left, "l"))
+        }
+        if (Tree *left = FindParent(what, what->left, "l"))
             return left;
-        if (Tree *right = FindParent(what->right, "r"))
+        if (Tree *right = FindParent(what, what->right, "r"))
             return right;
         return NULL;
     }
@@ -1076,26 +1096,32 @@ struct FindParentAction : Action
     Tree *DoInfix(Infix *what)
     {
         if (child == what)
+        {
             return what;
-        if (Tree *left = FindParent(what->left, "l"))
+        }
+        if (Tree *left = FindParent(what, what->left, "l"))
             return left;
-        if (Tree *right = FindParent(what->right, "r"))
+        if (Tree *right = FindParent(what, what->right, "r"))
             return right;
         return NULL;
     }
     Tree *DoBlock(Block *what)
     {
         if (child == what)
+        {
             return what;
-        if (Tree *child = FindParent(what->child, "c"))
-            return child;
+        }
+        if (Tree *aChild = FindParent(what, what->child, "c"))
+            return aChild;
         return NULL;
     }
 
     Tree *Do(Tree *what)
     {
         if (child == what)
+        {
             return what;
+        }
         return NULL;
     }
 
