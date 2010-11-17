@@ -441,9 +441,6 @@ inline Infix *Infix::LastStatement()
 
 
 
-
-
-
 // ============================================================================
 //
 //    Template members for info management
