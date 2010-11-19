@@ -142,11 +142,33 @@ Tree *xl_named_value(Context *context, Tree *value)
 }
 
 
+struct SourceInfo : Info
+// ----------------------------------------------------------------------------
+//   Record the source for a given tree
+// ----------------------------------------------------------------------------
+{
+    SourceInfo(Tree *source) : Info(), source(source) {}
+    Tree_p source;
+};
+
+
 Tree *xl_source(Tree *value)
 // ----------------------------------------------------------------------------
 //   Return the source for the given value
 // ----------------------------------------------------------------------------
 {
+    while (SourceInfo *info = value->GetInfo<SourceInfo>())
+        value = info->source;
+    return value;
+}
+
+
+Tree *xl_set_source(Tree *value, Tree *source)
+// ----------------------------------------------------------------------------
+//   Set the source associated with the value (e.g. for integer->real casts)
+// ----------------------------------------------------------------------------
+{
+    value->SetInfo<SourceInfo>(new SourceInfo(source));
     return value;
 }
 
@@ -519,7 +541,7 @@ Tree *xl_real_cast(Context *context, Tree *source, Tree *value)
     if (Real *rt = value->AsReal())
         return rt;
     if (Integer *it = value->AsInteger())
-        return new Real(it->value);
+        return xl_set_source(new Real(it->value), it);
     return NULL;
 }
 

@@ -55,6 +55,7 @@ Tree *xl_evaluate_children(Context *, Tree *);
 Tree *xl_assigned_value(Context *, Tree *);
 Tree *xl_named_value(Context *, Tree *);
 Tree *xl_source(Tree *);
+Tree *xl_set_source(Tree *value, Tree *source);
 Tree *xl_error(text msg, Tree *a1=0, Tree *a2=0, Tree *a3=0);
 Tree *xl_form_error(Context *c, Tree *tree);
 
