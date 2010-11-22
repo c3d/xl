@@ -49,8 +49,12 @@ Context::Context(Context *scope, Context *stack)
 //   Constructor for an execution context
 // ----------------------------------------------------------------------------
     : scope(scope), stack(stack), rewrites(),
-      hasConstants(scope ? scope->hasConstants : false)
-{}
+      hasConstants(scope ? scope->hasConstants : false),
+      keepSource(false)
+{
+    if (scope && scope->keepSource || stack && stack->keepSource)
+        keepSource = true;
+}
 
 
 Context::~Context()
@@ -510,6 +514,9 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                 return result;
         }
     }
+
+    if (keepSource && result != what)
+        xl_set_source(result, what);
 
     GarbageCollector::Collect();
 

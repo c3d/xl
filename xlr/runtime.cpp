@@ -168,7 +168,8 @@ Tree *xl_set_source(Tree *value, Tree *source)
 //   Set the source associated with the value (e.g. for integer->real casts)
 // ----------------------------------------------------------------------------
 {
-    value->SetInfo<SourceInfo>(new SourceInfo(source));
+    if (source != value)
+        value->SetInfo<SourceInfo>(new SourceInfo(source));
     return value;
 }
 
@@ -541,7 +542,7 @@ Tree *xl_real_cast(Context *context, Tree *source, Tree *value)
     if (Real *rt = value->AsReal())
         return rt;
     if (Integer *it = value->AsInteger())
-        return xl_set_source(new Real(it->value), it);
+        return new Real(it->value);
     return NULL;
 }
 

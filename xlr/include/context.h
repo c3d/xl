@@ -282,6 +282,7 @@ public:
     rewrite_table       rewrites;
     context_set         imported;
     bool                hasConstants;
+    bool                keepSource;
 
     GARBAGE_COLLECT(Context);
 };
