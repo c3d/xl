@@ -183,15 +183,21 @@ XL_BEGIN
 
 struct Context;                                 // Execution context
 struct Rewrite;                                 // Tree rewrite data
+struct Property;                                // Properties
+struct Constraint;                              // Constraints on properties
 struct Errors;                                  // Error handlers
 
 typedef GCPtr<Context>             Context_p;
 typedef GCPtr<Rewrite>             Rewrite_p;
+typedef GCPtr<Property>            Property_p;
+typedef GCPtr<Constraint>          Constraint_p;
 typedef std::map<ulong, Rewrite_p> rewrite_table;// Hashing of rewrites
 typedef std::vector<Rewrite_p>     rewrite_list;
 typedef std::set<Context_p>        context_set;
 typedef std::vector<Context_p>     context_list;
 typedef std::map<Tree_p, Tree_p>   tree_map;
+typedef std::map<text, Property>   Properties;
+typedef std::vector<Constraint>    Constraints;
 typedef Tree *(*native_fn) (Context *ctx, Tree *self);
 
 
@@ -258,6 +264,10 @@ struct Context
     Tree *              Bound(Name *name, lookup_mode mode = SCOPE_LOOKUP,
                               Context_p *where = NULL);
 
+    // Enter properties, return number of properties found
+    uint                EnterProperty(Tree *self);
+    uint                EnterConstraint(Tree *self);
+
     // Create a closure in this context
     Tree *              CreateCode(Tree *value);
     Tree *              EvaluateCode(Tree *closure, Tree *value);
@@ -281,6 +291,8 @@ public:
     Context_p           stack;
     rewrite_table       rewrites;
     context_set         imported;
+    Properties          properties;
+    Constraints         constraints;
     bool                hasConstants;
     bool                keepSource;
 
@@ -306,6 +318,39 @@ public:
     Tree_p              type;
 
     GARBAGE_COLLECT(Rewrite);
+};
+
+
+struct Property
+// ----------------------------------------------------------------------------
+//   Information about a property
+// ----------------------------------------------------------------------------
+{
+    Property(text name, text descr, Tree *type, Tree *value = NULL)
+        : name(name), description(descr), type(type), value(value) {}
+    Property(): name(), description(), type(NULL), value(NULL) {}
+    text        name;
+    text        description;
+    Tree_p      type;
+    Tree_p      value;
+
+    GARBAGE_COLLECT(Property);
+};
+
+
+struct Constraint
+// ----------------------------------------------------------------------------
+//   Information about a constraint
+// ----------------------------------------------------------------------------
+{
+    Constraint(Tree *eq): equation(eq) {}
+    Tree *      SolveFor(Name *name);
+    static uint CountName(Name *name, Tree *tree);
+    static bool IsValid(Tree *eq, std::set<text> &variables);
+
+    Tree_p      equation;
+
+    GARBAGE_COLLECT(Constraint);
 };
 
 

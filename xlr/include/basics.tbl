@@ -62,6 +62,21 @@ INFIX(Assignment, tree, source, ":=", tree,
 PREFIX(AnyLookup, tree, "any", PARM(t, source),
        return context->stack->Evaluate(&t, Context::ANY_LOOKUP),
        "")
+PREFIX(Property, tree, "property", PARM(t, source),
+       (void) t;
+       return (context->stack->EnterProperty(self)
+               ? XL::xl_true
+               : XL::xl_false),
+       "")
+PREFIX(Constraint, tree, "constraint", PARM(t, source),
+       (void) t;
+       return (context->stack->EnterConstraint(self)
+               ? XL::xl_true
+               : XL::xl_false),
+       "")
+PREFIX(Solve, tree, "solve", PARM(n, name) PARM(t, source),
+       return Constraint(&t).SolveFor(&n),
+       "")
 
 // Integer arithmetic and comparisons
 INFIX(SetInt, integer,integer,":=",integer,XL_RINT(l.value = XL_INT(r)), "")

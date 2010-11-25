@@ -1243,6 +1243,104 @@ Tree *Context::Bound(Name *name, lookup_mode lookup, Context_p *where)
 }
 
 
+uint Context::EnterProperty(Tree *property)
+// ----------------------------------------------------------------------------
+//   Enter the property into our table
+// ----------------------------------------------------------------------------
+{
+    Tree *type = NULL;
+    Tree *value = NULL;
+    text description = "";
+
+    // If there is a comment on the property, use that as description
+    if (CommentsInfo *cinfo = property->GetInfo<CommentsInfo>())
+        if (uint size = cinfo->before.size())
+            description = cinfo->before[size-1];
+
+    // If the property is a block, process children
+    if (Block *block = property->AsBlock())
+        return EnterProperty(block->child);
+
+    // If the property is a sequence, process them in turn
+    if (Infix *infix = property->AsInfix())
+        if (infix->name == "\n" || infix->name == ";")
+            return EnterProperty(infix->left) + EnterProperty(infix->right);
+
+    // If the property is like "property X := 0", look at the right part
+    if (Prefix *prefix = property->AsPrefix())
+        if (Name *name = prefix->left->AsName())
+            if (name->value == "property")
+                property = prefix->right;
+
+    // If the property is like "X := 0", take "0" as the value
+    if (Infix *infix = property->AsInfix())
+    {
+        if (infix->name == ":=")
+        {
+            property = infix->left;
+            value = infix->right;
+        }
+    }
+
+    // If the property is like "X : integer", take "integer" as the type
+    if (Infix *infix = property->AsInfix())
+    {
+        if (infix->name == ":")
+        {
+            property = infix->left;
+            type = infix->right;
+        }
+    }
+
+    // The property should now be a name
+    if (Name *n = property->AsName())
+    {
+        text name = n->value;
+        properties[name] = Property(name, description, type, value);
+        return 1;
+    }
+    else
+    {
+        Ooops("Property $1 is not a name", property);
+    }
+
+    return 0;
+}
+
+
+uint Context::EnterConstraint(Tree *constraint)
+// ----------------------------------------------------------------------------
+//   Enter the constraint into our table
+// ----------------------------------------------------------------------------
+{
+    // If the constraint is a block, process children
+    if (Block *block = constraint->AsBlock())
+        return EnterConstraint(block->child);
+
+    // If the property is a sequence, process them in turn
+    if (Infix *infix = constraint->AsInfix())
+        if (infix->name == "\n" || infix->name == ";")
+            return EnterConstraint(infix->left) + EnterConstraint(infix->right);
+
+    // If the property is like "constraint X = 0", look at the right part
+    if (Prefix *prefix = constraint->AsPrefix())
+        if (Name *name = prefix->left->AsName())
+            if (name->value == "constraint")
+                constraint = prefix->right;
+
+    // If the property is like "X = Y", record it
+    std::set<text> allVariables;
+    if (Constraint::IsValid(constraint, allVariables))
+    {
+        constraints.push_back(Constraint(constraint));
+        return 1;
+    }
+
+    Ooops("Constraint $1 is not valid", constraint);
+    return 0;
+}
+
+
 Tree *Context::CreateCode(Tree *value)
 // ----------------------------------------------------------------------------
 //   Create a closure to record the current context to be evaluted once
@@ -1441,6 +1539,235 @@ void Context::Clear()
 {
     rewrites.clear();
     imported.clear();
+}
+
+
+Tree *Constraint::SolveFor(Name *name)
+// ----------------------------------------------------------------------------
+//   Solve the constraint for the given name
+// ----------------------------------------------------------------------------
+{
+    if (Infix *eq = equation->AsInfix())
+    {
+        if (eq->name == "=")
+        {
+            Tree_p &left = eq->left;
+            Tree_p &right = eq->right;
+
+            // Check if already solved
+            if (left == name)
+                return right;
+
+            // Check if we are already in the right form
+            if (Name *n = left->AsName())
+            {
+                assert (CountName(name, right) == 0 ||
+                        !"Invalid equation entered?");
+
+                if (n->value == name->value)
+                    return right;
+            }
+
+            // Check which side the name is in
+            uint cleft = CountName(name, left);
+            uint cright = CountName(name, right);
+
+            // Make sure the requested variable is on the left            
+            if (cleft == 0 && cright == 1)
+            {
+                std::swap(left, right);
+                std::swap(cleft, cright);
+            }
+
+            // If the variable doesn't appear or appears twice, give up
+            if (cleft != 1 || cright != 0)
+                return NULL;
+
+            // Loop until we solved it
+            while (true)
+            {
+                // Check if we solved it
+                if (Name *n = left->AsName())
+                    if (n->value == name->value)
+                        return right;
+                    else
+                        return NULL;
+
+                // Check if we have an infix on the left
+                if (Infix *infix = left->AsInfix())
+                {
+                    text iname = infix->name;
+                    cleft = CountName(name, infix->left);
+                    if (iname == "+")
+                    {
+                        if (cleft == 1)
+                        {
+                            // X+a=b -> X=b-a
+                            right = new Infix("-", right, infix->right);
+                            left = infix->left;
+                        }
+                        else
+                        {
+                            // a+X=b -> X=b-a
+                            right = new Infix("-", right, infix->left);
+                            left = infix->right;
+                        }
+                    }
+                    else if (iname == "-")
+                    {
+                        if (cleft == 1)
+                        {
+                            // X-a=b -> X=b+a
+                            right = new Infix("+", right, infix->right);
+                            left = infix->left;
+                        }
+                        else
+                        {
+                            // a-X=b -> X=a-b
+                            right = new Infix("-", infix->left, right);
+                            left = infix->right;
+                        }
+                    }
+                    else if (iname == "*")
+                    {
+                        if (cleft == 1)
+                        {
+                            // X*a=b -> X=b/a
+                            right = new Infix("/", right, infix->right);
+                            left = infix->left;
+                        }
+                        else
+                        {
+                            // a*X=b -> X=b/a
+                            right = new Infix("/", right, infix->left);
+                            left = infix->right;
+                        }
+                    }
+                    else if (iname == "/")
+                    {
+                        if (cleft == 1)
+                        {
+                            // X/a=b -> X=b*a
+                            right = new Infix("*", right, infix->right);
+                            left = infix->left;
+                        }
+                        else
+                        {
+                            // a/X=b -> X=a/b
+                            right = new Infix("/", infix->left, right);
+                            left = infix->right;
+                        }
+                    }
+                    else
+                    {
+                        return NULL;
+                    }
+
+                }
+                else if (Prefix *prefix = left->AsPrefix())
+                {
+                    if (Name *pn = prefix->left->AsName())
+                    {
+                        if (pn->value == "+")
+                        {
+                            left = prefix->right;
+                        }
+                        else if (pn->value == "-")
+                        {
+                            left = prefix->right;
+                            right = new Prefix(prefix->left, right);
+                        }
+                        else
+                        {
+                            return NULL;
+                        }
+                    }
+                    else
+                    {
+                        return NULL;
+                    }
+                }
+                else
+                {
+                    return NULL;
+                }
+            }
+                
+        }
+    }
+
+    return NULL;
+}
+
+
+uint Constraint::CountName(Name *name, Tree *expr)
+// ----------------------------------------------------------------------------
+//   Count how many times the name occurs in the given expression
+// ----------------------------------------------------------------------------
+{
+    if (Name *n = expr->AsName())
+        return n->value == name->value ? 1 : 0;
+
+    if (Block *block = expr->AsBlock())
+        return CountName(name, block->child);
+    if (Infix *infix = expr->AsInfix())
+        return CountName(name, infix->left) + CountName(name, infix->right);
+    if (Prefix *prefix = expr->AsPrefix())
+        return CountName(name, prefix->right);
+    if (Postfix *postfix = expr->AsPostfix())
+        return CountName(name, postfix->left);
+
+    return 0;
+}
+
+
+bool Constraint::IsValid(Tree *eq, std::set<text> &vars)
+// ----------------------------------------------------------------------------
+//   Check if a given constraint is valid
+// ----------------------------------------------------------------------------
+{
+    // Count names, they should occur only once
+    if (Name *name = eq->AsName())
+    {
+        if (vars.count(name->value))
+            return false;
+        vars.insert(name->value);
+        return true;
+    }
+
+    // Check that infix operators are things we know how to deal with
+    if (Infix *infix = eq->AsInfix())
+    {
+        // Check if this is a known operator
+        if (infix->name == "=")
+        {
+            if (vars.count("="))
+                return false;
+            vars.insert("=");
+        }
+        else if (infix->name != "+" && infix->name != "-" &&
+                 infix->name != "*" && infix->name != "/")
+        {
+            return false;
+        }
+
+        // Valid if both sides are valid
+        return (IsValid(infix->left, vars) && IsValid(infix->right, vars));
+    }
+
+    // Check prefix operators that we know
+    if (Prefix *prefix = eq->AsPrefix())
+        if (Name *pn = prefix->left->AsName())
+            if (pn->value == "+" || pn->value == "-")
+                return IsValid(prefix->right, vars);
+
+    // Check blocks
+    if (Block *block = eq->AsBlock())
+        if (block->IsParentheses())
+            return IsValid(block->child, vars);
+
+    // Other cases are invalid for the moment.
+    return false;
 }
 
 XL_END
