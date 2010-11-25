@@ -52,7 +52,7 @@ Context::Context(Context *scope, Context *stack)
       hasConstants(scope ? scope->hasConstants : false),
       keepSource(false)
 {
-    if (scope && scope->keepSource || stack && stack->keepSource)
+    if ((scope && scope->keepSource) || (stack && stack->keepSource))
         keepSource = true;
 }
 
