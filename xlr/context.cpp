@@ -1561,11 +1561,12 @@ Tree *Constraint::SolveFor(Name *name)
             // Check if we are already in the right form
             if (Name *n = left->AsName())
             {
-                assert (CountName(name, right) == 0 ||
-                        !"Invalid equation entered?");
-
                 if (n->value == name->value)
+                {
+                    assert (CountName(name, right) == 0 ||
+                            !"Invalid equation entered?");
                     return right;
+                }
             }
 
             // Check which side the name is in
