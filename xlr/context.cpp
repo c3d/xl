@@ -1688,6 +1688,13 @@ Tree *Constraint::SolveFor(Name *name)
                         return NULL;
                     }
                 }
+                else if (Block *block = left->AsBlock())
+                {
+                    if (block->IsParentheses())
+                        left = block->child;
+                    else
+                        return NULL;
+                }
                 else
                 {
                     return NULL;
