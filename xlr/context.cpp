@@ -515,9 +515,6 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
         }
     }
 
-    if (keepSource && result != what)
-        xl_set_source(result, what);
-
     GarbageCollector::Collect();
 
     return result;
@@ -603,6 +600,8 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
                             Tree **args0 = (Tree **) &args[0];
                             Tree *result = adj(fn, eval, what, args0);
                             values[what] = result;
+                            if (keepSource && result != what)
+                                xl_set_source(result, what);
                             return result;
                         }
                     }
@@ -628,6 +627,8 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
                                 {
                                     *tailContext = eval;
                                     *tailTree = result;
+                                    if (keepSource && result != what)
+                                        xl_set_source(result, what);
                                     return result;
                                 }
                                 else
@@ -636,6 +637,8 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
                                 }
                             }
                             values[what] = result;
+                            if (keepSource && result != what)
+                                xl_set_source(result, what);
                             return result;
                         }
                     }
