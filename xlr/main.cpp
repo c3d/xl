@@ -60,7 +60,8 @@ SourceFile::SourceFile(text n, Tree *t, Context *c, bool ro)
       modified(0), changed(false), readOnly(ro)
 {
     struct stat st;
-    stat (n.c_str(), &st);
+    if (stat (n.c_str(), &st) < 0)
+        return;
     modified = st.st_mtime;
     if (access(n.c_str(), W_OK) != 0)
         readOnly = true;
