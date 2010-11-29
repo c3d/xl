@@ -1781,6 +1781,8 @@ bool Constraint::IsValid(Tree *eq, std::set<text> &vars)
 XL_END
 
 
+uint debugsm = 3;
+
 extern "C" void debugrw(XL::Rewrite *r)
 // ----------------------------------------------------------------------------
 //   For the debugger, dump a rewrite
@@ -1799,6 +1801,20 @@ extern "C" void debugrw(XL::Rewrite *r)
 }
 
 
+extern "C" void debugsn(XL::Context *c)
+// ----------------------------------------------------------------------------
+//   Show the file name associated with the context
+// ----------------------------------------------------------------------------
+{
+    XL::source_files &files = XL::MAIN->files;
+    for (XL::source_files::iterator i = files.begin(); i != files.end(); i++)
+        if (c == (*i).second.context)
+            std::cerr << "CONTEXT " << c
+                      << " IS FILE " << (*i).second.name
+                      << "\n";
+}
+
+
 extern "C" void debugs(XL::Context *c)
 // ----------------------------------------------------------------------------
 //   For the debugger, dump a symbol table
@@ -1806,9 +1822,11 @@ extern "C" void debugs(XL::Context *c)
 {
     using namespace XL;
     std::cerr << "REWRITES IN CONTEXT " << c << "\n";
+    debugsn(c);
 
     XL::rewrite_table::iterator i;
-    for (i = c->rewrites.begin(); i != c->rewrites.end(); i++)
+    uint n = 0;
+    for (i = c->rewrites.begin(); i != c->rewrites.end() && n++ < debugsm; i++)
         debugrw((*i).second);
 }
 
