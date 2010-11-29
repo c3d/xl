@@ -233,16 +233,16 @@ done
 
 if [ "$ONE_FAILED" ]; then
     echo "*** SUMMARY OF" $TOTAL_TESTS "TESTS: FAILURE ***"
-    echo "  Unexpected failures : " $UNEXPECTED_FAILURES
-    echo "  Unexpected successes: " $UNEXPECTED_SUCCESSES
-    echo "  Expected failures   : " $EXPECTED_FAILURES
-    echo "  Positive mismatches : " $POSITIVE_MISMATCHES
-    echo "  Negative mismatches : " $NEGATIVE_MISMATCHES
-    echo "  Missing references  : " $MISSING_REFERENCE
-    echo "  Missing patterns    : " $MISSING_PATTERN
-    echo "  Excluded from run   : " $EXCLUDED
+    echo "  Unexpected error exit      : " $UNEXPECTED_FAILURES
+    echo "  Unexpected successful exit : " $UNEXPECTED_SUCCESSES
+    echo "  Expected test failures     : " $EXPECTED_FAILURES
+    echo "  Positive mismatches        : " $POSITIVE_MISMATCHES
+    echo "  Negative mismatches        : " $NEGATIVE_MISMATCHES
+    echo "  Missing references         : " $MISSING_REFERENCE
+    echo "  Missing patterns           : " $MISSING_PATTERN
+    echo "  Excluded from run          : " $EXCLUDED
 else
     echo "*** SUMMARY OF" $TOTAL_TESTS "TESTS: SUCCESS ***"
-    echo "  Excluded from run   : " $EXCLUDED
-    echo "  Expected failures   : " $EXPECTED_FAILURES
+    echo "  Excluded from run          : " $EXCLUDED
+    echo "  Expected test failures     : " $EXPECTED_FAILURES
 fi
