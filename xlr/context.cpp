@@ -498,14 +498,10 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                         if (block->IsGroup())
                         {
                             if (eval == old)
-                                eval = new Context(eval, eval);
+                                eval = new Context(eval, this);
                             next = eval->ProcessDeclarations(block->child);
                         }
                     }
-
-                    // If we are here, pop execution stack back at this level
-                    eval->stack = this;
-                    
                 } // if(tail)
             }
 
