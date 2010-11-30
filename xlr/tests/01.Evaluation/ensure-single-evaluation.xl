@@ -1,0 +1,11 @@
+foo x ->
+    writeln "Foo was invoked with ", x
+    x
+
+bar 0 -> 1
+bar 1 -> 4
+bar 5 -> 7
+bar 8 -> 8
+bar N -> 37
+
+bar foo 3
