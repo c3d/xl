@@ -1342,10 +1342,6 @@ Tree *Context::CreateCode(Tree *value)
 //   Create a closure to record the current context to be evaluted once
 // ----------------------------------------------------------------------------
 {
-    if (Name *name = value->AsName())
-        if (Tree *existing = Bound(name))
-            value = existing;
-
     // Quick optimization for constants
     if (!hasConstants && value->IsConstant())
         return value;
@@ -1384,10 +1380,6 @@ Tree *Context::CreateLazy(Tree *value)
 //   Create a closure to record the current context to be evaluted once
 // ----------------------------------------------------------------------------
 {
-    if (Name *name = value->AsName())
-        if (Tree *existing = Bound(name))
-            value = existing;
-
     // Quick optimization for constants
     if (!hasConstants && value->IsConstant())
         return value;
