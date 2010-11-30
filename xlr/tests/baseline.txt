@@ -1,5 +1,6 @@
 02.Data/indexing.xl
 02.Data/write.xl
+02.Data/map-with-outer-scope.xl
 03.Arithmetic/map-reduce-filter.xl
 03.Arithmetic/partial-functions.xl
 03.Arithmetic/range.xl
