@@ -1589,10 +1589,12 @@ Tree *Constraint::SolveFor(Name *name)
             {
                 // Check if we solved it
                 if (Name *n = left->AsName())
+                {
                     if (n->value == name->value)
                         return right;
                     else
                         return NULL;
+                }
 
                 // Check if we have an infix on the left
                 if (Infix *infix = left->AsInfix())
