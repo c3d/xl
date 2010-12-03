@@ -1,5 +1,6 @@
 // Types must come first for type info to be initialized correctly
 NAME(nil);
+NAME(empty);
 NAME(true);
 NAME(false);
 
