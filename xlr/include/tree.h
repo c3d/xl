@@ -940,7 +940,7 @@ extern text     sha1(Tree *t);
 extern Name_p   xl_true;
 extern Name_p   xl_false;
 extern Name_p   xl_nil;
-
+extern Name_p   xl_empty;
 
 typedef long node_id;              // A node identifier
 
