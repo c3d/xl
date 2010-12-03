@@ -31,18 +31,38 @@
 #undef NAME
 #undef TYPE
 #undef PARM
+#undef DOC_RET
+#undef DOC_GROUP
+#undef DOC_SYNOPSIS
+#undef DOC_DESCRIPTION
+#undef DOC_MISC
 
 #ifndef XL_SCOPE
 #define XL_SCOPE "xl_"
 #endif // XL_SCOPE
 
+#define DOC_RET(rtype, rdoc)  doc+=text("  return_value \"" #rtype "\", <<")+rdoc+">>\n"
+#define DOC_GROUP(grp)        #grp
+#define DOC_SYNOPSIS(syno)    syno
+#define DOC_DESCRIPTION(desc) desc
+#define DOC_MISC(misc)        misc
 
-#define INFIX(name, rtype, t1, symbol, t2, _code, doc)       \
-    xl_enter_infix_##name(c, main);
+
+#define INFIX(name, rtype, t1, symbol, t2, _code, group, synopsis, desc, retdoc, misc)  \
+    do {                                                                          \
+         text doc = text("/*| docname \"" #name "\", \"") + group + "\", do \n";  \
+         doc += text("  dsyntax \" "#t1" ") + symbol + " "#t2" \"\n";             \
+         doc += text("  synopsis <<") + synopsis + ">>\n";                        \
+         doc += text("  description <<") + desc + ">>\n";                         \
+         retdoc;                                                                  \
+         doc += text("\n") + text(misc) + "|*/";                                  \
+        xl_enter_infix_##name(c, main, doc);                                      \
+    } while (0);
 
 
 
-#define PARM(symbol, type)                                      \
+#define PARM(symbol, type, pdoc)                                \
+    do {                                                        \
         if (text(#type) == "tree")                              \
         {                                                       \
             Name *symbol##_decl = new Name(#symbol);            \
@@ -54,29 +74,69 @@
                                              new Name(#symbol), \
                                              new Name(#type));  \
             parameters.push_back(symbol##_decl);                \
-        }
+        }                                                       \
+        syntaxe +=  text( #symbol ) + ", ";                     \
+        param_desc += text("  parameter \"" #type "\", \"" #symbol "\", <<")+pdoc+">>\n";\
+    } while (0);
 
 
-#define PREFIX(name, rtype, symbol, parms, _code, doc)               \
-    do                                                          \
-    {                                                           \
-        TreeList parameters;                                    \
-        parms;                                                  \
-        xl_enter_prefix_##name(c, main, parameters);            \
+#define PREFIX(name, rtype, symbol, parms, _code, group, synopsis, desc, retdoc, misc)   \
+    do                                                                             \
+    {                                                                              \
+        text doc = text("/*| docname \"" #name "\", \"") + group + "\", do \n";    \
+        text syntaxe = text("  dsyntax \"") + symbol + " ";                        \
+        text param_desc = "";                                                      \
+        TreeList parameters;                                                       \
+        parms;                                                                     \
+        bool paramPresent = param_desc.length();                                   \
+        if (paramPresent)                                                          \
+            syntaxe.resize(syntaxe.length() - 2);                                  \
+        doc += syntaxe + "\"\n";                                                   \
+        doc +=  text("  synopsis <<") + synopsis + ">> \n";                        \
+        doc +=  text("  description <<") + desc + ">> \n";                         \
+        if (paramPresent)                                                          \
+        {                                                                          \
+            doc +=  "  parameters \n";                                             \
+            doc += param_desc;                                                     \
+        }                                                                          \
+        retdoc;                                                                    \
+        doc += text("\n") + text(misc) + " |*/";                                   \
+        xl_enter_prefix_##name(c, main, parameters, doc);                          \
     } while(0);
 
 
-#define POSTFIX(name, rtype, parms, symbol, _code, doc)              \
-    do                                                          \
-    {                                                           \
-        TreeList  parameters;                                   \
-        parms;                                                  \
-        xl_enter_postfix_##name(c, main, parameters);           \
+#define POSTFIX(name, rtype, parms, symbol, _code, group, synopsis, desc, retdoc, misc)  \
+    do                                                                             \
+    {                                                                              \
+        text doc = text("/*| docname \"" #name "\", \"") + group + "\", do \n";    \
+        text syntaxe = "  dsyntax \"";                                             \
+        text param_desc = "";                                                      \
+        TreeList  parameters;                                                      \
+        parms;                                                                     \
+        bool paramPresent = param_desc.length();                                   \
+        if (paramPresent)                                                          \
+            syntaxe.resize(syntaxe.length() - 2);                                  \
+        doc += syntaxe + " " + symbol + "\"\n";                                    \
+        doc += text("  synopsis <<") + synopsis + ">>\n";                          \
+        doc += text("  description <<") + desc + ">>\n";                           \
+        doc += "  parameters \n";                                                  \
+        doc += param_desc;                                                         \
+        retdoc;                                                                    \
+        doc += text("\n") + text(misc) + " |*/";                                   \
+        xl_enter_postfix_##name(c, main, parameters, doc);                         \
     } while(0);
 
 
-#define BLOCK(name, rtype, open, type, close, _code, doc)    \
-    xl_enter_block_##name(c, main);
+#define BLOCK(name, rtype, open, type, close, _code, group, synopsis, desc, retdoc, misc) \
+    do {                                                                            \
+         text doc = text("/*| docname \"" #name "\", \"") + group + "\", do \n";    \
+         doc += "  dsyntax \"" #name " " #open " " #type " " #close "\" \n";        \
+         doc +=  text("  synopsis <<") + synopsis + ">> \n";                        \
+         doc +=  text("  description <<") + desc + ">> \n";                         \
+         retdoc;                                                                    \
+         doc += text("\n") + text(misc) + "|*/";                                    \
+         xl_enter_block_##name(c, main, doc);                                       \
+     } while (0);
 
 
 #define NAME(symbol)                            \

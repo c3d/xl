@@ -110,7 +110,7 @@ Tree *ValueMatchesType(Tree *type, Tree *value, bool conversions)
     if (Name *nt = type->AsName())
         if (value == nt)
             return value;
-    
+
     // Check if we match one of the constructed types
     if (Block *bt = type->AsBlock())
         return ValueMatchesType(bt->child, value, conversions);
@@ -211,7 +211,7 @@ Tree *TypeCoversType(Tree *type, Tree *test, bool conversions)
     if (test->IsConstant())
         if (ValueMatchesType(type, test, conversions))
             return test;
-    
+
     // Check if we match one of the constructed types
     if (Block *bt = type->AsBlock())
         return TypeCoversType(bt->child, test, conversions);
@@ -313,7 +313,7 @@ Tree *TypeIntersectsType(Tree *type, Tree *test, bool conversions)
     if (test->IsConstant())
         if (ValueMatchesType(type, test, conversions))
             return test;
-    
+
     // Check if we match one of the constructed types
     if (Block *bt = type->AsBlock())
         return TypeIntersectsType(bt->child, test, conversions);
@@ -399,7 +399,7 @@ Tree *CanonicalType(Tree *value)
     case POSTFIX:       type = postfix_type; break;
     case BLOCK:         type = block_type; break;
     }
-    return type;    
+    return type;
 }
 
 
@@ -465,7 +465,7 @@ Tree *StructuredType(Tree *value)
         value->Set<TypeInfo>(type);
     }
 
-    return type;    
+    return type;
 }
 
 
@@ -844,12 +844,22 @@ Tree *MatchType::Normalize()
 #undef PARM
 #undef DS
 #undef RS
+#undef DOC_RET
+#undef DOC_GROUP
+#undef DOC_SYNOPSIS
+#undef DOC_DESCRIPTION
+#undef DOC_MISC
 
-#define INFIX(name, rtype, t1, symbol, t2, code,doc)
-#define PARM(symbol, type,doc)
-#define PREFIX(name, rtype, symbol, parms, code,doc)
-#define POSTFIX(name, rtype, parms, symbol, code,doc)
-#define BLOCK(name, rtype, open, type, close, code,doc)
+#define DOC_MISC(misc)
+#define DOC_RET(type, rdoc)
+#define DOC_GROUP(grp)
+#define DOC_SYNOPSIS(syno)
+#define DOC_DESCRIPTION(desc)
+#define INFIX(name, rtype, t1, symbol, t2, code,group, synopsis, desc, retdoc, misc)
+#define PARM(symbol, type, pdoc)
+#define PREFIX(name, rtype, symbol, parms, code,group, synopsis, desc, retdoc, misc)
+#define POSTFIX(name, rtype, parms, symbol, code,group, synopsis, desc, retdoc, misc)
+#define BLOCK(name, rtype, open, type, close, code,group, synopsis, desc, retdoc, misc)
 #define NAME(symbol)
 #define TYPE(symbol)                            \
             if (name == #symbol)                \
