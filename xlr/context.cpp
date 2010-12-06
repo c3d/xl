@@ -1253,6 +1253,12 @@ uint Context::EnterProperty(Tree *property)
         if (uint size = cinfo->before.size())
             description = cinfo->before[size-1];
 
+    // If the property is like "property X := 0", look at the right part
+    if (Prefix *prefix = property->AsPrefix())
+        if (Name *name = prefix->left->AsName())
+            if (name->value == "property")
+                property = prefix->right;
+
     // If the property is a block, process children
     if (Block *block = property->AsBlock())
         return EnterProperty(block->child);
@@ -1261,12 +1267,6 @@ uint Context::EnterProperty(Tree *property)
     if (Infix *infix = property->AsInfix())
         if (infix->name == "\n" || infix->name == ";")
             return EnterProperty(infix->left) + EnterProperty(infix->right);
-
-    // If the property is like "property X := 0", look at the right part
-    if (Prefix *prefix = property->AsPrefix())
-        if (Name *name = prefix->left->AsName())
-            if (name->value == "property")
-                property = prefix->right;
 
     // If the property is like "X := 0", take "0" as the value
     if (Infix *infix = property->AsInfix())
@@ -1309,6 +1309,12 @@ uint Context::EnterConstraint(Tree *constraint)
 //   Enter the constraint into our table
 // ----------------------------------------------------------------------------
 {
+    // If the property is like "constraint X = 0", look at the right part
+    if (Prefix *prefix = constraint->AsPrefix())
+        if (Name *name = prefix->left->AsName())
+            if (name->value == "constraint")
+                constraint = prefix->right;
+
     // If the constraint is a block, process children
     if (Block *block = constraint->AsBlock())
         return EnterConstraint(block->child);
@@ -1317,12 +1323,6 @@ uint Context::EnterConstraint(Tree *constraint)
     if (Infix *infix = constraint->AsInfix())
         if (infix->name == "\n" || infix->name == ";")
             return EnterConstraint(infix->left) + EnterConstraint(infix->right);
-
-    // If the property is like "constraint X = 0", look at the right part
-    if (Prefix *prefix = constraint->AsPrefix())
-        if (Name *name = prefix->left->AsName())
-            if (name->value == "constraint")
-                constraint = prefix->right;
 
     // If the property is like "X = Y", record it
     std::set<text> allVariables;
@@ -1732,6 +1732,10 @@ bool Constraint::IsValid(Tree *eq, std::set<text> &vars)
         vars.insert(name->value);
         return true;
     }
+
+    // Check terminals
+    if (eq->AsInteger() || eq->AsReal())
+        return true;
 
     // Check that infix operators are things we know how to deal with
     if (Infix *infix = eq->AsInfix())
