@@ -183,6 +183,7 @@ XL_BEGIN
 
 struct Context;                                 // Execution context
 struct Rewrite;                                 // Tree rewrite data
+struct Evaluator;                               // Evaluation of tree
 struct Property;                                // Properties
 struct Constraint;                              // Constraints on properties
 struct Errors;                                  // Error handlers
@@ -193,7 +194,6 @@ typedef GCPtr<Property>            Property_p;
 typedef GCPtr<Constraint>          Constraint_p;
 typedef std::map<ulong, Rewrite_p> rewrite_table;// Hashing of rewrites
 typedef std::vector<Rewrite_p>     rewrite_list;
-typedef std::set<Context_p>        context_set;
 typedef std::vector<Context_p>     context_list;
 typedef std::map<Tree_p, Tree_p>   tree_map;
 typedef std::map<text, Property>   Properties;
@@ -242,6 +242,8 @@ struct Context
                                    lookup_mode mode = SCOPE_LOOKUP);
 
     // Rewriting things in the context
+    Tree *              Evaluate(Tree *what, Evaluator &eval, ulong hash);
+    static Tree *       Evaluate(Tree *, Evaluator &, ulong, context_list &);
     Tree *              Evaluate(Tree *what, lookup_mode mode = NORMAL_LOOKUP);
     Tree *              Evaluate(Tree *what,
                                  tree_map &valueCache,
@@ -281,16 +283,17 @@ struct Context
                                   bool prefixesOk = false);
 
     // List the set of contexts to lookup (necessary for imported case)
-    void                Contexts(lookup_mode, context_set &, context_list &);
+    void                Contexts(lookup_mode, context_list &);
+    bool                Import(Context *context);
 
     // Clear the symbol table
     void                Clear();
-
+ 
 public:
     Context_p           scope;
     Context_p           stack;
     rewrite_table       rewrites;
-    context_set         imported;
+    context_list        imported;
     Properties          properties;
     Constraints         constraints;
     bool                hasConstants;
@@ -318,6 +321,16 @@ public:
     Tree_p              type;
 
     GARBAGE_COLLECT(Rewrite);
+};
+
+
+struct Evaluator
+// ----------------------------------------------------------------------------
+//   An operation to perform on valid candidates in a tree
+// ----------------------------------------------------------------------------
+{
+    virtual Tree *Do(Context *c, Tree *t, Rewrite *r)  { return NULL; }
+    Tree *operator() (Context *c, Tree *t, Rewrite *r) { return Do(c, t, r); }
 };
 
 

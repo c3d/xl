@@ -4,3 +4,4 @@
 03.Arithmetic/map-reduce-filter.xl
 03.Arithmetic/partial-functions.xl
 03.Arithmetic/range.xl
+03.Arithmetic/solving-constraints.xl

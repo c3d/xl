@@ -855,7 +855,7 @@ Tree *xl_load(Context *context, text name)
 
     Context *imported = new Context(context, NULL);
     MAIN->files[path] = SourceFile(path, tree, imported);
-    context->imported.insert(imported);
+    context->Import(imported);
 
     return tree;
 }
@@ -996,7 +996,7 @@ Tree *xl_load_data(Context *context,
     stat(path.c_str(), &st);
     Context *imported = new Context(context, NULL);
     MAIN->files[path] = SourceFile(path, tree, imported);
-    context->imported.insert(imported);
+    context->Import(imported);
 
     return tree;
 }

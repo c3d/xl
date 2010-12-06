@@ -277,12 +277,11 @@ Rewrite *Context::DefineData(Tree *data)
 // Macro to lookup over all contexts
 #define FOR_CONTEXTS(start, context)                                    \
 {                                                                       \
-    context_set  set;                                                   \
     context_list list;                                                  \
     context_list::iterator iter;                                        \
     if (lookup & IMPORTED_LOOKUP)                                       \
     {                                                                   \
-        Contexts(lookup, set, list);                                    \
+        Contexts(lookup, list);                                         \
         iter = list.begin();                                            \
     }                                                                   \
     Context_p nextContext = NULL;                                       \
@@ -440,6 +439,60 @@ Tree *Context::AssignTree(Tree *tgt, Tree *val, Tree *tp,
         rewrite->native = xl_assigned_value;
     }
     return value;
+}
+
+
+Tree *Context::Evaluate(Tree *what, Evaluator &evaluator, ulong key)
+// ----------------------------------------------------------------------------
+//   Evaluate a tree using the given evaluator, only in given context
+// ----------------------------------------------------------------------------
+{
+    rewrite_table &rwt = rewrites;
+    rewrite_table::iterator found = rwt.find(key);
+    if (found != rwt.end())
+    {
+        Rewrite *candidate = (*found).second;
+        while (candidate)
+        {
+            ulong formKey = HashForm(candidate->from);
+            if (formKey == key)
+            {
+                IFTRACE(eval)
+                    std::cerr << "Tree " << ShortTreeForm(what)
+                              << " candidate in " << this
+                              << " is " << ShortTreeForm(candidate->from)
+                              << "\n";
+
+                Tree *result = evaluator(this, what, candidate);
+                if (result)
+                    return result;
+            } // Matching key
+
+            // Check next key
+            rewrite_table &rwh = candidate->hash;
+            found = rwh.find(key);
+            candidate = found == rwh.end() ? NULL : (*found).second;
+        } // Loop on candidates
+    } // If found candidate
+
+    // Not found
+    return NULL;
+}
+
+
+Tree *Context::Evaluate(Tree *what, Evaluator &evaluator, ulong key,
+                        context_list &contexts)
+// ----------------------------------------------------------------------------
+//   Evaluate on a list of contexts
+// ----------------------------------------------------------------------------
+{
+    for (context_list::iterator c = contexts.begin(); c != contexts.end(); c++)
+    {
+        Tree *result = (*c)->Evaluate(what, evaluator, key);
+        if (result)
+            return result;
+    }
+    return NULL;
 }
 
 
@@ -1497,26 +1550,39 @@ void Context::ListNames(text prefix, rewrite_list &list, lookup_mode lookup,
 }
 
 
-void Context::Contexts(lookup_mode lookup, context_set &set,context_list &list)
+void Context::Contexts(lookup_mode lookup, context_list &list)
 // ----------------------------------------------------------------------------
 //   List all the contexts we need to lookup for a given lookup mode
 // ----------------------------------------------------------------------------
 {
     // Check if this is already a known context
-    if (set.count(this))
+    if (std::find(list.begin(), list.end(), this) != list.end())
         return;
 
     // Insert self in the set and in the ordered list
-    set.insert(this);
     list.push_back(this);
 
     if (scope && (lookup & SCOPE_LOOKUP))
-        scope->Contexts(lookup, set, list);
+        scope->Contexts(lookup, list);
     if (stack && (lookup & STACK_LOOKUP))
-        stack->Contexts(lookup, set, list);
+        stack->Contexts(lookup, list);
     if (lookup & IMPORTED_LOOKUP)
-        for (context_set::iterator i = imported.begin(); i!=imported.end(); i++)
-            (*i)->Contexts(lookup, set, list);
+        for (context_list::iterator i=imported.begin();i!=imported.end();i++)
+            (*i)->Contexts(lookup, list);
+}
+
+
+bool Context::Import(Context *context)
+// ----------------------------------------------------------------------------
+//   Import the other context if we don't already have it
+// ----------------------------------------------------------------------------
+{
+    if (context == this ||
+        std::find(imported.begin(), imported.end(), context) != imported.end())
+        return false;
+
+    imported.push_back(context);
+    return true;
 }
 
 
