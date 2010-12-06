@@ -508,6 +508,125 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
 }
 
 
+struct RegularEvaluator
+// ----------------------------------------------------------------------------
+//   Normal evaluation of expressions
+// ----------------------------------------------------------------------------
+{
+    RegularEvaluator(tree_map &values,
+                     Context *stack,
+                     Context_p *tailContext,
+                     Tree_p *tailTree)
+        : values(values), stack(stack),
+          tailContext(tailContext), tailTree(tailTree) {}
+
+    Tree *operator() (Context *context, Tree *value, Rewrite *candidate);
+
+public:
+    tree_map &  values;         // Cache of values
+    Context_p   stack;          // Original evaluation context
+    Context_p * tailContext;    // Optional tail recursion ctxt
+    Tree_p *    tailTree;       // Optional tail recursion next
+};
+
+
+inline Tree *RegularEvaluator::operator() (Context *context,
+                                           Tree *what,
+                                           Rewrite *candidate)
+// ----------------------------------------------------------------------------
+//   Check if we can evaluate the given tree
+// ----------------------------------------------------------------------------
+{
+    IFTRACE(eval)
+        std::cerr << "Tree " << ShortTreeForm(what)
+                  << " candidate in " << context
+                  << " is " << ShortTreeForm(candidate->from)
+                  << "\n";
+
+    // If this is native C code, invoke it.
+    if (native_fn fn = candidate->native)
+    {
+        // Case where we have an assigned value
+        if (fn == xl_assigned_value)
+            return candidate->to;
+        
+        // Bind native context
+        TreeList args;
+        Context_p eval = new Context(context, stack);
+        if (eval->Bind(candidate->from, what, values, &args))
+        {
+            uint arity = args.size();
+            Compiler *comp = MAIN->compiler;
+            adapter_fn adj = comp->ArrayToArgsAdapter(arity);
+            Tree **args0 = (Tree **) &args[0];
+            Tree *result = adj(fn, eval, what, args0);
+            return result;
+        }
+    }
+    else if (Name *name = candidate->from->AsName())
+    {
+        // A name always evaluates in the present context,
+        // not context of origin (we'd have a closure)
+        Name *vname = what->AsName();
+        assert(vname || !"Hash function is broken");
+        if (name->value == vname->value)
+        {
+            Tree*result = candidate->to;
+            if (result && result != candidate->from)
+            {
+                // In general, we evaluate names in the current
+                // context, except when looking at name aliases
+                Context_p eval =
+                    candidate->type == name_type
+                    ? (Context *) context->stack
+                    : (Context *) stack;
+                
+                if (tailContext)
+                {
+                    *tailContext = eval;
+                    *tailTree = result;
+                    return result;
+                }
+                else
+                {
+                    result = eval->Evaluate(result);
+                }
+            }
+            return result;
+        }
+    }
+    else
+    {
+        // Keep evaluating
+        Context_p eval = new Context(context, stack);
+        if (eval->Bind(candidate->from, what, values))
+        {
+            Tree *result = candidate->from;
+            if (Tree *to = candidate->to)
+            {
+                if (tailContext)
+                {
+                    *tailContext = eval;
+                    *tailTree = to;
+                    return to;
+                }
+                else
+                {
+                    result = eval->Evaluate(to);
+                }
+            }
+            else
+            {
+                result = xl_evaluate_children(eval, result);
+            }
+            return result;
+        }
+    }
+
+    return NULL;
+}
+
+
 Tree *Context::Evaluate(Tree *what,             // Value to evaluate
                         tree_map &values,       // Cache of values
                         lookup_mode lookup,     // Lookup mode
@@ -544,128 +663,17 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
 
     // Loop over all contexts
     Tree_p saveWhatFromGC = what;
-    FOR_CONTEXTS(this, context)
+    RegularEvaluator evaluator(values, this, tailContext, tailTree);
+    Tree *result = Evaluate(what, evaluator, key, lookup);
+
+    if (result)
     {
-        rewrite_table &rwt = context->rewrites;
-        rewrite_table::iterator found = rwt.find(key);
-        if (found == rwt.end())
-        {
-            // Not found with exact key, check with kind alone
-            found = rwt.find(key & 0xF);
-            if (found == rwt.end())
-                found = rwt.find(0);
-        }
-        if (found != rwt.end())
-        {
-            Rewrite *candidate = (*found).second;
-            while (candidate)
-            {
-                ulong formKey = HashForm(candidate->from);
-                if (formKey == key)
-                {
-                    IFTRACE(eval)
-                        std::cerr << "Tree " << ShortTreeForm(what)
-                                  << " candidate in " << context
-                                  << " is " << ShortTreeForm(candidate->from)
-                                  << "\n";
-
-                    // If this is native C code, invoke it.
-                    if (native_fn fn = candidate->native)
-                    {
-                        // Case where we have an assigned value
-                        if (fn == xl_assigned_value)
-                            return candidate->to;
-
-                        // Bind native context
-                        TreeList args;
-                        Context_p eval = new Context(context, this);
-                        if (eval->Bind(candidate->from, what, values, &args))
-                        {
-                            uint arity = args.size();
-                            Compiler *comp = MAIN->compiler;
-                            adapter_fn adj = comp->ArrayToArgsAdapter(arity);
-                            Tree **args0 = (Tree **) &args[0];
-                            Tree *result = adj(fn, eval, what, args0);
-                            values[what] = result;
-                            if (keepSource && result != what)
-                                xl_set_source(result, what);
-                            return result;
-                        }
-                    }
-                    else if (Name *name = candidate->from->AsName())
-                    {
-                        // A name always evaluates in the present context,
-                        // not context of origin (we'd have a closure)
-                        Name *vname = what->AsName();
-                        assert(vname || !"Hash function is broken");
-                        if (name->value == vname->value)
-                        {
-                            Tree*result = candidate->to;
-                            if (result && result != candidate->from)
-                            {
-                                // In general, we evaluate names in the current
-                                // context, except when looking at name aliases
-                                Context_p eval =
-                                    candidate->type == name_type
-                                    ? (Context *) context->stack
-                                    : this;
-
-                                if (tailContext)
-                                {
-                                    *tailContext = eval;
-                                    *tailTree = result;
-                                    if (keepSource && result != what)
-                                        xl_set_source(result, what);
-                                    return result;
-                                }
-                                else
-                                {
-                                    result = eval->Evaluate(result, lookup);
-                                }
-                            }
-                            values[what] = result;
-                            if (keepSource && result != what)
-                                xl_set_source(result, what);
-                            return result;
-                        }
-                    }
-                    else
-                    {
-                        // Keep evaluating
-                        Context_p eval = new Context(context, this);
-                        if (eval->Bind(candidate->from, what, values))
-                        {
-                            Tree *result = candidate->from;
-                            if (Tree *to = candidate->to)
-                            {
-                                if (tailContext)
-                                {
-                                    *tailContext = eval;
-                                    *tailTree = to;
-                                    return to;
-                                }
-                                else
-                                {
-                                    result = eval->Evaluate(to,lookup);
-                                }
-                            }
-                            else
-                            {
-                                result = xl_evaluate_children(eval, result);
-                            }
-                            values[what] = result;
-                            return result;
-                        }
-                    }
-                }
-
-                rewrite_table &rwh = candidate->hash;
-                found = rwh.find(key);
-                candidate = found == rwh.end() ? NULL : (*found).second;
-            } // Loop on candidates
-        } // If found candidate
+        if (keepSource && result != what)
+            xl_set_source(result, what);
+        if (!tailContext || !*tailContext)
+            values[what] = result;
+        return result;
     }
-    END_FOR_CONTEXTS;
 
     // If we are unable to find the right form, check standard prefix forms
     if (Prefix *prefix = what->AsPrefix())

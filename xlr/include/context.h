@@ -408,12 +408,6 @@ Tree *Context::Evaluate(Tree *what,
             ulong formKey = HashForm(candidate->from);
             if (formKey == key)
             {
-                IFTRACE(eval)
-                    std::cerr << "Tree " << what
-                              << " candidate in " << this
-                              << " is " << candidate->from
-                              << "\n";
-
                 Tree *result = evaluator(this, what, candidate);
                 if (result)
                     return result;
