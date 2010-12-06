@@ -299,7 +299,6 @@ Rewrite *Context::DefineData(Tree *data)
 }
         
 
-
 Tree *Context::Assign(Tree *tgt, Tree *src, lookup_mode lookup)
 // ----------------------------------------------------------------------------
 //   Perform an assignment in the given context
@@ -323,13 +322,6 @@ Tree *Context::Assign(Tree *tgt, Tree *src, lookup_mode lookup)
         }
     }
 
-    // If the target is not a name, evaluate it
-    if (target->Kind() != NAME)
-    {
-        target = Evaluate(target);
-        if (target->Kind() != NAME)
-            Ooops("Assignment target $1 is not a name", target);
-    }
     return AssignTree(target, value, type, lookup);
 }
 
@@ -439,60 +431,6 @@ Tree *Context::AssignTree(Tree *tgt, Tree *val, Tree *tp,
         rewrite->native = xl_assigned_value;
     }
     return value;
-}
-
-
-Tree *Context::Evaluate(Tree *what, Evaluator &evaluator, ulong key)
-// ----------------------------------------------------------------------------
-//   Evaluate a tree using the given evaluator, only in given context
-// ----------------------------------------------------------------------------
-{
-    rewrite_table &rwt = rewrites;
-    rewrite_table::iterator found = rwt.find(key);
-    if (found != rwt.end())
-    {
-        Rewrite *candidate = (*found).second;
-        while (candidate)
-        {
-            ulong formKey = HashForm(candidate->from);
-            if (formKey == key)
-            {
-                IFTRACE(eval)
-                    std::cerr << "Tree " << ShortTreeForm(what)
-                              << " candidate in " << this
-                              << " is " << ShortTreeForm(candidate->from)
-                              << "\n";
-
-                Tree *result = evaluator(this, what, candidate);
-                if (result)
-                    return result;
-            } // Matching key
-
-            // Check next key
-            rewrite_table &rwh = candidate->hash;
-            found = rwh.find(key);
-            candidate = found == rwh.end() ? NULL : (*found).second;
-        } // Loop on candidates
-    } // If found candidate
-
-    // Not found
-    return NULL;
-}
-
-
-Tree *Context::Evaluate(Tree *what, Evaluator &evaluator, ulong key,
-                        context_list &contexts)
-// ----------------------------------------------------------------------------
-//   Evaluate on a list of contexts
-// ----------------------------------------------------------------------------
-{
-    for (context_list::iterator c = contexts.begin(); c != contexts.end(); c++)
-    {
-        Tree *result = (*c)->Evaluate(what, evaluator, key);
-        if (result)
-            return result;
-    }
-    return NULL;
 }
 
 

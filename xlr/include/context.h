@@ -183,7 +183,6 @@ XL_BEGIN
 
 struct Context;                                 // Execution context
 struct Rewrite;                                 // Tree rewrite data
-struct Evaluator;                               // Evaluation of tree
 struct Property;                                // Properties
 struct Constraint;                              // Constraints on properties
 struct Errors;                                  // Error handlers
@@ -242,8 +241,13 @@ struct Context
                                    lookup_mode mode = SCOPE_LOOKUP);
 
     // Rewriting things in the context
+    template <class Evaluator>
     Tree *              Evaluate(Tree *what, Evaluator &eval, ulong hash);
-    static Tree *       Evaluate(Tree *, Evaluator &, ulong, context_list &);
+    template <class Evaluator, class ContextIterator>
+    static Tree *       Evaluate(Tree *, Evaluator &, ulong hash,
+                                 ContextIterator from, ContextIterator to);
+    template <class Evaluator>
+    Tree *              Evaluate(Tree *, Evaluator &, ulong, lookup_mode);
     Tree *              Evaluate(Tree *what, lookup_mode mode = NORMAL_LOOKUP);
     Tree *              Evaluate(Tree *what,
                                  tree_map &valueCache,
@@ -288,7 +292,7 @@ struct Context
 
     // Clear the symbol table
     void                Clear();
- 
+
 public:
     Context_p           scope;
     Context_p           stack;
@@ -321,16 +325,6 @@ public:
     Tree_p              type;
 
     GARBAGE_COLLECT(Rewrite);
-};
-
-
-struct Evaluator
-// ----------------------------------------------------------------------------
-//   An operation to perform on valid candidates in a tree
-// ----------------------------------------------------------------------------
-{
-    virtual Tree *Do(Context *c, Tree *t, Rewrite *r)  { return NULL; }
-    Tree *operator() (Context *c, Tree *t, Rewrite *r) { return Do(c, t, r); }
 };
 
 
@@ -387,6 +381,89 @@ struct PrefixDefinitionsInfo : Info
     PrefixDefinitionsInfo(): last(NULL) {}
     Infix_p   last;
 };
+
+
+
+// ============================================================================
+//
+//   Template functions in Context class
+//
+// ============================================================================
+
+template<class Evaluator> inline
+Tree *Context::Evaluate(Tree *what,
+                        Evaluator &evaluator,
+                        ulong key)
+// ----------------------------------------------------------------------------
+//   Evaluate a tree using the given evaluator, only in given context
+// ----------------------------------------------------------------------------
+{
+    rewrite_table &rwt = rewrites;
+    rewrite_table::iterator found = rwt.find(key);
+    if (found != rwt.end())
+    {
+        Rewrite *candidate = (*found).second;
+        while (candidate)
+        {
+            ulong formKey = HashForm(candidate->from);
+            if (formKey == key)
+            {
+                IFTRACE(eval)
+                    std::cerr << "Tree " << what
+                              << " candidate in " << this
+                              << " is " << candidate->from
+                              << "\n";
+
+                Tree *result = evaluator(this, what, candidate);
+                if (result)
+                    return result;
+            } // Matching key
+
+            // Check next key
+            rewrite_table &rwh = candidate->hash;
+            found = rwh.find(key);
+            candidate = found == rwh.end() ? NULL : (*found).second;
+        } // Loop on candidates
+    } // If found candidate
+
+    // Not found
+    return NULL;
+}
+
+
+template <class Evaluator, class ContextIterator> inline
+Tree *Context::Evaluate(Tree *what,
+                        Evaluator &evaluator,
+                        ulong key,
+                        ContextIterator begin,
+                        ContextIterator end)
+// ----------------------------------------------------------------------------
+//   Evaluate on a list of contexts
+// ----------------------------------------------------------------------------
+{
+    for (ContextIterator it = begin; it != end; it++)
+    {
+        Tree *result = (*it)->Evaluate(what, evaluator, key);
+        if (result)
+            return result;
+    }
+    return NULL;
+}
+
+
+template <class Evaluator> inline
+Tree *Context::Evaluate(Tree *what,
+                        Evaluator &evaluator,
+                        ulong key,
+                        lookup_mode mode)
+// ----------------------------------------------------------------------------
+//   Evaluate on a list of contexts defined by lookup rules
+// ----------------------------------------------------------------------------
+{
+    context_list list;
+    Contexts(mode, list);
+    return Evaluate(what, evaluator, key, list.begin(), list.end());
+}
 
 
 
