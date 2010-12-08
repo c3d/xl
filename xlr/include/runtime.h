@@ -97,6 +97,7 @@ Tree *xl_postfix_cast(Context *, Tree *source, Tree *value);
 Tree *xl_block_cast(Context *, Tree *source, Tree *value);
 
 Tree *xl_parameter(text name, text type);
+void xl_infix_to_list(Infix *infix, TreeList &list);
 
 Real *xl_springify(Real &value, Real &target, Real &time,
                    Real &damp, Real &kspring, Real &lt, Real &ls);

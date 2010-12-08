@@ -729,6 +729,25 @@ Tree *xl_parameter(text symbol, text type)
 }
 
 
+void xl_infix_to_list(Infix *infix, TreeList &list)
+// ----------------------------------------------------------------------------
+//   Convert an infix to a list, whether left or right associative
+// ----------------------------------------------------------------------------
+{
+    Infix *left = infix->left->AsInfix();
+    if (left && left->name == infix->name)
+        xl_infix_to_list(left, list);
+    else
+        list.push_back(infix->left);
+    
+    Infix *right = infix->right->AsInfix();
+    if (right && right->name == infix->name)
+        xl_infix_to_list(right, list);
+    else
+        list.push_back(infix->right);
+}
+            
+
 Real *xl_springify(Real &value, Real &target, Real &time,
                    Real &damp, Real &kspring, Real &lt, Real &ls)
 // ----------------------------------------------------------------------------
