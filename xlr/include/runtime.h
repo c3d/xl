@@ -140,6 +140,7 @@ public:
 
 Tree *xl_apply(Tree *code, Tree *data);
 Tree *xl_range(longlong l, longlong h);
+void xl_infix_to_list(Infix *infix, TreeList &list);
 Tree *xl_nth(Tree *data, longlong index);
 
 
