@@ -130,8 +130,8 @@ PREFIX(IntToReal,  real, "real", PARM(x, integer, ""), XL_RREAL((real_t) x), DOC
 PREFIX(TextToReal, real, "real", PARM(x, text, ""), XL_RREAL(xl_text2real(x)), DOC_GROUP(basics), DOC_SYNOPSIS(""), DOC_DESCRIPTION(""), DOC_RET(real, ""),)
 PREFIX(RealToInt, integer, "integer", PARM(x, real, ""), XL_RINT((integer_t) x), DOC_GROUP(basics), DOC_SYNOPSIS(""), DOC_DESCRIPTION(""), DOC_RET(integer, ""),)
 PREFIX(TextToInt, integer, "integer", PARM(x, text, ""), XL_RINT(xl_text2int(x)), DOC_GROUP(basics), DOC_SYNOPSIS(""), DOC_DESCRIPTION(""), DOC_RET(integer, ""),)
-PREFIX(IntToText, text, "text", PARM(x, integer, ""), XL_RTEXT((text) x), DOC_GROUP(basics), DOC_SYNOPSIS(""), DOC_DESCRIPTION(""), DOC_RET(text, ""),)
-PREFIX(RealToText, text, "text", PARM(x, real, ""), XL_RTEXT((text) x), DOC_GROUP(basics), DOC_SYNOPSIS(""), DOC_DESCRIPTION(""), DOC_RET(text, ""),)
+PREFIX(IntToText, text, "text", PARM(x, integer, ""), XL_RTEXT(xl_int2text(x)), DOC_GROUP(basics), DOC_SYNOPSIS(""), DOC_DESCRIPTION(""), DOC_RET(text, ""),)
+PREFIX(RealToText, text, "text", PARM(x, real, ""), XL_RTEXT(xl_real2text(x)), DOC_GROUP(basics), DOC_SYNOPSIS(""), DOC_DESCRIPTION(""), DOC_RET(text, ""),)
 
 // Time computations
 PREFIX(TimeHours, integer, "hours", PARM(t, integer, ""), XL_RTIME(tm.tm_hour), DOC_GROUP(basics), DOC_SYNOPSIS(""), DOC_DESCRIPTION(""), DOC_RET(integer, ""),)
