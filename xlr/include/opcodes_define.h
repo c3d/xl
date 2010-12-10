@@ -55,7 +55,7 @@
          doc += text("  synopsis <<") + synopsis + ">>\n";                        \
          doc += text("  description <<") + desc + ">>\n";                         \
          retdoc;                                                                  \
-         doc += text("\n") + text(misc) + "|*/";                                  \
+         doc += text(misc) + "|*/";                                               \
         xl_enter_infix_##name(c, main, doc);                                      \
     } while (0);
 
@@ -100,7 +100,7 @@
             doc += param_desc;                                                     \
         }                                                                          \
         retdoc;                                                                    \
-        doc += text("\n") + text(misc) + " |*/";                                   \
+        doc += text(misc) + " |*/";                                                \
         xl_enter_prefix_##name(c, main, parameters, doc);                          \
     } while(0);
 
@@ -122,7 +122,7 @@
         doc += "  parameters \n";                                                  \
         doc += param_desc;                                                         \
         retdoc;                                                                    \
-        doc += text("\n") + text(misc) + " |*/";                                   \
+        doc += text(misc) + " |*/";                                                \
         xl_enter_postfix_##name(c, main, parameters, doc);                         \
     } while(0);
 
@@ -134,7 +134,7 @@
          doc +=  text("  synopsis <<") + synopsis + ">> \n";                        \
          doc +=  text("  description <<") + desc + ">> \n";                         \
          retdoc;                                                                    \
-         doc += text("\n") + text(misc) + "|*/";                                    \
+         doc += text(misc) + "|*/";                                                 \
          xl_enter_block_##name(c, main, doc);                                       \
      } while (0);
 
