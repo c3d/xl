@@ -175,7 +175,7 @@ public:
 // ============================================================================
 
 Tree *xl_write(Context *context, Tree *what, text sep = "");
-Tree *xl_list_files(Tree *patterns);
+Tree *xl_list_files(Context *context, Tree *patterns);
 
 
 

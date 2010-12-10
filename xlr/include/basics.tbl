@@ -258,7 +258,7 @@ PREFIX(Springify, real, "springify",
        PARM(d, real) PARM(k, real) PARM(lt, real) PARM(ls, real),
        return xl_springify(v, tgt, t, d, k, lt, ls), "")
 PREFIX(ListFiles, tree, "files", PARM(pat, tree),
-       return xl_list_files(&pat),
+       return xl_list_files(context, &pat),
        "List the files matching the pattern")
 // Debugging code
 PREFIX(DebugTree, tree, "debug", PARM(toDebug, source),

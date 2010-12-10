@@ -841,27 +841,27 @@ Tree *xl_write(Context *context, Tree *tree, text sep)
 }
 
 
-static void xl_list_files(Tree *patterns, Tree_p *&parent)
+static void xl_list_files(Context *context, Tree *patterns, Tree_p *&parent)
 // ----------------------------------------------------------------------------
 //   Append all files found in the parent
 // ----------------------------------------------------------------------------
 {
     if (Block *block = patterns->AsBlock())
     {
-        xl_list_files(block->child, parent);
+        xl_list_files(context, block->child, parent);
         return;
     }
     if (Infix *infix = patterns->AsInfix())
     {
         if (infix->name == "," || infix->name == ";" || infix->name == "\n")
         {
-            xl_list_files(infix->left, parent);
-            xl_list_files(infix->right, parent);
+            xl_list_files(context, infix->left, parent);
+            xl_list_files(context, infix->right, parent);
             return;
         }
     }
 
-    patterns = xl_evaluate(patterns);
+    patterns = context->Evaluate(patterns);
     if (Text *regexp = patterns->AsText())
     {
         glob_t files;
@@ -889,14 +889,14 @@ static void xl_list_files(Tree *patterns, Tree_p *&parent)
 }
 
 
-Tree *xl_list_files(Tree *patterns)
+Tree *xl_list_files(Context *context, Tree *patterns)
 // ----------------------------------------------------------------------------
 //   List all files in the given pattern
 // ----------------------------------------------------------------------------
 {
     Tree_p result = NULL;
     Tree_p *parent = &result;
-    xl_list_files(patterns, parent);
+    xl_list_files(context, patterns, parent);
     if (!result)
         result = xl_empty;
     return result;
