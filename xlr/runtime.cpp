@@ -36,7 +36,7 @@
 #include <iostream>
 #include <cstdarg>
 #include <cstdio>
-#include <glob.h>
+#include "winglob.h"
 #include <sys/stat.h>
 
 

@@ -44,7 +44,8 @@ SOURCES     =					\
         diff.cpp				\
         lcs.cpp                                 \
         traces_base.cpp                         \
-	opcodes.cpp
+	opcodes.cpp				\
+	winglob.cpp
 
 PRODUCT=xlr$(EXE)
 
