@@ -723,6 +723,8 @@ static void xl_list_files(Tree *patterns, Tree_p *&parent)
             return;
         }
     }
+
+    patterns = xl_evaluate(patterns);
     if (Text *regexp = patterns->AsText())
     {
         glob_t files;
