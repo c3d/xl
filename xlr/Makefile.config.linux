@@ -23,6 +23,12 @@
 #* Date       : $Date$
 #******************************************************************************
 
+ifndef BUILDENV
+BUILDENV=linux
+endif
+
+DEFINES_linux=-DCONFIG_LINUX
+
 LLVM_FLAGS = `llvm-config --cppflags | sed -e s/-DNDEBUG//g`
 LLVM_LIBS = `llvm-config --ldflags --libs all`
 
@@ -38,3 +44,6 @@ CPPFLAGS+=	-I/usr/include/X11				\
 LDFLAGS=	-L/usr/local/lib -lftgl -ljpeg -lfontconfig	\
 		 $(LLVM_LIBS)                                   \
                 -L/usr/lib -lglut
+
+include $(BROOT)Makefile.config.gnu
+include $(BROOT)Makefile.rules
