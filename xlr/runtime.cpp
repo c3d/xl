@@ -37,6 +37,7 @@
 #include <iostream>
 #include <cstdarg>
 #include <cstdio>
+#include <glob.h>
 #include <sys/stat.h>
 
 
@@ -701,6 +702,67 @@ Tree *xl_write(Symbols *symbols, Tree *tree, text sep)
 
     return XL::xl_true;
 }
+
+
+static void xl_list_files(Tree *patterns, Tree_p *&parent)
+// ----------------------------------------------------------------------------
+//   Append all files found in the parent
+// ----------------------------------------------------------------------------
+{
+    if (Block *block = patterns->AsBlock())
+    {
+        xl_list_files(block->child, parent);
+        return;
+    }
+    if (Infix *infix = patterns->AsInfix())
+    {
+        if (infix->name == "," || infix->name == ";" || infix->name == "\n")
+        {
+            xl_list_files(infix->left, parent);
+            xl_list_files(infix->right, parent);
+            return;
+        }
+    }
+    if (Text *regexp = patterns->AsText())
+    {
+        glob_t files;
+        text filename = regexp->value;
+        glob(filename.c_str(), GLOB_MARK, NULL, &files);
+        for (uint i = 0; i < files.gl_pathc; i++)
+        {
+            std::string entry(files.gl_pathv[i]);
+            Text *listed = new Text(entry);
+            if (*parent)
+            {
+                Infix *added = new Infix(",", *parent, listed);
+                *parent = added;
+                parent = &added->right;
+            }
+            else
+            {
+                *parent = listed;
+            }
+        }
+        globfree(&files);
+        return;
+    }
+    Ooops("Malformed files list $1", patterns);
+}
+
+
+Tree *xl_list_files(Tree *patterns)
+// ----------------------------------------------------------------------------
+//   List all files in the given pattern
+// ----------------------------------------------------------------------------
+{
+    Tree_p result = NULL;
+    Tree_p *parent = &result;
+    xl_list_files(patterns, parent);
+    if (!result)
+        result = xl_empty;
+    return result;
+}
+
 
 
 
