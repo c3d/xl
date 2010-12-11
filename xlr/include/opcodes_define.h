@@ -31,52 +31,100 @@
 #undef NAME
 #undef TYPE
 #undef PARM
+#undef RETURNS
+#undef GROUP
+#undef SYNOPSIS
+#undef DESCRIPTION
+#undef SEE
 
 #ifndef XL_SCOPE
 #define XL_SCOPE "xl_"
 #endif // XL_SCOPE
 
-
-#define INFIX(name, rtype, t1, symbol, t2, _code, doc)       \
-    xl_enter_infix_##name(c, main);
-
-
-
-#define PARM(symbol, type)                                      \
-        if (text(#type) == "tree")                              \
-        {                                                       \
-            Name *symbol##_decl = new Name(#symbol);            \
-            parameters.push_back(symbol##_decl);                \
-        }                                                       \
-        else                                                    \
-        {                                                       \
-            Infix *symbol##_decl = new Infix(":",               \
-                                             new Name(#symbol), \
-                                             new Name(#type));  \
-            parameters.push_back(symbol##_decl);                \
-        }
+#define RETURNS(rtype, rdoc)                                            \
+                          returns = " return_value \"" #rtype "\", <<"; \
+                          returns += rdoc;                              \
+                          returns += ">>\n";
+#define GROUP(grp)        docgroup = #grp;
+#define SYNOPSIS(syno)    synopsis = syno;
+#define DESCRIPTION(desc) description = desc;
+#define SEE(see)          seealso = #see;
 
 
-#define PREFIX(name, rtype, symbol, parms, _code, doc)               \
+#define DOC(name, syntax, docinfo)                                      \
+    text returns, docgroup, docparms, synopsis, description, seealso;   \
+    text docsyntax = syntax;                                            \
+    do { docinfo; } while (0);                                          \
+    text doc = "/*| docname \"" #name "\", \"" + docgroup + "\", do\n"; \
+    doc += " dsyntax \"" + docsyntax + "\"\n";                          \
+    doc += " synposis <<" + synopsis + ">>\n";                          \
+    doc += " description << " + description + ">>\n";                   \
+    if (docparms != "")                                                 \
+        doc += " parameters\n" + docparms + "\n";                       \
+    if (returns != "")                                                  \
+        doc += returns;                                                 \
+    if (seealso != "")                                                  \
+        doc += " see \"" + seealso + "\"\n";                            \
+    doc += "|*/";
+
+#define INFIX(name, rtype, t1, symbol, t2, _code, docinfo)      \
+    do                                                          \
+    {                                                           \
+        DOC(name, #t1 " " symbol " " #t2, docinfo);             \
+        xl_enter_infix_##name(c, main, doc);                    \
+    } while (0);
+
+
+
+#define PARM(symbol, type, pdoc)                                        \
+    do                                                                  \
+    {                                                                   \
+        if (text(#type) == "tree")                                      \
+        {                                                               \
+            Name *symbol##_decl = new Name(#symbol);                    \
+            parameters.push_back(symbol##_decl);                        \
+        }                                                               \
+        else                                                            \
+        {                                                               \
+            Infix *symbol##_decl = new Infix(":",                       \
+                                             new Name(#symbol),         \
+                                             new Name(#type));          \
+            parameters.push_back(symbol##_decl);                        \
+        }                                                               \
+        if (docparms != "")                                             \
+            docsyntax += ", ";                                          \
+        else                                                            \
+            docsyntax += " ";                                           \
+        docsyntax += text(#symbol);                                     \
+        docparms += "  parameter \"" #type "\", \"" #symbol "\",";      \
+        docparms += " <<" pdoc ">>\n";                                  \
+    } while (0);
+
+
+#define PREFIX(name, rtype, symbol, parms, _code, docinfo)      \
     do                                                          \
     {                                                           \
         TreeList parameters;                                    \
-        parms;                                                  \
-        xl_enter_prefix_##name(c, main, parameters);            \
+        DOC(name, #symbol, docinfo ; parms);                    \
+        xl_enter_prefix_##name(c, main, parameters, doc);       \
     } while(0);
 
 
-#define POSTFIX(name, rtype, parms, symbol, _code, doc)              \
+#define POSTFIX(name, rtype, parms, symbol, _code, docinfo)             \
+    do                                                                  \
+    {                                                                   \
+        TreeList  parameters;                                           \
+        DOC(name, #symbol, docinfo ; parms ; docsyntax += " " #symbol); \
+        xl_enter_postfix_##name(c, main, parameters, doc);              \
+    } while(0);
+
+
+#define BLOCK(name, rtype, open, type, close, _code, docinfo)   \
     do                                                          \
     {                                                           \
-        TreeList  parameters;                                   \
-        parms;                                                  \
-        xl_enter_postfix_##name(c, main, parameters);           \
-    } while(0);
-
-
-#define BLOCK(name, rtype, open, type, close, _code, doc)    \
-    xl_enter_block_##name(c, main);
+        DOC(name, #open " " #type " " #close, docinfo);         \
+        xl_enter_block_##name(c, main, doc);                    \
+    } while (0);
 
 
 #define NAME(symbol)                            \

@@ -18,193 +18,670 @@ TYPE(postfix);
 TYPE(block);
 
 // Integer arithmetic and comparisons
-INFIX(SetInt, integer,integer,":=",integer,XL_RINT(l.value = XL_INT(r)), "")
-INFIX(AddInt,integer, integer,"+",integer, XL_RINT(XL_INT(l) + XL_INT(r)), "")
-INFIX(SubInt,integer, integer,"-",integer, XL_RINT(XL_INT(l) - XL_INT(r)), "")
-INFIX(MulInt,integer, integer,"*",integer, XL_RINT(XL_INT(l) * XL_INT(r)), "")
+INFIX(SetInt, integer,integer,":=",integer,XL_RINT(l.value = XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(integer,""))
+INFIX(AddInt,integer, integer,"+",integer, XL_RINT(XL_INT(l) + XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(integer,""))
+INFIX(SubInt,integer, integer,"-",integer, XL_RINT(XL_INT(l) - XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(integer,""))
+INFIX(MulInt,integer, integer,"*",integer, XL_RINT(XL_INT(l) * XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(integer,""))
 INFIX(DivInt,integer, integer,"/",integer,
       if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RINT(0LL); }
-      XL_RINT(XL_INT(l) / XL_INT(r)), "")
+      XL_RINT(XL_INT(l) / XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(integer,""))
 INFIX(RemInt,integer, integer,"rem",integer,
       if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RINT(0LL); }
-      XL_RINT(XL_INT(l) % XL_INT(r)), "")
+      XL_RINT(XL_INT(l) % XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(integer,""))
 INFIX(ModInt,integer, integer,"mod",integer,
       if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RINT(0LL); }
-      XL_RINT(xl_mod(l, r)), "")
-INFIX(PowerInt, integer, integer, "^", integer, XL_RINT(xl_pow(l,r)), "")
+      XL_RINT(xl_mod(l, r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(integer,""))
+INFIX(PowerInt, integer, integer, "^", integer, XL_RINT(xl_pow(l,r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(integer,""))
 
-INFIX(LShift, integer, integer,"<<",integer, XL_RINT(XL_INT(l) << XL_INT(r)), "")
-INFIX(RShift, integer, integer,">>",integer, XL_RINT(XL_INT(l) >> XL_INT(r)), "")
+INFIX(LShift, integer, integer,"<<",integer, XL_RINT(XL_INT(l) << XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(integer,""))
+INFIX(RShift, integer, integer,">>",integer, XL_RINT(XL_INT(l) >> XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(integer,""))
 
-INFIX(And, integer, integer, "and", integer, XL_RINT(XL_INT(l) & XL_INT(r)), "")
-INFIX(Or, integer, integer, "or", integer, XL_RINT(XL_INT(l) | XL_INT(r)), "")
-INFIX(Xor, integer, integer, "xor", integer, XL_RINT(XL_INT(l) ^ XL_INT(r)), "")
+INFIX(And, integer, integer, "and", integer, XL_RINT(XL_INT(l) & XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(integer,""))
+INFIX(Or, integer, integer, "or", integer, XL_RINT(XL_INT(l) | XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(integer,""))
+INFIX(Xor, integer, integer, "xor", integer, XL_RINT(XL_INT(l) ^ XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(integer,""))
 
-INFIX(LTInt, boolean, integer, "<", integer, XL_RBOOL(XL_INT(l) < XL_INT(r)), "")
-INFIX(GTInt, boolean, integer, ">", integer, XL_RBOOL(XL_INT(l) > XL_INT(r)), "")
-INFIX(LEInt, boolean, integer, "<=", integer, XL_RBOOL(XL_INT(l) <= XL_INT(r)), "")
-INFIX(GEInt, boolean, integer, ">=", integer, XL_RBOOL(XL_INT(l) >= XL_INT(r)), "")
-INFIX(NEInt, boolean, integer, "<>", integer, XL_RBOOL(XL_INT(l) != XL_INT(r)), "")
-INFIX(EQInt, boolean, integer, "=", integer, XL_RBOOL(XL_INT(l) == XL_INT(r)), "")
+INFIX(LTInt, boolean, integer, "<", integer, XL_RBOOL(XL_INT(l) < XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(GTInt, boolean, integer, ">", integer, XL_RBOOL(XL_INT(l) > XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(LEInt, boolean, integer, "<=", integer, XL_RBOOL(XL_INT(l) <= XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(GEInt, boolean, integer, ">=", integer, XL_RBOOL(XL_INT(l) >= XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(NEInt, boolean, integer, "<>", integer, XL_RBOOL(XL_INT(l) != XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(EQInt, boolean, integer, "=", integer, XL_RBOOL(XL_INT(l) == XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
 
-PREFIX(NegateInt, integer, "-", PARM(x, integer), XL_RINT(-x), "")
-PREFIX(BitwiseNotInt, integer, "not", PARM(x, integer), XL_RINT(~x), "")
+PREFIX(NegateInt, integer, "-", PARM(x, integer, ""), XL_RINT(-x),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(BitwiseNotInt, integer, "not", PARM(x, integer, ""), XL_RINT(~x),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
 
 // Percents
-POSTFIX(PercentInt, real, PARM(x, integer), "%", XL_RREAL(x / 100.0), "")
-POSTFIX(PercentReal, real, PARM(x, real), "%", XL_RREAL(x / 100.0), "")
+POSTFIX(PercentInt, real, PARM(x, integer, ""), "%", XL_RREAL(x / 100.0),
+        GROUP(basics)
+        SYNOPSIS("")
+        DESCRIPTION("")
+        RETURNS( real, ""))
+POSTFIX(PercentReal, real, PARM(x, real, ""), "%", XL_RREAL(x / 100.0),
+        GROUP(basics)
+        SYNOPSIS("")
+        DESCRIPTION("")
+        RETURNS( real, ""))
 
 // Real arithmetic and comparisons
-INFIX(SetReal, real, real, ":=",real, XL_RREAL(l.value = XL_REAL(r)), "")
-INFIX(AddReal, real, real, "+", real, XL_RREAL(XL_REAL(l) + XL_REAL(r)), "")
-INFIX(SubReal, real, real, "-", real, XL_RREAL(XL_REAL(l) - XL_REAL(r)), "")
-INFIX(MulReal, real, real, "*", real, XL_RREAL(XL_REAL(l) * XL_REAL(r)), "")
+INFIX(SetReal, real, real, ":=",real, XL_RREAL(l.value = XL_REAL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS( real, ""))
+INFIX(AddReal, real, real, "+", real, XL_RREAL(XL_REAL(l) + XL_REAL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS( real, ""))
+INFIX(SubReal, real, real, "-", real, XL_RREAL(XL_REAL(l) - XL_REAL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS( real, ""))
+INFIX(MulReal, real, real, "*", real, XL_RREAL(XL_REAL(l) * XL_REAL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS( real, ""))
 INFIX(DivReal, real, real, "/", real,
       if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RREAL(0.0); }
-      XL_RREAL(XL_REAL(l) / XL_REAL(r)), "")
+      XL_RREAL(XL_REAL(l) / XL_REAL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS( real, ""))
 INFIX(RemReal, real, real, "rem", real,
       if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RREAL(0.0); }
-      XL_RREAL(fmod(XL_REAL(l), XL_REAL(r))), "")
+      XL_RREAL(fmod(XL_REAL(l), XL_REAL(r))),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS( real, ""))
 INFIX(ModReal, real, real, "mod", real,
       if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RREAL(0.0); }
-      XL_RREAL(xl_modf(l,r)), "")
-INFIX(PowRealInt, real, real, "^", integer, XL_RREAL(xl_powf(l,r)), "")
-INFIX(PowReal, real, real, "^", real, XL_RREAL(pow(XL_REAL(l), XL_REAL(r))), "")
+      XL_RREAL(xl_modf(l,r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS( real, ""))
+INFIX(PowRealInt, real, real, "^", integer, XL_RREAL(xl_powf(l,r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS( real, ""))
+INFIX(PowReal, real, real, "^", real, XL_RREAL(pow(XL_REAL(l), XL_REAL(r))),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS( real, ""))
 
-INFIX(LTReal, boolean, real, "<", real, XL_RBOOL(XL_REAL(l) < XL_REAL(r)), "")
-INFIX(GTReal, boolean, real, ">", real, XL_RBOOL(XL_REAL(l) > XL_REAL(r)), "")
-INFIX(LEReal, boolean, real, "<=", real, XL_RBOOL(XL_REAL(l) <= XL_REAL(r)), "")
-INFIX(GEReal, boolean, real, ">=", real, XL_RBOOL(XL_REAL(l) >= XL_REAL(r)), "")
-INFIX(NEReal, boolean, real, "<>", real, XL_RBOOL(XL_REAL(l) != XL_REAL(r)), "")
-INFIX(EQReal, boolean, real, "=", real, XL_RBOOL(XL_REAL(l) == XL_REAL(r)), "")
+INFIX(LTReal, boolean, real, "<", real, XL_RBOOL(XL_REAL(l) < XL_REAL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(GTReal, boolean, real, ">", real, XL_RBOOL(XL_REAL(l) > XL_REAL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(LEReal, boolean, real, "<=", real, XL_RBOOL(XL_REAL(l) <= XL_REAL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(GEReal, boolean, real, ">=", real, XL_RBOOL(XL_REAL(l) >= XL_REAL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(NEReal, boolean, real, "<>", real, XL_RBOOL(XL_REAL(l) != XL_REAL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(EQReal, boolean, real, "=", real, XL_RBOOL(XL_REAL(l) == XL_REAL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
 
-PREFIX(Negate, real, "-", PARM(r, real), XL_RREAL(-r), "")
-PREFIX(Abs, real, "abs", PARM(x, real), XL_RREAL(fabs(x)), "")
-PREFIX(Sqrt, real, "sqrt", PARM(x, real), XL_RREAL(sqrt(x)), "")
-PREFIX(Sin, real, "sin", PARM(x, real), XL_RREAL(sin(x)), "")
-PREFIX(Cos, real, "cos", PARM(x, real), XL_RREAL(cos(x)), "")
-PREFIX(Tan, real, "tan", PARM(x, real), XL_RREAL(tan(x)), "")
-PREFIX(ArcSin, real, "asin", PARM(x, real), XL_RREAL(asin(x)), "")
-PREFIX(ArcCos, real, "acos", PARM(x, real), XL_RREAL(acos(x)), "")
-PREFIX(ArcTan, real, "atan", PARM(x, real), XL_RREAL(atan(x)), "")
-PREFIX(ArcTan2, real, "atan", PARM(y, real) PARM(x, real), XL_RREAL(atan2(y,x)), "")
-PREFIX(Exp, real, "exp", PARM(x, real), XL_RREAL(exp(x)), "")
-PREFIX(ExpMinus1, real, "expm1", PARM(x, real), XL_RREAL(expm1(x)), "")
-PREFIX(Log, real, "log", PARM(x, real), XL_RREAL(log(x)), "")
-PREFIX(Log2, real, "log2", PARM(x, real), XL_RREAL(log2(x)), "")
-PREFIX(Log10, real, "log10", PARM(x, real), XL_RREAL(log10(x)), "")
-PREFIX(LogPlus1, real, "log1p", PARM(x, real), XL_RREAL(log1p(x)), "")
-PREFIX(PiConstant, real, "pi", , XL_RREAL(M_PI), "")
+PREFIX(Negate, real, "-", PARM(r, real, ""), XL_RREAL(-r),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(Abs, real, "abs", PARM(x, real, ""), XL_RREAL(fabs(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(Sqrt, real, "sqrt", PARM(x, real, ""), XL_RREAL(sqrt(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(Sin, real, "sin", PARM(x, real, ""), XL_RREAL(sin(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(Cos, real, "cos", PARM(x, real, ""), XL_RREAL(cos(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(Tan, real, "tan", PARM(x, real, ""), XL_RREAL(tan(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(ArcSin, real, "asin", PARM(x, real, ""), XL_RREAL(asin(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(ArcCos, real, "acos", PARM(x, real, ""), XL_RREAL(acos(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(ArcTan, real, "atan", PARM(x, real, ""), XL_RREAL(atan(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(ArcTan2, real, "atan", PARM(y, real, "") PARM(x, real, ""), XL_RREAL(atan2(y,x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(Exp, real, "exp", PARM(x, real, ""), XL_RREAL(exp(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(ExpMinus1, real, "expm1", PARM(x, real, ""), XL_RREAL(expm1(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(Log, real, "log", PARM(x, real, ""), XL_RREAL(log(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(Log2, real, "log2", PARM(x, real, ""), XL_RREAL(log2(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(Log10, real, "log10", PARM(x, real, ""), XL_RREAL(log10(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(LogPlus1, real, "log1p", PARM(x, real, ""), XL_RREAL(log1p(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(PiConstant, real, "pi", , XL_RREAL(M_PI),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
 
 // Boolean operations
 INFIX(SetBool, boolean, boolean, ":=",boolean,
       bool val = XL_BOOL(r);
       l.value = val ? "true" : "false";
-      XL_RBOOL(val), "")
-INFIX(AndBool, boolean, boolean, "and", boolean, XL_RBOOL(XL_BOOL(l) & XL_BOOL(r)), "")
-INFIX(OrBool, boolean, boolean, "or", boolean, XL_RBOOL(XL_BOOL(l) | XL_BOOL(r)), "")
-INFIX(XorBool, boolean, boolean, "xor", boolean, XL_RBOOL(XL_BOOL(l) ^ XL_BOOL(r)), "")
-PREFIX(NotBool, boolean, "not", PARM(x, boolean), XL_RBOOL(!x), "")
+      XL_RBOOL(val),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(AndBool, boolean, boolean, "and", boolean, XL_RBOOL(XL_BOOL(l) & XL_BOOL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(OrBool, boolean, boolean, "or", boolean, XL_RBOOL(XL_BOOL(l) | XL_BOOL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(XorBool, boolean, boolean, "xor", boolean, XL_RBOOL(XL_BOOL(l) ^ XL_BOOL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+PREFIX(NotBool, boolean, "not", PARM(x, boolean, ""), XL_RBOOL(!x),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS( boolean, ""))
 
-INFIX(NEBool, boolean, boolean, "<>", boolean, XL_RBOOL(XL_BOOL(l) != XL_BOOL(r)), "")
-INFIX(EQBool, boolean, boolean, "=", boolean, XL_RBOOL(XL_BOOL(l) == XL_BOOL(r)), "")
+INFIX(NEBool, boolean, boolean, "<>", boolean, XL_RBOOL(XL_BOOL(l) != XL_BOOL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(EQBool, boolean, boolean, "=", boolean, XL_RBOOL(XL_BOOL(l) == XL_BOOL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
 
 // Text operations
-INFIX(SetText, text, text,":=", text, XL_RTEXT(l.value = XL_TEXT(r)), "")
-INFIX(TextConcatenate, text, text, "&", text, XL_RTEXT(XL_TEXT(l) + XL_TEXT(r)), "")
-INFIX(LTText, boolean, text, "<", text, XL_RBOOL(XL_TEXT(l) < XL_TEXT(r)), "")
-INFIX(GTText, boolean, text, ">", text, XL_RBOOL(XL_TEXT(l) > XL_TEXT(r)), "")
-INFIX(LEText, boolean, text, "<=", text, XL_RBOOL(XL_TEXT(l) <= XL_TEXT(r)), "")
-INFIX(GEText, boolean, text, ">=", text, XL_RBOOL(XL_TEXT(l) >= XL_TEXT(r)), "")
-INFIX(NEText, boolean, text, "<>", text, XL_RBOOL(XL_TEXT(l) != XL_TEXT(r)), "")
-INFIX(EQText, boolean, text, "=", text, XL_RBOOL(XL_TEXT(l) == XL_TEXT(r)), "")
-PREFIX(TextLength, integer, "length", PARM(t,text), XL_RINT(t.value.length()), "")
+INFIX(SetText, text, text,":=", text, XL_RTEXT(l.value = XL_TEXT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(text, ""))
+INFIX(TextConcatenate, text, text, "&", text, XL_RTEXT(XL_TEXT(l) + XL_TEXT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(text, ""))
+INFIX(LTText, boolean, text, "<", text, XL_RBOOL(XL_TEXT(l) < XL_TEXT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(GTText, boolean, text, ">", text, XL_RBOOL(XL_TEXT(l) > XL_TEXT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(LEText, boolean, text, "<=", text, XL_RBOOL(XL_TEXT(l) <= XL_TEXT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(GEText, boolean, text, ">=", text, XL_RBOOL(XL_TEXT(l) >= XL_TEXT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(NEText, boolean, text, "<>", text, XL_RBOOL(XL_TEXT(l) != XL_TEXT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(EQText, boolean, text, "=", text, XL_RBOOL(XL_TEXT(l) == XL_TEXT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+PREFIX(TextLength, integer, "length", PARM(t,text, ""), XL_RINT(t.value.length()),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
 INFIX(TextAt, text, text, "at", integer,
       text t = l; longlong i = r;
       XL_RTEXT((i >= 1 && i <= (longlong) t.length()) ?
-               text(t[i-1],1) : text("")), "")
+               text(t[i-1],1) : text("")),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(text, ""))
 
 
 // Conversions
-PREFIX(IntToReal,  real, "real", PARM(x, integer), XL_RREAL((real_t) x), "")
-PREFIX(TextToReal, real, "real", PARM(x, text), XL_RREAL(xl_text2real(x)), "")
-PREFIX(RealToInt, integer, "integer", PARM(x, real), XL_RINT((integer_t) x), "")
-PREFIX(TextToInt, integer, "integer", PARM(x, text), XL_RINT(xl_text2int(x)), "")
-PREFIX(IntToText, text, "text", PARM(x, integer), XL_RTEXT(xl_int2text(x)), "")
-PREFIX(RealToText, text, "text", PARM(x, real), XL_RTEXT(xl_real2text(x)), "")
+PREFIX(IntToReal,  real, "real", PARM(x, integer, ""), XL_RREAL((real_t) x),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(TextToReal, real, "real", PARM(x, text, ""), XL_RREAL(xl_text2real(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(RealToInt, integer, "integer", PARM(x, real, ""), XL_RINT((integer_t) x),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(TextToInt, integer, "integer", PARM(x, text, ""), XL_RINT(xl_text2int(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(IntToText, text, "text", PARM(x, integer, ""), XL_RTEXT(xl_int2text(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(text, ""))
+PREFIX(RealToText, text, "text", PARM(x, real, ""), XL_RTEXT(xl_real2text(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(text, ""))
 
 // Time computations
-PREFIX(TimeHours, integer, "hours", PARM(t, integer), XL_RTIME(tm.tm_hour), "")
-PREFIX(TimeMinutes, integer, "minutes", PARM(t, integer), XL_RTIME(tm.tm_min), "")
-PREFIX(TimeSeconds, integer, "seconds", PARM(t, integer), XL_RTIME(tm.tm_sec), "")
-PREFIX(TimeYear, integer, "year", PARM(t, integer), XL_RTIME(tm.tm_year + 1900), "")
-PREFIX(TimeMonth, integer, "month", PARM(t, integer), XL_RTIME(tm.tm_mon), "")
-PREFIX(TimeMonthDay, integer, "day", PARM(t, integer), XL_RTIME(tm.tm_mday), "")
-PREFIX(TimeWeekDay, integer, "week_day", PARM(t, integer), XL_RTIME(tm.tm_wday), "")
-PREFIX(TimeYearDay, integer, "year_day", PARM(t, integer), XL_RTIME(tm.tm_yday), "")
+PREFIX(TimeHours, integer, "hours", PARM(t, integer, ""), XL_RTIME(tm.tm_hour),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(TimeMinutes, integer, "minutes", PARM(t, integer, ""), XL_RTIME(tm.tm_min),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(TimeSeconds, integer, "seconds", PARM(t, integer, ""), XL_RTIME(tm.tm_sec),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(TimeYear, integer, "year", PARM(t, integer, ""), XL_RTIME(tm.tm_year + 1900),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(TimeMonth, integer, "month", PARM(t, integer, ""), XL_RTIME(tm.tm_mon),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(TimeMonthDay, integer, "day", PARM(t, integer, ""), XL_RTIME(tm.tm_mday),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(TimeWeekDay, integer, "week_day", PARM(t, integer, ""), XL_RTIME(tm.tm_wday),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(TimeYearDay, integer, "year_day", PARM(t, integer, ""), XL_RTIME(tm.tm_yday),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
 
 // Return hour, minutes, seconds for the current time
-PREFIX(SystemTime, integer, "system_time",, XL_RINT(xl_time(1)), "")
-PREFIX(SystemHours, integer, "hours",, XL_RCTIME(tm.tm_hour, 10), "")
-PREFIX(SystemMinutes, integer, "minutes",, XL_RCTIME(tm.tm_min, 2), "")
-PREFIX(SystemSeconds, integer, "seconds",, XL_RCTIME(tm.tm_sec, 0.5), "")
-PREFIX(SystemYear, integer, "year",, XL_RCTIME(tm.tm_year + 1900, 10), "")
-PREFIX(SystemMonth, integer, "month",, XL_RCTIME(tm.tm_mon, 10), "")
-PREFIX(SystemMonthDay, integer, "day",, XL_RCTIME(tm.tm_mday, 10), "")
-PREFIX(SystemWeekDay, integer, "week_day",, XL_RCTIME(tm.tm_wday, 10), "")
-PREFIX(SystemYearDay, integer, "year_day",, XL_RCTIME(tm.tm_yday, 10), "")
+PREFIX(SystemTime, integer, "system_time",, XL_RINT(xl_time(1)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(SystemHours, integer, "hours",, XL_RCTIME(tm.tm_hour, 10),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(SystemMinutes, integer, "minutes",, XL_RCTIME(tm.tm_min, 2),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(SystemSeconds, integer, "seconds",, XL_RCTIME(tm.tm_sec, 0.5),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(SystemYear, integer, "year",, XL_RCTIME(tm.tm_year + 1900, 10),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(SystemMonth, integer, "month",, XL_RCTIME(tm.tm_mon, 10),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(SystemMonthDay, integer, "day",, XL_RCTIME(tm.tm_mday, 10),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(SystemWeekDay, integer, "week_day",, XL_RCTIME(tm.tm_wday, 10),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
+PREFIX(SystemYearDay, integer, "year_day",, XL_RCTIME(tm.tm_yday, 10),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
 
 // Random number generator
-PREFIX(RandomNumber, real, "random", , XL_RREAL(xl_random(0.0, 1.0)), "")
-PREFIX(RandomNumber2, real, "random", PARM(low, real) PARM(high, real),
-       XL_RREAL(xl_random(XL_REAL(low), XL_REAL(high))), "")
-PREFIX(RandomNumber2i, integer, "random", PARM(low,integer) PARM(high,integer),
-       XL_RINT(xl_random(XL_INT(low), XL_INT(high))), "")
+PREFIX(RandomNumber, real, "random", , XL_RREAL(xl_random(0.0, 1.0)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(RandomNumber2, real, "random", PARM(low, real, "") PARM(high, real, ""),
+       XL_RREAL(xl_random(XL_REAL(low), XL_REAL(high))),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(RandomNumber2i, integer, "random", PARM(low,integer, "") PARM(high,integer, ""),
+       XL_RINT(xl_random(XL_INT(low), XL_INT(high))),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(integer, ""))
 
 // Executing some code
-PREFIX(Identity,  tree, "identity", PARM(code, tree), return xl_identity(&code), "")
-PREFIX(DoCode,    tree, "do", PARM(code, tree), return xl_evaluate(&code), "")
-PREFIX(RepeatCode,tree, "repeat", PARM(n, integer) PARM(code, tree),
-       return xl_repeat(self, &code, n), "")
-PREFIX(LoadFile, tree, "load", PARM(file, text), return xl_load(file), "")
-PREFIX(ImportFile, tree, "import", PARM(file, text), return xl_import(file), "")
-PREFIX(LoadCSV,  tree, "load_csv", PARM(f, text) PARM(p, text),
-       return xl_load_data(f, p, ",;", "\n\f\r"), "")
-PREFIX(LoadTSV,  tree, "load_tsv", PARM(f, text) PARM(p, text),
-       return xl_load_data(f, p, "\t", "\n\f\r"), "")
+PREFIX(Identity,  tree, "identity", PARM(code, tree, ""), return xl_identity(&code),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
+PREFIX(DoCode,    tree, "do", PARM(code, tree, ""), return xl_evaluate(&code),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
+PREFIX(RepeatCode,tree, "repeat", PARM(n, integer, "") PARM(code, tree, ""),
+       return xl_repeat(self, &code, n),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
+PREFIX(LoadFile, tree, "load", PARM(file, text, ""), return xl_load(file),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
+PREFIX(ImportFile, tree, "import", PARM(file, text, ""), return xl_import(file),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
+PREFIX(LoadCSV,  tree, "load_csv", PARM(f, text, "") PARM(p, text, ""),
+       return xl_load_data(f, p, ",;", "\n\f\r"),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
+PREFIX(LoadTSV,  tree, "load_tsv", PARM(f, text, "") PARM(p, text, ""),
+       return xl_load_data(f, p, "\t", "\n\f\r"),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
 PREFIX(LoadData,  tree, "load_data",
-       PARM(f, text) PARM(p, text) PARM(fs, text) PARM(rs, text),
-       return xl_load_data(f, p, fs, rs), "")
+       PARM(f, text, "") PARM(p, text, "") PARM(fs, text, "") PARM(rs, text, ""),
+       return xl_load_data(f, p, fs, rs),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
 INFIX(Apply, tree, tree, "with", tree,
-      return xl_apply(&l, &r), "")
-INFIX(Range, tree, integer, "..", integer, return xl_range(l, r), "")
-INFIX(Index, tree, tree, "at", integer, return xl_nth(&l, r), "")
+      return xl_apply(&l, &r),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(tree, ""))
+INFIX(Range, tree, integer, "..", integer, return xl_range(l, r),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(tree, ""))
+INFIX(Index, tree, tree, "at", integer, return xl_nth(&l, r),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(tree, ""))
 
 PREFIX(Springify, real, "springify",
-       PARM(v, real) PARM(tgt, real) PARM(t, real)
-       PARM(d, real) PARM(k, real) PARM(lt, real) PARM(ls, real),
-       return xl_springify(v, tgt, t, d, k, lt, ls), "")
-PREFIX(ListFiles, tree, "files", PARM(pat, tree),
+       PARM(v, real, "") PARM(tgt, real, "") PARM(t, real, "")
+       PARM(d, real, "") PARM(k, real, "") PARM(lt, real, "") PARM(ls, real, ""),
+       return xl_springify(v, tgt, t, d, k, lt, ls),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
+PREFIX(ListFiles, tree, "files", PARM(pat, tree, ""),
        return xl_list_files(&pat),
-       "List the files matching the pattern")
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
+
 // Debugging code
-PREFIX(DebugTree, tree, "debug", PARM(toDebug, tree),
+PREFIX(DebugTree, tree, "debug", PARM(toDebug, tree, ""),
        std::cerr << "DEBUG: " << (Tree *) &toDebug << "\n";
-       return xl_true, "")
+       return xl_true,
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
 PREFIX(ErrorMsg3, tree, "error",
-       PARM(m, text) PARM(a,tree) PARM(b,tree) PARM(c, tree),
-       return xl_error(m, &a, &b, &c), "")
+       PARM(m, text, "") PARM(a,tree, "") PARM(b,tree, "") PARM(c, tree, ""),
+       return xl_error(m, &a, &b, &c),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
 PREFIX(ErrorMsg2, tree, "error",
-       PARM(m, text) PARM(a,tree) PARM(b,tree),
-       return xl_error(m, &a, &b), "")
-PREFIX(ErrorMsg1, tree, "error", PARM(m, text) PARM(a,tree),
-       return xl_error(m, &a), "")
-PREFIX(ErrorMsg0, tree, "error", PARM(m, text),
-       return xl_error(m), "")
-PREFIX(WriteTree, tree, "write", PARM(toWrite, tree),
-       return xl_write(self->Symbols(), &toWrite, ""), "")
-PREFIX(WriteLnTree, tree, "writeln", PARM(toWrite, tree),
-       return xl_write(self->Symbols(), &toWrite, "\n"), "")
+       PARM(m, text, "") PARM(a,tree, "") PARM(b,tree, ""),
+       return xl_error(m, &a, &b),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
+PREFIX(ErrorMsg1, tree, "error", PARM(m, text, "") PARM(a,tree, ""),
+       return xl_error(m, &a),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
+PREFIX(ErrorMsg0, tree, "error", PARM(m, text, ""),
+       return xl_error(m),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
+PREFIX(WriteTree, tree, "write", PARM(toWrite, tree, ""),
+       return xl_write(self->Symbols(), &toWrite, ""),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
+PREFIX(WriteLnTree, tree, "writeln", PARM(toWrite, tree, ""),
+       return xl_write(self->Symbols(), &toWrite, "\n"),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
 
 // Compute the sha1 of a tree
-PREFIX(ComputeSha1, text, "sha1", PARM(t, tree), XL_RTEXT(sha1(&t)), "")
+PREFIX(ComputeSha1, text, "sha1", PARM(t, tree, ""), XL_RTEXT(sha1(&t)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, "")
+       MISC("  see \"sha\"\n"))
