@@ -57,18 +57,18 @@ BLOCK(IntentationBlock, tree, Block::indent, source, Block::unindent,
       GROUP(basics:groups)
       SYNOPSIS("Grouping of statements using indentation"))
 PREFIX(CodeClosure, tree, "<code>",
-       PARM(code, source, "Source code"),
-       return context->stack->EvaluateCode(self, &code),
+       PARM(input, source, "Source code"),
+       return context->stack->EvaluateCode(self, &input),
        GROUP(basics:closure)
        SYNOPSIS("Code closure, evaluated repeatedly in original code context"))
 PREFIX(LazyClosure, tree, "<lazy>",
-       PARM(code, source, "Source code"),
-       return context->stack->EvaluateLazy(self, &code),
+       PARM(input, source, "Source code"),
+       return context->stack->EvaluateLazy(self, &input),
        GROUP(basics:closure)
        SYNOPSIS("Lazy evaluation closure, evaluated once in original context"))
 PREFIX(EvaluatedClosure, tree, "<value>",
-       PARM(code, source, "Stored value"),
-       return &code,
+       PARM(input, source, "Stored value"),
+       return &input,
        GROUP(basics:closure)
        SYNOPSIS("Result of a previous lazy evaluation"))
 INFIX(Assignment, tree, source, ":=", tree,
@@ -666,15 +666,15 @@ PREFIX(RandomNumber2i, integer, "random", PARM(low,integer, "") PARM(high,intege
 
 // Executing some code
 PREFIX(Identity,  tree, "identity",
-       PARM(code, tree, "Input ode"),
-       return &code,
+       PARM(input, tree, "Input ode"),
+       return &input,
        GROUP(basics)
        SYNOPSIS("No operation")
        DESCRIPTION("")
        RETURNS(tree, "The input tree, not evaluated"))
 PREFIX(DoCode,    tree, "do",
-       PARM(code, tree, "Input tree to evaluate"),
-       return xl_evaluate(context, &code),
+       PARM(input, tree, "Input tree to evaluate"),
+       return xl_evaluate(context, &input),
        GROUP(basics)
        SYNOPSIS("Evaluate the input immediately"))
 PREFIX(ParseTree, tree, "parse_tree",
