@@ -790,13 +790,13 @@ PREFIX(ExitProgram, boolean, "exit",
        GROUP(basics)
        SYNOPSIS("Terminate the program with the given exit code"))
 PREFIX(WriteTree, tree, "write", PARM(toWrite, tree, ""),
-       return xl_write(context, &toWrite, ""),
+       return xl_write(context->stack, &toWrite, ""),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
 PREFIX(WriteLnTree, tree, "writeln", PARM(toWrite, tree, ""),
-       return xl_write(context, &toWrite, "\n"),
+       return xl_write(context->stack, &toWrite, "\n"),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
