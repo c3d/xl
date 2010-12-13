@@ -33,6 +33,7 @@
 #include "compiler.h"
 #include "runtime.h"
 #include "main.h"
+#include "opcodes.h"
 #include "types.h"
 #include <sstream>
 
@@ -1364,6 +1365,8 @@ uint Context::EnterProperty(Tree *property)
     if (!bound)
     {
         rewrite = Define(property, value, type);
+        if (description != "")
+            xl_set_documentation(property, description);
         rewrite->native = xl_assigned_value;
     }
 
