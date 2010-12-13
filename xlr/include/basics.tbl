@@ -515,6 +515,12 @@ PREFIX(TextFind, integer, "text_find",
        XL_RINT(t.find(f)),
        GROUP(text)
        SYNOPSIS("Find a text into another larger text"))
+INFIX(TextContains, boolean, text, "contains", text,
+      text t = l;
+      text f = r;
+      XL_RBOOL(t.find(f) != t.npos),
+      GROUP(text)
+      SYNOPSIS("Find a text into another larger text"))
 
 // Conversions
 PREFIX(IntToReal,  real, "real",

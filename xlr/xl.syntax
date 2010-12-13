@@ -16,7 +16,7 @@ INFIX
         231     ,
         240     return 
         250     and or xor
-        260     in at
+        260     in at contains
         271     of to
         280     .. step
         290     = < > <= >= <>
