@@ -54,7 +54,7 @@
     text docsyntax = syntax;                                            \
     do { docinfo; } while (0);                                          \
     text doc = "/*| docname \"" #name "\", \"" + docgroup + "\", do\n"; \
-    doc += " dsyntax \"" + docsyntax + "\"\n";                          \
+    doc += " dsyntax <<" + docsyntax + ">>\n";                          \
     doc += " synposis <<" + synopsis + ">>\n";                          \
     doc += " description << " + description + ">>\n";                   \
     if (docparms != "")                                                 \
