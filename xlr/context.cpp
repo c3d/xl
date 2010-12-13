@@ -1796,7 +1796,9 @@ extern "C" void debugrw(XL::Rewrite *r)
 {
     if (r)
     {
-        if (r->native == XL::xl_assigned_value)
+        if (!r->to)
+            std::cerr << "data " << r->from << "\n";
+        else if (r->native == XL::xl_assigned_value)
             std::cerr << r->from << " := " << r->to << "\n";
         else
             std::cerr << r->from << " -> " << r->to << "\n";
@@ -1834,6 +1836,9 @@ extern "C" void debugs(XL::Context *c)
     uint n = 0;
     for (i = c->rewrites.begin(); i != c->rewrites.end() && n++ < debugsm; i++)
         debugrw((*i).second);
+
+    if (n >= debugsm)
+        std::cerr << "... MORE ELEMENTS NOT SHOWN\n";
 }
 
 
