@@ -69,7 +69,8 @@
     do                                                          \
     {                                                           \
         DOC(name, #t1 " " symbol " " #t2, docinfo);             \
-        xl_enter_infix_##name(context, doc);                    \
+        xl_enter_infix(context, (native_fn) xl_##name,          \
+                       rtype##_type, #t1, symbol, #t2, doc);    \
     } while(0);
 
 #define PARM(symbol, type, pdoc)                                        \
@@ -90,7 +91,8 @@
     {                                                           \
         TreeList parameters;                                    \
         DOC(name, #symbol, docinfo ; parms);                    \
-        xl_enter_prefix_##name(context, parameters, doc);       \
+        xl_enter_prefix(context, (native_fn) xl_##name,         \
+                        rtype##_type, parameters, symbol, doc); \
     } while(0);
 
 
@@ -99,17 +101,17 @@
     {                                                                   \
         TreeList  parameters;                                           \
         DOC(name, #symbol, docinfo ; parms ; docsyntax += " " #symbol); \
-        xl_enter_postfix_##name(context, parameters, doc);              \
+        xl_enter_postfix(context, (native_fn) xl_##name,                \
+                         rtype##_type, parameters, symbol, doc);        \
     } while(0);
 
-
-#define BLOCK(name, rtype, open, type, close, _code, docinfo)   \
-    do                                                          \
-    {                                                           \
-        DOC(name, #open " " #type " " #close, docinfo);         \
-        xl_enter_block_##name(context, doc);                    \
+#define BLOCK(name, rtype, open, type, close, _code, docinfo)           \
+    do                                                                  \
+    {                                                                   \
+        DOC(name, #open " " #type " " #close, docinfo);                 \
+        xl_enter_block(context, (native_fn) xl_##name,                  \
+                       rtype##_type, open, #type, close, doc);    \
     } while (0);
-
 
 #define NAME(symbol)                            \
     do                                          \

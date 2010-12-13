@@ -25,6 +25,7 @@
 #include "basics.h"
 #include "parser.h"
 #include "errors.h"
+#include "types.h"
 #include <typeinfo>
 
 XL_BEGIN
@@ -99,7 +100,7 @@ bool xl_boolean_arg(Tree *value)
 }
 
 
-Tree *ParametersTree(TreeList parameters)
+Tree *xl_parameters_tree(TreeList parameters)
 // ----------------------------------------------------------------------------
 //   Create a comma-separated parameter list
 // ----------------------------------------------------------------------------
@@ -117,17 +118,109 @@ Tree *ParametersTree(TreeList parameters)
     return result;
 }
 
-void setDocumentation(Tree *node, text doc)
+
+void xl_set_documentation(Tree *node, text doc)
 // ----------------------------------------------------------------------------
-//   attach the documentation to the node as a comment
+//   Attach the documentation to the node as a comment
 // ----------------------------------------------------------------------------
 {
-    if (doc.empty()) return;
+    if (!doc.empty())
+    {
+        std::vector<text> com(1,doc);
+        CommentsInfo *cinfo = new CommentsInfo();
+        cinfo->after = com;
+        node->SetInfo<CommentsInfo> (cinfo);
+    }
+}
 
-    std::vector<text> com(1,doc);
-    CommentsInfo *cinfo = new CommentsInfo();
-    cinfo->after = com;
-    node->SetInfo<CommentsInfo> (cinfo);
+
+void xl_enter_infix(Context *context, native_fn fn, Tree *rtype,
+                    text t1, text symbol, text t2, text doc)
+// ----------------------------------------------------------------------------
+//   Enter an infix into the context (called from .tbl files)
+// ----------------------------------------------------------------------------
+{
+    Tree *ldecl = xl_parameter("l", t1);
+    Tree *rdecl = xl_parameter("r", t2);
+    Infix *from = new Infix(symbol, ldecl, rdecl);
+    Name *to = new Name(symbol);
+
+    Rewrite *rw = context->Define(from, to);
+    rw->native = fn;
+
+    xl_set_documentation(from, doc);
+    to->Set<TypeInfo> (rtype);
+}
+
+
+void xl_enter_prefix(Context *context, native_fn fn, Tree *rtype,
+                     TreeList &parameters, text symbol, text doc)
+// ----------------------------------------------------------------------------
+//   Enter a prefix into the context (called from .tbl files)
+// ----------------------------------------------------------------------------
+{
+    if (parameters.size())
+    {
+        Tree *parmtree = xl_parameters_tree(parameters);
+
+        Prefix *from = new Prefix(new Name(symbol), parmtree);
+        Name *to = new Name(symbol);
+
+        Rewrite *rw = context->Define(from, to);
+        rw->native = fn;
+
+        xl_set_documentation(from, doc);
+        to->Set<TypeInfo> (rtype);
+    }
+    else
+    {
+        Name *n  = new Name(symbol);
+
+        Rewrite *rw = context->Define(n, n);
+        rw->native = fn;
+
+        n->Set<TypeInfo> (rtype);
+        xl_set_documentation(n, doc);
+    }
+}
+
+
+void xl_enter_postfix(Context *context, native_fn fn, Tree *rtype,
+                      TreeList &parameters, text symbol, text doc)
+// ----------------------------------------------------------------------------
+//   Enter a postfdix into the context (called from .tbl files)
+// ----------------------------------------------------------------------------
+{
+    Tree *parmtree = xl_parameters_tree(parameters);
+    Postfix *from = new Postfix(parmtree, new Name(symbol));
+    Name *to = new Name(symbol);
+    
+    Rewrite *rw = context->Define(from, to);
+    rw->native = (native_fn) fn;
+    
+    xl_set_documentation(from, doc);
+    to->Set<TypeInfo> (rtype);
+}
+
+
+void xl_enter_block(Context *context, native_fn fn, Tree *rtype,
+                    text open, text type, text close,
+                    text doc)
+// ----------------------------------------------------------------------------
+//    Enter a block into the context (called from .tbl files)
+// ----------------------------------------------------------------------------
+{
+    Tree *parms = xl_parameter("c", type);
+    Block *from = new Block(parms, open, close);
+    Name *to = new Name(open + close);
+
+    from = new Block(from, open, close); // Extra block removed by Define
+
+    Rewrite *rw = context->Define(from, to);
+    rw->native = (native_fn) fn;
+
+    xl_set_documentation(from, doc);
+    to->Set<TypeInfo> (rtype);
 }
 
 XL_END

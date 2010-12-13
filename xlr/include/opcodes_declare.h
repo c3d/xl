@@ -51,21 +51,13 @@
 #define MISC(misc)
 #define SEE(see)
 
+
+
 #define INFIX(name, rtype, t1, symbol, t2, _code, docinfo)              \
     rtype##_nkp xl_##name(Context *context, Tree *self,                 \
                            t1##_r l,t2##_r r)                           \
     {                                                                   \
         (void) context; DS(symbol) _code;                               \
-    }                                                                   \
-    static void xl_enter_infix_##name(Context *context, text doc)       \
-    {                                                                   \
-        Tree *ldecl = xl_parameter("l", #t1);                           \
-        Tree *rdecl = xl_parameter("r", #t2);                           \
-        Infix *from = new Infix(symbol, ldecl, rdecl);                  \
-        Name *to = new Name(symbol);                                    \
-        setDocumentation(from, doc);                                    \
-        Rewrite *rw = context->Define(from, to);                        \
-        rw->native = (native_fn) xl_##name;                             \
     }
 
 #define PARM(symbol, type, pdoc)      , type##_r symbol
@@ -75,67 +67,18 @@
     {                                                                   \
         (void) context; DS(symbol) _code;                               \
     }                                                                   \
-    static void xl_enter_prefix_##name(Context *context,                \
-                                       TreeList &parameters,            \
-                                       text doc)                        \
-    {                                                                   \
-        if (parameters.size())                                          \
-        {                                                               \
-            Tree *parmtree = ParametersTree(parameters);                \
-            Prefix *from = new Prefix(new Name(symbol), parmtree);      \
-            Name *to = new Name(symbol);                                \
-            setDocumentation(from, doc);                                \
-            to->Set<TypeInfo> (rtype##_type);                           \
-            Rewrite *rw = context->Define(from, to);                    \
-            rw->native = (native_fn) xl_##name;                         \
-        }                                                               \
-        else                                                            \
-        {                                                               \
-            Name *n  = new Name(symbol);                                \
-            n ->Set<TypeInfo> (rtype##_type);                           \
-            setDocumentation(n, doc);                                   \
-            Rewrite *rw = context->Define(n, n);                        \
-            rw->native = (native_fn) xl_##name;                         \
-        }                                                               \
-    }
 
 #define POSTFIX(name, rtype, parms, symbol, _code, docinfo)             \
     rtype##_nkp xl_##name(Context *context, Tree *self parms)           \
     {                                                                   \
         (void) context; DS(symbol) _code;                               \
-    }                                                                   \
-                                                                        \
-    static void xl_enter_postfix_##name(Context *context,               \
-                                        TreeList &parameters,           \
-                                        text doc)                       \
-    {                                                                   \
-        Tree *parmtree = ParametersTree(parameters);                    \
-        Postfix *from = new Postfix(parmtree, new Name(symbol));        \
-        Name *to = new Name(symbol);                                    \
-        setDocumentation(from, doc);                                    \
-        to->Set<TypeInfo> (rtype##_type);                               \
-        Rewrite *rw = context->Define(from, to);                        \
-        rw->native = (native_fn) xl_##name;                             \
     }
-
 
 #define BLOCK(name, rtype, open, type, close, _code, docinfo)           \
     rtype##_nkp xl_##name(Context *context,                             \
                           Tree *self, type##_r child)                   \
     {                                                                   \
         (void) context; DS(symbol) _code;                               \
-    }                                                                   \
-    static void xl_enter_block_##name(Context *context, text doc)       \
-    {                                                                   \
-        Tree *parms = xl_parameter("c", #type);                         \
-        Block *from = new Block(parms, open, close);                    \
-        Name *to = new Name(#name);                                     \
-        setDocumentation(from, doc);                                    \
-        to->Set<TypeInfo> (rtype##_type);                               \
-        /* Need an extra block that gets removed by Define */           \
-        from = new Block(from, open, close);                            \
-        Rewrite *rw = context->Define(from, to);                        \
-        rw->native = (native_fn) xl_##name;                             \
     }
 
 #define NAME(symbol)    Name_p xl_##symbol;
