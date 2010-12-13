@@ -1194,7 +1194,8 @@ Tree_p *Context::NormalizeArguments(text separator, Tree_p *args)
 }
 
 
-Tree *Context::Bound(Name *name, lookup_mode lookup, Context_p *where)
+Tree *Context::Bound(Name *name, lookup_mode lookup,
+                     Context_p *where, Rewrite_p *rewrite)
 // ----------------------------------------------------------------------------
 //   Return the value a name is bound to, or NULL if none...
 // ----------------------------------------------------------------------------
@@ -1218,6 +1219,8 @@ Tree *Context::Bound(Name *name, lookup_mode lookup, Context_p *where)
                     {
                         if (where)
                             *where = context;
+                        if (rewrite)
+                            *rewrite = candidate;
                         if (Tree *to = candidate->to)
                                 return to;
                         else
@@ -1235,6 +1238,68 @@ Tree *Context::Bound(Name *name, lookup_mode lookup, Context_p *where)
 
     // Not bound
     return NULL;
+}
+
+
+struct BindingEvaluator
+// ----------------------------------------------------------------------------
+//   Identify the binding associated with a given form
+// ----------------------------------------------------------------------------
+{
+    BindingEvaluator(Context *stack, Context_p *where, Rewrite_p *rewrite)
+        : values(), stack(stack), where(where), rewrite(rewrite) {}
+    Tree *operator() (Context *context, Tree *value, Rewrite *candidate);
+
+public:
+    tree_map    values;
+    Context_p   stack;          // Original evaluation context
+    Context_p * where;          // Context where we found the form
+    Rewrite_p * rewrite;        // Rewrite defining the form
+};
+
+
+inline Tree *BindingEvaluator::operator() (Context *context,
+                                           Tree *what,
+                                           Rewrite *candidate)
+// ----------------------------------------------------------------------------
+//   Check if we can evaluate the given tree
+// ----------------------------------------------------------------------------
+{
+    // Bind native context
+    TreeList args;
+    Context_p eval = new Context(context, stack);
+    if (eval->Bind(candidate->from, what, values, &args))
+    {
+        if (where)
+            *where = context;
+        if (rewrite)
+            *rewrite = candidate;
+        return candidate->from;
+    }
+
+    // Not found
+    return NULL;
+}
+
+
+Tree *Context::Bound(Tree *what,
+                     lookup_mode lookup, Context_p *where, Rewrite_p *rewrite)
+// ----------------------------------------------------------------------------
+//   Find the rewrite a given form is bound to
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = what->AsName())
+        return Bound(name, lookup, where, rewrite);
+
+    // Build the hash key for the tree to evaluate
+    ulong key = Hash(what);
+
+    // Loop over all contexts
+    Tree_p saveWhatFromGC = what;
+    BindingEvaluator binding(this, where, rewrite);
+    Tree *result = Evaluate(what, binding, key, lookup);
+
+    return result;
 }
 
 

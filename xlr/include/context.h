@@ -266,9 +266,16 @@ struct Context
     Tree_p *            NormalizeArguments(text sep, Tree_p *args);
 
 
-    // Find the value that a name is bound to, or returns NULL
+    // Find the rewrite that a form is bound to, or returns NULL
+    // The first form is optimized for quick lookup of names
     Tree *              Bound(Name *name, lookup_mode mode = SCOPE_LOOKUP,
-                              Context_p *where = NULL);
+                              Context_p *where = NULL,
+                              Rewrite_p *rewrite = NULL);
+    Tree *              Bound(Tree *form,
+                              lookup_mode mode = SCOPE_LOOKUP,
+                              Context_p *where = NULL,
+                              Rewrite_p *rewrite = NULL);
+    
 
     // Enter properties, return number of properties found
     uint                EnterProperty(Tree *self);
