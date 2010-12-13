@@ -195,8 +195,6 @@ typedef std::map<ulong, Rewrite_p> rewrite_table;// Hashing of rewrites
 typedef std::vector<Rewrite_p>     rewrite_list;
 typedef std::vector<Context_p>     context_list;
 typedef std::map<Tree_p, Tree_p>   tree_map;
-typedef std::map<text, Property>   Properties;
-typedef std::vector<Constraint>    Constraints;
 typedef Tree *(*native_fn) (Context *ctx, Tree *self);
 
 
@@ -305,8 +303,6 @@ public:
     Context_p           stack;
     rewrite_table       rewrites;
     context_list        imported;
-    Properties          properties;
-    Constraints         constraints;
     bool                hasConstants;
     bool                keepSource;
 

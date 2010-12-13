@@ -1307,6 +1307,8 @@ uint Context::EnterProperty(Tree *property)
 // ----------------------------------------------------------------------------
 //   Enter the property into our table
 // ----------------------------------------------------------------------------
+//   Properties are entered in the current context as a local declaration,
+//   unless a similar declaration is found in the caller's stack.
 {
     Tree *type = NULL;
     Tree *value = NULL;
@@ -1352,19 +1354,20 @@ uint Context::EnterProperty(Tree *property)
         }
     }
 
-    // The property should now be a name
-    if (Name *n = property->AsName())
+
+    // Check if we have a matching form
+    Context_p context;
+    Rewrite_p rewrite;
+    Tree *bound = stack->Bound(property, STACK_LOOKUP, &context, &rewrite);
+
+    // If no matching form, declare one locally with the given value
+    if (!bound)
     {
-        text name = n->value;
-        properties[name] = Property(name, description, type, value);
-        return 1;
-    }
-    else
-    {
-        Ooops("Property $1 is not a name", property);
+        rewrite = Define(property, value, type);
+        rewrite->native = xl_assigned_value;
     }
 
-    return 0;
+    return 1;
 }
 
 
@@ -1389,10 +1392,17 @@ uint Context::EnterConstraint(Tree *constraint)
             return EnterConstraint(infix->left) + EnterConstraint(infix->right);
 
     // If the property is like "X = Y", record it
-    std::set<text> allVariables;
-    if (Constraint::IsValid(constraint, allVariables))
+    std::set<text> vars;
+    if (Constraint::IsValid(constraint, vars))
     {
-        constraints.push_back(Constraint(constraint));
+        static Name eqname("[eq]");
+        Define(&eqname, constraint);
+
+        for (std::set<text>::iterator i = vars.begin(); i != vars.end(); i++)
+        {
+            Name_p name = new Name("[eq]" + *i);
+            Define(name, constraint);
+        }
         return 1;
     }
 
