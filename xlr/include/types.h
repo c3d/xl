@@ -54,9 +54,9 @@
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //   High-level entry points for type management
-// 
+//
 // ============================================================================
 
 Tree *ValueMatchesType(Context *, Tree *type, Tree *value, bool conversions);
@@ -69,9 +69,9 @@ Tree *StructuredType(Context *, Tree *value);
 
 
 // ============================================================================
-// 
+//
 //    Representation of types
-// 
+//
 // ============================================================================
 
 struct TypeInfo : Info
@@ -102,12 +102,22 @@ struct TypeInfo : Info
 #undef PARM
 #undef DS
 #undef RS
+#undef RETURNS
+#undef GROUP
+#undef SYNOPSIS
+#undef DESCRIPTION
+#undef SEE
 
-#define INFIX(name, rtype, t1, symbol, t2, code, doc)
-#define PARM(symbol, type)
-#define PREFIX(name, rtype, symbol, parms, code, doc)
-#define POSTFIX(name, rtype, parms, symbol, code, doc)
-#define BLOCK(name, rtype, open, type, close, code, doc)
+#define SEE(see)
+#define RETURNS(type, rdoc)
+#define GROUP(grp)
+#define SYNOPSIS(syno)
+#define DESCRIPTION(desc)
+#define INFIX(name, rtype, t1, symbol, t2, code, docinfo)
+#define PARM(symbol, type, pdoc)
+#define PREFIX(name, rtype, symbol, parms, code, docinfo)
+#define POSTFIX(name, rtype, parms, symbol, code, docinfo)
+#define BLOCK(name, rtype, open, type, close, code, docinfo)
 #define NAME(symbol)
 #define TYPE(symbol)    extern Name_p symbol##_type;
 #include "basics.tbl"

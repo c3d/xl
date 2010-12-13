@@ -27,8 +27,8 @@
 #include "base.h"
 #include "winglob.h"
 #include <dirent.h>
-#include <regex.h>
 #include <string>
+#include <windows.h>
 
 
 static void globinternal(text dir, text pattern, globpaths &paths)
@@ -41,51 +41,30 @@ static void globinternal(text dir, text pattern, globpaths &paths)
     bool dirmode = false;
 
     // Transform the regexp into a file-style regexp
-    for (size_t pos = 0; !dirmode && pos < pattern.length(); pos++)
+    size_t pos = pattern.find_first_of("/\\");
+    if (pos != pattern.npos)
     {
-        char c = pattern[pos];
-        switch (c)
-        {
-        case '*':
-            pattern.replace(pos, 1, ".*");
-            pos++;
-            break;
-        case '.':
-            pattern.replace(pos, 1, "[.]");
-            pos++;
-            break;
-        case '\\':
-        case '/':
-            subpat = pattern.substr(pos + 1, pattern.npos);
-            pattern = pattern.substr(0, pos-1);
-            dirmode = true;
-            break;
-        default:
-            break;
-        }
+        subpat = pattern.substr(pos + 1, pattern.npos);
+        pattern = pattern.substr(0, pos-1);
+        dirmode = true;
     }
 
     // Open directory
-    DIR *dirp = opendir(dir.c_str());
-    if (dirp)
+    WIN32_FIND_DATAA fdata;
+    HANDLE fhandle = FindFirstFileA(dir.c_str(), &fdata);
+    bool more = fhandle != INVALID_HANDLE_VALUE;
+    if (more)
     {
-        regex_t re;
-        if (regcomp(&re, pattern.c_str(), REG_EXTENDED | REG_NOSUB) == 0)
+        do
         {
-            while(struct dirent *dp = readdir(dirp))
-            {
-                std::string entry(dp->d_name);
-                if (regexec(&re, entry.c_str(), 0, NULL, 0) == 0)
-                {
-                    if (dirmode)
-                        globinternal(dir + "\\" + entry, subpat, paths);
-                    else
-                        paths.push_back(entry);
-                }
-            }
-            regfree(&re);
-        }
-        closedir(dirp);
+            std::string entry(fdata.cFileName);
+            if (dirmode)
+                globinternal(dir + "\\" + entry, subpat, paths);
+            else
+                paths.push_back(entry);
+            more = FindNextFileA(fhandle, &fdata);
+        } while (more);
+        FindClose(fhandle);
     }
 }
 

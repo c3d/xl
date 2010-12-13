@@ -115,7 +115,7 @@ Tree *ValueMatchesType(Context *ctx, Tree *type, Tree *value, bool convert)
     if (Name *nt = type->AsName())
         if (value == nt)
             return value;
-    
+
     // Check if we match one of the constructed types
     if (Block *bt = type->AsBlock())
         return ValueMatchesType(ctx, bt->child, value, convert);
@@ -216,7 +216,7 @@ Tree *TypeCoversType(Context *ctx, Tree *type, Tree *test, bool convert)
     if (test->IsConstant())
         if (ValueMatchesType(ctx, type, test, convert))
             return test;
-    
+
     // Check if we match one of the constructed types
     if (Block *bt = type->AsBlock())
         return TypeCoversType(ctx, bt->child, test, convert);
@@ -318,7 +318,7 @@ Tree *TypeIntersectsType(Context *ctx, Tree *type, Tree *test, bool convert)
     if (test->IsConstant())
         if (ValueMatchesType(ctx, type, test, convert))
             return test;
-    
+
     // Check if we match one of the constructed types
     if (Block *bt = type->AsBlock())
         return TypeIntersectsType(ctx, bt->child, test, convert);
@@ -405,7 +405,7 @@ Tree *CanonicalType(Context *ctx, Tree *value)
     case POSTFIX:       type = postfix_type; break;
     case BLOCK:         type = block_type; break;
     }
-    return type;    
+    return type;
 }
 
 
@@ -469,7 +469,7 @@ Tree *StructuredType(Context *ctx, Tree *value)
         value->Set<TypeInfo>(type);
     }
 
-    return type;    
+    return type;
 }
 
 XL_END
