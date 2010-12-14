@@ -466,7 +466,6 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                 // Opportunity for tail recursion
                 tree_map empty;
                 Tree_p   tail   = NULL;
-                Context *old = eval;
                 result = eval->Evaluate(what, empty, lookup, &eval, &tail);
                 if (tail)
                 {
@@ -489,8 +488,7 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
                     {
                         if (block->IsGroup())
                         {
-                            if (eval == old)
-                                eval = new Context(eval, this);
+                            eval = new Context(eval, eval);
                             next = eval->ProcessDeclarations(block->child);
                         }
                     }
@@ -1357,18 +1355,40 @@ uint Context::EnterProperty(Tree *property)
 
 
     // Check if we have a matching form
-    Context_p context;
     Rewrite_p rewrite;
-    Tree *bound = stack->Bound(property, STACK_LOOKUP, &context, &rewrite);
+    Context_p context = this;
 
-    // If no matching form, declare one locally with the given value
+    // Normally, "properties" is in a block (first stack level)
+    // in a form with args (second stack level). We protect against misuse
+    if (stack)
+        if (stack->stack)
+            context = stack->stack;
+        else
+            context = stack;
+    Tree *bound = context->Bound(property, LOCAL_LOOKUP, &context, &rewrite);
+
     if (!bound)
     {
+        // Check that we have a locally defined value
+        if (!value)
+        {
+            Ooops("Property $1 is not set", property);
+            return 0;
+        }
+
+        // If no matching form, declare one locally with the given value
         rewrite = Define(property, value, type);
-        if (description != "")
-            xl_set_documentation(property, description);
-        rewrite->native = xl_assigned_value;
     }
+    else if (rewrite->native == xl_assigned_value)
+    {
+        // Create local copy of the value in current scope
+        rewrite = Define(property, rewrite->to);
+    }
+
+    if (description != "")
+        xl_set_documentation(property, description);
+    if (rewrite)
+        rewrite->native = xl_assigned_value;
 
     return 1;
 }

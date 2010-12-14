@@ -7,3 +7,6 @@ x := 5
 foo "Hello"
 x := 7
 foo { z := 3; "Bar" }
+foo { x := 6; "Broupf" }
+foo "Schroumpf"
+
