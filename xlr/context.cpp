@@ -899,8 +899,7 @@ bool Context::Bind(Tree *formTree, Tree *valueTree,
         value = eval->CreateLazy(value);
         if (args)
             args->push_back(value);
-        else
-            Define(form, value);
+        Define(form, value);
         return true;
     }
 
@@ -929,14 +928,9 @@ bool Context::Bind(Tree *formTree, Tree *valueTree,
                             if (nval->value == name->value)
                             {
                                 if (args)
-                                {
                                     args->push_back(value);
-                                }
-                                else
-                                {
-                                    Rewrite *rw = Define(name, name);
-                                    rw->native = xl_named_value;
-                                }
+                                Rewrite *rw = Define(name, name);
+                                rw->native = xl_named_value;
                                 return true;
                             }
                         }
@@ -1024,8 +1018,7 @@ bool Context::Bind(Tree *formTree, Tree *valueTree,
                 // Define the name locally, do not create a closure
                 if (args)
                     args->push_back(value);
-                else
-                    Define(name, value, type);
+                Define(name, value, type);
                 return true;
             } // We have a name on the left
         } // We have an infix :
