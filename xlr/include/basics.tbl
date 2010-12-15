@@ -651,9 +651,14 @@ PREFIX(Identity,  tree, "identity",
        RETURNS(tree, "The input tree, not evaluated"))
 PREFIX(DoCode,    tree, "do",
        PARM(input, tree, "Input tree to evaluate"),
-       return xl_evaluate(context, &input),
+       return context->Evaluate(&input),
        GROUP(basics)
        SYNOPSIS("Evaluate the input immediately"))
+PREFIX(InCaller,    tree, "in_caller",
+       PARM(input, source, "Input tree to evaluate"),
+       return context->stack->EvaluateInCaller(&input),
+       GROUP(basics)
+       SYNOPSIS("Evaluate the input in caller's context"))
 PREFIX(ParseTree, tree, "parse_tree",
        PARM(src, source, "Source tree to return"),
        Tree *code = &src;

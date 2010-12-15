@@ -253,6 +253,7 @@ struct Context
                                  Context_p *tailContext = NULL,
                                  Tree_p *tailTree = NULL);
     Tree *              EvaluateBlock(Tree *child);
+    Tree *              EvaluateInCaller(Tree *child, uint stackLevel = 1);
 
     // The hash code used in the rewrite table
     static ulong        Hash(Tree *input);

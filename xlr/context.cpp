@@ -760,6 +760,30 @@ Tree *Context::EvaluateBlock(Tree *what)
 }
 
 
+Tree *Context::EvaluateInCaller(Tree *child, uint stackLevel)
+// ----------------------------------------------------------------------------
+//   Evaluate the tree in a caller's context
+// ----------------------------------------------------------------------------
+{
+    // Find the stack level we need
+    Context *context = this;
+    while (stackLevel > 0)
+    {
+        context = context->stack;
+        stackLevel--;
+    }
+
+    // Make sure we don't evaluate a block in a block context...
+    if (Block *block = child->AsBlock())
+        child = block->child;
+
+    // Evaluate the child
+    Tree *result = context->Evaluate(child);
+
+    return result;
+}
+
+
 ulong Context::HashForm(Tree *form)
 // ----------------------------------------------------------------------------
 //   Eliminate the "when" clauses from the form
