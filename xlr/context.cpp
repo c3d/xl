@@ -1457,10 +1457,12 @@ uint Context::EnterProperty(Tree *property)
     // Normally, "properties" is in a block (first stack level)
     // in a form with args (second stack level). We protect against misuse
     if (stack)
+    {
         if (stack->stack)
             context = stack->stack;
         else
             context = stack;
+    }
     Tree *bound = context->Bound(property, LOCAL_LOOKUP, &context, &rewrite);
 
     if (!bound)
