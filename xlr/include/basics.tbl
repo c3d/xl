@@ -668,7 +668,7 @@ PREFIX(ParseTree, tree, "parse_tree",
        GROUP(source)
        SYNOPSIS("Return the source tree unevaluated"))
 PREFIX(BoundForm, tree, "bound",
-       PARM(test, tree, "Value to test"),
+       PARM(test, source, "Value to test"),
        return xl_bound(context->stack, &test),
        GROUP(source)
        SYNOPSIS("Test if a given name or form is bound in the current context"))
