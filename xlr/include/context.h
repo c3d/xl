@@ -274,6 +274,11 @@ struct Context
                               lookup_mode mode = SCOPE_LOOKUP,
                               Context_p *where = NULL,
                               Rewrite_p *rewrite = NULL);
+
+    // Get an attribute for a given form, e.g. property
+    Tree *              Attribute(Tree *form,
+                                  lookup_mode mode = SCOPE_LOOKUP,
+                                  text kind = "property");
     
 
     // Enter properties, return number of properties found

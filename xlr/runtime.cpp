@@ -283,12 +283,12 @@ Tree *xl_parse_tree(Context *context, Tree *tree)
 }
 
 
-Tree *xl_bound(Context *context, Name *name)
+Tree *xl_bound(Context *context, Tree *form)
 // ----------------------------------------------------------------------------
-//   Return the bound value for a name or nil
+//   Return the bound value for a name/form, or nil if not bound
 // ----------------------------------------------------------------------------
 {
-    if (Tree *bound = context->Bound(name))
+    if (Tree *bound = context->Bound(form))
         return bound;
     return XL::xl_nil;
 }

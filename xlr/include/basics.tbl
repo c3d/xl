@@ -667,11 +667,21 @@ PREFIX(ParseTree, tree, "parse_tree",
        return xl_parse_tree(context->stack, code),
        GROUP(source)
        SYNOPSIS("Return the source tree unevaluated"))
-PREFIX(BoundValue, tree, "bound",
-       PARM(n, name, "Value to test"),
-       return xl_bound(context->stack, &n),
+PREFIX(BoundForm, tree, "bound",
+       PARM(test, tree, "Value to test"),
+       return xl_bound(context->stack, &test),
        GROUP(source)
-       SYNOPSIS("Test if a given name is bound in the current context"))
+       SYNOPSIS("Test if a given name or form is bound in the current context"))
+PREFIX(GetAttribute, tree, "form_attribute",
+       PARM(name, text, "Name of the attribute, e.g. 'property'")
+       PARM(form, tree, "Form to test for in the current context"),
+       Tree *found = context->stack->Attribute(&form,
+                                               Context::SCOPE_LOOKUP, name);
+       if (!found)
+           found = xl_nil;
+       return found,
+       GROUP(source)
+       SYNOPSIS("Find the attribute associated to a given form"))
 PREFIX(LoadFile, tree, "load",
        PARM(file, text, ""),
        return xl_load(context, file),

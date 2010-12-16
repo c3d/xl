@@ -1290,7 +1290,7 @@ inline Tree *BindingEvaluator::operator() (Context *context,
             *where = context;
         if (rewrite)
             *rewrite = candidate;
-        return candidate->from;
+        return candidate->to ? candidate->to : candidate->from;
     }
 
     // Not found
@@ -1315,6 +1315,85 @@ Tree *Context::Bound(Tree *what,
     BindingEvaluator binding(this, where, rewrite);
     Tree *result = Evaluate(what, binding, key, lookup);
 
+    return result;
+}
+
+
+Tree *Context::Attribute(Tree *form, lookup_mode lookup, text kind)
+// ----------------------------------------------------------------------------
+//   Find the bound form, and then a prefix with the given kind
+// ----------------------------------------------------------------------------
+{
+    Tree *tree = Bound(form, lookup);
+    if (!tree)
+        return NULL;
+
+    // If the definition is a block, look inside
+    if (Block *block = tree->AsBlock())
+        tree = block->child;
+
+    // List of attributes
+    Tree_p result = NULL;
+    Tree_p *current = &result;
+
+    // Loop on all top-level items
+    Tree *next = tree;
+    while (next)
+    {
+        // Check if we have \n or ; infix
+        Infix *infix = next->AsInfix();
+        if (infix && (infix->name == "\n" || infix->name == ";"))
+        {
+            tree = infix->left;
+            next = infix->right;
+        }
+        else
+        {
+            tree = next;
+            next = NULL;
+        }
+
+        // Analyze what we got here: is it in the form 'funcname args' ?
+        if (XL::Prefix *prefix = tree->AsPrefix())
+        {
+            if (Name *prefixName = prefix->left->AsName())
+            {
+                if (prefixName->value == kind)
+                {
+                    Tree *arg = prefix->right;
+
+                    if (arg->AsText())
+                    {
+                        // property "Shape" : Recurse to find child properties
+                        arg = Attribute(prefix, lookup, kind);
+                    }
+                    else
+                    {                    
+                        if (Block *block = arg->AsBlock())
+                            arg = block->child;
+                    }
+
+                    if (arg)
+                    {
+                        if (*current)
+                            *current = new Infix("\n", *current, arg);
+                        else
+                            *current = arg;
+
+                        while (Infix *ia = (*current)->AsInfix())
+                        {
+                            if (ia->name == "\n" || ia->name == ";")
+                                current = &ia->right;
+                            else
+                                break;
+                        }
+                    } // If (arg)
+                } // If matches the right kind
+            } // Prefix with a name on the left
+        } // Is a prefix
+    } // Loop on all top-level items
+
+    // Return what we found
     return result;
 }
 
