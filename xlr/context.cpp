@@ -542,6 +542,9 @@ inline Tree *RegularEvaluator::operator() (Context *context,
                   << " is " << ShortTreeForm(candidate->from)
                   << "\n";
 
+    // Evaluation context in which we will store parameters
+    Context_p eval = new Context(context, stack);
+
     // If this is native C code, invoke it.
     if (native_fn fn = candidate->native)
     {
@@ -551,7 +554,6 @@ inline Tree *RegularEvaluator::operator() (Context *context,
         
         // Bind native context
         TreeList args;
-        Context_p eval = new Context(context, stack);
         if (eval->Bind(candidate->from, what, values, &args))
         {
             uint arity = args.size();
@@ -575,7 +577,7 @@ inline Tree *RegularEvaluator::operator() (Context *context,
             {
                 // In general, we evaluate names in the current
                 // context, except when looking at name aliases
-                Context_p eval =
+                eval =
                     candidate->type == name_type
                     ? (Context *) context->stack
                     : (Context *) stack;
@@ -597,7 +599,6 @@ inline Tree *RegularEvaluator::operator() (Context *context,
     else
     {
         // Keep evaluating
-        Context_p eval = new Context(context, stack);
         if (eval->Bind(candidate->from, what, values))
         {
             Tree *result = candidate->from;
