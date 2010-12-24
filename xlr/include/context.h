@@ -472,25 +472,25 @@ Tree *Context::Evaluate(Tree *what,
 
 // ============================================================================
 //
-//   LocalSave helper class
+//   Save helper class - Save and restore value of a variable
 //
 // ============================================================================
 
 template <class T>
-struct LocalSave
+struct Save
 // ----------------------------------------------------------------------------
 //    Save a variable locally
 // ----------------------------------------------------------------------------
 {
-    LocalSave (T &source, T value): reference(source), saved(source)
+    Save (T &source, T value): reference(source), saved(source)
     {
         reference = value;
     }
-    LocalSave(const LocalSave &o): reference(o.reference), saved(o.saved) {}
-    LocalSave (T &source): reference(source), saved(source)
+    Save(const Save &o): reference(o.reference), saved(o.saved) {}
+    Save (T &source): reference(source), saved(source)
     {
     }
-    ~LocalSave()
+    ~Save()
     {
         reference = saved;
     }

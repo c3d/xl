@@ -647,7 +647,7 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
 
     // Depth check
     static uint depth = 0;
-    XL::LocalSave<uint> save(depth, depth+1);
+    XL::Save<uint> save(depth, depth+1);
     if (depth > MAIN->options.stack_depth)
     {
         Ooops("Recursed too deep evaluating $1", what);
@@ -740,7 +740,7 @@ Tree *Context::Evaluate(Tree *what,             // Value to evaluate
     else
     {
         static Name_p evaluationError = new Name("evaluation_error");
-        LocalSave<bool> saveInError(inError, true);
+        Save<bool> saveInError(inError, true);
         tree_map emptyCache;
         Prefix_p errorForm = new Prefix(evaluationError,what,what->Position());
         what = Evaluate(errorForm, emptyCache);
