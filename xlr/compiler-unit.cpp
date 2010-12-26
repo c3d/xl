@@ -1,0 +1,957 @@
+// ****************************************************************************
+//  compiler-unit.cpp                                               XLR project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Information about a single compilation unit, i.e. the code generated
+//     for a particular tree
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+//  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2010 Taodyne SAS
+// ****************************************************************************
+//
+// The compilation unit is where most of the "action" happens, e.g. where
+// the code generation happens for a given tree. It records all information
+// that is transient, i.e. only exists during a given compilation phase
+//
+
+#include "compiler-unit.h"
+#include "errors.h"
+
+#include <llvm/Analysis/Verifier.h>
+#include <llvm/CallingConv.h>
+#include "llvm/Constants.h"
+#include "llvm/LLVMContext.h"
+#include "llvm/DerivedTypes.h"
+#include "llvm/ExecutionEngine/JIT.h"
+#include "llvm/ExecutionEngine/GenericValue.h"
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include "llvm/Instructions.h"
+#include "llvm/Module.h"
+#include <llvm/PassManager.h>
+#include "llvm/Support/raw_ostream.h"
+#include <llvm/Support/IRBuilder.h>
+#include <llvm/Support/StandardPasses.h>
+#include <llvm/System/DynamicLibrary.h>
+#include <llvm/Target/TargetData.h>
+#include <llvm/Target/TargetSelect.h>
+#include <llvm/Target/TargetOptions.h>
+#include <llvm/Transforms/Scalar.h>
+#include <llvm/Transforms/Utils/BasicBlockUtils.h>
+#include <llvm/Support/raw_ostream.h>
+
+XL_BEGIN
+
+using namespace llvm;
+
+CompiledUnit::CompiledUnit(Compiler *comp, Tree *src, TreeList parms)
+// ----------------------------------------------------------------------------
+//   CompiledUnit constructor
+// ----------------------------------------------------------------------------
+    : compiler(comp), context(comp->context), source(src),
+      code(NULL), data(NULL), function(NULL),
+      allocabb(NULL), entrybb(NULL), exitbb(NULL), failbb(NULL)
+{
+    IFTRACE(llvm)
+        std::cerr << "CompiledUnit T" << (void *) src;
+
+    // If a compilation for that tree is alread in progress, fwd decl
+    if (llvm::Function *function = compiler->TreeFunction(src))
+    {
+        // We exit here without setting entrybb (see IsForward())
+        IFTRACE(llvm)
+            std::cerr << " exists F" << function << "\n";
+        return;
+    }
+
+    // Create the function signature, one entry per parameter + one for source
+    std::vector<const Type *> signature;
+    Type *treeTy = compiler->treePtrTy;
+    for (ulong p = 0; p <= parms.size(); p++)
+        signature.push_back(treeTy);
+    FunctionType *fnTy = FunctionType::get(treeTy, signature, false);
+    text label = "xl_eval";
+    IFTRACE(labels)
+        label += "[" + text(*src) + "]";
+    function = Function::Create(fnTy, Function::InternalLinkage,
+                                label.c_str(), compiler->module);
+
+    // Save it in the compiler
+    compiler->SetTreeFunction(src, function);
+    IFTRACE(llvm)
+        std::cerr << " new F" << function << "\n";
+
+    // Create function entry point, where we will have all allocas
+    allocabb = BasicBlock::Create(*context, "allocas", function);
+    data = new IRBuilder<> (allocabb);
+
+    // Create entry block for the function
+    entrybb = BasicBlock::Create(*context, "entry", function);
+    code = new IRBuilder<> (entrybb);
+
+    // Associate the value for the input tree
+    Function::arg_iterator args = function->arg_begin();
+    Value *inputArg = args++;
+    Value *result_storage = data->CreateAlloca(treeTy, 0, "result");
+    data->CreateStore(inputArg, result_storage);
+    storage[src] = result_storage;
+
+    // Associate the value for the additional arguments (read-only, no alloca)
+    TreeList::iterator parm;
+    ulong parmsCount = 0;
+    for (parm = parms.begin(); parm != parms.end(); parm++)
+    {
+        inputArg = args++;
+        value[*parm] = inputArg;
+        parmsCount++;
+    }
+
+    // Create the exit basic block and return statement
+    exitbb = BasicBlock::Create(*context, "exit", function);
+    IRBuilder<> exitcode(exitbb);
+    Value *retVal = exitcode.CreateLoad(result_storage, "retval");
+    exitcode.CreateRet(retVal);
+
+    // Record current entry/exit points for the current expression
+    failbb = NULL;
+}
+
+
+CompiledUnit::~CompiledUnit()
+// ----------------------------------------------------------------------------
+//   Delete what we must...
+// ----------------------------------------------------------------------------
+{
+    if (entrybb && exitbb)
+    {
+        // If entrybb is clear, we may be looking at a forward declaration
+        // Otherwise, if exitbb was not cleared by Finalize(), this means we
+        // failed to compile. Make sure the compiler forgets the function
+        compiler->SetTreeFunction(source, NULL);
+        function->eraseFromParent();
+    }
+
+    delete code;
+    delete data;
+}
+
+
+eval_fn CompiledUnit::Finalize()
+// ----------------------------------------------------------------------------
+//   Finalize the build of the current function
+// ----------------------------------------------------------------------------
+{
+    IFTRACE(llvm)
+        std::cerr << "CompiledUnit Finalize T" << (void *) source
+                  << " F" << function;
+
+    // Branch to the exit block from the last test we did
+    code->CreateBr(exitbb);
+
+    // Connect the "allocas" to the actual entry point
+    data->CreateBr(entrybb);
+
+    // Verify the function we built
+    verifyFunction(*function);
+    if (compiler->optimizer)
+        compiler->optimizer->run(*function);
+
+    IFTRACE(code)
+    {
+        function->print(errs());
+    }
+
+    void *result = compiler->runtime->getPointerToFunction(function);
+    IFTRACE(llvm)
+        std::cerr << " C" << (void *) result << "\n";
+
+    exitbb = NULL;              // Tell destructor we were successful
+    return (eval_fn) result;
+}
+
+
+Value *CompiledUnit::NeedStorage(Tree *tree)
+// ----------------------------------------------------------------------------
+//    Allocate storage for a given tree
+// ----------------------------------------------------------------------------
+{
+    Value *result = storage[tree];
+    if (!result)
+    {
+        // Create alloca to store the new form
+        text label = "loc";
+        IFTRACE(labels)
+            label += "[" + text(*tree) + "]";
+        const char *clabel = label.c_str();
+        result = data->CreateAlloca(compiler->treePtrTy, 0, clabel);
+        storage[tree] = result;
+    }
+    if (value.count(tree))
+        data->CreateStore(value[tree], result);
+    else if (Value *global = compiler->TreeGlobal(tree))
+        data->CreateStore(data->CreateLoad(global), result);
+
+    return result;
+}
+
+
+bool CompiledUnit::IsKnown(Tree *tree, uint which)
+// ----------------------------------------------------------------------------
+//   Check if the tree has a known local or global value
+// ----------------------------------------------------------------------------
+{
+    if ((which & knowLocals) && storage.count(tree) > 0)
+        return true;
+    else if ((which & knowValues) && value.count(tree) > 0)
+        return true;
+    else if (which & knowGlobals)
+        if (compiler->IsKnown(tree))
+            return true;
+    return false;
+}
+
+
+Value *CompiledUnit::Known(Tree *tree, uint which)
+// ----------------------------------------------------------------------------
+//   Return the known local or global value if any
+// ----------------------------------------------------------------------------
+{
+    Value *result = NULL;
+    if ((which & knowLocals) && storage.count(tree) > 0)
+    {
+        // Value is stored in a local variable
+        result = code->CreateLoad(storage[tree], "loc");
+    }
+    else if ((which & knowValues) && value.count(tree) > 0)
+    {
+        // Immediate value of some sort, use that
+        result = value[tree];
+    }
+    else if (which & knowGlobals)
+    {
+        // Check if this is a global
+        result = compiler->TreeGlobal(tree);
+        if (result)
+        {
+            text label = "glob";
+            IFTRACE(labels)
+                label += "[" + text(*tree) + "]";
+            result = code->CreateLoad(result, label);
+        }
+    }
+    return result;
+}
+
+
+Value *CompiledUnit::ConstantInteger(Integer *what)
+// ----------------------------------------------------------------------------
+//    Generate an Integer tree
+// ----------------------------------------------------------------------------
+{
+    Value *result = Known(what, knowGlobals);
+    if (!result)
+    {
+        result = compiler->EnterConstant(what);
+        result = code->CreateLoad(result, "intk");
+        if (storage.count(what))
+            code->CreateStore(result, storage[what]);
+    }
+    return result;
+}
+
+
+Value *CompiledUnit::ConstantReal(Real *what)
+// ----------------------------------------------------------------------------
+//    Generate a Real tree
+// ----------------------------------------------------------------------------
+{
+    Value *result = Known(what, knowGlobals);
+    if (!result)
+    {
+        result = compiler->EnterConstant(what);
+        result = code->CreateLoad(result, "realk");
+        if (storage.count(what))
+            code->CreateStore(result, storage[what]);
+    }
+    return result;
+}
+
+
+Value *CompiledUnit::ConstantText(Text *what)
+// ----------------------------------------------------------------------------
+//    Generate a Text tree
+// ----------------------------------------------------------------------------
+{
+    Value *result = Known(what, knowGlobals);
+    if (!result)
+    {
+        result = compiler->EnterConstant(what);
+        result = code->CreateLoad(result, "textk");
+        if (storage.count(what))
+            code->CreateStore(result, storage[what]);
+    }
+    return result;
+}
+
+
+Value *CompiledUnit::ConstantTree(Tree *what)
+// ----------------------------------------------------------------------------
+//    Generate a constant tree
+// ----------------------------------------------------------------------------
+{
+    Value *result = Known(what, knowGlobals);
+    if (!result)
+    {
+        result = compiler->EnterConstant(what);
+        result = data->CreateLoad(result, "treek");
+        if (storage.count(what))
+            data->CreateStore(result, storage[what]);
+    }
+    return result;
+}
+
+
+Value *CompiledUnit::NeedLazy(Tree *subexpr, bool allocate)
+// ----------------------------------------------------------------------------
+//   Record that we need a 'computed' flag for lazy evaluation of the subexpr
+// ----------------------------------------------------------------------------
+{
+    Value *result = computed[subexpr];
+    if (!result && allocate)
+    {
+        text label = "computed";
+        IFTRACE(labels)
+            label += "[" + text(*subexpr) + "]";
+
+        result = data->CreateAlloca(LLVM_BOOLTYPE, 0, label.c_str());
+        Value *falseFlag = ConstantInt::get(LLVM_BOOLTYPE, 0);
+        data->CreateStore(falseFlag, result);
+        computed[subexpr] = result;
+    }
+    return result;
+}
+
+
+llvm::Value *CompiledUnit::MarkComputed(Tree *subexpr, Value *val)
+// ----------------------------------------------------------------------------
+//   Record that we computed that particular subexpression
+// ----------------------------------------------------------------------------
+{
+    // Store the value we were given as the result
+    if (val)
+    {
+        if (storage.count(subexpr) > 0)
+            code->CreateStore(val, storage[subexpr]);
+    }
+
+    // Set the 'lazy' flag or lazy evaluation
+    Value *result = NeedLazy(subexpr);
+    Value *trueFlag = ConstantInt::get(LLVM_BOOLTYPE, 1);
+    code->CreateStore(trueFlag, result);
+
+    // Return the test flag
+    return result;
+}
+
+
+BasicBlock *CompiledUnit::BeginLazy(Tree *subexpr)
+// ----------------------------------------------------------------------------
+//    Begin lazy evaluation of a block of code
+// ----------------------------------------------------------------------------
+{
+    text lskip = "skip";
+    text lwork = "work";
+    text llazy = "lazy";
+    IFTRACE(labels)
+    {
+        text lbl = text("[") + text(*subexpr) + "]";
+        lskip += lbl;
+        lwork += lbl;
+        llazy += lbl;
+    }
+    BasicBlock *skip = BasicBlock::Create(*context, lskip, function);
+    BasicBlock *work = BasicBlock::Create(*context, lwork, function);
+
+    Value *lazyFlagPtr = NeedLazy(subexpr);
+    Value *lazyFlag = code->CreateLoad(lazyFlagPtr, llazy);
+    code->CreateCondBr(lazyFlag, skip, work);
+
+    code->SetInsertPoint(work);
+    return skip;
+}
+
+
+void CompiledUnit::EndLazy(Tree *subexpr,
+                           llvm::BasicBlock *skip)
+// ----------------------------------------------------------------------------
+//   Finish lazy evaluation of a block of code
+// ----------------------------------------------------------------------------
+{
+    (void) subexpr;
+    code->CreateBr(skip);
+    code->SetInsertPoint(skip);
+}
+
+
+llvm::Value *CompiledUnit::Invoke(Tree *subexpr, Tree *callee, TreeList args)
+// ----------------------------------------------------------------------------
+//    Generate a call with the given arguments
+// ----------------------------------------------------------------------------
+{
+    // Check if the resulting form is a name or literal
+    if (callee->IsConstant())
+    {
+        if (Value *known = Known(callee))
+        {
+            MarkComputed(subexpr, known);
+            return known;
+        }
+        else
+        {
+            std::cerr << "No value for xl_identity tree " << callee << '\n';
+        }
+    }
+
+    Function *toCall = compiler->TreeFunction(callee); assert(toCall);
+
+    // Add the 'self' argument
+    std::vector<Value *> argV;
+    Value *defaultVal = ConstantTree(subexpr);
+    argV.push_back(defaultVal);
+
+    TreeList::iterator a;
+    for (a = args.begin(); a != args.end(); a++)
+    {
+        Tree *arg = *a;
+        Value *value = Known(arg);
+        if (!value)
+            value = ConstantTree(arg);
+        argV.push_back(value);
+    }
+
+    Value *callVal = code->CreateCall(toCall, argV.begin(), argV.end());
+
+    // Store the flags indicating that we computed the value
+    MarkComputed(subexpr, callVal);
+
+    return callVal;
+}
+
+
+BasicBlock *CompiledUnit::NeedTest()
+// ----------------------------------------------------------------------------
+//    Indicates that we need an exit basic block to jump to
+// ----------------------------------------------------------------------------
+{
+    if (!failbb)
+        failbb = BasicBlock::Create(*context, "fail", function);
+    return failbb;
+}
+
+
+Value *CompiledUnit::Left(Tree *tree)
+// ----------------------------------------------------------------------------
+//    Return the value for the left of the current tree
+// ----------------------------------------------------------------------------
+{
+    // Check that the tree has the expected kind
+    assert (tree->Kind() >= BLOCK);
+
+    // Check if we already know the result, if so just return it
+    // HACK: The following code assumes Prefix, Infix and Postfix have the
+    // same layout for their pointers.
+    Prefix *prefix = (Prefix *) tree;
+    Value *result = Known(prefix->left);
+    if (result)
+        return result;
+
+    // Check that we already have a value for the given tree
+    Value *parent = Known(tree);
+    if (parent)
+    {
+        Value *ptr = NeedStorage(prefix->left);
+
+        // WARNING: This relies on the layout of all nodes beginning the same
+        Value *pptr = code->CreateBitCast(parent, compiler->prefixTreePtrTy,
+                                          "pfxl");
+        result = code->CreateConstGEP2_32(pptr, 0,
+                                          LEFT_VALUE_INDEX, "lptr");
+        result = code->CreateLoad(result, "left");
+        code->CreateStore(result, ptr);
+    }
+    else
+    {
+        Ooops("Internal: Using left of uncompiled $1", tree);
+    }
+
+    return result;
+}
+
+
+Value *CompiledUnit::Right(Tree *tree)
+// ----------------------------------------------------------------------------
+//    Return the value for the right of the current tree
+// ----------------------------------------------------------------------------
+{
+    // Check that the tree has the expected kind
+    assert(tree->Kind() > BLOCK);
+
+    // Check if we already known the result, if so just return it
+    // HACK: The following code assumes Prefix, Infix and Postfix have the
+    // same layout for their pointers.
+    Prefix *prefix = (Prefix *) tree;
+    Value *result = Known(prefix->right);
+    if (result)
+        return result;
+
+    // Check that we already have a value for the given tree
+    Value *parent = Known(tree);
+    if (parent)
+    {
+        Value *ptr = NeedStorage(prefix->right);
+
+        // WARNING: This relies on the layout of all nodes beginning the same
+        Value *pptr = code->CreateBitCast(parent, compiler->prefixTreePtrTy,
+                                          "pfxr");
+        result = code->CreateConstGEP2_32(pptr, 0,
+                                          RIGHT_VALUE_INDEX, "rptr");
+        result = code->CreateLoad(result, "right");
+        code->CreateStore(result, ptr);
+    }
+    else
+    {
+        Ooops("Internal: Using right of uncompiled $14", tree);
+    }
+    return result;
+}
+
+
+Value *CompiledUnit::Copy(Tree *source, Tree *dest, bool markDone)
+// ----------------------------------------------------------------------------
+//    Copy data from source to destination
+// ----------------------------------------------------------------------------
+{
+    Value *result = Known(source); assert(result);
+    Value *ptr = NeedStorage(dest); assert(ptr);
+    code->CreateStore(result, ptr);
+
+    if (markDone)
+    {
+        // Set the target flag to 'done'
+        Value *doneFlag = NeedLazy(dest);
+        Value *trueFlag = ConstantInt::get(LLVM_BOOLTYPE, 1);
+        code->CreateStore(trueFlag, doneFlag);
+    }
+    else if (Value *oldDoneFlag = NeedLazy(source, false))
+    {
+        // Copy the flag from the source
+        Value *newDoneFlag = NeedLazy(dest);
+        Value *computed = code->CreateLoad(oldDoneFlag);
+        code->CreateStore(computed, newDoneFlag);
+    }
+
+    return result;
+}
+
+
+Value *CompiledUnit::CallEvaluate(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Call the evaluate function for the given tree
+// ----------------------------------------------------------------------------
+{
+    Value *treeValue = Known(tree); assert(treeValue);
+    if (dataForm.count(tree))
+        return treeValue;
+
+    Value *evaluated = code->CreateCall(compiler->xl_evaluate, treeValue);
+    MarkComputed(tree, evaluated);
+    return evaluated;
+}
+
+
+Value *CompiledUnit::CallNewBlock(Block *block)
+// ----------------------------------------------------------------------------
+//    Compile code generating the children of the block
+// ----------------------------------------------------------------------------
+{
+    Value *blockValue = ConstantTree(block);
+    Value *childValue = Known(block->child);
+    Value *result = code->CreateCall2(compiler->xl_new_block,
+                                      blockValue, childValue);
+    MarkComputed(block, result);
+    return result;
+}
+
+
+Value *CompiledUnit::CallNewPrefix(Prefix *prefix)
+// ----------------------------------------------------------------------------
+//    Compile code generating the children of a prefix
+// ----------------------------------------------------------------------------
+{
+    Value *prefixValue = ConstantTree(prefix);
+    Value *leftValue = Known(prefix->left);
+    Value *rightValue = Known(prefix->right);
+    Value *result = code->CreateCall3(compiler->xl_new_prefix,
+                                      prefixValue, leftValue, rightValue);
+    MarkComputed(prefix, result);
+    return result;
+}
+
+
+Value *CompiledUnit::CallNewPostfix(Postfix *postfix)
+// ----------------------------------------------------------------------------
+//    Compile code generating the children of a postfix
+// ----------------------------------------------------------------------------
+{
+    Value *postfixValue = ConstantTree(postfix);
+    Value *leftValue = Known(postfix->left);
+    Value *rightValue = Known(postfix->right);
+    Value *result = code->CreateCall3(compiler->xl_new_postfix,
+                                      postfixValue, leftValue, rightValue);
+    MarkComputed(postfix, result);
+    return result;
+}
+
+
+Value *CompiledUnit::CallNewInfix(Infix *infix)
+// ----------------------------------------------------------------------------
+//    Compile code generating the children of an infix
+// ----------------------------------------------------------------------------
+{
+    Value *infixValue = ConstantTree(infix);
+    Value *leftValue = Known(infix->left);
+    Value *rightValue = Known(infix->right);
+    Value *result = code->CreateCall3(compiler->xl_new_infix,
+                                      infixValue, leftValue, rightValue);
+    MarkComputed(infix, result);
+    return result;
+}
+
+
+Value *CompiledUnit::CreateClosure(Tree *callee, TreeList &args)
+// ----------------------------------------------------------------------------
+//   Create a closure for an expression we want to evaluate later
+// ----------------------------------------------------------------------------
+{
+    std::vector<Value *> argV;
+    Value *calleeVal = Known(callee);
+    if (!calleeVal)
+        return NULL;
+    Value *countVal = ConstantInt::get(LLVM_INTTYPE(uint), args.size());
+    TreeList::iterator a;
+
+    argV.push_back(calleeVal);
+    argV.push_back(countVal);
+    for (a = args.begin(); a != args.end(); a++)
+    {
+        Tree *value = *a;
+        Value *llvmValue = Known(value); assert(llvmValue);
+        argV.push_back(llvmValue);
+    }
+
+    Value *callVal = code->CreateCall(compiler->xl_new_closure,
+                                      argV.begin(), argV.end());
+
+    // Need to store result, but not mark it as evaluated
+    NeedStorage(callee);
+    code->CreateStore(callVal, storage[callee]);
+    // MarkComputed(callee, callVal);
+
+    return callVal;
+}
+
+
+Value *CompiledUnit::CallClosure(Tree *callee, uint ntrees)
+// ----------------------------------------------------------------------------
+//   Call a closure function with the given n trees
+// ----------------------------------------------------------------------------
+//   We build it with an indirect call so that we generate one closure call
+//   subroutine per number of arguments only.
+//   The input is a prefix of the form E X1 X2 X3 false, where E is the
+//   expression to evaluate, and X1, X2, X3 are the arguments it needs.
+//   The generated function takes the 'code' field of E, and calls it
+//   using C conventions with arguments (E, X1, X2, X3).
+{
+    // Load left tree and get its code tag
+    Type *treePtrTy = compiler->treePtrTy;
+    Value *ptr = Known(callee); assert(ptr);
+    Value *pfx = code->CreateBitCast(ptr,compiler->prefixTreePtrTy);
+    Value *lf = code->CreateConstGEP2_32(pfx, 0, LEFT_VALUE_INDEX);
+    Value *callTree = code->CreateLoad(lf);
+#define CODE_INDEX 0
+    Value *callCode = code->CreateConstGEP2_32(callTree, 0, CODE_INDEX);
+    callCode = code->CreateLoad(callCode);
+
+    // Build argument list
+    std::vector<Value *> argV;
+    std::vector<const Type *> signature;
+    argV.push_back(callTree);     // Self is the original expression
+    signature.push_back(treePtrTy);
+    for (uint i = 0; i < ntrees; i++)
+    {
+        // WARNING: This relies on the layout of all nodes beginning the same
+        Value *pfx = code->CreateBitCast(ptr,compiler->prefixTreePtrTy);
+        Value *rt = code->CreateConstGEP2_32(pfx, 0, RIGHT_VALUE_INDEX);
+        ptr = code->CreateLoad(rt);
+        pfx = code->CreateBitCast(ptr,compiler->prefixTreePtrTy);
+        Value *lf = code->CreateConstGEP2_32(pfx, 0, LEFT_VALUE_INDEX);
+        Value *arg = code->CreateLoad(lf);
+        argV.push_back(arg);
+        signature.push_back(treePtrTy);
+    }
+
+    // Call the resulting function
+    FunctionType *fnTy = FunctionType::get(treePtrTy, signature, false);
+    PointerType *fnPtrTy = PointerType::get(fnTy, 0);
+    Value *toCall = code->CreateBitCast(callCode, fnPtrTy);
+    Value *callVal = code->CreateCall(toCall, argV.begin(), argV.end());
+
+    // Store the flags indicating that we computed the value
+    MarkComputed(callee, callVal);
+
+    return callVal;
+
+}
+
+
+Value *CompiledUnit::CallFormError(Tree *what)
+// ----------------------------------------------------------------------------
+//   Report a type error trying to evaluate some argument
+// ----------------------------------------------------------------------------
+{
+    Value *ptr = ConstantTree(what); assert(what);
+    Value *callVal = code->CreateCall(compiler->xl_form_error, ptr);
+    MarkComputed(what, callVal);
+    return callVal;
+}
+
+
+BasicBlock *CompiledUnit::TagTest(Tree *tree, ulong tagValue)
+// ----------------------------------------------------------------------------
+//   Test if the input tree is an integer tree with the given value
+// ----------------------------------------------------------------------------
+{
+    // Where we go if the tests fail
+    BasicBlock *notGood = NeedTest();
+
+    // Check if the tag is INTEGER
+    Value *treeValue = Known(tree);
+    if (!treeValue)
+    {
+        Ooops("No value for $1", tree);
+        return NULL;
+    }
+    Value *tagPtr = code->CreateConstGEP2_32(treeValue, 0, 0, "tagPtr");
+    Value *tag = code->CreateLoad(tagPtr, "tag");
+    Value *mask = ConstantInt::get(tag->getType(), Tree::KINDMASK);
+    Value *kind = code->CreateAnd(tag, mask, "tagAndMask");
+    Constant *refTag = ConstantInt::get(tag->getType(), tagValue);
+    Value *isRightTag = code->CreateICmpEQ(kind, refTag, "isRightTag");
+    BasicBlock *isRightKindBB = BasicBlock::Create(*context,
+                                                   "isRightKind", function);
+    code->CreateCondBr(isRightTag, isRightKindBB, notGood);
+
+    code->SetInsertPoint(isRightKindBB);
+    return isRightKindBB;
+}
+
+
+BasicBlock *CompiledUnit::IntegerTest(Tree *tree, longlong value)
+// ----------------------------------------------------------------------------
+//   Test if the input tree is an integer tree with the given value
+// ----------------------------------------------------------------------------
+{
+    // Where we go if the tests fail
+    BasicBlock *notGood = NeedTest();
+
+    // Check if the tag is INTEGER
+    BasicBlock *isIntegerBB = TagTest(tree, INTEGER);
+    if (!isIntegerBB)
+        return isIntegerBB;
+
+    // Check if the value is the same
+    Value *treeValue = Known(tree);
+    assert(treeValue);
+    treeValue = code->CreateBitCast(treeValue, compiler->integerTreePtrTy);
+    Value *valueFieldPtr = code->CreateConstGEP2_32(treeValue, 0,
+                                                    INTEGER_VALUE_INDEX);
+    Value *tval = code->CreateLoad(valueFieldPtr, "treeValue");
+    Constant *rval = ConstantInt::get(tval->getType(), value, "refValue");
+    Value *isGood = code->CreateICmpEQ(tval, rval, "isGood");
+    BasicBlock *isGoodBB = BasicBlock::Create(*context,
+                                              "isGood", function);
+    code->CreateCondBr(isGood, isGoodBB, notGood);
+
+    // If the value is the same, then go on, switch to the isGood basic block
+    code->SetInsertPoint(isGoodBB);
+    return isGoodBB;
+}
+
+
+BasicBlock *CompiledUnit::RealTest(Tree *tree, double value)
+// ----------------------------------------------------------------------------
+//   Test if the input tree is a real tree with the given value
+// ----------------------------------------------------------------------------
+{
+    // Where we go if the tests fail
+    BasicBlock *notGood = NeedTest();
+
+    // Check if the tag is REAL
+    BasicBlock *isRealBB = TagTest(tree, REAL);
+    if (!isRealBB)
+        return isRealBB;
+
+    // Check if the value is the same
+    Value *treeValue = Known(tree);
+    assert(treeValue);
+    treeValue = code->CreateBitCast(treeValue, compiler->realTreePtrTy);
+    Value *valueFieldPtr = code->CreateConstGEP2_32(treeValue, 0,
+                                                       REAL_VALUE_INDEX);
+    Value *tval = code->CreateLoad(valueFieldPtr, "treeValue");
+    Constant *rval = ConstantFP::get(tval->getType(), value);
+    Value *isGood = code->CreateFCmpOEQ(tval, rval, "isGood");
+    BasicBlock *isGoodBB = BasicBlock::Create(*context,
+                                              "isGood", function);
+    code->CreateCondBr(isGood, isGoodBB, notGood);
+
+    // If the value is the same, then go on, switch to the isGood basic block
+    code->SetInsertPoint(isGoodBB);
+    return isGoodBB;
+}
+
+
+BasicBlock *CompiledUnit::TextTest(Tree *tree, text value)
+// ----------------------------------------------------------------------------
+//   Test if the input tree is a text tree with the given value
+// ----------------------------------------------------------------------------
+{
+    // Where we go if the tests fail
+    BasicBlock *notGood = NeedTest();
+
+    // Check if the tag is TEXT
+    BasicBlock *isTextBB = TagTest(tree, TEXT);
+    if (!isTextBB)
+        return isTextBB;
+
+    // Check if the value is the same, call xl_same_text
+    Value *treeValue = Known(tree);
+    assert(treeValue);
+    Constant *refVal = ConstantArray::get(*context, value);
+    const Type *refValTy = refVal->getType();
+    GlobalVariable *gvar = new GlobalVariable(*compiler->module, refValTy, true,
+                                              GlobalValue::InternalLinkage,
+                                              refVal, "str");
+    Value *refPtr = code->CreateConstGEP2_32(gvar, 0, 0);
+    Value *isGood = code->CreateCall2(compiler->xl_same_text,
+                                      treeValue, refPtr);
+    BasicBlock *isGoodBB = BasicBlock::Create(*context, "isGood", function);
+    code->CreateCondBr(isGood, isGoodBB, notGood);
+
+    // If the value is the same, then go on, switch to the isGood basic block
+    code->SetInsertPoint(isGoodBB);
+    return isGoodBB;
+}
+
+
+BasicBlock *CompiledUnit::ShapeTest(Tree *left, Tree *right)
+// ----------------------------------------------------------------------------
+//   Test if the two given trees have the same shape
+// ----------------------------------------------------------------------------
+{
+    Value *leftVal = Known(left);
+    Value *rightVal = Known(right);
+    assert(leftVal);
+    assert(rightVal);
+    if (leftVal == rightVal) // How unlikely?
+        return NULL;
+
+    // Where we go if the tests fail
+    BasicBlock *notGood = NeedTest();
+    Value *isGood = code->CreateCall2(compiler->xl_same_shape,
+                                      leftVal, rightVal);
+    BasicBlock *isGoodBB = BasicBlock::Create(*context, "isGood", function);
+    code->CreateCondBr(isGood, isGoodBB, notGood);
+
+    // If the value is the same, then go on, switch to the isGood basic block
+    code->SetInsertPoint(isGoodBB);
+    return isGoodBB;
+}
+
+
+BasicBlock *CompiledUnit::InfixMatchTest(Tree *actual, Infix *reference)
+// ----------------------------------------------------------------------------
+//   Test if the actual tree has the same shape as the given infix
+// ----------------------------------------------------------------------------
+{
+    // Check that we know how to evaluate both
+    Value *actualVal = Known(actual);           assert(actualVal);
+    Value *refVal = NeedStorage(reference);     assert (refVal);
+
+    // Extract the name of the reference
+    Constant *refNameVal = ConstantArray::get(*context, reference->name);
+    const Type *refNameTy = refNameVal->getType();
+    GlobalVariable *gvar = new GlobalVariable(*compiler->module,refNameTy,true,
+                                              GlobalValue::InternalLinkage,
+                                              refNameVal, "infix_name");
+    Value *refNamePtr = code->CreateConstGEP2_32(gvar, 0, 0);
+
+    // Where we go if the tests fail
+    BasicBlock *notGood = NeedTest();
+    Value *afterExtract = code->CreateCall2(compiler->xl_infix_match_check,
+                                            actualVal, refNamePtr);
+    Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
+    Value *isGood = code->CreateICmpNE(afterExtract, null, "isGoodInfix");
+    BasicBlock *isGoodBB = BasicBlock::Create(*context, "isGood", function);
+    code->CreateCondBr(isGood, isGoodBB, notGood);
+
+    // If the value is the same, then go on, switch to the isGood basic block
+    code->SetInsertPoint(isGoodBB);
+
+    // We are on the right path: extract left and right
+    code->CreateStore(afterExtract, refVal);
+    MarkComputed(reference, NULL);
+    MarkComputed(reference->left, NULL);
+    MarkComputed(reference->right, NULL);
+    Left(reference);
+    Right(reference);
+
+    return isGoodBB;
+}
+
+
+BasicBlock *CompiledUnit::TypeTest(Tree *value, Tree *type)
+// ----------------------------------------------------------------------------
+//   Test if the given value has the given type
+// ----------------------------------------------------------------------------
+{
+    Value *valueVal = Known(value);     assert(valueVal);
+    Value *typeVal = Known(type);       assert(typeVal);
+
+    // Where we go if the tests fail
+    BasicBlock *notGood = NeedTest();
+    Value *afterCast = code->CreateCall2(compiler->xl_type_check,
+                                         valueVal, typeVal);
+    Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
+    Value *isGood = code->CreateICmpNE(afterCast, null, "isGoodType");
+    BasicBlock *isGoodBB = BasicBlock::Create(*context, "isGood", function);
+    code->CreateCondBr(isGood, isGoodBB, notGood);
+
+    // If the value matched, we may have a type cast, remember it
+    code->SetInsertPoint(isGoodBB);
+    Value *ptr = NeedStorage(value);
+    code->CreateStore(afterCast, ptr);
+
+    return isGoodBB;
+}
+
+XL_END

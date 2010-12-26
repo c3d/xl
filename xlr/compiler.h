@@ -30,6 +30,12 @@
 #include <llvm/Support/IRBuilder.h>
 
 
+// ============================================================================
+// 
+//    Forward declarations
+// 
+// ============================================================================
+
 namespace llvm
 // ----------------------------------------------------------------------------
 //   Forward classes from LLVM
@@ -67,6 +73,13 @@ typedef std::set<Tree *>                    closure_set;
 typedef std::set<Tree *>                    data_set;
 
 
+
+// ============================================================================
+// 
+//    Global structures to access the LLVM just-in-time compiler
+// 
+// ============================================================================
+
 struct Compiler
 // ----------------------------------------------------------------------------
 //   Just-in-time compiler data
@@ -91,6 +104,7 @@ struct Compiler
     adapter_fn                ArrayToArgsAdapter(uint numtrees);
     llvm::Value *             EnterGlobal(Name *name, Name_p *address);
     llvm::Value *             EnterConstant(Tree *constant);
+    eval_fn                   MarkAsClosure(Tree *closure, uint ntrees);
     bool                      IsKnown(Tree *value);
 
     bool                      FreeResources(Tree *tree);
@@ -139,137 +153,23 @@ public:
 };
 
 
-struct CompiledUnit
-// ----------------------------------------------------------------------------
-//  A compilation unit, which typically corresponds to an expression
-// ----------------------------------------------------------------------------
-{
-    CompiledUnit(Compiler *comp, Tree *source, TreeList parms);
-    ~CompiledUnit();
 
-    bool                IsForwardCall()         { return entrybb == NULL; }
-    eval_fn             Finalize();
-
-    enum { knowAll = -1, knowGlobals = 1, knowLocals = 2, knowValues = 4 };
-
-    llvm::Value *       NeedStorage(Tree *tree);
-    bool                IsKnown(Tree *tree, uint which = knowAll);
-    llvm::Value *       Known(Tree *tree, uint which = knowAll );
-
-    llvm::Value *       ConstantInteger(Integer *what);
-    llvm::Value *       ConstantReal(Real *what);
-    llvm::Value *       ConstantText(Text *what);
-    llvm::Value *       ConstantTree(Tree *what);
-
-    llvm::Value *       NeedLazy(Tree *subexpr, bool allocate = true);
-    llvm::Value *       MarkComputed(Tree *subexpr, llvm::Value *value);
-    llvm::BasicBlock *  BeginLazy(Tree *subexpr);
-    void                EndLazy(Tree *subexpr, llvm::BasicBlock *skip);
-
-    llvm::BasicBlock *  NeedTest();
-    llvm::Value *       Left(Tree *);
-    llvm::Value *       Right(Tree *);
-    llvm::Value *       Copy(Tree *src, Tree *dst, bool markDone=true);
-    llvm::Value *       Invoke(Tree *subexpr, Tree *callee, TreeList args);
-    llvm::Value *       CallEvaluate(Tree *);
-    llvm::Value *       CallNewBlock(Block *);
-    llvm::Value *       CallNewPrefix(Prefix *);
-    llvm::Value *       CallNewPostfix(Postfix *);
-    llvm::Value *       CallNewInfix(Infix *);
-    llvm::Value *       CreateClosure(Tree *callee, TreeList &args);
-    llvm::Value *       CallClosure(Tree *callee, uint ntrees);
-    llvm::Value *       CallFormError(Tree *what);
-
-    llvm::BasicBlock *  TagTest(Tree *code, ulong tag);
-    llvm::BasicBlock *  IntegerTest(Tree *code, longlong value);
-    llvm::BasicBlock *  RealTest(Tree *code, double value);
-    llvm::BasicBlock *  TextTest(Tree *code, text value);
-    llvm::BasicBlock *  ShapeTest(Tree *code, Tree *other);
-    llvm::BasicBlock *  InfixMatchTest(Tree *code, Infix *ref);
-    llvm::BasicBlock *  TypeTest(Tree *code, Tree *type);
-
-public:
-    Compiler *          compiler;       // The compiler environment we use
-    llvm::LLVMContext * context;        // The context we got from compiler
-    Tree_p              source;         // The original source we compile
-
-    llvm::IRBuilder<> * code;           // Instruction builder for code
-    llvm::IRBuilder<> * data;           // Instruction builder for data
-    llvm::Function *    function;       // Function we generate
-
-    llvm::BasicBlock *  allocabb;       // Function entry point, allocas
-    llvm::BasicBlock *  entrybb;        // Entry point for that code
-    llvm::BasicBlock *  exitbb;         // Exit point for that code
-    llvm::BasicBlock *  failbb;         // Where we go if tests fail
-
-    value_map           value;          // Map tree -> LLVM value
-    value_map           storage;        // Map tree -> LLVM alloca space
-    value_map           computed;       // Map tree -> LLVM "computed" flag
-    data_set            dataForm;       // Data expressions we don't evaluate
-};
-
-
-struct ExpressionReduction
-// ----------------------------------------------------------------------------
-//   Record compilation state around a specific expression reduction
-// ----------------------------------------------------------------------------
-{
-    ExpressionReduction(CompiledUnit &unit, Tree *source);
-    ~ExpressionReduction();
-
-    void                NewForm();
-    void                Succeeded();
-    void                Failed();
-
-public:
-    CompiledUnit &      unit;           // Compilation unit we use
-    Tree *              source;         // Tree we build (mostly for debugging)
-    llvm::LLVMContext * context;        // Inherited context
-
-    llvm::Value *       storage;        // Storage for expression value
-    llvm::Value *       computed;       // Flag telling if value was computed
-
-    llvm::BasicBlock *  savedfailbb;    // Saved location of failbb
-
-    llvm::BasicBlock *  entrybb;        // Entry point to subcase
-    llvm::BasicBlock *  savedbb;        // Saved position before subcase
-    llvm::BasicBlock *  successbb;      // Successful completion of expression
-
-    value_map           savedvalue;     // Saved compile unit value map
-};
-
-
-struct CompilerGarbageCollectionListener : TypeAllocator::Listener
-// ----------------------------------------------------------------------------
-//   Listen to the garbage collection to put away LLVM data structures
-// ----------------------------------------------------------------------------
-{
-    CompilerGarbageCollectionListener(Compiler *compiler)
-        : compiler(compiler) {}
-
-    virtual void BeginCollection();
-    virtual bool CanDelete (void *obj);
-    virtual void EndCollection();
-
-    Compiler *compiler;
-};
-
-
-struct CompilerInfo : Info
-// ----------------------------------------------------------------------------
-//   Information about compiler-related data structures
-// ----------------------------------------------------------------------------
-{
-    CompilerInfo(Tree *tree): tree(tree), global(0), function(0) {}
-    ~CompilerInfo();
-    Tree *                      tree;
-    llvm::GlobalValue *         global;
-    llvm::Function *            function;
-};
-
+// ============================================================================
+// 
+//   Useful macros
+// 
+// ============================================================================
 
 #define LLVM_INTTYPE(t)         llvm::IntegerType::get(*context, sizeof(t) * 8)
 #define LLVM_BOOLTYPE           llvm::Type::getInt1Ty(*context)
+
+// Index in data structures of fields in Tree types
+#define TAG_INDEX           0
+#define INFO_INDEX          1
+#define INTEGER_VALUE_INDEX 2
+#define REAL_VALUE_INDEX    2
+#define LEFT_VALUE_INDEX    2
+#define RIGHT_VALUE_INDEX   3
 
 XL_END
 

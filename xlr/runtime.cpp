@@ -486,16 +486,7 @@ Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
 
     // Generate the code for the arguments
     Compiler *compiler = MAIN->compiler;
-    eval_fn fn = compiler->closures[ntrees];
-    if (!fn)
-    {
-        TreeList noParms;
-        CompiledUnit unit(compiler, result, noParms);
-        unit.CallClosure(result, ntrees);
-        fn = unit.Finalize();
-        compiler->closures[ntrees] = fn;
-        compiler->SetTreeFunction(result, NULL); // Now owned by closures[n]
-    }
+    compiler->MarkAsClosure(result, ntrees);
 
     return result;
 }

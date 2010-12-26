@@ -39,6 +39,15 @@ SOURCES     =					\
 	runtime.cpp				\
 	basics.cpp				\
 	types.cpp				\
+	compiler-action.cpp			\
+	compiler-arg.cpp			\
+	compiler-children.cpp			\
+	compiler-decl.cpp			\
+	compiler-envscan.cpp			\
+	compiler-expred.cpp			\
+	compiler-gc.cpp				\
+	compiler-parm.cpp			\
+	compiler-unit.cpp			\
         sha1.cpp				\
 	serializer.cpp				\
         diff.cpp				\
