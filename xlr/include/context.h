@@ -468,38 +468,6 @@ Tree *Context::Evaluate(Tree *what,
     return Evaluate(what, evaluator, key, list.begin(), list.end());
 }
 
-
-
-// ============================================================================
-//
-//   Save helper class - Save and restore value of a variable
-//
-// ============================================================================
-
-template <class T>
-struct Save
-// ----------------------------------------------------------------------------
-//    Save a variable locally
-// ----------------------------------------------------------------------------
-{
-    Save (T &source, T value): reference(source), saved(source)
-    {
-        reference = value;
-    }
-    Save(const Save &o): reference(o.reference), saved(o.saved) {}
-    Save (T &source): reference(source), saved(source)
-    {
-    }
-    ~Save()
-    {
-        reference = saved;
-    }
-    operator T()        { return saved; }
-
-    T&  reference;
-    T   saved;
-};
-
 XL_END
 
 extern "C"
