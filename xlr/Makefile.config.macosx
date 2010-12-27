@@ -41,8 +41,8 @@ CPP=cpp
 LD=c++
 
 # And doesn't have the -MG flag
-CC_DEPEND=$(CC) $(CPPFLAGS) $(CPPFLAGS_$*) -M -Wp,-MG,-M > _tmp.depend
-CXX_DEPEND=$(CXX) $(CPPFLAGS) $(CPPFLAGS_$*) -M -Wp,-MG,-M > _tmp.depend
-AS_DEPEND=$(CC) $(CPPFLAGS) $(CPPFLAGS_$*) -M -Wp,-MG,-M > _tmp.depend
+CC_DEPEND=$(CC) $(CPPFLAGS) $(CPPFLAGS_$*) -M -Wp,-MG,-M
+CXX_DEPEND=$(CXX) $(CPPFLAGS) $(CPPFLAGS_$*) -M -Wp,-MG,-M
+AS_DEPEND=$(CC) $(CPPFLAGS) $(CPPFLAGS_$*) -M -Wp,-MG,-M
 
 include $(BROOT)Makefile.rules

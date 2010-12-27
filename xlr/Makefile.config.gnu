@@ -33,9 +33,9 @@ CPP=gcc -E
 LD=g++
 AR=ar
 RANLIB=ranlib
-CC_DEPEND=$(CC) $(CPPFLAGS) $(CPPFLAGS_$*) -M -MG > _tmp.depend
-CXX_DEPEND=$(CXX) $(CPPFLAGS) $(CPPFLAGS_$*) -M -MG > _tmp.depend
-AS_DEPEND=$(CC) $(CPPFLAGS) $(CPPFLAGS_$*) -M -MG > _tmp.depend
+CC_DEPEND=$(CC) $(CPPFLAGS) $(CPPFLAGS_$*) -M -MG
+CXX_DEPEND=$(CXX) $(CPPFLAGS) $(CPPFLAGS_$*) -M -MG
+AS_DEPEND=$(CC) $(CPPFLAGS) $(CPPFLAGS_$*) -M -MG
 
 
 #------------------------------------------------------------------------------

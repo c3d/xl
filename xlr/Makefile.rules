@@ -68,7 +68,7 @@ clean: dirclean
 	rm -f $(NATIVEDIR)/xl_lib.h $(NATIVEDIR)/xl.syntax $(NATIVEDIR)/nxl.exe
 	rm -f $(NATIVEDIR)/TEST/failure.out $(NATIVEDIR)/TEST/success.out $(NATIVEDIR)/TEST/nxl.exe
 	rm -f `find $(NATIVEDIR)/TESTS -name *.log` 
-	
+
 dirclean:
 	rm -f $(GARBAGE) $(TOCLEAN)
 	$(MAKE) recurse RECURSE=dirclean
@@ -78,10 +78,10 @@ install: all
 startup: clean all
 
 depend: $(OBJDIR)/Makefile.depend
-	@echo Dependencies for $(TARGET) done
+	@echo --------- Dependencies for $(TARGET) done ----------
 hello:
 	@echo ----------- Making $(TARGET) in $$(pwd) ------------
-goodbye:
+goodbye: $(OBJECTS) $(OBJLIBRARY) $(OBJDRIVER) $(OBJEXE)
 	@echo ---------- Done with $(TARGET) in $$(pwd) ----------
 
 build:									\
@@ -154,42 +154,40 @@ $(OBJDIR)/%.C.o: %.C
 $(OBJDIR)/%.cpp.o: %.cpp
 	$V $(CXX) $(CXXFLAGS) $(CPPFLAGS_$*) $(CXXFLAGS_$*) -o $@ -c $<
 
-# Dependencies generation
-CAT_DEPEND=sed								\
-	-e 's@$(@:.mkdepend=).o:@$(OBJDIR)/$(@:.mkdepend=).o:@g' 	\
-	-e 's@$*.o:@$(OBJDIR)/$(@:.mkdepend=).o:@g'	 		\
-	< _tmp.depend >> $(OBJDIR)/_Makefile.depend &&			\
-	rm -f _tmp.depend
 ifdef TARGET
-$(OBJDIR)/Makefile.depend: $(SOURCES)
-	$V echo Generating dependencies in $@
-	$V mkdir -p $(OBJDIR)
-	$V echo > $(OBJDIR)/Makefile.depend
-	$V $(MAKE) mkdepend
-else
-$(OBJDIR)/Makefile.depend:
-endif
 
-mkdepend: predepend $(SOURCES:%=%.mkdepend)
-	$V touch $(OBJDIR)/_Makefile.depend
-	$V mv $(OBJDIR)/_Makefile.depend $(OBJDIR)/Makefile.depend
-predepend:
-	$V echo > $(OBJDIR)/_Makefile.depend
-%.c.mkdepend:
-	$V $(CC_DEPEND) $*.c && $(CAT_DEPEND)
-%.C.mkdepend:
-	$V $(CXX_DEPEND) $*.C && $(CAT_DEPEND)
-%.cpp.mkdepend:
-	$V $(CXX_DEPEND) $*.cpp && $(CAT_DEPEND)
-%.S.mkdepend:
-	$V $(AS_DEPEND) $*.S && $(CAT_DEPEND)
-%.s.mkdepend:
-	$V $(AS_DEPEND) $*.s && $(CAT_DEPEND)
-%.xl.mkdepend:
-	$V echo No dependency for %
+# Dependencies generation
+
+# Don't you just love the sed syntax?
+# This means: Replace runtime.o in .d file with $(OBJDIR)/runtime.cpp.o
+# The $(OBJDIR) is actually in the name of the .d file in $@,
+# So $(@:.d=) removes the .d, and then we add the .o back... Smart, eh?
+SED_DEPEND=sed -e 's!$*.o!$(@:.d=).o!g'
+
+$(OBJDIR)/Makefile.depend: $(OBJDIR) $(SOURCES:%=$(OBJDIR)/%.d)
+	$V echo Generating dependencies in $@
+	$V cat $(SOURCES:%=$(OBJDIR)/%.d) > $@
+
+$(OBJDIR)/%.d: $(OBJDIR)
+
+$(OBJDIR)/%.c.d: %.c
+	$R $(CC_DEPEND) $< | $(SED_DEPEND) > $@
+$(OBJDIR)/%.C.d: %.C
+	$R $(CXX_DEPEND) $< | $(SED_DEPEND) > $@
+$(OBJDIR)/%.cpp.d: %.cpp
+	$R $(CXX_DEPEND) $< | $(SED_DEPEND) > $@
+$(OBJDIR)/%.S.d: %.S
+	$R $(AS_DEPEND) $< | $(SED_DEPEND) > $@
+$(OBJDIR)/%.s.d: %.s
+	$R $(AS_DEPEND) $< | $(SED_DEPEND) > $@
+$(OBJDIR)/%.xl.d: %.xl
+	$R echo No dependency for $*
+
+endif
 
 
 # Include dependencies from current directory
 ifdef SOURCES
 -include $(OBJDIR)/Makefile.depend
 endif
+\
