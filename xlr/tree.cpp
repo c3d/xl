@@ -87,27 +87,6 @@ Name::operator bool()
 // 
 // ============================================================================
 
-Tree *Tree::Do(Action *action)
-// ----------------------------------------------------------------------------
-//   Perform an action on the tree 
-// ----------------------------------------------------------------------------
-{
-    switch(Kind())
-    {
-    case INTEGER:       return action->DoInteger((Integer *) this);
-    case REAL:          return action->DoReal((Real *) this);
-    case TEXT:          return action->DoText((Text *) this);
-    case NAME:          return action->DoName((Name *) this);
-    case BLOCK:         return action->DoBlock((Block *) this);
-    case PREFIX:        return action->DoPrefix((Prefix *) this);
-    case POSTFIX:       return action->DoPostfix((Postfix *) this);
-    case INFIX:         return action->DoInfix((Infix *) this);
-    default:            assert(!"Unexpected tree kind");
-    }
-    return NULL;
-}
-
-
 Tree *Action::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------
 //   Default is simply to invoke 'Do'

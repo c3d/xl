@@ -120,8 +120,14 @@ struct Tree
     ~Tree();
 
     // Perform recursive actions on a tree
-    Tree *              Do(Action *action);
-    Tree *              Do(Action &action)    { return Do(&action); }
+    template<typename Action, typename Value>
+    Value               Do(Action &action);
+    template<typename Action, typename Value>
+    Value               Do(Action *a)         { return Do<Action, Value> (*a); }
+    template <typename Action>
+    Tree *              Do(Action &a)         { return Do<Action,Tree*>(a); }
+    template <typename Action>
+    Tree *              Do(Action *a)         { return Do<Action,Tree*>(*a); }
 
     // Attributes
     kind                Kind()                { return kind(tag & KINDMASK); }
@@ -439,6 +445,35 @@ inline Infix *Infix::LastStatement()
            (next->name == "\n" || next->name == ";"))
         last = next;
     return last;
+}
+
+
+
+// ============================================================================
+// 
+//   Template members for recursive operations on trees
+// 
+// ============================================================================
+
+template<typename Action, typename Value>
+Value Tree::Do(Action &action)
+// ----------------------------------------------------------------------------
+//   Perform an action on the tree 
+// ----------------------------------------------------------------------------
+{
+    switch(Kind())
+    {
+    case INTEGER:       return action.DoInteger((Integer *) this);
+    case REAL:          return action.DoReal((Real *) this);
+    case TEXT:          return action.DoText((Text *) this);
+    case NAME:          return action.DoName((Name *) this);
+    case BLOCK:         return action.DoBlock((Block *) this);
+    case PREFIX:        return action.DoPrefix((Prefix *) this);
+    case POSTFIX:       return action.DoPostfix((Postfix *) this);
+    case INFIX:         return action.DoInfix((Infix *) this);
+    default:            assert(!"Unexpected tree kind");
+    }
+    return NULL;
 }
 
 
