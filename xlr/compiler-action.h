@@ -46,7 +46,7 @@ struct CompileAction : Action
     // Build code selecting among rewrites in current context
     Tree *         Rewrites(Tree *what);
 
-    Context_p     symbols;
+    Context_p     context;
     CompiledUnit &unit;
     bool          nullIfBad;
     bool          keepAlternatives;

@@ -64,13 +64,14 @@ struct Options;
 typedef Tree * (*eval_fn) (Tree *);
 typedef Tree * (*adapter_fn) (native_fn callee, Context *ctx,
                               Tree *src, Tree **args);
-typedef std::map<text, llvm::Function *>    builtins_map;
-typedef std::map<Tree *, llvm::Value *>     value_map;
-typedef std::map<Tree *, Tree **>           address_map;
-typedef std::map<uint, eval_fn>             closure_map;
-typedef std::map<uint, adapter_fn>          adapter_map;
-typedef std::set<Tree *>                    closure_set;
-typedef std::set<Tree *>                    data_set;
+typedef std::map<text, llvm::Function *>       builtins_map;
+typedef std::map<Tree *, llvm::Value *>        value_map;
+typedef std::map<Tree *, Tree **>              address_map;
+typedef std::map<text, llvm::GlobalVariable *> text_constants_map;
+typedef std::map<uint, eval_fn>                closure_map;
+typedef std::map<uint, adapter_fn>             adapter_map;
+typedef std::set<Tree *>                       closure_set;
+typedef std::set<Tree *>                       data_set;
 
 
 
@@ -104,6 +105,7 @@ struct Compiler
     adapter_fn                ArrayToArgsAdapter(uint numtrees);
     llvm::Value *             EnterGlobal(Name *name, Name_p *address);
     llvm::Value *             EnterConstant(Tree *constant);
+    llvm::GlobalVariable *    TextConstant(text value);
     eval_fn                   MarkAsClosure(Tree *closure, uint ntrees);
     bool                      IsKnown(Tree *value);
 
@@ -115,6 +117,9 @@ public:
     llvm::Module              *module;
     llvm::ExecutionEngine     *runtime;
     llvm::FunctionPassManager *optimizer;
+    const llvm::IntegerType   *booleanTy;
+    const llvm::IntegerType   *integerTy;
+    const llvm::Type          *realTy;
     llvm::StructType          *treeTy;
     llvm::PointerType         *treePtrTy;
     llvm::PointerType         *treePtrPtrTy;
@@ -150,6 +155,7 @@ public:
     builtins_map               builtins;
     closure_map                closures;
     adapter_map                array_to_args_adapters;
+    text_constants_map         text_constants;
 };
 
 

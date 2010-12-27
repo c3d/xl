@@ -146,6 +146,50 @@ CompiledUnit::~CompiledUnit()
 }
 
 
+llvm::Value *CompiledUnit::Compile(Tree *tree)
+// ----------------------------------------------------------------------------
+//    Compile a given tree
+// ----------------------------------------------------------------------------
+{
+    Value *result = NULL;
+
+    switch(tree->Kind())
+    {
+    case INTEGER:
+    {
+        Integer *it = (Integer *) tree;
+        result = ConstantInt::get(compiler->integerTy, it->value);
+        break;
+    }
+    
+    case REAL:
+    {
+        Real *rt = (Real *) tree;
+        result = ConstantFP::get(compiler->realTy, rt->value);
+        break;
+    }
+
+    case TEXT:
+    {
+        Text *tt = (Text *) tree;
+        GlobalVariable *global = compiler->TextConstant(tt->value);
+        result = code->CreateConstGEP2_32(global, 0, 0);
+        break;
+    }
+
+    case NAME:
+    {
+        break;
+    }
+
+    default:
+        break;
+    }
+
+    return result;
+}
+
+
 eval_fn CompiledUnit::Finalize()
 // ----------------------------------------------------------------------------
 //   Finalize the build of the current function
@@ -846,12 +890,8 @@ BasicBlock *CompiledUnit::TextTest(Tree *tree, text value)
     // Check if the value is the same, call xl_same_text
     Value *treeValue = Known(tree);
     assert(treeValue);
-    Constant *refVal = ConstantArray::get(*context, value);
-    const Type *refValTy = refVal->getType();
-    GlobalVariable *gvar = new GlobalVariable(*compiler->module, refValTy, true,
-                                              GlobalValue::InternalLinkage,
-                                              refVal, "str");
-    Value *refPtr = code->CreateConstGEP2_32(gvar, 0, 0);
+    GlobalVariable *global = compiler->TextConstant(value);
+    Value *refPtr = code->CreateConstGEP2_32(global, 0, 0);
     Value *isGood = code->CreateCall2(compiler->xl_same_text,
                                       treeValue, refPtr);
     BasicBlock *isGoodBB = BasicBlock::Create(*context, "isGood", function);

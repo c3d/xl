@@ -34,6 +34,8 @@ struct CompiledUnit
     CompiledUnit(Compiler *comp, Tree *source, TreeList parms);
     ~CompiledUnit();
 
+    llvm::Value *       Compile(Tree *tree);
+
     bool                IsForwardCall()         { return entrybb == NULL; }
     eval_fn             Finalize();
 
@@ -42,6 +44,7 @@ struct CompiledUnit
     llvm::Value *       NeedStorage(Tree *tree);
     bool                IsKnown(Tree *tree, uint which = knowAll);
     llvm::Value *       Known(Tree *tree, uint which = knowAll );
+    llvm::Value *       StringPointer(text value);
 
     llvm::Value *       ConstantInteger(Integer *what);
     llvm::Value *       ConstantReal(Real *what);

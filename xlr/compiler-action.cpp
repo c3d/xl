@@ -23,5 +23,4 @@
 #include "compiler-action.h"
 
 XL_BEGIN
-
 XL_END

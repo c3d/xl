@@ -89,6 +89,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 //   Initialize the various instances we may need
 // ----------------------------------------------------------------------------
     : module(NULL), runtime(NULL), optimizer(NULL),
+      booleanTy(NULL), integerTy(NULL), realTy(NULL),
       treeTy(NULL), treePtrTy(NULL), treePtrPtrTy(NULL),
       integerTreeTy(NULL), integerTreePtrTy(NULL),
       realTreeTy(NULL), realTreePtrTy(NULL),
@@ -185,6 +186,11 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     // systems which do not allow the program to dlopen itself.
     runtime->InstallLazyFunctionCreator(unresolved_external);
 
+    // Get the basic types
+    booleanTy = Type::getInt1Ty(*context);
+    integerTy = LLVM_INTTYPE(long long);
+    realTy = Type::getDoubleTy(*context);
+
     // Create the Info and Symbol pointer types
     PATypeHolder structInfoTy = OpaqueType::get(*context); // struct Info
     infoPtrTy = PointerType::get(structInfoTy, 0);         // Info *
@@ -256,14 +262,13 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 
     // Create a reference to the evaluation function
     charPtrTy = PointerType::get(LLVM_INTTYPE(char), 0);
-    const Type *boolTy = Type::getInt1Ty(*context);
 #define FN(x) #x, (void *) XL::x
     xl_evaluate = ExternFunction(FN(xl_evaluate),
                                  treePtrTy, 2, contextPtrTy, treePtrTy);
     xl_same_text = ExternFunction(FN(xl_same_text),
-                                  boolTy, 2, treePtrTy, charPtrTy);
+                                  booleanTy, 2, treePtrTy, charPtrTy);
     xl_same_shape = ExternFunction(FN(xl_same_shape),
-                                   boolTy, 2, treePtrTy, treePtrTy);
+                                   booleanTy, 2, treePtrTy, treePtrTy);
     xl_infix_match_check = ExternFunction(FN(xl_infix_match_check),
                                           treePtrTy, 2, treePtrTy, charPtrTy);
     xl_type_check = ExternFunction(FN(xl_type_check), treePtrTy,
@@ -593,6 +598,32 @@ Value *Compiler::EnterConstant(Tree *constant)
                   << " A" << (void *) &Info(constant)->tree << "\n";
 
     return result;
+}
+
+
+GlobalVariable *Compiler::TextConstant(text value)
+// ----------------------------------------------------------------------------
+//   Return a C-style string pointer for a string constant
+// ----------------------------------------------------------------------------
+{
+    GlobalVariable *global;
+
+    text_constants_map::iterator found = text_constants.find(value);
+    if (found == text_constants.end())
+    {
+        Constant *refVal = ConstantArray::get(*context, value);
+        const Type *refValTy = refVal->getType();
+        global = new GlobalVariable(*module, refValTy, true,
+                                    GlobalValue::InternalLinkage,
+                                    refVal, "text");
+        text_constants[value] = global;
+    }
+    else
+    {
+        global = (*found).second;
+    }
+
+    return global;
 }
 
 
