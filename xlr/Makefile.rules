@@ -162,7 +162,7 @@ ifdef TARGET
 # This means: Replace runtime.o in .d file with $(OBJDIR)/runtime.cpp.o
 # The $(OBJDIR) is actually in the name of the .d file in $@,
 # So $(@:.d=) removes the .d, and then we add the .o back... Smart, eh?
-SED_DEPEND=sed -e 's!$*.o!$(@:.d=).o!g'
+SED_DEPEND=sed -e 's!$*.o:!$@ $(@:.d=).o:!g'
 
 $(OBJDIR)/Makefile.depend: $(OBJDIR) $(SOURCES:%=$(OBJDIR)/%.d)
 	$V echo Generating dependencies in $@
@@ -190,4 +190,3 @@ endif
 ifdef SOURCES
 -include $(OBJDIR)/Makefile.depend
 endif
-\
