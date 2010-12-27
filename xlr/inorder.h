@@ -28,69 +28,64 @@
 
 XL_BEGIN
 
-struct InOrderTraversal : Action
+template <typename Action>
+struct InOrderTraversal
 // ----------------------------------------------------------------------------
 //   Execute action on a tree (whole or part), following the in-order algorithm
 // ----------------------------------------------------------------------------
 {
     InOrderTraversal (Action &action, bool fullScan = true):
         action(action), fullScan(fullScan) {}
-    Tree *DoBlock(Block *what)
+
+    typedef typename Action::value_type value_type;
+
+    value_type DoInteger(Integer *what)         { return what->Do(action); }
+    value_type DoReal(Real *what)               { return what->Do(action); }
+    value_type DoText(Text *what)               { return what->Do(action); }
+    value_type DoName(Name *what)               { return what->Do(action); }
+
+    value_type DoBlock(Block *what)
     {
-        Tree *ret = NULL;
+        // REVISIT: Why do we need to test what->child? Test fail otherwise?!?
+        value_type ret = value_type();
         if (what->child)
-            ret = Do(what->child);
+            ret = what->child->Do(this);
         if (!fullScan && ret)
             return ret;
         return what->Do(action);
     }
-    Tree *DoInfix(Infix *what)
+    value_type DoInfix(Infix *what)
     {    
-        Tree *ret = Do(what->left);
+        value_type ret = what->left->Do(this);
         if (!fullScan && ret)
             return ret;
         ret = what->Do(action);
         if (!fullScan && ret)
             return ret;
-        return Do(what->right);
+        return what->right->Do(this);
     }
-    Tree *DoPrefix(Prefix *what)
+    value_type DoPrefix(Prefix *what)
     {
-        Tree *ret = Do(what->left);
+        value_type ret = what->left->Do(this);
         if (!fullScan && ret)
             return ret;
         ret = what->Do(action);
         if (!fullScan && ret)
             return ret;
-        return Do(what->right);
+        return what->right->Do(this);
     }
-    Tree *DoPostfix(Postfix *what)
+    value_type DoPostfix(Postfix *what)
     {
-        Tree *ret = Do(what->left);
+        value_type ret = what->left->Do(this);
         if (!fullScan && ret)
             return ret;
         ret = what->Do(action);
         if (!fullScan && ret)
             return ret;
-        return Do(what->right);
-    }
-    Tree *Do(Tree *what)
-    {
-        switch(what->Kind())
-        {
-        case INTEGER:
-        case REAL:
-        case TEXT:
-        case NAME:          return what->Do(action);
-        case BLOCK:         return DoBlock(what->AsBlock());
-        case PREFIX:        return DoPrefix(what->AsPrefix());
-        case POSTFIX:       return DoPostfix(what->AsPostfix());
-        case INFIX:         return DoInfix(what->AsInfix());
-        default:            assert(!"Unexpected tree kind");
-        }
-        return NULL;
+        return what->right->Do(this);
     }
 
+public:
     Action & action;
     bool fullScan;
 };

@@ -24,6 +24,7 @@
 // ****************************************************************************
 
 #include "tree.h"
+#include "action.h"
 #include "sha1.h"
 #include <string.h>
 
@@ -284,6 +285,8 @@ public:
         return Do(what);
     }
 };
+
+extern text sha1(Tree *t);
 
 XL_END
 

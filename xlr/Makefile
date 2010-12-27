@@ -29,6 +29,8 @@ SOURCES     =					\
 	options.cpp				\
 	errors.cpp				\
 	tree.cpp				\
+	hash.cpp				\
+	action.cpp				\
 	gc.cpp					\
 	syntax.cpp				\
 	scanner.cpp				\

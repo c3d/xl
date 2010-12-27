@@ -43,6 +43,9 @@ struct Action
 {
     Action () {}
     virtual ~Action() {}
+
+    typedef Tree *value_type;
+
     virtual Tree *Do (Tree *what) = 0;
 
     // Specialization for the canonical nodes, default is to run them

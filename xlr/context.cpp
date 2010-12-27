@@ -916,13 +916,13 @@ bool Context::Bind(Tree *formTree, Tree *valueTree,
         {
             if (bound == form)
                 return true;
-            if (EqualTrees(bound, value))
+            if (Tree::Equal(bound, value))
                 return true;
             value = eval->Evaluate(value, cache, BIND_LOOKUP);
             bound = eval->Evaluate(bound, cache, BIND_LOOKUP);
             if (errors.Swallowed())
                 return false;
-            return EqualTrees(bound, value);
+            return Tree::Equal(bound, value);
         }
 
         // Define the name in the given context (same as if it was 'lazy')

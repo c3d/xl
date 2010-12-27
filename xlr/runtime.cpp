@@ -309,7 +309,7 @@ bool xl_same_shape(Tree *left, Tree *right)
 //   Check equality of two trees
 // ----------------------------------------------------------------------------
 {
-    return EqualTrees(left, right);
+    return Tree::Equal(left, right);
 }
 
 

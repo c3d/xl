@@ -34,6 +34,7 @@
 #include "runtime.h"
 #include "types.h"
 #include "main.h"
+#include "hash.h"
 
 
 XL_BEGIN

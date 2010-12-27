@@ -27,7 +27,6 @@
 #include "base.h"
 #include "gc.h"
 #include "info.h"
-#include "action.h"
 #include <map>
 #include <vector>
 #include <cassert>
@@ -51,7 +50,6 @@ struct Prefix;                                  // Prefix: sin X
 struct Postfix;                                 // Postfix: 3!
 struct Infix;                                   // Infix: A+B, newline
 struct Block;                                   // Block: (A), {A}
-struct Action;                                  // Action on trees
 struct Info;                                    // Information in trees
 struct Sha1;                                    // Hash used for id-ing trees
 
@@ -120,14 +118,10 @@ struct Tree
     ~Tree();
 
     // Perform recursive actions on a tree
-    template<typename Action, typename Value>
-    Value               Do(Action &action);
-    template<typename Action, typename Value>
-    Value               Do(Action *a)         { return Do<Action, Value> (*a); }
-    template <typename Action>
-    Tree *              Do(Action &a)         { return Do<Action,Tree*>(a); }
-    template <typename Action>
-    Tree *              Do(Action *a)         { return Do<Action,Tree*>(*a); }
+    template<typename Action>
+    typename Action::value_type Do(Action &a);
+    template<typename Action>
+    typename Action::value_type Do(Action *a) { return Do<Action>(*a); }
 
     // Attributes
     kind                Kind()                { return kind(tag & KINDMASK); }
@@ -170,6 +164,10 @@ struct Tree
                         operator text();
 
 public:
+    static int          Compare(Tree *t1, Tree *t2, bool recurse = true);
+    static bool         Equal(Tree *t1, Tree *t2, bool recurse = true);
+
+public:
     ulong       tag;                            // Position + kind
     Info *      info;                           // Information for tree
 
@@ -178,17 +176,6 @@ public:
 private:
     Tree (const Tree &);
 };
-
-
-int  CompareTrees(Tree *t1, Tree *t2, bool recurse = true);
-
-inline bool EqualTrees(Tree *t1, Tree *t2, bool recurse = true)
-// ----------------------------------------------------------------------------
-//   Compare for equality
-// ----------------------------------------------------------------------------
-{
-    return CompareTrees(t1, t2, recurse) == 0;
-}
 
 
 
@@ -455,8 +442,8 @@ inline Infix *Infix::LastStatement()
 // 
 // ============================================================================
 
-template<typename Action, typename Value>
-Value Tree::Do(Action &action)
+template<typename Action>
+typename Action::value_type Tree::Do(Action &action)
 // ----------------------------------------------------------------------------
 //   Perform an action on the tree 
 // ----------------------------------------------------------------------------
@@ -473,7 +460,16 @@ Value Tree::Do(Action &action)
     case INFIX:         return action.DoInfix((Infix *) this);
     default:            assert(!"Unexpected tree kind");
     }
-    return NULL;
+    return typename Action::value_type();
+}
+
+
+inline bool Tree::Equal(Tree *t1, Tree *t2, bool recurse)
+// ----------------------------------------------------------------------------
+//   Compare for equality
+// ----------------------------------------------------------------------------
+{
+    return Compare(t1, t2, recurse) == 0;
 }
 
 
@@ -632,538 +628,10 @@ template <class I> inline I* Tree::Remove(I *toFind)
     return NULL;
 }
 
-
-
-// ============================================================================
-//
-//    Tree cloning
-//
-// ============================================================================
-
-struct DeepCopyCloneMode;       // Child nodes are cloned too (default)
-struct ShallowCopyCloneMode;    // Child nodes are referenced
-struct NodeOnlyCloneMode;       // Child nodes are left NULL
-
-
-template <typename mode> struct TreeCloneTemplate : Action
-// ----------------------------------------------------------------------------
-//   Clone a tree
-// ----------------------------------------------------------------------------
-{
-    TreeCloneTemplate() {}
-    virtual ~TreeCloneTemplate() {}
-
-    Tree *DoInteger(Integer *what)
-    {
-        return new Integer(what->value, what->Position());
-    }
-    Tree *DoReal(Real *what)
-    {
-        return new Real(what->value, what->Position());
-
-    }
-    Tree *DoText(Text *what)
-    {
-        return new Text(what->value, what->opening, what->closing,
-                        what->Position());
-    }
-    Tree *DoName(Name *what)
-    {
-        return new Name(what->value, what->Position());
-    }
-
-    Tree *DoBlock(Block *what)
-    {
-        return new Block(Clone(what->child), what->opening, what->closing,
-                         what->Position());
-    }
-    Tree *DoInfix(Infix *what)
-    {
-        return new Infix (what->name, Clone(what->left), Clone(what->right),
-                          what->Position());
-    }
-    Tree *DoPrefix(Prefix *what)
-    {
-        return new Prefix(Clone(what->left), Clone(what->right),
-                          what->Position());
-    }
-    Tree *DoPostfix(Postfix *what)
-    {
-        return new Postfix(Clone(what->left), Clone(what->right),
-                           what->Position());
-    }
-    Tree *Do(Tree *what)
-    {
-        return what;            // ??? Should not happen
-    }
-protected:
-    // Default is to do a deep copy
-    Tree *  Clone(Tree *t) { return t->Do(this); }
-};
-
-
-template<> inline
-Tree *TreeCloneTemplate<ShallowCopyCloneMode>::Clone(Tree *t)
-// ----------------------------------------------------------------------------
-//   Specialization for the shallow copy clone
-// ----------------------------------------------------------------------------
-{
-    return t;
-}
-
-
-template<> inline
-Tree *TreeCloneTemplate<NodeOnlyCloneMode>::Clone(Tree *)
-// ----------------------------------------------------------------------------
-//   Specialization for the node-only clone
-// ----------------------------------------------------------------------------
-{
-    return NULL;
-}
-
-
-typedef struct TreeCloneTemplate<DeepCopyCloneMode>     TreeClone;
-typedef struct TreeCloneTemplate<ShallowCopyCloneMode>  ShallowCopyTreeClone;
-typedef struct TreeCloneTemplate<NodeOnlyCloneMode>     NodeOnlyTreeClone;
-
-
-
-// ============================================================================
-//
-//    Tree copying
-//
-// ============================================================================
-
-enum CopyMode
-// ----------------------------------------------------------------------------
-//   Several ways of copying a tree.
-// ----------------------------------------------------------------------------
-{
-    CM_RECURSIVE = 1,    // Copy child nodes (as long as their kind match)
-    CM_NODE_ONLY         // Copy only one node
-};
-
-
-template <CopyMode mode> struct TreeCopyTemplate : Action
-// ----------------------------------------------------------------------------
-//   Copy a tree into another tree. Node values are copied, infos are not.
-// ----------------------------------------------------------------------------
-{
-    TreeCopyTemplate(Tree *dest): dest(dest) {}
-    virtual ~TreeCopyTemplate() {}
-
-    Tree *DoInteger(Integer *what)
-    {
-        if (Integer *it = dest->AsInteger())
-        {
-            it->value = what->value;
-            it->tag = ((what->Position()<<Tree::KINDBITS) | it->Kind());
-            return what;
-        }
-        return NULL;
-    }
-    Tree *DoReal(Real *what)
-    {
-        if (Real *rt = dest->AsReal())
-        {
-            rt->value = what->value;
-            rt->tag = ((what->Position()<<Tree::KINDBITS) | rt->Kind());
-            return what;
-        }
-        return NULL;
-    }
-    Tree *DoText(Text *what)
-    {
-        if (Text *tt = dest->AsText())
-        {
-            tt->value = what->value;
-            tt->tag = ((what->Position()<<Tree::KINDBITS) | tt->Kind());
-            return what;
-        }
-        return NULL;
-    }
-    Tree *DoName(Name *what)
-    {
-        if (Name *nt = dest->AsName())
-        {
-            nt->value = what->value;
-            nt->tag = ((what->Position()<<Tree::KINDBITS) | nt->Kind());
-            return what;
-        }
-        return NULL;
-    }
-
-    Tree *DoBlock(Block *what)
-    {
-        if (Block *bt = dest->AsBlock())
-        {
-            bt->opening = what->opening;
-            bt->closing = what->closing;
-            bt->tag = ((what->Position()<<Tree::KINDBITS) | bt->Kind());
-            if (mode == CM_RECURSIVE)
-            {
-                dest = bt->child;
-                Tree *  br = what->child->Do(this);
-                dest = bt;
-                return br;
-            }
-            return what;
-        }
-        return NULL;
-    }
-    Tree *DoInfix(Infix *what)
-    {
-        if (Infix *it = dest->AsInfix())
-        {
-            it->name = what->name;
-            it->tag = ((what->Position()<<Tree::KINDBITS) | it->Kind());
-            if (mode == CM_RECURSIVE)
-            {
-                dest = it->left;
-                Tree *lr = what->left->Do(this);
-                dest = it;
-                if (!lr)
-                    return NULL;
-                dest = it->right;
-                Tree *rr = what->right->Do(this);
-                dest = it;
-                if (!rr)
-                    return NULL;
-            }
-            return what;
-        }
-        return NULL;
-    }
-    Tree *DoPrefix(Prefix *what)
-    {
-        if (Prefix *pt = dest->AsPrefix())
-        {
-            pt->tag = ((what->Position()<<Tree::KINDBITS) | pt->Kind());
-            if (mode == CM_RECURSIVE)
-            {
-                dest = pt->left;
-                Tree *lr = what->left->Do(this);
-                dest = pt;
-                if (!lr)
-                    return NULL;
-                dest = pt->right;
-                Tree *rr = what->right->Do(this);
-                dest = pt;
-                if (!rr)
-                    return NULL;
-            }
-            return what;
-        }
-        return NULL;
-    }
-    Tree *DoPostfix(Postfix *what)
-    {
-        if (Postfix *pt = dest->AsPostfix())
-        {
-            pt->tag = ((what->Position()<<Tree::KINDBITS) | pt->Kind());
-            if (mode == CM_RECURSIVE)
-            {
-                dest = pt->left;
-                Tree *lr = what->left->Do(this);
-                dest = pt;
-                if (!lr)
-                    return NULL;
-                dest = pt->right;
-                Tree *rr = what->right->Do(this);
-                dest = pt;
-                if (!rr)
-                    return NULL;
-            }
-            return what;
-        }
-        return NULL;
-    }
-    Tree *Do(Tree *what)
-    {
-        return what;            // ??? Should not happen
-    }
-    Tree *dest;
-};
-
-
-
-// ============================================================================
-//
-//    Hash key for tree rewrite
-//
-// ============================================================================
-//  We use this hashing key to quickly determine if two trees "look the same"
-
-struct RewriteKey : Action
-// ----------------------------------------------------------------------------
-//   Compute a hashing key for a rewrite
-// ----------------------------------------------------------------------------
-{
-    RewriteKey (ulong base = 0): key(base) {}
-    ulong Key()  { return key; }
-
-    ulong Hash(ulong id, text t)
-    {
-        ulong result = 0xC0DED;
-        text::iterator p;
-        for (p = t.begin(); p != t.end(); p++)
-            result = (result * 0x301) ^ *p;
-        return id | (result << 3);
-    }
-    ulong Hash(ulong id, ulong value)
-    {
-        return id | (value << 3);
-    }
-
-    Tree *DoInteger(Integer *what)
-    {
-        key = (key << 3) ^ Hash(0, what->value);
-        return what;
-    }
-    Tree *DoReal(Real *what)
-    {
-        ulong *value = (ulong*)&what->value;
-        key = (key << 3) ^ Hash(1, *value);
-        return what;
-    }
-    Tree *DoText(Text *what)
-    {
-        key = (key << 3) ^ Hash(2, what->value);
-        return what;
-    }
-    Tree *DoName(Name *what)
-    {
-        key = (key << 3) ^ Hash(3, what->value);
-        return what;
-    }
-
-    Tree *DoBlock(Block *what)
-    {
-        key = (key << 3) ^ Hash(4, what->opening + what->closing);
-        return what;
-    }
-    Tree *DoInfix(Infix *what)
-    {
-        key = (key << 3) ^ Hash(5, what->name);
-        return what;
-    }
-    Tree *DoPrefix(Prefix *what)
-    {
-        ulong old = key;
-        key = 0; what->left->Do(this);
-        key = (old << 3) ^ Hash(6, key);
-        return what;
-    }
-    Tree *DoPostfix(Postfix *what)
-    {
-        ulong old = key;
-        key = 0; what->right->Do(this);
-        key = (old << 3) ^ Hash(7, key);
-        return what;
-    }
-    Tree *Do(Tree *what)
-    {
-        key = (key << 3) ^ Hash(1, (ulong) (Tree *) what);
-        return what;
-    }
-
-    ulong key;
-};
-
-
-extern text     sha1(Tree *t);
 extern Name_p   xl_true;
 extern Name_p   xl_false;
 extern Name_p   xl_nil;
 extern Name_p   xl_empty;
-
-typedef long node_id;              // A node identifier
-
-
-struct NodeIdInfo : Info
-// ----------------------------------------------------------------------------
-//   Node identifier information
-// ----------------------------------------------------------------------------
-{
-    NodeIdInfo(node_id id): id(id) {}
-
-    typedef node_id data_t;
-    operator data_t() { return id; }
-    node_id id;
-};
-
-
-struct SimpleAction : Action
-// ----------------------------------------------------------------------------
-//   Holds a method to be run on any kind of tree node
-// ----------------------------------------------------------------------------
-{
-    SimpleAction() {}
-    virtual ~SimpleAction() {}
-    Tree *DoBlock(Block *what)
-    {
-        return Do(what);
-    }
-    Tree *DoInfix(Infix *what)
-    {
-        return Do(what);
-    }
-    Tree *DoPrefix(Prefix *what)
-    {
-        return Do(what);
-    }
-    Tree *DoPostfix(Postfix *what)
-    {
-        return Do(what);
-    }
-    virtual Tree *  Do(Tree *what) = 0;
-};
-
-
-struct SetNodeIdAction : SimpleAction
-// ------------------------------------------------------------------------
-//   Set an integer node ID to each node.
-// ------------------------------------------------------------------------
-{
-    SetNodeIdAction(node_id from_id = 1, node_id step = 1)
-        : id(from_id), step(step) {}
-    virtual Tree *Do(Tree *what)
-    {
-        what->Set<NodeIdInfo>(id);
-        id += step;
-        return NULL;
-    }
-    node_id id;
-    node_id step;
-};
-
-
-struct FindParentAction : Action
-// ------------------------------------------------------------------------
-//   Find an ancestor of a node
-// ------------------------------------------------------------------------
-// "level" gives the depth of the parent. 0 means the node itself, 1 is the
-// parent, 2 the grand-parent, etc...
-// "path" is a string containing the path between the node and its ancestor:
-// l means left, r means right and c means child of block.
-{
-    FindParentAction(Tree *self, uint level = 1):
-        child(self), level(level), path() {}
-
-    Tree *DoInteger(Integer *what)
-    {
-        if (child == what)
-        {
-            return what;
-        }
-        return NULL;
-    }
-    Tree *DoReal(Real *what)
-    {
-        if (child == what)
-        {
-            return what;
-        }
-        return NULL;
-    }
-    Tree *DoText(Text *what)
-    {
-        if (child == what)
-        {
-            return what;
-        }
-        return NULL;
-    }
-    Tree *DoName(Name *what)
-    {
-        if (child == what)
-        {
-            return what;
-        }
-        return NULL;
-    }
-    Tree *FindParent(Tree *ancestor, Tree *aChild, kstring subpath)
-    {
-        if (Tree *result = aChild->Do(this))
-        {
-            if (level <= 0 )
-            {
-                // The requested parent is already identified
-                // and it is the received result, so return it.
-                return result;
-            }
-            // The ancestor is on the path between the child and the requested parent
-            // so add the subpath, decrement the level and return the ancestor.
-            path.append(subpath);
-            level--;
-            return ancestor;
-        }
-        // Nothing found on this path, return NULL
-        return NULL;
-    }
-
-    Tree *DoPrefix(Prefix *what)
-    {
-        if (child == what)
-        {
-            return what;
-        }
-        if (Tree *left = FindParent(what, what->left, "l"))
-            return left;
-        if (Tree *right = FindParent(what, what->right, "r"))
-            return right;
-        return NULL;
-    }
-
-    Tree *DoPostfix(Postfix *what)
-    {
-        if (child == what)
-        {
-            return what;
-        }
-        if (Tree *left = FindParent(what, what->left, "l"))
-            return left;
-        if (Tree *right = FindParent(what, what->right, "r"))
-            return right;
-        return NULL;
-    }
-
-    Tree *DoInfix(Infix *what)
-    {
-        if (child == what)
-        {
-            return what;
-        }
-        if (Tree *left = FindParent(what, what->left, "l"))
-            return left;
-        if (Tree *right = FindParent(what, what->right, "r"))
-            return right;
-        return NULL;
-    }
-    Tree *DoBlock(Block *what)
-    {
-        if (child == what)
-        {
-            return what;
-        }
-        if (Tree *aChild = FindParent(what, what->child, "c"))
-            return aChild;
-        return NULL;
-    }
-
-    Tree *Do(Tree *what)
-    {
-        if (child == what)
-        {
-            return what;
-        }
-        return NULL;
-    }
-
-    Tree_p child;
-    int    level;
-    text   path;
-};
 
 XL_END
 

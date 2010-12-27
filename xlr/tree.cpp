@@ -80,93 +80,7 @@ Name::operator bool()
 }
 
 
-
-// ============================================================================
-// 
-//   Actions on a tree
-// 
-// ============================================================================
-
-Tree *Action::DoInteger(Integer *what)
-// ----------------------------------------------------------------------------
-//   Default is simply to invoke 'Do'
-// ----------------------------------------------------------------------------
-{
-    return Do(what);
-}
-
-
-Tree *Action::DoReal(Real *what)
-// ----------------------------------------------------------------------------
-//   Default is simply to invoke 'Do'
-// ----------------------------------------------------------------------------
-{
-    return Do(what);
-}
-
-
-Tree *Action::DoText(Text *what)
-// ----------------------------------------------------------------------------
-//   Default is simply to invoke 'Do'
-// ----------------------------------------------------------------------------
-{
-    return Do(what);
-}
-
-
-Tree *Action::DoName(Name *what)
-// ----------------------------------------------------------------------------
-//   Default is simply to invoke 'Do'
-// ----------------------------------------------------------------------------
-{
-    return Do(what);
-}
-
-
-Tree *Action::DoBlock(Block *what)
-// ----------------------------------------------------------------------------
-//    Default is to firm perform action on block's child, then on self
-// ----------------------------------------------------------------------------
-{
-    what->child = what->child->Do(this);
-    return Do(what);
-}
-
-
-Tree *Action::DoPrefix(Prefix *what)
-// ----------------------------------------------------------------------------
-//   Default is to run the action on the left, then on right
-// ----------------------------------------------------------------------------
-{
-    what->left = what->left->Do(this);
-    what->right = what->right->Do(this);
-    return Do(what);
-}
-
-
-Tree *Action::DoPostfix(Postfix *what)
-// ----------------------------------------------------------------------------
-//   Default is to run the action on the right, then on the left
-// ----------------------------------------------------------------------------
-{
-    what->right = what->right->Do(this);
-    what->left = what->left->Do(this);
-    return Do(what);
-}
-
-
-Tree *Action::DoInfix(Infix *what)
-// ----------------------------------------------------------------------------
-//   Default is to run the action on children first
-// ----------------------------------------------------------------------------
-{
-    what->left = what->left->Do(this);
-    what->right = what->right->Do(this);
-    return Do(what);
-}
-
-
-int CompareTrees(Tree *left, Tree *right, bool recurse)
+int Tree::Compare(Tree *left, Tree *right, bool recurse)
 // ----------------------------------------------------------------------------
 //   Return true if two trees are equal
 // ----------------------------------------------------------------------------
@@ -223,9 +137,9 @@ int CompareTrees(Tree *left, Tree *right, bool recurse)
             return 2;
         if (recurse)
         {
-            if (int cmpLeft = CompareTrees(li->left, ri->left))
+            if (int cmpLeft = Compare(li->left, ri->left))
                 return cmpLeft;
-            if (int cmpRight = CompareTrees(li->right, ri->right))
+            if (int cmpRight = Compare(li->right, ri->right))
                 return cmpRight;
         }
         return 0;
@@ -236,9 +150,9 @@ int CompareTrees(Tree *left, Tree *right, bool recurse)
         Prefix *rp = (Prefix *) right;
         if (recurse)
         {
-            if (int cmpLeft = CompareTrees(lp->left, rp->left))
+            if (int cmpLeft = Compare(lp->left, rp->left))
                 return cmpLeft;
-            if (int cmpRight = CompareTrees(lp->right, rp->right))
+            if (int cmpRight = Compare(lp->right, rp->right))
                 return cmpRight;
         }
         return 0;
@@ -249,9 +163,9 @@ int CompareTrees(Tree *left, Tree *right, bool recurse)
         Postfix *rp = (Postfix *) right;
         if (recurse)
         {
-            if (int cmpLeft = CompareTrees(lp->left, rp->left))
+            if (int cmpLeft = Compare(lp->left, rp->left))
                 return cmpLeft;
-            if (int cmpRight = CompareTrees(lp->right, rp->right))
+            if (int cmpRight = Compare(lp->right, rp->right))
                 return cmpRight;
         }
         return 0;
@@ -266,7 +180,7 @@ int CompareTrees(Tree *left, Tree *right, bool recurse)
             return  2;
         if (!recurse)
             return 0;
-        return CompareTrees(lb->child, rb->child);
+        return Compare(lb->child, rb->child);
     }
     }
 
@@ -280,30 +194,4 @@ text Text::textQuote = "\"";
 text Text::charQuote = "'";
 
 XL_END
-
-#include "sha1_ostream.h"
-
-XL_BEGIN
-
-text sha1(Tree *t)
-// ----------------------------------------------------------------------------
-//    Compute the SHA-1 for a tree and return it
-// ----------------------------------------------------------------------------
-{
-    text result;
-    if (t)
-    {
-        TreeHashAction<> hash;
-        t->Do(hash);
-
-        std::ostringstream os;
-        os << t->Get< HashInfo<> > ();
-
-        result = os.str();
-    }
-    return result;
-}
-
-XL_END
-
 

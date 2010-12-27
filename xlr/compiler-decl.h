@@ -26,22 +26,22 @@
 
 XL_BEGIN
 
-struct DeclarationAction : Action
+struct DeclarationAction
 // ----------------------------------------------------------------------------
 //   Record data and rewrite declarations in the input tree
 // ----------------------------------------------------------------------------
 {
     DeclarationAction (Context *c): symbols(c) {}
 
-    virtual Tree *Do(Tree *what);
-    virtual Tree *DoInteger(Integer *what);
-    virtual Tree *DoReal(Real *what);
-    virtual Tree *DoText(Text *what);
-    virtual Tree *DoName(Name *what);
-    virtual Tree *DoPrefix(Prefix *what);
-    virtual Tree *DoPostfix(Postfix *what);
-    virtual Tree *DoInfix(Infix *what);
-    virtual Tree *DoBlock(Block *what);
+    Tree *Do(Tree *what);
+    Tree *DoInteger(Integer *what);
+    Tree *DoReal(Real *what);
+    Tree *DoText(Text *what);
+    Tree *DoName(Name *what);
+    Tree *DoPrefix(Prefix *what);
+    Tree *DoPostfix(Postfix *what);
+    Tree *DoInfix(Infix *what);
+    Tree *DoBlock(Block *what);
 
     void        EnterRewrite(Tree *defined, Tree *definition, Tree *where);
 

@@ -29,6 +29,7 @@
 #include "options.h"
 #include "hash.h"
 #include "renderer.h"
+#include "tree-clone.h"
 #include <iostream>
 #include <cassert>
 #include <map>
@@ -633,19 +634,18 @@ struct CountLeaves : Action
 };
 
 
-struct AssignNodeIds : SimpleAction
+struct AssignNodeIds : NonRecursiveAction<node_id>
 // ------------------------------------------------------------------------
 //   Set an integer node ID to each node. Append node to a table.
 // ------------------------------------------------------------------------
 {
     AssignNodeIds(NodeTable &tab, node_id from_id = 1, node_id step = 1)
       : tab(tab), id(from_id), step(step) {}
-    virtual Tree *Do(Tree *what)
+    virtual node_id Do(Tree *what)
     {
         what->Set2<NodeIdInfo>(id);
         tab[id] = what;
-        id += step;
-        return NULL;
+        return id += step;
     }
     NodeTable &tab;
     node_id id;
@@ -653,44 +653,45 @@ struct AssignNodeIds : SimpleAction
 };
 
 
-struct StoreNodeIntoChainArray : SimpleAction
+struct StoreNodeIntoChainArray : NonRecursiveAction<bool>
 // ------------------------------------------------------------------------
 //   Append node to a node array based on node kind.
 // ------------------------------------------------------------------------
 {
     StoreNodeIntoChainArray(node_vector *chains): chains(chains) {}
-    virtual Tree *Do(Tree *what)
+    virtual bool Do(Tree *what)
     {
         chains[what->Kind()].push_back(what);
-        return NULL;
+        return false;
     }
     void SetChains(node_vector *c) { chains = c; }
     node_vector *chains;
 };
 
+
 template <typename I>
-struct AddPtr : SimpleAction
+struct AddPtr : NonRecursiveAction<bool>
 // ------------------------------------------------------------------------
 //   Append node pointer to a container using push_back.
 // ------------------------------------------------------------------------
 {
     AddPtr(I &container): container(container) {}
-    virtual Tree *Do(Tree *what)
+    virtual bool Do(Tree *what)
     {
         container.push_back(what);
-        return NULL;
+        return false;
     }
     I &container;
 };
 
 
-struct PurgeDiffInfos : SimpleAction
+struct PurgeDiffInfos : NonRecursiveAction<bool>
 // ------------------------------------------------------------------------
 //   Purge all Info pointers that may have been added to T2 by TreeDiff
 // ------------------------------------------------------------------------
 {
     PurgeDiffInfos() {}
-    virtual Tree *Do(Tree *what)
+    virtual bool Do(Tree *what)
     {
         what->Purge<NodeIdInfo>();
         what->Purge<MatchedInfo>();
@@ -699,14 +700,17 @@ struct PurgeDiffInfos : SimpleAction
         what->Purge<ParentInfo>();
         what->Purge<ChildVectorInfo>();
         what->Purge<CommonLeavesInfo>();
-        return NULL;
+        return false;
     }
 };
 
 
-TreeDiff::TreeDiff(Tree *t1, Tree *t2) :
-  t1(NULL), t2(t2), nodes1(*new NodeTable), nodes2(*new NodeTable),
-  matching(*new Matching), escript(NULL)
+TreeDiff::TreeDiff(Tree *t1, Tree *t2)
+// ----------------------------------------------------------------------------
+//   TreeDiff constructor
+// ----------------------------------------------------------------------------
+    : t1(NULL), t2(t2), nodes1(*new NodeTable), nodes2(*new NodeTable),
+      matching(*new Matching), escript(NULL)
 {
     // Make a deep copy because the diff algorithm needs to modify the tree
     if (t1)
@@ -716,11 +720,15 @@ TreeDiff::TreeDiff(Tree *t1, Tree *t2) :
     }
 }
 
+
 TreeDiff::~TreeDiff()
+// ----------------------------------------------------------------------------
+//   Destructor for tree diff
+// ----------------------------------------------------------------------------
 {
     // t2 is the second tree passed to CTOR -> clean it
     PurgeDiffInfos purge;
-    InOrderTraversal iot(purge);
+    InOrderTraversal<PurgeDiffInfos> iot(purge);
     t2->Do(iot);
 
     delete &nodes1;
@@ -811,7 +819,7 @@ void TreeDiff::FastMatch()
 
     // For each tree, sort the nodes into node chains (one for each node kind).
     StoreNodeIntoChainArray action(chains1);
-    InOrderTraversal iot(action);
+    InOrderTraversal<StoreNodeIntoChainArray> iot(action);
     t1->Do(iot);
     action.SetChains(chains2);
     t2->Do(iot);
@@ -1043,7 +1051,7 @@ void TreeDiff::DoEditScript()
     // Prepare T1 and T2: create a child vector in each node so that edit
     // operations may be applied
     SetChildVectorInfo action;
-    InOrderTraversal iot(action);
+    InOrderTraversal<SetChildVectorInfo> iot(action);
     t1->Do(iot);
     t2->Do(iot);
 
@@ -1107,7 +1115,7 @@ void TreeDiff::DoEditScript()
                 assert(vptr);
                 node_id v = vptr->Get<NodeIdInfo>();
 
-                if (!EqualTrees(wptr, xptr, false))
+                if (!Tree::Equal(wptr, xptr, false))
                 {
                     // ii. If v(w) != v(x)
                     
@@ -1155,7 +1163,7 @@ void TreeDiff::DoEditScript()
     // 3. Do a post-order traversal of T1
     std::list<Tree_p> list;
     AddPtr< std::list<Tree_p> > act(list);
-    PostOrderTraversal pot(act);
+    PostOrderTraversal<AddPtr<std::list<Tree_p> > > pot(act);
     t1->Do(pot);
     std::list<Tree_p>::iterator it;
     for (it = list.begin(); it != list.end(); it++)
@@ -1402,19 +1410,19 @@ bool TreeDiff::Diff()
     // is numbered with negative integers (-1, -2, etc.)
     // Start from 0 to account for the dummy root nodes
     AssignNodeIds sni1(nodes1, 0, 1);
-    BreadthFirstSearch bfs_sni1(sni1);
+    BreadthFirstSearch<AssignNodeIds> bfs_sni1(sni1);
     t1->Do(bfs_sni1);
     nodes1.SetNextId(sni1.id);
     nodes1.SetStep(1);
     AssignNodeIds sni2(nodes2, 0, -1);
-    BreadthFirstSearch bfs_sni2(sni2);
+    BreadthFirstSearch<AssignNodeIds> bfs_sni2(sni2);
     t2->Do(bfs_sni2);
     nodes2.SetNextId(sni2.id);
     nodes2.SetStep(-1);
 
     // Set 'parent' pointers in each node of each tree
     SetParentInfo spi;
-    BreadthFirstSearch bfs_spi(spi);
+    BreadthFirstSearch<SetParentInfo> bfs_spi(spi);
     t1->Do(bfs_spi);
     t2->Do(bfs_spi);
 

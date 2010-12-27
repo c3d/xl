@@ -29,40 +29,33 @@
 
 XL_BEGIN
 
-struct BreadthFirstSearch : Action
+template <typename Action>
+struct BreadthFirstSearch
 // ----------------------------------------------------------------------------
 //   Execute ActionClass on a tree (whole or part), in breadth-first order
 // ----------------------------------------------------------------------------
 {
     BreadthFirstSearch (Action &action, bool fullScan = true):
         action(action), fullScan(fullScan) {}
-    Tree *DoBlock(Block *what)
-    {
-        return Do(what);
-    }
-    Tree *DoInfix(Infix *what)
-    {
-        return Do(what);
-    }
-    Tree *DoPrefix(Prefix *what)
-    {
-        return Do(what);
-    }
-    Tree *DoPostfix(Postfix *what)
-    {
-        return Do(what);
-    }
-    Tree *Do(Tree *what)
+
+    typedef typename Action::value_type value_type;
+
+    value_type DoInteger(Integer *what)      { return Do(what); }
+    value_type DoReal(Real *what)            { return Do(what); }
+    value_type DoText(Text *what)            { return Do(what); }
+    value_type DoName(Name *what)            { return Do(what); }
+    value_type DoBlock(Block *what)          { return Do(what); }
+    value_type DoInfix(Infix *what)          { return Do(what); }
+    value_type DoPrefix(Prefix *what)        { return Do(what); }
+    value_type DoPostfix(Postfix *what)      { return Do(what); }
+
+    value_type Do(Tree *what)
     {
         nodes.push(what);
         do
         {
-            Block   *bl;
-            Infix   *in;
-            Prefix  *pr;
-            Postfix *po;
-            Tree    *curr;
-            Tree    *res;
+            Tree       *curr;
+            value_type  res;
 
             curr = nodes.front();
             if (!curr)
@@ -74,28 +67,30 @@ struct BreadthFirstSearch : Action
             if (!fullScan && res)
                 return res;
             nodes.pop();
-            if ((bl = curr->AsBlock()))
+            
+            if (Block   *bl = curr->AsBlock())
             {
-              nodes.push(bl->child);
+                nodes.push(bl->child);
             }
-            if ((in = curr->AsInfix()))
+            else if (Infix *in = curr->AsInfix())
             {
-              nodes.push(in->left);
-              nodes.push(in->right);
+                nodes.push(in->left);
+                nodes.push(in->right);
             }
-            if ((pr = curr->AsPrefix()))
+            else if (Prefix *pr = curr->AsPrefix())
             {
-              nodes.push(pr->left);
-              nodes.push(pr->right);
+                nodes.push(pr->left);
+                nodes.push(pr->right);
             }
-            if ((po = curr->AsPostfix()))
+            else if (Postfix *po = curr->AsPostfix())
             {
-              nodes.push(po->left);
-              nodes.push(po->right);
+                nodes.push(po->left);
+                nodes.push(po->right);
             }
         }
         while (!nodes.empty());
-        return NULL;
+
+        return value_type();
     }
 
     Action & action;

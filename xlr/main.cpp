@@ -353,7 +353,7 @@ int Main::LoadFile(text file, bool updateContext)
     if (options.showGV && tree)
     {
         SetNodeIdAction sni;
-        BreadthFirstSearch bfs(sni);
+        BreadthFirstSearch<SetNodeIdAction> bfs(sni);
         tree->Do(bfs);
         GvOutput gvout(std::cout);
         tree->Do(gvout);

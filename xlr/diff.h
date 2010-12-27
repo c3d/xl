@@ -42,6 +42,10 @@ struct NodeTable;                 // A table of tree nodes indexed by ID
 struct Matching;                  // To associate nodes between T1 and T2
 struct EditScript;                // A list of edit operations (the diff result)
 
+typedef long node_id;              // A node identifier
+
+
+
 // ============================================================================
 //
 //    The TreeDiff class
@@ -191,6 +195,59 @@ struct EditScript : EditScriptBase
     virtual ~EditScript() {}
 
     Tree *  Apply(Tree *tree);
+};
+
+
+struct NodeIdInfo : Info
+// ----------------------------------------------------------------------------
+//   Node identifier information
+// ----------------------------------------------------------------------------
+{
+    NodeIdInfo(node_id id): id(id) {}
+
+    typedef node_id data_t;
+    operator data_t() { return id; }
+    node_id id;
+};
+
+
+template <typename Value>
+struct NonRecursiveAction
+// ----------------------------------------------------------------------------
+//   Holds a method to be run on any kind of tree node
+// ----------------------------------------------------------------------------
+{
+    NonRecursiveAction() {}
+    ~NonRecursiveAction() {}
+    typedef Value value_type;
+
+    Value DoInteger(Integer *what)      { return Do(what); }
+    Value DoReal(Real *what)            { return Do(what); }
+    Value DoText(Text *what)            { return Do(what); }
+    Value DoName(Name *what)            { return Do(what); }
+    Value DoBlock(Block *what)          { return Do(what); }
+    Value DoInfix(Infix *what)          { return Do(what); }
+    Value DoPrefix(Prefix *what)        { return Do(what); }
+    Value DoPostfix(Postfix *what)      { return Do(what); }
+
+    virtual Value Do(Tree *what)        = 0;
+};
+
+
+struct SetNodeIdAction : NonRecursiveAction<node_id>
+// ------------------------------------------------------------------------
+//   Set an integer node ID to each node.
+// ------------------------------------------------------------------------
+{
+    SetNodeIdAction(node_id from_id = 1, node_id step = 1)
+        : id(from_id), step(step) {}
+    virtual node_id Do(Tree *what)
+    {
+        what->Set<NodeIdInfo>(id);
+        return id += step;
+    }
+    node_id id;
+    node_id step;
 };
 
 
