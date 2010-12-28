@@ -35,7 +35,7 @@ XL_BEGIN
 //
 // ============================================================================
 
-bool TypeInferer::DoInteger(Integer *what)
+bool TypeInference::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------
 //   Annotate an integer tree with its value
 // ----------------------------------------------------------------------------
@@ -44,7 +44,7 @@ bool TypeInferer::DoInteger(Integer *what)
 }
 
 
-bool TypeInferer::DoReal(Real *what)
+bool TypeInference::DoReal(Real *what)
 // ----------------------------------------------------------------------------
 //   Annotate a real tree with its value
 // ----------------------------------------------------------------------------
@@ -53,7 +53,7 @@ bool TypeInferer::DoReal(Real *what)
 }
 
 
-bool TypeInferer::DoText(Text *what)
+bool TypeInference::DoText(Text *what)
 // ----------------------------------------------------------------------------
 //   Annotate a text tree with its own value
 // ----------------------------------------------------------------------------
@@ -62,7 +62,7 @@ bool TypeInferer::DoText(Text *what)
 }
 
 
-bool TypeInferer::DoName(Name *what)
+bool TypeInference::DoName(Name *what)
 // ----------------------------------------------------------------------------
 //   Assign an unknown type to a name
 // ----------------------------------------------------------------------------
@@ -71,7 +71,7 @@ bool TypeInferer::DoName(Name *what)
 }
 
 
-bool TypeInferer::DoPrefix(Prefix *what)
+bool TypeInference::DoPrefix(Prefix *what)
 // ----------------------------------------------------------------------------
 //   Assign an unknown type to a prefix and then to its children
 // ----------------------------------------------------------------------------
@@ -80,7 +80,7 @@ bool TypeInferer::DoPrefix(Prefix *what)
 }
 
 
-bool TypeInferer::DoPostfix(Postfix *what)
+bool TypeInference::DoPostfix(Postfix *what)
 // ----------------------------------------------------------------------------
 //   Assign an unknown type to a postfix and then to its children
 // ----------------------------------------------------------------------------
@@ -89,7 +89,7 @@ bool TypeInferer::DoPostfix(Postfix *what)
 }
 
 
-bool TypeInferer::DoInfix(Infix *what)
+bool TypeInference::DoInfix(Infix *what)
 // ----------------------------------------------------------------------------
 //   Special treatment for the special infix forms
 // ----------------------------------------------------------------------------
@@ -118,7 +118,7 @@ bool TypeInferer::DoInfix(Infix *what)
 }
 
 
-bool TypeInferer::DoBlock(Block *what)
+bool TypeInference::DoBlock(Block *what)
 // ----------------------------------------------------------------------------
 //   Assign an unknown type to a block and then to its children
 // ----------------------------------------------------------------------------
@@ -127,7 +127,7 @@ bool TypeInferer::DoBlock(Block *what)
 }
 
 
-bool TypeInferer::AssignType(Tree *expr, Tree *type)
+bool TypeInference::AssignType(Tree *expr, Tree *type)
 // ----------------------------------------------------------------------------
 //   Assign a type to a given tree
 // ----------------------------------------------------------------------------
@@ -154,7 +154,7 @@ bool TypeInferer::AssignType(Tree *expr, Tree *type)
 }
 
 
-bool TypeInferer::Rewrite(Infix *what)
+bool TypeInference::Rewrite(Infix *what)
 // ----------------------------------------------------------------------------
 //   Assign a type to a rewrite
 // ----------------------------------------------------------------------------
@@ -178,7 +178,7 @@ bool TypeInferer::Rewrite(Infix *what)
 
 
 
-bool TypeInferer::Unify(Tree *expr1, Tree *expr2)
+bool TypeInference::Unify(Tree *expr1, Tree *expr2)
 // ----------------------------------------------------------------------------
 //   Indicates that the two trees must have identical types
 // ----------------------------------------------------------------------------
@@ -194,7 +194,7 @@ bool TypeInferer::Unify(Tree *expr1, Tree *expr2)
 }
 
 
-bool TypeInferer::UnifyType(Tree *t1, Tree *t2)
+bool TypeInference::UnifyType(Tree *t1, Tree *t2)
 // ----------------------------------------------------------------------------
 //   Unify two type forms
 // ----------------------------------------------------------------------------
@@ -290,7 +290,7 @@ bool TypeInferer::UnifyType(Tree *t1, Tree *t2)
 }
 
 
-Tree *TypeInferer::Type(Tree *expr)
+Tree *TypeInference::Type(Tree *expr)
 // ----------------------------------------------------------------------------
 //   Return the base type associated with a given expression
 // ----------------------------------------------------------------------------
@@ -305,7 +305,7 @@ Tree *TypeInferer::Type(Tree *expr)
 }
 
 
-Tree *TypeInferer::Base(Tree *type)
+Tree *TypeInference::Base(Tree *type)
 // ----------------------------------------------------------------------------
 //   Return the base type for a given type, i.e. after all substitutions
 // ----------------------------------------------------------------------------
@@ -317,7 +317,7 @@ Tree *TypeInferer::Base(Tree *type)
 }
 
 
-bool TypeInferer::IsGeneric(Tree *type)
+bool TypeInference::IsGeneric(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if a given type is a generated generic type name
 // ----------------------------------------------------------------------------
@@ -328,7 +328,7 @@ bool TypeInferer::IsGeneric(Tree *type)
 }
 
 
-bool TypeInferer::IsTypeName(Tree *type)
+bool TypeInference::IsTypeName(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if a given type is a 'true' type name, i.e. not generated
 // ----------------------------------------------------------------------------
@@ -339,7 +339,7 @@ bool TypeInferer::IsTypeName(Tree *type)
 }
 
 
-bool TypeInferer::JoinTypes(Tree *base, Tree *other, bool knownGood)
+bool TypeInference::JoinTypes(Tree *base, Tree *other, bool knownGood)
 // ----------------------------------------------------------------------------
 //   Use 'base' as the prototype for the other type
 // ----------------------------------------------------------------------------
@@ -387,7 +387,7 @@ bool TypeInferer::JoinTypes(Tree *base, Tree *other, bool knownGood)
 }
 
 
-Name * TypeInferer::NewTypeName(TreePosition pos)
+Name * TypeInference::NewTypeName(TreePosition pos)
 // ----------------------------------------------------------------------------
 //   Automatically generate new type names
 // ----------------------------------------------------------------------------

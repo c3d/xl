@@ -58,12 +58,12 @@ XL_BEGIN
 //
 // ============================================================================
 
-struct TypeInferer
+struct TypeInference
 // ----------------------------------------------------------------------------
 //   A hacked derivative of the Damas-Hilner-Milner type-inference algorithm
 // ----------------------------------------------------------------------------
 {
-    TypeInferer(Context *context) : context(context), types(), id(0) {}
+    TypeInference(Context *context) : context(context), types(), id(0) {}
     typedef bool value_type;
 
 public:
@@ -187,6 +187,6 @@ struct TypeInfo : Info
 
 XL_END
 
-extern "C" void debugt(XL::TypeInferer *ti);
+extern "C" void debugt(XL::TypeInference *ti);
 
 #endif // TYPES_H

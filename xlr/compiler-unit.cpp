@@ -206,7 +206,7 @@ Tree *CompiledUnit::TypeCheck(Tree *program)
 //   Verify that the given program/expression is valid in current context
 // ----------------------------------------------------------------------------
 {
-    TypeInferer inferTypes(context);
+    TypeInference inferTypes(context);
     if (!program->Do(inferTypes))
         return NULL;
     return inferTypes.Type(program);
