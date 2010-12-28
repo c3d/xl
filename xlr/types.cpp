@@ -205,6 +205,14 @@ bool TypeInferer::UnifyType(Tree *t1, Tree *t2)
     if (t1 == t2)
         return true;            // Already unified
 
+    // Strip out blocks
+    if (Block *b1 = t1->AsBlock())
+        if (UnifyType(b1->child, t2))
+            return JoinTypes(b1, t2);
+    if (Block *b2 = t2->AsBlock())
+        if (UnifyType(t1, b2->child))
+            return JoinTypes(t1, b2);
+
     // Check if we have similar structured types on both sides
     if (Infix *i1 = t1->AsInfix())
         if (Infix *i2 = t2->AsInfix())
@@ -222,14 +230,6 @@ bool TypeInferer::UnifyType(Tree *t1, Tree *t2)
             if (UnifyType(p1->left, p2->left) &&
                 UnifyType(p1->right, p2->right))
                 return JoinTypes(p1, p2);
-
-    // Strip out blocks
-    if (Block *b1 = t1->AsBlock())
-        if (UnifyType(b1->child, t2))
-            return JoinTypes(b1, t2);
-    if (Block *b2 = t2->AsBlock())
-        if (UnifyType(t1, b2->child))
-            return JoinTypes(t1, b2);
 
     // If either is a generic name, unify with the other
     if (IsGeneric(t1))
@@ -321,8 +321,28 @@ bool TypeInferer::JoinTypes(Tree *base, Tree *other, bool knownGood)
 
         // If what we want to use as a base is a generic and other isn't, swap
         else if (IsGeneric(base))
-            std::swap(base, other);
+            std::swap(other, base);
     }
+
+    // Make sure that built-in types always come out on top
+    if (other == boolean_type ||
+        other == integer_type ||
+        other == real_type ||
+        other == text_type ||
+        other == character_type ||
+        other == tree_type ||
+        other == source_type ||
+        other == code_type ||
+        other == lazy_type ||
+        other == XL::value_type ||
+        other == symbol_type ||
+        other == name_type ||
+        other == operator_type ||
+        other == infix_type ||
+        other == prefix_type ||
+        other == postfix_type ||
+        other == block_type)
+        std::swap(other, base);
 
     if (Tree *already = other->Get<TypeClass>())
     {
