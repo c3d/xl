@@ -231,6 +231,38 @@ bool TypeInferer::UnifyType(Tree *t1, Tree *t2)
                 UnifyType(p1->right, p2->right))
                 return JoinTypes(p1, p2);
 
+    // Check that we can unify constants with associated built-in type
+    if (Integer *i1 = t1->AsInteger())
+    {
+        if (Integer *i2 = t2->AsInteger())
+            return i1->value == i2->value && JoinTypes(i1, i2);
+        if (t2 == integer_type)
+            return JoinTypes(t2, t1);
+    }
+    if (Integer *i2 = t2->AsInteger())
+        if (t1 == integer_type)
+            return JoinTypes(i2, t1);
+    if (Real *i1 = t1->AsReal())
+    {
+        if (Real *i2 = t2->AsReal())
+            return i1->value == i2->value && JoinTypes(i1, i2);
+        if (t2 == real_type)
+            return JoinTypes(t2, t1);
+    }
+    if (Real *i2 = t2->AsReal())
+        if (t1 == real_type)
+            return JoinTypes(i2, t1);
+    if (Text *i1 = t1->AsText())
+    {
+        if (Text *i2 = t2->AsText())
+            return i1->value == i2->value && JoinTypes(i1, i2);
+        if (t2 == text_type)
+            return JoinTypes(t2, t1);
+    }
+    if (Text *i2 = t2->AsText())
+        if (t1 == text_type)
+            return JoinTypes(i2, t1);
+
     // If either is a generic name, unify with the other
     if (IsGeneric(t1))
         return JoinTypes(t2, t1, true);
