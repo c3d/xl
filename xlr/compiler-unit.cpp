@@ -63,49 +63,100 @@ XL_BEGIN
 
 using namespace llvm;
 
-CompiledUnit::CompiledUnit(Compiler *compiler,
-                           Context *context,
-                           Rewrite *rewrite)
+CompiledUnit::CompiledUnit(Compiler *compiler)
 // ----------------------------------------------------------------------------
 //   CompiledUnit constructor
 // ----------------------------------------------------------------------------
-    : context(context), rewrite(rewrite),
-      compiler(compiler), llvm(compiler->llvm),
+    : compiler(compiler), llvm(compiler->llvm),
       code(NULL), data(NULL), function(NULL),
       allocabb(NULL), entrybb(NULL), exitbb(NULL), failbb(NULL),
-      storage(), computed(),
-      parameters(compiler, context)
+      value(), storage(), computed(), dataForm()
+{}
+
+
+CompiledUnit::~CompiledUnit()
+// ----------------------------------------------------------------------------
+//   Delete what we must...
+// ----------------------------------------------------------------------------
+{
+    if (entrybb && exitbb)
+    {
+        // If entrybb is clear, we may be looking at a forward declaration
+        // Otherwise, if exitbb was not cleared by Finalize(), this means we
+        // failed to compile. Make sure LLVM cleans the function up
+        function->eraseFromParent();
+    }
+
+    delete code;
+    delete data;
+}
+
+
+Function *CompiledUnit::RewriteFunction(Context *context, Rewrite *rewrite)
+// ----------------------------------------------------------------------------
+//   Create a function for a tree rewrite
+// ----------------------------------------------------------------------------
 {
     Tree *source = rewrite->from;
     Tree *def = rewrite->to;
     IFTRACE(llvm)
-        std::cerr << "CompiledUnit T" << (void *) source;
-
-    // If a compilation for that tree is alread in progress, fwd decl
-    if (llvm::Function *function = compiler->TreeFunction(source))
-    {
-        // We exit here without setting entrybb (see IsForward())
-        IFTRACE(llvm)
-            std::cerr << " exists F" << function << "\n";
-        return;
-    }
+        std::cerr << "CompiledUnit::RewriteFunction T" << (void *) source;
 
     // Extract parameters from source form
+    ParameterList parameters(compiler, context);
     source->Do(parameters);
 
     // Create the function signature, one entry per parameter
     llvm_types signature;
     parameters.Signature(signature);
-    llvm_type retTy = def ? ReturnType(def) : StructureType(signature);
+    llvm_type retTy;
+
+    // Compute return type:
+    // - If explicitly specified, use that (TODO: Check compatibility)
+    // - For definitions, infer from definition
+    // - For data forms, this is the type of the data form
+    if (llvm_type specifiedRetTy = parameters.returned)
+        retTy = specifiedRetTy;
+    else if (def)
+        retTy = ReturnType(def);
+    else
+        retTy = StructureType(signature);
+
     FunctionType *fnTy = FunctionType::get(retTy, signature, false);
+
     text label = "xl_eval";
     IFTRACE(labels)
         label += "[" + text(*source) + "]";
-    function = Function::Create(fnTy, Function::InternalLinkage,
-                                label.c_str(), compiler->module);
 
-    // Save it in the compiler
-    compiler->SetTreeFunction(source, function);
+    return InitializeFunction(fnTy, parameters, label.c_str());
+}
+
+
+Function *CompiledUnit::TopLevelFunction(Context *context)
+// ----------------------------------------------------------------------------
+//   Create a function for a top-level program
+// ----------------------------------------------------------------------------
+{
+    llvm_types signature;
+    ParameterList parameters(compiler, context);
+    llvm_type retTy = compiler->treePtrTy;
+    FunctionType *fnTy = FunctionType::get(retTy, signature, false);
+    return InitializeFunction(fnTy, parameters, "xl_program");
+}
+
+
+Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
+                                           ParameterList &parameters,
+                                           kstring label)
+// ----------------------------------------------------------------------------
+//   Build the LLVM function, create entry points, ...
+// ----------------------------------------------------------------------------
+{
+    assert (!function || !"LLVM function was already built");
+
+    // Create function and save it in the CompiledUnit
+    function = Function::Create(fnTy, Function::InternalLinkage, 
+                                label, compiler->module);
     IFTRACE(llvm)
         std::cerr << " new F" << function << "\n";
 
@@ -119,6 +170,7 @@ CompiledUnit::CompiledUnit(Compiler *compiler,
 
     // Associate the value for the input tree
     Function::arg_iterator args = function->arg_begin();
+    llvm_type retTy = function->getReturnType();
     Value *result_storage = data->CreateAlloca(retTy, 0, "result");
 
     // Associate the value for the additional arguments (read-only, no alloca)
@@ -136,25 +188,9 @@ CompiledUnit::CompiledUnit(Compiler *compiler,
     IRBuilder<> exitcode(exitbb);
     Value *retVal = exitcode.CreateLoad(result_storage, "retval");
     exitcode.CreateRet(retVal);
-}
 
-
-CompiledUnit::~CompiledUnit()
-// ----------------------------------------------------------------------------
-//   Delete what we must...
-// ----------------------------------------------------------------------------
-{
-    if (entrybb && exitbb)
-    {
-        // If entrybb is clear, we may be looking at a forward declaration
-        // Otherwise, if exitbb was not cleared by Finalize(), this means we
-        // failed to compile. Make sure the compiler forgets the function
-        compiler->SetTreeFunction(rewrite->from, NULL);
-        function->eraseFromParent();
-    }
-
-    delete code;
-    delete data;
+    // Return the newly created function
+    return function;
 }
 
 
@@ -208,8 +244,7 @@ eval_fn CompiledUnit::Finalize()
 // ----------------------------------------------------------------------------
 {
     IFTRACE(llvm)
-        std::cerr << "CompiledUnit Finalize T" << (void *) rewrite->from
-                  << " F" << function;
+        std::cerr << "CompiledUnit Finalize F" << function;
 
     // Branch to the exit block from the last test we did
     code->CreateBr(exitbb);
@@ -1012,10 +1047,6 @@ llvm_type CompiledUnit::ReturnType(Tree *form)
 //   Compute the return type associated with the given form
 // ----------------------------------------------------------------------------
 {
-    // If the return type was explicitly specified
-    if (parameters.returned)
-        return parameters.returned;
-
     // TODO: Type inference to get the type from RHS
 
     // For now, pessimize and assume the return type is Tree *

@@ -33,8 +33,17 @@ struct CompiledUnit
 //  The function we generate for a given rewrite
 // ----------------------------------------------------------------------------
 {
-    CompiledUnit(Compiler *comp, Context *context, Rewrite *rewrite);
+    CompiledUnit(Compiler *compiler);
     ~CompiledUnit();
+
+public:
+    llvm::Function *    RewriteFunction(Context *context, Rewrite *rewrite);
+    llvm::Function *    TopLevelFunction(Context *context);
+
+protected:
+    llvm::Function *    InitializeFunction(llvm::FunctionType *,
+                                           ParameterList &parameters,
+                                           kstring label);
 
 public:
     llvm::Value *       Compile(Tree *tree);
@@ -83,9 +92,6 @@ public:
     llvm_type           StructureType(llvm_types &signature);
 
 public:
-    Context_p           context;        // The XL context in which we rewrite
-    Rewrite_p           rewrite;        // The rewrite we are translating
-
     Compiler *          compiler;       // The compiler environment we use
     llvm::LLVMContext * llvm;           // The LLVM context we got from compiler
 
@@ -102,7 +108,6 @@ public:
     value_map           storage;        // Map tree -> LLVM alloca space
     value_map           computed;       // Map tree -> LLVM "computed" flag
     data_set            dataForm;       // Data expressions: don't evaluate
-    ParameterList       parameters;     // List of parameters for this form
 };
 
 XL_END

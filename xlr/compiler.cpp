@@ -332,6 +332,25 @@ Compiler::~Compiler()
 }
 
 
+program_fn Compiler::CompileProgram(Tree *program)
+// ----------------------------------------------------------------------------
+//   Compile a whole XL program
+// ----------------------------------------------------------------------------
+//   This is the entry point used to compile a top-level XL program.
+//   It will process all the declarations in the program and then compile
+//   the rest of the code as a function taking no arguments.
+{
+    Context_p topContext = new Context(NULL, NULL);
+    CompiledUnit topUnit(this);
+
+    if (!topUnit.TopLevelFunction(topContext))
+        return NULL;
+    if (!topUnit.Compile(program))
+        return NULL;
+    return (program_fn) topUnit.Finalize();
+}
+
+
 void Compiler::Reset()
 // ----------------------------------------------------------------------------
 //    Clear the contents of a compiler

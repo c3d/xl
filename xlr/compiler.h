@@ -61,6 +61,7 @@ struct CompiledUnit;
 struct CompilerInfo;
 struct Context;
 struct Options;
+typedef Tree * (*program_fn) (void);
 typedef Tree * (*eval_fn) (Tree *);
 typedef Tree * (*adapter_fn) (native_fn callee, Context *ctx,
                               Tree *src, Tree **args);
@@ -92,6 +93,9 @@ struct Compiler
 {
     Compiler(kstring moduleName = "xl", uint optimize_level = 999);
     ~Compiler();
+
+    // Top-level entry point: compile a whole program
+    program_fn                CompileProgram(Tree *program);
 
     void                      Reset();
     CompilerInfo *            Info(Tree *tree, bool create = false);
