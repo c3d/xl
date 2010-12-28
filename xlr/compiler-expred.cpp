@@ -43,11 +43,10 @@ ExpressionReduction::ExpressionReduction(CompiledUnit &u, Tree *src)
 // ----------------------------------------------------------------------------
 //    Snapshot current basic blocks in the compiled unit
 // ----------------------------------------------------------------------------
-    : unit(u), source(src), context(u.context),
+    : unit(u), source(src), llvm(u.llvm),
       storage(NULL), computed(NULL),
       savedfailbb(NULL),
-      entrybb(NULL), savedbb(NULL), successbb(NULL),
-      savedvalue(u.value)
+      entrybb(NULL), savedbb(NULL), successbb(NULL)
 {
     // We need storage and a compute flag to skip this computation if needed
     storage = u.NeedStorage(src);
@@ -74,7 +73,6 @@ ExpressionReduction::~ExpressionReduction()
 
     // Restore saved 'failbb' and value map
     u.failbb = savedfailbb;
-    u.value = savedvalue;
 }
 
 
@@ -90,7 +88,7 @@ void ExpressionReduction::NewForm ()
     assert(savedbb || !"NewForm called after unconditional success");
 
     // Create entry / exit basic blocks for this expression
-    entrybb = BasicBlock::Create(*context, "subexpr", u.function);
+    entrybb = BasicBlock::Create(*llvm, "subexpr", u.function);
     u.failbb = NULL;
 
     // Set the insertion point to the new invokation code
@@ -122,7 +120,7 @@ void ExpressionReduction::Succeeded(void)
     else
     {
         // Create a fake basic block in case someone decides to add code
-        BasicBlock *empty = BasicBlock::Create(*context, "empty", u.function);
+        BasicBlock *empty = BasicBlock::Create(*llvm, "empty", u.function);
         u.code->SetInsertPoint(empty);
     }
     u.failbb = NULL;

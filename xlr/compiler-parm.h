@@ -26,26 +26,53 @@
 
 XL_BEGIN
 
-struct ParameterMatch
+struct Parameter
+// ----------------------------------------------------------------------------
+//   Internal representation of a parameter
+// ----------------------------------------------------------------------------
+{
+    Parameter(Name *name, const llvm::Type *type = 0, llvm::Value *value = 0)
+        : name(name), type(type), value(value) {}
+    Name_p              name;
+    llvm_type           type;
+    llvm_value          value;
+};
+
+
+typedef std::vector<Parameter>      Parameters;
+
+
+struct ParameterList
 // ----------------------------------------------------------------------------
 //   Collect parameters on the left of a rewrite
 // ----------------------------------------------------------------------------
 {
-    ParameterMatch (Context *s): symbols(s), defined(NULL) {}
+    typedef bool value_type;
+    
+public:
+    ParameterList(Compiler *compiler, Context *context)
+        : compiler(compiler), context(context), defined(NULL), returned(NULL) {}
 
-    Tree *Do(Tree *what);
-    Tree *DoInteger(Integer *what);
-    Tree *DoReal(Real *what);
-    Tree *DoText(Text *what);
-    Tree *DoName(Name *what);
-    Tree *DoPrefix(Prefix *what);
-    Tree *DoPostfix(Postfix *what);
-    Tree *DoInfix(Infix *what);
-    Tree *DoBlock(Block *what);
+public:
+    bool EnterName(Name *what, const llvm::Type *type, bool global);
 
-    Context_p symbols;          // Context in which we test
-    Tree_p    defined;          // Tree beind defined, e.g. 'sin' in 'sin X'
-    TreeList  order;            // Record order of parameters
+    bool DoInteger(Integer *what);
+    bool DoReal(Real *what);
+    bool DoText(Text *what);
+    bool DoName(Name *what);
+    bool DoPrefix(Prefix *what);
+    bool DoPostfix(Postfix *what);
+    bool DoInfix(Infix *what);
+    bool DoBlock(Block *what);
+
+    void Signature(llvm_types &signature);
+
+public:
+    Compiler * compiler;
+    Context_p  context;         // Context in which we record parameters
+    Tree_p     defined;         // Tree beind defined, e.g. 'sin' in 'sin X'
+    Parameters parameters;      // Parameters and their order
+    llvm_type  returned;        // Returned type if specified
 };
 
 XL_END

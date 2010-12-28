@@ -24,8 +24,17 @@
 // the code generation happens for a given tree. It records all information
 // that is transient, i.e. only exists during a given compilation phase
 //
+// In the following, we will consider a rewrite such as:
+//    foo X:integer, Y -> bar X + Y
+//
+// Such a rewrite is transformed into a function with a prototype that
+// depends on the arguments, i.e. something like:
+//    retType foo(int X, Tree *Y);
+//
+// The actual retType is determined dynamically from the return type of bar.
 
 #include "compiler-unit.h"
+#include "compiler-parm.h"
 #include "errors.h"
 
 #include <llvm/Analysis/Verifier.h>
@@ -54,19 +63,26 @@ XL_BEGIN
 
 using namespace llvm;
 
-CompiledUnit::CompiledUnit(Compiler *comp, Tree *src, TreeList parms)
+CompiledUnit::CompiledUnit(Compiler *compiler,
+                           Context *context,
+                           Rewrite *rewrite)
 // ----------------------------------------------------------------------------
 //   CompiledUnit constructor
 // ----------------------------------------------------------------------------
-    : compiler(comp), context(comp->context), source(src),
+    : context(context), rewrite(rewrite),
+      compiler(compiler), llvm(compiler->llvm),
       code(NULL), data(NULL), function(NULL),
-      allocabb(NULL), entrybb(NULL), exitbb(NULL), failbb(NULL)
+      allocabb(NULL), entrybb(NULL), exitbb(NULL), failbb(NULL),
+      storage(), computed(),
+      parameters(compiler, context)
 {
+    Tree *source = rewrite->from;
+    Tree *def = rewrite->to;
     IFTRACE(llvm)
-        std::cerr << "CompiledUnit T" << (void *) src;
+        std::cerr << "CompiledUnit T" << (void *) source;
 
     // If a compilation for that tree is alread in progress, fwd decl
-    if (llvm::Function *function = compiler->TreeFunction(src))
+    if (llvm::Function *function = compiler->TreeFunction(source))
     {
         // We exit here without setting entrybb (see IsForward())
         IFTRACE(llvm)
@@ -74,56 +90,52 @@ CompiledUnit::CompiledUnit(Compiler *comp, Tree *src, TreeList parms)
         return;
     }
 
-    // Create the function signature, one entry per parameter + one for source
-    std::vector<const Type *> signature;
-    Type *treeTy = compiler->treePtrTy;
-    for (ulong p = 0; p <= parms.size(); p++)
-        signature.push_back(treeTy);
-    FunctionType *fnTy = FunctionType::get(treeTy, signature, false);
+    // Extract parameters from source form
+    source->Do(parameters);
+
+    // Create the function signature, one entry per parameter
+    llvm_types signature;
+    parameters.Signature(signature);
+    llvm_type retTy = def ? ReturnType(def) : StructureType(signature);
+    FunctionType *fnTy = FunctionType::get(retTy, signature, false);
     text label = "xl_eval";
     IFTRACE(labels)
-        label += "[" + text(*src) + "]";
+        label += "[" + text(*source) + "]";
     function = Function::Create(fnTy, Function::InternalLinkage,
                                 label.c_str(), compiler->module);
 
     // Save it in the compiler
-    compiler->SetTreeFunction(src, function);
+    compiler->SetTreeFunction(source, function);
     IFTRACE(llvm)
         std::cerr << " new F" << function << "\n";
 
     // Create function entry point, where we will have all allocas
-    allocabb = BasicBlock::Create(*context, "allocas", function);
+    allocabb = BasicBlock::Create(*llvm, "allocas", function);
     data = new IRBuilder<> (allocabb);
 
     // Create entry block for the function
-    entrybb = BasicBlock::Create(*context, "entry", function);
+    entrybb = BasicBlock::Create(*llvm, "entry", function);
     code = new IRBuilder<> (entrybb);
 
     // Associate the value for the input tree
     Function::arg_iterator args = function->arg_begin();
-    Value *inputArg = args++;
-    Value *result_storage = data->CreateAlloca(treeTy, 0, "result");
-    data->CreateStore(inputArg, result_storage);
-    storage[src] = result_storage;
+    Value *result_storage = data->CreateAlloca(retTy, 0, "result");
 
     // Associate the value for the additional arguments (read-only, no alloca)
-    TreeList::iterator parm;
-    ulong parmsCount = 0;
-    for (parm = parms.begin(); parm != parms.end(); parm++)
+    Parameters &plist = parameters.parameters;
+    for (Parameters::iterator p = plist.begin(); p != plist.end(); p++)
     {
-        inputArg = args++;
-        value[*parm] = inputArg;
-        parmsCount++;
+        Parameter &parm = *p;
+        llvm_value inputArg = args++;
+        parm.value = inputArg;
+        value[parm.name] = inputArg;
     }
 
     // Create the exit basic block and return statement
-    exitbb = BasicBlock::Create(*context, "exit", function);
+    exitbb = BasicBlock::Create(*llvm, "exit", function);
     IRBuilder<> exitcode(exitbb);
     Value *retVal = exitcode.CreateLoad(result_storage, "retval");
     exitcode.CreateRet(retVal);
-
-    // Record current entry/exit points for the current expression
-    failbb = NULL;
 }
 
 
@@ -137,7 +149,7 @@ CompiledUnit::~CompiledUnit()
         // If entrybb is clear, we may be looking at a forward declaration
         // Otherwise, if exitbb was not cleared by Finalize(), this means we
         // failed to compile. Make sure the compiler forgets the function
-        compiler->SetTreeFunction(source, NULL);
+        compiler->SetTreeFunction(rewrite->from, NULL);
         function->eraseFromParent();
     }
 
@@ -196,7 +208,7 @@ eval_fn CompiledUnit::Finalize()
 // ----------------------------------------------------------------------------
 {
     IFTRACE(llvm)
-        std::cerr << "CompiledUnit Finalize T" << (void *) source
+        std::cerr << "CompiledUnit Finalize T" << (void *) rewrite->from
                   << " F" << function;
 
     // Branch to the exit block from the last test we did
@@ -423,8 +435,8 @@ BasicBlock *CompiledUnit::BeginLazy(Tree *subexpr)
         lwork += lbl;
         llazy += lbl;
     }
-    BasicBlock *skip = BasicBlock::Create(*context, lskip, function);
-    BasicBlock *work = BasicBlock::Create(*context, lwork, function);
+    BasicBlock *skip = BasicBlock::Create(*llvm, lskip, function);
+    BasicBlock *work = BasicBlock::Create(*llvm, lwork, function);
 
     Value *lazyFlagPtr = NeedLazy(subexpr);
     Value *lazyFlag = code->CreateLoad(lazyFlagPtr, llazy);
@@ -498,7 +510,7 @@ BasicBlock *CompiledUnit::NeedTest()
 // ----------------------------------------------------------------------------
 {
     if (!failbb)
-        failbb = BasicBlock::Create(*context, "fail", function);
+        failbb = BasicBlock::Create(*llvm, "fail", function);
     return failbb;
 }
 
@@ -801,7 +813,7 @@ BasicBlock *CompiledUnit::TagTest(Tree *tree, ulong tagValue)
     Value *kind = code->CreateAnd(tag, mask, "tagAndMask");
     Constant *refTag = ConstantInt::get(tag->getType(), tagValue);
     Value *isRightTag = code->CreateICmpEQ(kind, refTag, "isRightTag");
-    BasicBlock *isRightKindBB = BasicBlock::Create(*context,
+    BasicBlock *isRightKindBB = BasicBlock::Create(*llvm,
                                                    "isRightKind", function);
     code->CreateCondBr(isRightTag, isRightKindBB, notGood);
 
@@ -832,7 +844,7 @@ BasicBlock *CompiledUnit::IntegerTest(Tree *tree, longlong value)
     Value *tval = code->CreateLoad(valueFieldPtr, "treeValue");
     Constant *rval = ConstantInt::get(tval->getType(), value, "refValue");
     Value *isGood = code->CreateICmpEQ(tval, rval, "isGood");
-    BasicBlock *isGoodBB = BasicBlock::Create(*context,
+    BasicBlock *isGoodBB = BasicBlock::Create(*llvm,
                                               "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
@@ -864,7 +876,7 @@ BasicBlock *CompiledUnit::RealTest(Tree *tree, double value)
     Value *tval = code->CreateLoad(valueFieldPtr, "treeValue");
     Constant *rval = ConstantFP::get(tval->getType(), value);
     Value *isGood = code->CreateFCmpOEQ(tval, rval, "isGood");
-    BasicBlock *isGoodBB = BasicBlock::Create(*context,
+    BasicBlock *isGoodBB = BasicBlock::Create(*llvm,
                                               "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
@@ -894,7 +906,7 @@ BasicBlock *CompiledUnit::TextTest(Tree *tree, text value)
     Value *refPtr = code->CreateConstGEP2_32(global, 0, 0);
     Value *isGood = code->CreateCall2(compiler->xl_same_text,
                                       treeValue, refPtr);
-    BasicBlock *isGoodBB = BasicBlock::Create(*context, "isGood", function);
+    BasicBlock *isGoodBB = BasicBlock::Create(*llvm, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
@@ -919,7 +931,7 @@ BasicBlock *CompiledUnit::ShapeTest(Tree *left, Tree *right)
     BasicBlock *notGood = NeedTest();
     Value *isGood = code->CreateCall2(compiler->xl_same_shape,
                                       leftVal, rightVal);
-    BasicBlock *isGoodBB = BasicBlock::Create(*context, "isGood", function);
+    BasicBlock *isGoodBB = BasicBlock::Create(*llvm, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
@@ -938,7 +950,7 @@ BasicBlock *CompiledUnit::InfixMatchTest(Tree *actual, Infix *reference)
     Value *refVal = NeedStorage(reference);     assert (refVal);
 
     // Extract the name of the reference
-    Constant *refNameVal = ConstantArray::get(*context, reference->name);
+    Constant *refNameVal = ConstantArray::get(*llvm, reference->name);
     const Type *refNameTy = refNameVal->getType();
     GlobalVariable *gvar = new GlobalVariable(*compiler->module,refNameTy,true,
                                               GlobalValue::InternalLinkage,
@@ -951,7 +963,7 @@ BasicBlock *CompiledUnit::InfixMatchTest(Tree *actual, Infix *reference)
                                             actualVal, refNamePtr);
     Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
     Value *isGood = code->CreateICmpNE(afterExtract, null, "isGoodInfix");
-    BasicBlock *isGoodBB = BasicBlock::Create(*context, "isGood", function);
+    BasicBlock *isGoodBB = BasicBlock::Create(*llvm, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
@@ -983,7 +995,7 @@ BasicBlock *CompiledUnit::TypeTest(Tree *value, Tree *type)
                                          valueVal, typeVal);
     Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
     Value *isGood = code->CreateICmpNE(afterCast, null, "isGoodType");
-    BasicBlock *isGoodBB = BasicBlock::Create(*context, "isGood", function);
+    BasicBlock *isGoodBB = BasicBlock::Create(*llvm, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value matched, we may have a type cast, remember it
@@ -992,6 +1004,32 @@ BasicBlock *CompiledUnit::TypeTest(Tree *value, Tree *type)
     code->CreateStore(afterCast, ptr);
 
     return isGoodBB;
+}
+
+
+llvm_type CompiledUnit::ReturnType(Tree *form)
+// ----------------------------------------------------------------------------
+//   Compute the return type associated with the given form
+// ----------------------------------------------------------------------------
+{
+    // If the return type was explicitly specified
+    if (parameters.returned)
+        return parameters.returned;
+
+    // TODO: Type inference to get the type from RHS
+
+    // For now, pessimize and assume the return type is Tree *
+    return compiler->treePtrTy;
+}
+
+
+llvm_type CompiledUnit::StructureType(llvm_types &signature)
+// ----------------------------------------------------------------------------
+//   Compute the return type associated with the given data form
+// ----------------------------------------------------------------------------
+{
+    StructType *stype = StructType::get(*llvm, signature);
+    return stype;
 }
 
 XL_END

@@ -48,7 +48,7 @@ struct ExpressionReduction
 public:
     CompiledUnit &      unit;           // Compilation unit we use
     Tree *              source;         // Tree we build (mostly for debugging)
-    llvm::LLVMContext * context;        // Inherited context
+    llvm::LLVMContext * llvm;           // Inherited LLVM context
 
     llvm::Value *       storage;        // Storage for expression value
     llvm::Value *       computed;       // Flag telling if value was computed

@@ -7,7 +7,7 @@
 //   File Description:
 // 
 //     Information about a single compilation unit, i.e. the code generated
-//     for a particular tree
+//     for a particular tree rerite.
 // 
 // 
 // 
@@ -23,24 +23,25 @@
 // ****************************************************************************
 
 #include "compiler.h"
+#include "compiler-parm.h"
+
 
 XL_BEGIN
 
 struct CompiledUnit
 // ----------------------------------------------------------------------------
-//  The code we generate when compiling a given tree
+//  The function we generate for a given rewrite
 // ----------------------------------------------------------------------------
 {
-    CompiledUnit(Compiler *comp, Tree *source, TreeList parms);
+    CompiledUnit(Compiler *comp, Context *context, Rewrite *rewrite);
     ~CompiledUnit();
 
+public:
     llvm::Value *       Compile(Tree *tree);
 
-    bool                IsForwardCall()         { return entrybb == NULL; }
     eval_fn             Finalize();
 
     enum { knowAll = -1, knowGlobals = 1, knowLocals = 2, knowValues = 4 };
-
     llvm::Value *       NeedStorage(Tree *tree);
     bool                IsKnown(Tree *tree, uint which = knowAll);
     llvm::Value *       Known(Tree *tree, uint which = knowAll );
@@ -78,24 +79,30 @@ struct CompiledUnit
     llvm::BasicBlock *  InfixMatchTest(Tree *code, Infix *ref);
     llvm::BasicBlock *  TypeTest(Tree *code, Tree *type);
 
+    llvm_type           ReturnType(Tree *form);
+    llvm_type           StructureType(llvm_types &signature);
+
 public:
+    Context_p           context;        // The XL context in which we rewrite
+    Rewrite_p           rewrite;        // The rewrite we are translating
+
     Compiler *          compiler;       // The compiler environment we use
-    llvm::LLVMContext * context;        // The context we got from compiler
-    Tree_p              source;         // The original source we compile
+    llvm::LLVMContext * llvm;           // The LLVM context we got from compiler
 
     llvm::IRBuilder<> * code;           // Instruction builder for code
     llvm::IRBuilder<> * data;           // Instruction builder for data
     llvm::Function *    function;       // Function we generate
 
     llvm::BasicBlock *  allocabb;       // Function entry point, allocas
-    llvm::BasicBlock *  entrybb;        // Entry point for that code
-    llvm::BasicBlock *  exitbb;         // Exit point for that code
-    llvm::BasicBlock *  failbb;         // Where we go if tests fail
+    llvm::BasicBlock *  entrybb;        // Code entry point
+    llvm::BasicBlock *  exitbb;         // Shared exit for the function
+    llvm::BasicBlock *  failbb;         // Shared exit for failed expred tests
 
     value_map           value;          // Map tree -> LLVM value
     value_map           storage;        // Map tree -> LLVM alloca space
     value_map           computed;       // Map tree -> LLVM "computed" flag
-    data_set            dataForm;       // Data expressions we don't evaluate
+    data_set            dataForm;       // Data expressions: don't evaluate
+    ParameterList       parameters;     // List of parameters for this form
 };
 
 XL_END

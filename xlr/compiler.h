@@ -73,6 +73,10 @@ typedef std::map<uint, adapter_fn>             adapter_map;
 typedef std::set<Tree *>                       closure_set;
 typedef std::set<Tree *>                       data_set;
 
+typedef const llvm::Type *                     llvm_type;
+typedef std::vector<llvm_type>                 llvm_types;
+typedef llvm::Value *                          llvm_value;
+
 
 
 // ============================================================================
@@ -109,16 +113,19 @@ struct Compiler
     eval_fn                   MarkAsClosure(Tree *closure, uint ntrees);
     bool                      IsKnown(Tree *value);
 
+    const llvm::Type *        MachineType(Context *context, Tree *tree);
+
     bool                      FreeResources(Tree *tree);
 
 
 public:
-    llvm::LLVMContext         *context;
+    llvm::LLVMContext         *llvm;
     llvm::Module              *module;
     llvm::ExecutionEngine     *runtime;
     llvm::FunctionPassManager *optimizer;
     const llvm::IntegerType   *booleanTy;
     const llvm::IntegerType   *integerTy;
+    const llvm::IntegerType   *characterTy;
     const llvm::Type          *realTy;
     llvm::StructType          *treeTy;
     llvm::PointerType         *treePtrTy;
@@ -127,8 +134,14 @@ public:
     llvm::PointerType         *integerTreePtrTy;
     llvm::StructType          *realTreeTy;
     llvm::PointerType         *realTreePtrTy;
+    llvm::StructType          *blockTreeTy;
+    llvm::PointerType         *blockTreePtrTy;
     llvm::StructType          *prefixTreeTy;
     llvm::PointerType         *prefixTreePtrTy;
+    llvm::StructType          *postfixTreeTy;
+    llvm::PointerType         *postfixTreePtrTy;
+    llvm::StructType          *infixTreeTy;
+    llvm::PointerType         *infixTreePtrTy;
     llvm::FunctionType        *nativeTy;
     llvm::PointerType         *nativeFnTy;
     llvm::FunctionType        *evalTy;
@@ -153,7 +166,6 @@ public:
     llvm::Function            *xl_new_infix;
     llvm::Function            *xl_new_closure;
     builtins_map               builtins;
-    closure_map                closures;
     adapter_map                array_to_args_adapters;
     text_constants_map         text_constants;
 };
@@ -166,16 +178,21 @@ public:
 // 
 // ============================================================================
 
-#define LLVM_INTTYPE(t)         llvm::IntegerType::get(*context, sizeof(t) * 8)
-#define LLVM_BOOLTYPE           llvm::Type::getInt1Ty(*context)
+#define LLVM_INTTYPE(t)         llvm::IntegerType::get(*llvm, sizeof(t) * 8)
+#define LLVM_BOOLTYPE           llvm::Type::getInt1Ty(*llvm)
 
 // Index in data structures of fields in Tree types
 #define TAG_INDEX           0
 #define INFO_INDEX          1
 #define INTEGER_VALUE_INDEX 2
 #define REAL_VALUE_INDEX    2
+#define NAME_VALUE_INDEX    2
+#define BLOCK_CHILD_INDEX   2
+#define BLOCK_OPENING_INDEX 3
+#define BLOCK_CLOSING_INDEX 4
 #define LEFT_VALUE_INDEX    2
 #define RIGHT_VALUE_INDEX   3
+#define INFIX_NAME_INDEX    4
 
 XL_END
 

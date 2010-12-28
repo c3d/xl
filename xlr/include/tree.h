@@ -46,10 +46,10 @@ struct Integer;                                 // Integer: 0, 3, 8
 struct Real;                                    // Real: 3.2, 1.6e4
 struct Text;                                    // Text: "ABC"
 struct Name;                                    // Name / symbol: ABC, ++-
+struct Block;                                   // Block: (A), {A}
 struct Prefix;                                  // Prefix: sin X
 struct Postfix;                                 // Postfix: 3!
 struct Infix;                                   // Infix: A+B, newline
-struct Block;                                   // Block: (A), {A}
 struct Info;                                    // Information in trees
 struct Sha1;                                    // Hash used for id-ing trees
 
@@ -66,10 +66,10 @@ typedef GCPtr<Integer, longlong>        Integer_p;
 typedef GCPtr<Real, double>             Real_p;
 typedef GCPtr<Text, text>               Text_p;
 typedef GCPtr<Name>                     Name_p;
+typedef GCPtr<Block>                    Block_p;
 typedef GCPtr<Prefix>                   Prefix_p;
 typedef GCPtr<Postfix>                  Postfix_p;
 typedef GCPtr<Infix>                    Infix_p;
-typedef GCPtr<Block>                    Block_p;
 
 typedef ulong TreePosition;                     // Position in source files
 typedef std::vector<Tree_p> TreeList;           // A list of trees
