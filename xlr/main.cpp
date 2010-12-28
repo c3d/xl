@@ -406,7 +406,7 @@ int Main::Run()
             Errors errors;
             if (options.optimize_level == 3)
             {
-                program_fn fn = compiler->CompileProgram(sf.tree);
+                program_fn fn = compiler->CompileProgram(sf.context, sf.tree);
                 result = fn();
             }
             else

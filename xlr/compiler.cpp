@@ -332,7 +332,7 @@ Compiler::~Compiler()
 }
 
 
-program_fn Compiler::CompileProgram(Tree *program)
+program_fn Compiler::CompileProgram(Context *context, Tree *program)
 // ----------------------------------------------------------------------------
 //   Compile a whole XL program
 // ----------------------------------------------------------------------------
@@ -340,7 +340,7 @@ program_fn Compiler::CompileProgram(Tree *program)
 //   It will process all the declarations in the program and then compile
 //   the rest of the code as a function taking no arguments.
 {
-    Context_p topContext = new Context(NULL, NULL);
+    Context_p topContext = new Context(context, context);
     CompiledUnit topUnit(this);
 
     if (!topUnit.TopLevelFunction(topContext))
