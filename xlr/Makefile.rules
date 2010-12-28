@@ -125,10 +125,12 @@ l-%:
 
 V=@if [ ! -z "$<" ]; then echo Compiling $<; fi;
 R=@if [ ! -z "$@" ]; then echo Building $@; fi;
+D=@if [ ! -z "$@" ]; then echo Dependency $@; fi;
 H=@
 
 $(OBJDIR):
-	$R mkdir -p $(OBJDIR)
+	$R mkdir -p $(OBJDIR) && touch $(OBJDIR)/created
+$(OBJDIR)/created: $(OBJDIR)
 
 
 $(OBJEXE) exe: $(OBJECTS) $(OBJLIBDEP)
@@ -164,24 +166,26 @@ ifdef TARGET
 # So $(@:.d=) removes the .d, and then we add the .o back... Smart, eh?
 SED_DEPEND=sed -e 's!$*.o:!$@ $(@:.d=).o:!g'
 
-$(OBJDIR)/Makefile.depend: $(OBJDIR) $(SOURCES:%=$(OBJDIR)/%.d)
-	$V echo Generating dependencies in $@
-	$V cat $(SOURCES:%=$(OBJDIR)/%.d) > $@
+DEPENDENCIES=$(SOURCES:%=$(OBJDIR)/%.d)
 
-$(OBJDIR)/%.d: $(OBJDIR)
+$(OBJDIR)/Makefile.depend: $(OBJDIR) $(DEPENDENCIES)
+	$D cat $(SOURCES:%=$(OBJDIR)/%.d) > $@
+
+$(DEPENDENCIES): $(OBJDIR)/created
 
 $(OBJDIR)/%.c.d: %.c
-	$R $(CC_DEPEND) $< | $(SED_DEPEND) > $@
+	$D $(CC_DEPEND) $< | $(SED_DEPEND) > $@
 $(OBJDIR)/%.C.d: %.C
-	$R $(CXX_DEPEND) $< | $(SED_DEPEND) > $@
+	$D $(CXX_DEPEND) $< | $(SED_DEPEND) > $@
 $(OBJDIR)/%.cpp.d: %.cpp
-	$R $(CXX_DEPEND) $< | $(SED_DEPEND) > $@
+	$D $(CXX_DEPEND) $< | $(SED_DEPEND) > $@
 $(OBJDIR)/%.S.d: %.S
-	$R $(AS_DEPEND) $< | $(SED_DEPEND) > $@
+	$D $(AS_DEPEND) $< | $(SED_DEPEND) > $@
 $(OBJDIR)/%.s.d: %.s
-	$R $(AS_DEPEND) $< | $(SED_DEPEND) > $@
+	$D $(AS_DEPEND) $< | $(SED_DEPEND) > $@
 $(OBJDIR)/%.xl.d: %.xl
-	$R echo No dependency for $*
+	@echo No dependency for $*
+	$H touch $@
 
 endif
 
