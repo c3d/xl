@@ -25,6 +25,7 @@
 
 # List of source files to process
 SOURCES     =					\
+	basics.cpp				\
 	main.cpp				\
 	options.cpp				\
 	errors.cpp				\
@@ -39,7 +40,6 @@ SOURCES     =					\
 	compiler.cpp				\
 	context.cpp				\
 	runtime.cpp				\
-	basics.cpp				\
 	types.cpp				\
 	compiler-action.cpp			\
 	compiler-arg.cpp			\
