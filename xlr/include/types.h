@@ -46,12 +46,75 @@
 //  The type analysis phase consists in scanning the input tree,
 //  recording type information and returning typed trees.
 
-
 #include "tree.h"
 #include "context.h"
 #include <map>
 
 XL_BEGIN
+
+// ============================================================================
+//
+//   Class used to infer types in a program
+//
+// ============================================================================
+
+struct TypeInferer
+// ----------------------------------------------------------------------------
+//   A hacked derivative of the Damas-Hilner-Milner type-inference algorithm
+// ----------------------------------------------------------------------------
+{
+    TypeInferer(Context *context) : context(context), types(), id(0) {}
+    typedef bool value_type;
+
+public:
+    // Interface for Tree::Do() to annotate teh tree
+    bool DoInteger(Integer *what);
+    bool DoReal(Real *what);
+    bool DoText(Text *what);
+    bool DoName(Name *what);
+    bool DoPrefix(Prefix *what);
+    bool DoPostfix(Postfix *what);
+    bool DoInfix(Infix *what);
+    bool DoBlock(Block *what);
+
+public:
+    // Annotate expressions with type variables
+    bool        AssignType(Tree *expr, Tree *type = NULL);
+    bool        Rewrite(Infix *rewrite);
+
+    // Indicates that two trees must have compatible types
+    bool        Unify(Tree *expr1, Tree *expr2);
+    bool        UnifyType(Tree *t1, Tree *t2);
+    bool        JoinTypes(Tree *base, Tree *other, bool knownGood = false);
+
+    // Return the base type associated with a given tree
+    Tree *      Type(Tree *expr);
+    Tree *      Base(Tree *type);
+    bool        IsGeneric(Tree *type);
+    bool        IsTypeName(Tree *type);
+
+    // Generation of type names
+    Name *      NewTypeName(TreePosition pos);
+
+public:
+    Context_p   context;        // Context in which we lookup things
+    tree_map    types;          // Map an expression to its type
+    ulong       id;             // Id of next type
+};
+
+
+struct TypeClass : Info
+// ----------------------------------------------------------------------------
+//   Record which types have been unified
+// ----------------------------------------------------------------------------
+{
+    TypeClass(Tree *base): base(base) {}
+    typedef Tree_p       data_t;
+    operator             data_t()  { return base; }
+    Tree_p               base;
+};
+
+
 
 // ============================================================================
 //
@@ -79,9 +142,9 @@ struct TypeInfo : Info
 //    Information recording the type of a given tree
 // ----------------------------------------------------------------------------
 {
-    typedef Tree_p       data_t;
     TypeInfo(Tree *type): type(type) {}
-    operator            data_t()  { return type; }
+    typedef Tree_p       data_t;
+    operator             data_t()  { return type; }
     Tree_p               type;
 };
 
@@ -123,5 +186,7 @@ struct TypeInfo : Info
 #include "basics.tbl"
 
 XL_END
+
+extern "C" void debugt(XL::TypeInferer *ti);
 
 #endif // TYPES_H

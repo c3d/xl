@@ -31,6 +31,329 @@ XL_BEGIN
 
 // ============================================================================
 //
+//    Type inference algorithm
+//
+// ============================================================================
+
+bool TypeInferer::DoInteger(Integer *what)
+// ----------------------------------------------------------------------------
+//   Annotate an integer tree with its value
+// ----------------------------------------------------------------------------
+{
+    return AssignType(what, what);
+}
+
+
+bool TypeInferer::DoReal(Real *what)
+// ----------------------------------------------------------------------------
+//   Annotate a real tree with its value
+// ----------------------------------------------------------------------------
+{
+    return AssignType(what, what);
+}
+
+
+bool TypeInferer::DoText(Text *what)
+// ----------------------------------------------------------------------------
+//   Annotate a text tree with its own value
+// ----------------------------------------------------------------------------
+{
+    return AssignType(what, what);
+}
+
+
+bool TypeInferer::DoName(Name *what)
+// ----------------------------------------------------------------------------
+//   Assign an unknown type to a name
+// ----------------------------------------------------------------------------
+{
+    return AssignType(what);
+}
+
+
+bool TypeInferer::DoPrefix(Prefix *what)
+// ----------------------------------------------------------------------------
+//   Assign an unknown type to a prefix and then to its children
+// ----------------------------------------------------------------------------
+{
+    return AssignType(what) && what->left->Do(this) && what->right->Do(this);
+}
+
+
+bool TypeInferer::DoPostfix(Postfix *what)
+// ----------------------------------------------------------------------------
+//   Assign an unknown type to a postfix and then to its children
+// ----------------------------------------------------------------------------
+{
+    return AssignType(what) && what->right->Do(this) && what->left->Do(this);
+}
+
+
+bool TypeInferer::DoInfix(Infix *what)
+// ----------------------------------------------------------------------------
+//   Special treatment for the special infix forms
+// ----------------------------------------------------------------------------
+{
+    // Case of 'X : T' : Set type of X to T and unify X:T with X
+    if (what->name == ":")
+        return (AssignType(what->left, what->right) &&
+                AssignType(what) &&
+                Unify(what, what->left));
+
+    // Case of 'X -> Y': Analyze type of X and Y, unify them, set type of result
+    if (what->name == "->")
+        return Rewrite(what);
+ 
+    // For other cases, we assign types to left and right
+    if (!(AssignType(what) && what->left->Do(this) && what->right->Do(this)))
+        return false;
+
+    // For a sequence, assign types for left and right, then unify
+    // the type of the sequence with the type of the last statement
+    if (what->name == "\n" || what->name == ";")
+        return Unify(what, what->right);
+
+    // Success
+    return true;
+}
+
+
+bool TypeInferer::DoBlock(Block *what)
+// ----------------------------------------------------------------------------
+//   Assign an unknown type to a block and then to its children
+// ----------------------------------------------------------------------------
+{
+    return AssignType(what) && what->child->Do(this);
+}
+
+
+bool TypeInferer::AssignType(Tree *expr, Tree *type)
+// ----------------------------------------------------------------------------
+//   Assign a type to a given tree
+// ----------------------------------------------------------------------------
+{
+    // Check if we somehow already enterered that type - That is bad
+    tree_map::iterator found = types.find(expr);
+    if (found != types.end())
+    {
+        Ooops("Internal: Tree $1 assigned two types", expr);
+        Ooops("   Previous type was $1", (*found).second);
+        Ooops("   New type is $1", type);
+        return false;
+    }
+
+    // Generate a unique type name if nothing is given
+    if (type == NULL)
+        type = NewTypeName(expr->Position());
+
+    // Record the type for that tree
+    types[expr] = type;
+
+    // Success
+    return true;
+}
+
+
+bool TypeInferer::Rewrite(Infix *what)
+// ----------------------------------------------------------------------------
+//   Assign a type to a rewrite
+// ----------------------------------------------------------------------------
+{
+    // Recursively assign types to tree elements on the left and right
+    if (!(what->left->Do(this) && what->right->Do(this)))
+        return false;
+
+    // We need to be able to unify left and right
+    if (!Unify(what->left, what->right))
+        return false;
+
+    // Create a new function type for the rewrite itself
+    Tree *lt = Type(what->left);
+    Tree *rt = Type(what->right);
+    Infix *fntype = new Infix("->", lt, rt, what->Position());
+
+    // And assign this type to the rewrite itself
+    return AssignType(what, fntype);
+}
+
+
+
+bool TypeInferer::Unify(Tree *expr1, Tree *expr2)
+// ----------------------------------------------------------------------------
+//   Indicates that the two trees must have identical types
+// ----------------------------------------------------------------------------
+{
+    Tree *t1 = Type(expr1);
+    Tree *t2 = Type(expr2);
+
+    // If already unified, we are done
+    if (t1 == t2)
+        return true;
+
+    return UnifyType(t1, t2);
+}
+
+
+bool TypeInferer::UnifyType(Tree *t1, Tree *t2)
+// ----------------------------------------------------------------------------
+//   Unify two type forms
+// ----------------------------------------------------------------------------
+{
+    // Make sure we have the canonical form
+    t1 = Base(t1);
+    t2 = Base(t2);
+    if (t1 == t2)
+        return true;            // Already unified
+
+    // Check if we have similar structured types on both sides
+    if (Infix *i1 = t1->AsInfix())
+        if (Infix *i2 = t2->AsInfix())
+            if (i1->name == i2->name)
+                if (UnifyType(i1->left, i2->left) &&
+                    UnifyType(i1->right, i2->right))
+                    return JoinTypes(i1, i2);
+    if (Prefix *p1 = t1->AsPrefix())
+        if (Prefix *p2 = t2->AsPrefix())
+            if (UnifyType(p1->left, p2->left) &&
+                UnifyType(p1->right, p2->right))
+                return JoinTypes(p1, p2);
+    if (Postfix *p1 = t1->AsPostfix())
+        if (Postfix *p2 = t2->AsPostfix())
+            if (UnifyType(p1->left, p2->left) &&
+                UnifyType(p1->right, p2->right))
+                return JoinTypes(p1, p2);
+
+    // Strip out blocks
+    if (Block *b1 = t1->AsBlock())
+        if (UnifyType(b1->child, t2))
+            return JoinTypes(b1, t2);
+    if (Block *b2 = t2->AsBlock())
+        if (UnifyType(t1, b2->child))
+            return JoinTypes(t1, b2);
+
+    // If either is a generic name, unify with the other
+    if (IsGeneric(t1))
+        return JoinTypes(t2, t1, true);
+    if (IsGeneric(t2))
+        return JoinTypes(t1, t2, true);
+    
+    // Try to unify with bound value if we find any
+    Tree *bound1 = context->Bound(t1);
+    if (bound1 && bound1 != t1)
+    {
+        if (UnifyType(bound1, t2))
+            return JoinTypes(bound1, t2) && JoinTypes(t1, t2);
+    }
+    Tree *bound2 = context->Bound(t2);
+    if (bound2 && bound2 != t2)
+    {
+        if (UnifyType(t1, bound2))
+            return JoinTypes(t1, bound2) && JoinTypes(t1, t2);
+    }
+
+    // None of the above: fail
+    Ooops ("Unable to unify $1", t1);
+    Ooops ("with $1", t2);
+    return false;
+}
+
+
+Tree *TypeInferer::Type(Tree *expr)
+// ----------------------------------------------------------------------------
+//   Return the base type associated with a given expression
+// ----------------------------------------------------------------------------
+{
+    Tree *type = types[expr];
+    if (!type)
+    {
+        Ooops("Internal: $1 has no type", expr);
+        type = integer_type;    // Avoid crashing...
+    }
+    return Base(type);
+}
+
+
+Tree *TypeInferer::Base(Tree *type)
+// ----------------------------------------------------------------------------
+//   Return the base type for a given type, i.e. after all substitutions
+// ----------------------------------------------------------------------------
+{
+    // If we had some unification, find the reference type
+    while (Tree *base = type->Get<TypeClass>())
+        type = base;
+    return type;
+}
+
+
+bool TypeInferer::IsGeneric(Tree *type)
+// ----------------------------------------------------------------------------
+//   Check if a given type is a generated generic type name
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = type->AsName())
+        return name->value.size() && name->value[0] == '#';
+    return false;
+}
+
+
+bool TypeInferer::IsTypeName(Tree *type)
+// ----------------------------------------------------------------------------
+//   Check if a given type is a 'true' type name, i.e. not generated
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = type->AsName())
+        return name->value.size() && name->value[0] != '#';
+    return false;
+}
+
+
+bool TypeInferer::JoinTypes(Tree *base, Tree *other, bool knownGood)
+// ----------------------------------------------------------------------------
+//   Use 'base' as the prototype for the other type
+// ----------------------------------------------------------------------------
+{
+    if (!knownGood)
+    {
+        // If we have a type name, prefer that to a more complex form
+        // in order to keep error messages more readable
+        if (IsTypeName(other))
+            std::swap(other, base);
+
+        // If what we want to use as a base is a generic and other isn't, swap
+        else if (IsGeneric(base))
+            std::swap(base, other);
+    }
+
+    if (Tree *already = other->Get<TypeClass>())
+    {
+        Ooops("Internal: Type $1 already unified to another type", other);
+        Ooops("   The previous type was $1", already);
+        return false;
+    }
+    other->Set<TypeClass>(base);
+    return true;
+}
+
+
+Name * TypeInferer::NewTypeName(TreePosition pos)
+// ----------------------------------------------------------------------------
+//   Automatically generate new type names
+// ----------------------------------------------------------------------------
+{
+    ulong v = id++;
+    text  name = "";
+    do
+    {
+        name = char('A' + v % 26) + name;
+        v /= 26;
+    } while (v);
+    return new Name("#" + name, pos);
+}
+
+
+
+// ============================================================================
+//
 //   High-level type functions
 //
 // ============================================================================

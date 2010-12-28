@@ -94,7 +94,7 @@ struct Compiler
     Compiler(kstring moduleName = "xl", uint optimize_level = 999);
     ~Compiler();
 
-    // Top-level entry point: compile a whole program
+    // Top-level entry point: analyze and compile a whole program
     program_fn                CompileProgram(Tree *program);
 
     void                      Reset();

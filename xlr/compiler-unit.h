@@ -46,6 +46,7 @@ protected:
                                            kstring label);
 
 public:
+    Tree *              TypeCheck(Tree *program);
     llvm::Value *       Compile(Tree *tree);
 
     eval_fn             Finalize();
@@ -92,6 +93,8 @@ public:
     llvm_type           StructureType(llvm_types &signature);
 
 public:
+    Context_p           context;        // Context in which we compile
+
     Compiler *          compiler;       // The compiler environment we use
     llvm::LLVMContext * llvm;           // The LLVM context we got from compiler
 

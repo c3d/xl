@@ -345,6 +345,8 @@ program_fn Compiler::CompileProgram(Tree *program)
 
     if (!topUnit.TopLevelFunction(topContext))
         return NULL;
+    if (!topUnit.TypeCheck(program))
+        return NULL;
     if (!topUnit.Compile(program))
         return NULL;
     return (program_fn) topUnit.Finalize();

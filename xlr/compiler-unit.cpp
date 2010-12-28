@@ -36,6 +36,7 @@
 #include "compiler-unit.h"
 #include "compiler-parm.h"
 #include "errors.h"
+#include "types.h"
 
 #include <llvm/Analysis/Verifier.h>
 #include <llvm/CallingConv.h>
@@ -67,7 +68,7 @@ CompiledUnit::CompiledUnit(Compiler *compiler)
 // ----------------------------------------------------------------------------
 //   CompiledUnit constructor
 // ----------------------------------------------------------------------------
-    : compiler(compiler), llvm(compiler->llvm),
+    : context(NULL), compiler(compiler), llvm(compiler->llvm),
       code(NULL), data(NULL), function(NULL),
       allocabb(NULL), entrybb(NULL), exitbb(NULL), failbb(NULL),
       value(), storage(), computed(), dataForm()
@@ -97,6 +98,9 @@ Function *CompiledUnit::RewriteFunction(Context *context, Rewrite *rewrite)
 //   Create a function for a tree rewrite
 // ----------------------------------------------------------------------------
 {
+    // Save context for later
+    this->context = context;
+
     Tree *source = rewrite->from;
     Tree *def = rewrite->to;
     IFTRACE(llvm)
@@ -137,6 +141,9 @@ Function *CompiledUnit::TopLevelFunction(Context *context)
 //   Create a function for a top-level program
 // ----------------------------------------------------------------------------
 {
+    // Save context for later
+    this->context = context;
+
     llvm_types signature;
     ParameterList parameters(compiler, context);
     llvm_type retTy = compiler->treePtrTy;
@@ -191,6 +198,18 @@ Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
 
     // Return the newly created function
     return function;
+}
+
+
+Tree *CompiledUnit::TypeCheck(Tree *program)
+// ----------------------------------------------------------------------------
+//   Verify that the given program/expression is valid in current context
+// ----------------------------------------------------------------------------
+{
+    TypeInferer inferTypes(context);
+    if (!program->Do(inferTypes))
+        return NULL;
+    return inferTypes.Type(program);
 }
 
 
