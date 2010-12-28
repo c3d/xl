@@ -404,7 +404,15 @@ int Main::Run()
         try
         {
             Errors errors;
-            result = sf.context->Evaluate(sf.tree);
+            if (options.optimize_level == 3)
+            {
+                program_fn fn = compiler->CompileProgram(sf.tree);
+                result = fn();
+            }
+            else
+            {
+                result = sf.context->Evaluate(sf.tree);
+            }
         }
         catch (XL::Error &e)
         {
