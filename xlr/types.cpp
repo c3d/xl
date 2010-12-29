@@ -27,6 +27,7 @@
 #include "options.h"
 #include "save.h"
 #include "compiler-arg.h"
+#include "renderer.h"
 #include <iostream>
 
 XL_BEGIN
@@ -1078,3 +1079,25 @@ Tree *StructuredType(Context *ctx, Tree *value)
 }
 
 XL_END
+
+
+void debugt(XL::TypeInference *ti)
+// ----------------------------------------------------------------------------
+//   Dump a type inference
+// ----------------------------------------------------------------------------
+{
+    using namespace XL;
+    uint i = 0;
+    for (tree_map::iterator t = ti->types.begin(); t != ti->types.end(); t++)
+    {
+        Tree *value = (*t).first;
+        Tree *type = (*t).second;
+        std::cout << "#" << ++i << value << " : " << type;
+        while (Tree *base = ti->unifications[type])
+        {
+            std::cout << " = " << base;
+            type = base;
+        }
+        std::cout << "\n";
+    }
+}
