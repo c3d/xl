@@ -453,12 +453,15 @@ Tree *TypeInference::Base(Tree *type)
 
     // If we had some unification, find the reference type
     while (Tree *base = unifications[type])
+    {
         type = base;
+        assert(type != chain || !"Circularity in unification chain");
+    }
 
     // Make all elements in chain point to correct type for performance
     while (chain != type)
     {
-        Tree_p &u = unifications[type];
+        Tree_p &u = unifications[chain];
         chain = u;
         u = type;
     }
@@ -488,7 +491,8 @@ bool TypeInference::JoinTypes(Tree *base, Tree *other, bool knownGood)
     // Connext the base type classes
     base = Base(base);
     other = Base(other);
-    unifications[other] = base;
+    if (other != base)
+        unifications[other] = base;
     return true;
 }
 
