@@ -129,7 +129,17 @@ bool TypeInference::DoPrefix(Prefix *what)
         return false;
     
     // Compute sub-expression, which may fail if Evaluate() fails, it's OK
-    what->left->Do(this);
+    if (Name *name = what->left->AsName())
+    {
+        // Make sure we don't care if 'bar' is not defined in 'bar 3'
+        XL::Save<bool> savePrototyping(prototyping, true);
+        name->Do(this);
+    }
+    else
+    {
+        what->left->Do(this);
+    }
+
     what->right->Do(this);
     
     // What really matters is if we can evaluate the top-level expression
@@ -146,7 +156,17 @@ bool TypeInference::DoPostfix(Postfix *what)
         return false;
     
     // Compute sub-expression, which may fail if Evaluate() fails, it's OK
-    what->right->Do(this);
+    if (Name *name = what->right->AsName())
+    {
+        // Make sure we don't care if 'bar' is not defined in 'bar 3'
+        XL::Save<bool> savePrototyping(prototyping, true);
+        name->Do(this);
+    }
+    else
+    {
+        what->right->Do(this);
+    }
+
     what->left->Do(this);
    
     // What really matters is if we can evaluate the top-level expression
@@ -162,6 +182,7 @@ bool TypeInference::DoInfix(Infix *what)
     // Case of 'X : T' : Set type of X to T and unify X:T with X
     if (what->name == ":")
         return (AssignType(what->left, what->right) &&
+                what->left->Do(this) &&
                 AssignType(what) &&
                 Unify(what, what->left));
 
@@ -244,6 +265,10 @@ bool TypeInference::Rewrite(Infix *what)
 //   Assign a type to a rewrite
 // ----------------------------------------------------------------------------
 {
+    // Create a context for the rewrite parameters
+    Context *childContext = new Context(context, context);
+    XL::Save<Context_p> saveContext(context, childContext);
+
     // Assign types on the left of the rewrite
     XL::Save<bool> proto(prototyping, true);
     if (!what->left->Do(this))
@@ -252,35 +277,23 @@ bool TypeInference::Rewrite(Infix *what)
         return false;
     }
 
-    // Need to run a complete type scan on the rewrite body
-    Context *childContext = new Context(context, context);
-    TypeInference childInference(childContext, this);
-    bool childSucceeded = childInference.TypeCheck(what->right);
-    id = childInference.id;
-
-    if (!childSucceeded)
-    {
-        Ooops("Type inference failed on definition of $1", what->left);
-        return false;
-    }
-    Tree *childType = childInference.Type(what->right);
-
     // Create a new function type for the rewrite tree
-    Tree *defType = Type(what->left);
-    Infix *fntype = new Infix("=>", defType, childType, what->Position());
+    Tree *formType = Type(what->left);
+    Tree *valueType = Type(what->right);
+    Infix *fntype = new Infix("=>", formType, valueType, what->Position());
     if (!AssignType(what, fntype))
         return false;
-    
+
     // We need to be able to unify pattern and definition types
-    if (!UnifyTypes(defType, childType))
+    if (!UnifyTypes(formType, valueType))
         return false;
 
     // The type of the definition is a pattern type, perform unification
-    if (!what->left->IsConstant())
+    if (what->left->AsInfix())
     {
         Tree *patternType = new Prefix(new Name("type"), what->left,
                                        what->left->Position());
-        if (!UnifyTypes(defType, patternType))
+        if (!UnifyTypes(formType, patternType))
             return false;
     }
 
@@ -301,6 +314,17 @@ bool TypeInference::Evaluate(Tree *what)
     // Evaluating constants is always successful
     if (what->IsConstant() && !context->hasConstants)
         return AssignType(what, what);
+
+    // For a name, check if bound and evaluate bound value
+    if (Name *name = what->AsName())
+    {
+        if (Tree *existing = context->Bound(name))
+        {
+            if (existing == name)
+                return true;    // Example: 'true' or 'integer'
+            return Evaluate(existing);
+        }
+    }
 
     // Identify all candidate rewrites in the current context
     IdentifyCandidates evaluator(this);
@@ -1099,8 +1123,11 @@ void debugt(XL::TypeInference *ti)
     {
         Tree *value = (*t).first;
         Tree *type = (*t).second;
-        std::cout << "#" << ++i << "\t" << value << "\t: "
-                  << type << "\t= " << ti->Base(type) << "\n";
+        Tree *base = ti->Base(type);
+        std::cout << "#" << ++i << "\t" << value << "\t: " << type;
+        if (base != type)
+            std::cout << "\t= " << base;
+        std::cout << "\n";
     }
 }
 

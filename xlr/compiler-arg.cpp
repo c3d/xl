@@ -38,7 +38,7 @@ Tree *IdentifyCandidates::operator() (Context *context,
     RewriteCandidate rc(candidate);
 
     // Create local type inference deriving from ours
-    Context *childContext = new Context(context, context);
+    Context *childContext = new Context(inference->context, inference->context);
     TypeInference childInference(childContext, inference);
 
     // Attempt binding / unification of parameters to arguments
@@ -229,7 +229,7 @@ IdentifyCandidates::Bind(Context *context,
         Name *valueName = prefixValue->left->AsName();
         if (!valueName)
             return FAILED;
-        if (formName != valueName)
+        if (formName->value != valueName->value)
             return FAILED;
 
         return Bind(context, prefixForm->right, prefixValue->right, rc);
