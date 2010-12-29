@@ -407,7 +407,8 @@ int Main::Run()
             if (options.optimize_level == 3)
             {
                 program_fn fn = compiler->CompileProgram(sf.context, sf.tree);
-                result = fn();
+                if (fn)
+                    result = fn();
             }
             else
             {

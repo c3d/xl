@@ -23,6 +23,7 @@
 #include "compiler-arg.h"
 #include "save.h"
 #include "types.h"
+#include "errors.h"
 
 XL_BEGIN
 
@@ -33,6 +34,7 @@ Tree *IdentifyCandidates::operator() (Context *context,
 //   Check which candidates match, and what binding is required to match
 // ----------------------------------------------------------------------------
 {
+    Errors errors;
     RewriteCandidate rc(candidate);
 
     // Create local type inference deriving from ours
@@ -41,7 +43,7 @@ Tree *IdentifyCandidates::operator() (Context *context,
 
     // Attempt binding / unification of parameters to arguments
     XL::Save<TypeInference *> saveInference(inference, &childInference);
-    BindingStrength binding = Bind(context, candidate->from, what, rc);
+    BindingStrength binding = Bind(childContext, candidate->from, what, rc);
 
     // If argument/parameters binding worked, try to typecheck the definition
     if (binding != FAILED)
@@ -59,6 +61,10 @@ Tree *IdentifyCandidates::operator() (Context *context,
                 binding = FAILED;
         }
     }
+
+    // If we had some errors in the process, binding fails
+    if (errors.Swallowed())
+        binding = FAILED;
 
     // Record the rewrite candidate if we had any success with binding
     if (binding != FAILED)

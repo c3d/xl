@@ -310,7 +310,10 @@ bool TypeInference::Evaluate(Tree *what)
     // If we have no candidate, this is a failure
     uint count = evaluator.candidates.size();
     if (count == 0)
+    {
+        Ooops("No form matches $1", what);
         return false;
+    }
 
     // The resulting type is the union of all candidates
     Tree *type = evaluator.candidates[0].type;
