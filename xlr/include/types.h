@@ -229,5 +229,6 @@ inline bool TypeInference::IsTypeName(Tree *type)
 XL_END
 
 extern "C" void debugt(XL::TypeInference *ti);
+extern "C" void debugu(XL::TypeInference *ti);
 
 #endif // TYPES_H

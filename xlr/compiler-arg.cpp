@@ -46,10 +46,18 @@ Tree *IdentifyCandidates::operator() (Context *context,
     // If argument/parameters binding worked, try to typecheck the definition
     if (binding != FAILED)
     {
-        bool childSucceeded = childInference.TypeCheck(candidate->to);
-        saveInference.saved->id = childInference.id;
-        if (!childSucceeded)
-            binding = FAILED;
+        if (candidate->native)
+        {
+            if (!childInference.AssignType(candidate->to, candidate->type))
+                binding = FAILED;
+        }
+        else
+        {
+            bool childSucceeded = childInference.TypeCheck(candidate->to);
+            saveInference.saved->id = childInference.id;
+            if (!childSucceeded)
+                binding = FAILED;
+        }
     }
 
     // Record the rewrite candidate if we had any success with binding
@@ -183,7 +191,7 @@ IdentifyCandidates::Bind(Context *context,
                 BindingStrength left = Bind(context, fi->left, infix->left, rc);
                 if (left == FAILED)
                     return FAILED;
-                BindingStrength right = Bind(context, fi->right, infix->right, rc);
+                BindingStrength right = Bind(context,fi->right,infix->right,rc);
 
                 // Return the weakest binding
                 if (left > right)

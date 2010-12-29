@@ -147,9 +147,9 @@ void xl_enter_infix(Context *context, native_fn fn, Tree *rtype,
 
     Rewrite *rw = context->Define(from, to);
     rw->native = fn;
+    rw->type  = rtype;
 
     xl_set_documentation(from, doc);
-    to->Set<TypeInfo> (rtype);
 }
 
 
@@ -168,9 +168,9 @@ void xl_enter_prefix(Context *context, native_fn fn, Tree *rtype,
 
         Rewrite *rw = context->Define(from, to);
         rw->native = fn;
+        rw->type = rtype;
 
         xl_set_documentation(from, doc);
-        to->Set<TypeInfo> (rtype);
     }
     else
     {
@@ -178,8 +178,8 @@ void xl_enter_prefix(Context *context, native_fn fn, Tree *rtype,
 
         Rewrite *rw = context->Define(n, n);
         rw->native = fn;
+        rw->type = rtype;
 
-        n->Set<TypeInfo> (rtype);
         xl_set_documentation(n, doc);
     }
 }
@@ -197,9 +197,9 @@ void xl_enter_postfix(Context *context, native_fn fn, Tree *rtype,
     
     Rewrite *rw = context->Define(from, to);
     rw->native = (native_fn) fn;
+    rw->type = rtype;
     
     xl_set_documentation(from, doc);
-    to->Set<TypeInfo> (rtype);
 }
 
 
@@ -218,9 +218,9 @@ void xl_enter_block(Context *context, native_fn fn, Tree *rtype,
 
     Rewrite *rw = context->Define(from, to);
     rw->native = (native_fn) fn;
+    rw->type = rtype;
 
     xl_set_documentation(from, doc);
-    to->Set<TypeInfo> (rtype);
 }
 
 XL_END

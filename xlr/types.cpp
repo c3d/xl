@@ -453,9 +453,11 @@ Tree *TypeInference::Base(Tree *type)
     Tree *chain = type;
 
     // If we had some unification, find the reference type
-    while (Tree *base = unifications[type])
+    tree_map::iterator found = unifications.find(type);
+    while (found != unifications.end())
     {
-        type = base;
+        type = (*found).second;
+        found = unifications.find(type);
         assert(type != chain || !"Circularity in unification chain");
     }
 
@@ -1088,16 +1090,32 @@ void debugt(XL::TypeInference *ti)
 {
     using namespace XL;
     uint i = 0;
-    for (tree_map::iterator t = ti->types.begin(); t != ti->types.end(); t++)
+
+    tree_map &map = ti->types;
+    for (tree_map::iterator t = map.begin(); t != map.end(); t++)
     {
         Tree *value = (*t).first;
         Tree *type = (*t).second;
-        std::cout << "#" << ++i << value << " : " << type;
-        while (Tree *base = ti->unifications[type])
-        {
-            std::cout << " = " << base;
-            type = base;
-        }
-        std::cout << "\n";
+        std::cout << "#" << ++i << "\t" << value << "\t: "
+                  << type << "\t= " << ti->Base(type) << "\n";
+    }
+}
+
+
+void debugu(XL::TypeInference *ti)
+// ----------------------------------------------------------------------------
+//   Dump type unifications in a given inference system
+// ----------------------------------------------------------------------------
+{
+    using namespace XL;
+    uint i = 0;
+
+    tree_map &map = ti->unifications;
+    for (tree_map::iterator t = map.begin(); t != map.end(); t++)
+    {
+        Tree *value = (*t).first;
+        Tree *type = (*t).second;
+        std::cout << "#" << ++i << "\t" << value << "\t= "
+                  << type << "\t= " << ti->Base(type) << "\n";
     }
 }
