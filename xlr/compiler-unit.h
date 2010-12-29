@@ -46,7 +46,7 @@ protected:
                                            kstring label);
 
 public:
-    Tree *              TypeCheck(Tree *program);
+    bool                TypeCheck(Tree *program);
     llvm::Value *       Compile(Tree *tree);
 
     eval_fn             Finalize();

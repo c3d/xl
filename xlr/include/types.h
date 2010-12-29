@@ -67,6 +67,11 @@ struct TypeInference
     typedef bool value_type;
 
 public:
+    // Main entry point
+    bool TypeCheck(Tree *what);
+    Tree *Type(Tree *expr);
+
+public:
     // Interface for Tree::Do() to annotate the tree
     bool DoInteger(Integer *what);
     bool DoReal(Real *what);
@@ -80,7 +85,7 @@ public:
     // Common code for all constants (integer, real, text)
     bool DoConstant(Tree *what);
 
-public:
+protected:
     // Annotate expressions with type variables
     bool        AssignType(Tree *expr, Tree *type = NULL);
     bool        Rewrite(Infix *rewrite);
@@ -94,7 +99,6 @@ public:
     bool        JoinTypes(Tree *base, Tree *other, bool knownGood = false);
 
     // Return the base type associated with a given tree
-    Tree *      Type(Tree *expr);
     Tree *      Base(Tree *type);
     bool        IsGeneric(Tree *type);
     bool        IsTypeName(Tree *type);

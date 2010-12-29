@@ -201,15 +201,13 @@ Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
 }
 
 
-Tree *CompiledUnit::TypeCheck(Tree *program)
+bool CompiledUnit::TypeCheck(Tree *program)
 // ----------------------------------------------------------------------------
 //   Verify that the given program/expression is valid in current context
 // ----------------------------------------------------------------------------
 {
     TypeInference inferTypes(context);
-    if (!program->Do(inferTypes))
-        return NULL;
-    return inferTypes.Type(program);
+    return inferTypes.TypeCheck(program);
 }
 
 

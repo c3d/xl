@@ -35,6 +35,35 @@ XL_BEGIN
 //
 // ============================================================================
 
+bool TypeInference::TypeCheck(Tree *program)
+// ----------------------------------------------------------------------------
+//   Perform all the steps of type inference on the given program
+// ----------------------------------------------------------------------------
+{
+    // First process all the declarations of the program in current context
+    context->ProcessDeclarations(program);
+
+    // Once this is done, record all type information for the program
+    return program->Do(this);
+}
+
+
+Tree *TypeInference::Type(Tree *expr)
+// ----------------------------------------------------------------------------
+//   Return the base type associated with a given expression
+// ----------------------------------------------------------------------------
+{
+    Tree *type = types[expr];
+    if (!type)
+    {
+        Ooops("Internal: $1 has no type", expr);
+        type = integer_type;    // Avoid crashing...
+    }
+    return Base(type);
+}
+
+
+
 bool TypeInference::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------
 //   Annotate an integer tree with its value
@@ -310,21 +339,6 @@ bool TypeInference::UnifyType(Tree *t1, Tree *t2)
     Ooops ("Unable to unify $1", t1);
     Ooops ("with $1", t2);
     return false;
-}
-
-
-Tree *TypeInference::Type(Tree *expr)
-// ----------------------------------------------------------------------------
-//   Return the base type associated with a given expression
-// ----------------------------------------------------------------------------
-{
-    Tree *type = types[expr];
-    if (!type)
-    {
-        Ooops("Internal: $1 has no type", expr);
-        type = integer_type;    // Avoid crashing...
-    }
-    return Base(type);
 }
 
 
