@@ -57,7 +57,10 @@ Tree *TypeInference::Type(Tree *expr)
 {
     Tree *type = types[expr];
     if (!type)
+    {
         AssignType(expr);
+        type = types[expr];
+    }
     return Base(type);
 }
 
