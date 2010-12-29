@@ -27,6 +27,9 @@
 
 XL_BEGIN
 
+struct TypeInference;
+
+
 struct RewriteBinding
 // ----------------------------------------------------------------------------
 //   Structure recording the binding of a given parameter to a value
@@ -45,10 +48,12 @@ struct RewriteCandidate
 //    A rewrite candidate for a particular tree form
 // ----------------------------------------------------------------------------
 {
-    RewriteCandidate(Rewrite *rewrite): rewrite(rewrite), bindings() {}
+    RewriteCandidate(Rewrite *rewrite)
+        : rewrite(rewrite), bindings(), type(NULL) {}
 
     Rewrite_p           rewrite;
     RewriteBindings     bindings;
+    Tree_p              type;
 };
 
 typedef std::vector<RewriteCandidate> RewriteCandidates;
@@ -59,11 +64,16 @@ struct IdentifyCandidates
 //   Identify the candidates for a given form
 // ----------------------------------------------------------------------------
 {
-    IdentifyCandidates() {}
+    IdentifyCandidates(TypeInference *ti): inference(ti), candidates() {}
+    
+    enum BindingStrength { FAILED, POSSIBLE, PERFECT };
 
     Tree *operator() (Context *context, Tree *value, Rewrite *candidate);
+    BindingStrength     Bind(Context *context,
+                             Tree *ref, Tree *what, RewriteCandidate &rc);
 
 public:
+    TypeInference *     inference;
     RewriteCandidates   candidates;
 };
 

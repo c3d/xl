@@ -55,7 +55,13 @@ struct TypeInference
 // ----------------------------------------------------------------------------
 {
     TypeInference(Context *context, ulong id = 0)
-        : context(context), types(), id(id), prototyping(false) {}
+        : context(context),
+          types(), unifications(),
+          id(id), prototyping(false) {}
+    TypeInference(Context *context, TypeInference *parent)
+        : context(context),
+          types(parent->types), unifications(parent->unifications),
+          id(parent->id), prototyping(false) {}
     typedef bool value_type;
 
 public:
@@ -77,7 +83,7 @@ public:
     // Common code for all constants (integer, real, text)
     bool DoConstant(Tree *what);
 
-protected:
+public:
     // Annotate expressions with type variables
     bool        AssignType(Tree *expr, Tree *type = NULL);
     bool        Rewrite(Infix *rewrite);
@@ -106,20 +112,9 @@ protected:
 public:
     Context_p   context;        // Context in which we lookup things
     tree_map    types;          // Map an expression to its type
+    tree_map    unifications;   // Map a type to its reference type
     ulong       id;             // Id of next type
     bool        prototyping;    // Prototyping a function declaration
-};
-
-
-struct TypeClass : Info
-// ----------------------------------------------------------------------------
-//   Record which types have been unified
-// ----------------------------------------------------------------------------
-{
-    TypeClass(Tree *base): base(base) {}
-    typedef Tree_p       data_t;
-    operator             data_t()  { return base; }
-    Tree_p               base;
 };
 
 

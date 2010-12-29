@@ -26,6 +26,7 @@
 #include "errors.h"
 #include "options.h"
 #include "save.h"
+#include "compiler-arg.h"
 #include <iostream>
 
 XL_BEGIN
@@ -56,10 +57,7 @@ Tree *TypeInference::Type(Tree *expr)
 {
     Tree *type = types[expr];
     if (!type)
-    {
-        Ooops("Internal: $1 has no type", expr);
-        type = integer_type;    // Avoid crashing...
-    }
+        AssignType(expr);
     return Base(type);
 }
 
@@ -214,14 +212,15 @@ bool TypeInference::AssignType(Tree *expr, Tree *type)
 //   Assign a type to a given tree
 // ----------------------------------------------------------------------------
 {
-    // Check if we somehow already enterered that type - That is bad
-    tree_map::iterator found = types.find(expr);
-    if (found != types.end())
+    // Check if we already have a type
+    if (Tree *existing = types[expr])
     {
-        Ooops("Internal: Tree $1 assigned two types", expr);
-        Ooops("   Previous type was $1", (*found).second);
-        Ooops("   New type is $1", type);
-        return false;
+        // If no type given, that's it
+        if (!type)
+            return true;
+
+        // We have two types specified for that entity, need to unify
+        return UnifyTypes(existing, type);
     }
 
     // Generate a unique type name if nothing is given
@@ -251,7 +250,7 @@ bool TypeInference::Rewrite(Infix *what)
 
     // Need to run a complete type scan on the rewrite body
     Context *childContext = new Context(context, context);
-    TypeInference childInference(childContext, id);
+    TypeInference childInference(childContext, this);
     bool childSucceeded = childInference.TypeCheck(what->right);
     id = childInference.id;
 
@@ -295,7 +294,27 @@ bool TypeInference::Evaluate(Tree *what)
     if (prototyping)
         return true;
 
-    return true;
+    // Evaluating constants is always successful
+    if (what->IsConstant() && !context->hasConstants)
+        return AssignType(what, what);
+
+    // Identify all candidate rewrites in the current context
+    IdentifyCandidates evaluator(this);
+    ulong key = context->Hash(what);
+    context->Evaluate(what, evaluator, key, Context::NORMAL_LOOKUP);
+
+    // If we have no candidate, this is a failure
+    uint count = evaluator.candidates.size();
+    if (count == 0)
+        return false;
+
+    // The resulting type is the union of all candidates
+    Tree *type = evaluator.candidates[0].type;
+    for (uint i = 1; i < count; i++)
+        type = UnionType(context, type, evaluator.candidates[i].type);
+
+    // Perform type unification
+    return UnifyTypes(Type(what), type);
 }
 
 
@@ -430,15 +449,15 @@ Tree *TypeInference::Base(Tree *type)
     Tree *chain = type;
 
     // If we had some unification, find the reference type
-    while (Tree *base = type->Get<TypeClass>())
+    while (Tree *base = unifications[type])
         type = base;
 
     // Make all elements in chain point to correct type for performance
     while (chain != type)
     {
-        TypeClass *typeclass = chain->GetInfo<TypeClass>();
-        chain = typeclass->base;
-        typeclass->base = type;
+        Tree_p &u = unifications[type];
+        chain = u;
+        u = type;
     }
     
     return type;
@@ -466,7 +485,7 @@ bool TypeInference::JoinTypes(Tree *base, Tree *other, bool knownGood)
     // Connext the base type classes
     base = Base(base);
     other = Base(other);
-    other->Set<TypeClass>(base);
+    unifications[other] = base;
     return true;
 }
 
@@ -773,11 +792,11 @@ Tree *TypeCoversType(Context *ctx, Tree *type, Tree *test, bool convert)
                 TypeCoversType(ctx, type, itst->right, convert))
                 return test;
         }
-        else if (itst->name == "->")
+        else if (itst->name == "=>")
         {
             if (Infix *it = type->AsInfix())
             {
-                if (it->name == "->")
+                if (it->name == "=>")
                 {
                     // REVISIT: Coverage of function types
                     Ooops("Unimplemented: "
