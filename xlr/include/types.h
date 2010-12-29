@@ -54,20 +54,20 @@ XL_BEGIN
 
 // ============================================================================
 //
-//   Class used to infer types in a program
+//   Class used to infer types in a program (hacked Damas-Hindley-Milner)
 //
 // ============================================================================
 
 struct TypeInference
 // ----------------------------------------------------------------------------
-//   A hacked derivative of the Damas-Hilner-Milner type-inference algorithm
+//   Scan a tree, record required types and perform type analysis
 // ----------------------------------------------------------------------------
 {
     TypeInference(Context *context) : context(context), types(), id(0) {}
     typedef bool value_type;
 
 public:
-    // Interface for Tree::Do() to annotate teh tree
+    // Interface for Tree::Do() to annotate the tree
     bool DoInteger(Integer *what);
     bool DoReal(Real *what);
     bool DoText(Text *what);
@@ -81,6 +81,9 @@ public:
     // Annotate expressions with type variables
     bool        AssignType(Tree *expr, Tree *type = NULL);
     bool        Rewrite(Infix *rewrite);
+
+    // Attempt to evaluate an expression and perform reqiored unifications
+    bool        Evaluate(Tree *tree);    
 
     // Indicates that two trees must have compatible types
     bool        Unify(Tree *expr1, Tree *expr2);

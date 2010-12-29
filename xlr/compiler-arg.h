@@ -27,6 +27,47 @@
 
 XL_BEGIN
 
+struct RewriteBinding
+// ----------------------------------------------------------------------------
+//   Structure recording the binding of a given parameter to a value
+// ----------------------------------------------------------------------------
+{
+    RewriteBinding(Name *name, Tree *value): name(name), value(value) {}
+    Name_p      name;
+    Tree_p      value;
+};
+
+typedef std::vector<RewriteBinding> RewriteBindings;
+
+
+struct RewriteCandidate
+// ----------------------------------------------------------------------------
+//    A rewrite candidate for a particular tree form
+// ----------------------------------------------------------------------------
+{
+    RewriteCandidate(Rewrite *rewrite): rewrite(rewrite), bindings() {}
+
+    Rewrite_p           rewrite;
+    RewriteBindings     bindings;
+};
+
+typedef std::vector<RewriteCandidate> RewriteCandidates;
+
+
+struct IdentifyCandidates
+// ----------------------------------------------------------------------------
+//   Identify the candidates for a given form
+// ----------------------------------------------------------------------------
+{
+    IdentifyCandidates() {}
+
+    Tree *operator() (Context *context, Tree *value, Rewrite *candidate);
+
+public:
+    RewriteCandidates   candidates;
+};
+
+
 struct ArgumentMatch
 // ----------------------------------------------------------------------------
 //   Check if a tree matches the form of the left of a rewrite

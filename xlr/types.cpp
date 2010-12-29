@@ -31,7 +31,7 @@ XL_BEGIN
 
 // ============================================================================
 //
-//    Type inference algorithm
+//    Type allocation and unification algorithms (hacked Damas-Hilney-Milner)
 //
 // ============================================================================
 
@@ -310,9 +310,20 @@ Tree *TypeInference::Base(Tree *type)
 //   Return the base type for a given type, i.e. after all substitutions
 // ----------------------------------------------------------------------------
 {
+    Tree *chain = type;
+
     // If we had some unification, find the reference type
     while (Tree *base = type->Get<TypeClass>())
         type = base;
+
+    // Make all elements in chain point to correct type for performance
+    while (chain != type)
+    {
+        TypeClass *typeclass = chain->GetInfo<TypeClass>();
+        chain = typeclass->base;
+        typeclass->base = type;
+    }
+    
     return type;
 }
 
