@@ -25,26 +25,17 @@
 //  The type system in XL is somewhat similar to what is found in Haskell,
 //  except that it's based on the shape of trees.
 //
-//  The fundamental types are:
-//  - Literals, which match only their exact value
-//  - boolean, type of true and false
-//  - integer, type of integer literals such as 0, 1, 2, ...
-//  - real, type of real literals such as 0.3, 4.2, 6.3e21
-//  - text, type of double-quoted text literals such as "ABC" and "Hello World"
-//  - character, type of single-quoted text literals such as 'A' and ' '
-//  - name, type of names (not symbols) such as A or Toto2
-//  - symbol, type of symbols (not names) such as + or **
-//  - infix, prefix, postfix, block, type of corresponding structured types
+//  A type form in XL can be:
+//   - A type name              integer
+//   - A litteral value         0       1.5             "Hello"
+//   - A range of values        0..4    1.3..8.9        "A".."Z"
+//   - A union of types         0,3,5   integer|real
+//   - A block for precedence   (real)
+//   - A rewrite specifier      integer => real
+//   - The type of a pattern    type (X:integer, Y:integer)
 //
-//  The type constructors are:
-//  - (T): Values from T
-//  - T1 |  T2 : Values of either type T1 or T2
-//  - T1 -> T2 : A transformation taking T1 and returning T2
-//  - type(pattern): A type matching the pattern, e.g. type(X+Y:integer)
-//                   matches 2.3+5 or A+3
-//
-//  The type analysis phase consists in scanning the input tree,
-//  recording type information and returning typed trees.
+//  REVISIT: The form A => B is to distinguish from a rewrite itself.
+//  Not sure if this is desirable.
 
 #include "tree.h"
 #include "context.h"
@@ -63,7 +54,8 @@ struct TypeInference
 //   Scan a tree, record required types and perform type analysis
 // ----------------------------------------------------------------------------
 {
-    TypeInference(Context *context) : context(context), types(), id(0) {}
+    TypeInference(Context *context, ulong id = 0)
+        : context(context), types(), id(id), prototyping(false) {}
     typedef bool value_type;
 
 public:
@@ -95,21 +87,27 @@ protected:
 
     // Indicates that two trees must have compatible types
     bool        Unify(Tree *expr1, Tree *expr2);
-    bool        UnifyType(Tree *t1, Tree *t2);
+    bool        UnifyTypes(Tree *t1, Tree *t2);
     bool        JoinTypes(Tree *base, Tree *other, bool knownGood = false);
+    bool        UnifyPatterns(Tree *t1, Tree *t2);
 
     // Return the base type associated with a given tree
     Tree *      Base(Tree *type);
+    bool        IsGeneric(text name);
     bool        IsGeneric(Tree *type);
     bool        IsTypeName(Tree *type);
 
     // Generation of type names
     Name *      NewTypeName(TreePosition pos);
 
+    // Lookup a type name in the given context
+    Tree *      LookupTypeName(Tree *input);
+
 public:
     Context_p   context;        // Context in which we lookup things
     tree_map    types;          // Map an expression to its type
     ulong       id;             // Id of next type
+    bool        prototyping;    // Prototyping a function declaration
 };
 
 
@@ -157,6 +155,44 @@ struct TypeInfo : Info
     operator             data_t()  { return type; }
     Tree_p               type;
 };
+
+
+
+// ============================================================================
+// 
+//   Inline functions
+// 
+// ============================================================================
+
+inline bool TypeInference::IsGeneric(text name)
+// ----------------------------------------------------------------------------
+//   Check if a given type is a generated generic type name
+// ----------------------------------------------------------------------------
+{
+    return name.size() && name[0] == '#';
+}
+
+
+inline bool TypeInference::IsGeneric(Tree *type)
+// ----------------------------------------------------------------------------
+//   Check if a given type is a generated generic type name
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = type->AsName())
+        return IsGeneric(name->value);
+    return false;
+}
+
+
+inline bool TypeInference::IsTypeName(Tree *type)
+// ----------------------------------------------------------------------------
+//   Check if a given type is a 'true' type name, i.e. not generated
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = type->AsName())
+        return !IsGeneric(name->value);
+    return false;
+}
 
 
 

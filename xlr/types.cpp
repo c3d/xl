@@ -25,6 +25,7 @@
 #include "runtime.h"
 #include "errors.h"
 #include "options.h"
+#include "save.h"
 #include <iostream>
 
 XL_BEGIN
@@ -111,7 +112,9 @@ bool TypeInference::DoName(Name *what)
 //   Assign an unknown type to a name
 // ----------------------------------------------------------------------------
 {
-    return AssignType(what);
+    if (!AssignType(what))
+        return false;
+    return Evaluate(what);
 }
 
 
@@ -120,7 +123,15 @@ bool TypeInference::DoPrefix(Prefix *what)
 //   Assign an unknown type to a prefix and then to its children
 // ----------------------------------------------------------------------------
 {
-    return AssignType(what) && what->left->Do(this) && what->right->Do(this);
+    if (!AssignType(what))
+        return false;
+    
+    // Compute sub-expression, which may fail if Evaluate() fails, it's OK
+    what->left->Do(this);
+    what->right->Do(this);
+    
+    // What really matters is if we can evaluate the top-level expression
+    return Evaluate(what);
 }
 
 
@@ -129,7 +140,15 @@ bool TypeInference::DoPostfix(Postfix *what)
 //   Assign an unknown type to a postfix and then to its children
 // ----------------------------------------------------------------------------
 {
-    return AssignType(what) && what->right->Do(this) && what->left->Do(this);
+    if (!AssignType(what))
+        return false;
+    
+    // Compute sub-expression, which may fail if Evaluate() fails, it's OK
+    what->right->Do(this);
+    what->left->Do(this);
+   
+    // What really matters is if we can evaluate the top-level expression
+    return Evaluate(what);
 }
 
 
@@ -149,25 +168,44 @@ bool TypeInference::DoInfix(Infix *what)
         return Rewrite(what);
  
     // For other cases, we assign types to left and right
-    if (!(AssignType(what) && what->left->Do(this) && what->right->Do(this)))
+    if (!AssignType(what))
         return false;
 
-    // For a sequence, assign types for left and right, then unify
-    // the type of the sequence with the type of the last statement
+    // For a sequence, both sub-expressions must succeed individually.
+    // The type of the sequence is the type of the last statement
     if (what->name == "\n" || what->name == ";")
+    {
+        if (!what->left->Do(this))
+            return false;
+        if (!what->right->Do(this))
+            return false;
         return Unify(what, what->right);
+    }
 
-    // Success
-    return true;
+    // For other infix expressions, evaluate terms, which may individually fail
+    what->left->Do(this);
+    what->right->Do(this);
+
+    // Success depends on successful evaluation of the complete form
+    return Evaluate(what);
 }
 
 
 bool TypeInference::DoBlock(Block *what)
 // ----------------------------------------------------------------------------
-//   Assign an unknown type to a block and then to its children
+//   A block has the same type as its children, except if child alone fails
 // ----------------------------------------------------------------------------
 {
-    return AssignType(what) && what->child->Do(this);
+    // Assign a type to the block
+    if (!AssignType(what))
+        return false;
+
+    // If child succeeds, the block and its child have the same type
+    if (what->child->Do(this))
+        return Unify(what, what->child);
+
+    // Otherwise, try to find a matching form
+    return Evaluate(what);
 }
 
 
@@ -203,21 +241,48 @@ bool TypeInference::Rewrite(Infix *what)
 //   Assign a type to a rewrite
 // ----------------------------------------------------------------------------
 {
-    // Recursively assign types to tree elements on the left and right
-    if (!(what->left->Do(this) && what->right->Do(this)))
+    // Assign types on the left of the rewrite
+    XL::Save<bool> proto(prototyping, true);
+    if (!what->left->Do(this))
+    {
+        Ooops("Malformed rewrite pattern $1", what->left);
+        return false;
+    }
+
+    // Need to run a complete type scan on the rewrite body
+    Context *childContext = new Context(context, context);
+    TypeInference childInference(childContext, id);
+    bool childSucceeded = childInference.TypeCheck(what->right);
+    id = childInference.id;
+
+    if (!childSucceeded)
+    {
+        Ooops("Type inference failed on definition of $1", what->left);
+        return false;
+    }
+    Tree *childType = childInference.Type(what->right);
+
+    // Create a new function type for the rewrite tree
+    Tree *defType = Type(what->left);
+    Infix *fntype = new Infix("=>", defType, childType, what->Position());
+    if (!AssignType(what, fntype))
+        return false;
+    
+    // We need to be able to unify pattern and definition types
+    if (!UnifyTypes(defType, childType))
         return false;
 
-    // We need to be able to unify left and right
-    if (!Unify(what->left, what->right))
-        return false;
+    // The type of the definition is a pattern type, perform unification
+    if (!what->left->IsConstant())
+    {
+        Tree *patternType = new Prefix(new Name("type"), what->left,
+                                       what->left->Position());
+        if (!UnifyTypes(defType, patternType))
+            return false;
+    }
 
-    // Create a new function type for the rewrite itself
-    Tree *lt = Type(what->left);
-    Tree *rt = Type(what->right);
-    Infix *fntype = new Infix("->", lt, rt, what->Position());
-
-    // And assign this type to the rewrite itself
-    return AssignType(what, fntype);
+    // Well done, success!
+    return true;
 }
 
 
@@ -226,6 +291,10 @@ bool TypeInference::Evaluate(Tree *what)
 //   Find candidates for the given expression and infer types from that
 // ----------------------------------------------------------------------------
 {
+    // We don't evaluate expressions while prototyping a pattern
+    if (prototyping)
+        return true;
+
     return true;
 }
 
@@ -242,14 +311,26 @@ bool TypeInference::Unify(Tree *expr1, Tree *expr2)
     if (t1 == t2)
         return true;
 
-    return UnifyType(t1, t2);
+    return UnifyTypes(t1, t2);
 }
 
 
-bool TypeInference::UnifyType(Tree *t1, Tree *t2)
+bool TypeInference::UnifyTypes(Tree *t1, Tree *t2)
 // ----------------------------------------------------------------------------
 //   Unify two type forms
 // ----------------------------------------------------------------------------
+//  A type form in XL can be:
+//   - A type name              integer
+//   - A generic type name      #ABC
+//   - A litteral value         0       1.5             "Hello"
+//   - A range of values        0..4    1.3..8.9        "A".."Z"
+//   - A union of types         0,3,5   integer|real
+//   - A block for precedence   (real)
+//   - A rewrite specifier      integer => real
+//   - The type of a pattern    type (X:integer, Y:integer)
+//
+// Unification happens almost as "usual" for Algorithm W, except for how
+// we deal with XL "shape-based" type constructors, e.g. type(P)
 {
     // Make sure we have the canonical form
     t1 = Base(t1);
@@ -257,83 +338,82 @@ bool TypeInference::UnifyType(Tree *t1, Tree *t2)
     if (t1 == t2)
         return true;            // Already unified
 
-    // Strip out blocks
+    // Strip out blocks in type specification
     if (Block *b1 = t1->AsBlock())
-        if (UnifyType(b1->child, t2))
+        if (UnifyTypes(b1->child, t2))
             return JoinTypes(b1, t2);
     if (Block *b2 = t2->AsBlock())
-        if (UnifyType(t1, b2->child))
+        if (UnifyTypes(t1, b2->child))
             return JoinTypes(t1, b2);
 
-    // Check if we have similar structured types on both sides
-    if (Infix *i1 = t1->AsInfix())
-        if (Infix *i2 = t2->AsInfix())
-            if (i1->name == i2->name)
-                if (UnifyType(i1->left, i2->left) &&
-                    UnifyType(i1->right, i2->right))
-                    return JoinTypes(i1, i2);
-    if (Prefix *p1 = t1->AsPrefix())
-        if (Prefix *p2 = t2->AsPrefix())
-            if (UnifyType(p1->left, p2->left) &&
-                UnifyType(p1->right, p2->right))
-                return JoinTypes(p1, p2);
-    if (Postfix *p1 = t1->AsPostfix())
-        if (Postfix *p2 = t2->AsPostfix())
-            if (UnifyType(p1->left, p2->left) &&
-                UnifyType(p1->right, p2->right))
-                return JoinTypes(p1, p2);
+    // Lookup type names, replace them with their value
+    t1 = LookupTypeName(t1);
+    t2 = LookupTypeName(t2);
+    if (t1 == t2)
+        return true;            // This may have been enough for unifiation
 
-    // Check that we can unify constants with associated built-in type
-    if (Integer *i1 = t1->AsInteger())
-    {
-        if (Integer *i2 = t2->AsInteger())
-            return i1->value == i2->value && JoinTypes(i1, i2);
-        if (t2 == integer_type)
-            return JoinTypes(t2, t1);
-    }
-    if (Integer *i2 = t2->AsInteger())
-        if (t1 == integer_type)
-            return JoinTypes(i2, t1);
-    if (Real *i1 = t1->AsReal())
-    {
-        if (Real *i2 = t2->AsReal())
-            return i1->value == i2->value && JoinTypes(i1, i2);
-        if (t2 == real_type)
-            return JoinTypes(t2, t1);
-    }
-    if (Real *i2 = t2->AsReal())
-        if (t1 == real_type)
-            return JoinTypes(i2, t1);
-    if (Text *i1 = t1->AsText())
-    {
-        if (Text *i2 = t2->AsText())
-            return i1->value == i2->value && JoinTypes(i1, i2);
-        if (t2 == text_type)
-            return JoinTypes(t2, t1);
-    }
-    if (Text *i2 = t2->AsText())
-        if (t1 == text_type)
-            return JoinTypes(i2, t1);
-
-    // If either is a generic name, unify with the other
+    // If either is a generic, unify with the other
     if (IsGeneric(t1))
-        return JoinTypes(t2, t1, true);
+        return JoinTypes(t1, t2);
     if (IsGeneric(t2))
-        return JoinTypes(t1, t2, true);
-    
-    // Try to unify with bound value if we find any
-    Tree *bound1 = context->Bound(t1);
-    if (bound1 && bound1 != t1)
+        return JoinTypes(t1, t2);
+
+    // If we have a type name at this stage, this is a failure
+    if (IsTypeName(t1))
     {
-        if (UnifyType(bound1, t2))
-            return JoinTypes(bound1, t2) && JoinTypes(t1, t2);
+        Ooops("Cannot unify named type $1", t1);
+        Ooops("with structured type $1", t2);
+        return false;
     }
-    Tree *bound2 = context->Bound(t2);
-    if (bound2 && bound2 != t2)
+    if (IsTypeName(t2))
     {
-        if (UnifyType(t1, bound2))
-            return JoinTypes(t1, bound2) && JoinTypes(t1, t2);
+        Ooops("Cannot unify named type $1", t2);
+        Ooops("with structured type $1", t1);
+        return false;
     }
+
+    // Check if t1 is one of the infix constructor types
+    if (Infix *i1 = t1->AsInfix())
+    {
+        // Function types: Unifies only with a function type
+        if (i1->name == "=>")
+        {
+            if (Infix *i2 = t2->AsInfix())
+                if (i2->name == "=>")
+                    return
+                        UnifyTypes(i1->left, i2->left) &&
+                        UnifyTypes(i1->right, i2->right);
+
+            Ooops("Cannot unify function type $1", i1);
+            Ooops("with non-function $1", t2);
+        }
+
+        // Union types: Unify with either side
+        if (i1->name == "|" || i1->name == ",")
+            return UnifyTypes(i1->left, t2) || UnifyTypes(i1->right, t2);
+
+        Ooops("Malformed type definition $1", i1);
+        return false;
+    }
+    if (Infix *i2 = t2->AsInfix())
+    {
+        // Union types: Unify with either side
+        if (i2->name == "|" || i2->name == ",")
+            return UnifyTypes(t1, i2->left) || UnifyTypes(t1, i2->right);
+
+        Ooops("Malformed type definition $1", i2);
+        return false;
+    }
+
+    // Check prefix constructor types
+    if (Prefix *p1 = t1->AsPrefix())
+        if (Name *pn1 = p1->left->AsName())
+            if (pn1->value == "type")
+                if (Prefix *p2 = t2->AsPrefix())
+                    if (Name *pn2 = p2->right->AsName())
+                        if (pn2->value == "type")
+                            if (UnifyPatterns(p1->right, p2->right))
+                                return JoinTypes(t1, t2);
 
     // None of the above: fail
     Ooops ("Unable to unify $1", t1);
@@ -365,28 +445,6 @@ Tree *TypeInference::Base(Tree *type)
 }
 
 
-bool TypeInference::IsGeneric(Tree *type)
-// ----------------------------------------------------------------------------
-//   Check if a given type is a generated generic type name
-// ----------------------------------------------------------------------------
-{
-    if (Name *name = type->AsName())
-        return name->value.size() && name->value[0] == '#';
-    return false;
-}
-
-
-bool TypeInference::IsTypeName(Tree *type)
-// ----------------------------------------------------------------------------
-//   Check if a given type is a 'true' type name, i.e. not generated
-// ----------------------------------------------------------------------------
-{
-    if (Name *name = type->AsName())
-        return name->value.size() && name->value[0] != '#';
-    return false;
-}
-
-
 bool TypeInference::JoinTypes(Tree *base, Tree *other, bool knownGood)
 // ----------------------------------------------------------------------------
 //   Use 'base' as the prototype for the other type
@@ -396,42 +454,98 @@ bool TypeInference::JoinTypes(Tree *base, Tree *other, bool knownGood)
     {
         // If we have a type name, prefer that to a more complex form
         // in order to keep error messages more readable
-        if (IsTypeName(other))
+        if (IsTypeName(other) && !IsTypeName(base))
             std::swap(other, base);
 
         // If what we want to use as a base is a generic and other isn't, swap
+        // (otherwise we could later unify through that variable)
         else if (IsGeneric(base))
             std::swap(other, base);
     }
 
-    // Make sure that built-in types always come out on top
-    if (other == boolean_type ||
-        other == integer_type ||
-        other == real_type ||
-        other == text_type ||
-        other == character_type ||
-        other == tree_type ||
-        other == source_type ||
-        other == code_type ||
-        other == lazy_type ||
-        other == XL::value_type ||
-        other == symbol_type ||
-        other == name_type ||
-        other == operator_type ||
-        other == infix_type ||
-        other == prefix_type ||
-        other == postfix_type ||
-        other == block_type)
-        std::swap(other, base);
-
-    if (Tree *already = other->Get<TypeClass>())
-    {
-        Ooops("Internal: Type $1 already unified to another type", other);
-        Ooops("   The previous type was $1", already);
-        return false;
-    }
+    // Connext the base type classes
+    base = Base(base);
+    other = Base(other);
     other->Set<TypeClass>(base);
     return true;
+}
+
+
+bool TypeInference::UnifyPatterns(Tree *t1, Tree *t2)
+// ----------------------------------------------------------------------------
+//   Check if two patterns describe the same tree shape
+// ----------------------------------------------------------------------------
+{
+    if (t1 == t2)
+        return true;
+
+    switch(t1->Kind())
+    {
+    case INTEGER:
+        if (Integer *x1 = t1->AsInteger())
+            if (Integer *x2 = t2->AsInteger())
+                return x1->value == x2->value;
+        return false;
+    case REAL:
+        if (Real *x1 = t1->AsReal())
+            if (Real *x2 = t2->AsReal())
+                return x1->value == x2->value;
+        return false;
+
+    case TEXT:
+        if (Text *x1 = t1->AsText())
+            if (Text *x2 = t2->AsText())
+                return x1->value == x2->value;
+        return false;
+
+    case NAME:
+        // We don't attempt to allow renames. Names must match, it's simpler.
+        if (Name *x1 = t1->AsName())
+            if (Name *x2 = t2->AsName())
+                return x1->value == x2->value;
+        return false;
+
+    case INFIX:
+        if (Infix *x1 = t1->AsInfix())
+            if (Infix *x2 = t2->AsInfix())
+                return
+                    x1->name == x2->name &&
+                    UnifyPatterns(x1->left, x2->left) &&
+                    UnifyPatterns(x1->right, x2->right);
+
+        return false;
+
+    case PREFIX:
+        if (Prefix *x1 = t1->AsPrefix())
+            if (Prefix *x2 = t2->AsPrefix())
+                return
+                    UnifyPatterns(x1->left, x2->left) &&
+                    UnifyPatterns(x1->right, x2->right);
+
+        return false;
+
+    case POSTFIX:
+        if (Postfix *x1 = t1->AsPostfix())
+            if (Postfix *x2 = t2->AsPostfix())
+                return
+                    UnifyPatterns(x1->left, x2->left) &&
+                    UnifyPatterns(x1->right, x2->right);
+
+        return false;
+
+    case BLOCK:
+        if (Block *x1 = t1->AsBlock())
+            if (Block *x2 = t2->AsBlock())
+                return
+                    x1->opening == x2->opening &&
+                    x1->closing == x2->closing &&
+                    UnifyPatterns(x1->child, x2->child);
+
+        return false;
+
+    }
+
+    return false;
 }
 
 
@@ -448,6 +562,48 @@ Name * TypeInference::NewTypeName(TreePosition pos)
         v /= 26;
     } while (v);
     return new Name("#" + name, pos);
+}
+
+
+Tree *TypeInference::LookupTypeName(Tree *type)
+// ----------------------------------------------------------------------------
+//   If we have a type name, lookup its definition
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = type->AsName())
+    {
+        // Don't lookup type variables (generic names such as #A)
+        if (IsGeneric(name->value))
+            return name;
+
+        // Check if we have a type definition. If so, use it
+        Tree *definition = context->Bound(name);
+        if (definition && definition != name)
+        {
+            JoinTypes(definition, name);
+            return Base(definition);
+        }
+    }
+
+    // Temporary hack: promote constant types to their base type
+    kind k = type->Kind();
+    switch(k)
+    {
+    case INTEGER:
+        JoinTypes(integer_type, type, true);
+        return integer_type;
+    case REAL:
+        JoinTypes(real_type, type, true);
+        return real_type;
+    case TEXT:
+        JoinTypes(text_type, type, true);
+        return text_type;
+    default:
+        break;
+    }
+
+    // Otherwise, simply return input type
+    return type;
 }
 
 
