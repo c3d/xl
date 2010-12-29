@@ -40,7 +40,7 @@ bool TypeInference::DoInteger(Integer *what)
 //   Annotate an integer tree with its value
 // ----------------------------------------------------------------------------
 {
-    return AssignType(what, what);
+    return DoConstant(what);
 }
 
 
@@ -49,7 +49,7 @@ bool TypeInference::DoReal(Real *what)
 //   Annotate a real tree with its value
 // ----------------------------------------------------------------------------
 {
-    return AssignType(what, what);
+    return DoConstant(what);
 }
 
 
@@ -58,7 +58,22 @@ bool TypeInference::DoText(Text *what)
 //   Annotate a text tree with its own value
 // ----------------------------------------------------------------------------
 {
-    return AssignType(what, what);
+    return DoConstant(what);
+}
+
+
+bool TypeInference::DoConstant(Tree *what)
+// ----------------------------------------------------------------------------
+//   All constants have themselves as type, and don't normally evaluate
+// ----------------------------------------------------------------------------
+{
+    bool result = AssignType(what, what);
+
+    // Only try to evaluate constants if the context has constant rewrites
+    if (result && context->hasConstants)
+        result = Evaluate(what);
+
+    return result;
 }
 
 
@@ -176,6 +191,14 @@ bool TypeInference::Rewrite(Infix *what)
     return AssignType(what, fntype);
 }
 
+
+bool TypeInference::Evaluate(Tree *what)
+// ----------------------------------------------------------------------------
+//   Find candidates for the given expression and infer types from that
+// ----------------------------------------------------------------------------
+{
+    return true;
+}
 
 
 bool TypeInference::Unify(Tree *expr1, Tree *expr2)

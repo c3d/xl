@@ -77,6 +77,9 @@ public:
     bool DoInfix(Infix *what);
     bool DoBlock(Block *what);
 
+    // Common code for all constants (integer, real, text)
+    bool DoConstant(Tree *what);
+
 public:
     // Annotate expressions with type variables
     bool        AssignType(Tree *expr, Tree *type = NULL);
