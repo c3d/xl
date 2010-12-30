@@ -3,18 +3,18 @@
 // ****************************************************************************
 //  compiler-arg.h                                                 XLR project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //    Check if a tree matches the form on the left of a rewrite
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
@@ -59,13 +59,13 @@ struct RewriteCandidate
 typedef std::vector<RewriteCandidate> RewriteCandidates;
 
 
-struct IdentifyCandidates
+struct RewriteCalls
 // ----------------------------------------------------------------------------
-//   Identify the candidates for a given form
+//   Identify the way to invoke rewrites for a particular form
 // ----------------------------------------------------------------------------
 {
-    IdentifyCandidates(TypeInference *ti): inference(ti), candidates() {}
-    
+    RewriteCalls(TypeInference *ti): inference(ti), candidates() {}
+
     enum BindingStrength { FAILED, POSSIBLE, PERFECT };
 
     Tree *operator() (Context *context, Tree *value, Rewrite *candidate);
@@ -75,7 +75,12 @@ struct IdentifyCandidates
 public:
     TypeInference *     inference;
     RewriteCandidates   candidates;
+
+    GARBAGE_COLLECT(RewriteCalls);
 };
+
+typedef GCPtr<RewriteCalls> RewriteCalls_p;
+typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
 
 
 struct ArgumentMatch

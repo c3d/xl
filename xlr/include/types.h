@@ -39,6 +39,7 @@
 
 #include "tree.h"
 #include "context.h"
+#include "compiler-arg.h"
 #include <map>
 
 XL_BEGIN
@@ -54,14 +55,9 @@ struct TypeInference
 //   Scan a tree, record required types and perform type analysis
 // ----------------------------------------------------------------------------
 {
-    TypeInference(Context *context, ulong id = 0)
-        : context(context),
-          types(), unifications(),
-          id(id), prototyping(false) {}
-    TypeInference(Context *context, TypeInference *parent)
-        : context(context),
-          types(parent->types), unifications(parent->unifications),
-          id(parent->id), prototyping(false) {}
+    TypeInference(Context *context, ulong id = 0);
+    TypeInference(Context *context, TypeInference *parent);
+    ~TypeInference();
     typedef bool value_type;
 
 public:
@@ -113,6 +109,7 @@ public:
     Context_p   context;        // Context in which we lookup things
     tree_map    types;          // Map an expression to its type
     tree_map    unifications;   // Map a type to its reference type
+    rcall_map   rcalls;         // Rewrites to call for a given tree
     ulong       id;             // Id of next type
     bool        prototyping;    // Prototyping a function declaration
 };

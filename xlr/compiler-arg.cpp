@@ -27,9 +27,9 @@
 
 XL_BEGIN
 
-Tree *IdentifyCandidates::operator() (Context *context,
-                                      Tree *what,
-                                      Rewrite *candidate)
+Tree *RewriteCalls::operator() (Context *context,
+                                Tree *what,
+                                Rewrite *candidate)
 // ----------------------------------------------------------------------------
 //   Check which candidates match, and what binding is required to match
 // ----------------------------------------------------------------------------
@@ -81,11 +81,10 @@ Tree *IdentifyCandidates::operator() (Context *context,
 }
 
 
-IdentifyCandidates::BindingStrength
-IdentifyCandidates::Bind(Context *context,
-                         Tree *form,
-                         Tree *value,
-                         RewriteCandidate &rc)
+RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
+                                                 Tree *form,
+                                                 Tree *value,
+                                                 RewriteCandidate &rc)
 // ----------------------------------------------------------------------------
 //   Attempts to bind 'value' to the pattern form given in 'form'
 // ----------------------------------------------------------------------------

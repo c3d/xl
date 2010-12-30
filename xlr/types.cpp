@@ -38,6 +38,36 @@ XL_BEGIN
 //
 // ============================================================================
 
+TypeInference::TypeInference(Context *context, ulong id)
+// ----------------------------------------------------------------------------
+//   Constructor for top-level type inferences
+// ----------------------------------------------------------------------------
+    : context(context),
+      types(), unifications(),
+      rcalls(),
+      id(id), prototyping(false)
+{}
+
+
+TypeInference::TypeInference(Context *context, TypeInference *parent)
+// ----------------------------------------------------------------------------
+//   Constructor for "child" type inferences, i.e. done within a parent
+// ----------------------------------------------------------------------------
+    : context(context),
+      types(parent->types),
+      unifications(parent->unifications),
+      rcalls(),
+      id(parent->id), prototyping(false)
+{}
+
+
+TypeInference::~TypeInference()
+// ----------------------------------------------------------------------------
+//    Destructor - Nothing to explicitly delete, but useful for debugging
+// ----------------------------------------------------------------------------
+{}
+
+
 bool TypeInference::TypeCheck(Tree *program)
 // ----------------------------------------------------------------------------
 //   Perform all the steps of type inference on the given program
@@ -327,12 +357,12 @@ bool TypeInference::Evaluate(Tree *what)
     }
 
     // Identify all candidate rewrites in the current context
-    IdentifyCandidates evaluator(this);
+    RewriteCalls_p rc = new RewriteCalls(this);
     ulong key = context->Hash(what);
-    context->Evaluate(what, evaluator, key, Context::NORMAL_LOOKUP);
+    context->Evaluate(what, *rc, key, Context::NORMAL_LOOKUP);
 
     // If we have no candidate, this is a failure
-    uint count = evaluator.candidates.size();
+    uint count = rc->candidates.size();
     if (count == 0)
     {
         Ooops("No form matches $1", what);
@@ -340,9 +370,12 @@ bool TypeInference::Evaluate(Tree *what)
     }
 
     // The resulting type is the union of all candidates
-    Tree *type = evaluator.candidates[0].type;
+    Tree *type = rc->candidates[0].type;
     for (uint i = 1; i < count; i++)
-        type = UnionType(context, type, evaluator.candidates[i].type);
+        type = UnionType(context, type, rc->candidates[i].type);
+
+    // Memorize the rewrite calls associated to this tree
+    rcalls[what] = rc;
 
     // Perform type unification
     return UnifyTypes(Type(what), type);
