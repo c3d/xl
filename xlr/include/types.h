@@ -59,6 +59,7 @@ struct TypeInference
     TypeInference(Context *context, TypeInference *parent);
     ~TypeInference();
     typedef bool value_type;
+    enum unify_mode { STANDARD, DECLARATION };
 
 public:
     // Main entry point
@@ -89,7 +90,7 @@ public:
 
     // Indicates that two trees must have compatible types
     bool        UnifyTypesOf(Tree *expr1, Tree *expr2);
-    bool        Unify(Tree *t1, Tree *t2);
+    bool        Unify(Tree *t1, Tree *t2, unify_mode mode = STANDARD);
     bool        Join(Tree *base, Tree *other, bool knownGood = false);
     bool        UnifyPatterns(Tree *t1, Tree *t2);
 
@@ -128,6 +129,7 @@ Tree *TypeIntersectsType(Context *, Tree *type, Tree *test, bool conversions);
 Tree *UnionType(Context *, Tree *t1, Tree *t2);
 Tree *CanonicalType(Context *, Tree *value);
 Tree *StructuredType(Context *, Tree *value);
+bool  IsTreeType(Tree *type);
 
 
 
@@ -147,6 +149,43 @@ struct TypeInfo : Info
     operator             data_t()  { return type; }
     Tree_p               type;
 };
+
+
+
+// ============================================================================
+//
+//   Declare the basic types
+//
+// ============================================================================
+
+#undef INFIX
+#undef PREFIX
+#undef POSTFIX
+#undef BLOCK
+#undef NAME
+#undef TYPE
+#undef PARM
+#undef DS
+#undef RS
+#undef RETURNS
+#undef GROUP
+#undef SYNOPSIS
+#undef DESCRIPTION
+#undef SEE
+
+#define SEE(see)
+#define RETURNS(type, rdoc)
+#define GROUP(grp)
+#define SYNOPSIS(syno)
+#define DESCRIPTION(desc)
+#define INFIX(name, rtype, t1, symbol, t2, code, docinfo)
+#define PARM(symbol, type, pdoc)
+#define PREFIX(name, rtype, symbol, parms, code, docinfo)
+#define POSTFIX(name, rtype, parms, symbol, code, docinfo)
+#define BLOCK(name, rtype, open, type, close, code, docinfo)
+#define NAME(symbol)
+#define TYPE(symbol)    extern Name_p symbol##_type;
+#include "basics.tbl"
 
 
 
@@ -187,41 +226,17 @@ inline bool TypeInference::IsTypeName(Tree *type)
 }
 
 
-
-// ============================================================================
-//
-//   Declare the basic types
-//
-// ============================================================================
-
-#undef INFIX
-#undef PREFIX
-#undef POSTFIX
-#undef BLOCK
-#undef NAME
-#undef TYPE
-#undef PARM
-#undef DS
-#undef RS
-#undef RETURNS
-#undef GROUP
-#undef SYNOPSIS
-#undef DESCRIPTION
-#undef SEE
-
-#define SEE(see)
-#define RETURNS(type, rdoc)
-#define GROUP(grp)
-#define SYNOPSIS(syno)
-#define DESCRIPTION(desc)
-#define INFIX(name, rtype, t1, symbol, t2, code, docinfo)
-#define PARM(symbol, type, pdoc)
-#define PREFIX(name, rtype, symbol, parms, code, docinfo)
-#define POSTFIX(name, rtype, parms, symbol, code, docinfo)
-#define BLOCK(name, rtype, open, type, close, code, docinfo)
-#define NAME(symbol)
-#define TYPE(symbol)    extern Name_p symbol##_type;
-#include "basics.tbl"
+inline bool IsTreeType(Tree *type)
+// ----------------------------------------------------------------------------
+//   Return true for any 'tree' type
+// ----------------------------------------------------------------------------
+{
+    return (type == tree_type       ||
+            type == source_type     ||
+            type == code_type       ||
+            type == lazy_type       ||
+            type == value_type);
+}
 
 XL_END
 

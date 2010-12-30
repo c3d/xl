@@ -161,7 +161,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
                 return FAILED;
 
             // Add type binding with the given type
-            if (!inference->Unify(type, fi->right))
+            if (!inference->Unify(type, fi->right, TypeInference::DECLARATION))
                 return FAILED;
 
             // Having been successful makes it a strong binding

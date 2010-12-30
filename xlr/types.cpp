@@ -422,7 +422,7 @@ bool TypeInference::UnifyTypesOf(Tree *expr1, Tree *expr2)
 }
 
 
-bool TypeInference::Unify(Tree *t1, Tree *t2)
+bool TypeInference::Unify(Tree *t1, Tree *t2, unify_mode mode)
 // ----------------------------------------------------------------------------
 //   Unify two type forms
 // ----------------------------------------------------------------------------
@@ -468,6 +468,10 @@ bool TypeInference::Unify(Tree *t1, Tree *t2)
     // If we have a type name at this stage, this is a failure
     if (IsTypeName(t1))
     {
+        // In declaration mode, we have success if t2 covers t1
+        if (mode == DECLARATION && IsTreeType(t2))
+            return true;
+
         Ooops("Cannot unify named type $1", t1);
         Ooops("with structured type $1", t2);
         return false;
@@ -763,7 +767,7 @@ Tree *ValueMatchesType(Context *ctx, Tree *type, Tree *value, bool convert)
         if (Name *nv = value->AsName())
             if (nv->value == "true" || nv->value == "false")
                 return nv;
-    if (type == tree_type)
+    if (IsTreeType(type))
         return value;
     if (type == symbol_type)
         if (Name *nv = value->AsName())
@@ -867,7 +871,7 @@ Tree *TypeCoversType(Context *ctx, Tree *type, Tree *test, bool convert)
     // Quick exit when types are the same or the tree type is used
     if (type == test)
         return test;
-    if (type == tree_type)
+    if (IsTreeType(type))
         return test;
     if (convert)
     {
@@ -968,7 +972,7 @@ Tree *TypeIntersectsType(Context *ctx, Tree *type, Tree *test, bool convert)
     // Quick exit when types are the same or the tree type is used
     if (type == test)
         return test;
-    if (type == tree_type || test == tree_type)
+    if (IsTreeType(type) || IsTreeType(test))
         return test;
     if (convert)
     {
@@ -1154,7 +1158,7 @@ Tree *StructuredType(Context *ctx, Tree *value)
     }
 
     // Memorize the type for next time
-    if (type && type != tree_type)
+    if (type && !IsTreeType(type))
     {
         IFTRACE(types)
             std::cerr << "Caching type " << type << " for " << value << '\n';
@@ -1228,7 +1232,7 @@ void debugr(XL::TypeInference *ti)
         RewriteCandidates &rc = calls->candidates;
         for (RewriteCandidates::iterator r = rc.begin(); r != rc.end(); r++)
         {
-            std::cout << "\t#" << j
+            std::cout << "\t#" << ++j
                       << "\t" << (*r).rewrite->from
                       << "\t: " << (*r).type << "\n";
 
