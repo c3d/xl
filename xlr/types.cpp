@@ -38,14 +38,17 @@ XL_BEGIN
 //
 // ============================================================================
 
-TypeInference::TypeInference(Context *context, ulong id)
+ulong TypeInference::id = 0;
+
+TypeInference::TypeInference(Context *context)
 // ----------------------------------------------------------------------------
 //   Constructor for top-level type inferences
 // ----------------------------------------------------------------------------
     : context(context),
-      types(), unifications(),
+      types(),
+      unifications(),
       rcalls(),
-      id(id), prototyping(false)
+      prototyping(false)
 {}
 
 
@@ -57,7 +60,7 @@ TypeInference::TypeInference(Context *context, TypeInference *parent)
       types(parent->types),
       unifications(parent->unifications),
       rcalls(),
-      id(parent->id), prototyping(false)
+      prototyping(false)
 {}
 
 
@@ -77,7 +80,18 @@ bool TypeInference::TypeCheck(Tree *program)
     context->ProcessDeclarations(program);
 
     // Once this is done, record all type information for the program
-    return program->Do(this);
+    bool result = program->Do(this);
+
+    // Dump debug information if approriate
+    IFTRACE(types)
+    {
+        std::cout << "TYPE CHECK FOR " << program << "\n";
+        std::cout << "TYPES:\n"; debugt(this);
+        std::cout << "UNIFICATIONS:\n"; debugu(this);
+        std::cout << "CALLS:\n"; debugr(this);
+    }
+
+    return result;
 }
 
 
@@ -271,7 +285,7 @@ bool TypeInference::AssignType(Tree *expr, Tree *type)
     if (Tree *existing = types[expr])
     {
         // If no type given, that's it
-        if (!type)
+        if (!type || existing == type)
             return true;
 
         // We have two types specified for that entity, need to unify
@@ -352,7 +366,11 @@ bool TypeInference::Evaluate(Tree *what)
         {
             if (existing == name)
                 return true;    // Example: 'true' or 'integer'
-            return Evaluate(existing);
+            if (!Evaluate(existing))
+                return false;
+            Tree *etype = Type(existing);
+            Tree *ntype = Type(name);
+            return UnifyTypes(ntype, etype);
         }
     }
 
@@ -378,7 +396,8 @@ bool TypeInference::Evaluate(Tree *what)
     rcalls[what] = rc;
 
     // Perform type unification
-    return UnifyTypes(Type(what), type);
+    Tree *wtype = Type(what);
+    return UnifyTypes(wtype, type);
 }
 
 
@@ -1180,5 +1199,38 @@ void debugu(XL::TypeInference *ti)
         Tree *type = (*t).second;
         std::cout << "#" << ++i << "\t" << value << "\t= "
                   << type << "\t= " << ti->Base(type) << "\n";
+    }
+}
+
+
+
+void debugr(XL::TypeInference *ti)
+// ----------------------------------------------------------------------------
+//   Dump rewrite calls associated with each tree in this type inference system
+// ----------------------------------------------------------------------------
+{
+    using namespace XL;
+    uint i = 0;
+
+    rcall_map &map = ti->rcalls;
+    for (rcall_map::iterator t = map.begin(); t != map.end(); t++)
+    {
+        Tree *expr = (*t).first;
+        std::cout << "#" << ++i << "\t" << expr << "\n";
+
+        uint j = 0;
+        RewriteCalls *calls = (*t).second;
+        RewriteCandidates &rc = calls->candidates;
+        for (RewriteCandidates::iterator r = rc.begin(); r != rc.end(); r++)
+        {
+            std::cout << "\t#" << j
+                      << "\t" << (*r).rewrite->from
+                      << "\t: " << (*r).type << "\n";
+
+            RewriteBindings &rb = (*r).bindings;
+            for (RewriteBindings::iterator b = rb.begin(); b != rb.end(); b++)
+                std::cout << "\t\t" << (*b).name
+                          << "\t= " << (*b).value << "\n";
+        }
     }
 }

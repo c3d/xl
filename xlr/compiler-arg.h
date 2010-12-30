@@ -78,7 +78,6 @@ public:
 
     GARBAGE_COLLECT(RewriteCalls);
 };
-
 typedef GCPtr<RewriteCalls> RewriteCalls_p;
 typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
 

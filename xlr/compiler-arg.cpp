@@ -56,7 +56,6 @@ Tree *RewriteCalls::operator() (Context *context,
         else
         {
             bool childSucceeded = childInference.TypeCheck(candidate->to);
-            saveInference.saved->id = childInference.id;
             if (!childSucceeded)
                 binding = FAILED;
         }

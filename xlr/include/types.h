@@ -55,7 +55,7 @@ struct TypeInference
 //   Scan a tree, record required types and perform type analysis
 // ----------------------------------------------------------------------------
 {
-    TypeInference(Context *context, ulong id = 0);
+    TypeInference(Context *context);
     TypeInference(Context *context, TypeInference *parent);
     ~TypeInference();
     typedef bool value_type;
@@ -85,7 +85,7 @@ public:
     bool        Rewrite(Infix *rewrite);
 
     // Attempt to evaluate an expression and perform reqiored unifications
-    bool        Evaluate(Tree *tree);    
+    bool        Evaluate(Tree *tree);
 
     // Indicates that two trees must have compatible types
     bool        Unify(Tree *expr1, Tree *expr2);
@@ -110,8 +110,8 @@ public:
     tree_map    types;          // Map an expression to its type
     tree_map    unifications;   // Map a type to its reference type
     rcall_map   rcalls;         // Rewrites to call for a given tree
-    ulong       id;             // Id of next type
     bool        prototyping;    // Prototyping a function declaration
+    static ulong id;            // Id of next type
 };
 
 
@@ -151,9 +151,9 @@ struct TypeInfo : Info
 
 
 // ============================================================================
-// 
+//
 //   Inline functions
-// 
+//
 // ============================================================================
 
 inline bool TypeInference::IsGeneric(text name)
@@ -227,5 +227,6 @@ XL_END
 
 extern "C" void debugt(XL::TypeInference *ti);
 extern "C" void debugu(XL::TypeInference *ti);
+extern "C" void debugr(XL::TypeInference *ti);
 
 #endif // TYPES_H
