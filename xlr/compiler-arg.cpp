@@ -98,7 +98,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         Integer *f = (Integer *) form;
         if (Integer *iv = value->AsInteger())
             return iv->value == f->value ? PERFECT : FAILED;
-        if (inference->UnifyTypes(type, integer_type))
+        if (inference->Unify(type, integer_type))
             return POSSIBLE;
         return FAILED;
     }
@@ -107,7 +107,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         Real *f = (Real *) form;
         if (Real *iv = value->AsReal())
             return iv->value == f->value ? PERFECT : FAILED;
-        if (inference->UnifyTypes(type, real_type))
+        if (inference->Unify(type, real_type))
             return POSSIBLE;
         return FAILED;
     }
@@ -116,7 +116,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         Text *f = (Text *) form;
         if (Text *iv = value->AsText())
             return iv->value == f->value ? PERFECT : FAILED;
-        if (inference->UnifyTypes(type, text_type))
+        if (inference->Unify(type, text_type))
             return POSSIBLE;
         return FAILED;
     }
@@ -134,13 +134,13 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         if (Tree *bound = context->Bound(f, Context::SCOPE_LOOKUP))
         {
             Tree *boundType = inference->Type(bound);
-            if (!inference->UnifyTypes(boundType, type))
+            if (!inference->Unify(boundType, type))
                 return FAILED;
         }
 
         // Check if we can unify the value and name types
         Tree *nameType = inference->Type(f);
-        if (!inference->UnifyTypes(type, nameType))
+        if (!inference->Unify(type, nameType))
             return FAILED;
 
         // Enter the name in the context and in the bindings
@@ -161,7 +161,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
                 return FAILED;
 
             // Add type binding with the given type
-            if (!inference->UnifyTypes(type, fi->right))
+            if (!inference->Unify(type, fi->right))
                 return FAILED;
 
             // Having been successful makes it a strong binding
@@ -180,7 +180,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
 
             // Check that the type of the guard is a boolean
             Tree *guardType = inference->Type(fi->right);
-            if (!inference->UnifyTypes(guardType, boolean_type))
+            if (!inference->Unify(guardType, boolean_type))
                 return FAILED;
 
             // The guard makes the binding weak
@@ -205,7 +205,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         }
 
         // We may have an expression that evaluates as an infix
-        if (!inference->UnifyTypes(type, infix_type))
+        if (!inference->Unify(type, infix_type))
             return FAILED;
 
         // If we had to evaluate, we need a runtime pattern match (weak binding)

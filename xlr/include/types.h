@@ -88,9 +88,9 @@ public:
     bool        Evaluate(Tree *tree);
 
     // Indicates that two trees must have compatible types
-    bool        Unify(Tree *expr1, Tree *expr2);
-    bool        UnifyTypes(Tree *t1, Tree *t2);
-    bool        JoinTypes(Tree *base, Tree *other, bool knownGood = false);
+    bool        UnifyTypesOf(Tree *expr1, Tree *expr2);
+    bool        Unify(Tree *t1, Tree *t2);
+    bool        Join(Tree *base, Tree *other, bool knownGood = false);
     bool        UnifyPatterns(Tree *t1, Tree *t2);
 
     // Return the base type associated with a given tree

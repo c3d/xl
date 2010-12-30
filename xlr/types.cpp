@@ -83,13 +83,14 @@ bool TypeInference::TypeCheck(Tree *program)
     bool result = program->Do(this);
 
     // Dump debug information if approriate
-    IFTRACE(types)
+    IFTRACE(typecheck)
     {
         std::cout << "TYPE CHECK FOR " << program << "\n";
         std::cout << "TYPES:\n"; debugt(this);
         std::cout << "UNIFICATIONS:\n"; debugu(this);
-        std::cout << "CALLS:\n"; debugr(this);
     }
+    IFTRACE(types)
+        std::cout << "CALLS FOR " << program << ":\n"; debugr(this);
 
     return result;
 }
@@ -228,7 +229,7 @@ bool TypeInference::DoInfix(Infix *what)
         return (AssignType(what->left, what->right) &&
                 what->left->Do(this) &&
                 AssignType(what) &&
-                Unify(what, what->left));
+                UnifyTypesOf(what, what->left));
 
     // Case of 'X -> Y': Analyze type of X and Y, unify them, set type of result
     if (what->name == "->")
@@ -246,7 +247,7 @@ bool TypeInference::DoInfix(Infix *what)
             return false;
         if (!what->right->Do(this))
             return false;
-        return Unify(what, what->right);
+        return UnifyTypesOf(what, what->right);
     }
 
     // For other infix expressions, evaluate terms, which may individually fail
@@ -269,7 +270,7 @@ bool TypeInference::DoBlock(Block *what)
 
     // If child succeeds, the block and its child have the same type
     if (what->child->Do(this))
-        return Unify(what, what->child);
+        return UnifyTypesOf(what, what->child);
 
     // Otherwise, try to find a matching form
     return Evaluate(what);
@@ -289,7 +290,7 @@ bool TypeInference::AssignType(Tree *expr, Tree *type)
             return true;
 
         // We have two types specified for that entity, need to unify
-        return UnifyTypes(existing, type);
+        return Unify(existing, type);
     }
 
     // Generate a unique type name if nothing is given
@@ -329,7 +330,7 @@ bool TypeInference::Rewrite(Infix *what)
         return false;
 
     // We need to be able to unify pattern and definition types
-    if (!UnifyTypes(formType, valueType))
+    if (!Unify(formType, valueType))
         return false;
 
     // The type of the definition is a pattern type, perform unification
@@ -337,7 +338,7 @@ bool TypeInference::Rewrite(Infix *what)
     {
         Tree *patternType = new Prefix(new Name("type"), what->left,
                                        what->left->Position());
-        if (!UnifyTypes(formType, patternType))
+        if (!Unify(formType, patternType))
             return false;
     }
 
@@ -370,7 +371,7 @@ bool TypeInference::Evaluate(Tree *what)
                 return false;
             Tree *etype = Type(existing);
             Tree *ntype = Type(name);
-            return UnifyTypes(ntype, etype);
+            return Unify(ntype, etype);
         }
     }
 
@@ -397,11 +398,11 @@ bool TypeInference::Evaluate(Tree *what)
 
     // Perform type unification
     Tree *wtype = Type(what);
-    return UnifyTypes(wtype, type);
+    return Unify(wtype, type);
 }
 
 
-bool TypeInference::Unify(Tree *expr1, Tree *expr2)
+bool TypeInference::UnifyTypesOf(Tree *expr1, Tree *expr2)
 // ----------------------------------------------------------------------------
 //   Indicates that the two trees must have identical types
 // ----------------------------------------------------------------------------
@@ -413,11 +414,11 @@ bool TypeInference::Unify(Tree *expr1, Tree *expr2)
     if (t1 == t2)
         return true;
 
-    return UnifyTypes(t1, t2);
+    return Unify(t1, t2);
 }
 
 
-bool TypeInference::UnifyTypes(Tree *t1, Tree *t2)
+bool TypeInference::Unify(Tree *t1, Tree *t2)
 // ----------------------------------------------------------------------------
 //   Unify two type forms
 // ----------------------------------------------------------------------------
@@ -442,11 +443,11 @@ bool TypeInference::UnifyTypes(Tree *t1, Tree *t2)
 
     // Strip out blocks in type specification
     if (Block *b1 = t1->AsBlock())
-        if (UnifyTypes(b1->child, t2))
-            return JoinTypes(b1, t2);
+        if (Unify(b1->child, t2))
+            return Join(b1, t2);
     if (Block *b2 = t2->AsBlock())
-        if (UnifyTypes(t1, b2->child))
-            return JoinTypes(t1, b2);
+        if (Unify(t1, b2->child))
+            return Join(t1, b2);
 
     // Lookup type names, replace them with their value
     t1 = LookupTypeName(t1);
@@ -456,9 +457,9 @@ bool TypeInference::UnifyTypes(Tree *t1, Tree *t2)
 
     // If either is a generic, unify with the other
     if (IsGeneric(t1))
-        return JoinTypes(t1, t2);
+        return Join(t1, t2);
     if (IsGeneric(t2))
-        return JoinTypes(t1, t2);
+        return Join(t1, t2);
 
     // If we have a type name at this stage, this is a failure
     if (IsTypeName(t1))
@@ -483,8 +484,8 @@ bool TypeInference::UnifyTypes(Tree *t1, Tree *t2)
             if (Infix *i2 = t2->AsInfix())
                 if (i2->name == "=>")
                     return
-                        UnifyTypes(i1->left, i2->left) &&
-                        UnifyTypes(i1->right, i2->right);
+                        Unify(i1->left, i2->left) &&
+                        Unify(i1->right, i2->right);
 
             Ooops("Cannot unify function type $1", i1);
             Ooops("with non-function $1", t2);
@@ -492,7 +493,7 @@ bool TypeInference::UnifyTypes(Tree *t1, Tree *t2)
 
         // Union types: Unify with either side
         if (i1->name == "|" || i1->name == ",")
-            return UnifyTypes(i1->left, t2) || UnifyTypes(i1->right, t2);
+            return Unify(i1->left, t2) || Unify(i1->right, t2);
 
         Ooops("Malformed type definition $1", i1);
         return false;
@@ -501,7 +502,7 @@ bool TypeInference::UnifyTypes(Tree *t1, Tree *t2)
     {
         // Union types: Unify with either side
         if (i2->name == "|" || i2->name == ",")
-            return UnifyTypes(t1, i2->left) || UnifyTypes(t1, i2->right);
+            return Unify(t1, i2->left) || Unify(t1, i2->right);
 
         Ooops("Malformed type definition $1", i2);
         return false;
@@ -515,7 +516,7 @@ bool TypeInference::UnifyTypes(Tree *t1, Tree *t2)
                     if (Name *pn2 = p2->right->AsName())
                         if (pn2->value == "type")
                             if (UnifyPatterns(p1->right, p2->right))
-                                return JoinTypes(t1, t2);
+                                return Join(t1, t2);
 
     // None of the above: fail
     Ooops ("Unable to unify $1", t1);
@@ -552,7 +553,7 @@ Tree *TypeInference::Base(Tree *type)
 }
 
 
-bool TypeInference::JoinTypes(Tree *base, Tree *other, bool knownGood)
+bool TypeInference::Join(Tree *base, Tree *other, bool knownGood)
 // ----------------------------------------------------------------------------
 //   Use 'base' as the prototype for the other type
 // ----------------------------------------------------------------------------
@@ -688,7 +689,7 @@ Tree *TypeInference::LookupTypeName(Tree *type)
         Tree *definition = context->Bound(name);
         if (definition && definition != name)
         {
-            JoinTypes(definition, name);
+            Join(definition, name);
             return Base(definition);
         }
     }
@@ -698,13 +699,13 @@ Tree *TypeInference::LookupTypeName(Tree *type)
     switch(k)
     {
     case INTEGER:
-        JoinTypes(integer_type, type, true);
+        Join(integer_type, type, true);
         return integer_type;
     case REAL:
-        JoinTypes(real_type, type, true);
+        Join(real_type, type, true);
         return real_type;
     case TEXT:
-        JoinTypes(text_type, type, true);
+        Join(text_type, type, true);
         return text_type;
     default:
         break;
