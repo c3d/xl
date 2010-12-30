@@ -59,7 +59,7 @@ TypeInference::TypeInference(Context *context, TypeInference *parent)
     : context(context),
       types(parent->types),
       unifications(parent->unifications),
-      rcalls(),
+      rcalls(parent->rcalls),
       prototyping(false)
 {}
 
@@ -172,7 +172,7 @@ bool TypeInference::DoPrefix(Prefix *what)
 {
     if (!AssignType(what))
         return false;
-    
+
     // Compute sub-expression, which may fail if Evaluate() fails, it's OK
     if (Name *name = what->left->AsName())
     {
@@ -186,7 +186,7 @@ bool TypeInference::DoPrefix(Prefix *what)
     }
 
     what->right->Do(this);
-    
+
     // What really matters is if we can evaluate the top-level expression
     return Evaluate(what);
 }
@@ -199,7 +199,7 @@ bool TypeInference::DoPostfix(Postfix *what)
 {
     if (!AssignType(what))
         return false;
-    
+
     // Compute sub-expression, which may fail if Evaluate() fails, it's OK
     if (Name *name = what->right->AsName())
     {
@@ -213,7 +213,7 @@ bool TypeInference::DoPostfix(Postfix *what)
     }
 
     what->left->Do(this);
-   
+
     // What really matters is if we can evaluate the top-level expression
     return Evaluate(what);
 }
@@ -234,7 +234,7 @@ bool TypeInference::DoInfix(Infix *what)
     // Case of 'X -> Y': Analyze type of X and Y, unify them, set type of result
     if (what->name == "->")
         return Rewrite(what);
- 
+
     // For other cases, we assign types to left and right
     if (!AssignType(what))
         return false;
@@ -375,8 +375,15 @@ bool TypeInference::Evaluate(Tree *what)
         }
     }
 
+    // Test if we are already trying to evaluate this particular form
+    rcall_map::iterator found = rcalls.find(what);
+    if (found != rcalls.end())
+        // Recursive evaluation - Assume successful for now
+        return true;
+
     // Identify all candidate rewrites in the current context
     RewriteCalls_p rc = new RewriteCalls(this);
+    rcalls[what] = rc;
     ulong key = context->Hash(what);
     context->Evaluate(what, *rc, key, Context::NORMAL_LOOKUP);
 
@@ -392,9 +399,6 @@ bool TypeInference::Evaluate(Tree *what)
     Tree *type = rc->candidates[0].type;
     for (uint i = 1; i < count; i++)
         type = UnionType(context, type, rc->candidates[i].type);
-
-    // Memorize the rewrite calls associated to this tree
-    rcalls[what] = rc;
 
     // Perform type unification
     Tree *wtype = Type(what);
@@ -548,7 +552,7 @@ Tree *TypeInference::Base(Tree *type)
         chain = u;
         u = type;
     }
-    
+
     return type;
 }
 
