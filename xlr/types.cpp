@@ -90,7 +90,9 @@ bool TypeInference::TypeCheck(Tree *program)
         std::cout << "UNIFICATIONS:\n"; debugu(this);
     }
     IFTRACE(types)
+    {
         std::cout << "CALLS FOR " << program << ":\n"; debugr(this);
+    }
 
     return result;
 }
@@ -402,7 +404,7 @@ bool TypeInference::Evaluate(Tree *what)
 
     // Perform type unification
     Tree *wtype = Type(what);
-    return Unify(wtype, type);
+    return Unify(wtype, type, DECLARATION);
 }
 
 
