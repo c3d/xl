@@ -148,6 +148,7 @@ public:
     virtual void        Finalize(void *object);
     void                RegisterPointers();
     static void         MarkObject(void *object);
+    static bool         IsAllocated(void *ptr);
 };
 
 
@@ -487,6 +488,26 @@ void Allocator<Object>::MarkObject(void *object)
 {
     if (object)
         ((Object *) object)->Mark(*Singleton());
+}
+
+
+template <class Object> inline
+bool Allocator<Object>::IsAllocated(void *ptr)
+// ----------------------------------------------------------------------------
+//   Tell if a pointer is allocated in this particular pool
+// ----------------------------------------------------------------------------
+{
+    if (IsGarbageCollected(ptr))
+    {
+        if ((uintptr_t) ptr & CHUNKALIGN_MASK)
+            return false;
+
+        Chunk *chunk = (Chunk *) ptr - 1;
+        TypeAllocator *alloc = AllocatorPointer(chunk->allocator);
+        if (alloc == Singleton())
+            return true;
+    }
+    return false;
 }
 
 XL_END

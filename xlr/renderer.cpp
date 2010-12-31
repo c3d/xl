@@ -786,9 +786,24 @@ void debug(XL::Tree *tree)
 //    Emit for debugging purpose
 // ----------------------------------------------------------------------------
 {
-    XL::Renderer render(std::cout);
-    render.RenderFile(tree);
-    std::cout << "\n";
+    if (XL::Allocator<XL::Integer>::IsAllocated(tree)   ||
+        XL::Allocator<XL::Real>::IsAllocated(tree)      ||
+        XL::Allocator<XL::Text>::IsAllocated(tree)      ||
+        XL::Allocator<XL::Name>::IsAllocated(tree)      ||
+        XL::Allocator<XL::Infix>::IsAllocated(tree)     ||
+        XL::Allocator<XL::Prefix>::IsAllocated(tree)    ||
+        XL::Allocator<XL::Postfix>::IsAllocated(tree)   ||
+        XL::Allocator<XL::Block>::IsAllocated(tree))
+    {
+        XL::Renderer render(std::cout);
+        render.RenderFile(tree);
+        std::cout << "\n";
+    }
+    else
+    {
+        std::cout << "Cowardly refusing to render unknown pointer "
+                  << (void *) tree << "\n";
+    }
 }
 
 
@@ -799,12 +814,27 @@ void debugp(XL::Tree *tree)
 //    Emit for debugging purpose
 // ----------------------------------------------------------------------------
 {
-    XL::Renderer render(std::cout);
-    render.SelectStyleSheet("debug.stylesheet");
-    render.RenderFile(tree);
-
-    XL::TreeHashAction<> h_action(XL::TreeHashAction<>::Force);
-    tree->Do(h_action);
-    if (tree->Exists< XL::HashInfo<> >())
-        std::cout << "HASH: " << tree->Get< XL::HashInfo<> >() << '\n';
+    if (XL::Allocator<XL::Integer>::IsAllocated(tree)   ||
+        XL::Allocator<XL::Real>::IsAllocated(tree)      ||
+        XL::Allocator<XL::Text>::IsAllocated(tree)      ||
+        XL::Allocator<XL::Name>::IsAllocated(tree)      ||
+        XL::Allocator<XL::Infix>::IsAllocated(tree)     ||
+        XL::Allocator<XL::Prefix>::IsAllocated(tree)    ||
+        XL::Allocator<XL::Postfix>::IsAllocated(tree)   ||
+        XL::Allocator<XL::Block>::IsAllocated(tree))
+    {
+        XL::Renderer render(std::cout);
+        render.SelectStyleSheet("debug.stylesheet");
+        render.RenderFile(tree);
+        
+        XL::TreeHashAction<> h_action(XL::TreeHashAction<>::Force);
+        tree->Do(h_action);
+        if (tree->Exists< XL::HashInfo<> >())
+            std::cout << "HASH: " << tree->Get< XL::HashInfo<> >() << '\n';
+    }
+    else
+    {
+        std::cout << "Cowardly refusing to render unknown pointer "
+                  << (void *) tree << "\n";
+    }
 }

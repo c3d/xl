@@ -113,6 +113,8 @@ public:
     rcall_map   rcalls;         // Rewrites to call for a given tree
     bool        prototyping;    // Prototyping a function declaration
     static ulong id;            // Id of next type
+
+    GARBAGE_COLLECT(TypeInference);
 };
 
 

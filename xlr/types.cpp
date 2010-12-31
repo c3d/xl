@@ -1178,6 +1178,13 @@ void debugt(XL::TypeInference *ti)
 //   Dump a type inference
 // ----------------------------------------------------------------------------
 {
+    if (!XL::Allocator<XL::TypeInference>::IsAllocated(ti))
+    {
+        std::cout << "Cowardly refusing to show bad TypeInference pointer "
+                  << (void *) ti << "\n";
+        return;
+    }
+
     using namespace XL;
     uint i = 0;
 
@@ -1200,6 +1207,13 @@ void debugu(XL::TypeInference *ti)
 //   Dump type unifications in a given inference system
 // ----------------------------------------------------------------------------
 {
+    if (!XL::Allocator<XL::TypeInference>::IsAllocated(ti))
+    {
+        std::cout << "Cowardly refusing to show bad TypeInference pointer "
+                  << (void *) ti << "\n";
+        return;
+    }
+
     using namespace XL;
     uint i = 0;
 
@@ -1220,6 +1234,13 @@ void debugr(XL::TypeInference *ti)
 //   Dump rewrite calls associated with each tree in this type inference system
 // ----------------------------------------------------------------------------
 {
+    if (!XL::Allocator<XL::TypeInference>::IsAllocated(ti))
+    {
+        std::cout << "Cowardly refusing to show bad TypeInference pointer "
+                  << (void *) ti << "\n";
+        return;
+    }
+
     using namespace XL;
     uint i = 0;
 

@@ -1998,7 +1998,7 @@ extern "C" void debugrw(XL::Rewrite *r)
 //   For the debugger, dump a rewrite
 // ----------------------------------------------------------------------------
 {
-    if (r)
+    if (XL::Allocator<XL::Rewrite>::IsAllocated(r))
     {
         if (!r->to)
             std::cerr << "data " << r->from << "\n";
@@ -2010,6 +2010,11 @@ extern "C" void debugrw(XL::Rewrite *r)
         for (i = r->hash.begin(); i != r->hash.end(); i++)
             debugrw((*i).second);
     }
+    else
+    {
+        std::cout << "Cowardly refusing to show unknown Rewrite pointer"
+                  << (void *) r << "\n";
+    }
 }
 
 
@@ -2018,6 +2023,12 @@ extern "C" void debugsn(XL::Context *c)
 //   Show the file name associated with the context
 // ----------------------------------------------------------------------------
 {
+    if (!XL::Allocator<XL::Context>::IsAllocated(c))
+    {
+        std::cout << "Cowardly refusing to show bad context pointer "
+                  << (void *) c << "\n";
+        return;
+    }
     XL::source_files &files = XL::MAIN->files;
     for (XL::source_files::iterator i = files.begin(); i != files.end(); i++)
         if (c == (*i).second.context)
@@ -2032,6 +2043,13 @@ extern "C" void debugs(XL::Context *c)
 //   For the debugger, dump a symbol table
 // ----------------------------------------------------------------------------
 {
+    if (!XL::Allocator<XL::Context>::IsAllocated(c))
+    {
+        std::cout << "Cowardly refusing to show bad context pointer "
+                  << (void *) c << "\n";
+        return;
+    }
+
     using namespace XL;
     std::cerr << "REWRITES IN CONTEXT " << c << "\n";
     debugsn(c);
@@ -2051,6 +2069,13 @@ extern "C" void debugsc(XL::Context *c)
 //   For the debugger, dump a symbol table along the scope
 // ----------------------------------------------------------------------------
 {
+    if (!XL::Allocator<XL::Context>::IsAllocated(c))
+    {
+        std::cout << "Cowardly refusing to show bad context pointer "
+                  << (void *) c << "\n";
+        return;
+    }
+
     using namespace XL;
     while (c && c != XL::MAIN->context)
     {
@@ -2069,6 +2094,13 @@ extern "C" void debugst(XL::Context *c)
 //   For the debugger, dump a symbol table along the stack
 // ----------------------------------------------------------------------------
 {
+    if (!XL::Allocator<XL::Context>::IsAllocated(c))
+    {
+        std::cout << "Cowardly refusing to show bad context pointer "
+                  << (void *) c << "\n";
+        return;
+    }
+
     using namespace XL;
     while (c && c != XL::MAIN->context)
     {
