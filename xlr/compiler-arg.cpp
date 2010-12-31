@@ -39,10 +39,10 @@ Tree *RewriteCalls::operator() (Context *context,
 
     // Create local type inference deriving from ours
     Context *childContext = new Context(inference->context, inference->context);
-    TypeInference childInference(childContext, inference);
+    TypeInference_p childInference = new TypeInference(childContext, inference);
 
     // Attempt binding / unification of parameters to arguments
-    XL::Save<TypeInference *> saveInference(inference, &childInference);
+    XL::Save<TypeInference_p> saveInference(inference, childInference);
     BindingStrength binding = Bind(childContext, candidate->from, what, rc);
 
     // If argument/parameters binding worked, try to typecheck the definition
@@ -50,12 +50,12 @@ Tree *RewriteCalls::operator() (Context *context,
     {
         if (candidate->native)
         {
-            if (!childInference.AssignType(candidate->to, candidate->type))
+            if (!childInference->AssignType(candidate->to, candidate->type))
                 binding = FAILED;
         }
         else
         {
-            bool childSucceeded = childInference.TypeCheck(candidate->to);
+            bool childSucceeded = childInference->TypeCheck(candidate->to);
             if (!childSucceeded)
                 binding = FAILED;
         }
@@ -69,7 +69,7 @@ Tree *RewriteCalls::operator() (Context *context,
     if (binding != FAILED)
     {
         // Record the type for that specific expression
-        rc.type = childInference.Type(candidate->to);
+        rc.type = childInference->Type(candidate->to);
         candidates.push_back(rc);
     }
 

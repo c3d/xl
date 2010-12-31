@@ -206,8 +206,8 @@ bool CompiledUnit::TypeCheck(Tree *program)
 //   Verify that the given program/expression is valid in current context
 // ----------------------------------------------------------------------------
 {
-    TypeInference inferTypes(context);
-    return inferTypes.TypeCheck(program);
+    TypeInference_p inferTypes = new TypeInference(context);
+    return inferTypes->TypeCheck(program);
 }
 
 
