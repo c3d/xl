@@ -116,6 +116,7 @@ public:
 
     GARBAGE_COLLECT(TypeInference);
 };
+typedef GCPtr<TypeInference> TypeInference_p;
 
 
 

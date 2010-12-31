@@ -42,7 +42,7 @@ Tree *RewriteCalls::operator() (Context *context,
     TypeInference_p childInference = new TypeInference(childContext, inference);
 
     // Attempt binding / unification of parameters to arguments
-    XL::Save<TypeInference_p> saveInference(inference, childInference);
+    XL::Save<TypeInference *> saveInference(inference, childInference);
     BindingStrength binding = Bind(childContext, candidate->from, what, rc);
 
     // If argument/parameters binding worked, try to typecheck the definition

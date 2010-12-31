@@ -28,7 +28,6 @@
 XL_BEGIN
 
 struct TypeInference;
-typedef GCPtr<TypeInference> TypeInference_p;
 
 
 struct RewriteBinding
@@ -74,7 +73,7 @@ struct RewriteCalls
                              Tree *ref, Tree *what, RewriteCandidate &rc);
 
 public:
-    TypeInference_p     inference;
+    TypeInference *     inference;
     RewriteCandidates   candidates;
 
     GARBAGE_COLLECT(RewriteCalls);
