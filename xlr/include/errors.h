@@ -82,6 +82,7 @@ struct Errors
     void Display();
     Error &Log(const Error &e);
     uint Count()        { return errors.size() + count; }
+    bool HadErrors()    { return !errors.empty(); }
 
     std::vector<Error>  errors;
     Errors *            parent;
