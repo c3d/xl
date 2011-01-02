@@ -48,6 +48,7 @@ TypeInference::TypeInference(Context *context)
       types(),
       unifications(),
       rcalls(),
+      left(NULL), right(NULL),
       prototyping(false)
 {}
 
@@ -60,6 +61,7 @@ TypeInference::TypeInference(Context *context, TypeInference *parent)
       types(parent->types),
       unifications(parent->unifications),
       rcalls(parent->rcalls),
+      left(parent->left), right(parent->right),
       prototyping(false)
 {}
 
@@ -179,7 +181,7 @@ bool TypeInference::DoPrefix(Prefix *what)
     if (Name *name = what->left->AsName())
     {
         // Make sure we don't care if 'bar' is not defined in 'bar 3'
-        XL::Save<bool> savePrototyping(prototyping, true);
+        Save<bool> savePrototyping(prototyping, true);
         name->Do(this);
     }
     else
@@ -206,7 +208,7 @@ bool TypeInference::DoPostfix(Postfix *what)
     if (Name *name = what->right->AsName())
     {
         // Make sure we don't care if 'bar' is not defined in 'bar 3'
-        XL::Save<bool> savePrototyping(prototyping, true);
+        Save<bool> savePrototyping(prototyping, true);
         name->Do(this);
     }
     else
@@ -292,7 +294,7 @@ bool TypeInference::AssignType(Tree *expr, Tree *type)
             return true;
 
         // We have two types specified for that entity, need to unify
-        return Unify(existing, type);
+        return Unify(existing, type, expr, expr);
     }
 
     // Generate a unique type name if nothing is given
@@ -314,10 +316,10 @@ bool TypeInference::Rewrite(Infix *what)
 {
     // Create a context for the rewrite parameters
     Context *childContext = new Context(context, context);
-    XL::Save<Context_p> saveContext(context, childContext);
+    Save<Context_p> saveContext(context, childContext);
 
     // Assign types on the left of the rewrite
-    XL::Save<bool> proto(prototyping, true);
+    Save<bool> proto(prototyping, true);
     if (!what->left->Do(this))
     {
         Ooops("Malformed rewrite pattern $1", what->left);
@@ -358,6 +360,10 @@ bool TypeInference::Evaluate(Tree *what)
     if (prototyping)
         return true;
 
+    // Look directly inside blocks
+    while (Block *block = what->AsBlock())
+        what = block->child;
+
     // Evaluating constants is always successful
     if (what->IsConstant() && !context->hasConstants)
         return AssignType(what, what);
@@ -388,22 +394,14 @@ bool TypeInference::Evaluate(Tree *what)
     rcalls[what] = rc;
     uint count = 0;
     ulong key = context->Hash(what);
-    {
-        Errors errors;
-        errors.Log (Error("No form matches $1 because", what), true);
-        context->Evaluate(what, *rc, key, Context::NORMAL_LOOKUP);
+    Errors errors;
+    errors.Log (Error("Unable to evaluate $1 because", what), true);
+    context->Evaluate(what, *rc, key, Context::NORMAL_LOOKUP);
         
-        // If we have no candidate, this is a failure
-        count = rc->candidates.size();
-        if (count == 0)
-        {
-            return false;
-        }
-        else
-        {
-            errors.Swallowed();
-        }
-    }
+    // If we have no candidate, this is a failure
+    count = rc->candidates.size();
+    if (count == 0)
+        return false;
 
     // The resulting type is the union of all candidates
     Tree *type = rc->candidates[0].type;
@@ -412,9 +410,7 @@ bool TypeInference::Evaluate(Tree *what)
 
     // Perform type unification
     Tree *wtype = Type(what);
-    Errors errors;
-    errors.Log(Error("Unable to evaluate $1 because", what), true);
-    return Unify(wtype, type, DECLARATION);
+    return Unify(type, wtype, what, what, DECLARATION);
 }
 
 
@@ -423,6 +419,9 @@ bool TypeInference::UnifyTypesOf(Tree *expr1, Tree *expr2)
 //   Indicates that the two trees must have identical types
 // ----------------------------------------------------------------------------
 {
+    Save<Tree_p> saveLeft(left, expr1);
+    Save<Tree_p> saveRight(right, expr2);
+
     Tree *t1 = Type(expr1);
     Tree *t2 = Type(expr2);
 
@@ -431,6 +430,19 @@ bool TypeInference::UnifyTypesOf(Tree *expr1, Tree *expr2)
         return true;
 
     return Unify(t1, t2);
+}
+
+
+bool TypeInference::Unify(Tree *t1, Tree *t2,
+                          Tree *x1, Tree *x2,
+                          unify_mode mode)
+// ----------------------------------------------------------------------------
+//   Unification with expressions
+// ----------------------------------------------------------------------------
+{
+    Save<Tree_p> saveLeft(left, x1);
+    Save<Tree_p> saveRight(right, x2);
+    return Unify(t1, t2, mode);
 }
 
 
@@ -477,24 +489,6 @@ bool TypeInference::Unify(Tree *t1, Tree *t2, unify_mode mode)
     if (IsGeneric(t2))
         return Join(t1, t2);
 
-    // If we have a type name at this stage, this is a failure
-    if (IsTypeName(t1))
-    {
-        // In declaration mode, we have success if t2 covers t1
-        if (mode == DECLARATION && IsTreeType(t2))
-            return true;
-
-        Ooops("Cannot unify type $1", t1);
-        Ooops("with type $1", t2);
-        return false;
-    }
-    if (IsTypeName(t2))
-    {
-        Ooops("Cannot unify type $1", t2);
-        Ooops("with type $1", t1);
-        return false;
-    }
-
     // Check if t1 is one of the infix constructor types
     if (Infix *i1 = t1->AsInfix())
     {
@@ -504,28 +498,60 @@ bool TypeInference::Unify(Tree *t1, Tree *t2, unify_mode mode)
             if (Infix *i2 = t2->AsInfix())
                 if (i2->name == "=>")
                     return
-                        Unify(i1->left, i2->left) &&
-                        Unify(i1->right, i2->right);
-
-            Ooops("Cannot unify function type $1", i1);
-            Ooops("with non-function $1", t2);
+                        Unify(i1->left, i2->left, i1, i2) &&
+                        Unify(i1->right, i2->right, i1, i2);
+            
+            return TypeError(i1, t2);
         }
-
+        
         // Union types: Unify with either side
         if (i1->name == "|" || i1->name == ",")
-            return Unify(i1->left, t2) || Unify(i1->right, t2);
-
-        Ooops("Malformed type definition $1", i1);
+        {
+            if (mode != DECLARATION)
+            {
+                Errors errors;
+                if (Unify(i1->left, t2))
+                    return true;
+                errors.Swallowed();
+                if (Unify(i1->right, t2))
+                    return true;
+            }
+            return TypeError(t1, t2);
+        }
+        
+        Ooops("Malformed type definition $2 for $1", left, i1);
         return false;
     }
+
     if (Infix *i2 = t2->AsInfix())
     {
         // Union types: Unify with either side
         if (i2->name == "|" || i2->name == ",")
-            return Unify(t1, i2->left) || Unify(t1, i2->right);
+        {
+            Errors errors;
+            if (Unify(t1, i2->left))
+                return true;
+            errors.Swallowed();
+            if (Unify(t1, i2->right))
+                return true;
+            return false;
+        }
 
-        Ooops("Malformed type definition $1", i2);
+        Ooops("Malformed type definition $2 for $1", right, i2);
         return false;
+    }
+
+    // If we have a type name at this stage, this is a failure
+    if (IsTypeName(t1))
+    {
+        // In declaration mode, we have success if t2 covers t1
+        if (mode == DECLARATION && TypeCoversType(context, t2, t1, false))
+            return true;
+        return TypeError(t1, t2);
+    }
+    if (IsTypeName(t2))
+    {
+        return TypeError(t1, t2);
     }
 
     // Check prefix constructor types
@@ -539,9 +565,7 @@ bool TypeInference::Unify(Tree *t1, Tree *t2, unify_mode mode)
                                 return Join(t1, t2);
 
     // None of the above: fail
-    Ooops ("Unable to unify $1", t1);
-    Ooops ("with $1", t2);
-    return false;
+    return TypeError(t1, t2);
 }
 
 
@@ -678,6 +702,29 @@ bool TypeInference::UnifyPatterns(Tree *t1, Tree *t2)
 }
 
 
+bool TypeInference::Commit(TypeInference *child)
+// ----------------------------------------------------------------------------
+//   Commit all the inferences from 'child' into the current
+// ----------------------------------------------------------------------------
+{
+    tree_map &tmap = child->types;
+    for (tree_map::iterator t = tmap.begin(); t != tmap.end(); t++)
+        if (!AssignType((*t).first, (*t).second))
+            return false;
+
+    tree_map &umap = child->unifications;
+    for (tree_map::iterator u = umap.begin(); u != umap.end(); u++)
+        if (!Unify((*u).first, (*u).second))
+            return false;
+
+    rcall_map &rmap = child->rcalls;
+    for (rcall_map::iterator r = rmap.begin(); r != rmap.end(); r++)
+        rcalls[(*r).first] = (*r).second;
+
+    return true;
+}
+
+
 Name * TypeInference::NewTypeName(TreePosition pos)
 // ----------------------------------------------------------------------------
 //   Automatically generate new type names
@@ -733,6 +780,26 @@ Tree *TypeInference::LookupTypeName(Tree *type)
 
     // Otherwise, simply return input type
     return type;
+}
+
+
+bool TypeInference::TypeError(Tree *t1, Tree *t2)
+// ----------------------------------------------------------------------------
+//   Show type matching errors
+// ----------------------------------------------------------------------------
+{
+    assert(left && right);
+
+    if (left == right)
+    {
+        Ooops("Type of $1 cannot be both $2 and $3", left, t1, t2);
+    }
+    else
+    {
+        Ooops("Cannot unify type $2 of $1", left, t1);
+        Ooops("with type $2 of $1", right, t2);
+    }
+    return false;
 }
 
 
@@ -1204,7 +1271,9 @@ void debugt(XL::TypeInference *ti)
         Tree *value = (*t).first;
         Tree *type = (*t).second;
         Tree *base = ti->Base(type);
-        std::cout << "#" << ++i << "\t" << value << "\t: " << type;
+        std::cout << "#" << ++i
+                  << "\t" << ShortTreeForm(value)
+                  << "\t: " << type;
         if (base != type)
             std::cout << "\t= " << base;
         std::cout << "\n";
@@ -1232,8 +1301,10 @@ void debugu(XL::TypeInference *ti)
     {
         Tree *value = (*t).first;
         Tree *type = (*t).second;
-        std::cout << "#" << ++i << "\t" << value << "\t= "
-                  << type << "\t= " << ti->Base(type) << "\n";
+        std::cout << "#" << ++i
+                  << "\t" << ShortTreeForm(value)
+                  << "\t= " << type
+                  << "\t= " << ti->Base(type) << "\n";
     }
 }
 
@@ -1258,7 +1329,7 @@ void debugr(XL::TypeInference *ti)
     for (rcall_map::iterator t = map.begin(); t != map.end(); t++)
     {
         Tree *expr = (*t).first;
-        std::cout << "#" << ++i << "\t" << expr << "\n";
+        std::cout << "#" << ++i << "\t" << ShortTreeForm(expr) << "\n";
 
         uint j = 0;
         RewriteCalls *calls = (*t).second;
@@ -1272,7 +1343,7 @@ void debugr(XL::TypeInference *ti)
             RewriteBindings &rb = (*r).bindings;
             for (RewriteBindings::iterator b = rb.begin(); b != rb.end(); b++)
                 std::cout << "\t\t" << (*b).name
-                          << "\t= " << (*b).value << "\n";
+                          << "\t= " << ShortTreeForm((*b).value) << "\n";
         }
     }
 }

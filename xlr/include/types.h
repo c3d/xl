@@ -68,17 +68,17 @@ public:
 
 public:
     // Interface for Tree::Do() to annotate the tree
-    bool DoInteger(Integer *what);
-    bool DoReal(Real *what);
-    bool DoText(Text *what);
-    bool DoName(Name *what);
-    bool DoPrefix(Prefix *what);
-    bool DoPostfix(Postfix *what);
-    bool DoInfix(Infix *what);
-    bool DoBlock(Block *what);
+    bool        DoInteger(Integer *what);
+    bool        DoReal(Real *what);
+    bool        DoText(Text *what);
+    bool        DoName(Name *what);
+    bool        DoPrefix(Prefix *what);
+    bool        DoPostfix(Postfix *what);
+    bool        DoInfix(Infix *what);
+    bool        DoBlock(Block *what);
 
     // Common code for all constants (integer, real, text)
-    bool DoConstant(Tree *what);
+    bool        DoConstant(Tree *what);
 
 public:
     // Annotate expressions with type variables
@@ -90,9 +90,12 @@ public:
 
     // Indicates that two trees must have compatible types
     bool        UnifyTypesOf(Tree *expr1, Tree *expr2);
+    bool        Unify(Tree *t1, Tree *t2,
+                      Tree *x1, Tree *x2, unify_mode mode = STANDARD);
     bool        Unify(Tree *t1, Tree *t2, unify_mode mode = STANDARD);
     bool        Join(Tree *base, Tree *other, bool knownGood = false);
     bool        UnifyPatterns(Tree *t1, Tree *t2);
+    bool        Commit(TypeInference *child);
 
     // Return the base type associated with a given tree
     Tree *      Base(Tree *type);
@@ -106,11 +109,15 @@ public:
     // Lookup a type name in the given context
     Tree *      LookupTypeName(Tree *input);
 
+    // Error messages
+    bool        TypeError(Tree *t1, Tree *t2);
+
 public:
     Context_p   context;        // Context in which we lookup things
     tree_map    types;          // Map an expression to its type
     tree_map    unifications;   // Map a type to its reference type
     rcall_map   rcalls;         // Rewrites to call for a given tree
+    Tree_p      left, right;    // Current left and right of unification
     bool        prototyping;    // Prototyping a function declaration
     static ulong id;            // Id of next type
 
