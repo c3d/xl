@@ -82,7 +82,7 @@ struct Errors
     void Display();
     Error &Log(const Error &e, bool context = false);
     uint Count()        { return errors.size() + count; }
-    bool HadErrors()    { return !errors.empty(); }
+    bool HadErrors()    { return errors.size() > context; }
 
     std::vector<Error>  errors;
     Errors *            parent;
@@ -99,7 +99,7 @@ Error &Ooops (text m, Tree *a, Tree *b, Tree *c);
 
 // Formatting a tree for error reporting
 Text *FormatTreeForError(Tree *tree);
-text ShortTreeForm(Tree *tree, uint maxWidth = 30);
+text ShortTreeForm(Tree *tree, uint maxWidth = 60);
 
 XL_END
 

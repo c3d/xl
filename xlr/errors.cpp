@@ -214,9 +214,9 @@ bool Errors::Swallowed()
 //   Return true if we swallowed errors
 // ----------------------------------------------------------------------------
 {
-    bool result = !errors.empty();
-    if (result)
-        errors.clear();
+    bool result = errors.size() > context;
+    errors.clear();
+    context = 0;
     return result;
 }
 
@@ -307,16 +307,22 @@ text ShortTreeForm(Tree *tree, uint maxWidth)
 // ----------------------------------------------------------------------------
 {
     text t = *tree;
-    size_t first = t.find("\n");
-    if (first != text::npos)
-    {
-        size_t last = t.find("\n");
-        t.erase(first, last - first);
-        t.insert(first, "...");
-    }
     size_t length = t.length();
-    if (length > maxWidth + 3)
-        t.replace(maxWidth/2, length - maxWidth, "...");
+
+    size_t first = t.find("\n");
+    if (first != t.npos)
+    {
+        size_t last = t.rfind("\n");
+        t.replace(first, last-first+1, "...");
+        length = t.length();
+    }
+
+    if (length > maxWidth)
+    {
+        uint extra = length - maxWidth;
+        first = maxWidth / 2;
+        t.replace(first, extra+1, "...");
+    }
 
     return t;
 }
