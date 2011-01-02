@@ -80,13 +80,14 @@ struct Errors
     void Clear();
     bool Swallowed();
     void Display();
-    Error &Log(const Error &e);
+    Error &Log(const Error &e, bool context = false);
     uint Count()        { return errors.size() + count; }
     bool HadErrors()    { return !errors.empty(); }
 
     std::vector<Error>  errors;
     Errors *            parent;
     ulong               count;
+    ulong               context;
 };
 
 

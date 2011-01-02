@@ -181,7 +181,7 @@ Errors::Errors()
 // ----------------------------------------------------------------------------
 //   Save errors from the top-level error handler
 // ----------------------------------------------------------------------------
-    : parent(MAIN->errors), count(0)
+    : parent(MAIN->errors), count(0), context(0)
 {
     MAIN->errors = this;
 }
@@ -195,12 +195,8 @@ Errors::~Errors()
     assert (MAIN->errors == this);
     MAIN->errors = parent;
 
-    if (ulong sz = errors.size())
-    {
-        if (parent)
-            parent->count += sz;
+    if (errors.size() > context)
         Display();
-    }
 }
 
 
@@ -230,18 +226,29 @@ void Errors::Display()
 //   Display pending error messages
 // ----------------------------------------------------------------------------
 {
-    std::vector<Error>::iterator e;
-    for (e = errors.begin(); e != errors.end(); e++)
-        (*e).Display();
+    if (parent)
+    {
+        parent->count += errors.size();
+        parent->errors.insert(parent->errors.end(),
+                              errors.begin(), errors.end());
+    }
+    else
+    {
+        std::vector<Error>::iterator e;
+        for (e = errors.begin(); e != errors.end(); e++)
+            (*e).Display();
+    }
 }
 
 
-Error &Errors::Log(const Error &e)
+Error &Errors::Log(const Error &e, bool isContext)
 // ----------------------------------------------------------------------------
 //   Log an error
 // ----------------------------------------------------------------------------
 {
     errors.push_back(e);
+    if (isContext)
+        context++;
     return errors.back();
 }
 

@@ -62,9 +62,7 @@ Tree *RewriteCalls::operator() (Context *context,
     }
 
     // If we had some errors in the process, binding fails
-    if (binding == FAILED)
-        errors.Swallowed();
-    else if (errors.HadErrors())
+    if (errors.HadErrors())
         binding = FAILED;
 
     // Record the rewrite candidate if we had any success with binding

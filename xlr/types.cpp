@@ -386,15 +386,23 @@ bool TypeInference::Evaluate(Tree *what)
     // Identify all candidate rewrites in the current context
     RewriteCalls_p rc = new RewriteCalls(this);
     rcalls[what] = rc;
+    uint count = 0;
     ulong key = context->Hash(what);
-    context->Evaluate(what, *rc, key, Context::NORMAL_LOOKUP);
-
-    // If we have no candidate, this is a failure
-    uint count = rc->candidates.size();
-    if (count == 0)
     {
-        Ooops("No form matches $1", what);
-        return false;
+        Errors errors;
+        errors.Log (Error("No form matches $1 because", what), true);
+        context->Evaluate(what, *rc, key, Context::NORMAL_LOOKUP);
+        
+        // If we have no candidate, this is a failure
+        count = rc->candidates.size();
+        if (count == 0)
+        {
+            return false;
+        }
+        else
+        {
+            errors.Swallowed();
+        }
     }
 
     // The resulting type is the union of all candidates
@@ -404,6 +412,8 @@ bool TypeInference::Evaluate(Tree *what)
 
     // Perform type unification
     Tree *wtype = Type(what);
+    Errors errors;
+    errors.Log(Error("Unable to evaluate $1 because", what), true);
     return Unify(wtype, type, DECLARATION);
 }
 
@@ -474,14 +484,14 @@ bool TypeInference::Unify(Tree *t1, Tree *t2, unify_mode mode)
         if (mode == DECLARATION && IsTreeType(t2))
             return true;
 
-        Ooops("Cannot unify named type $1", t1);
-        Ooops("with structured type $1", t2);
+        Ooops("Cannot unify type $1", t1);
+        Ooops("with type $1", t2);
         return false;
     }
     if (IsTypeName(t2))
     {
-        Ooops("Cannot unify named type $1", t2);
-        Ooops("with structured type $1", t1);
+        Ooops("Cannot unify type $1", t2);
+        Ooops("with type $1", t1);
         return false;
     }
 
