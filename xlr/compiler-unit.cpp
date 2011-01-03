@@ -72,6 +72,7 @@ CompiledUnit::CompiledUnit(Compiler *compiler)
       compiler(compiler), llvm(compiler->llvm),
       code(NULL), data(NULL), function(NULL),
       allocabb(NULL), entrybb(NULL), exitbb(NULL), failbb(NULL),
+      returned(NULL),
       value(), storage(), computed(), dataForm()
 {}
 
@@ -99,6 +100,9 @@ Function *CompiledUnit::RewriteFunction(Context *context, Rewrite *rewrite)
 //   Create a function for a tree rewrite
 // ----------------------------------------------------------------------------
 {
+    // We must have verified the types before
+    assert(inference || !"RewriteFunction called without type check");
+
     // Save context for later
     this->context = context;
 
@@ -108,7 +112,7 @@ Function *CompiledUnit::RewriteFunction(Context *context, Rewrite *rewrite)
         std::cerr << "CompiledUnit::RewriteFunction T" << (void *) source;
 
     // Extract parameters from source form
-    ParameterList parameters(compiler, context);
+    ParameterList parameters(this);
     source->Do(parameters);
 
     // Create the function signature, one entry per parameter
@@ -142,11 +146,14 @@ Function *CompiledUnit::TopLevelFunction(Context *context)
 //   Create a function for a top-level program
 // ----------------------------------------------------------------------------
 {
+    // We must have verified the types before
+    assert(inference || !"TopLevelFunction called without type check");
+
     // Save context for later
     this->context = context;
 
     llvm_types signature;
-    ParameterList parameters(compiler, context);
+    ParameterList parameters(this);
     llvm_type retTy = compiler->treePtrTy;
     FunctionType *fnTy = FunctionType::get(retTy, signature, false);
     return InitializeFunction(fnTy, parameters, "xl_program");
@@ -179,7 +186,7 @@ Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
     // Associate the value for the input tree
     Function::arg_iterator args = function->arg_begin();
     llvm_type retTy = function->getReturnType();
-    Value *result_storage = data->CreateAlloca(retTy, 0, "result");
+    returned = data->CreateAlloca(retTy, 0, "result");
 
     // Associate the value for the additional arguments (read-only, no alloca)
     Parameters &plist = parameters.parameters;
@@ -194,7 +201,7 @@ Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
     // Create the exit basic block and return statement
     exitbb = BasicBlock::Create(*llvm, "exit", function);
     IRBuilder<> exitcode(exitbb);
-    Value *retVal = exitcode.CreateLoad(result_storage, "retval");
+    Value *retVal = exitcode.CreateLoad(returned, "retval");
     exitcode.CreateRet(retVal);
 
     // Return the newly created function
@@ -257,6 +264,18 @@ llvm::Value *CompiledUnit::Compile(Tree *tree)
     }
 
     return result;
+}
+
+
+llvm_value CompiledUnit::Return(llvm_value value)
+// ----------------------------------------------------------------------------
+//   Return the given value, after appropriate boxing
+// ----------------------------------------------------------------------------
+{
+    llvm_type retTy = function->getReturnType();
+    value = Autobox(value, retTy);
+    code->CreateStore(returned, value);
+    return returned;
 }
 
 
@@ -1069,11 +1088,10 @@ llvm_type CompiledUnit::ReturnType(Tree *form)
 //   Compute the return type associated with the given form
 // ----------------------------------------------------------------------------
 {
-    // TODO: Type inference to get the type from RHS
-    (void) form;
-
-    // For now, pessimize and assume the return type is Tree *
-    return compiler->treePtrTy;
+    // Type inference gives us the return type for this form
+    Tree *type = inference->Type(form);
+    llvm_type mtype = compiler->MachineType(type);
+    return mtype;
 }
 
 
@@ -1087,58 +1105,74 @@ llvm_type CompiledUnit::StructureType(llvm_types &signature)
 }
 
 
-llvm_type CompiledUnit::MachineType(Tree *type)
+llvm_type CompiledUnit::ExpressionMachineType(Tree *expr)
 // ----------------------------------------------------------------------------
-//   Return the machine type associated with a given XL type
+//   Return the machine type associated with a given expression
 // ----------------------------------------------------------------------------
 {
-    // Default is a tree pointer
-    llvm_type result = compiler->treePtrTy;
+    assert(inference || !"ExpressionMachineType without type check");
 
-    // Check the various built-in types
-    if (type == boolean_type)
-        result = compiler->booleanTy;
-    else if (type == integer_type)
-        result = compiler->integerTy;
-    else if (type == real_type)
-        result = compiler->realTy;
-    else if (type == text_type)
-        result = compiler->charPtrTy;
-    else if (type == character_type)
-        result = compiler->characterTy;
-    else if (type == symbol_type || type == name_type || type == operator_type)
-        result = compiler->nameTreePtrTy;
-    else if (type == infix_type)
-        result = compiler->infixTreePtrTy;
-    else if (type == prefix_type)
-        result = compiler->prefixTreePtrTy;
-    else if (type == postfix_type)
-        result = compiler->postfixTreePtrTy;
-    else if (type == block_type)
-        result = compiler->blockTreePtrTy;
-
-    return result;
+    Tree *type = inference->Type(expr);
+    return compiler->MachineType(type);
 }
 
 
-llvm_value CompiledUnit::Box(llvm_value value)
+llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
 // ----------------------------------------------------------------------------
-//    If a given value needs to be boxed, call xl_new_integer() and co...
+//   Automatically box/unbox primitive types
 // ----------------------------------------------------------------------------
-//   Boxing a value is the process of creating an object around it.
-//   The boolean type (int1) is boxed into xl_true or xl_false
-//   The integer type (int64) is boxed into instances of Integer
-//   The real type (double) is boxed into instances of Real
-//   The char type (int8) is boxed into instances of Text with xl_new_char
-//   The char * type is boxed into instances of Text with xl_new_ctext
-//   The text type is boxed into instances of Text with xl_new_text
+//   Primitive values like integers can exist in two forms during execution:
+//   - In boxed form, e.g. as a pointer to an instance of Integer
+//   - In native form, e.g. as an integer
+//   This function automatically converts from one to the other as necessary
 {
     llvm_type  type   = value->getType();
     llvm_value result = value;
     Function * boxFn  = NULL;
 
-    if (type == compiler->booleanTy)
+    // Short circuit if we are already there
+    if (req == type)
+        return result;
+
+    if (req == compiler->booleanTy)
     {
+        assert (type == compiler->treePtrTy || type == compiler->nameTreePtrTy);
+        Value *falsePtr = compiler->TreeGlobal(xl_false);
+        result = code->CreateLoad(falsePtr, "xl_false");
+        result = code->CreateICmpNE(value, result, "notFalse");
+    }
+    else if (req == compiler->integerTy)
+    {
+        assert (type == compiler->integerTreePtrTy);
+        result = code->CreateConstGEP2_32(value,0, INTEGER_VALUE_INDEX, "ival");
+    }
+    else if (req == compiler->realTy)
+    {
+        assert(type == compiler->realTreePtrTy);
+        result = code->CreateConstGEP2_32(value,0, REAL_VALUE_INDEX, "rval");
+    }
+    else if (req == compiler->characterTy)
+    {
+        assert(type == compiler->textTreePtrTy);
+        result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX, "tval");
+        result = code->CreateConstGEP2_32(result, 0, 0, "cptrval");
+        result = code->CreateConstGEP2_32(result, 0, 0, "charval");
+    }
+    else if (req == compiler->charPtrTy)
+    {
+        assert(type == compiler->textTreePtrTy);
+        result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX, "tval");
+        result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX,"cptrval");
+    }
+    else if (req == compiler->textTy)
+    {
+        assert (type == compiler->textTreePtrTy);
+        result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX, "tval");
+    }
+    else if (type == compiler->booleanTy)
+    {
+        assert(req == compiler->treePtrTy || req == compiler->nameTreePtrTy);
+
         // Insert code corresponding to value ? xl_true : xl_false
         BasicBlock *isTrue = BasicBlock::Create(*llvm, "isTrue", function);
         BasicBlock *isFalse = BasicBlock::Create(*llvm, "isFalse", function);
@@ -1162,23 +1196,40 @@ llvm_value CompiledUnit::Box(llvm_value value)
     }
     else if (type == compiler->integerTy)
     {
+        assert(req == compiler->treePtrTy || req == compiler->integerTreePtrTy);
         boxFn = compiler->xl_new_integer;
     }
     else if (type == compiler->realTy)
     {
+        assert(req == compiler->treePtrTy || req == compiler->realTreePtrTy);
         boxFn = compiler->xl_new_real;
     }
     else if (type == compiler->characterTy)
     {
+        assert(req == compiler->treePtrTy || req == compiler->textTreePtrTy);
         boxFn = compiler->xl_new_character;
     }
     else if (type == compiler->textTy)
     {
+        assert(req == compiler->treePtrTy || req == compiler->textTreePtrTy);
         boxFn = compiler->xl_new_text;
     }
-   else if (type == compiler->charPtrTy)
+    else if (type == compiler->charPtrTy)
     {
+        assert(req == compiler->treePtrTy || req == compiler->textTreePtrTy);
         boxFn = compiler->xl_new_ctext;
+    }
+    else if (req == compiler->treePtrTy)
+    {
+        assert(type == compiler->integerTreePtrTy ||
+               type == compiler->realTreePtrTy ||
+               type == compiler->textTreePtrTy ||
+               type == compiler->nameTreePtrTy ||
+               type == compiler->blockTreePtrTy ||
+               type == compiler->prefixTreePtrTy ||
+               type == compiler->postfixTreePtrTy ||
+               type == compiler->infixTreePtrTy);
+        result = code->CreateBitCast(value, req);
     }
 
     // If we need to invoke a boxing function, do it now
@@ -1187,53 +1238,6 @@ llvm_value CompiledUnit::Box(llvm_value value)
 
     // Return what we built if anything
     return result;
-}
-
-
-llvm_value CompiledUnit::Unbox(llvm_value value, llvm_type req)
-// ----------------------------------------------------------------------------
-//   Return a native value from one of the types we can unbox
-// ----------------------------------------------------------------------------
-{
-    llvm_type  type   = value->getType();
-    llvm_value result = value;
-
-    // Short circuit if we are already there
-    if (req == type)
-        return result;
-
-    if (req == compiler->booleanTy)
-    {
-        if (type == compiler->treePtrTy || type == compiler->nameTreePtrTy)
-        {
-            Value *falsePtr = compiler->TreeGlobal(xl_false);
-            result = code->CreateLoad(falsePtr, "xl_false");
-            result = code->CreateICmpNE(value, result, "notFalse");
-        }
-    }
-    else if (req == compiler->integerTy && type == compiler->integerTreePtrTy)
-    {
-        result = code->CreateConstGEP2_32(value,0, INTEGER_VALUE_INDEX, "ival");
-    }
-    else if (req == compiler->realTy && type == compiler->realTreePtrTy)
-    {
-        result = code->CreateConstGEP2_32(value,0, REAL_VALUE_INDEX, "rval");
-    }
-    else if (req == compiler->characterTy && type == compiler->textTreePtrTy)
-    {
-        result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX, "tval");
-        result = code->CreateConstGEP2_32(result, 0, 0, "cptrval");
-        result = code->CreateConstGEP2_32(result, 0, 0, "charval");
-    }
-    else if (req == compiler->charPtrTy && type == compiler->textTreePtrTy)
-    {
-        result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX, "tval");
-        result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX,"cptrval");
-    }
-    else if (req == compiler->textTy && type == compiler->textTreePtrTy)
-    {
-        result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX, "tval");
-    }
 
     return result;
 }

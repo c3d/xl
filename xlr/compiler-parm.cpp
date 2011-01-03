@@ -21,13 +21,13 @@
 // ****************************************************************************
 
 #include "compiler-parm.h"
+#include "compiler-unit.h"
 #include "errors.h"
 
 XL_BEGIN
 
 
 bool ParameterList::EnterName(Name *what,
-                              const llvm::Type *type,
                               bool globalCheck)
 // ----------------------------------------------------------------------------
 //   Enter a name in the parameter list
@@ -35,7 +35,13 @@ bool ParameterList::EnterName(Name *what,
 {
     // We only allow names here, not symbols (bug #154)
     if (what->value.length() == 0 || !isalpha(what->value[0]))
+    {
         Ooops("The pattern variable $1 is not a name", what);
+        return false;
+    }
+
+    // Check the LLVM type for the given form
+    llvm_type type = unit->ExpressionMachineType(what);
 
     // Check if the name already exists in parameter list, e.g. in 'A+A'
     text name = what->value;
@@ -44,17 +50,18 @@ bool ParameterList::EnterName(Name *what,
     {
         if ((*it).name->value == name)
         {
-            if (type == compiler->treePtrTy || type == (*it).type)
+            llvm_type nameType = unit->ExpressionMachineType((*it).name);
+            if (type == nameType)
                 return true;
 
-            Ooops("Conflicting types for $1", what);
+            Ooops("Conflicting machine types for $1", what);
             return false;
         }
     }
 
     // Check if the name already exists in context, e.g. 'false'
     if (globalCheck)
-        if (context->Bound(what))
+        if (unit->context->Bound(what))
             return true;
         
     // We need to record a new parameter
@@ -104,7 +111,7 @@ bool ParameterList::DoName(Name *what)
     else
     {
         // We need to record a new parameter, type is Tree * by default
-        return EnterName(what, compiler->treePtrTy, true);
+        return EnterName(what, true);
     }
 }
 
@@ -130,8 +137,14 @@ bool ParameterList::DoInfix(Infix *what)
         if (Name *varName = what->left->AsName())
         {
             // Enter a name in the parameter list with adequate machine type
-            llvm_type mtype = compiler->MachineType(context, what->right);
-            return EnterName(varName, mtype, false);
+            llvm_type mtype = unit->ExpressionMachineType(what->right);
+            llvm_type ntype = unit->ExpressionMachineType(varName);
+            if (mtype != ntype)
+            {
+                Ooops("Conflicting maching type for declaration $1", what);
+                return false;
+            }
+            return EnterName(varName, false);
         }
         else
         {
@@ -143,7 +156,7 @@ bool ParameterList::DoInfix(Infix *what)
             }
 
             // Remember the specified returned value
-            returned = compiler->MachineType(context, what->right);
+            returned = unit->ExpressionMachineType(what);
 
             // Keep going with the left-hand side
             return what->left->Do(this);

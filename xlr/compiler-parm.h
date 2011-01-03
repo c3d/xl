@@ -24,6 +24,7 @@
 
 #include "compiler.h"
 
+
 XL_BEGIN
 
 struct Parameter
@@ -31,7 +32,7 @@ struct Parameter
 //   Internal representation of a parameter
 // ----------------------------------------------------------------------------
 {
-    Parameter(Name *name, const llvm::Type *type = 0, llvm::Value *value = 0)
+    Parameter(Name *name, llvm_type type = 0, llvm_value value = 0)
         : name(name), type(type), value(value) {}
     Name_p              name;
     llvm_type           type;
@@ -50,11 +51,11 @@ struct ParameterList
     typedef bool value_type;
     
 public:
-    ParameterList(Compiler *compiler, Context *context)
-        : compiler(compiler), context(context), defined(NULL), returned(NULL) {}
+    ParameterList(CompiledUnit *unit)
+        : unit(unit), defined(NULL), returned(NULL) {}
 
 public:
-    bool EnterName(Name *what, const llvm::Type *type, bool global);
+    bool EnterName(Name *what, bool global);
 
     bool DoInteger(Integer *what);
     bool DoReal(Real *what);
@@ -68,11 +69,10 @@ public:
     void Signature(llvm_types &signature);
 
 public:
-    Compiler * compiler;
-    Context_p  context;         // Context in which we record parameters
-    Tree_p     defined;         // Tree beind defined, e.g. 'sin' in 'sin X'
-    Parameters parameters;      // Parameters and their order
-    llvm_type  returned;        // Returned type if specified
+    CompiledUnit *  unit;         // Current compilation unit
+    Tree_p          defined;      // Tree being defined, e.g. 'sin' in 'sin X'
+    Parameters      parameters;   // Parameters and their order
+    llvm_type       returned;     // Returned type if specified
 };
 
 XL_END

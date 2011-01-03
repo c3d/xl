@@ -383,7 +383,10 @@ program_fn Compiler::CompileProgram(Context *context, Tree *program)
         return NULL;
     if (!topUnit.TypeCheck(program))
         return NULL;
-    if (!topUnit.Compile(program))
+    llvm_value returned = topUnit.Compile(program);
+    if (!returned)
+        return NULL;
+    if (!topUnit.Return(returned))
         return NULL;
     return (program_fn) topUnit.Finalize();
 }
@@ -727,28 +730,26 @@ bool Compiler::IsKnown(Tree *tree)
 }
 
 
-const Type *Compiler::MachineType(Context *context, Tree *tree)
+llvm_type Compiler::MachineType(Tree *tree)
 // ----------------------------------------------------------------------------
 //    Return the LLVM type associated to a given XL type name
 // ----------------------------------------------------------------------------
 {
-    tree = context->Evaluate(tree);
-
     // Check all "basic" types in basics.tbl
-    if (tree == integer_type)
-        return integerTy;
     if (tree == boolean_type)
         return booleanTy;
-    if (tree == character_type)
-        return characterTy;
+    if (tree == integer_type)
+        return integerTy;
     if (tree == real_type)
         return realTy;
+    if (tree == character_type)
+        return characterTy;
     if (tree == text_type)
         return charPtrTy;
     
     // Check special tree types in basics.tbl
     if (tree == symbol_type || tree == name_type || tree == operator_type)
-        return charPtrTy;
+        return nameTreePtrTy;
     if (tree == infix_type)
         return infixTreePtrTy;
     if (tree == prefix_type)

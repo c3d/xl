@@ -51,8 +51,8 @@ protected:
 
 public:
     bool                TypeCheck(Tree *program);
-    llvm::Value *       Compile(Tree *tree);
-
+    llvm_value          Compile(Tree *tree);
+    llvm_value          Return(llvm_value value);
     eval_fn             Finalize();
 
     enum { knowAll = -1, knowGlobals = 1, knowLocals = 2, knowValues = 4 };
@@ -95,9 +95,8 @@ public:
 
     llvm_type           ReturnType(Tree *form);
     llvm_type           StructureType(llvm_types &signature);
-    llvm_type           MachineType(Tree *type);
-    llvm_value          Box(llvm_value value);
-    llvm_value          Unbox(llvm_value value, llvm_type requested);
+    llvm_type           ExpressionMachineType(Tree *expr);
+    llvm_value          Autobox(llvm_value value, llvm_type requested);
 
 public:
     Context_p           context;        // Context in which we compile
@@ -114,6 +113,7 @@ public:
     llvm::BasicBlock *  entrybb;        // Code entry point
     llvm::BasicBlock *  exitbb;         // Shared exit for the function
     llvm::BasicBlock *  failbb;         // Shared exit for failed expred tests
+    llvm::Value *       returned;       // Where we store the returned value
 
     value_map           value;          // Map tree -> LLVM value
     value_map           storage;        // Map tree -> LLVM alloca space

@@ -117,7 +117,7 @@ struct Compiler
     eval_fn                   MarkAsClosure(Tree *closure, uint ntrees);
     bool                      IsKnown(Tree *value);
 
-    const llvm::Type *        MachineType(Context *context, Tree *tree);
+    const llvm::Type *        MachineType(Tree *tree);
 
     bool                      FreeResources(Tree *tree);
 
