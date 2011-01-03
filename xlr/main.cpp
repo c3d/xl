@@ -404,7 +404,7 @@ int Main::Run()
         try
         {
             Errors errors;
-            if (options.optimize_level == 3)
+            if (options.optimize_level >= 3)
             {
                 program_fn fn = compiler->CompileProgram(sf.context, sf.tree);
                 if (fn)
@@ -412,6 +412,8 @@ int Main::Run()
             }
             else
             {
+                if (getenv("XLOPT"))
+                    compiler->CompileProgram(sf.context, sf.tree);
                 result = sf.context->Evaluate(sf.tree);
             }
         }
