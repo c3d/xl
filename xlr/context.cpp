@@ -815,7 +815,12 @@ ulong Context::Hash(Tree *what)
         h = ((Integer *) what)->value;
         break;
     case REAL:
-        h = *((ulong *) &((Real *) what)->value);
+        {
+	    size_t s = sizeof(ulong);
+	    if (sizeof(double) < s)
+	        s = sizeof(double);
+            memcpy(&h, &((Real *) what)->value, s);
+        }
         break;
     case TEXT:
         t = ((Text *) what)->value;
