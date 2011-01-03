@@ -28,6 +28,7 @@
 XL_BEGIN
 
 struct TypeInference;
+typedef GCPtr<TypeInference> TypeInference_p;
 
 
 struct RewriteBinding
@@ -49,11 +50,12 @@ struct RewriteCandidate
 // ----------------------------------------------------------------------------
 {
     RewriteCandidate(Rewrite *rewrite)
-        : rewrite(rewrite), bindings(), type(NULL) {}
+        : rewrite(rewrite), bindings(), type(NULL), calls(NULL) {}
 
     Rewrite_p           rewrite;
     RewriteBindings     bindings;
     Tree_p              type;
+    TypeInference_p     calls;
 };
 
 typedef std::vector<RewriteCandidate> RewriteCandidates;

@@ -84,6 +84,7 @@ Tree *RewriteCalls::operator() (Context *context,
         rc.type = childInference->Type(candidate->to
                                        ? candidate->to
                                        : candidate->from);
+        rc.calls = childInference;
         candidates.push_back(rc);
     }
 
