@@ -708,19 +708,14 @@ bool TypeInference::Commit(TypeInference *child)
 //   Commit all the inferences from 'child' into the current
 // ----------------------------------------------------------------------------
 {
-    tree_map &tmap = child->types;
-    for (tree_map::iterator t = tmap.begin(); t != tmap.end(); t++)
-        if (!AssignType((*t).first, (*t).second))
-            return false;
-
-    tree_map &umap = child->unifications;
-    for (tree_map::iterator u = umap.begin(); u != umap.end(); u++)
-        if (!Unify((*u).first, (*u).second))
-            return false;
-
-    rcall_map &rmap = child->rcalls;
+    rcall_map &rmap = rcalls;
     for (rcall_map::iterator r = rmap.begin(); r != rmap.end(); r++)
-        rcalls[(*r).first] = (*r).second;
+    {
+        Tree *expr = (*r).first;
+        Tree *type = child->Type(expr);
+        if (!AssignType(expr, type))
+            return false;
+    }
 
     return true;
 }
