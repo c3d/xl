@@ -37,12 +37,12 @@ struct CompiledUnit
 //  The function we generate for a given rewrite
 // ----------------------------------------------------------------------------
 {
-    CompiledUnit(Compiler *compiler);
+    CompiledUnit(Compiler *compiler, Context *);
     ~CompiledUnit();
 
 public:
-    llvm::Function *    RewriteFunction(Context *context, Rewrite *rewrite);
-    llvm::Function *    TopLevelFunction(Context *context);
+    llvm::Function *    RewriteFunction(Rewrite *rewrite);
+    llvm::Function *    TopLevelFunction();
 
 protected:
     llvm::Function *    InitializeFunction(llvm::FunctionType *,

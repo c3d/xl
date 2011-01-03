@@ -377,11 +377,11 @@ program_fn Compiler::CompileProgram(Context *context, Tree *program)
 //   the rest of the code as a function taking no arguments.
 {
     Context_p topContext = new Context(context, context);
-    CompiledUnit topUnit(this);
+    CompiledUnit topUnit(this, topContext);
 
-    if (!topUnit.TopLevelFunction(topContext))
-        return NULL;
     if (!topUnit.TypeCheck(program))
+        return NULL;
+    if (!topUnit.TopLevelFunction())
         return NULL;
     llvm_value returned = topUnit.Compile(program);
     if (!returned)

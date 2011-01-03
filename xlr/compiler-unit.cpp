@@ -64,11 +64,11 @@ XL_BEGIN
 
 using namespace llvm;
 
-CompiledUnit::CompiledUnit(Compiler *compiler)
+CompiledUnit::CompiledUnit(Compiler *compiler, Context *context)
 // ----------------------------------------------------------------------------
 //   CompiledUnit constructor
 // ----------------------------------------------------------------------------
-    : context(NULL), inference(NULL),
+    : context(context), inference(NULL),
       compiler(compiler), llvm(compiler->llvm),
       code(NULL), data(NULL), function(NULL),
       allocabb(NULL), entrybb(NULL), exitbb(NULL), failbb(NULL),
@@ -95,16 +95,13 @@ CompiledUnit::~CompiledUnit()
 }
 
 
-Function *CompiledUnit::RewriteFunction(Context *context, Rewrite *rewrite)
+Function *CompiledUnit::RewriteFunction(Rewrite *rewrite)
 // ----------------------------------------------------------------------------
 //   Create a function for a tree rewrite
 // ----------------------------------------------------------------------------
 {
     // We must have verified the types before
     assert(inference || !"RewriteFunction called without type check");
-
-    // Save context for later
-    this->context = context;
 
     Tree *source = rewrite->from;
     Tree *def = rewrite->to;
@@ -141,7 +138,7 @@ Function *CompiledUnit::RewriteFunction(Context *context, Rewrite *rewrite)
 }
 
 
-Function *CompiledUnit::TopLevelFunction(Context *context)
+Function *CompiledUnit::TopLevelFunction()
 // ----------------------------------------------------------------------------
 //   Create a function for a top-level program
 // ----------------------------------------------------------------------------
@@ -274,8 +271,8 @@ llvm_value CompiledUnit::Return(llvm_value value)
 {
     llvm_type retTy = function->getReturnType();
     value = Autobox(value, retTy);
-    code->CreateStore(returned, value);
-    return returned;
+    code->CreateStore(value, returned);
+    return value;
 }
 
 
@@ -1219,7 +1216,16 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
         assert(req == compiler->treePtrTy || req == compiler->textTreePtrTy);
         boxFn = compiler->xl_new_ctext;
     }
-    else if (req == compiler->treePtrTy)
+
+    // If we need to invoke a boxing function, do it now
+    if (boxFn)
+    {
+        result = code->CreateCall(boxFn, value);
+        type = result->getType();
+    }
+
+
+    if (req == compiler->treePtrTy)
     {
         assert(type == compiler->integerTreePtrTy ||
                type == compiler->realTreePtrTy ||
@@ -1229,12 +1235,8 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
                type == compiler->prefixTreePtrTy ||
                type == compiler->postfixTreePtrTy ||
                type == compiler->infixTreePtrTy);
-        result = code->CreateBitCast(value, req);
+        result = code->CreateBitCast(result, req);
     }
-
-    // If we need to invoke a boxing function, do it now
-    if (boxFn)
-        result = code->CreateCall(boxFn, value);
 
     // Return what we built if anything
     return result;
