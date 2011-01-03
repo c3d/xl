@@ -28,6 +28,10 @@
 
 XL_BEGIN
 
+struct TypeInference;
+typedef GCPtr<TypeInference> TypeInference_p;
+
+
 struct CompiledUnit
 // ----------------------------------------------------------------------------
 //  The function we generate for a given rewrite
@@ -94,6 +98,7 @@ public:
 
 public:
     Context_p           context;        // Context in which we compile
+    TypeInference_p     inference;      // Type inferences for this unit
 
     Compiler *          compiler;       // The compiler environment we use
     llvm::LLVMContext * llvm;           // The LLVM context we got from compiler

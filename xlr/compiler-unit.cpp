@@ -68,7 +68,8 @@ CompiledUnit::CompiledUnit(Compiler *compiler)
 // ----------------------------------------------------------------------------
 //   CompiledUnit constructor
 // ----------------------------------------------------------------------------
-    : context(NULL), compiler(compiler), llvm(compiler->llvm),
+    : context(NULL), inference(NULL),
+      compiler(compiler), llvm(compiler->llvm),
       code(NULL), data(NULL), function(NULL),
       allocabb(NULL), entrybb(NULL), exitbb(NULL), failbb(NULL),
       value(), storage(), computed(), dataForm()
@@ -207,7 +208,10 @@ bool CompiledUnit::TypeCheck(Tree *program)
 // ----------------------------------------------------------------------------
 {
     TypeInference_p inferTypes = new TypeInference(context);
-    return inferTypes->TypeCheck(program);
+    bool result = inferTypes->TypeCheck(program);
+    if (result)
+        inference = inferTypes;
+    return result;
 }
 
 
