@@ -380,7 +380,7 @@ bool TypeInference::Evaluate(Tree *what)
                 return false;
             Tree *etype = Type(existing);
             Tree *ntype = Type(name);
-            return Unify(ntype, etype);
+            return Unify(ntype, etype, name, existing);
         }
     }
 
