@@ -52,16 +52,20 @@ Tree *RewriteCalls::operator() (Context *context,
     }
 
     // If argument/parameters binding worked, try to typecheck the definition
-    if (candidate->native)
+    if (candidate->to)
     {
-        if (!childInference->AssignType(candidate->to, candidate->type))
-            binding = FAILED;
-    }
-    else if (candidate->to)
-    {
-        bool childSucceeded = childInference->TypeCheck(candidate->to);
-        if (!childSucceeded)
-            binding = FAILED;
+        Save<Context_p> saveContext(childInference->context, context);
+        if (candidate->native)
+        {
+            if (!childInference->AssignType(candidate->to, candidate->type))
+                binding = FAILED;
+        }
+        else
+        {
+            bool childSucceeded = childInference->TypeCheck(candidate->to);
+            if (!childSucceeded)
+                binding = FAILED;
+        }
     }
 
     // If we had some errors in the process, binding fails,
