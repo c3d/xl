@@ -43,7 +43,7 @@ Error::Error(text m, ulong p)
 // ----------------------------------------------------------------------------
 //   Error without arguments
 // ----------------------------------------------------------------------------
-    : message(m), position(p)
+    : message(m), position(p), indent(0)
 {}
 
 
@@ -51,7 +51,7 @@ Error::Error(text m, Tree *a)
 // ----------------------------------------------------------------------------
 //   Error with a tree argument
 // ----------------------------------------------------------------------------
-    : message(m), position(UNKNOWN_POSITION)
+    : message(m), position(UNKNOWN_POSITION), indent(0)
 {
     Arg(a);
 }
@@ -61,7 +61,7 @@ Error::Error(text m, Tree *a, Tree *b)
 // ----------------------------------------------------------------------------
 //   Error with two tree arguments
 // ----------------------------------------------------------------------------
-    : message(m), position(UNKNOWN_POSITION)
+    : message(m), position(UNKNOWN_POSITION), indent(0)
 {
     Arg(a); Arg(b);
 }
@@ -71,7 +71,7 @@ Error::Error(text m, Tree *a, Tree *b, Tree *c)
 // ----------------------------------------------------------------------------
 //   Error with three tree arguments
 // ----------------------------------------------------------------------------
-    : message(m), position(UNKNOWN_POSITION)
+    : message(m), position(UNKNOWN_POSITION), indent(0)
 {
     Arg(a); Arg(b); Arg(c);
 }
@@ -116,7 +116,7 @@ void Error::Display()
 //   Display an error on the error output
 // ----------------------------------------------------------------------------
 {
-    std::cerr << Position() << ": " << Message() << '\n';
+    std::cerr << Position() << ": " << text(indent, ' ') << Message() << '\n';
 }
 
 
@@ -229,6 +229,9 @@ void Errors::Display()
     if (parent)
     {
         parent->count += errors.size();
+        uint max = errors.size();
+        for (uint i = context; i < max; i++)
+            errors[i].indent++;
         parent->errors.insert(parent->errors.end(),
                               errors.begin(), errors.end());
     }

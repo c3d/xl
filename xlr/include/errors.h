@@ -66,6 +66,7 @@ struct Error
     text                message;
     std::vector<text>   arguments;
     ulong               position;
+    ulong               indent;
 };
 
 
