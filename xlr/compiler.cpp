@@ -676,6 +676,8 @@ eval_fn Compiler::MarkAsClosure(XL::Tree *closure, uint ntrees)
 //    Create the closure wrapper for ntrees elements, associate to result
 // ----------------------------------------------------------------------------
 {
+    (void) closure;
+    (void) ntrees;
     return NULL;
 }
 

@@ -63,7 +63,7 @@ bool ParameterList::EnterName(Name *what,
 }
 
 
-bool ParameterList::DoInteger(Integer *what)
+bool ParameterList::DoInteger(Integer *)
 // ----------------------------------------------------------------------------
 //   Nothing to do for leaves
 // ----------------------------------------------------------------------------
@@ -72,7 +72,7 @@ bool ParameterList::DoInteger(Integer *what)
 }
 
 
-bool ParameterList::DoReal(Real *what)
+bool ParameterList::DoReal(Real *)
 // ----------------------------------------------------------------------------
 //   Nothing to do for leaves
 // ----------------------------------------------------------------------------
@@ -81,7 +81,7 @@ bool ParameterList::DoReal(Real *what)
 }
 
 
-bool ParameterList::DoText(Text *what)
+bool ParameterList::DoText(Text *)
 // ----------------------------------------------------------------------------
 //   Nothing to do for leaves
 // ----------------------------------------------------------------------------

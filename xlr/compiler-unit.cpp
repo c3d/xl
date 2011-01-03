@@ -1065,6 +1065,7 @@ llvm_type CompiledUnit::ReturnType(Tree *form)
 // ----------------------------------------------------------------------------
 {
     // TODO: Type inference to get the type from RHS
+    (void) form;
 
     // For now, pessimize and assume the return type is Tree *
     return compiler->treePtrTy;
