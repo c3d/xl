@@ -229,9 +229,12 @@ void Errors::Display()
     if (parent)
     {
         parent->count += errors.size();
-        uint max = errors.size();
-        for (uint i = context; i < max; i++)
-            errors[i].indent++;
+        if (context)
+        {
+            uint max = errors.size();
+            for (uint i = context; i < max; i++)
+                errors[i].indent++;
+        }
         parent->errors.insert(parent->errors.end(),
                               errors.begin(), errors.end());
     }
