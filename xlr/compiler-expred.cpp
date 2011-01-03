@@ -22,10 +22,168 @@
 
 #include "compiler-expred.h"
 #include "compiler-unit.h"
+#include "compiler-arg.h"
+#include "types.h"
+
+#include <llvm/Support/IRBuilder.h>
+#include <llvm/GlobalVariable.h>
 
 XL_BEGIN
 
 using namespace llvm;
+
+
+
+// ============================================================================
+// 
+//    Compile an expression
+// 
+// ============================================================================
+
+llvm_value CompileExpression::DoInteger(Integer *what)
+// ----------------------------------------------------------------------------
+//   Compile an integer constant
+// ----------------------------------------------------------------------------
+{
+    Compiler *compiler = unit->compiler;
+    return ConstantInt::get(compiler->integerTy, what->value);
+}
+    
+
+llvm_value CompileExpression::DoReal(Real *what)
+// ----------------------------------------------------------------------------
+//   Compile a real constant
+// ----------------------------------------------------------------------------
+{
+    Compiler *compiler = unit->compiler;
+    return ConstantFP::get(compiler->realTy, what->value);
+}
+
+
+llvm_value CompileExpression::DoText(Text *what)
+// ----------------------------------------------------------------------------
+//   Compile a text constant
+// ----------------------------------------------------------------------------
+{
+    Compiler *compiler = unit->compiler;
+    GlobalVariable *global = compiler->TextConstant(what->value);
+    return unit->code->CreateConstGEP2_32(global, 0U, 0U);
+}
+
+
+llvm_value CompileExpression::DoName(Name *what)
+// ----------------------------------------------------------------------------
+//   Compile a name
+// ----------------------------------------------------------------------------
+{
+    Context_p  where;
+    Context   *context  = unit->context;
+    Tree      *existing = context->Bound(what, Context::SCOPE_LOOKUP, &where);
+    assert(existing || !"Type checking didn't realize a name is missing");
+    if (where == context)
+    {
+        llvm_value storage = unit->Storage(what);
+        return unit->code->CreateLoad(storage);
+    }
+
+    // For now assume a global
+    return unit->Global(what);
+}
+
+
+llvm_value CompileExpression::DoInfix(Infix *infix)
+// ----------------------------------------------------------------------------
+//   Compile infix expressions
+// ----------------------------------------------------------------------------
+{
+    // Sequences
+    if (infix->name == "\n" || infix->name == ";")
+    {
+        infix->left->Do(this);
+        return infix->right->Do(this);
+    }
+
+    // Type casts - REVISIT: may need to do some actual conversion
+    if (infix->name == ":")
+    {
+        return infix->left->Do(this);
+    }
+
+    // Declarations: enter a function
+    if (infix->name == "->")
+    {
+        
+    }
+
+    // General case: expression
+    return DoCall(infix);
+}
+
+
+llvm_value CompileExpression::DoPrefix(Prefix *what)
+// ----------------------------------------------------------------------------
+//   Compile prefix expressions
+// ----------------------------------------------------------------------------
+{
+    return DoCall(what);
+}
+
+
+llvm_value CompileExpression::DoPostfix(Postfix *what)
+// ----------------------------------------------------------------------------
+//   Compile postfix expressions
+// ----------------------------------------------------------------------------
+{
+    return DoCall(what);
+}
+
+
+llvm_value CompileExpression::DoBlock(Block *block)
+// ----------------------------------------------------------------------------
+//   Compile blocks
+// ----------------------------------------------------------------------------
+{
+    return block->child->Do(this);
+}
+
+
+llvm_value CompileExpression::DoCall(Tree *call)
+// ----------------------------------------------------------------------------
+//   Compile expressions into calls for the right expression
+// ----------------------------------------------------------------------------
+{
+    rcall_map &rcalls = unit->inference->rcalls;
+    rcall_map::iterator found = rcalls.find(call);
+    if (found != rcalls.end())
+    {
+        RewriteCalls *rc = (*found).second;
+        RewriteCandidates &calls = rc->candidates;
+        if (calls.size() == 1)
+        {
+            RewriteCandidate &call = calls[0];
+            llvm_value function = unit->Compile(call.rewrite);
+            std::vector<llvm_value> args;
+            std::vector<RewriteBinding> &bnds = call.bindings;
+            std::vector<RewriteBinding>::iterator b;
+            for (b = bnds.begin(); b != bnds.end(); b++)
+            {
+                Tree *tree = (*b).value;
+                llvm_value value = tree->Do(this);
+                args.push_back(value);
+            }
+            llvm_value result =
+                unit->code->CreateCall(function, args.begin(), args.end());
+            return result;
+        }
+        else
+        {
+            assert(!"Not implemented yet");
+        }
+    }
+    return NULL;
+}
+
+
 
 // ============================================================================
 // 

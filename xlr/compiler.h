@@ -95,7 +95,7 @@ struct Compiler
     ~Compiler();
 
     // Top-level entry point: analyze and compile a whole program
-    program_fn                CompileProgram(Context *contetx, Tree *program);
+    program_fn                CompileProgram(Context *context, Tree *program);
 
     void                      Reset();
     CompilerInfo *            Info(Tree *tree, bool create = false);

@@ -52,6 +52,7 @@ protected:
 public:
     bool                TypeCheck(Tree *program);
     llvm_value          Compile(Tree *tree);
+    llvm_value          Compile(Rewrite *rewrite);
     llvm_value          Return(llvm_value value);
     eval_fn             Finalize();
 
@@ -97,6 +98,8 @@ public:
     llvm_type           StructureType(llvm_types &signature);
     llvm_type           ExpressionMachineType(Tree *expr);
     llvm_value          Autobox(llvm_value value, llvm_type requested);
+    llvm_value          Storage(Tree *tree);
+    llvm_value          Global(Tree *tree);
 
 public:
     Context_p           context;        // Context in which we compile

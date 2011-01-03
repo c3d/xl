@@ -35,6 +35,7 @@
 
 #include "compiler-unit.h"
 #include "compiler-parm.h"
+#include "compiler-expred.h"
 #include "errors.h"
 #include "types.h"
 
@@ -146,9 +147,6 @@ Function *CompiledUnit::TopLevelFunction()
     // We must have verified the types before
     assert(inference || !"TopLevelFunction called without type check");
 
-    // Save context for later
-    this->context = context;
-
     llvm_types signature;
     ParameterList parameters(this);
     llvm_type retTy = compiler->treePtrTy;
@@ -167,7 +165,7 @@ Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
     assert (!function || !"LLVM function was already built");
 
     // Create function and save it in the CompiledUnit
-    function = Function::Create(fnTy, Function::InternalLinkage, 
+    function = Function::Create(fnTy, Function::InternalLinkage,
                                 label, compiler->module);
     IFTRACE(llvm)
         std::cerr << " new F" << function << "\n";
@@ -219,47 +217,41 @@ bool CompiledUnit::TypeCheck(Tree *program)
 }
 
 
-llvm::Value *CompiledUnit::Compile(Tree *tree)
+llvm_value CompiledUnit::Compile(Tree *tree)
 // ----------------------------------------------------------------------------
 //    Compile a given tree
 // ----------------------------------------------------------------------------
 {
     assert (inference || !"Compile() called without type checking");
-    Value *result = NULL;
+    CompileExpression cexpr(this);
+    llvm_value result = tree->Do(cexpr);
+    return result;
+}
 
-    switch(tree->Kind())
-    {
-    case INTEGER:
-    {
-        Integer *it = (Integer *) tree;
-        result = ConstantInt::get(compiler->integerTy, it->value);
-        break;
-    }
-    
-    case REAL:
-    {
-        Real *rt = (Real *) tree;
-        result = ConstantFP::get(compiler->realTy, rt->value);
-        break;
-    }
 
-    case TEXT:
+llvm_value CompiledUnit::Compile(Rewrite *rewrite)
+// ----------------------------------------------------------------------------
+//    Compile a given tree
+// ----------------------------------------------------------------------------
+{
+    llvm_value result = value[rewrite->from];
+    if (result == NULL)
     {
-        Text *tt = (Text *) tree;
-        GlobalVariable *global = compiler->TextConstant(tt->value);
-        result = code->CreateConstGEP2_32(global, 0, 0);
-        break;
-    }
+        Context_p rewriteContext = new Context(context, context);
+        CompiledUnit rewriteUnit(compiler, rewriteContext);
 
-    case NAME:
-    {
-        break;
-    }
+        Function *function = RewriteFunction(rewrite);
+        value[rewrite->from] = function;
+        result = function;
 
-    default:
-        break;
+        llvm_value returned = rewriteUnit.Compile(rewrite->to);
+        if (!returned)
+            return NULL;
+        if (!rewriteUnit.Return(returned))
+            return NULL;
+        if (!rewriteUnit.Finalize())
+            return NULL;
     }
-
     return result;
 }
 
@@ -324,11 +316,12 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
         const char *clabel = label.c_str();
         result = data->CreateAlloca(compiler->treePtrTy, 0, clabel);
         storage[tree] = result;
+
+        if (value.count(tree))
+            data->CreateStore(value[tree], result);
+        else if (Value *global = compiler->TreeGlobal(tree))
+            data->CreateStore(data->CreateLoad(global), result);
     }
-    if (value.count(tree))
-        data->CreateStore(value[tree], result);
-    else if (Value *global = compiler->TreeGlobal(tree))
-        data->CreateStore(data->CreateLoad(global), result);
 
     return result;
 }
@@ -1240,7 +1233,49 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
 
     // Return what we built if anything
     return result;
+}
 
+
+Value *CompiledUnit::Storage(Tree *tree)
+// ----------------------------------------------------------------------------
+//    Allocate storage for the tree
+// ----------------------------------------------------------------------------
+{
+    assert(inference || !"Storage() called without type check");
+
+    Value *result = storage[tree];
+    if (!result)
+    {
+        // Get the associated machine type
+        llvm_type mtype = ExpressionMachineType(tree);
+
+        // Create alloca to store the new form
+        text label = "loc";
+        IFTRACE(labels)
+            label += "[" + text(*tree) + "]";
+        const char *clabel = label.c_str();
+        result = data->CreateAlloca(mtype, 0, clabel);
+        storage[tree] = result;
+    }
+
+    return result;
+}
+
+
+Value *CompiledUnit::Global(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Return a global value if there is any
+// ----------------------------------------------------------------------------
+{
+    // Check if this is a global
+    Value *result = compiler->TreeGlobal(tree);
+    if (result)
+    {
+        text label = "glob";
+        IFTRACE(labels)
+            label += "[" + text(*tree) + "]";
+        result = code->CreateLoad(result, label);
+    }
     return result;
 }
 

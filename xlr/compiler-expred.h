@@ -26,6 +26,34 @@
 
 XL_BEGIN
 
+
+struct CompileExpression
+// ----------------------------------------------------------------------------
+//   Collect parameters on the left of a rewrite
+// ----------------------------------------------------------------------------
+{
+    typedef llvm_value value_type;
+    
+public:
+    CompileExpression(CompiledUnit *unit) : unit(unit) {}
+
+public:
+    llvm_value DoInteger(Integer *what);
+    llvm_value DoReal(Real *what);
+    llvm_value DoText(Text *what);
+    llvm_value DoName(Name *what);
+    llvm_value DoPrefix(Prefix *what);
+    llvm_value DoPostfix(Postfix *what);
+    llvm_value DoInfix(Infix *what);
+    llvm_value DoBlock(Block *what);
+
+    llvm_value DoCall(Tree *call);
+
+public:
+    CompiledUnit *  unit;         // Current compilation unit
+};
+
+
 struct ExpressionReduction
 // ----------------------------------------------------------------------------
 //   Record compilation state for a specific expression reduction
