@@ -357,92 +357,102 @@ Tree *xl_type_check(Context *context, Tree *value, Tree *type)
 //
 // ========================================================================
 
-Tree *xl_new_integer(longlong value)
+Integer *xl_new_integer(longlong value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new Integer
 // ----------------------------------------------------------------------------
 {
-    Tree *result = new Integer(value);
+    Integer *result = new Integer(value);
     return result;
 }
 
 
-Tree *xl_new_real(double value)
+Real *xl_new_real(double value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new Real
 // ----------------------------------------------------------------------------
 {
-    Tree *result = new Real (value);
+    Real *result = new Real (value);
     return result;
 }
 
 
-Tree *xl_new_character(kstring value)
+Text *xl_new_character(char value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new single-quoted Text
 // ----------------------------------------------------------------------------
 {
-    Tree *result = new Text(value, "'", "'");
+    Text *result = new Text(text(value, 1), "'", "'");
     return result;
 }
 
 
-Tree *xl_new_text(kstring value)
+Text *xl_new_text(text value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new double-quoted Text
 // ----------------------------------------------------------------------------
 {
-    Tree *result = new Text(text(value));
+    Text *result = new Text(value);
     return result;
 }
 
 
-Tree *xl_new_xtext(kstring value, kstring open, kstring close)
+Text *xl_new_ctext(kstring value)
+// ----------------------------------------------------------------------------
+//    Called by generated code to build a new double-quoted Text
+// ----------------------------------------------------------------------------
+{
+    Text *result = new Text(text(value));
+    return result;
+}
+
+
+Text *xl_new_xtext(kstring value, longlong len, kstring open, kstring close)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new arbitrarily-quoted Text
 // ----------------------------------------------------------------------------
 {
-    Tree *result = new Text(value, open, close);
+    Text *result = new Text(text(value, len), open, close);
     return result;
 }
 
 
-Tree *xl_new_block(Block *source, Tree *child)
+Block *xl_new_block(Block *source, Tree *child)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new block
 // ----------------------------------------------------------------------------
 {
-    Tree *result = new Block(source, child);
+    Block *result = new Block(source, child);
     return result;
 }
 
 
-Tree *xl_new_prefix(Prefix *source, Tree *left, Tree *right)
+Prefix *xl_new_prefix(Prefix *source, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new Prefix
 // ----------------------------------------------------------------------------
 {
-    Tree *result = new Prefix(source, left, right);
+    Prefix *result = new Prefix(source, left, right);
     return result;
 }
 
 
-Tree *xl_new_postfix(Postfix *source, Tree *left, Tree *right)
+Postfix *xl_new_postfix(Postfix *source, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new Postfix
 // ----------------------------------------------------------------------------
 {
-    Tree *result = new Postfix(source, left, right);
+    Postfix *result = new Postfix(source, left, right);
     return result;
 }
 
 
-Tree *xl_new_infix(Infix *source, Tree *left, Tree *right)
+Infix *xl_new_infix(Infix *source, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new Infix
 // ----------------------------------------------------------------------------
 {
-    Tree *result = new Infix(source, left, right);
+    Infix *result = new Infix(source, left, right);
     return result;
 }
 

@@ -66,15 +66,16 @@ bool  xl_same_shape(Tree *t1, Tree *t2);
 Tree *xl_infix_match_check(Tree *value, kstring name);
 Tree *xl_type_check(Context *, Tree *value, Tree *type);
 
-Tree *xl_new_integer(longlong value);
-Tree *xl_new_real(double value);
-Tree *xl_new_character(kstring value);
-Tree *xl_new_text(kstring value);
-Tree *xl_new_xtext(kstring value, kstring open, kstring close);
-Tree *xl_new_block(Block *source, Tree *child);
-Tree *xl_new_prefix(Prefix *source, Tree *left, Tree *right);
-Tree *xl_new_postfix(Postfix *source, Tree *left, Tree *right);
-Tree *xl_new_infix(Infix *source, Tree *left, Tree *right);
+Integer *xl_new_integer(longlong value);
+Real    *xl_new_real(double value);
+Text    *xl_new_character(char value);
+Text    *xl_new_ctext(kstring value);
+Text    *xl_new_text(text value);
+Text    *xl_new_xtext(kstring value, longlong len, kstring open, kstring close);
+Block   *xl_new_block(Block *source, Tree *child);
+Prefix  *xl_new_prefix(Prefix *source, Tree *left, Tree *right);
+Postfix *xl_new_postfix(Postfix *source, Tree *left, Tree *right);
+Infix   *xl_new_infix(Infix *source, Tree *left, Tree *right);
 
 Tree *xl_new_closure(Tree *expr, uint ntrees, ...);
 

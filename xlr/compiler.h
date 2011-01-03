@@ -129,8 +129,10 @@ public:
     llvm::FunctionPassManager *optimizer;
     const llvm::IntegerType   *booleanTy;
     const llvm::IntegerType   *integerTy;
-    const llvm::IntegerType   *characterTy;
     const llvm::Type          *realTy;
+    const llvm::IntegerType   *characterTy;
+    llvm::PointerType         *charPtrTy;
+    llvm::StructType          *textTy;
     llvm::StructType          *treeTy;
     llvm::PointerType         *treePtrTy;
     llvm::PointerType         *treePtrPtrTy;
@@ -138,6 +140,10 @@ public:
     llvm::PointerType         *integerTreePtrTy;
     llvm::StructType          *realTreeTy;
     llvm::PointerType         *realTreePtrTy;
+    llvm::StructType          *textTreeTy;
+    llvm::PointerType         *textTreePtrTy;
+    llvm::StructType          *nameTreeTy;
+    llvm::PointerType         *nameTreePtrTy;
     llvm::StructType          *blockTreeTy;
     llvm::PointerType         *blockTreePtrTy;
     llvm::StructType          *prefixTreeTy;
@@ -152,7 +158,6 @@ public:
     llvm::PointerType         *evalFnTy;
     llvm::PointerType         *infoPtrTy;
     llvm::PointerType         *contextPtrTy;
-    llvm::PointerType         *charPtrTy;
     llvm::Function            *xl_evaluate;
     llvm::Function            *xl_same_text;
     llvm::Function            *xl_same_shape;
@@ -163,6 +168,7 @@ public:
     llvm::Function            *xl_new_real;
     llvm::Function            *xl_new_character;
     llvm::Function            *xl_new_text;
+    llvm::Function            *xl_new_ctext;
     llvm::Function            *xl_new_xtext;
     llvm::Function            *xl_new_block;
     llvm::Function            *xl_new_prefix;
@@ -190,6 +196,7 @@ public:
 #define INFO_INDEX          1
 #define INTEGER_VALUE_INDEX 2
 #define REAL_VALUE_INDEX    2
+#define TEXT_VALUE_INDEX    2
 #define NAME_VALUE_INDEX    2
 #define BLOCK_CHILD_INDEX   2
 #define BLOCK_OPENING_INDEX 3

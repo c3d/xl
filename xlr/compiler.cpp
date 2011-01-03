@@ -90,21 +90,25 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 //   Initialize the various instances we may need
 // ----------------------------------------------------------------------------
     : module(NULL), runtime(NULL), optimizer(NULL),
-      booleanTy(NULL), integerTy(NULL), characterTy(NULL), realTy(NULL),
+      booleanTy(NULL), integerTy(NULL), realTy(NULL),
+      characterTy(NULL), charPtrTy(NULL), textTy(NULL),
       treeTy(NULL), treePtrTy(NULL), treePtrPtrTy(NULL),
       integerTreeTy(NULL), integerTreePtrTy(NULL),
       realTreeTy(NULL), realTreePtrTy(NULL),
+      textTreeTy(NULL), textTreePtrTy(NULL),
+      nameTreeTy(NULL), nameTreePtrTy(NULL),
       blockTreeTy(NULL), blockTreePtrTy(NULL),
       prefixTreeTy(NULL), prefixTreePtrTy(NULL),
       postfixTreeTy(NULL), postfixTreePtrTy(NULL),
       infixTreeTy(NULL), infixTreePtrTy(NULL),
       nativeTy(NULL), nativeFnTy(NULL),
       evalTy(NULL), evalFnTy(NULL),
-      infoPtrTy(NULL), contextPtrTy(NULL), charPtrTy(NULL),
+      infoPtrTy(NULL), contextPtrTy(NULL),
       xl_evaluate(NULL), xl_same_text(NULL), xl_same_shape(NULL),
       xl_infix_match_check(NULL), xl_type_check(NULL), xl_form_error(NULL),
       xl_new_integer(NULL), xl_new_real(NULL), xl_new_character(NULL),
-      xl_new_text(NULL), xl_new_xtext(NULL), xl_new_block(NULL),
+      xl_new_text(NULL), xl_new_ctext(NULL), xl_new_xtext(NULL),
+      xl_new_block(NULL),
       xl_new_prefix(NULL), xl_new_postfix(NULL), xl_new_infix(NULL),
       xl_new_closure(NULL)
 {
@@ -197,6 +201,11 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     realTy = Type::getDoubleTy(*llvm);
     charPtrTy = PointerType::get(LLVM_INTTYPE(char), 0);
 
+    // Create the 'text' type, assume it contains a single char *
+    std::vector<const Type *> textElements;
+    textElements.push_back(charPtrTy);             // _M_p in gcc's impl
+    textTy = StructType::get(*llvm, textElements); // text
+
     // Create the Info and Symbol pointer types
     PATypeHolder structInfoTy = OpaqueType::get(*llvm); // struct Info
     infoPtrTy = PointerType::get(structInfoTy, 0);         // Info *
@@ -241,49 +250,76 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 
     // Create the Integer type
     std::vector<const Type *> integerElements = treeElements;
-    integerElements.push_back(LLVM_INTTYPE(longlong));  // value
-    integerTreeTy = StructType::get(*llvm, integerElements); // struct Int
-    integerTreePtrTy = PointerType::get(integerTreeTy,0); // Integer *
+    integerElements.push_back(LLVM_INTTYPE(longlong));       // value
+    integerTreeTy = StructType::get(*llvm, integerElements); // struct Integer
+    integerTreePtrTy = PointerType::get(integerTreeTy,0);    // Integer *
 
     // Create the Real type
     std::vector<const Type *> realElements = treeElements;
-    realElements.push_back(Type::getDoubleTy(*llvm));  // value
-    realTreeTy = StructType::get(*llvm, realElements); // struct Real{}
-    realTreePtrTy = PointerType::get(realTreeTy, 0);      // Real *
+    realElements.push_back(Type::getDoubleTy(*llvm));    // value
+    realTreeTy = StructType::get(*llvm, realElements);   // struct Real{}
+    realTreePtrTy = PointerType::get(realTreeTy, 0);     // Real *
+
+    // Create the Text type
+    std::vector<const Type *> textTreeElements = treeElements;
+    textTreeElements.push_back(textTy);                        // value
+    textTreeElements.push_back(textTy);                        // opening
+    textTreeElements.push_back(textTy);                        // closing
+    textTreeTy = StructType::get(*llvm, textTreeElements);     // struct Text
+    textTreePtrTy = PointerType::get(textTreeTy, 0);           // Text *
+
+    // Create the Name type
+    std::vector<const Type *> nameElements = treeElements;
+    nameElements.push_back(textTy);
+    nameTreeTy = StructType::get(*llvm, nameElements);    // struct Name{}
+    nameTreePtrTy = PointerType::get(nameTreeTy, 0);      // Name *
 
     // Create the Block type
     std::vector<const Type *> blockElements = treeElements;
-    blockElements.push_back(treePtrTy);                // Tree *
-    blockElements.push_back(charPtrTy);                // opening
-    blockElements.push_back(charPtrTy);                // closing
+    blockElements.push_back(treePtrTy);                  // Tree *
+    blockElements.push_back(textTy);                     // opening
+    blockElements.push_back(textTy);                     // closing
     blockTreeTy = StructType::get(*llvm, blockElements); // struct Block
-    blockTreePtrTy = PointerType::get(blockTreeTy, 0);// Block *
+    blockTreePtrTy = PointerType::get(blockTreeTy, 0);   // Block *
 
     // Create the Prefix type
     std::vector<const Type *> prefixElements = treeElements;
-    prefixElements.push_back(treePtrTy);                // Tree *
-    prefixElements.push_back(treePtrTy);                // Tree *
+    prefixElements.push_back(treePtrTy);                   // Tree *
+    prefixElements.push_back(treePtrTy);                   // Tree *
     prefixTreeTy = StructType::get(*llvm, prefixElements); // struct Prefix
-    prefixTreePtrTy = PointerType::get(prefixTreeTy, 0);// Prefix *
+    prefixTreePtrTy = PointerType::get(prefixTreeTy, 0);   // Prefix *
 
     // Create the Postfix type
     std::vector<const Type *> postfixElements = prefixElements;
     postfixTreeTy = StructType::get(*llvm, postfixElements); // Postfix
-    postfixTreePtrTy = PointerType::get(postfixTreeTy, 0);      // Postfix *
+    postfixTreePtrTy = PointerType::get(postfixTreeTy, 0);   // Postfix *
 
     // Create the Infix type
     std::vector<const Type *> infixElements = prefixElements;
-    infixElements.push_back(charPtrTy);                     // name
-    infixTreeTy = StructType::get(*llvm, infixElements); // Infix
+    infixElements.push_back(textTy);                        // name
+    infixTreeTy = StructType::get(*llvm, infixElements);    // Infix
     infixTreePtrTy = PointerType::get(infixTreeTy, 0);      // Infix *
 
     // Record the type names
-    module->addTypeName("tree", treeTy);
-    module->addTypeName("integer", integerTreeTy);
-    module->addTypeName("real", realTreeTy);
-    module->addTypeName("eval", evalTy);
-    module->addTypeName("prefix", prefixTreeTy);
-    module->addTypeName("info*", infoPtrTy);
+    module->addTypeName("boolean", booleanTy);
+    module->addTypeName("integer", integerTy);
+    module->addTypeName("character", characterTy);
+    module->addTypeName("real", realTy);
+    module->addTypeName("text", charPtrTy);
+
+    module->addTypeName("Tree", treeTy);
+    module->addTypeName("Integer", integerTreeTy);
+    module->addTypeName("Real", realTreeTy);
+    module->addTypeName("Text", textTreeTy);
+    module->addTypeName("Block", blockTreeTy);
+    module->addTypeName("Name", nameTreeTy);
+    module->addTypeName("Prefix", prefixTreeTy);
+    module->addTypeName("Postfix", postfixTreeTy);
+    module->addTypeName("Infix", infixTreeTy);
+    module->addTypeName("eval_fn", evalTy);
+    module->addTypeName("native_fn", nativeTy);
+    module->addTypeName("Info*", infoPtrTy);
+    module->addTypeName("Context*", contextPtrTy);
 
     // Create a reference to the evaluation function
 #define FN(x) #x, (void *) XL::x
@@ -300,23 +336,23 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     xl_form_error = ExternFunction(FN(xl_form_error),
                                    treePtrTy, 1, treePtrTy);
     xl_new_integer = ExternFunction(FN(xl_new_integer),
-                                    treePtrTy, 1, LLVM_INTTYPE(longlong));
+                                    integerTreePtrTy, 1, integerTy);
     xl_new_real = ExternFunction(FN(xl_new_real),
-                                 treePtrTy, 1, Type::getDoubleTy(*llvm));
+                                 realTreePtrTy, 1, realTy);
     xl_new_character = ExternFunction(FN(xl_new_character),
-                                      treePtrTy, 1, charPtrTy);
-    xl_new_text = ExternFunction(FN(xl_new_text),
-                                 treePtrTy, 1, charPtrTy);
-    xl_new_xtext = ExternFunction(FN(xl_new_xtext),
-                                 treePtrTy, 3, charPtrTy, charPtrTy, charPtrTy);
-    xl_new_block = ExternFunction(FN(xl_new_block),
-                                  treePtrTy, 2, treePtrTy,treePtrTy);
-    xl_new_prefix = ExternFunction(FN(xl_new_prefix),
-                                   treePtrTy, 3, treePtrTy,treePtrTy,treePtrTy);
-    xl_new_postfix = ExternFunction(FN(xl_new_postfix),
-                                    treePtrTy, 3,treePtrTy,treePtrTy,treePtrTy);
-    xl_new_infix = ExternFunction(FN(xl_new_infix),
-                                  treePtrTy, 3, treePtrTy,treePtrTy,treePtrTy);
+                                      textTreePtrTy, 1, characterTy);
+    xl_new_text = ExternFunction(FN(xl_new_text), textTreePtrTy, 1, textTy);
+    xl_new_ctext = ExternFunction(FN(xl_new_ctext), textTreePtrTy, 1,charPtrTy);
+    xl_new_xtext = ExternFunction(FN(xl_new_xtext), textTreePtrTy, 4,
+                                  charPtrTy, integerTy, charPtrTy, charPtrTy);
+    xl_new_block = ExternFunction(FN(xl_new_block), blockTreePtrTy, 2,
+                                  blockTreePtrTy,treePtrTy);
+    xl_new_prefix = ExternFunction(FN(xl_new_prefix), prefixTreePtrTy, 3,
+                                   prefixTreePtrTy, treePtrTy, treePtrTy);
+    xl_new_postfix = ExternFunction(FN(xl_new_postfix), postfixTreePtrTy, 3,
+                                    postfixTreePtrTy, treePtrTy, treePtrTy);
+    xl_new_infix = ExternFunction(FN(xl_new_infix), infixTreePtrTy, 3,
+                                  infixTreePtrTy,treePtrTy,treePtrTy);
     xl_new_closure = ExternFunction(FN(xl_new_closure),
                                     treePtrTy, -2,
                                     treePtrTy, LLVM_INTTYPE(uint));
