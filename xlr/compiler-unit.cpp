@@ -220,6 +220,7 @@ llvm::Value *CompiledUnit::Compile(Tree *tree)
 //    Compile a given tree
 // ----------------------------------------------------------------------------
 {
+    assert (inference || !"Compile() called without type checking");
     Value *result = NULL;
 
     switch(tree->Kind())
@@ -1083,6 +1084,158 @@ llvm_type CompiledUnit::StructureType(llvm_types &signature)
 {
     StructType *stype = StructType::get(*llvm, signature);
     return stype;
+}
+
+
+llvm_type CompiledUnit::MachineType(Tree *type)
+// ----------------------------------------------------------------------------
+//   Return the machine type associated with a given XL type
+// ----------------------------------------------------------------------------
+{
+    // Default is a tree pointer
+    llvm_type result = compiler->treePtrTy;
+
+    // Check the various built-in types
+    if (type == boolean_type)
+        result = compiler->booleanTy;
+    else if (type == integer_type)
+        result = compiler->integerTy;
+    else if (type == real_type)
+        result = compiler->realTy;
+    else if (type == text_type)
+        result = compiler->charPtrTy;
+    else if (type == character_type)
+        result = compiler->characterTy;
+    else if (type == symbol_type || type == name_type || type == operator_type)
+        result = compiler->nameTreePtrTy;
+    else if (type == infix_type)
+        result = compiler->infixTreePtrTy;
+    else if (type == prefix_type)
+        result = compiler->prefixTreePtrTy;
+    else if (type == postfix_type)
+        result = compiler->postfixTreePtrTy;
+    else if (type == block_type)
+        result = compiler->blockTreePtrTy;
+
+    return result;
+}
+
+
+llvm_value CompiledUnit::Box(llvm_value value)
+// ----------------------------------------------------------------------------
+//    If a given value needs to be boxed, call xl_new_integer() and co...
+// ----------------------------------------------------------------------------
+//   Boxing a value is the process of creating an object around it.
+//   The boolean type (int1) is boxed into xl_true or xl_false
+//   The integer type (int64) is boxed into instances of Integer
+//   The real type (double) is boxed into instances of Real
+//   The char type (int8) is boxed into instances of Text with xl_new_char
+//   The char * type is boxed into instances of Text with xl_new_ctext
+//   The text type is boxed into instances of Text with xl_new_text
+{
+    llvm_type  type   = value->getType();
+    llvm_value result = value;
+    Function * boxFn  = NULL;
+
+    if (type == compiler->booleanTy)
+    {
+        // Insert code corresponding to value ? xl_true : xl_false
+        BasicBlock *isTrue = BasicBlock::Create(*llvm, "isTrue", function);
+        BasicBlock *isFalse = BasicBlock::Create(*llvm, "isFalse", function);
+        BasicBlock *exit = BasicBlock::Create(*llvm, "booleanBoxed", function);
+        code->CreateCondBr(value, isTrue, isFalse);
+
+        // True block
+        code->SetInsertPoint(isTrue);
+        Value *truePtr = compiler->TreeGlobal(xl_true);
+        result = code->CreateLoad(truePtr, "xl_true");
+        code->CreateBr(exit);
+
+        // False block
+        code->SetInsertPoint(isFalse);
+        Value *falsePtr = compiler->TreeGlobal(xl_false);
+        result = code->CreateLoad(falsePtr, "xl_false");
+        code->CreateBr(exit);
+
+        // Now on shared exit block
+        code->SetInsertPoint(exit);
+    }
+    else if (type == compiler->integerTy)
+    {
+        boxFn = compiler->xl_new_integer;
+    }
+    else if (type == compiler->realTy)
+    {
+        boxFn = compiler->xl_new_real;
+    }
+    else if (type == compiler->characterTy)
+    {
+        boxFn = compiler->xl_new_character;
+    }
+    else if (type == compiler->textTy)
+    {
+        boxFn = compiler->xl_new_text;
+    }
+   else if (type == compiler->charPtrTy)
+    {
+        boxFn = compiler->xl_new_ctext;
+    }
+
+    // If we need to invoke a boxing function, do it now
+    if (boxFn)
+        result = code->CreateCall(boxFn, value);
+
+    // Return what we built if anything
+    return result;
+}
+
+
+llvm_value CompiledUnit::Unbox(llvm_value value, llvm_type req)
+// ----------------------------------------------------------------------------
+//   Return a native value from one of the types we can unbox
+// ----------------------------------------------------------------------------
+{
+    llvm_type  type   = value->getType();
+    llvm_value result = value;
+
+    // Short circuit if we are already there
+    if (req == type)
+        return result;
+
+    if (req == compiler->booleanTy)
+    {
+        if (type == compiler->treePtrTy || type == compiler->nameTreePtrTy)
+        {
+            Value *falsePtr = compiler->TreeGlobal(xl_false);
+            result = code->CreateLoad(falsePtr, "xl_false");
+            result = code->CreateICmpNE(value, result, "notFalse");
+        }
+    }
+    else if (req == compiler->integerTy && type == compiler->integerTreePtrTy)
+    {
+        result = code->CreateConstGEP2_32(value,0, INTEGER_VALUE_INDEX, "ival");
+    }
+    else if (req == compiler->realTy && type == compiler->realTreePtrTy)
+    {
+        result = code->CreateConstGEP2_32(value,0, REAL_VALUE_INDEX, "rval");
+    }
+    else if (req == compiler->characterTy && type == compiler->textTreePtrTy)
+    {
+        result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX, "tval");
+        result = code->CreateConstGEP2_32(result, 0, 0, "cptrval");
+        result = code->CreateConstGEP2_32(result, 0, 0, "charval");
+    }
+    else if (req == compiler->charPtrTy && type == compiler->textTreePtrTy)
+    {
+        result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX, "tval");
+        result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX,"cptrval");
+    }
+    else if (req == compiler->textTy && type == compiler->textTreePtrTy)
+    {
+        result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX, "tval");
+    }
+
+    return result;
 }
 
 XL_END

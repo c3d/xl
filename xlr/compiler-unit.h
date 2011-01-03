@@ -95,6 +95,9 @@ public:
 
     llvm_type           ReturnType(Tree *form);
     llvm_type           StructureType(llvm_types &signature);
+    llvm_type           MachineType(Tree *type);
+    llvm_value          Box(llvm_value value);
+    llvm_value          Unbox(llvm_value value, llvm_type requested);
 
 public:
     Context_p           context;        // Context in which we compile
