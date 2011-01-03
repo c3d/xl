@@ -39,10 +39,21 @@
 
 #include "tree.h"
 #include "context.h"
-#include "compiler-arg.h"
 #include <map>
 
 XL_BEGIN
+
+// ============================================================================
+// 
+//   Forward classes
+// 
+// ============================================================================
+
+struct RewriteCalls;
+typedef GCPtr<RewriteCalls> RewriteCalls_p;
+typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
+
+
 
 // ============================================================================
 //
