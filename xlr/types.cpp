@@ -87,13 +87,14 @@ bool TypeInference::TypeCheck(Tree *program)
     // Dump debug information if approriate
     IFTRACE(typecheck)
     {
-        std::cout << "TYPE CHECK FOR " << program << "\n";
+        std::cout << "TYPE CHECK FOR " << ShortTreeForm(program) << "\n";
         std::cout << "TYPES:\n"; debugt(this);
         std::cout << "UNIFICATIONS:\n"; debugu(this);
     }
     IFTRACE(types)
     {
-        std::cout << "CALLS FOR " << program << ":\n"; debugr(this);
+        std::cout << "CALLS FOR " << ShortTreeForm(program) << ":\n";
+        debugr(this);
     }
 
     return result;
