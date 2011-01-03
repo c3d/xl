@@ -372,10 +372,14 @@ bool TypeInference::Evaluate(Tree *what)
     // For a name, check if bound and evaluate bound value
     if (Name *name = what->AsName())
     {
-        if (Tree *existing = context->Bound(name))
+        Context_p where;
+        if (Tree *existing = context->Bound(name,
+                                            Context::SCOPE_LOOKUP,
+                                            &where))
         {
             if (existing == name)
                 return true;    // Example: 'true' or 'integer'
+            Save<Context_p> saveContext(context, where);
             if (!Evaluate(existing))
                 return false;
             Tree *etype = Type(existing);
