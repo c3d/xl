@@ -57,7 +57,7 @@ Tree *RewriteCalls::operator() (Context *context,
         if (!childInference->AssignType(candidate->to, candidate->type))
             binding = FAILED;
     }
-    else
+    else if (candidate->to)
     {
         bool childSucceeded = childInference->TypeCheck(candidate->to);
         if (!childSucceeded)
@@ -77,7 +77,9 @@ Tree *RewriteCalls::operator() (Context *context,
     if (binding != FAILED)
     {
         // Record the type for that specific expression
-        rc.type = childInference->Type(candidate->to);
+        rc.type = childInference->Type(candidate->to
+                                       ? candidate->to
+                                       : candidate->from);
         candidates.push_back(rc);
     }
 
