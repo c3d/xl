@@ -23,6 +23,7 @@
 #include "compiler.h"
 #include "compiler-gc.h"
 #include "compiler-unit.h"
+#include "compiler-llvm.h"
 #include "options.h"
 #include "context.h"
 #include "renderer.h"
@@ -356,6 +357,10 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     xl_new_closure = ExternFunction(FN(xl_new_closure),
                                     treePtrTy, -2,
                                     treePtrTy, LLVM_INTTYPE(uint));
+
+    // Initialize the llvm_entries table
+    for (CompilerLLVMTableEntry *le = CompilerLLVMTable; le->name; le++)
+        llvm_primitives[le->name] = le;
 }
 
 
@@ -761,6 +766,28 @@ llvm_type Compiler::MachineType(Tree *tree)
 
     // Otherwise, it's a Tree *
     return treePtrTy;
+}
+
+
+llvm_value Compiler::Primitive(llvm_builder builder, text name,
+                               uint arity, llvm_value *args)
+// ----------------------------------------------------------------------------
+//   Invoke an LLVM primitive, assuming it's found in the table
+// ----------------------------------------------------------------------------
+{
+    // Find the entry in the primitives table
+    llvm_entry_table::iterator found = llvm_primitives.find(name);
+    if (found == llvm_primitives.end())
+        return NULL;
+
+    // If the entry doesn't have the expected arity, give up
+    CompilerLLVMTableEntry *entry = (*found).second;
+    if (entry->arity != arity)
+        return NULL;
+
+    // Invoke the entry
+    llvm_value result = entry->function(builder, args);
+    return result;
 }
 
 

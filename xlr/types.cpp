@@ -335,16 +335,19 @@ bool TypeInference::Rewrite(Infix *what)
         return false;
 
     // We need to be able to unify pattern and definition types
-    if (!Unify(formType, valueType))
+    if (!Unify(formType, valueType, what->left, what->right))
         return false;
 
     // The type of the definition is a pattern type, perform unification
-    if (what->left->AsInfix())
+    if (Infix *infix = what->left->AsInfix())
     {
-        Tree *patternType = new Prefix(new Name("type"), what->left,
-                                       what->left->Position());
-        if (!Unify(formType, patternType))
-            return false;
+        if (infix->name != ":")
+        {
+            Tree *patternType = new Prefix(new Name("type"), what->left,
+                                           what->left->Position());
+            if (!Unify(formType, patternType, what->left, what->left))
+                return false;
+        }
     }
 
     // Well done, success!

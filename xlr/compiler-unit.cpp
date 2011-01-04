@@ -238,7 +238,7 @@ llvm_value CompiledUnit::Compile(Rewrite *rewrite, TypeInference *calls)
     llvm_value result = value[rewrite->from];
     if (result == NULL)
     {
-        Context_p rewriteContext = calls->context;
+        Context_p rewriteContext = calls->context;new Context(context, context);
         CompiledUnit rewriteUnit(compiler, rewriteContext);
 
         Function *function = rewriteUnit.RewriteFunction(rewrite, calls);
@@ -308,17 +308,23 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
 //    Allocate storage for a given tree
 // ----------------------------------------------------------------------------
 {
+    assert(inference || !"Storage() called without type check");
+
     Value *result = storage[tree];
     if (!result)
     {
+        // Get the associated machine type
+        llvm_type mtype = ExpressionMachineType(tree);
+
         // Create alloca to store the new form
         text label = "loc";
         IFTRACE(labels)
             label += "[" + text(*tree) + "]";
         const char *clabel = label.c_str();
-        result = data->CreateAlloca(compiler->treePtrTy, 0, clabel);
+        result = data->CreateAlloca(mtype, 0, clabel);
         storage[tree] = result;
 
+        // If this started with a value or global, initialize on function entry
         if (value.count(tree))
             data->CreateStore(value[tree], result);
         else if (Value *global = compiler->TreeGlobal(tree))
@@ -1234,32 +1240,6 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     }
 
     // Return what we built if anything
-    return result;
-}
-
-
-Value *CompiledUnit::Storage(Tree *tree)
-// ----------------------------------------------------------------------------
-//    Allocate storage for the tree
-// ----------------------------------------------------------------------------
-{
-    assert(inference || !"Storage() called without type check");
-
-    Value *result = storage[tree];
-    if (!result)
-    {
-        // Get the associated machine type
-        llvm_type mtype = ExpressionMachineType(tree);
-
-        // Create alloca to store the new form
-        text label = "loc";
-        IFTRACE(labels)
-            label += "[" + text(*tree) + "]";
-        const char *clabel = label.c_str();
-        result = data->CreateAlloca(mtype, 0, clabel);
-        storage[tree] = result;
-    }
-
     return result;
 }
 

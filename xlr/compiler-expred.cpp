@@ -77,14 +77,13 @@ llvm_value CompileExpression::DoName(Name *what)
 // ----------------------------------------------------------------------------
 {
     Context_p  where;
+    Rewrite_p  rewrite;
     Context   *context  = unit->context;
-    Tree      *existing = context->Bound(what, Context::SCOPE_LOOKUP, &where);
+    Tree      *existing = context->Bound(what, Context::SCOPE_LOOKUP,
+                                         &where, &rewrite);
     assert(existing || !"Type checking didn't realize a name is missing");
     if (where == context)
-    {
-        llvm_value storage = unit->Storage(what);
-        return unit->code->CreateLoad(storage);
-    }
+        return unit->Known(rewrite->from);
 
     // For now assume a global
     return unit->Global(what);
@@ -161,21 +160,60 @@ llvm_value CompileExpression::DoCall(Tree *call)
         if (calls.size() == 1)
         {
             RewriteCandidate &cand = calls[0];
-            llvm_value function = unit->Compile(cand.rewrite, cand.calls);
-            if (function)
+            Rewrite *rw = cand.rewrite;
+
+            // Check if this is an LLVM builtin
+            Tree *builtin = NULL;
+            if (rw->to)
+                if (Prefix *prefix = rw->to->AsPrefix())
+                    if (Name *name = prefix->left->AsName())
+                        if (name->value == "llvm")
+                            builtin = prefix->right;
+
+            // Evaluate parameters
+            std::vector<llvm_value> args;
+            std::vector<RewriteBinding> &bnds = cand.bindings;
+            std::vector<RewriteBinding>::iterator b;
+            for (b = bnds.begin(); b != bnds.end(); b++)
             {
-                std::vector<llvm_value> args;
-                std::vector<RewriteBinding> &bnds = cand.bindings;
-                std::vector<RewriteBinding>::iterator b;
-                for (b = bnds.begin(); b != bnds.end(); b++)
+                Tree *tree = (*b).value;
+                llvm_value value = tree->Do(this);
+                args.push_back(value);
+            }
+
+            if (builtin)
+            {
+                llvm_builder bld = unit->code;
+                if (Prefix *prefix = builtin->AsPrefix())
                 {
-                    Tree *tree = (*b).value;
-                    llvm_value value = tree->Do(this);
-                    args.push_back(value);
+                    if (Name *name = prefix->left->AsName())
+                    {
+                        if (name->value == "data")
+                        {
+                            bld = unit->data;
+                            builtin = prefix->right;
+                        }
+                    }
                 }
-                llvm_value result =
+
+                if (Name *name = builtin->AsName())
+                {
+                    Compiler *compiler = unit->compiler;
+                    text op = name->value;
+                    uint sz = args.size();
+                    llvm_value *a = &args[0];
+                    return compiler->Primitive(bld, op, sz, a);
+                }                        
+            }
+            else
+            {
+                llvm_value function = unit->Compile(rw, cand.calls);
+                if (function)
+                {
+                    llvm_value result =
                     unit->code->CreateCall(function, args.begin(), args.end());
-                return result;
+                    return result;
+                }
             }
         }
         else

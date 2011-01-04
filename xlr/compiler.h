@@ -30,6 +30,7 @@
 #include <llvm/Support/IRBuilder.h>
 
 
+
 // ============================================================================
 // 
 //    Forward declarations
@@ -61,6 +62,7 @@ struct CompiledUnit;
 struct CompilerInfo;
 struct Context;
 struct Options;
+struct CompilerLLVMTableEntry;
 typedef Tree * (*program_fn) (void);
 typedef Tree * (*eval_fn) (Tree *);
 typedef Tree * (*adapter_fn) (native_fn callee, Context *ctx,
@@ -73,10 +75,14 @@ typedef std::map<uint, eval_fn>                closure_map;
 typedef std::map<uint, adapter_fn>             adapter_map;
 typedef std::set<Tree *>                       closure_set;
 typedef std::set<Tree *>                       data_set;
+typedef std::map<text,CompilerLLVMTableEntry *>llvm_entry_table;
 
 typedef const llvm::Type *                     llvm_type;
 typedef std::vector<llvm_type>                 llvm_types;
 typedef llvm::Value *                          llvm_value;
+typedef llvm::IRBuilder<> *                    llvm_builder;
+typedef llvm::Function *                       llvm_function;
+typedef llvm::BasicBlock *                     llvm_block;
 
 
 
@@ -117,7 +123,9 @@ struct Compiler
     eval_fn                   MarkAsClosure(Tree *closure, uint ntrees);
     bool                      IsKnown(Tree *value);
 
-    const llvm::Type *        MachineType(Tree *tree);
+    llvm_type                 MachineType(Tree *tree);
+    llvm_value                Primitive(llvm_builder builder, text name,
+                                        uint arity, llvm_value *args);
 
     bool                      FreeResources(Tree *tree);
 
@@ -178,6 +186,7 @@ public:
     builtins_map               builtins;
     adapter_map                array_to_args_adapters;
     text_constants_map         text_constants;
+    llvm_entry_table           llvm_primitives;
 };
 
 

@@ -98,7 +98,6 @@ public:
     llvm_type           StructureType(llvm_types &signature);
     llvm_type           ExpressionMachineType(Tree *expr);
     llvm_value          Autobox(llvm_value value, llvm_type requested);
-    llvm_value          Storage(Tree *tree);
     llvm_value          Global(Tree *tree);
 
 public:
@@ -108,15 +107,15 @@ public:
     Compiler *          compiler;       // The compiler environment we use
     llvm::LLVMContext * llvm;           // The LLVM context we got from compiler
 
-    llvm::IRBuilder<> * code;           // Instruction builder for code
-    llvm::IRBuilder<> * data;           // Instruction builder for data
-    llvm::Function *    function;       // Function we generate
+    llvm_builder        code;           // Instruction builder for code
+    llvm_builder        data;           // Instruction builder for data
+    llvm_function       function;       // Function we generate
 
-    llvm::BasicBlock *  allocabb;       // Function entry point, allocas
-    llvm::BasicBlock *  entrybb;        // Code entry point
-    llvm::BasicBlock *  exitbb;         // Shared exit for the function
-    llvm::BasicBlock *  failbb;         // Shared exit for failed expred tests
-    llvm::Value *       returned;       // Where we store the returned value
+    llvm_block          allocabb;       // Function entry point, allocas
+    llvm_block          entrybb;        // Code entry point
+    llvm_block          exitbb;         // Shared exit for the function
+    llvm_block          failbb;         // Shared exit for failed expred tests
+    llvm_value          returned;       // Where we store the returned value
 
     value_map           value;          // Map tree -> LLVM value
     value_map           storage;        // Map tree -> LLVM alloca space

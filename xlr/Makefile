@@ -41,6 +41,7 @@ SOURCES     =					\
 	context.cpp				\
 	runtime.cpp				\
 	types.cpp				\
+	compiler-llvm.cpp			\
 	compiler-action.cpp			\
 	compiler-arg.cpp			\
 	compiler-children.cpp			\

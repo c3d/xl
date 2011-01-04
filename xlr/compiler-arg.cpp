@@ -62,9 +62,22 @@ Tree *RewriteCalls::operator() (Context *context,
         }
         else
         {
-            bool childSucceeded = childInference->TypeCheck(candidate->to);
-            if (!childSucceeded)
-                binding = FAILED;
+            bool builtin = false;
+            if (Prefix *prefix = candidate->to->AsPrefix())
+                if (Name *pfname = prefix->left->AsName())
+                    if (pfname->value == "llvm")
+                        builtin = true;
+
+            if (builtin)
+            {
+                binding = PERFECT;
+            }
+            else
+            {
+                bool childSucceeded = childInference->TypeCheck(candidate->to);
+                if (!childSucceeded)
+                    binding = FAILED;
+            }
         }
     }
 

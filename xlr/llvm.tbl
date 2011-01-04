@@ -1,0 +1,31 @@
+// ****************************************************************************
+//  llvm.tbl                                                        XLR project
+// ****************************************************************************
+//
+//   File Description:
+//
+//    Description of all the LLVM operators we support from rewrite forms
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+//  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2010 Taodyne SAS
+// ****************************************************************************
+
+UNARY(Neg)
+UNARY(FNeg)
+BINARY(Add)
+BINARY(FAdd)
+BINARY(Sub)
+BINARY(FSub)
+
+#undef UNARY
+#undef BINARY
