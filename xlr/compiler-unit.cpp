@@ -96,13 +96,14 @@ CompiledUnit::~CompiledUnit()
 }
 
 
-Function *CompiledUnit::RewriteFunction(Rewrite *rewrite)
+Function *CompiledUnit::RewriteFunction(Rewrite *rewrite, TypeInference *inf)
 // ----------------------------------------------------------------------------
 //   Create a function for a tree rewrite
 // ----------------------------------------------------------------------------
 {
     // We must have verified the types before
-    assert(inference || !"RewriteFunction called without type check");
+    assert((inf && !inference) || !"RewriteFunction: bogus type check");
+    inference = inf;
 
     Tree *source = rewrite->from;
     Tree *def = rewrite->to;
@@ -229,7 +230,7 @@ llvm_value CompiledUnit::Compile(Tree *tree)
 }
 
 
-llvm_value CompiledUnit::Compile(Rewrite *rewrite)
+llvm_value CompiledUnit::Compile(Rewrite *rewrite, TypeInference *calls)
 // ----------------------------------------------------------------------------
 //    Compile a given tree
 // ----------------------------------------------------------------------------
@@ -237,11 +238,12 @@ llvm_value CompiledUnit::Compile(Rewrite *rewrite)
     llvm_value result = value[rewrite->from];
     if (result == NULL)
     {
-        Context_p rewriteContext = new Context(context, context);
+        Context_p rewriteContext = calls->context;
         CompiledUnit rewriteUnit(compiler, rewriteContext);
 
-        Function *function = RewriteFunction(rewrite);
+        Function *function = rewriteUnit.RewriteFunction(rewrite, calls);
         value[rewrite->from] = function;
+        rewriteUnit.value[rewrite->from] = function;
         result = function;
 
         llvm_value returned = rewriteUnit.Compile(rewrite->to);

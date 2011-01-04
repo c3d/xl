@@ -61,7 +61,7 @@ bool ParameterList::EnterName(Name *what,
 
     // Check if the name already exists in context, e.g. 'false'
     if (globalCheck)
-        if (unit->context->Bound(what))
+        if (unit->context->scope->Bound(what))
             return true;
         
     // We need to record a new parameter

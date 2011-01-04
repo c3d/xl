@@ -160,20 +160,23 @@ llvm_value CompileExpression::DoCall(Tree *call)
         RewriteCandidates &calls = rc->candidates;
         if (calls.size() == 1)
         {
-            RewriteCandidate &call = calls[0];
-            llvm_value function = unit->Compile(call.rewrite);
-            std::vector<llvm_value> args;
-            std::vector<RewriteBinding> &bnds = call.bindings;
-            std::vector<RewriteBinding>::iterator b;
-            for (b = bnds.begin(); b != bnds.end(); b++)
+            RewriteCandidate &cand = calls[0];
+            llvm_value function = unit->Compile(cand.rewrite, cand.calls);
+            if (function)
             {
-                Tree *tree = (*b).value;
-                llvm_value value = tree->Do(this);
-                args.push_back(value);
+                std::vector<llvm_value> args;
+                std::vector<RewriteBinding> &bnds = cand.bindings;
+                std::vector<RewriteBinding>::iterator b;
+                for (b = bnds.begin(); b != bnds.end(); b++)
+                {
+                    Tree *tree = (*b).value;
+                    llvm_value value = tree->Do(this);
+                    args.push_back(value);
+                }
+                llvm_value result =
+                    unit->code->CreateCall(function, args.begin(), args.end());
+                return result;
             }
-            llvm_value result =
-                unit->code->CreateCall(function, args.begin(), args.end());
-            return result;
         }
         else
         {

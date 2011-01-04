@@ -41,7 +41,7 @@ struct CompiledUnit
     ~CompiledUnit();
 
 public:
-    llvm::Function *    RewriteFunction(Rewrite *rewrite);
+    llvm::Function *    RewriteFunction(Rewrite *, TypeInference *);
     llvm::Function *    TopLevelFunction();
 
 protected:
@@ -52,7 +52,7 @@ protected:
 public:
     bool                TypeCheck(Tree *program);
     llvm_value          Compile(Tree *tree);
-    llvm_value          Compile(Rewrite *rewrite);
+    llvm_value          Compile(Rewrite *rewrite, TypeInference *calls);
     llvm_value          Return(llvm_value value);
     eval_fn             Finalize();
 
