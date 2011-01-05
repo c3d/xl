@@ -1,0 +1,7 @@
+// OPT=-O3 -tcode
+(x:integer + y:integer):integer -> opcode Add
+foo A -> A + A + A + 5 + 12
+
+foo 3
+
+
