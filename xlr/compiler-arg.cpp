@@ -65,7 +65,7 @@ Tree *RewriteCalls::operator() (Context *context,
             bool builtin = false;
             if (Prefix *prefix = candidate->to->AsPrefix())
                 if (Name *pfname = prefix->left->AsName())
-                    if (pfname->value == "llvm")
+                    if (pfname->value == "opcode")
                         builtin = true;
 
             if (builtin)

@@ -167,7 +167,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
             if (rw->to)
                 if (Prefix *prefix = rw->to->AsPrefix())
                     if (Name *name = prefix->left->AsName())
-                        if (name->value == "llvm")
+                        if (name->value == "opcode")
                             builtin = prefix->right;
 
             // Evaluate parameters
