@@ -1,6 +1,6 @@
 INFIX
         11      NEWLINE
-        21      ->
+        21      -> =>
         31      else into
         40      loop while until
         50      then require ensure
