@@ -418,12 +418,19 @@ bool TypeInference::Evaluate(Tree *what)
         return false;
 
     // The resulting type is the union of all candidates
-    Tree *type = rc->candidates[0].type;
+    Tree *type = Base(rc->candidates[0].type);
+    Tree *wtype = Type(what);
     for (uint i = 1; i < count; i++)
-        type = UnionType(context, type, rc->candidates[i].type);
+    {
+        Tree *ctype = rc->candidates[i].type;
+        if (IsGeneric(ctype) && ctype == wtype)
+            if (!Join(ctype, type))
+                return false;
+        ctype = Base(ctype);
+        type = UnionType(context, type, ctype);
+    }
 
     // Perform type unification
-    Tree *wtype = Type(what);
     return Unify(type, wtype, what, what, DECLARATION);
 }
 
