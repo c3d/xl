@@ -97,7 +97,7 @@ Tree *RewriteCalls::operator() (Context *context,
         rc.type = childInference->Type(candidate->to
                                        ? candidate->to
                                        : candidate->from);
-        rc.calls = childInference;
+        rc.types = childInference;
         candidates.push_back(rc);
     }
 
@@ -127,7 +127,10 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         if (Integer *iv = value->AsInteger())
             return iv->value == f->value ? PERFECT : FAILED;
         if (inference->Unify(type, integer_type, value, form))
+        {
+            rc.conditions.push_back(RewriteCondition(value, form));
             return POSSIBLE;
+        }
         return FAILED;
     }
     case REAL:
@@ -136,7 +139,10 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         if (Real *iv = value->AsReal())
             return iv->value == f->value ? PERFECT : FAILED;
         if (inference->Unify(type, real_type, value, form))
+        {
+            rc.conditions.push_back(RewriteCondition(value, form));
             return POSSIBLE;
+        }
         return FAILED;
     }
     case TEXT:
@@ -145,7 +151,10 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         if (Text *iv = value->AsText())
             return iv->value == f->value ? PERFECT : FAILED;
         if (inference->Unify(type, text_type, value, form))
+        {
+            rc.conditions.push_back(RewriteCondition(value, form));
             return POSSIBLE;
+        }
         return FAILED;
     }
 
@@ -166,6 +175,9 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
                 Tree *boundType = inference->Type(bound);
                 if (!inference->Unify(boundType, type, form, value))
                     return FAILED;
+
+                // We need to have the same value
+                rc.conditions.push_back(RewriteCondition(value, form));
             }
         }
 
@@ -214,6 +226,9 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
             Tree *guardType = inference->Type(fi->right);
             if (!inference->Unify(guardType, boolean_type, fi->right, fi->left))
                 return FAILED;
+
+            // Add the guard condition
+            rc.conditions.push_back(RewriteCondition(fi->right, xl_true));
 
             // The guard makes the binding weak
             return POSSIBLE;

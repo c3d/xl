@@ -138,7 +138,7 @@ bool ParameterList::DoInfix(Infix *what)
         if (Name *varName = what->left->AsName())
         {
             // Enter a name in the parameter list with adequate machine type
-            llvm_type mtype = unit->ExpressionMachineType(what->right);
+            llvm_type mtype = unit->MachineType(what->right);
             llvm_type ntype = unit->ExpressionMachineType(varName);
             if (mtype != ntype)
             {

@@ -341,7 +341,13 @@ bool TypeInference::Rewrite(Infix *what)
     // The type of the definition is a pattern type, perform unification
     if (Infix *infix = what->left->AsInfix())
     {
-        if (infix->name != ":")
+        if (infix->name == ":")
+        {
+            // Explicit type declaration
+            if (!Unify(valueType, infix->right, what->right, infix->right))
+                return false;
+        }
+        else
         {
             Tree *patternType = new Prefix(new Name("type"), what->left,
                                            what->left->Position());

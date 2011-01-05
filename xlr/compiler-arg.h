@@ -40,8 +40,19 @@ struct RewriteBinding
     Name_p      name;
     Tree_p      value;
 };
-
 typedef std::vector<RewriteBinding> RewriteBindings;
+
+
+struct RewriteCondition
+// ----------------------------------------------------------------------------
+//   Structure recording a condition for a given rewrite to be valid
+// ----------------------------------------------------------------------------
+{
+    RewriteCondition(Tree *value, Tree *test): value(value), test(test) {}
+    Tree_p      value;
+    Tree_p      test;
+};
+typedef std::vector<RewriteCondition> RewriteConditions;
 
 
 struct RewriteCandidate
@@ -50,14 +61,14 @@ struct RewriteCandidate
 // ----------------------------------------------------------------------------
 {
     RewriteCandidate(Rewrite *rewrite)
-        : rewrite(rewrite), bindings(), type(NULL), calls(NULL) {}
+        : rewrite(rewrite), bindings(), type(NULL), types(NULL) {}
 
     Rewrite_p           rewrite;
     RewriteBindings     bindings;
+    RewriteConditions   conditions;
     Tree_p              type;
-    TypeInference_p     calls;
+    TypeInference_p     types;
 };
-
 typedef std::vector<RewriteCandidate> RewriteCandidates;
 
 
@@ -82,45 +93,6 @@ public:
 };
 typedef GCPtr<RewriteCalls> RewriteCalls_p;
 typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
-
-
-struct ArgumentMatch
-// ----------------------------------------------------------------------------
-//   Check if a tree matches the form of the left of a rewrite
-// ----------------------------------------------------------------------------
-{
-    ArgumentMatch (Tree *t,
-                   Context *s, Context *l, Context *r,
-                   CompileAction *comp, bool data):
-        symbols(s), locals(l), rewrite(r),
-        test(t), defined(NULL), compile(comp), unit(comp->unit), data(data) {}
-
-    // Action callbacks
-    Tree *Do(Tree *what);
-    Tree *DoInteger(Integer *what);
-    Tree *DoReal(Real *what);
-    Tree *DoText(Text *what);
-    Tree *DoName(Name *what);
-    Tree *DoPrefix(Prefix *what);
-    Tree *DoPostfix(Postfix *what);
-    Tree *DoInfix(Infix *what);
-    Tree *DoBlock(Block *what);
-
-    // Compile a tree
-    Tree *         Compile(Tree *source);
-    Tree *         CompileValue(Tree *source);
-    Tree *         CompileClosure(Tree *source);
-
-public:
-    Context_p      symbols;     // Context in which we evaluate values
-    Context_p      locals;      // Context where we declare arguments
-    Context_p      rewrite;     // Context in which the rewrite was declared
-    Tree_p         test;        // Tree we test
-    Tree_p         defined;     // Tree beind defined, e.g. 'sin' in 'sin X'
-    CompileAction *compile;     // Action in which we are compiling
-    CompiledUnit  &unit;        // JIT compiler compilation unit
-    bool           data;        // Is a data form
-};
 
 XL_END
 

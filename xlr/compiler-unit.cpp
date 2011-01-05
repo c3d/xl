@@ -112,7 +112,8 @@ Function *CompiledUnit::RewriteFunction(Rewrite *rewrite, TypeInference *inf)
 
     // Extract parameters from source form
     ParameterList parameters(this);
-    source->Do(parameters);
+    if (!source->Do(parameters))
+        return NULL;
 
     // Create the function signature, one entry per parameter
     llvm_types signature;
@@ -230,7 +231,7 @@ llvm_value CompiledUnit::Compile(Tree *tree)
 }
 
 
-llvm_value CompiledUnit::Compile(Rewrite *rewrite, TypeInference *calls)
+llvm_value CompiledUnit::Compile(Rewrite *rewrite, TypeInference *types)
 // ----------------------------------------------------------------------------
 //    Compile a given tree
 // ----------------------------------------------------------------------------
@@ -238,10 +239,10 @@ llvm_value CompiledUnit::Compile(Rewrite *rewrite, TypeInference *calls)
     llvm_value result = value[rewrite->from];
     if (result == NULL)
     {
-        Context_p rewriteContext = calls->context;new Context(context, context);
+        Context_p rewriteContext = types->context;
         CompiledUnit rewriteUnit(compiler, rewriteContext);
 
-        Function *function = rewriteUnit.RewriteFunction(rewrite, calls);
+        Function *function = rewriteUnit.RewriteFunction(rewrite, types);
         value[rewrite->from] = function;
         rewriteUnit.value[rewrite->from] = function;
         result = function;
@@ -1111,6 +1112,18 @@ llvm_type CompiledUnit::ExpressionMachineType(Tree *expr)
     assert(inference || !"ExpressionMachineType without type check");
 
     Tree *type = inference->Type(expr);
+    return compiler->MachineType(type);
+}
+
+
+llvm_type CompiledUnit::MachineType(Tree *type)
+// ----------------------------------------------------------------------------
+//   Return the machine type associated with a given type
+// ----------------------------------------------------------------------------
+{
+    assert(inference || !"ExpressionMachineType without type check");
+
+    type = inference->Base(type);
     return compiler->MachineType(type);
 }
 

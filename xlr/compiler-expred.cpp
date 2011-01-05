@@ -27,6 +27,7 @@
 
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/GlobalVariable.h>
+#include <llvm/Function.h>
 
 XL_BEGIN
 
@@ -111,7 +112,14 @@ llvm_value CompileExpression::DoInfix(Infix *infix)
     // Declarations: enter a function
     if (infix->name == "->")
     {
-        
+        return NULL;
+        Rewrite *rw = unit->context->RewriteFor(infix->left);
+        assert(rw || !"Compiling declaration that was not seen before");
+        // REVISIT: unit->inference is NOT the right inference here,
+        // so we end up botching the compilation
+        llvm_value function = unit->Compile(rw, unit->inference);
+        assert(function || "Unable to compile function");
+        return function;
     }
 
     // General case: expression
@@ -124,6 +132,46 @@ llvm_value CompileExpression::DoPrefix(Prefix *what)
 //   Compile prefix expressions
 // ----------------------------------------------------------------------------
 {
+    if (Name *name = what->left->AsName())
+    {
+        if (name->value == "opcode")
+        {
+            // This is a builtin, find if we write to code or data
+            llvm_builder bld = unit->code;
+            Tree *builtin = what->right;
+            if (Prefix *prefix = builtin->AsPrefix())
+            {
+                if (Name *name = prefix->left->AsName())
+                {
+                    if (name->value == "data")
+                    {
+                        bld = unit->data;
+                        builtin = prefix->right;
+                    }
+                }
+            }
+
+            // Take args list for current function as input
+            std::vector<llvm_value> args;
+            Function *function = bld->GetInsertBlock()->getParent();
+            uint i, max = function->arg_size();
+            Function::arg_iterator arg = function->arg_begin();
+            for (i = 0; i < max; i++)
+            {
+                llvm_value inputArg = arg++;
+                args.push_back(inputArg);
+            }
+
+            // Call the primitive (effectively creating a wrapper for it)
+            Name *name = builtin->AsName();
+            assert(name || !"Malformed primitive");
+            Compiler *compiler = unit->compiler;
+            text op = name->value;
+            uint sz = args.size();
+            llvm_value *a = &args[0];
+            return compiler->Primitive(bld, op, sz, a);
+        }
+    }
     return DoCall(what);
 }
 
@@ -153,72 +201,68 @@ llvm_value CompileExpression::DoCall(Tree *call)
 {
     rcall_map &rcalls = unit->inference->rcalls;
     rcall_map::iterator found = rcalls.find(call);
-    if (found != rcalls.end())
+    assert(found != rcalls.end() || !"Type analysis botched on expression");
+        
+    RewriteCalls *rc = (*found).second;
+    RewriteCandidates &calls = rc->candidates;
+
+    uint i, max = calls.size();
+    for (i = 0; i < max; i++)
     {
-        RewriteCalls *rc = (*found).second;
-        RewriteCandidates &calls = rc->candidates;
-        if (calls.size() == 1)
+        RewriteCandidate &cand = calls[i];
+        Rewrite *rw = cand.rewrite;
+        
+        // Check if this is an LLVM builtin
+        Tree *builtin = NULL;
+        if (rw->to)
+            if (Prefix *prefix = rw->to->AsPrefix())
+                if (Name *name = prefix->left->AsName())
+                    if (name->value == "opcode")
+                        builtin = prefix->right;
+
+        // Evaluate parameters
+        std::vector<llvm_value> args;
+        std::vector<RewriteBinding> &bnds = cand.bindings;
+        std::vector<RewriteBinding>::iterator b;
+        for (b = bnds.begin(); b != bnds.end(); b++)
         {
-            RewriteCandidate &cand = calls[0];
-            Rewrite *rw = cand.rewrite;
-
-            // Check if this is an LLVM builtin
-            Tree *builtin = NULL;
-            if (rw->to)
-                if (Prefix *prefix = rw->to->AsPrefix())
-                    if (Name *name = prefix->left->AsName())
-                        if (name->value == "opcode")
-                            builtin = prefix->right;
-
-            // Evaluate parameters
-            std::vector<llvm_value> args;
-            std::vector<RewriteBinding> &bnds = cand.bindings;
-            std::vector<RewriteBinding>::iterator b;
-            for (b = bnds.begin(); b != bnds.end(); b++)
+            Tree *tree = (*b).value;
+            llvm_value value = tree->Do(this);
+            args.push_back(value);
+        }
+        
+        if (builtin)
+        {
+            llvm_builder bld = unit->code;
+            if (Prefix *prefix = builtin->AsPrefix())
             {
-                Tree *tree = (*b).value;
-                llvm_value value = tree->Do(this);
-                args.push_back(value);
-            }
-
-            if (builtin)
-            {
-                llvm_builder bld = unit->code;
-                if (Prefix *prefix = builtin->AsPrefix())
+                if (Name *name = prefix->left->AsName())
                 {
-                    if (Name *name = prefix->left->AsName())
+                    if (name->value == "data")
                     {
-                        if (name->value == "data")
-                        {
-                            bld = unit->data;
-                            builtin = prefix->right;
-                        }
+                        bld = unit->data;
+                        builtin = prefix->right;
                     }
                 }
-
-                if (Name *name = builtin->AsName())
-                {
-                    Compiler *compiler = unit->compiler;
-                    text op = name->value;
-                    uint sz = args.size();
-                    llvm_value *a = &args[0];
-                    return compiler->Primitive(bld, op, sz, a);
-                }                        
             }
-            else
-            {
-                llvm_value function = unit->Compile(rw, cand.calls);
-                if (function)
-                {
-                    llvm_value result =
-                    unit->code->CreateCall(function, args.begin(), args.end());
-                    return result;
-                }
-            }
+            
+            Name *name = builtin->AsName();
+            assert(name || !"Malformed primitive");
+            Compiler *compiler = unit->compiler;
+            text op = name->value;
+            uint sz = args.size();
+            llvm_value *a = &args[0];
+            return compiler->Primitive(bld, op, sz, a);
         }
         else
         {
-            assert(!"Not implemented yet");
+            llvm_value function = unit->Compile(rw, cand.types);
+            if (function)
+            {
+                llvm_value result =
+                    unit->code->CreateCall(function, args.begin(), args.end());
+                return result;
+            }
         }
     }
     return NULL;

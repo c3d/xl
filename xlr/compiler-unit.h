@@ -97,6 +97,7 @@ public:
     llvm_type           ReturnType(Tree *form);
     llvm_type           StructureType(llvm_types &signature);
     llvm_type           ExpressionMachineType(Tree *expr);
+    llvm_type           MachineType(Tree *type);
     llvm_value          Autobox(llvm_value value, llvm_type requested);
     llvm_value          Global(Tree *tree);
 

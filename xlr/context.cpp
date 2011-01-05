@@ -1340,6 +1340,60 @@ Tree *Context::Bound(Tree *what,
 }
 
 
+Rewrite *Context::RewriteFor(Tree *form, lookup_mode lookup, Context_p *where)
+// ----------------------------------------------------------------------------
+//   Find the rewrite associated with a given form
+// ----------------------------------------------------------------------------
+{
+    // Check if we have a type specification
+    Tree *type = NULL;
+    if (Infix *infix = form->AsInfix())
+    {
+        if (infix->name == ":")
+        {
+            type = infix->right;
+            form = infix->left;
+        }
+    }
+
+    // If we have a block on the left, define the child of that block
+    if (Block *block = form->AsBlock())
+        form = block->child;
+
+    // Build the hash key for the tree to evaluate
+    ulong key = Hash(form);
+
+    // Loop over all contexts
+    FOR_CONTEXTS(this, context)
+    {
+        rewrite_table &rwt = context->rewrites;
+        rewrite_table::iterator found = rwt.find(key);
+        if (found != rwt.end())
+        {
+            Rewrite *candidate = (*found).second;
+            while (candidate)
+            {
+                if (candidate->from == form)
+                {
+                    if (where)
+                        *where = context;
+                    return candidate;
+                }
+
+                rewrite_table &rwh = candidate->hash;
+                found = rwh.find(key);
+                candidate = found == rwh.end() ? NULL : (*found).second;
+            }
+        }
+    }
+    END_FOR_CONTEXTS;
+
+    // Not bound
+    return NULL;
+}
+
+
+
 Tree *Context::Attribute(Tree *form, lookup_mode lookup, text kind)
 // ----------------------------------------------------------------------------
 //   Find the bound form, and then a prefix with the given kind

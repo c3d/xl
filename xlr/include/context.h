@@ -274,6 +274,9 @@ struct Context
                               lookup_mode mode = SCOPE_LOOKUP,
                               Context_p *where = NULL,
                               Rewrite_p *rewrite = NULL);
+    Rewrite *           RewriteFor(Tree *form,
+                                   lookup_mode = SCOPE_LOOKUP,
+                                   Context_p *where = NULL);
 
     // Get an attribute for a given form, e.g. property
     Tree *              Attribute(Tree *form,
