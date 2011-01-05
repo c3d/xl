@@ -445,8 +445,6 @@ Value *CompiledUnit::ConstantTree(Tree *what)
     {
         result = compiler->EnterConstant(what);
         result = data->CreateLoad(result, "treek");
-        if (storage.count(what))
-            data->CreateStore(result, storage[what]);
     }
     return result;
 }
@@ -487,8 +485,7 @@ llvm::Value *CompiledUnit::MarkComputed(Tree *subexpr, Value *val)
 
     // Set the 'lazy' flag or lazy evaluation
     Value *result = NeedLazy(subexpr);
-    Value *trueFlag = ConstantInt::get(LLVM_BOOLTYPE, 1);
-    code->CreateStore(trueFlag, result);
+    code->CreateStore(code->getTrue(), result);
 
     // Return the test flag
     return result;
@@ -513,7 +510,7 @@ BasicBlock *CompiledUnit::BeginLazy(Tree *subexpr)
     BasicBlock *skip = BasicBlock::Create(*llvm, lskip, function);
     BasicBlock *work = BasicBlock::Create(*llvm, lwork, function);
 
-    Value *lazyFlagPtr = NeedLazy(subexpr);
+    Value *lazyFlagPtr = computed[subexpr];
     Value *lazyFlag = code->CreateLoad(lazyFlagPtr, llazy);
     code->CreateCondBr(lazyFlag, skip, work);
 
@@ -522,8 +519,7 @@ BasicBlock *CompiledUnit::BeginLazy(Tree *subexpr)
 }
 
 
-void CompiledUnit::EndLazy(Tree *subexpr,
-                           llvm::BasicBlock *skip)
+void CompiledUnit::EndLazy(Tree *subexpr, llvm::BasicBlock *skip)
 // ----------------------------------------------------------------------------
 //   Finish lazy evaluation of a block of code
 // ----------------------------------------------------------------------------
@@ -862,7 +858,6 @@ Value *CompiledUnit::CallFormError(Tree *what)
 {
     Value *ptr = ConstantTree(what); assert(what);
     Value *callVal = code->CreateCall(compiler->xl_form_error, ptr);
-    MarkComputed(what, callVal);
     return callVal;
 }
 

@@ -1,18 +1,18 @@
 // ****************************************************************************
 //  compiler-expred.cpp                                             XLR project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //    Information required by the compiler for expression reduction
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
@@ -36,9 +36,9 @@ using namespace llvm;
 
 
 // ============================================================================
-// 
+//
 //    Compile an expression
-// 
+//
 // ============================================================================
 
 llvm_value CompileExpression::DoInteger(Integer *what)
@@ -49,7 +49,7 @@ llvm_value CompileExpression::DoInteger(Integer *what)
     Compiler *compiler = unit->compiler;
     return ConstantInt::get(compiler->integerTy, what->value);
 }
-    
+
 
 llvm_value CompileExpression::DoReal(Real *what)
 // ----------------------------------------------------------------------------
@@ -153,7 +153,7 @@ llvm_value CompileExpression::DoPrefix(Prefix *what)
 
             // Take args list for current function as input
             std::vector<llvm_value> args;
-            Function *function = bld->GetInsertBlock()->getParent();
+            Function *function = unit->function;
             uint i, max = function->arg_size();
             Function::arg_iterator arg = function->arg_begin();
             for (i = 0; i < max; i++)
@@ -199,81 +199,208 @@ llvm_value CompileExpression::DoCall(Tree *call)
 //   Compile expressions into calls for the right expression
 // ----------------------------------------------------------------------------
 {
+    llvm_value result = NULL;
+
     rcall_map &rcalls = unit->inference->rcalls;
     rcall_map::iterator found = rcalls.find(call);
     assert(found != rcalls.end() || !"Type analysis botched on expression");
-        
+
+    Function *function = unit->function;
+    LLVMContext &llvm = *unit->llvm;
     RewriteCalls *rc = (*found).second;
     RewriteCandidates &calls = rc->candidates;
 
+
+    // Optimize the frequent case where we have a single call candidate
     uint i, max = calls.size();
+    if (max == 1)
+    {
+        RewriteCandidate &cand = calls[0];
+        if (cand.conditions.size() == 0)
+        {
+            result = DoRewrite(cand);
+            return result;
+        }
+    }
+
+    // More general case: we need to generate expression reduction
+    llvm_block isDone = BasicBlock::Create(llvm, "done", function);
+    llvm_builder code = unit->code;
+    llvm_value storage = unit->NeedStorage(call);
+
     for (i = 0; i < max; i++)
     {
         RewriteCandidate &cand = calls[i];
-        Rewrite *rw = cand.rewrite;
-        
-        // Check if this is an LLVM builtin
-        Tree *builtin = NULL;
-        if (rw->to)
-            if (Prefix *prefix = rw->to->AsPrefix())
-                if (Name *name = prefix->left->AsName())
-                    if (name->value == "opcode")
-                        builtin = prefix->right;
+        llvm_value condition = NULL;
 
-        // Evaluate parameters
-        std::vector<llvm_value> args;
-        std::vector<RewriteBinding> &bnds = cand.bindings;
-        std::vector<RewriteBinding>::iterator b;
-        for (b = bnds.begin(); b != bnds.end(); b++)
+        // Perform the tests to check if this candidate is valid
+        std::vector<RewriteCondition> &conds = cand.conditions;
+        std::vector<RewriteCondition>::iterator t;
+        for (t = conds.begin(); t != conds.end(); t++)
         {
-            Tree *tree = (*b).value;
-            llvm_value value = tree->Do(this);
-            args.push_back(value);
+            llvm_value compare = Compare((*t).value, (*t).test);
+            if (condition)
+                condition = code->CreateAnd(condition, compare);
+            else
+                condition = compare;
         }
-        
-        if (builtin)
+
+        if (condition)
         {
-            llvm_builder bld = unit->code;
-            if (Prefix *prefix = builtin->AsPrefix())
-            {
-                if (Name *name = prefix->left->AsName())
-                {
-                    if (name->value == "data")
-                    {
-                        bld = unit->data;
-                        builtin = prefix->right;
-                    }
-                }
-            }
-            
-            Name *name = builtin->AsName();
-            assert(name || !"Malformed primitive");
-            Compiler *compiler = unit->compiler;
-            text op = name->value;
-            uint sz = args.size();
-            llvm_value *a = &args[0];
-            return compiler->Primitive(bld, op, sz, a);
+            llvm_block isBad = BasicBlock::Create(llvm, "bad", function);
+            llvm_block isGood = BasicBlock::Create(llvm, "good", function);
+            code->CreateCondBr(condition, isGood, isBad);
+            code->SetInsertPoint(isGood);
+            result = DoRewrite(cand);
+            code->CreateStore(result, storage);
+            code->CreateBr(isDone);
+            code->SetInsertPoint(isBad);
         }
         else
         {
-            llvm_value function = unit->Compile(rw, cand.types);
-            if (function)
-            {
-                llvm_value result =
-                    unit->code->CreateCall(function, args.begin(), args.end());
-                return result;
-            }
+            // If this particular call was unconditional, we are done
+            result = DoRewrite(cand);
+            code->CreateStore(result, storage);
+            code->CreateBr(isDone);
+            code->SetInsertPoint(isDone);
+            result = code->CreateLoad(storage);
+            return result;
         }
     }
-    return NULL;
+
+    // The final call to xl_form_error if nothing worked
+    unit->CallFormError(call);
+    code->CreateBr(isDone);
+    code->SetInsertPoint(isDone);
+    result = code->CreateLoad(storage);
+    return result;
+}
+
+
+llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
+// ----------------------------------------------------------------------------
+//   Generate code for a particular rewwrite candidate
+// ----------------------------------------------------------------------------
+{
+    Rewrite *rw = cand.rewrite;
+    llvm_value result = NULL;
+
+    // Evaluate parameters
+    std::vector<llvm_value> args;
+    std::vector<RewriteBinding> &bnds = cand.bindings;
+    std::vector<RewriteBinding>::iterator b;
+    for (b = bnds.begin(); b != bnds.end(); b++)
+    {
+        Tree *tree = (*b).value;
+        llvm_value value = Value(tree);
+        args.push_back(value);
+    }
+
+    // Check if this is an LLVM builtin
+    Tree *builtin = NULL;
+    if (rw->to)
+        if (Prefix *prefix = rw->to->AsPrefix())
+            if (Name *name = prefix->left->AsName())
+                if (name->value == "opcode")
+                    builtin = prefix->right;
+
+    if (builtin)
+    {
+        llvm_builder bld = unit->code;
+        if (Prefix *prefix = builtin->AsPrefix())
+        {
+            if (Name *name = prefix->left->AsName())
+            {
+                if (name->value == "data")
+                {
+                    bld = unit->data;
+                    builtin = prefix->right;
+                }
+            }
+        }
+
+        Name *name = builtin->AsName();
+        assert(name || !"Malformed primitive");
+        Compiler *compiler = unit->compiler;
+        text op = name->value;
+        uint sz = args.size();
+        llvm_value *a = &args[0];
+        result = compiler->Primitive(bld, op, sz, a);
+    }
+    else
+    {
+        llvm_value function = unit->Compile(rw, cand.types);
+        if (function)
+            result = unit->code->CreateCall(function, args.begin(), args.end());
+    }
+
+    return result;
+}
+
+
+llvm_value CompileExpression::Value(Tree *expr)
+// ----------------------------------------------------------------------------
+//   Evaluate an expression once
+// ----------------------------------------------------------------------------
+{
+    llvm_value value = computed[expr];
+    if (!value)
+    {
+        value = expr->Do(this);
+        computed[expr] = value;
+    }
+    return value;
+}
+
+
+llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
+// ----------------------------------------------------------------------------
+//   Perform a comparison between the two values and check if this matches
+// ----------------------------------------------------------------------------
+{
+    llvm_value value = Value(valueTree);
+    llvm_value test = Value(testTree);
+    llvm_type valueType = value->getType();
+    llvm_type testType = test->getType();
+
+    CompiledUnit &u = *unit;
+    Compiler &c = *u.compiler;
+    llvm_builder code = u.code;
+
+    // Test the various types we know how to compare
+    if (testType == c.integerTy)
+    {
+        if (valueType == c.integerTreePtrTy)
+        {
+            value = u.Autobox(value, c.integerTy);
+            valueType = value->getType();
+        }
+        if (valueType != c.integerTy)
+            return code->getFalse();
+        return code->CreateICmpEQ(test, value);
+    }
+
+    if (testType == c.realTy)
+    {
+        if (valueType == c.realTreePtrTy)
+        {
+            value = u.Autobox(value, c.realTy);
+            valueType = value->getType();
+        }
+        if (valueType != c.realTy)
+            return code->getFalse();
+        return code->CreateFCmpOEQ(test, value);
+    }
+
+    return code->getFalse();
 }
 
 
 
 // ============================================================================
-// 
+//
 //    Expression reduction
-// 
+//
 // ============================================================================
 //   An expression reduction typically compiles as:
 //     if (cond1) if (cond2) if (cond3) invoke(T)
@@ -287,13 +414,12 @@ ExpressionReduction::ExpressionReduction(CompiledUnit &u, Tree *src)
 //    Snapshot current basic blocks in the compiled unit
 // ----------------------------------------------------------------------------
     : unit(u), source(src), llvm(u.llvm),
-      storage(NULL), computed(NULL),
       savedfailbb(NULL),
       entrybb(NULL), savedbb(NULL), successbb(NULL)
 {
-    // We need storage and a compute flag to skip this computation if needed
-    storage = u.NeedStorage(src);
-    computed = u.NeedLazy(src);
+    // We need storage for the various cases to store the result
+    u.NeedStorage(src);
+    u.NeedLazy(src);
 
     // Save compile unit's data
     savedfailbb = u.failbb;

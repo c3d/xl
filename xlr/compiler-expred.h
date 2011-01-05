@@ -26,6 +26,7 @@
 
 XL_BEGIN
 
+struct RewriteCandidate;
 
 struct CompileExpression
 // ----------------------------------------------------------------------------
@@ -48,9 +49,13 @@ public:
     llvm_value DoBlock(Block *what);
 
     llvm_value DoCall(Tree *call);
+    llvm_value DoRewrite(RewriteCandidate &candidate);
+    llvm_value Value(Tree *expr);
+    llvm_value Compare(Tree *value, Tree *test);
 
 public:
     CompiledUnit *  unit;         // Current compilation unit
+    value_map       computed;     // Values we already computed
 };
 
 
@@ -77,9 +82,6 @@ public:
     CompiledUnit &      unit;           // Compilation unit we use
     Tree *              source;         // Tree we build (mostly for debugging)
     llvm::LLVMContext * llvm;           // Inherited LLVM context
-
-    llvm::Value *       storage;        // Storage for expression value
-    llvm::Value *       computed;       // Flag telling if value was computed
 
     llvm::BasicBlock *  savedfailbb;    // Saved location of failbb
 

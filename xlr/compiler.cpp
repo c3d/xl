@@ -741,16 +741,23 @@ llvm_type Compiler::MachineType(Tree *tree)
 // ----------------------------------------------------------------------------
 {
     // Check all "basic" types in basics.tbl
-    if (tree == boolean_type)
+    if (tree == boolean_type || tree == xl_true || tree == xl_false)
         return booleanTy;
-    if (tree == integer_type)
+    if (tree == integer_type || tree->Kind() == INTEGER)
         return integerTy;
-    if (tree == real_type)
+    if (tree == real_type || tree->Kind() == REAL)
         return realTy;
     if (tree == character_type)
         return characterTy;
     if (tree == text_type)
         return charPtrTy;
+    if (Text *text = tree->AsText())
+    {
+        if (text->opening == "'" && text->closing == "'")
+            return characterTy;
+        if (text->opening == "\"" && text->closing == "\"")
+            return charPtrTy;
+    }
     
     // Check special tree types in basics.tbl
     if (tree == symbol_type || tree == name_type || tree == operator_type)
