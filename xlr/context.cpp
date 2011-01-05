@@ -203,6 +203,19 @@ Rewrite *Context::Define(Tree *form, Tree *value, Tree *type)
 //   Enter a rewrite in the context
 // ----------------------------------------------------------------------------
 {
+    // Check if we have a type specification
+    if (type == NULL)
+    {
+        if (Infix *infix = form->AsInfix())
+        {
+            if (infix->name == ":")
+            {
+                type = infix->right;
+                form = infix->left;
+            }
+        }
+    }
+
     // If we have a block on the left, define the child of that block
     if (Block *block = form->AsBlock())
         form = block->child;
