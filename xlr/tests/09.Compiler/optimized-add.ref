@@ -1,5 +1,5 @@
 
-define internal i64 @xl_eval(i64) {
+define internal i64 @xl_eval_foo(i64) {
 allocas:
   %1 = mul i64 %0, 3
   %2 = add i64 %1, 17
@@ -8,7 +8,7 @@ allocas:
 
 define internal %Tree* @xl_program() {
 allocas:
-  %0 = tail call i64 @xl_eval(i64 3)
+  %0 = tail call i64 @xl_eval_foo(i64 3)
   %1 = tail call %Integer* @xl_new_integer(i64 %0)
   %2 = bitcast %Integer* %1 to %Tree*
   ret %Tree* %2

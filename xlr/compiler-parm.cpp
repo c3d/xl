@@ -106,6 +106,7 @@ bool ParameterList::DoName(Name *what)
     {
         // The first name we see must match exactly, e.g. 'sin' in 'sin X'
         defined = what;
+        name = what->value;
         return true;
     }
     else
@@ -165,7 +166,10 @@ bool ParameterList::DoInfix(Infix *what)
 
     // If this is the first one, this is what we define
     if (!defined)
+    {
         defined = what;
+        name = what->name;
+    }
 
     // Otherwise, test left and right
     if (!what->left->Do(this))
@@ -183,6 +187,7 @@ bool ParameterList::DoPrefix(Prefix *what)
 {
     // In 'if X then Y', 'then' is defined first, but we want 'if'
     Infix *defined_infix = defined->AsInfix();
+    text defined_name = name;
     if (defined_infix)
         defined = NULL;
 
@@ -192,7 +197,10 @@ bool ParameterList::DoPrefix(Prefix *what)
         return false;
 
     if (!defined && defined_infix)
+    {
         defined = defined_infix;
+        name = defined_name;
+    }
 
     return true;
 }

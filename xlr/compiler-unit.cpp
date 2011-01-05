@@ -132,7 +132,7 @@ Function *CompiledUnit::RewriteFunction(Rewrite *rewrite, TypeInference *inf)
 
     FunctionType *fnTy = FunctionType::get(retTy, signature, false);
 
-    text label = "xl_eval";
+    text label = "xl_eval_" + parameters.name;
     IFTRACE(labels)
         label += "[" + text(*source) + "]";
 

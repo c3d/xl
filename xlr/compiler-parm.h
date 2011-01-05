@@ -71,6 +71,7 @@ public:
 public:
     CompiledUnit *  unit;         // Current compilation unit
     Tree_p          defined;      // Tree being defined, e.g. 'sin' in 'sin X'
+    text            name;         // Name being given to the LLVM function
     Parameters      parameters;   // Parameters and their order
     llvm_type       returned;     // Returned type if specified
 };
