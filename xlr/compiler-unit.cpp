@@ -156,7 +156,7 @@ Function *CompiledUnit::RewriteFunction(Rewrite *rewrite, TypeInference *inf)
     }
 
     Function *f = InitializeFunction(fnTy, parameters, label.c_str(),
-                                     false, isC);
+                                     isC, isC);
     if (isC)
     {
         void *address = sys::DynamicLibrary::SearchForAddressOfSymbol(label);
