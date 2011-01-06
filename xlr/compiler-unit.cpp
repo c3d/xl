@@ -168,7 +168,6 @@ Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
     assert (!function || !"LLVM function was already built");
 
     // Create function and save it in the CompiledUnit
-    global = true;
     function = Function::Create(fnTy,
                                 global
                                 ? Function::ExternalLinkage
