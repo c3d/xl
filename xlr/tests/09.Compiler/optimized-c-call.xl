@@ -1,0 +1,3 @@
+// OPT=-O3
+(sin x:real):real -> C
+sin 3.5

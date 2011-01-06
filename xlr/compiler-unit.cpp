@@ -60,6 +60,8 @@
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/Utils/BasicBlockUtils.h>
 #include <llvm/Support/raw_ostream.h>
+#include <llvm/System/DynamicLibrary.h>
+
 
 XL_BEGIN
 
@@ -137,7 +139,35 @@ Function *CompiledUnit::RewriteFunction(Rewrite *rewrite, TypeInference *inf)
     IFTRACE(labels)
         label += "[" + text(*source) + "]";
 
-    return InitializeFunction(fnTy, parameters, label.c_str(), false);
+    // Check if we are actually declaring a C function
+    bool isC = false;
+    if (Tree *defined = parameters.defined)
+    {
+        if (Name *name = def->AsName())
+            if (name->value == "C")
+                if (ValidCName(defined, label))
+                    isC = true;
+
+        if (Prefix *prefix = def->AsPrefix())
+            if (Name *name = prefix->left->AsName())
+                if (name->value == "C")
+                    if (ValidCName(prefix->right, label))
+                        isC = true;
+    }
+
+    Function *f = InitializeFunction(fnTy, parameters, label.c_str(),
+                                     false, isC);
+    if (isC)
+    {
+        void *address = sys::DynamicLibrary::SearchForAddressOfSymbol(label);
+        if (!address)
+        {
+            Ooops("Unable to find address for $1", rewrite->from);
+            return NULL;
+        }
+        sys::DynamicLibrary::AddSymbol(label, address);
+    }
+    return f;
 }
 
 
@@ -153,14 +183,14 @@ Function *CompiledUnit::TopLevelFunction()
     ParameterList parameters(this);
     llvm_type retTy = compiler->treePtrTy;
     FunctionType *fnTy = FunctionType::get(retTy, signature, false);
-    return InitializeFunction(fnTy, parameters, "xl_program", true);
+    return InitializeFunction(fnTy, parameters, "xl_program", true, false);
 }
 
 
 Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
                                            ParameterList &parameters,
                                            kstring label,
-                                           bool global)
+                                           bool global, bool isC)
 // ----------------------------------------------------------------------------
 //   Build the LLVM function, create entry points, ...
 // ----------------------------------------------------------------------------
@@ -176,34 +206,38 @@ Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
     IFTRACE(llvm)
         std::cerr << " new F" << function << "\n";
 
-    // Create function entry point, where we will have all allocas
-    allocabb = BasicBlock::Create(*llvm, "allocas", function);
-    data = new IRBuilder<> (allocabb);
-
-    // Create entry block for the function
-    entrybb = BasicBlock::Create(*llvm, "entry", function);
-    code = new IRBuilder<> (entrybb);
-
-    // Associate the value for the input tree
-    Function::arg_iterator args = function->arg_begin();
-    llvm_type retTy = function->getReturnType();
-    returned = data->CreateAlloca(retTy, 0, "result");
-
-    // Associate the value for the additional arguments (read-only, no alloca)
-    Parameters &plist = parameters.parameters;
-    for (Parameters::iterator p = plist.begin(); p != plist.end(); p++)
+    if (!isC)
     {
-        Parameter &parm = *p;
-        llvm_value inputArg = args++;
-        parm.value = inputArg;
-        value[parm.name] = inputArg;
-    }
+        // Create function entry point, where we will have all allocas
+        allocabb = BasicBlock::Create(*llvm, "allocas", function);
+        data = new IRBuilder<> (allocabb);
 
-    // Create the exit basic block and return statement
-    exitbb = BasicBlock::Create(*llvm, "exit", function);
-    IRBuilder<> exitcode(exitbb);
-    Value *retVal = exitcode.CreateLoad(returned, "retval");
-    exitcode.CreateRet(retVal);
+        // Create entry block for the function
+        entrybb = BasicBlock::Create(*llvm, "entry", function);
+        code = new IRBuilder<> (entrybb);
+
+        // Associate the value for the input tree
+        Function::arg_iterator args = function->arg_begin();
+        llvm_type retTy = function->getReturnType();
+        returned = data->CreateAlloca(retTy, 0, "result");
+
+        // Associate the value for the additional arguments
+        // (read-only, no alloca)
+        Parameters &plist = parameters.parameters;
+        for (Parameters::iterator p = plist.begin(); p != plist.end(); p++)
+        {
+            Parameter &parm = *p;
+            llvm_value inputArg = args++;
+            parm.value = inputArg;
+            value[parm.name] = inputArg;
+        }
+
+        // Create the exit basic block and return statement
+        exitbb = BasicBlock::Create(*llvm, "exit", function);
+        IRBuilder<> exitcode(exitbb);
+        Value *retVal = exitcode.CreateLoad(returned, "retval");
+        exitcode.CreateRet(retVal);
+    }
 
     // Return the newly created function
     return function;
@@ -247,16 +281,22 @@ llvm_value CompiledUnit::Compile(Rewrite *rewrite, TypeInference *types)
         CompiledUnit rewriteUnit(compiler, rewriteContext);
 
         Function *function = rewriteUnit.RewriteFunction(rewrite, types);
+        if (!function)
+            return function;
+
         value[rewrite->from] = function;
         rewriteUnit.value[rewrite->from] = function;
         result = function;
 
-        llvm_value returned = rewriteUnit.Compile(rewrite->to);
-        if (!returned)
-            return NULL;
-        if (!rewriteUnit.Return(returned))
-            return NULL;
-        rewriteUnit.Finalize(false);
+        if (rewriteUnit.code)
+        {
+            llvm_value returned = rewriteUnit.Compile(rewrite->to);
+            if (!returned)
+                return NULL;
+            if (!rewriteUnit.Return(returned))
+                return NULL;
+            rewriteUnit.Finalize(false);
+        }
     }
     return result;
 }
@@ -1275,6 +1315,44 @@ Value *CompiledUnit::Global(Tree *tree)
         result = code->CreateLoad(result, label);
     }
     return result;
+}
+
+
+bool CompiledUnit::ValidCName(Tree *tree, text &label)
+// ----------------------------------------------------------------------------
+//   Check if the name is valid for C
+// ----------------------------------------------------------------------------
+{
+    uint len = 0;
+
+    if (Name *name = tree->AsName())
+    {
+        label = name->value;
+        len = label.length();
+    }
+    else if (Text *text = tree->AsText())
+    {
+        label = text->value;
+        len = label.length();
+    }
+
+    if (len == 0)
+    {
+        Ooops("No valid C name in $1", tree);
+        return false;
+    }
+
+    // We will NOT call functions beginning with _ (internal functions)
+    for (uint i = 0; i < len; i++)
+    {
+        char c = label[i];
+        if (!isalpha(c) && c != '_' && !(i && isdigit(c)))
+        {
+            Ooops("C name $1 contains invalid characters", tree);
+            return false;
+        }
+    }
+    return true;
 }
 
 XL_END

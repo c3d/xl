@@ -48,7 +48,8 @@ protected:
     llvm::Function *    InitializeFunction(llvm::FunctionType *,
                                            ParameterList &parameters,
                                            kstring label,
-                                           bool global);
+                                           bool global,
+                                           bool isC);
 
 public:
     bool                TypeCheck(Tree *program);
@@ -101,6 +102,8 @@ public:
     llvm_type           MachineType(Tree *type);
     llvm_value          Autobox(llvm_value value, llvm_type requested);
     llvm_value          Global(Tree *tree);
+
+    static bool         ValidCName(Tree *tree, text &label);
 
 public:
     Context_p           context;        // Context in which we compile

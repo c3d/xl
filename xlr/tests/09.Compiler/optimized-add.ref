@@ -1,5 +1,5 @@
 
-define i64 @xl_eval_foo(i64) {
+define internal i64 @xl_eval_foo(i64) {
 allocas:
   %1 = mul i64 %0, 3
   %2 = add i64 %1, 17

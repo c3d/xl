@@ -63,9 +63,12 @@ Tree *RewriteCalls::operator() (Context *context,
         else
         {
             bool builtin = false;
+            if (Name *name = candidate->to->AsName())
+                if (name->value == "C")
+                    builtin = true;
             if (Prefix *prefix = candidate->to->AsPrefix())
                 if (Name *pfname = prefix->left->AsName())
-                    if (pfname->value == "opcode")
+                    if (pfname->value == "opcode" || pfname->value == "C")
                         builtin = true;
 
             if (!builtin)
