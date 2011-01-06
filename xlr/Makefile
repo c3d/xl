@@ -1,3 +1,4 @@
+
 #******************************************************************************
 # Makefile                          (C) 1992-2003 Christophe de Dinechin (ddd) 
 #                                                                  XLR project 
@@ -64,7 +65,7 @@ PRODUCT=xlr$(EXE)
 include $(BROOT)Makefile.config
 
 LLVM_FLAGS=`llvm-config --cppflags | sed -e s/-DNDEBUG//g`
-LLVM_LIBS=`llvm-config --libs core jit native interpreter`
+LLVM_LIBS=`llvm-config --libs`
 LLVM_LDFLAGS=`llvm-config --ldflags`
 
 CPPFLAGS+=-DXLR $(LLVM_FLAGS) -I. -Iinclude
