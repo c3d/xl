@@ -143,19 +143,17 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     optimizer = new FunctionPassManager(module);
     createStandardFunctionPasses(optimizer, optimize_level);
     moduleOptimizer = new PassManager;
-    if (false)
     createStandardModulePasses(moduleOptimizer, optimize_level,
                                true,    /* Optimize size */
                                true,    /* Unit at a time */
                                true,    /* Unroll loops */
-                               false,   /* Simplify lib calls */
+                               true,    /* Simplify lib calls */
                                false,    /* Have exception */
                                llvm::createFunctionInliningPass());
-    if (false)
     createStandardLTOPasses(moduleOptimizer,
                             true, /* Internalize */
                             true, /* RunInliner */
-                            true /* Verify Each */);
+                            true  /* Verify Each */);
 
     // Other target options
     // DwarfExceptionHandling = true;// Present in LLVM 2.6, but crashes

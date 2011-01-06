@@ -137,7 +137,7 @@ Function *CompiledUnit::RewriteFunction(Rewrite *rewrite, TypeInference *inf)
     IFTRACE(labels)
         label += "[" + text(*source) + "]";
 
-    return InitializeFunction(fnTy, parameters, label.c_str());
+    return InitializeFunction(fnTy, parameters, label.c_str(), false);
 }
 
 
@@ -153,13 +153,14 @@ Function *CompiledUnit::TopLevelFunction()
     ParameterList parameters(this);
     llvm_type retTy = compiler->treePtrTy;
     FunctionType *fnTy = FunctionType::get(retTy, signature, false);
-    return InitializeFunction(fnTy, parameters, "xl_program");
+    return InitializeFunction(fnTy, parameters, "xl_program", true);
 }
 
 
 Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
                                            ParameterList &parameters,
-                                           kstring label)
+                                           kstring label,
+                                           bool global)
 // ----------------------------------------------------------------------------
 //   Build the LLVM function, create entry points, ...
 // ----------------------------------------------------------------------------
@@ -167,7 +168,11 @@ Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
     assert (!function || !"LLVM function was already built");
 
     // Create function and save it in the CompiledUnit
-    function = Function::Create(fnTy, Function::InternalLinkage,
+    global = true;
+    function = Function::Create(fnTy,
+                                global
+                                ? Function::ExternalLinkage
+                                : Function::InternalLinkage,
                                 label, compiler->module);
     IFTRACE(llvm)
         std::cerr << " new F" << function << "\n";

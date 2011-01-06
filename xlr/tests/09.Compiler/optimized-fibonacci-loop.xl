@@ -1,0 +1,15 @@
+// OPT=-O3
+(x:integer + y:integer):integer -> opcode Add
+(x:integer - y:integer):integer -> opcode Sub
+
+fib 0 -> 1
+fib 1 -> 1
+fib "A" -> "A"
+fib N -> (fib (N-1) + fib (N-2))
+
+loops 0 -> fib 25
+loops N ->
+    loops 0
+    loops N-1
+
+loops 999999

@@ -47,7 +47,8 @@ public:
 protected:
     llvm::Function *    InitializeFunction(llvm::FunctionType *,
                                            ParameterList &parameters,
-                                           kstring label);
+                                           kstring label,
+                                           bool global);
 
 public:
     bool                TypeCheck(Tree *program);
