@@ -24,6 +24,7 @@
 #include "compiler-unit.h"
 #include "compiler-arg.h"
 #include "types.h"
+#include "save.h"
 
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/GlobalVariable.h>
@@ -210,12 +211,14 @@ llvm_value CompileExpression::DoCall(Tree *call)
     RewriteCalls *rc = (*found).second;
     RewriteCandidates &calls = rc->candidates;
 
-
     // Optimize the frequent case where we have a single call candidate
     uint i, max = calls.size();
     if (max == 1)
     {
+        // We now evaluate in that rewrite's type system
         RewriteCandidate &cand = calls[0];
+        Save<TypeInference_p> saveTypes(unit->inference, cand.types);
+
         if (cand.conditions.size() == 0)
         {
             result = DoRewrite(cand);
@@ -230,7 +233,9 @@ llvm_value CompileExpression::DoCall(Tree *call)
 
     for (i = 0; i < max; i++)
     {
+        // Now evaluate in that candidate's type system
         RewriteCandidate &cand = calls[i];
+        Save<TypeInference_p> saveTypes(unit->inference, cand.types);
         llvm_value condition = NULL;
 
         // Perform the tests to check if this candidate is valid
