@@ -68,11 +68,7 @@ Tree *RewriteCalls::operator() (Context *context,
                     if (pfname->value == "opcode")
                         builtin = true;
 
-            if (builtin)
-            {
-                binding = PERFECT;
-            }
-            else
+            if (!builtin)
             {
                 bool childSucceeded = childInference->TypeCheck(candidate->to);
                 if (!childSucceeded)
