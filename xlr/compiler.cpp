@@ -145,7 +145,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     moduleOptimizer = new PassManager;
     createStandardModulePasses(moduleOptimizer, optimize_level,
                                true,    /* Optimize size */
-                               true,    /* Unit at a time */
+                               false,   /* Unit at a time */
                                true,    /* Unroll loops */
                                true,    /* Simplify lib calls */
                                false,    /* Have exception */
