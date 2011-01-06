@@ -252,8 +252,7 @@ llvm_value CompiledUnit::Compile(Rewrite *rewrite, TypeInference *types)
             return NULL;
         if (!rewriteUnit.Return(returned))
             return NULL;
-        if (!rewriteUnit.Finalize())
-            return NULL;
+        rewriteUnit.Finalize(false);
     }
     return result;
 }
@@ -271,7 +270,7 @@ llvm_value CompiledUnit::Return(llvm_value value)
 }
 
 
-eval_fn CompiledUnit::Finalize()
+eval_fn CompiledUnit::Finalize(bool createCode)
 // ----------------------------------------------------------------------------
 //   Finalize the build of the current function
 // ----------------------------------------------------------------------------
@@ -295,9 +294,14 @@ eval_fn CompiledUnit::Finalize()
         function->print(errs());
     }
 
-    void *result = compiler->runtime->getPointerToFunction(function);
-    IFTRACE(llvm)
-        std::cerr << " C" << (void *) result << "\n";
+    void *result = NULL;
+    if (createCode)
+    {
+        compiler->moduleOptimizer->run(*compiler->module);
+        result = compiler->runtime->getPointerToFunction(function);
+        IFTRACE(llvm)
+            std::cerr << " C" << (void *) result << "\n";
+    }
 
     exitbb = NULL;              // Tell destructor we were successful
     return (eval_fn) result;

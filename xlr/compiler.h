@@ -46,6 +46,7 @@ namespace llvm
     class Module;
     class ExecutionEngine;
     class FunctionPassManager;
+    class PassManager;
     class StructType;
     class PointerType;
     class FunctionType;
@@ -135,6 +136,7 @@ public:
     llvm::Module              *module;
     llvm::ExecutionEngine     *runtime;
     llvm::FunctionPassManager *optimizer;
+    llvm::PassManager         *moduleOptimizer;
     const llvm::IntegerType   *booleanTy;
     const llvm::IntegerType   *integerTy;
     const llvm::Type          *realTy;

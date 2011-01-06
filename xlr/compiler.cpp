@@ -90,7 +90,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 // ----------------------------------------------------------------------------
 //   Initialize the various instances we may need
 // ----------------------------------------------------------------------------
-    : module(NULL), runtime(NULL), optimizer(NULL),
+    : module(NULL), runtime(NULL), optimizer(NULL), moduleOptimizer(NULL),
       booleanTy(NULL), integerTy(NULL), realTy(NULL),
       characterTy(NULL), charPtrTy(NULL), textTy(NULL),
       treeTy(NULL), treePtrTy(NULL), treePtrPtrTy(NULL),
@@ -142,6 +142,20 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
     // Setup the optimizer - REVISIT: Adjust with optimization level
     optimizer = new FunctionPassManager(module);
     createStandardFunctionPasses(optimizer, optimize_level);
+    moduleOptimizer = new PassManager;
+    if (false)
+    createStandardModulePasses(moduleOptimizer, optimize_level,
+                               true,    /* Optimize size */
+                               true,    /* Unit at a time */
+                               true,    /* Unroll loops */
+                               false,   /* Simplify lib calls */
+                               false,    /* Have exception */
+                               llvm::createFunctionInliningPass());
+    if (false)
+    createStandardLTOPasses(moduleOptimizer,
+                            true, /* Internalize */
+                            true, /* RunInliner */
+                            true /* Verify Each */);
 
     // Other target options
     // DwarfExceptionHandling = true;// Present in LLVM 2.6, but crashes
@@ -329,6 +343,8 @@ Compiler::~Compiler()
 // ----------------------------------------------------------------------------
 {
     delete llvm;
+    delete optimizer;
+    delete moduleOptimizer;
 }
 
 
@@ -352,7 +368,7 @@ program_fn Compiler::CompileProgram(Context *context, Tree *program)
         return NULL;
     if (!topUnit.Return(returned))
         return NULL;
-    return (program_fn) topUnit.Finalize();
+    return (program_fn) topUnit.Finalize(true);
 }
 
 

@@ -54,7 +54,7 @@ public:
     llvm_value          Compile(Tree *tree);
     llvm_value          Compile(Rewrite *rewrite, TypeInference *calls);
     llvm_value          Return(llvm_value value);
-    eval_fn             Finalize();
+    eval_fn             Finalize(bool createCode);
 
     enum { knowAll = -1, knowGlobals = 1, knowLocals = 2, knowValues = 4 };
     llvm::Value *       NeedStorage(Tree *tree);
