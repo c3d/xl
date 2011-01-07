@@ -137,7 +137,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 
     // Select "fast JIT" if optimize level is 0, optimizing JIT otherwise
     runtime = EngineBuilder(module).create();
-    runtime->DisableLazyCompilation(false);
+    runtime->DisableLazyCompilation(true);
 
     // Setup the optimizer - REVISIT: Adjust with optimization level
     optimizer = new FunctionPassManager(module);
