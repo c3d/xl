@@ -37,24 +37,23 @@ Tree *RewriteCalls::operator() (Context *context,
     Errors errors;
     errors.Log(Error("$1 doesn't match because", candidate->from), true);
     RewriteCandidate rc(candidate);
+    inference->AssignType(what);
 
     // Create local type inference deriving from ours
-    Context *childContext = new Context(inference->context, inference->context);
-    TypeInference_p childInference = new TypeInference(childContext, inference);
+    Context_p valueContext = inference->context;
+    Context_p childContext = new Context(context, context);
+    TypeInference_p childInference = new TypeInference(valueContext, inference);
 
     // Attempt binding / unification of parameters to arguments
     XL::Save<TypeInference *> saveInference(inference, childInference);
     BindingStrength binding = Bind(childContext, candidate->from, what, rc);
     if (binding == FAILED)
-    {
-        errors.Clear();
         return NULL;
-    }
 
     // If argument/parameters binding worked, try to typecheck the definition
+    childInference->context = childContext;
     if (candidate->to)
     {
-        Save<Context_p> saveContext(childInference->context, context);
         if (candidate->native)
         {
             if (!childInference->AssignType(candidate->to, candidate->type))
@@ -162,7 +161,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         Name *f = (Name *) form;
 
         // Check if what we have as an expression evaluates correctly
-        if (!inference->Evaluate(value))
+        if (!value->Do(inference))
             return FAILED;
         type = inference->Type(value);
 
@@ -218,7 +217,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
                 return FAILED;
 
             // Check if we can evaluate the guard
-            if (!inference->Evaluate(fi->right))
+            if (!fi->right->Do(inference))
                 return FAILED;
 
             // Check that the type of the guard is a boolean

@@ -109,7 +109,16 @@ Tree *TypeInference::Type(Tree *expr)
     Tree *type = types[expr];
     if (!type)
     {
-        AssignType(expr);
+        if (expr->Kind() == NAME)
+        {
+            AssignType(expr);
+        }
+        else if (!expr->Do(this))
+        {
+            Ooops("Unable to assign type to $1", expr);
+            if (!types[expr])
+                AssignType(expr);
+        }
         type = types[expr];
     }
     return Base(type);
@@ -178,20 +187,6 @@ bool TypeInference::DoPrefix(Prefix *what)
     if (!AssignType(what))
         return false;
 
-    // Compute sub-expression, which may fail if Evaluate() fails, it's OK
-    if (Name *name = what->left->AsName())
-    {
-        // Make sure we don't care if 'bar' is not defined in 'bar 3'
-        Save<bool> savePrototyping(prototyping, true);
-        name->Do(this);
-    }
-    else
-    {
-        what->left->Do(this);
-    }
-
-    what->right->Do(this);
-
     // What really matters is if we can evaluate the top-level expression
     return Evaluate(what);
 }
@@ -204,20 +199,6 @@ bool TypeInference::DoPostfix(Postfix *what)
 {
     if (!AssignType(what))
         return false;
-
-    // Compute sub-expression, which may fail if Evaluate() fails, it's OK
-    if (Name *name = what->right->AsName())
-    {
-        // Make sure we don't care if 'bar' is not defined in 'bar 3'
-        Save<bool> savePrototyping(prototyping, true);
-        name->Do(this);
-    }
-    else
-    {
-        what->right->Do(this);
-    }
-
-    what->left->Do(this);
 
     // What really matters is if we can evaluate the top-level expression
     return Evaluate(what);
@@ -254,10 +235,6 @@ bool TypeInference::DoInfix(Infix *what)
             return false;
         return UnifyTypesOf(what, what->right);
     }
-
-    // For other infix expressions, evaluate terms, which may individually fail
-    what->left->Do(this);
-    what->right->Do(this);
 
     // Success depends on successful evaluation of the complete form
     return Evaluate(what);
@@ -415,7 +392,12 @@ bool TypeInference::Evaluate(Tree *what)
     // If we have no candidate, this is a failure
     count = rc->candidates.size();
     if (count == 0)
+    {
+        Ooops("No form matches $1", what);
         return false;
+    }
+    errors.Clear();
+    errors.Log(Error("Unable to check types in $1 because", what), true);
 
     // The resulting type is the union of all candidates
     Tree *type = Base(rc->candidates[0].type);
@@ -423,10 +405,17 @@ bool TypeInference::Evaluate(Tree *what)
     for (uint i = 1; i < count; i++)
     {
         Tree *ctype = rc->candidates[i].type;
-        if (IsGeneric(ctype) && ctype == wtype)
+        ctype = Base(ctype);
+        if (IsGeneric(ctype) && IsGeneric(wtype))
+        {
+            // foo:#A rewritten as bar:#B and another type
+            // Joint types instead of performing a union
             if (!Join(ctype, type))
                 return false;
-        ctype = Base(ctype);
+            if (!Join(wtype, type))
+                return false;
+            continue;
+        }
         type = UnionType(context, type, ctype);
     }
 
@@ -747,7 +736,7 @@ Name * TypeInference::NewTypeName(TreePosition pos)
 // ----------------------------------------------------------------------------
 {
     ulong v = id++;
-    text  name = "";
+    text  name;
     do
     {
         name = char('A' + v % 26) + name;
