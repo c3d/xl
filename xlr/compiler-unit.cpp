@@ -133,14 +133,13 @@ Function *CompiledUnit::RewriteFunction(Rewrite *rewrite, TypeInference *inf)
     else
         retTy = StructureType(signature);
 
-    FunctionType *fnTy = FunctionType::get(retTy, signature, false);
-
     text label = "xl_eval_" + parameters.name;
     IFTRACE(labels)
         label += "[" + text(*source) + "]";
 
     // Check if we are actually declaring a C function
     bool isC = false;
+    bool isVararg = false;
     if (Tree *defined = parameters.defined)
     {
         if (Name *name = def->AsName())
@@ -155,6 +154,7 @@ Function *CompiledUnit::RewriteFunction(Rewrite *rewrite, TypeInference *inf)
                         isC = true;
     }
 
+    FunctionType *fnTy = FunctionType::get(retTy, signature, isVararg);
     Function *f = InitializeFunction(fnTy, parameters, label.c_str(),
                                      isC, isC);
     if (isC)
