@@ -56,3 +56,7 @@ COMMENT
         "//" NEWLINE
         "/*" "*/"
 
+
+SYNTAX "C"
+        extern ;
+

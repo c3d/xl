@@ -1,0 +1,16 @@
+INFIX
+        41     ,
+
+PREFIX
+        30      extern ...
+
+POSTFIX
+        400     *
+
+BLOCK
+        500     '(' ')' '[' ']'
+
+COMMENT
+        "//" NEWLINE
+        "/*" "*/"
+

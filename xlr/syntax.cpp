@@ -37,21 +37,6 @@ XL_BEGIN
 Syntax *Syntax::syntax = NULL;
 
 
-Syntax::Syntax(kstring name)
-// ----------------------------------------------------------------------------
-//    Read the given syntax file
-// ----------------------------------------------------------------------------
-    : priority(0), default_priority(0),
-      statement_priority(100), function_priority(200)
-{
-    Syntax    baseSyntax;
-    Positions basePositions;
-    Errors    errors;
-    Scanner   scanner(name, baseSyntax, basePositions, errors);
-    ReadSyntaxFile(scanner);
-}
-
-
 int Syntax::InfixPriority(text n)
 // ----------------------------------------------------------------------------
 //   Return infix priority, which is either this or parent's
@@ -217,6 +202,32 @@ bool Syntax::IsBlock(char Begin, text &End)
 }
 
 
+Syntax *Syntax::HasSpecialSyntax(text Begin, text &End)
+// ----------------------------------------------------------------------------
+//   Returns a child syntax if any is applicable
+// ----------------------------------------------------------------------------
+{
+    // Find associated syntax file
+    delimiter_table::iterator found = subsyntax_file.find(Begin);
+    if (found == subsyntax_file.end())
+        return NULL;
+
+    // Find associated child syntax
+    text filename = (*found).second;
+    ChildSyntax &child = subsyntax[filename];
+    assert(child.filename == filename);
+
+    // Find delimiters in that child syntax
+    delimiter_table::iterator dfound = child.delimiters.find(Begin);
+    if (dfound == child.delimiters.end())
+        return NULL;            // Defensive codeing, should not happen
+
+    // Success, return the syntax we found
+    End = (*dfound).second;
+    return &child;
+}
+
+
 void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
 // ----------------------------------------------------------------------------
 //   Parse the syntax description table
@@ -227,7 +238,8 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
         inUnknown, inPrefix, inInfix, inPostfix,
         inComment, inCommentDef,
         inText, inTextDef,
-        inBlock, inBlockDef
+        inBlock, inBlockDef,
+        inSyntaxName, inSyntax, inSyntaxDef
     };
 
     State       state = inUnknown;
@@ -235,6 +247,7 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
     token_t     tok = tokNAME;
     int         priority = 0;
     bool        done = false;
+    ChildSyntax *childSyntax = NULL;
 
     while(tok != tokEOF && !done)
     {
@@ -293,6 +306,8 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
                 state = inComment;
             else if (txt == "TEXT")
                 state = inText;
+            else if (txt == "SYNTAX")
+                state = inSyntaxName;
 
             else if (txt == "STATEMENT")
                 statement_priority = priority;
@@ -341,6 +356,26 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
                 infix_priority[txt] = priority;
                 state = inBlock;
                 break;
+            case inSyntaxName:
+                if (txt.find(".syntax") == txt.npos)
+                    txt += ".syntax";
+                childSyntax = &subsyntax[txt];
+                if (childSyntax->filename == "")
+                {
+                    childSyntax->filename = txt;
+                    childSyntax->ReadSyntaxFile(txt);
+                }
+                state = inSyntax;
+                break;
+            case inSyntax:
+                entry = txt;
+                state = inSyntaxDef;
+                break;
+            case inSyntaxDef:
+                childSyntax->delimiters[entry] = txt;
+                subsyntax_file[entry] = childSyntax->filename;
+                state = inSyntax;
+                break;
             }
             break;
         default:
@@ -348,5 +383,20 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
         }
     }
 }
+
+
+void Syntax::ReadSyntaxFile (text filename, uint indents)
+// ----------------------------------------------------------------------------
+//   Read a syntax directly from a syntax file
+// ----------------------------------------------------------------------------
+{
+    Syntax    baseSyntax;
+    Positions basePositions;
+    Errors    errors;
+    Scanner   scanner(filename.c_str(), baseSyntax, basePositions, errors);
+    ReadSyntaxFile(scanner, indents);
+}
+
+
 
 XL_END

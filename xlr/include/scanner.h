@@ -195,6 +195,11 @@ public:
     uint        OpenParen();
     void        CloseParen(uint old);
 
+    // Get input of the scanner
+    std::istream & Input()              { return input; }
+    Positions    & InputPositions()     { return positions; }
+    Errors       & InputErrors()        { return errors; }
+
 private:
     Syntax &       syntax;
     std::istream & input;

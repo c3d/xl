@@ -349,7 +349,21 @@ Tree *Parser::Parse(text closing)
         case tokSYMBOL:
             name = scanner.TokenText();
             spelling = scanner.TextValue();
-            if (!result)
+            if (name == closing)
+            {
+                done = true;
+            }
+            else if (Syntax *cs = syntax.HasSpecialSyntax(spelling,blk_closing))
+            {
+                // Read the input with the special syntax
+                ulong pos = scanner.Position();
+                Parser childParser(scanner.Input(), *cs,
+                                   scanner.InputPositions(),
+                                   scanner.InputErrors());
+                right = childParser.Parse(blk_closing);
+                right = new Prefix(new Name(name), right, pos);
+            }
+            else if (!result)
             {
                 prefix_priority = syntax.PrefixPriority(name);
                 right = new Name(spelling, pos);

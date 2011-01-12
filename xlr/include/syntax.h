@@ -29,9 +29,11 @@ XL_BEGIN
 
 struct Tree;
 struct Scanner;
+struct ChildSyntax;
 
 typedef std::map<text, int>             priority_table;
 typedef std::map<text, text>            delimiter_table;
+typedef std::map<text, ChildSyntax>     subsyntax_table;
 typedef std::set<text>                  token_set;
 
 
@@ -50,7 +52,12 @@ public:
     {
         ReadSyntaxFile(scanner);
     }
-    Syntax(kstring name);
+    Syntax(kstring name):
+        priority(0), default_priority(0),
+        statement_priority(100), function_priority(200)
+    {
+        ReadSyntaxFile(name);
+    }
 
 public:
     // Managing priorities
@@ -64,6 +71,7 @@ public:
 
     // Read a complete syntax file (xl.syntax)
     void                ReadSyntaxFile (Scanner &scanner, uint indents = 1);
+    void                ReadSyntaxFile (text filename, uint indents = 1);
 
     // Defining delimiters
     void                CommentDelimiter(text Begin, text End);
@@ -74,6 +82,7 @@ public:
     bool                IsTextDelimiter(text Begin, text &end);
     bool                IsBlock(text Begin, text &end);
     bool                IsBlock(char Begin, text &end);
+    Syntax *            HasSpecialSyntax(text Begin, text &end);
 
 public:
     priority_table      infix_priority;
@@ -82,6 +91,8 @@ public:
     delimiter_table     comment_delimiters;
     delimiter_table     text_delimiters;
     delimiter_table     block_delimiters;
+    delimiter_table     subsyntax_file;
+    subsyntax_table     subsyntax;
     token_set           known_tokens;
     int                 priority;
 
@@ -90,6 +101,18 @@ public:
     int                 function_priority;
 
     static Syntax *     syntax;
+};
+
+
+struct ChildSyntax : Syntax
+// ----------------------------------------------------------------------------
+//   Child syntax of a top-level syntax
+// ----------------------------------------------------------------------------
+{
+    ChildSyntax() : Syntax(), filename(), delimiters() {}
+    ChildSyntax(text fn) : Syntax(fn.c_str()), filename(fn), delimiters() {}
+    text                filename;
+    delimiter_table     delimiters;
 };
 
 XL_END
