@@ -135,6 +135,9 @@ llvm_value CompileExpression::DoPrefix(Prefix *what)
 {
     if (Name *name = what->left->AsName())
     {
+        if (name->value == "data" || name->value == "extern")
+            return NULL;
+
         if (name->value == "opcode")
         {
             // This is a builtin, find if we write to code or data

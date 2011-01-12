@@ -46,6 +46,7 @@ SOURCES     =					\
 	compiler-action.cpp			\
 	compiler-arg.cpp			\
 	compiler-children.cpp			\
+	compiler-cdecls.cpp			\
 	compiler-decl.cpp			\
 	compiler-envscan.cpp			\
 	compiler-expred.cpp			\

@@ -34,6 +34,7 @@
 #include "opcodes.h"
 #include "types.h"
 #include "save.h"
+#include "compiler-cdecls.h"
 
 #include <iostream>
 #include <cstdlib>
@@ -112,6 +113,18 @@ Tree *Context::ProcessDeclarations(Tree *what)
                 {
                     DefineData(prefix->right);
                     instr = NULL;
+                }
+                else if (pname->value == "extern")
+                {
+                    ProcessCDeclaration pcd;
+                    Tree *rewritten = pcd.Declaration(prefix->right);
+                    if (rewritten)
+                    {
+                        Name *C = new Name("C", what->Position());
+                        Prefix *cdecl = new Prefix(C, pcd.name);
+                        Define(rewritten, cdecl);
+                        instr = NULL;
+                    }
                 }
             }
         }

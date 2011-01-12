@@ -187,6 +187,11 @@ bool TypeInference::DoPrefix(Prefix *what)
     if (!AssignType(what))
         return false;
 
+    // Skip bizarre declarations
+    if (Name *name = what->left->AsName())
+        if (name->value == "data" || name->value == "extern")
+            return true;
+
     // What really matters is if we can evaluate the top-level expression
     return Evaluate(what);
 }

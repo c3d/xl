@@ -22,6 +22,19 @@ TYPE(prefix);
 TYPE(postfix);
 TYPE(block);
 
+TYPE(integer8);
+TYPE(integer16);
+TYPE(integer32);
+TYPE(integer64);
+TYPE(unsigned);
+TYPE(unsigned8);
+TYPE(unsigned16);
+TYPE(unsigned32);
+TYPE(unsigned64);
+TYPE(real32);
+TYPE(real64);
+TYPE(real80);
+
 // Basic units
 INFIX(DefineRewrite, tree, source, "->", source,
       context->stack->Define(&l, &r);
