@@ -294,7 +294,7 @@ Name *ProcessCDeclaration::NamedType(Name *input)
         "long",         "integer64",
         "float",        "real32",
         "double",       "real64",
-        "unsigned",     "unsigned",
+        "unsigned",     "unsigned32",
         "int8_t",       "integer8",
         "int16_t",      "integer16",
         "int32_t",      "integer32",
@@ -318,7 +318,28 @@ Name *ProcessCDeclaration::BaroqueTypeMods(Name *first, Name *second)
 //   Perform type replacements such as "short int"
 // ----------------------------------------------------------------------------
 {
-    // Not supported
+    text a = first->value;
+    text b = second->value;
+
+    static kstring cvt[] =
+    {
+        "integer16",    "integer32",    "integer16", // short int
+        "integer64",    "integer32",    "integer64", // long int
+        "integer16",    "integer16",    "integer16", // short short
+        "integer64",    "integer64",    "integer64", // long long
+        "integer64",    "real64",       "real80",    // long double
+
+        "integer16",    "unsigned32",    "unsigned16", // short unsigned
+        "integer64",    "unsigned32",    "unsigned64", // long unsigned
+        "unsigned32",   "unsigned32",    "unsigned32"  // unsigned unsigned
+    };
+
+    for (uint i = 0; i < sizeof(cvt)/sizeof(cvt[0]); i += 3)
+        if ((a == cvt[i] && b == cvt[i+1]) ||
+            (b == cvt[i] && a == cvt[i+1]))
+            return new Name(cvt[i+2], first->Position());
+            
+    Ooops("Invalid type combination $1 and $2, even for C", first, second);
     return NULL;
 }
 
