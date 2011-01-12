@@ -47,13 +47,13 @@ Tree *ProcessCDeclaration::Declaration(Tree *input)
     TreePosition position = input->Position();
 
     // Strip out the return type and name
+    uint mods = 0;
     while (Prefix *prefix = input->AsPrefix())
     {
-        if (!TypeAndName(prefix->left, returnType, name))
+        if (!TypeAndName(prefix->left, returnType, name, mods))
             return NULL;
         input = prefix->right;
     }
-        
 
     // Check if we got a return type or return value
     if (!returnType)
@@ -91,7 +91,8 @@ Tree *ProcessCDeclaration::Declaration(Tree *input)
 
 Tree *ProcessCDeclaration::TypeAndName(Tree *input,
                                        Tree_p &declType,
-                                       Name_p &declName)
+                                       Name_p &declName,
+                                       uint &mods)
 // ----------------------------------------------------------------------------
 //   Incrementally build the return type 
 // ----------------------------------------------------------------------------
@@ -99,7 +100,7 @@ Tree *ProcessCDeclaration::TypeAndName(Tree *input,
     // Check case of pointers
     if (!declType)
     {
-        Tree *type = Type(input);
+        Tree *type = Type(input, mods);
         if (type)
         {
             declType = type;
@@ -111,9 +112,13 @@ Tree *ProcessCDeclaration::TypeAndName(Tree *input,
     if (Prefix *prefix = input->AsPrefix())
     {
         // Check that we can process the left-hand side
-        Tree *result = TypeAndName(prefix->left, declType, declName);
+        Tree *result = Type(prefix->left, mods);
         if (!result)
+        {
+            Ooops("No valid C type in $1", prefix->left);
             return NULL;
+        }
+        declType = result;
 
         // Check if the right hand side is [], then it's an array
         if (Block *block = prefix->right->AsBlock())
@@ -128,8 +133,9 @@ Tree *ProcessCDeclaration::TypeAndName(Tree *input,
     // Check if we just have a name, then it's a type
     if (Name *named = input->AsName())
     {
+        named = NamedType(named, mods);
         if (Name *existing = declType->AsName())
-            if (Tree *combined = BaroqueTypeMods(existing, named))
+            if (Tree *combined = BaroqueTypeMods(existing, named, mods))
                 return declType = combined;
 
         // Check that we don't have two names in a row
@@ -143,7 +149,7 @@ Tree *ProcessCDeclaration::TypeAndName(Tree *input,
         declName = named;
         return named;
     }
-         
+
 
     Ooops("Unable to make sense of $1 as a C type or name", input);
     return NULL;
@@ -167,7 +173,8 @@ Tree *ProcessCDeclaration::Parameters(Block *input)
             return new Block(input, new Name("", named->Position()));
 
         // Otherwise, this has to be a type name, tranform it
-        Tree *type = NamedType(named);
+        uint mods = 0;
+        Tree *type = NamedType(named, mods);
         Name *parm = Anonymous();
         Infix *decl = new Infix(":", parm, type, named->Position());
         Block *result = new Block(input, decl);
@@ -198,7 +205,8 @@ Tree *ProcessCDeclaration::Parameters(Block *input)
         // Check if we have a prefix like 'int x'
         Tree_p declType = NULL;
         Name_p declName = NULL;
-        Tree *rewritten = TypeAndName(args, declType, declName);
+        uint mods = 0;
+        Tree *rewritten = TypeAndName(args, declType, declName, mods);
         if (!rewritten || !declType || !declName)
         {
             Ooops("Invalid declaration $1", args);
@@ -226,7 +234,7 @@ Tree *ProcessCDeclaration::Parameters(Block *input)
 }
 
 
-Tree *ProcessCDeclaration::Type(Tree *input)
+Tree *ProcessCDeclaration::Type(Tree *input, uint &mods)
 // ----------------------------------------------------------------------------
 //   Check if something looks like a type
 // ----------------------------------------------------------------------------
@@ -235,8 +243,17 @@ Tree *ProcessCDeclaration::Type(Tree *input)
         if (Tree *ptrType = PointerType(postfix))
             return ptrType;
     if (Name *named = input->AsName())
-        if (Tree *namedType = NamedType(named))
+        if (Tree *namedType = NamedType(named, mods))
             return namedType;
+
+    // Check all funny cases like short int, ...
+    if (Prefix *prefix = input->AsPrefix())
+        if (Tree *left = Type(prefix->left, mods))
+            if (Name *ln = left->AsName())
+                if (Tree *right = Type(prefix->right, mods))
+                    if (Name *rn = right->AsName())
+                        if (Tree *combo = BaroqueTypeMods(ln, rn, mods))
+                            return combo;
 
     return NULL;
 }
@@ -251,7 +268,8 @@ Tree *ProcessCDeclaration::PointerType(Postfix *input)
     {
         if (named->value == "*")
         {
-            Tree *pointedTo = Type(input->left);
+            uint mods = 0;
+            Tree *pointedTo = Type(input->left, mods);
             if (pointedTo)
                 return new Infix("to",
                                  new Name("pointer", input->Position()),
@@ -270,7 +288,8 @@ Tree *ProcessCDeclaration::ArrayType(Tree *pointedTo)
 //   Create an array type. For argument passing, that's a pointer
 // ----------------------------------------------------------------------------
 {
-    Tree *type = Type(pointedTo);
+    uint mods = 0;
+    Tree *type = Type(pointedTo, mods);
     if (!type)
         return NULL;
     return new Infix("to",
@@ -280,40 +299,54 @@ Tree *ProcessCDeclaration::ArrayType(Tree *pointedTo)
 }
 
 
-Name *ProcessCDeclaration::NamedType(Name *input)
+Name *ProcessCDeclaration::NamedType(Name *input, uint &mods)
 // ----------------------------------------------------------------------------
 //   Perform type replacements
 // ----------------------------------------------------------------------------
 {
     text n = input->value;
-    static kstring cvt[] =
+    static struct { kstring from, to; uint flags; } cvt[] =
     {
-        "int",          "integer32",
-        "char",         "character",
-        "short",        "integer16",
-        "long",         "integer64",
-        "float",        "real32",
-        "double",       "real64",
-        "unsigned",     "unsigned32",
-        "int8_t",       "integer8",
-        "int16_t",      "integer16",
-        "int32_t",      "integer32",
-        "int64_t",      "integer64",
-        "uint8_t",      "unsigned8",
-        "uint16_t",     "unsigned16",
-        "uint32_t",     "unsigned32",
-        "uint64_t",     "unsigned64"
+        { "int",          "integer32",    0 },
+        { "char",         "character",    0 },
+        { "short",        "integer16",    SHORT },
+        { "long",         "integer32",    LONG },
+        { "longlong",     "integer64",    LONG },
+        { "float",        "real32",       0 },
+        { "double",       "real64",       0 },
+        { "unsigned",     "unsigned32",   UNSIGNED },
+        { "signed",       "integer32",    SIGNED },
+        { "int8_t",       "integer8",     0 },
+        { "int16_t",      "integer16",    0 },
+        { "int32_t",      "integer32",    0 },
+        { "int64_t",      "integer64",    0 },
+        { "uint8_t",      "unsigned8",    0 },
+        { "uint16_t",     "unsigned16",   0 },
+        { "uint32_t",     "unsigned32",   0 },
+        { "uint64_t",     "unsigned64",   0 }
     };
 
-    for (uint i = 0; i < sizeof(cvt)/sizeof(cvt[0]); i += 2)
-        if (n == cvt[i])
-            return new Name(cvt[i+1], input->Position());
+    for (uint i = 0; i < sizeof(cvt)/sizeof(cvt[0]); i++)
+    {
+        if (n == cvt[i].from)
+        {
+            if (uint flags = cvt[i].flags)
+                mods |= flags;
+            if ((mods & (SHORT|LONG)) == (SHORT|LONG))
+                Ooops("C type $1 cannot be both short and long", input);
+            if ((mods & (SIGNED|UNSIGNED)) == (SIGNED|UNSIGNED))
+                Ooops("C type $1 cannot be both signed and unsigned", input);
+            return new Name(cvt[i].to, input->Position());
+        }
+    }
 
     return input;
 }
 
 
-Name *ProcessCDeclaration::BaroqueTypeMods(Name *first, Name *second)
+Name *ProcessCDeclaration::BaroqueTypeMods(Name *first,
+                                           Name *second,
+                                           uint &mods)
 // ----------------------------------------------------------------------------
 //   Perform type replacements such as "short int"
 // ----------------------------------------------------------------------------
@@ -321,25 +354,23 @@ Name *ProcessCDeclaration::BaroqueTypeMods(Name *first, Name *second)
     text a = first->value;
     text b = second->value;
 
-    static kstring cvt[] =
+    static struct { kstring first, second, to; } cvt[] =
     {
-        "integer16",    "integer32",    "integer16", // short int
-        "integer64",    "integer32",    "integer64", // long int
-        "integer16",    "integer16",    "integer16", // short short
-        "integer64",    "integer64",    "integer64", // long long
-        "integer64",    "real64",       "real80",    // long double
-
-        "integer16",    "unsigned32",    "unsigned16", // short unsigned
-        "integer64",    "unsigned32",    "unsigned64", // long unsigned
-        "unsigned32",   "unsigned32",    "unsigned32"  // unsigned unsigned
+        { "integer16",    "integer32",    "integer16" }, // short int
+        { "integer64",    "integer32",    "integer64" }, // long int
+        { "integer16",    "integer16",    "integer16" }, // short short
+        { "integer64",    "integer64",    "integer64" }, // long long
+        { "integer64",    "real64",       "real80" },    // long double
+        { "integer16",    "unsigned32",    "unsigned16" }, // short unsigned
+        { "integer64",    "unsigned32",    "unsigned64" }, // long unsigned
+        { "unsigned32",   "unsigned32",    "unsigned32" }  // unsigned unsigned
     };
 
-    for (uint i = 0; i < sizeof(cvt)/sizeof(cvt[0]); i += 3)
-        if ((a == cvt[i] && b == cvt[i+1]) ||
-            (b == cvt[i] && a == cvt[i+1]))
-            return new Name(cvt[i+2], first->Position());
+    for (uint i = 0; i < sizeof(cvt)/sizeof(cvt[0]); i++)
+        if ((a == cvt[i].first && b == cvt[i].second) ||
+            (b == cvt[i].first && a == cvt[i].second))
+            return new Name(cvt[i].to, first->Position());
             
-    Ooops("Invalid type combination $1 and $2, even for C", first, second);
     return NULL;
 }
 

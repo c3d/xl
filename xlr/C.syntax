@@ -3,9 +3,11 @@ INFIX
 
 PREFIX
         30      extern ...
+        400     FUNCTION
+        450     short long unsigned signed
 
 POSTFIX
-        400     *
+        100     *
 
 BLOCK
         500     '(' ')' '[' ']'

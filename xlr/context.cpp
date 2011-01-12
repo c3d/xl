@@ -118,6 +118,9 @@ Tree *Context::ProcessDeclarations(Tree *what)
                 {
                     ProcessCDeclaration pcd;
                     Tree *rewritten = pcd.Declaration(prefix->right);
+                    IFTRACE(xl2c)
+                        std::cout << "C:  " << prefix << "\n"
+                                  << "XL: " << rewritten << "\n";
                     if (rewritten)
                     {
                         Name *C = new Name("C", what->Position());

@@ -35,14 +35,16 @@ struct ProcessCDeclaration
     typedef Tree *value_type;
     
     Tree * Declaration(Tree *input);
-    Tree * TypeAndName(Tree *input, Tree_p &declType, Name_p &name);
+    Tree * TypeAndName(Tree *input, Tree_p &type, Name_p &name, uint &mods);
     Tree * Parameters(Block *input);
-    Tree * Type(Tree *input);
+    Tree * Type(Tree *input, uint &mods);
     Tree * PointerType(Postfix *input);
     Tree * ArrayType(Tree *returned);
-    Name * NamedType(Name *input);
-    Name * BaroqueTypeMods(Name *first, Name *second);
+    Name * NamedType(Name *input, uint &mods);
+    Name * BaroqueTypeMods(Name *first, Name *second, uint &mods);
     Name * Anonymous();
+
+    enum { SHORT = 1, LONG = 2, UNSIGNED = 4, SIGNED = 8 };
 
 public:
     Name_p      name;
