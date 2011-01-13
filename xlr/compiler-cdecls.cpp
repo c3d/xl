@@ -213,11 +213,13 @@ Tree *CDeclaration::Parameters(Block *input)
         Name_p declName = NULL;
         uint mods = 0;
         Tree *rewritten = TypeAndName(args, declType, declName, mods);
-        if (!rewritten || !declType || !declName)
+        if (!rewritten || !declType)
         {
             Ooops("Invalid declaration $1", args);
             return NULL;
         }
+        if (!declName)
+            declName = Anonymous();
 
         // Build the replacement declaration
         Infix *decl = new Infix(":", declName, declType, args->Position());
