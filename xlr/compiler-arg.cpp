@@ -162,6 +162,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
     case NAME:
     {
         Name *f = (Name *) form;
+        bool needArg = true;
 
         // Check if what we have as an expression evaluates correctly
         if (!value->Do(inference))
@@ -179,6 +180,9 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
 
                 // We need to have the same value
                 rc.conditions.push_back(RewriteCondition(value, form));
+
+                // Since we are testing an existing value, don't pass arg
+                needArg = false;
             }
         }
 
@@ -188,8 +192,11 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
             return FAILED;
 
         // Enter the name in the context and in the bindings
-        context->Define(form, value);
-        rc.bindings.push_back(RewriteBinding(f, value));
+        if (needArg)
+        {
+            context->Define(form, value);
+            rc.bindings.push_back(RewriteBinding(f, value));
+        }
         return POSSIBLE;
     }
 

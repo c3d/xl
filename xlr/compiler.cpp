@@ -659,7 +659,7 @@ Value *Compiler::EnterConstant(Tree *constant)
     IFTRACE(labels)
         name += "[" + text(*constant) + "]";
     GlobalValue *result = new GlobalVariable (*module, treePtrTy, isConstant,
-                                              GlobalVariable::InternalLinkage,
+                                              GlobalVariable::ExternalLinkage,
                                               NULL, name);
     SetTreeGlobal(constant, result, NULL);
 
