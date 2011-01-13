@@ -33,7 +33,6 @@ TYPE(unsigned32);
 TYPE(unsigned64);
 TYPE(real32);
 TYPE(real64);
-TYPE(real80);
 
 // Basic units
 INFIX(DefineRewrite, tree, source, "->", source,

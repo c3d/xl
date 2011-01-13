@@ -229,7 +229,10 @@ struct Text : Tree
     text                value;
     text                opening, closing;
     static text         textQuote, charQuote;
-    operator text()             { return value; }
+    operator text()     { return value; }
+    bool IsCharacter()  { return opening == charQuote && closing == charQuote; }
+    bool IsText()       { return opening == textQuote && closing == textQuote; }
+
     GARBAGE_COLLECT(Text);
 };
 template<> inline Text_p::operator text() const  { return pointer->value; }

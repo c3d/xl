@@ -522,14 +522,14 @@ bool TypeInference::Unify(Tree *t1, Tree *t2, unify_mode mode)
     t2 = LookupTypeName(t2);
     if (t1 == t2)
         return true;            // This may have been enough for unifiation
-    if (t1 == real_type && t2 == real64_type)
-        return true;
-    if (t1 == real64_type && t2 == real_type)
-        return true;
-    if (t1 == integer64_type && t2 == integer_type)
-        return true;
-    if (t1 == integer_type && t2 == integer64_type)
-        return true;
+
+    // Special case of constants
+    if (t1->IsConstant())
+        if (Name *t2n = t2->AsName())
+            return JoinConstant(t1, t2n);
+    if (t2->IsConstant())
+        if (Name *t1n = t1->AsName())
+            return JoinConstant(t2, t1n);
 
     // If either is a generic, unify with the other
     if (IsGeneric(t1))
@@ -672,6 +672,57 @@ bool TypeInference::Join(Tree *base, Tree *other, bool knownGood)
 }
 
 
+bool TypeInference::JoinConstant(Tree *cst, Name *type)
+// ----------------------------------------------------------------------------
+//    Join a constant with a type name
+// ----------------------------------------------------------------------------
+{
+    // If the type we got is generic, associate it with value
+    if (IsGeneric(type->value))
+        return Join(type, cst, true);
+
+    // Otherwise, it's a type name. Check constant types
+    switch (cst->Kind())
+    {
+    case INTEGER:
+        if (type == integer_type   || type == unsigned_type   ||
+            type == integer8_type  || type == unsigned8_type  ||
+            type == integer16_type || type == unsigned16_type ||
+            type == integer32_type || type == unsigned32_type ||
+            type == integer64_type || type == unsigned64_type)
+            return Join(cst, type, true);
+        return false;
+
+    case REAL:
+        if (type == real_type   ||
+            type == real64_type || 
+            type == real32_type)
+            return Join(cst, type, true);
+        return false;
+
+    case TEXT:
+    {
+        Text *text = (Text *) cst;
+        if (text->IsCharacter())
+        {
+            if (type == character_type)
+                return Join(cst, type, true);
+        }
+        else
+        {
+            if (type == text_type)
+                return Join(cst, type, true);
+        }
+        return false;
+    }
+
+    default:
+        assert(!"JoinConstant() called with incorrect input");
+    }
+    return false;
+}
+
+
 bool TypeInference::UnifyPatterns(Tree *t1, Tree *t2)
 // ----------------------------------------------------------------------------
 //   Check if two patterns describe the same tree shape
@@ -802,23 +853,6 @@ Tree *TypeInference::LookupTypeName(Tree *type)
             Join(definition, name);
             return Base(definition);
         }
-    }
-
-    // Temporary hack: promote constant types to their base type
-    kind k = type->Kind();
-    switch(k)
-    {
-    case INTEGER:
-        Join(integer_type, type, true);
-        return integer_type;
-    case REAL:
-        Join(real_type, type, true);
-        return real_type;
-    case TEXT:
-        Join(text_type, type, true);
-        return text_type;
-    default:
-        break;
     }
 
     // Otherwise, simply return input type
