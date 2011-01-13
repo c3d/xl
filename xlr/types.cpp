@@ -112,7 +112,10 @@ Tree *TypeInference::Type(Tree *expr)
     {
         if (expr->Kind() == NAME)
         {
-            AssignType(expr);
+            if (expr == xl_true || expr == xl_false)
+                AssignType(expr, boolean_type);
+            else
+                AssignType(expr);
         }
         else if (!expr->Do(this))
         {

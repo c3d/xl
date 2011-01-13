@@ -1,4 +1,4 @@
-// OPT=-O3
+// OPT=-O3 -tcode
 (X:integer < Y:integer):boolean -> opcode ICmpSLT
 
 if true then X else Y -> X

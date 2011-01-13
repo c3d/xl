@@ -87,6 +87,12 @@ llvm_value CompileExpression::DoName(Name *what)
     if (where == context)
         return unit->Known(rewrite->from);
 
+    // Check true and false values
+    if (existing == xl_true)
+        return unit->code->getTrue();
+    if (existing == xl_false)
+        return unit->code->getFalse();
+
     // For now assume a global
     return unit->Global(existing);
 }
