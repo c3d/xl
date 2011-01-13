@@ -88,7 +88,7 @@ llvm_value CompileExpression::DoName(Name *what)
         return unit->Known(rewrite->from);
 
     // For now assume a global
-    return unit->Global(what);
+    return unit->Global(existing);
 }
 
 
@@ -375,31 +375,141 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
     Compiler &c = *u.compiler;
     llvm_builder code = u.code;
 
-    // Test the various types we know how to compare
-    if (testType == c.integerTy)
+    // Comparison of boolean values
+    if (testType == c.booleanTy)
+    {
+        if (valueType == c.treePtrTy || valueType == c.nameTreePtrTy)
+        {
+            value = u.Autobox(value, c.booleanTy);
+            valueType = value->getType();
+        }
+        if (valueType != c.booleanTy)
+            return code->getFalse();
+        return code->CreateICmpEQ(test, value);
+    }
+
+    // Comparison of character values
+    if (testType == c.characterTy)
+    {
+        if (valueType == c.textTreePtrTy)
+        {
+            value = u.Autobox(value, testType);
+            valueType = value->getType();
+        }
+        if (valueType != c.characterTy)
+            return code->getFalse();
+        return code->CreateICmpEQ(test, value);
+    }
+
+    // Comparison of text constants
+    if (testType == c.textTy)
+    {
+        test = u.Autobox(test, c.charPtrTy);
+        testType = test->getType();
+    }
+    if (testType == c.charPtrTy)
+    {
+        if (valueType == c.textTreePtrTy)
+        {
+            value = u.Autobox(value, testType);
+            valueType = value->getType();
+        }
+        if (valueType != c.charPtrTy)
+            return code->getFalse();
+        value = code->CreateCall2(c.strcmp_fn, test, value);
+        test = ConstantInt::get(value->getType(), 0);
+        value = code->CreateICmpEQ(value, test);
+        return value;
+    }
+
+    // Comparison of integer values
+    if (testType->isIntegerTy())
     {
         if (valueType == c.integerTreePtrTy)
         {
             value = u.Autobox(value, c.integerTy);
             valueType = value->getType();
         }
-        if (valueType != c.integerTy)
+        if (!valueType->isIntegerTy())
             return code->getFalse();
+        if (valueType != c.integerTy)
+            value = code->CreateSExt(value, c.integerTy);
+        if (testType != c.integerTy)
+            test = code->CreateSExt(test, c.integerTy);
         return code->CreateICmpEQ(test, value);
     }
 
-    if (testType == c.realTy)
+    // Comparison of floating-point values
+    if (testType->isFloatingPointTy())
     {
         if (valueType == c.realTreePtrTy)
         {
             value = u.Autobox(value, c.realTy);
             valueType = value->getType();
         }
-        if (valueType != c.realTy)
+        if (!valueType->isFloatingPointTy())
             return code->getFalse();
+        if (valueType != testType)
+        {
+            if (valueType != c.realTy)
+            {
+                value = code->CreateFPExt(value, c.realTy);
+                valueType = value->getType();
+            }
+            if (testType != c.realTy)
+            {
+                test = code->CreateFPExt(test, c.realTy);
+                testType = test->getType();
+            }
+            if (valueType != testType)
+                return code->getFalse();
+        }
         return code->CreateFCmpOEQ(test, value);
     }
 
+    // Test our special types
+    if (testType == c.treePtrTy         ||
+        testType == c.integerTreePtrTy  ||
+        testType == c.realTreePtrTy     ||
+        testType == c.textTreePtrTy     ||
+        testType == c.nameTreePtrTy     ||
+        testType == c.blockTreePtrTy    ||
+        testType == c.infixTreePtrTy    ||
+        testType == c.prefixTreePtrTy   ||
+        testType == c.postfixTreePtrTy)
+    {
+        if (testType != c.treePtrTy)
+        {
+            test = code->CreateBitCast(test, c.treePtrTy);
+            testType = test->getType();
+        }
+
+        // Convert value to a Tree * if possible
+        if (valueType->isIntegerTy() ||
+            valueType->isFloatingPointTy() ||
+            valueType == c.charPtrTy ||
+            valueType == c.textTy ||
+            valueType == c.integerTreePtrTy  ||
+            valueType == c.realTreePtrTy     ||
+            valueType == c.textTreePtrTy     ||
+            valueType == c.nameTreePtrTy     ||
+            valueType == c.blockTreePtrTy    ||
+            valueType == c.infixTreePtrTy    ||
+            valueType == c.prefixTreePtrTy   ||
+            valueType == c.postfixTreePtrTy)
+        {
+            value = u.Autobox(value, c.treePtrTy);
+            valueType = value->getType();
+        }
+
+        if (testType != valueType)
+            return code->getFalse();
+
+        // Call runtime function to perform tree comparison
+        return code->CreateCall2(c.xl_same_shape, value, test);
+    }
+
+    // Other comparisons fail for now
     return code->getFalse();
 }
 

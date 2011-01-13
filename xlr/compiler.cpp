@@ -107,6 +107,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
       nativeTy(NULL), nativeFnTy(NULL),
       evalTy(NULL), evalFnTy(NULL),
       infoPtrTy(NULL), contextPtrTy(NULL),
+      strcmp_fn(NULL),
       xl_evaluate(NULL), xl_same_text(NULL), xl_same_shape(NULL),
       xl_infix_match_check(NULL), xl_type_check(NULL), xl_form_error(NULL),
       xl_new_integer(NULL), xl_new_real(NULL), xl_new_character(NULL),
@@ -301,6 +302,8 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 
     // Create a reference to the evaluation function
 #define FN(x) #x, (void *) XL::x
+    strcmp_fn = ExternFunction("strcmp", (void *) strcmp,
+                               LLVM_INTTYPE(int), 2, charPtrTy, charPtrTy);
     xl_evaluate = ExternFunction(FN(xl_evaluate),
                                  treePtrTy, 2, contextPtrTy, treePtrTy);
     xl_same_text = ExternFunction(FN(xl_same_text),

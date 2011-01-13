@@ -172,6 +172,7 @@ public:
     llvm::PointerType         *evalFnTy;
     llvm::PointerType         *infoPtrTy;
     llvm::PointerType         *contextPtrTy;
+    llvm::Function            *strcmp_fn;
     llvm::Function            *xl_evaluate;
     llvm::Function            *xl_same_text;
     llvm::Function            *xl_same_shape;

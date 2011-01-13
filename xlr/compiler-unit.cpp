@@ -1202,7 +1202,8 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
             // Convert text constant to character
             result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX);
             result = code->CreateConstGEP2_32(result, 0, 0);
-            result = code->CreateConstGEP2_32(result, 0, 0, "charval");
+            result = code->CreateConstGEP2_32(result, 0, 0);
+            result = code->CreateLoad(result);
         }
         else
         {
@@ -1223,8 +1224,9 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     else if (req == compiler->charPtrTy)
     {
         assert(type == compiler->textTreePtrTy);
-        result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX, "tval");
-        result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX,"cptrval");
+        result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX);
+        result = code->CreateConstGEP2_32(result,0, 0);
+        result = code->CreateLoad(result);
     }
     else if (req == compiler->textTy)
     {

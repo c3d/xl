@@ -114,7 +114,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
 //   Attempts to bind 'value' to the pattern form given in 'form'
 // ----------------------------------------------------------------------------
 {
-    Tree_p type = inference->Type(value);
+    Tree *type = NULL;
     kind k = form->Kind();
 
     switch(k)
@@ -124,6 +124,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         Integer *f = (Integer *) form;
         if (Integer *iv = value->AsInteger())
             return iv->value == f->value ? PERFECT : FAILED;
+        type = inference->Type(value);
         if (inference->Unify(type, integer_type, value, form))
         {
             rc.conditions.push_back(RewriteCondition(value, form));
@@ -136,6 +137,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         Real *f = (Real *) form;
         if (Real *iv = value->AsReal())
             return iv->value == f->value ? PERFECT : FAILED;
+        type = inference->Type(value);
         if (inference->Unify(type, real_type, value, form))
         {
             rc.conditions.push_back(RewriteCondition(value, form));
@@ -148,6 +150,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         Text *f = (Text *) form;
         if (Text *iv = value->AsText())
             return iv->value == f->value ? PERFECT : FAILED;
+        type = inference->Type(value);
         if (inference->Unify(type, text_type, value, form))
         {
             rc.conditions.push_back(RewriteCondition(value, form));
@@ -202,6 +205,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
                 return FAILED;
 
             // Add type binding with the given type
+            type = inference->Type(value);
             if (!inference->Unify(type, fi->right, value, fi->left,
                                   TypeInference::DECLARATION))
                 return FAILED;
@@ -250,6 +254,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         }
 
         // We may have an expression that evaluates as an infix
+        type = inference->Type(value);
         if (!inference->Unify(type, infix_type, value, form))
             return FAILED;
 
