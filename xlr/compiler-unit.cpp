@@ -1239,22 +1239,27 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
         BasicBlock *isTrue = BasicBlock::Create(*llvm, "isTrue", function);
         BasicBlock *isFalse = BasicBlock::Create(*llvm, "isFalse", function);
         BasicBlock *exit = BasicBlock::Create(*llvm, "booleanBoxed", function);
+        Value *ptr = data->CreateAlloca(compiler->treePtrTy);
         code->CreateCondBr(value, isTrue, isFalse);
 
         // True block
         code->SetInsertPoint(isTrue);
         Value *truePtr = compiler->TreeGlobal(xl_true);
-        result = code->CreateLoad(truePtr, "xl_true");
+        result = code->CreateLoad(truePtr);
+        result = code->CreateStore(result, ptr);
         code->CreateBr(exit);
 
         // False block
         code->SetInsertPoint(isFalse);
         Value *falsePtr = compiler->TreeGlobal(xl_false);
-        result = code->CreateLoad(falsePtr, "xl_false");
+        result = code->CreateLoad(falsePtr);
+        result = code->CreateStore(result, ptr);
         code->CreateBr(exit);
 
         // Now on shared exit block
         code->SetInsertPoint(exit);
+        result = code->CreateLoad(ptr);
+        type = result->getType();
     }
     else if (type == compiler->characterTy &&
              (req == compiler->treePtrTy || req == compiler->textTreePtrTy))
@@ -1294,7 +1299,7 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     }
 
 
-    if (req == compiler->treePtrTy)
+    if (req == compiler->treePtrTy && type != req)
     {
         assert(type == compiler->integerTreePtrTy ||
                type == compiler->realTreePtrTy ||

@@ -222,6 +222,7 @@ public:
 
 XL_END
 
-extern void debugv(void *);
+extern void debugv(llvm::Value *);
+extern void debugv(llvm::Type *);
 
 #endif // COMPILER_H
