@@ -677,11 +677,7 @@ bool TypeInference::JoinConstant(Tree *cst, Name *type)
 //    Join a constant with a type name
 // ----------------------------------------------------------------------------
 {
-    // If the type we got is generic, associate it with value
-    if (IsGeneric(type->value))
-        return Join(type, cst, true);
-
-    // Otherwise, it's a type name. Check constant types
+    // Check if we match against some sized type, otherwise force type
     switch (cst->Kind())
     {
     case INTEGER:
@@ -690,15 +686,15 @@ bool TypeInference::JoinConstant(Tree *cst, Name *type)
             type == integer16_type || type == unsigned16_type ||
             type == integer32_type || type == unsigned32_type ||
             type == integer64_type || type == unsigned64_type)
-            return Join(cst, type, true);
-        return false;
+            return Join(type, cst, true);
+        return Unify(integer_type, type) && Join(cst, integer_type);
 
     case REAL:
         if (type == real_type   ||
             type == real64_type || 
             type == real32_type)
-            return Join(cst, type, true);
-        return false;
+            return Join(type, cst, true);
+        return Unify(real_type, type) && Join(cst, real_type);
 
     case TEXT:
     {
@@ -706,14 +702,13 @@ bool TypeInference::JoinConstant(Tree *cst, Name *type)
         if (text->IsCharacter())
         {
             if (type == character_type)
-                return Join(cst, type, true);
+                return Join(type, cst, true);
+            return Join(type, character_type) && Join(cst, character_type);
         }
-        else
-        {
-            if (type == text_type)
-                return Join(cst, type, true);
-        }
-        return false;
+
+        if (type == text_type)
+            return Join(type, cst, true);
+        return Unify(text_type, type) && Join(cst, text_type);
     }
 
     default:

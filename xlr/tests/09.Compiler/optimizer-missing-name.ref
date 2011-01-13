@@ -2,60 +2,6 @@
 printf "The value of fib %lld is %lld", N, fib N
 09.Compiler/optimizer-missing-name.xl:4: Unable to evaluate printf "The value of fib %lld is %lld", N, fib N because
 09.Compiler/optimizer-missing-name.xl:3:  printf fmt:text, arg:integer, arg2:integer doesn't match because
-09.Compiler/optimizer-missing-name.xl:4:   Unable to evaluate "The value of fib %lld is %lld", N, fib N because
-builtins.xl:42:    x, y doesn't match because
-09.Compiler/optimizer-missing-name.xl:4:     Unable to evaluate N, fib N because
-builtins.xl:42:      x, y doesn't match because
-09.Compiler/optimizer-missing-name.xl:4:       Unable to evaluate N because
-09.Compiler/optimizer-missing-name.xl:4:        No form matches 'N'
-builtins.xl:47:      x, nil doesn't match because
-09.Compiler/optimizer-missing-name.xl:4:       Unable to evaluate N because
-09.Compiler/optimizer-missing-name.xl:4:        No form matches 'N'
-builtins.xl:48:      nil, x doesn't match because
-09.Compiler/optimizer-missing-name.xl:4:       Unable to evaluate N because
-09.Compiler/optimizer-missing-name.xl:4:        No form matches 'N'
-09.Compiler/optimizer-missing-name.xl:4:      No form matches 'N, fib N'
-09.Compiler/optimizer-missing-name.xl:4:     Unable to assign type to 'N, fib N'
-builtins.xl:47:    x, nil doesn't match because
-09.Compiler/optimizer-missing-name.xl:4:     Unable to evaluate N, fib N because
-builtins.xl:42:      x, y doesn't match because
-09.Compiler/optimizer-missing-name.xl:4:       Unable to evaluate N because
-09.Compiler/optimizer-missing-name.xl:4:        No form matches 'N'
-builtins.xl:47:      x, nil doesn't match because
-09.Compiler/optimizer-missing-name.xl:4:       Unable to evaluate N because
-09.Compiler/optimizer-missing-name.xl:4:        No form matches 'N'
-builtins.xl:48:      nil, x doesn't match because
-09.Compiler/optimizer-missing-name.xl:4:       Unable to evaluate N because
-09.Compiler/optimizer-missing-name.xl:4:        No form matches 'N'
-09.Compiler/optimizer-missing-name.xl:4:      No form matches 'N, fib N'
-09.Compiler/optimizer-missing-name.xl:4:     Unable to assign type to 'N, fib N'
-builtins.xl:48:    nil, x doesn't match because
-09.Compiler/optimizer-missing-name.xl:4:     Unable to evaluate N, fib N because
-builtins.xl:42:      x, y doesn't match because
-09.Compiler/optimizer-missing-name.xl:4:       Unable to evaluate N because
-09.Compiler/optimizer-missing-name.xl:4:        No form matches 'N'
-builtins.xl:47:      x, nil doesn't match because
-09.Compiler/optimizer-missing-name.xl:4:       Unable to evaluate N because
-09.Compiler/optimizer-missing-name.xl:4:        No form matches 'N'
-builtins.xl:48:      nil, x doesn't match because
-09.Compiler/optimizer-missing-name.xl:4:       Unable to evaluate N because
-09.Compiler/optimizer-missing-name.xl:4:        No form matches 'N'
-09.Compiler/optimizer-missing-name.xl:4:      No form matches 'N, fib N'
-09.Compiler/optimizer-missing-name.xl:4:     Unable to assign type to 'N, fib N'
-09.Compiler/optimizer-missing-name.xl:4:    No form matches '"The value of fib %lld is %lld", N, fib N'
-09.Compiler/optimizer-missing-name.xl:4:   Unable to assign type to '"The value of fib %lld is %lld", N, fib N'
-09.Compiler/optimizer-missing-name.xl:4:   Unable to evaluate N, fib N because
-builtins.xl:42:    x, y doesn't match because
-09.Compiler/optimizer-missing-name.xl:4:     Unable to evaluate N because
-09.Compiler/optimizer-missing-name.xl:4:      No form matches 'N'
-builtins.xl:47:    x, nil doesn't match because
-09.Compiler/optimizer-missing-name.xl:4:     Unable to evaluate N because
-09.Compiler/optimizer-missing-name.xl:4:      No form matches 'N'
-builtins.xl:48:    nil, x doesn't match because
-09.Compiler/optimizer-missing-name.xl:4:     Unable to evaluate N because
-09.Compiler/optimizer-missing-name.xl:4:      No form matches 'N'
-09.Compiler/optimizer-missing-name.xl:4:    No form matches 'N, fib N'
-09.Compiler/optimizer-missing-name.xl:4:   Unable to assign type to 'N, fib N'
 09.Compiler/optimizer-missing-name.xl:4:   Unable to evaluate N because
 09.Compiler/optimizer-missing-name.xl:4:    No form matches 'N'
 09.Compiler/optimizer-missing-name.xl:4:  No form matches 'printf "The value of fib %lld is %lld", N, fib N'
