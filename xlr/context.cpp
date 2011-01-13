@@ -116,17 +116,21 @@ Tree *Context::ProcessDeclarations(Tree *what)
                 }
                 else if (pname->value == "extern")
                 {
-                    ProcessCDeclaration pcd;
-                    Tree *rewritten = pcd.Declaration(prefix->right);
+                    CDeclaration *pcd = new CDeclaration;
+                    Infix *normalForm = pcd->Declaration(prefix->right);
                     IFTRACE(xl2c)
                         std::cout << "C:  " << prefix << "\n"
-                                  << "XL: " << rewritten << "\n";
-                    if (rewritten)
+                                  << "XL: " << normalForm << "\n";
+                    if (normalForm)
                     {
-                        Name *C = new Name("C", what->Position());
-                        Prefix *cdecl = new Prefix(C, pcd.name);
-                        Define(rewritten, cdecl);
+                        Define(normalForm->left, normalForm->right);
+                        prefix->SetInfo<CDeclaration>(pcd);
+                        prefix->right->SetInfo<CDeclaration>(pcd);
                         instr = NULL;
+                    }
+                    else
+                    {
+                        delete pcd;
                     }
                 }
             }

@@ -26,29 +26,30 @@
 
 XL_BEGIN
 
-struct ProcessCDeclaration
+struct CDeclaration : Info
 // ----------------------------------------------------------------------------
 //   A class that processes C declarations
 // ----------------------------------------------------------------------------
 {
-    ProcessCDeclaration();
+    CDeclaration();
     typedef Tree *value_type;
     
-    Tree * Declaration(Tree *input);
-    Tree * TypeAndName(Tree *input, Tree_p &type, Name_p &name, uint &mods);
-    Tree * Parameters(Block *input);
-    Tree * Type(Tree *input, uint &mods);
-    Tree * PointerType(Postfix *input);
-    Tree * ArrayType(Tree *returned);
-    Name * NamedType(Name *input, uint &mods);
-    Name * BaroqueTypeMods(Name *first, Name *second, uint &mods);
-    Name * Anonymous();
+    Infix * Declaration(Tree *input);
+    Tree *  TypeAndName(Tree *input, Tree_p &type, Name_p &name, uint &mods);
+    Tree *  Parameters(Block *input);
+    Tree *  Type(Tree *input, uint &mods);
+    Tree *  PointerType(Postfix *input);
+    Tree *  ArrayType(Tree *returned);
+    Name *  NamedType(Name *input, uint &mods);
+    Name *  BaroqueTypeMods(Name *first, Name *second, uint &mods);
+    Name *  Anonymous();
 
     enum { SHORT = 1, LONG = 2, UNSIGNED = 4, SIGNED = 8 };
 
 public:
     Name_p      name;
     Tree_p      returnType;
+    Infix_p     rewrite;
     uint        parameters;
 };
 

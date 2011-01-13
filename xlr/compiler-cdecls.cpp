@@ -28,17 +28,18 @@
 
 XL_BEGIN
 
-ProcessCDeclaration::ProcessCDeclaration()
+CDeclaration::CDeclaration()
 // ----------------------------------------------------------------------------
 //   Constructor for the C declaration preprocessor
 // ----------------------------------------------------------------------------
     : name(NULL),
       returnType(NULL),
+      rewrite(NULL),
       parameters(0)
 {}
 
 
-Tree *ProcessCDeclaration::Declaration(Tree *input)
+Infix *CDeclaration::Declaration(Tree *input)
 // ----------------------------------------------------------------------------
 //    Process a C declaration given into normal form
 // ----------------------------------------------------------------------------
@@ -79,8 +80,13 @@ Tree *ProcessCDeclaration::Declaration(Tree *input)
             
             // Assemble the final result
             Prefix *form = new Prefix(name, input, position);
-            Infix *result = new Infix(":", form, returnType, position);
-            return result;
+            Infix *decl = new Infix(":", form, returnType, position);
+
+            Name *C = new Name("C", source->Position());
+            Prefix *cdecl = new Prefix(C, name);
+            rewrite = new Infix("->", decl, cdecl);
+
+            return rewrite;
         }
     }
 
@@ -89,7 +95,7 @@ Tree *ProcessCDeclaration::Declaration(Tree *input)
 }
 
 
-Tree *ProcessCDeclaration::TypeAndName(Tree *input,
+Tree *CDeclaration::TypeAndName(Tree *input,
                                        Tree_p &declType,
                                        Name_p &declName,
                                        uint &mods)
@@ -156,7 +162,7 @@ Tree *ProcessCDeclaration::TypeAndName(Tree *input,
 }
 
 
-Tree *ProcessCDeclaration::Parameters(Block *input)
+Tree *CDeclaration::Parameters(Block *input)
 // ----------------------------------------------------------------------------
 //   Process the parameters in a C declaration
 // ----------------------------------------------------------------------------
@@ -234,7 +240,7 @@ Tree *ProcessCDeclaration::Parameters(Block *input)
 }
 
 
-Tree *ProcessCDeclaration::Type(Tree *input, uint &mods)
+Tree *CDeclaration::Type(Tree *input, uint &mods)
 // ----------------------------------------------------------------------------
 //   Check if something looks like a type
 // ----------------------------------------------------------------------------
@@ -259,7 +265,7 @@ Tree *ProcessCDeclaration::Type(Tree *input, uint &mods)
 }
 
 
-Tree *ProcessCDeclaration::PointerType(Postfix *input)
+Tree *CDeclaration::PointerType(Postfix *input)
 // ----------------------------------------------------------------------------
 //   Create a C pointer type and return it
 // ----------------------------------------------------------------------------
@@ -283,7 +289,7 @@ Tree *ProcessCDeclaration::PointerType(Postfix *input)
 }
 
 
-Tree *ProcessCDeclaration::ArrayType(Tree *pointedTo)
+Tree *CDeclaration::ArrayType(Tree *pointedTo)
 // ----------------------------------------------------------------------------
 //   Create an array type. For argument passing, that's a pointer
 // ----------------------------------------------------------------------------
@@ -299,7 +305,7 @@ Tree *ProcessCDeclaration::ArrayType(Tree *pointedTo)
 }
 
 
-Name *ProcessCDeclaration::NamedType(Name *input, uint &mods)
+Name *CDeclaration::NamedType(Name *input, uint &mods)
 // ----------------------------------------------------------------------------
 //   Perform type replacements
 // ----------------------------------------------------------------------------
@@ -344,7 +350,7 @@ Name *ProcessCDeclaration::NamedType(Name *input, uint &mods)
 }
 
 
-Name *ProcessCDeclaration::BaroqueTypeMods(Name *first,
+Name *CDeclaration::BaroqueTypeMods(Name *first,
                                            Name *second,
                                            uint &mods)
 // ----------------------------------------------------------------------------
@@ -375,7 +381,7 @@ Name *ProcessCDeclaration::BaroqueTypeMods(Name *first,
 }
 
 
-Name *ProcessCDeclaration::Anonymous()
+Name *CDeclaration::Anonymous()
 // ----------------------------------------------------------------------------
 //   Generate an argument name
 // ----------------------------------------------------------------------------

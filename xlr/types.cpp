@@ -27,6 +27,7 @@
 #include "options.h"
 #include "save.h"
 #include "compiler-arg.h"
+#include "compiler-cdecls.h"
 #include "renderer.h"
 #include <iostream>
 
@@ -189,8 +190,10 @@ bool TypeInference::DoPrefix(Prefix *what)
 
     // Skip bizarre declarations
     if (Name *name = what->left->AsName())
-        if (name->value == "data" || name->value == "extern")
-            return true;
+        if (name->value == "data")
+            return Data(what->right);
+        else if (name->value == "extern")
+            return Extern(what->right);
 
     // What really matters is if we can evaluate the top-level expression
     return Evaluate(what);
@@ -340,6 +343,28 @@ bool TypeInference::Rewrite(Infix *what)
 
     // Well done, success!
     return true;
+}
+
+
+bool TypeInference::Data(Tree *what)
+// ----------------------------------------------------------------------------
+//   Build the structure type associated to the data form
+// ----------------------------------------------------------------------------
+{
+    // TODO
+    return true;
+}
+
+
+bool TypeInference::Extern(Tree *what)
+// ----------------------------------------------------------------------------
+//   Recover the transformed rewrite and enter that
+// ----------------------------------------------------------------------------
+{
+    CDeclaration *cdecl = what->GetInfo<CDeclaration>();
+    if (!cdecl)
+        return false;
+    return Rewrite(cdecl->rewrite);
 }
 
 

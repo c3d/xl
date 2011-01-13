@@ -95,6 +95,8 @@ public:
     // Annotate expressions with type variables
     bool        AssignType(Tree *expr, Tree *type = NULL);
     bool        Rewrite(Infix *rewrite);
+    bool        Data(Tree *form);
+    bool        Extern(Tree *form);
 
     // Attempt to evaluate an expression and perform reqiored unifications
     bool        Evaluate(Tree *tree);
