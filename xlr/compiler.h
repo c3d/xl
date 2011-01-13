@@ -139,7 +139,11 @@ public:
     llvm::PassManager         *moduleOptimizer;
     const llvm::IntegerType   *booleanTy;
     const llvm::IntegerType   *integerTy;
+    const llvm::IntegerType   *integer8Ty;
+    const llvm::IntegerType   *integer16Ty;
+    const llvm::IntegerType   *integer32Ty;
     const llvm::Type          *realTy;
+    const llvm::Type          *real32Ty;
     const llvm::IntegerType   *characterTy;
     llvm::PointerType         *charPtrTy;
     llvm::StructType          *textTy;

@@ -1195,22 +1195,30 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
         result = code->CreateLoad(falsePtr, "xl_false");
         result = code->CreateICmpNE(value, result, "notFalse");
     }
-    else if (req == compiler->integerTy)
+    else if (req->isIntegerTy())
     {
-        assert (type == compiler->integerTreePtrTy);
-        result = code->CreateConstGEP2_32(value,0, INTEGER_VALUE_INDEX, "ival");
+        if (req == compiler->characterTy && type == compiler->textTreePtrTy)
+        {
+            // Convert text constant to character
+            result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX);
+            result = code->CreateConstGEP2_32(result, 0, 0);
+            result = code->CreateConstGEP2_32(result, 0, 0, "charval");
+        }
+        else
+        {
+            // Convert integer constants
+            assert (type == compiler->integerTreePtrTy);
+            result = code->CreateConstGEP2_32(value,0, INTEGER_VALUE_INDEX);
+            if (req != compiler->integerTy)
+                result = code->CreateTrunc(result, req);
+        }
     }
-    else if (req == compiler->realTy)
+    else if (req->isFloatingPointTy())
     {
         assert(type == compiler->realTreePtrTy);
         result = code->CreateConstGEP2_32(value,0, REAL_VALUE_INDEX, "rval");
-    }
-    else if (req == compiler->characterTy)
-    {
-        assert(type == compiler->textTreePtrTy);
-        result = code->CreateConstGEP2_32(result,0, TEXT_VALUE_INDEX, "tval");
-        result = code->CreateConstGEP2_32(result, 0, 0, "cptrval");
-        result = code->CreateConstGEP2_32(result, 0, 0, "charval");
+        if (req != compiler->realTy)
+            result = code->CreateFPTrunc(result, req);
     }
     else if (req == compiler->charPtrTy)
     {
@@ -1248,20 +1256,24 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
         // Now on shared exit block
         code->SetInsertPoint(exit);
     }
-    else if (type == compiler->integerTy)
+    else if (type == compiler->characterTy &&
+             (req == compiler->treePtrTy || req == compiler->textTreePtrTy))
+    {
+        boxFn = compiler->xl_new_character;
+    }
+    else if (type->isIntegerTy())
     {
         assert(req == compiler->treePtrTy || req == compiler->integerTreePtrTy);
         boxFn = compiler->xl_new_integer;
+        if (type != compiler->integerTy)
+            result = code->CreateSExt(result, type); // REVISIT: Signed?
     }
-    else if (type == compiler->realTy)
+    else if (type->isFloatingPointTy())
     {
         assert(req == compiler->treePtrTy || req == compiler->realTreePtrTy);
         boxFn = compiler->xl_new_real;
-    }
-    else if (type == compiler->characterTy)
-    {
-        assert(req == compiler->treePtrTy || req == compiler->textTreePtrTy);
-        boxFn = compiler->xl_new_character;
+        if (type != compiler->realTy)
+            result = code->CreateFPExt(result, type);
     }
     else if (type == compiler->textTy)
     {

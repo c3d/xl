@@ -75,6 +75,5 @@ BINARY(FCmpUGE)
 BINARY(FCmpULT)
 BINARY(FCmpULE)
 
-
 #undef UNARY
 #undef BINARY

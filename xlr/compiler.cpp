@@ -91,7 +91,9 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 //   Initialize the various instances we may need
 // ----------------------------------------------------------------------------
     : module(NULL), runtime(NULL), optimizer(NULL), moduleOptimizer(NULL),
-      booleanTy(NULL), integerTy(NULL), realTy(NULL),
+      booleanTy(NULL),
+      integerTy(NULL), integer8Ty(NULL), integer16Ty(NULL), integer32Ty(NULL),
+      realTy(NULL), real32Ty(NULL),
       characterTy(NULL), charPtrTy(NULL), textTy(NULL),
       treeTy(NULL), treePtrTy(NULL), treePtrPtrTy(NULL),
       integerTreeTy(NULL), integerTreePtrTy(NULL),
@@ -168,9 +170,13 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 
     // Get the basic types
     booleanTy = Type::getInt1Ty(*llvm);
-    integerTy = LLVM_INTTYPE(long long);
+    integerTy = llvm::IntegerType::get(*llvm, 64);
+    integer8Ty = llvm::IntegerType::get(*llvm, 8);
+    integer16Ty = llvm::IntegerType::get(*llvm, 16);
+    integer32Ty = llvm::IntegerType::get(*llvm, 32);
     characterTy = LLVM_INTTYPE(char);
     realTy = Type::getDoubleTy(*llvm);
+    real32Ty = Type::getFloatTy(*llvm);
     charPtrTy = PointerType::get(LLVM_INTTYPE(char), 0);
 
     // Create the 'text' type, assume it contains a single char *
@@ -716,9 +722,11 @@ llvm_type Compiler::MachineType(Tree *tree)
     // Check all "basic" types in basics.tbl
     if (tree == boolean_type || tree == xl_true || tree == xl_false)
         return booleanTy;
-    if (tree == integer_type || tree->Kind() == INTEGER)
+    if (tree == integer_type|| tree == integer64_type ||
+        tree == unsigned_type || tree == unsigned64_type ||
+        tree->Kind() == INTEGER)
         return integerTy;
-    if (tree == real_type || tree->Kind() == REAL)
+    if (tree == real_type || tree == real64_type || tree->Kind() == REAL)
         return realTy;
     if (tree == character_type)
         return characterTy;
@@ -731,6 +739,16 @@ llvm_type Compiler::MachineType(Tree *tree)
         if (text->opening == "\"" && text->closing == "\"")
             return charPtrTy;
     }
+
+    // Sized types
+    if (tree == integer8_type || tree == unsigned8_type)
+        return integer8Ty;
+    if (tree == integer16_type || tree == unsigned16_type)
+        return integer16Ty;
+    if (tree == integer32_type || tree == unsigned32_type)
+        return integer32Ty;
+    if (tree == real32_type)
+        return real32Ty;
     
     // Check special tree types in basics.tbl
     if (tree == symbol_type || tree == name_type || tree == operator_type)

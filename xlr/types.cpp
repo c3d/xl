@@ -522,6 +522,14 @@ bool TypeInference::Unify(Tree *t1, Tree *t2, unify_mode mode)
     t2 = LookupTypeName(t2);
     if (t1 == t2)
         return true;            // This may have been enough for unifiation
+    if (t1 == real_type && t2 == real64_type)
+        return true;
+    if (t1 == real64_type && t2 == real_type)
+        return true;
+    if (t1 == integer64_type && t2 == integer_type)
+        return true;
+    if (t1 == integer_type && t2 == integer64_type)
+        return true;
 
     // If either is a generic, unify with the other
     if (IsGeneric(t1))
