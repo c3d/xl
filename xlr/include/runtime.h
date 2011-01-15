@@ -176,6 +176,14 @@ public:
 // ============================================================================
 
 Tree *xl_write(Context *context, Tree *what, text sep = "");
+extern "C"
+{
+    bool xl_write_integer(longlong);
+    bool xl_write_real(double);
+    bool xl_write_text(kstring);
+    bool xl_write_character(char c);
+    bool xl_writeln(void);
+}
 Tree *xl_list_files(Context *context, Tree *patterns);
 
 
