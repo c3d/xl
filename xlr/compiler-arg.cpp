@@ -41,7 +41,7 @@ Tree *RewriteCalls::operator() (Context *context,
 
     // Create local type inference deriving from ours
     Context_p valueContext = inference->context;
-    Context_p childContext = new Context(context, context);
+    Context_p childContext = new Context(context, valueContext);
     TypeInference_p childInference = new TypeInference(valueContext, inference);
 
     // Attempt binding / unification of parameters to arguments

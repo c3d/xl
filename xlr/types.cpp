@@ -335,13 +335,6 @@ bool TypeInference::Rewrite(Infix *what)
             if (!Unify(valueType, infix->right, what->right, infix->right))
                 return false;
         }
-        else
-        {
-            Tree *patternType = new Prefix(new Name("type"), what->left,
-                                           what->left->Position());
-            if (!Unify(formType, patternType, what->left, what->left))
-                return false;
-        }
     }
 
     // Well done, success!
@@ -398,7 +391,7 @@ bool TypeInference::Evaluate(Tree *what)
         {
             if (existing == name)
                 return true;    // Example: 'true' or 'integer'
-            Save<Context_p> saveContext(context, where);
+            Save<Context_p> saveContext(context, where->stack);
             if (!Evaluate(existing))
                 return false;
             Tree *etype = Type(existing);
