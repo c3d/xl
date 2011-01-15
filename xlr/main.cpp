@@ -100,6 +100,7 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
     MAIN = this;
     options.builtins = builtinsName;
     ParseOptions();
+    compiler->Setup(options);
 }
 
 
@@ -404,7 +405,7 @@ int Main::Run()
         try
         {
             Errors errors;
-            if (options.optimize_level >= 3)
+            if (options.optimize_level)
             {
                 program_fn fn = compiler->CompileProgram(sf.context, sf.tree);
                 if (fn)

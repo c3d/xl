@@ -98,12 +98,13 @@ struct Compiler
 //   Just-in-time compiler data
 // ----------------------------------------------------------------------------
 {
-    Compiler(kstring moduleName = "xl", uint optimize_level = 999);
+    Compiler(kstring moduleName = "xl");
     ~Compiler();
 
     // Top-level entry point: analyze and compile a whole program
     program_fn                CompileProgram(Context *context, Tree *program);
 
+    void                      Setup(Options &options);
     void                      Reset();
     CompilerInfo *            Info(Tree *tree, bool create = false);
     llvm::Function *          TreeFunction(Tree *tree);

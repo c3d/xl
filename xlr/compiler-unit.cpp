@@ -334,9 +334,7 @@ eval_fn CompiledUnit::Finalize(bool createCode)
         compiler->optimizer->run(*function);
 
     IFTRACE(code)
-    {
         function->print(errs());
-    }
 
     void *result = NULL;
     if (createCode)

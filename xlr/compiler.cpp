@@ -86,7 +86,7 @@ static void* unresolved_external(const std::string& name)
 }
 
 
-Compiler::Compiler(kstring moduleName, uint optimize_level)
+Compiler::Compiler(kstring moduleName)
 // ----------------------------------------------------------------------------
 //   Initialize the various instances we may need
 // ----------------------------------------------------------------------------
@@ -144,26 +144,7 @@ Compiler::Compiler(kstring moduleName, uint optimize_level)
 
     // Setup the optimizer - REVISIT: Adjust with optimization level
     optimizer = new FunctionPassManager(module);
-    createStandardFunctionPasses(optimizer, optimize_level);
     moduleOptimizer = new PassManager;
-    createStandardModulePasses(moduleOptimizer, optimize_level,
-                               true,    /* Optimize size */
-                               false,   /* Unit at a time */
-                               true,    /* Unroll loops */
-                               true,    /* Simplify lib calls */
-                               false,    /* Have exception */
-                               llvm::createFunctionInliningPass());
-    createStandardLTOPasses(moduleOptimizer,
-                            true, /* Internalize */
-                            true, /* RunInliner */
-                            true  /* Verify Each */);
-
-    // Other target options
-    // DwarfExceptionHandling = true;// Present in LLVM 2.6, but crashes
-    JITEmitDebugInfo = true;         // Not present in LLVM 2.6
-    UnwindTablesMandatory = true;
-    // PerformTailCallOpt = true;
-    NoFramePointerElim = true;
 
     // Install a fallback mechanism to resolve references to the runtime, on
     // systems which do not allow the program to dlopen itself.
@@ -376,6 +357,35 @@ program_fn Compiler::CompileProgram(Context *context, Tree *program)
     if (!topUnit.Return(returned))
         return NULL;
     return (program_fn) topUnit.Finalize(true);
+}
+
+
+void Compiler::Setup(Options &options)
+// ----------------------------------------------------------------------------
+//   Setup the compiler after we have parsed the options
+// ----------------------------------------------------------------------------
+{
+    uint optimize_level = options.optimize_level;
+
+    createStandardFunctionPasses(optimizer, optimize_level);
+    createStandardModulePasses(moduleOptimizer, optimize_level,
+                               true,    /* Optimize size */
+                               false,   /* Unit at a time */
+                               true,    /* Unroll loops */
+                               true,    /* Simplify lib calls */
+                               false,    /* Have exception */
+                               llvm::createFunctionInliningPass());
+    createStandardLTOPasses(moduleOptimizer,
+                            true, /* Internalize */
+                            true, /* RunInliner */
+                            true  /* Verify Each */);
+
+    // Other target options
+    // DwarfExceptionHandling = true;// Present in LLVM 2.6, but crashes
+    JITEmitDebugInfo = true;         // Not present in LLVM 2.6
+    UnwindTablesMandatory = true;
+    // PerformTailCallOpt = true;
+    NoFramePointerElim = options.debug;
 }
 
 
