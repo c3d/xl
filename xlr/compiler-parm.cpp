@@ -142,7 +142,7 @@ bool ParameterList::DoInfix(Infix *what)
             llvm_type ntype = unit->ExpressionMachineType(varName);
             if (mtype != ntype)
             {
-                Ooops("Conflicting maching type for declaration $1", what);
+                Ooops("Conflicting machine type for declaration $1", what);
                 return false;
             }
             return EnterName(varName, false);
