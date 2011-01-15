@@ -94,7 +94,10 @@ llvm_value CompileExpression::DoName(Name *what)
         return unit->code->getFalse();
 
     // For now assume a global
-    return unit->Global(existing);
+    if (llvm_value global = unit->Global(existing))
+        return global;
+
+    return DoCall(what);
 }
 
 

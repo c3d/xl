@@ -1,18 +1,18 @@
 // ****************************************************************************
 //  compiler-arg.cpp                                               XLR project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //    Check if a tree matches the form on the left of a rewrite
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
@@ -169,6 +169,10 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
             return FAILED;
         type = inference->Type(value);
 
+        // Ignore function name if that is all we have
+        if (f == rc.rewrite->from)
+            return POSSIBLE;
+
         // Test if the name is already bound, and if so, if trees fail to match
         if (Tree *bound = context->Bound(f, Context::SCOPE_LOOKUP))
         {
@@ -219,7 +223,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
 
             // Having been successful makes it a strong binding
             return PERFECT;
-            
+
         } // We have an infix :
         else if (fi->name == "when")
         {
