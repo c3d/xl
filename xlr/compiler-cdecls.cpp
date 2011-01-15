@@ -77,9 +77,15 @@ Infix *CDeclaration::Declaration(Tree *input)
             input = Parameters(parms);
             if (!input)
                 return NULL;
-            
+
             // Assemble the final result
-            Prefix *form = new Prefix(name, input, position);
+            bool nullParms = false;
+            if (Name *namedParm = input->AsName())
+                if (namedParm->value == "")
+                    nullParms = true;
+            Tree *form = nullParms
+                ? name
+                : (Tree *) new Prefix(name, input, position);
             Infix *decl = new Infix(":", form, returnType, position);
 
             Name *C = new Name("C", source->Position());
@@ -174,9 +180,9 @@ Tree *CDeclaration::Parameters(Block *input)
     {
         // First special case for empty parameter lists
         if (named->value == "")
-            return input;
+            return named;
         if (named->value == "void")
-            return new Block(input, new Name("", named->Position()));
+            return new Name("", named->Position());
 
         // Otherwise, this has to be a type name, tranform it
         uint mods = 0;

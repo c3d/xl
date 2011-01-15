@@ -381,29 +381,10 @@ bool TypeInference::Evaluate(Tree *what)
     if (what->IsConstant() && !context->hasConstants)
         return AssignType(what, what);
 
-    // For a name, check if bound and evaluate bound value
-    if (Name *name = what->AsName())
-    {
-        Context_p where;
-        if (Tree *existing = context->Bound(name,
-                                            Context::SCOPE_LOOKUP,
-                                            &where))
-        {
-            if (existing == name)
-                return true;    // Example: 'true' or 'integer'
-            Save<Context_p> saveContext(context, where->stack);
-            if (!Evaluate(existing))
-                return false;
-            Tree *etype = Type(existing);
-            Tree *ntype = Type(name);
-            return Unify(ntype, etype, name, existing);
-        }
-    }
-
     // Test if we are already trying to evaluate this particular form
     rcall_map::iterator found = rcalls.find(what);
-    if (found != rcalls.end())
-        // Recursive evaluation - Assume successful for now
+    bool recursive = found != rcalls.end();
+    if (recursive)
         return true;
 
     // Identify all candidate rewrites in the current context
