@@ -315,6 +315,7 @@ Name *CDeclaration::NamedType(Name *input, uint &mods)
     text n = input->value;
     static struct { kstring from, to; uint flags; } cvt[] =
     {
+        { "bool",         "boolean",      0 },
         { "int",          "integer32",    0 },
         { "char",         "character",    0 },
         { "short",        "integer16",    SHORT },
