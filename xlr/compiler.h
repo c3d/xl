@@ -64,11 +64,12 @@ struct CompilerInfo;
 struct Context;
 struct Options;
 struct CompilerLLVMTableEntry;
+struct RewriteCandidate;
 typedef Tree * (*program_fn) (void);
 typedef Tree * (*eval_fn) (Tree *);
 typedef Tree * (*adapter_fn) (native_fn callee, Context *ctx,
                               Tree *src, Tree **args);
-typedef std::map<text, llvm::Function *>       builtins_map;
+typedef std::map<text, llvm::Function *>       functions_map;
 typedef std::map<Tree *, llvm::Value *>        value_map;
 typedef std::map<Tree *, Tree **>              address_map;
 typedef std::map<text, llvm::GlobalVariable *> text_constants_map;
@@ -81,6 +82,7 @@ typedef std::map<text,CompilerLLVMTableEntry *>llvm_entry_table;
 typedef const llvm::Type *                     llvm_type;
 typedef std::vector<llvm_type>                 llvm_types;
 typedef llvm::Value *                          llvm_value;
+typedef std::vector<llvm_value>                llvm_values;
 typedef llvm::IRBuilder<> *                    llvm_builder;
 typedef llvm::Function *                       llvm_function;
 typedef llvm::BasicBlock *                     llvm_block;
@@ -128,6 +130,9 @@ struct Compiler
     llvm_type                 MachineType(Tree *tree);
     llvm_value                Primitive(llvm_builder builder, text name,
                                         uint arity, llvm_value *args);
+
+    text                      FunctionKey(RewriteCandidate &rc);
+    llvm::Function * &        FunctionFor(text fkey) { return functions[fkey]; }
 
     bool                      FreeResources(Tree *tree);
 
@@ -191,7 +196,8 @@ public:
     llvm::Function            *xl_new_postfix;
     llvm::Function            *xl_new_infix;
     llvm::Function            *xl_new_closure;
-    builtins_map               builtins;
+    functions_map              builtins;
+    functions_map              functions;
     adapter_map                array_to_args_adapters;
     text_constants_map         text_constants;
     llvm_entry_table           llvm_primitives;

@@ -36,6 +36,7 @@
 #include "compiler-unit.h"
 #include "compiler-parm.h"
 #include "compiler-expred.h"
+#include "compiler-arg.h"
 #include "errors.h"
 #include "types.h"
 
@@ -269,26 +270,25 @@ llvm_value CompiledUnit::Compile(Tree *tree)
 }
 
 
-llvm_value CompiledUnit::Compile(Rewrite *rewrite, TypeInference *types)
+llvm_value CompiledUnit::Compile(RewriteCandidate &rc)
 // ----------------------------------------------------------------------------
 //    Compile a given tree
 // ----------------------------------------------------------------------------
 {
-    llvm_value result = value[rewrite->from];
-    if (result == NULL)
+    // Check if we already have built this function, e.g. recursive calls
+    text fkey = compiler->FunctionKey(rc);
+    llvm::Function *&function = compiler->FunctionFor(fkey);
+
+    // If we have not, then we need to build it
+    if (function == NULL)
     {
+        TypeInference *types = rc.types;
+        Rewrite *rewrite = rc.rewrite;
         Context_p rewriteContext = types->context;
         CompiledUnit rewriteUnit(compiler, rewriteContext);
 
-        Function *function = rewriteUnit.RewriteFunction(rewrite, types);
-        if (!function)
-            return function;
-
-        value[rewrite->from] = function;
-        rewriteUnit.value[rewrite->from] = function;
-        result = function;
-
-        if (rewriteUnit.code)
+        function = rewriteUnit.RewriteFunction(rewrite, types);
+        if (function && rewriteUnit.code)
         {
             llvm_value returned = rewriteUnit.Compile(rewrite->to);
             if (!returned)
@@ -298,7 +298,7 @@ llvm_value CompiledUnit::Compile(Rewrite *rewrite, TypeInference *types)
             rewriteUnit.Finalize(false);
         }
     }
-    return result;
+    return function;
 }
 
 

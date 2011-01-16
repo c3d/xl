@@ -24,6 +24,7 @@
 #include "compiler-gc.h"
 #include "compiler-unit.h"
 #include "compiler-llvm.h"
+#include "compiler-arg.h"
 #include "options.h"
 #include "context.h"
 #include "renderer.h"
@@ -799,6 +800,28 @@ llvm_value Compiler::Primitive(llvm_builder builder, text name,
     // Invoke the entry
     llvm_value result = entry->function(builder, args);
     return result;
+}
+
+
+text Compiler::FunctionKey(RewriteCandidate &rc)
+// ----------------------------------------------------------------------------
+//    Return a unique function key corresponding to a given overload
+// ----------------------------------------------------------------------------
+{
+    std::ostringstream out;
+    out << (void *) rc.rewrite << ":";
+
+    TypeInference *types = rc.types;
+    std::vector<RewriteBinding> &bnds = rc.bindings;
+    std::vector<RewriteBinding>::iterator b;
+    for (b = bnds.begin(); b != bnds.end(); b++)
+    {
+        Tree *tree = (*b).value;
+        Tree *type = types->Type(tree);
+        out << (void *) type << ":";
+    }
+
+    return out.str();
 }
 
 

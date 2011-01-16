@@ -164,14 +164,14 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         Name *f = (Name *) form;
         bool needArg = true;
 
+        // Ignore function name if that is all we have
+        if (f == rc.rewrite->from)
+            return POSSIBLE;
+
         // Check if what we have as an expression evaluates correctly
         if (!value->Do(inference))
             return FAILED;
         type = inference->Type(value);
-
-        // Ignore function name if that is all we have
-        if (f == rc.rewrite->from)
-            return POSSIBLE;
 
         // Test if the name is already bound, and if so, if trees fail to match
         if (Tree *bound = context->Bound(f, Context::SCOPE_LOOKUP))

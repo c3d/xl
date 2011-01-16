@@ -54,7 +54,7 @@ protected:
 public:
     bool                TypeCheck(Tree *program);
     llvm_value          Compile(Tree *tree);
-    llvm_value          Compile(Rewrite *rewrite, TypeInference *calls);
+    llvm_value          Compile(RewriteCandidate &rc);
     llvm_value          Return(llvm_value value);
     eval_fn             Finalize(bool createCode);
 

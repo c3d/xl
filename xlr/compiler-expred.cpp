@@ -119,18 +119,10 @@ llvm_value CompileExpression::DoInfix(Infix *infix)
         return infix->left->Do(this);
     }
 
-    // Declarations: enter a function
+    // Declarations: it's too early to define a function just yet,
+    // because we don't have the actual argument types.
     if (infix->name == "->")
-    {
         return NULL;
-        Rewrite *rw = unit->context->RewriteFor(infix->left);
-        assert(rw || !"Compiling declaration that was not seen before");
-        // REVISIT: unit->inference is NOT the right inference here,
-        // so we end up botching the compilation
-        llvm_value function = unit->Compile(rw, unit->inference);
-        assert(function || "Unable to compile function");
-        return function;
-    }
 
     // General case: expression
     return DoCall(infix);
@@ -165,7 +157,7 @@ llvm_value CompileExpression::DoPrefix(Prefix *what)
             }
 
             // Take args list for current function as input
-            std::vector<llvm_value> args;
+            llvm_values args;
             Function *function = unit->function;
             uint i, max = function->arg_size();
             Function::arg_iterator arg = function->arg_begin();
@@ -303,7 +295,7 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
     llvm_value result = NULL;
 
     // Evaluate parameters
-    std::vector<llvm_value> args;
+    llvm_values args;
     std::vector<RewriteBinding> &bnds = cand.bindings;
     std::vector<RewriteBinding>::iterator b;
     for (b = bnds.begin(); b != bnds.end(); b++)
@@ -346,7 +338,7 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
     }
     else
     {
-        llvm_value function = unit->Compile(rw, cand.types);
+        llvm_value function = unit->Compile(cand);
         if (function)
             result = unit->code->CreateCall(function, args.begin(), args.end());
     }
