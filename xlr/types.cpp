@@ -347,6 +347,8 @@ bool TypeInference::Data(Tree *what)
 //   Build the structure type associated to the data form
 // ----------------------------------------------------------------------------
 {
+    (void) what;
+
     // TODO
     return true;
 }

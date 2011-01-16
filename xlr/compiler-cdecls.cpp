@@ -369,6 +369,8 @@ Name *CDeclaration::BaroqueTypeMods(Name *first,
     text a = first->value;
     text b = second->value;
 
+    mods = mods;
+
     static struct { kstring first, second, to; } cvt[] =
     {
         { "integer16",    "integer32",    "integer16" }, // short int
