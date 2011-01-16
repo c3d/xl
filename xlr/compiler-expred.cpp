@@ -69,6 +69,9 @@ llvm_value CompileExpression::DoText(Text *what)
 {
     Compiler *compiler = unit->compiler;
     GlobalVariable *global = compiler->TextConstant(what->value);
+    if (what->IsCharacter())
+        return ConstantInt::get(compiler->characterTy,
+                                what->value.length() ? what->value[0] : 0);
     return unit->code->CreateConstGEP2_32(global, 0U, 0U);
 }
 

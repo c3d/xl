@@ -15,5 +15,7 @@ write_with_cr a         -> write a; xl_write_cr
 
 write_with_cr "Hello World"
 write_with_cr 2.5
+write_with_cr 213
+write_with_cr 'a'
 
 
