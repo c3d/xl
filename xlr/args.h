@@ -36,10 +36,12 @@ struct RewriteBinding
 // ----------------------------------------------------------------------------
 {
     RewriteBinding(Name *name, Tree *value)
-        : name(name), value(value), type(NULL) {}
-    Name_p      name;
-    Tree_p      value;
-    Tree_p      type;
+        : name(name), value(value), type(NULL), closure(NULL) {}
+    bool IsDeferred();
+    Name_p     name;
+    Tree_p     value;
+    Tree_p     type;
+    llvm_value closure;
 };
 typedef std::vector<RewriteBinding> RewriteBindings;
 

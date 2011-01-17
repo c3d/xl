@@ -41,35 +41,40 @@ struct CompiledUnit
     ~CompiledUnit();
 
 public:
-    llvm::Function *    RewriteFunction(Rewrite *, TypeInference *);
-    llvm::Function *    TopLevelFunction();
+    llvm_function       TopLevelFunction();
+    llvm_function       ClosureFunction(Tree *expr, TypeInference *types);
+    llvm_function       RewriteFunction(RewriteCandidate &rc);
 
 protected:
-    llvm::Function *    InitializeFunction(llvm::FunctionType *,
-                                           ParameterList &parameters,
+    llvm_function       InitializeFunction(llvm::FunctionType *,
+                                           Parameters *parameters,
                                            kstring label,
                                            bool global,
                                            bool isC);
+    bool                Signature(Parameters &parms, RewriteCandidate &rc,
+                                  llvm_types &signature);
 
 public:
     bool                TypeCheck(Tree *program);
     llvm_value          Compile(Tree *tree);
     llvm_value          Compile(RewriteCandidate &rc);
+    llvm_value          Closure(Tree *tree);
+    llvm_value          InvokeClosure(Tree *expr, llvm_value result);
     llvm_value          Return(llvm_value value);
     eval_fn             Finalize(bool createCode);
 
     enum { knowAll = -1, knowGlobals = 1, knowLocals = 2, knowValues = 4 };
-    llvm::Value *       NeedStorage(Tree *tree);
+    llvm_value          NeedStorage(Tree *tree);
     bool                IsKnown(Tree *tree, uint which = knowAll);
-    llvm::Value *       Known(Tree *tree, uint which = knowAll );
-    llvm::Value *       StringPointer(text value);
+    llvm_value          Known(Tree *tree, uint which = knowAll );
+    llvm_value          StringPointer(text value);
 
-    llvm::Value *       ConstantInteger(Integer *what);
-    llvm::Value *       ConstantReal(Real *what);
-    llvm::Value *       ConstantText(Text *what);
-    llvm::Value *       ConstantTree(Tree *what);
+    llvm_value          ConstantInteger(Integer *what);
+    llvm_value          ConstantReal(Real *what);
+    llvm_value          ConstantText(Text *what);
+    llvm_value          ConstantTree(Tree *what);
 
-    llvm::Value *       CallFormError(Tree *what);
+    llvm_value          CallFormError(Tree *what);
 
     llvm_type           ReturnType(Tree *form);
     llvm_type           StructureType(llvm_types &signature);
@@ -98,6 +103,9 @@ public:
 
     value_map           value;          // Map tree -> LLVM value
     value_map           storage;        // Map tree -> LLVM alloca space
+
+    llvm::PATypeHolder  closureTy;      // Argument type for closures
+    value_map           closure;        // Arguments that need closures
 };
 
 XL_END

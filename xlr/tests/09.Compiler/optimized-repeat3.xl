@@ -1,0 +1,11 @@
+// OPT=-O3 -nobuiltins
+extern bool xl_write_text(text);
+extern bool xl_write_cr(void);
+
+write x:text            -> xl_write_text x
+write_with_cr a         -> write a; xl_write_cr
+
+write_with_cr "Hello World"
+repeat3 B -> B; B; B
+repeat3
+    write_with_cr "Repeating"

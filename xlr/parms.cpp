@@ -21,14 +21,18 @@
 // ****************************************************************************
 
 #include "parms.h"
+#include "args.h"
 #include "unit.h"
 #include "errors.h"
+
+#include "llvm/DerivedTypes.h"
+#include "llvm/Function.h"
 
 XL_BEGIN
 
 
 bool ParameterList::EnterName(Name *what,
-                              bool globalCheck)
+                              bool untyped)
 // ----------------------------------------------------------------------------
 //   Enter a name in the parameter list
 // ----------------------------------------------------------------------------
@@ -60,7 +64,7 @@ bool ParameterList::EnterName(Name *what,
     }
 
     // Check if the name already exists in context, e.g. 'false'
-    if (globalCheck)
+    if (untyped)
         if (unit->context->scope->Bound(what))
             return true;
         
@@ -218,16 +222,6 @@ bool ParameterList::DoPostfix(Postfix *what)
     if (!what->left->Do(this))
         return false;
     return true;
-}
-
-
-void ParameterList::Signature(llvm_types &signature)
-// ----------------------------------------------------------------------------
-//   Extract the types from the parameter list
-// ----------------------------------------------------------------------------
-{
-    for (Parameters::iterator p=parameters.begin(); p!=parameters.end(); p++)
-        signature.push_back((*p).type);
 }
 
 XL_END

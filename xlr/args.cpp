@@ -27,6 +27,37 @@
 
 XL_BEGIN
 
+bool RewriteBinding::IsDeferred()
+// ----------------------------------------------------------------------------
+//   Return true if we want to defer evaluation for the given value
+// ----------------------------------------------------------------------------
+// We defer evaluation for indent and {} blocks, sequences and functions
+{
+    Tree *val = value;
+
+    // If we had a closure associated to this binding, defer
+    if (closure)
+        return true;
+
+    if (Block *block = val->AsBlock())
+    {
+        // Defer evaluation of indent and {} blocks
+        if (block->IsIndent() || block->IsBraces())
+            return true;
+
+        // If we have a block with a deferred child, defer
+        if (Infix *infix = block->child->AsInfix())
+            val = infix;
+    }
+
+    // Defere sequences and function definitions
+    if (Infix *infix = val->AsInfix())
+        return infix->name == ";" || infix->name == "\n" || infix->name == "->";
+
+    return false;
+}
+
+
 Tree *RewriteCalls::operator() (Context *context,
                                 Tree *what,
                                 Rewrite *candidate)

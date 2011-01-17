@@ -112,8 +112,8 @@ llvm_value CompileExpression::DoInfix(Infix *infix)
     // Sequences
     if (infix->name == "\n" || infix->name == ";")
     {
-        infix->left->Do(this);
-        return infix->right->Do(this);
+        ForceEvaluation(infix->left);
+        return ForceEvaluation(infix->right);
     }
 
     // Type casts - REVISIT: may need to do some actual conversion
@@ -299,13 +299,34 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
 
     // Evaluate parameters
     llvm_values args;
-    std::vector<RewriteBinding> &bnds = cand.bindings;
-    std::vector<RewriteBinding>::iterator b;
+    RewriteBindings &bnds = cand.bindings;
+    RewriteBindings::iterator b;
     for (b = bnds.begin(); b != bnds.end(); b++)
     {
         Tree *tree = (*b).value;
-        llvm_value value = Value(tree);
-        args.push_back(value);
+        if ((*b).closure)
+        {
+            args.push_back((*b).closure);
+        }
+        else if ((*b).IsDeferred())
+        {
+            // Deferred evaluation: pass a closure and its argument
+            if (llvm_value closure = unit->Closure(tree))
+            {
+                (*b).closure = closure;
+                args.push_back(closure);
+            }
+        }
+        else
+        {
+            // Evaluate immediately
+            llvm_value value = Value(tree);
+            args.push_back(value);
+
+            // Check if this is actually a closure argument being passed around
+            if (unit->compiler->IsClosureType(value->getType()))
+                (*b).closure = value;
+        }
     }
 
     // Check if this is an LLVM builtin
@@ -515,6 +536,22 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
 
     // Other comparisons fail for now
     return code->getFalse();
+}
+
+
+llvm_value CompileExpression::ForceEvaluation(Tree *expr)
+// ----------------------------------------------------------------------------
+//   For top-level expressions, make sure we evaluate closures
+// ----------------------------------------------------------------------------
+{
+    llvm_value result = expr->Do(this);
+    if (result)
+    {
+        llvm_type resTy = result->getType();
+        if (unit->compiler->IsClosureType(resTy))
+            result = unit->InvokeClosure(expr, result);
+    }
+    return result;
 }
 
 XL_END

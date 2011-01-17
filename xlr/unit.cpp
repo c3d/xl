@@ -77,7 +77,8 @@ CompiledUnit::CompiledUnit(Compiler *compiler, Context *context)
       code(NULL), data(NULL), function(NULL),
       allocabb(NULL), entrybb(NULL), exitbb(NULL),
       returned(NULL),
-      value(), storage()
+      value(), storage(),
+      closureTy(), closure()
 {}
 
 
@@ -99,14 +100,63 @@ CompiledUnit::~CompiledUnit()
 }
 
 
-Function *CompiledUnit::RewriteFunction(Rewrite *rewrite, TypeInference *inf)
+Function *CompiledUnit::TopLevelFunction()
+// ----------------------------------------------------------------------------
+//   Create a function for a top-level program
+// ----------------------------------------------------------------------------
+{
+    // We must have verified the types before
+    assert(inference || !"TopLevelFunction called without type check");
+
+    llvm_types signature;
+    ParameterList parameters(this);
+    llvm_type retTy = compiler->treePtrTy;
+    FunctionType *fnTy = FunctionType::get(retTy, signature, false);
+    return InitializeFunction(fnTy, &parameters.parameters,
+                              "xl_program", true, false);
+}
+
+
+Function *CompiledUnit::ClosureFunction(Tree *expr, TypeInference *types)
+// ----------------------------------------------------------------------------
+//   Create a function for a closure
+// ----------------------------------------------------------------------------
+{
+    // We must have verified the types before
+    assert((types && !inference) || !"ClosureFunction botched types");
+    inference = types;
+
+    // We have a closure type that we will build as we evaluate expression
+    closureTy = OpaqueType::get(*llvm);
+    compiler->module->addTypeName("closure", closureTy);
+
+    // Add a single parameter to the signature
+    llvm_types signature;
+    llvm_type closurePtrTy = PointerType::get(closureTy, 0);
+    signature.push_back(closurePtrTy);
+
+    // Figure out the return type and function type
+    Tree *rtype = inference->Type(expr);
+    llvm_type retTy = compiler->MachineType(rtype);
+    FunctionType *fnTy = FunctionType::get(retTy, signature, false);
+    llvm_function fn = InitializeFunction(fnTy,NULL,"xl_closure",true,false);
+
+    // Return the function
+    return fn;
+}
+
+
+Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
 // ----------------------------------------------------------------------------
 //   Create a function for a tree rewrite
 // ----------------------------------------------------------------------------
 {
+    TypeInference *types = rc.types;
+    Rewrite *rewrite = rc.rewrite;
+
     // We must have verified the types before
-    assert((inf && !inference) || !"RewriteFunction: bogus type check");
-    inference = inf;
+    assert((types && !inference) || !"RewriteFunction: bogus type check");
+    inference = types;
 
     Tree *source = rewrite->from;
     Tree *def = rewrite->to;
@@ -120,13 +170,13 @@ Function *CompiledUnit::RewriteFunction(Rewrite *rewrite, TypeInference *inf)
 
     // Create the function signature, one entry per parameter
     llvm_types signature;
-    parameters.Signature(signature);
-    llvm_type retTy;
+    Signature(parameters.parameters, rc, signature);
 
     // Compute return type:
     // - If explicitly specified, use that (TODO: Check compatibility)
     // - For definitions, infer from definition
     // - For data forms, this is the type of the data form
+    llvm_type retTy;
     if (llvm_type specifiedRetTy = parameters.returned)
         retTy = specifiedRetTy;
     else if (def)
@@ -156,8 +206,8 @@ Function *CompiledUnit::RewriteFunction(Rewrite *rewrite, TypeInference *inf)
     }
 
     FunctionType *fnTy = FunctionType::get(retTy, signature, isVararg);
-    Function *f = InitializeFunction(fnTy, parameters, label.c_str(),
-                                     isC, isC);
+    Function *f = InitializeFunction(fnTy, &parameters.parameters,
+                                     label.c_str(), isC, isC);
     if (isC)
     {
         void *address = sys::DynamicLibrary::SearchForAddressOfSymbol(label);
@@ -172,24 +222,8 @@ Function *CompiledUnit::RewriteFunction(Rewrite *rewrite, TypeInference *inf)
 }
 
 
-Function *CompiledUnit::TopLevelFunction()
-// ----------------------------------------------------------------------------
-//   Create a function for a top-level program
-// ----------------------------------------------------------------------------
-{
-    // We must have verified the types before
-    assert(inference || !"TopLevelFunction called without type check");
-
-    llvm_types signature;
-    ParameterList parameters(this);
-    llvm_type retTy = compiler->treePtrTy;
-    FunctionType *fnTy = FunctionType::get(retTy, signature, false);
-    return InitializeFunction(fnTy, parameters, "xl_program", true, false);
-}
-
-
 Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
-                                           ParameterList &parameters,
+                                           Parameters *parameters,
                                            kstring label,
                                            bool global, bool isC)
 // ----------------------------------------------------------------------------
@@ -217,20 +251,22 @@ Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
         entrybb = BasicBlock::Create(*llvm, "entry", function);
         code = new IRBuilder<> (entrybb);
 
-        // Associate the value for the input tree
-        Function::arg_iterator args = function->arg_begin();
+        // Build storage for the return value
         llvm_type retTy = function->getReturnType();
         returned = data->CreateAlloca(retTy, 0, "result");
 
-        // Associate the value for the additional arguments
-        // (read-only, no alloca)
-        Parameters &plist = parameters.parameters;
-        for (Parameters::iterator p = plist.begin(); p != plist.end(); p++)
+        if (parameters)
         {
-            Parameter &parm = *p;
-            llvm_value inputArg = args++;
-            parm.value = inputArg;
-            value[parm.name] = inputArg;
+            // Associate the value for the additional arguments
+            // (read-only, no alloca)
+            Function::arg_iterator args = function->arg_begin();
+            Parameters &plist = *parameters;
+            for (Parameters::iterator p = plist.begin(); p != plist.end(); p++)
+            {
+                Parameter &parm = *p;
+                llvm_value inputArg = args++;
+                value[parm.name] = inputArg;
+            }
         }
 
         // Create the exit basic block and return statement
@@ -242,6 +278,38 @@ Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
 
     // Return the newly created function
     return function;
+}
+
+
+bool CompiledUnit::Signature(Parameters &parms, RewriteCandidate &rc,
+                             llvm_types &signature)
+// ----------------------------------------------------------------------------
+//   Extract the types from the parameter list
+// ----------------------------------------------------------------------------
+{
+    bool hasClosures = false;
+
+    RewriteBindings &bnds = rc.bindings;
+    RewriteBindings::iterator b = bnds.begin();
+    for (Parameters::iterator p = parms.begin(); p != parms.end(); p++, b++)
+    {
+        assert (b != bnds.end());
+        RewriteBinding &binding = *b;
+        if (llvm_value closure = binding.closure)
+        {
+            // Deferred evaluation: pass evaluation function pointer and arg
+            llvm_type argTy = closure->getType();
+            signature.push_back(argTy);
+            hasClosures = true;
+        }
+        else
+        {
+            // Regular evaluation: just pass argument around
+            signature.push_back((*p).type);
+        }
+    }
+
+    return hasClosures;
 }
 
 
@@ -287,7 +355,7 @@ llvm_value CompiledUnit::Compile(RewriteCandidate &rc)
         Context_p rewriteContext = types->context;
         CompiledUnit rewriteUnit(compiler, rewriteContext);
 
-        function = rewriteUnit.RewriteFunction(rewrite, types);
+        function = rewriteUnit.RewriteFunction(rc);
         if (function && rewriteUnit.code)
         {
             llvm_value returned = rewriteUnit.Compile(rewrite->to);
@@ -299,6 +367,71 @@ llvm_value CompiledUnit::Compile(RewriteCandidate &rc)
         }
     }
     return function;
+}
+
+
+llvm_value CompiledUnit::Closure(Tree *expr)
+// ----------------------------------------------------------------------------
+//    Compile code to pass a given tree as a closure
+// ----------------------------------------------------------------------------
+//    Closures are represented as functions taking a pointer to a structure
+//    that will contain the values being used by the closure code
+{
+    // Record the function that we build
+    text fkey = compiler->ClosureKey(expr, context);
+    llvm_function &function = compiler->FunctionFor(fkey);
+    assert (function == NULL);
+
+    // Create the evaluation function
+    CompiledUnit cunit(compiler, context);
+    function = cunit.ClosureFunction(expr, inference);
+    if (!function || !cunit.code || !cunit.closureTy)
+        return NULL;
+    llvm_value returned = cunit.Compile(expr);
+    if (!returned)
+        return NULL;
+    if (!cunit.Return(returned))
+        return NULL;
+    cunit.Finalize(false);
+
+    // Values imported from closure are now in cunit.closure[]
+    // Allocate a local data block to pass as the closure
+    llvm_value stackPtr = data->CreateAlloca(cunit.closureTy);
+    compiler->MarkAsClosureType(stackPtr->getType());
+
+    // First, store the function pointer
+    uint field = 0;
+    llvm_value fptr = code->CreateConstGEP2_32(stackPtr, 0, field++);
+    code->CreateStore(function, fptr);
+
+    // Then loop over all values that were detected while evaluating expr
+    value_map &cls = cunit.closure;
+    for (value_map::iterator v = cls.begin(); v != cls.end(); v++)
+    {
+        Tree *subexpr = (*v).first;
+        llvm_value subval = Compile(subexpr);
+        fptr = code->CreateConstGEP2_32(stackPtr, 0, field++);
+        code->CreateStore(subval, fptr);
+    }
+
+    // Return the stack pointer that we'll use later to evaluate the closure
+    return stackPtr;
+}
+
+
+llvm_value CompiledUnit::InvokeClosure(Tree *expr, llvm_value result)
+// ----------------------------------------------------------------------------
+//   Invoke a closure if appropriate
+// ----------------------------------------------------------------------------
+{
+    // Get function pointer and argument
+    llvm_value fnPtr = code->CreateConstGEP2_32(result, 0, 0);
+    fnPtr = code->CreateLoad(fnPtr);
+
+    // Call the closure callback
+    result = code->CreateCall(fnPtr, result);
+
+    return result;
 }
 
 
@@ -321,6 +454,28 @@ eval_fn CompiledUnit::Finalize(bool createCode)
 {
     IFTRACE(llvm)
         std::cerr << "CompiledUnit Finalize F" << function;
+
+    // If we had closure information, finish building the closure type
+    if (closureTy)
+    {
+        llvm_types sig;
+
+        // First argument is always the pointer to the evaluation function
+        llvm_type fnTy = function->getType();
+        sig.push_back(fnTy);
+
+        // Loop over other elements that need a closure
+        for (value_map::iterator v = closure.begin(); v != closure.end(); v++)
+        {
+            llvm_value value = (*v).second;
+            llvm_type type = value->getType();
+            sig.push_back(type);
+        }
+
+        // Build the structure type and unify it with opaque type used in decl
+        llvm_type structTy = StructType::get(*llvm, sig);
+        cast<OpaqueType>(closureTy.get())->refineAbstractTypeTo(structTy);
+    }
 
     // Branch to the exit block from the last test we did
     code->CreateBr(exitbb);

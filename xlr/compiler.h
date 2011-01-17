@@ -83,6 +83,8 @@ typedef const llvm::Type *                     llvm_type;
 typedef std::vector<llvm_type>                 llvm_types;
 typedef llvm::Value *                          llvm_value;
 typedef std::vector<llvm_value>                llvm_values;
+typedef llvm::Constant *                       llvm_constant;
+typedef std::vector<llvm_constant>             llvm_constants;
 typedef llvm::IRBuilder<> *                    llvm_builder;
 typedef llvm::Function *                       llvm_function;
 typedef llvm::BasicBlock *                     llvm_block;
@@ -130,8 +132,11 @@ struct Compiler
     llvm_type                 MachineType(Tree *tree);
     llvm_value                Primitive(llvm_builder builder, text name,
                                         uint arity, llvm_value *args);
+    bool                      MarkAsClosureType(llvm_type type);
+    bool                      IsClosureType(llvm_type type);
 
     text                      FunctionKey(RewriteCandidate &rc);
+    text                      ClosureKey(Tree *expr, Context *context);
     llvm::Function * &        FunctionFor(text fkey) { return functions[fkey]; }
 
     bool                      FreeResources(Tree *tree);
@@ -201,6 +206,7 @@ public:
     adapter_map                array_to_args_adapters;
     text_constants_map         text_constants;
     llvm_entry_table           llvm_primitives;
+    llvm_types                 closure_types;
 };
 
 

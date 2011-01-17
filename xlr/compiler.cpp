@@ -803,24 +803,66 @@ llvm_value Compiler::Primitive(llvm_builder builder, text name,
 }
 
 
+bool Compiler::MarkAsClosureType(llvm_type type)
+// ----------------------------------------------------------------------------
+//   Record which types are used as closures
+// ----------------------------------------------------------------------------
+{
+    assert(type->isPointerTy());
+    if (IsClosureType(type))
+        return false;
+    closure_types.push_back(type);
+    return true;
+}
+
+
+bool Compiler::IsClosureType(llvm_type type)
+// ----------------------------------------------------------------------------
+//   Return true if the type is a closure type
+// ----------------------------------------------------------------------------
+{
+    if (type->isPointerTy())
+    {
+        llvm_types::iterator begin = closure_types.begin();
+        llvm_types::iterator end = closure_types.end();
+        for (llvm_types::iterator t = begin; t != end; t++)
+            if (type == *t)
+                return true;
+    }
+    return false;
+}
+
+
 text Compiler::FunctionKey(RewriteCandidate &rc)
 // ----------------------------------------------------------------------------
 //    Return a unique function key corresponding to a given overload
 // ----------------------------------------------------------------------------
 {
     std::ostringstream out;
-    out << (void *) rc.rewrite << ":";
+    out << (void *) rc.rewrite;
 
     TypeInference *types = rc.types;
-    std::vector<RewriteBinding> &bnds = rc.bindings;
-    std::vector<RewriteBinding>::iterator b;
+    RewriteBindings &bnds = rc.bindings;
+    RewriteBindings::iterator b;
     for (b = bnds.begin(); b != bnds.end(); b++)
     {
         Tree *tree = (*b).value;
         Tree *type = types->Type(tree);
-        out << (void *) type << ":";
+        bool deferred = (*b).IsDeferred();
+        out << (deferred ? '?' : ':') << (void *) type;
     }
 
+    return out.str();
+}
+
+
+text Compiler::ClosureKey(Tree *tree, Context *context)
+// ----------------------------------------------------------------------------
+//    Return a unique function key corresponding to a given closure
+// ----------------------------------------------------------------------------
+{
+    std::ostringstream out;
+    out << (void *) tree << "@" << (void *) context;
     return out.str();
 }
 

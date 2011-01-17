@@ -32,14 +32,10 @@ struct Parameter
 //   Internal representation of a parameter
 // ----------------------------------------------------------------------------
 {
-    Parameter(Name *name, llvm_type type = 0, llvm_value value = 0)
-        : name(name), type(type), value(value) {}
+    Parameter(Name *name, llvm_type type = 0) : name(name), type(type) {}
     Name_p              name;
     llvm_type           type;
-    llvm_value          value;
 };
-
-
 typedef std::vector<Parameter>      Parameters;
 
 
@@ -55,7 +51,7 @@ public:
         : unit(unit), defined(NULL), returned(NULL) {}
 
 public:
-    bool EnterName(Name *what, bool global);
+    bool EnterName(Name *what, bool untyped);
 
     bool DoInteger(Integer *what);
     bool DoReal(Real *what);
@@ -65,8 +61,6 @@ public:
     bool DoPostfix(Postfix *what);
     bool DoInfix(Infix *what);
     bool DoBlock(Block *what);
-
-    void Signature(llvm_types &signature);
 
 public:
     CompiledUnit *  unit;         // Current compilation unit
