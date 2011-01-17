@@ -94,7 +94,6 @@ public:
     llvm_block          allocabb;       // Function entry point, allocas
     llvm_block          entrybb;        // Code entry point
     llvm_block          exitbb;         // Shared exit for the function
-    llvm_block          failbb;         // Shared exit for failed expred tests
     llvm_value          returned;       // Where we store the returned value
 
     value_map           value;          // Map tree -> LLVM value

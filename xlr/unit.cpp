@@ -75,7 +75,7 @@ CompiledUnit::CompiledUnit(Compiler *compiler, Context *context)
     : context(context), inference(NULL),
       compiler(compiler), llvm(compiler->llvm),
       code(NULL), data(NULL), function(NULL),
-      allocabb(NULL), entrybb(NULL), exitbb(NULL), failbb(NULL),
+      allocabb(NULL), entrybb(NULL), exitbb(NULL),
       returned(NULL),
       value(), storage(), computed(), dataForm()
 {}
