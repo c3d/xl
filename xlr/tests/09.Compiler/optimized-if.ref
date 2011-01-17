@@ -26,4 +26,12 @@ allocas:
   %2 = bitcast %Text* %1 to %Tree*
   ret %Tree* %2
 }
+AFTER GLOBAL OPTIMIZATIONS:
+
+define %Tree* @xl_program() {
+allocas:
+  %0 = tail call %Text* @xl_new_ctext(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %1 = bitcast %Text* %0 to %Tree*
+  ret %Tree* %1
+}
 "hello"

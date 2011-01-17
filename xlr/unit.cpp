@@ -426,16 +426,16 @@ llvm_value CompiledUnit::InvokeClosure(Tree *expr, llvm_value result)
 // ----------------------------------------------------------------------------
 {
     // Get function pointer and argument
-    llvm_value fnPtr = closure[expr];
-    if (!fnPtr)
-    {
-        fnPtr = data->CreateConstGEP2_32(result, 0, 0);
-        fnPtr = data->CreateLoad(fnPtr);
-        closure[expr] = fnPtr;
-    }
+    llvm_value fnPtrPtr = data->CreateConstGEP2_32(result, 0, 0);
+    llvm_value fnPtr = data->CreateLoad(fnPtrPtr);
 
     // Call the closure callback
     result = code->CreateCall(fnPtr, result);
+
+    // Overwrite the function pointer to its original value
+    // (actually improves optimizations by showing it doesn't change)
+    code->CreateStore(fnPtr, fnPtrPtr);
+    
 
     return result;
 }
@@ -502,6 +502,11 @@ eval_fn CompiledUnit::Finalize(bool createCode)
     {
         compiler->moduleOptimizer->run(*compiler->module);
         result = compiler->runtime->getPointerToFunction(function);
+        IFTRACE(code)
+        {
+            errs() << "AFTER GLOBAL OPTIMIZATIONS:\n";
+            function->print(errs());
+        }
         IFTRACE(llvm)
             std::cerr << " C" << (void *) result << "\n";
     }
