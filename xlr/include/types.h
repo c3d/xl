@@ -98,7 +98,7 @@ public:
     bool        Data(Tree *form);
     bool        Extern(Tree *form);
 
-    // Attempt to evaluate an expression and perform reqiored unifications
+    // Attempt to evaluate an expression and perform required unifications
     bool        Evaluate(Tree *tree);
 
     // Indicates that two trees must have compatible types
