@@ -98,8 +98,6 @@ public:
 
     value_map           value;          // Map tree -> LLVM value
     value_map           storage;        // Map tree -> LLVM alloca space
-    value_map           computed;       // Map tree -> LLVM "computed" flag
-    data_set            dataForm;       // Data expressions: don't evaluate
 };
 
 XL_END
