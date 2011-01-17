@@ -35,9 +35,11 @@ struct RewriteBinding
 //   Structure recording the binding of a given parameter to a value
 // ----------------------------------------------------------------------------
 {
-    RewriteBinding(Name *name, Tree *value): name(name), value(value) {}
+    RewriteBinding(Name *name, Tree *value)
+        : name(name), value(value), type(NULL) {}
     Name_p      name;
     Tree_p      value;
+    Tree_p      type;
 };
 typedef std::vector<RewriteBinding> RewriteBindings;
 

@@ -1391,10 +1391,19 @@ void debugr(XL::TypeInference *ti)
                       << "\t" << (*r).rewrite->from
                       << "\t: " << (*r).type << "\n";
 
+            RewriteConditions &rt = (*r).conditions;
+            for (RewriteConditions::iterator t = rt.begin(); t != rt.end(); t++)
+                std::cout << "\t\tWhen " << ShortTreeForm((*t).value)
+                          << "\t= " << ShortTreeForm((*t).test) << "\n";
+
             RewriteBindings &rb = (*r).bindings;
             for (RewriteBindings::iterator b = rb.begin(); b != rb.end(); b++)
-                std::cout << "\t\t" << (*b).name
-                          << "\t= " << ShortTreeForm((*b).value) << "\n";
+            {
+                std::cout << "\t\t" << (*b).name;
+                if ((*b).type)
+                    std::cout << "\t" << (*b).type;
+                std::cout << "\t= " << ShortTreeForm((*b).value) << "\n";
+            }
         }
     }
 }

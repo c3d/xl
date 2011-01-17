@@ -221,6 +221,10 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
                                   TypeInference::DECLARATION))
                 return FAILED;
 
+            // In that case, we want to force evaluation to given type
+            Tree *dtype = inference->Base(fi->right);
+            rc.bindings.back().type = dtype;
+
             // Having been successful makes it a strong binding
             return PERFECT;
 
