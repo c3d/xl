@@ -88,14 +88,6 @@ public:
     llvm::Value *       CallClosure(Tree *callee, uint ntrees);
     llvm::Value *       CallFormError(Tree *what);
 
-    llvm::BasicBlock *  TagTest(Tree *code, ulong tag);
-    llvm::BasicBlock *  IntegerTest(Tree *code, longlong value);
-    llvm::BasicBlock *  RealTest(Tree *code, double value);
-    llvm::BasicBlock *  TextTest(Tree *code, text value);
-    llvm::BasicBlock *  ShapeTest(Tree *code, Tree *other);
-    llvm::BasicBlock *  InfixMatchTest(Tree *code, Infix *ref);
-    llvm::BasicBlock *  TypeTest(Tree *code, Tree *type);
-
     llvm_type           ReturnType(Tree *form);
     llvm_type           StructureType(llvm_types &signature);
     llvm_type           ExpressionMachineType(Tree *expr);
