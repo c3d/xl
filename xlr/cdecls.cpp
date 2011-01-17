@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  compiler-cdecls.cpp                                             Tao project
+//  cdecls.cpp                                                      XLR project
 // ****************************************************************************
 //
 //   File Description:
@@ -20,7 +20,7 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
-#include "compiler-cdecls.h"
+#include "cdecls.h"
 #include "types.h"
 #include "errors.h"
 

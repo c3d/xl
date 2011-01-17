@@ -1,7 +1,7 @@
 #ifndef COMPILER_CDECLS_H
 #define COMPILER_CDECLS_H
 // ****************************************************************************
-//  compiler-cdecls.h                                               Tao project
+//  cdecls.h                                                        XLR project
 // ****************************************************************************
 // 
 //   File Description:

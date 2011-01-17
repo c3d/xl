@@ -38,21 +38,17 @@ SOURCES     =					\
 	scanner.cpp				\
 	parser.cpp				\
 	renderer.cpp				\
-	compiler.cpp				\
 	context.cpp				\
 	runtime.cpp				\
-	types.cpp				\
+	compiler.cpp				\
 	compiler-llvm.cpp			\
-	compiler-action.cpp			\
-	compiler-arg.cpp			\
-	compiler-children.cpp			\
-	compiler-cdecls.cpp			\
-	compiler-decl.cpp			\
-	compiler-envscan.cpp			\
-	compiler-expred.cpp			\
 	compiler-gc.cpp				\
-	compiler-parm.cpp			\
-	compiler-unit.cpp			\
+	types.cpp				\
+	args.cpp				\
+	cdecls.cpp				\
+	expred.cpp				\
+	parms.cpp				\
+	unit.cpp				\
         sha1.cpp				\
 	serializer.cpp				\
         diff.cpp				\

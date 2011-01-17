@@ -1,7 +1,7 @@
 #ifndef COMPILER_UNIT_H
 #define COMPILER_UNIT_H
 // ****************************************************************************
-//  compiler-unit.h                                                 XLR project
+//  unit.h                                                          XLR project
 // ****************************************************************************
 // 
 //   File Description:
@@ -23,7 +23,7 @@
 // ****************************************************************************
 
 #include "compiler.h"
-#include "compiler-parm.h"
+#include "parms.h"
 
 
 XL_BEGIN

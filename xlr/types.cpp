@@ -26,8 +26,8 @@
 #include "errors.h"
 #include "options.h"
 #include "save.h"
-#include "compiler-arg.h"
-#include "compiler-cdecls.h"
+#include "args.h"
+#include "cdecls.h"
 #include "renderer.h"
 #include <iostream>
 

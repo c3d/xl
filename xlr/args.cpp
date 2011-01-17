@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  compiler-arg.cpp                                               XLR project
+//  args.cpp                                                        XLR project
 // ****************************************************************************
 //
 //   File Description:
@@ -20,7 +20,7 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
-#include "compiler-arg.h"
+#include "args.h"
 #include "save.h"
 #include "types.h"
 #include "errors.h"

@@ -22,9 +22,9 @@
 
 #include "compiler.h"
 #include "compiler-gc.h"
-#include "compiler-unit.h"
 #include "compiler-llvm.h"
-#include "compiler-arg.h"
+#include "unit.h"
+#include "args.h"
 #include "options.h"
 #include "context.h"
 #include "renderer.h"

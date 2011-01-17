@@ -1,7 +1,7 @@
 #ifndef COMPILER_PARM_H
 #define COMPILER_PARM_H
 // ****************************************************************************
-//  compiler-parm.h                                                XLR project
+//  parms.h                                                         XLR project
 // ****************************************************************************
 // 
 //   File Description:

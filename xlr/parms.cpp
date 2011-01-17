@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  compiler-parm.cpp                                              XLR project
+//  parms.cpp                                                      XLR project
 // ****************************************************************************
 // 
 //   File Description:
@@ -20,8 +20,8 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
-#include "compiler-parm.h"
-#include "compiler-unit.h"
+#include "parms.h"
+#include "unit.h"
 #include "errors.h"
 
 XL_BEGIN

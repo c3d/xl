@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  compiler-expred.cpp                                             XLR project
+//  expred.cpp                                                      XLR project
 // ****************************************************************************
 //
 //   File Description:
@@ -20,9 +20,9 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
-#include "compiler-expred.h"
-#include "compiler-unit.h"
-#include "compiler-arg.h"
+#include "expred.h"
+#include "unit.h"
+#include "args.h"
 #include "types.h"
 #include "save.h"
 

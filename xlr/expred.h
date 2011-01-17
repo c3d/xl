@@ -1,7 +1,7 @@
 #ifndef COMPILER_EXPRED_H
 #define COMPILER_EXPRED_H
 // ****************************************************************************
-//  compiler-expred.h                                               XLR project
+//  expred.h                                                        XLR project
 // ****************************************************************************
 // 
 //   File Description:

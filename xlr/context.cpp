@@ -34,7 +34,7 @@
 #include "opcodes.h"
 #include "types.h"
 #include "save.h"
-#include "compiler-cdecls.h"
+#include "cdecls.h"
 
 #include <iostream>
 #include <cstdlib>

@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  compiler-unit.cpp                                               XLR project
+//  unit.cpp                                                        XLR project
 // ****************************************************************************
 //
 //   File Description:
@@ -33,10 +33,10 @@
 //
 // The actual retType is determined dynamically from the return type of bar.
 
-#include "compiler-unit.h"
-#include "compiler-parm.h"
-#include "compiler-expred.h"
-#include "compiler-arg.h"
+#include "unit.h"
+#include "parms.h"
+#include "args.h"
+#include "expred.h"
 #include "errors.h"
 #include "types.h"
 

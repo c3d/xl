@@ -6,7 +6,7 @@
 // 
 //   File Description:
 // 
-//     Information connecting the LLVM compiler to the XLR garbage collector
+//     Information connecting the XLR/LLVM compiler to the garbage collector
 // 
 //
 // 

@@ -1,7 +1,7 @@
 #ifndef COMPILER_ARG_H
 #define COMPILER_ARG_H
 // ****************************************************************************
-//  compiler-arg.h                                                 XLR project
+//  args.h                                                          XLR project
 // ****************************************************************************
 //
 //   File Description:
@@ -23,7 +23,6 @@
 // ****************************************************************************
 
 #include "compiler.h"
-#include "compiler-action.h"
 
 XL_BEGIN
 
