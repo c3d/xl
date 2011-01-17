@@ -69,23 +69,6 @@ public:
     llvm::Value *       ConstantText(Text *what);
     llvm::Value *       ConstantTree(Tree *what);
 
-    llvm::Value *       NeedLazy(Tree *subexpr, bool allocate = true);
-    llvm::Value *       MarkComputed(Tree *subexpr, llvm::Value *value);
-    llvm::BasicBlock *  BeginLazy(Tree *subexpr);
-    void                EndLazy(Tree *subexpr, llvm::BasicBlock *skip);
-
-    llvm::BasicBlock *  NeedTest();
-    llvm::Value *       Left(Tree *);
-    llvm::Value *       Right(Tree *);
-    llvm::Value *       Copy(Tree *src, Tree *dst, bool markDone=true);
-    llvm::Value *       Invoke(Tree *subexpr, Tree *callee, TreeList args);
-    llvm::Value *       CallEvaluate(Tree *);
-    llvm::Value *       CallNewBlock(Block *);
-    llvm::Value *       CallNewPrefix(Prefix *);
-    llvm::Value *       CallNewPostfix(Postfix *);
-    llvm::Value *       CallNewInfix(Infix *);
-    llvm::Value *       CreateClosure(Tree *callee, TreeList &args);
-    llvm::Value *       CallClosure(Tree *callee, uint ntrees);
     llvm::Value *       CallFormError(Tree *what);
 
     llvm_type           ReturnType(Tree *form);
