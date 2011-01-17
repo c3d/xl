@@ -281,7 +281,8 @@ Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
 }
 
 
-bool CompiledUnit::Signature(Parameters &parms, RewriteCandidate &rc,
+bool CompiledUnit::Signature(Parameters &parms,
+                             RewriteCandidate &rc,
                              llvm_types &signature)
 // ----------------------------------------------------------------------------
 //   Extract the types from the parameter list
@@ -425,8 +426,13 @@ llvm_value CompiledUnit::InvokeClosure(Tree *expr, llvm_value result)
 // ----------------------------------------------------------------------------
 {
     // Get function pointer and argument
-    llvm_value fnPtr = code->CreateConstGEP2_32(result, 0, 0);
-    fnPtr = code->CreateLoad(fnPtr);
+    llvm_value fnPtr = closure[expr];
+    if (!fnPtr)
+    {
+        fnPtr = data->CreateConstGEP2_32(result, 0, 0);
+        fnPtr = data->CreateLoad(fnPtr);
+        closure[expr] = fnPtr;
+    }
 
     // Call the closure callback
     result = code->CreateCall(fnPtr, result);

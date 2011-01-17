@@ -321,11 +321,15 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
         {
             // Evaluate immediately
             llvm_value value = Value(tree);
-            args.push_back(value);
+            if (value)
+            {
+                args.push_back(value);
 
-            // Check if this is actually a closure argument being passed around
-            if (unit->compiler->IsClosureType(value->getType()))
-                (*b).closure = value;
+                // Check if this is actually a closure argument
+                // being passed around
+                if (unit->compiler->IsClosureType(value->getType()))
+                    (*b).closure = value;
+            }
         }
     }
 
