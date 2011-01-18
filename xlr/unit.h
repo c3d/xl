@@ -58,8 +58,9 @@ public:
     bool                TypeCheck(Tree *program);
     llvm_value          Compile(Tree *tree);
     llvm_value          Compile(RewriteCandidate &rc);
-    llvm_value          Closure(Tree *tree);
-    llvm_value          InvokeClosure(Tree *expr, llvm_value result);
+    llvm_value          Closure(Name *name, Tree *value);
+    llvm_value          InvokeClosure(llvm_value result, llvm_value fnPtr);
+    llvm_value          InvokeClosure(llvm_value result);
     llvm_value          Return(llvm_value value);
     eval_fn             Finalize(bool createCode);
 
@@ -68,7 +69,7 @@ public:
     llvm_value          NeedClosure(Tree *tree);
     bool                IsKnown(Tree *tree, uint which = knowAll);
     llvm_value          Known(Tree *tree, uint which = knowAll );
-    llvm_value          StringPointer(text value);
+    void                ImportClosureInfo(const CompiledUnit *other);
 
     llvm_value          ConstantInteger(Integer *what);
     llvm_value          ConstantReal(Real *what);

@@ -708,17 +708,6 @@ GlobalVariable *Compiler::TextConstant(text value)
 }
 
 
-eval_fn Compiler::MarkAsClosure(XL::Tree *closure, uint ntrees)
-// ----------------------------------------------------------------------------
-//    Create the closure wrapper for ntrees elements, associate to result
-// ----------------------------------------------------------------------------
-{
-    (void) closure;
-    (void) ntrees;
-    return NULL;
-}
-
-
 bool Compiler::IsKnown(Tree *tree)
 // ----------------------------------------------------------------------------
 //    Test if global is known
@@ -803,33 +792,28 @@ llvm_value Compiler::Primitive(llvm_builder builder, text name,
 }
 
 
-bool Compiler::MarkAsClosureType(llvm_type type)
+void Compiler::MarkAsClosureType(llvm_type type, llvm_value function)
 // ----------------------------------------------------------------------------
 //   Record which types are used as closures
 // ----------------------------------------------------------------------------
 {
-    assert(type->isPointerTy());
-    if (IsClosureType(type))
-        return false;
-    closure_types.push_back(type);
-    return true;
+    assert(type->isPointerTy() || !"Closures should be pointers");
+    closure_types[type] = function;
 }
 
 
-bool Compiler::IsClosureType(llvm_type type)
+llvm_value Compiler::ClosureFunctionForType(llvm_type type)
 // ----------------------------------------------------------------------------
 //   Return true if the type is a closure type
 // ----------------------------------------------------------------------------
 {
     if (type->isPointerTy())
     {
-        llvm_types::iterator begin = closure_types.begin();
-        llvm_types::iterator end = closure_types.end();
-        for (llvm_types::iterator t = begin; t != end; t++)
-            if (type == *t)
-                return true;
+        closure_type_map::iterator found = closure_types.find(type);
+        if (found != closure_types.end())
+            return (*found).second;
     }
-    return false;
+    return NULL;
 }
 
 

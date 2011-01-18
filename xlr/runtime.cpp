@@ -494,10 +494,6 @@ Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
     va_end(va);
     parent->right = xl_false;
 
-    // Generate the code for the arguments
-    Compiler *compiler = MAIN->compiler;
-    compiler->MarkAsClosure(result, ntrees);
-
     return result;
 }
 

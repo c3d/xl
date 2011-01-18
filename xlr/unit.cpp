@@ -361,7 +361,7 @@ llvm_value CompiledUnit::Compile(RewriteCandidate &rc)
         function = rewriteUnit.RewriteFunction(rc);
         if (function && rewriteUnit.code)
         {
-            rewriteUnit.machineType = machineType;
+            rewriteUnit.ImportClosureInfo(this);
             llvm_value returned = rewriteUnit.Compile(rewrite->to);
             if (!returned)
                 return NULL;
@@ -374,7 +374,7 @@ llvm_value CompiledUnit::Compile(RewriteCandidate &rc)
 }
 
 
-llvm_value CompiledUnit::Closure(Tree *expr)
+llvm_value CompiledUnit::Closure(Name *name, Tree *expr)
 // ----------------------------------------------------------------------------
 //    Compile code to pass a given tree as a closure
 // ----------------------------------------------------------------------------
@@ -391,7 +391,7 @@ llvm_value CompiledUnit::Closure(Tree *expr)
     function = cunit.ClosureFunction(expr, inference);
     if (!function || !cunit.code || !cunit.closureTy)
         return NULL;
-    cunit.machineType = machineType;
+    cunit.ImportClosureInfo(this);
     llvm_value returned = cunit.Compile(expr);
     if (!returned)
         return NULL;
@@ -402,7 +402,7 @@ llvm_value CompiledUnit::Closure(Tree *expr)
     // Values imported from closure are now in cunit.closure[]
     // Allocate a local data block to pass as the closure
     llvm_value stackPtr = data->CreateAlloca(cunit.closureTy);
-    compiler->MarkAsClosureType(stackPtr->getType());
+    compiler->MarkAsClosureType(stackPtr->getType(), function);
 
     // First, store the function pointer
     uint field = 0;
@@ -419,14 +419,28 @@ llvm_value CompiledUnit::Closure(Tree *expr)
         code->CreateStore(subval, fptr);
     }
 
+    // Remember the machine type associated with this closure
+    llvm_type mtype = stackPtr->getType();
+    ExpressionMachineType(name, mtype);
+
     // Return the stack pointer that we'll use later to evaluate the closure
     return stackPtr;
 }
 
 
-llvm_value CompiledUnit::InvokeClosure(Tree *expr, llvm_value result)
+llvm_value CompiledUnit::InvokeClosure(llvm_value result, llvm_value fnPtr)
 // ----------------------------------------------------------------------------
-//   Invoke a closure if appropriate
+//   Invoke a closure with a known closure function
+// ----------------------------------------------------------------------------
+{
+    result = code->CreateCall(fnPtr, result);
+    return result;
+}
+
+
+llvm_value CompiledUnit::InvokeClosure(llvm_value result)
+// ----------------------------------------------------------------------------
+//   Invoke a closure loading the function pointer dynamically
 // ----------------------------------------------------------------------------
 {
     // Get function pointer and argument
@@ -434,13 +448,12 @@ llvm_value CompiledUnit::InvokeClosure(Tree *expr, llvm_value result)
     llvm_value fnPtr = data->CreateLoad(fnPtrPtr);
 
     // Call the closure callback
-    result = code->CreateCall(fnPtr, result);
+    InvokeClosure(result, fnPtr);
 
     // Overwrite the function pointer to its original value
     // (actually improves optimizations by showing it doesn't change)
     code->CreateStore(fnPtr, fnPtrPtr);
     
-
     return result;
 }
 
@@ -629,6 +642,15 @@ Value *CompiledUnit::Known(Tree *tree, uint which)
         }
     }
     return result;
+}
+
+
+void CompiledUnit::ImportClosureInfo(const CompiledUnit *parent)
+// ----------------------------------------------------------------------------
+//   Copy closure data from parent to child
+// ----------------------------------------------------------------------------
+{
+    machineType = parent->machineType;
 }
 
 

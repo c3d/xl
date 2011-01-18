@@ -317,7 +317,7 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
         {
             args.push_back(value);
             llvm_type mtype = value->getType();
-            if (unit->compiler->IsClosureType(mtype))
+            if (unit->compiler->ClosureFunctionForType(mtype))
                 (*b).closure = value;
         }
     }
@@ -541,8 +541,8 @@ llvm_value CompileExpression::ForceEvaluation(Tree *expr)
     if (result)
     {
         llvm_type resTy = result->getType();
-        if (unit->compiler->IsClosureType(resTy))
-            result = unit->InvokeClosure(expr, result);
+        if (llvm_value fn = unit->compiler->ClosureFunctionForType(resTy))
+            result = unit->InvokeClosure(result, fn);
     }
     return result;
 }
