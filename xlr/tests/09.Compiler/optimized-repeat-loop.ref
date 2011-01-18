@@ -1,0 +1,262 @@
+
+define i1 @xl_closure(%closure0*) {
+allocas:
+  %1 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  ret i1 %1
+}
+
+define internal %Tree* @xl_eval_repeat2(%closure0*) {
+allocas:
+  %1 = load %Tree** @false
+  ret %Tree* %1
+}
+
+define internal %Tree* @xl_eval_repeat(i64, %closure0*) {
+allocas:
+  %2 = getelementptr %closure0* %1, i32 0, i32 0
+  %3 = load i1 (%closure0*)** %2
+  %4 = call i1 %3(%closure0* %1)
+  store i1 (%closure0*)* %3, i1 (%closure0*)** %2
+  %5 = add i64 %0, -1
+  %6 = icmp eq i64 %5, 0
+  br i1 %6, label %good, label %bad
+
+done:                                             ; preds = %bad, %good
+  %loc.0 = phi %Tree* [ %8, %good ], [ %7, %bad ]
+  ret %Tree* %loc.0
+
+bad:                                              ; preds = %allocas
+  %7 = call %Tree* @xl_eval_repeat(i64 %5, %closure0* %1)
+  br label %done
+
+good:                                             ; preds = %allocas
+  %8 = call %Tree* @xl_eval_repeat2(%closure0* %1)
+  br label %done
+}
+
+define %Tree* @xl_program() {
+allocas:
+  %0 = alloca %closure0
+  %1 = getelementptr %closure0* %0, i32 0, i32 0
+  store i1 (%closure0*)* @xl_closure, i1 (%closure0*)** %1
+  %2 = call %Tree* @xl_eval_repeat(i64 200, %closure0* %0)
+  ret %Tree* %2
+}
+AFTER GLOBAL OPTIMIZATIONS:
+
+define %Tree* @xl_program() nounwind {
+allocas:
+  br label %tailrecurse.i
+
+tailrecurse.i:                                    ; preds = %tailrecurse.i, %allocas
+  %lsr.iv = phi i64 [ %lsr.iv.next, %tailrecurse.i ], [ 200, %allocas ]
+  %0 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %lsr.iv.next = add i64 %lsr.iv, -1
+  %exitcond1 = icmp eq i64 %lsr.iv.next, 0
+  br i1 %exitcond1, label %xl_eval_repeat.exit, label %tailrecurse.i
+
+xl_eval_repeat.exit:                              ; preds = %tailrecurse.i
+  %1 = load %Tree** @false
+  ret %Tree* %1
+}
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+false

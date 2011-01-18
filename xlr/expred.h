@@ -53,6 +53,7 @@ public:
     llvm_value Value(Tree *expr);
     llvm_value Compare(Tree *value, Tree *test);
     llvm_value ForceEvaluation(Tree *expr);
+    llvm_value TopLevelEvaluation(Tree *expr);
 
 public:
     CompiledUnit *  unit;         // Current compilation unit

@@ -242,6 +242,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
     llvm_block isDone = BasicBlock::Create(llvm, "done", function);
     llvm_builder code = unit->code;
     llvm_value storage = unit->NeedStorage(call);
+    llvm_type storageType = unit->ExpressionMachineType(call);
 
     for (i = 0; i < max; i++)
     {
@@ -269,6 +270,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
             code->CreateCondBr(condition, isGood, isBad);
             code->SetInsertPoint(isGood);
             result = DoRewrite(cand);
+            result = unit->Autobox(result, storageType);
             code->CreateStore(result, storage);
             code->CreateBr(isDone);
             code->SetInsertPoint(isBad);
@@ -277,6 +279,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
         {
             // If this particular call was unconditional, we are done
             result = DoRewrite(cand);
+            result = unit->Autobox(result, storageType);
             code->CreateStore(result, storage);
             code->CreateBr(isDone);
             code->SetInsertPoint(isDone);
@@ -545,6 +548,17 @@ llvm_value CompileExpression::ForceEvaluation(Tree *expr)
             result = unit->InvokeClosure(result);
     }
     return result;
+}
+
+
+llvm_value CompileExpression::TopLevelEvaluation(Tree *expr)
+// ----------------------------------------------------------------------------
+//   Evaluate normally, but force evaluation for names
+// ----------------------------------------------------------------------------
+{
+    if (expr->Kind() == NAME)
+        return ForceEvaluation(expr);
+    return expr->Do(this);
 }
 
 XL_END

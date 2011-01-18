@@ -56,6 +56,7 @@ protected:
 
 public:
     bool                TypeCheck(Tree *program);
+    llvm_value          CompileTopLevel(Tree *tree);
     llvm_value          Compile(Tree *tree);
     llvm_value          Compile(RewriteCandidate &rc, llvm_values &args);
     llvm_value          Closure(Name *name, Tree *value);

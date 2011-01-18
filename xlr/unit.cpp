@@ -329,6 +329,18 @@ bool CompiledUnit::TypeCheck(Tree *program)
 }
 
 
+llvm_value CompiledUnit::CompileTopLevel(Tree *tree)
+// ----------------------------------------------------------------------------
+//    Compile a given tree at top level (evaluate closures)
+// ----------------------------------------------------------------------------
+{
+    assert (inference || !"Compile() called without type checking");
+    CompileExpression cexpr(this);
+    llvm_value result = cexpr.TopLevelEvaluation(tree);
+    return result;
+}
+
+
 llvm_value CompiledUnit::Compile(Tree *tree)
 // ----------------------------------------------------------------------------
 //    Compile a given tree
@@ -362,7 +374,7 @@ llvm_value CompiledUnit::Compile(RewriteCandidate &rc, llvm_values &args)
         if (function && rewriteUnit.code)
         {
             rewriteUnit.ImportClosureInfo(this);
-            llvm_value returned = rewriteUnit.Compile(rewrite->to);
+            llvm_value returned = rewriteUnit.CompileTopLevel(rewrite->to);
             if (!returned)
                 return NULL;
             if (!rewriteUnit.Return(returned))
@@ -392,7 +404,7 @@ llvm_value CompiledUnit::Closure(Name *name, Tree *expr)
     if (!function || !cunit.code || !cunit.closureTy)
         return NULL;
     cunit.ImportClosureInfo(this);
-    llvm_value returned = cunit.Compile(expr);
+    llvm_value returned = cunit.CompileTopLevel(expr);
     if (!returned)
         return NULL;
     if (!cunit.Return(returned))

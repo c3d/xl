@@ -352,7 +352,7 @@ program_fn Compiler::CompileProgram(Context *context, Tree *program)
         return NULL;
     if (!topUnit.TopLevelFunction())
         return NULL;
-    llvm_value returned = topUnit.Compile(program);
+    llvm_value returned = topUnit.CompileTopLevel(program);
     if (!returned)
         return NULL;
     if (!topUnit.Return(returned))
