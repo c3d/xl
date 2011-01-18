@@ -1,0 +1,18 @@
+// OPT=-O3 -nobuiltins
+extern bool puts(text);
+
+repeat3 B -> B; B; B
+repeat9 B -> repeat3 { repeat3 B }
+
+repeat9
+    puts "Hello"
+    puts "World"
+
+repeat3 { puts "Bonjour le monde!" }
+
+repeat9
+    puts "Block 1"
+    repeat3
+        puts "Block 2"
+        repeat9
+            puts "Hello toto"
