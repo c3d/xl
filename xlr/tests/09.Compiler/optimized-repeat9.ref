@@ -1,0 +1,120 @@
+
+define i1 @xl_closure(%closure0*) {
+allocas:
+  %1 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %2 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text2, i32 0, i32 0))
+  ret i1 %2
+}
+
+define internal i1 @xl_eval_repeat3(%closure0*) {
+allocas:
+  %1 = call i1 @xl_closure(%closure0* %0)
+  %2 = call i1 @xl_closure(%closure0* %0)
+  %3 = call i1 @xl_closure(%closure0* %0)
+  ret i1 %3
+}
+
+define i1 @xl_closure3(%closure1*) {
+allocas:
+  %1 = getelementptr %closure1* %0, i32 0, i32 1
+  %2 = load %closure0** %1
+  %3 = call i1 @xl_eval_repeat3(%closure0* %2)
+  ret i1 %3
+}
+
+define internal i1 @xl_eval_repeat34(%closure1*) {
+allocas:
+  %1 = call i1 @xl_closure3(%closure1* %0)
+  %2 = call i1 @xl_closure3(%closure1* %0)
+  %3 = call i1 @xl_closure3(%closure1* %0)
+  ret i1 %3
+}
+
+define internal i1 @xl_eval_repeat9(%closure0*) {
+allocas:
+  %1 = alloca %closure1
+  %2 = getelementptr %closure1* %1, i32 0, i32 0
+  store i1 (%closure1*)* @xl_closure3, i1 (%closure1*)** %2
+  %3 = getelementptr %closure1* %1, i32 0, i32 1
+  store %closure0* %0, %closure0** %3
+  %4 = call i1 @xl_eval_repeat34(%closure1* %1)
+  ret i1 %4
+}
+
+define i1 @xl_closure5(%closure0*) {
+allocas:
+  %1 = call i1 @puts(i8* getelementptr inbounds ([7 x i8]* @text6, i32 0, i32 0))
+  ret i1 %1
+}
+
+define %Tree* @xl_program() {
+allocas:
+  %0 = alloca %closure0
+  %1 = alloca %closure0
+  %2 = getelementptr %closure0* %0, i32 0, i32 0
+  store i1 (%closure0*)* @xl_closure, i1 (%closure0*)** %2
+  %3 = call i1 @xl_eval_repeat9(%closure0* %0)
+  %4 = getelementptr %closure0* %1, i32 0, i32 0
+  store i1 (%closure0*)* @xl_closure5, i1 (%closure0*)** %4
+  %5 = call i1 @xl_eval_repeat9(%closure0* %1)
+  br i1 %5, label %isTrue, label %isFalse
+
+isTrue:                                           ; preds = %allocas
+  br label %booleanBoxed
+
+isFalse:                                          ; preds = %allocas
+  br label %booleanBoxed
+
+booleanBoxed:                                     ; preds = %isFalse, %isTrue
+  %.0.in = phi %Tree** [ @true, %isTrue ], [ @false, %isFalse ]
+  %.0 = load %Tree** %.0.in
+  ret %Tree* %.0
+}
+AFTER GLOBAL OPTIMIZATIONS:
+
+define %Tree* @xl_program() nounwind {
+allocas:
+  %0 = call fastcc i1 @xl_eval_repeat9()
+  %1 = call fastcc i1 @xl_eval_repeat9()
+  %true.val = load %Tree** @true
+  %false.val = load %Tree** @false
+  %.0 = select i1 %1, %Tree* %true.val, %Tree* %false.val
+  ret %Tree* %.0
+}
+Hello
+World
+Hello
+World
+Hello
+World
+Hello
+World
+Hello
+World
+Hello
+World
+Hello
+World
+Hello
+World
+Hello
+World
+Hello
+World
+Hello
+World
+Hello
+World
+Hello
+World
+Hello
+World
+Hello
+World
+Hello
+World
+Hello
+World
+Hello
+World
+false

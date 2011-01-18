@@ -758,8 +758,9 @@ llvm_type CompiledUnit::ExpressionMachineType(Tree *expr, llvm_type type)
 //   Define the machine type associated with an expression
 // ----------------------------------------------------------------------------
 {
-    assert (type || !"ExpressionMachineType called with null type");
-    assert (!machineType[expr] || !"ExpressionMachineType overrides type");
+    assert (type && "ExpressionMachineType called with null type");
+    assert ((machineType[expr] == NULL || machineType[expr] == type) &&
+            "ExpressionMachineType overrides type");
     machineType[expr] = type;
     return type;
 }
