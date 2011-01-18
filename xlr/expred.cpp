@@ -355,7 +355,7 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
     }
     else
     {
-        llvm_value function = unit->Compile(cand);
+        llvm_value function = unit->Compile(cand, args);
         if (function)
             result = unit->code->CreateCall(function, args.begin(), args.end());
     }

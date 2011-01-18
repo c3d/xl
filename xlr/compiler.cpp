@@ -833,23 +833,19 @@ bool Compiler::IsClosureType(llvm_type type)
 }
 
 
-text Compiler::FunctionKey(RewriteCandidate &rc)
+text Compiler::FunctionKey(Rewrite *rw, llvm_values &args)
 // ----------------------------------------------------------------------------
 //    Return a unique function key corresponding to a given overload
 // ----------------------------------------------------------------------------
 {
     std::ostringstream out;
-    out << (void *) rc.rewrite;
+    out << (void *) rw;
 
-    TypeInference *types = rc.types;
-    RewriteBindings &bnds = rc.bindings;
-    RewriteBindings::iterator b;
-    for (b = bnds.begin(); b != bnds.end(); b++)
+    for (llvm_values::iterator a = args.begin(); a != args.end(); a++)
     {
-        Tree *tree = (*b).value;
-        Tree *type = types->Type(tree);
-        bool deferred = (*b).IsDeferred();
-        out << (deferred ? '?' : ':') << (void *) type;
+        llvm_value value = *a;
+        llvm_type type = value->getType();
+        out << ';' << (void *) type;
     }
 
     return out.str();

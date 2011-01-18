@@ -341,13 +341,13 @@ llvm_value CompiledUnit::Compile(Tree *tree)
 }
 
 
-llvm_value CompiledUnit::Compile(RewriteCandidate &rc)
+llvm_value CompiledUnit::Compile(RewriteCandidate &rc, llvm_values &args)
 // ----------------------------------------------------------------------------
 //    Compile a given tree
 // ----------------------------------------------------------------------------
 {
     // Check if we already have built this function, e.g. recursive calls
-    text fkey = compiler->FunctionKey(rc);
+    text fkey = compiler->FunctionKey(rc.rewrite, args);
     llvm::Function *&function = compiler->FunctionFor(fkey);
 
     // If we have not, then we need to build it

@@ -136,7 +136,7 @@ struct Compiler
     bool                      MarkAsClosureType(llvm_type type);
     bool                      IsClosureType(llvm_type type);
 
-    text                      FunctionKey(RewriteCandidate &rc);
+    text                      FunctionKey(Rewrite *rw, llvm_values &values);
     text                      ClosureKey(Tree *expr, Context *context);
     llvm::Function * &        FunctionFor(text fkey) { return functions[fkey]; }
 

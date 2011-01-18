@@ -15,3 +15,5 @@ repeat9a { puts "Glop glop" }
 repeat9
     puts "Tadaaa!"
 
+repeat3 { puts "Bonjour le monde!" }
+
