@@ -90,7 +90,6 @@ typedef llvm::IRBuilder<> *                    llvm_builder;
 typedef llvm::Function *                       llvm_function;
 typedef llvm::BasicBlock *                     llvm_block;
 
-typedef std::map<llvm_type, llvm_value>        closure_type_map;
 
 
 // ============================================================================
@@ -128,13 +127,14 @@ struct Compiler
     llvm::Value *             EnterGlobal(Name *name, Name_p *address);
     llvm::Value *             EnterConstant(Tree *constant);
     llvm::GlobalVariable *    TextConstant(text value);
+    eval_fn                   MarkAsClosure(Tree *closure, uint ntrees);
     bool                      IsKnown(Tree *value);
 
     llvm_type                 MachineType(Tree *tree);
     llvm_value                Primitive(llvm_builder builder, text name,
                                         uint arity, llvm_value *args);
-    void                      MarkAsClosureType(llvm_type type, llvm_value fn);
-    llvm_value                ClosureFunctionForType(llvm_type type);
+    bool                      MarkAsClosureType(llvm_type type);
+    bool                      IsClosureType(llvm_type type);
 
     text                      FunctionKey(RewriteCandidate &rc);
     text                      ClosureKey(Tree *expr, Context *context);
@@ -207,7 +207,7 @@ public:
     adapter_map                array_to_args_adapters;
     text_constants_map         text_constants;
     llvm_entry_table           llvm_primitives;
-    closure_type_map           closure_types;
+    llvm_types                 closure_types;
 };
 
 

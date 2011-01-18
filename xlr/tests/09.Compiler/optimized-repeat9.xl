@@ -4,11 +4,14 @@ extern bool puts(text);
 repeat3 B -> B; B; B
 repeat9 A -> repeat3 { repeat3 A }
 repeat9a B -> repeat3 { repeat3 B }
+// repeat81 D -> repeat9 { repeat9 D }
 
 repeat9
     puts "Hello"
     puts "World"
-    
+
+repeat9a { puts "Glop glop" }
+
 repeat9
-    puts "Tadaa!"
-    
+    puts "Tadaaa!"
+

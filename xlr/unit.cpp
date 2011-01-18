@@ -402,7 +402,7 @@ llvm_value CompiledUnit::Closure(Name *name, Tree *expr)
     // Values imported from closure are now in cunit.closure[]
     // Allocate a local data block to pass as the closure
     llvm_value stackPtr = data->CreateAlloca(cunit.closureTy);
-    compiler->MarkAsClosureType(stackPtr->getType(), function);
+    compiler->MarkAsClosureType(stackPtr->getType());
 
     // First, store the function pointer
     uint field = 0;
@@ -448,7 +448,7 @@ llvm_value CompiledUnit::InvokeClosure(llvm_value result)
     llvm_value fnPtr = data->CreateLoad(fnPtrPtr);
 
     // Call the closure callback
-    InvokeClosure(result, fnPtr);
+    result = InvokeClosure(result, fnPtr);
 
     // Overwrite the function pointer to its original value
     // (actually improves optimizations by showing it doesn't change)
