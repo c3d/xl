@@ -128,7 +128,9 @@ Function *CompiledUnit::ClosureFunction(Tree *expr, TypeInference *types)
 
     // We have a closure type that we will build as we evaluate expression
     closureTy = OpaqueType::get(*llvm);
-    compiler->module->addTypeName("closure", closureTy);
+    static char buffer[80]; static int count = 0;
+    snprintf(buffer, 80, "closure%d", count++);
+    compiler->module->addTypeName(buffer, closureTy);
 
     // Add a single parameter to the signature
     llvm_types signature;
@@ -481,6 +483,19 @@ eval_fn CompiledUnit::Finalize(bool createCode)
         // Build the structure type and unify it with opaque type used in decl
         llvm_type structTy = StructType::get(*llvm, sig);
         cast<OpaqueType>(closureTy.get())->refineAbstractTypeTo(structTy);
+
+        // Load the elements from the closure
+        Function::arg_iterator args = function->arg_begin();
+        llvm_value closureArg = args++;
+        uint field = 1;
+        for (value_map::iterator v = closure.begin(); v != closure.end(); v++)
+        {
+            Tree *value = (*v).first;
+            llvm_value storage = NeedStorage(value);
+            llvm_value input = data->CreateConstGEP2_32(closureArg, 0, field++);
+            data->CreateStore(input, storage);
+        }
+
     }
 
     // Branch to the exit block from the last test we did
@@ -544,6 +559,22 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
             data->CreateStore(data->CreateLoad(global), result);
     }
 
+    return result;
+}
+
+
+llvm_value CompiledUnit::NeedClosure(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Allocate a closure variable
+// ----------------------------------------------------------------------------
+{
+    llvm_value storage = closure[tree];
+    if (!storage)
+    {
+        storage = NeedStorage(tree);
+        closure[tree] = storage;
+    }
+    llvm_value result = code->CreateLoad(storage);
     return result;
 }
 
@@ -695,15 +726,32 @@ llvm_type CompiledUnit::StructureType(llvm_types &signature)
 }
 
 
+llvm_type CompiledUnit::ExpressionMachineType(Tree *expr, llvm_type type)
+// ----------------------------------------------------------------------------
+//   Define the machine type associated with an expression
+// ----------------------------------------------------------------------------
+{
+    assert (type || !"ExpressionMachineType called with null type");
+    assert (!machineType[expr] || !"ExpressionMachineType overrides type");
+    machineType[expr] = type;
+    return type;
+}
+
+
 llvm_type CompiledUnit::ExpressionMachineType(Tree *expr)
 // ----------------------------------------------------------------------------
 //   Return the machine type associated with a given expression
 // ----------------------------------------------------------------------------
 {
-    assert(inference || !"ExpressionMachineType without type check");
-
-    Tree *type = inference->Type(expr);
-    return compiler->MachineType(type);
+    llvm_type type = machineType[expr];
+    if (!type)
+    {
+        assert(inference || !"ExpressionMachineType without type check");
+        Tree *typeTree = inference->Type(expr);
+        type = compiler->MachineType(typeTree);
+        machineType[expr] = type;
+    }
+    return type;
 }
 
 

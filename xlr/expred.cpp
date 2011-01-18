@@ -88,7 +88,8 @@ llvm_value CompileExpression::DoName(Name *what)
                                          &where, &rewrite);
     assert(existing || !"Type checking didn't realize a name is missing");
     if (where == context)
-        return unit->Known(rewrite->from);
+        if (llvm_value result = unit->Known(rewrite->from))
+            return result;
 
     // Check true and false values
     if (existing == xl_true)
@@ -96,9 +97,13 @@ llvm_value CompileExpression::DoName(Name *what)
     if (existing == xl_false)
         return unit->code->getFalse();
 
-    // For now assume a global
+    // Check if it is a global
     if (llvm_value global = unit->Global(existing))
         return global;
+
+    // If we are in a context building a closure, record dependency
+    if (unit->closureTy)
+        return unit->NeedClosure(what);
 
     return DoCall(what);
 }
@@ -304,32 +309,13 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
     for (b = bnds.begin(); b != bnds.end(); b++)
     {
         Tree *tree = (*b).value;
-        if ((*b).closure)
+        if (llvm_value closure = (*b).Closure(unit))
         {
-            args.push_back((*b).closure);
+            args.push_back(closure);
         }
-        else if ((*b).IsDeferred())
+        else if (llvm_value value = Value(tree))
         {
-            // Deferred evaluation: pass a closure and its argument
-            if (llvm_value closure = unit->Closure(tree))
-            {
-                (*b).closure = closure;
-                args.push_back(closure);
-            }
-        }
-        else
-        {
-            // Evaluate immediately
-            llvm_value value = Value(tree);
-            if (value)
-            {
-                args.push_back(value);
-
-                // Check if this is actually a closure argument
-                // being passed around
-                if (unit->compiler->IsClosureType(value->getType()))
-                    (*b).closure = value;
-            }
+            args.push_back(value);
         }
     }
 

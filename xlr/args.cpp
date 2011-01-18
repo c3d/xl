@@ -24,6 +24,7 @@
 #include "save.h"
 #include "types.h"
 #include "errors.h"
+#include "unit.h"
 
 XL_BEGIN
 
@@ -34,11 +35,6 @@ bool RewriteBinding::IsDeferred()
 // We defer evaluation for indent and {} blocks, sequences and functions
 {
     Tree *val = value;
-
-    // If we had a closure associated to this binding, defer
-    if (closure)
-        return true;
-
     if (Block *block = val->AsBlock())
     {
         // Defer evaluation of indent and {} blocks
@@ -55,6 +51,19 @@ bool RewriteBinding::IsDeferred()
         return infix->name == ";" || infix->name == "\n" || infix->name == "->";
 
     return false;
+}
+
+
+llvm_value RewriteBinding::Closure(CompiledUnit *unit)
+// ----------------------------------------------------------------------------
+//   Return closure for this value if we need one
+// ----------------------------------------------------------------------------
+{
+    if (!closure)
+        if (IsDeferred())
+            closure = unit->Closure(value);
+
+    return closure;
 }
 
 
@@ -251,10 +260,6 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
             if (!inference->Unify(type, fi->right, value, fi->left,
                                   TypeInference::DECLARATION))
                 return FAILED;
-
-            // In that case, we want to force evaluation to given type
-            Tree *dtype = inference->Base(fi->right);
-            rc.bindings.back().type = dtype;
 
             // Having been successful makes it a strong binding
             return PERFECT;

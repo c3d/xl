@@ -71,6 +71,7 @@ typedef Tree * (*adapter_fn) (native_fn callee, Context *ctx,
                               Tree *src, Tree **args);
 typedef std::map<text, llvm::Function *>       functions_map;
 typedef std::map<Tree *, llvm::Value *>        value_map;
+typedef std::map<Tree *, const llvm::Type *>   type_map;
 typedef std::map<Tree *, Tree **>              address_map;
 typedef std::map<text, llvm::GlobalVariable *> text_constants_map;
 typedef std::map<uint, eval_fn>                closure_map;

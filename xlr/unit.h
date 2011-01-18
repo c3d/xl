@@ -65,6 +65,7 @@ public:
 
     enum { knowAll = -1, knowGlobals = 1, knowLocals = 2, knowValues = 4 };
     llvm_value          NeedStorage(Tree *tree);
+    llvm_value          NeedClosure(Tree *tree);
     bool                IsKnown(Tree *tree, uint which = knowAll);
     llvm_value          Known(Tree *tree, uint which = knowAll );
     llvm_value          StringPointer(text value);
@@ -78,6 +79,7 @@ public:
 
     llvm_type           ReturnType(Tree *form);
     llvm_type           StructureType(llvm_types &signature);
+    llvm_type           ExpressionMachineType(Tree *expr, llvm_type type);
     llvm_type           ExpressionMachineType(Tree *expr);
     llvm_type           MachineType(Tree *type);
     llvm_value          Autobox(llvm_value value, llvm_type requested);
@@ -103,6 +105,7 @@ public:
 
     value_map           value;          // Map tree -> LLVM value
     value_map           storage;        // Map tree -> LLVM alloca space
+    type_map            machineType;    // Map tree -> machine type
 
     llvm::PATypeHolder  closureTy;      // Argument type for closures
     value_map           closure;        // Arguments that need closures

@@ -1400,8 +1400,6 @@ void debugr(XL::TypeInference *ti)
             for (RewriteBindings::iterator b = rb.begin(); b != rb.end(); b++)
             {
                 std::cout << "\t\t" << (*b).name;
-                if ((*b).type)
-                    std::cout << "\t" << (*b).type;
                 std::cout << "\t= " << ShortTreeForm((*b).value) << "\n";
             }
         }
