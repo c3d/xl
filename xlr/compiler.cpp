@@ -345,6 +345,9 @@ program_fn Compiler::CompileProgram(Context *context, Tree *program)
 //   It will process all the declarations in the program and then compile
 //   the rest of the code as a function taking no arguments.
 {
+    if (!program)
+        return NULL;
+
     Context_p topContext = new Context(context, context);
     CompiledUnit topUnit(this, topContext);
 

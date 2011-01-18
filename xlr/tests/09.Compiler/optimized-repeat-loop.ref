@@ -7,7 +7,7 @@ allocas:
 
 define internal %Tree* @xl_eval_repeat2(%closure0*) {
 allocas:
-  %1 = load %Tree** @false
+  %1 = load %Tree** @true
   ret %Tree* %1
 }
 
@@ -39,25 +39,40 @@ allocas:
   %0 = alloca %closure0
   %1 = getelementptr %closure0* %0, i32 0, i32 0
   store i1 (%closure0*)* @xl_closure, i1 (%closure0*)** %1
-  %2 = call %Tree* @xl_eval_repeat(i64 200, %closure0* %0)
+  %2 = call %Tree* @xl_eval_repeat(i64 25, %closure0* %0)
   ret %Tree* %2
 }
 AFTER GLOBAL OPTIMIZATIONS:
 
 define %Tree* @xl_program() nounwind {
 allocas:
-  br label %tailrecurse.i
-
-tailrecurse.i:                                    ; preds = %tailrecurse.i, %allocas
-  %lsr.iv = phi i64 [ %lsr.iv.next, %tailrecurse.i ], [ 200, %allocas ]
   %0 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
-  %lsr.iv.next = add i64 %lsr.iv, -1
-  %exitcond1 = icmp eq i64 %lsr.iv.next, 0
-  br i1 %exitcond1, label %xl_eval_repeat.exit, label %tailrecurse.i
-
-xl_eval_repeat.exit:                              ; preds = %tailrecurse.i
-  %1 = load %Tree** @false
-  ret %Tree* %1
+  %1 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %2 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %3 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %4 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %5 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %6 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %7 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %8 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %9 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %10 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %11 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %12 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %13 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %14 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %15 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %16 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %17 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %18 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %19 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %20 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %21 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %22 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %23 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %24 = call i1 @puts(i8* getelementptr inbounds ([6 x i8]* @text1, i32 0, i32 0))
+  %25 = load %Tree** @true
+  ret %Tree* %25
 }
 Hello
 Hello
@@ -84,179 +99,4 @@ Hello
 Hello
 Hello
 Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-Hello
-false
+true

@@ -4,9 +4,10 @@ extern bool puts(text);
 (x:integer - y:integer):integer -> opcode Sub
 
 repeat 0, B -> true
-repeat N, B -> B; repeat N-1, B
+repeat 1, B -> 42
+repeat N, B -> B; repeat N-2, B
 
-repeat 25, { puts "Hello" }
+repeat 26, { puts "Hello" }
 
 
 
