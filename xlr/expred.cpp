@@ -103,7 +103,7 @@ llvm_value CompileExpression::DoName(Name *what)
 
     // If we are in a context building a closure, record dependency
     if (unit->closureTy)
-        return unit->NeedClosure(what);
+        return unit->NeedClosure(rewrite->from);
 
     return DoCall(what);
 }
@@ -316,6 +316,9 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
         else if (llvm_value value = Value(tree))
         {
             args.push_back(value);
+            llvm_type mtype = value->getType();
+            if (unit->compiler->IsClosureType(mtype))
+                (*b).closure = value;
         }
     }
 

@@ -361,6 +361,7 @@ llvm_value CompiledUnit::Compile(RewriteCandidate &rc)
         function = rewriteUnit.RewriteFunction(rc);
         if (function && rewriteUnit.code)
         {
+            rewriteUnit.machineType = machineType;
             llvm_value returned = rewriteUnit.Compile(rewrite->to);
             if (!returned)
                 return NULL;
@@ -390,6 +391,7 @@ llvm_value CompiledUnit::Closure(Tree *expr)
     function = cunit.ClosureFunction(expr, inference);
     if (!function || !cunit.code || !cunit.closureTy)
         return NULL;
+    cunit.machineType = machineType;
     llvm_value returned = cunit.Compile(expr);
     if (!returned)
         return NULL;
@@ -476,7 +478,9 @@ eval_fn CompiledUnit::Finalize(bool createCode)
         for (value_map::iterator v = closure.begin(); v != closure.end(); v++)
         {
             llvm_value value = (*v).second;
-            llvm_type type = value->getType();
+            llvm_type allocaTy = value->getType();
+            const llvm::PointerType *ptrTy = cast<PointerType>(allocaTy);
+            llvm_type type = ptrTy->getElementType();
             sig.push_back(type);
         }
 
@@ -492,7 +496,8 @@ eval_fn CompiledUnit::Finalize(bool createCode)
         {
             Tree *value = (*v).first;
             llvm_value storage = NeedStorage(value);
-            llvm_value input = data->CreateConstGEP2_32(closureArg, 0, field++);
+            llvm_value ptr = data->CreateConstGEP2_32(closureArg, 0, field++);
+            llvm_value input = data->CreateLoad(ptr);
             data->CreateStore(input, storage);
         }
 

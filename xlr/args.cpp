@@ -60,8 +60,14 @@ llvm_value RewriteBinding::Closure(CompiledUnit *unit)
 // ----------------------------------------------------------------------------
 {
     if (!closure)
+    {
         if (IsDeferred())
+        {
             closure = unit->Closure(value);
+            llvm_type mtype = closure->getType();
+            unit->ExpressionMachineType(name, mtype);
+        }
+    }
 
     return closure;
 }
