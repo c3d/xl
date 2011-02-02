@@ -127,7 +127,7 @@ token_t Parser::NextToken()
             }
             else if (syntax.IsTextDelimiter(opening, closing))
             {
-                text longText = scanner.Comment(closing);
+                text longText = scanner.Comment(closing, false);
                 ulong cLen = closing.length();
                 longText.erase(longText.length() - cLen, cLen);
                 scanner.SetTextValue(longText);
