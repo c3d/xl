@@ -167,6 +167,7 @@ class Scanner
 public:
     Scanner(kstring fileName, Syntax &stx, Positions &pos, Errors &err);
     Scanner(std::istream &input, Syntax &stx, Positions &pos, Errors &err);
+    Scanner(const Scanner &parent);
     ~Scanner();
     
 public:
@@ -199,6 +200,7 @@ public:
     std::istream & Input()              { return input; }
     Positions    & InputPositions()     { return positions; }
     Errors       & InputErrors()        { return errors; }
+    Syntax       & InputSyntax()        { return syntax; }
 
 private:
     Syntax &       syntax;

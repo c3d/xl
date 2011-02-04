@@ -357,9 +357,7 @@ Tree *Parser::Parse(text closing)
             {
                 // Read the input with the special syntax
                 ulong pos = scanner.Position();
-                Parser childParser(scanner.Input(), *cs,
-                                   scanner.InputPositions(),
-                                   scanner.InputErrors());
+                Parser childParser(scanner, cs);
                 right = childParser.Parse(blk_closing);
                 right = new Prefix(new Name(name), right, pos);
             }

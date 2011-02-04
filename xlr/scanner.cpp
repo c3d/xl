@@ -84,7 +84,7 @@ Scanner::Scanner(kstring name, Syntax &stx, Positions &pos, Errors &err)
     : syntax(stx),
       input(*new std::ifstream(name)),
       tokenText(""),
-      textValue(""), realValue(0.0), intValue(0),
+      textValue(""), realValue(0.0), intValue(0), base(10),
       indents(), indent(0), indentChar(0),
       checkingIndent(false), settingIndent(false),
       position(0), lineStart(0),
@@ -107,7 +107,7 @@ Scanner::Scanner(std::istream &input, Syntax &stx, Positions &pos, Errors &err)
     : syntax(stx),
       input(input),
       tokenText(""),
-      textValue(""), realValue(0.0), intValue(0),
+      textValue(""), realValue(0.0), intValue(0), base(10),
       indents(), indent(0), indentChar(0),
       checkingIndent(false), settingIndent(false),
       position(0), lineStart(0),
@@ -121,6 +121,26 @@ Scanner::Scanner(std::istream &input, Syntax &stx, Positions &pos, Errors &err)
         err.Log(Error("Input stream cannot be read: $1", position)
                 .Arg(strerror(errno)));
 }
+
+
+Scanner::Scanner(const Scanner &parent)
+// ----------------------------------------------------------------------------
+//   Open the file and make sure it's readable
+// ----------------------------------------------------------------------------
+    : syntax(parent.syntax),
+      input(parent.input),
+      tokenText(""),
+      textValue(""), realValue(0.0), intValue(0), base(10),
+      indents(parent.indents),
+      indent(parent.indent),
+      indentChar(parent.indentChar),
+      checkingIndent(false), settingIndent(false),
+      position(parent.position), lineStart(parent.lineStart),
+      positions(parent.positions), errors(parent.errors),
+      hadSpaceBefore(parent.hadSpaceBefore),
+      hadSpaceAfter(parent.hadSpaceAfter),
+      mustDeleteInput(false)
+{}
 
 
 Scanner::~Scanner()
