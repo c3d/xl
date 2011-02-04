@@ -318,7 +318,8 @@ Tree *xl_list_files(Tree *patterns);
 
 Tree *xl_load(text name);
 Tree *xl_import(text name);
-Tree *xl_load_data(text name, text prefix,
+Tree *xl_load_data(Tree *self,
+                   text name, text prefix,
                    text fieldSeps = ",;", text recordSeps = "\n");
 
 

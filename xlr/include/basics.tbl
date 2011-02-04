@@ -599,20 +599,23 @@ PREFIX(ImportFile, tree, "import", PARM(file, text, ""), return xl_import(file),
        DESCRIPTION("")
        RETURNS(tree, ""))
 PREFIX(LoadCSV,  tree, "load_csv", PARM(f, text, "") PARM(p, text, ""),
-       return xl_load_data(f, p, ",;", "\n\f\r"),
+       return xl_load_data(self, f, p, ",;", "\n\f\r"),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
 PREFIX(LoadTSV,  tree, "load_tsv", PARM(f, text, "") PARM(p, text, ""),
-       return xl_load_data(f, p, "\t", "\n\f\r"),
+       return xl_load_data(self, f, p, "\t", "\n\f\r"),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
 PREFIX(LoadData,  tree, "load_data",
-       PARM(f, text, "") PARM(p, text, "") PARM(fs, text, "") PARM(rs, text, ""),
-       return xl_load_data(f, p, fs, rs),
+       PARM(f, text, "")
+       PARM(p, text, "")
+       PARM(fs, text, "")
+       PARM(rs, text, ""),
+       return xl_load_data(self, f, p, fs, rs),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
