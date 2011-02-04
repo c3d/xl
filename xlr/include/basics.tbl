@@ -464,6 +464,10 @@ PREFIX(RealToText, text, "text", PARM(x, real, ""), XL_RTEXT(xl_real2text(x)),
        RETURNS(text, ""))
 
 // Time computations
+#ifndef LIBXLR
+/* Currently if LIBXLR is defined it means we're building Tao.
+   Tao redefines the following primitives, and we must not define
+   them twice to avoid a clash */
 PREFIX(TimeHours, integer, "hours", PARM(t, integer, ""), XL_RTIME(tm.tm_hour),
        GROUP(basics)
        SYNOPSIS("")
@@ -511,10 +515,6 @@ PREFIX(SystemTime, integer, "system_time",, XL_RINT(xl_time(1)),
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(integer, ""))
-#ifndef LIBXLR
-/* Currently if LIBXLR is defined it means we're building Tao.
-   Tao redefines the following primitives, and we must not define
-   them twice to avoid a clash */
 PREFIX(SystemHours, integer, "hours",, XL_RCTIME(tm.tm_hour, 10),
        GROUP(basics)
        SYNOPSIS("")
