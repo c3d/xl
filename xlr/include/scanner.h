@@ -172,7 +172,7 @@ public:
 public:
     // Scanning
     token_t     NextToken(bool hungry = false);
-    text        Comment(text EndOfComment);
+    text        Comment(text EndOfComment, bool stripIndent = true);
     
     // Access to scanned data
     text        TokenText()             { return tokenText; }

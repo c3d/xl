@@ -500,7 +500,7 @@ token_t Scanner::NextToken(bool hungry)
 }
 
 
-text Scanner::Comment(text EOC)
+text Scanner::Comment(text EOC, bool stripIndent)
 // ----------------------------------------------------------------------------
 //   Keep adding characters until end of comment is found (and consumed)
 // ----------------------------------------------------------------------------
@@ -518,7 +518,7 @@ text Scanner::Comment(text EOC)
         position++;
         skip = false;
 
-        if (c == '\n')
+        if (c == '\n' && stripIndent)
         {
             // New line: start counting indentation
             checkingIndent = true;
