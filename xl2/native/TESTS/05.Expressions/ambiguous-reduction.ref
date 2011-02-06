@@ -10,6 +10,6 @@ library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be 
 05.Expressions/ambiguous-reduction.xl:3: A first possible match is 'X' + 'Y' * 'Z'
 | function Case1(X, Y, Z:integer) return integer written X+Y*Z is
 |_________________________________________________________^
-05.Expressions/ambiguous-reduction.xl:5: A second possible match is 'X' + 'Y' * 'Z'
-| function Case2(X, Y, Z:integer) return integer written X+Y*Z is
-|_________________________________________________________^
+05.Expressions/ambiguous-reduction.xl:5: A second possible match is 'X' * 'Y' + 'Z'
+| function Case2(X, Y, Z:integer) return integer written X*Y+Z is
+|___________________________________________________________^
