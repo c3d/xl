@@ -1,0 +1,8 @@
+// EXIT=2
+// Check that we correctly deal with ambiguous reductions
+function Case1(X, Y, Z:integer) return integer written X+Y*Z is
+   return X
+function Case2(X, Y, Z:integer) return integer written X+Y*Z is
+   return Y
+
+A : integer := 1 * 2 + 3 * 4
