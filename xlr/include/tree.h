@@ -113,9 +113,10 @@ struct Tree
 
     // Constructor and destructor
     Tree (kind k, TreePosition pos = NOWHERE):
-        tag((pos<<KINDBITS) | k), info(NULL) {}
+        tag((pos<<KINDBITS) | k), info(NULL), code(NULL), symbols(NULL) {}
     Tree(kind k, Tree *from):
-        tag(from->tag), info(from->info ? from->info->Copy() : NULL)
+        tag(from->tag), info(from->info ? from->info->Copy() : NULL),
+        code(NULL), symbols(NULL)
     {
         assert(k == Kind());
     }
