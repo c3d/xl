@@ -738,7 +738,9 @@ Value *CompiledUnit::CallFormError(Tree *what)
 // ----------------------------------------------------------------------------
 {
     Value *ptr = ConstantTree(what); assert(what);
-    Value *callVal = code->CreateCall(compiler->xl_form_error, ptr);
+    Value *nullContext = ConstantPointerNull::get(compiler->contextPtrTy);
+    Value *callVal = code->CreateCall2(compiler->xl_form_error,
+                                       nullContext, ptr);
     return callVal;
 }
 
