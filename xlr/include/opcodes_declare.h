@@ -37,7 +37,6 @@
 #undef GROUP
 #undef SYNOPSIS
 #undef DESCRIPTION
-#undef MISC
 #undef SEE
 
 #ifndef XL_SCOPE
@@ -50,7 +49,6 @@
 #define SYNOPSIS(syno)
 #define DESCRIPTION(desc)
 #define RETURNS(rytpe, rdoc)
-#define MISC(misc)
 #define SEE(see)
 
 #define INFIX(name, rtype, t1, symbol, t2, _code, docinfo)              \

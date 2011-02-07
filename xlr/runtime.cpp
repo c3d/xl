@@ -761,7 +761,7 @@ Tree *xl_list_files(Tree *patterns)
     Tree_p *parent = &result;
     xl_list_files(patterns, parent);
     if (!result)
-        result = xl_empty;
+        result = xl_nil;
     return result;
 }
 
@@ -1168,14 +1168,14 @@ void xl_infix_to_list(Infix *infix, TreeList &list)
         xl_infix_to_list(left, list);
     else
         list.push_back(infix->left);
-    
+
     Infix *right = infix->right->AsInfix();
     if (right && right->name == infix->name)
         xl_infix_to_list(right, list);
     else
         list.push_back(infix->right);
 }
-            
+
 
 Tree *xl_nth(Tree *data, longlong index)
 // ----------------------------------------------------------------------------
@@ -1222,9 +1222,9 @@ Tree *xl_nth(Tree *data, longlong index)
 
 
 // ============================================================================
-// 
+//
 //   Map an operation on all elements
-// 
+//
 // ============================================================================
 
 Tree *MapFunctionInfo::Apply(Tree *what)
@@ -1300,9 +1300,9 @@ Tree *MapAction::DoBlock(Block *block)
 
 
 // ============================================================================
-// 
+//
 //   Reduce by applying operations to consecutive elements
-// 
+//
 // ============================================================================
 
 Tree *ReduceFunctionInfo::Apply(Tree *what)
@@ -1371,9 +1371,9 @@ Tree *ReduceAction::DoBlock(Block *block)
 
 
 // ============================================================================
-// 
+//
 //   Filter by selecting elements that match a given condition
-// 
+//
 // ============================================================================
 
 Tree *FilterFunctionInfo::Apply(Tree *what)

@@ -1,5 +1,5 @@
 // Types must come first for type info to be initialized correctly
-NAME(empty);
+NAME(nil);
 NAME(true);
 NAME(false);
 
@@ -710,4 +710,4 @@ PREFIX(ComputeSha1, text, "sha1", PARM(t, tree, ""), XL_RTEXT(sha1(&t)),
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, "")
-       MISC("  see \"sha\"\n"))
+       SEE("sha"))

@@ -43,29 +43,29 @@
 
 #define RETURNS(rtype, rdoc)                                            \
                           returns = " return_value \"" #rtype "\", <<"; \
-                          returns += rdoc;                              \
-                          returns += ">>\n";
+                          returns.append(rdoc).append(">>\n");
 #define GROUP(grp)        docgroup = #grp;
 #define SYNOPSIS(syno)    synopsis = syno;
 #define DESCRIPTION(desc) description = desc;
-#define SEE(see)          seealso = #see;
+#define SEE(see)          seealso = see;
 
 
 #define DOC(name, syntax, docinfo)                                      \
     text returns, docgroup, docparms, synopsis, description, seealso;   \
     text docsyntax = syntax;                                            \
     do { docinfo; } while (0);                                          \
-    text doc = "/*| docname \"" #name "\", \"" + docgroup + "\", do\n"; \
-    doc += " dsyntax \"" + docsyntax + "\"\n";                          \
-    doc += " synposis <<" + synopsis + ">>\n";                          \
-    doc += " description << " + description + ">>\n";                   \
+    text doc = text("/*| docname \"" #name "\", \"").append(docgroup);  \
+    doc.append("\", do\n");                                             \
+    doc.append(" dsyntax \"").append(docsyntax).append("\"\n");         \
+    doc.append(" synopsis <<").append(synopsis).append(">>\n");         \
+    doc.append(" description << ").append(description).append(">>\n");  \
     if (docparms != "")                                                 \
-        doc += " parameters\n" + docparms + "\n";                       \
+        doc.append(" parameters\n").append(docparms).append("\n");      \
     if (returns != "")                                                  \
-        doc += returns;                                                 \
+        doc.append(returns);                                            \
     if (seealso != "")                                                  \
-        doc += " see \"" + seealso + "\"\n";                            \
-    doc += "|*/";
+        doc.append(" see \"").append(seealso).append("\"\n");           \
+    doc.append("|*/");
 
 #define INFIX(name, rtype, t1, symbol, t2, _code, docinfo)      \
     do                                                          \
@@ -92,12 +92,12 @@
             parameters.push_back(symbol##_decl);                        \
         }                                                               \
         if (docparms != "")                                             \
-            docsyntax += ", ";                                          \
+            docsyntax.append(", ");                                     \
         else                                                            \
-            docsyntax += " ";                                           \
-        docsyntax += text(#symbol);                                     \
-        docparms += "  parameter \"" #type "\", \"" #symbol "\",";      \
-        docparms += " <<" pdoc ">>\n";                                  \
+            docsyntax.append(" ");                                      \
+        docsyntax.append(#symbol);                                      \
+        docparms.append(" parameter \"" #type "\", \"" #symbol "\","); \
+        docparms.append(" <<" pdoc ">>\n");                             \
     } while (0);
 
 
@@ -105,17 +105,17 @@
     do                                                          \
     {                                                           \
         TreeList parameters;                                    \
-        DOC(name, #symbol, docinfo ; parms);                    \
+        DOC(name, symbol, docinfo ; parms);                     \
         xl_enter_prefix_##name(c, main, parameters, doc);       \
     } while(0);
 
 
-#define POSTFIX(name, rtype, parms, symbol, _code, docinfo)             \
-    do                                                                  \
-    {                                                                   \
-        TreeList  parameters;                                           \
-        DOC(name, #symbol, docinfo ; parms ; docsyntax += " " #symbol); \
-        xl_enter_postfix_##name(c, main, parameters, doc);              \
+#define POSTFIX(name, rtype, parms, symbol, _code, docinfo)       \
+    do                                                            \
+    {                                                             \
+        TreeList  parameters;                                     \
+        DOC(name, "", docinfo ; parms ; docsyntax.append(" ").append(symbol)); \
+        xl_enter_postfix_##name(c, main, parameters, doc);        \
     } while(0);
 
 

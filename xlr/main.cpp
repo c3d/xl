@@ -185,8 +185,7 @@ SourceFile *Main::NewFile(text path)
 //   Allocate an entry for updating programs (untitled)
 // ----------------------------------------------------------------------------
 {
-    Name_p nil = new Name("nil");
-    files[path] = SourceFile(path, nil, new Symbols(Symbols::symbols), true);
+    files[path] = SourceFile(path, xl_nil, new Symbols(Symbols::symbols), true);
     return &files[path];
 }
 
@@ -459,7 +458,7 @@ int main(int argc, char **argv)
 
     if (!rc && MAIN->errors->Count())
         rc = 1;
-    
+
 #if CONFIG_USE_SBRK
     IFTRACE(memory)
         fprintf(stderr, "Total memory usage: %ldK\n",
