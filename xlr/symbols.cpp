@@ -2085,7 +2085,8 @@ OCompiledUnit::OCompiledUnit(Compiler *comp, Tree *src, TreeList parms)
 // ----------------------------------------------------------------------------
     : compiler(comp), llvm(comp->llvm), source(src),
       code(NULL), data(NULL), function(NULL),
-      allocabb(NULL), entrybb(NULL), exitbb(NULL), failbb(NULL)
+      allocabb(NULL), entrybb(NULL), exitbb(NULL), failbb(NULL),
+      contextPtr(NULL)
 {
     IFTRACE(llvm)
         std::cerr << "OCompiledUnit T" << (void *) src;
@@ -2102,10 +2103,10 @@ OCompiledUnit::OCompiledUnit(Compiler *comp, Tree *src, TreeList parms)
     // Create the function signature, one entry per parameter + one for source
     std::vector<const Type *> signature;
     signature.push_back(compiler->contextPtrTy);
-    Type *treeTy = compiler->treePtrTy;
+    Type *treePtrTy = compiler->treePtrTy;
     for (ulong p = 0; p <= parms.size(); p++)
-        signature.push_back(treeTy);
-    FunctionType *fnTy = FunctionType::get(treeTy, signature, false);
+        signature.push_back(treePtrTy);
+    FunctionType *fnTy = FunctionType::get(treePtrTy, signature, false);
     text label = "xl_eval";
     IFTRACE(labels)
         label += "[" + text(*src) + "]";
@@ -2127,10 +2128,11 @@ OCompiledUnit::OCompiledUnit(Compiler *comp, Tree *src, TreeList parms)
 
     // Associate the value for the input tree
     Function::arg_iterator args = function->arg_begin();
+    contextPtr = args++;
     Value *inputArg = args++;
-    Value *result_storage = data->CreateAlloca(treeTy, 0, "result");
-    data->CreateStore(inputArg, result_storage);
-    storage[src] = result_storage;
+    Value *resultStorage = data->CreateAlloca(treePtrTy, 0, "result");
+    data->CreateStore(inputArg, resultStorage);
+    storage[src] = resultStorage;
 
     // Associate the value for the additional arguments (read-only, no alloca)
     TreeList::iterator parm;
@@ -2145,7 +2147,7 @@ OCompiledUnit::OCompiledUnit(Compiler *comp, Tree *src, TreeList parms)
     // Create the exit basic block and return statement
     exitbb = BasicBlock::Create(*llvm, "exit", function);
     IRBuilder<> exitcode(exitbb);
-    Value *retVal = exitcode.CreateLoad(result_storage, "retval");
+    Value *retVal = exitcode.CreateLoad(resultStorage, "retval");
     exitcode.CreateRet(retVal);
 
     // Record current entry/exit points for the current expression
@@ -2599,9 +2601,8 @@ Value *OCompiledUnit::CallEvaluate(Tree *tree)
     if (dataForm.count(tree))
         return treeValue;
 
-    Value *nullContext = ConstantPointerNull::get(compiler->contextPtrTy);
     Value *evaluated = code->CreateCall2(compiler->xl_evaluate,
-                                         nullContext, treeValue);
+                                         contextPtr, treeValue);
     MarkComputed(tree, evaluated);
     return evaluated;
 }
@@ -2722,6 +2723,7 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
     // Build argument list
     std::vector<Value *> argV;
     std::vector<const Type *> signature;
+    argV.push_back(contextPtr);   // Pass context pointer
     argV.push_back(callTree);     // Self is the original expression
     signature.push_back(treePtrTy);
     for (uint i = 0; i < ntrees; i++)
@@ -2756,8 +2758,8 @@ Value *OCompiledUnit::CallTypeError(Tree *what)
 // ----------------------------------------------------------------------------
 {
     Value *ptr = ConstantTree(what); assert(what);
-    Value *null = ConstantPointerNull::get(compiler->contextPtrTy);
-    Value *callVal = code->CreateCall2(compiler->xl_form_error, null, ptr);
+    Value *callVal = code->CreateCall2(compiler->xl_form_error,
+                                       contextPtr, ptr);
     MarkComputed(what, callVal);
     return callVal;
 }
@@ -2769,9 +2771,8 @@ Value *OCompiledUnit::CallEvaluateChildren(Tree *what)
 // ----------------------------------------------------------------------------
 {
     Value *ptr = ConstantTree(what); assert(what);
-    Value *nullContext = ConstantPointerNull::get(compiler->contextPtrTy);
     Value *callVal = code->CreateCall2(compiler->xl_evaluate_children,
-                                       nullContext, ptr);
+                                       contextPtr, ptr);
     MarkComputed(what, callVal);
     return callVal;
 }

@@ -233,6 +233,7 @@ public:
     llvm::BasicBlock *  entrybb;        // Entry point for that code
     llvm::BasicBlock *  exitbb;         // Exit point for that code
     llvm::BasicBlock *  failbb;         // Where we go if tests fail
+    llvm_value          contextPtr;     // Storage for context pointer
 
     value_map           value;          // Map tree -> LLVM value
     value_map           storage;        // Map tree -> LLVM alloca space
