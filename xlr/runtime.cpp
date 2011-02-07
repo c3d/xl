@@ -824,7 +824,8 @@ Tree *xl_import(text name)
 }
 
 
-Tree *xl_load_data(text name, text prefix, text fieldSeps, text recordSeps)
+Tree *xl_load_data(Tree *self,
+                   text name, text prefix, text fieldSeps, text recordSeps)
 // ----------------------------------------------------------------------------
 //    Load a comma-separated or tab-separated file from disk
 // ----------------------------------------------------------------------------
@@ -839,10 +840,21 @@ Tree *xl_load_data(text name, text prefix, text fieldSeps, text recordSeps)
     {
         SourceFile &sf = MAIN->files[path];
         Symbols::symbols->Import(sf.symbols);
-        return sf.tree;
+        Tree *tree = sf.tree;
+        if (prefix != "")
+        {
+            while (Infix *infix = tree->AsInfix())
+            {
+                xl_evaluate(infix->left);
+                tree = infix->right;
+            }
+            return xl_evaluate(tree);
+        }
+        return tree;
     }
 
-    Tree *tree = NULL;
+    Tree_p tree = NULL;
+    Tree_p *treePtr = NULL;
     Tree *line = NULL;
     char buffer[256];
     char *ptr = buffer;
@@ -851,6 +863,9 @@ Tree *xl_load_data(text name, text prefix, text fieldSeps, text recordSeps)
     bool hasRecord = false;
     bool hasField = false;
     FILE *f = fopen(path.c_str(), "r");
+    Symbols *old = self->Symbols(); assert(old);
+    Symbols *syms = new Symbols(old);
+    Tree *result = NULL;
 
     *end = 0;
     while (!feof(f))
@@ -883,7 +898,8 @@ Tree *xl_load_data(text name, text prefix, text fieldSeps, text recordSeps)
             text token;
             Tree *child = NULL;
 
-            if (isdigit(ptr[0]))
+            if (isdigit(buffer[0]) ||
+                ((buffer[0] == '-' || buffer[0] == '+') && isdigit(buffer[1])))
             {
                 char *ptr2 = NULL;
                 longlong l = strtoll(buffer, &ptr2, 10);
@@ -900,11 +916,14 @@ Tree *xl_load_data(text name, text prefix, text fieldSeps, text recordSeps)
             }
             if (child == NULL)
             {
+                if (*buffer == 0)
+                    continue;
                 token = text(buffer, ptr - buffer - 1);
                 child = new Text(buffer);
             }
 
-            // Combine to line
+            // Combine tree into a line
+            child->SetSymbols(syms);
             if (line)
                 line = new Infix(",", line, child);
             else
@@ -914,11 +933,23 @@ Tree *xl_load_data(text name, text prefix, text fieldSeps, text recordSeps)
             if (hasRecord)
             {
                 if (prefix != "")
+                {
                     line = new Prefix(new Name(prefix), line);
-                if (tree)
-                    tree = new Infix("\n", tree, line);
+                    line->SetSymbols(syms);
+                    result = xl_evaluate(line);
+                }
+                    
+                if (treePtr)
+                {
+                    Infix *infix = new Infix("\n", *treePtr, line);
+                    *treePtr = infix;
+                    treePtr = &infix->right;
+                }
                 else
+                {
                     tree = line;
+                    treePtr = &tree;
+                }
                 line = NULL;
             }
             ptr = buffer;
@@ -928,17 +959,11 @@ Tree *xl_load_data(text name, text prefix, text fieldSeps, text recordSeps)
     if (!tree)
         return Ooops("Unable to load data from $1", new Text(path));
 
-    // Store that we use the file
-    struct stat st;
-    stat(path.c_str(), &st);
-    Symbols_p old = Symbols::symbols;
-    Symbols_p syms = new Symbols(old);
+    // Remember that we use that file
     MAIN->files[path] = SourceFile(path, tree, syms);
-    Symbols::symbols = syms;
-    tree->SetSymbols(syms);
-    tree = syms->CompileAll(tree);
-    Symbols::symbols = old;
     old->Import(syms);
+    if (result)
+        return result;
 
     return tree;
 }

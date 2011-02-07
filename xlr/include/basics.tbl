@@ -464,6 +464,10 @@ PREFIX(RealToText, text, "text", PARM(x, real, ""), XL_RTEXT(xl_real2text(x)),
        RETURNS(text, ""))
 
 // Time computations
+#ifndef LIBXLR
+/* Currently if LIBXLR is defined it means we're building Tao.
+   Tao redefines the following primitives, and we must not define
+   them twice to avoid a clash */
 PREFIX(TimeHours, integer, "hours", PARM(t, integer, ""), XL_RTIME(tm.tm_hour),
        GROUP(basics)
        SYNOPSIS("")
@@ -551,6 +555,7 @@ PREFIX(SystemYearDay, integer, "year_day",, XL_RCTIME(tm.tm_yday, 10),
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(integer, ""))
+#endif
 
 // Random number generator
 PREFIX(RandomNumber, real, "random", , XL_RREAL(xl_random(0.0, 1.0)),
@@ -599,20 +604,23 @@ PREFIX(ImportFile, tree, "import", PARM(file, text, ""), return xl_import(file),
        DESCRIPTION("")
        RETURNS(tree, ""))
 PREFIX(LoadCSV,  tree, "load_csv", PARM(f, text, "") PARM(p, text, ""),
-       return xl_load_data(f, p, ",;", "\n\f\r"),
+       return xl_load_data(self, f, p, ",;", "\n\f\r"),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
 PREFIX(LoadTSV,  tree, "load_tsv", PARM(f, text, "") PARM(p, text, ""),
-       return xl_load_data(f, p, "\t", "\n\f\r"),
+       return xl_load_data(self, f, p, "\t", "\n\f\r"),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
 PREFIX(LoadData,  tree, "load_data",
-       PARM(f, text, "") PARM(p, text, "") PARM(fs, text, "") PARM(rs, text, ""),
-       return xl_load_data(f, p, fs, rs),
+       PARM(f, text, "")
+       PARM(p, text, "")
+       PARM(fs, text, "")
+       PARM(rs, text, ""),
+       return xl_load_data(self, f, p, fs, rs),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")

@@ -314,11 +314,10 @@ int Main::LoadFile(text file, bool updateContext)
     if (options.showSource)
         std::cout << tree << "\n";
 
+    files[file] = SourceFile (file, tree, syms);
     if (tree)
     {
         tree->SetSymbols(syms);
-        files[file] = SourceFile (file, tree, syms);
-
         if (options.showGV)
         {
             SetNodeIdAction sni;
