@@ -464,6 +464,10 @@ PREFIX(RealToText, text, "text", PARM(x, real, ""), XL_RTEXT(xl_real2text(x)),
        RETURNS(text, ""))
 
 // Time computations
+#ifndef LIBXLR
+/* Currently if LIBXLR is defined it means we're building Tao.
+   Tao redefines the following primitives, and we must not define
+   them twice to avoid a clash */
 PREFIX(TimeHours, integer, "hours", PARM(t, integer, ""), XL_RTIME(tm.tm_hour),
        GROUP(basics)
        SYNOPSIS("")
@@ -551,6 +555,7 @@ PREFIX(SystemYearDay, integer, "year_day",, XL_RCTIME(tm.tm_yday, 10),
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(integer, ""))
+#endif
 
 // Random number generator
 PREFIX(RandomNumber, real, "random", , XL_RREAL(xl_random(0.0, 1.0)),
