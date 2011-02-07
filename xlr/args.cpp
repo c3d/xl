@@ -209,8 +209,11 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
             return POSSIBLE;
 
         // Check if what we have as an expression evaluates correctly
+        bool old_matching = inference->matching;
+        inference->matching = true;
         if (!value->Do(inference))
             return FAILED;
+        inference->matching = old_matching;
         type = inference->Type(value);
 
         // Test if the name is already bound, and if so, if trees fail to match

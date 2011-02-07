@@ -50,7 +50,7 @@ TypeInference::TypeInference(Context *context)
       unifications(),
       rcalls(),
       left(NULL), right(NULL),
-      prototyping(false)
+      prototyping(false), matching(false)
 {}
 
 
@@ -63,7 +63,7 @@ TypeInference::TypeInference(Context *context, TypeInference *parent)
       unifications(parent->unifications),
       rcalls(parent->rcalls),
       left(parent->left), right(parent->right),
-      prototyping(false)
+      prototyping(false), matching(false)
 {}
 
 
@@ -375,6 +375,10 @@ bool TypeInference::Evaluate(Tree *what)
     if (prototyping)
         return true;
 
+    // Record if we are matching patterns
+    bool matchingPattern = matching;
+    matching = false;
+
     // Look directly inside blocks
     while (Block *block = what->AsBlock())
         what = block->child;
@@ -402,6 +406,11 @@ bool TypeInference::Evaluate(Tree *what)
     count = rc->candidates.size();
     if (count == 0)
     {
+        if (matchingPattern && what->Kind() > KIND_LEAF_LAST)
+        {
+            Tree *wtype = Type(what);
+            return Unify(wtype, tree_type, what, what);
+        }
         Ooops("No form matches $1", what);
         return false;
     }

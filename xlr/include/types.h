@@ -133,6 +133,7 @@ public:
     rcall_map   rcalls;         // Rewrites to call for a given tree
     Tree_p      left, right;    // Current left and right of unification
     bool        prototyping;    // Prototyping a function declaration
+    bool        matching;       // Matching a pattern
     static ulong id;            // Id of next type
 
     GARBAGE_COLLECT(TypeInference);

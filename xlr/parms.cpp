@@ -113,11 +113,8 @@ bool ParameterList::DoName(Name *what)
         name = what->value;
         return true;
     }
-    else
-    {
-        // We need to record a new parameter, type is Tree * by default
-        return EnterName(what, true);
-    }
+    // We need to record a new parameter, type is Tree * by default
+    return EnterName(what, true);
 }
 
 
