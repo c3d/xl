@@ -475,6 +475,10 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
 //   Evaluate 'what' in the given context
 // ----------------------------------------------------------------------------
 {
+    // Short-circuit if tree was compiled
+    if (what->code)
+        return what->code(this, what);
+
     // Process declarations and evaluate the rest
     Tree_p   result = what;
     Tree_p   instrs = ProcessDeclarations(what);

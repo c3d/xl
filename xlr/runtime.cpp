@@ -27,6 +27,7 @@
 #include "scanner.h"
 #include "renderer.h"
 #include "context.h"
+#include "symbols.h"
 #include "options.h"
 #include "opcodes.h"
 #include "compiler.h"
@@ -42,12 +43,23 @@
 
 XL_BEGIN
 
+Tree *xl_identity(Context *, Tree *what)
+// ----------------------------------------------------------------------------
+//   Return the input tree unchanged
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
 Tree *xl_evaluate(Context *context, Tree *what)
 // ----------------------------------------------------------------------------
 //   Compile the tree if necessary, then evaluate it
 // ----------------------------------------------------------------------------
 // This is similar to Context::Run, but we save stack space for recursion
 {
+    if (what->code)
+        return what->code(context, what);
     return context->Evaluate(what);
 }
 
@@ -470,11 +482,12 @@ Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
 // ----------------------------------------------------------------------------
 {
     // Immediately return anything we could evaluate at no cost
-    if (!expr || expr->IsConstant() || !ntrees)
+    if (!expr || expr->IsConstant() || !expr->code || !ntrees)
         return expr;
 
     IFTRACE(closure)
         std::cerr << "CLOSURE: Arity " << ntrees
+                  << " code " << (void *) expr->code
                   << " [" << expr << "]\n";
 
     // Build the prefix with all the arguments
@@ -493,6 +506,21 @@ Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
     }
     va_end(va);
     parent->right = xl_false;
+
+    // Generate the code for the arguments
+    Compiler *compiler = MAIN->compiler;
+    eval_fn fn = compiler->closures[ntrees];
+    if (!fn)
+    {
+        TreeList noParms;
+        OCompiledUnit unit(compiler, result, noParms);
+        unit.CallClosure(result, ntrees);
+        fn = unit.Finalize();
+        compiler->closures[ntrees] = fn;
+        compiler->SetTreeFunction(result, NULL); // Now owned by closures[n]
+    }
+    result->code = fn;
+    xl_set_source(result, expr);
 
     return result;
 }
@@ -1128,6 +1156,37 @@ Tree *xl_load_data(Context *context,
     context->Import(imported);
 
     return tree;
+}
+
+
+
+// ============================================================================
+//
+//   Managing calls to/from XL
+//
+// ============================================================================
+
+Tree *XLCall::operator() (Symbols *syms, bool nullIfBad, bool cached)
+// ----------------------------------------------------------------------------
+//    Perform the given call in the given context
+// ----------------------------------------------------------------------------
+{
+    assert(syms);
+    Tree *callee = syms->CompileCall(name->value, args, nullIfBad, cached);
+    if (callee && callee->code)
+        callee = callee->code(NULL, callee);
+    return callee;
+}
+
+
+Tree *XLCall::build(Symbols *syms)
+// ----------------------------------------------------------------------------
+//    Perform the given call in the given context
+// ----------------------------------------------------------------------------
+{
+    assert(syms);
+    Tree *callee = syms->CompileCall(name->value, args);
+    return callee;
 }
 
 XL_END

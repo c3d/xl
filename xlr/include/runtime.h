@@ -50,6 +50,7 @@ struct Main;
 //
 // ============================================================================
 
+Tree *xl_identity(Context*, Tree *);
 Tree *xl_evaluate(Context *, Tree *);
 Tree *xl_evaluate_children(Context *, Tree *);
 Tree *xl_assigned_value(Context *, Tree *);
@@ -158,11 +159,14 @@ struct XLCall
         return xl_evaluate(context, call);
     }
 
-    // Compile in the given context
-    void build(Context *context) { (void) context; }
+    // Calling in a given symbol context
+    Tree *  operator() (Symbols *syms = NULL,
+                       bool nullIfBad = false, bool cached = true);
+    Tree *  build(Symbols *syms = NULL);
 
 public:
     Name_p      name;
+    TreeList    args;
     Tree_p      arguments;
     Tree_p *    pointer;
 };

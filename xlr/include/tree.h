@@ -51,6 +51,8 @@ struct Prefix;                                  // Prefix: sin X
 struct Postfix;                                 // Postfix: 3!
 struct Infix;                                   // Infix: A+B, newline
 struct Info;                                    // Information in trees
+struct Context;                                 // Execution context
+struct Symbols;                                 // Symbol table
 struct Sha1;                                    // Hash used for id-ing trees
 
 
@@ -70,9 +72,11 @@ typedef GCPtr<Block>                    Block_p;
 typedef GCPtr<Prefix>                   Prefix_p;
 typedef GCPtr<Postfix>                  Postfix_p;
 typedef GCPtr<Infix>                    Infix_p;
+typedef GCPtr<Symbols>                  Symbols_p;
 
 typedef ulong TreePosition;                     // Position in source files
 typedef std::vector<Tree_p> TreeList;           // A list of trees
+typedef Tree *(*eval_fn) (Context *, Tree *);   // Compiled evaluation code
 
 
 
@@ -139,6 +143,10 @@ struct Tree
     Prefix *            AsPrefix();
     Postfix *           AsPostfix();
 
+    // Symbols management (obsolete)
+    XL::Symbols *       Symbols()                       { return symbols; }
+    void                SetSymbols(XL::Symbols *s)      { symbols = s; }
+
     // Info management
     template<class I>
     typename I::data_t  Get() const;
@@ -170,6 +178,10 @@ public:
 public:
     ulong       tag;                            // Position + kind
     Info *      info;                           // Information for tree
+
+    // OBSOLETE FIELDS (should go away soon)
+    eval_fn     code;                           // Compiled code
+    Symbols_p   symbols;                        // Symbol table for evaluation
 
     GARBAGE_COLLECT(Tree);
 

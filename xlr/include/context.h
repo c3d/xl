@@ -186,6 +186,7 @@ struct Rewrite;                                 // Tree rewrite data
 struct Property;                                // Properties
 struct Constraint;                              // Constraints on properties
 struct Errors;                                  // Error handlers
+struct Action;                                  // Actions applied on trees
 
 typedef GCPtr<Context>             Context_p;
 typedef GCPtr<Rewrite>             Rewrite_p;
@@ -326,15 +327,25 @@ struct Rewrite
 //   Note that a rewrite with 'to' = NULL is used for 'data' statements
 {
     Rewrite (Tree *f, Tree *t, Tree *tp):
-        from(f), to(t), hash(), native(NULL), type(tp) {}
+        symbols(NULL), from(f), to(t), hash(), native(NULL), type(tp) {}
+    Rewrite (Symbols * syms, Tree *f, Tree *t, Tree *tp = NULL):
+        symbols(syms), from(f), to(t), hash(), native(NULL), type(tp) {}
     ~Rewrite() {}
 
+    // Obsolete: old compiler stuff
+    Rewrite *           Add (Rewrite *rewrite);
+    Tree *              Do(Action &a);
+    Tree *              Compile(void);
+
+
 public:
+    Symbols_p           symbols; // Obsolete
     Tree_p              from;
     Tree_p              to;
     rewrite_table       hash;
     native_fn           native;
     Tree_p              type;
+    TreeList            parameters; // Obsolete
 
     GARBAGE_COLLECT(Rewrite);
 };
@@ -475,6 +486,7 @@ XL_END
 
 extern "C"
 {
+    void debugrw(XL::Rewrite *rw);
     void debugs(XL::Context *s);
     void debugsc(XL::Context *s);
     void debugst(XL::Context *s);

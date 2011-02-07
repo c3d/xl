@@ -66,7 +66,7 @@ struct Options;
 struct CompilerLLVMTableEntry;
 struct RewriteCandidate;
 typedef Tree * (*program_fn) (void);
-typedef Tree * (*eval_fn) (Tree *);
+typedef Tree * (*eval_fn) (Context *, Tree *);
 typedef Tree * (*adapter_fn) (native_fn callee, Context *ctx,
                               Tree *src, Tree **args);
 typedef std::map<text, llvm::Function *>       functions_map;
@@ -184,8 +184,10 @@ public:
     llvm::PointerType         *evalFnTy;
     llvm::PointerType         *infoPtrTy;
     llvm::PointerType         *contextPtrTy;
+    llvm::PointerType         *symbolsPtrTy;
     llvm::Function            *strcmp_fn;
     llvm::Function            *xl_evaluate;
+    llvm::Function            *xl_evaluate_children;
     llvm::Function            *xl_same_text;
     llvm::Function            *xl_same_shape;
     llvm::Function            *xl_infix_match_check;
@@ -205,6 +207,7 @@ public:
     functions_map              builtins;
     functions_map              functions;
     adapter_map                array_to_args_adapters;
+    closure_map                closures;
     text_constants_map         text_constants;
     llvm_entry_table           llvm_primitives;
     llvm_types                 closure_types;
@@ -224,16 +227,18 @@ public:
 // Index in data structures of fields in Tree types
 #define TAG_INDEX           0
 #define INFO_INDEX          1
-#define INTEGER_VALUE_INDEX 2
-#define REAL_VALUE_INDEX    2
-#define TEXT_VALUE_INDEX    2
-#define NAME_VALUE_INDEX    2
-#define BLOCK_CHILD_INDEX   2
-#define BLOCK_OPENING_INDEX 3
-#define BLOCK_CLOSING_INDEX 4
-#define LEFT_VALUE_INDEX    2
-#define RIGHT_VALUE_INDEX   3
-#define INFIX_NAME_INDEX    4
+#define CODE_INDEX          2
+#define SYMBOLS_INDEX       3
+#define INTEGER_VALUE_INDEX 4
+#define REAL_VALUE_INDEX    4
+#define TEXT_VALUE_INDEX    4
+#define NAME_VALUE_INDEX    4
+#define BLOCK_CHILD_INDEX   4
+#define BLOCK_OPENING_INDEX 5
+#define BLOCK_CLOSING_INDEX 6
+#define LEFT_VALUE_INDEX    4
+#define RIGHT_VALUE_INDEX   5
+#define INFIX_NAME_INDEX    6
 
 XL_END
 

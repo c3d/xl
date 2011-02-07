@@ -36,6 +36,7 @@
 #include "errors.h"
 #include "tree.h"
 #include "context.h"
+#include "symbols.h"
 #include "compiler.h"
 #include "options.h"
 #include "basics.h"
@@ -90,6 +91,7 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
       options(inArgc, inArgv),
       compiler(new Compiler(compilerName.c_str())),
       context(new Context(NULL, NULL)),
+      globals(new Symbols(NULL)),
       renderer(std::cout, styleSheetName, syntax),
       reader(NULL), writer(NULL)
 {

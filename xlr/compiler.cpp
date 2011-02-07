@@ -109,7 +109,8 @@ Compiler::Compiler(kstring moduleName)
       evalTy(NULL), evalFnTy(NULL),
       infoPtrTy(NULL), contextPtrTy(NULL),
       strcmp_fn(NULL),
-      xl_evaluate(NULL), xl_same_text(NULL), xl_same_shape(NULL),
+      xl_evaluate(NULL), xl_evaluate_children(NULL),
+      xl_same_text(NULL), xl_same_shape(NULL),
       xl_infix_match_check(NULL), xl_type_check(NULL), xl_form_error(NULL),
       xl_new_integer(NULL), xl_new_real(NULL), xl_new_character(NULL),
       xl_new_text(NULL), xl_new_ctext(NULL), xl_new_xtext(NULL),
@@ -169,9 +170,11 @@ Compiler::Compiler(kstring moduleName)
 
     // Create the Info and Symbol pointer types
     PATypeHolder structInfoTy = OpaqueType::get(*llvm); // struct Info
-    infoPtrTy = PointerType::get(structInfoTy, 0);         // Info *
+    infoPtrTy = PointerType::get(structInfoTy, 0);      // Info *
     PATypeHolder structCtxTy = OpaqueType::get(*llvm);  // struct Context
-    contextPtrTy = PointerType::get(structCtxTy, 0);       // Context *
+    contextPtrTy = PointerType::get(structCtxTy, 0);    // Context *
+    PATypeHolder structSymTy = OpaqueType::get(*llvm);  // struct Symbols
+    symbolsPtrTy = PointerType::get(structSymTy, 0);    // Symbols *
 
     // Create the Tree and Tree pointer types
     PATypeHolder structTreeTy = OpaqueType::get(*llvm); // struct Tree
@@ -187,6 +190,7 @@ Compiler::Compiler(kstring moduleName)
 
     // Create the eval_fn type
     std::vector<const Type *> evalParms;
+    evalParms.push_back(contextPtrTy);
     evalParms.push_back(treePtrTy);
     evalTy = FunctionType::get(treePtrTy, evalParms, false);
     evalFnTy = PointerType::get(evalTy, 0);
@@ -195,8 +199,10 @@ Compiler::Compiler(kstring moduleName)
     struct LocalTree
     {
         LocalTree (const Tree &o): tag(o.tag), info(o.info) {}
-        ulong    tag;
-        XL::Info*info;          // We check that the size is the same
+        ulong     tag;
+        XL::Info* info;
+        eval_fn   code;
+        Symbols*  symbols;
     };
     // If this assert fails, you changed struct tree and need to modify here
     XL_CASSERT(sizeof(LocalTree) == sizeof(Tree));
@@ -205,6 +211,8 @@ Compiler::Compiler(kstring moduleName)
     std::vector<const Type *> treeElements;
     treeElements.push_back(LLVM_INTTYPE(ulong));           // tag
     treeElements.push_back(infoPtrTy);                     // info
+    treeElements.push_back(evalFnTy);                      // code
+    treeElements.push_back(symbolsPtrTy);                  // symbols
     treeTy = StructType::get(*llvm, treeElements);      // struct Tree {}
     cast<OpaqueType>(structTreeTy.get())->refineAbstractTypeTo(treeTy);
     treeTy = cast<StructType> (structTreeTy.get());
@@ -288,6 +296,8 @@ Compiler::Compiler(kstring moduleName)
                                LLVM_INTTYPE(int), 2, charPtrTy, charPtrTy);
     xl_evaluate = ExternFunction(FN(xl_evaluate),
                                  treePtrTy, 2, contextPtrTy, treePtrTy);
+    xl_evaluate_children = ExternFunction(FN(xl_evaluate_children),
+                                 treePtrTy, 2, contextPtrTy, treePtrTy);
     xl_same_text = ExternFunction(FN(xl_same_text),
                                   booleanTy, 2, treePtrTy, charPtrTy);
     xl_same_shape = ExternFunction(FN(xl_same_shape),
@@ -297,7 +307,7 @@ Compiler::Compiler(kstring moduleName)
     xl_type_check = ExternFunction(FN(xl_type_check), treePtrTy,
                                    3, contextPtrTy, treePtrTy, treePtrTy);
     xl_form_error = ExternFunction(FN(xl_form_error),
-                                   treePtrTy, 1, treePtrTy);
+                                   treePtrTy, 2, contextPtrTy, treePtrTy);
     xl_new_integer = ExternFunction(FN(xl_new_integer),
                                     integerTreePtrTy, 1, integerTy);
     xl_new_real = ExternFunction(FN(xl_new_real),
