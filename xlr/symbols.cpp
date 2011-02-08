@@ -517,6 +517,45 @@ Tree *Symbols::Ooops(text message, Tree *arg1, Tree *arg2, Tree *arg3)
 
 // ============================================================================
 //
+//   Stack depth check
+//
+// ============================================================================
+
+uint StackDepthCheck::stack_depth      = 0;
+uint StackDepthCheck::max_stack_depth  = 0;
+bool StackDepthCheck::in_error_handler = false;
+bool StackDepthCheck::in_error         = false;
+
+
+void StackDepthCheck::StackOverflow(Tree *what)
+// ----------------------------------------------------------------------------
+//   We have a stack overflow, bummer
+// ----------------------------------------------------------------------------
+{
+    if (!max_stack_depth)
+    {
+        max_stack_depth = Options::options->stack_depth;
+        if (stack_depth <= max_stack_depth)
+            return;
+    }
+    if (in_error_handler)
+    {
+        Error("Double stack overflow in $1", what, NULL, NULL).Display();
+        in_error_handler = false;
+    }
+    else
+    {
+        in_error = true;
+        Save<bool> overflow(in_error_handler, true);
+        Save<uint> depth(stack_depth, 1);
+        Ooops("Stack overflow evaluating $1", what);
+    }
+}
+
+
+
+// ============================================================================
+//
 //    Parameter match - Isolate parameters in an rewrite source
 //
 // ============================================================================
@@ -1090,6 +1129,8 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         }
 
         // Insert a run-time type test
+        if (!typeExpr->Symbols())
+            typeExpr->SetSymbols(symbols);
         unit.TypeTest(compiled, typeExpr);
 
         // Enter the compiled expression in the symbol table

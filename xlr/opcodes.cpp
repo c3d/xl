@@ -256,4 +256,27 @@ void xl_enter_block(Context *context, text name, native_fn fn, Tree *rtype,
     xl_set_documentation(from, doc);
 }
 
+
+void xl_enter_type(Symbols *symbols, Name *name,
+                   text castfnname, typecheck_fn tc)
+// ----------------------------------------------------------------------------
+//   Enter a type function into the symbol table
+// ----------------------------------------------------------------------------
+{
+    /* Enter the type name itself */
+    name->code = xl_identity;
+    symbols->EnterName(name->value, name);
+    name->SetSymbols(symbols);
+
+    /* Type as infix : evaluates to type check, e.g. 0 : integer */
+    text nv = name->value;
+    Infix *from = new Infix(":", new Name("V"), new Name(nv));
+    Name *to = new Name(nv);
+    Rewrite *rw = symbols->EnterRewrite(from, to);
+    eval_fn typeTestFn = (eval_fn) tc;
+    to->code = typeTestFn;
+    to->SetSymbols(symbols);
+    xl_enter_builtin(MAIN, castfnname, to,rw->parameters,typeTestFn);
+}
+
 XL_END

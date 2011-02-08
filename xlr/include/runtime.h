@@ -97,6 +97,17 @@ Tree *xl_infix_cast(Context *, Tree *source, Tree *value);
 Tree *xl_prefix_cast(Context *, Tree *source, Tree *value);
 Tree *xl_postfix_cast(Context *, Tree *source, Tree *value);
 Tree *xl_block_cast(Context *, Tree *source, Tree *value);
+#define xl_integer8_cast   xl_integer_cast
+#define xl_integer16_cast  xl_integer_cast
+#define xl_integer32_cast  xl_integer_cast
+#define xl_integer64_cast  xl_integer_cast
+#define xl_unsigned_cast   xl_integer_cast
+#define xl_unsigned8_cast  xl_integer_cast
+#define xl_unsigned16_cast xl_integer_cast
+#define xl_unsigned32_cast xl_integer_cast
+#define xl_unsigned64_cast xl_integer_cast
+#define xl_real32_cast     xl_real_cast
+#define xl_real64_cast     xl_real_cast
 
 Tree *xl_parameter(text name, text type);
 void xl_infix_to_list(Infix *infix, TreeList &list);

@@ -132,5 +132,6 @@
         symbol##_type = n;                                              \
         xl_enter_global(MAIN, n, &symbol##_type);                       \
         context->Define(n, n);                                          \
-        n->code = xl_identity;                  \
+        xl_enter_type(MAIN->globals, n,                                 \
+                      "xl_" #symbol "_cast", xl_##symbol##_cast);       \
     } while(0);

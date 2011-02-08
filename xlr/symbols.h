@@ -57,7 +57,7 @@ typedef symbol_table::iterator     symbol_iter;  // Iterator over sym table
 typedef std::map<Tree_p, Symbols_p>capture_table;// Symbol capture table
 typedef std::map<Tree_p, Tree_p>   value_table;  // Used for value caching
 typedef value_table::iterator      value_iter;   // Used to iterate over values
-typedef Tree * (*typecheck_fn) (Tree *src, Tree *value);
+typedef Tree * (*typecheck_fn) (Context *context, Tree *src, Tree *value);
 
 
 
@@ -269,6 +269,44 @@ public:
     llvm::BasicBlock *  successbb;      // Successful completion of expression
 
     value_map           savedvalue;     // Saved compile unit value map
+};
+
+
+
+// ============================================================================
+// 
+//   Stack depth management
+// 
+// ============================================================================
+
+struct StackDepthCheck
+// ----------------------------------------------------------------------------
+//   Verify that we don't go too deep into the stack
+// ----------------------------------------------------------------------------
+{
+    StackDepthCheck(Tree *what)
+    {
+        stack_depth++;
+        if (stack_depth > max_stack_depth)
+            StackOverflow(what);
+    }
+    ~StackDepthCheck()
+    {
+        stack_depth--;
+        if (stack_depth == 0 && !in_error_handler)
+            in_error = false;
+    }
+    operator bool()
+    {
+        return in_error && !in_error_handler;
+    }
+    void StackOverflow(Tree *what);
+
+protected:
+    static uint         stack_depth;
+    static uint         max_stack_depth;
+    static bool         in_error_handler;
+    static bool         in_error;
 };
 
 

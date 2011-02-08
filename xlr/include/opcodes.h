@@ -28,6 +28,8 @@
 
 XL_BEGIN
 
+typedef Tree * (*typecheck_fn) (Context *context, Tree *src, Tree *value);
+
 longlong        xl_integer_arg(Tree *arg);
 double          xl_real_arg(Tree *arg);
 text            xl_text_arg(Tree *arg);
@@ -48,6 +50,8 @@ void            xl_enter_postfix(Context *context, text name, native_fn fn,
 void            xl_enter_block(Context *context, text name, native_fn fn,
                                Tree *rtype,
                                text open, text type, text close, text doc);
+void            xl_enter_type(Symbols *symbols, Name *tname,
+                              text castfnname, typecheck_fn tc);
 
 #define XL_TREE(v)      (v)
 #define XL_INT(v)       ((integer_t) (v))

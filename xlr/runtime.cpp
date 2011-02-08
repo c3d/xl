@@ -59,7 +59,12 @@ Tree *xl_evaluate(Context *context, Tree *what)
 // This is similar to Context::Run, but we save stack space for recursion
 {
     if (what->code)
+    {
+        StackDepthCheck depthCheck(what);
+        if (depthCheck)
+            return what;
         return what->code(context, what);
+    }
     return context->Evaluate(what);
 }
 
@@ -69,6 +74,16 @@ Tree *xl_evaluate_children(Context *context, Tree *what)
 //   Evaluate the children for a given node
 // ----------------------------------------------------------------------------
 {
+    Tree *result = what;
+    if (Symbols *s = what->Symbols())
+    {
+        EvaluateChildren eval(context, s);
+        result = what->Do(eval);
+        if (!result->Symbols())
+            result->SetSymbols(what->Symbols());
+        return result;
+    }
+
     switch(what->Kind())
     {
     case INTEGER:
@@ -347,6 +362,33 @@ Tree *xl_type_check(Context *context, Tree *value, Tree *type)
 {
     IFTRACE(typecheck)
         std::cerr << "Type check " << value << " against " << type << ':';
+
+    // Check if we are using the old compiler
+    if (Symbols *symbols = type->Symbols())
+    {
+        assert(value && "xl_type_check needs a valid value");
+
+        // Check if this is a closure or something we want to evaluate
+        Tree *original = value;
+        StackDepthCheck typeDepthCheck(value);
+        if (typeDepthCheck)
+            return NULL;
+        
+        Infix *typeExpr = symbols->CompileTypeTest(type);
+        assert(type->code && "xl_type_check needs compiled type check");
+        typecheck_fn typecheck = (typecheck_fn) typeExpr->code;
+        Tree *afterTypeCast = typecheck(context, typeExpr, value);
+        if (afterTypeCast && afterTypeCast != original)
+            xl_set_source(afterTypeCast, value);
+        IFTRACE(typecheck)
+        {
+            if (afterTypeCast)
+                std::cerr << "Success\n";
+            else
+                std::cerr << "Failed (not same type)\n";
+        }
+        return afterTypeCast;
+    }
 
     if (Tree *works = ValueMatchesType(context, value, type, true))
     {
