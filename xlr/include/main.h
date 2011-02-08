@@ -48,11 +48,12 @@ struct SourceFile
 //    A source file and associated data
 // ----------------------------------------------------------------------------
 {
-    SourceFile(text n, Tree *t, Context *c, bool readOnly = false);
+    SourceFile(text n, Tree *t, Context *c, Symbols *s, bool readOnly = false);
     SourceFile();
     text        name;
     Tree_p      tree;
     Context_p   context;
+    Symbols_p   symbols;
     time_t      modified;
     text        hash;
     bool        changed;

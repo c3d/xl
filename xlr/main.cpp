@@ -53,11 +53,11 @@ XL_BEGIN
 
 Main *MAIN = NULL;
 
-SourceFile::SourceFile(text n, Tree *t, Context *c, bool ro)
+SourceFile::SourceFile(text n, Tree *t, Context *c, Symbols *s, bool ro)
 // ----------------------------------------------------------------------------
 //   Construct a source file given a name
 // ----------------------------------------------------------------------------
-    : name(n), tree(t), context(c),
+    : name(n), tree(t), context(c), symbols(s),
       modified(0), changed(false), readOnly(ro)
 {
     struct stat st;
@@ -134,9 +134,6 @@ int Main::ParseOptions()
     text cmd, end = "";
     int  filenum  = 0;
 
-    // Read initial options
-    options.Parse(argc, argv, false);
-
     // Make sure debug function is linked in...
     if (getenv("SHOW_INITIAL_DEBUG"))
         debug((Tree *) NULL);
@@ -150,16 +147,16 @@ int Main::ParseOptions()
     EnterBasics();
 
     // Scan options and build list of files we need to process
-    cmd = options.ParseNext();
-    if (options.doDiff)
-        options.parseOnly = true;
-
-    for (; cmd != end; cmd = options.ParseNext())
+    for (cmd = options.ParseFirst(); cmd != end; cmd = options.ParseNext())
     {
-        if (options.doDiff && ++filenum > 2)
+        if (options.doDiff)
         {
-          std::cerr << "Error: -diff option needs exactly 2 files" << std::endl;
-          return true;
+            options.parseOnly = true;
+            if (++filenum > 2)
+            {
+                std::cerr << "Error: -diff option needs exactly 2 files\n";
+                return true;
+            }
         }
         file_names.push_back(cmd);
     }
@@ -189,7 +186,9 @@ SourceFile *Main::NewFile(text path)
 // ----------------------------------------------------------------------------
 {
     Name_p nil = new Name("nil");
-    files[path] = SourceFile(path,nil, new Context(MAIN->context,NULL), true);
+    Context *context = new Context(MAIN->context, NULL);
+    Symbols *symbols = new Symbols(MAIN->globals);
+    files[path] = SourceFile(path,nil, context, symbols, true);
     return &files[path];
 }
 
@@ -284,7 +283,8 @@ int Main::LoadFile(text file, bool updateContext)
         tree = reader->ReadTree();
         if (!reader->IsValid())
         {
-            std::cerr << "Error in input stream '" << file << "'\n";
+            errors->Log(Error("Serialized stream cannot be read: $1")
+                        .Arg(file));
             hadError = true;
             return hadError;
         }
@@ -319,7 +319,7 @@ int Main::LoadFile(text file, bool updateContext)
     {
         if (options.doDiff)
         {
-            files[file] = SourceFile (file, NULL, NULL);
+            files[file] = SourceFile (file, NULL, NULL, NULL);
             hadError = false;
         }
     }
@@ -328,41 +328,69 @@ int Main::LoadFile(text file, bool updateContext)
     SourceFile &sf = files[file];
 
     // Create new symbol table for the file, or clear it if we had one
-    Context *syms = MAIN->context;
-    Context *savedSyms = syms;
+    Context *ctx = MAIN->context;
+    Context *savedCtx = ctx;
+    Symbols *syms = MAIN->globals;
+    Symbols *savedSyms = syms;
     if (sf.context)
     {
         updateContext = false;
-        syms = sf.context;
-        sf.context->Clear();
+        ctx = sf.context;
+        syms = sf.symbols;
+        ctx->Clear();
+        syms->Clear();
     }
     else
     {
-        syms = new Context(syms, NULL);
+        ctx = new Context(ctx, NULL);
+        syms = new Symbols(syms);
     }
-    MAIN->context = syms;
+    MAIN->context = ctx;
+    MAIN->globals = syms;
 
     // Register the source file we had
-    sf = SourceFile (file, tree, syms);
+    sf = SourceFile (file, tree, ctx, syms);
 
-    if (options.showGV && tree)
+    if (tree)
     {
-        SetNodeIdAction sni;
-        BreadthFirstSearch<SetNodeIdAction> bfs(sni);
-        tree->Do(bfs);
-        GvOutput gvout(std::cout);
-        tree->Do(gvout);
+        // Set symbols and compile if required
+        if (!options.parseOnly)
+        {
+            if (options.optimize_level == 1)
+            {
+                tree->SetSymbols(syms);
+                tree = syms->CompileAll(tree);
+                if (!tree)
+                    hadError = true;
+                else
+                    files[file].tree = tree;
+            }
+
+            // TODO: At -O3, do we need to do anything here?
+        }
+       
+        // Graph of the input tree
+        if (options.showGV)
+        {
+            SetNodeIdAction sni;
+            BreadthFirstSearch<SetNodeIdAction> bfs(sni);
+            tree->Do(bfs);
+            GvOutput gvout(std::cout);
+            tree->Do(gvout);
+        }
     }
 
     if (options.showSource)
         std::cout << tree << "\n";
-
     if (options.verbose)
         debugp(tree);
 
     // Decide if we update symbols for next run
     if (!updateContext)
-        MAIN->context = savedSyms;
+    {
+        MAIN->context = savedCtx;
+        MAIN->globals = savedSyms;
+    }
 
     IFTRACE(symbols)
         std::cerr << "Loaded file " << file
@@ -396,31 +424,20 @@ int Main::Run()
 
         // Evaluate the given tree
         Tree_p result = sf.tree;
-        try
+        Errors errors;
+        if (options.optimize_level == 0)
         {
-            Errors errors;
-            if (options.optimize_level)
-            {
-                program_fn fn = compiler->CompileProgram(sf.context, sf.tree);
-                if (fn)
-                    result = fn();
-            }
-            else
-            {
-                if (getenv("XLOPT"))
-                    compiler->CompileProgram(sf.context, sf.tree);
-                result = sf.context->Evaluate(sf.tree);
-            }
+            // Slow interpreted evaluation
+            result = sf.context->Evaluate(sf.tree);
         }
-        catch (XL::Error &e)
+        else if (options.optimize_level == 1)
         {
-            e.Display();
-            result = NULL;
+            result = sf.symbols->Run(MAIN->context, sf.tree);
         }
-        catch (...)
+        else if (options.optimize_level == 3)
         {
-            std::cerr << "Got unknown exception.\n";
-            result = NULL;
+            if (program_fn code = compiler->CompileProgram(sf.context, sf.tree))
+                result = code();
         }
 
         if (!result)

@@ -105,7 +105,7 @@ struct Symbols
     Tree *               CompileCall(text callee, TreeList &args,
                                      bool nullIfBad=false, bool cached = true);
     Infix *              CompileTypeTest(Tree *type);
-    Tree *               Run(Tree *t);
+    Tree *               Run(Context *, Tree *t);
 
     // Error handling
     Tree *               Ooops (text message,
@@ -420,7 +420,8 @@ struct EvaluateChildren : Action
 //   Build a clone of a tree, evaluating its children
 // ----------------------------------------------------------------------------
 {
-    EvaluateChildren(Symbols *s): symbols(s)    { assert(s); }
+    EvaluateChildren(Context *c, Symbols *s): context(c), symbols(s)
+    { assert(s); assert(c); }
     ~EvaluateChildren()                         {}
 
     virtual Tree *Do(Tree *what)                { return what; }
@@ -435,7 +436,8 @@ struct EvaluateChildren : Action
 
     Tree *        Try(Tree *what);
 public:
-    Symbols *   symbols;
+    Context_p   context;
+    Symbols_p   symbols;
 };
 
 extern "C"

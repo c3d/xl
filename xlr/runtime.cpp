@@ -1010,9 +1010,11 @@ Tree *xl_load(Context *context, text name)
     if (!tree)
         return Ooops("Unable to load file $1", new Text(path));
 
-    Context *imported = new Context(context, NULL);
-    MAIN->files[path] = SourceFile(path, tree, imported);
-    context->Import(imported);
+    Context *importCtx = new Context(context, NULL);
+    Symbols *importSyms = new Symbols(MAIN->globals);
+    MAIN->files[path] = SourceFile(path, tree, importCtx, importSyms);
+    context->Import(importCtx);
+    MAIN->globals->Import(importSyms);
 
     return tree;
 }
@@ -1151,9 +1153,11 @@ Tree *xl_load_data(Context *context,
     // Store that we use the file
     struct stat st;
     stat(path.c_str(), &st);
-    Context *imported = new Context(context, NULL);
-    MAIN->files[path] = SourceFile(path, tree, imported);
-    context->Import(imported);
+    Context *importCtx = new Context(context, NULL);
+    Symbols *importSyms = new Symbols(MAIN->globals);
+    MAIN->files[path] = SourceFile(path, tree, importCtx, importSyms);
+    context->Import(importCtx);
+    MAIN->globals->Import(importSyms);
 
     return tree;
 }

@@ -70,8 +70,6 @@ XL_BEGIN
 //
 // ============================================================================
 
-Symbols_p Symbols::symbols;
-
 Tree *Symbols::Named(text name, bool deep)
 // ----------------------------------------------------------------------------
 //   Find the name in the current context
@@ -249,9 +247,6 @@ Tree *Symbols::Compile(Tree *source, OCompiledUnit &unit,
 //    Return an optimized version of the source tree, ready to run
 // ----------------------------------------------------------------------------
 {
-    // Make sure that errors are shown in the proper context
-    Save<Symbols_p> saveSyms(symbols, this);
-
     // Record rewrites and data declarations in the current context
     DeclarationAction declare(this);
     Tree *result = source->Do(declare);
@@ -404,7 +399,7 @@ Tree *Symbols::CompileCall(text callee, TreeList &arglist,
 
 Infix *Symbols::CompileTypeTest(Tree *type)
 // ----------------------------------------------------------------------------
-//   Compile a top-level infix, reusing code if possible
+//   Compile a type test
 // ----------------------------------------------------------------------------
 {
     // Check if we already have a call compiled for that type
@@ -427,7 +422,7 @@ Infix *Symbols::CompileTypeTest(Tree *type)
         return call;
 
     // Create local symbols
-    Symbols *locals = new Symbols (Symbols::symbols);
+    Symbols *locals = new Symbols (this);
 
     // Record rewrites and data declarations in the current context
     DeclarationAction declare(locals);
@@ -449,7 +444,7 @@ Infix *Symbols::CompileTypeTest(Tree *type)
 }
 
 
-Tree *Symbols::Run(Tree *code)
+Tree *Symbols::Run(Context *context, Tree *code)
 // ----------------------------------------------------------------------------
 //   Execute a tree by applying the rewrites in the current context
 // ----------------------------------------------------------------------------
@@ -478,7 +473,7 @@ Tree *Symbols::Run(Tree *code)
             if (!result->code || errors.Count())
                 return Ooops("Unable to compile $1", result);
         }
-        result = result->code(NULL, code);
+        result = result->code(context, code);
     }
     IFTRACE(eval)
         std::cerr << "RSLT" << index-- << ": " << result << '\n';
@@ -768,7 +763,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     {
         Tree *name = (*c).first;
         Symbols *where = (*c).second;
-        if (where == MAIN->globals || where == Symbols::symbols)
+        if (where == MAIN->globals)
         {
             // This is a global, we'll find it running the target.
         }
@@ -1375,7 +1370,7 @@ Tree *EvaluateChildren::Try(Tree *what)
         }
         compiled = what;
     }
-    return symbols->Run(what);
+    return symbols->Run(context, what);
 }
 
 
