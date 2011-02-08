@@ -27,6 +27,9 @@
 #include <ctype.h>
 #include <string>
 #include <iostream>
+#include <sstream>
+#include <algorithm>
+#include <iterator>
 #include "options.h"
 #include "errors.h"
 #include "renderer.h"
@@ -48,17 +51,36 @@ Options::Options(int argc, char **argv):
 #define OPTVAR(name, type, value)       name(value),
 #define OPTION(name, descr, code)
 #include "options.tbl"
-    arg(0), argc(argc), argv(argv)
-{}
+    arg(1), args()
+{
+    // Store name of the program
+    args.push_back(argv[0]);
+
+    // Check if some options are given from environment
+    if (kstring envopt = getenv("XLOPT"))
+    {
+        // Split space-separated input options and prepend them to args[]
+        text envtext = envopt;
+        std::istringstream input(envtext);
+        std::copy(std::istream_iterator<text> (input),
+                  std::istream_iterator<text> (),
+                  std::back_inserter< std::vector<text> > (args));
+    }
+
+    // Add options from the command-line
+    for (int a = 1; a < argc; a++)
+        args.push_back(argv[a]);
+
+}
 
 
-static void Usage(char **argv)
+static void Usage(kstring appName)
 // ----------------------------------------------------------------------------
 //    Display usage information when an invalid name is given
 // ----------------------------------------------------------------------------
 {
     std::cerr << "Usage:\n";
-    std::cerr << argv[0] << " <options> <source_file>\n";
+    std::cerr << appName << " <options> <source_file>\n";
 
 #define OPTVAR(name, type, value)
 #define OPTION(name, descr, code)                                       \
@@ -108,10 +130,10 @@ static kstring OptionString(kstring &command_line, Options &opt)
         return result;
     }
     opt.arg += 1;
-    if (opt.arg  < opt.argc)
+    if (opt.arg  < opt.args.size())
     {
         command_line = "";
-        return opt.argv[opt.arg];
+        return opt.args[opt.arg].c_str();
     }
     Ooops("Option #$1 does not exist", Error::COMMAND_LINE)
         .Arg(opt.arg);
@@ -138,8 +160,8 @@ static ulong OptionInteger(kstring &command_line, Options &opt,
     else
     {
         opt.arg += 1;
-        if (opt.arg  < opt.argc && isdigit(opt.argv[opt.arg][0]))
-            result = strtol(old = opt.argv[opt.arg],
+        if (opt.arg  < opt.args.size() && isdigit(opt.args[opt.arg][0]))
+            result = strtol(old = opt.args[opt.arg].c_str(),
                             (char **) &command_line, 10);
         else
             Ooops("Option $1 is not an integer value", Error::COMMAND_LINE)
@@ -161,19 +183,13 @@ static ulong OptionInteger(kstring &command_line, Options &opt,
 }
 
 
-text Options::Parse(int argc, char **argv, bool consumeFile)
+text Options::ParseFirst(bool consumeFile)
 // ----------------------------------------------------------------------------
 //   Start parsing options, return first non-option
 // ----------------------------------------------------------------------------
 {
-    this->arg = 1;
-    this->argc = argc;
-    this->argv = argv;
-    if (cstring envopt = getenv("OPTIONS"))
-    {
-        this->argv[0] = envopt;
-        this->arg = 0;
-    }
+    // Parse next option
+    arg = 1;
     return ParseNext(consumeFile);
 }
 
@@ -184,11 +200,11 @@ text Options::ParseNext(bool consumeFiles)
 // ----------------------------------------------------------------------------
 // Note: What we read here should be compatible with GCC parsing
 {
-    while (arg < argc)
+    while (arg < args.size())
     {
-        if(argv[arg] && argv[arg][0] == '-' && argv[arg][1])
+        if(args[arg].length() > 1 && args[arg][0] == '-')
         {
-            kstring argval = argv[arg] + 1;
+            kstring argval = args[arg].c_str() + 1;
 
 #define OPTVAR(name, type, value)
 #define OPTION(name, descr, code)                               \
@@ -216,15 +232,18 @@ text Options::ParseNext(bool consumeFiles)
                 // Default: Output usage
                 Ooops("Unknown option $1 ignored", Error::COMMAND_LINE)
                     .Arg(argval);
-                Usage(argv);
+                Usage(args[0].c_str());
             }
             arg++;
         }
         else
         {
-            text fileName = text(argv[arg]);
+            text fileName = args[arg];
             if (consumeFiles)
+            {
                 arg++;
+                files.push_back(fileName);
+            }
             return fileName;
         }
     }

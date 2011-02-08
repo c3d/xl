@@ -24,6 +24,7 @@
 // ****************************************************************************
 
 #include <string>
+#include <vector>
 #include "base.h"
 
 XL_BEGIN
@@ -38,8 +39,8 @@ class Options
 {
   public:
     Options(int argc, char **argv);
-    text                Parse(int argc, char **argv, bool consumeFile);
-    text                ParseNext(bool consumeFile = true);
+    text ParseFirst(bool consumeFile = true);
+    text ParseNext(bool consumeFile = true);
 
   public:
     // Read options from the options.tbl file
@@ -49,9 +50,9 @@ class Options
 #undef OPTVAR
 #undef OPTION
 
-    int                 arg;
-    int                 argc;
-    char **             argv;
+    uint                arg;
+    std::vector<text>   args;
+    std::vector<text>   files;
 
     static Options *    options;
 };
