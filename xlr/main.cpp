@@ -270,17 +270,9 @@ int Main::LoadFile(text file, bool updateContext)
 {
     Tree_p tree = NULL;
     bool hadError = false;
-    FILE *f;
 
     IFTRACE(fileload)
         std::cout << "Loading: " << file << "\n";
-
-    if ((f = fopen(file.c_str(), "r")) == NULL)
-    {
-        perror(std::string(argv[0]).append(": ").append(file).c_str());
-        return true;
-    }
-    fclose(f);
 
     // Parse program - Local parser to delete scanner and close file
     // This ensures positions are updated even if there is a 'load'
