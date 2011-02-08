@@ -2976,8 +2976,8 @@ BasicBlock *OCompiledUnit::TypeTest(Tree *value, Tree *type)
 
     // Where we go if the tests fail
     BasicBlock *notGood = NeedTest();
-    Value *afterCast = code->CreateCall2(compiler->xl_type_check,
-                                         valueVal, typeVal);
+    Value *afterCast = code->CreateCall3(compiler->xl_type_check,
+                                         contextPtr, valueVal, typeVal);
     Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
     Value *isGood = code->CreateICmpNE(afterCast, null, "isGoodType");
     BasicBlock *isGoodBB = BasicBlock::Create(*llvm, "isGood", function);
