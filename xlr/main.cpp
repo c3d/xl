@@ -425,19 +425,23 @@ int Main::Run()
         // Evaluate the given tree
         Tree_p result = sf.tree;
         Errors errors;
-        if (options.optimize_level == 0)
+        if (Tree *tree = result)
         {
-            // Slow interpreted evaluation
-            result = sf.context->Evaluate(sf.tree);
-        }
-        else if (options.optimize_level == 1)
-        {
-            result = sf.symbols->Run(MAIN->context, sf.tree);
-        }
-        else if (options.optimize_level == 3)
-        {
-            if (program_fn code = compiler->CompileProgram(sf.context, sf.tree))
-                result = code();
+            Context *context = sf.context;
+            if (options.optimize_level == 0)
+            {
+                // Slow interpreted evaluation
+                result = context->Evaluate(tree);
+            }
+            else if (options.optimize_level == 1)
+            {
+                result = sf.symbols->Run(context, tree);
+            }
+            else if (options.optimize_level == 3)
+            {
+                if (program_fn code = compiler->CompileProgram(context, tree))
+                    result = code();
+            }
         }
 
         if (!result)
