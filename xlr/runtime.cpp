@@ -803,12 +803,13 @@ Real *xl_springify(Real &value, Real &target, Real &time,
 //
 // ============================================================================
 
-void xl_enter_builtin(Main *main, text name, Tree *to, TreeList parms)
+void xl_enter_builtin(Main *main, text name, Tree *to, TreeList parms,
+                      eval_fn code)
 // ----------------------------------------------------------------------------
 //   Add a new builtin
 // ----------------------------------------------------------------------------
 {
-    main->compiler->EnterBuiltin(name, to, parms, NULL);
+    main->compiler->EnterBuiltin(name, to, parms, code);
 }
 
 

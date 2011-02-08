@@ -65,12 +65,12 @@
         doc += " see \"" + seealso + "\"\n";                            \
     doc += "|*/";
 
-#define INFIX(name, rtype, t1, symbol, t2, _code, docinfo)      \
-    do                                                          \
-    {                                                           \
-        DOC(name, #t1 " " symbol " " #t2, docinfo);             \
-        xl_enter_infix(context, (native_fn) xl_##name,          \
-                       rtype##_type, #t1, symbol, #t2, doc);    \
+#define INFIX(name, rtype, t1, symbol, t2, _code, docinfo)              \
+    do                                                                  \
+    {                                                                   \
+        DOC(name, #t1 " " symbol " " #t2, docinfo);                     \
+        xl_enter_infix(context, XL_SCOPE #name, (native_fn) xl_##name,  \
+                       rtype##_type, #t1, symbol, #t2, doc);            \
     } while(0);
 
 #define PARM(symbol, type, pdoc)                                        \
@@ -86,13 +86,13 @@
         docparms += " <<" pdoc ">>\n";                                  \
     } while (0);
 
-#define PREFIX(name, rtype, symbol, parms, _code, docinfo)      \
-    do                                                          \
-    {                                                           \
-        TreeList parameters;                                    \
-        DOC(name, #symbol, docinfo ; parms);                    \
-        xl_enter_prefix(context, (native_fn) xl_##name,         \
-                        rtype##_type, parameters, symbol, doc); \
+#define PREFIX(name, rtype, symbol, parms, _code, docinfo)              \
+    do                                                                  \
+    {                                                                   \
+        TreeList parameters;                                            \
+        DOC(name, #symbol, docinfo ; parms);                            \
+        xl_enter_prefix(context, XL_SCOPE #name, (native_fn) xl_##name, \
+                        rtype##_type, parameters, symbol, doc);         \
     } while(0);
 
 
@@ -101,7 +101,7 @@
     {                                                                   \
         TreeList  parameters;                                           \
         DOC(name, #symbol, docinfo ; parms ; docsyntax += " " #symbol); \
-        xl_enter_postfix(context, (native_fn) xl_##name,                \
+        xl_enter_postfix(context, XL_SCOPE #name,(native_fn) xl_##name, \
                          rtype##_type, parameters, symbol, doc);        \
     } while(0);
 
@@ -109,7 +109,7 @@
     do                                                                  \
     {                                                                   \
         DOC(name, #open " " #type " " #close, docinfo);                 \
-        xl_enter_block(context, (native_fn) xl_##name,                  \
+        xl_enter_block(context, XL_SCOPE #name, (native_fn) xl_##name,  \
                        rtype##_type, open, #type, close, doc);    \
     } while (0);
 
@@ -120,6 +120,7 @@
         xl_##symbol = n;                        \
         xl_enter_global(MAIN, n, &xl_##symbol); \
         context->Define(n, n);                  \
+        n->code = xl_identity;                  \
     } while (0);
 
 
@@ -131,4 +132,5 @@
         symbol##_type = n;                                              \
         xl_enter_global(MAIN, n, &symbol##_type);                       \
         context->Define(n, n);                                          \
+        n->code = xl_identity;                  \
     } while(0);

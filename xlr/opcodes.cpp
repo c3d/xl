@@ -26,6 +26,8 @@
 #include "parser.h"
 #include "errors.h"
 #include "types.h"
+#include "symbols.h"
+#include "runtime.h"
 #include <typeinfo>
 
 XL_BEGIN
@@ -134,7 +136,7 @@ void xl_set_documentation(Tree *node, text doc)
 }
 
 
-void xl_enter_infix(Context *context, native_fn fn, Tree *rtype,
+void xl_enter_infix(Context *context, text name, native_fn fn, Tree *rtype,
                     text t1, text symbol, text t2, text doc)
 // ----------------------------------------------------------------------------
 //   Enter an infix into the context (called from .tbl files)
@@ -149,11 +151,17 @@ void xl_enter_infix(Context *context, native_fn fn, Tree *rtype,
     rw->native = fn;
     rw->type  = rtype;
 
+    Symbols *s = MAIN->globals;
+    Rewrite *rw2 = s->EnterRewrite(from, to);
+    to->code = fn;
+    to->SetSymbols(s);
+    xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
+
     xl_set_documentation(from, doc);
 }
 
 
-void xl_enter_prefix(Context *context, native_fn fn, Tree *rtype,
+void xl_enter_prefix(Context *context, text name, native_fn fn, Tree *rtype,
                      TreeList &parameters, text symbol, text doc)
 // ----------------------------------------------------------------------------
 //   Enter a prefix into the context (called from .tbl files)
@@ -170,6 +178,12 @@ void xl_enter_prefix(Context *context, native_fn fn, Tree *rtype,
         rw->native = fn;
         rw->type = rtype;
 
+        Symbols *s = MAIN->globals;
+        Rewrite *rw2 = s->EnterRewrite(from, to);
+        to->code = fn;
+        to->SetSymbols(s);
+        xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
+
         xl_set_documentation(from, doc);
     }
     else
@@ -180,12 +194,19 @@ void xl_enter_prefix(Context *context, native_fn fn, Tree *rtype,
         rw->native = fn;
         rw->type = rtype;
 
+        Symbols *s = MAIN->globals;
+        s->EnterName(symbol, n);
+        n->code = fn;
+        n->SetSymbols(s);
+        TreeList noparms;
+        xl_enter_builtin(MAIN, name, n, noparms, fn);
+
         xl_set_documentation(n, doc);
     }
 }
 
 
-void xl_enter_postfix(Context *context, native_fn fn, Tree *rtype,
+void xl_enter_postfix(Context *context, text name, native_fn fn, Tree *rtype,
                       TreeList &parameters, text symbol, text doc)
 // ----------------------------------------------------------------------------
 //   Enter a postfdix into the context (called from .tbl files)
@@ -199,11 +220,17 @@ void xl_enter_postfix(Context *context, native_fn fn, Tree *rtype,
     rw->native = (native_fn) fn;
     rw->type = rtype;
     
+    Symbols *s = MAIN->globals;
+    Rewrite *rw2 = s->EnterRewrite(from, to);
+    to->code = fn;
+    to->SetSymbols(s);
+    xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
+
     xl_set_documentation(from, doc);
 }
 
 
-void xl_enter_block(Context *context, native_fn fn, Tree *rtype,
+void xl_enter_block(Context *context, text name, native_fn fn, Tree *rtype,
                     text open, text type, text close,
                     text doc)
 // ----------------------------------------------------------------------------
@@ -220,8 +247,13 @@ void xl_enter_block(Context *context, native_fn fn, Tree *rtype,
     rw->native = (native_fn) fn;
     rw->type = rtype;
 
+    Symbols *s = MAIN->globals;
+    Rewrite *rw2 = s->EnterRewrite(from, to);
+    to->code = fn;
+    to->SetSymbols(s);
+    xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
+
     xl_set_documentation(from, doc);
 }
 
 XL_END
-

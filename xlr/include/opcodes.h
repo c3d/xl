@@ -36,14 +36,17 @@ bool            xl_boolean_arg(Tree *arg);
 Tree *          xl_parameter(text symbol, text type);
 Tree *          xl_parameters_tree(TreeList parameters);
 void            xl_set_documentation(Tree *node, text doc);
-void            xl_enter_infix(Context *context, native_fn fn, Tree *rtype,
-                               text t1, text symbol, text t2,
+void            xl_enter_infix(Context *context, text name, native_fn fn,
+                               Tree *rtype, text t1, text symbol, text t2,
                                text doc);
-void            xl_enter_prefix(Context *context, native_fn fn, Tree *rtype,
-                                TreeList &parameters, text symbol, text doc);
-void            xl_enter_postfix(Context *context, native_fn fn, Tree *rtype,
-                                 TreeList &parameters, text symbol, text doc);
-void            xl_enter_block(Context *context, native_fn fn, Tree *rtype,
+void            xl_enter_prefix(Context *context, text name, native_fn fn,
+                                Tree *rtype, TreeList &parameters,
+                                text symbol, text doc);
+void            xl_enter_postfix(Context *context, text name, native_fn fn,
+                                 Tree *rtype, TreeList &parameters,
+                                 text symbol, text doc);
+void            xl_enter_block(Context *context, text name, native_fn fn,
+                               Tree *rtype,
                                text open, text type, text close, text doc);
 
 #define XL_TREE(v)      (v)

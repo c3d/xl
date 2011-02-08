@@ -493,7 +493,8 @@ Function *Compiler::EnterBuiltin(text name,
     {
         // Create the LLVM function
         std::vector<const Type *> parmTypes;
-        parmTypes.push_back(treePtrTy); // First arg is self
+        parmTypes.push_back(contextPtrTy); // First arg is context pointer
+        parmTypes.push_back(treePtrTy);    // Second arg is self
         for (TreeList::iterator p = parms.begin(); p != parms.end(); p++)
             parmTypes.push_back(treePtrTy);
         FunctionType *fnTy = FunctionType::get(treePtrTy, parmTypes, false);

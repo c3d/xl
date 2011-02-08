@@ -2447,8 +2447,11 @@ llvm::Value *OCompiledUnit::Invoke(Tree *subexpr, Tree *callee, TreeList args)
 
     Function *toCall = compiler->TreeFunction(callee); assert(toCall);
 
-    // Add the 'self' argument
+    // Add the context argument
     std::vector<Value *> argV;
+    argV.push_back(contextPtr);
+
+    // Add the 'self' argument
     Value *defaultVal = ConstantTree(subexpr);
     argV.push_back(defaultVal);
 
