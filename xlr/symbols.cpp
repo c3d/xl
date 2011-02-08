@@ -2722,6 +2722,7 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
     std::vector<Value *> argV;
     std::vector<const Type *> signature;
     argV.push_back(contextPtr);   // Pass context pointer
+    signature.push_back(compiler->contextPtrTy);
     argV.push_back(callTree);     // Self is the original expression
     signature.push_back(treePtrTy);
     for (uint i = 0; i < ntrees; i++)
