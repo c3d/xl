@@ -102,7 +102,6 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
     MAIN = this;
     options.builtins = builtinsName;
     ParseOptions();
-    compiler->Setup(options);
 }
 
 
@@ -161,6 +160,15 @@ int Main::ParseOptions()
         file_names.push_back(cmd);
     }
     return false;
+}
+
+
+void Main::SetupCompiler()
+// ----------------------------------------------------------------------------
+//    Setup the compiler once all possible options have been set
+// ----------------------------------------------------------------------------
+{
+    compiler->Setup(options);
 }
 
 
@@ -499,6 +507,7 @@ int main(int argc, char **argv)
     using namespace XL;
     source_names noSpecificContext;
     Main main(argc, argv);
+    main.SetupCompiler();
     int rc = MAIN->LoadContextFiles(noSpecificContext);
     if (rc)
     {
