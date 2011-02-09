@@ -524,7 +524,7 @@ Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
 // ----------------------------------------------------------------------------
 {
     // Immediately return anything we could evaluate at no cost
-    if (!expr || expr->IsConstant() || !expr->code || !ntrees)
+    if (!ntrees || !expr || expr->IsConstant() || !expr->code)
         return expr;
 
     IFTRACE(closure)
