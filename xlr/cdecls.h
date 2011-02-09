@@ -55,4 +55,4 @@ public:
 
 XL_END
 
-#endif COMPILER_CDECLS_H
+#endif // COMPILER_CDECLS_H
