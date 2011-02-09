@@ -733,6 +733,23 @@ PREFIX(LoadData,  tree, "load_data",
        DESCRIPTION("")
        RETURNS(tree, ""))
 
+INFIX(Apply, tree, tree, "with", tree,
+      return xl_apply(context, &l, &r),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(tree, ""))
+INFIX(Range, tree, integer, "..", integer, return xl_range(l, r),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(tree, ""))
+INFIX(Index, tree, tree, "at", integer, return xl_nth(context, &l, r),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(tree, ""))
+
 PREFIX(Springify, real, "springify",
        PARM(v, real, "") PARM(tgt, real, "") PARM(t, real, "")
        PARM(d, real, "") PARM(k, real, "")

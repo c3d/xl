@@ -185,6 +185,142 @@ public:
 
 
 // ============================================================================
+// 
+//    Actions used for functional applications (temporary / obsolete)
+// 
+// ============================================================================
+
+XL_END
+#include "action.h"
+XL_BEGIN
+
+Tree *xl_apply(Context *, Tree *code, Tree *data);
+Tree *xl_range(longlong l, longlong h);
+Tree *xl_nth(Context *, Tree *data, longlong index);
+typedef GCPtr<Context> Context_p;
+
+
+struct MapAction : Action
+// ----------------------------------------------------------------------------
+//   Map a given operation onto each element in a data set
+// ----------------------------------------------------------------------------
+{
+    typedef Tree * (*map_fn) (Tree *self, Tree *arg);
+
+public:
+    MapAction(Context *context, eval_fn function, std::set<text> &sep)
+        : context(context), function((map_fn) function), separators(sep) {}
+
+    virtual Tree *Do(Tree *what);
+
+    virtual Tree *DoInfix(Infix *what);
+    virtual Tree *DoPrefix(Prefix *what);
+    virtual Tree *DoPostfix(Postfix *what);
+    virtual Tree *DoBlock(Block *what);
+
+public:
+    Context_p           context;
+    map_fn              function;
+    std::set<text>      separators;
+};
+
+
+struct ReduceAction : Action
+// ----------------------------------------------------------------------------
+//   Reduce a given operation by combining successive elements
+// ----------------------------------------------------------------------------
+{
+    typedef Tree * (*reduce_fn) (Tree *self, Tree *first, Tree *second);
+
+public:
+    ReduceAction(eval_fn function, std::set<text> &sep)
+        : function((reduce_fn) function), separators(sep) {}
+
+    virtual Tree *Do(Tree *what);
+
+    virtual Tree *DoInfix(Infix *what);
+    virtual Tree *DoPrefix(Prefix *what);
+    virtual Tree *DoPostfix(Postfix *what);
+    virtual Tree *DoBlock(Block *what);
+
+public:
+    reduce_fn           function;
+    std::set<text>      separators;
+};
+
+
+struct FilterAction : Action
+// ----------------------------------------------------------------------------
+//   Filter a given operation onto each element in a data set
+// ----------------------------------------------------------------------------
+{
+    typedef Tree * (*filter_fn) (Tree *self, Tree *arg);
+
+public:
+    FilterAction(eval_fn function, std::set<text> &sep)
+        : function((filter_fn) function), separators(sep) {}
+
+    virtual Tree *Do(Tree *what);
+
+    virtual Tree *DoInfix(Infix *what);
+    virtual Tree *DoPrefix(Prefix *what);
+    virtual Tree *DoPostfix(Postfix *what);
+    virtual Tree *DoBlock(Block *what);
+
+public:
+    filter_fn           function;
+    std::set<text>      separators;
+};
+
+
+struct FunctionInfo : Info
+// ----------------------------------------------------------------------------
+//   Hold a single-argument function for a given tree
+// ----------------------------------------------------------------------------
+//   REVISIT: According to Wikipedia, really a Moses Schönfinkel function
+{
+    FunctionInfo(): function(NULL), context(NULL), symbols(NULL) {}
+    
+    virtual Tree * Apply(Tree *what) { return what; }
+
+public:
+    eval_fn        function;
+    Context_p      context;
+    Symbols_p      symbols;
+    Tree_p         compiled;
+    std::set<text> separators;
+};
+
+
+struct MapFunctionInfo : FunctionInfo
+// ----------------------------------------------------------------------------
+//   Record the code for a map operation
+// ----------------------------------------------------------------------------
+{
+    virtual Tree * Apply(Tree *what);
+};
+
+
+struct ReduceFunctionInfo : FunctionInfo
+// ----------------------------------------------------------------------------
+//   Record the code for a reduce operation
+// ----------------------------------------------------------------------------
+{
+    virtual Tree * Apply(Tree *what);
+};
+
+
+struct FilterFunctionInfo : FunctionInfo
+// ----------------------------------------------------------------------------
+//   Record the code for a filter operation
+// ----------------------------------------------------------------------------
+{
+    virtual Tree * Apply(Tree *what);
+};
+
+
+
+// ============================================================================
 //
 //    Basic text I/O (temporary)
 //

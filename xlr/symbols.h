@@ -122,8 +122,6 @@ public:
     Tree_p              error_handler;
     bool                has_rewrites_for_constants;
 
-    static Symbols_p    symbols;
-
     GARBAGE_COLLECT(Symbols);
 };
 
