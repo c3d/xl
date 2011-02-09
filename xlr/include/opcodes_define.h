@@ -120,7 +120,7 @@
         xl_##symbol = n;                        \
         xl_enter_global(MAIN, n, &xl_##symbol); \
         context->Define(n, n);                  \
-        n->code = xl_identity;                  \
+        xl_enter_name(MAIN->globals, n);        \
     } while (0);
 
 

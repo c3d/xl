@@ -50,6 +50,7 @@ void            xl_enter_postfix(Context *context, text name, native_fn fn,
 void            xl_enter_block(Context *context, text name, native_fn fn,
                                Tree *rtype,
                                text open, text type, text close, text doc);
+void            xl_enter_name(Symbols *symbols, Name *name);
 void            xl_enter_type(Symbols *symbols, Name *tname,
                               text castfnname, typecheck_fn tc);
 

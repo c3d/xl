@@ -257,6 +257,17 @@ void xl_enter_block(Context *context, text name, native_fn fn, Tree *rtype,
 }
 
 
+void xl_enter_name(Symbols *symbols, Name *name)
+// ----------------------------------------------------------------------------
+//   Enter a global name in the symbol table
+// ----------------------------------------------------------------------------
+{
+    name->code = xl_identity;
+    name->SetSymbols(symbols);
+    symbols->EnterName(name->value, name);
+}    
+
+
 void xl_enter_type(Symbols *symbols, Name *name,
                    text castfnname, typecheck_fn tc)
 // ----------------------------------------------------------------------------
