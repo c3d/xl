@@ -26,6 +26,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <sstream>
 #include "symbols.h"
 #include "save.h"
 #include "tree.h"
@@ -36,7 +37,7 @@
 #include "compiler.h"
 #include "runtime.h"
 #include "main.h"
-#include <sstream>
+#include "types.h"
 
 #include <llvm/Analysis/Verifier.h>
 #include <llvm/CallingConv.h>
@@ -1101,6 +1102,15 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                   what->left, existing);
             return NULL;
         }
+
+        // Check for types that don't require a type check
+        if (Name *declTypeName = what->right->AsName())
+            if (Tree *namedType = symbols->Named(declTypeName->value))
+                if (namedType == tree_type ||
+                    namedType == code_type ||
+                    namedType == lazy_type ||
+                    namedType == source_type)
+                    return DoName(varName);
 
         // Evaluate type expression, e.g. 'integer' in example above
         Tree *typeExpr = Compile(what->right);
