@@ -381,6 +381,10 @@ void Compiler::Setup(Options &options)
 {
     uint optimize_level = options.optimize_level;
 
+    // If we use the old compiler, we need lazy compilation, see bug #718
+    if (optimize_level == 1)
+        runtime->DisableLazyCompilation(false);
+
     createStandardFunctionPasses(optimizer, optimize_level);
     createStandardModulePasses(moduleOptimizer, optimize_level,
                                true,    /* Optimize size */
