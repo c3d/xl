@@ -23,6 +23,7 @@
 // ****************************************************************************
 
 #include "context.h"
+#include "symbols.h"
 #include "tree.h"
 #include "errors.h"
 #include "options.h"
@@ -478,6 +479,8 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
     // Short-circuit if tree was compiled
     if (what->code)
         return what->code(this, what);
+    if (Symbols *symbols = what->Symbols())
+        return symbols->Run(this, what);
 
     // Process declarations and evaluate the rest
     Tree_p   result = what;
