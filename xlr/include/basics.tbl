@@ -36,46 +36,42 @@ TYPE(real64);
 
 // Basic units
 INFIX(DefineRewrite, tree, source, "->", source,
-      context->stack->Define(&l, &r);
-      return self,
+      return xl_define(context, self, &l, &r),
       GROUP(basics)
       SYNOPSIS("Declare a tree rewrite"))
 INFIX(SequenceNewLine, tree, source, "\n", source,
-      context->stack->Evaluate(&l);
-      return context->stack->Evaluate(&r),
+      return xl_evaluate_sequence(context, &l, &r),
       GROUP(basics)
       SYNOPSIS("Sequence of statements separated by line separators"))
 INFIX(SequenceSemicolon, tree, source, ";", source,
-      context->stack->Evaluate(&l);
-      return context->stack->Evaluate(&r),
+      return xl_evaluate_sequence(context, &l, &r),
       GROUP(basics)
       SYNOPSIS("Sequence of statements separated by semicolons"))
 PREFIX(DataDefinition, tree, "data",
        PARM(form, source, "Source code for the data form"),
-       context->stack->DefineData(&form);
-       return self,
+       return xl_define(context, self, &form, NULL),
        GROUP(basics)
        SYNOPSIS("Declare a data form"))
 BLOCK(Parentheses, tree, "(", source, ")",
-      return context->stack->EvaluateBlock(&child),
+      return xl_evaluate_block(context, &child),
       GROUP(basics:groups)
       SYNOPSIS("Grouping of expressions with parentheses"))
 BLOCK(CurlyBraces, tree, "{", source, "}",
-      return context->stack->EvaluateBlock(&child),
+      return xl_evaluate_block(context, &child),
       GROUP(basics:groups)
       SYNOPSIS("Groupoing of statements with curly braces"))
 BLOCK(IntentationBlock, tree, Block::indent, source, Block::unindent,
-      return context->stack->EvaluateBlock(&child),
+      return xl_evaluate_block(context, &child),
       GROUP(basics:groups)
       SYNOPSIS("Grouping of statements using indentation"))
 PREFIX(CodeClosure, tree, "<code>",
        PARM(input, source, "Source code"),
-       return context->stack->EvaluateCode(self, &input),
+       return xl_evaluate_code(context, self, &input),
        GROUP(basics:closure)
        SYNOPSIS("Code closure, evaluated repeatedly in original code context"))
 PREFIX(LazyClosure, tree, "<lazy>",
        PARM(input, source, "Source code"),
-       return context->stack->EvaluateLazy(self, &input),
+       return xl_evaluate_lazy(context, self, &input),
        GROUP(basics:closure)
        SYNOPSIS("Lazy evaluation closure, evaluated once in original context"))
 PREFIX(EvaluatedClosure, tree, "<value>",
@@ -84,28 +80,22 @@ PREFIX(EvaluatedClosure, tree, "<value>",
        GROUP(basics:closure)
        SYNOPSIS("Result of a previous lazy evaluation"))
 INFIX(Assignment, tree, source, ":=", tree,
-      return context->stack->Assign(&l, &r),
+      return xl_assign(context, &l, &r),
       GROUP(basics:assignment)
       SYNOPSIS("Assignment of a value to a variable"))
 PREFIX(AnyLookup, tree, "any",
        PARM(expr, source, "Expression to evaluate"),
-       return context->stack->Evaluate(&expr, Context::ANY_LOOKUP),
+       return xl_evaluate_any(context, &expr),
        GROUP(basics:lookup)
        SYNOPSIS("Evaluate the value along the call stack"))
 PREFIX(Property, tree, "property",
        PARM(declarations, source, "Property declarations"),
-       (void) declarations;
-       return (context->stack->EnterProperty(self)
-               ? XL::xl_true
-               : XL::xl_false),
+       return xl_enter_properties(context, self, &declarations),
        GROUP(basics:properties)
        SYNOPSIS("Declare properties"))
 PREFIX(Constraint, tree, "constraint",
        PARM(declarations, source, "Constraint declarations"),
-       (void) declarations;
-       return (context->stack->EnterConstraint(self)
-               ? XL::xl_true
-               : XL::xl_false),
+       return xl_enter_constraints(context, self, &declarations),
        GROUP(basics:properties)
        SYNOPSIS("Declare constraints on properties or variables"))
 PREFIX(Solve, tree, "solve",
@@ -663,35 +653,28 @@ PREFIX(Identity,  tree, "identity",
        RETURNS(tree, "The input tree, not evaluated"))
 PREFIX(DoCode,    tree, "do",
        PARM(input, tree, "Input tree to evaluate"),
-       return context->Evaluate(&input),
+       return xl_evaluate(context, &input),
        GROUP(basics)
        SYNOPSIS("Evaluate the input immediately"))
 PREFIX(InCaller,    tree, "in_caller",
        PARM(input, source, "Input tree to evaluate"),
-       return context->stack->EvaluateInCaller(&input),
+       return xl_evaluate_in_caller(context, &input),
        GROUP(basics)
        SYNOPSIS("Evaluate the input in caller's context"))
 PREFIX(ParseTree, tree, "parse_tree",
        PARM(src, source, "Source tree to return"),
-       Tree *code = &src;
-       if (Block *block = code->AsBlock())
-           code = block->child;
-       return xl_parse_tree(context->stack, code),
+       return xl_parse_tree(context, &src),
        GROUP(source)
        SYNOPSIS("Return the source tree unevaluated"))
 PREFIX(BoundForm, tree, "bound",
        PARM(test, source, "Value to test"),
-       return xl_bound(context->stack, &test),
+       return xl_bound(context, &test),
        GROUP(source)
        SYNOPSIS("Test if a given name or form is bound in the current context"))
 PREFIX(GetAttribute, tree, "form_attribute",
        PARM(name, text, "Name of the attribute, e.g. 'property'")
        PARM(form, tree, "Form to test for in the current context"),
-       Tree *found = context->stack->Attribute(&form,
-                                               Context::SCOPE_LOOKUP, name);
-       if (!found)
-           found = xl_nil;
-       return found,
+       return xl_attribute(context, name, &form),
        GROUP(source)
        SYNOPSIS("Find the attribute associated to a given form"))
 PREFIX(LoadFile, tree, "load",
@@ -776,7 +759,7 @@ PREFIX(DebugTree, tree, "debug", PARM(toDebug, tree, ""),
        RETURNS(tree, ""))
 PREFIX(EvaluationError, tree, "evaluation_error",
        PARM(expr, source, "Expression that caused an evaluation error"),
-       return xl_form_error(context->stack, &expr),
+       return xl_form_error(context, &expr),
        GROUP(basics)
        SYNOPSIS("Function called when no form matches a given expression"))
 PREFIX(ErrorMsg3, tree, "error",
@@ -811,13 +794,13 @@ PREFIX(ExitProgram, boolean, "exit",
        GROUP(basics)
        SYNOPSIS("Terminate the program with the given exit code"))
 PREFIX(WriteTree, tree, "write", PARM(toWrite, tree, ""),
-       return xl_write(context->stack, &toWrite, ""),
+       return xl_write(context, &toWrite, ""),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
 PREFIX(WriteLnTree, tree, "writeln", PARM(toWrite, tree, ""),
-       return xl_write(context->stack, &toWrite, "\n"),
+       return xl_write(context, &toWrite, "\n"),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")

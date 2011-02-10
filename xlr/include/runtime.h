@@ -186,6 +186,25 @@ public:
 
 // ============================================================================
 // 
+//    Interfaces to make old and new compiler compatible (temporary)
+// 
+// ============================================================================
+
+Tree *xl_define(Context *, Tree *self, Tree *form, Tree *definition);
+Tree *xl_assign(Context *, Tree *form, Tree *definition);
+Tree *xl_evaluate_sequence(Context *, Tree *first, Tree *second);
+Tree *xl_evaluate_any(Context *, Tree *form);
+Tree *xl_evaluate_block(Context *, Tree *child);
+Tree *xl_evaluate_code(Context *, Tree *self, Tree *code);
+Tree *xl_evaluate_lazy(Context *, Tree *self, Tree *code);
+Tree *xl_evaluate_in_caller(Context *, Tree *code);
+Tree *xl_enter_properties(Context *, Tree *self, Tree *declarations);
+Tree *xl_enter_constraints(Context *, Tree *self, Tree *constraints);
+Tree *xl_attribute(Context *, text name, Tree *form);
+
+
+// ============================================================================
+// 
 //    Actions used for functional applications (temporary / obsolete)
 // 
 // ============================================================================
@@ -205,7 +224,7 @@ struct MapAction : Action
 //   Map a given operation onto each element in a data set
 // ----------------------------------------------------------------------------
 {
-    typedef Tree * (*map_fn) (Tree *self, Tree *arg);
+    typedef Tree * (*map_fn) (Context *context, Tree *self, Tree *arg);
 
 public:
     MapAction(Context *context, eval_fn function, std::set<text> &sep)
@@ -230,11 +249,11 @@ struct ReduceAction : Action
 //   Reduce a given operation by combining successive elements
 // ----------------------------------------------------------------------------
 {
-    typedef Tree * (*reduce_fn) (Tree *self, Tree *first, Tree *second);
+    typedef Tree * (*reduce_fn) (Context *, Tree *self, Tree *t1,Tree *t2);
 
 public:
-    ReduceAction(eval_fn function, std::set<text> &sep)
-        : function((reduce_fn) function), separators(sep) {}
+    ReduceAction(Context *context, eval_fn function, std::set<text> &sep)
+        : context(context), function((reduce_fn) function), separators(sep) {}
 
     virtual Tree *Do(Tree *what);
 
@@ -244,6 +263,7 @@ public:
     virtual Tree *DoBlock(Block *what);
 
 public:
+    Context_p           context;
     reduce_fn           function;
     std::set<text>      separators;
 };
@@ -254,11 +274,11 @@ struct FilterAction : Action
 //   Filter a given operation onto each element in a data set
 // ----------------------------------------------------------------------------
 {
-    typedef Tree * (*filter_fn) (Tree *self, Tree *arg);
+    typedef Tree * (*filter_fn) (Context *, Tree *self, Tree *arg);
 
 public:
-    FilterAction(eval_fn function, std::set<text> &sep)
-        : function((filter_fn) function), separators(sep) {}
+    FilterAction(Context *context, eval_fn function, std::set<text> &sep)
+        : context(context), function((filter_fn) function), separators(sep) {}
 
     virtual Tree *Do(Tree *what);
 
@@ -268,6 +288,7 @@ public:
     virtual Tree *DoBlock(Block *what);
 
 public:
+    Context_p           context;
     filter_fn           function;
     std::set<text>      separators;
 };
@@ -280,7 +301,6 @@ struct FunctionInfo : Info
 //   REVISIT: According to Wikipedia, really a Moses Schönfinkel function
 {
     FunctionInfo(): function(NULL), context(NULL), symbols(NULL) {}
-    
     virtual Tree * Apply(Tree *what) { return what; }
 
 public:

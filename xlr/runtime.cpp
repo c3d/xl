@@ -44,6 +44,18 @@
 
 XL_BEGIN
 
+// In interpreted mode, the context actually holds the stack.
+// However, in compiled mode, there's only one level of context,
+// so attempting to unwind it ultimately causes a NULL-deref
+#define ADJUST_CONTEXT_FOR_INTERPRETER(context) \
+    if (Options::options->optimize_level == 0)  \
+        context = context->stack;
+#define ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context)                  \
+    assert (Options::options->optimize_level == 0 &&                    \
+            "This routine should only be called in interpreted mode");  \
+    context = context->stack;
+
+
 Tree *xl_identity(Context *, Tree *what)
 // ----------------------------------------------------------------------------
 //   Return the input tree unchanged
@@ -66,6 +78,8 @@ Tree *xl_evaluate(Context *context, Tree *what)
             return what;
         return what->code(context, what);
     }
+    if (Symbols *symbols = what->Symbols())
+        return symbols->Run(context, what);
     return context->Evaluate(what);
 }
 
@@ -233,9 +247,10 @@ Tree *xl_form_error(Context *context, Tree *what)
 //   Raise an error if we have a form error
 // ----------------------------------------------------------------------------
 {
-    bool quickExit = false;
+    bool quickExit = false;     // For debugging purpose
     if (quickExit)
         return what;
+    ADJUST_CONTEXT_FOR_INTERPRETER(context);
     static Name_p errorName = new Name("error");
     static Text_p errorText = new Text("No form matches $1");
     Infix *args = new Infix(",", errorText, what, what->Position());
@@ -244,7 +259,7 @@ Tree *xl_form_error(Context *context, Tree *what)
 }
 
 
-Tree *xl_parse_tree(Context *context, Tree *tree)
+Tree *xl_parse_tree_inner(Context *context, Tree *tree)
 // ----------------------------------------------------------------------------
 //   Build a parse tree in the current context
 // ----------------------------------------------------------------------------
@@ -259,24 +274,24 @@ Tree *xl_parse_tree(Context *context, Tree *tree)
     case INFIX:
     {
         Infix *infix = (Infix *) tree;
-        Tree *left = xl_parse_tree(context, infix->left);
-        Tree *right = xl_parse_tree(context, infix->right);
+        Tree *left = xl_parse_tree_inner(context, infix->left);
+        Tree *right = xl_parse_tree_inner(context, infix->right);
         Infix *result = new Infix(infix, left, right);
         return result;
     }
     case PREFIX:
     {
         Prefix *prefix = (Prefix *) tree;
-        Tree *left = xl_parse_tree(context, prefix->left);
-        Tree *right = xl_parse_tree(context, prefix->right);
+        Tree *left = xl_parse_tree_inner(context, prefix->left);
+        Tree *right = xl_parse_tree_inner(context, prefix->right);
         Prefix *result = new Prefix(prefix, left, right);
         return result;
     }
     case POSTFIX:
     {
         Postfix *postfix = (Postfix *) tree;
-        Tree *left = xl_parse_tree(context, postfix->left);
-        Tree *right = xl_parse_tree(context, postfix->right);
+        Tree *left = xl_parse_tree_inner(context, postfix->left);
+        Tree *right = xl_parse_tree_inner(context, postfix->right);
         Postfix *result = new Postfix(postfix, left, right);
         return result;
     }
@@ -290,7 +305,7 @@ Tree *xl_parse_tree(Context *context, Tree *tree)
             if (child && child->opening == "{" && child->closing == "}")
             {
                 // Case where we have parse_tree {{x}}: Return {x}
-                result = xl_parse_tree(context, child->child);
+                result = xl_parse_tree_inner(context, child->child);
                 result = new Block(block, result);
                 return result;
             }
@@ -302,7 +317,7 @@ Tree *xl_parse_tree(Context *context, Tree *tree)
             result = context->Evaluate(result);
             return result;
         }
-        result = xl_parse_tree(context, result);
+        result = xl_parse_tree_inner(context, result);
         result = new Block(block, result);
         return result;
     }
@@ -311,14 +326,28 @@ Tree *xl_parse_tree(Context *context, Tree *tree)
 }
 
 
+Tree *xl_parse_tree(Context *context, Tree *code)
+// ----------------------------------------------------------------------------
+//   Entry point for parse_tree
+// ----------------------------------------------------------------------------
+{
+    if (Block *block = code->AsBlock())
+        code = block->child;
+    ADJUST_CONTEXT_FOR_INTERPRETER(context);
+    return xl_parse_tree_inner(context, code);
+}
+
+
 Tree *xl_bound(Context *context, Tree *form)
 // ----------------------------------------------------------------------------
 //   Return the bound value for a name/form, or nil if not bound
 // ----------------------------------------------------------------------------
 {
+    // TODO: Equivalent in compiled mode
+    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
     if (Tree *bound = context->Bound(form))
         return bound;
-    return XL::xl_nil;
+    return XL::xl_false;
 }
 
 
@@ -885,7 +914,7 @@ Tree *xl_write(Context *context, Tree *tree, text sep)
     }
 
     // Evaluate tree (and get rid of possible closures)
-    tree = context->Evaluate(tree);
+    tree = xl_evaluate(context, tree);
 
     // Format contents
     if (Infix *infix = tree->AsInfix())
@@ -1240,6 +1269,131 @@ Tree *XLCall::build(Symbols *syms)
 
 // ============================================================================
 //
+//    Interfaces to make old and new compiler compatible (temporary)
+//
+// ============================================================================
+
+Tree *xl_define(Context *context, Tree *self, Tree *form, Tree *definition)
+// ----------------------------------------------------------------------------
+//    Define a form in interpreted mode
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
+    context->Define(form, definition);
+    return self;
+}
+
+
+Tree *xl_assign(Context *context, Tree *form, Tree *definition)
+// ----------------------------------------------------------------------------
+//   Assignment in interpreted mode
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
+    return context->Assign(form, definition);
+}
+
+
+Tree *xl_evaluate_sequence(Context *context, Tree *first, Tree *second)
+// ----------------------------------------------------------------------------
+//   Evaluate a sequence
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_FOR_INTERPRETER(context);
+    xl_evaluate(context, first);
+    return xl_evaluate(context, second);
+}
+
+
+Tree *xl_evaluate_any(Context *context, Tree *form)
+// ----------------------------------------------------------------------------
+//   Evaluation in both stack and scope (any lookup)
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
+    return context->Evaluate(form, Context::ANY_LOOKUP);
+}
+
+
+Tree *xl_evaluate_block(Context *context, Tree *child)
+// ----------------------------------------------------------------------------
+//   Evaluate a block in interpreted mode
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
+    return context->EvaluateBlock(child);
+}
+
+
+Tree *xl_evaluate_code(Context *context, Tree *self, Tree *code)
+// ----------------------------------------------------------------------------
+//   Evaluate a code tree in interpreted mode
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
+    return context->EvaluateCode(self, code);
+}
+
+
+Tree *xl_evaluate_lazy(Context *context, Tree *self, Tree *code)
+// ----------------------------------------------------------------------------
+//   Evaluate a lazy tree in interpreted mode
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
+    return context->EvaluateLazy(self, code);
+}
+
+
+Tree *xl_evaluate_in_caller(Context *context, Tree *code)
+// ----------------------------------------------------------------------------
+//   Evaluate code in the caller's context (interpreted mode only)
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
+    return context->EvaluateInCaller(code);
+}
+
+
+Tree *xl_enter_properties(Context *context, Tree *self, Tree *declarations)
+// ----------------------------------------------------------------------------
+//   Enter properties in interpreted mode
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
+    (void) declarations;
+    return context->EnterProperty(self) ? xl_true : xl_false;
+}
+
+
+Tree *xl_enter_constraints(Context *context, Tree *self, Tree *constraints)
+// ----------------------------------------------------------------------------
+//   Enter constraints in interpreted mode
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
+    (void) constraints;
+    return context->EnterConstraint(self) ? xl_true : xl_false;
+}
+
+
+Tree *xl_attribute(Context *context, text name, Tree *form)
+// ----------------------------------------------------------------------------
+//   Return the attribute associated to a given tree
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_FOR_INTERPRETER(context);
+    Tree *found = context->Attribute(form, Context::SCOPE_LOOKUP, name);
+    if (!found)
+        found = xl_nil;
+    return found;
+}
+
+
+
+
+// ============================================================================
+//
 //   Apply a code recursively to a data set (temporary / obsolete)
 //
 // ============================================================================
@@ -1492,7 +1646,7 @@ Tree *MapAction::Do(Tree *what)
 // ----------------------------------------------------------------------------
 {
     what = xl_evaluate(context, what);
-    return function(what, what);
+    return function(context, what, what);
 }
 
 
@@ -1557,7 +1711,7 @@ Tree *ReduceFunctionInfo::Apply(Tree *what)
 //   Apply a reduce operation to the tree
 // ----------------------------------------------------------------------------
 {
-    ReduceAction reduce(function, separators);
+    ReduceAction reduce(context, function, separators);
     return what->Do(reduce);
 }
 
@@ -1580,7 +1734,7 @@ Tree *ReduceAction::DoInfix(Infix *infix)
     {
         Tree *left = infix->left->Do(this);
         Tree *right = infix->right->Do(this);
-        return function(infix, left, right);
+        return function(context, infix, left, right);
     }
 
     // Otherwise simply apply the function to the infix
@@ -1626,7 +1780,7 @@ Tree *FilterFunctionInfo::Apply(Tree *what)
 //   Apply a filter operation to the tree
 // ----------------------------------------------------------------------------
 {
-    FilterAction filter(function, separators);
+    FilterAction filter(context, function, separators);
     Tree *result = what->Do(filter);
     if (!result)
         result = xl_false;
@@ -1639,7 +1793,7 @@ Tree *FilterAction::Do(Tree *what)
 //   By default, reducing non-list elements returns these elements
 // ----------------------------------------------------------------------------
 {
-    if (function(what, what) == xl_true)
+    if (function(context, what, what) == xl_true)
         return what;
     return NULL;
 }
