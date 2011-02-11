@@ -355,6 +355,9 @@ struct CompileAction : Action
     virtual Tree *DoInfix(Infix *what);
     virtual Tree *DoBlock(Block *what);
 
+    // Evaluation of names is lazy, except in sequences where it's forced
+    Tree *DoName(Name *what, bool forceEval);
+
     // Build code selecting among rewrites in current context
     Tree *         Rewrites(Tree *what);
 

@@ -1671,6 +1671,15 @@ Tree *CompileAction::DoText(Text *what)
 
 Tree *CompileAction::DoName(Name *what)
 // ----------------------------------------------------------------------------
+//   Normal name evaluation: don't force evaluation
+// ----------------------------------------------------------------------------
+{
+    return DoName(what, false);
+}
+
+
+Tree *CompileAction::DoName(Name *what, bool forceEval)
+// ----------------------------------------------------------------------------
 //   Build a unique reference in the context for the entity
 // ----------------------------------------------------------------------------
 {
@@ -1698,6 +1707,10 @@ Tree *CompileAction::DoName(Name *what)
             unit.NeedStorage(what);
             unit.Invoke(what, result, noArgs);
             return what;
+        }
+        else if (forceEval && unit.IsKnown(result))
+        {
+            unit.CallEvaluate(result);
         }
         else if (unit.value.count(result))
         {
@@ -1763,8 +1776,16 @@ Tree *CompileAction::DoInfix(Infix *what)
     if (what->name == "\n" || what->name == ";")
     {
         // For instruction list, string compile results together
-        if (!what->left->Do(this))
+        // Force evaluation of names on the left of a sequence
+        if (Name *leftAsName = what->left->AsName())
+        {
+            if (!DoName(leftAsName, true))
+                return NULL;
+        }
+        else if (!what->left->Do(this))
+        {
             return NULL;
+        }
         if (unit.IsKnown(what->left))
         {
             if (!what->left->Symbols())
