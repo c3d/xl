@@ -229,7 +229,7 @@ void Symbols::Clear()
     names = empty;
     if (rewrites)
     {
-        delete rewrites;
+        // delete rewrites;
         rewrites = NULL;        // Decrease reference count
     }
 }
