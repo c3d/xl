@@ -913,9 +913,11 @@ Tree *xl_write(Context *context, Tree *tree, text sep)
         return XL::xl_false;
     }
 
-    // Evaluate tree (and get rid of possible closures)
-    tree = xl_evaluate(context, tree);
-
+    // Evaluate closures if we have any
+    Prefix *prefix = tree->AsPrefix();
+    if (prefix)
+        tree = xl_evaluate(context, prefix);
+        
     // Format contents
     if (Infix *infix = tree->AsInfix())
     {
@@ -925,6 +927,10 @@ Tree *xl_write(Context *context, Tree *tree, text sep)
             return xl_write(context, infix->right, sep);
         }
     }
+
+    // Evaluate non-prefix trees
+    if (!prefix)
+        tree = xl_evaluate(context, tree);
 
     // Evaluate the input argument
     switch(tree->Kind())
