@@ -476,11 +476,19 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
 //   Evaluate 'what' in the given context
 // ----------------------------------------------------------------------------
 {
-    // Short-circuit if tree was compiled
-    if (what->code)
-        return what->code(this, what);
-    if (Symbols *symbols = what->Symbols())
-        return symbols->Run(this, what);
+    // Check if the old compiler was activated
+    if (Options::options->optimize_level == 1)
+    {
+        // Short-circuit if tree was compiled
+        if (what->code)
+            return what->code(this, what);
+        if (Symbols *symbols = what->Symbols())
+            return symbols->Run(this, what);
+        if (what->IsConstant())
+            return what;
+        std::cerr << "WARNING: Tree " << what << " was not compiled\n";
+        return what;
+    }
 
     // Process declarations and evaluate the rest
     Tree_p   result = what;

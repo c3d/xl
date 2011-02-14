@@ -71,15 +71,6 @@ Tree *xl_evaluate(Context *context, Tree *what)
 // ----------------------------------------------------------------------------
 // This is similar to Context::Run, but we save stack space for recursion
 {
-    if (what->code)
-    {
-        StackDepthCheck depthCheck(what);
-        if (depthCheck)
-            return what;
-        return what->code(context, what);
-    }
-    if (Symbols *symbols = what->Symbols())
-        return symbols->Run(context, what);
     return context->Evaluate(what);
 }
 

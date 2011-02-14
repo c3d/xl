@@ -474,7 +474,11 @@ Tree *Symbols::Run(Context *context, Tree *code)
             if (!result->code || errors.Count())
                 return Ooops("Unable to compile $1", result);
         }
-        result = result->code(context, code);
+
+        // Check infinite recursion
+        StackDepthCheck stackDepthCheck(result);
+        if (!stackDepthCheck)
+            result = result->code(context, code);
     }
     IFTRACE(eval)
         std::cerr << "RSLT" << index-- << ": " << result << '\n';
