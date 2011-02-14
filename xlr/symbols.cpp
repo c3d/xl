@@ -1096,6 +1096,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         }
 
         // Check if the name already exists
+        if (false) // Prevents local argument names
         if (Tree *existing = rewrite->Named(varName->value))
         {
             Ooops("Name $1 already exists as $2",
@@ -1104,24 +1105,28 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         }
 
         // Check for types that don't require a type check
+        bool needEvaluation = true;
         if (Name *declTypeName = what->right->AsName())
+        {
             if (Tree *namedType = symbols->Named(declTypeName->value))
+            {
                 if (namedType == tree_type ||
                     namedType == code_type ||
                     namedType == lazy_type ||
                     namedType == source_type)
                     return DoName(varName);
+                kind tk = test->Kind();
+                if ((namedType == block_type && tk == BLOCK) ||
+                    (namedType == infix_type && tk == INFIX) ||
+                    (namedType == prefix_type && tk == PREFIX))
+                    needEvaluation = false;
+            }
+        }
 
         // Evaluate type expression, e.g. 'integer' in example above
         Tree *typeExpr = Compile(what->right);
         if (!typeExpr)
             return NULL;
-
-        // Check if this is a case where we don't compile the value
-        bool needEvaluation = true;
-        if (Name *name = typeExpr->AsName())
-            if (name->value == "tree")
-                needEvaluation = false;
 
         // Compile what we are testing against
         Tree *compiled = test;
