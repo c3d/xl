@@ -81,6 +81,7 @@ struct Main
     int          LoadFile(text file, bool updateContext = false);
     SourceFile * NewFile(text path);
     virtual text SearchFile(text input);
+    virtual text ParentDir(text input);
     virtual bool Refresh(double delay);
     int          Run();
     int          Diff();
