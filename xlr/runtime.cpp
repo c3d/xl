@@ -1249,6 +1249,22 @@ Tree *xl_load_data(Context *context,
 //
 // ============================================================================
 
+Tree *XLCall::operator() (SourceFile *sf)
+// ----------------------------------------------------------------------------
+//   Invoke the call in the context of a given source file
+// ----------------------------------------------------------------------------
+{
+    Context *context = sf->context;
+    Symbols *symbols = sf->symbols;
+    Tree *call = name;
+    if (arguments)
+        call = new Prefix(call, arguments);
+    if (symbols)
+        call->SetSymbols(symbols);
+    return xl_evaluate(context, call);
+}
+
+
 Tree *XLCall::operator() (Symbols *syms, bool nullIfBad, bool cached)
 // ----------------------------------------------------------------------------
 //    Perform the given call in the given context
@@ -1257,7 +1273,7 @@ Tree *XLCall::operator() (Symbols *syms, bool nullIfBad, bool cached)
     assert(syms);
     Tree *callee = syms->CompileCall(name->value, args, nullIfBad, cached);
     if (callee && callee->code)
-        callee = callee->code(NULL, callee);
+        callee = callee->code(MAIN->context, callee);
     return callee;
 }
 

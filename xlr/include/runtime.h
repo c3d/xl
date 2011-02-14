@@ -41,6 +41,7 @@ struct Prefix;
 struct Postfix;
 struct Context;
 struct Main;
+struct SourceFile;
 
 
 
@@ -162,13 +163,7 @@ struct XLCall
     XLCall &operator, (text  v)    { return *this, new Text(v); }
 
     // Calling in a given symbol context
-    Tree *  operator() (Context *context)
-    {
-        Tree *call = name;
-        if (arguments)
-            call = new Prefix(call, arguments);
-        return xl_evaluate(context, call);
-    }
+    Tree *  operator() (SourceFile *sf);
 
     // Calling in a given symbol context
     Tree *  operator() (Symbols *syms = NULL,
