@@ -1937,7 +1937,7 @@ Tree *CompileAction::Rewrites(Tree *what)
                         // Set the symbols for the result
                         if (!what->Symbols())
                             what->SetSymbols(symbols);
-                        if (nullIfBad)
+                        if (nullIfBad && false)
                         {
                             reduction.Failed();
                         }
@@ -2820,24 +2820,30 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
     Type *treePtrTy = compiler->treePtrTy;
     Value *ptr = Known(callee); assert(ptr);
 
+    // Read original self and point to first argument
+    Value *pfx = code->CreateBitCast(ptr,compiler->prefixTreePtrTy);
+    Value *lf = code->CreateConstGEP2_32(pfx, 0, LEFT_VALUE_INDEX);
+    Value *rt = code->CreateConstGEP2_32(pfx, 0, RIGHT_VALUE_INDEX);
+    Value *original = code->CreateLoad(lf);
+    ptr = code->CreateLoad(rt);
+
     // Build argument list
     std::vector<Value *> argV;
     std::vector<const Type *> signature;
     argV.push_back(contextPtr);   // Pass context pointer
     signature.push_back(compiler->contextPtrTy);
-    argV.push_back(ptr);     // Self is the original expression
+    argV.push_back(original);     // Self is the original expression
     signature.push_back(treePtrTy);
     for (uint i = 0; i < ntrees; i++)
     {
         // WARNING: This relies on the layout of all nodes beginning the same
-        Value *pfx = code->CreateBitCast(ptr,compiler->prefixTreePtrTy);
-        Value *rt = code->CreateConstGEP2_32(pfx, 0, RIGHT_VALUE_INDEX);
-        ptr = code->CreateLoad(rt);
         pfx = code->CreateBitCast(ptr,compiler->prefixTreePtrTy);
-        Value *lf = code->CreateConstGEP2_32(pfx, 0, LEFT_VALUE_INDEX);
+        lf = code->CreateConstGEP2_32(pfx, 0, LEFT_VALUE_INDEX);
+        rt = code->CreateConstGEP2_32(pfx, 0, RIGHT_VALUE_INDEX);
         Value *arg = code->CreateLoad(lf);
         argV.push_back(arg);
         signature.push_back(treePtrTy);
+        ptr = code->CreateLoad(rt);
     }
 
     // Load the target code
