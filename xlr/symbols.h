@@ -102,10 +102,10 @@ struct Symbols
     Tree *              CompileAll(Tree *s,
                                    bool nullIfBad = false,
                                    bool keepOtherConstants = false);
-    Tree *               CompileCall(text callee, TreeList &args,
-                                     bool nullIfBad=false, bool cached = true);
-    Infix *              CompileTypeTest(Tree *type);
-    Tree *               Run(Context *, Tree *t);
+    Tree *              CompileCall(text callee, TreeList &args,
+                                    bool nullIfBad=false, bool cached = true);
+    Infix *             CompileTypeTest(Tree *type);
+    Tree *              Run(Context *, Tree *t);
 
     // Error handling
     Tree *               Ooops (text message,

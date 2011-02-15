@@ -337,15 +337,15 @@ Tree *Symbols::CompileCall(text callee, TreeList &arglist,
                 // Replace arguments in place if necessary
                 Prefix *pfx = previous->AsPrefix();
                 Tree_p *args = &pfx->right;
-                while (*args && arity--)
+                uint argIndex = 0;
+                while (*args && argIndex < arity)
                 {
-                    Tree *value = arglist[arity];
+                    Tree *value = arglist[argIndex++];
                     Tree *existing = *args;
-                    if (arity)
+                    if (Infix *infix = existing->AsInfix())
                     {
-                        Infix *infix = existing->AsInfix();
-                        args = &infix->left;
-                        existing = infix->right;
+                        existing = infix->left;
+                        args = &infix->right;
                     }
                     if (Real *rs = value->AsReal())
                     {
@@ -386,9 +386,9 @@ Tree *Symbols::CompileCall(text callee, TreeList &arglist,
     Tree *call = new Name(callee);
     if (arity)
     {
-        Tree *args = arglist[0];
+        Tree *args = arglist[arity + ~0];
         for (uint a = 1; a < arity; a++)
-            args = new Infix(",", args, arglist[a]);
+            args = new Infix(",", arglist[arity + ~a], args);
         call = new Prefix(call, args);
     }
     call = CompileAll(call, nullIfBad, true);
