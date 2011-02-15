@@ -172,6 +172,26 @@ void Main::SetupCompiler()
 }
 
 
+void Main::CreateScope()
+// ----------------------------------------------------------------------------
+//   Create a new scope containing a new symbol table and context
+// ----------------------------------------------------------------------------
+{
+    context = new Context(context, NULL);
+    globals = new Symbols(globals);
+}
+
+
+void Main::PopScope()
+// ----------------------------------------------------------------------------
+//   Pop one-level of scope off the scope stack
+// ----------------------------------------------------------------------------
+{
+    context = context->scope;
+    globals = globals->parent;
+}
+
+
 int Main::LoadFiles()
 // ----------------------------------------------------------------------------
 //   Load all files given on the command line and compile them
@@ -193,10 +213,10 @@ SourceFile *Main::NewFile(text path)
 //   Allocate an entry for updating programs (untitled)
 // ----------------------------------------------------------------------------
 {
+    CreateScope();
     Name_p nil = new Name("nil");
-    Context *context = new Context(MAIN->context, NULL);
-    Symbols *symbols = new Symbols(MAIN->globals);
-    files[path] = SourceFile(path,nil, context, symbols, true);
+    files[path] = SourceFile(path,nil, context, globals, true);
+    PopScope();
     return &files[path];
 }
 

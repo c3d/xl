@@ -77,6 +77,8 @@ struct Main
 
     int          ParseOptions();
     void         SetupCompiler();
+    void         CreateScope();
+    void         PopScope();
     int          LoadContextFiles(source_names &context_file_names);
     void         EvaluateContextFiles(source_names &context_file_names);
     int          LoadFiles();
