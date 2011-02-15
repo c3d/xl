@@ -284,6 +284,13 @@ Tree *Symbols::CompileAll(Tree *source,
 //    to avoid re-generating LLVM code for each and every call
 //    (it's more difficult to avoid leaking memory from LLVM)
 {
+    // Fast-compile constants
+    if (!has_rewrites_for_constants && source->IsConstant())
+    {
+        source->code = xl_identity;
+        return source;
+    }
+
     Errors errors;
 
     IFTRACE(compile)
