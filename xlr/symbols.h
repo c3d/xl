@@ -205,7 +205,8 @@ struct OCompiledUnit
     llvm::Value *       CallNewPrefix(Prefix *);
     llvm::Value *       CallNewPostfix(Postfix *);
     llvm::Value *       CallNewInfix(Infix *);
-    llvm::Value *       CreateClosure(Tree *callee, TreeList &args);
+    llvm::Value *       CreateClosure(Tree *callee, TreeList &args,
+                                      llvm::Function *);
     llvm::Value *       CallClosure(Tree *callee, uint ntrees);
     llvm::Value *       CallTypeError(Tree *what);
     llvm::Value *       CallEvaluateChildren(Tree *what);

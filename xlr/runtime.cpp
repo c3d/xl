@@ -542,7 +542,7 @@ Infix *xl_new_infix(Infix *source, Tree *left, Tree *right)
 //
 // ============================================================================
 
-Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
+Tree *xl_new_closure(eval_fn toCall, Tree *expr, uint ntrees, ...)
 // ----------------------------------------------------------------------------
 //   Create a new closure at runtime, capturing the various trees
 // ----------------------------------------------------------------------------
@@ -571,7 +571,11 @@ Tree *xl_new_closure(Tree *expr, uint ntrees, ...)
         parent = item;
     }
     va_end(va);
-    parent->right = xl_false;
+
+    // Add a tree that indicates we have a closure
+    Name *target = new Name("[closure]", expr->Position());
+    target->code = toCall;
+    parent->right = target;
 
     // Generate the code for the arguments
     Compiler *compiler = MAIN->compiler;

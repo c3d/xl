@@ -799,6 +799,8 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
         Ooops("Internal: what environment in $1?", source);
         return NULL;
     }
+    if (env.captured.size() == 0)
+        return Compile(source);
 
     // Create the parameter list with all imported locals
     TreeList parms, args;
@@ -827,27 +829,30 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
         }
     }
 
-    // Create the compilation unit and check if we are already compiling this
-    // Can this happen for a closure?
+    // Save tree function from possible regular compilation
+    llvm::Function *treeFunction = compiler->TreeFunction(source);
+    compiler->SetTreeFunction(source, NULL);
+
+    // Create the compilation unit for the code to enclose
     OCompiledUnit subUnit(compiler, source, parms);
-    if (!subUnit.IsForwardCall())
+    assert (!subUnit.IsForwardCall()); // because we cleared TreeFunction
+
+    Tree *result = symbols->Compile(source, subUnit, true);
+    if (!result)
     {
-        Tree *result = symbols->Compile(source, subUnit, true);
-        if (!result)
-        {
-            unit.ConstantTree(source);
-        }
-        else
-        {
-            eval_fn fn = subUnit.Finalize();
-            source->code = fn;
-        }
-        if (!source->Symbols())
-            source->SetSymbols(symbols);
+        unit.ConstantTree(source);
     }
+    else
+    {
+        subUnit.Finalize();
+    }
+    if (!source->Symbols())
+        source->SetSymbols(symbols);
+    compiler->SetTreeFunction(source, treeFunction);
+    compiler->SetTreeClosure(source, subUnit.function);
 
     // Create a call to xl_new_closure to save the required trees
-    unit.CreateClosure(source, args);
+    unit.CreateClosure(source, args, subUnit.function);
 
     return source;
 }
@@ -2746,7 +2751,7 @@ Value *OCompiledUnit::CallNewInfix(Infix *infix)
 }
 
 
-Value *OCompiledUnit::CreateClosure(Tree *callee, TreeList &args)
+Value *OCompiledUnit::CreateClosure(Tree *callee, TreeList &args, Function*fn)
 // ----------------------------------------------------------------------------
 //   Create a closure for an expression we want to evaluate later
 // ----------------------------------------------------------------------------
@@ -2758,6 +2763,9 @@ Value *OCompiledUnit::CreateClosure(Tree *callee, TreeList &args)
     Value *countVal = ConstantInt::get(LLVM_INTTYPE(uint), args.size());
     TreeList::iterator a;
 
+    // Cast given function pointer to eval_fn and create argument list
+    Value *evalFn = code->CreateBitCast(fn, compiler->evalFnTy);
+    argV.push_back(evalFn);
     argV.push_back(calleeVal);
     argV.push_back(countVal);
     for (a = args.begin(); a != args.end(); a++)
@@ -2790,21 +2798,16 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
 //   The generated function takes the 'code' field of E, and calls it
 //   using C conventions with arguments (E, X1, X2, X3).
 {
-    // Load left tree and get its code tag
+    // Load left tree
     Type *treePtrTy = compiler->treePtrTy;
     Value *ptr = Known(callee); assert(ptr);
-    Value *pfx = code->CreateBitCast(ptr,compiler->prefixTreePtrTy);
-    Value *lf = code->CreateConstGEP2_32(pfx, 0, LEFT_VALUE_INDEX);
-    Value *callTree = code->CreateLoad(lf);
-    Value *callCode = code->CreateConstGEP2_32(callTree, 0, CODE_INDEX);
-    callCode = code->CreateLoad(callCode);
-    
+
     // Build argument list
     std::vector<Value *> argV;
     std::vector<const Type *> signature;
     argV.push_back(contextPtr);   // Pass context pointer
     signature.push_back(compiler->contextPtrTy);
-    argV.push_back(callTree);     // Self is the original expression
+    argV.push_back(ptr);     // Self is the original expression
     signature.push_back(treePtrTy);
     for (uint i = 0; i < ntrees; i++)
     {
@@ -2818,6 +2821,10 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
         argV.push_back(arg);
         signature.push_back(treePtrTy);
     }
+
+    // Load the target code
+    Value *callCode = code->CreateConstGEP2_32(ptr, 0, CODE_INDEX);
+    callCode = code->CreateLoad(callCode);
 
     // Call the resulting function
     FunctionType *fnTy = FunctionType::get(treePtrTy, signature, false);

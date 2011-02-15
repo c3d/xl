@@ -114,6 +114,8 @@ struct Compiler
     CompilerInfo *            Info(Tree *tree, bool create = false);
     llvm::Function *          TreeFunction(Tree *tree);
     void                      SetTreeFunction(Tree *tree, llvm::Function *);
+    llvm::Function *          TreeClosure(Tree *tree);
+    void                      SetTreeClosure(Tree *tree, llvm::Function *);
     llvm::GlobalValue *       TreeGlobal(Tree *tree);
     void                      SetTreeGlobal(Tree*, llvm::GlobalValue*, void*);
     llvm::Function *          EnterBuiltin(text name,

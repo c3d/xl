@@ -327,8 +327,8 @@ Compiler::Compiler(kstring moduleName)
     xl_new_infix = ExternFunction(FN(xl_new_infix), infixTreePtrTy, 3,
                                   infixTreePtrTy,treePtrTy,treePtrTy);
     xl_new_closure = ExternFunction(FN(xl_new_closure),
-                                    treePtrTy, -2,
-                                    treePtrTy, LLVM_INTTYPE(uint));
+                                    treePtrTy, -3,
+                                    evalFnTy, treePtrTy, LLVM_INTTYPE(uint));
 
     // Initialize the llvm_entries table
     for (CompilerLLVMTableEntry *le = CompilerLLVMTable; le->name; le++)
@@ -447,6 +447,26 @@ void Compiler::SetTreeFunction(Tree *tree, llvm::Function *function)
 {
     CompilerInfo *info = Info(tree, true);
     info->function = function;
+}
+
+
+llvm::Function * Compiler::TreeClosure(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Return the closure associated to the tree
+// ----------------------------------------------------------------------------
+{
+    CompilerInfo *info = Info(tree);
+    return info ? info->closure : NULL;
+}
+
+
+void Compiler::SetTreeClosure(Tree *tree, llvm::Function *closure)
+// ----------------------------------------------------------------------------
+//   Associate a closure to the given tree
+// ----------------------------------------------------------------------------
+{
+    CompilerInfo *info = Info(tree, true);
+    info->closure = closure;
 }
 
 

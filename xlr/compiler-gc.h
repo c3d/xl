@@ -47,11 +47,12 @@ struct CompilerInfo : Info
 //   Information about compiler-related data structures
 // ----------------------------------------------------------------------------
 {
-    CompilerInfo(Tree *tree): tree(tree), global(0), function(0) {}
+    CompilerInfo(Tree *tree): tree(tree), global(0), function(0), closure(0) {}
     ~CompilerInfo();
     Tree *                      tree;
     llvm::GlobalValue *         global;
     llvm::Function *            function;
+    llvm::Function *            closure;
 };
 
 XL_END
