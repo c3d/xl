@@ -39,6 +39,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <sstream>
+#include <sys/stat.h>
 
 XL_BEGIN
 
@@ -1830,6 +1831,64 @@ void Context::Clear()
 {
     rewrites.clear();
     imported.clear();
+}
+
+
+void Context::AddSearchPath(text prefix, text dir)
+// ----------------------------------------------------------------------------
+//   Add directory to the search path for prefix
+// ----------------------------------------------------------------------------
+{
+    searchPaths[prefix].push_back(dir);
+}
+
+
+text Context::FindInSearchPath(text prefix, text filename)
+// ----------------------------------------------------------------------------
+//   Look for file using search path for prefix.
+// ----------------------------------------------------------------------------
+{
+    if (searchPaths.count(prefix) > 0)
+    {
+        path_list dirs = searchPaths[prefix];
+        path_list::iterator it;
+        for (it = dirs.begin(); it != dirs.end(); it++)
+        {
+            text path = (*it) + "/" + filename;
+            struct stat st;
+            if (stat(path.c_str(), &st) == 0)
+                return path;
+        }
+    }
+
+    context_list list;
+    Contexts(NORMAL_LOOKUP, list);
+    for (context_list::iterator i=list.begin();i!=list.end();i++)
+    {
+        if ((*i) == this)
+            continue;
+        text p = (*i)->FindInSearchPath(prefix, filename);
+        if (p != "")
+            return p;
+    }
+    return "";
+}
+
+
+text Context::ResolvePrefixedPath(text filename)
+// ----------------------------------------------------------------------------
+//   Find a file using the search path prefix, e.g., "image:file.png"
+// ----------------------------------------------------------------------------
+{
+    size_t sep = filename.find(":");
+    if (sep != filename.npos)
+    {
+        text prefix = filename.substr(0, sep + 1);
+        text file = filename.substr(sep + 1, filename.npos);
+        if (file[0] != '/')
+            filename = FindInSearchPath(prefix, file);
+    }
+    return filename;
 }
 
 

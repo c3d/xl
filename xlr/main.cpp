@@ -367,8 +367,13 @@ int Main::LoadFile(text file, bool updateContext)
     }
     MAIN->context = syms;
 
-    syms->Define(new Name("module_file"), new Text(file));
-    syms->Define(new Name("module_dir"),  new Text(ParentDir(file)));
+    if (file.find(".ddd") == file.npos &&
+        file.find("tao.xl") == file.npos &&
+        file.find("builtins.xl") == file.npos) // HACK - do not hide imported .xl
+    {
+        syms->Define(new Name("module_file"), new Text(file));
+        syms->Define(new Name("module_dir"),  new Text(ParentDir(file)));
+    }
 
     // Register the source file we had
     sf = SourceFile (file, tree, syms);

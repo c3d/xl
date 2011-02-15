@@ -1129,4 +1129,23 @@ Tree *xl_load_data(Context *context,
     return tree;
 }
 
+
+Tree *xl_add_search_path(Context *context, text prefix, text dir)
+// ----------------------------------------------------------------------------
+//   Add directory to the search path for prefix for the current context
+// ----------------------------------------------------------------------------
+{
+    context->stack->AddSearchPath(prefix, dir);
+    return XL::xl_true;
+}
+
+
+Text *xl_find_in_search_path(Context *context, text prefix, text file)
+// ----------------------------------------------------------------------------
+//   Add directory to the search path for prefix for the current context
+// ----------------------------------------------------------------------------
+{
+    return new Text(context->stack->FindInSearchPath(prefix, file));
+}
+
 XL_END
