@@ -246,6 +246,9 @@ Tree *xl_form_error(Context *context, Tree *what)
     static Text_p errorText = new Text("No form matches $1");
     Infix *args = new Infix(",", errorText, what, what->Position());
     Prefix *error = new Prefix(errorName, args, what->Position());
+    Symbols *symbols = what->Symbols();
+    if (!symbols) symbols = MAIN->globals;
+    error->SetSymbols(symbols);
     return context->Evaluate(error);
 }
 
@@ -1245,14 +1248,18 @@ Tree *XLCall::operator() (SourceFile *sf)
 //   Invoke the call in the context of a given source file
 // ----------------------------------------------------------------------------
 {
-    Context *context = sf->context;
-    Symbols *symbols = sf->symbols;
-    Tree *call = name;
-    if (arguments)
-        call = new Prefix(call, arguments);
-    if (symbols)
-        call->SetSymbols(symbols);
-    return xl_evaluate(context, call);
+    if (Symbols *symbols = sf->symbols)
+    {
+        return operator() (symbols, false, true);
+    }
+    else
+    {
+        Context *context = sf->context;
+        Tree *call = name;
+        if (arguments)
+            call = new Prefix(call, arguments);
+        return context->Evaluate(call);
+    }
 }
 
 
