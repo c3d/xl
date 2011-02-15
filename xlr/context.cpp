@@ -1886,7 +1886,11 @@ text Context::ResolvePrefixedPath(text filename)
         text prefix = filename.substr(0, sep + 1);
         text file = filename.substr(sep + 1, filename.npos);
         if (file[0] != '/')
-            filename = FindInSearchPath(prefix, file);
+        {
+            text found = FindInSearchPath(prefix, file);
+            if (found != "")
+                filename = found;
+        }
     }
     return filename;
 }
