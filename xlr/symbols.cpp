@@ -1937,10 +1937,17 @@ Tree *CompileAction::Rewrites(Tree *what)
                         // Set the symbols for the result
                         if (!what->Symbols())
                             what->SetSymbols(symbols);
-                        unit.CallEvaluateChildren(what);
-                        foundUnconditional = !unit.failbb;
-                        unit.dataForm.insert(what);
-                        reduction.Succeeded();
+                        if (nullIfBad)
+                        {
+                            reduction.Failed();
+                        }
+                        else
+                        {
+                            unit.CallEvaluateChildren(what);
+                            foundUnconditional = !unit.failbb;
+                            unit.dataForm.insert(what);
+                            reduction.Succeeded();
+                        }
                     }
                     else
                     {
