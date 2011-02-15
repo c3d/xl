@@ -98,10 +98,12 @@ struct Symbols
     // Compiling and evaluating a tree in scope defined by these symbols
     Tree *              Compile(Tree *s, OCompiledUnit &,
                                 bool nullIfBad = false,
-                                bool keepOtherConstants = false);
+                                bool keepOtherConstants = false,
+                                bool noDataForms = false);
     Tree *              CompileAll(Tree *s,
                                    bool nullIfBad = false,
-                                   bool keepOtherConstants = false);
+                                   bool keepOtherConstants = false,
+                                   bool noDataForms = false);
     Tree *              CompileCall(text callee, TreeList &args,
                                     bool nullIfBad=false, bool cached = true);
     Infix *             CompileTypeTest(Tree *type);
@@ -344,7 +346,8 @@ struct CompileAction : Action
 //   Compute the input tree in the given compiled unit
 // ----------------------------------------------------------------------------
 {
-    CompileAction (Symbols *s, OCompiledUnit &, bool nullIfBad, bool keepAlt);
+    CompileAction (Symbols *s, OCompiledUnit &,
+                   bool nullIfBad, bool keepAlt, bool noDataForms);
 
     virtual Tree *Do(Tree *what);
     virtual Tree *DoInteger(Integer *what);
@@ -366,6 +369,7 @@ struct CompileAction : Action
     OCompiledUnit &unit;
     bool          nullIfBad;
     bool          keepAlternatives;
+    bool          noDataForms;
 };
 
 
@@ -416,8 +420,8 @@ struct ArgumentMatch : Action
     virtual Tree *DoBlock(Block *what);
 
     // Compile a tree
-    Tree *         Compile(Tree *source);
-    Tree *         CompileValue(Tree *source);
+    Tree *         Compile(Tree *source, bool noData);
+    Tree *         CompileValue(Tree *source, bool noData);
     Tree *         CompileClosure(Tree *source);
 
 public:

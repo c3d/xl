@@ -1550,7 +1550,7 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
         assert(toDecl);
 
         // Compile the body we generated
-        CompileAction compile(symbols, unit, true, true);
+        CompileAction compile(symbols, unit, true, true, false);
         Tree *compiled = toCompile->Do(compile);
 
         // Generate code if compilation was successful

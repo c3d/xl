@@ -243,7 +243,7 @@ void Symbols::Clear()
 // ============================================================================
 
 Tree *Symbols::Compile(Tree *source, OCompiledUnit &unit,
-                        bool nullIfBad, bool keepAlternatives)
+                       bool nullIfBad, bool keepAlternatives, bool noData)
 // ----------------------------------------------------------------------------
 //    Return an optimized version of the source tree, ready to run
 // ----------------------------------------------------------------------------
@@ -253,7 +253,7 @@ Tree *Symbols::Compile(Tree *source, OCompiledUnit &unit,
     Tree *result = source->Do(declare);
 
     // Compile code for that tree
-    CompileAction compile(this, unit, nullIfBad, keepAlternatives);
+    CompileAction compile(this, unit, nullIfBad, keepAlternatives, noData);
     result = source->Do(compile);
 
     // If we didn't compile successfully, report
@@ -271,7 +271,8 @@ Tree *Symbols::Compile(Tree *source, OCompiledUnit &unit,
 
 Tree *Symbols::CompileAll(Tree *source,
                           bool nullIfBad,
-                          bool keepAlternatives)
+                          bool keepAlternatives,
+                          bool noData)
 // ----------------------------------------------------------------------------
 //   Compile a top-level tree
 // ----------------------------------------------------------------------------
@@ -303,7 +304,7 @@ Tree *Symbols::CompileAll(Tree *source,
     if (unit.IsForwardCall())
         return source;
 
-    Tree *result = Compile(source, unit, nullIfBad, keepAlternatives);
+    Tree *result = Compile(source, unit, nullIfBad, keepAlternatives, noData);
     if (!result)
         return result;
 
@@ -398,7 +399,7 @@ Tree *Symbols::CompileCall(text callee, TreeList &arglist,
             args = new Infix(",", arglist[arity + ~a], args);
         call = new Prefix(call, args);
     }
-    call = CompileAll(call, nullIfBad, true);
+    call = CompileAll(call, nullIfBad, true, false);
     if (cached)
         calls[key] = call;
     return call;
@@ -439,7 +440,7 @@ Infix *Symbols::CompileTypeTest(Tree *type)
         Ooops("Internal: Declaration error for call $1", callDecls);
 
     // Compile the body of the rewrite, keep all alternatives open
-    CompileAction compile(locals, unit, false, false);
+    CompileAction compile(locals, unit, false, false, false);
     Tree *result = callDecls->Do(compile);
     if (!result)
         Ooops("Unable to compile $1", callDecls);
@@ -740,7 +741,7 @@ Tree *ParameterMatch::DoPostfix(Postfix *what)
 //
 // ============================================================================
 
-Tree *ArgumentMatch::Compile(Tree *source)
+Tree *ArgumentMatch::Compile(Tree *source, bool noData)
 // ----------------------------------------------------------------------------
 //    Compile the source tree, and record we use the value in expr cache
 // ----------------------------------------------------------------------------
@@ -748,7 +749,7 @@ Tree *ArgumentMatch::Compile(Tree *source)
     // Compile the code
     if (!unit.IsKnown(source))
     {
-        source = symbols->Compile(source, unit, true);
+        source = symbols->Compile(source, unit, true, false, noData);
         if (!source)
             return NULL; // No match
     }
@@ -756,19 +757,23 @@ Tree *ArgumentMatch::Compile(Tree *source)
     {
         // Generate code to evaluate the argument
         Save<bool> nib(compile->nullIfBad, true);
+        Save<bool> nod(compile->noDataForms, noData);
         source = source->Do(compile);
     }
+
+    if (!source->Symbols())
+        source->SetSymbols(symbols);
 
     return source;
 }
 
 
-Tree *ArgumentMatch::CompileValue(Tree *source)
+Tree *ArgumentMatch::CompileValue(Tree *source, bool noData)
 // ----------------------------------------------------------------------------
 //   Compile the source and make sure we evaluate it
 // ----------------------------------------------------------------------------
 {
-    Tree *result = Compile(source);
+    Tree *result = Compile(source, noData);
     if (result)
     {
         if (Name *name = result->AsName())
@@ -792,7 +797,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
 {
     // Compile leaves normally
     if (source->IsLeaf())
-        return Compile(source);
+        return Compile(source, true);
 
     // For more complex expression, return a constant tree
     unit.ConstantTree(source);
@@ -807,7 +812,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
         return NULL;
     }
     if (env.captured.size() == 0)
-        return Compile(source);
+        return Compile(source, false);
 
     // Create the parameter list with all imported locals
     TreeList parms, args;
@@ -850,8 +855,6 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
             subUnit.Finalize();
         }
     }
-    if (!source->Symbols())
-        source->SetSymbols(symbols);
 
     // Create a call to xl_new_closure to save the required trees
     unit.CreateClosure(source, args, subUnit.function);
@@ -889,7 +892,7 @@ Tree *ArgumentMatch::DoInteger(Integer *what)
     }
 
     // Compile the test tree
-    Tree *compiled = CompileValue(test);
+    Tree *compiled = CompileValue(test, true);
     if (!compiled)
         return NULL;
 
@@ -919,7 +922,7 @@ Tree *ArgumentMatch::DoReal(Real *what)
     }
 
     // Compile the test tree
-    Tree *compiled = CompileValue(test);
+    Tree *compiled = CompileValue(test, true);
     if (!compiled)
         return NULL;
 
@@ -949,7 +952,7 @@ Tree *ArgumentMatch::DoText(Text *what)
     }
 
     // Compile the test tree
-    Tree *compiled = CompileValue(test);
+    Tree *compiled = CompileValue(test, true);
     if (!compiled)
         return NULL;
 
@@ -991,10 +994,10 @@ Tree *ArgumentMatch::DoName(Name *what)
             }
 
             // Insert a dynamic tree comparison test
-            Tree *testCode = Compile(test);
+            Tree *testCode = Compile(test, false);
             if (!testCode)
                 return NULL;
-            Tree *thisCode = Compile(existing);
+            Tree *thisCode = Compile(existing, false);
             if (!thisCode)
                 return NULL;
             unit.ShapeTest(testCode, thisCode);
@@ -1057,7 +1060,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         if (Name *name = test->AsName())
         {
             // Evaluate 'A' to see if we will get something like x,y
-            Tree *compiled = CompileValue(name);
+            Tree *compiled = CompileValue(name, false);
             if (!compiled)
                 return NULL;
 
@@ -1135,7 +1138,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         }
 
         // Evaluate type expression, e.g. 'integer' in example above
-        Tree *typeExpr = Compile(what->right);
+        Tree *typeExpr = Compile(what->right, true);
         if (!typeExpr)
             return NULL;
 
@@ -1143,7 +1146,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         Tree *compiled = test;
         if (needEvaluation)
         {
-            compiled = Compile(compiled);
+            compiled = Compile(compiled, false);
             if (!compiled)
                 return NULL;
         }
@@ -1638,11 +1641,13 @@ void DeclarationAction::EnterRewrite(Tree *defined,
 //
 // ============================================================================
 
-CompileAction::CompileAction(Symbols *s, OCompiledUnit &u, bool nib, bool ka)
+CompileAction::CompileAction(Symbols *s, OCompiledUnit &u,
+                             bool nib, bool ka, bool ndf)
 // ----------------------------------------------------------------------------
 //   Constructor
 // ----------------------------------------------------------------------------
-    : symbols(s), unit(u), nullIfBad(nib), keepAlternatives(ka)
+    : symbols(s), unit(u),
+      nullIfBad(nib), keepAlternatives(ka), noDataForms(ndf)
 {}
 
 
@@ -1937,7 +1942,7 @@ Tree *CompileAction::Rewrites(Tree *what)
                         // Set the symbols for the result
                         if (!what->Symbols())
                             what->SetSymbols(symbols);
-                        if (nullIfBad && false)
+                        if (noDataForms)
                         {
                             reduction.Failed();
                         }
@@ -2140,7 +2145,7 @@ Tree *Rewrite::Compile(void)
         Ooops("Internal: Declaration error for $1", to);
 
     // Compile the body of the rewrite
-    CompileAction compile(locals, unit, false, false);
+    CompileAction compile(locals, unit, false, false, false);
     Tree *result = to->Do(compile);
     if (!result)
     {
@@ -2424,9 +2429,9 @@ Value *OCompiledUnit::ConstantText(Text *what)
     {
         result = compiler->EnterConstant(what);
         result = code->CreateLoad(result, "textk");
-        if (storage.count(what))
-            code->CreateStore(result, storage[what]);
     }
+    if (storage.count(what))
+        code->CreateStore(result, storage[what]);
     return result;
 }
 
