@@ -583,7 +583,7 @@ Tree *xl_new_closure(eval_fn toCall, Tree *expr, uint ntrees, ...)
     if (!fn)
     {
         TreeList noParms;
-        OCompiledUnit unit(compiler, result, noParms);
+        OCompiledUnit unit(compiler, result, noParms, false);
         unit.CallClosure(result, ntrees);
         fn = unit.Finalize();
         compiler->closures[ntrees] = fn;
@@ -1541,7 +1541,7 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
 
         // Create a compile unit with the right number of parameters
         Compiler *compiler = MAIN->compiler;
-        OCompiledUnit unit(compiler, toCompile, parameters);
+        OCompiledUnit unit(compiler, toCompile, parameters, false);
         assert (!unit.IsForwardCall() || !"Forward call in map/reduce code");
 
         // Record internal declarations if any

@@ -292,7 +292,7 @@ Tree *Symbols::CompileAll(Tree *source,
 
     Compiler *compiler = MAIN->compiler;
     TreeList noParms;
-    OCompiledUnit unit (compiler, source, noParms);
+    OCompiledUnit unit (compiler, source, noParms, false);
     if (unit.IsForwardCall())
         return source;
 
@@ -418,7 +418,7 @@ Infix *Symbols::CompileTypeTest(Tree *type)
 
     // Create the compilation unit for the infix with two parms
     Compiler *compiler = MAIN->compiler;
-    OCompiledUnit unit(compiler, call, parameters);
+    OCompiledUnit unit(compiler, call, parameters, false);
     if (unit.IsForwardCall())
         return call;
 
@@ -829,27 +829,22 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
         }
     }
 
-    // Save tree function from possible regular compilation
-    llvm::Function *treeFunction = compiler->TreeFunction(source);
-    compiler->SetTreeFunction(source, NULL);
-
     // Create the compilation unit for the code to enclose
-    OCompiledUnit subUnit(compiler, source, parms);
-    assert (!subUnit.IsForwardCall()); // because we cleared TreeFunction
-
-    Tree *result = symbols->Compile(source, subUnit, true);
-    if (!result)
+    OCompiledUnit subUnit(compiler, source, parms, true);
+    if (!subUnit.IsForwardCall())
     {
-        unit.ConstantTree(source);
-    }
-    else
-    {
-        subUnit.Finalize();
+        Tree *result = symbols->Compile(source, subUnit, true);
+        if (!result)
+        {
+            unit.ConstantTree(source);
+        }
+        else
+        {
+            subUnit.Finalize();
+        }
     }
     if (!source->Symbols())
         source->SetSymbols(symbols);
-    compiler->SetTreeFunction(source, treeFunction);
-    compiler->SetTreeClosure(source, subUnit.function);
 
     // Create a call to xl_new_closure to save the required trees
     unit.CreateClosure(source, args, subUnit.function);
@@ -2110,7 +2105,7 @@ Tree *Rewrite::Compile(void)
     Compiler *compiler = MAIN->compiler;
 
     // Create the compilation unit and check if we are already compiling this
-    OCompiledUnit unit(compiler, to, parameters);
+    OCompiledUnit unit(compiler, to, parameters, false);
     if (unit.IsForwardCall())
     {
         // Recursive compilation of that form
@@ -2160,7 +2155,10 @@ Tree *Rewrite::Compile(void)
 
 using namespace llvm;
 
-OCompiledUnit::OCompiledUnit(Compiler *comp, Tree *src, TreeList parms)
+OCompiledUnit::OCompiledUnit(Compiler *comp,
+                             Tree *src,
+                             TreeList parms,
+                             bool closure)
 // ----------------------------------------------------------------------------
 //   OCompiledUnit constructor
 // ----------------------------------------------------------------------------
@@ -2173,7 +2171,10 @@ OCompiledUnit::OCompiledUnit(Compiler *comp, Tree *src, TreeList parms)
         std::cerr << "OCompiledUnit T" << (void *) src;
 
     // If a compilation for that tree is alread in progress, fwd decl
-    if (llvm::Function *function = compiler->TreeFunction(src))
+    function = closure
+        ? compiler->TreeClosure(src)
+        : compiler->TreeFunction(src);
+    if (function)
     {
         // We exit here without setting entrybb (see IsForward())
         IFTRACE(llvm)
@@ -2195,7 +2196,10 @@ OCompiledUnit::OCompiledUnit(Compiler *comp, Tree *src, TreeList parms)
                                 label.c_str(), compiler->module);
 
     // Save it in the compiler
-    compiler->SetTreeFunction(src, function);
+    if (closure)
+        compiler->SetTreeClosure(src, function);
+    else
+        compiler->SetTreeFunction(src, function);
     IFTRACE(llvm)
         std::cerr << " new F" << function << "\n";
 

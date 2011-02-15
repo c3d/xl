@@ -173,7 +173,7 @@ struct OCompiledUnit
 //  A compilation unit, which typically corresponds to an expression
 // ----------------------------------------------------------------------------
 {
-    OCompiledUnit(Compiler *comp, Tree *source, TreeList parms);
+    OCompiledUnit(Compiler *comp, Tree *source, TreeList parms, bool closure);
     ~OCompiledUnit();
 
     bool                IsForwardCall()         { return entrybb == NULL; }
