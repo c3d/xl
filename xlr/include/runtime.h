@@ -155,6 +155,7 @@ struct XLCall
         {
             *pointer = tree;
         }
+        args.push_back(tree);
         return *this;
     }
     XLCall &operator, (Tree &tree) { return *this, &tree; }
