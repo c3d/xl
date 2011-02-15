@@ -2,71 +2,11 @@
 N! -> N * (N-1)!
 
 // If-then-else statement
-if true then TrueBody else FalseBody    -> TrueBody
-if false then TrueBody else FalseBody   -> FalseBody
+if true then TrueBody else FalseBody    -> do TrueBody
+if false then TrueBody else FalseBody   -> do FalseBody
 
-if true then TrueBody                   -> TrueBody
+if true then TrueBody                   -> do TrueBody
 if false then TrueBody                  -> false
-
-// Loops
-loop Body:code                  -> Body; loop Body
-while Cond:code loop Body:code  ->
-    if Cond then
-        Body
-        while Cond loop Body
-until Cond:code loop Body:code  ->
-    if not Cond then
-        Body
-        until Cond loop Body
-loop Body:code while Cond:code  ->
-    Body
-    if Cond then
-        loop Body while Cond
-loop Body:code until Cond:code  ->
-    Body
-    if not Cond then
-        loop Body until Cond
-for I:name in Low:integer..High:integer loop Body:code ->
-    I := Low
-    while I <= High loop
-        Body
-        I := I + 1
-
-// Min and max functions
-min x, y -> if x < min y then x else min y
-min y    -> y
-max x, y -> if x > max y then x else max y
-max y    -> y
 
 // Building lists, notably lists of arguments
 data x,y
-first x,y -> x
-rest  x,y -> y
-first x   -> x
-rest  x   -> nil
-x, nil    -> x
-nil, x    -> x
-
-// Range of values
-data low..high
-data low..high step step
-
-// Mapping functions
-Callback:tree with A,B ->
-    data X:value, Y:value
-    (Callback A), (Callback with B)
-Callback:tree with nil -> nil
-Callback:tree with A..B when A < B ->
-    data X:value, Y:value
-    (Callback A), (Callback with A+1..B)
-Callback:tree with A..A -> Callback A
-Callback:tree with A..B -> nil
-Callback:tree with A -> Callback A
-
-// In-place arithmetic
-X:name += Y:value -> X := X + Y
-X:name -= Y:value -> X := X - Y
-X:name *= Y:value -> X := X * Y
-X:name /= Y:value -> X := X / Y
-++X:name -> X += 1
---X:name -> X -= 1
