@@ -945,6 +945,28 @@ bool Compiler::FreeResources(Tree *tree)
         }
     }
     
+    // Drop closure function reference if any
+    if (Function *f = info->closure)
+    {
+        bool inUse = !f->use_empty();
+        
+        IFTRACE(llvm)
+            std::cerr << " closure F" << f
+                      << (inUse ? " in use" : " unused");
+        
+        if (inUse)
+        {
+            // Defer deletion until later
+            result = false;
+        }
+        else
+        {
+            // Not in use, we can delete it directly
+            f->eraseFromParent();
+            info->function = NULL;
+        }
+    }
+    
     // Drop any global reference
     if (GlobalValue *v = info->global)
     {
