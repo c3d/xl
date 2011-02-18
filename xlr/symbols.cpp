@@ -750,8 +750,6 @@ Tree *ArgumentMatch::Compile(Tree *source, bool noData)
     if (!unit.IsKnown(source))
     {
         source = symbols->Compile(source, unit, true, false, noData);
-        if (!source)
-            return NULL; // No match
     }
     else
     {
@@ -761,7 +759,7 @@ Tree *ArgumentMatch::Compile(Tree *source, bool noData)
         source = source->Do(compile);
     }
 
-    if (!source->Symbols())
+    if (source && !source->Symbols())
         source->SetSymbols(symbols);
 
     return source;
@@ -801,6 +799,8 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
 
     // For more complex expression, return a constant tree
     unit.ConstantTree(source);
+    if (!source->Symbols())
+        source->SetSymbols(symbols);
 
     // Record which elements of the expression are captured from context
     Compiler *compiler = MAIN->compiler;
@@ -812,7 +812,12 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
         return NULL;
     }
     if (env.captured.size() == 0)
-        return Compile(source, false);
+    {
+        Tree *result = Compile(source, true);
+        if (!result)
+            result = source;
+        return result;
+    }
 
     // Create the parameter list with all imported locals
     TreeList parms, args;
@@ -845,15 +850,8 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     OCompiledUnit subUnit(compiler, source, parms, true);
     if (!subUnit.IsForwardCall())
     {
-        Tree *result = symbols->Compile(source, subUnit, true);
-        if (!result)
-        {
-            unit.ConstantTree(source);
-        }
-        else
-        {
-            subUnit.Finalize();
-        }
+        symbols->Compile(source, subUnit, true);
+        subUnit.Finalize();
     }
 
     // Create a call to xl_new_closure to save the required trees
@@ -2043,7 +2041,8 @@ Tree *CompileAction::Rewrites(Tree *what)
             // Set the symbols for the result
             if (!what->Symbols())
                 what->SetSymbols(symbols);
-            unit.CallEvaluateChildren(what);
+            if (!noDataForms)
+                unit.CallEvaluateChildren(what);
             return NULL;
         }
         Ooops("No rewrite candidate for $1", what);
