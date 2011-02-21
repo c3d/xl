@@ -650,12 +650,14 @@ PREFIX(Springify, real, "springify",
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
+#ifndef LIBXLR
 PREFIX(ListFiles, tree, "files", PARM(pat, tree, ""),
        return xl_list_files(&pat),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
+#endif
 
 // Debugging code
 PREFIX(DebugTree, tree, "debug", PARM(toDebug, tree, ""),
