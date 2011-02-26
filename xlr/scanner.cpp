@@ -541,9 +541,21 @@ text Scanner::Comment(text EOC, bool stripIndent)
         }
 
         if (c == *match)
+        {
             match++;
+        }
         else
-            match = eoc;
+        {
+            // Backtrack in case we had something like **/
+            uint i, max = match - eoc;
+            kstring end = comment.c_str() + comment.length();
+            for (i = 0; i < max; i++)
+            {
+                if (memcmp(eoc, end - max + i, match - eoc) == 0)
+                    break;
+                match--;
+            }
+        }
 
         if (!skip)
             comment += c;
