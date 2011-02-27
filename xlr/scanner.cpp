@@ -490,11 +490,21 @@ token_t Scanner::NextToken(bool hungry)
            !syntax.IsBlock(c, endMarker))
     {
         NEXT_CHAR(c);
-        if (!hungry && !syntax.KnownToken(tokenText))
+        if (!hungry && !syntax.KnownPrefix(tokenText))
             break;
     }
     input.unget();
     position--;
+    if (!hungry)
+    {
+        while (tokenText.length() > 1 && !syntax.KnownToken(tokenText))
+        {
+            tokenText.erase(tokenText.length() - 1, 1);
+            textValue.erase(textValue.length() - 1, 1);
+            input.unget();
+            position--;
+        }
+    }
     hadSpaceAfter = isspace(c);
     if (syntax.IsBlock(textValue, endMarker))
         return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
