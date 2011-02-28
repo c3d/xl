@@ -1028,6 +1028,8 @@ Tree *xl_list_files(Context *context, Tree *patterns)
     xl_list_files(context, patterns, parent);
     if (!result)
         result = xl_nil;
+    else
+        result->SetSymbols(patterns->Symbols());
     return result;
 }
 
