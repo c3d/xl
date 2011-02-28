@@ -811,13 +811,6 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
         Ooops("Internal: what environment in $1?", source);
         return NULL;
     }
-    if (env.captured.size() == 0)
-    {
-        Tree *result = Compile(source, true);
-        if (!result)
-            result = source;
-        return result;
-    }
 
     // Create the parameter list with all imported locals
     TreeList parms, args;
