@@ -311,7 +311,8 @@ struct Context
 
     // Search paths
     void                AddSearchPath(text prefix, text dir);
-    text                FindInSearchPath(text prefix, text filename);
+    text                FindInSearchPath(text prefix, text filename,
+                                         bool localonly = false);
     text                ResolvePrefixedPath(text filename);
 
 public:

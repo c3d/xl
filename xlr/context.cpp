@@ -1843,7 +1843,7 @@ void Context::AddSearchPath(text prefix, text dir)
 }
 
 
-text Context::FindInSearchPath(text prefix, text filename)
+text Context::FindInSearchPath(text prefix, text filename, bool localonly)
 // ----------------------------------------------------------------------------
 //   Look for file using search path for prefix.
 // ----------------------------------------------------------------------------
@@ -1861,13 +1861,16 @@ text Context::FindInSearchPath(text prefix, text filename)
         }
     }
 
+    if (localonly)
+        return "";
+
     context_list list;
     Contexts(NORMAL_LOOKUP, list);
     for (context_list::iterator i=list.begin();i!=list.end();i++)
     {
         if ((*i) == this)
             continue;
-        text p = (*i)->FindInSearchPath(prefix, filename);
+        text p = (*i)->FindInSearchPath(prefix, filename, true);
         if (p != "")
             return p;
     }
