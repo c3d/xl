@@ -279,6 +279,25 @@ text Main::SearchFile(text file)
 }
 
 
+text Main::ParentDir(text path)
+// ----------------------------------------------------------------------------
+//   Return path of parent directory
+// ----------------------------------------------------------------------------
+{
+    text resolved = SearchFile(path);
+    if (resolved == "")
+        return "";
+    const char *p, *str = resolved.c_str();
+    for (p = &str[strlen(str) - 1] ; p != str && *p == '/'; p--) {};
+    if (p == str)
+        return "/";
+    for ( ; p != str && *p != '/'; p--) {};
+    if (p != str)
+        p--;
+    return resolved.substr(0, p - str + 1);
+}
+
+
 bool Main::Refresh(double delay)
 // ----------------------------------------------------------------------------
 //   Tell that the program won't execute again after the given delay
@@ -374,6 +393,15 @@ int Main::LoadFile(text file, bool updateContext)
     }
     MAIN->context = ctx;
     MAIN->globals = syms;
+
+    // HACK - do not hide imported .xl
+    if (file.find(".ddd") == file.npos &&
+        file.find("tao.xl") == file.npos &&
+        file.find("builtins.xl") == file.npos)
+    {
+        ctx->Define(new Name("module_file"), new Text(file));
+        ctx->Define(new Name("module_dir"),  new Text(ParentDir(file)));
+    }
 
     // Register the source file we had
     sf = SourceFile (file, tree, ctx, syms);

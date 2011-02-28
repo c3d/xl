@@ -197,6 +197,8 @@ typedef std::vector<Rewrite_p>     rewrite_list;
 typedef std::vector<Context_p>     context_list;
 typedef std::map<Tree_p, Tree_p>   tree_map;
 typedef Tree *(*native_fn) (Context *ctx, Tree *self);
+typedef std::vector<text>          path_list;
+typedef std::map<text, path_list>  search_paths;
 
 
 
@@ -308,11 +310,18 @@ struct Context
     // Clear the symbol table
     void                Clear();
 
+    // Search paths
+    void                AddSearchPath(text prefix, text dir);
+    text                FindInSearchPath(text prefix, text filename,
+                                         bool localonly = false);
+    text                ResolvePrefixedPath(text filename);
+
 public:
     Context_p           scope;
     Context_p           stack;
     rewrite_table       rewrites;
     context_list        imported;
+    search_paths        searchPaths;
     bool                hasConstants;
     bool                keepSource;
 

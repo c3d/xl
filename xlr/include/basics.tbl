@@ -739,6 +739,18 @@ PREFIX(LoadData,  tree, "load_data",
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
+PREFIX(AddSearchPath, tree, "add_search_path", PARM(prefix, text, "") PARM(dir, text, ""),
+       return xl_add_search_path(context, prefix, dir),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("Add dir to the search path for prefix for the current context")
+       RETURNS(tree, ""))
+PREFIX(FindInSearchPath, text, "find_in_search_path", PARM(prefix, text, "") PARM(path, text, ""),
+       return xl_find_in_search_path(context, prefix, path),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("Look for file using search path for prefix")
+       RETURNS(text, "The path to the file, if the file was found"))
 
 INFIX(Apply, tree, tree, "with", tree,
       return xl_apply(context, &l, &r),
