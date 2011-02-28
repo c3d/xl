@@ -109,6 +109,9 @@ OPTION(diff,
        "Compute difference of two parse trees "
        "(you must give exactly two input files)", doDiff=true)
 
+OPTVAR(debugPrefix, text, "")
+OPTION(debug_prefix, "Select the prefix to debug", debugPrefix = STRING)
+
 
 
 // ============================================================================

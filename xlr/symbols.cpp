@@ -1848,6 +1848,10 @@ Tree *CompileAction::DoPrefix(Prefix *what)
                 what->right->code = xl_evaluate_children;
             return what;
         }
+
+        // A breakpoint location for convenience
+        if (name->value == Options::options->debugPrefix)
+            return Rewrites(what);
     }
     return Rewrites(what);
 }
