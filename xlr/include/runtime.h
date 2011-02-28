@@ -80,6 +80,7 @@ Postfix *xl_new_postfix(Postfix *source, Tree *left, Tree *right);
 Infix   *xl_new_infix(Infix *source, Tree *left, Tree *right);
 
 Tree *xl_new_closure(eval_fn toCall, Tree *expr, uint ntrees, ...);
+Tree *xl_tree_copy(Tree *from, Tree *to);
 
 Tree *xl_boolean_cast(Context *, Tree *source, Tree *value);
 Tree *xl_integer_cast(Context *, Tree *source, Tree *value);

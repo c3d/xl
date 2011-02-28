@@ -31,6 +31,7 @@
 #include "options.h"
 #include "opcodes.h"
 #include "compiler.h"
+#include "compiler-gc.h"
 #include "main.h"
 #include "types.h"
 #include "save.h"
@@ -593,6 +594,32 @@ Tree *xl_new_closure(eval_fn toCall, Tree *expr, uint ntrees, ...)
     xl_set_source(result, expr);
 
     return result;
+}
+
+
+Tree *xl_tree_copy(Tree *from, Tree *to)
+// ----------------------------------------------------------------------------
+//    Copy information from one tree to the other
+// ----------------------------------------------------------------------------
+{
+    if (from && to && from != to)
+    {
+        if (Symbols *symbols = from->Symbols())
+        {
+            to->SetSymbols(symbols);
+            symbols->Clear();
+        }
+#if 0
+        if (CompilerInfo *cinfo = from->Remove<CompilerInfo>())
+            to->SetInfo<CompilerInfo> (cinfo);
+        if (eval_fn code = from->code)
+        {
+            to->code = code;
+            from->code = NULL;
+        }
+#endif
+    }
+    return to;
 }
 
 

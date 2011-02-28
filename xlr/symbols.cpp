@@ -1542,12 +1542,6 @@ Tree *DeclarationAction::DoPrefix(Prefix *what)
             EnterRewrite(what->right, NULL, NULL);
             return what;
         }
-        if (name->value == "load")
-        {
-            Text *file = what->right->AsText();
-            if (file)
-                return xl_load(NULL, file->value);
-        }
     }
 
     return what;
