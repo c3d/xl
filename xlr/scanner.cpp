@@ -508,11 +508,21 @@ token_t Scanner::NextToken(bool hungry)
            !syntax.IsBlock(c, endMarker))
     {
         NEXT_CHAR(c);
-        if (!hungry && !syntax.KnownToken(tokenText))
+        if (!hungry && !syntax.KnownPrefix(tokenText))
             break;
     }
     input.unget();
     position--;
+    if (!hungry)
+    {
+        while (tokenText.length() > 1 && !syntax.KnownToken(tokenText))
+        {
+            tokenText.erase(tokenText.length() - 1, 1);
+            textValue.erase(textValue.length() - 1, 1);
+            input.unget();
+            position--;
+        }
+    }
     hadSpaceAfter = isspace(c);
     if (syntax.IsBlock(textValue, endMarker))
         return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
@@ -559,9 +569,21 @@ text Scanner::Comment(text EOC, bool stripIndent)
         }
 
         if (c == *match)
+        {
             match++;
+        }
         else
-            match = eoc;
+        {
+            // Backtrack in case we had something like **/
+            uint i, max = match - eoc;
+            kstring end = comment.c_str() + comment.length();
+            for (i = 0; i < max; i++)
+            {
+                if (memcmp(eoc, end - max + i, match - eoc) == 0)
+                    break;
+                match--;
+            }
+        }
 
         if (!skip)
             comment += c;

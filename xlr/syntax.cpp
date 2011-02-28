@@ -121,6 +121,15 @@ bool Syntax::KnownToken(text n)
 }
 
 
+bool Syntax::KnownPrefix(text n)
+// ----------------------------------------------------------------------------
+//   Check if the given symbol is a known prefix to a possible token
+// ----------------------------------------------------------------------------
+{
+    return known_prefixes.count(n) > 0;
+}
+
+
 void Syntax::CommentDelimiter(text Begin, text End)
 // ----------------------------------------------------------------------------
 //   Define comment syntax
@@ -260,8 +269,9 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
             for (i = 1; i < len; i++)
             {
                 text sub = t.substr(0, i);
-                known_tokens.insert(sub);
+                known_prefixes.insert(sub);
             }
+            known_tokens.insert(t);
         }
 
         switch(tok)

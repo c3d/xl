@@ -214,8 +214,7 @@ SourceFile *Main::NewFile(text path)
 // ----------------------------------------------------------------------------
 {
     CreateScope();
-    Name_p nil = new Name("nil");
-    files[path] = SourceFile(path,nil, context, globals, true);
+    files[path] = SourceFile(path,xl_nil, context, globals, true);
     PopScope();
     return &files[path];
 }
@@ -378,7 +377,6 @@ int Main::LoadFile(text file, bool updateContext)
 
     // Register the source file we had
     sf = SourceFile (file, tree, ctx, syms);
-
     if (tree)
     {
         // Set symbols and compile if required
@@ -543,7 +541,7 @@ int main(int argc, char **argv)
 
     if (!rc && MAIN->HadErrors())
         rc = 1;
-    
+
 #if CONFIG_USE_SBRK
     IFTRACE(memory)
         fprintf(stderr, "Total memory usage: %ldK\n",

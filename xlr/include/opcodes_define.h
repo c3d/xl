@@ -41,12 +41,11 @@
 
 #define RETURNS(rtype, rdoc)                                            \
                           returns = " return_value \"" #rtype "\", <<"; \
-                          returns += rdoc;                              \
-                          returns += ">>\n";
+                          returns.append(rdoc).append(">>\n");
 #define GROUP(grp)        docgroup = #grp;
 #define SYNOPSIS(syno)    synopsis = syno;
 #define DESCRIPTION(desc) description = desc;
-#define SEE(see)          seealso = #see;
+#define SEE(see)          seealso = see;
 
 
 #define DOC(name, syntax, docinfo)                                      \
@@ -58,12 +57,12 @@
     doc += " synposis <<" + synopsis + ">>\n";                          \
     doc += " description << " + description + ">>\n";                   \
     if (docparms != "")                                                 \
-        doc += " parameters\n" + docparms + "\n";                       \
+        doc.append(" parameters\n").append(docparms).append("\n");      \
     if (returns != "")                                                  \
-        doc += returns;                                                 \
+        doc.append(returns);                                            \
     if (seealso != "")                                                  \
-        doc += " see \"" + seealso + "\"\n";                            \
-    doc += "|*/";
+        doc.append(" see \"").append(seealso).append("\"\n");           \
+    doc.append("|*/");
 
 #define INFIX(name, rtype, t1, symbol, t2, _code, docinfo)              \
     do                                                                  \
@@ -78,12 +77,12 @@
     {                                                                   \
         parameters.push_back(xl_parameter(#symbol, #type));             \
         if (docparms != "")                                             \
-            docsyntax += ", ";                                          \
+            docsyntax.append(", ");                                     \
         else                                                            \
-            docsyntax += " ";                                           \
-        docsyntax += text(#symbol);                                     \
-        docparms += "  parameter \"" #type "\", \"" #symbol "\",";      \
-        docparms += " <<" pdoc ">>\n";                                  \
+            docsyntax.append(" ");                                      \
+        docsyntax.append(#symbol);                                      \
+        docparms.append(" parameter \"" #type "\", \"" #symbol "\","); \
+        docparms.append(" <<" pdoc ">>\n");                             \
     } while (0);
 
 #define PREFIX(name, rtype, symbol, parms, _code, docinfo)              \

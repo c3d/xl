@@ -79,10 +79,6 @@ PREFIX(EvaluatedClosure, tree, "<value>",
        return &input,
        GROUP(basics:closure)
        SYNOPSIS("Result of a previous lazy evaluation"))
-INFIX(Assignment, tree, source, ":=", tree,
-      return xl_assign(context, &l, &r),
-      GROUP(basics:assignment)
-      SYNOPSIS("Assignment of a value to a variable"))
 PREFIX(AnyLookup, tree, "any",
        PARM(expr, source, "Expression to evaluate"),
        return xl_evaluate_any(context, &expr),
@@ -106,6 +102,11 @@ PREFIX(Solve, tree, "solve",
        SYNOPSIS("Test for the property solver"))
 
 // Integer arithmetic and comparisons
+INFIX(SetInt, integer,integer,":=",integer,XL_RINT(l.value = XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(integer,""))
 INFIX(AddInt,integer, integer,"+",integer, XL_RINT(XL_INT(l) + XL_INT(r)),
       GROUP(basics)
       SYNOPSIS("")
@@ -230,6 +231,11 @@ POSTFIX(PercentReal, real, PARM(x, real, ""), "%", XL_RREAL(x / 100.0),
         RETURNS( real, ""))
 
 // Real arithmetic and comparisons
+INFIX(SetReal, real, real, ":=",real, XL_RREAL(l.value = XL_REAL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS( real, ""))
 INFIX(AddReal, real, real, "+", real, XL_RREAL(XL_REAL(l) + XL_REAL(r)),
       GROUP(basics)
       SYNOPSIS("")
@@ -395,6 +401,14 @@ PREFIX(PiConstant, real, "pi", , XL_RREAL(M_PI),
        RETURNS(real, ""))
 
 // Boolean operations
+INFIX(SetBool, boolean, boolean, ":=",boolean,
+      bool val = XL_BOOL(r);
+      l.value = val ? "true" : "false";
+      XL_RBOOL(val),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
 INFIX(AndBool, boolean, boolean, "and", boolean, XL_RBOOL(XL_BOOL(l) & XL_BOOL(r)),
       GROUP(basics)
       SYNOPSIS("")
@@ -428,6 +442,11 @@ INFIX(EQBool, boolean, boolean, "=", boolean, XL_RBOOL(XL_BOOL(l) == XL_BOOL(r))
       RETURNS(boolean, ""))
 
 // Text operations
+INFIX(SetText, text, text,":=", text, XL_RTEXT(l.value = XL_TEXT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(text, ""))
 INFIX(TextConcatenate, text, text, "&", text, XL_RTEXT(XL_TEXT(l) + XL_TEXT(r)),
       GROUP(basics)
       SYNOPSIS("")
@@ -536,6 +555,10 @@ PREFIX(RealToText, text, "text", PARM(x, real, ""), XL_RTEXT(xl_real2text(x)),
        RETURNS(text, ""))
 
 // Time computations
+#ifndef LIBXLR
+/* Currently if LIBXLR is defined it means we're building Tao.
+   Tao redefines the following primitives, and we must not define
+   them twice to avoid a clash */
 PREFIX(TimeHours, integer, "hours", PARM(t, integer, ""), XL_RTIME(tm.tm_hour),
        GROUP(basics)
        SYNOPSIS("")
@@ -623,6 +646,7 @@ PREFIX(SystemYearDay, integer, "year_day",, XL_RCTIME(tm.tm_yday, 10),
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(integer, ""))
+#endif
 
 // Random number generator
 PREFIX(RandomNumber, real, "random", , XL_RREAL(xl_random(0.0, 1.0)),
@@ -692,7 +716,7 @@ PREFIX(ImportFile, tree, "import",
        DESCRIPTION("")
        RETURNS(tree, ""))
 PREFIX(LoadCSV,  tree, "load_csv", PARM(f, text, "") PARM(p, text, ""),
-       return xl_load_data(context, f, p, ",;", "\n\f\r"),
+       return xl_load_data(context, self, f, p, ",;", "\n\f\r"),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
@@ -700,7 +724,7 @@ PREFIX(LoadCSV,  tree, "load_csv", PARM(f, text, "") PARM(p, text, ""),
 PREFIX(LoadTSV,  tree, "load_tsv",
        PARM(f, text, "File name")
        PARM(p, text, "Prefix to apply"),
-       return xl_load_data(context, f, p, "\t", "\n\f\r"),
+       return xl_load_data(context, self, f, p, "\t", "\n\f\r"),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
@@ -710,7 +734,7 @@ PREFIX(LoadData,  tree, "load_data",
        PARM(p, text, "Prefix to apply")
        PARM(fs, text, "Field separator")
        PARM(rs, text, "Row separator"),
-       return xl_load_data(context, f, p, fs, rs),
+       return xl_load_data(context, self, f, p, fs, rs),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
@@ -742,12 +766,14 @@ PREFIX(Springify, real, "springify",
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
+#ifndef LIBXLR
 PREFIX(ListFiles, tree, "files", PARM(pat, tree, ""),
        return xl_list_files(context, &pat),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
+#endif
 
 // Debugging code
 PREFIX(DebugTree, tree, "debug", PARM(toDebug, tree, ""),
@@ -812,4 +838,4 @@ PREFIX(ComputeSha1, text, "sha1", PARM(t, tree, ""), XL_RTEXT(sha1(&t)),
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, "")
-       MISC("  see \"sha\"\n"))
+       SEE("sha"))
