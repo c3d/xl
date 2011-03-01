@@ -419,7 +419,6 @@ int Main::LoadFile(text file, bool updateContext)
             if (options.optimize_level == 1)
             {
                 tree->SetSymbols(syms);
-                tree = syms->CompileAll(tree);
                 if (!tree)
                     hadError = true;
                 else

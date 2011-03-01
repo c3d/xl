@@ -1115,6 +1115,7 @@ Tree *xl_load(Context *context, text name)
 
     SourceFile &sf = MAIN->files[path];
     context->Import(sf.context);
+    MAIN->globals->Import(sf.symbols);
     return sf.tree;
 }
 
