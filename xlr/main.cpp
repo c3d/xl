@@ -399,8 +399,14 @@ int Main::LoadFile(text file, bool updateContext)
         file.find("tao.xl") == file.npos &&
         file.find("builtins.xl") == file.npos)
     {
-        ctx->Define(new Name("module_file"), new Text(file));
-        ctx->Define(new Name("module_dir"),  new Text(ParentDir(file)));
+        Name_p module_file = new Name("module_file"); // TODO: Position
+        Name_p module_dir = new Name("module_dir");
+        Text_p module_file_value = new Text(file);
+        Text_p module_dir_value = new Text(ParentDir(file));
+        ctx->Define(module_file, module_file_value);
+        ctx->Define(module_dir, module_dir_value);
+        syms->EnterName(module_file->value, module_file_value);
+        syms->EnterName(module_dir->value, module_dir_value);
     }
 
     // Register the source file we had
