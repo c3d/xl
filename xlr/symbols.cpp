@@ -1100,15 +1100,6 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
             return NULL;
         }
 
-        // Check if the name already exists
-        if (false) // Prevents local argument names
-        if (Tree *existing = rewrite->Named(varName->value))
-        {
-            Ooops("Name $1 already exists as $2",
-                  what->left, existing);
-            return NULL;
-        }
-
         // Check for types that don't require a type check
         bool needEvaluation = true;
         if (Name *declTypeName = what->right->AsName())
