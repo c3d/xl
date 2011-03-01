@@ -1091,7 +1091,7 @@ bool xl_write_cr()
 //
 // ============================================================================
 
-Tree *xl_load(Context *context, text name)
+Tree *xl_load(Context *context, Tree *self, text name)
 // ----------------------------------------------------------------------------
 //    Load a file from disk without evaluating it
 // ----------------------------------------------------------------------------
@@ -1115,17 +1115,18 @@ Tree *xl_load(Context *context, text name)
 
     SourceFile &sf = MAIN->files[path];
     context->Import(sf.context);
-    MAIN->globals->Import(sf.symbols);
+    if (Symbols *symbols = self->Symbols())
+        symbols->Import(sf.symbols);
     return sf.tree;
 }
 
 
-Tree *xl_import(Context *context, text name)
+Tree *xl_import(Context *context, Tree *self, text name)
 // ----------------------------------------------------------------------------
 //   Load a tree and evaluate the result
 // ----------------------------------------------------------------------------
 {
-    Tree *result = xl_load(context, name);
+    Tree *result = xl_load(context, self, name);
     result = context->Evaluate(result);
     return result;
 }

@@ -362,8 +362,8 @@ Tree *xl_list_files(Context *context, Tree *patterns);
 //
 // ============================================================================
 
-Tree *xl_load(Context *, text name);
-Tree *xl_import(Context *, text name);
+Tree *xl_load(Context *, Tree *self, text name);
+Tree *xl_import(Context *, Tree *self, text name);
 Tree *xl_load_data(Context *, Tree *self,
                    text name, text prefix,
                    text fieldSeps = ",;", text recordSeps = "\n");

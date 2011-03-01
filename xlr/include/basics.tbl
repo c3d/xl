@@ -703,14 +703,14 @@ PREFIX(GetAttribute, tree, "form_attribute",
        SYNOPSIS("Find the attribute associated to a given form"))
 PREFIX(LoadFile, tree, "load",
        PARM(file, text, ""),
-       return xl_load(context, file),
+       return xl_load(context, self, file),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
 PREFIX(ImportFile, tree, "import",
        PARM(file, text, "Name of file to import"),
-       return xl_import(context, file),
+       return xl_import(context, self, file),
        GROUP(basics)
        SYNOPSIS("Import a module")
        DESCRIPTION("")
