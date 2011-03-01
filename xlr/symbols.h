@@ -487,6 +487,7 @@ public:
 extern "C"
 {
     void debugsy(XL::Symbols *s);
+    void debugsym(XL::Symbols *s);
 }
 
 

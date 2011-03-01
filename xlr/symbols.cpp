@@ -3240,12 +3240,41 @@ extern "C" void debugsy(XL::Symbols *s)
 {
     using namespace XL;
     std::cerr << "SYMBOLS AT " << s << "\n";
-
-    std::cerr << "NAMES:\n";
+        
+    std::cerr << "NAMES IN " << s << ":\n";
     symbol_table::iterator i;
     for (i = s->names.begin(); i != s->names.end(); i++)
         std::cerr << (*i).first << ": " << (*i).second << "\n";
+    
+    std::cerr << "REWRITES IN " << s << ":\n";
+    if (s->rewrites)
+        debugrw(s->rewrites);
+}
 
-    std::cerr << "REWRITES:\n";
-    debugrw(s->rewrites);
+
+extern "C" void debugsym(XL::Symbols *symbols)
+// ----------------------------------------------------------------------------
+//   For the debugger, dump a symbol table
+// ----------------------------------------------------------------------------
+{
+    using namespace XL;
+    symbols_set visited;
+    symbols_list lookups;
+
+    // Build all the symbol tables that we are going to look into
+    BuildSymbolsList(symbols, visited, lookups);
+
+    for (symbols_list::iterator i = lookups.begin(); i != lookups.end(); i++)
+    {
+        Symbols *s = *i;
+
+        debugsy(s);
+        symbols_set::iterator import;
+        for (import = s->imported.begin(); import!=s->imported.end(); import++)
+        {
+            std::cerr << "IMPORT " << *import << " IN " << s << ":\n";
+            debugsy(*import);
+        }
+        s = s->parent;
+    }
 }
