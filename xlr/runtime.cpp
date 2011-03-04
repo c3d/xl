@@ -968,25 +968,20 @@ Tree *xl_load(Context *context, text name)
 
     // Check if the file has already been loaded somehwere.
     // If so, return the loaded file
-    if (MAIN->files.count(path) > 0)
+    bool exists = MAIN->files.count(path);
+    if (!exists)
     {
-        SourceFile &sf = MAIN->files[path];
-        return sf.tree;
+        IFTRACE(fileload)
+                std::cout << "Loading: " << path << "\n";
+
+        bool hadError = MAIN->LoadFile(path, false);
+        if (hadError)
+            return Ooops("Unable to load file $1", new Text(path));
     }
 
-    IFTRACE(fileload)
-        std::cout << "Loading: " << path << "\n";
-
-    Parser parser(path.c_str(), MAIN->syntax, MAIN->positions, *MAIN->errors);
-    Tree *tree = parser.Parse();
-    if (!tree)
-        return Ooops("Unable to load file $1", new Text(path));
-
-    Context *imported = new Context(context, NULL);
-    MAIN->files[path] = SourceFile(path, tree, imported);
-    context->Import(imported);
-
-    return tree;
+    SourceFile &sf = MAIN->files[path];
+    context->Import(sf.context);
+    return sf.tree;
 }
 
 
@@ -1128,6 +1123,25 @@ Tree *xl_load_data(Context *context,
     context->Import(imported);
 
     return tree;
+}
+
+
+Tree *xl_add_search_path(Context *context, text prefix, text dir)
+// ----------------------------------------------------------------------------
+//   Add directory to the search path for prefix for the current context
+// ----------------------------------------------------------------------------
+{
+    context->stack->AddSearchPath(prefix, dir);
+    return XL::xl_true;
+}
+
+
+Text *xl_find_in_search_path(Context *context, text prefix, text file)
+// ----------------------------------------------------------------------------
+//   Add directory to the search path for prefix for the current context
+// ----------------------------------------------------------------------------
+{
+    return new Text(context->stack->FindInSearchPath(prefix, file));
 }
 
 XL_END
