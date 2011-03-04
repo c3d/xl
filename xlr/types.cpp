@@ -898,7 +898,7 @@ Tree *ValueMatchesType(Context *ctx, Tree *type, Tree *value, bool convert)
     }
     if (type == text_type)
         if (Text *tv = value->AsText())
-            if (tv->opening == "\"" && tv->closing == "\"")
+            if (tv->opening != "'" && tv->closing != "'")
                 return tv;
     if (type == character_type)
         if (Text *cv = value->AsText())
