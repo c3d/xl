@@ -1788,8 +1788,15 @@ Tree *CompileAction::DoInfix(Infix *what)
             if (!what->left->Symbols())
                 what->left->SetSymbols(symbols);
         }
-        if (!what->right->Do(this))
+        if (Name *rightAsName = what->right->AsName())
+        {
+            if (!DoName(rightAsName, true))
+                return NULL;
+        }
+        else if (!what->right->Do(this))
+        {
             return NULL;
+        }
         if (unit.IsKnown(what->right))
         {
             if (!what->right->Symbols())
