@@ -45,17 +45,6 @@
 
 XL_BEGIN
 
-// In interpreted mode, the context actually holds the stack.
-// However, in compiled mode, there's only one level of context,
-// so attempting to unwind it ultimately causes a NULL-deref
-#define ADJUST_CONTEXT_FOR_INTERPRETER(context) \
-    if (Options::options->optimize_level == 0)  \
-        context = context->stack;
-#define ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context)                  \
-    assert (Options::options->optimize_level == 0 &&                    \
-            "This routine should only be called in interpreted mode");  \
-    context = context->stack;
-
 
 Tree *xl_identity(Context *, Tree *what)
 // ----------------------------------------------------------------------------
