@@ -389,7 +389,7 @@ Tree *xl_type_check(Context *context, Tree *value, Tree *type)
             return NULL;
         
         Infix *typeExpr = symbols->CompileTypeTest(type);
-        assert(type->code && "xl_type_check needs compiled type check");
+        assert(typeExpr->code && "xl_type_check needs compiled type check");
         typecheck_fn typecheck = (typecheck_fn) typeExpr->code;
         Tree *afterTypeCast = typecheck(context, typeExpr, value);
         if (afterTypeCast && afterTypeCast != original)
