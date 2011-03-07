@@ -443,7 +443,7 @@ Infix *Symbols::CompileTypeTest(Tree *type)
     CompileAction compile(locals, unit, false, false, false);
     Tree *result = callDecls->Do(compile);
     if (!result)
-        Ooops("Unable to compile $1", callDecls);
+        Ooops("Error compiling type test $1", callDecls);
 
     // Even if technically, this is not an 'eval_fn' (it has more args),
     // we still record it to avoid recompiling multiple times
@@ -480,7 +480,7 @@ Tree *Symbols::Run(Context *context, Tree *code)
             }
             result = symbols->CompileAll(result);
             if (!result->code || errors.Count())
-                return Ooops("Unable to compile $1", result);
+                return Ooops("Error compiling $1", result);
         }
 
         // Check infinite recursion
@@ -843,7 +843,11 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     OCompiledUnit subUnit(compiler, source, parms, true);
     if (!subUnit.IsForwardCall())
     {
-        symbols->Compile(source, subUnit, true);
+        if (!symbols->Compile(source, subUnit, true))
+        {
+            Ooops("Error compiling closure $1", source);
+            subUnit.CallTypeError(source);
+        }
         subUnit.Finalize();
     }
 
@@ -2137,7 +2141,7 @@ Tree *Rewrite::Compile(void)
     Tree *result = to->Do(compile);
     if (!result)
     {
-        Ooops("Unable to compile $1", to);
+        Ooops("Error compiling rewrite $1", to);
         return NULL;
     }
 
