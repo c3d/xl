@@ -252,21 +252,21 @@ INFIX(MulReal, real, real, "*", real, XL_RREAL(XL_REAL(l) * XL_REAL(r)),
       DESCRIPTION("")
       RETURNS( real, ""))
 INFIX(DivReal, real, real, "/", real,
-      if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RREAL(0.0); }
+      if (XL_REAL(r) == 0) { Ooops("Divide by $1", &r); XL_RREAL(0.0); }
       XL_RREAL(XL_REAL(l) / XL_REAL(r)),
       GROUP(basics)
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS( real, ""))
 INFIX(RemReal, real, real, "rem", real,
-      if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RREAL(0.0); }
+      if (XL_REAL(r) == 0) { Ooops("Divide by $1", &r); XL_RREAL(0.0); }
       XL_RREAL(fmod(XL_REAL(l), XL_REAL(r))),
       GROUP(basics)
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS( real, ""))
 INFIX(ModReal, real, real, "mod", real,
-      if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RREAL(0.0); }
+      if (XL_REAL(r) == 0) { Ooops("Divide by $1", &r); XL_RREAL(0.0); }
       XL_RREAL(xl_modf(l,r)),
       GROUP(basics)
       SYNOPSIS("")
