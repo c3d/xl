@@ -61,6 +61,7 @@ public:
     int                 PostfixPriority(text n);
     void                SetPostfixPriority(text n, int p);
     bool                KnownToken(text n);
+    bool                KnownPrefix(text n);
 
     // Read a complete syntax file (xl.syntax)
     void                ReadSyntaxFile (Scanner &scanner, uint indents = 1);
@@ -83,6 +84,7 @@ public:
     delimiter_table     text_delimiters;
     delimiter_table     block_delimiters;
     token_set           known_tokens;
+    token_set           known_prefixes;
     int                 priority;
 
     int                 default_priority;

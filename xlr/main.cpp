@@ -185,7 +185,7 @@ SourceFile *Main::NewFile(text path)
 //   Allocate an entry for updating programs (untitled)
 // ----------------------------------------------------------------------------
 {
-    files[path] = SourceFile(path, NULL, new Symbols(Symbols::symbols), true);
+    files[path] = SourceFile(path, xl_nil, new Symbols(Symbols::symbols), true);
     return &files[path];
 }
 
@@ -308,35 +308,35 @@ int Main::LoadFile(text file, bool updateContext)
     Symbols *savedSyms = syms;
     syms = new Symbols(syms);
     Symbols::symbols = syms;
-    if (tree)
-        tree->SetSymbols(syms);
-
     if (options.fileLoad)
         std::cout << "Loading: " << file << "\n";
-
-    files[file] = SourceFile (file, tree, syms);
-
-    if (options.showGV && tree)
-    {
-        SetNodeIdAction sni;
-        BreadthFirstSearch bfs(sni);
-        tree->Do(bfs);
-        GvOutput gvout(std::cout);
-        tree->Do(gvout);
-    }
 
     if (options.showSource)
         std::cout << tree << "\n";
 
-    if (!options.parseOnly)
+    files[file] = SourceFile (file, tree, syms);
+    if (tree)
     {
-        if (options.optimize_level && tree)
+        tree->SetSymbols(syms);
+        if (options.showGV)
         {
-            tree = syms->CompileAll(tree);
-            if (!tree)
-                hadError = true;
-            else
-                files[file].tree = tree;
+            SetNodeIdAction sni;
+            BreadthFirstSearch bfs(sni);
+            tree->Do(bfs);
+            GvOutput gvout(std::cout);
+            tree->Do(gvout);
+        }
+
+        if (!options.parseOnly)
+        {
+            if (options.optimize_level)
+            {
+                tree = syms->CompileAll(tree);
+                if (!tree)
+                    hadError = true;
+                else
+                    files[file].tree = tree;
+            }
         }
     }
 
@@ -458,7 +458,7 @@ int main(int argc, char **argv)
 
     if (!rc && MAIN->errors->Count())
         rc = 1;
-    
+
 #if CONFIG_USE_SBRK
     IFTRACE(memory)
         fprintf(stderr, "Total memory usage: %ldK\n",

@@ -37,6 +37,7 @@
 #include <iostream>
 #include <cstdarg>
 #include <cstdio>
+#include "winglob.h"
 #include <sys/stat.h>
 
 
@@ -703,6 +704,69 @@ Tree *xl_write(Symbols *symbols, Tree *tree, text sep)
 }
 
 
+static void xl_list_files(Tree *patterns, Tree_p *&parent)
+// ----------------------------------------------------------------------------
+//   Append all files found in the parent
+// ----------------------------------------------------------------------------
+{
+    if (Block *block = patterns->AsBlock())
+    {
+        xl_list_files(block->child, parent);
+        return;
+    }
+    if (Infix *infix = patterns->AsInfix())
+    {
+        if (infix->name == "," || infix->name == ";" || infix->name == "\n")
+        {
+            xl_list_files(infix->left, parent);
+            xl_list_files(infix->right, parent);
+            return;
+        }
+    }
+
+    patterns = xl_evaluate(patterns);
+    if (Text *regexp = patterns->AsText())
+    {
+        glob_t files;
+        text filename = regexp->value;
+        glob(filename.c_str(), GLOB_MARK, NULL, &files);
+        for (uint i = 0; i < files.gl_pathc; i++)
+        {
+            std::string entry(files.gl_pathv[i]);
+            Text *listed = new Text(entry);
+            if (*parent)
+            {
+                Infix *added = new Infix(",", *parent, listed);
+                *parent = added;
+                parent = &added->right;
+            }
+            else
+            {
+                *parent = listed;
+            }
+        }
+        globfree(&files);
+        return;
+    }
+    Ooops("Malformed files list $1", patterns);
+}
+
+
+Tree *xl_list_files(Tree *patterns)
+// ----------------------------------------------------------------------------
+//   List all files in the given pattern
+// ----------------------------------------------------------------------------
+{
+    Tree_p result = NULL;
+    Tree_p *parent = &result;
+    xl_list_files(patterns, parent);
+    if (!result)
+        result = xl_nil;
+    return result;
+}
+
+
+
 
 // ============================================================================
 //
@@ -760,7 +824,8 @@ Tree *xl_import(text name)
 }
 
 
-Tree *xl_load_data(text name, text prefix, text fieldSeps, text recordSeps)
+Tree *xl_load_data(Tree *self,
+                   text name, text prefix, text fieldSeps, text recordSeps)
 // ----------------------------------------------------------------------------
 //    Load a comma-separated or tab-separated file from disk
 // ----------------------------------------------------------------------------
@@ -775,10 +840,21 @@ Tree *xl_load_data(text name, text prefix, text fieldSeps, text recordSeps)
     {
         SourceFile &sf = MAIN->files[path];
         Symbols::symbols->Import(sf.symbols);
-        return sf.tree;
+        Tree *tree = sf.tree;
+        if (prefix != "")
+        {
+            while (Infix *infix = tree->AsInfix())
+            {
+                xl_evaluate(infix->left);
+                tree = infix->right;
+            }
+            return xl_evaluate(tree);
+        }
+        return tree;
     }
 
-    Tree *tree = NULL;
+    Tree_p tree = NULL;
+    Tree_p *treePtr = NULL;
     Tree *line = NULL;
     char buffer[256];
     char *ptr = buffer;
@@ -787,6 +863,9 @@ Tree *xl_load_data(text name, text prefix, text fieldSeps, text recordSeps)
     bool hasRecord = false;
     bool hasField = false;
     FILE *f = fopen(path.c_str(), "r");
+    Symbols *old = self->Symbols(); assert(old);
+    Symbols *syms = new Symbols(old);
+    Tree *result = NULL;
 
     *end = 0;
     while (!feof(f))
@@ -819,7 +898,8 @@ Tree *xl_load_data(text name, text prefix, text fieldSeps, text recordSeps)
             text token;
             Tree *child = NULL;
 
-            if (isdigit(ptr[0]))
+            if (isdigit(buffer[0]) ||
+                ((buffer[0] == '-' || buffer[0] == '+') && isdigit(buffer[1])))
             {
                 char *ptr2 = NULL;
                 longlong l = strtoll(buffer, &ptr2, 10);
@@ -836,11 +916,14 @@ Tree *xl_load_data(text name, text prefix, text fieldSeps, text recordSeps)
             }
             if (child == NULL)
             {
+                if (*buffer == 0)
+                    continue;
                 token = text(buffer, ptr - buffer - 1);
                 child = new Text(buffer);
             }
 
-            // Combine to line
+            // Combine tree into a line
+            child->SetSymbols(syms);
             if (line)
                 line = new Infix(",", line, child);
             else
@@ -850,11 +933,23 @@ Tree *xl_load_data(text name, text prefix, text fieldSeps, text recordSeps)
             if (hasRecord)
             {
                 if (prefix != "")
+                {
                     line = new Prefix(new Name(prefix), line);
-                if (tree)
-                    tree = new Infix("\n", tree, line);
+                    line->SetSymbols(syms);
+                    result = xl_evaluate(line);
+                }
+                    
+                if (treePtr)
+                {
+                    Infix *infix = new Infix("\n", *treePtr, line);
+                    *treePtr = infix;
+                    treePtr = &infix->right;
+                }
                 else
+                {
                     tree = line;
+                    treePtr = &tree;
+                }
                 line = NULL;
             }
             ptr = buffer;
@@ -864,17 +959,11 @@ Tree *xl_load_data(text name, text prefix, text fieldSeps, text recordSeps)
     if (!tree)
         return Ooops("Unable to load data from $1", new Text(path));
 
-    // Store that we use the file
-    struct stat st;
-    stat(path.c_str(), &st);
-    Symbols_p old = Symbols::symbols;
-    Symbols_p syms = new Symbols(old);
+    // Remember that we use that file
     MAIN->files[path] = SourceFile(path, tree, syms);
-    Symbols::symbols = syms;
-    tree->SetSymbols(syms);
-    tree = syms->CompileAll(tree);
-    Symbols::symbols = old;
     old->Import(syms);
+    if (result)
+        return result;
 
     return tree;
 }
@@ -1079,14 +1168,14 @@ void xl_infix_to_list(Infix *infix, TreeList &list)
         xl_infix_to_list(left, list);
     else
         list.push_back(infix->left);
-    
+
     Infix *right = infix->right->AsInfix();
     if (right && right->name == infix->name)
         xl_infix_to_list(right, list);
     else
         list.push_back(infix->right);
 }
-            
+
 
 Tree *xl_nth(Tree *data, longlong index)
 // ----------------------------------------------------------------------------
@@ -1133,9 +1222,9 @@ Tree *xl_nth(Tree *data, longlong index)
 
 
 // ============================================================================
-// 
+//
 //   Map an operation on all elements
-// 
+//
 // ============================================================================
 
 Tree *MapFunctionInfo::Apply(Tree *what)
@@ -1211,9 +1300,9 @@ Tree *MapAction::DoBlock(Block *block)
 
 
 // ============================================================================
-// 
+//
 //   Reduce by applying operations to consecutive elements
-// 
+//
 // ============================================================================
 
 Tree *ReduceFunctionInfo::Apply(Tree *what)
@@ -1282,9 +1371,9 @@ Tree *ReduceAction::DoBlock(Block *block)
 
 
 // ============================================================================
-// 
+//
 //   Filter by selecting elements that match a given condition
-// 
+//
 // ============================================================================
 
 Tree *FilterFunctionInfo::Apply(Tree *what)

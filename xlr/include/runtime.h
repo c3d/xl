@@ -140,6 +140,7 @@ public:
 
 Tree *xl_apply(Tree *code, Tree *data);
 Tree *xl_range(longlong l, longlong h);
+void xl_infix_to_list(Infix *infix, TreeList &list);
 Tree *xl_nth(Tree *data, longlong index);
 
 
@@ -306,6 +307,7 @@ protected:
 // ============================================================================
 
 Tree *xl_write(Symbols *symbols, Tree *what, text sep = "");
+Tree *xl_list_files(Tree *patterns);
 
 
 // ============================================================================
@@ -316,7 +318,8 @@ Tree *xl_write(Symbols *symbols, Tree *what, text sep = "");
 
 Tree *xl_load(text name);
 Tree *xl_import(text name);
-Tree *xl_load_data(text name, text prefix,
+Tree *xl_load_data(Tree *self,
+                   text name, text prefix,
                    text fieldSeps = ",;", text recordSeps = "\n");
 
 
