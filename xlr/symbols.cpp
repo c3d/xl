@@ -67,6 +67,16 @@ XL_BEGIN
 
 // ============================================================================
 //
+//   Global variables
+//
+// ============================================================================
+
+declarator_table Symbols::declarators;
+
+
+
+// ============================================================================
+//
 //   Symbols: symbols management
 //
 // ============================================================================
@@ -151,7 +161,7 @@ void Symbols::ExtendName(text name, Tree *value)
             entry = new Block(new Infix("\n", entry, value,
                                         value->Position()),
                               Block::indent, Block::unindent,
-                              value->Position());                              
+                              value->Position());
     }
     else
     {
@@ -1525,6 +1535,14 @@ Tree *DeclarationAction::DoPrefix(Prefix *what)
     // Deal with 'data' declarations and 'load' statements
     if (Name *name = what->left->AsName())
     {
+        // Check if there is some stuff that needs to be done at decl time
+        // This is used for 'load' and 'import'
+        declarator_table::iterator fnd = Symbols::declarators.find(name->value);
+        if (fnd != Symbols::declarators.end())
+            if (decl_fn fn = (*fnd).second)
+                if (Tree *result = fn(symbols, what, false))
+                    return result;
+
         if (name->value == "data")
         {
             EnterRewrite(what->right, NULL, NULL);
@@ -1874,7 +1892,7 @@ static void BuildSymbolsList(Symbols *s,
         {
             lookups.push_back(s);
             visited.insert(s);
-            
+
             symbols_set::iterator si;
             for (si = s->imported.begin(); si != s->imported.end(); si++)
                 BuildSymbolsList(*si, visited, lookups);
@@ -2061,7 +2079,7 @@ Rewrite *Rewrite::Add (Rewrite *rewrite)
 // ----------------------------------------------------------------------------
 //   Add a new rewrite at the right place in an existing rewrite
 // ----------------------------------------------------------------------------
-{ 
+{
     // Compute the hash key for the form we have to match
     Rewrite *parent = this;
     ulong formKey = Context::HashForm(rewrite->from);
@@ -2156,9 +2174,9 @@ Tree *Rewrite::Compile(void)
 
 
 // ============================================================================
-// 
+//
 //   OCompiledUnit - A particular piece of code we generate for a tree
-// 
+//
 // ============================================================================
 //  This is the "old" version that generates relatively inefficient machine code
 //  However, it is at the moment more complete than the 'new' version and is
@@ -2267,7 +2285,7 @@ OCompiledUnit::~OCompiledUnit()
 
     delete code;
     delete data;
-}    
+}
 
 
 eval_fn OCompiledUnit::Finalize()
@@ -2396,7 +2414,7 @@ Value *OCompiledUnit::ConstantInteger(Integer *what)
 
 Value *OCompiledUnit::ConstantReal(Real *what)
 // ----------------------------------------------------------------------------
-//    Generate a Real tree 
+//    Generate a Real tree
 // ----------------------------------------------------------------------------
 {
     Value *result = Known(what, knowGlobals);
@@ -2456,7 +2474,7 @@ Value *OCompiledUnit::NeedLazy(Tree *subexpr, bool allocate)
         text label = "computed";
         IFTRACE(labels)
             label += "[" + text(*subexpr) + "]";
-        
+
         result = data->CreateAlloca(LLVM_BOOLTYPE, 0, label.c_str());
         Value *falseFlag = ConstantInt::get(LLVM_BOOLTYPE, 0);
         data->CreateStore(falseFlag, result);
@@ -2789,7 +2807,7 @@ Value *OCompiledUnit::CreateClosure(Tree *callee, TreeList &args, Function*fn)
         Value *llvmValue = Known(value); assert(llvmValue);
         argV.push_back(llvmValue);
     }
-        
+
     Value *callVal = code->CreateCall(compiler->xl_new_closure,
                                       argV.begin(), argV.end());
 
@@ -3043,7 +3061,7 @@ BasicBlock *OCompiledUnit::InfixMatchTest(Tree *actual, Infix *reference)
 //   Test if the actual tree has the same shape as the given infix
 // ----------------------------------------------------------------------------
 {
-    // Check that we know how to evaluate both 
+    // Check that we know how to evaluate both
     Value *actualVal = Known(actual);           assert(actualVal);
     Value *refVal = NeedStorage(reference);     assert (refVal);
 
@@ -3107,9 +3125,9 @@ BasicBlock *OCompiledUnit::TypeTest(Tree *value, Tree *type)
 
 
 // ============================================================================
-// 
+//
 //    Expression reduction
-// 
+//
 // ============================================================================
 //   An expression reduction typically compiles as:
 //     if (cond1) if (cond2) if (cond3) invoke(T)
@@ -3242,12 +3260,12 @@ extern "C" void debugsy(XL::Symbols *s)
 {
     using namespace XL;
     std::cerr << "SYMBOLS AT " << s << "\n";
-        
+
     std::cerr << "NAMES IN " << s << ":\n";
     symbol_table::iterator i;
     for (i = s->names.begin(); i != s->names.end(); i++)
         std::cerr << (*i).first << ": " << (*i).second << "\n";
-    
+
     std::cerr << "REWRITES IN " << s << ":\n";
     if (s->rewrites)
         debugrw(s->rewrites);

@@ -32,6 +32,7 @@
 #include "opcodes.h"
 #include "options.h"
 #include "runtime.h"
+#include "symbols.h"
 #include "types.h"
 #include "main.h"
 #include "hash.h"
@@ -49,6 +50,33 @@ XL_BEGIN
 #include "basics.tbl"
 
 
+Tree *xl_process_import(Symbols *symbols, Tree *source, bool execute)
+// ----------------------------------------------------------------------------
+//   Standard connector for 'load' statements
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *prefix = source->AsPrefix())
+    {
+        if (Text *name = prefix->right->AsText())
+        {
+            source->SetSymbols(symbols);
+            return xl_import(MAIN->context, source, name->value, execute);
+        }
+    }
+    return NULL;
+}
+
+
+Tree *xl_process_load(Symbols *symbols, Tree *source, bool execute)
+// ----------------------------------------------------------------------------
+//   Standard connector for 'load' statements
+// ----------------------------------------------------------------------------
+{
+    execute = false;            // 'load' statement doesn't execute loaded code
+    return xl_process_import(symbols, source, execute);
+}
+
+
 void EnterBasics()
 // ----------------------------------------------------------------------------
 //   Enter all the basic operations defined in basics.tbl
@@ -57,6 +85,8 @@ void EnterBasics()
     Context *context = MAIN->context;
 #include "opcodes_define.h"
 #include "basics.tbl"
+    xl_enter_declarator("load", xl_process_load);
+    xl_enter_declarator("import", xl_process_import);
 }
 
 void DeleteBasics()

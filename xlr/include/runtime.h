@@ -362,13 +362,15 @@ Tree *xl_list_files(Context *context, Tree *patterns);
 //
 // ============================================================================
 
-Tree *xl_load(Context *, Tree *self, text name);
-Tree *xl_import(Context *, Tree *self, text name);
+Tree *xl_import(Context *, Tree *self, text name, bool execute);
 Tree *xl_load_data(Context *, Tree *self,
                    text name, text prefix,
                    text fieldSeps = ",;", text recordSeps = "\n");
 Tree *xl_add_search_path(Context *, text prefix, text dir);
 Text *xl_find_in_search_path(Context *, text prefix, text file);
+
+typedef Tree * (*decl_fn) (Symbols *, Tree *source, bool execute);
+void xl_enter_declarator(text name, decl_fn fn);
 
 XL_END
 

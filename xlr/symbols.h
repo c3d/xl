@@ -58,6 +58,8 @@ typedef std::map<Tree_p, Symbols_p>capture_table;// Symbol capture table
 typedef std::map<Tree_p, Tree_p>   value_table;  // Used for value caching
 typedef value_table::iterator      value_iter;   // Used to iterate over values
 typedef Tree * (*typecheck_fn) (Context *context, Tree *src, Tree *value);
+typedef Tree * (*decl_fn) (Symbols *, Tree *source, bool execute);
+typedef std::map<text, decl_fn>    declarator_table; // To call at decl time
 
 
 
@@ -123,6 +125,8 @@ public:
     symbols_set         imported;
     Tree_p              error_handler;
     bool                has_rewrites_for_constants;
+
+    static declarator_table declarators;
 
     GARBAGE_COLLECT(Symbols);
 };
