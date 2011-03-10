@@ -230,6 +230,27 @@ Rewrite *Symbols::EnterRewrite(Tree *from, Tree *to)
 }
 
 
+Tree *Symbols::ProcessDeclarations(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Process the declarations for the given tree, and associate it to symbols
+// ----------------------------------------------------------------------------
+{
+    if (source == tree)
+        return tree;
+
+    // Clear the symbol table if necessary
+    source = tree;
+    if (rewrites || names.size())
+        Clear();
+
+    // Process all declarations
+    DeclarationAction declare(this);
+    tree = tree->Do(declare);
+
+    return tree;
+}
+
+
 void Symbols::Clear()
 // ----------------------------------------------------------------------------
 //   Clear all symbol tables

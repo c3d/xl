@@ -1096,7 +1096,6 @@ Tree *xl_import(Context *context, Tree *self, text name, bool execute)
     {
         IFTRACE(fileload)
                 std::cout << "Loading: " << path << "\n";
-
         bool hadError = MAIN->LoadFile(path, false);
         if (hadError)
             return Ooops("Unable to load file $1", new Text(path));
@@ -1109,11 +1108,7 @@ Tree *xl_import(Context *context, Tree *self, text name, bool execute)
     if (Symbols *symbols = self->Symbols())
     {
         symbols->Import(sf.symbols);
-        if (!execute)
-        {
-            DeclarationAction declare(symbols);
-            result = result->Do(declare);
-        }
+        result = symbols->ProcessDeclarations(result);
     }
     if (execute)
         result = context->Evaluate(result);

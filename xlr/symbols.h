@@ -94,6 +94,9 @@ struct Symbols
     Rewrite *           EnterRewrite(Tree *from, Tree *to);
     Name *              Allocate(Name *varName);
 
+    // Performing the declarations on a given tree
+    Tree *              ProcessDeclarations(Tree *tree);
+
     // Clearing symbol tables
     void                Clear();
 
@@ -116,6 +119,7 @@ struct Symbols
                                 Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
 
 public:
+    Tree_p              source;
     Symbols_p           parent;
     symbol_table        names;
     symbol_table        definitions;
@@ -143,7 +147,7 @@ inline Symbols::Symbols(Symbols *s)
 // ----------------------------------------------------------------------------
 //   Create a "child" symbol table
 // ----------------------------------------------------------------------------
-    : parent(s), rewrites(NULL), error_handler(NULL),
+    : source(NULL), parent(s), rewrites(NULL), error_handler(NULL),
       has_rewrites_for_constants(false)
 {}
 
