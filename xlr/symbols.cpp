@@ -81,26 +81,58 @@ declarator_table Symbols::declarators;
 //
 // ============================================================================
 
+static void BuildSymbolsList(Symbols *s,
+                             symbols_set &visited,
+                             symbols_list &lookups)
+// ----------------------------------------------------------------------------
+//   Build the list of symbols to visit
+// ----------------------------------------------------------------------------
+{
+    while (s)
+    {
+        if (!visited.count(s))
+        {
+            lookups.push_back(s);
+            visited.insert(s);
+
+            symbols_set::iterator si;
+            for (si = s->imported.begin(); si != s->imported.end(); si++)
+                BuildSymbolsList(*si, visited, lookups);
+        }
+        s = s->parent;
+    }
+}
+
+
 Tree *Symbols::Named(text name, bool deep)
 // ----------------------------------------------------------------------------
 //   Find the name in the current context
 // ----------------------------------------------------------------------------
 {
-    for (Symbols *s = this; s; s = deep ? s->parent.Pointer() : NULL)
+    if (deep)
     {
-        symbol_table::iterator found = s->names.find(name);
-        if (found != s->names.end())
-            return (*found).second;
+        symbols_set visited;
+        symbols_list lookups;
 
-        symbols_set::iterator it;
-        for (it = s->imported.begin(); it != s->imported.end(); it++)
+        // Build all the symbol tables that we are going to look into
+        BuildSymbolsList(this, visited, lookups);
+
+        symbols_list::iterator li;
+        for (li = lookups.begin(); li != lookups.end(); li++)
         {
-            Symbols *syms = (*it);
-            found = syms->names.find(name);
-            if (found != syms->names.end())
+            Symbols *s = *li;
+            symbol_table::iterator found = s->names.find(name);
+            if (found != s->names.end())
                 return (*found).second;
         }
     }
+    else
+    {
+        symbol_table::iterator found = names.find(name);
+        if (found != names.end())
+            return (*found).second;
+    }
+
     return NULL;
 }
 
@@ -1894,29 +1926,6 @@ Tree *CompileAction::DoPostfix(Postfix *what)
 // ----------------------------------------------------------------------------
 {
     return Rewrites(what);
-}
-
-
-static void BuildSymbolsList(Symbols *s,
-                             symbols_set &visited,
-                             symbols_list &lookups)
-// ----------------------------------------------------------------------------
-//   Build the list of symbols to visit
-// ----------------------------------------------------------------------------
-{
-    while (s)
-    {
-        if (!visited.count(s))
-        {
-            lookups.push_back(s);
-            visited.insert(s);
-
-            symbols_set::iterator si;
-            for (si = s->imported.begin(); si != s->imported.end(); si++)
-                BuildSymbolsList(*si, visited, lookups);
-        }
-        s = s->parent;
-    }
 }
 
 
