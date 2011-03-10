@@ -62,6 +62,7 @@
 #include <llvm/Transforms/Utils/BasicBlockUtils.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/System/DynamicLibrary.h>
+#include <stdio.h>
 
 
 XL_BEGIN
