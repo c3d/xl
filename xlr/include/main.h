@@ -82,7 +82,8 @@ struct Main
     int          LoadContextFiles(source_names &context_file_names);
     void         EvaluateContextFiles(source_names &context_file_names);
     int          LoadFiles();
-    int          LoadFile(text file, bool updateContext = false);
+    int          LoadFile(text file, bool updateContext = false,
+                          Context *importContext=0, Symbols *importSymbols=0);
     SourceFile * NewFile(text path);
     virtual text SearchFile(text input);
     virtual text ParentDir(text input);

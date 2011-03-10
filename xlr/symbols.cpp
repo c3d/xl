@@ -238,12 +238,8 @@ Tree *Symbols::ProcessDeclarations(Tree *tree)
     if (source == tree)
         return tree;
 
-    // Clear the symbol table if necessary
-    source = tree;
-    if (rewrites || names.size())
-        Clear();
-
     // Process all declarations
+    source = tree;
     DeclarationAction declare(this);
     tree = tree->Do(declare);
 
@@ -280,8 +276,9 @@ Tree *Symbols::Compile(Tree *source, OCompiledUnit &unit,
 // ----------------------------------------------------------------------------
 {
     // Record rewrites and data declarations in the current context
-    DeclarationAction declare(this);
-    Tree *result = source->Do(declare);
+    Tree *result = source;
+    if (this->source != source)
+        result = ProcessDeclarations(result);
 
     // Compile code for that tree
     CompileAction compile(this, unit, nullIfBad, keepAlternatives, noData);

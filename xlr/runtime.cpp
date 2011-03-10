@@ -1096,21 +1096,14 @@ Tree *xl_import(Context *context, Tree *self, text name, bool execute)
     {
         IFTRACE(fileload)
                 std::cout << "Loading: " << path << "\n";
-        bool hadError = MAIN->LoadFile(path, false);
+        bool hadError = MAIN->LoadFile(path, false, context, self->Symbols());
         if (hadError)
             return Ooops("Unable to load file $1", new Text(path));
     }
 
     SourceFile &sf = MAIN->files[path];
     Tree *result = sf.tree;
-    context->Import(sf.context);
-
-    if (Symbols *symbols = self->Symbols())
-    {
-        symbols->Import(sf.symbols);
-        result = symbols->ProcessDeclarations(result);
-    }
-    if (execute)
+    if (execute && result)
         result = context->Evaluate(result);
     return result;
 }

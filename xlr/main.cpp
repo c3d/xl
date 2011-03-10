@@ -308,7 +308,10 @@ bool Main::Refresh(double delay)
 }
 
 
-int Main::LoadFile(text file, bool updateContext)
+int Main::LoadFile(text file,
+                   bool updateContext,
+                   Context *importContext,
+                   Symbols *importSymbols)
 // ----------------------------------------------------------------------------
 //   Load an individual file
 // ----------------------------------------------------------------------------
@@ -394,6 +397,12 @@ int Main::LoadFile(text file, bool updateContext)
     MAIN->context = ctx;
     MAIN->globals = syms;
 
+    // Connect imports if any
+    if (importContext)
+        importContext->Import(ctx);
+    if (importSymbols)
+        importSymbols->Import(syms);
+
     // HACK - do not hide imported .xl
     if (file.find(".ddd") == file.npos &&
         file.find("tao.xl") == file.npos &&
@@ -423,6 +432,7 @@ int Main::LoadFile(text file, bool updateContext)
                     hadError = true;
                 else
                     files[file].tree = tree;
+                syms->ProcessDeclarations(tree);
             }
 
             // TODO: At -O3, do we need to do anything here?
