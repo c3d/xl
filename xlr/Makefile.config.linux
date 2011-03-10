@@ -23,18 +23,11 @@
 #* Date       : $Date$
 #******************************************************************************
 
-LLVM_FLAGS = `llvm-config --cppflags | sed -e s/-DNDEBUG//g`
-LLVM_LIBS = `llvm-config --ldflags --libs all`
+ifndef BUILDENV
+BUILDENV=linux
+endif
 
-DEFAULT_FONT=/usr/share/fonts/truetype/freefont/FreeSans.ttf
+DEFINES_linux=-DCONFIG_LINUX
 
-CPPFLAGS+=	-I/usr/include/X11				\
-                -I/usr/include/freetype2                        \
-                -I.                                             \
-		$(LLVM_FLAGS)                                   \
-                -DFONT_FILE=\"$(DEFAULT_FONT)\"                 \
-                -DLINUX
-
-LDFLAGS=	-L/usr/local/lib -lftgl -ljpeg -lfontconfig	\
-		 $(LLVM_LIBS)                                   \
-                -L/usr/lib -lglut
+include $(BROOT)Makefile.config.gnu
+include $(BROOT)Makefile.rules
