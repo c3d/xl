@@ -50,7 +50,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/Support/StandardPasses.h>
-#include <llvm/System/DynamicLibrary.h>
+#include <llvm/Support/DynamicLibrary.h>
 #include <llvm/Target/TargetData.h>
 #include <llvm/Target/TargetSelect.h>
 #include <llvm/Target/TargetOptions.h>
