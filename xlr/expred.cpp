@@ -93,9 +93,9 @@ llvm_value CompileExpression::DoName(Name *what)
 
     // Check true and false values
     if (existing == xl_true)
-        return unit->code->getTrue();
+        return ConstantInt::get(unit->compiler->booleanTy, 1);
     if (existing == xl_false)
-        return unit->code->getFalse();
+        return ConstantInt::get(unit->compiler->booleanTy, 0);
 
     // Check if it is a global
     if (llvm_value global = unit->Global(existing))
@@ -405,7 +405,7 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
             valueType = value->getType();
         }
         if (valueType != c.booleanTy)
-            return code->getFalse();
+            return ConstantInt::get(c.booleanTy, 0);
         return code->CreateICmpEQ(test, value);
     }
 
@@ -418,7 +418,7 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
             valueType = value->getType();
         }
         if (valueType != c.characterTy)
-            return code->getFalse();
+            return ConstantInt::get(c.booleanTy, 0);
         return code->CreateICmpEQ(test, value);
     }
 
@@ -436,7 +436,7 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
             valueType = value->getType();
         }
         if (valueType != c.charPtrTy)
-            return code->getFalse();
+            return ConstantInt::get(c.booleanTy, 0);
         value = code->CreateCall2(c.strcmp_fn, test, value);
         test = ConstantInt::get(value->getType(), 0);
         value = code->CreateICmpEQ(value, test);
@@ -452,7 +452,7 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
             valueType = value->getType();
         }
         if (!valueType->isIntegerTy())
-            return code->getFalse();
+            return ConstantInt::get(c.booleanTy, 0);
         if (valueType != c.integerTy)
             value = code->CreateSExt(value, c.integerTy);
         if (testType != c.integerTy)
@@ -469,7 +469,7 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
             valueType = value->getType();
         }
         if (!valueType->isFloatingPointTy())
-            return code->getFalse();
+            return ConstantInt::get(c.booleanTy, 0);
         if (valueType != testType)
         {
             if (valueType != c.realTy)
@@ -483,7 +483,7 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
                 testType = test->getType();
             }
             if (valueType != testType)
-                return code->getFalse();
+                return ConstantInt::get(c.booleanTy, 0);
         }
         return code->CreateFCmpOEQ(test, value);
     }
@@ -524,14 +524,14 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
         }
 
         if (testType != valueType)
-            return code->getFalse();
+            return ConstantInt::get(c.booleanTy, 0);
 
         // Call runtime function to perform tree comparison
         return code->CreateCall2(c.xl_same_shape, value, test);
     }
 
     // Other comparisons fail for now
-    return code->getFalse();
+    return ConstantInt::get(c.booleanTy, 0);
 }
 
 
