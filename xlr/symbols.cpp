@@ -899,7 +899,8 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     }
 
     // Create the compilation unit for the code to enclose
-    OCompiledUnit subUnit(compiler, source, parms, true);
+    bool isCallableDirectly = parms.size() == 0;
+    OCompiledUnit subUnit(compiler, source, parms, !isCallableDirectly);
     if (!subUnit.IsForwardCall())
     {
         if (!symbols->Compile(source, subUnit, true))
@@ -907,7 +908,9 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
             Ooops("Error compiling closure $1", source);
             subUnit.CallTypeError(source);
         }
-        subUnit.Finalize();
+        if (eval_fn fn = subUnit.Finalize())
+            if (isCallableDirectly)
+                source->code = fn;
     }
 
     // Create a call to xl_new_closure to save the required trees
@@ -1961,9 +1964,9 @@ Tree *CompileAction::Rewrites(Tree *what)
             {
                 // Create the invokation point
                 reduction.NewForm();
-                Symbols args(candidate->symbols);
+                Symbols_p args = new Symbols(candidate->symbols);
                 ArgumentMatch matchArgs(what,
-                                        symbols, &args, candidate->symbols,
+                                        symbols, args, candidate->symbols,
                                         this, !candidate->to);
                 Tree *argsTest = candidate->from->Do(matchArgs);
                 if (argsTest)
@@ -1994,7 +1997,7 @@ Tree *CompileAction::Rewrites(Tree *what)
                         // We should have same number of args and parms
                         Symbols &parms = *candidate->from->Symbols();
                         ulong parmCount = parms.names.size();
-                        if (args.names.size() != parmCount)
+                        if (args->names.size() != parmCount)
                         {
                             symbol_iter a, p;
                             std::cerr << "Args/parms mismatch:\n";
@@ -2009,12 +2012,12 @@ Tree *CompileAction::Rewrites(Tree *what)
                                           << " = " << parm << "\n";
                             }
                             std::cerr << "Args:\n";
-                            for (a = args.names.begin();
-                                 a != args.names.end();
+                            for (a = args->names.begin();
+                                 a != args->names.end();
                                  a++)
                             {
                                 text name = (*a).first;
-                                Tree *arg = args.Named(name);
+                                Tree *arg = args->Named(name);
                                 std::cerr << "   " << name
                                           << " = " << arg << "\n";
                             }
@@ -2027,7 +2030,7 @@ Tree *CompileAction::Rewrites(Tree *what)
                         for (p = order.begin(); p != order.end(); p++)
                         {
                             Name *name = (*p)->AsName();
-                            Tree *argValue = args.Named(name->value);
+                            Tree *argValue = args->Named(name->value);
                             argsList.push_back(argValue);
                         }
 
