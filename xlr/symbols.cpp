@@ -285,11 +285,16 @@ void Symbols::Clear()
 {
     symbol_table empty;
     names = empty;
+    definitions = empty;
     if (rewrites)
     {
         // delete rewrites;
         rewrites = NULL;        // Decrease reference count
     }
+    calls = empty;
+    type_tests.clear();
+    error_handler = NULL;
+    has_rewrites_for_constants = false;
 }
 
 
@@ -1697,7 +1702,8 @@ CompileAction::CompileAction(Symbols *s, OCompiledUnit &u,
 //   Constructor
 // ----------------------------------------------------------------------------
     : symbols(s), unit(u),
-      nullIfBad(nib), keepAlternatives(ka), noDataForms(ndf)
+      nullIfBad(nib), keepAlternatives(ka), noDataForms(ndf),
+      debugRewrites(0)
 {}
 
 
@@ -1916,7 +1922,10 @@ Tree *CompileAction::DoPrefix(Prefix *what)
 
         // A breakpoint location for convenience
         if (name->value == Options::options->debugPrefix)
+        {
+            Save<char> debug(debugRewrites, debugRewrites+1);
             return Rewrites(what);
+        }
     }
     return Rewrites(what);
 }
@@ -1973,6 +1982,13 @@ Tree *CompileAction::Rewrites(Tree *what)
                 {
                     // Record that we found something
                     foundSomething = true;
+
+                    if (debugRewrites > 0)
+                    {
+                        std::cerr << "REWRITE" << (int) debugRewrites
+                                  << ": " << candidate->from << "\n";
+                        debugRewrites = -debugRewrites;
+                    }
 
                     // If this is a data form, we are done
                     if (!candidate->to)
@@ -2045,6 +2061,10 @@ Tree *CompileAction::Rewrites(Tree *what)
                             reduction.Failed();
                         }
                     } // if (data form)
+
+                    if (debugRewrites < 0)
+                        debugRewrites = -debugRewrites;
+
                 } // Match args
                 else
                 {
