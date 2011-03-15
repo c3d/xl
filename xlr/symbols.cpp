@@ -1194,7 +1194,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         Tree *compiled = test;
         if (needEvaluation)
         {
-            compiled = Compile(compiled, false);
+            compiled = Compile(compiled, true);
             if (!compiled)
                 return NULL;
         }
@@ -1960,7 +1960,7 @@ Tree *CompileAction::Rewrites(Tree *what)
             ulong testKey = Context::Hash(candidate->from);
 
             // If we have an exact match for the keys, we may have a winner
-            if (testKey == formKey)
+            if (testKey == formKey && (!noDataForms || candidate->to))
             {
                 // Create the invokation point
                 reduction.NewForm();
@@ -1980,17 +1980,10 @@ Tree *CompileAction::Rewrites(Tree *what)
                         // Set the symbols for the result
                         if (!what->Symbols())
                             what->SetSymbols(symbols);
-                        if (noDataForms)
-                        {
-                            reduction.Failed();
-                        }
-                        else
-                        {
-                            unit.CallEvaluateChildren(what);
-                            foundUnconditional = !unit.failbb;
-                            unit.dataForm.insert(what);
-                            reduction.Succeeded();
-                        }
+                        unit.CallEvaluateChildren(what);
+                        foundUnconditional = !unit.failbb;
+                        unit.dataForm.insert(what);
+                        reduction.Succeeded();
                     }
                     else
                     {
