@@ -908,11 +908,10 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     OCompiledUnit subUnit(compiler, source, parms, !isCallableDirectly);
     if (!subUnit.IsForwardCall())
     {
+        // If there is an error compiling, make sure we report it
+        // but only if we attempt to actually evaluate the tree
         if (!symbols->Compile(source, subUnit, true))
-        {
-            Ooops("Error compiling closure $1", source);
             subUnit.CallTypeError(source);
-        }
         if (eval_fn fn = subUnit.Finalize())
             if (isCallableDirectly)
                 source->code = fn;
@@ -1978,17 +1977,18 @@ Tree *CompileAction::Rewrites(Tree *what)
                                         symbols, args, candidate->symbols,
                                         this, !candidate->to);
                 Tree *argsTest = candidate->from->Do(matchArgs);
+                if (debugRewrites > 0)
+                {
+                    std::cerr << "REWRITE" << (int) debugRewrites
+                              << ": " << candidate->from
+                              << (argsTest ? " MATCH" : "FAIL") << "\n";
+                    debugRewrites = -debugRewrites;
+                }
+
                 if (argsTest)
                 {
                     // Record that we found something
                     foundSomething = true;
-
-                    if (debugRewrites > 0)
-                    {
-                        std::cerr << "REWRITE" << (int) debugRewrites
-                                  << ": " << candidate->from << "\n";
-                        debugRewrites = -debugRewrites;
-                    }
 
                     // If this is a data form, we are done
                     if (!candidate->to)
@@ -2062,15 +2062,16 @@ Tree *CompileAction::Rewrites(Tree *what)
                         }
                     } // if (data form)
 
-                    if (debugRewrites < 0)
-                        debugRewrites = -debugRewrites;
-
                 } // Match args
                 else
                 {
                     // Indicate unsuccessful invokation
                     reduction.Failed();
                 }
+
+                if (debugRewrites < 0)
+                    debugRewrites = -debugRewrites;
+
             } // Match test key
 
             // Otherwise, check if we have a key match in the hash table,
