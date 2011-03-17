@@ -1901,7 +1901,8 @@ Tree *xl_add_search_path(Context *context, text prefix, text dir)
 //   Add directory to the search path for prefix for the current context
 // ----------------------------------------------------------------------------
 {
-    context->stack->AddSearchPath(prefix, dir);
+    ADJUST_CONTEXT_FOR_INTERPRETER(context);
+    context->AddSearchPath(prefix, dir);
     return XL::xl_true;
 }
 
@@ -1911,7 +1912,8 @@ Text *xl_find_in_search_path(Context *context, text prefix, text file)
 //   Add directory to the search path for prefix for the current context
 // ----------------------------------------------------------------------------
 {
-    return new Text(context->stack->FindInSearchPath(prefix, file));
+    ADJUST_CONTEXT_FOR_INTERPRETER(context);
+    return new Text(context->FindInSearchPath(prefix, file));
 }
 
 
