@@ -378,6 +378,7 @@ struct CompileAction : Action
     bool          nullIfBad;
     bool          keepAlternatives;
     bool          noDataForms;
+    char          debugRewrites;
 };
 
 

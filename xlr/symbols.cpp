@@ -285,11 +285,16 @@ void Symbols::Clear()
 {
     symbol_table empty;
     names = empty;
+    definitions = empty;
     if (rewrites)
     {
         // delete rewrites;
         rewrites = NULL;        // Decrease reference count
     }
+    calls = empty;
+    type_tests.clear();
+    error_handler = NULL;
+    has_rewrites_for_constants = false;
 }
 
 
@@ -899,7 +904,8 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     }
 
     // Create the compilation unit for the code to enclose
-    OCompiledUnit subUnit(compiler, source, parms, true);
+    bool isCallableDirectly = parms.size() == 0;
+    OCompiledUnit subUnit(compiler, source, parms, !isCallableDirectly);
     if (!subUnit.IsForwardCall())
     {
         if (!symbols->Compile(source, subUnit, true))
@@ -907,7 +913,9 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
             Ooops("Error compiling closure $1", source);
             subUnit.CallTypeError(source);
         }
-        subUnit.Finalize();
+        if (eval_fn fn = subUnit.Finalize())
+            if (isCallableDirectly)
+                source->code = fn;
     }
 
     // Create a call to xl_new_closure to save the required trees
@@ -1191,7 +1199,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         Tree *compiled = test;
         if (needEvaluation)
         {
-            compiled = Compile(compiled, false);
+            compiled = Compile(compiled, true);
             if (!compiled)
                 return NULL;
         }
@@ -1694,7 +1702,8 @@ CompileAction::CompileAction(Symbols *s, OCompiledUnit &u,
 //   Constructor
 // ----------------------------------------------------------------------------
     : symbols(s), unit(u),
-      nullIfBad(nib), keepAlternatives(ka), noDataForms(ndf)
+      nullIfBad(nib), keepAlternatives(ka), noDataForms(ndf),
+      debugRewrites(0)
 {}
 
 
@@ -1913,7 +1922,10 @@ Tree *CompileAction::DoPrefix(Prefix *what)
 
         // A breakpoint location for convenience
         if (name->value == Options::options->debugPrefix)
+        {
+            Save<char> debug(debugRewrites, debugRewrites+1);
             return Rewrites(what);
+        }
     }
     return Rewrites(what);
 }
@@ -1957,13 +1969,13 @@ Tree *CompileAction::Rewrites(Tree *what)
             ulong testKey = Context::Hash(candidate->from);
 
             // If we have an exact match for the keys, we may have a winner
-            if (testKey == formKey)
+            if (testKey == formKey && (!noDataForms || candidate->to))
             {
                 // Create the invokation point
                 reduction.NewForm();
-                Symbols args(candidate->symbols);
+                Symbols_p args = new Symbols(candidate->symbols);
                 ArgumentMatch matchArgs(what,
-                                        symbols, &args, candidate->symbols,
+                                        symbols, args, candidate->symbols,
                                         this, !candidate->to);
                 Tree *argsTest = candidate->from->Do(matchArgs);
                 if (argsTest)
@@ -1971,30 +1983,30 @@ Tree *CompileAction::Rewrites(Tree *what)
                     // Record that we found something
                     foundSomething = true;
 
+                    if (debugRewrites > 0)
+                    {
+                        std::cerr << "REWRITE" << (int) debugRewrites
+                                  << ": " << candidate->from << "\n";
+                        debugRewrites = -debugRewrites;
+                    }
+
                     // If this is a data form, we are done
                     if (!candidate->to)
                     {
                         // Set the symbols for the result
                         if (!what->Symbols())
                             what->SetSymbols(symbols);
-                        if (noDataForms)
-                        {
-                            reduction.Failed();
-                        }
-                        else
-                        {
-                            unit.CallEvaluateChildren(what);
-                            foundUnconditional = !unit.failbb;
-                            unit.dataForm.insert(what);
-                            reduction.Succeeded();
-                        }
+                        unit.CallEvaluateChildren(what);
+                        foundUnconditional = !unit.failbb;
+                        unit.dataForm.insert(what);
+                        reduction.Succeeded();
                     }
                     else
                     {
                         // We should have same number of args and parms
                         Symbols &parms = *candidate->from->Symbols();
                         ulong parmCount = parms.names.size();
-                        if (args.names.size() != parmCount)
+                        if (args->names.size() != parmCount)
                         {
                             symbol_iter a, p;
                             std::cerr << "Args/parms mismatch:\n";
@@ -2009,12 +2021,12 @@ Tree *CompileAction::Rewrites(Tree *what)
                                           << " = " << parm << "\n";
                             }
                             std::cerr << "Args:\n";
-                            for (a = args.names.begin();
-                                 a != args.names.end();
+                            for (a = args->names.begin();
+                                 a != args->names.end();
                                  a++)
                             {
                                 text name = (*a).first;
-                                Tree *arg = args.Named(name);
+                                Tree *arg = args->Named(name);
                                 std::cerr << "   " << name
                                           << " = " << arg << "\n";
                             }
@@ -2027,7 +2039,7 @@ Tree *CompileAction::Rewrites(Tree *what)
                         for (p = order.begin(); p != order.end(); p++)
                         {
                             Name *name = (*p)->AsName();
-                            Tree *argValue = args.Named(name->value);
+                            Tree *argValue = args->Named(name->value);
                             argsList.push_back(argValue);
                         }
 
@@ -2049,6 +2061,10 @@ Tree *CompileAction::Rewrites(Tree *what)
                             reduction.Failed();
                         }
                     } // if (data form)
+
+                    if (debugRewrites < 0)
+                        debugRewrites = -debugRewrites;
+
                 } // Match args
                 else
                 {

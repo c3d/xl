@@ -547,7 +547,7 @@ Tree *xl_new_closure(eval_fn toCall, Tree *expr, uint ntrees, ...)
                   << " [" << expr << "]\n";
 
     // Build the prefix with all the arguments
-    Prefix *result = new Prefix(expr, NULL);
+    Prefix *result = new Prefix(expr, NULL, expr->Position());
     Prefix *parent = result;
     va_list va;
     va_start(va, ntrees);
@@ -556,7 +556,7 @@ Tree *xl_new_closure(eval_fn toCall, Tree *expr, uint ntrees, ...)
         Tree *arg = va_arg(va, Tree *);
         IFTRACE(closure)
             std::cerr << "  ARG: " << arg << '\n';
-        Prefix *item = new Prefix(arg, NULL);
+        Prefix *item = new Prefix(arg, NULL, arg->Position());
         parent->right = item;
         parent = item;
     }
@@ -1571,7 +1571,7 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
         assert(toDecl);
 
         // Compile the body we generated
-        CompileAction compile(symbols, unit, true, true, false);
+        CompileAction compile(symbols, unit, true, true, true);
         Tree *compiled = toCompile->Do(compile);
 
         // Generate code if compilation was successful
