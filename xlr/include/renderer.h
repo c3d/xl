@@ -82,6 +82,7 @@ struct Renderer
     bool                had_punctuation;
     bool                need_separator;
     bool                need_newline;
+    bool                no_indents;
 
     static Renderer *   renderer;
 };

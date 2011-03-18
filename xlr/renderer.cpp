@@ -87,7 +87,7 @@ Renderer::Renderer(std::ostream &out, text styleFile, Syntax &stx)
       indent(0), self(""), left(NULL), right(NULL), current_quote("\""),
       priority(0),
       had_space(true), had_newline(false), had_punctuation(false),
-      need_separator(false), need_newline(false)
+      need_separator(false), need_newline(false), no_indents(false)
 {
     SelectStyleSheet(styleFile);
 }
@@ -105,7 +105,8 @@ Renderer::Renderer(std::ostream &out, Renderer *from)
       had_newline(from->had_newline),
       had_punctuation(from->had_punctuation),
       need_separator(from->need_separator),
-      need_newline(from->need_newline)
+      need_newline(from->need_newline),
+      no_indents(from->no_indents)
 {}
 
 
@@ -165,7 +166,8 @@ void Renderer::RenderSeparators(char c)
         {
             had_newline = false;
             need_separator = false;
-            RenderIndents();
+            if (!no_indents)
+                RenderIndents();
         }
 
         if (need_separator)
@@ -581,6 +583,7 @@ void Renderer::RenderBody(Tree *what)
         text q2 = q1 + " " + w->closing;
         text saveq = this->current_quote;
         this->current_quote = w->opening;
+        this->no_indents = true;
 
         if (formats.count(q2) > 0)
         {
@@ -603,6 +606,7 @@ void Renderer::RenderBody(Tree *what)
             RenderText (t);
         }
         this->current_quote = saveq;
+        this->no_indents = false;
     }   break;
     case NAME:
         t = what->AsName()->value;
