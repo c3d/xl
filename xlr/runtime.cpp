@@ -1568,7 +1568,7 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
         // Record internal declarations if any
         DeclarationAction declare(symbols);
         Tree *toDecl = toCompile->Do(declare);
-        assert(toDecl);
+        assert(toDecl); (void) toDecl;
 
         // Compile the body we generated
         CompileAction compile(symbols, unit, true, true, true);

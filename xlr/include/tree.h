@@ -118,7 +118,7 @@ struct Tree
         tag(from->tag), info(from->info ? from->info->Copy() : NULL),
         code(NULL), symbols(NULL)
     {
-        assert(k == Kind());
+        assert(k == Kind()); (void) k;
     }
     ~Tree();
 
