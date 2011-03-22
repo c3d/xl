@@ -1172,27 +1172,35 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
 
         // Check for types that don't require a type check
         bool needEvaluation = true;
+        bool needRTTypeTest = true;
         if (Name *declTypeName = what->right->AsName())
         {
             if (Tree *namedType = symbols->Named(declTypeName->value))
             {
                 if (namedType == tree_type ||
                     namedType == code_type ||
-                    namedType == lazy_type ||
-                    namedType == source_type)
+                    namedType == lazy_type)
                     return DoName(varName);
                 kind tk = test->Kind();
-                if ((namedType == block_type && tk == BLOCK) ||
+                if ((namedType == source_type) ||
+                    (namedType == block_type && tk == BLOCK) ||
                     (namedType == infix_type && tk == INFIX) ||
                     (namedType == prefix_type && tk == PREFIX))
+                {
                     needEvaluation = false;
+                    needRTTypeTest = namedType != source_type;
+                }
             }
         }
 
         // Evaluate type expression, e.g. 'integer' in example above
-        Tree *typeExpr = Compile(what->right, true);
-        if (!typeExpr)
-            return NULL;
+        Tree *typeExpr = what->right;
+        if (needRTTypeTest)
+        {
+            typeExpr = Compile(what->right, true);
+            if (!typeExpr)
+                return NULL;
+        }
 
         // Compile what we are testing against
         Tree *compiled = test;
@@ -1210,9 +1218,12 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         }
 
         // Insert a run-time type test
-        if (!typeExpr->Symbols())
-            typeExpr->SetSymbols(symbols);
-        unit.TypeTest(compiled, typeExpr);
+        if (needRTTypeTest)
+        {
+            if (!typeExpr->Symbols())
+                typeExpr->SetSymbols(symbols);
+            unit.TypeTest(compiled, typeExpr);
+        }
 
         // Enter the compiled expression in the symbol table
         locals->EnterName(varName->value, compiled);
