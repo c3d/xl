@@ -1,0 +1,4 @@
+error "Error compiling $1", 'bar x -> nil...foo 0'
+30.Bugs/895.xl:6: No rewrite candidate for 'foo 0'
+30.Bugs/895.xl:4: Couldn't compile '''bar x -> nil...foo 0'''
+30.Bugs/895.xl:4: Error compiling '''bar x -> nil...foo 0'''
