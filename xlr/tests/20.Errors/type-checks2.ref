@@ -1,2 +1,5 @@
 error "No form matches $1", 3.3 - 2.6 * cos "A"
+20.Errors/type-checks2.xl:2: No form matches 'cos "A"'
+20.Errors/type-checks2.xl:2: No form matches 'cos "A"'
+20.Errors/type-checks2.xl:2: No form matches '2.6 * cos "A"'
 20.Errors/type-checks2.xl:2: No form matches '3.3 - 2.6 * cos "A"'
