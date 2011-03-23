@@ -446,7 +446,7 @@ Object *Allocator<Object>::Allocate(size_t size)
 //   Allocate an object (invoked by operator new)
 // ----------------------------------------------------------------------------
 {
-    assert(size == Singleton()->TypeAllocator::objectSize);
+    assert(size == Singleton()->TypeAllocator::objectSize); (void) size;
     return (Object *) Singleton()->TypeAllocator::Allocate();
 }
 

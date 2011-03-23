@@ -1648,6 +1648,10 @@ Tree *Context::CreateCode(Tree *value)
 //   Create a closure to record the current context to be evaluted once
 // ----------------------------------------------------------------------------
 {
+    // Do not encapsulate closures when in compiled mode
+    if (XL::Options::options->optimize_level != 0)
+        return value;
+
     // Quick optimization for constants
     if (!hasConstants && value->IsConstant())
         return value;
@@ -1686,6 +1690,10 @@ Tree *Context::CreateLazy(Tree *value)
 //   Create a closure to record the current context to be evaluted once
 // ----------------------------------------------------------------------------
 {
+    // Do not encapsulate closures when in compiled mode
+    if (XL::Options::options->optimize_level != 0)
+        return value;
+
     // Quick optimization for constants
     if (!hasConstants && value->IsConstant())
         return value;
