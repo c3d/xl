@@ -17,8 +17,8 @@ allocas:
   %3 = load i1 (%closure0*)** %2
   %4 = call i1 %3(%closure0* %1)
   store i1 (%closure0*)* %3, i1 (%closure0*)** %2
-  %5 = add i64 %0, -1
-  %6 = icmp eq i64 %5, 0
+  %5 = sub i64 %0, 1
+  %6 = icmp eq i64 0, %5
   br i1 %6, label %good, label %bad
 
 done:                                             ; preds = %bad, %good

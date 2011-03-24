@@ -1056,10 +1056,10 @@ Tree *ArgumentMatch::DoName(Name *what)
 
             // Insert a dynamic tree comparison test
             Tree *testCode = Compile(test, false);
-            if (!testCode)
+            if (!testCode || !unit.IsKnown(testCode))
                 return NULL;
             Tree *thisCode = Compile(existing, false);
-            if (!thisCode)
+            if (!thisCode || !unit.IsKnown(thisCode))
                 return NULL;
             unit.ShapeTest(testCode, thisCode);
 

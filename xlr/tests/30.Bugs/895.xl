@@ -1,0 +1,6 @@
+// EXIT=1
+// This doesn't work because bar is implicitly defined as x->x+1,
+// so foo 0 doesn't match foo bar
+bar x -> nil
+foo bar -> bar + 1
+foo 0
