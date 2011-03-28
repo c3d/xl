@@ -343,7 +343,6 @@ struct FilterFunctionInfo : FunctionInfo
 //
 // ============================================================================
 
-Tree *xl_write(Context *context, Tree *what, text sep = "");
 extern "C"
 {
     bool xl_write_integer(longlong);

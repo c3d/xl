@@ -924,50 +924,6 @@ void xl_enter_global(Main *main, Name *name, Name_p *address)
 //
 // ============================================================================
 
-Tree *xl_write(Context *context, Tree *tree, text sep)
-// ----------------------------------------------------------------------------
-//   Write elements of the tree to the console
-// ----------------------------------------------------------------------------
-{
-    // Special case when we have no argument
-    if (!tree)
-    {
-        std::cout << "NULL" << sep;
-        return XL::xl_false;
-    }
-
-    // Evaluate closures if we have any
-    Prefix *prefix = tree->AsPrefix();
-    if (prefix)
-        tree = xl_evaluate(context, prefix);
-        
-    // Format contents
-    if (Infix *infix = tree->AsInfix())
-    {
-        if (infix->name == ",")
-        {
-            xl_write(context, infix->left, "");
-            return xl_write(context, infix->right, sep);
-        }
-    }
-
-    // Evaluate non-prefix trees
-    if (!prefix)
-        tree = xl_evaluate(context, tree);
-
-    // Evaluate the input argument
-    switch(tree->Kind())
-    {
-    case INTEGER: std::cout << ((Integer *) tree)->value << sep; break;
-    case REAL:    std::cout << ((Real *) tree)->value << sep; break;
-    case TEXT:    std::cout << ((Text *) tree)->value << sep; break;
-    default:      std::cout << tree << sep; break;
-    }
-
-    return XL::xl_true;
-}
-
-
 static void xl_list_files(Context *context, Tree *patterns, Tree_p *&parent)
 // ----------------------------------------------------------------------------
 //   Append all files found in the parent

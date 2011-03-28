@@ -182,21 +182,24 @@ void Symbols::ExtendName(text name, Tree *value)
 //   Extend a named value as part of a rewrite
 // ----------------------------------------------------------------------------
 {
-    Tree_p &entry = names[name];
-    if (entry)
+    if (!parent->Named(name))
     {
-        if (Block *block = entry->AsBlock())
-            block->child = new Infix("\n", block->child, value,
-                                     value->Position());
+        Tree_p &entry = names[name];
+        if (entry)
+        {
+            if (Block *block = entry->AsBlock())
+                block->child = new Infix("\n", block->child, value,
+                                         value->Position());
+            else
+                entry = new Block(new Infix("\n", entry, value,
+                                            value->Position()),
+                                  Block::indent, Block::unindent,
+                                  value->Position());
+        }
         else
-            entry = new Block(new Infix("\n", entry, value,
-                                        value->Position()),
-                              Block::indent, Block::unindent,
-                              value->Position());
-    }
-    else
-    {
-        entry = value;
+        {
+            entry = value;
+        }
     }
 
     if (value && !value->Symbols())

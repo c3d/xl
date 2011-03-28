@@ -10,3 +10,7 @@ if false then TrueBody                  -> false
 
 // Building lists, notably lists of arguments
 data x,y
+
+// Write operations
+write x,y -> write x; write y
+writeln x -> write x; writeln
