@@ -303,6 +303,41 @@ bool TypeAllocator::CanDelete(void *obj)
 
 // ============================================================================
 //
+//   Allocator class
+//
+// ============================================================================
+
+// Define the allocator singleton for each object type.
+// Previously, Allocator::Singleton() had a static local 'allocator' variable,
+// but we ended up with several instances on Windows. See #903.
+
+#define DEFINE_ALLOC(_type) \
+    struct _type;           \
+    template<> Allocator<_type> * Allocator<_type>::allocator = NULL;
+
+DEFINE_ALLOC(Tree);
+DEFINE_ALLOC(Integer);
+DEFINE_ALLOC(Real);
+DEFINE_ALLOC(Text);
+DEFINE_ALLOC(Name);
+DEFINE_ALLOC(Block);
+DEFINE_ALLOC(Prefix);
+DEFINE_ALLOC(Postfix);
+DEFINE_ALLOC(Infix);
+DEFINE_ALLOC(Context);
+DEFINE_ALLOC(Symbols);
+DEFINE_ALLOC(TypeInference);
+DEFINE_ALLOC(Rewrite);
+DEFINE_ALLOC(RewriteCalls);
+
+#undef DEFINE_ALLOC
+
+
+
+
+
+// ============================================================================
+//
 //   Garbage Collector class
 //
 // ============================================================================
