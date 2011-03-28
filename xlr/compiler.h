@@ -189,7 +189,6 @@ public:
     llvm::PointerType         *symbolsPtrTy;
     llvm::Function            *strcmp_fn;
     llvm::Function            *xl_evaluate;
-    llvm::Function            *xl_evaluate_children;
     llvm::Function            *xl_same_text;
     llvm::Function            *xl_same_shape;
     llvm::Function            *xl_infix_match_check;

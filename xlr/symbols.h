@@ -220,7 +220,6 @@ struct OCompiledUnit
                                       llvm::Function *);
     llvm::Value *       CallClosure(Tree *callee, uint ntrees);
     llvm::Value *       CallTypeError(Tree *what);
-    llvm::Value *       CallEvaluateChildren(Tree *what);
 
     llvm::BasicBlock *  TagTest(Tree *code, ulong tag);
     llvm::BasicBlock *  IntegerTest(Tree *code, longlong value);
@@ -369,10 +368,13 @@ struct CompileAction : Action
     virtual Tree *DoBlock(Block *what);
 
     // Evaluation of names is lazy, except in sequences where it's forced
-    Tree *DoName(Name *what, bool forceEval);
+    Tree *        DoName(Name *what, bool forceEval);
 
     // Build code selecting among rewrites in current context
-    Tree *         Rewrites(Tree *what);
+    Tree *        Rewrites(Tree *what);
+
+    // Build code for children
+    Tree *        RewriteChildren(Tree *what);
 
     Symbols_p     symbols;
     OCompiledUnit &unit;
@@ -469,29 +471,26 @@ public:
 };
 
 
-struct EvaluateChildren : Action
+struct EvaluateChildren
 // ----------------------------------------------------------------------------
 //   Build a clone of a tree, evaluating its children
 // ----------------------------------------------------------------------------
 {
-    EvaluateChildren(Context *c, Symbols *s): context(c), symbols(s)
-    { assert(s); assert(c); }
+    EvaluateChildren(CompileAction *c): compile(c) {}
     ~EvaluateChildren()                         {}
+    typedef Tree *value_type;
 
-    virtual Tree *Do(Tree *what)                { return what; }
-    virtual Tree *DoInteger(Integer *what)      { return what; }
-    virtual Tree *DoReal(Real *what)            { return what; }
-    virtual Tree *DoText(Text *what)            { return what; }
-    virtual Tree *DoName(Name *what)            { return what; }
+    virtual Tree *DoInteger(Integer *what);
+    virtual Tree *DoReal(Real *what);
+    virtual Tree *DoText(Text *what);
+    virtual Tree *DoName(Name *what);
     virtual Tree *DoPrefix(Prefix *what);
     virtual Tree *DoPostfix(Postfix *what);
     virtual Tree *DoInfix(Infix *what);
     virtual Tree *DoBlock(Block *what);
 
-    Tree *        Try(Tree *what);
 public:
-    Context_p   context;
-    Symbols_p   symbols;
+    CompileAction *     compile;
 };
 
 extern "C"

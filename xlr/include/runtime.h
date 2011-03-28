@@ -65,7 +65,7 @@ Tree *xl_parse_tree(Context *, Tree *tree);
 Tree *xl_bound(Context *, Tree *form);
 bool  xl_same_text(Tree * , const char *);
 bool  xl_same_shape(Tree *t1, Tree *t2);
-Tree *xl_infix_match_check(Tree *value, kstring name);
+Tree *xl_infix_match_check(Context *, Tree *value, kstring name);
 Tree *xl_type_check(Context *, Tree *value, Tree *type);
 
 Integer *xl_new_integer(longlong value);

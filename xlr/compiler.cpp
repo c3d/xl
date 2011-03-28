@@ -109,7 +109,7 @@ Compiler::Compiler(kstring moduleName)
       evalTy(NULL), evalFnTy(NULL),
       infoPtrTy(NULL), contextPtrTy(NULL),
       strcmp_fn(NULL),
-      xl_evaluate(NULL), xl_evaluate_children(NULL),
+      xl_evaluate(NULL),
       xl_same_text(NULL), xl_same_shape(NULL),
       xl_infix_match_check(NULL), xl_type_check(NULL), xl_form_error(NULL),
       xl_new_integer(NULL), xl_new_real(NULL), xl_new_character(NULL),
@@ -296,14 +296,13 @@ Compiler::Compiler(kstring moduleName)
                                LLVM_INTTYPE(int), 2, charPtrTy, charPtrTy);
     xl_evaluate = ExternFunction(FN(xl_evaluate),
                                  treePtrTy, 2, contextPtrTy, treePtrTy);
-    xl_evaluate_children = ExternFunction(FN(xl_evaluate_children),
-                                 treePtrTy, 2, contextPtrTy, treePtrTy);
     xl_same_text = ExternFunction(FN(xl_same_text),
                                   booleanTy, 2, treePtrTy, charPtrTy);
     xl_same_shape = ExternFunction(FN(xl_same_shape),
                                    booleanTy, 2, treePtrTy, treePtrTy);
     xl_infix_match_check = ExternFunction(FN(xl_infix_match_check),
-                                          treePtrTy, 2, treePtrTy, charPtrTy);
+                                          treePtrTy, 3,
+                                          contextPtrTy, treePtrTy, charPtrTy);
     xl_type_check = ExternFunction(FN(xl_type_check), treePtrTy,
                                    3, contextPtrTy, treePtrTy, treePtrTy);
     xl_form_error = ExternFunction(FN(xl_form_error),

@@ -904,7 +904,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
 
     // Create the compilation unit for the code to enclose
     bool isCallableDirectly = parms.size() == 0;
-    OCompiledUnit subUnit(compiler, source, parms, !isCallableDirectly);
+    OCompiledUnit subUnit(compiler, source, args, !isCallableDirectly);
     if (!subUnit.IsForwardCall())
     {
         // If there is an error compiling, make sure we report it
@@ -1119,21 +1119,31 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
     {
         if (Name *name = test->AsName())
         {
-            // Evaluate 'A' to see if we will get something like x,y
-            Tree *compiled = CompileValue(name, false);
-            if (!compiled)
-                return NULL;
+            if (Tree *value = symbols->Named(name->value))
+            {
+                // For non-names, evaluate the expression
+                if (!value->AsName())
+                {
+                    value = CompileValue(value, false);
+                    if (!value)
+                        return NULL;
+                }
 
-            // Build an infix tree corresponding to what we extract
-            Name *left = new Name("left");
-            Name *right = new Name("right");
-            Infix *extracted = new Infix(what->name, left, right);
+                if (unit.IsKnown(value))
+                {
+                    // Build an infix tree corresponding to what we extract
+                    Name *left = new Name("left");
+                    Name *right = new Name("right");
+                    Infix *extracted = new Infix(what->name, left, right);
 
-            // Extract the infix parameters from actual value
-            unit.InfixMatchTest(compiled, extracted);
+                    // Extract the infix parameters from actual value
+                    unit.InfixMatchTest(value, extracted);
 
-            // Proceed with the infix we extracted to map the remaining args
-            test = extracted;
+                    // Proceed with the infix we extracted to
+                    // map the remaining args
+                    test = extracted;
+                }
+            }
         }
     }
 
@@ -1421,35 +1431,73 @@ Tree *EnvironmentScan::DoPostfix(Postfix *what)
 //
 // ============================================================================
 
-Tree *EvaluateChildren::DoPrefix(Prefix *what)
+Tree *EvaluateChildren::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------
-//   Evaluate children, then build a prefix
+//   Compile integer constants
 // ----------------------------------------------------------------------------
 {
-    Tree *left = Try(what->left);
-    Tree *right = Try(what->right);
-    Tree *result = what;
-    if (left != what->left || right != what->right)
-        result = new Prefix(left, right, what->Position());
-    if (!result->code)
-        result->code = xl_evaluate_children;
-    return result;
+    return compile->DoInteger(what);
+}
+
+
+Tree *EvaluateChildren::DoReal(Real *what)
+// ----------------------------------------------------------------------------
+//   Compile real constants
+// ----------------------------------------------------------------------------
+{
+    return compile->DoReal(what);
+}
+
+
+Tree *EvaluateChildren::DoText(Text *what)
+// ----------------------------------------------------------------------------
+//   Compile text constants
+// ----------------------------------------------------------------------------
+{
+    return compile->DoText(what);
+}
+
+
+Tree *EvaluateChildren::DoName(Name *what)
+// ----------------------------------------------------------------------------
+//   Compile names
+// ----------------------------------------------------------------------------
+{
+    return compile->DoName(what, true);
+}
+
+
+Tree *EvaluateChildren::DoPrefix(Prefix *what)
+// ----------------------------------------------------------------------------
+//   Evaluate children of a prefix
+// ----------------------------------------------------------------------------
+{
+    OCompiledUnit &unit = compile->unit;
+    Tree *left = what->left->Do(compile);
+    if (!left)
+        return NULL;
+    Tree *right = what->right->Do(compile);
+    if (!right)
+        return NULL;
+    unit.CallNewPrefix(what);
+    return what;
 }
 
 
 Tree *EvaluateChildren::DoPostfix(Postfix *what)
 // ----------------------------------------------------------------------------
-//   Evaluate children, then build a postfix
+//   Evaluate children of a postfix
 // ----------------------------------------------------------------------------
 {
-    Tree *left = Try(what->left);
-    Tree *right = Try(what->right);
-    Tree *result = what;
-    if (left != what->left || right != what->right)
-        result = new Postfix(left, right, what->Position());
-    if (!result->code)
-        result->code = xl_evaluate_children;
-    return result;
+    OCompiledUnit &unit = compile->unit;
+    Tree *left = what->left->Do(compile);
+    if (!left)
+        return NULL;
+    Tree *right = what->right->Do(compile);
+    if (!right)
+        return NULL;
+    unit.CallNewPostfix(what);
+    return what;
 }
 
 
@@ -1458,14 +1506,15 @@ Tree *EvaluateChildren::DoInfix(Infix *what)
 //   Evaluate children, then build an infix
 // ----------------------------------------------------------------------------
 {
-    Tree *left = Try(what->left);
-    Tree *right = Try(what->right);
-    Tree *result = what;
-    if (left != what->left || right != what->right)
-        result = new Infix(what->name, left, right, what->Position());
-    if (!result->code)
-        result->code = xl_evaluate_children;
-    return result;
+    OCompiledUnit &unit = compile->unit;
+    Tree *left = what->left->Do(compile);
+    if (!left)
+        return NULL;
+    Tree *right = what->right->Do(compile);
+    if (!right)
+        return NULL;
+    unit.CallNewInfix(what);
+    return what;
 }
 
 
@@ -1474,35 +1523,12 @@ Tree *EvaluateChildren::DoBlock(Block *what)
 //   Evaluate children, then build a new block
 // ----------------------------------------------------------------------------
 {
-    Tree *child = Try(what->child);
-    Tree *result = what;
-    if (child != what->child)
-        result = new Block(child, what->opening,what->closing,
-                           what->Position());
-    if (!result->code)
-        result->code = xl_evaluate_children;
-    return result;
-}
-
-
-Tree *EvaluateChildren::Try(Tree *what)
-// ----------------------------------------------------------------------------
-//   Try to evaluate a child, otherwise recurse on children
-// ----------------------------------------------------------------------------
-{
-    if (!what->Symbols())
-        what->SetSymbols(symbols);
-    if (!what->code)
-    {
-        Tree *compiled = symbols->CompileAll(what, true);
-        if (!compiled)
-        {
-            what->code = xl_evaluate_children;
-            return what->Do(this);
-        }
-        compiled = what;
-    }
-    return symbols->Run(context, what);
+    OCompiledUnit &unit = compile->unit;
+    Tree *child = what->child->Do(compile);
+    if (!child)
+        return NULL;
+    unit.CallNewBlock(what);
+    return what;
 }
 
 
@@ -1922,17 +1948,13 @@ Tree *CompileAction::DoPrefix(Prefix *what)
         {
             if (!what->right->Symbols())
                 what->right->SetSymbols(symbols);
-            unit.CallEvaluateChildren(what->right);
-            unit.Copy(what->right, what);
-            if (!what->right->code)
-                what->right->code = xl_evaluate_children;
             return what;
         }
 
         // A breakpoint location for convenience
         if (name->value == Options::options->debugPrefix)
         {
-            Save<char> debug(debugRewrites, debugRewrites+1);
+            Save<char> saveDebugFlag(debugRewrites, debugRewrites+1);
             return Rewrites(what);
         }
     }
@@ -2006,7 +2028,7 @@ Tree *CompileAction::Rewrites(Tree *what)
                         // Set the symbols for the result
                         if (!what->Symbols())
                             what->SetSymbols(symbols);
-                        unit.CallEvaluateChildren(what);
+                        RewriteChildren(what);
                         foundUnconditional = !unit.failbb;
                         unit.dataForm.insert(what);
                         reduction.Succeeded();
@@ -2106,7 +2128,7 @@ Tree *CompileAction::Rewrites(Tree *what)
             if (!what->Symbols())
                 what->SetSymbols(symbols);
             if (!noDataForms)
-                unit.CallEvaluateChildren(what);
+                RewriteChildren(what);
             return NULL;
         }
         Ooops("No rewrite candidate for $1", what);
@@ -2118,6 +2140,16 @@ Tree *CompileAction::Rewrites(Tree *what)
         what->SetSymbols(symbols);
 
     return what;
+}
+
+
+Tree *CompileAction::RewriteChildren(Tree *what)
+// ----------------------------------------------------------------------------
+//   Generate code for children of a structured tree
+// ----------------------------------------------------------------------------
+{
+    EvaluateChildren eval(this);
+    return what->Do(eval);
 }
 
 
@@ -2785,8 +2817,10 @@ Value *OCompiledUnit::CallNewBlock(Block *block)
 {
     Value *blockValue = ConstantTree(block);
     Value *childValue = Known(block->child);
+    blockValue = code->CreateBitCast(blockValue, compiler->blockTreePtrTy);
     Value *result = code->CreateCall2(compiler->xl_new_block,
                                       blockValue, childValue);
+    result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(block, result);
     return result;
 }
@@ -2800,8 +2834,10 @@ Value *OCompiledUnit::CallNewPrefix(Prefix *prefix)
     Value *prefixValue = ConstantTree(prefix);
     Value *leftValue = Known(prefix->left);
     Value *rightValue = Known(prefix->right);
+    prefixValue = code->CreateBitCast(prefixValue, compiler->prefixTreePtrTy);
     Value *result = code->CreateCall3(compiler->xl_new_prefix,
                                       prefixValue, leftValue, rightValue);
+    result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(prefix, result);
     return result;
 }
@@ -2815,8 +2851,10 @@ Value *OCompiledUnit::CallNewPostfix(Postfix *postfix)
     Value *postfixValue = ConstantTree(postfix);
     Value *leftValue = Known(postfix->left);
     Value *rightValue = Known(postfix->right);
+    postfixValue = code->CreateBitCast(postfixValue,compiler->postfixTreePtrTy);
     Value *result = code->CreateCall3(compiler->xl_new_postfix,
                                       postfixValue, leftValue, rightValue);
+    result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(postfix, result);
     return result;
 }
@@ -2830,8 +2868,10 @@ Value *OCompiledUnit::CallNewInfix(Infix *infix)
     Value *infixValue = ConstantTree(infix);
     Value *leftValue = Known(infix->left);
     Value *rightValue = Known(infix->right);
+    infixValue = code->CreateBitCast(infixValue, compiler->infixTreePtrTy);
     Value *result = code->CreateCall3(compiler->xl_new_infix,
                                       infixValue, leftValue, rightValue);
+    result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(infix, result);
     return result;
 }
@@ -2958,19 +2998,6 @@ Value *OCompiledUnit::CallTypeError(Tree *what)
 {
     Value *ptr = ConstantTree(what); assert(what);
     Value *callVal = code->CreateCall2(compiler->xl_form_error,
-                                       contextPtr, ptr);
-    MarkComputed(what, callVal);
-    return callVal;
-}
-
-
-Value *OCompiledUnit::CallEvaluateChildren(Tree *what)
-// ----------------------------------------------------------------------------
-//   Evaluate all children for a tree
-// ----------------------------------------------------------------------------
-{
-    Value *ptr = ConstantTree(what); assert(what);
-    Value *callVal = code->CreateCall2(compiler->xl_evaluate_children,
                                        contextPtr, ptr);
     MarkComputed(what, callVal);
     return callVal;
@@ -3148,8 +3175,8 @@ BasicBlock *OCompiledUnit::InfixMatchTest(Tree *actual, Infix *reference)
 
     // Where we go if the tests fail
     BasicBlock *notGood = NeedTest();
-    Value *afterExtract = code->CreateCall2(compiler->xl_infix_match_check,
-                                            actualVal, refNamePtr);
+    Value *afterExtract = code->CreateCall3(compiler->xl_infix_match_check,
+                                            contextPtr, actualVal, refNamePtr);
     Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
     Value *isGood = code->CreateICmpNE(afterExtract, null, "isGoodInfix");
     BasicBlock *isGoodBB = BasicBlock::Create(*llvm, "isGood", function);

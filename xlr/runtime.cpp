@@ -70,16 +70,6 @@ Tree *xl_evaluate_children(Context *context, Tree *what)
 //   Evaluate the children for a given node
 // ----------------------------------------------------------------------------
 {
-    Tree *result = what;
-    if (Symbols *s = what->Symbols())
-    {
-        EvaluateChildren eval(context, s);
-        result = what->Do(eval);
-        if (!result->Symbols())
-            result->SetSymbols(what->Symbols());
-        return result;
-    }
-
     switch(what->Kind())
     {
     case INTEGER:
@@ -354,11 +344,14 @@ bool xl_same_shape(Tree *left, Tree *right)
 }
 
 
-Tree *xl_infix_match_check(Tree *value, kstring name)
+Tree *xl_infix_match_check(Context *context, Tree *value, kstring name)
 // ----------------------------------------------------------------------------
 //   Check if the value is matching the given infix
 // ----------------------------------------------------------------------------
 {
+    // The following test is a hack to detect closures
+    if (value->code && !value->Symbols())
+        value = context->Evaluate(value);
     while (Block *block = value->AsBlock())
         if (block->opening == "(" && block->closing == ")")
             value = block->child;
@@ -1434,8 +1427,6 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
         data = block->child;
         if (!data->Symbols())
             data->SetSymbols(block->Symbols());
-        if (!data->code)
-            data->code = xl_evaluate_children;
     }
 
     // Check if we already compiled that code
@@ -1562,9 +1553,6 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
         // Report compile error the first time
         if (!compiled)
             return Ooops("Cannot compile map/reduce code $1", code);
-
-        if (!toCompile->code)
-            toCompile->code = xl_evaluate_children;
     }
 
     Tree *result = data;
@@ -1613,8 +1601,6 @@ Tree *xl_nth(Context *context, Tree *data, longlong index)
         data = block->child;
         if (!data->Symbols())
             data->SetSymbols(block->Symbols());
-        if (!data->code)
-            data->code = xl_evaluate_children;
     }
 
     // Now loop on the top-level infix
@@ -1672,7 +1658,7 @@ Tree *MapAction::DoInfix(Infix *infix)
         if (left != infix->left || right != infix->right)
         {
             infix = new Infix(infix->name, left, right, infix->Position());
-            infix->code = xl_evaluate_children;
+            infix->code = xl_identity;
         }
         return infix;
     }
@@ -1821,7 +1807,7 @@ Tree *FilterAction::DoInfix(Infix *infix)
         if (left && right)
         {
             infix = new Infix(infix->name, left, right, infix->Position());
-            infix->code = xl_evaluate_children;
+            infix->code = xl_identity;
             return infix;
         }
         if (left)
