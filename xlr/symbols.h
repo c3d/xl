@@ -54,7 +54,7 @@ typedef std::set<Symbols_p>        symbols_set;  // Set of symbol tables
 typedef std::vector<Symbols_p>     symbols_list; // List of symbols table
 typedef std::map<ulong, Rewrite_p> rewrite_table;// Hashing of rewrites
 typedef symbol_table::iterator     symbol_iter;  // Iterator over sym table
-typedef std::map<Tree_p, Symbols_p>capture_table;// Symbol capture table
+typedef std::map<Name_p, Tree_p>   capture_table;// Symbol capture table
 typedef std::map<Tree_p, Tree_p>   value_table;  // Used for value caching
 typedef value_table::iterator      value_iter;   // Used to iterate over values
 typedef Tree * (*typecheck_fn) (Context *context, Tree *src, Tree *value);
@@ -215,7 +215,8 @@ struct OCompiledUnit
     llvm::Value *       CallNewPrefix(Prefix *);
     llvm::Value *       CallNewPostfix(Postfix *);
     llvm::Value *       CallNewInfix(Infix *);
-    llvm::Value *       CreateClosure(Tree *callee, TreeList &args,
+    llvm::Value *       CreateClosure(Tree *callee,
+                                      TreeList &parms, TreeList &args,
                                       llvm::Function *);
     llvm::Value *       CallClosure(Tree *callee, uint ntrees);
     llvm::Value *       CallTypeError(Tree *what);

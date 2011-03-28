@@ -546,26 +546,35 @@ Tree *xl_new_closure(eval_fn toCall, Tree *expr, uint ntrees, ...)
                   << " code " << (void *) expr->code
                   << " [" << expr << "]\n";
 
-    // Build the prefix with all the arguments
-    Prefix *result = new Prefix(expr, NULL, expr->Position());
-    Prefix *parent = result;
+    // Build the list of parameter names and associated arguments
+    Tree_p result = NULL;
+    Tree_p *treePtr = &result;
+    Infix *decl = NULL;
     va_list va;
     va_start(va, ntrees);
     for (uint i = 0; i < ntrees; i++)
     {
+        Name *name = va_arg(va, Name *);
         Tree *arg = va_arg(va, Tree *);
         IFTRACE(closure)
-            std::cerr << "  ARG: " << arg << '\n';
-        Prefix *item = new Prefix(arg, NULL, arg->Position());
-        parent->right = item;
-        parent = item;
+            std::cerr << "  PARM: " << name << " ARG: " << arg << '\n';
+        decl = new Infix("->", name, arg, arg->Position());
+        if (*treePtr)
+        {
+            Infix *infix = new Infix("\n", *treePtr, decl);
+            *treePtr = infix;
+            treePtr = &infix->right;
+        }
+        else
+        {
+            *treePtr = decl;
+        }
     }
     va_end(va);
 
-    // Add a tree that indicates we have a closure
-    Name *target = new Name("[closure]", expr->Position());
-    target->code = toCall;
-    parent->right = target;
+    // Build the final infix with the original expression
+    *treePtr = new Infix("\n", *treePtr, expr);
+    decl->code = toCall;
 
     // Generate the code for the arguments
     Compiler *compiler = MAIN->compiler;

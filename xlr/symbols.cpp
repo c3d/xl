@@ -882,16 +882,12 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     for (c = env.captured.begin(); c != env.captured.end(); c++)
     {
         Tree *name = (*c).first;
-        Symbols *where = (*c).second;
-        if (where == MAIN->globals)
-        {
-            // This is a global, we'll find it running the target.
-        }
-        else if (unit.IsKnown(name))
+        Tree *value = (*c).second;
+        if (unit.IsKnown(value))
         {
             // This is a local: simply pass it around
             parms.push_back(name);
-            args.push_back(name);
+            args.push_back(value);
         }
         else
         {
@@ -918,7 +914,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     }
 
     // Create a call to xl_new_closure to save the required trees
-    unit.CreateClosure(source, args, subUnit.function);
+    unit.CreateClosure(source, parms, args, subUnit.function);
 
     return source;
 }
@@ -1362,8 +1358,8 @@ Tree *EnvironmentScan::DoName(Name *what)
         if (Tree *existing = s->Named(what->value, false))
         {
             // Found the symbol in the given symbol table
-            if (!captured.count(existing))
-                captured[existing] = s;
+            if (!captured.count(what))
+                captured[what] = existing;
             break;
         }
     }
@@ -2838,7 +2834,10 @@ Value *OCompiledUnit::CallNewInfix(Infix *infix)
 }
 
 
-Value *OCompiledUnit::CreateClosure(Tree *callee, TreeList &args, Function*fn)
+Value *OCompiledUnit::CreateClosure(Tree *callee,
+                                    TreeList &parms,
+                                    TreeList &args,
+                                    Function*fn)
 // ----------------------------------------------------------------------------
 //   Create a closure for an expression we want to evaluate later
 // ----------------------------------------------------------------------------
@@ -2848,15 +2847,21 @@ Value *OCompiledUnit::CreateClosure(Tree *callee, TreeList &args, Function*fn)
     if (!calleeVal)
         return NULL;
     Value *countVal = ConstantInt::get(LLVM_INTTYPE(uint), args.size());
-    TreeList::iterator a;
+    TreeList::iterator a, p;
 
     // Cast given function pointer to eval_fn and create argument list
     Value *evalFn = code->CreateBitCast(fn, compiler->evalFnTy);
     argV.push_back(evalFn);
     argV.push_back(calleeVal);
     argV.push_back(countVal);
-    for (a = args.begin(); a != args.end(); a++)
+    for (a = args.begin(), p = parms.begin();
+         a != args.end() && p != parms.end();
+         a++, p++)
     {
+        Tree *name = *p;
+        Value *llvmName = ConstantTree(name);
+        argV.push_back(llvmName);
+
         Tree *value = *a;
         Value *llvmValue = Known(value); assert(llvmValue);
         argV.push_back(llvmValue);
@@ -2880,47 +2885,58 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
 // ----------------------------------------------------------------------------
 //   We build it with an indirect call so that we generate one closure call
 //   subroutine per number of arguments only.
-//   The input is a prefix of the form E X1 X2 X3 false, where E is the
-//   expression to evaluate, and X1, X2, X3 are the arguments it needs.
-//   The generated function takes the 'code' field of E, and calls it
-//   using C conventions with arguments (E, X1, X2, X3).
+//   The input is a sequence of infix \n that looks like:
+//      P1 -> V1
+//      P2 -> V2
+//      P3 -> V3
+//      [...]
+//      E
+//   where P1..Pn are the parameter names, V1..Vn their values, and E is the
+//   original expression to evaluate.
+//   The generated function takes the 'code' field of the last infix before E,
+//   and calls it using C conventions with arguments (E, V1, V2, V3, ...)
 {
     // Load left tree
-    Type *treePtrTy = compiler->treePtrTy;
+    Type *treeTy = compiler->treePtrTy;
+    Type *infixTy = compiler->infixTreePtrTy;
     Value *ptr = Known(callee); assert(ptr);
-
-    // Read original self and point to first argument
-    Value *pfx = code->CreateBitCast(ptr,compiler->prefixTreePtrTy);
-    Value *lf = code->CreateConstGEP2_32(pfx, 0, LEFT_VALUE_INDEX);
-    Value *rt = code->CreateConstGEP2_32(pfx, 0, RIGHT_VALUE_INDEX);
-    Value *original = code->CreateLoad(lf);
-    ptr = code->CreateLoad(rt);
+    Value *decl = NULL;
 
     // Build argument list
     std::vector<Value *> argV;
     std::vector<const Type *> signature;
     argV.push_back(contextPtr);   // Pass context pointer
     signature.push_back(compiler->contextPtrTy);
-    argV.push_back(original);     // Self is the original expression
-    signature.push_back(treePtrTy);
+    argV.push_back(ptr);          // Self is the closure expression
+    signature.push_back(treeTy);
     for (uint i = 0; i < ntrees; i++)
     {
-        // WARNING: This relies on the layout of all nodes beginning the same
-        pfx = code->CreateBitCast(ptr,compiler->prefixTreePtrTy);
-        lf = code->CreateConstGEP2_32(pfx, 0, LEFT_VALUE_INDEX);
-        rt = code->CreateConstGEP2_32(pfx, 0, RIGHT_VALUE_INDEX);
-        Value *arg = code->CreateLoad(lf);
+        // Load the left of the \n which is a decl of the form P->V
+        Value *infix = code->CreateBitCast(ptr, infixTy);
+        Value *lf = code->CreateConstGEP2_32(infix, 0, LEFT_VALUE_INDEX);
+        decl = code->CreateLoad(lf);
+        decl = code->CreateBitCast(decl, infixTy);
+
+        // Load the value V out of P->V and pass it as an argument
+        Value *arg = code->CreateConstGEP2_32(decl, 0, RIGHT_VALUE_INDEX);
+        arg = code->CreateLoad(arg);
         argV.push_back(arg);
-        signature.push_back(treePtrTy);
+        signature.push_back(treeTy);
+
+        // Load the next element in the list
+        Value *rt = code->CreateConstGEP2_32(infix, 0, RIGHT_VALUE_INDEX);
         ptr = code->CreateLoad(rt);
     }
 
     // Load the target code
-    Value *callCode = code->CreateConstGEP2_32(ptr, 0, CODE_INDEX);
+    Value *callCode = code->CreateConstGEP2_32(decl, 0, CODE_INDEX);
     callCode = code->CreateLoad(callCode);
 
+    // Replace the 'self' argument with the expression sans closure
+    argV[1] = ptr;
+
     // Call the resulting function
-    FunctionType *fnTy = FunctionType::get(treePtrTy, signature, false);
+    FunctionType *fnTy = FunctionType::get(treeTy, signature, false);
     PointerType *fnPtrTy = PointerType::get(fnTy, 0);
     Value *toCall = code->CreateBitCast(callCode, fnPtrTy);
     Value *callVal = code->CreateCall(toCall, argV.begin(), argV.end());
