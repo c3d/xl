@@ -149,6 +149,9 @@ public:
     void                RegisterPointers();
     static void         MarkObject(void *object);
     static bool         IsAllocated(void *ptr);
+
+private:
+    static Allocator *  allocator;
 };
 
 
@@ -430,8 +433,6 @@ Allocator<Object> * Allocator<Object>::Singleton()
 //    Return a singleton for the allocation class
 // ----------------------------------------------------------------------------
 {
-    static Allocator *allocator = NULL;
-
     if (!allocator)
         // Create the singleton
         allocator = new Allocator;
