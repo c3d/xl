@@ -1473,9 +1473,7 @@ Tree *EvaluateChildren::DoPrefix(Prefix *what)
 // ----------------------------------------------------------------------------
 {
     OCompiledUnit &unit = compile->unit;
-    Tree *left = what->left->Do(compile);
-    if (!left)
-        return NULL;
+    unit.ConstantTree(what->left);
     Tree *right = what->right->Do(compile);
     if (!right)
         return NULL;
@@ -1493,9 +1491,7 @@ Tree *EvaluateChildren::DoPostfix(Postfix *what)
     Tree *left = what->left->Do(compile);
     if (!left)
         return NULL;
-    Tree *right = what->right->Do(compile);
-    if (!right)
-        return NULL;
+    unit.ConstantTree(what->right);
     unit.CallNewPostfix(what);
     return what;
 }

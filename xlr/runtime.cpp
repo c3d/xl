@@ -1494,7 +1494,7 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
                 }
             }
         }
-        else if (Name *name = code->AsName())
+        else if (Name *name = toCompile->AsName())
         {
             // We have a single name: consider it as a prefix to all elements
             Name *parameter = new Name("_");
@@ -1504,7 +1504,7 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
         else
         {
             // OK, we don't know what to do with this stuff...
-            return Ooops("Malformed map/reduce code $1", code);
+            return Ooops("Malformed map/reduce code $1", toCompile);
         }
 
         // We have now decided what this is, so we compile the code
@@ -1552,7 +1552,7 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
 
         // Report compile error the first time
         if (!compiled)
-            return Ooops("Cannot compile map/reduce code $1", code);
+            return Ooops("Cannot compile map/reduce code $1", toCompile);
     }
 
     Tree *result = data;
