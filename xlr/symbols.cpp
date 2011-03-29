@@ -1119,30 +1119,35 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
     {
         if (Name *name = test->AsName())
         {
-            if (Tree *value = symbols->Named(name->value))
+            if (!unit.IsKnown(test))
             {
-                // For non-names, evaluate the expression
-                if (!value->AsName())
+                if (Tree *value = symbols->Named(name->value))
                 {
-                    value = CompileValue(value, false);
-                    if (!value)
-                        return NULL;
+                    // For non-names, evaluate the expression
+                    if (!unit.IsKnown(value))
+                    {
+                        value = CompileValue(value, false);
+                        if (!value)
+                            return NULL;
+                    }
+                    if (unit.IsKnown(value))
+                        test = value;
                 }
+            }
 
-                if (unit.IsKnown(value))
-                {
-                    // Build an infix tree corresponding to what we extract
-                    Name *left = new Name("left");
-                    Name *right = new Name("right");
-                    Infix *extracted = new Infix(what->name, left, right);
+            if (unit.IsKnown(test))
+            {
+                // Build an infix tree corresponding to what we extract
+                Name *left = new Name("left");
+                Name *right = new Name("right");
+                Infix *extracted = new Infix(what->name, left, right);
 
-                    // Extract the infix parameters from actual value
-                    unit.InfixMatchTest(value, extracted);
+                // Extract the infix parameters from actual value
+                unit.InfixMatchTest(test, extracted);
 
-                    // Proceed with the infix we extracted to
-                    // map the remaining args
-                    test = extracted;
-                }
+                // Proceed with the infix we extracted to
+                // map the remaining args
+                test = extracted;
             }
         }
     }
