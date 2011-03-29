@@ -484,6 +484,8 @@ Block *xl_new_block(Block *source, Tree *child)
 // ----------------------------------------------------------------------------
 {
     Block *result = new Block(source, child);
+    result->SetSymbols(source->Symbols());
+    result->code = xl_identity;
     return result;
 }
 
@@ -494,6 +496,8 @@ Prefix *xl_new_prefix(Prefix *source, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 {
     Prefix *result = new Prefix(source, left, right);
+    result->SetSymbols(source->Symbols());
+    result->code = xl_identity;
     return result;
 }
 
@@ -504,6 +508,8 @@ Postfix *xl_new_postfix(Postfix *source, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 {
     Postfix *result = new Postfix(source, left, right);
+    result->SetSymbols(source->Symbols());
+    result->code = xl_identity;
     return result;
 }
 
@@ -514,6 +520,8 @@ Infix *xl_new_infix(Infix *source, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 {
     Infix *result = new Infix(source, left, right);
+    result->SetSymbols(source->Symbols());
+    result->code = xl_identity;
     return result;
 }
 

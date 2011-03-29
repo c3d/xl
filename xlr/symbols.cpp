@@ -2150,6 +2150,8 @@ Tree *CompileAction::RewriteChildren(Tree *what)
 // ----------------------------------------------------------------------------
 {
     EvaluateChildren eval(this);
+    if (!what->Symbols())
+        what->SetSymbols(symbols);
     return what->Do(eval);
 }
 
