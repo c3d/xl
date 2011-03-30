@@ -32,12 +32,7 @@ XL_BEGIN
 //
 // ============================================================================
 
-struct DeepCopyCloneMode;       // Child nodes are cloned too (default)
-struct ShallowCopyCloneMode;    // Child nodes are referenced
-struct NodeOnlyCloneMode;       // Child nodes are left NULL
-
-
-template <typename mode> struct TreeCloneTemplate
+template <typename CloneMode> struct TreeCloneTemplate : CloneMode
 // ----------------------------------------------------------------------------
 //   Clone a tree
 // ----------------------------------------------------------------------------
@@ -58,7 +53,8 @@ template <typename mode> struct TreeCloneTemplate
     }
     Tree *DoText(Text *what)
     {
-        return new Text(what->value, what->opening, what->closing,
+        return new Text(what->value,
+                        what->opening, what->closing, 
                         what->Position());
     }
     Tree *DoName(Name *what)
@@ -68,12 +64,14 @@ template <typename mode> struct TreeCloneTemplate
 
     Tree *DoBlock(Block *what)
     {
-        return new Block(Clone(what->child), what->opening, what->closing,
+        return new Block(Clone(what->child),
+                         what->opening, what->closing,
                          what->Position());
     }
     Tree *DoInfix(Infix *what)
     {
-        return new Infix (what->name, Clone(what->left), Clone(what->right),
+        return new Infix (what->name,
+                          Clone(what->left), Clone(what->right),
                           what->Position());
     }
     Tree *DoPrefix(Prefix *what)
@@ -86,39 +84,45 @@ template <typename mode> struct TreeCloneTemplate
         return new Postfix(Clone(what->left), Clone(what->right),
                            what->Position());
     }
-    Tree *Do(Tree *what)
-    {
-        return what;            // ??? Should not happen
-    }
 protected:
     // Default is to do a deep copy
-    Tree *  Clone(Tree *t) { return t->Do(this); }
+    Tree *  Clone(Tree *t) { return CloneMode::Clone(t, this); }
 };
 
 
-template<> inline
-Tree *TreeCloneTemplate<ShallowCopyCloneMode>::Clone(Tree *t)
+struct DeepCloneMode
 // ----------------------------------------------------------------------------
-//   Specialization for the shallow copy clone
-// ----------------------------------------------------------------------------
-{
-    return t;
-}
-
-
-template<> inline
-Tree *TreeCloneTemplate<NodeOnlyCloneMode>::Clone(Tree *)
-// ----------------------------------------------------------------------------
-//   Specialization for the node-only clone
+//   Clone mode where all the children nodes are copied (default)
 // ----------------------------------------------------------------------------
 {
-    return NULL;
-}
+    template<typename CloneClass>
+    Tree *Clone(Tree *t, CloneClass *clone) { return t->Do(clone); }
+};
 
 
-typedef struct TreeCloneTemplate<DeepCopyCloneMode>     TreeClone;
-typedef struct TreeCloneTemplate<ShallowCopyCloneMode>  ShallowCopyTreeClone;
-typedef struct TreeCloneTemplate<NodeOnlyCloneMode>     NodeOnlyTreeClone;
+struct ShallowCloneMode
+// ----------------------------------------------------------------------------
+//   Shallow copy only create a new value for the top-level item
+// ----------------------------------------------------------------------------
+{
+    template<typename CloneClass>
+    Tree *Clone(Tree *t, CloneClass *) { return t; }
+};
+
+
+struct NullCloneMode
+// ----------------------------------------------------------------------------
+//   Fill all children with NULL
+// ----------------------------------------------------------------------------
+{
+    template<typename CloneClass>
+    Tree *Clone(Tree *, CloneClass *) { return NULL; }
+};
+
+
+typedef struct TreeCloneTemplate<DeepCloneMode>         TreeClone;
+typedef struct TreeCloneTemplate<ShallowCloneMode>      ShallowClone;
+typedef struct TreeCloneTemplate<NullCloneMode>         NullClone;
 
 
 

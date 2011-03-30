@@ -1080,7 +1080,7 @@ void TreeDiff::DoEditScript()
             //  i. k <- FindPos(x);
             unsigned k = FindPos(x);
 
-            NodeOnlyTreeClone clone;
+            NullClone clone;
             Tree *t = xptr->Do(clone);
             EditOperation::Insert *ins;
             ins = new EditOperation::Insert(t, z, k);
@@ -1119,7 +1119,7 @@ void TreeDiff::DoEditScript()
                 {
                     // ii. If v(w) != v(x)
                     
-                    NodeOnlyTreeClone clone;
+                    NullClone clone;
                     Tree *t = xptr->Do(clone);
                     EditOperation::Update *upd;
                     upd = new EditOperation::Update(w, t);
