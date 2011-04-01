@@ -1866,12 +1866,10 @@ Tree *CompileAction::DoBlock(Block *what)
         Tree *result = what->child->Do(this);
         if (!result)
             return NULL;
-        if (unit.IsKnown(what->child))
-        {
-            if (!what->child->Symbols())
-                what->child->SetSymbols(symbols);
-        }
-        unit.Copy(result, what);
+        if (!what->child->Symbols())
+            what->child->SetSymbols(symbols);
+        if (unit.IsKnown(result))
+            unit.Copy(result, what);
         return what;
     }
 
