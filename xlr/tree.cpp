@@ -47,11 +47,13 @@ Tree::~Tree()
 // ----------------------------------------------------------------------------
 {
     Info *next = NULL;
+    assert (info != (Info *) 0xD00DEL && "Please report this in bug #922");
     for (Info *i = info; i; i = next)
     {
         next = i->next;
         delete i;
     }
+    info = (Info *) 0xD00DEL;
 }
 
 
