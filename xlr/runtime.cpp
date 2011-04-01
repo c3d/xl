@@ -221,6 +221,16 @@ Tree *xl_form_error(Context *context, Tree *what)
     bool quickExit = false;     // For debugging purpose
     if (quickExit)
         return what;
+
+    static bool recursive = false;
+    if (recursive)
+    {
+        std::cerr << "ABORT - Recursive error during error handling\n"
+                  << "Error tree: " << what << "\n";
+        return XL::xl_false;
+    }
+    Save<bool> saveRecursive(recursive, true);
+
     ADJUST_CONTEXT_FOR_INTERPRETER(context);
     static Name_p errorName = new Name("error");
     static Text_p errorText = new Text("No form matches $1");
