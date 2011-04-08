@@ -1375,7 +1375,7 @@ Tree *EnvironmentScan::DoName(Name *what)
 //    Check if name is found in context, if so record where we took it from
 // ----------------------------------------------------------------------------
 {
-    for (Symbols *s = symbols; s; s = s->Parent())
+    for (Symbols *s = symbols; s && s != MAIN->globals; s = s->Parent())
     {
         if (Tree *existing = s->Named(what->value, false))
         {
