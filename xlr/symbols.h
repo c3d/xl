@@ -129,6 +129,7 @@ public:
     symbols_set         imported;
     Tree_p              error_handler;
     bool                has_rewrites_for_constants;
+    bool                is_global;
 
     static declarator_table declarators;
 
@@ -148,7 +149,7 @@ inline Symbols::Symbols(Symbols *s)
 //   Create a "child" symbol table
 // ----------------------------------------------------------------------------
     : source(NULL), parent(s), rewrites(NULL), error_handler(NULL),
-      has_rewrites_for_constants(false)
+      has_rewrites_for_constants(false), is_global(false)
 {}
 
 

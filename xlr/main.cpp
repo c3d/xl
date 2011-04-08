@@ -66,6 +66,7 @@ SourceFile::SourceFile(text n, Tree *t, Context *c, Symbols *s, bool ro)
     modified = st.st_mtime;
     if (access(n.c_str(), W_OK) != 0)
         readOnly = true;
+    s->is_global = true;
 }
 
 
@@ -396,6 +397,7 @@ int Main::LoadFile(text file,
     }
     MAIN->context = ctx;
     MAIN->globals = syms;
+    syms->is_global = true;
 
     // Connect imports if any
     if (importContext)
