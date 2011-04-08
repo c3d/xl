@@ -816,7 +816,9 @@ Tree *ArgumentMatch::Compile(Tree *source, bool noData)
     // Compile the code
     if (!unit.IsKnown(source))
     {
-        source = symbols->Compile(source, unit, true, false, noData);
+        bool nullIfBad = true;
+        bool keepAlt = false;
+        source = symbols->Compile(source, unit, nullIfBad, keepAlt, noData);
     }
     else
     {
@@ -886,6 +888,8 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     {
         Tree *name = (*c).first;
         Tree *value = (*c).second;
+        if (!unit.IsKnown(value))
+            value = Compile(value, true);
         if (unit.IsKnown(value))
         {
             // This is a local: simply pass it around
@@ -1390,7 +1394,9 @@ Tree *EnvironmentScan::DoBlock(Block *what)
 //   Parameters in a block are in its child
 // ----------------------------------------------------------------------------
 {
-    return what->child->Do(this);
+    if (what->child->Kind() != NAME)
+        what->child->Do(this);
+    return what;
 }
 
 
@@ -1411,7 +1417,8 @@ Tree *EnvironmentScan::DoPrefix(Prefix *what)
 //   For prefix expressions, simply test left then right
 // ----------------------------------------------------------------------------
 {
-    what->left->Do(this);
+    if (what->left->Kind() != NAME)
+        what->left->Do(this);
     what->right->Do(this);
     return what;
 }
@@ -1423,7 +1430,8 @@ Tree *EnvironmentScan::DoPostfix(Postfix *what)
 // ----------------------------------------------------------------------------
 {
     // Order shouldn't really matter here (unlike ParameterMach)
-    what->right->Do(this);
+    if (what->right->Kind() != NAME)
+        what->right->Do(this);
     what->left->Do(this);
     return what;
 }
