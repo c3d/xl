@@ -1,0 +1,8 @@
+foo x:real, y:real ->
+   if x > y then
+       x
+   else
+       y
+boo -> 0.0
+boo := foo(3.4, 5.2)
+writeln "boo=", boo

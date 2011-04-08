@@ -1,0 +1,7 @@
+foo x007:real, y008:real ->
+   if x007 > y008 then
+       x007
+   else
+       y008
+gloo r:real -> writeln "r=", r
+gloo foo(3.4, 5.2)

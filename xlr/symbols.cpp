@@ -1394,7 +1394,7 @@ Tree *EnvironmentScan::DoBlock(Block *what)
 //   Parameters in a block are in its child
 // ----------------------------------------------------------------------------
 {
-    if (what->child->Kind() != NAME)
+    if (!what->IsParentheses() || what->child->Kind() != NAME)
         what->child->Do(this);
     return what;
 }
@@ -1833,7 +1833,7 @@ Tree *CompileAction::DoName(Name *what, bool forceEval)
         {
             unit.CallEvaluate(result);
         }
-        else if (unit.value.count(result))
+        else if (unit.IsKnown(result))
         {
             // Case of "Foo(A,B) -> B" with B: evaluate B lazily
             unit.Copy(result, what, false);
