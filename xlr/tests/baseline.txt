@@ -51,3 +51,4 @@
 20.Errors/error_in_write_argument.xl
 20.Errors/local-variables-redeclaration.xl
 20.Errors/local-variables-type-error.xl
+20.Errors/bug357.xl
