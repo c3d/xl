@@ -649,23 +649,23 @@ PREFIX(SystemYearDay, integer, "year_day",, XL_RCTIME(tm.tm_yday, 10),
 #endif
 
 // Random number generator
-PREFIX(RandomNumber, real, "random", , XL_RREAL(xl_random(0.0, 1.0)),
-       GROUP(basics)
-       SYNOPSIS("")
-       DESCRIPTION("")
-       RETURNS(real, ""))
-PREFIX(RandomNumber2, real, "random", PARM(low, real, "") PARM(high, real, ""),
-       XL_RREAL(xl_random(XL_REAL(low), XL_REAL(high))),
-       GROUP(basics)
-       SYNOPSIS("")
-       DESCRIPTION("")
-       RETURNS(real, ""))
 PREFIX(RandomNumber2i, integer, "random", PARM(low,integer, "") PARM(high,integer, ""),
        XL_RINT(xl_random(XL_INT(low), XL_INT(high))),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(integer, ""))
+PREFIX(RandomNumber2, real, "random", PARM(low, real, "") PARM(high, real, ""),
+       XL_RREAL(xl_random(XL_REAL(low), XL_REAL(high))),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(RandomNumber, real, "random", , XL_RREAL(xl_random(0.0, 1.0)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
 
 // Executing some code
 PREFIX(Identity,  tree, "identity",
