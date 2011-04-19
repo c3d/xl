@@ -131,6 +131,12 @@ Compiler::Compiler(kstring moduleName)
     Allocator<Postfix>  ::Singleton()->AddListener(cgcl);
     Allocator<Block>    ::Singleton()->AddListener(cgcl);
 
+    // Set initial target options
+    JITExceptionHandling = true;
+    JITEmitDebugInfo = true;
+    UnwindTablesMandatory = true;
+    NoFramePointerElim = true;
+
     // Initialize native target (new features)
     InitializeNativeTarget();
 
@@ -397,11 +403,7 @@ void Compiler::Setup(Options &options)
                             true, /* RunInliner */
                             true  /* Verify Each */);
 
-    // Other target options
-    // DwarfExceptionHandling = true;// Present in LLVM 2.6, but crashes
-    JITEmitDebugInfo = true;         // Not present in LLVM 2.6
-    UnwindTablesMandatory = true;
-    // PerformTailCallOpt = true;
+    // Adjust frame pointer elimination based on the -g option
     NoFramePointerElim = options.debug;
 }
 
