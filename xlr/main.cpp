@@ -66,7 +66,8 @@ SourceFile::SourceFile(text n, Tree *t, Context *c, Symbols *s, bool ro)
     modified = st.st_mtime;
     if (access(n.c_str(), W_OK) != 0)
         readOnly = true;
-    s->is_global = true;
+    if (s)
+        s->is_global = true;
 }
 
 
