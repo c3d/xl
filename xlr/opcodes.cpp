@@ -33,14 +33,14 @@
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //    Helper functions for native code
-// 
+//
 // ============================================================================
 
 longlong xl_integer_arg(Tree *value)
 // ----------------------------------------------------------------------------
-//    Return an integer value 
+//    Return an integer value
 // ----------------------------------------------------------------------------
 {
     if (Integer *ival = value->AsInteger())
@@ -52,7 +52,7 @@ longlong xl_integer_arg(Tree *value)
 
 double xl_real_arg(Tree *value)
 // ----------------------------------------------------------------------------
-//    Return a real value 
+//    Return a real value
 // ----------------------------------------------------------------------------
 {
     if (Real *rval = value->AsReal())
@@ -64,7 +64,7 @@ double xl_real_arg(Tree *value)
 
 text xl_text_arg(Tree *value)
 // ----------------------------------------------------------------------------
-//    Return a text value 
+//    Return a text value
 // ----------------------------------------------------------------------------
 {
     if (Text *tval = value->AsText())
@@ -77,7 +77,7 @@ text xl_text_arg(Tree *value)
 
 int xl_character_arg(Tree *value)
 // ----------------------------------------------------------------------------
-//    Return a character value 
+//    Return a character value
 // ----------------------------------------------------------------------------
 {
     if (Text *tval = value->AsText())
@@ -90,7 +90,7 @@ int xl_character_arg(Tree *value)
 
 bool xl_boolean_arg(Tree *value)
 // ----------------------------------------------------------------------------
-//    Return a boolean truth value 
+//    Return a boolean truth value
 // ----------------------------------------------------------------------------
 {
     if (value == xl_true)
@@ -170,7 +170,6 @@ void xl_enter_prefix(Context *context, text name, native_fn fn, Tree *rtype,
     if (parameters.size())
     {
         Tree *parmtree = xl_parameters_tree(parameters);
-
         Prefix *from = new Prefix(new Name(symbol), parmtree);
         Name *to = new Name(symbol);
 
@@ -189,7 +188,7 @@ void xl_enter_prefix(Context *context, text name, native_fn fn, Tree *rtype,
     else
     {
         Name *n  = new Name(symbol);
-
+        n->SetInfo<PrefixDefinitionsInfo>(new PrefixDefinitionsInfo());
         Rewrite *rw = context->Define(n, n);
         rw->native = fn;
         rw->type = rtype;
@@ -215,11 +214,11 @@ void xl_enter_postfix(Context *context, text name, native_fn fn, Tree *rtype,
     Tree *parmtree = xl_parameters_tree(parameters);
     Postfix *from = new Postfix(parmtree, new Name(symbol));
     Name *to = new Name(symbol);
-    
+
     Rewrite *rw = context->Define(from, to);
     rw->native = (native_fn) fn;
     rw->type = rtype;
-    
+
     Symbols *s = MAIN->globals;
     Rewrite *rw2 = s->EnterRewrite(from, to);
     to->code = fn;
@@ -265,7 +264,7 @@ void xl_enter_name(Symbols *symbols, Name *name)
     name->code = xl_identity;
     name->SetSymbols(symbols);
     symbols->EnterName(name->value, name);
-}    
+}
 
 
 void xl_enter_type(Symbols *symbols, Name *name,
