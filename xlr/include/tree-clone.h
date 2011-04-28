@@ -44,49 +44,56 @@ template <typename CloneMode> struct TreeCloneTemplate : CloneMode
 
     Tree *DoInteger(Integer *what)
     {
-        return new Integer(what->value, what->Position());
+        return Adjust(what, new Integer(what->value, what->Position()));
     }
     Tree *DoReal(Real *what)
     {
-        return new Real(what->value, what->Position());
+        return Adjust(what, new Real(what->value, what->Position()));
 
     }
     Tree *DoText(Text *what)
     {
-        return new Text(what->value,
-                        what->opening, what->closing, 
-                        what->Position());
+        return Adjust(what, new Text(what->value,
+                                     what->opening, what->closing, 
+                                     what->Position()));
     }
     Tree *DoName(Name *what)
     {
-        return new Name(what->value, what->Position());
+        return Adjust(what, new Name(what->value, what->Position()));
     }
 
     Tree *DoBlock(Block *what)
     {
-        return new Block(Clone(what->child),
-                         what->opening, what->closing,
-                         what->Position());
+        return Adjust(what, new Block(Clone(what->child),
+                                      what->opening, what->closing,
+                                      what->Position()));
     }
     Tree *DoInfix(Infix *what)
     {
-        return new Infix (what->name,
-                          Clone(what->left), Clone(what->right),
-                          what->Position());
+        return Adjust(what, new Infix (what->name,
+                                       Clone(what->left), Clone(what->right),
+                                       what->Position()));
     }
     Tree *DoPrefix(Prefix *what)
     {
-        return new Prefix(Clone(what->left), Clone(what->right),
-                          what->Position());
+        return Adjust(what, new Prefix(Clone(what->left), Clone(what->right),
+                                       what->Position()));
     }
     Tree *DoPostfix(Postfix *what)
     {
-        return new Postfix(Clone(what->left), Clone(what->right),
-                           what->Position());
+        return Adjust(what, new Postfix(Clone(what->left), Clone(what->right),
+                                        what->Position()));
     }
 protected:
-    // Default is to do a deep copy
-    Tree *  Clone(Tree *t) { return CloneMode::Clone(t, this); }
+    // Clone configuration code
+    Tree *  Clone(Tree *t)
+    {
+        return CloneMode::Clone(t, this);
+    }
+    Tree *  Adjust(Tree *from, Tree *to)
+    {
+        return CloneMode::Adjust(from, to, this);
+    }
 };
 
 
@@ -96,11 +103,20 @@ struct DeepCloneMode
 // ----------------------------------------------------------------------------
 {
     template<typename CloneClass>
-    Tree *Clone(Tree *t, CloneClass *clone) { return t->Do(clone); }
+    Tree *Clone(Tree *t, CloneClass *clone)
+    {
+        return t->Do(clone);
+    }
+
+    template<typename CloneClass>
+    Tree *Adjust(Tree * /* from */, Tree *to, CloneClass */* clone */)
+    {
+        return to;
+    }
 };
 
 
-struct ShallowCloneMode
+struct ShallowCloneMode : DeepCloneMode
 // ----------------------------------------------------------------------------
 //   Shallow copy only create a new value for the top-level item
 // ----------------------------------------------------------------------------
@@ -110,7 +126,7 @@ struct ShallowCloneMode
 };
 
 
-struct NullCloneMode
+struct NullCloneMode : DeepCloneMode
 // ----------------------------------------------------------------------------
 //   Fill all children with NULL
 // ----------------------------------------------------------------------------
