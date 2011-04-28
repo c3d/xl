@@ -53,6 +53,9 @@ struct CompilerInfo : Info
     llvm::GlobalValue *         global;
     llvm::Function *            function;
     llvm::Function *            closure;
+
+    // We must mark builtins in a special way, see bug #991
+    bool        IsBuiltin()     { return function && function == closure; }
 };
 
 XL_END

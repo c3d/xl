@@ -513,6 +513,7 @@ Function *Compiler::EnterBuiltin(text name,
             std::cerr << " existing F " << result
                       << " replaces F" << TreeFunction(to) << "\n";
         SetTreeFunction(to, result);
+        SetTreeClosure(to, result);
     }
     else
     {
@@ -535,6 +536,7 @@ Function *Compiler::EnterBuiltin(text name,
 
         // Associate the function with the tree form
         SetTreeFunction(to, result);
+        SetTreeClosure(to, result);
         builtins[name] = result;
     }
 
@@ -924,47 +926,56 @@ bool Compiler::FreeResources(Tree *tree)
         return true;
     }
 
-    // Drop function reference if any
-    if (Function *f = info->function)
+    // Avoid purging built-in functions (bug #991)
+    if (info->IsBuiltin())
     {
-        bool inUse = !f->use_empty();
-        
         IFTRACE(llvm)
-            std::cerr << " function F" << f
-                      << (inUse ? " in use" : " unused");
-        
-        if (inUse)
-        {
-            // Defer deletion until later
-            result = false;
-        }
-        else
-        {
-            // Not in use, we can delete it directly
-            f->eraseFromParent();
-            info->function = NULL;
-        }
+            std::cerr << " is a built-in, don't purge it\n";
     }
-    
-    // Drop closure function reference if any
-    if (Function *f = info->closure)
+    else
     {
-        bool inUse = !f->use_empty();
-        
-        IFTRACE(llvm)
-            std::cerr << " closure F" << f
-                      << (inUse ? " in use" : " unused");
-        
-        if (inUse)
+        // Drop function reference if any
+        if (Function *f = info->function)
         {
-            // Defer deletion until later
-            result = false;
+            bool inUse = !f->use_empty();
+            
+            IFTRACE(llvm)
+                std::cerr << " function F" << f
+                          << (inUse ? " in use" : " unused");
+            
+            if (inUse)
+            {
+                // Defer deletion until later
+                result = false;
+            }
+            else
+            {
+                // Not in use, we can delete it directly
+                f->eraseFromParent();
+                info->function = NULL;
+            }
         }
-        else
+        
+        // Drop closure function reference if any
+        if (Function *f = info->closure)
         {
-            // Not in use, we can delete it directly
-            f->eraseFromParent();
-            info->function = NULL;
+            bool inUse = !f->use_empty();
+            
+            IFTRACE(llvm)
+                std::cerr << " closure F" << f
+                          << (inUse ? " in use" : " unused");
+            
+            if (inUse)
+            {
+                // Defer deletion until later
+                result = false;
+            }
+            else
+            {
+                // Not in use, we can delete it directly
+                f->eraseFromParent();
+                info->closure = NULL;
+            }
         }
     }
     
