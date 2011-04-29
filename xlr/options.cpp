@@ -109,7 +109,7 @@ static bool OptionMatches(kstring &command_line, kstring optdescr)
 // Single character options may accept argument as same or next parameter
 {
     size_t len = strlen(optdescr);
-    if (strncmp(command_line, optdescr, len) == 0)
+    if (strcmp(command_line, optdescr) == 0)
     {
         command_line += len;
         return true;
