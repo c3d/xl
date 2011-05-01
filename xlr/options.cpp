@@ -204,19 +204,9 @@ text Options::ParseNext(bool consumeFiles)
     {
         if(args[arg].length() > 1 && args[arg][0] == '-')
         {
-            kstring argval = args[arg].c_str() + 1;
+            kstring option = args[arg].c_str() + 1;
+            kstring argval = option;
 
-#define OPTVAR(name, type, value)
-#define OPTION(name, descr, code)                               \
-            if (OptionMatches(argval, #name))                   \
-            {                                                   \
-                code;                                           \
-                                                                \
-                if (*argval)                                    \
-                    Ooops("Garbage found after option $1",      \
-                          Error::COMMAND_LINE).Arg(argval);     \
-            }                                                   \
-            else
 #if XL_DEBUG
             if (argval[0] == 't')
             {
@@ -225,6 +215,18 @@ text Options::ParseNext(bool consumeFiles)
             }
             else
 #endif
+
+#define OPTVAR(name, type, value)
+#define OPTION(name, descr, code)                                       \
+            if (OptionMatches(argval, #name))                           \
+            {                                                           \
+                code;                                                   \
+                                                                        \
+                if (*argval)                                            \
+                    Ooops("Garbage found after option -$1 : $2",        \
+                          Error::COMMAND_LINE).Arg(#name).Arg(option);  \
+            }                                                           \
+            else
 #define INTEGER(n, m)           OptionInteger(argval, *this, n, m)
 #define STRING                  OptionString(argval, *this)
 #include "options.tbl"
