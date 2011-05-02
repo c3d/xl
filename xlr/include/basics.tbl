@@ -677,9 +677,23 @@ PREFIX(Identity,  tree, "identity",
        RETURNS(tree, "The input tree, not evaluated"))
 PREFIX(DoCode,    tree, "do",
        PARM(input, tree, "Input tree to evaluate"),
-       return xl_evaluate(context, &input),
+       Symbols *symbols = self->Symbols();
+       if (!input.Symbols())
+           input.SetSymbols(symbols);
+       Tree *tree = xl_evaluate(context, &input);
+       if (!tree->Symbols())
+           tree->SetSymbols(symbols);
+       return xl_evaluate(context, tree),
        GROUP(basics)
        SYNOPSIS("Evaluate the input immediately"))
+PREFIX(ParseText,    tree, "parse",
+       PARM(input, text, "Input text to turn into a tree"),
+       Tree *tree = xl_parse_text(input);
+       if (!tree)
+           tree = xl_false;
+       return tree,
+       GROUP(basics)
+       SYNOPSIS("Parse a tree from text"))
 PREFIX(InCaller,    tree, "in_caller",
        PARM(input, source, "Input tree to evaluate"),
        return xl_evaluate_in_caller(context, &input),

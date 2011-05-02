@@ -1,0 +1,3 @@
+// Test the 'parse' keyword
+do parse "writeln ""Hello"""
+

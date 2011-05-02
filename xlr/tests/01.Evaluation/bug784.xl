@@ -1,0 +1,14 @@
+i -> 17
+f -> parse_tree { if x < i+1 then writeln "Hello", x else writeln "World", x }
+x -> 3
+
+// Not evaluated
+f
+
+// Evaluated
+do f
+x := 40
+do f
+
+
+

@@ -62,6 +62,7 @@ Tree *xl_error(text msg, Tree *a1=0, Tree *a2=0, Tree *a3=0);
 Tree *xl_form_error(Context *c, Tree *tree);
 
 Tree *xl_parse_tree(Context *, Tree *tree);
+Tree *xl_parse_text(text source);
 Tree *xl_bound(Context *, Tree *form);
 bool  xl_same_text(Tree * , const char *);
 bool  xl_same_shape(Tree *t1, Tree *t2);

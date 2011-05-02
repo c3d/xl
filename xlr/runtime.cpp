@@ -39,6 +39,7 @@
 #include <iostream>
 #include <cstdarg>
 #include <cstdio>
+#include <sstream>
 #include "winglob.h"
 #include <sys/stat.h>
 
@@ -319,6 +320,17 @@ Tree *xl_parse_tree(Context *context, Tree *code)
         code = block->child;
     ADJUST_CONTEXT_FOR_INTERPRETER(context);
     return xl_parse_tree_inner(context, code);
+}
+
+
+Tree *xl_parse_text(text source)
+// ----------------------------------------------------------------------------
+//   Generate a tree from text
+// ----------------------------------------------------------------------------
+{
+    std::istringstream input(source);
+    Parser parser(input, MAIN->syntax, MAIN->positions, *MAIN->errors);
+    return parser.Parse();
 }
 
 
