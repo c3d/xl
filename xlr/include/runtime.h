@@ -114,6 +114,7 @@ Tree *xl_block_cast(Context *, Tree *source, Tree *value);
 
 Tree *xl_parameter(text name, text type);
 void xl_infix_to_list(Infix *infix, TreeList &list);
+Tree *xl_list_to_tree(TreeList v, text infix);
 
 Real *xl_springify(Real &value, Real &target, Real &time,
                    Real &damp, Real &kspring, Real &lt, Real &ls);
@@ -183,9 +184,9 @@ public:
 
 
 // ============================================================================
-// 
+//
 //    Interfaces to make old and new compiler compatible (temporary)
-// 
+//
 // ============================================================================
 
 Tree *xl_define(Context *, Tree *self, Tree *form, Tree *definition);
@@ -202,9 +203,9 @@ Tree *xl_attribute(Context *, text name, Tree *form);
 
 
 // ============================================================================
-// 
+//
 //    Actions used for functional applications (temporary / obsolete)
-// 
+//
 // ============================================================================
 
 XL_END
