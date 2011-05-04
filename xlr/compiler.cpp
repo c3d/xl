@@ -953,6 +953,7 @@ bool Compiler::FreeResources(Tree *tree)
                 // Not in use, we can delete it directly
                 f->eraseFromParent();
                 info->function = NULL;
+                tree->code = NULL; // Bug #1011: Tree may remain live for global
             }
         }
         
