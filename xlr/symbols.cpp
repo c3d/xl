@@ -377,6 +377,8 @@ Tree *Symbols::CompileAll(Tree *source,
 
     eval_fn fn = unit.Finalize();
     source->code = fn;
+    source->symbols = this; // Fix for #1017
+
     IFTRACE(compile)
         std::cerr << "In " << this
                   << " compiled top-level " << source
@@ -516,6 +518,8 @@ Infix *Symbols::CompileTypeTest(Tree *type)
     // we still record it to avoid recompiling multiple times
     eval_fn fn = compile.unit.Finalize();
     call->code = fn;
+    call->symbols = locals; // Fix for #1017
+
     return call;
 }
 
@@ -2261,6 +2265,7 @@ Tree *Rewrite::Compile(void)
     // we still record it to avoid recompiling multiple times
     eval_fn fn = unit.Finalize();
     to->code = fn;
+    to->symbols = locals; // Record symbols, fix for #1017
 
     return to;
 }
