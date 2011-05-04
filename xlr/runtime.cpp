@@ -402,7 +402,7 @@ Tree *xl_type_check(Context *context, Tree *value, Tree *type)
         StackDepthCheck typeDepthCheck(value);
         if (typeDepthCheck)
             return NULL;
-        
+
         Infix *typeExpr = symbols->CompileTypeTest(type);
         assert(typeExpr->code && "xl_type_check needs compiled type check");
         typecheck_fn typecheck = (typecheck_fn) typeExpr->code;
@@ -883,14 +883,37 @@ void xl_infix_to_list(Infix *infix, TreeList &list)
         xl_infix_to_list(left, list);
     else
         list.push_back(infix->left);
-    
+
     Infix *right = infix->right->AsInfix();
     if (right && right->name == infix->name)
         xl_infix_to_list(right, list);
     else
         list.push_back(infix->right);
 }
-            
+
+
+Tree *xl_list_to_tree(TreeList v, text infix)
+// ----------------------------------------------------------------------------
+//   Builds a tree from a list of tree with the given infix.
+// ----------------------------------------------------------------------------
+{
+    if (v.size() <= 0) return XL::xl_nil;
+    if (v.size() == 1) return v[0];
+
+    Tree* result = NULL;
+    TreeList::reverse_iterator rit;
+    // First build the bottom of the tree
+    rit = v.rbegin();
+    result = *rit;
+    rit++;
+    // Build the common part
+    for (; rit < v.rend(); ++rit)
+    {
+        result = new XL::Infix(infix, *rit, result);
+    }
+    return result;
+}
+
 
 Real *xl_springify(Real &value, Real &target, Real &time,
                    Real &damp, Real &kspring, Real &lt, Real &ls)
