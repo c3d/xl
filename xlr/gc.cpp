@@ -109,14 +109,14 @@ void *TypeAllocator::Allocate()
         size_t  allocSize = (chunkSize + 1) * itemSize;
 
         void   *allocated = malloc(allocSize);
-        VALGRIND_MAKE_MEM_NOACCESS(allocated, allocSize);
+        (void)VALGRIND_MAKE_MEM_NOACCESS(allocated, allocSize);
 
         char   *chunkBase = (char *) allocated + alignedSize;
         chunks.push_back((Chunk *) allocated);
         for (uint i = 0; i < chunkSize; i++)
         {
             Chunk *ptr = (Chunk *) (chunkBase + i * itemSize);
-            VALGRIND_MAKE_MEM_UNDEFINED(&ptr->next, sizeof(ptr->next));
+            (void)VALGRIND_MAKE_MEM_UNDEFINED(&ptr->next, sizeof(ptr->next));
             ptr->next = result;
             result = ptr;
         }
@@ -132,7 +132,7 @@ void *TypeAllocator::Allocate()
 
     // REVISIT: Atomic operations here
     freeList = result->next;
-    VALGRIND_MAKE_MEM_UNDEFINED(result, sizeof(Chunk));
+    (void)VALGRIND_MAKE_MEM_UNDEFINED(result, sizeof(Chunk));
     result->allocator = this;
     result->bits |= IN_USE;     // In case a collection is running right now
     if (--available < chunkSize / 4)
@@ -166,7 +166,7 @@ void TypeAllocator::Delete(void *ptr)
     // Scrub all the pointers
     uint32 *base = (uint32 *) ptr;
     uint32 *last = (uint32 *) (((char *) ptr) + alignedSize);
-    VALGRIND_MAKE_MEM_UNDEFINED(ptr, alignedSize);
+    (void)VALGRIND_MAKE_MEM_UNDEFINED(ptr, alignedSize);
     for (uint *p = base; p < last; p++)
         *p = 0xDeadBeef;
 #endif
