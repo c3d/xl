@@ -51,6 +51,9 @@ TypeAllocator::TypeAllocator(kstring tn, uint os, mark_fn mark)
 //    Setup an empty allocator
 // ----------------------------------------------------------------------------
     : gc(NULL), name(tn), chunks(), mark(mark), freeList(NULL),
+#ifdef XLR_GC_LIFO
+      freeListTail(NULL),
+#endif
       chunkSize(1022), objectSize(os), alignedSize(os), available(0),
       allocatedCount(0), freedCount(0), totalCount(0)
 {
@@ -132,6 +135,10 @@ void *TypeAllocator::Allocate()
 
     // REVISIT: Atomic operations here
     freeList = result->next;
+#ifdef XLR_GC_LIFO
+    if (!freeList)
+        freeListTail = NULL;
+#endif
     (void)VALGRIND_MAKE_MEM_UNDEFINED(result, sizeof(Chunk));
     result->allocator = this;
     result->bits |= IN_USE;     // In case a collection is running right now
@@ -158,8 +165,17 @@ void TypeAllocator::Delete(void *ptr)
     assert(!(chunk->bits & USE_MASK) || !"Deleted pointer has live references");
 
     // Put the pointer back on the free list
+#ifndef XLR_GC_LIFO
     chunk->next = freeList;
     freeList = chunk;
+#else
+    chunk->next = NULL;
+    if (freeListTail)
+        freeListTail->next = chunk;
+    freeListTail = chunk;
+    if (!freeList)
+        freeList = chunk;
+#endif
     available++;
 
 #if 1

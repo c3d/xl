@@ -108,6 +108,11 @@ protected:
     std::set<Listener *>listeners;
     std::map<void*,uint>roots;
     Chunk *             freeList;
+#ifdef XLR_GC_LIFO
+    // Make free list LIFO instead of FIFO. Not good performance-wise,
+    // but may help valgrind detect re-use of freed pointers.
+    Chunk *             freeListTail;
+#endif
     uint                chunkSize;
     uint                objectSize;
     uint                alignedSize;
