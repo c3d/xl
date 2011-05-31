@@ -132,7 +132,7 @@ Compiler::Compiler(kstring moduleName)
     Allocator<Block>    ::Singleton()->AddListener(cgcl);
 
     // Set initial target options
-    JITExceptionHandling = true;
+    JITExceptionHandling = false;  // Bug #1026
     JITEmitDebugInfo = true;
     UnwindTablesMandatory = true;
     NoFramePointerElim = true;

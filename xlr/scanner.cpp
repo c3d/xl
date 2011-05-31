@@ -97,6 +97,20 @@ Scanner::Scanner(kstring name, Syntax &stx, Positions &pos, Errors &err)
     if (input.fail())
         err.Log(Error("File $1 cannot be read: $2", position).
                 Arg(name).Arg(strerror(errno)));
+
+    // Skip UTF-8 BOM if present
+    input.seekg(0, std::ios::end);
+    int length = input.tellg();
+    input.seekg(0, std::ios::beg);
+    if (length >= 3)
+    {
+        unsigned char c1, c2, c3;
+        c1 = input.get(); c2 = input.get(); c3 = input.get();
+        if (!(c1 == 0xEF && c2 == 0xBB  && c3 == 0xBF))
+        {
+            input.unget(); input.unget(); input.unget();
+        }
+    }
 }
 
 
