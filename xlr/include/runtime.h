@@ -79,6 +79,8 @@ Block   *xl_new_block(Block *source, Tree *child);
 Prefix  *xl_new_prefix(Prefix *source, Tree *left, Tree *right);
 Postfix *xl_new_postfix(Postfix *source, Tree *left, Tree *right);
 Infix   *xl_new_infix(Infix *source, Tree *left, Tree *right);
+Tree    *xl_real_list(Tree *self, uint n, double *values);
+Tree    *xl_integer_list(Tree *self, uint n, longlong *values);
 
 Tree *xl_new_closure(eval_fn toCall, Tree *expr, uint ntrees, ...);
 Tree *xl_tree_copy(Tree *from, Tree *to);

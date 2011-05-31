@@ -548,6 +548,46 @@ Infix *xl_new_infix(Infix *source, Tree *left, Tree *right)
 }
 
 
+Tree *xl_real_list(Tree *self, uint n, double *values)
+// ----------------------------------------------------------------------------
+//   Build an infix from a list of real numbers
+// ----------------------------------------------------------------------------
+{
+    Tree *result = NULL;
+    while (n)
+    {
+        Tree *left = new Real(values[--n], self->Position());
+        if (result)
+            result = new Infix(",", left, result, self->Position());
+        else
+            result = left;
+        result->code = xl_identity;
+        result->SetSymbols(self->Symbols());
+    }
+    return result;
+}
+
+
+Tree *xl_integer_list(Tree *self, uint n, longlong *values)
+// ----------------------------------------------------------------------------
+//   Build an infix from a list of real numbers
+// ----------------------------------------------------------------------------
+{
+    Tree *result = NULL;
+    while (n)
+    {
+        Tree *left = new Integer(values[--n], self->Position());
+        if (result)
+            result = new Infix(",", left, result, self->Position());
+        else
+            result = left;
+        result->code = xl_identity;
+        result->SetSymbols(self->Symbols());
+    }
+    return result;
+}
+
+
 
 // ============================================================================
 //
