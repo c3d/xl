@@ -1177,17 +1177,26 @@ Tree *xl_load_data(Context *context, Tree *self,
         SourceFile &sf = MAIN->files[path];
         context->Import(sf.context);
         Tree *tree = sf.tree;
+        Symbols *syms = sf.symbols;
         if (prefix != "")
         {
             while (Infix *infix = tree->AsInfix())
             {
+                if (!infix->left->Symbols())
+                    infix->left->SetSymbols(syms);
                 xl_evaluate(context, infix->left);
                 tree = infix->right;
             }
+            if (!tree->Symbols())
+                tree->SetSymbols(syms);
             return xl_evaluate(context, tree);
         }
         return sf.tree;
     }
+
+    // Current symbols
+    Symbols *old       = self->Symbols(); assert(old);
+    Symbols *syms      = new Symbols(old);
 
     char     buffer[256];
     char    *ptr       = buffer;
@@ -1200,8 +1209,6 @@ Tree *xl_load_data(Context *context, Tree *self,
     bool     hasRecord = false;
     bool     hasField  = false;
     FILE    *f         = fopen(path.c_str(), "r");
-    Symbols *old       = self->Symbols(); assert(old);
-    Symbols *syms      = new Symbols(old);
     Tree    *result    = NULL;
 
     *end = 0;
@@ -1253,8 +1260,6 @@ Tree *xl_load_data(Context *context, Tree *self,
             }
             if (child == NULL)
             {
-                if (*buffer == 0)
-                    continue;
                 token = text(buffer, ptr - buffer - 1);
                 child = new Text(buffer);
             }
@@ -1303,10 +1308,11 @@ Tree *xl_load_data(Context *context, Tree *self,
 
     // Store that we use the file
     Context *importCtx = new Context(context, NULL);
-    Symbols *importSyms = new Symbols(MAIN->globals);
-    MAIN->files[path] = SourceFile(path, tree, importCtx, importSyms);
+    SourceFile &sf = MAIN->files[path];
+    sf = SourceFile(path, tree, importCtx, syms);
+    sf.fromDataFile = true;
     context->Import(importCtx);
-    MAIN->globals->Import(importSyms);
+    MAIN->globals->Import(syms);
 
     return tree;
 }

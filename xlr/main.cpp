@@ -22,6 +22,7 @@
 // ****************************************************************************
 
 #include "configuration.h"
+#include "tree-clone.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <map>
@@ -58,7 +59,7 @@ SourceFile::SourceFile(text n, Tree *t, Context *c, Symbols *s, bool ro)
 //   Construct a source file given a name
 // ----------------------------------------------------------------------------
     : name(n), tree(t), context(c), symbols(s),
-      modified(0), changed(false), readOnly(ro)
+      modified(0), changed(false), readOnly(ro), fromDataFile(false)
 {
     struct stat st;
     if (stat (n.c_str(), &st) < 0)
@@ -75,8 +76,8 @@ SourceFile::SourceFile()
 // ----------------------------------------------------------------------------
 //   Default constructor
 // ----------------------------------------------------------------------------
-    : name(""), tree(NULL), context(NULL),
-      modified(0), changed(false)
+    : name(""), tree(NULL), context(NULL), symbols(NULL),
+      modified(0), changed(false), readOnly(false), fromDataFile(false)
 {}
 
 
@@ -324,10 +325,19 @@ int Main::LoadFile(text file,
     IFTRACE(fileload)
         std::cout << "Loading: " << file << "\n";
 
+    // Find which source file we are referencing
+    SourceFile &sf = files[file];
+    bool fromDataFile = sf.fromDataFile;
+
     // Parse program - Local parser to delete scanner and close file
     // This ensures positions are updated even if there is a 'load'
     // being called during execution.
-    if (options.readSerialized)
+    if (fromDataFile)
+    {
+        TreeClone clone;
+        tree = sf.tree->Do(clone);
+    }
+    else if (options.readSerialized)
     {
         if (!reader)
             reader = new Deserializer(std::cin);
@@ -375,9 +385,6 @@ int Main::LoadFile(text file,
         }
     }
 
-    // Find which source file we are referencing
-    SourceFile &sf = files[file];
-
     // Create new symbol table for the file, or clear it if we had one
     Context *ctx = MAIN->context;
     Context *savedCtx = ctx;
@@ -423,6 +430,7 @@ int Main::LoadFile(text file,
 
     // Register the source file we had
     sf = SourceFile (file, tree, ctx, syms);
+    sf.fromDataFile = fromDataFile;
     if (tree)
     {
         // Set symbols and compile if required
