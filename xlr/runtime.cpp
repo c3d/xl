@@ -1294,7 +1294,7 @@ Tree *xl_load_data(Context *context, Tree *self,
                 }
                 else
                 {
-                    *treePtr = child;
+                    *treePtr = line;
                 }
                 line = NULL;
                 linePtr = &line;
