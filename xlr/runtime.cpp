@@ -1160,6 +1160,20 @@ Tree *xl_import(Context *context, Tree *self, text name, bool execute)
 }
 
 
+struct LoadDataInfo : Info
+// ----------------------------------------------------------------------------
+//   Information about the data that was loaded
+// ----------------------------------------------------------------------------
+{
+    LoadDataInfo(text name, Tree *loaded, Symbols *symbols, Context *context)
+        : name(name), loaded(loaded), symbols(symbols), context(context) {}
+    text      name;
+    Tree_p    loaded;
+    Symbols_p symbols;
+    Context_p context;
+};
+
+
 Tree *xl_load_data(Context *context, Tree *self,
                    text name, text prefix, text fieldSeps, text recordSeps)
 // ----------------------------------------------------------------------------
@@ -1171,13 +1185,13 @@ Tree *xl_load_data(Context *context, Tree *self,
         return Ooops("CSV file $1 not found", new Text(name));
 
     // Check if the file has already been loaded somehwere.
-    // If so, return the loaded file
-    if (MAIN->files.count(path) > 0)
+    // If so, return the loaded data
+    LoadDataInfo *info = self->GetInfo<LoadDataInfo>();
+    if (info && info->name == prefix)
     {
-        SourceFile &sf = MAIN->files[path];
-        context->Import(sf.context);
-        Tree *tree = sf.tree;
-        Symbols *syms = sf.symbols;
+        context->Import(info->context);
+        Tree *tree = info->loaded;
+        Symbols *syms = info->symbols;
         if (prefix != "")
         {
             while (Infix *infix = tree->AsInfix())
@@ -1191,7 +1205,7 @@ Tree *xl_load_data(Context *context, Tree *self,
                 tree->SetSymbols(syms);
             return xl_evaluate(context, tree);
         }
-        return sf.tree;
+        return info->loaded;
     }
 
     // Current symbols
@@ -1306,13 +1320,9 @@ Tree *xl_load_data(Context *context, Tree *self,
     if (!tree)
         return Ooops("Unable to load data from $1", new Text(path));
 
-    // Store that we use the file
-    Context *importCtx = new Context(context, NULL);
-    SourceFile &sf = MAIN->files[path];
-    sf = SourceFile(path, tree, importCtx, syms);
-    sf.fromDataFile = true;
-    context->Import(importCtx);
-    MAIN->globals->Import(syms);
+    // Store that we loaded the file
+    info = new LoadDataInfo(prefix, tree, syms, context);
+    self->SetInfo<LoadDataInfo> (info);
 
     return tree;
 }

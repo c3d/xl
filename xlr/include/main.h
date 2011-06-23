@@ -58,7 +58,6 @@ struct SourceFile
     text        hash;
     bool        changed;
     bool        readOnly;
-    bool        fromDataFile;
 };
 typedef std::map<text, SourceFile> source_files;
 typedef std::vector<text> source_names;

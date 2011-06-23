@@ -59,7 +59,7 @@ SourceFile::SourceFile(text n, Tree *t, Context *c, Symbols *s, bool ro)
 //   Construct a source file given a name
 // ----------------------------------------------------------------------------
     : name(n), tree(t), context(c), symbols(s),
-      modified(0), changed(false), readOnly(ro), fromDataFile(false)
+      modified(0), changed(false), readOnly(ro)
 {
     struct stat st;
     if (stat (n.c_str(), &st) < 0)
@@ -77,7 +77,7 @@ SourceFile::SourceFile()
 //   Default constructor
 // ----------------------------------------------------------------------------
     : name(""), tree(NULL), context(NULL), symbols(NULL),
-      modified(0), changed(false), readOnly(false), fromDataFile(false)
+      modified(0), changed(false), readOnly(false)
 {}
 
 
@@ -327,17 +327,11 @@ int Main::LoadFile(text file,
 
     // Find which source file we are referencing
     SourceFile &sf = files[file];
-    bool fromDataFile = sf.fromDataFile;
 
     // Parse program - Local parser to delete scanner and close file
     // This ensures positions are updated even if there is a 'load'
     // being called during execution.
-    if (fromDataFile)
-    {
-        TreeClone clone;
-        tree = sf.tree->Do(clone);
-    }
-    else if (options.readSerialized)
+    if (options.readSerialized)
     {
         if (!reader)
             reader = new Deserializer(std::cin);
@@ -430,7 +424,6 @@ int Main::LoadFile(text file,
 
     // Register the source file we had
     sf = SourceFile (file, tree, ctx, syms);
-    sf.fromDataFile = fromDataFile;
     if (tree)
     {
         // Set symbols and compile if required
