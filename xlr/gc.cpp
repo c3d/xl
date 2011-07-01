@@ -142,6 +142,7 @@ void *TypeAllocator::Allocate()
     (void)VALGRIND_MAKE_MEM_UNDEFINED(result, sizeof(Chunk));
     result->allocator = this;
     result->bits |= IN_USE;     // In case a collection is running right now
+    result->count = 0;
     if (--available < chunkSize / 4)
         GarbageCollector::CollectionNeeded();
 
@@ -162,7 +163,7 @@ void TypeAllocator::Delete(void *ptr)
     Chunk *chunk = (Chunk *) ptr - 1;
     assert(IsGarbageCollected(ptr) || !"Deleted pointer is not managed by GC");
     assert(IsAllocated(ptr) || !"Deleted GC pointer that was already freed");
-    assert(!(chunk->bits & USE_MASK) || !"Deleted pointer has live references");
+    assert(!chunk->count || !"Deleted pointer has live references");
 
     // Put the pointer back on the free list
 #ifndef XLR_GC_LIFO
@@ -220,7 +221,7 @@ void TypeAllocator::MarkRoots()
             {
                 allocatedCount++;
                 if ((ptr->bits & IN_USE) == 0)
-                    if ((ptr->bits & USE_MASK) > 0)
+                    if (ptr->count > 0)
                         Mark(ptr+1);
             }
         }
@@ -273,7 +274,7 @@ void TypeAllocator::Sweep()
                 {
                     ptr->bits &= ~IN_USE;
                 }
-                else if ((ptr->bits & USE_MASK) == 0)
+                else if (ptr->count == 0)
                 {
                     Finalize(ptr+1);
                     freedCount++;

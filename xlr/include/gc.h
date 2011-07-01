@@ -47,11 +47,15 @@ struct TypeAllocator
 //   Structure allocating data for a single data type
 // ----------------------------------------------------------------------------
 {
-    union Chunk
+    struct Chunk
     {
-        Chunk *         next;           // Next in free list
-        TypeAllocator * allocator;      // Allocator for this object
-        uintptr_t       bits;           // Allocation bits
+        union
+        {
+            Chunk *         next;           // Next in free list
+            TypeAllocator * allocator;      // Allocator for this object
+            uintptr_t       bits;           // Allocation bits
+        };
+        uint                count;          // Ref count
     };
     typedef void (*mark_fn)(void *object);
 
@@ -83,10 +87,8 @@ public:
     enum ChunkBits
     {
         PTR_MASK        = 15,           // Special bits we take out of the ptr
-        USE_MASK        = 7,            // Bits used as reference counter
         CHUNKALIGN_MASK = 7,            // Alignment for chunks
         ALLOCATED       = 0,            // Just allocated
-        LOCKED_ROOT     = 7,            // Too many references to fit in mask
         IN_USE          = 8             // Set if already marked this time
     };
 
@@ -352,16 +354,7 @@ inline uint TypeAllocator::Acquire(void *pointer)
         assert (IsAllocated(pointer));
 
         Chunk *chunk = ((Chunk *) pointer) - 1;
-        count = chunk->bits & USE_MASK;
-        if (count < LOCKED_ROOT)
-        {
-            chunk->bits = (chunk->bits & ~USE_MASK) | ++count;
-        }
-        if (count >= LOCKED_ROOT)
-        {
-            TypeAllocator *allocator = ValidPointer(chunk->allocator);
-            count = LOCKED_ROOT + allocator->roots[pointer]++;
-        }
+        count = ++chunk->count;
     }
     return count;
 }
@@ -380,20 +373,10 @@ inline uint TypeAllocator::Release(void *pointer)
 
         Chunk *chunk = ((Chunk *) pointer) - 1;
         TypeAllocator *allocator = ValidPointer(chunk->allocator);
-        count = chunk->bits & USE_MASK;
-        assert(count);
-        if (count < LOCKED_ROOT)
-        {
-            chunk->bits = (chunk->bits & ~USE_MASK) | --count;
-            if (!count && !(chunk->bits & IN_USE))
-                allocator->Finalize(pointer);
-        }
-        else
-        {
-            count = LOCKED_ROOT + --allocator->roots[pointer];
-            if (count == LOCKED_ROOT)
-                chunk->bits = (chunk->bits & ~USE_MASK) | --count;
-        }
+        assert(chunk->count);
+        count = --chunk->count;
+        if (!count && !(chunk->bits & IN_USE))
+            allocator->Finalize(pointer);
     }
     return count;
 }
