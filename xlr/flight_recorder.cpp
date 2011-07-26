@@ -56,15 +56,21 @@ void FlightRecorder::Dump(int fd)
         Entry &e = records[rindex % records.size()];
         size = snprintf(buffer, sizeof buffer,
                         "%4d: %16s %8p ", windex - rindex, e.what, e.caller);
+
+#define AUTOFORMAT(x)                           \
+        (((x) < 1000000 && (x) > -1000000)      \
+         ? "%8s=%8" PRIdPTR " "                 \
+         : "%8s=0x%8" PRIxPTR " ")            
+
         if (e.label1[0])
             size += snprintf(buffer + size, sizeof buffer - size,
-                             "%8s=%8" PRIdPTR " ", e.label1, e.arg1);
+                             AUTOFORMAT(e.arg1), e.label1, e.arg1);
         if (e.label2[0])
             size += snprintf(buffer + size, sizeof buffer - size,
-                             "%8s=%8" PRIdPTR " ", e.label2, e.arg2);
+                             AUTOFORMAT(e.arg2), e.label2, e.arg2);
         if (e.label3[0])
             size += snprintf(buffer + size, sizeof buffer - size,
-                             "%8s=%8" PRIdPTR " ", e.label3, e.arg3);
+                             AUTOFORMAT(e.arg3), e.label3, e.arg3);
         if (size < sizeof buffer)
             buffer[size++] = '\n';
         write(fd, buffer, size);
