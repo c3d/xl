@@ -57,6 +57,7 @@
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/Utils/BasicBlockUtils.h>
 #include <llvm/Support/raw_ostream.h>
+#include <llvm/Support/Signals.h>
 
 XL_BEGIN
 
@@ -118,6 +119,10 @@ Compiler::Compiler(kstring moduleName)
       xl_new_prefix(NULL), xl_new_postfix(NULL), xl_new_infix(NULL),
       xl_new_closure(NULL)
 {
+#ifdef CONFIG_MINGW
+    llvm::sys::PrintStackTraceOnErrorSignal();
+#endif
+
     // Register a listener with the garbage collector
     CompilerGarbageCollectionListener *cgcl =
         new CompilerGarbageCollectionListener(this);
