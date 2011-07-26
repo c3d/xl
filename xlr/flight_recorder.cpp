@@ -23,6 +23,7 @@
 #include "flight_recorder.h"
 #include <stdio.h>
 #include <time.h>
+#include <fcntl.h>
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
