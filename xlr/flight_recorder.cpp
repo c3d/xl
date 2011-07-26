@@ -57,7 +57,8 @@ void FlightRecorder::Dump(std::ostream &out)
     }
 
     // Keep a reference to recorder_dump so that the linker preserves it
-    if (recorder_dump != NULL)
+    // We need a convoluted expression so that GCC doesn't warn
+    if ((void *) recorder_dump != (void *) 0x01)
         out.flush();
 }
 
