@@ -24,7 +24,6 @@
 
 #include "base.h"
 #include <vector>
-#include <iostream>
 
 XL_BEGIN
 
@@ -83,7 +82,6 @@ struct FlightRecorder
                                      enabled(REC_CRITICAL | REC_DEBUG),
                                      records(size) {}
 
-
 public:
     // Interface for a given recorder
     void Record(ulong when,
@@ -106,7 +104,7 @@ public:
         }
     }
 
-    void Dump(std::ostream &out);
+    void Dump(int fd);
     void Resize(uint size) { records.resize(size); }
 
 public:
@@ -120,7 +118,7 @@ public:
     {
         recorder->Record(when, what, caller, l1, a1, l2, a2, l3, a3);
     }
-    static void SDump(std::ostream &out) { recorder->Dump(out); }
+    static void SDump(int fd) { recorder->Dump(fd); }
     static void SResize(uint size) { recorder->Resize(size); }
 
 

@@ -21,46 +21,57 @@
 // ****************************************************************************
 
 #include "flight_recorder.h"
-#include <iostream>
-#include <fstream>
-#include <iomanip>
+#include <stdio.h>
 #include <time.h>
+
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 XL_BEGIN
 
-void FlightRecorder::Dump(std::ostream &out)
+void FlightRecorder::Dump(int fd)
 // ----------------------------------------------------------------------------
 //   Dump the contents of the flight recorder to given stream
 // ----------------------------------------------------------------------------
+//   We use the lowest-possible sytem-level I/O facility to make it
+//   easier to invoke Dump() from a variety of contexts
 {
     using namespace std;
+    static char buffer[512];
 
+    // Write recorder time stamp
+    time_t now = time(NULL);
+    size_t size = snprintf(buffer, sizeof buffer,
+                           "FLIGHT RECORDER DUMP AT %s\n",
+                           asctime(localtime(&now)));
+    write(fd, buffer, size);
+
+    // Can't have more events than the size of the buffer
     if (rindex + records.size() <= windex)
         rindex = windex - records.size() + 1;
 
-    time_t now = time(NULL);
-    out << "FLIGHT RECORDER DUMP - " << asctime(localtime(&now)) << '\n';
-
+    // Write all elements that remain to be shown
     while (rindex < windex)
     {
         Entry &e = records[rindex % records.size()];
-        out << setw(4) << windex - rindex << ' '
-            << setw(16) << e.what << ' '
-            << setw(18) << e.caller << ' ';
+        size = snprintf(buffer, sizeof buffer,
+                        "%4d: %16s %8p ", windex - rindex, e.what, e.caller);
         if (e.label1[0])
-            out << setw(8) << e.label1 << '=' << setw(8) << e.arg1 << ' ';
+            size += snprintf(buffer + size, sizeof buffer - size,
+                             "%8s=%8" PRIdPTR " ", e.label1, e.arg1);
         if (e.label2[0])
-            out << setw(8) << e.label2 << '=' << setw(8) << e.arg2 << ' ';
+            size += snprintf(buffer + size, sizeof buffer - size,
+                             "%8s=%8" PRIdPTR " ", e.label2, e.arg2);
         if (e.label3[0])
-            out << setw(8) << e.label3 << '=' << setw(8) << e.arg3;
-        out << '\n';
+            size += snprintf(buffer + size, sizeof buffer - size,
+                             "%8s=%8" PRIdPTR " ", e.label3, e.arg3);
+        if (size < sizeof buffer)
+            buffer[size++] = '\n';
+        write(fd, buffer, size);
+
+        // Next step
         rindex++;
     }
-
-    // Keep a reference to recorder_dump so that the linker preserves it
-    // We need a convoluted expression so that GCC doesn't warn
-    if ((void *) recorder_dump != (void *) 0x01)
-        out.flush();
 }
 
 FlightRecorder *     FlightRecorder::recorder = NULL;
@@ -72,5 +83,5 @@ void recorder_dump()
 //   Dump the recorder to standard error (for use in the debugger)
 // ----------------------------------------------------------------------------
 {
-    XL::FlightRecorder::SDump(std::cerr);
+    XL::FlightRecorder::SDump(2);
 }
