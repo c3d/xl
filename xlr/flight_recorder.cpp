@@ -29,7 +29,7 @@
 
 XL_BEGIN
 
-void FlightRecorder::Dump(int fd)
+void FlightRecorder::Dump(int fd, bool kill)
 // ----------------------------------------------------------------------------
 //   Dump the contents of the flight recorder to given stream
 // ----------------------------------------------------------------------------
@@ -47,6 +47,7 @@ void FlightRecorder::Dump(int fd)
     write(fd, buffer, size);
 
     // Can't have more events than the size of the buffer
+    uint rindex = this->rindex;
     if (rindex + records.size() <= windex)
         rindex = windex - records.size() + 1;
 
@@ -78,6 +79,9 @@ void FlightRecorder::Dump(int fd)
         // Next step
         rindex++;
     }
+
+    if (kill)
+        this->rindex = rindex;
 }
 
 FlightRecorder *     FlightRecorder::recorder = NULL;

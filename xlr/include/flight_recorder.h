@@ -104,7 +104,7 @@ public:
         }
     }
 
-    void Dump(int fd);
+    void Dump(int fd, bool consume = false);
     void Resize(uint size) { records.resize(size); }
 
 public:
@@ -118,7 +118,7 @@ public:
     {
         recorder->Record(when, what, caller, l1, a1, l2, a2, l3, a3);
     }
-    static void SDump(int fd) { recorder->Dump(fd); }
+    static void SDump(int fd, bool kill=false) { recorder->Dump(fd,kill); }
     static void SResize(uint size) { recorder->Resize(size); }
 
 
