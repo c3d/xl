@@ -79,29 +79,25 @@ struct FlightRecorder
     };
 
     FlightRecorder(uint size=4096) : windex(0), rindex(0),
-                                     enabled(REC_CRITICAL | REC_DEBUG),
                                      records(size) {}
 
 public:
     // Interface for a given recorder
-    void Record(ulong when,
-                kstring what, void *caller = NULL,
-                kstring l1="", intptr_t a1=0,
-                kstring l2="", intptr_t a2=0,
-                kstring l3="", intptr_t a3=0)
+    ulong Record(kstring what, void *caller = NULL,
+                 kstring l1="", intptr_t a1=0,
+                 kstring l2="", intptr_t a2=0,
+                 kstring l3="", intptr_t a3=0)
     {
-        if (when & (enabled | REC_ALWAYS))
-        {
-            Entry &e = records[windex++ % records.size()];
-            e.what = what;
-            e.caller = caller;
-            e.label1 = l1;
-            e.arg1 = a1;
-            e.label2 = l2;
-            e.arg2 = a2;
-            e.label3 = l3;
-            e.arg3 = a3;
-        }
+        Entry &e = records[windex++ % records.size()];
+        e.what = what;
+        e.caller = caller;
+        e.label1 = l1;
+        e.arg1 = a1;
+        e.label2 = l2;
+        e.arg2 = a2;
+        e.label3 = l3;
+        e.arg3 = a3;
+        return enabled;
     }
 
     void Dump(int fd, bool consume = false);
@@ -110,32 +106,33 @@ public:
 public:
     // Static interface
     static void Initialize()   { if (!recorder) recorder = new FlightRecorder; }
-    static void SRecord(ulong when,
-                        kstring what, void *caller = NULL,
-                        kstring l1="", intptr_t a1=0,
-                        kstring l2="", intptr_t a2=0,
-                        kstring l3="", intptr_t a3=0)
+    static ulong SRecord(kstring what, void *caller = NULL,
+                         kstring l1="", intptr_t a1=0,
+                         kstring l2="", intptr_t a2=0,
+                         kstring l3="", intptr_t a3=0)
     {
-        recorder->Record(when, what, caller, l1, a1, l2, a2, l3, a3);
+        return recorder->Record(what, caller, l1, a1, l2, a2, l3, a3);
     }
     static void SDump(int fd, bool kill=false) { recorder->Dump(fd,kill); }
     static void SResize(uint size) { recorder->Resize(size); }
-
+    static void SFlags(ulong en) { enabled = en | REC_ALWAYS; }
 
 public:
-    uint        windex, rindex;
-    ulonglong   enabled;
-    std::vector<Entry>  records;
+    uint               windex, rindex;
+    std::vector<Entry> records;
+
+    static ulong            enabled;
 
 private:
-    static FlightRecorder *     recorder;
+    static FlightRecorder * recorder;
 };
 
 
-#define RECORD(cond, what, args...)                             \
-    (XL::FlightRecorder::SRecord(XL::REC_##cond, what,          \
-                                 __builtin_return_address(0),   \
-                                 ##args))
+#define RECORD(cond, what, args...)                                     \
+    ((XL::REC_##cond) & (XL::FlightRecorder::enabled | XL::REC_ALWAYS)  \
+     && XL::FlightRecorder::SRecord(what,                               \
+                                    __builtin_return_address(0),        \
+                                    ##args))
 
 XL_END
 

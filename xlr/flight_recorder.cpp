@@ -85,7 +85,8 @@ void FlightRecorder::Dump(int fd, bool kill)
         this->rindex = rindex;
 }
 
-FlightRecorder *     FlightRecorder::recorder = NULL;
+FlightRecorder * FlightRecorder::recorder = NULL;
+ulong            FlightRecorder::enabled  = REC_ALWAYS|REC_CRITICAL|REC_DEBUG;
 
 XL_END
 
