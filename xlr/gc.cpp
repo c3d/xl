@@ -22,6 +22,7 @@
 
 #include "gc.h"
 #include "options.h"
+#include "flight_recorder.h"
 #include "valgrind/memcheck.h"
 #include <iostream>
 #include <cstdio>
@@ -57,6 +58,9 @@ TypeAllocator::TypeAllocator(kstring tn, uint os, mark_fn mark)
       chunkSize(1022), objectSize(os), alignedSize(os), available(0),
       allocatedCount(0), freedCount(0), totalCount(0)
 {
+    RECORD(MEMORY, "New type allocator",
+           tn, os, "mark", (intptr_t) mark, "this", (intptr_t) this);
+
     // Make sure we align everything on Chunk boundaries
     if ((alignedSize + sizeof (Chunk)) & CHUNKALIGN_MASK)
     {
@@ -91,6 +95,8 @@ TypeAllocator::~TypeAllocator()
 //   Delete all the chunks we allocated
 // ----------------------------------------------------------------------------
 {
+    RECORD(MEMORY, "Destroy type allocator", "this", (intptr_t) this);
+
     VALGRIND_DESTROY_MEMPOOL(this);
 
     std::vector<Chunk *>::iterator c;
@@ -104,6 +110,8 @@ void *TypeAllocator::Allocate()
 //   Allocate a chunk of the given size
 // ----------------------------------------------------------------------------
 {
+    RECORD(MEMORY_DETAILS, "Allocate", "free", (intptr_t) freeList);
+
     Chunk *result = freeList;
     if (!result)
     {
@@ -113,6 +121,8 @@ void *TypeAllocator::Allocate()
 
         void   *allocated = malloc(allocSize);
         (void)VALGRIND_MAKE_MEM_NOACCESS(allocated, allocSize);
+
+        RECORD(MEMORY_DETAILS, "New Chunk", "addr", (intptr_t) allocated);
 
         char   *chunkBase = (char *) allocated + alignedSize;
         chunks.push_back((Chunk *) allocated);
@@ -157,6 +167,8 @@ void TypeAllocator::Delete(void *ptr)
 //   Free a chunk of the given size
 // ----------------------------------------------------------------------------
 {
+    RECORD(MEMORY_DETAILS, "Delete", "ptr", (intptr_t) ptr);
+
     if (!ptr)
         return;
 
@@ -207,6 +219,8 @@ void TypeAllocator::MarkRoots()
 //    Loop on all objects that have a reference count above 1
 // ----------------------------------------------------------------------------
 {
+    RECORD(MEMORY_DETAILS, "Mark Roots");
+
     std::vector<Chunk *>::iterator chunk;
     allocatedCount = freedCount = totalCount = 0;
     for (chunk = chunks.begin(); chunk != chunks.end(); chunk++)
@@ -226,6 +240,9 @@ void TypeAllocator::MarkRoots()
             }
         }
     }
+
+    RECORD(MEMORY_DETAILS, "Mark Roots End",
+           "total", totalCount, "alloc", allocatedCount);
 }
 
 
@@ -260,6 +277,8 @@ void TypeAllocator::Sweep()
 //   Once we have marked everything, sweep what is not in use
 // ----------------------------------------------------------------------------
 {
+    RECORD(MEMORY_DETAILS, "Sweep");
+
     std::vector<Chunk *>::iterator chunk;
     for (chunk = chunks.begin(); chunk != chunks.end(); chunk++)
     {
@@ -282,6 +301,8 @@ void TypeAllocator::Sweep()
             }
         }
     }
+
+    RECORD(MEMORY_DETAILS, "Sweep Done", "freed", freedCount);
 }
 
 
@@ -328,6 +349,8 @@ bool TypeAllocator::CanDelete(void *obj)
     for (i = listeners.begin(); i != listeners.end(); i++)
         if (!(*i)->CanDelete(obj))
             result = false;
+    RECORD(MEMORY_DETAILS, "Can delete",
+           "addr", (intptr_t) obj, "ok", result);
     return result;
 }
 
@@ -420,6 +443,8 @@ void GarbageCollector::RunCollection(bool force, bool mark)
 {
     if (mustRun || force || !mark)
     {
+        RECORD(MEMORY, "Garbage collection", "force", force, "mark", mark);
+
         std::vector<TypeAllocator *>::iterator a;
         std::set<TypeAllocator::Listener *> listeners;
         std::set<TypeAllocator::Listener *>::iterator l;
@@ -465,6 +490,8 @@ void GarbageCollector::RunCollection(bool force, bool mark)
             printf("%15s %7uK %7uK %7uK\n",
                    "Kilobytes", tot >> 10, alloc >> 10, freed >> 10);
         }
+
+        RECORD(MEMORY, "Garbage collection", "force", force, "mark", mark);
     }
 }
 

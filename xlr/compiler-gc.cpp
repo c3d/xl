@@ -25,6 +25,7 @@
 //
 
 #include "compiler-gc.h"
+#include "flight_recorder.h"
 
 XL_BEGIN
 
@@ -33,6 +34,11 @@ CompilerInfo::~CompilerInfo()
 //   Notice when we lose a compiler info
 // ----------------------------------------------------------------------------
 {
+    RECORD(COMPILER_DETAILS, "Compiler info deleted",
+           "function", (intptr_t) function,
+           "global", (intptr_t) global,
+           "tree", (intptr_t) tree);
+
     IFTRACE(llvm)
         std::cerr << "CompilerInfo deleted F" << (void *) function
                   << " G" << (void *) global
