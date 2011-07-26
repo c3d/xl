@@ -31,6 +31,7 @@
 #include "runtime.h"
 #include "errors.h"
 #include "types.h"
+#include "flight_recorder.h"
 
 #include <iostream>
 #include <sstream>
@@ -122,6 +123,7 @@ Compiler::Compiler(kstring moduleName)
 #ifdef CONFIG_MINGW
     llvm::sys::PrintStackTraceOnErrorSignal();
 #endif
+    RECORD(COMPILER, "Creating compiler");
 
     // Register a listener with the garbage collector
     CompilerGarbageCollectionListener *cgcl =
@@ -365,6 +367,8 @@ program_fn Compiler::CompileProgram(Context *context, Tree *program)
 //   It will process all the declarations in the program and then compile
 //   the rest of the code as a function taking no arguments.
 {
+    RECORD(COMPILER, "CompileProgram", "program", (intptr_t) program);
+
     if (!program)
         return NULL;
 
@@ -390,6 +394,8 @@ void Compiler::Setup(Options &options)
 // ----------------------------------------------------------------------------
 {
     uint optimize_level = options.optimize_level;
+
+    RECORD(COMPILER, "Compiler setup", "opt", optimize_level);
 
     // If we use the old compiler, we need lazy compilation, see bug #718
     if (optimize_level == 1)
@@ -507,6 +513,11 @@ Function *Compiler::EnterBuiltin(text name,
 //   The input is not technically an eval_fn, but has as many parameters as
 //   there are variables in the form
 {
+    RECORD(COMPILER, "Enter Builtin",
+           "parms", parms.size(),
+           "src", (intptr_t) to,
+           "code", (intptr_t) code);
+
     IFTRACE(llvm)
         std::cerr << "EnterBuiltin " << name
                   << " C" << (void *) code << " T" << (void *) to;
@@ -646,6 +657,8 @@ Function *Compiler::ExternFunction(kstring name, void *address,
 //   Return a Function for some given external symbol
 // ----------------------------------------------------------------------------
 {
+    RECORD(COMPILER, "Extern Function",
+           name, parmCount, "addr", (intptr_t) address);
     IFTRACE(llvm)
         std::cerr << "ExternFunction " << name
                   << " has " << parmCount << " parameters "
@@ -681,6 +694,9 @@ Value *Compiler::EnterGlobal(Name *name, Name_p *address)
 //   Enter a global variable in the symbol table
 // ----------------------------------------------------------------------------
 {
+    RECORD(COMPILER_DETAILS, "Enter Global",
+           name->value.c_str(), (intptr_t) address);
+
     Constant *null = ConstantPointerNull::get(treePtrTy);
     bool isConstant = false;
     GlobalValue *result = new GlobalVariable (*module, treePtrTy, isConstant,
@@ -704,6 +720,9 @@ Value *Compiler::EnterConstant(Tree *constant)
 //   Enter a constant (i.e. an Integer, Real or Text) into global map
 // ----------------------------------------------------------------------------
 {
+    RECORD(COMPILER_DETAILS, "Enter Constant",
+           "tree", (intptr_t) constant, "kind", constant->Kind());
+
     bool isConstant = true;
     text name = "xlcst";
     switch(constant->Kind())

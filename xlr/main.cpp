@@ -108,6 +108,8 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
     options.builtins = builtinsName;
     ParseOptions();
     FlightRecorder::SResize(options.flightRecorderSize);
+    if (options.flightRecorderFlags)
+        FlightRecorder::SFlags(options.flightRecorderFlags);
 }
 
 
