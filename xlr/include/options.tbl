@@ -112,6 +112,10 @@ OPTION(diff,
 OPTVAR(debugPrefix, text, "")
 OPTION(debug_prefix, "Select the prefix to debug", debugPrefix = STRING)
 
+OPTVAR(flightRecorderSize, uint, 8192)
+OPTION(frs, "Select the flight recorder size",
+       flightRecorderSize=INTEGER(128, 131072))
+
 
 
 // ============================================================================

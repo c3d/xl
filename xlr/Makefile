@@ -1,4 +1,3 @@
-
 #******************************************************************************
 # Makefile                          (C) 1992-2003 Christophe de Dinechin (ddd) 
 #                                                                  XLR project 
@@ -27,6 +26,7 @@
 # List of source files to process
 SOURCES     =					\
 	basics.cpp				\
+	flight_recorder.cpp			\
 	main.cpp				\
 	options.cpp				\
 	errors.cpp				\

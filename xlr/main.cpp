@@ -47,6 +47,8 @@
 #include "gv.h"
 #include "runtime.h"
 #include "traces.h"
+#include "flight_recorder.h"
+
 
 XL_DEFINE_TRACES
 
@@ -105,6 +107,7 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
     MAIN = this;
     options.builtins = builtinsName;
     ParseOptions();
+    FlightRecorder::SResize(options.flightRecorderSize);
 }
 
 
@@ -565,6 +568,9 @@ int main(int argc, char **argv)
 //   Parse the command line and run the compiler phases
 // ----------------------------------------------------------------------------
 {
+    XL::FlightRecorder::Initialize();
+    RECORD(ALWAYS, "Compiler starting");
+
 #if CONFIG_USE_SBRK
     char *low_water = (char *) sbrk(0);
 #endif

@@ -33,6 +33,8 @@
 #include "options.h"
 #include "errors.h"
 #include "renderer.h"
+#include "flight_recorder.h"
+
 
 XL_BEGIN
 
@@ -59,6 +61,8 @@ Options::Options(int argc, char **argv):
     // Check if some options are given from environment
     if (kstring envopt = getenv("XLOPT"))
     {
+        RECORD(INFO, "Options from XLOPT", envopt);
+
         // Split space-separated input options and prepend them to args[]
         text envtext = envopt;
         std::istringstream input(envtext);
@@ -68,9 +72,12 @@ Options::Options(int argc, char **argv):
     }
 
     // Add options from the command-line
+    RECORD(INFO, "Options list", "Count", argc);
     for (int a = 1; a < argc; a++)
+    {
+        RECORD(INFO, "Option", "Index", a, argv[a]);
         args.push_back(argv[a]);
-
+    }
 }
 
 
@@ -206,6 +213,8 @@ text Options::ParseNext(bool consumeFiles)
         {
             kstring option = args[arg].c_str() + 1;
             kstring argval = option;
+
+            RECORD(INFO, "Parse option", "Index", arg, option);
 
 #if XL_DEBUG
             if (argval[0] == 't')
