@@ -61,8 +61,8 @@ void FlightRecorder::Dump(int fd, bool kill)
 
 #define AUTOFORMAT(x)                           \
         (((x) < 1000000 && (x) > -1000000)      \
-         ? "%8s=%8" PRIdPTR " "                 \
-         : "%8s=0x%8" PRIxPTR " ")            
+         ? "%8s=%10" PRIdPTR " "                 \
+         : "%8s=%#10" PRIxPTR " ")            
 
         if (e.label1[0])
             size += snprintf(buffer + size, sizeof buffer - size,
@@ -84,6 +84,7 @@ void FlightRecorder::Dump(int fd, bool kill)
     if (kill)
         this->rindex = rindex;
 }
+
 
 FlightRecorder * FlightRecorder::recorder = NULL;
 ulong            FlightRecorder::enabled  = REC_ALWAYS|REC_CRITICAL|REC_DEBUG;
