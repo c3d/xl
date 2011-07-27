@@ -199,6 +199,7 @@ typedef std::map<Tree_p, Tree_p>   tree_map;
 typedef Tree *(*native_fn) (Context *ctx, Tree *self);
 typedef std::vector<text>          path_list;
 typedef std::map<text, path_list>  search_paths;
+typedef std::map<text, text>       search_path_cache;
 
 
 
@@ -322,6 +323,7 @@ public:
     rewrite_table       rewrites;
     context_list        imported;
     search_paths        searchPaths;
+    search_path_cache   searchPathCache;
     bool                hasConstants;
     bool                keepSource;
 

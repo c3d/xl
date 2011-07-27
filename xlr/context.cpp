@@ -1909,13 +1909,20 @@ text Context::ResolvePrefixedPath(text filename)
     size_t sep = filename.find(":");
     if (sep != filename.npos)
     {
+        search_path_cache::iterator known = searchPathCache.find(filename);
+        if (known != searchPathCache.end())
+            return (*known).second;
+
         text prefix = filename.substr(0, sep + 1);
         text file = filename.substr(sep + 1, filename.npos);
         if (file[0] != '/')
         {
             text found = FindInSearchPath(prefix, file);
             if (found != "")
+            {
+                searchPathCache[filename] = found;
                 filename = found;
+            }
         }
     }
     return filename;
