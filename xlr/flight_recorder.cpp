@@ -45,7 +45,7 @@ void FlightRecorder::Dump(int fd, bool kill)
     size_t size = snprintf(buffer, sizeof buffer,
                            "FLIGHT RECORDER DUMP AT %s\n",
                            asctime(localtime(&now)));
-    write(fd, buffer, size);
+    size_t ignored = write(fd, buffer, size);
 
     // Can't have more events than the size of the buffer
     uint rindex = this->rindex;
@@ -75,7 +75,7 @@ void FlightRecorder::Dump(int fd, bool kill)
                              AUTOFORMAT(e.arg3), e.label3, e.arg3);
         if (size < sizeof buffer)
             buffer[size++] = '\n';
-        write(fd, buffer, size);
+        ignored = write(fd, buffer, size);
 
         // Next step
         rindex++;
