@@ -51,7 +51,7 @@ Tree::~Tree()
     for (Info *i = info; i; i = next)
     {
         next = i->next;
-        delete i;
+        i->Delete();
     }
     info = (Info *) 0xD00DEL;
 }

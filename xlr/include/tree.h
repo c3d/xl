@@ -586,7 +586,7 @@ template <class I> inline bool Tree::Purge()
                 last->next = next;
             else
                 info = next;
-            delete ic;
+            ic->Delete();
             purged = true;
         }
         else
