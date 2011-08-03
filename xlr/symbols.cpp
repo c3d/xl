@@ -2421,7 +2421,7 @@ eval_fn OCompiledUnit::Finalize()
 }
 
 
-Value *OCompiledUnit::NeedStorage(Tree *tree)
+Value *OCompiledUnit::NeedStorage(Tree *tree, Tree *source)
 // ----------------------------------------------------------------------------
 //    Allocate storage for a given tree
 // ----------------------------------------------------------------------------
@@ -2438,9 +2438,23 @@ Value *OCompiledUnit::NeedStorage(Tree *tree)
         storage[tree] = result;
     }
     if (value.count(tree))
+    {
         data->CreateStore(value[tree], result);
+    }
     else if (Value *global = compiler->TreeGlobal(tree))
+    {
         data->CreateStore(data->CreateLoad(global), result);
+    }
+    else if (source && value.count(source))
+    {
+        data->CreateStore(value[source], result);
+        value[tree] = value[source];
+    }
+    else
+    {
+        Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
+        data->CreateStore(null, result);
+    }
 
     return result;
 }
@@ -2786,7 +2800,7 @@ Value *OCompiledUnit::Copy(Tree *source, Tree *dest, bool markDone)
 // ----------------------------------------------------------------------------
 {
     Value *result = Known(source); assert(result);
-    Value *ptr = NeedStorage(dest); assert(ptr);
+    Value *ptr = NeedStorage(dest, source); assert(ptr);
     code->CreateStore(result, ptr);
 
     if (markDone)

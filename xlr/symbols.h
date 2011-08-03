@@ -192,7 +192,7 @@ struct OCompiledUnit
 
     enum { knowAll = -1, knowGlobals = 1, knowLocals = 2, knowValues = 4 };
 
-    llvm::Value *       NeedStorage(Tree *tree);
+    llvm::Value *       NeedStorage(Tree *tree, Tree *source = NULL);
     bool                IsKnown(Tree *tree, uint which = knowAll);
     llvm::Value *       Known(Tree *tree, uint which = knowAll );
 
