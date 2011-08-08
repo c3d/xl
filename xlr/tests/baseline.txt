@@ -4,6 +4,7 @@
 01.Evaluation/bound-name-in-prefix.xl
 01.Evaluation/bug-261.xl
 01.Evaluation/bug-842.xl
+01.Evaluation/bug1046.xl
 01.Evaluation/ensure-single-evaluation.xl
 01.Evaluation/forward-declaration.xl
 01.Evaluation/guard-clause-for-range.xl

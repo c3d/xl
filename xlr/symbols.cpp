@@ -2436,6 +2436,20 @@ Value *OCompiledUnit::NeedStorage(Tree *tree, Tree *source)
         const char *clabel = label.c_str();
         result = data->CreateAlloca(compiler->treePtrTy, 0, clabel);
         storage[tree] = result;
+
+        // Deal with uninitialized values
+        if (!value.count(tree))
+        {
+            if (source && value.count(source))
+            {
+                value[tree] = value[source];
+            }
+            else
+            {
+                Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
+                data->CreateStore(null, result);
+            }
+        }
     }
     if (value.count(tree))
     {
@@ -2444,16 +2458,6 @@ Value *OCompiledUnit::NeedStorage(Tree *tree, Tree *source)
     else if (Value *global = compiler->TreeGlobal(tree))
     {
         data->CreateStore(data->CreateLoad(global), result);
-    }
-    else if (source && value.count(source))
-    {
-        data->CreateStore(value[source], result);
-        value[tree] = value[source];
-    }
-    else
-    {
-        Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
-        data->CreateStore(null, result);
     }
 
     return result;
