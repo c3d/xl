@@ -153,7 +153,7 @@ void *TypeAllocator::Allocate()
     result->allocator = this;
     result->bits |= IN_USE;     // In case a collection is running right now
     result->count = 0;
-    if (--available < chunkSize / 4)
+    if (--available < chunkSize * 0.9)
         GarbageCollector::CollectionNeeded();
 
     void *ret =  &result[1];
