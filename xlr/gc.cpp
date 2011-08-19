@@ -45,7 +45,7 @@ void *TypeAllocator::lowestAddress = (void *) ~0;
 void *TypeAllocator::highestAddress = (void *) 0;
 void *TypeAllocator::lowestAllocatorAddress = (void *) ~0;
 void *TypeAllocator::highestAllocatorAddress = (void *) 0;
-
+uint  TypeAllocator::finalizing = 0;
 
 TypeAllocator::TypeAllocator(kstring tn, uint os, mark_fn mark)
 // ----------------------------------------------------------------------------
