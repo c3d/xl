@@ -72,7 +72,7 @@ protected:
 
 #else
 
-typedef std::ifstream<char> utf8_ifstream;
+typedef std::ifstream utf8_ifstream;
 
 #endif
 
