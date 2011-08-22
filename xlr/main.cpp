@@ -48,6 +48,7 @@
 #include "runtime.h"
 #include "traces.h"
 #include "flight_recorder.h"
+#include "utf8_ifstream.h"
 
 
 XL_DEFINE_TRACES
@@ -352,7 +353,7 @@ int Main::LoadFile(text file,
     else
     {
         std::string nt = "";
-        std::ifstream ifs(file.c_str(), std::ifstream::in);
+        utf8_ifstream ifs(file.c_str());
         Deserializer ds(ifs);
         tree = ds.ReadTree();
         if (!ds.IsValid())
