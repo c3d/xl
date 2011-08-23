@@ -932,12 +932,19 @@ void xl_infix_to_list(Infix *infix, TreeList &list)
 }
 
 
-Tree *xl_list_to_tree(TreeList v, text infix)
+Tree *xl_list_to_tree(TreeList v, text infix, Infix ** deepest)
 // ----------------------------------------------------------------------------
 //   Builds a tree from a list of tree with the given infix.
 // ----------------------------------------------------------------------------
+// The deepest infix carries the 2 last elements of TreeList. If latest is
+// provided then the deepest infix is returned and its right leg carries xl_nil.
 {
     if (v.size() <= 0) return XL::xl_nil;
+    if (deepest)
+    {
+        *deepest = NULL;
+        v.push_back(XL::xl_nil);
+    }
     if (v.size() == 1) return v[0];
 
     Tree* result = NULL;
@@ -946,10 +953,14 @@ Tree *xl_list_to_tree(TreeList v, text infix)
     rit = v.rbegin();
     result = *rit;
     rit++;
+    XL::Infix * resInf = NULL;
     // Build the common part
     for (; rit < v.rend(); ++rit)
     {
-        result = new XL::Infix(infix, *rit, result);
+        result = resInf = new XL::Infix(infix, *rit, result);
+        // Assign only the first time to remember the bottomest Infix
+        if (deepest && *deepest == NULL)
+            *deepest = resInf;
     }
     return result;
 }

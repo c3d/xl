@@ -116,7 +116,7 @@ Tree *xl_block_cast(Context *, Tree *source, Tree *value);
 
 Tree *xl_parameter(text name, text type);
 void xl_infix_to_list(Infix *infix, TreeList &list);
-Tree *xl_list_to_tree(TreeList v, text infix);
+Tree *xl_list_to_tree(TreeList v, text infix, Infix **deepest = NULL);
 
 Real *xl_springify(Real &value, Real &target, Real &time,
                    Real &damp, Real &kspring, Real &lt, Real &ls);
