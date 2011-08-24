@@ -131,6 +131,7 @@ public:
     static void *       highestAddress;
     static void *       lowestAllocatorAddress;
     static void *       highestAllocatorAddress;
+    static uint         finalizing;
 } __attribute__((aligned(16)));
 
 
@@ -375,8 +376,12 @@ inline uint TypeAllocator::Release(void *pointer)
         TypeAllocator *allocator = ValidPointer(chunk->allocator);
         assert(chunk->count);
         count = --chunk->count;
-        if (!count && !(chunk->bits & IN_USE))
+        if (!count && (finalizing || !(chunk->bits & IN_USE)))
+        {
+            finalizing++;
             allocator->Finalize(pointer);
+            finalizing--;
+        }
     }
     return count;
 }

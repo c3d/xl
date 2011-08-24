@@ -28,6 +28,7 @@
 #include "errors.h"
 #include "syntax.h"
 #include "utf8.h"
+#include "utf8_ifstream.h"
 
 
 XL_BEGIN
@@ -82,7 +83,7 @@ Scanner::Scanner(kstring name, Syntax &stx, Positions &pos, Errors &err)
 //   Open the file and make sure it's readable
 // ----------------------------------------------------------------------------
     : syntax(stx),
-      input(*new std::ifstream(name)),
+      input(*new utf8_ifstream(name)),
       tokenText(""),
       textValue(""), realValue(0.0), intValue(0), base(10),
       indents(), indent(0), indentChar(0),

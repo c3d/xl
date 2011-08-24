@@ -45,7 +45,7 @@ void *TypeAllocator::lowestAddress = (void *) ~0;
 void *TypeAllocator::highestAddress = (void *) 0;
 void *TypeAllocator::lowestAllocatorAddress = (void *) ~0;
 void *TypeAllocator::highestAllocatorAddress = (void *) 0;
-
+uint  TypeAllocator::finalizing = 0;
 
 TypeAllocator::TypeAllocator(kstring tn, uint os, mark_fn mark)
 // ----------------------------------------------------------------------------
@@ -153,7 +153,7 @@ void *TypeAllocator::Allocate()
     result->allocator = this;
     result->bits |= IN_USE;     // In case a collection is running right now
     result->count = 0;
-    if (--available < chunkSize / 4)
+    if (--available < chunkSize * 0.9)
         GarbageCollector::CollectionNeeded();
 
     void *ret =  &result[1];
