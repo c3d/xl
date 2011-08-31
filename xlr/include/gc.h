@@ -57,28 +57,25 @@ struct TypeAllocator
         };
         uint                count;          // Ref count
     };
-    typedef void (*mark_fn)(void *object);
 
 public:
-    TypeAllocator(kstring name, uint objectSize, mark_fn mark);
+    TypeAllocator(kstring name, uint objectSize);
     virtual ~TypeAllocator();
 
     void *              Allocate();
     void                Delete(void *);
     virtual void        Finalize(void *);
 
-    void                MarkRoots();
-    void                Mark(void *inUse);
     void                Sweep();
 
     static TypeAllocator *ValidPointer(TypeAllocator *ptr);
     static TypeAllocator *AllocatorPointer(TypeAllocator *ptr);
 
-    static uint         Acquire(void *ptr);
-    static uint         Release(void *ptr);
+    static void         Acquire(void *ptr);
+    static void         Release(void *ptr);
     static bool         IsGarbageCollected(void *ptr);
     static bool         IsAllocated(void *ptr);
-    static bool         InUse(void *ptr);
+    static void         InUse(void *ptr);
 
     void *operator new(size_t size);
     void operator delete(void *ptr);
@@ -89,7 +86,7 @@ public:
         PTR_MASK        = 15,           // Special bits we take out of the ptr
         CHUNKALIGN_MASK = 7,            // Alignment for chunks
         ALLOCATED       = 0,            // Just allocated
-        IN_USE          = 8             // Set if already marked this time
+        IN_USE          = 1             // Set if already marked this time
     };
 
 public:
@@ -106,7 +103,6 @@ protected:
     GarbageCollector *  gc;
     kstring             name;
     std::vector<Chunk*> chunks;
-    mark_fn             mark;
     std::set<Listener *>listeners;
     std::map<void*,uint>roots;
     Chunk *             freeList;
@@ -155,7 +151,6 @@ public:
     static void         Delete(Object *);
     virtual void        Finalize(void *object);
     void                RegisterPointers();
-    static void         MarkObject(void *object);
     static bool         IsAllocated(void *ptr);
 
 private:
@@ -180,10 +175,10 @@ struct GCPtr
     ~GCPtr()                                    { Release(); }
 
     operator Object* () const                   { InUse(); return pointer; }
-    const Object *ConstPointer() const          { InUse(); return pointer; }
-    Object *Pointer() const                     { InUse(); return pointer; }
-    Object *operator->() const                  { InUse(); return pointer; }
-    Object& operator*() const                   { InUse(); return *pointer; }
+    const Object *ConstPointer() const          { return pointer; }
+    Object *Pointer() const                     { return pointer; }
+    Object *operator->() const                  { return pointer; }
+    Object& operator*() const                   { return *pointer; }
     operator ValueType() const                  { return pointer; }
 
     GCPtr &operator= (const GCPtr &o)
@@ -223,11 +218,11 @@ struct GCPtr
     DEFINE_CMP(>)
     DEFINE_CMP(>=)
 
-    bool        InUse() const   { return TypeAllocator::InUse(pointer); }
+    void        InUse() const   { TypeAllocator::InUse(pointer); }
 
 protected:
-    uint        Acquire() const { return TypeAllocator::Acquire(pointer); }
-    uint        Release() const { return TypeAllocator::Release(pointer); }
+    void        Acquire() const { TypeAllocator::Acquire(pointer); }
+    void        Release() const { TypeAllocator::Release(pointer); }
 
     Object *    pointer;
 };
@@ -242,7 +237,7 @@ struct GarbageCollector
     ~GarbageCollector();
 
     void        Register(TypeAllocator *a);
-    void        RunCollection(bool force=false, bool mark=true);
+    void        RunCollection(bool force=false);
     void        MustRun()    { mustRun = true; }
 
     static GarbageCollector *   Singleton();
@@ -267,9 +262,8 @@ protected:
 // ============================================================================
 
 // Define a garbage collected tree
-// Intended usage : GARBAGE_COLLECT(Tree) { /* code to mark pointers */ }
 
-#define GARBAGE_COLLECT_MARK(type)                                      \
+#define GARBAGE_COLLECT(type)                                           \
     void *operator new(size_t size)                                     \
     {                                                                   \
         return XL::Allocator<type>::Allocate(size);                     \
@@ -278,12 +272,7 @@ protected:
     void operator delete(void *ptr)                                     \
     {                                                                   \
         XL::Allocator<type>::Delete((type *) ptr);                      \
-    }                                                                   \
-                                                                        \
-    void Mark(XL::Allocator<type> &alloc)
-
-#define GARBAGE_COLLECT(type)                           \
-        GARBAGE_COLLECT_MARK(type) { (void) alloc; }
+    }
 
 
 
@@ -343,30 +332,27 @@ inline bool TypeAllocator::IsAllocated(void *ptr)
 }
 
 
-inline uint TypeAllocator::Acquire(void *pointer)
+inline void TypeAllocator::Acquire(void *pointer)
 // ----------------------------------------------------------------------------
 //   Increase reference count for pointer and return it
 // ----------------------------------------------------------------------------
 {
-    uint count = 0;
     if (IsGarbageCollected(pointer))
     {
         assert (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
         assert (IsAllocated(pointer));
 
         Chunk *chunk = ((Chunk *) pointer) - 1;
-        count = ++chunk->count;
+        ++chunk->count;
     }
-    return count;
 }
 
 
-inline uint TypeAllocator::Release(void *pointer)
+inline void TypeAllocator::Release(void *pointer)
 // ----------------------------------------------------------------------------
 //   Decrease reference count for pointer and return it
 // ----------------------------------------------------------------------------
 {
-    uint count = 0;
     if (IsGarbageCollected(pointer))
     {
         assert (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
@@ -375,7 +361,7 @@ inline uint TypeAllocator::Release(void *pointer)
         Chunk *chunk = ((Chunk *) pointer) - 1;
         TypeAllocator *allocator = ValidPointer(chunk->allocator);
         assert(chunk->count);
-        count = --chunk->count;
+        uint count = --chunk->count;
         if (!count && (finalizing || !(chunk->bits & IN_USE)))
         {
             finalizing++;
@@ -383,24 +369,20 @@ inline uint TypeAllocator::Release(void *pointer)
             finalizing--;
         }
     }
-    return count;
 }
 
 
-inline bool TypeAllocator::InUse(void *pointer)
+inline void TypeAllocator::InUse(void *pointer)
 // ----------------------------------------------------------------------------
 //   Mark the current pointer as in use, to preserve in next GC cycle
 // ----------------------------------------------------------------------------
 {
-    bool result = false;
     if (IsGarbageCollected(pointer))
     {
         assert (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
         Chunk *chunk = ((Chunk *) pointer) - 1;
-        result = (chunk->bits & IN_USE) != 0;
         chunk->bits |= IN_USE;
     }
-    return result;
 }
 
 
@@ -416,7 +398,7 @@ Allocator<Object>::Allocator()
 // ----------------------------------------------------------------------------
 //   Create an allocator for the given size
 // ----------------------------------------------------------------------------
-    : TypeAllocator(typeid(Object).name(), sizeof (Object), MarkObject)
+    : TypeAllocator(typeid(Object).name(), sizeof (Object))
 {}
 
 
@@ -471,17 +453,6 @@ void Allocator<Object>::Finalize(void *obj)
         Chunk *chunk = ((Chunk *) obj) - 1;
         chunk->bits |= IN_USE;
     }
-}
-
-
-template<class Object> inline
-void Allocator<Object>::MarkObject(void *object)
-// ----------------------------------------------------------------------------
-//   Make sure that we properly call the destructor for the object
-// ----------------------------------------------------------------------------
-{
-    if (object)
-        ((Object *) object)->Mark(*Singleton());
 }
 
 

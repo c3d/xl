@@ -47,11 +47,11 @@ void *TypeAllocator::lowestAllocatorAddress = (void *) ~0;
 void *TypeAllocator::highestAllocatorAddress = (void *) 0;
 uint  TypeAllocator::finalizing = 0;
 
-TypeAllocator::TypeAllocator(kstring tn, uint os, mark_fn mark)
+TypeAllocator::TypeAllocator(kstring tn, uint os)
 // ----------------------------------------------------------------------------
 //    Setup an empty allocator
 // ----------------------------------------------------------------------------
-    : gc(NULL), name(tn), chunks(), mark(mark), freeList(NULL),
+    : gc(NULL), name(tn), chunks(), freeList(NULL),
 #ifdef XLR_GC_LIFO
       freeListTail(NULL),
 #endif
@@ -59,7 +59,7 @@ TypeAllocator::TypeAllocator(kstring tn, uint os, mark_fn mark)
       allocatedCount(0), freedCount(0), totalCount(0)
 {
     RECORD(MEMORY, "New type allocator",
-           tn, os, "mark", (intptr_t) mark, "this", (intptr_t) this);
+           tn, os, "this", (intptr_t) this);
 
     // Make sure we align everything on Chunk boundaries
     if ((alignedSize + sizeof (Chunk)) & CHUNKALIGN_MASK)
@@ -214,15 +214,15 @@ void TypeAllocator::Finalize(void *ptr)
 }
 
 
-void TypeAllocator::MarkRoots()
+void TypeAllocator::Sweep()
 // ----------------------------------------------------------------------------
-//    Loop on all objects that have a reference count above 1
+//   Once we have marked everything, sweep what is not in use
 // ----------------------------------------------------------------------------
 {
-    RECORD(MEMORY_DETAILS, "Mark Roots");
+    RECORD(MEMORY_DETAILS, "Sweep");
 
-    std::vector<Chunk *>::iterator chunk;
     allocatedCount = freedCount = totalCount = 0;
+    std::vector<Chunk *>::iterator chunk;
     for (chunk = chunks.begin(); chunk != chunks.end(); chunk++)
     {
         char *chunkBase = (char *) *chunk + alignedSize;
@@ -233,69 +233,17 @@ void TypeAllocator::MarkRoots()
             totalCount++;
             if (AllocatorPointer(ptr->allocator) == this)
             {
-                allocatedCount++;
-                if ((ptr->bits & IN_USE) == 0)
-                    if (ptr->count > 0)
-                        Mark(ptr+1);
-            }
-        }
-    }
-
-    RECORD(MEMORY_DETAILS, "Mark Roots End",
-           "total", totalCount, "alloc", allocatedCount);
-}
-
-
-void TypeAllocator::Mark(void *data)
-// ----------------------------------------------------------------------------
-//   Loop on all allocated items and mark which ones are in use
-// ----------------------------------------------------------------------------
-{
-    if (!data)
-        return;
-
-    // Find chunk pointer
-    Chunk *inUse = ((Chunk *) data) - 1;
-
-    // We should only look at allocated items, otherwise oops...
-    if (inUse->bits & IN_USE)
-        return;
-
-    // We'd better be in the right allocator
-    assert(ValidPointer(inUse->allocator) == this);
-
-    // We had not marked that one yet, mark it now
-    inUse->bits |= IN_USE;
-
-    // Mark all pointers in this item
-    mark(data);
-}
-
-
-void TypeAllocator::Sweep()
-// ----------------------------------------------------------------------------
-//   Once we have marked everything, sweep what is not in use
-// ----------------------------------------------------------------------------
-{
-    RECORD(MEMORY_DETAILS, "Sweep");
-
-    std::vector<Chunk *>::iterator chunk;
-    for (chunk = chunks.begin(); chunk != chunks.end(); chunk++)
-    {
-        char *chunkBase = (char *) *chunk + alignedSize;
-        size_t  itemSize  = alignedSize + sizeof(Chunk);
-        for (uint i = 0; i < chunkSize; i++)
-        {
-            Chunk *ptr = (Chunk *) (chunkBase + i * itemSize);
-            if (AllocatorPointer(ptr->allocator) == this)
-            {
-                if (ptr->bits & IN_USE)
+                if (ptr->count)
                 {
-                    ptr->bits &= ~IN_USE;
+                    // Non-zero count, still alive somewhere
+                    allocatedCount++;
                 }
-                else if (ptr->count == 0)
+                else
                 {
+                    // Count is 0 : no longer referenced, may cascade free
+                    finalizing++;
                     Finalize(ptr+1);
+                    finalizing--;
                     freedCount++;
                 }
             }
@@ -411,8 +359,8 @@ GarbageCollector::~GarbageCollector()
 //    Destroy the garbage collector
 // ----------------------------------------------------------------------------
 {
-    RunCollection(true, false);
-    RunCollection(true, false);
+    RunCollection(true);
+    RunCollection(true);
 
     std::vector<TypeAllocator *>::iterator i;
     for (i = allocators.begin(); i != allocators.end(); i++)
@@ -436,14 +384,14 @@ void GarbageCollector::Register(TypeAllocator *allocator)
 }
 
 
-void GarbageCollector::RunCollection(bool force, bool mark)
+void GarbageCollector::RunCollection(bool force)
 // ----------------------------------------------------------------------------
 //   Run garbage collection on all the allocators we own
 // ----------------------------------------------------------------------------
 {
-    if (mustRun || force || !mark)
+    if (mustRun || force)
     {
-        RECORD(MEMORY, "Garbage collection", "force", force, "mark", mark);
+        RECORD(MEMORY, "Garbage collection", "force", force);
 
         std::vector<TypeAllocator *>::iterator a;
         std::set<TypeAllocator::Listener *> listeners;
@@ -459,12 +407,7 @@ void GarbageCollector::RunCollection(bool force, bool mark)
         for (l = listeners.begin(); l != listeners.end(); l++)
             (*l)->BeginCollection();
 
-        // Mark roots in all the allocators
-        if (mark)
-            for (a = allocators.begin(); a != allocators.end(); a++)
-                (*a)->MarkRoots();
-
-        // Then sweep whatever was not referenced
+        // Sweep whatever is not referenced at this point in time
         for (a = allocators.begin(); a != allocators.end(); a++)
             (*a)->Sweep();
 
@@ -491,7 +434,7 @@ void GarbageCollector::RunCollection(bool force, bool mark)
                    "Kilobytes", tot >> 10, alloc >> 10, freed >> 10);
         }
 
-        RECORD(MEMORY, "Garbage collection", "force", force, "mark", mark);
+        RECORD(MEMORY, "Garbage collection", "force", force);
     }
 }
 
