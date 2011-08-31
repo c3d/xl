@@ -777,7 +777,7 @@ INFIX(Range, tree, integer, "..", integer, return xl_range(l, r),
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS(tree, ""))
-INFIX(Index, tree, tree, "at", integer, return xl_nth(context, &l, r),
+INFIX(Index, tree, tree, "at", integer, return xl_nth(context, &l, &r),
       GROUP(basics)
       SYNOPSIS("")
       DESCRIPTION("")

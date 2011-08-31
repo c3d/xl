@@ -216,7 +216,7 @@ XL_BEGIN
 
 Tree *xl_apply(Context *, Tree *code, Tree *data);
 Tree *xl_range(longlong l, longlong h);
-Tree *xl_nth(Context *, Tree *data, longlong index);
+Tree *xl_nth(Context *, Tree *data, Integer *index);
 typedef GCPtr<Context> Context_p;
 
 

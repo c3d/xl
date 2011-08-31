@@ -913,25 +913,6 @@ Tree *xl_parameter(text symbol, text type)
 }
 
 
-void xl_infix_to_list(Infix *infix, TreeList &list)
-// ----------------------------------------------------------------------------
-//   Convert an infix to a list, whether left or right associative
-// ----------------------------------------------------------------------------
-{
-    Infix *left = infix->left->AsInfix();
-    if (left && left->name == infix->name)
-        xl_infix_to_list(left, list);
-    else
-        list.push_back(infix->left);
-
-    Infix *right = infix->right->AsInfix();
-    if (right && right->name == infix->name)
-        xl_infix_to_list(right, list);
-    else
-        list.push_back(infix->right);
-}
-
-
 Tree *xl_list_to_tree(TreeList v, text infix, Infix ** deepest)
 // ----------------------------------------------------------------------------
 //   Builds a tree from a list of tree with the given infix.
@@ -1698,23 +1679,21 @@ Tree *xl_range(longlong low, longlong high)
 }
 
 
-Tree *xl_nth(Context *context, Tree *data, longlong index)
+Tree *xl_nth(Context *context, Tree *data, Integer *indexTree)
 // ----------------------------------------------------------------------------
 //   Find the nth element in a data set
 // ----------------------------------------------------------------------------
 {
-    Tree *source = data;
+    // Check that the index begins at 1
+    longlong index = indexTree->value;
+    if (index <= 0)
+    {
+        Ooops ("Negative or null list index $1", indexTree);
+        return xl_false;
+    }
 
     // Check if we got (1,2,3,4) or something like f(3) as 'data'
     Block *block = data->AsBlock();
-    if (!block)
-    {
-        // We got f(3) or Hello as input: evaluate it
-        data = xl_evaluate(context, data);
-
-        // The returned data may itself be something like (1,2,3,4,5)
-        block = data->AsBlock();
-    }
     if (block)
     {
         // We got (1,2,3,4): Extract 1,2,3,4
@@ -1723,19 +1702,36 @@ Tree *xl_nth(Context *context, Tree *data, longlong index)
             data->SetSymbols(block->Symbols());
     }
 
-    // Now loop on the top-level infix
-    Tree *result = data;
-    if (Infix *infix = result->AsInfix())
+    // Check if we have an infix
+    if (Infix *infix = data->AsInfix())
     {
-        TreeList list;
-        xl_infix_to_list(infix, list);
-        if (index < 1 || index > (longlong) list.size())
-            return Ooops("Index $2 for $1 out of range",
-                         source, new Integer(index));
-        result = list[index-1];
-    }
+        text separator = infix->name;
+        while (index > 1 && infix)
+        {
+            data = infix->right;
+            infix = NULL;
+            if (Infix *rightInfix = data->AsInfix())
+                if (rightInfix->name == separator)
+                    infix = rightInfix;
+            index--;
+        }
 
-    return result;
+        if (infix)
+        {
+            assert (index == 1);
+            data = infix->left;
+        }
+    }
+    
+    // When we get there, we should have the first item, i.e. in (1) or (1,2)
+    if (index != 1)
+    {
+        Ooops ("Index $1 is out of range", indexTree);
+        return xl_false;
+    }
+            
+    // Return the value we got
+    return data;
 }
 
 
