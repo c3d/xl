@@ -94,12 +94,11 @@ Tree *RewriteCalls::operator() (Context *context,
     childInference->context = childContext;
     if (candidate->to)
     {
-        if (candidate->native)
-        {
+        if (candidate->type)
             if (!childInference->AssignType(candidate->to, candidate->type))
                 binding = FAILED;
-        }
-        else
+
+        if (!candidate->native)
         {
             bool builtin = false;
             if (Name *name = candidate->to->AsName())

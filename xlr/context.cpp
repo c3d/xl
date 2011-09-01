@@ -681,8 +681,8 @@ inline Tree *RegularEvaluator::operator() (Context *context,
 Tree *Context::Evaluate(Tree *what,             // Value to evaluate
                         tree_map &values,       // Cache of values
                         lookup_mode lookup,     // Lookup mode
-                        Context_p *tailContext,  // Optional tail recursion ctxt
-                        Tree_p *tailTree)        // Optional tail recursion next
+                        Context_p *tailContext, // Optional tail recursion ctxt
+                        Tree_p *tailTree)       // Optional tail recursion next
 // ----------------------------------------------------------------------------
 //   Check if something is in the cache, otherwise evaluate it
 // ----------------------------------------------------------------------------
@@ -1034,7 +1034,7 @@ bool Context::Bind(Tree *formTree, Tree *valueTree,
                 if (errors.Swallowed())
                     return false;
 
-                // Evaluate the value and match its type if the type is not tree
+                // Evaluate the value and check type if the type is not 'tree'
                 if (type == source_type)
                 {
                     // No evaluation at all, pass data as is.
@@ -1621,7 +1621,7 @@ uint Context::EnterConstraint(Tree *constraint)
     // If the property is a sequence, process them in turn
     if (Infix *infix = constraint->AsInfix())
         if (infix->name == "\n" || infix->name == ";")
-            return EnterConstraint(infix->left) + EnterConstraint(infix->right);
+            return EnterConstraint(infix->left)+EnterConstraint(infix->right);
 
     // If the property is like "X = Y", record it
     std::set<text> vars;
