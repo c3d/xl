@@ -215,7 +215,7 @@ Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
         void *address = sys::DynamicLibrary::SearchForAddressOfSymbol(label);
         if (!address)
         {
-            Ooops("Unable to find address for $1", rewrite->from);
+            Ooops("No library function matching $1", rewrite->from);
             return NULL;
         }
         sys::DynamicLibrary::AddSymbol(label, address);
