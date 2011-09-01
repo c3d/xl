@@ -1,16 +1,80 @@
-// If-then-else statement
-if true then TrueBody else FalseBody    -> do TrueBody
-if false then TrueBody else FalseBody   -> do FalseBody
+// Binary operations on integers
+(x:integer + y:integer):integer -> opcode Add
+(x:integer - y:integer):integer -> opcode Sub
+(x:integer * y:integer):integer -> opcode Mul
+(x:integer / y:integer):integer -> opcode SDiv
+(x:integer mod y:integer):integer -> opcode SRem
+(x:integer and y:integer):integer -> opcode And
+(x:integer or y:integer):integer -> opcode Or
+(x:integer xor y:integer):integer -> opcode Xor
+(x:integer shl y:integer):integer -> opcode Shl
+(x:integer ashr y:integer):integer -> opcode AShr
+(x:integer lshr y:integer):integer -> opcode LShr
+(-x:integer):integer -> opcode Neg
+(not x:real):integer -> opcode not
 
-if true then TrueBody                   -> do TrueBody
+// Binary operation on real numbers
+(x:real + y:real):real -> opcode FAdd
+(x:real - y:real):real -> opcode FSub
+(x:real * y:real):real -> opcode FMul
+(x:real / y:real):real -> opcode FDiv
+(-x:real):real -> opcode FNeg
+
+// Comparison operators
+(X:integer = Y:integer):boolean -> opcode ICmpEQ
+(X:integer <> Y:integer):boolean -> opcode ICmpNE
+(X:integer > Y:integer):boolean -> opcode ICmpSGT
+(X:integer >= Y:integer):boolean -> opcode ICmpSGE
+(X:integer < Y:integer):boolean -> opcode ICmpSLT
+(X:integer <= Y:integer):boolean -> opcode ICmpSLE
+
+(X:real = Y:real):boolean -> opcode FCmpOEQ
+(X:real <> Y:real):boolean -> opcode FCmpONE
+(X:real > Y:real):boolean -> opcode FCmpOGT
+(X:real >= Y:real):boolean -> opcode FCmpOGE
+(X:real < Y:real):boolean -> opcode FCmpOLT
+(X:real <= Y:real):boolean -> opcode FCmpOLE
+
+// Basic math functions
+(abs X:real):real -> C fabs
+extern real sqrt(real);
+extern real sin(real);
+extern real cos(real);
+extern real tan(real);
+extern real asin(real);
+extern real acos(real);
+extern real atan(real);
+extern real exp(real);
+extern real expm1(real);
+extern real log(real);
+extern real log10(real);
+extern real log2(real);
+extern real log1p(real);
+pi -> 3.1415926535897932384626433
+
+// If-then-else statement
+if true then TrueBody else FalseBody    -> TrueBody
+if false then TrueBody else FalseBody   -> FalseBody
+
+if true then TrueBody                   -> TrueBody
 if false then TrueBody                  -> false
 
 // Building lists, notably lists of arguments
 data x,y
 
 // Console / debugging operations
-write x,y -> write x; write y
-writeln x -> write x; writeln
+extern bool xl_write_integer(integer);
+extern bool xl_write_real(real);
+extern bool xl_write_text(text);
+extern bool xl_write_character(char);
+extern bool xl_write_cr(void);
+
+write x:text            -> xl_write_text x
+write x:integer         -> xl_write_integer x
+write x:real            -> xl_write_real x
+write x:character       -> xl_write_character x
+write x, y              -> write x; write y
+writeln a               -> write a; xl_write_cr
 
 // Min and max functions
 min x, y -> if x < min y then x else min y
