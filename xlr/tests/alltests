@@ -75,6 +75,7 @@ $LN ../xlr ./xl
 $LN ../*.stylesheet .
 $LN ../xl.syntax .
 $LN ../builtins.xl .
+$LN ../opt-builtins.xl .
 
 # Cleanup the test results
 echo Tests successfully run on $(date) on $HOSTNAME > $SUCCESS

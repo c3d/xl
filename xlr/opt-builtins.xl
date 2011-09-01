@@ -1,0 +1,23 @@
+// If-then-else statement
+if true then TrueBody else FalseBody    -> do TrueBody
+if false then TrueBody else FalseBody   -> do FalseBody
+
+if true then TrueBody                   -> do TrueBody
+if false then TrueBody                  -> false
+
+// Building lists, notably lists of arguments
+data x,y
+
+// Console / debugging operations
+write x,y -> write x; write y
+writeln x -> write x; writeln
+
+// Min and max functions
+min x, y -> if x < min y then x else min y
+min y    -> y
+max x, y -> if x > max y then x else max y
+max y    -> y
+
+// Factorial function
+0! -> 1
+N! -> N * (N-1)!
