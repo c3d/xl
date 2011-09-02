@@ -95,8 +95,13 @@ Tree *RewriteCalls::operator() (Context *context,
     if (candidate->to)
     {
         if (candidate->type)
+        {
             if (!childInference->AssignType(candidate->to, candidate->type))
                 binding = FAILED;
+            if (!childInference->UnifyTypesOf(what, candidate->to))
+                binding = FAILED;
+        }
+
 
         if (!candidate->native)
         {
