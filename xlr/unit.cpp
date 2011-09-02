@@ -355,7 +355,7 @@ llvm_value CompiledUnit::Compile(Tree *tree)
 
 llvm_value CompiledUnit::Compile(RewriteCandidate &rc, llvm_values &args)
 // ----------------------------------------------------------------------------
-//    Compile a given tree
+//    Compile a given rewrite for a tree
 // ----------------------------------------------------------------------------
 {
     // Check if we already have built this function, e.g. recursive calls

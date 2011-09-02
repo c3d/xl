@@ -77,9 +77,9 @@ write x, y              -> write x; write y
 writeln a               -> write a; xl_write_cr
 
 // Min and max functions
-min x, y -> if x < min y then x else min y
+min x, y -> if min x < min y then min x else min y
 min y    -> y
-max x, y -> if x > max y then x else max y
+max x, y -> if max x > max y then max x else max y
 max y    -> y
 
 // Factorial function

@@ -102,7 +102,6 @@ Tree *RewriteCalls::operator() (Context *context,
                 binding = FAILED;
         }
 
-
         if (!candidate->native)
         {
             bool builtin = false;
@@ -312,6 +311,15 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         }
 
         // We may have an expression that evaluates as an infix
+
+        // Check if what we have as an expression evaluates correctly
+        bool old_matching = inference->matching;
+        inference->matching = true;
+        if (!value->Do(inference))
+            return FAILED;
+        inference->matching = old_matching;
+
+        // Then check if the type matches
         type = inference->Type(value);
         if (!inference->Unify(type, infix_type, value, form))
             return FAILED;

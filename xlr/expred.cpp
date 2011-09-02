@@ -269,7 +269,9 @@ llvm_value CompileExpression::DoCall(Tree *call)
             llvm_block isGood = BasicBlock::Create(llvm, "good", function);
             code->CreateCondBr(condition, isGood, isBad);
             code->SetInsertPoint(isGood);
+            value_map saveComputed = computed;
             result = DoRewrite(cand);
+            computed = saveComputed;
             result = unit->Autobox(result, storageType);
             code->CreateStore(result, storage);
             code->CreateBr(isDone);
