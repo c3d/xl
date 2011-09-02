@@ -45,7 +45,6 @@ public:
     llvm_function       ClosureFunction(Tree *expr, TypeInference *types);
     llvm_function       RewriteFunction(RewriteCandidate &rc);
 
-protected:
     llvm_function       InitializeFunction(llvm::FunctionType *,
                                            Parameters *parameters,
                                            kstring label,
@@ -59,6 +58,8 @@ public:
     llvm_value          CompileTopLevel(Tree *tree);
     llvm_value          Compile(Tree *tree);
     llvm_value          Compile(RewriteCandidate &rc, llvm_values &args);
+    llvm_value          Data(Tree *form, uint &index);
+    llvm_value          Unbox(llvm_value arg, Tree *form, uint &index);
     llvm_value          Closure(Name *name, Tree *value);
     llvm_value          InvokeClosure(llvm_value result, llvm_value fnPtr);
     llvm_value          InvokeClosure(llvm_value result);
@@ -80,7 +81,7 @@ public:
     llvm_value          CallFormError(Tree *what);
 
     llvm_type           ReturnType(Tree *form);
-    llvm_type           StructureType(llvm_types &signature);
+    llvm_type           StructureType(llvm_types &signature, Tree *source);
     llvm_type           ExpressionMachineType(Tree *expr, llvm_type type);
     llvm_type           ExpressionMachineType(Tree *expr);
     llvm_type           MachineType(Tree *type);

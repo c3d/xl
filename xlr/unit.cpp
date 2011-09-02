@@ -184,7 +184,7 @@ Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
     else if (def)
         retTy = ReturnType(def);
     else
-        retTy = StructureType(signature);
+        retTy = StructureType(signature, source);
 
     text label = "xl_eval_" + parameters.name;
     IFTRACE(labels)
@@ -374,15 +374,206 @@ llvm_value CompiledUnit::Compile(RewriteCandidate &rc, llvm_values &args)
         if (function && rewriteUnit.code)
         {
             rewriteUnit.ImportClosureInfo(this);
-            llvm_value returned = rewriteUnit.CompileTopLevel(rewrite->to);
-            if (!returned)
-                return NULL;
-            if (!rewriteUnit.Return(returned))
-                return NULL;
+            if (rewrite->to)
+            {
+                // Regular function
+                llvm_value returned = rewriteUnit.CompileTopLevel(rewrite->to);
+                if (!returned)
+                    return NULL;
+                if (!rewriteUnit.Return(returned))
+                    return NULL;
+            }
+            else
+            {
+                // Constructor for a 'data' form
+                uint index = 0;
+                llvm_value returned = rewriteUnit.Data(rewrite->from, index);
+                if (!returned)
+                    return NULL;
+            }
             rewriteUnit.Finalize(false);
         }
     }
     return function;
+}
+
+
+llvm_value CompiledUnit::Data(Tree *form, uint &index)
+// ----------------------------------------------------------------------------
+//    Generate a constructor for a data form
+// ----------------------------------------------------------------------------
+//    Generate a function that constructs the given data form
+{
+    llvm_value left, right, child;
+
+    switch(form->Kind())
+    {
+    case INTEGER:
+    case REAL:
+    case TEXT:
+    {
+        // For all these cases, simply compute the corresponding value
+        CompileExpression expr(this);
+        llvm_value result = form->Do(expr);
+        return result;
+    }
+
+    case NAME:
+    {
+        Context_p  where;
+        Rewrite_p  rw;
+        Tree      *existing;
+
+        // Bound names are returned as is, parameters are evaluated
+        existing = context->Bound(form, Context::SCOPE_LOOKUP, &where, &rw);
+        assert(existing || !"Type checking didn't realize a name is missing");
+
+        // Arguments bound here are returned directly as a tree
+        if (where == context)
+        {
+            if (llvm_value result = Known(rw->from))
+            {
+                // Store that in the result tree
+                llvm_value ptr = code->CreateConstGEP2_32(returned, 0, index++);
+                result = code->CreateStore(result, ptr);
+                return result;
+            }
+        }
+
+        // Arguments not bound here are returned as a constant
+        return compiler->EnterConstant(rw->from);
+    }
+
+    case INFIX:
+    {
+        Infix *infix = (Infix *) form;
+        left = Data(infix->left, index);
+        right = Data(infix->right, index);
+        return right;
+    }
+
+    case PREFIX:
+    {
+        Prefix *prefix = (Prefix *) form;
+        left = Data(prefix->left, index);
+        right = Data(prefix->right, index);
+        return right;
+    }
+
+    case POSTFIX:
+    {
+        Postfix *postfix = (Postfix *) form;
+        left = Data(postfix->left, index);
+        right = Data(postfix->right, index);
+        return right;
+    }
+
+    case BLOCK:
+    {
+        Block *block = (Block *) form;
+        child = Data(block->child, index);
+        return child;
+    }
+    }
+
+    assert (!"Unknoen kind of tree in Data()");
+    return NULL;
+}
+
+
+llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
+// ----------------------------------------------------------------------------
+//   Generate code to unbox a value
+// ----------------------------------------------------------------------------
+{
+    llvm_type ttp = compiler->treePtrTy;
+    llvm_value ref, left, right, child;
+
+    switch(form->Kind())
+    {
+    case INTEGER:
+    case REAL:
+    case TEXT:
+    {
+        // For all these cases, simply compute the corresponding value
+        CompileExpression expr(this);
+        llvm_value result = form->Do(expr);
+        return result;
+    }
+
+    case NAME:
+    {
+        Context_p  where;
+        Rewrite_p  rw;
+        Tree      *existing;
+
+        // Bound names are returned as is, parameters are evaluated
+        existing = context->Bound(form, Context::SCOPE_LOOKUP, &where, &rw);
+        assert(existing || !"Type checking didn't realize a name is missing");
+
+        // Arguments bound here are returned directly as a tree
+        if (where == context)
+        {
+            // Get element from input argument
+            llvm_value ptr = code->CreateConstGEP2_32(boxed, 0, index++);
+            return code->CreateLoad(ptr);
+        }
+
+        // Arguments not bound here are returned as a constant
+        return compiler->EnterConstant(rw->from);
+    }
+
+    case INFIX:
+    {
+        Infix *infix = (Infix *) form;
+        ref = compiler->EnterConstant(form);
+        left = Unbox(boxed, infix->left, index);
+        right = Unbox(boxed, infix->right, index);
+        left = Autobox(left, ttp);
+        right = Autobox(right, ttp);
+        return code->CreateCall3(compiler->xl_new_infix, ref, left, right);
+    }
+
+    case PREFIX:
+    {
+        Prefix *prefix = (Prefix *) form;
+        ref = compiler->EnterConstant(form);
+        if (prefix->left->Kind() == NAME)
+            left = compiler->EnterConstant(prefix->left);
+        else
+            left = Unbox(boxed, prefix->left, index);
+        right = Unbox(boxed, prefix->right, index);
+        left = Autobox(left, ttp);
+        right = Autobox(right, ttp);
+        return code->CreateCall3(compiler->xl_new_prefix, ref, left, right);
+    }
+
+    case POSTFIX:
+    {
+        Postfix *postfix = (Postfix *) form;
+        ref = compiler->EnterConstant(form);
+        left = Unbox(boxed, postfix->left, index);
+        if (postfix->right->Kind() == NAME)
+            right = compiler->EnterConstant(postfix->right);
+        else
+            right = Unbox(boxed, postfix->right, index);
+        left = Autobox(left, ttp);
+        right = Autobox(right, ttp);
+        return code->CreateCall3(compiler->xl_new_postfix, ref, left, right);
+    }
+
+    case BLOCK:
+    {
+        Block *block = (Block *) form;
+        ref = compiler->EnterConstant(form);
+        child = Unbox(boxed, block->child, index);
+        child = Autobox(child, ttp);
+        return code->CreateCall2(compiler->xl_new_block, ref, child);
+    }
+    }
+
+    assert(!"Invalid tree kind in CompiledUnit::Unbox");
+    return NULL;
 }
 
 
@@ -760,12 +951,23 @@ llvm_type CompiledUnit::ReturnType(Tree *form)
 }
 
 
-llvm_type CompiledUnit::StructureType(llvm_types &signature)
+llvm_type CompiledUnit::StructureType(llvm_types &signature, Tree *source)
 // ----------------------------------------------------------------------------
 //   Compute the return type associated with the given data form
 // ----------------------------------------------------------------------------
 {
+    // Check if we already had this signature
+    llvm_type found = compiler->boxed[source];
+    if (found)
+        return found;
+
+    // Build the corresponding structure type
     StructType *stype = StructType::get(*llvm, signature);
+
+    // Record boxing and unboxing for that particular tree
+    compiler->boxed[source] = stype;
+    compiler->unboxed[stype] = source;
+
     return stype;
 }
 
@@ -932,6 +1134,15 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     {
         assert(req == compiler->treePtrTy || req == compiler->textTreePtrTy);
         boxFn = compiler->xl_new_ctext;
+    }
+    else if (compiler->unboxed.count(type) &&
+             (req == compiler->blockTreePtrTy ||
+              req == compiler->infixTreePtrTy ||
+              req == compiler->prefixTreePtrTy ||
+              req == compiler->postfixTreePtrTy ||
+              req == compiler->treePtrTy))
+    {
+        boxFn = compiler->UnboxFunction(context, type);
     }
 
     // If we need to invoke a boxing function, do it now

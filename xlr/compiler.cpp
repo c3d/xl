@@ -875,6 +875,44 @@ llvm_type Compiler::TreeMachineType(Tree *tree)
 }
 
 
+llvm_function Compiler::UnboxFunction(Context_p ctx, llvm_type type)
+// ----------------------------------------------------------------------------
+//    Create a function transforming a boxed (structure) value into tree form
+// ----------------------------------------------------------------------------
+{
+    // Check if we have a matching boxing function
+    std::ostringstream out;
+    out << "Unbox" << (void *) type << ";" << (void *) ctx;
+
+    llvm::Function * &fn = FunctionFor(out.str());
+    if (fn)
+        return fn;
+
+    // Get original form representing that data type
+    Tree *form = unboxed[type]; assert(form && "Trying to unbox unknown type");
+    llvm_type mtype = TreeMachineType(form);
+
+    // Create a function taking a boxed type as an argument, returning a tree
+    llvm_types signature;
+    signature.push_back(type);
+    FunctionType *ftype = FunctionType::get(treePtrTy, signature, false);
+    CompiledUnit unit(this, ctx);
+    fn = unit.InitializeFunction(ftype, NULL, "xl_unbox", false, false);
+
+    // Take the first input argument, which is the boxed value.
+    Function::arg_iterator args = fn->arg_begin();
+    llvm_value arg = args++;
+
+    // Generate code to create the unboxed tree
+    uint index = 0;
+    llvm_value tree = unit.Unbox(arg, form, index);
+    tree = unit.Autobox(tree, treePtrTy);
+    unit.Return(tree);
+
+    return fn;
+}
+
+
 llvm_value Compiler::Primitive(llvm_builder builder, text name,
                                uint arity, llvm_value *args)
 // ----------------------------------------------------------------------------

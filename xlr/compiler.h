@@ -65,20 +65,6 @@ struct Context;
 struct Options;
 struct CompilerLLVMTableEntry;
 struct RewriteCandidate;
-typedef Tree * (*program_fn) (void);
-typedef Tree * (*eval_fn) (Context *, Tree *);
-typedef Tree * (*adapter_fn) (native_fn callee, Context *ctx,
-                              Tree *src, Tree **args);
-typedef std::map<text, llvm::Function *>       functions_map;
-typedef std::map<Tree *, llvm::Value *>        value_map;
-typedef std::map<Tree *, const llvm::Type *>   type_map;
-typedef std::map<Tree *, Tree **>              address_map;
-typedef std::map<text, llvm::GlobalVariable *> text_constants_map;
-typedef std::map<uint, eval_fn>                closure_map;
-typedef std::map<uint, adapter_fn>             adapter_map;
-typedef std::set<Tree *>                       closure_set;
-typedef std::set<Tree *>                       data_set;
-typedef std::map<text,CompilerLLVMTableEntry *>llvm_entry_table;
 
 typedef const llvm::Type *                     llvm_type;
 typedef std::vector<llvm_type>                 llvm_types;
@@ -90,6 +76,21 @@ typedef llvm::IRBuilder<> *                    llvm_builder;
 typedef llvm::Function *                       llvm_function;
 typedef llvm::BasicBlock *                     llvm_block;
 
+typedef Tree * (*program_fn) (void);
+typedef Tree * (*eval_fn) (Context *, Tree *);
+typedef Tree * (*adapter_fn) (native_fn callee, Context *ctx,
+                              Tree *src, Tree **args);
+typedef std::map<text, llvm::Function *>       functions_map;
+typedef std::map<Tree *, llvm::Value *>        value_map;
+typedef std::map<Tree *, const llvm::Type *>   type_map;
+typedef std::map<llvm_type, Tree *>            unboxing_map;
+typedef std::map<Tree *, Tree **>              address_map;
+typedef std::map<text, llvm::GlobalVariable *> text_constants_map;
+typedef std::map<uint, eval_fn>                closure_map;
+typedef std::map<uint, adapter_fn>             adapter_map;
+typedef std::set<Tree *>                       closure_set;
+typedef std::set<Tree *>                       data_set;
+typedef std::map<text,CompilerLLVMTableEntry *>llvm_entry_table;
 
 
 // ============================================================================
@@ -134,6 +135,7 @@ struct Compiler
 
     llvm_type                 MachineType(Tree *tree);
     llvm_type                 TreeMachineType(Tree *tree);
+    llvm_function             UnboxFunction(Context_p ctx, llvm_type type);
     llvm_value                Primitive(llvm_builder builder, text name,
                                         uint arity, llvm_value *args);
     bool                      MarkAsClosureType(llvm_type type);
@@ -213,6 +215,8 @@ public:
     text_constants_map         text_constants;
     llvm_entry_table           llvm_primitives;
     llvm_types                 closure_types;
+    type_map                   boxed;
+    unboxing_map               unboxed;
 };
 
 
