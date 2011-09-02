@@ -1,7 +1,4 @@
 // OPT=-O3
-(x:integer + y:integer):integer -> opcode Add
-(x:integer - y:integer):integer -> opcode Sub
-
 fib 0 -> 1
 fib 1 -> 1
 fib "A" -> "A"

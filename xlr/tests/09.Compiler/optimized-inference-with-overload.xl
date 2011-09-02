@@ -1,11 +1,4 @@
 // OPT=-O3
-(x:integer + y:integer):integer -> opcode Add
-(x:integer - y:integer):integer -> opcode Sub
-(x:real + y:real):real -> opcode FAdd
-(x:real - y:real):real -> opcode FSub
-extern bool xl_write_real(real);
-extern bool xl_write_integer(integer);
-
 foo X : integer -> 1 + X
 foo Y : real -> 42.0 - Y
 
