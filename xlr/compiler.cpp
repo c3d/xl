@@ -846,6 +846,35 @@ llvm_type Compiler::MachineType(Tree *tree)
 }
 
 
+llvm_type Compiler::TreeMachineType(Tree *tree)
+// ----------------------------------------------------------------------------
+//    Return the LLVM tree type associated to a given XL expression
+// ----------------------------------------------------------------------------
+{
+    switch(tree->Kind())
+    {
+    case INTEGER:
+        return integerTreePtrTy;
+    case REAL:
+        return realTreePtrTy;
+    case TEXT:
+        return textTreePtrTy;
+    case NAME:
+        return nameTreePtrTy;
+    case INFIX:
+        return infixTreePtrTy;
+    case PREFIX:
+        return prefixTreePtrTy;
+    case POSTFIX:
+        return postfixTreePtrTy;
+    case BLOCK:
+        return blockTreePtrTy;
+    }
+    assert(!"Invalid tree type");
+    return treePtrTy;
+}
+
+
 llvm_value Compiler::Primitive(llvm_builder builder, text name,
                                uint arity, llvm_value *args)
 // ----------------------------------------------------------------------------

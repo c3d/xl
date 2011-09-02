@@ -133,6 +133,7 @@ struct Compiler
     bool                      IsKnown(Tree *value);
 
     llvm_type                 MachineType(Tree *tree);
+    llvm_type                 TreeMachineType(Tree *tree);
     llvm_value                Primitive(llvm_builder builder, text name,
                                         uint arity, llvm_value *args);
     bool                      MarkAsClosureType(llvm_type type);

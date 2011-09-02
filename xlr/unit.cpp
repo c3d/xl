@@ -583,10 +583,13 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
         storage[tree] = result;
 
         // If this started with a value or global, initialize on function entry
+        llvm_value initializer = NULL;
         if (value.count(tree))
-            data->CreateStore(value[tree], result);
+            initializer = value[tree];
         else if (Value *global = compiler->TreeGlobal(tree))
-            data->CreateStore(data->CreateLoad(global), result);
+            initializer = data->CreateLoad(global);
+        if (initializer && initializer->getType() == mtype)
+            data->CreateStore(initializer, result);
     }
 
     return result;
