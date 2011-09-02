@@ -290,7 +290,12 @@ bool TypeInference::AssignType(Tree *expr, Tree *type)
 
     // Generate a unique type name if nothing is given
     if (type == NULL)
-        type = NewTypeName(expr->Position());
+    {
+        if (expr == xl_true || expr == xl_false)
+            type = boolean_type;
+        else
+            type = NewTypeName(expr->Position());
+    }
 
     // Record the type for that tree
     types[expr] = type;

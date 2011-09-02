@@ -5,10 +5,9 @@ allocas:
   ret i1 %1
 }
 
-define internal %Tree* @xl_eval_repeat2(%closure0*) {
+define internal i1 @xl_eval_repeat2(%closure0*) {
 allocas:
-  %1 = load %Tree** @true
-  ret %Tree* %1
+  ret i1 true
 }
 
 define internal i64 @xl_eval_repeat3(%closure0*) {
@@ -26,8 +25,8 @@ allocas:
   %6 = icmp eq i64 0, %5
   br i1 %6, label %good, label %bad
 
-done:                                             ; preds = %bad1, %good2, %good
-  %loc.0 = phi %Tree* [ %8, %good ], [ %12, %good2 ], [ %9, %bad1 ]
+done:                                             ; preds = %bad1, %good2, %booleanBoxed
+  %loc.0 = phi %Tree* [ %.0, %booleanBoxed ], [ %14, %good2 ], [ %11, %bad1 ]
   ret %Tree* %loc.0
 
 bad:                                              ; preds = %allocas
@@ -35,17 +34,29 @@ bad:                                              ; preds = %allocas
   br i1 %7, label %good2, label %bad1
 
 good:                                             ; preds = %allocas
-  %8 = call %Tree* @xl_eval_repeat2(%closure0* %1)
+  %8 = call i1 @xl_eval_repeat2(%closure0* %1)
+  br i1 %8, label %isTrue, label %isFalse
+
+isTrue:                                           ; preds = %good
+  %9 = load %Tree** @true
+  br label %booleanBoxed
+
+isFalse:                                          ; preds = %good
+  %10 = load %Tree** @false
+  br label %booleanBoxed
+
+booleanBoxed:                                     ; preds = %isFalse, %isTrue
+  %.0 = phi %Tree* [ %9, %isTrue ], [ %10, %isFalse ]
   br label %done
 
 bad1:                                             ; preds = %bad
-  %9 = call %Tree* @xl_eval_repeat(i64 %5, %closure0* %1)
+  %11 = call %Tree* @xl_eval_repeat(i64 %5, %closure0* %1)
   br label %done
 
 good2:                                            ; preds = %bad
-  %10 = call i64 @xl_eval_repeat3(%closure0* %1)
-  %11 = call %Integer* @xl_new_integer(i64 %10)
-  %12 = bitcast %Integer* %11 to %Tree*
+  %12 = call i64 @xl_eval_repeat3(%closure0* %1)
+  %13 = call %Integer* @xl_new_integer(i64 %12)
+  %14 = bitcast %Integer* %13 to %Tree*
   br label %done
 }
 
@@ -77,7 +88,7 @@ tailrecurse.i:                                    ; preds = %bad1.i, %allocas
 good.i:                                           ; preds = %tailrecurse.i
   %3 = bitcast %closure0* %0 to i1 (%closure0*)**
   store i1 (%closure0*)* @xl_closure, i1 (%closure0*)** %3
-  %4 = load %Tree** @true
+  %.0.i = load %Tree** @true
   br label %xl_eval_repeat.exit
 
 bad1.i:                                           ; preds = %tailrecurse.i
@@ -85,14 +96,14 @@ bad1.i:                                           ; preds = %tailrecurse.i
   br label %tailrecurse.i
 
 good2.i:                                          ; preds = %tailrecurse.i
-  %5 = bitcast %closure0* %0 to i1 (%closure0*)**
-  store i1 (%closure0*)* @xl_closure, i1 (%closure0*)** %5
-  %6 = call %Integer* @xl_new_integer(i64 42)
-  %7 = bitcast %Integer* %6 to %Tree*
+  %4 = bitcast %closure0* %0 to i1 (%closure0*)**
+  store i1 (%closure0*)* @xl_closure, i1 (%closure0*)** %4
+  %5 = call %Integer* @xl_new_integer(i64 42)
+  %6 = bitcast %Integer* %5 to %Tree*
   br label %xl_eval_repeat.exit
 
 xl_eval_repeat.exit:                              ; preds = %good.i, %good2.i
-  %loc.0.i = phi %Tree* [ %4, %good.i ], [ %7, %good2.i ]
+  %loc.0.i = phi %Tree* [ %.0.i, %good.i ], [ %6, %good2.i ]
   ret %Tree* %loc.0.i
 }
 Hello
