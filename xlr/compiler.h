@@ -80,9 +80,9 @@ typedef Tree * (*program_fn) (void);
 typedef Tree * (*eval_fn) (Context *, Tree *);
 typedef Tree * (*adapter_fn) (native_fn callee, Context *ctx,
                               Tree *src, Tree **args);
-typedef std::map<text, llvm::Function *>       functions_map;
-typedef std::map<Tree *, llvm::Value *>        value_map;
-typedef std::map<Tree *, const llvm::Type *>   type_map;
+typedef std::map<text, llvm_function>          functions_map;
+typedef std::map<Tree *, llvm_value>           value_map;
+typedef std::map<Tree *, llvm_type>            type_map;
 typedef std::map<llvm_type, Tree *>            unboxing_map;
 typedef std::map<Tree *, Tree **>              address_map;
 typedef std::map<text, llvm::GlobalVariable *> text_constants_map;
@@ -133,9 +133,11 @@ struct Compiler
     eval_fn                   MarkAsClosure(Tree *closure, uint ntrees);
     bool                      IsKnown(Tree *value);
 
+    void                      MachineType(Tree *source, llvm_type mtype);
     llvm_type                 MachineType(Tree *tree);
     llvm_type                 TreeMachineType(Tree *tree);
-    llvm_function             UnboxFunction(Context_p ctx, llvm_type type);
+    llvm_function             UnboxFunction(Context_p ctx, llvm_type type,
+                                            Tree *form);
     llvm_value                Primitive(llvm_builder builder, text name,
                                         uint arity, llvm_value *args);
     bool                      MarkAsClosureType(llvm_type type);
@@ -215,8 +217,7 @@ public:
     text_constants_map         text_constants;
     llvm_entry_table           llvm_primitives;
     llvm_types                 closure_types;
-    type_map                   boxed;
-    unboxing_map               unboxed;
+    type_map                   machineTypes;
 };
 
 

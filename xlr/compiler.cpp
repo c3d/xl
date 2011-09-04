@@ -793,11 +793,25 @@ bool Compiler::IsKnown(Tree *tree)
 }
 
 
+void Compiler::MachineType(Tree *tree, llvm_type mtype)
+// ----------------------------------------------------------------------------
+//   Record a machine type association that spans multiple units
+// ----------------------------------------------------------------------------
+{
+    machineTypes[tree] = mtype;
+}
+
+
 llvm_type Compiler::MachineType(Tree *tree)
 // ----------------------------------------------------------------------------
 //    Return the LLVM type associated to a given XL type name
 // ----------------------------------------------------------------------------
 {
+    // Check the special cases, e.g. boxed structs associated to type names
+    type_map::iterator found = machineTypes.find(tree);
+    if (found != machineTypes.end())
+        return (*found).second;
+
     // Check all "basic" types in basics.tbl
     if (tree == boolean_type || tree == xl_true || tree == xl_false)
         return booleanTy;
@@ -875,7 +889,7 @@ llvm_type Compiler::TreeMachineType(Tree *tree)
 }
 
 
-llvm_function Compiler::UnboxFunction(Context_p ctx, llvm_type type)
+llvm_function Compiler::UnboxFunction(Context_p ctx, llvm_type type, Tree *form)
 // ----------------------------------------------------------------------------
 //    Create a function transforming a boxed (structure) value into tree form
 // ----------------------------------------------------------------------------
@@ -889,13 +903,12 @@ llvm_function Compiler::UnboxFunction(Context_p ctx, llvm_type type)
         return fn;
 
     // Get original form representing that data type
-    Tree *form = unboxed[type]; assert(form && "Trying to unbox unknown type");
     llvm_type mtype = TreeMachineType(form);
 
     // Create a function taking a boxed type as an argument, returning a tree
     llvm_types signature;
     signature.push_back(type);
-    FunctionType *ftype = FunctionType::get(treePtrTy, signature, false);
+    FunctionType *ftype = FunctionType::get(mtype, signature, false);
     CompiledUnit unit(this, ctx);
     fn = unit.InitializeFunction(ftype, NULL, "xl_unbox", false, false);
 

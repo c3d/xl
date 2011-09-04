@@ -85,6 +85,7 @@ public:
     llvm_type           ExpressionMachineType(Tree *expr, llvm_type type);
     llvm_type           ExpressionMachineType(Tree *expr);
     llvm_type           MachineType(Tree *type);
+    void                InheritMachineTypes(CompiledUnit &unit);
     llvm_value          Autobox(llvm_value value, llvm_type requested);
     llvm_value          Global(Tree *tree);
 
@@ -112,6 +113,8 @@ public:
 
     llvm::PATypeHolder  closureTy;      // Argument type for closures
     value_map           closure;        // Arguments that need closures
+    type_map            boxed;          // Boxed struct types
+    unboxing_map        unboxed;        // Unboxed source for a boxed type
 };
 
 XL_END
