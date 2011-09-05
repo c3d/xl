@@ -190,28 +190,21 @@ Tree *xl_set_source(Tree *value, Tree *source)
 }
 
 
-Tree *xl_error(text msg, Tree *a1, Tree *a2, Tree *a3)
+Tree *xl_error(Tree *self, text msg, Tree *a1, Tree *a2, Tree *a3)
 // ----------------------------------------------------------------------------
 //   The default runtime error message mechanism (if not overriden)
 // ----------------------------------------------------------------------------
 {
-    static Name_p errorName = new Name("error");
-    Tree *args = new Text(msg);
-    if (a3)
-        a2 = new Infix(",", a2, a3);
-    if (a2)
-        a1 = new Infix(",", a1, a2);
-    if (a1)
-        args = new Infix(",", args, a1);
-    Tree *result = new Prefix(errorName, args);
-
     if (a1) a1 = FormatTreeForError(a1);
     if (a2) a2 = FormatTreeForError(a2);
     if (a3) a3 = FormatTreeForError(a3);
-    Error err(msg, a1, a2, a3);
+    Error err(msg, self->Position());
+    if (a1) err.Arg(a1);
+    if (a2) err.Arg(a2);
+    if (a3) err.Arg(a3);
     MAIN->errors->Log(err);
 
-    return result;
+    return self;
 }
 
 

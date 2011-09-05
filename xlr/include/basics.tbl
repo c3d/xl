@@ -816,26 +816,26 @@ PREFIX(EvaluationError, tree, "evaluation_error",
        SYNOPSIS("Function called when no form matches a given expression"))
 PREFIX(ErrorMsg3, tree, "error",
        PARM(m, text, "") PARM(a,tree, "") PARM(b,tree, "") PARM(c, tree, ""),
-       return xl_error(m, &a, &b, &c),
+       return xl_error(self, m, &a, &b, &c),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
 PREFIX(ErrorMsg2, tree, "error",
        PARM(m, text, "") PARM(a,tree, "") PARM(b,tree, ""),
-       return xl_error(m, &a, &b),
+       return xl_error(self, m, &a, &b),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
 PREFIX(ErrorMsg1, tree, "error", PARM(m, text, "") PARM(a,tree, ""),
-       return xl_error(m, &a),
+       return xl_error(self, m, &a),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
 PREFIX(ErrorMsg0, tree, "error", PARM(m, text, ""),
-       return xl_error(m),
+       return xl_error(self, m),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
