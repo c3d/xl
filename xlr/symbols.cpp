@@ -2127,7 +2127,7 @@ Tree *CompileAction::Rewrites(Tree *what)
     } // for(namespaces)
 
     // If we didn't match anything, then emit an error at runtime
-    if (!foundUnconditional && !nullIfBad)
+    if (!foundUnconditional)
         unit.CallTypeError(what);
 
     // If we didn't find anything, report it
