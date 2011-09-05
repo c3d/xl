@@ -40,6 +40,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <sstream>
+#include <errno.h>
 #include "winglob.h"
 #include <sys/stat.h>
 
@@ -1216,6 +1217,9 @@ Tree *xl_load_data(Context *context, Tree *self,
     bool     hasField  = false;
     FILE    *f         = fopen(path.c_str(), "r");
     Tree    *result    = NULL;
+    if (!f)
+        return Ooops("Unable to load data for $1: " + text(strerror(errno)),
+                     self);
 
     *end = 0;
     while (!feof(f))
