@@ -434,7 +434,7 @@ bool TypeInference::Evaluate(Tree *what)
         if (IsGeneric(ctype) && IsGeneric(wtype))
         {
             // foo:#A rewritten as bar:#B and another type
-            // Joint types instead of performing a union
+            // Join types instead of performing a union
             if (!Join(ctype, type))
                 return false;
             if (!Join(wtype, type))
