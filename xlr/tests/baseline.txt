@@ -53,3 +53,4 @@
 20.Errors/local-variables-redeclaration.xl
 20.Errors/local-variables-type-error.xl
 20.Errors/bug357.xl
+09.Compiler/optimized-min-3args.xl
