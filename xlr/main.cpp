@@ -111,6 +111,7 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
     FlightRecorder::SResize(options.flightRecorderSize);
     if (options.flightRecorderFlags)
         FlightRecorder::SFlags(options.flightRecorderFlags);
+    globals->is_global = true; // Duh...
 }
 
 
