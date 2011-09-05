@@ -1812,12 +1812,13 @@ Tree *CompileAction::DoName(Name *what, bool forceEval)
     if (Tree *result = symbols->Named(what->value))
     {
         // Try to compile the definition of the name
+        TreeList xargs;
         if (!result->AsName())
         {
             Rewrite rw(symbols, what, result);
             if (!what->Symbols())
                 what->SetSymbols(symbols);
-            result = rw.Compile();
+            result = rw.Compile(xargs);
             if (!result)
                 return result;
         }
@@ -1828,9 +1829,8 @@ Tree *CompileAction::DoName(Name *what, bool forceEval)
         if (function && function != unit.function)
         {
             // Case of "Name -> Foo": Invoke Name
-            TreeList noArgs;
             unit.NeedStorage(what);
-            unit.Invoke(what, result, noArgs);
+            unit.Invoke(what, result, xargs);
             return what;
         }
         else if (forceEval && unit.IsKnown(result))
@@ -2087,7 +2087,7 @@ Tree *CompileAction::Rewrites(Tree *what)
                         }
 
                         // Compile the candidate
-                        Tree *code = candidate->Compile();
+                        Tree *code = candidate->Compile(argsList);
                         if (code)
                         {
                             // Invoke the candidate
@@ -2217,34 +2217,49 @@ Tree *Rewrite::Do(Action &a)
 }
 
 
-Tree *Rewrite::Compile(void)
+Tree *Rewrite::Compile(TreeList &xargs)
 // ----------------------------------------------------------------------------
 //   Compile code for the 'to' form
 // ----------------------------------------------------------------------------
 //   This is similar to Context::Compile, except that it may generate a
 //   function with more parameters, i.e. Tree *f(Tree * , Tree * , ...),
-//   where there is one input arg per variable in the 'from' tree
+//   where there is one input arg per variable in the 'from' tree or per
+//   captured variable from the surrounding context
 {
     assert (to || !"Rewrite::Compile called for data rewrite?");
+
+    // Check if there are variables in the environment that we need to capture
+    Symbols_p syms = from->Symbols();
+    if (!syms)
+        Ooops("Internal: No symbols for $1", from);
+    TreeList xparms = parameters;
+    EnvironmentScan envScan(syms->Parent());
+    Tree *envOK = to->Do(envScan);
+    if (!envOK)
+        Ooops("Internal: environment capture error in $1", to);
+    capture_table &ct = envScan.captured;
+    for (capture_table::iterator ci = ct.begin(); ci != ct.end(); ci++)
+    {
+        xparms.push_back((*ci).second);
+        xargs.push_back((*ci).second);
+    }
+
+    // Check if already compiled
     if (to->code)
         return to;
 
     Compiler *compiler = MAIN->compiler;
 
     // Create the compilation unit and check if we are already compiling this
-    OCompiledUnit unit(compiler, to, parameters, false);
+    OCompiledUnit unit(compiler, to, xparms, false);
     if (unit.IsForwardCall())
     {
         // Recursive compilation of that form
         return to;              // We know how to invoke it anyway
     }
 
-    // Check that we had symbols defined for the 'from' tree
-    if (!from->Symbols())
-        Ooops("Internal: No symbols for $1", from);
-
     // Create local symbols
-    Symbols_p locals = new Symbols (from->Symbols());
+    Symbols_p locals = new Symbols (syms);
 
     // Record rewrites and data declarations in the current context
     DeclarationAction declare(locals);

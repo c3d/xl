@@ -346,8 +346,7 @@ struct Rewrite
     // Obsolete: old compiler stuff
     Rewrite *           Add (Rewrite *rewrite);
     Tree *              Do(Action &a);
-    Tree *              Compile(void);
-
+    Tree *              Compile(TreeList &xargs);
 
 public:
     Symbols_p           symbols; // Obsolete
