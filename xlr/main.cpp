@@ -189,6 +189,7 @@ void Main::CreateScope()
 {
     context = new Context(context, NULL);
     globals = new Symbols(globals);
+    globals->is_global = true;
 }
 
 
