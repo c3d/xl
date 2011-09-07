@@ -2240,8 +2240,18 @@ Tree *Rewrite::Compile(TreeList &xargs)
     capture_table &ct = envScan.captured;
     for (capture_table::iterator ci = ct.begin(); ci != ct.end(); ci++)
     {
-        xparms.push_back((*ci).second);
-        xargs.push_back((*ci).second);
+        // We only capture local arguments
+        if (Name *n1 = (*ci).first->AsName())
+        {
+            if (Name *n2 = (*ci).second->AsName())
+            {
+                if (n1->value == n2->value)
+                {
+                    xparms.push_back(n2);
+                    xargs.push_back(n2);
+                }
+            }
+        }
     }
 
     // Check if already compiled
