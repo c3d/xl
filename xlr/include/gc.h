@@ -239,6 +239,7 @@ struct GarbageCollector
     void        Register(TypeAllocator *a);
     void        RunCollection(bool force=false);
     void        MustRun()    { mustRun = true; }
+    void        Statistics(uint &tot, uint &alloc, uint &freed);
 
     static GarbageCollector *   Singleton();
     static void                 Delete();

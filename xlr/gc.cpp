@@ -439,6 +439,26 @@ void GarbageCollector::RunCollection(bool force)
 }
 
 
+void GarbageCollector::Statistics(uint &tot, uint &alloc, uint &freed)
+// ----------------------------------------------------------------------------
+//   Get statistics about garbage collections
+// ----------------------------------------------------------------------------
+{
+    tot = 0;
+    alloc = 0;
+    freed = 0;
+
+    std::vector<TypeAllocator *>::iterator a;
+    for (a = allocators.begin(); a != allocators.end(); a++)
+    {
+        TypeAllocator *ta = *a;
+        tot   += ta->totalCount     * ta->alignedSize;
+        alloc += ta->allocatedCount * ta->alignedSize;
+        freed += ta->freedCount     * ta->alignedSize;
+    }
+}
+
+
 GarbageCollector *GarbageCollector::gc = NULL;
 
 GarbageCollector *GarbageCollector::Singleton()
