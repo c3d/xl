@@ -1677,6 +1677,7 @@ void DeclarationAction::EnterRewrite(Tree *defined,
 {
     if (definition)
     {
+#if CREATE_NAME_FOR_PREFIX
         // When entering 'foo X,Y -> bar', also update the definition of 'foo'
         if (Prefix *prefix = defined->AsPrefix())
         {
@@ -1688,6 +1689,7 @@ void DeclarationAction::EnterRewrite(Tree *defined,
                 symbols->ExtendName(left->value, redef);
             }
         }
+#endif // CREATE_NAME_FOR_PREFIX
 
 #if CREATE_NAMES_FOR_POSTFIX_AND_INFIX
         // Same thing for a postfix
