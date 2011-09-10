@@ -324,6 +324,12 @@ PREFIX(Abs, real, "abs", PARM(x, real, ""), XL_RREAL(fabs(x)),
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(real, ""))
+PREFIX(Sign, real, "sign", PARM(x, real, ""),
+       XL_RREAL(XL_REAL(x) < 0 ? -1 : XL_REAL(x) > 0 ? 1 : 0),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
 PREFIX(Sqrt, real, "sqrt", PARM(x, real, ""), XL_RREAL(sqrt(x)),
        GROUP(basics)
        SYNOPSIS("")
