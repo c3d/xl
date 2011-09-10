@@ -330,6 +330,16 @@ PREFIX(Sign, real, "sign", PARM(x, real, ""),
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(real, ""))
+PREFIX(Floor, real, "floor", PARM(x, real, ""), XL_RREAL(floor(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
+PREFIX(Ceil, real, "ceil", PARM(x, real, ""), XL_RREAL(ceil(x)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(real, ""))
 PREFIX(Sqrt, real, "sqrt", PARM(x, real, ""), XL_RREAL(sqrt(x)),
        GROUP(basics)
        SYNOPSIS("")
