@@ -477,6 +477,8 @@ Tree *Context::Evaluate(Tree *what, lookup_mode lookup)
 //   Evaluate 'what' in the given context
 // ----------------------------------------------------------------------------
 {
+    assert (!GarbageCollector::Running());
+
     // Check if the old compiler was activated
     if (Options::options->optimize_level == 1)
     {

@@ -350,7 +350,7 @@ GarbageCollector::GarbageCollector()
 // ----------------------------------------------------------------------------
 //   Create the garbage collector
 // ----------------------------------------------------------------------------
-    : mustRun(false)
+    : mustRun(false), running(false)
 {}
 
 
@@ -397,6 +397,7 @@ void GarbageCollector::RunCollection(bool force)
         std::set<TypeAllocator::Listener *> listeners;
         std::set<TypeAllocator::Listener *>::iterator l;
         mustRun = false;
+        running = true;
 
         // Build the listeners from all allocators
         for (a = allocators.begin(); a != allocators.end(); a++)
@@ -434,6 +435,7 @@ void GarbageCollector::RunCollection(bool force)
                    "Kilobytes", tot >> 10, alloc >> 10, freed >> 10);
         }
 
+        running = false;
         RECORD(MEMORY, "Garbage collection", "force", force);
     }
 }

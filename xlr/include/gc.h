@@ -245,10 +245,11 @@ struct GarbageCollector
     static void                 Delete();
     static void                 Collect(bool force=false);
     static void                 CollectionNeeded() { Singleton()->MustRun(); }
+    static bool                 Running() { return Singleton()->running; }
 
 protected:
     std::vector<TypeAllocator *> allocators;
-    bool mustRun;
+    bool mustRun, running;
     static GarbageCollector *    gc;
 
     friend void ::debuggc(void *ptr);
@@ -344,6 +345,7 @@ inline void TypeAllocator::Acquire(void *pointer)
         assert (IsAllocated(pointer));
 
         Chunk *chunk = ((Chunk *) pointer) - 1;
+        assert (chunk->count || !GarbageCollector::Running());
         ++chunk->count;
     }
 }
