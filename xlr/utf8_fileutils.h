@@ -23,6 +23,7 @@
 // ****************************************************************************
 
 #include <fstream>
+#include <sys/stat.h>
 
 
 #ifdef CONFIG_MINGW
@@ -70,9 +71,25 @@ protected:
     filebuf_type b;
 };
 
+
+inline int utf8_stat(const char *path, struct _stat *buffer)
+{
+    std::wstring wpath = utf8_decode(std::string(path));
+    return _wstat(wpath.c_str(), buffer);
+}
+
+
+inline int utf8_access(const char *path, int mode)
+{
+    std::wstring wpath = utf8_decode(std::string(path));
+    return _waccess(wpath.c_str(), mode);
+}
+
 #else
 
 typedef std::ifstream utf8_ifstream;
+#define utf8_stat(path, buffer) stat(path, buffer)
+#define utf8_access(path, mode) access(path, mode)
 
 #endif
 

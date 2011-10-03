@@ -48,7 +48,7 @@
 #include "runtime.h"
 #include "traces.h"
 #include "flight_recorder.h"
-#include "utf8_ifstream.h"
+#include "utf8_fileutils.h"
 
 
 XL_DEFINE_TRACES
@@ -64,11 +64,15 @@ SourceFile::SourceFile(text n, Tree *t, Context *c, Symbols *s, bool ro)
     : name(n), tree(t), context(c), symbols(s),
       modified(0), changed(false), readOnly(ro)
 {
+#if defined(CONFIG_MINGW)
+    struct _stat st;
+#else
     struct stat st;
-    if (stat (n.c_str(), &st) < 0)
+#endif
+    if (utf8_stat (n.c_str(), &st) < 0)
         return;
     modified = st.st_mtime;
-    if (access(n.c_str(), W_OK) != 0)
+    if (utf8_access (n.c_str(), W_OK) != 0)
         readOnly = true;
     if (s)
         s->is_global = true;

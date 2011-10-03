@@ -28,7 +28,7 @@
 #include "errors.h"
 #include "syntax.h"
 #include "utf8.h"
-#include "utf8_ifstream.h"
+#include "utf8_fileutils.h"
 
 
 XL_BEGIN
