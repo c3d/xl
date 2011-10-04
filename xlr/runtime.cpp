@@ -1732,6 +1732,48 @@ Tree *xl_nth(Context *context, Tree *data, Integer *indexTree)
 }
 
 
+Integer *xl_length(Context *context, Tree *data)
+// ----------------------------------------------------------------------------
+//   Return the length of a given list
+// ----------------------------------------------------------------------------
+{
+    TreePosition pos = data->Position();
+
+    // Check if we got (1,2,3,4) or something like f(3) as 'data'
+    Block *block = data->AsBlock();
+    if (block)
+    {
+        // We got (1,2,3,4): Extract 1,2,3,4
+        data = block->child;
+        if (!data->Symbols())
+            data->SetSymbols(block->Symbols());
+    }
+
+    // Special case the empty name
+    if (Name *name = data->AsName())
+        if (name->value == "")
+            return new Integer(0, pos);
+
+    // Check if we have an infix
+    ulong len = 1;
+    if (Infix *infix = data->AsInfix())
+    {
+        text separator = infix->name;
+        while (infix)
+        {
+            data = infix->right;
+            infix = NULL;
+            if (Infix *rightInfix = data->AsInfix())
+                if (rightInfix->name == separator)
+                    infix = rightInfix;
+            len++;
+        }
+    }
+
+    return new Integer(len, pos);
+}
+
+
 
 // ============================================================================
 //

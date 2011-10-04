@@ -798,6 +798,10 @@ INFIX(Index, tree, tree, "at", integer, return xl_nth(context, &l, &r),
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS(tree, ""))
+PREFIX(Length, integer, "length",
+       PARM(l, tree, ""),
+       return xl_length(context, &l),
+       GROUP(basics))
 
 PREFIX(Springify, real, "springify",
        PARM(v, real, "") PARM(tgt, real, "") PARM(t, real, "")

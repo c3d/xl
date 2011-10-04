@@ -1,0 +1,7 @@
+data1 -> (1, 2, 3)
+data2 -> ("A", "B", "D", "E")
+data3 -> ("Heroes")
+
+writeln "3=", length data1
+writeln "4=", length data2
+writeln "1=", length data3
