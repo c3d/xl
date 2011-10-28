@@ -1209,7 +1209,6 @@ Tree *xl_load_data(Context *context, Tree *self,
     bool     hasRecord = false;
     bool     hasField  = false;
     FILE    *f         = fopen(path.c_str(), "r");
-    Tree    *result    = NULL;
     if (!f)
         return Ooops("Unable to load data for $1: " + text(strerror(errno)),
                      self);
@@ -1287,7 +1286,7 @@ Tree *xl_load_data(Context *context, Tree *self,
                 {
                     line = new Prefix(new Name(prefix), line);
                     line->SetSymbols(syms);
-                    result = xl_evaluate(context, line);
+                    xl_evaluate(context, line);
                 }
                 if (*treePtr)
                 {

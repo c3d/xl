@@ -1384,12 +1384,10 @@ Rewrite *Context::RewriteFor(Tree *form, lookup_mode lookup, Context_p *where)
 // ----------------------------------------------------------------------------
 {
     // Check if we have a type specification
-    Tree *type = NULL;
     if (Infix *infix = form->AsInfix())
     {
         if (infix->name == ":")
         {
-            type = infix->right;
             form = infix->left;
         }
     }

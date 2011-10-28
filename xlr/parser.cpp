@@ -280,7 +280,6 @@ Tree *Parser::Parse(text closing)
     int                  paren_priority     = syntax.InfixPriority(closing);
     bool                 is_expression      = false;
     bool                 new_statement      = true;
-    bool                 line_continuation  = false;
     ulong                pos                = 0;
     uint                 old_indent         = 0;
     text                 infix, name, spelling;
@@ -499,7 +498,6 @@ Tree *Parser::Parse(text closing)
             
 
         // Check what is the current result
-        line_continuation = false;
         if (!result)
         {
             // First thing we parse
@@ -528,8 +526,6 @@ Tree *Parser::Parse(text closing)
                 // Push "A and" in the above example
                 ulong st_pos = new_statement ? left->Position() : pos;
                 stack.push_back(Pending(infix, left, infix_priority, st_pos));
-                if (infix_priority > default_priority)
-                    line_continuation = true;
                 left = NULL;
 
                 // Start over with "not"
@@ -569,8 +565,6 @@ Tree *Parser::Parse(text closing)
                     // Something like A+B+C, just got second +
                     ulong st_pos = new_statement ? left->Position() : pos;
                     stack.push_back(Pending(infix,left,infix_priority,st_pos));
-                    if (infix_priority > default_priority)
-                        line_continuation = true;
                     result = NULL;
                 }
                 left = NULL;

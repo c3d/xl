@@ -433,6 +433,7 @@ llvm_value CompiledUnit::Data(Tree *form, uint &index)
         // Bound names are returned as is, parameters are evaluated
         existing = context->Bound(form, Context::SCOPE_LOOKUP, &where, &rw);
         assert(existing || !"Type checking didn't realize a name is missing");
+        (void)existing;
 
         // Arguments bound here are returned directly as a tree
         if (where == context)
@@ -482,7 +483,8 @@ llvm_value CompiledUnit::Data(Tree *form, uint &index)
     }
     }
 
-    assert (!"Unknoen kind of tree in Data()");
+    (void)left;
+    assert (!"Unknown kind of tree in Data()");
     return NULL;
 }
 
@@ -516,6 +518,7 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
         // Bound names are returned as is, parameters are evaluated
         existing = context->Bound(form, Context::SCOPE_LOOKUP, &where, &rw);
         assert(existing || !"Type checking didn't realize a name is missing");
+        (void)existing;
 
         // Arguments bound here are returned directly as a tree
         if (where == context)

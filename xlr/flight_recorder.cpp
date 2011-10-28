@@ -30,6 +30,21 @@
 
 XL_BEGIN
 
+static void Write(int fd, const char *buf, size_t size)
+// ----------------------------------------------------------------------------
+//   write() wrapper
+// ----------------------------------------------------------------------------
+{
+    size_t left = size;
+    while (left)
+    {
+        size_t s = write(fd, buf + size - left, left);
+        if (s > 0)
+            left -= s;
+    }
+}
+
+
 void FlightRecorder::Dump(int fd, bool kill)
 // ----------------------------------------------------------------------------
 //   Dump the contents of the flight recorder to given stream
@@ -45,7 +60,7 @@ void FlightRecorder::Dump(int fd, bool kill)
     size_t size = snprintf(buffer, sizeof buffer,
                            "FLIGHT RECORDER DUMP AT %s\n",
                            asctime(localtime(&now)));
-    size_t ignored = write(fd, buffer, size);
+    Write(fd, buffer, size);
 
     // Can't have more events than the size of the buffer
     uint rindex = this->rindex;
@@ -75,7 +90,7 @@ void FlightRecorder::Dump(int fd, bool kill)
                              AUTOFORMAT(e.arg3), e.label3, e.arg3);
         if (size < sizeof buffer)
             buffer[size++] = '\n';
-        ignored = write(fd, buffer, size);
+        Write(fd, buffer, size);
 
         // Next step
         rindex++;
