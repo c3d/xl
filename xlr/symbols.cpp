@@ -1059,17 +1059,21 @@ Tree *ArgumentMatch::DoName(Name *what)
                 }
             }
 
-            // Insert a dynamic tree comparison test
-            Tree *testCode = Compile(test, false);
-            if (!testCode || !unit.IsKnown(testCode))
-                return NULL;
-            Tree *thisCode = Compile(existing, false);
-            if (!thisCode || !unit.IsKnown(thisCode))
-                return NULL;
-            unit.ShapeTest(testCode, thisCode);
-
-            // Return compilation success
-            return what;
+            if (existing->Kind() == NAME ||
+                existing == locals->Named(what->value, false))
+            {
+                // Insert a dynamic tree comparison test
+                Tree *testCode = Compile(test, false);
+                if (!testCode || !unit.IsKnown(testCode))
+                    return NULL;
+                Tree *thisCode = Compile(existing, false);
+                if (!thisCode || !unit.IsKnown(thisCode))
+                    return NULL;
+                unit.ShapeTest(testCode, thisCode);
+                
+                // Return compilation success
+                return what;
+            }
         }
 
         // Bind expression to name, not value of expression (create a closure)
