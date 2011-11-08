@@ -29,6 +29,8 @@
 #include "errors.h"
 #include "tree.h"
 #include "parser.h"
+#include "options.h"
+
 
 
 XL_BEGIN
@@ -243,6 +245,33 @@ void Parser::AddComments(Tree *what, bool before)
     comments.clear();
 }
 
+
+static inline Tree *CreatePrefix(Tree *left, Tree *right, TreePosition pos)
+// ----------------------------------------------------------------------------
+//   Create a prefix, special-case unary minus with constants (feature #1580)
+// ----------------------------------------------------------------------------
+{
+    if (Options::options && Options::options->signedConstants)
+    {
+        if (Name *name = left->AsName())
+        {
+            if (name->value == "-")
+            {
+                if (Integer *iv = right->AsInteger())
+                {
+                    iv->value = -iv->value;
+                    return iv;
+                }
+                if (Real *rv = right->AsReal())
+                {
+                    rv->value = -rv->value;
+                    return rv;
+                }
+            }
+        }
+    }
+    return new Prefix(left, right, pos);
+}
 
 
 Tree *Parser::Parse(text closing)
@@ -547,7 +576,7 @@ Tree *Parser::Parse(text closing)
                         infix_priority > (prev.priority & ~1))
                         break;
                     if (prev.opcode == prefix)
-                        left = new Prefix(prev.argument, left, prev.position);
+                        left = CreatePrefix(prev.argument, left, prev.position);
                     else
                         left = new Infix(prev.opcode, prev.argument, left,
                                          prev.position);
@@ -592,8 +621,8 @@ Tree *Parser::Parse(text closing)
                         result_priority > (prev.priority & ~1))
                         break;
                     if (prev.opcode == prefix)
-                        result = new Prefix(prev.argument, result,
-                                            prev.position);
+                        result = CreatePrefix(prev.argument, result,
+                                              prev.position);
                     else
                         result = new Infix(prev.opcode, prev.argument,
                                            result, prev.position);
@@ -633,7 +662,7 @@ Tree *Parser::Parse(text closing)
         {
             Pending &prev = stack.back();
             if (prev.opcode == prefix)
-                result = new Prefix(prev.argument, result, prev.position);
+                result = CreatePrefix(prev.argument, result, prev.position);
             else
                 result = new Infix(prev.opcode, prev.argument,
                                    result, prev.position);
