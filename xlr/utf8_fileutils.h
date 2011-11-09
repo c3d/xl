@@ -72,10 +72,35 @@ protected:
 };
 
 
+inline time_t fileTimeToTime_t(FILETIME ft)
+{
+   ULARGE_INTEGER ull;
+   ull.LowPart = ft.dwLowDateTime;
+   ull.HighPart = ft.dwHighDateTime;
+   return ull.QuadPart / 10000000ULL - 11644473600ULL;
+}
+
+
 inline int utf8_stat(const char *path, struct _stat *buffer)
 {
     std::wstring wpath = utf8_decode(std::string(path));
-    return _wstat(wpath.c_str(), buffer);
+    int status = _wstat(wpath.c_str(), buffer);
+    if (status < 0)
+        return status;
+    // Bug#1567: _wsat returns bogus file times when daylight saving
+    // time setting changes
+    // By using GetFileAttributesEx we are consistent with
+    // QFileInfo::lastModified().toTime_t().
+    WIN32_FILE_ATTRIBUTE_DATA attr;
+    bool ok = GetFileAttributesEx((const wchar_t *)wpath.c_str(),
+                                  GetFileExInfoStandard, &attr);
+    if (ok)
+    {
+        buffer->st_ctime = fileTimeToTime_t(attr.ftCreationTime);
+        buffer->st_atime = fileTimeToTime_t(attr.ftLastAccessTime);
+        buffer->st_mtime = fileTimeToTime_t(attr.ftLastWriteTime);
+    }
+    return 0;
 }
 
 
