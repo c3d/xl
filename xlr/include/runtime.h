@@ -122,6 +122,7 @@ Real *xl_springify(Real &value, Real &target, Real &time,
                    Real &damp, Real &kspring, Real &lt, Real &ls);
 
 
+
 // ============================================================================
 //
 //   Initialization code
@@ -339,6 +340,26 @@ struct FilterFunctionInfo : FunctionInfo
 {
     virtual Tree * Apply(Tree *what);
 };
+
+
+
+// ============================================================================
+//
+//   Loops
+//
+// ============================================================================
+
+Tree *xl_integer_for_loop(Context *, Tree *self,
+                          Integer *Variable,
+                          longlong low, longlong high, longlong step,
+                          Tree *body);
+Tree *xl_real_for_loop(Context *, Tree *self,
+                       Real *Variable,
+                       double low, double high, double step, Tree *body);
+Tree *xl_list_for_loop(Context *, Tree *self,
+                       Name *Variable, Tree *list, Tree *body);
+Tree *xl_while_loop(Context *, Tree *self,
+                    Tree *Condition, Tree *body, bool TestValue);
 
 
 

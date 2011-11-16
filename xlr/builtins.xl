@@ -5,6 +5,13 @@ if false then TrueBody else FalseBody   -> do FalseBody
 if true then TrueBody                   -> do TrueBody
 if false then TrueBody                  -> false
 
+// Loops
+for V in L..H loop Body                 -> for_loop V, L, H, Body
+for V in L..H step S loop Body          -> for_loop_step V, L, H, S, Body
+for V in L loop Body                    -> list_for_loop V, L, Body
+while Cond loop Body                    -> while_loop Cond, Body
+until Cond loop Body                    -> until_loop Cond, Body
+
 // Building lists, notably lists of arguments
 data x,y
 

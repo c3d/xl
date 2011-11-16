@@ -35,6 +35,7 @@
 #include "main.h"
 #include "types.h"
 #include "save.h"
+#include "tree-clone.h"
 
 #include <iostream>
 #include <cstdarg>
@@ -1718,14 +1719,14 @@ Tree *xl_nth(Context *context, Tree *data, Integer *indexTree)
             data = infix->left;
         }
     }
-    
+
     // When we get there, we should have the first item, i.e. in (1) or (1,2)
     if (index != 1)
     {
         Ooops ("Index $1 is out of range", indexTree);
         return xl_false;
     }
-            
+
     // Return the value we got
     return data;
 }
@@ -2030,6 +2031,207 @@ void xl_enter_declarator(text name, decl_fn fn)
 //   declaration phase, e.g. 'load' or 'import'
 {
     Symbols::declarators[name] = fn;
+}
+
+
+
+// ============================================================================
+//
+//    Loops
+//
+// ============================================================================
+
+struct ForLoopInfo : Info
+// ----------------------------------------------------------------------------
+//    Specifically compiled body for list for loops
+// ----------------------------------------------------------------------------
+{
+    ForLoopInfo(Tree_p body) : body(body) {}
+    static Tree *LoopBody(Tree *self, Name *var, Tree *body);
+    Tree_p    body;
+};
+
+
+static Tree_p xl_list_for_loop_current_item;
+static Tree *xl_list_for_loop_item(Context *context, Tree *value)
+// ----------------------------------------------------------------------------
+//   Return the current value of a list for loop
+// ----------------------------------------------------------------------------
+{
+    return xl_list_for_loop_current_item
+        ?  (Tree *) xl_list_for_loop_current_item
+        :  (Tree *) xl_false;
+}
+
+
+Tree *ForLoopInfo::LoopBody(Tree *self, Name *var, Tree *body)
+// ----------------------------------------------------------------------------
+//   Create a clone of the loop body suitable for evaluation in a for loop
+// ----------------------------------------------------------------------------
+{
+    ForLoopInfo *info = self->GetInfo<ForLoopInfo>();
+    if (!info)
+    {
+        // Create a local scope containing only the named variable
+        Symbols_p scope = body->Symbols();
+        Symbols_p locals = new Symbols(scope);
+        locals->Allocate (var);
+        var->code = xl_list_for_loop_item;
+
+        // Create a clone for the body, that's what we will evaluate
+        TreeClone clone;
+        body = body->Do(clone);
+        body->SetSymbols(locals);
+
+        // Create the info and attach it
+        info = new ForLoopInfo(body);
+        self->SetInfo<ForLoopInfo>(info);
+    }
+    else
+    {
+        body = info->body;
+    }
+    return body;
+}
+
+
+Tree *xl_integer_for_loop(Context *context, Tree *self,
+                          Integer *Variable,
+                          longlong low, longlong high, longlong step,
+                          Tree *body)
+// ----------------------------------------------------------------------------
+//    Loop over an integer variable
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_FOR_INTERPRETER(context);
+
+    if (!body->Symbols())
+        body->SetSymbols(self->Symbols());
+
+    Tree_p result = xl_false;
+    if (step >= 0)
+    {
+        for (longlong i = low; i <= high; i += step)
+        {
+            Variable->value = i;
+            result = context->Evaluate(body);
+        }
+    }
+    else
+    {
+        for (longlong i = low; i >= high; i += step)
+        {
+            Variable->value = i;
+            result = context->Evaluate(body);
+        }
+    }
+    return result;
+}
+
+
+Tree *xl_real_for_loop(Context *context, Tree *self,
+                       Real *Variable,
+                       double low, double high, double step, Tree *body)
+// ----------------------------------------------------------------------------
+//    Loop over a real variable
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_FOR_INTERPRETER(context);
+
+    if (!body->Symbols())
+        body->SetSymbols(self->Symbols());
+
+    Tree_p result = xl_false;
+    if (step >= 0)
+    {
+        for (double i = low; i <= high; i += step)
+        {
+            Variable->value = i;
+            result = context->Evaluate(body);
+        }
+    }
+    else
+    {
+        for (double i = low; i >= high; i += step)
+        {
+            Variable->value = i;
+            result = context->Evaluate(body);
+        }
+    }
+    return result;
+}
+
+
+Tree *xl_list_for_loop(Context *context, Tree *self,
+                       Name *Variable,
+                       Tree *list, Tree *body)
+// ----------------------------------------------------------------------------
+//   Loop over a list
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_FOR_INTERPRETER(context);
+
+    Tree_p result = xl_false;
+    if (Block *block = list->AsBlock())
+        list = block->child;
+    if (Name *name = list->AsName())
+        if (name->value == "")
+            return result;      // empty list
+
+    // Get body of loop for given variable
+    body = ForLoopInfo::LoopBody(self, Variable, body);
+
+    // Save current index, and loop on all items
+    Save<Tree_p> saveIndex(xl_list_for_loop_current_item, xl_false);
+    Tree *next = list;
+    while (next)
+    {
+        Tree *value = next;
+        Infix *infix = value->AsInfix();
+        if (infix && (infix->name == "," ||
+                      infix->name == ";" ||
+                      infix->name == "\n"))
+        {
+            value = infix->left;
+            next = infix->right;
+        }
+        else
+        {
+            next = NULL;
+        }
+
+        // Set the loop index
+        xl_list_for_loop_current_item = value;
+        result = context->Evaluate(body);
+    }
+
+    return result;
+}
+
+
+Tree *xl_while_loop(Context *context, Tree *self,
+                    Tree *condition, Tree *body, bool TestValue)
+// ----------------------------------------------------------------------------
+//   Conditional loop (while and until)
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_FOR_INTERPRETER(context);
+
+    if (!condition->Symbols())
+        condition->SetSymbols(self->Symbols());
+    if (!body->Symbols())
+        body->SetSymbols(self->Symbols());
+
+    Tree_p result = xl_false;
+    Tree_p test = TestValue ? xl_true : xl_false;
+    while (true)
+    {
+        Tree_p value = context->Evaluate(condition);
+        if (value != test)
+            break;
+        result = context->Evaluate(body);
+    }
+    return result;
 }
 
 XL_END

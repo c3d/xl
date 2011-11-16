@@ -889,6 +889,46 @@ PREFIX(WriteLn, tree, "writeln", ,
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
+PREFIX(IntegerForLoop, tree, "for_loop",
+       PARM(Var, integer, "")
+       PARM(Low, integer, "")
+       PARM(High, integer, "")
+       PARM(Body, tree, ""),
+       return xl_integer_for_loop(context,self, &Var, Low, High, 1, &Body), )
+PREFIX(IntegerForLoopStep, tree, "for_loop_step",
+       PARM(Var, integer, "")
+       PARM(Low, integer, "")
+       PARM(High, integer, "")
+       PARM(Step, integer, "")
+       PARM(Body, tree, ""),
+       return xl_integer_for_loop(context,self, &Var, Low,High,Step, &Body), )
+PREFIX(RealForLoop, tree, "for_loop",
+       PARM(Var, real, "")
+       PARM(Low, real, "")
+       PARM(High, real, "")
+       PARM(Body, tree, ""),
+       return xl_real_for_loop(context,self, &Var, Low, High, 1.0, &Body), )
+PREFIX(RealForLoopStep, tree, "for_loop_step",
+       PARM(Var, real, "")
+       PARM(Low, real, "")
+       PARM(High, real, "")
+       PARM(Step, real, "")
+       PARM(Body, tree, ""),
+       return xl_real_for_loop(context,self, &Var, Low,High,Step, &Body), )
+PREFIX(ListForLoop, tree, "list_for_loop",
+       PARM(Var, name, "")
+       PARM(List, tree, "")
+       PARM(Body, tree, ""),
+       return xl_list_for_loop(context, self, &Var, &List, &Body), )
+PREFIX(WhileLoop, tree, "while_loop",
+       PARM(Condition, tree, "")
+       PARM(Body, tree, ""),
+       return xl_while_loop(context, self, &Condition, &Body, true), )
+PREFIX(UntilLoop, tree, "until_loop",
+       PARM(Condition, tree, "")
+       PARM(Body, tree, ""),
+       return xl_while_loop(context, self, &Condition, &Body, false), )
+       
 
 // Compute the sha1 of a tree
 PREFIX(ComputeSha1, text, "sha1", PARM(t, tree, ""), XL_RTEXT(sha1(&t)),
