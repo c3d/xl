@@ -39,6 +39,7 @@
 #define XL_SCOPE "xl_"
 #endif // XL_SCOPE
 
+#if GENERATE_DOCUMENTATION_FOR_TBL_FILES // Now disabled, see #1639
 #define RETURNS(rtype, rdoc)                                            \
                           returns = " return_value \"" #rtype "\", <<"; \
                           returns.append(rdoc).append(">>\n");
@@ -46,7 +47,6 @@
 #define SYNOPSIS(syno)    synopsis = syno;
 #define DESCRIPTION(desc) description = desc;
 #define SEE(see)          seealso = see;
-
 
 #define DOC(name, syntax, docinfo)                                      \
     text returns, docgroup, docparms, synopsis, description, seealso;   \
@@ -63,11 +63,22 @@
     if (seealso != "")                                                  \
         doc.append(" see \"").append(seealso).append("\"\n");           \
     doc.append("|*/");
+#define XDOC(x) x
+#else
+#define RETURNS(rtype, rdoc)
+#define GROUP(grp)
+#define SYNOPSIS(syno)
+#define DESCRIPTION(desc)
+#define SEE(see)
+#define DOC(name, syntax, docinfo)      kstring doc = ""; docinfo;
+#define XDOC(x)
+#endif
+
 
 #define INFIX(name, rtype, t1, symbol, t2, _code, docinfo)              \
     do                                                                  \
     {                                                                   \
-        DOC(name, #t1 " " symbol " " #t2, docinfo);                     \
+        DOC(name, #t1 " " symbol " " #t2, XDOC(docinfo));               \
         xl_enter_infix(context, XL_SCOPE #name, (native_fn) xl_##name,  \
                        rtype##_type, #t1, symbol, #t2, doc);            \
     } while(0);
@@ -76,30 +87,31 @@
     do                                                                  \
     {                                                                   \
         parameters.push_back(xl_parameter(#symbol, #type));             \
+        XDOC(                                                           \
         if (docparms != "")                                             \
             docsyntax.append(", ");                                     \
         else                                                            \
             docsyntax.append(" ");                                      \
         docsyntax.append(#symbol);                                      \
-        docparms.append(" parameter \"" #type "\", \"" #symbol "\","); \
-        docparms.append(" <<" pdoc ">>\n");                             \
+        docparms.append(" parameter \"" #type "\", \"" #symbol "\",");  \
+        docparms.append(" <<" pdoc ">>\n");)                            \
     } while (0);
 
 #define PREFIX(name, rtype, symbol, parms, _code, docinfo)              \
     do                                                                  \
     {                                                                   \
         TreeList parameters;                                            \
-        DOC(name, #symbol, docinfo ; parms);                            \
+        DOC(name, #symbol, XDOC(docinfo ;) parms);                      \
         xl_enter_prefix(context, XL_SCOPE #name, (native_fn) xl_##name, \
                         rtype##_type, parameters, symbol, doc);         \
     } while(0);
-
 
 #define POSTFIX(name, rtype, parms, symbol, _code, docinfo)             \
     do                                                                  \
     {                                                                   \
         TreeList  parameters;                                           \
-        DOC(name, #symbol, docinfo ; parms ; docsyntax += " " #symbol); \
+        DOC(name, #symbol,                                              \
+            XDOC(docinfo ;) parms XDOC(; docsyntax += " " #symbol));    \
         xl_enter_postfix(context, XL_SCOPE #name,(native_fn) xl_##name, \
                          rtype##_type, parameters, symbol, doc);        \
     } while(0);
