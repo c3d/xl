@@ -26,6 +26,7 @@
 #undef PREFIX
 #undef POSTFIX
 #undef BLOCK
+#undef FORM
 #undef NAME
 #undef TYPE
 #undef PARM
@@ -123,6 +124,15 @@
         xl_enter_block(context, XL_SCOPE #name, (native_fn) xl_##name,  \
                        rtype##_type, open, #type, close, doc);    \
     } while (0);
+
+#define FORM(name, rtype, form, parms, _code, docinfo)                  \
+    do                                                                  \
+    {                                                                   \
+        TreeList parameters;                                            \
+        DOC(name, form, XDOC(docinfo;) parms);                          \
+        xl_enter_form(context, XL_SCOPE #name, (native_fn) xl_##name,   \
+                      rtype##_type, form, parameters, doc);             \
+    } while(0);
 
 #define NAME(symbol)                            \
     do                                          \

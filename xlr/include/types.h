@@ -188,6 +188,7 @@ struct TypeInfo : Info
 #undef PREFIX
 #undef POSTFIX
 #undef BLOCK
+#undef FORM
 #undef NAME
 #undef TYPE
 #undef PARM
@@ -209,6 +210,7 @@ struct TypeInfo : Info
 #define PREFIX(name, rtype, symbol, parms, code, docinfo)
 #define POSTFIX(name, rtype, parms, symbol, code, docinfo)
 #define BLOCK(name, rtype, open, type, close, code, docinfo)
+#define FORM(name, rtype, form, parms, _code, docinfo)
 #define NAME(symbol)
 #define TYPE(symbol)    extern Name_p symbol##_type;
 #include "basics.tbl"

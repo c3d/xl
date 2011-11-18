@@ -256,6 +256,37 @@ void xl_enter_block(Context *context, text name, native_fn fn, Tree *rtype,
 }
 
 
+void xl_enter_form(Context *context, text name, native_fn fn,
+                   Tree *rtype, text form, TreeList &parameters,
+                   text doc)
+// ----------------------------------------------------------------------------
+//    Enter an arbitrary form in the symbol table
+// ----------------------------------------------------------------------------
+{
+    Tree *from = xl_parse_text(form);
+    Name *to = new Name(name);
+
+    Rewrite *rw = context->Define(from, to);
+    rw->native = fn;
+    rw->type = rtype;
+
+    Symbols *s = MAIN->globals;
+    Rewrite *rw2 = s->EnterRewrite(from, to);
+    to->code = fn;
+    to->SetSymbols(s);
+    xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
+
+    ulong sz = parameters.size();
+    if (sz != rw2->parameters.size())
+    {
+        std::cerr << "WARNING: Internal error on parameter count for\n"
+                  << "         " << form << "(" << name << ")\n";
+    }
+
+    xl_set_documentation(from, doc);
+}
+
+
 void xl_enter_name(Symbols *symbols, Name *name)
 // ----------------------------------------------------------------------------
 //   Enter a global name in the symbol table

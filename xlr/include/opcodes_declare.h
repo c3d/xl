@@ -26,6 +26,7 @@
 #undef PREFIX
 #undef POSTFIX
 #undef BLOCK
+#undef FORM
 #undef NAME
 #undef TYPE
 #undef PARM
@@ -48,8 +49,6 @@
 #define DESCRIPTION(desc)
 #define RETURNS(rytpe, rdoc)
 #define SEE(see)
-
-
 
 #define INFIX(name, rtype, t1, symbol, t2, _code, docinfo)              \
     rtype##_nkp xl_##name(Context *context, Tree *self,                 \
@@ -77,6 +76,12 @@
                           Tree *self, type##_r child)                   \
     {                                                                   \
         (void) context; DS(symbol) _code;                               \
+    }
+
+#define FORM(name, rtype, form, parms, _code, docinfo)          \
+    rtype##_nkp xl_##name(Context *context, Tree *self parms)   \
+    {                                                           \
+        (void) context; DS(symbol) _code;                       \
     }
 
 #define NAME(symbol)    Name_p xl_##symbol;

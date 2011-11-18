@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  context.cpp                     (C) 1992-2003 Christophe de Dinechin (ddd)
+//  symbols.cpp                     (C) 1992-2003 Christophe de Dinechin (ddd)
 //                                                                 XL2 project
 // ****************************************************************************
 //
@@ -1207,6 +1207,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                     return DoName(varName);
                 kind tk = test->Kind();
                 if ((namedType == source_type) ||
+                    (namedType == name_type && tk == NAME) ||
                     (namedType == block_type && tk == BLOCK) ||
                     (namedType == infix_type && tk == INFIX) ||
                     (namedType == prefix_type && tk == PREFIX))
