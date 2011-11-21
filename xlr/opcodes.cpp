@@ -281,6 +281,16 @@ void xl_enter_form(Context *context, text name, native_fn fn,
     {
         std::cerr << "WARNING: Internal error on parameter count for\n"
                   << "         " << form << "(" << name << ")\n";
+        ulong sz2 = rw2->parameters.size();
+        for (ulong i = 0; i < sz || i < sz2; i++)
+        {
+            std::cerr << "  #" << i << ": ";
+            if (i < sz)
+                std::cerr << "spec(" << parameters[i] << ") ";
+            if (i < sz2)
+                std::cerr << "form(" << rw2->parameters[i] << ") ";
+            std::cerr << "\n";
+        }
     }
 
     xl_set_documentation(from, doc);
