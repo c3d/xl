@@ -731,20 +731,6 @@ PREFIX(GetAttribute, tree, "form_attribute",
        return xl_attribute(context, name, &form),
        GROUP(source)
        SYNOPSIS("Find the attribute associated to a given form"))
-PREFIX(LoadFile, tree, "load",
-       PARM(file, text, ""),
-       return xl_import(context, self, file, false),
-       GROUP(basics)
-       SYNOPSIS("")
-       DESCRIPTION("")
-       RETURNS(tree, ""))
-PREFIX(ImportFile, tree, "import",
-       PARM(file, text, "Name of file to import"),
-       return xl_import(context, self, file, true),
-       GROUP(basics)
-       SYNOPSIS("Import a module")
-       DESCRIPTION("")
-       RETURNS(tree, ""))
 PREFIX(LoadCSV,  tree, "load_csv", PARM(f, text, "") PARM(p, text, ""),
        return xl_load_data(context, self, f, p, ",;", "\n\f\r"),
        GROUP(basics)
