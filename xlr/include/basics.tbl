@@ -84,9 +84,10 @@ PREFIX(AnyLookup, tree, "any",
        return xl_evaluate_any(context, &expr),
        GROUP(basics:lookup)
        SYNOPSIS("Evaluate the value along the call stack"))
-PREFIX(Property, tree, "property",
+PREFIX(Properties, tree, "properties",
+       PARM(body, source, "Property storage")
        PARM(declarations, source, "Property declarations"),
-       return xl_enter_properties(context, self, &declarations),
+       return xl_enter_properties(context, self, &body, &declarations),
        GROUP(basics:properties)
        SYNOPSIS("Declare properties"))
 PREFIX(Constraint, tree, "constraint",

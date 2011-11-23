@@ -1456,13 +1456,18 @@ Tree *xl_evaluate_in_caller(Context *context, Tree *code)
 }
 
 
-Tree *xl_enter_properties(Context *context, Tree *self, Tree *declarations)
+Tree *xl_enter_properties(Context *context, Tree *self,
+                          Tree *storage, Tree *declarations)
 // ----------------------------------------------------------------------------
 //   Enter properties in interpreted mode
 // ----------------------------------------------------------------------------
 {
-    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
-    (void) declarations;
+    ADJUST_CONTEXT_FOR_INTERPRETER(context);
+    if (Symbols *symbols = self->Symbols())
+        return symbols->EnterProperty(context, self, storage, declarations)
+            ? xl_true : xl_false;
+
+    // Probably broken after #1635
     return context->EnterProperty(self) ? xl_true : xl_false;
 }
 
@@ -1490,6 +1495,57 @@ Tree *xl_attribute(Context *context, text name, Tree *form)
     return found;
 }
 
+
+Tree *xl_read_property_default(Context *context, Tree *self)
+// ----------------------------------------------------------------------------
+//   Return the property associated with the given name
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_FOR_INTERPRETER(context);
+    Symbols *symbols = self->Symbols();
+    Name *name = self->AsName();
+    if (!symbols || !name)
+        return xl_false;
+    Property &prop = symbols->NamedProperty(name->value);
+    return prop.value;
+}
+
+
+Tree *xl_write_property_default(Context *context, Tree *self, Tree *value)
+// ----------------------------------------------------------------------------
+//   Set the property associated with the given name
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_FOR_INTERPRETER(context);
+    Symbols *symbols = self->Symbols();
+    Prefix *prefix = self->AsPrefix();
+    if (!symbols || !prefix)
+        return xl_false;
+    Name *name = prefix->left->AsName();
+    if (!name)
+        return xl_false;
+    Property &prop = symbols->NamedProperty(name->value);
+    kind k = value->Kind();
+    Tree *type = prop.type;
+    if ((type == integer_type && k != INTEGER) ||
+        (type == real_type    && k != REAL)    ||
+        (type == text_type    && k != TEXT)    ||
+        (type == name_type    && k != NAME))
+    {
+        Ooops("Internal error: inconsistent type in property $1", self);
+        Ooops("Received value is $1", value);
+        Ooops("Expected type is $1", type);
+        return value;
+    }
+
+    prop.value = value;
+    return value;
+}
+
+
+// Default callbacks for reading and writing properties
+xl_read_property_fn      xl_read_property = xl_read_property_default;
+xl_write_property_fn     xl_write_property = xl_write_property_default;
 
 
 

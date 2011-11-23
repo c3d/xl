@@ -57,6 +57,7 @@ typedef symbol_table::iterator     symbol_iter;  // Iterator over sym table
 typedef std::map<Name_p, Tree_p>   capture_table;// Symbol capture table
 typedef std::map<Tree_p, Tree_p>   value_table;  // Used for value caching
 typedef value_table::iterator      value_iter;   // Used to iterate over values
+typedef std::vector<Property>      property_list;// Sorted by name
 typedef Tree * (*typecheck_fn) (Context *context, Tree *src, Tree *value);
 typedef Tree * (*decl_fn) (Symbols *, Tree *source, bool execute);
 typedef std::map<text, decl_fn>    declarator_table; // To call at decl time
@@ -94,6 +95,12 @@ struct Symbols
     Rewrite *           EnterRewrite(Tree *from, Tree *to);
     Name *              Allocate(Name *varName);
 
+    // Enter properties, return number of properties found
+    uint                EnterProperty(Context *context,
+                                      Tree *self, Tree *storage, Tree *decls);
+    Property &          NamedProperty(text name);
+    Property &          NamedProperty(text name, uint min, uint max);
+
     // Performing the declarations on a given tree
     Tree *              ProcessDeclarations(Tree *tree);
 
@@ -115,8 +122,8 @@ struct Symbols
     Tree *              Run(Context *, Tree *t);
 
     // Error handling
-    Tree *               Ooops (text message,
-                                Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
+    Tree *              Ooops (text message,
+                               Tree *a1=NULL, Tree *a2=NULL, Tree *a3=NULL);
 
 public:
     Tree_p              source;
@@ -127,6 +134,7 @@ public:
     symbol_table        calls;
     value_table         type_tests;
     symbols_set         imported;
+    property_list       properties; // Sorted by name
     Tree_p              error_handler;
     bool                has_rewrites_for_constants;
     bool                is_global;
@@ -169,6 +177,15 @@ inline ulong Symbols::Depth()
     for (Symbols *s = this; s; s = s->parent)
         depth++;
     return depth;
+}
+
+
+inline Property &Symbols::NamedProperty(text name)
+// ----------------------------------------------------------------------------
+//   Find the entry associated with a given name
+// ----------------------------------------------------------------------------
+{
+    return NamedProperty(name, 0, properties.size());
 }
 
 
