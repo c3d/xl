@@ -262,6 +262,177 @@ Rewrite *Symbols::EnterRewrite(Tree *from, Tree *to)
 }
 
 
+uint Symbols::EnterProperty(Context *context,
+                            Tree *self, Tree *storage, Tree *properties)
+// ----------------------------------------------------------------------------
+//   Attach named property or properties to the given storage [#1635]
+// ----------------------------------------------------------------------------
+//   Properties are entered in the current context as two local declarations:
+//   - One is a prefix with a single argument, it sets the property
+//   - One is a name, it gets the property
+//
+//   The value of the property is initialized with the first of:
+//   - The value of a matching name in the storage's symbol table, if it exists
+//   - The initialization value of the property, if given
+//   - A default value appropriate for the given type (0, 0.0, "" or false)
+{
+    // If the properties are in a block, process children
+    while (Block *block = properties->AsBlock())
+        properties = block->child;
+
+    // If the property is a sequence, process them in turn
+    if (Infix *infix = properties->AsInfix())
+        if (infix->name == "\n" || infix->name == ";")
+            return EnterProperty(context, self, storage, infix->left)
+                +  EnterProperty(context, self, storage, infix->right);
+
+    // If there is a comment on the property, use that as description
+    text description = "";
+    if (CommentsInfo *cinfo = properties->GetInfo<CommentsInfo>())
+        if (uint size = cinfo->before.size())
+            description = cinfo->before[size-1];
+
+    // Extract name, value and type
+    Symbols *symbols = storage->Symbols();
+    Tree *type = NULL;
+    Tree *value = NULL;
+
+    // If the property is like "X := 0", take "0" as the value
+    if (Infix *infix = properties->AsInfix())
+    {
+        if (infix->name == ":=")
+        {
+            properties = infix->left;
+            value = infix->right;
+        }
+    }
+
+    // If the property is like "X : integer", take "integer" as the type
+    if (Infix *infix = properties->AsInfix())
+    {
+        if (infix->name == ":")
+        {
+            properties = infix->left;
+            type = infix->right;
+        }
+    }
+
+    // If at that stage the property is not a name, we have a problem
+    Name *name = properties->AsName();
+    if (name == NULL)
+    {
+        Ooops("Property '$1' is not a name", properties);
+        return 0;
+    }
+    if (type)
+        type = symbols->Run(context, type);
+
+    // Check if there is an existing value with that name in the body
+    Tree *existing = symbols->Named(name->value);
+
+    // Enter local declarations for the property getter
+    TreePosition pos = properties->Position();
+    Name *getForm = new Name(name->value, pos);
+    Rewrite *rw = symbols->EnterRewrite(getForm, getForm);
+    getForm->code = xl_read_property;
+    getForm->SetSymbols(symbols);
+
+    // Enter local declaration for the property setter
+    Name *setName = new Name(name->value, pos);
+    Tree *setArg = new Name(name->value + "_value", pos);
+    if (type)
+        setArg = new Infix(":", setArg, type, pos);
+    Prefix *setPrefix = new Prefix(setName, setArg, pos);
+    rw = symbols->EnterRewrite(setPrefix, setName);
+    setName->code = (eval_fn) xl_write_property;
+    setName->SetSymbols(symbols);
+
+    // Adjust information for the property
+    if (description == "")
+        description = name->value;
+    if (!type)
+        type = tree_type;
+    if (existing)
+    {
+        kind k = existing->Kind();
+        if (type == integer_type && k != INTEGER ||
+            type == real_type && k != REAL ||
+            type == text_type && k != TEXT ||
+            type == name_type && k != NAME)
+        {
+            Ooops("Ignoring existing value for name $1", name);
+            Ooops("because its current value $1", existing);
+            Ooops("is not compatible with type $1", type);
+        }
+        else
+        {
+            value = existing;
+        }
+    }
+    if (value)
+    {
+        kind k = value->Kind();
+        if (type == integer_type && k != INTEGER ||
+            type == real_type && k != REAL ||
+            type == text_type && k != TEXT ||
+            type == name_type && k != NAME)
+        {
+            Ooops("Value for property $1", name);
+            Ooops("is declared as $1,", existing);
+            Ooops("which is not compatible with type $1", type);
+            value = NULL;
+        }
+    }
+    if (!value)
+    {
+        if (type == integer_type)
+            value = new Integer(0, pos);
+        else if (type == real_type)
+            value = new Real(0.0, pos);
+        else if (type == text_type)
+            value = new Text("", "\"", "\"", pos);
+        else
+            value = xl_false;
+    }
+
+    // Set information for the property
+    Property &prop = symbols->NamedProperty(name->value);
+    assert(prop.name == name->value);
+    prop.description = description;
+    prop.type = type;
+    prop.value = value;
+
+    return 1;
+}
+
+
+Property &Symbols::NamedProperty(text name, uint min, uint max)
+// ----------------------------------------------------------------------------
+//   Binary search to find an entry
+// ----------------------------------------------------------------------------
+{
+    while (min < max)
+    {
+        uint half = (min + max) / 2;
+        Property &mid = properties[half];
+        int cmp = name.compare(mid.name);
+        if (cmp == 0)
+            return mid;
+        if (cmp > 0 && half > min)
+            min = half;
+        else if (cmp < 0 && half < max)
+            max = half;
+        else
+            break;
+    }
+
+    // Not found, need to insert
+    Property prop(name, "Uninitialized property", tree_type, xl_false);
+    properties.insert(properties.begin() + max, prop);
+    return properties[max];
+}
+
+
 Tree *Symbols::ProcessDeclarations(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Process the declarations for the given tree, and associate it to symbols
@@ -3431,6 +3602,16 @@ extern "C" void debugsy(XL::Symbols *s)
     std::cerr << "REWRITES IN " << s << ":\n";
     if (s->rewrites)
         debugrw(s->rewrites);
+
+    std::cerr << "PROPERTIES IN " << s << ":\n";
+    uint p, max = s->properties.size();
+    for (p = 0; p < max; p++)
+    {
+        Property &prop = s->properties[p];
+        std::cerr << "  " << prop.name << "\t: " << prop.type
+                  << "\t:= " << prop.value
+                  << "\t// " << prop.description << "\n";
+    }
 }
 
 

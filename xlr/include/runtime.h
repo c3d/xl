@@ -200,9 +200,16 @@ Tree *xl_evaluate_block(Context *, Tree *child);
 Tree *xl_evaluate_code(Context *, Tree *self, Tree *code);
 Tree *xl_evaluate_lazy(Context *, Tree *self, Tree *code);
 Tree *xl_evaluate_in_caller(Context *, Tree *code);
-Tree *xl_enter_properties(Context *, Tree *self, Tree *declarations);
+Tree *xl_enter_properties(Context *, Tree *self, Tree *storage, Tree *decls);
 Tree *xl_enter_constraints(Context *, Tree *self, Tree *constraints);
 Tree *xl_attribute(Context *, text name, Tree *form);
+Tree *xl_read_property_default(Context *, Tree *self);
+Tree *xl_write_property_default(Context *, Tree *self, Tree *value);
+
+typedef Tree *(*xl_read_property_fn)(Context *, Tree *self);
+typedef Tree *(*xl_write_property_fn)(Context *, Tree *self, Tree *value);
+extern xl_read_property_fn      xl_read_property;
+extern xl_write_property_fn     xl_write_property;
 
 
 // ============================================================================
