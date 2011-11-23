@@ -19,7 +19,6 @@
 02.Data/map-with-range-locally-defined.xl
 02.Data/map-with-range.xl
 02.Data/properties.xl
-02.Data/redefined_name.xl
 02.Data/write.xl
 03.Arithmetic/complex-add.xl
 03.Arithmetic/complex-div.xl

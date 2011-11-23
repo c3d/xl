@@ -731,20 +731,6 @@ PREFIX(GetAttribute, tree, "form_attribute",
        return xl_attribute(context, name, &form),
        GROUP(source)
        SYNOPSIS("Find the attribute associated to a given form"))
-PREFIX(LoadFile, tree, "load",
-       PARM(file, text, ""),
-       return xl_import(context, self, file, false),
-       GROUP(basics)
-       SYNOPSIS("")
-       DESCRIPTION("")
-       RETURNS(tree, ""))
-PREFIX(ImportFile, tree, "import",
-       PARM(file, text, "Name of file to import"),
-       return xl_import(context, self, file, true),
-       GROUP(basics)
-       SYNOPSIS("Import a module")
-       DESCRIPTION("")
-       RETURNS(tree, ""))
 PREFIX(LoadCSV,  tree, "load_csv", PARM(f, text, "") PARM(p, text, ""),
        return xl_load_data(context, self, f, p, ",;", "\n\f\r"),
        GROUP(basics)
@@ -889,6 +875,54 @@ PREFIX(WriteLn, tree, "writeln", ,
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
+
+// Loops
+FORM(IntegerForLoop, tree,
+     "for Var:integer in Low:integer..High:integer loop Body",
+     PARM(Var, integer, "")
+     PARM(Low, integer, "")
+     PARM(High, integer, "")
+     PARM(Body, source, ""),
+     return xl_integer_for_loop(context,self, &Var, Low, High, 1, &Body), )
+FORM(IntegerForLoopStep, tree,
+     "for Var:integer in Low:integer..High:integer step Step:integer loop Body",
+     PARM(Var, integer, "")
+     PARM(Low, integer, "")
+     PARM(High, integer, "")
+     PARM(Step, integer, "")
+     PARM(Body, source, ""),
+     return xl_integer_for_loop(context,self, &Var, Low,High,Step, &Body), )
+FORM(RealForLoop, tree,
+     "for Var:real in Low:real..High:real loop Body",
+     PARM(Var, real, "")
+     PARM(Low, real, "")
+     PARM(High, real, "")
+     PARM(Body, source, ""),
+     return xl_real_for_loop(context,self, &Var, Low, High, 1.0, &Body), )
+FORM(RealForLoopStep, tree,
+     "for Var:real in Low:real..High:real step Step:real loop Body",
+     PARM(Var, real, "")
+     PARM(Low, real, "")
+     PARM(High, real, "")
+     PARM(Step, real, "")
+     PARM(Body, source, ""),
+     return xl_real_for_loop(context,self, &Var, Low,High,Step, &Body), )
+FORM(ListForLoop, tree,
+     "for Var:name in List loop Body",
+     PARM(Var, name, "")
+     PARM(List, tree, "")
+     PARM(Body, source, ""),
+     return xl_list_for_loop(context, self, &Var, &List, &Body), )
+FORM(WhileLoop, tree,
+     "while Condition loop Body",
+     PARM(Condition, tree, "")
+     PARM(Body, source, ""),
+     return xl_while_loop(context, self, &Condition, &Body, true), )
+FORM(UntilLoop, tree,
+     "until Condition loop Body",
+     PARM(Condition, tree, "")
+     PARM(Body, source, ""),
+     return xl_while_loop(context, self, &Condition, &Body, false), )
 
 // Compute the sha1 of a tree
 PREFIX(ComputeSha1, text, "sha1", PARM(t, tree, ""), XL_RTEXT(sha1(&t)),

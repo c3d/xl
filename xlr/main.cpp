@@ -156,9 +156,6 @@ int Main::ParseOptions()
         std::cerr << "WARNING: Cannot set locale.\n"
                   << "         Check LANG, LC_CTYPE, LC_ALL.\n";
 
-    // Initialize basics
-    EnterBasics();
-
     // Scan options and build list of files we need to process
     for (cmd = options.ParseFirst(); cmd != end; cmd = options.ParseNext())
     {
@@ -587,6 +584,7 @@ int main(int argc, char **argv)
     using namespace XL;
     source_names noSpecificContext;
     Main main(argc, argv);
+    EnterBasics();
     main.SetupCompiler();
     int rc = MAIN->LoadContextFiles(noSpecificContext);
     if (rc)

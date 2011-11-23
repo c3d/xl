@@ -23,6 +23,7 @@
 #undef PREFIX
 #undef POSTFIX
 #undef BLOCK
+#undef FORM
 #undef NAME
 #undef TYPE
 #undef PARM
@@ -43,5 +44,6 @@
 #define PREFIX(name, rtype, symbol, parms, _code, docinfo)
 #define POSTFIX(name, rtype, parms, symbol, _code, docinfo)
 #define BLOCK(name, rtype, open, type, close, _code, docinfo)
+#define FORM(name, rtype, form, parms, _code, docinfo)
 #define NAME(symbol)    xl_##symbol = 0;
 #define TYPE(symbol)    symbol##_type = 0;
