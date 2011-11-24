@@ -118,60 +118,35 @@ Tree *Symbols::Named(text name, bool deep)
         for (li = lookups.begin(); li != lookups.end(); li++)
         {
             Symbols *s = *li;
-            symbol_table::iterator found = s->names.find(name);
-            if (found != s->names.end())
-                return (*found).second;
+            Property *found = s->Entry(name, false);
+            if (found)
+                return found->value;
         }
     }
     else
     {
-        symbol_table::iterator found = names.find(name);
-        if (found != names.end())
-            return (*found).second;
+        Property *found = Entry(name, false);
+        if (found)
+            return found->value;
     }
 
     return NULL;
 }
 
 
-Tree *Symbols::Defined(text name, bool deep)
-// ----------------------------------------------------------------------------
-//   Find the definition for the name in the current context
-// ----------------------------------------------------------------------------
-{
-    for (Symbols *s = this; s; s = deep ? s->parent.Pointer() : NULL)
-    {
-        symbol_table::iterator found = s->definitions.find(name);
-        if (found != s->definitions.end())
-            return (*found).second;
-
-        symbols_set::iterator it;
-        for (it = s->imported.begin(); it != s->imported.end(); it++)
-        {
-            Symbols *syms = (*it);
-            found = syms->definitions.find(name);
-            if (found != syms->definitions.end())
-                return (*found).second;
-        }
-    }
-    return NULL;
-}
-
-
-void Symbols::EnterName(text name, Tree *value, Tree *def)
+void Symbols::EnterName(text name, Tree *value, Property::Kind kind)
 // ----------------------------------------------------------------------------
 //   Enter a value in the namespace
 // ----------------------------------------------------------------------------
 {
-    Tree_p &entry = names[name];
-    if (entry)
+    Property *found = Entry(name, true);
+    if (found->value)
     {
         Ooops("Name $1 already exists", new Name(name, value->Position()));
-        Ooops("Previous value was $1", entry);
+        Ooops("Previous value was $1", found->value);
     }
-    entry = value;
-    if (def)
-        definitions[name] = def;
+    found->kind = kind;
+    found->value = value;
 }
 
 
@@ -182,8 +157,9 @@ void Symbols::ExtendName(text name, Tree *value)
 {
     if (!parent->Named(name))
     {
-        Tree_p &entry = names[name];
-        if (entry)
+        Property *found = Entry(name, true); 
+        found->kind = Property::FORM;
+        if (Tree *entry = found->value)
         {
             if (Block *block = entry->AsBlock())
                 block->child = new Infix("\n", block->child, value,
@@ -196,7 +172,7 @@ void Symbols::ExtendName(text name, Tree *value)
         }
         else
         {
-            entry = value;
+            found->value = value;
         }
     }
 
@@ -210,15 +186,31 @@ Name *Symbols::Allocate(Name *n)
 //   Enter a value in the namespace
 // ----------------------------------------------------------------------------
 {
-    if (Tree *existing = names[n->value])
+    Property *entry = Entry(n->value, true);
+    if (Tree *existing = entry->value)
     {
         if (Name *name = existing->AsName())
             if (name->value == n->value)
                 return name;
         Ooops("Parameter $1 previously had value $2", n, existing);
     }
-    names[n->value] = n;
+    entry->value = n;
+    entry->kind = Property::PARM;
     return n;
+}
+
+
+ulong Symbols::Count(ulong mask)
+// ----------------------------------------------------------------------------
+//   Return the number of local variables
+// ----------------------------------------------------------------------------
+{
+    ulong count = 0;
+    ulong i, max = entries.size();
+    for (i = 0; i < max; i++)
+        if (mask & (1 << entries[i].kind))
+            count++;
+    return count;
 }
 
 
@@ -396,17 +388,17 @@ uint Symbols::EnterProperty(Context *context,
     }
 
     // Set information for the property
-    Property &prop = symbols->NamedProperty(name->value);
-    assert(prop.name == name->value);
-    prop.description = description;
-    prop.type = type;
-    prop.value = value;
+    Property *prop = symbols->Entry(name->value, true);
+    assert(prop->name == name->value);
+    prop->description = description;
+    prop->type = type;
+    prop->value = value;
 
     return 1;
 }
 
 
-Property &Symbols::NamedProperty(text name, uint min, uint max)
+Property *Symbols::Entry(text name, uint min, uint max, bool create)
 // ----------------------------------------------------------------------------
 //   Binary search to find an entry
 // ----------------------------------------------------------------------------
@@ -414,10 +406,10 @@ Property &Symbols::NamedProperty(text name, uint min, uint max)
     while (min < max)
     {
         uint half = (min + max) / 2;
-        Property &mid = properties[half];
+        Property &mid = entries[half];
         int cmp = name.compare(mid.name);
         if (cmp == 0)
-            return mid;
+            return &mid;
         if (cmp > 0 && half > min)
             min = half;
         else if (cmp < 0 && half < max)
@@ -426,10 +418,15 @@ Property &Symbols::NamedProperty(text name, uint min, uint max)
             break;
     }
 
-    // Not found, need to insert
-    Property prop(name, "Uninitialized property", tree_type, xl_false);
-    properties.insert(properties.begin() + max, prop);
-    return properties[max];
+    // Not found, check if we need to create it
+    if (!create)
+        return NULL;
+
+    // Create entry
+    Property prop(name, "", NULL, NULL);
+    prop.id = entries.size();
+    entry_list::iterator ins = entries.insert(entries.begin() + max, prop);
+    return &*ins;               // Just love C++ and shut up
 }
 
 
@@ -456,13 +453,9 @@ void Symbols::Clear()
 // ----------------------------------------------------------------------------
 {
     symbol_table empty;
-    names = empty;
-    definitions = empty;
     if (rewrites)
-    {
-        // delete rewrites;
         rewrites = NULL;        // Decrease reference count
-    }
+    entries.clear();
     calls = empty;
     type_tests.clear();
     error_handler = NULL;
@@ -1253,7 +1246,7 @@ Tree *ArgumentMatch::DoName(Name *what)
             return NULL;
 
         // If first occurence of the name, enter it in symbol table
-        locals->EnterName(what->value, compiled);
+        locals->EnterName(what->value, compiled, Property::ARG);
         return what;
     }
 }
@@ -1422,7 +1415,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         }
 
         // Enter the compiled expression in the symbol table
-        locals->EnterName(varName->value, compiled);
+        locals->EnterName(varName->value, compiled, Property::ARG);
 
         return what;
     }
@@ -1798,7 +1791,7 @@ Tree *DeclarationAction::DoInfix(Infix *what)
     if (what->name == "->")
     {
         // Enter the rewrite
-        EnterRewrite(what->left, what->right, what);
+        EnterRewrite(what->left, what->right);
         return what;
     }
 
@@ -1824,7 +1817,7 @@ Tree *DeclarationAction::DoPrefix(Prefix *what)
 
         if (name->value == "data")
         {
-            EnterRewrite(what->right, NULL, NULL);
+            EnterRewrite(what->right, NULL);
             return what;
         }
     }
@@ -1843,8 +1836,7 @@ Tree *DeclarationAction::DoPostfix(Postfix *what)
 
 
 void DeclarationAction::EnterRewrite(Tree *defined,
-                                     Tree *definition,
-                                     Tree *where)
+                                     Tree *definition)
 // ----------------------------------------------------------------------------
 //   Add a definition in the current context
 // ----------------------------------------------------------------------------
@@ -1903,7 +1895,7 @@ void DeclarationAction::EnterRewrite(Tree *defined,
     {
         symbols->EnterName(name->value,
                            definition ? (Tree *) definition : (Tree *) name,
-                           where);
+                           Property::LOCAL);
     }
     else
     {
@@ -2224,31 +2216,18 @@ Tree *CompileAction::Rewrites(Tree *what)
                     {
                         // We should have same number of args and parms
                         Symbols &parms = *candidate->from->Symbols();
-                        ulong parmCount = parms.names.size();
-                        if (args->names.size() != parmCount)
+                        ulong parmCount = parms.Count(1<<Property::PARM);
+                        ulong argCount = args->Count(1<<Property::ARG);
+                        if (argCount != parmCount)
                         {
                             symbol_iter a, p;
-                            std::cerr << "Args/parms mismatch:\n";
+                            std::cerr << "Args/parms mismatch: "
+                                      << parmCount << " parms, "
+                                      << argCount << " args\n";
                             std::cerr << "Parms:\n";
-                            for (p = parms.names.begin();
-                                 p != parms.names.end();
-                                 p++)
-                            {
-                                text name = (*p).first;
-                                Tree *parm = parms.Named(name);
-                                std::cerr << "   " << name
-                                          << " = " << parm << "\n";
-                            }
+                            debugsy(&parms);
                             std::cerr << "Args:\n";
-                            for (a = args->names.begin();
-                                 a != args->names.end();
-                                 a++)
-                            {
-                                text name = (*a).first;
-                                Tree *arg = args->Named(name);
-                                std::cerr << "   " << name
-                                          << " = " << arg << "\n";
-                            }
+                            debugsy(args);
                         }
 
                         // Map the arguments we found in parameter order
@@ -3594,24 +3573,27 @@ extern "C" void debugsy(XL::Symbols *s)
     using namespace XL;
     std::cerr << "SYMBOLS AT " << s << "\n";
 
-    std::cerr << "NAMES IN " << s << ":\n";
-    symbol_table::iterator i;
-    for (i = s->names.begin(); i != s->names.end(); i++)
-        std::cerr << (*i).first << ": " << (*i).second << "\n";
-
+    std::cerr << "ENTRIES IN " << s << ":\n";
+    uint p, max = s->entries.size();
+    kstring kinds[] = { "UNKNOWN", "ARG", "PARM", "LOCAL",
+                        "GLOBAL", "FORM", "TYPE", "ENUM",
+                        "PROPERTY", "IMPORTED" };
+    for (p = 0; p < max; p++)
+    {
+        Property &entry = s->entries[p];
+        std::cerr << "  " << kinds[entry.kind] << " " << entry.name;
+        if (entry.type)
+            std::cerr << "\t: " << entry.type;
+        if (entry.value)
+            std::cerr << "\t:= " << entry.value;
+        if (entry.description != "")
+            std::cerr << "\t// " << entry.description;
+        std::cerr << "\n";
+    }
     std::cerr << "REWRITES IN " << s << ":\n";
     if (s->rewrites)
         debugrw(s->rewrites);
 
-    std::cerr << "PROPERTIES IN " << s << ":\n";
-    uint p, max = s->properties.size();
-    for (p = 0; p < max; p++)
-    {
-        Property &prop = s->properties[p];
-        std::cerr << "  " << prop.name << "\t: " << prop.type
-                  << "\t:= " << prop.value
-                  << "\t// " << prop.description << "\n";
-    }
 }
 
 
