@@ -57,7 +57,7 @@ typedef symbol_table::iterator     symbol_iter;  // Iterator over sym table
 typedef std::map<Name_p, Tree_p>   capture_table;// Symbol capture table
 typedef std::map<Tree_p, Tree_p>   value_table;  // Used for value caching
 typedef value_table::iterator      value_iter;   // Used to iterate over values
-typedef std::vector<Property>      property_list;// Sorted by name
+typedef std::vector<Property>      entry_list;   // Sorted by name
 typedef Tree * (*typecheck_fn) (Context *context, Tree *src, Tree *value);
 typedef Tree * (*decl_fn) (Symbols *, Tree *source, bool execute);
 typedef std::map<text, decl_fn>    declarator_table; // To call at decl time
@@ -80,26 +80,27 @@ struct Symbols
 
     // Symbols properties
     Symbols *           Parent()                { return parent; }
-    ulong               Depth();
+    ulong               Depth()                 { return depth; }
+    ulong               Deepen()                { return ++depth; }
     void                Import (Symbols *other) { imported.insert(other); }
 
     // Symbol management
     Tree *              Named (text name, bool deep = true);
-    Tree *              Defined (text name, bool deep = true);
     Rewrite *           Rewrites()              { return rewrites; }
 
     // Entering symbols in the symbol table
-    void                EnterName (text name, Tree *value, Tree *def = NULL);
+    void                EnterName (text name, Tree *value, Property::Kind k);
     void                ExtendName (text name, Tree *value);
     Rewrite *           EnterRewrite(Rewrite *r);
     Rewrite *           EnterRewrite(Tree *from, Tree *to);
     Name *              Allocate(Name *varName);
+    ulong               Count(ulong kinds /* bit mask of PROPERTY::Kind */);
 
     // Enter properties, return number of properties found
     uint                EnterProperty(Context *context,
                                       Tree *self, Tree *storage, Tree *decls);
-    Property &          NamedProperty(text name);
-    Property &          NamedProperty(text name, uint min, uint max);
+    Property *          Entry(text name, bool create);
+    Property *          Entry(text name, uint min, uint max, bool create);
 
     // Performing the declarations on a given tree
     Tree *              ProcessDeclarations(Tree *tree);
@@ -128,14 +129,13 @@ struct Symbols
 public:
     Tree_p              source;
     Symbols_p           parent;
-    symbol_table        names;
-    symbol_table        definitions;
+    entry_list          entries; // Sorted by name
     Rewrite_p           rewrites;
     symbol_table        calls;
     value_table         type_tests;
     symbols_set         imported;
-    property_list       properties; // Sorted by name
     Tree_p              error_handler;
+    ulong               depth;
     bool                has_rewrites_for_constants;
     bool                is_global;
 
@@ -157,6 +157,7 @@ inline Symbols::Symbols(Symbols *s)
 //   Create a "child" symbol table
 // ----------------------------------------------------------------------------
     : source(NULL), parent(s), rewrites(NULL), error_handler(NULL),
+      depth(s ? s->depth : 0),
       has_rewrites_for_constants(false), is_global(false)
 {}
 
@@ -168,24 +169,12 @@ inline Symbols::~Symbols()
 {}
 
 
-inline ulong Symbols::Depth()
-// ----------------------------------------------------------------------------
-//    Return the depth for the current symbol table
-// ----------------------------------------------------------------------------
-{
-    ulong depth = 0;
-    for (Symbols *s = this; s; s = s->parent)
-        depth++;
-    return depth;
-}
-
-
-inline Property &Symbols::NamedProperty(text name)
+inline Property *Symbols::Entry(text name, bool create)
 // ----------------------------------------------------------------------------
 //   Find the entry associated with a given name
 // ----------------------------------------------------------------------------
 {
-    return NamedProperty(name, 0, properties.size());
+    return Entry(name, 0, entries.size(), create);
 }
 
 
@@ -361,7 +350,7 @@ struct DeclarationAction : Action
     virtual Tree *DoInfix(Infix *what);
     virtual Tree *DoBlock(Block *what);
 
-    void        EnterRewrite(Tree *defined, Tree *definition, Tree *where);
+    void        EnterRewrite(Tree *defined, Tree *definition);
 
     Symbols_p symbols;
 };

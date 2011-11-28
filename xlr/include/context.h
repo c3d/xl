@@ -366,13 +366,20 @@ struct Property
 //   Information about a property
 // ----------------------------------------------------------------------------
 {
+    enum Kind { UNKNOWN, ARG, PARM, LOCAL,
+                GLOBAL, FORM, TYPE, ENUM, 
+                PROPERTY, IMPORTED };
     Property(text name, text descr, Tree *type, Tree *value = NULL)
-        : name(name), description(descr), type(type), value(value) {}
-    Property(): name(), description(), type(NULL), value(NULL) {}
+        : name(name), description(descr), type(type), value(value),
+          kind(UNKNOWN), id(0) {}
+    Property(): name(), description(), type(NULL), value(NULL),
+                kind(UNKNOWN), id(0) {}
     text        name;
     text        description;
     Tree_p      type;
     Tree_p      value;
+    Kind        kind;
+    ulong       id;
 
     GARBAGE_COLLECT(Property);
 };

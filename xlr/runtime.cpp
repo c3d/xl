@@ -1506,8 +1506,10 @@ Tree *xl_read_property_default(Context *context, Tree *self)
     Name *name = self->AsName();
     if (!symbols || !name)
         return xl_false;
-    Property &prop = symbols->NamedProperty(name->value);
-    return prop.value;
+    Property *prop = symbols->Entry(name->value, false);
+    if (!prop)
+        return self;
+    return prop->value;
 }
 
 
@@ -1524,9 +1526,9 @@ Tree *xl_write_property_default(Context *context, Tree *self, Tree *value)
     Name *name = prefix->left->AsName();
     if (!name)
         return xl_false;
-    Property &prop = symbols->NamedProperty(name->value);
+    Property *prop = symbols->Entry(name->value, true);
     kind k = value->Kind();
-    Tree *type = prop.type;
+    Tree *type = prop->type;
     if ((type == integer_type && k != INTEGER) ||
         (type == real_type    && k != REAL)    ||
         (type == text_type    && k != TEXT)    ||
@@ -1538,7 +1540,7 @@ Tree *xl_write_property_default(Context *context, Tree *self, Tree *value)
         return value;
     }
 
-    prop.value = value;
+    prop->value = value;
     return value;
 }
 
