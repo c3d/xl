@@ -18,6 +18,9 @@ min y    -> y
 max x, y -> if x > max y then x else max y
 max y    -> y
 
+// Interval test
+X:real in A:real..B:real -> X >= A and X <= B
+
 // Factorial function
 0! -> 1
 N! -> N * (N-1)!
