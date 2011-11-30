@@ -36,6 +36,7 @@
 #include "types.h"
 #include "save.h"
 #include "tree-clone.h"
+#include "utf8_fileutils.h"
 
 #include <iostream>
 #include <cstdarg>
@@ -1118,14 +1119,73 @@ bool xl_write_cr()
 //
 // ============================================================================
 
+struct ImportedFileInfo : Info
+// ----------------------------------------------------------------------------
+//   Information about a file that was imported (save full path)
+// ----------------------------------------------------------------------------
+{
+    ImportedFileInfo(text path)
+        : path(path) {}
+    text      path;
+};
+
+
+static bool isAbsolute(text path)
+// ----------------------------------------------------------------------------
+//    Test absolute/relative path
+// ----------------------------------------------------------------------------
+{
+    if (path == "")
+        return false;
+#if defined (CONFIG_MINGW)
+    if (path[0] == '/' || path[0] == '\\')
+        return true;
+    if (path.length() >= 2 && path[1] == ':')
+        return true;
+    return false;
+#else
+    return (path[0] != '/');
+#endif
+}
+
 Tree *xl_import(Context *context, Tree *self, text name, bool execute)
 // ----------------------------------------------------------------------------
 //    Load a file from disk without evaluating it
 // ----------------------------------------------------------------------------
 {
-    text path = MAIN->SearchFile(name);
-    if (path == "")
-        return Ooops("Source file $1 not found", new Text(name));
+    text path = "";
+    ImportedFileInfo *info = self->GetInfo<ImportedFileInfo>();
+    if (info)
+    {
+        path = info->path;
+    }
+    else
+    {
+        if (!isAbsolute(path))
+        {
+            // Relative path: look in same directory as parent
+            if (Tree * dir = self->Symbols()->Named("module_dir"))
+            {
+                if (Text * txt = dir->AsText())
+                {
+                    path = txt->value + "/" + name;
+#if defined(CONFIG_MINGW)
+                    struct _stat st;
+#else
+                    struct stat st;
+#endif
+                    if (utf8_stat (path.c_str(), &st) < 0)
+                        path = "";
+                }
+            }
+        }
+        if (path == "")
+            path = MAIN->SearchFile(name);
+        if (path == "")
+            return Ooops("Source file $1 not found", new Text(name));
+        info = new ImportedFileInfo(path);
+        self->SetInfo<ImportedFileInfo> (info);
+    }
 
     // Check if the file has already been loaded somehwere.
     // If so, return the loaded file
