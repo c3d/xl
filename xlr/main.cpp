@@ -356,7 +356,7 @@ int Main::LoadFile(text file,
     else
     {
         std::string nt = "";
-        utf8_ifstream ifs(file.c_str());
+        utf8_ifstream ifs(file.c_str(), std::ios::in | std::ios::binary);
         Deserializer ds(ifs);
         tree = ds.ReadTree();
         if (!ds.IsValid())
