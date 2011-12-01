@@ -1161,7 +1161,9 @@ Tree *xl_import(Context *context, Tree *self, text name, bool execute)
     }
     else
     {
-        if (!isAbsolute(path))
+        if (path == "")
+            path = MAIN->SearchFile(name);
+        if (path == "" && !isAbsolute(path))
         {
             // Relative path: look in same directory as parent
             if (Tree * dir = self->Symbols()->Named("module_dir"))
@@ -1179,8 +1181,6 @@ Tree *xl_import(Context *context, Tree *self, text name, bool execute)
                 }
             }
         }
-        if (path == "")
-            path = MAIN->SearchFile(name);
         if (path == "")
             return Ooops("Source file $1 not found", new Text(name));
         info = new ImportedFileInfo(path);
