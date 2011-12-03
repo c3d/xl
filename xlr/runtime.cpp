@@ -2011,6 +2011,16 @@ Tree *xl_index(Context *context, Tree *data, Tree *indexTree)
 }
 
 
+Tree *xl_array_index(Context *context, Tree *data, Tree *indexTree)
+// ----------------------------------------------------------------------------
+//   Evaluate things like A[B]
+// ----------------------------------------------------------------------------
+{
+    indexTree = xl_evaluate(context, indexTree);
+    return xl_index(context, data, indexTree);
+}
+
+
 Integer *xl_size(Context *context, Tree *data)
 // ----------------------------------------------------------------------------
 //   Return the length of a given list

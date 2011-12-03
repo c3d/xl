@@ -2210,6 +2210,20 @@ Tree *CompileAction::DoPrefix(Prefix *what)
         }
     }
 
+    // Special case the A[B] notation
+    if (Block *br = what->right->AsBlock())
+    {
+        if (br->IsSquare())
+        {
+            what->left->SetSymbols(symbols);
+            what->right->SetSymbols(symbols);
+            what->left->Do(this);
+            br->child->Do(this);
+            unit.CallArrayIndex(what, what->left, br->child);
+            return what;
+        }
+    }
+
     return Rewrites(what);
 }
 
@@ -3161,6 +3175,20 @@ Value *OCompiledUnit::CallFillInfix(Infix *infix)
                                       infixValue, leftValue, rightValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(infix, result);
+    return result;
+}
+
+
+Value *OCompiledUnit::CallArrayIndex(Tree *self, Tree *left, Tree *right)
+// ----------------------------------------------------------------------------
+//    Compile code calling xl_index for a form like A[B]
+// ----------------------------------------------------------------------------
+{
+    Value *leftValue = Known(left);
+    Value *rightValue = Known(right);
+    Value *result = code->CreateCall3(compiler->xl_array_index,
+                                      contextPtr, leftValue, rightValue);
+    MarkComputed(self, result);
     return result;
 }
 

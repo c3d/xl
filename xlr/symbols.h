@@ -213,6 +213,7 @@ struct OCompiledUnit
     llvm::Value *       CallFillPrefix(Prefix *);
     llvm::Value *       CallFillPostfix(Postfix *);
     llvm::Value *       CallFillInfix(Infix *);
+    llvm::Value *       CallArrayIndex(Tree *self, Tree *l, Tree *r);
     llvm::Value *       CreateClosure(Tree *callee,
                                       TreeList &parms, TreeList &args,
                                       llvm::Function *);

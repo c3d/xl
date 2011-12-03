@@ -229,6 +229,7 @@ Tree *xl_apply(Context *, Tree *code, Tree *data);
 Tree *xl_range(longlong l, longlong h);
 Tree *xl_assign(Context *, Tree *name, Tree *value);
 Tree *xl_index(Context *, Tree *data, Tree *index);
+Tree *xl_array_index(Context *, Tree *data, Tree *index);
 Integer *xl_size(Context *, Tree *data);
 typedef GCPtr<Context> Context_p;
 
