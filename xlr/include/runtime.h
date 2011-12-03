@@ -197,7 +197,6 @@ public:
 // ============================================================================
 
 Tree *xl_define(Context *, Tree *self, Tree *form, Tree *definition);
-Tree *xl_assign(Context *, Tree *form, Tree *definition);
 Tree *xl_evaluate_sequence(Context *, Tree *first, Tree *second);
 Tree *xl_evaluate_any(Context *, Tree *form);
 Tree *xl_evaluate_block(Context *, Tree *child);
@@ -228,8 +227,8 @@ XL_BEGIN
 
 Tree *xl_apply(Context *, Tree *code, Tree *data);
 Tree *xl_range(longlong l, longlong h);
+Tree *xl_assign(Context *, Tree *name, Tree *value);
 Tree *xl_index(Context *, Tree *data, Tree *index);
-Tree *xl_index_set(Context *, Tree *data, Tree *index, Tree *value);
 Integer *xl_size(Context *, Tree *data);
 typedef GCPtr<Context> Context_p;
 

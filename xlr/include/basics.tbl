@@ -103,32 +103,14 @@ PREFIX(Solve, tree, "solve",
        SYNOPSIS("Test for the property solver"))
 
 // Array indexing and assignment. Assignment must be before other assignments
-INFIX(IndexText, tree, tree, "at", tree,
-      return xl_index(context, &l, &r),
-      GROUP(basics)
-      SYNOPSIS("")
-      DESCRIPTION("")
-      RETURNS(tree, ""))
-FORM(IndexSet, tree,
-     "Var.Index := Value",
-     PARM(Var, tree, "")
-     PARM(Index, tree, "")
-     PARM(Value, tree, ""),
-     return xl_index_set(context, &Var, &Index, &Value), )
-FORM(IndexGet, tree,
-     "Var.Index",
-     PARM(Var, tree, "")
-     PARM(Index, tree, ""),
-     return xl_index(context, &Var, &Index), )
-PREFIX(NonFalse, name, "not_false", PARM(V, tree, ""),
+INFIX(Assign, tree, tree, ":=", tree,
+      return xl_assign(context, &l, &r), )
+INFIX(Index, tree, tree, ".", tree,
+      return xl_index(context, &l, &r), )
+PREFIX(Good, name, "good", PARM(V, tree, ""),
        XL_RBOOL(xl_evaluate(context, &V) != xl_false), )
 
 // Integer arithmetic and comparisons
-INFIX(SetInt, integer,integer,":=",integer,XL_RINT(l.value = XL_INT(r)),
-      GROUP(basics)
-      SYNOPSIS("")
-      DESCRIPTION("")
-      RETURNS(integer,""))
 INFIX(AddInt,integer, integer,"+",integer, XL_RINT(XL_INT(l) + XL_INT(r)),
       GROUP(basics)
       SYNOPSIS("")
@@ -253,11 +235,6 @@ POSTFIX(PercentReal, real, PARM(x, real, ""), "%", XL_RREAL(x / 100.0),
         RETURNS( real, ""))
 
 // Real arithmetic and comparisons
-INFIX(SetReal, real, real, ":=",real, XL_RREAL(l.value = XL_REAL(r)),
-      GROUP(basics)
-      SYNOPSIS("")
-      DESCRIPTION("")
-      RETURNS( real, ""))
 INFIX(AddReal, real, real, "+", real, XL_RREAL(XL_REAL(l) + XL_REAL(r)),
       GROUP(basics)
       SYNOPSIS("")
@@ -439,14 +416,6 @@ PREFIX(PiConstant, real, "pi", , XL_RREAL(M_PI),
        RETURNS(real, ""))
 
 // Boolean operations
-INFIX(SetBool, boolean, boolean, ":=",boolean,
-      bool val = XL_BOOL(r);
-      l.value = val ? "true" : "false";
-      XL_RBOOL(val),
-      GROUP(basics)
-      SYNOPSIS("")
-      DESCRIPTION("")
-      RETURNS(boolean, ""))
 INFIX(AndBool, boolean, boolean, "and", boolean, XL_RBOOL(XL_BOOL(l) & XL_BOOL(r)),
       GROUP(basics)
       SYNOPSIS("")
@@ -480,11 +449,6 @@ INFIX(EQBool, boolean, boolean, "=", boolean, XL_RBOOL(XL_BOOL(l) == XL_BOOL(r))
       RETURNS(boolean, ""))
 
 // Text operations
-INFIX(SetText, text, text,":=", text, XL_RTEXT(l.value = XL_TEXT(r)),
-      GROUP(basics)
-      SYNOPSIS("")
-      DESCRIPTION("")
-      RETURNS(text, ""))
 INFIX(TextConcatenate, text, text, "&", text, XL_RTEXT(XL_TEXT(l) + XL_TEXT(r)),
       GROUP(basics)
       SYNOPSIS("")

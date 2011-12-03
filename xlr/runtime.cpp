@@ -1488,16 +1488,6 @@ Tree *xl_define(Context *context, Tree *self, Tree *form, Tree *definition)
 }
 
 
-Tree *xl_assign(Context *context, Tree *form, Tree *definition)
-// ----------------------------------------------------------------------------
-//   Assignment in interpreted mode
-// ----------------------------------------------------------------------------
-{
-    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
-    return context->Assign(form, definition);
-}
-
-
 Tree *xl_evaluate_sequence(Context *context, Tree *first, Tree *second)
 // ----------------------------------------------------------------------------
 //   Evaluate a sequence
@@ -1609,10 +1599,10 @@ Tree *xl_read_property_default(Context *context, Tree *self)
     Name *name = self->AsName();
     if (!symbols || !name)
         return xl_false;
-    Property *prop = symbols->Entry(name->value, false);
+    Rewrite *prop = symbols->Entry(name->value, false);
     if (!prop)
         return self;
-    return prop->value;
+    return prop->to;
 }
 
 
@@ -1629,7 +1619,7 @@ Tree *xl_write_property_default(Context *context, Tree *self, Tree *value)
     Name *name = prefix->left->AsName();
     if (!name)
         return xl_false;
-    Property *prop = symbols->Entry(name->value, true);
+    Rewrite *prop = symbols->Entry(name->value, true);
     kind k = value->Kind();
     Tree *type = prop->type;
     if ((type == integer_type && k != INTEGER) ||
@@ -1643,7 +1633,7 @@ Tree *xl_write_property_default(Context *context, Tree *self, Tree *value)
         return value;
     }
 
-    prop->value = value;
+    prop->to = value;
     return value;
 }
 
@@ -1837,98 +1827,140 @@ Tree *xl_range(longlong low, longlong high)
 }
 
 
-struct IndexInfo : Info
+Rewrite *xl_reference(Context *context, Tree *expr, bool create)
 // ----------------------------------------------------------------------------
-//   Store information about data values
-// ----------------------------------------------------------------------------
-{
-    std::map<longlong, Tree_p>  imap;
-    std::map<text, Tree_p>      tmap;
-};
-
-
-void xl_index_info_initialize(Symbols *s, IndexInfo *info, Tree *data)
-// ----------------------------------------------------------------------------
-//   Internal recursive initialization for index info
+//   Find the property associated with the given expression
 // ----------------------------------------------------------------------------
 {
-    if (Infix *what = data->AsInfix())
+    Symbols *symbols = expr->Symbols();
+    Tree *type = NULL;
+
+    while (expr)
     {
-        if (what->name == "," || what->name == ";" || what->name == "\n")
+        Tree *left = NULL;
+        Tree *right = NULL;
+
+        // Lookup terminals
+        text key = "";
+        if (Name *nt = expr->AsName())
+            key = nt->value;
+        else if (Text *tt = expr->AsText())
+            key = tt->opening + tt->value + tt->closing;
+        else if (Integer *it = expr->AsInteger())
+            key = text(*it);
+        else if (Real *rt = expr->AsReal())
+            key = text(*rt);
+
+        if (key.size())
         {
-            xl_index_info_initialize(s, info, what->left);
-            xl_index_info_initialize(s, info, what->right);
+            Rewrite *entry = symbols->LookupEntry(key, create);
+            if (entry && type)
+            {
+                if (!entry->type)
+                {
+                    entry->type = type;
+                }
+                else if (entry->type != type)
+                {
+                    Ooops("Invalid type override with $1", type);
+                    Ooops("Previous type was $1", entry->type);
+                }
+            }
+            return entry;
         }
-        if (what->name == "->")
+            
+        // Check special infix notations
+        else if (Infix *infix = expr->AsInfix())
         {
-            Tree *left = what->left;
-            if (Integer *li = left->AsInteger())
+            if (infix->name == ":")
             {
-                if (!what->right->Symbols())
-                    what->right->SetSymbols(s);
-                info->imap[li->value] = what->right;
+                if (!type)
+                {
+                    type = xl_evaluate(context, infix->right);
+                }
+                else
+                {
+                    Ooops("Extraneous type specification $1", infix->right);
+                    Ooops("Previous type specification $1", type);
+                }
             }
-            else if (Text *ti = left->AsText())
+            else if (infix->name == ".")
             {
-                if (!what->right->Symbols())
-                    what->right->SetSymbols(s);
-                info->tmap[ti->value] = what->right;
+                left = infix->left;
+                right = infix->right;
             }
-            else
-            {
-                Ooops("Unimplemented data form $1", what);
-            }                
         }
-    }
-    else
-    {
-        if (!data->Symbols())
-            data->SetSymbols(s);
-        info->imap[info->imap.size()+1] = data;
-    }
+            
+        // Check special prefix notation A[B]
+        else if (Prefix *prefix = expr->AsPrefix())
+        {
+            if (Block *br = prefix->right->AsBlock())
+            {
+                if (br->IsSquare())
+                {
+                    left = prefix->left;
+                    if (!br->child->Symbols())
+                        br->child->SetSymbols(symbols);
+                    right = xl_evaluate(context, br->child);
+                }
+            }
+        }
+
+        // Evacuate blocks
+        else if (Block *block = expr->AsBlock())
+        {
+            expr = block->child;
+            continue;           // Do not evaluate anything
+        }
+
+        if (left && right)
+        {
+            // Find the reference on the left
+            if (!left->Symbols())
+                left->SetSymbols(symbols);
+            Rewrite *ref = xl_reference(context, left, true);
+                
+            // Create value and symbol table if they don't exist
+            if (!ref->to)
+                ref->to = ref->from;
+
+            Symbols *s = ref->to->Symbols();
+            if (!s)
+            {
+                s = new Symbols(symbols);
+                ref->to->SetSymbols(s);
+            }
+            symbols = s;
+            expr = right;
+            if (!expr->Symbols())
+                expr->SetSymbols(symbols);
+        }
+        else
+        {
+            // All other cases: evaluate expression
+            expr = xl_evaluate(context, expr);
+        }
+
+    } // While (expr)
+
+    return NULL;
 }
 
 
-IndexInfo *xl_index_info_initialize(Context *context, Tree *data)
+Tree *xl_assign(Context *context, Tree *var, Tree *value)
 // ----------------------------------------------------------------------------
-//    Process the tree recursively and initialize data
+//   Assignment in interpreted mode
 // ----------------------------------------------------------------------------
 {
-    Symbols *symbols = data->Symbols();
-    bool empty = false;
-
-    // Lookup names
-    if (Name *name = data->AsName())
+    ADJUST_CONTEXT_FOR_INTERPRETER(context);
+    if (var->Symbols())
     {
-        data = symbols->Named(name->value);
-        if (!data)
-            data = name;
+        Rewrite *rw = xl_reference(context, var, true);
+        if (rw)
+            rw->to = value;
+        return value;
     }
-
-    // Evaluate prefix or postfix values
-    else if (data->Kind() == PREFIX || data->Kind() == POSTFIX)
-    {
-        data = xl_evaluate(context, data);
-    }
-
-    // Look inside blocks
-    if (Block *block = data->AsBlock())
-    {
-        data = block->child;
-        if (Name *name = data->AsName())
-            if (name->value == "")
-                empty = true;   // Empty block
-    }
-
-    IndexInfo *info = data->GetInfo<IndexInfo>();
-    if (!info)
-    {
-        info = new IndexInfo;
-        data->SetInfo<IndexInfo>(info);
-        if (!empty)
-            xl_index_info_initialize(symbols, info, data);
-    }
-    return info;
+    return context->Assign(var, value);
 }
 
 
@@ -1937,74 +1969,17 @@ Tree *xl_index(Context *context, Tree *data, Tree *indexTree)
 //   Find the given element in a data set or return false
 // ----------------------------------------------------------------------------
 {
-    Tree_p value = xl_false;
-    IndexInfo *info = xl_index_info_initialize(context, data);
-    if (Block *block = indexTree->AsBlock())
-        indexTree = xl_evaluate(context, block->child);
+    Rewrite *rw = xl_reference(context, data, false);
+    if (!rw)
+        return xl_false;
 
-    if (Integer *it = indexTree->AsInteger())
+    Tree *value = rw->to;
+    if (!value)
+        value = rw->from;
+    if (!value->Symbols())
     {
-        longlong idx = it->value;
-        std::map<longlong,Tree_p>::iterator found = info->imap.find(idx);
-        if (found != info->imap.end())
-            value = (*found).second;
-    }
-    else
-    {
-        text idx;
-        if (Text *tt = indexTree->AsText())
-            idx = tt->value;
-        else if (Name *nt = indexTree->AsName())
-            idx = nt->value;
-        else
-            idx = text(*indexTree);
-        
-        std::map<text,Tree_p>::iterator found = info->tmap.find(idx);
-        if (found != info->tmap.end())
-            value = (*found).second;
-    }
-
-    if (!value->IsConstant())
-        value = xl_evaluate(context, value);
-    return value;
-}
-
-
-Tree *xl_index_set(Context *context,
-                        Tree *data, Tree *indexTree,
-                        Tree *value)
-// ----------------------------------------------------------------------------
-//   Set the given element in a data set
-// ----------------------------------------------------------------------------
-{
-    IndexInfo *info = xl_index_info_initialize(context, data);
-
-    if (Block *block = indexTree->AsBlock())
-        indexTree = xl_evaluate(context, block->child);
-
-    if (Integer *it = indexTree->AsInteger())
-    {
-        longlong idx = it->value;
-        if (value == xl_false)
-            info->imap.erase(idx);
-        else
-            info->imap[idx] = value;
-    }
-    else
-    {
-        text idx;
-
-        if (Text *tt = indexTree->AsText())
-            idx = tt->value;
-        else if (Name *nt = indexTree->AsName())
-            idx = nt->value;
-        else
-            idx = text(*indexTree);
-        
-        if (value == xl_false)
-            info->tmap.erase(idx);
-        else
-            info->tmap[idx] = value;
+        Symbols *s = new Symbols(data->Symbols());
+        value->SetSymbols(s);
     }
 
     return value;
@@ -2016,8 +1991,16 @@ Integer *xl_size(Context *context, Tree *data)
 //   Return the length of a given list
 // ----------------------------------------------------------------------------
 {
-    IndexInfo *info = xl_index_info_initialize(context, data);
-    return new Integer(info->imap.size() + info->tmap.size(), data->Position());
+    Rewrite *rw = xl_reference(context, data, false);
+    Tree *value = rw->to;
+    if (!value)
+        value = rw->from;
+
+    ulong count = 0;
+    if (Symbols *symbols = value->Symbols())
+        count = symbols->Count(~0U);
+
+    return new Integer(count, data->Position());
 }
 
 
