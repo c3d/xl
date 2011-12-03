@@ -1661,7 +1661,7 @@ Tree *EvaluateChildren::DoPrefix(Prefix *what)
     Tree *right = what->right->Do(compile);
     if (!right)
         return NULL;
-    unit.CallNewPrefix(what);
+    unit.CallFillPrefix(what);
     return what;
 }
 
@@ -1676,7 +1676,7 @@ Tree *EvaluateChildren::DoPostfix(Postfix *what)
     if (!left)
         return NULL;
     unit.ConstantTree(what->right);
-    unit.CallNewPostfix(what);
+    unit.CallFillPostfix(what);
     return what;
 }
 
@@ -1693,7 +1693,7 @@ Tree *EvaluateChildren::DoInfix(Infix *what)
     Tree *right = what->right->Do(compile);
     if (!right)
         return NULL;
-    unit.CallNewInfix(what);
+    unit.CallFillInfix(what);
     return what;
 }
 
@@ -1707,7 +1707,7 @@ Tree *EvaluateChildren::DoBlock(Block *what)
     Tree *child = what->child->Do(compile);
     if (!child)
         return NULL;
-    unit.CallNewBlock(what);
+    unit.CallFillBlock(what);
     return what;
 }
 
@@ -2137,6 +2137,7 @@ Tree *CompileAction::DoPrefix(Prefix *what)
             return Rewrites(what);
         }
     }
+
     return Rewrites(what);
 }
 
@@ -3022,7 +3023,7 @@ Value *OCompiledUnit::CallEvaluate(Tree *tree)
 }
 
 
-Value *OCompiledUnit::CallNewBlock(Block *block)
+Value *OCompiledUnit::CallFillBlock(Block *block)
 // ----------------------------------------------------------------------------
 //    Compile code generating the children of the block
 // ----------------------------------------------------------------------------
@@ -3030,7 +3031,7 @@ Value *OCompiledUnit::CallNewBlock(Block *block)
     Value *blockValue = ConstantTree(block);
     Value *childValue = Known(block->child);
     blockValue = code->CreateBitCast(blockValue, compiler->blockTreePtrTy);
-    Value *result = code->CreateCall2(compiler->xl_new_block,
+    Value *result = code->CreateCall2(compiler->xl_fill_block,
                                       blockValue, childValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(block, result);
@@ -3038,7 +3039,7 @@ Value *OCompiledUnit::CallNewBlock(Block *block)
 }
 
 
-Value *OCompiledUnit::CallNewPrefix(Prefix *prefix)
+Value *OCompiledUnit::CallFillPrefix(Prefix *prefix)
 // ----------------------------------------------------------------------------
 //    Compile code generating the children of a prefix
 // ----------------------------------------------------------------------------
@@ -3047,7 +3048,7 @@ Value *OCompiledUnit::CallNewPrefix(Prefix *prefix)
     Value *leftValue = Known(prefix->left);
     Value *rightValue = Known(prefix->right);
     prefixValue = code->CreateBitCast(prefixValue, compiler->prefixTreePtrTy);
-    Value *result = code->CreateCall3(compiler->xl_new_prefix,
+    Value *result = code->CreateCall3(compiler->xl_fill_prefix,
                                       prefixValue, leftValue, rightValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(prefix, result);
@@ -3055,7 +3056,7 @@ Value *OCompiledUnit::CallNewPrefix(Prefix *prefix)
 }
 
 
-Value *OCompiledUnit::CallNewPostfix(Postfix *postfix)
+Value *OCompiledUnit::CallFillPostfix(Postfix *postfix)
 // ----------------------------------------------------------------------------
 //    Compile code generating the children of a postfix
 // ----------------------------------------------------------------------------
@@ -3064,7 +3065,7 @@ Value *OCompiledUnit::CallNewPostfix(Postfix *postfix)
     Value *leftValue = Known(postfix->left);
     Value *rightValue = Known(postfix->right);
     postfixValue = code->CreateBitCast(postfixValue,compiler->postfixTreePtrTy);
-    Value *result = code->CreateCall3(compiler->xl_new_postfix,
+    Value *result = code->CreateCall3(compiler->xl_fill_postfix,
                                       postfixValue, leftValue, rightValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(postfix, result);
@@ -3072,7 +3073,7 @@ Value *OCompiledUnit::CallNewPostfix(Postfix *postfix)
 }
 
 
-Value *OCompiledUnit::CallNewInfix(Infix *infix)
+Value *OCompiledUnit::CallFillInfix(Infix *infix)
 // ----------------------------------------------------------------------------
 //    Compile code generating the children of an infix
 // ----------------------------------------------------------------------------
@@ -3081,7 +3082,7 @@ Value *OCompiledUnit::CallNewInfix(Infix *infix)
     Value *leftValue = Known(infix->left);
     Value *rightValue = Known(infix->right);
     infixValue = code->CreateBitCast(infixValue, compiler->infixTreePtrTy);
-    Value *result = code->CreateCall3(compiler->xl_new_infix,
+    Value *result = code->CreateCall3(compiler->xl_fill_infix,
                                       infixValue, leftValue, rightValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(infix, result);

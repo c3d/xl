@@ -544,6 +544,49 @@ Infix *xl_new_infix(Infix *source, Tree *left, Tree *right)
 }
 
 
+Block *xl_fill_block(Block *source, Tree *child)
+// ----------------------------------------------------------------------------
+//    Called by generated code to replace child of a Block
+// ----------------------------------------------------------------------------
+{
+    source->child = child;
+    return source;
+}
+
+
+Prefix *xl_fill_prefix(Prefix *source, Tree *left, Tree *right)
+// ----------------------------------------------------------------------------
+//    Called by generated code to replace children of a Prefix
+// ----------------------------------------------------------------------------
+{
+    source->left = left;
+    source->right = right;
+    return source;
+}
+
+
+Postfix *xl_fill_postfix(Postfix *source, Tree *left, Tree *right)
+// ----------------------------------------------------------------------------
+//    Called by generated code to replace children of a Postfix
+// ----------------------------------------------------------------------------
+{
+    source->left = left;
+    source->right = right;
+    return source;
+}
+
+
+Infix *xl_fill_infix(Infix *source, Tree *left, Tree *right)
+// ----------------------------------------------------------------------------
+//    Called by generated code to replace children of an Infix
+// ----------------------------------------------------------------------------
+{
+    source->left = left;
+    source->right = right;
+    return source;
+}
+
+
 Tree *xl_real_list(Tree *self, uint n, double *values)
 // ----------------------------------------------------------------------------
 //   Build an infix from a list of real numbers
@@ -1794,101 +1837,187 @@ Tree *xl_range(longlong low, longlong high)
 }
 
 
-Tree *xl_nth(Context *context, Tree *data, Integer *indexTree)
+struct IndexInfo : Info
 // ----------------------------------------------------------------------------
-//   Find the nth element in a data set
+//   Store information about data values
 // ----------------------------------------------------------------------------
 {
-    // Check that the index begins at 1
-    longlong index = indexTree->value;
-    if (index <= 0)
-    {
-        Ooops ("Negative or null list index $1", indexTree);
-        return xl_false;
-    }
+    std::map<longlong, Tree_p>  imap;
+    std::map<text, Tree_p>      tmap;
+};
 
-    // Check if we got (1,2,3,4) or something like f(3) as 'data'
-    Block *block = data->AsBlock();
-    if (block)
+
+void xl_index_info_initialize(Symbols *s, IndexInfo *info, Tree *data)
+// ----------------------------------------------------------------------------
+//   Internal recursive initialization for index info
+// ----------------------------------------------------------------------------
+{
+    if (Infix *what = data->AsInfix())
     {
-        // We got (1,2,3,4): Extract 1,2,3,4
-        data = block->child;
+        if (what->name == "," || what->name == ";" || what->name == "\n")
+        {
+            xl_index_info_initialize(s, info, what->left);
+            xl_index_info_initialize(s, info, what->right);
+        }
+        if (what->name == "->")
+        {
+            Tree *left = what->left;
+            if (Integer *li = left->AsInteger())
+            {
+                if (!what->right->Symbols())
+                    what->right->SetSymbols(s);
+                info->imap[li->value] = what->right;
+            }
+            else if (Text *ti = left->AsText())
+            {
+                if (!what->right->Symbols())
+                    what->right->SetSymbols(s);
+                info->tmap[ti->value] = what->right;
+            }
+            else
+            {
+                Ooops("Unimplemented data form $1", what);
+            }                
+        }
+    }
+    else
+    {
         if (!data->Symbols())
-            data->SetSymbols(block->Symbols());
+            data->SetSymbols(s);
+        info->imap[info->imap.size()+1] = data;
     }
-
-    // Check if we have an infix
-    if (Infix *infix = data->AsInfix())
-    {
-        text separator = infix->name;
-        while (index > 1 && infix)
-        {
-            data = infix->right;
-            infix = NULL;
-            if (Infix *rightInfix = data->AsInfix())
-                if (rightInfix->name == separator)
-                    infix = rightInfix;
-            index--;
-        }
-
-        if (infix)
-        {
-            assert (index == 1);
-            data = infix->left;
-        }
-    }
-
-    // When we get there, we should have the first item, i.e. in (1) or (1,2)
-    if (index != 1)
-    {
-        Ooops ("Index $1 is out of range", indexTree);
-        return xl_false;
-    }
-
-    // Return the value we got
-    return data;
 }
 
 
-Integer *xl_length(Context *context, Tree *data)
+IndexInfo *xl_index_info_initialize(Context *context, Tree *data)
+// ----------------------------------------------------------------------------
+//    Process the tree recursively and initialize data
+// ----------------------------------------------------------------------------
+{
+    Symbols *symbols = data->Symbols();
+    bool empty = false;
+
+    // Lookup names
+    if (Name *name = data->AsName())
+    {
+        data = symbols->Named(name->value);
+        if (!data)
+            data = name;
+    }
+
+    // Evaluate prefix or postfix values
+    else if (data->Kind() == PREFIX || data->Kind() == POSTFIX)
+    {
+        data = xl_evaluate(context, data);
+    }
+
+    // Look inside blocks
+    if (Block *block = data->AsBlock())
+    {
+        data = block->child;
+        if (Name *name = data->AsName())
+            if (name->value == "")
+                empty = true;   // Empty block
+    }
+
+    IndexInfo *info = data->GetInfo<IndexInfo>();
+    if (!info)
+    {
+        info = new IndexInfo;
+        data->SetInfo<IndexInfo>(info);
+        if (!empty)
+            xl_index_info_initialize(symbols, info, data);
+    }
+    return info;
+}
+
+
+Tree *xl_index(Context *context, Tree *data, Tree *indexTree)
+// ----------------------------------------------------------------------------
+//   Find the given element in a data set or return false
+// ----------------------------------------------------------------------------
+{
+    Tree_p value = xl_false;
+    IndexInfo *info = xl_index_info_initialize(context, data);
+    if (Block *block = indexTree->AsBlock())
+        indexTree = xl_evaluate(context, block->child);
+
+    if (Integer *it = indexTree->AsInteger())
+    {
+        longlong idx = it->value;
+        std::map<longlong,Tree_p>::iterator found = info->imap.find(idx);
+        if (found != info->imap.end())
+            value = (*found).second;
+    }
+    else
+    {
+        text idx;
+        if (Text *tt = indexTree->AsText())
+            idx = tt->value;
+        else if (Name *nt = indexTree->AsName())
+            idx = nt->value;
+        else
+            idx = text(*indexTree);
+        
+        std::map<text,Tree_p>::iterator found = info->tmap.find(idx);
+        if (found != info->tmap.end())
+            value = (*found).second;
+    }
+
+    if (!value->IsConstant())
+        value = xl_evaluate(context, value);
+    return value;
+}
+
+
+Tree *xl_index_set(Context *context,
+                        Tree *data, Tree *indexTree,
+                        Tree *value)
+// ----------------------------------------------------------------------------
+//   Set the given element in a data set
+// ----------------------------------------------------------------------------
+{
+    IndexInfo *info = xl_index_info_initialize(context, data);
+
+    if (Block *block = indexTree->AsBlock())
+        indexTree = xl_evaluate(context, block->child);
+
+    if (Integer *it = indexTree->AsInteger())
+    {
+        longlong idx = it->value;
+        if (value == xl_false)
+            info->imap.erase(idx);
+        else
+            info->imap[idx] = value;
+    }
+    else
+    {
+        text idx;
+
+        if (Text *tt = indexTree->AsText())
+            idx = tt->value;
+        else if (Name *nt = indexTree->AsName())
+            idx = nt->value;
+        else
+            idx = text(*indexTree);
+        
+        if (value == xl_false)
+            info->tmap.erase(idx);
+        else
+            info->tmap[idx] = value;
+    }
+
+    return value;
+}
+
+
+Integer *xl_size(Context *context, Tree *data)
 // ----------------------------------------------------------------------------
 //   Return the length of a given list
 // ----------------------------------------------------------------------------
 {
-    TreePosition pos = data->Position();
-
-    // Check if we got (1,2,3,4) or something like f(3) as 'data'
-    Block *block = data->AsBlock();
-    if (block)
-    {
-        // We got (1,2,3,4): Extract 1,2,3,4
-        data = block->child;
-        if (!data->Symbols())
-            data->SetSymbols(block->Symbols());
-    }
-
-    // Special case the empty name
-    if (Name *name = data->AsName())
-        if (name->value == "")
-            return new Integer(0, pos);
-
-    // Check if we have an infix
-    ulong len = 1;
-    if (Infix *infix = data->AsInfix())
-    {
-        text separator = infix->name;
-        while (infix)
-        {
-            data = infix->right;
-            infix = NULL;
-            if (Infix *rightInfix = data->AsInfix())
-                if (rightInfix->name == separator)
-                    infix = rightInfix;
-            len++;
-        }
-    }
-
-    return new Integer(len, pos);
+    IndexInfo *info = xl_index_info_initialize(context, data);
+    return new Integer(info->imap.size() + info->tmap.size(), data->Position());
 }
 
 

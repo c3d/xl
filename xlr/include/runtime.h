@@ -79,6 +79,10 @@ Block   *xl_new_block(Block *source, Tree *child);
 Prefix  *xl_new_prefix(Prefix *source, Tree *left, Tree *right);
 Postfix *xl_new_postfix(Postfix *source, Tree *left, Tree *right);
 Infix   *xl_new_infix(Infix *source, Tree *left, Tree *right);
+Block   *xl_fill_block(Block *source, Tree *child);
+Prefix  *xl_fill_prefix(Prefix *source, Tree *left, Tree *right);
+Postfix *xl_fill_postfix(Postfix *source, Tree *left, Tree *right);
+Infix   *xl_fill_infix(Infix *source, Tree *left, Tree *right);
 Tree    *xl_real_list(Tree *self, uint n, double *values);
 Tree    *xl_integer_list(Tree *self, uint n, longlong *values);
 
@@ -224,8 +228,9 @@ XL_BEGIN
 
 Tree *xl_apply(Context *, Tree *code, Tree *data);
 Tree *xl_range(longlong l, longlong h);
-Tree *xl_nth(Context *, Tree *data, Integer *index);
-Integer *xl_length(Context *, Tree *data);
+Tree *xl_index(Context *, Tree *data, Tree *index);
+Tree *xl_index_set(Context *, Tree *data, Tree *index, Tree *value);
+Integer *xl_size(Context *, Tree *data);
 typedef GCPtr<Context> Context_p;
 
 

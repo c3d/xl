@@ -102,6 +102,27 @@ PREFIX(Solve, tree, "solve",
        GROUP(basics:properties)
        SYNOPSIS("Test for the property solver"))
 
+// Array indexing and assignment. Assignment must be before other assignments
+INFIX(IndexText, tree, tree, "at", tree,
+      return xl_index(context, &l, &r),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(tree, ""))
+FORM(IndexSet, tree,
+     "Var.Index := Value",
+     PARM(Var, tree, "")
+     PARM(Index, tree, "")
+     PARM(Value, tree, ""),
+     return xl_index_set(context, &Var, &Index, &Value), )
+FORM(IndexGet, tree,
+     "Var.Index",
+     PARM(Var, tree, "")
+     PARM(Index, tree, ""),
+     return xl_index(context, &Var, &Index), )
+PREFIX(NonFalse, name, "not_false", PARM(V, tree, ""),
+       XL_RBOOL(xl_evaluate(context, &V) != xl_false), )
+
 // Integer arithmetic and comparisons
 INFIX(SetInt, integer,integer,":=",integer,XL_RINT(l.value = XL_INT(r)),
       GROUP(basics)
@@ -780,14 +801,14 @@ INFIX(Range, tree, integer, "..", integer, return xl_range(l, r),
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS(tree, ""))
-INFIX(Index, tree, tree, "at", integer, return xl_nth(context, &l, &r),
-      GROUP(basics)
-      SYNOPSIS("")
-      DESCRIPTION("")
-      RETURNS(tree, ""))
+
 PREFIX(Length, integer, "length",
        PARM(l, tree, ""),
-       return xl_length(context, &l),
+       return xl_size(context, &l),
+       GROUP(basics))
+PREFIX(Size, integer, "size",
+       PARM(l, tree, ""),
+       return xl_size(context, &l),
        GROUP(basics))
 
 PREFIX(Springify, real, "springify",

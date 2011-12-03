@@ -218,10 +218,10 @@ struct OCompiledUnit
     llvm::Value *       Copy(Tree *src, Tree *dst, bool markDone=true);
     llvm::Value *       Invoke(Tree *subexpr, Tree *callee, TreeList args);
     llvm::Value *       CallEvaluate(Tree *);
-    llvm::Value *       CallNewBlock(Block *);
-    llvm::Value *       CallNewPrefix(Prefix *);
-    llvm::Value *       CallNewPostfix(Postfix *);
-    llvm::Value *       CallNewInfix(Infix *);
+    llvm::Value *       CallFillBlock(Block *);
+    llvm::Value *       CallFillPrefix(Prefix *);
+    llvm::Value *       CallFillPostfix(Postfix *);
+    llvm::Value *       CallFillInfix(Infix *);
     llvm::Value *       CreateClosure(Tree *callee,
                                       TreeList &parms, TreeList &args,
                                       llvm::Function *);
