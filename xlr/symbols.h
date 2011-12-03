@@ -101,6 +101,7 @@ struct Symbols
     Rewrite *           Entry(text name, bool create);
     Rewrite *           Entry(Tree *form, bool create);
     Rewrite *           LookupEntry(text name, bool create);
+    Rewrite *           LookupEntry(Tree *form, bool create);
 
     // Performing the declarations on a given tree
     Tree *              ProcessDeclarations(Tree *tree);

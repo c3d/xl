@@ -1135,6 +1135,16 @@ bool xl_write_text(kstring x)
 }
 
 
+bool xl_write_tree(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Write a text value
+// ----------------------------------------------------------------------------
+{
+    std::cout << tree;
+    return true;
+}
+
+
 bool xl_write_character(char x)
 // ----------------------------------------------------------------------------
 //   Write a character value
@@ -1841,19 +1851,9 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
         Tree *right = NULL;
 
         // Lookup terminals
-        text key = "";
-        if (Name *nt = expr->AsName())
-            key = nt->value;
-        else if (Text *tt = expr->AsText())
-            key = tt->opening + tt->value + tt->closing;
-        else if (Integer *it = expr->AsInteger())
-            key = text(*it);
-        else if (Real *rt = expr->AsReal())
-            key = text(*rt);
-
-        if (key.size())
+        if (expr->IsLeaf())
         {
-            Rewrite *entry = symbols->LookupEntry(key, create);
+            Rewrite *entry = symbols->LookupEntry(expr, create);
             if (entry && type)
             {
                 if (!entry->type)
@@ -1921,15 +1921,9 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
             Rewrite *ref = xl_reference(context, left, true);
                 
             // Create value and symbol table if they don't exist
-            if (!ref->to)
-                ref->to = ref->from;
-
-            Symbols *s = ref->to->Symbols();
+            Symbols *s = ref->symbols;
             if (!s)
-            {
-                s = new Symbols(symbols);
-                ref->to->SetSymbols(s);
-            }
+                s = ref->symbols = new Symbols(symbols);
             symbols = s;
             expr = right;
             if (!expr->Symbols())
@@ -1957,7 +1951,37 @@ Tree *xl_assign(Context *context, Tree *var, Tree *value)
     {
         Rewrite *rw = xl_reference(context, var, true);
         if (rw)
-            rw->to = value;
+        {
+            value = xl_evaluate(context, value);
+
+            // TODO: Type checks
+            kind vk = value->Kind();
+            Tree *old = rw->to;
+            if (vk <= TEXT && old && vk == old->Kind())
+            {
+                // Update tree in place
+                switch (vk)
+                {
+                case INTEGER:
+                    ((Integer *) old)->value = ((Integer *) value)->value;
+                    break;
+                case REAL:
+                    ((Real *) old)->value = ((Real *) value)->value;
+                    break;
+                case TEXT:
+                    ((Text *) old)->value = ((Text *) value)->value;
+                    break;
+                default:
+                    assert(!"Unexpected switch case");
+                }
+            }
+            else
+            {
+                // Replace tree in the rewrite itself
+                rw->to = value;
+                rw->kind = Rewrite::ASSIGNED;
+            }
+        }
         return value;
     }
     return context->Assign(var, value);
@@ -1966,23 +1990,24 @@ Tree *xl_assign(Context *context, Tree *var, Tree *value)
 
 Tree *xl_index(Context *context, Tree *data, Tree *indexTree)
 // ----------------------------------------------------------------------------
-//   Find the given element in a data set or return false
+//   Find the given element in a data set or return false, e.g. X.Y
 // ----------------------------------------------------------------------------
 {
+    // Identify the reference for X
     Rewrite *rw = xl_reference(context, data, false);
     if (!rw)
         return xl_false;
 
-    Tree *value = rw->to;
-    if (!value)
-        value = rw->from;
-    if (!value->Symbols())
-    {
-        Symbols *s = new Symbols(data->Symbols());
-        value->SetSymbols(s);
-    }
+    // Get the symbol table for X
+    Symbols *symbols = rw->symbols;
+    if (!symbols)
+        return xl_false;
 
-    return value;
+    // In X's symbol table, find Y (don't look up, we want only local results)
+    rw = symbols->Entry(indexTree, false);
+    if (!rw || !rw->to)
+        return xl_false;
+    return rw->to;
 }
 
 

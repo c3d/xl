@@ -128,6 +128,33 @@ Rewrite *Symbols::LookupEntry(text name, bool create)
 }
 
 
+Rewrite *Symbols::LookupEntry(Tree *form, bool create)
+// ----------------------------------------------------------------------------
+//   Find the entry for a given name in all visible scopes
+// ----------------------------------------------------------------------------
+{
+    symbols_set visited;
+    symbols_list lookups;
+
+    // Build all the symbol tables that we are going to look into
+    BuildSymbolsList(this, visited, lookups);
+
+    symbols_list::iterator li;
+    for (li = lookups.begin(); li != lookups.end(); li++)
+    {
+        Symbols *s = *li;
+        if (Rewrite *found = s->Entry(form, false))
+            return found;
+    }
+
+    // If we didn't find it, create it locally
+    if (create)
+        return Entry(form, create);
+
+    return NULL;
+}
+
+
 Tree *Symbols::Named(text name, bool deep)
 // ----------------------------------------------------------------------------
 //   Find the name in the current context

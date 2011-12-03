@@ -855,6 +855,12 @@ PREFIX(WriteText, tree, "write", PARM(toWrite, text, ""),
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
+PREFIX(WriteOther, tree, "write", PARM(toWrite, tree, ""),
+       XL_RBOOL(xl_write_tree(&toWrite)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
 PREFIX(WriteLn, tree, "writeln", ,
        XL_RBOOL(xl_write_cr()),
        GROUP(basics)

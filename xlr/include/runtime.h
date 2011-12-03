@@ -386,6 +386,7 @@ extern "C"
     bool xl_write_real(double);
     bool xl_write_text(kstring);
     bool xl_write_character(char c);
+    bool xl_write_tree(XL::Tree *t);
     bool xl_write_cr(void);
 }
 Tree *xl_list_files(Context *context, Tree *patterns);

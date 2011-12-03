@@ -2193,13 +2193,14 @@ extern "C" void debugrw(XL::Rewrite *r)
 {
     static kstring kinds[] = { "UNKNOWN", "ARG", "PARM", "LOCAL",
                                "GLOBAL", "FORM", "TYPE", "ENUM",
-                               "PROPERTY", "IMPORTED" };
+                               "PROPERTY", "IMPORTED", "ASSIGNED" };
 
     if (XL::Allocator<XL::Rewrite>::IsAllocated(r))
     {
         if (r->description != "")
             std::cerr << "// " << r->description << "\n";
-        std::cerr << kinds[r->kind] << "\t";
+        if ((uint) r->kind < sizeof(kinds) / sizeof(kinds[0]))
+            std::cerr << kinds[r->kind] << "\t";
 
         if (!r->to)
             std::cerr << "data " << r->from << "\n";
