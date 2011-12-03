@@ -1953,34 +1953,8 @@ Tree *xl_assign(Context *context, Tree *var, Tree *value)
         if (rw)
         {
             value = xl_evaluate(context, value);
-
-            // TODO: Type checks
-            kind vk = value->Kind();
-            Tree *old = rw->to;
-            if (vk <= TEXT && old && vk == old->Kind())
-            {
-                // Update tree in place
-                switch (vk)
-                {
-                case INTEGER:
-                    ((Integer *) old)->value = ((Integer *) value)->value;
-                    break;
-                case REAL:
-                    ((Real *) old)->value = ((Real *) value)->value;
-                    break;
-                case TEXT:
-                    ((Text *) old)->value = ((Text *) value)->value;
-                    break;
-                default:
-                    assert(!"Unexpected switch case");
-                }
-            }
-            else
-            {
-                // Replace tree in the rewrite itself
-                rw->to = value;
-                rw->kind = Rewrite::ASSIGNED;
-            }
+            rw->to = value;
+            rw->kind = Rewrite::ASSIGNED;
         }
         return value;
     }
@@ -2306,62 +2280,8 @@ void xl_enter_declarator(text name, decl_fn fn)
 //
 // ============================================================================
 
-struct ForLoopInfo : Info
-// ----------------------------------------------------------------------------
-//    Specifically compiled body for list for loops
-// ----------------------------------------------------------------------------
-{
-    ForLoopInfo(Tree_p body) : body(body) {}
-    static Tree *LoopBody(Tree *self, Name *var, Tree *body);
-    Tree_p    body;
-};
-
-
-static Tree_p xl_list_for_loop_current_item;
-static Tree *xl_list_for_loop_item(Context *context, Tree *value)
-// ----------------------------------------------------------------------------
-//   Return the current value of a list for loop
-// ----------------------------------------------------------------------------
-{
-    return xl_list_for_loop_current_item
-        ?  (Tree *) xl_list_for_loop_current_item
-        :  (Tree *) xl_false;
-}
-
-
-Tree *ForLoopInfo::LoopBody(Tree *self, Name *var, Tree *body)
-// ----------------------------------------------------------------------------
-//   Create a clone of the loop body suitable for evaluation in a for loop
-// ----------------------------------------------------------------------------
-{
-    ForLoopInfo *info = self->GetInfo<ForLoopInfo>();
-    if (!info)
-    {
-        // Create a local scope containing only the named variable
-        Symbols_p scope = body->Symbols();
-        Symbols_p locals = new Symbols(scope);
-        locals->Allocate (var);
-        var->code = xl_list_for_loop_item;
-
-        // Create a clone for the body, that's what we will evaluate
-        TreeClone clone;
-        body = body->Do(clone);
-        body->SetSymbols(locals);
-
-        // Create the info and attach it
-        info = new ForLoopInfo(body);
-        self->SetInfo<ForLoopInfo>(info);
-    }
-    else
-    {
-        body = info->body;
-    }
-    return body;
-}
-
-
 Tree *xl_integer_for_loop(Context *context, Tree *self,
-                          Integer *Variable,
+                          Tree *Variable,
                           longlong low, longlong high, longlong step,
                           Tree *body)
 // ----------------------------------------------------------------------------
@@ -2374,11 +2294,13 @@ Tree *xl_integer_for_loop(Context *context, Tree *self,
         body->SetSymbols(self->Symbols());
 
     Tree_p result = xl_false;
+    Integer_p ival = new Integer(low, self->Position());
     if (step >= 0)
     {
         for (longlong i = low; i <= high; i += step)
         {
-            Variable->value = i;
+            ival->value = i;
+            xl_assign(context, Variable, ival);
             result = context->Evaluate(body);
         }
     }
@@ -2386,7 +2308,8 @@ Tree *xl_integer_for_loop(Context *context, Tree *self,
     {
         for (longlong i = low; i >= high; i += step)
         {
-            Variable->value = i;
+            ival->value = i;
+            xl_assign(context, Variable, ival);
             result = context->Evaluate(body);
         }
     }
@@ -2395,7 +2318,7 @@ Tree *xl_integer_for_loop(Context *context, Tree *self,
 
 
 Tree *xl_real_for_loop(Context *context, Tree *self,
-                       Real *Variable,
+                       Tree *Variable,
                        double low, double high, double step, Tree *body)
 // ----------------------------------------------------------------------------
 //    Loop over a real variable
@@ -2407,11 +2330,13 @@ Tree *xl_real_for_loop(Context *context, Tree *self,
         body->SetSymbols(self->Symbols());
 
     Tree_p result = xl_false;
+    Real_p rval = new Real(low, self->Position());
     if (step >= 0)
     {
         for (double i = low; i <= high; i += step)
         {
-            Variable->value = i;
+            rval->value = i;
+            xl_assign(context, Variable, rval);
             result = context->Evaluate(body);
         }
     }
@@ -2419,7 +2344,8 @@ Tree *xl_real_for_loop(Context *context, Tree *self,
     {
         for (double i = low; i >= high; i += step)
         {
-            Variable->value = i;
+            rval->value = i;
+            xl_assign(context, Variable, rval);
             result = context->Evaluate(body);
         }
     }
@@ -2428,7 +2354,7 @@ Tree *xl_real_for_loop(Context *context, Tree *self,
 
 
 Tree *xl_list_for_loop(Context *context, Tree *self,
-                       Name *Variable,
+                       Tree *Variable,
                        Tree *list, Tree *body)
 // ----------------------------------------------------------------------------
 //   Loop over a list
@@ -2436,6 +2362,7 @@ Tree *xl_list_for_loop(Context *context, Tree *self,
 {
     ADJUST_CONTEXT_FOR_INTERPRETER(context);
 
+    // Extract list value
     Tree_p result = xl_false;
     if (Block *block = list->AsBlock())
         list = block->child;
@@ -2443,11 +2370,7 @@ Tree *xl_list_for_loop(Context *context, Tree *self,
         if (name->value == "")
             return result;      // empty list
 
-    // Get body of loop for given variable
-    body = ForLoopInfo::LoopBody(self, Variable, body);
-
-    // Save current index, and loop on all items
-    Save<Tree_p> saveIndex(xl_list_for_loop_current_item, xl_false);
+    // Loop on list items
     Tree *next = list;
     while (next)
     {
@@ -2466,7 +2389,7 @@ Tree *xl_list_for_loop(Context *context, Tree *self,
         }
 
         // Set the loop index
-        xl_list_for_loop_current_item = value;
+        xl_assign(context, Variable, value);
         result = context->Evaluate(body);
     }
 

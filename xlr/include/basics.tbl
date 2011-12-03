@@ -870,38 +870,38 @@ PREFIX(WriteLn, tree, "writeln", ,
 
 // Loops
 FORM(IntegerForLoop, tree,
-     "for Var:integer in Low:integer..High:integer loop Body",
-     PARM(Var, integer, "")
+     "for Var in Low:integer..High:integer loop Body",
+     PARM(Var, tree, "")
      PARM(Low, integer, "")
      PARM(High, integer, "")
      PARM(Body, source, ""),
      return xl_integer_for_loop(context,self, &Var, Low, High, 1, &Body), )
 FORM(IntegerForLoopStep, tree,
-     "for Var:integer in Low:integer..High:integer step Step:integer loop Body",
-     PARM(Var, integer, "")
+     "for Var in Low:integer..High:integer step Step:integer loop Body",
+     PARM(Var, tree, "")
      PARM(Low, integer, "")
      PARM(High, integer, "")
      PARM(Step, integer, "")
      PARM(Body, source, ""),
      return xl_integer_for_loop(context,self, &Var, Low,High,Step, &Body), )
 FORM(RealForLoop, tree,
-     "for Var:real in Low:real..High:real loop Body",
-     PARM(Var, real, "")
+     "for Var in Low:real..High:real loop Body",
+     PARM(Var, tree, "")
      PARM(Low, real, "")
      PARM(High, real, "")
      PARM(Body, source, ""),
      return xl_real_for_loop(context,self, &Var, Low, High, 1.0, &Body), )
 FORM(RealForLoopStep, tree,
-     "for Var:real in Low:real..High:real step Step:real loop Body",
-     PARM(Var, real, "")
+     "for Var in Low:real..High:real step Step:real loop Body",
+     PARM(Var, tree, "")
      PARM(Low, real, "")
      PARM(High, real, "")
      PARM(Step, real, "")
      PARM(Body, source, ""),
      return xl_real_for_loop(context,self, &Var, Low,High,Step, &Body), )
 FORM(ListForLoop, tree,
-     "for Var:name in List loop Body",
-     PARM(Var, name, "")
+     "for Var in List loop Body",
+     PARM(Var, tree, "")
      PARM(List, tree, "")
      PARM(Body, source, ""),
      return xl_list_for_loop(context, self, &Var, &List, &Body), )
