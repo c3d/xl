@@ -1837,6 +1837,78 @@ Tree *xl_range(longlong low, longlong high)
 }
 
 
+Rewrite *xl_data_reference(Context *context, Tree *expr)
+// ----------------------------------------------------------------------------
+//   Build a symbol table for a list
+// ----------------------------------------------------------------------------
+{
+    Symbols *symbols = expr->Symbols();
+
+    // Check if already built
+    if (symbols)
+    {
+        if (Rewrite *rewrite = symbols->Rewrites())
+        {
+            if (rewrite->kind == Rewrite::METADATA)
+            {
+                if (Name *name = rewrite->from->AsName())
+                    if (name->value == ":List:")
+                        return rewrite;
+                
+                // If we have a non-empty symbol table, create a new one
+                symbols = new Symbols(symbols);
+                expr->SetSymbols(symbols);
+            }
+        }
+    }
+    else
+    {
+        // No symbol table: create one - Should not happen too often
+        symbols = new Symbols(symbols);
+        expr->SetSymbols(symbols);
+    }
+        
+    // Create the original entry for the symbol table
+    longlong count = 0;
+    TreePosition pos = expr->Position();
+    Name_p listMarker = new Name(":List:", pos);
+    Integer_p listSize = new Integer(count, pos);
+    Rewrite_p top = symbols->EnterRewrite(listMarker, listSize);
+    top->kind = Rewrite::METADATA;
+    top->symbols = symbols;
+
+    // Check the empty name case
+    if (Name *name = expr->AsName())
+        if (name->value == "")
+            return top;
+
+    // Populate the symbol table with the entries
+    while (expr)
+    {
+        Tree *next = NULL;
+
+        if (Infix *infix = expr->AsInfix())
+        {
+            if (infix->name == ",")
+            {
+                expr = infix->left;
+                next = infix->right;
+            }
+        }
+
+        Integer_p index = new Integer(++count, pos);
+        symbols->EnterRewrite(index, expr);
+        expr = next;
+    }
+
+    // Update size of the list
+    listSize->value = count;
+
+    // Return the top-level entry
+    return top;
+}
+
+
 Rewrite *xl_reference(Context *context, Tree *expr, bool create)
 // ----------------------------------------------------------------------------
 //   Find the property associated with the given expression
@@ -1845,6 +1917,7 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
     Symbols *symbols = expr->Symbols();
     Tree *type = NULL;
 
+    // Deal with non-list cases
     while (expr)
     {
         Tree *left = NULL;
@@ -1874,6 +1947,7 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
         {
             if (infix->name == ":")
             {
+                // A:B = record that we have a type
                 if (!type)
                 {
                     type = xl_evaluate(context, infix->right);
@@ -1886,8 +1960,14 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
             }
             else if (infix->name == ".")
             {
+                // A.B = Dereference A, then lookup B
                 left = infix->left;
                 right = infix->right;
+            }
+            else if (infix->name == ",")
+            {
+                // A,B = Infix list
+                return xl_data_reference(context, infix);
             }
         }
             
@@ -1913,6 +1993,20 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
             continue;           // Do not evaluate anything
         }
 
+        // Check empty names
+        else if (Name *name = expr->AsName())
+        {
+            if (name->value == "")
+                return xl_data_reference(context, expr);
+        }
+
+        // Check constants
+        else if (expr->IsConstant())
+        {
+            return xl_data_reference(context, expr);
+        }
+
+        // Check if we were in a A.B or A[B] case
         if (left && right)
         {
             // Find the reference on the left
@@ -1923,6 +2017,8 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
             // Create value and symbol table if they don't exist
             Symbols *s = ref->symbols;
             if (!s)
+                s = ref->symbols = ref->to->Symbols();
+            if (!s)
                 s = ref->symbols = new Symbols(symbols);
             symbols = s;
             expr = right;
@@ -1931,8 +2027,11 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
         }
         else
         {
-            // All other cases: evaluate expression
-            expr = xl_evaluate(context, expr);
+            // All other cases: evaluate
+            Tree *evaluated = xl_evaluate(context, expr);
+            if (evaluated == expr)
+                return NULL;
+            expr = evaluated;
         }
 
     } // While (expr)
@@ -1975,7 +2074,12 @@ Tree *xl_index(Context *context, Tree *data, Tree *indexTree)
     // Get the symbol table for X
     Symbols *symbols = rw->symbols;
     if (!symbols)
-        return xl_false;
+    {
+        symbols = rw->to->Symbols();
+        if (!symbols)
+            return xl_false;
+        rw->symbols = symbols;
+    }
 
     // In X's symbol table, find Y (don't look up, we want only local results)
     rw = symbols->Entry(indexTree, false);
@@ -2001,14 +2105,19 @@ Integer *xl_size(Context *context, Tree *data)
 // ----------------------------------------------------------------------------
 {
     Rewrite *rw = xl_reference(context, data, false);
-    Tree *value = rw->to;
-    if (!value)
-        value = rw->from;
-
     ulong count = 0;
-    if (Symbols *symbols = value->Symbols())
-        count = symbols->Count(~0U);
+    if (rw)
+    {
+        // Check if this is an already computed list, if so return size
+        Symbols *symbols = rw->symbols;
+        if (symbols)
+            if (rw->kind == Rewrite::METADATA)
+                if (Name *name = rw->from->AsName())
+                    if (name->value == ":List:")
+                        return rw->to->AsInteger();
 
+        count = symbols->Count(~(1<<Rewrite::METADATA));
+    }
     return new Integer(count, data->Position());
 }
 

@@ -2217,6 +2217,7 @@ Tree *CompileAction::DoPrefix(Prefix *what)
         {
             what->left->SetSymbols(symbols);
             what->right->SetSymbols(symbols);
+            br->child->SetSymbols(symbols);
             what->left->Do(this);
             br->child->Do(this);
             unit.CallArrayIndex(what, what->left, br->child);

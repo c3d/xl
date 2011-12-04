@@ -343,7 +343,7 @@ struct Rewrite
 {
     enum Kind { UNKNOWN, ARG, PARM, LOCAL,
                 GLOBAL, FORM, TYPE, ENUM, 
-                PROPERTY, IMPORTED, ASSIGNED };
+                PROPERTY, IMPORTED, ASSIGNED, METADATA };
 
     Rewrite (Tree *f, Tree *t, Tree *tp):
         symbols(NULL), from(f), to(t), hash(), native(NULL), type(tp) {}

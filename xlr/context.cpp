@@ -2193,7 +2193,7 @@ extern "C" void debugrw(XL::Rewrite *r)
 {
     static kstring kinds[] = { "UNKNOWN", "ARG", "PARM", "LOCAL",
                                "GLOBAL", "FORM", "TYPE", "ENUM",
-                               "PROPERTY", "IMPORTED", "ASSIGNED" };
+                               "PROPERTY", "IMPORTED", "ASSIGNED", "METADATA" };
 
     if (XL::Allocator<XL::Rewrite>::IsAllocated(r))
     {
