@@ -2113,6 +2113,15 @@ Tree *CompileAction::DoBlock(Block *what)
         (what->opening == "{" && what->closing == "}") ||
         (what->opening == "(" && what->closing == ")"))
     {
+        if (Name *name = what->child->AsName())
+        {
+            if (name->value == "")
+            {
+                unit.ConstantTree(what);
+                return what;
+            }
+        }
+
         if (unit.IsKnown(what))
             unit.Copy(what, what->child, false);
         Tree *result = what->child->Do(this);

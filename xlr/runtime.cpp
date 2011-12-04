@@ -1877,6 +1877,10 @@ Rewrite *xl_data_reference(Context *context, Tree *expr)
     top->kind = Rewrite::METADATA;
     top->symbols = symbols;
 
+    // Evacuate block
+    if (Block *block = expr->AsBlock())
+        expr = block->child;
+
     // Check the empty name case
     if (Name *name = expr->AsName())
         if (name->value == "")
