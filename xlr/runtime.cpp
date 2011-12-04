@@ -2101,10 +2101,10 @@ Tree *xl_array_index(Context *context, Tree *data, Tree *indexTree)
 
 Integer *xl_size(Context *context, Tree *data)
 // ----------------------------------------------------------------------------
-//   Return the length of a given list
+//   Return the length / size of a given list
 // ----------------------------------------------------------------------------
 {
-    Rewrite *rw = xl_reference(context, data, false);
+    Rewrite *rw = xl_data_reference(context, data);
     ulong count = 0;
     if (rw)
     {
