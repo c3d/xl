@@ -492,7 +492,8 @@ INFIX(TextAt, text, text, "at", integer,
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS(text, ""))
-INFIX(ListIndex, tree, tree, "at", tree, return xl_index(context, &l, &r), )
+INFIX(ListIndex, tree, tree, "at", tree,
+      return xl_array_index(context, &l, &r), )
 
 // Some other text primitives
 PREFIX(TextLength, integer, "text_length",
@@ -878,7 +879,7 @@ FORM(IntegerForLoop, tree,
      PARM(Body, source, ""),
      return xl_integer_for_loop(context,self, &Var, Low, High, 1, &Body), )
 FORM(IntegerForLoopStep, tree,
-     "for Var in Low:integer..High:integer step Step:integer loop Body",
+     "for Var in Low:integer..High:integer by Step:integer loop Body",
      PARM(Var, tree, "")
      PARM(Low, integer, "")
      PARM(High, integer, "")
@@ -893,7 +894,7 @@ FORM(RealForLoop, tree,
      PARM(Body, source, ""),
      return xl_real_for_loop(context,self, &Var, Low, High, 1.0, &Body), )
 FORM(RealForLoopStep, tree,
-     "for Var in Low:real..High:real step Step:real loop Body",
+     "for Var in Low:real..High:real by Step:real loop Body",
      PARM(Var, tree, "")
      PARM(Low, real, "")
      PARM(High, real, "")
