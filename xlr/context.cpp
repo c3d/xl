@@ -382,11 +382,12 @@ Tree *Context::AssignTree(Tree *tgt, Tree *val, Tree *tp,
         ValidateNames(name);
 
         // Build the hash key for the tree to evaluate
-        ulong key = Hash(name);
+        ulong hkey = Hash(name);
 
         // Loop over all contexts, searching for a pre-existing assignment
         FOR_CONTEXTS(this, context)
         {
+            ulong key = hkey;
             if (Rewrite *candidate = REWRITE_FIRST(context->rewrites, key))
             {
                 while (candidate)
@@ -456,6 +457,7 @@ Tree *Context::AssignTree(Tree *tgt, Tree *val, Tree *tp,
         Rewrite *rewrite = new Rewrite(name, value, type);
 
         // Walk through existing rewrites (we already checked for redefinitions)
+        ulong key = hkey;
         Rewrite_p *parent = &rewrites[key % REWRITE_HASH_SIZE]; 
         while (Rewrite *where = *parent)
         {
@@ -1294,11 +1296,12 @@ Tree *Context::Bound(Name *name, lookup_mode lookup,
 // ----------------------------------------------------------------------------
 {
     // Build the hash key for the tree to evaluate
-    ulong key = Hash(name);
+    ulong hkey = Hash(name);
 
     // Loop over all contexts
     FOR_CONTEXTS(this, context)
     {
+        ulong key = hkey;
         if (Rewrite *candidate = REWRITE_FIRST(context->rewrites, key))
         {
             while (candidate)
@@ -1410,11 +1413,12 @@ Rewrite *Context::RewriteFor(Tree *form, lookup_mode lookup, Context_p *where)
         form = block->child;
 
     // Build the hash key for the tree to evaluate
-    ulong key = Hash(form);
+    ulong hkey = Hash(form);
 
     // Loop over all contexts
     FOR_CONTEXTS(this, context)
     {
+        ulong key = hkey;
         if (Rewrite *candidate = REWRITE_FIRST(context->rewrites, key))
         {
             while (candidate)
