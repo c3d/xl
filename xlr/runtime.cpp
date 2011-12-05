@@ -2092,7 +2092,7 @@ Tree *xl_assign(Context *context, Tree *var, Tree *value)
 // ----------------------------------------------------------------------------
 {
     ADJUST_CONTEXT_FOR_INTERPRETER(context);
-    if (var->Symbols())
+    if (XL::Options::options->optimize_level == 1)
     {
         value = xl_evaluate(context, value);
         if (var->IsConstant())
