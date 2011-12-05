@@ -2048,59 +2048,71 @@ Tree *CompileAction::DoName(Name *what, bool forceEval)
 //   Build a unique reference in the context for the entity
 // ----------------------------------------------------------------------------
 {
-    // Normally, the name should have been declared in ParameterMatch
-    if (Tree *result = symbols->Named(what->value))
+    // Lookup rewrite for that name
+    Rewrite *rw = symbols->LookupEntry(what->value, false);
+    if (!rw || !rw->to)
     {
-        // Try to compile the definition of the name
-        TreeList xargs;
-        if (!result->AsName())
+        if (nullIfBad)
         {
-            Rewrite rw(symbols, what, result);
-            if (!what->Symbols())
-                what->SetSymbols(symbols);
-            result = rw.Compile(xargs);
-            if (!result)
-                return result;
-        }
-
-        // Check if there is code we need to call
-        Compiler *compiler = MAIN->compiler;
-        llvm::Function *function = compiler->TreeFunction(result);
-        if (function && function != unit.function)
-        {
-            // Case of "Name -> Foo": Invoke Name
-            unit.NeedStorage(what);
-            unit.Invoke(what, result, xargs);
+            unit.ConstantTree(what);
             return what;
         }
-        else if (forceEval && unit.IsKnown(result))
-        {
-            unit.CallEvaluate(result);
-        }
-        else if (unit.IsKnown(result))
-        {
-            // Case of "Foo(A,B) -> B" with B: evaluate B lazily
-            unit.Copy(result, what, false);
-            return what;
-        }
-        else
-        {
-            // Return the name itself by default
-            unit.ConstantTree(result);
-            unit.Copy(result, what);
-            if (!result->Symbols())
-                result->SetSymbols(symbols);
-        }
-
-        return result;
+        Ooops("Name $1 does not exist", what);
+        return NULL;
     }
-    if (nullIfBad)
+
+    // If this is an assigned value, then we directly use the rewrite address
+    if (rw->kind == Rewrite::ASSIGNED)
     {
-        unit.ConstantTree(what);
+        unit.ReadName(what, rw);
         return what;
     }
-    Ooops("Name $1 does not exist", what);
-    return NULL;
+
+    // Normally, the name should have been declared in ParameterMatch
+    Tree *result = rw->to;
+
+    // Try to compile the definition of the name
+    TreeList xargs;
+    if (!result->AsName())
+    {
+        Rewrite rw(symbols, what, result);
+        if (!what->Symbols())
+            what->SetSymbols(symbols);
+        result = rw.Compile(xargs);
+        if (!result)
+            return result;
+    }
+
+    // Check if there is code we need to call
+    Compiler *compiler = MAIN->compiler;
+    llvm::Function *function = compiler->TreeFunction(result);
+    if (function && function != unit.function)
+    {
+        // Case of "Name -> Foo": Invoke Name
+        unit.NeedStorage(what);
+        unit.Invoke(what, result, xargs);
+        return what;
+    }
+    else if (forceEval && unit.IsKnown(result))
+    {
+        unit.CallEvaluate(result);
+    }
+    else if (unit.IsKnown(result))
+    {
+        // Case of "Foo(A,B) -> B" with B: evaluate B lazily
+        unit.Copy(result, what, false);
+        return what;
+    }
+    else
+    {
+        // Return the name itself by default
+        unit.ConstantTree(result);
+        unit.Copy(result, what);
+        if (!result->Symbols())
+            result->SetSymbols(symbols);
+    }
+    
+    return result;
 }
 
 
@@ -2987,6 +2999,21 @@ llvm::Value *OCompiledUnit::Invoke(Tree *subexpr, Tree *callee, TreeList args)
     MarkComputed(subexpr, callVal);
 
     return callVal;
+}
+
+
+Value *OCompiledUnit::ReadName(Name *what, Rewrite *rw)
+// ----------------------------------------------------------------------------
+//   Read a value directly from a rewrite
+// ----------------------------------------------------------------------------
+//   This is used for values created directly by xl_assign.
+//   WARNING: We assume that 'to' is the first field in a rewrite
+{
+    Constant *rwa = ConstantInt::get(LLVM_INTTYPE(int64), (int64) rw);
+    Value *rwp = ConstantExpr::getIntToPtr(rwa, compiler->treePtrPtrTy);
+    Value *val = code->CreateLoad(rwp, "assigned");
+    MarkComputed(what, val);
+    return val;
 }
 
 

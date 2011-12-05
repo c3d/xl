@@ -2044,6 +2044,39 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
 }
 
 
+Tree *xl_assign_constant(Context *context, Tree *old, Tree *value)
+// ----------------------------------------------------------------------------
+//    Assign in place when the left is an integer, real or text
+// ----------------------------------------------------------------------------
+//    This is a backward compatible behavior
+{
+    kind ok = old->Kind();
+    kind vk = value->Kind();
+    if (ok == INTEGER && vk == INTEGER)
+    {
+        ((Integer *) old)->value = ((Integer *) value)->value;
+    }
+    else if (ok == REAL && vk == REAL)
+    {
+        ((Real *) old)->value = ((Real *) value)->value;
+    }
+    else if (ok == REAL && vk == INTEGER)
+    {
+        ((Real *) old)->value = ((Integer *) value)->value;
+    }
+    else if (ok == TEXT && vk == TEXT)
+    {
+        ((Text *) old)->value = ((Text *) value)->value;
+    }
+    else
+    {
+        Ooops("Incompatible assignment of $1", value);
+        Ooops("Old value was $1", old);
+    }
+    return value;
+}
+
+
 Tree *xl_assign(Context *context, Tree *var, Tree *value)
 // ----------------------------------------------------------------------------
 //   Assignment in interpreted mode
@@ -2052,12 +2085,21 @@ Tree *xl_assign(Context *context, Tree *var, Tree *value)
     ADJUST_CONTEXT_FOR_INTERPRETER(context);
     if (var->Symbols())
     {
+        value = xl_evaluate(context, value);
+        if (var->IsConstant())
+            return xl_assign_constant(context, var, value);
+
+
         Rewrite *rw = xl_reference(context, var, true);
         if (rw)
         {
-            value = xl_evaluate(context, value);
+            // Writing to an input parameter: only works if same type
+            if (rw->kind == Rewrite::PARM || rw->kind == Rewrite::LOCAL)
+                return xl_assign_constant(context, rw->to, value);
+
             rw->to = value;
-            rw->kind = Rewrite::ASSIGNED;
+            if (rw->kind == Rewrite::UNKNOWN)
+                rw->kind = Rewrite::ASSIGNED;
         }
         return value;
     }

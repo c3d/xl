@@ -208,6 +208,7 @@ struct OCompiledUnit
     llvm::Value *       Right(Tree *);
     llvm::Value *       Copy(Tree *src, Tree *dst, bool markDone=true);
     llvm::Value *       Invoke(Tree *subexpr, Tree *callee, TreeList args);
+    llvm::Value *       ReadName(Name *what, Rewrite *rw);
     llvm::Value *       CallEvaluate(Tree *);
     llvm::Value *       CallFillBlock(Block *);
     llvm::Value *       CallFillPrefix(Prefix *);

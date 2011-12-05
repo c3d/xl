@@ -346,9 +346,9 @@ struct Rewrite
                 PROPERTY, IMPORTED, ASSIGNED, METADATA };
 
     Rewrite (Tree *f, Tree *t, Tree *tp):
-        symbols(NULL), from(f), to(t), hash(), native(NULL), type(tp) {}
+        to(t), from(f), symbols(NULL), hash(), native(NULL), type(tp) {}
     Rewrite (Symbols * syms, Tree *f, Tree *t, Tree *tp = NULL):
-        symbols(syms), from(f), to(t), hash(), native(NULL), type(tp) {}
+        to(t), from(f), symbols(syms), hash(), native(NULL), type(tp) {}
     ~Rewrite() {}
 
     // Obsolete: old compiler stuff
@@ -357,9 +357,9 @@ struct Rewrite
     Tree *              Compile(TreeList &xargs);
 
 public:
-    Symbols_p           symbols; // Obsolete at -O3
-    Tree_p              from;
     Tree_p              to;
+    Tree_p              from;
+    Symbols_p           symbols; // Obsolete at -O3
     rewrite_table       hash;
     native_fn           native;
     Tree_p              type;
