@@ -3240,6 +3240,7 @@ Value *OCompiledUnit::CallArrayIndex(Tree *self, Tree *left, Tree *right)
     Value *rightValue = Known(right);
     Value *result = code->CreateCall3(compiler->xl_array_index,
                                       contextPtr, leftValue, rightValue);
+    NeedStorage(self);
     MarkComputed(self, result);
     return result;
 }
