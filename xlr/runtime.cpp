@@ -2077,6 +2077,20 @@ Tree *xl_assign_constant(Context *context, Tree *old, Tree *value)
     {
         ((Text *) old)->value = ((Text *) value)->value;
     }
+    else if (ok == NAME && vk == NAME)
+    {
+        Name *o = (Name *) old;
+        Name *v = (Name *) value;
+        if (o->code == xl_identity)
+        {
+            Ooops("Assigning to constant name $1", old);
+            Ooops("New value was $1", value);
+        }
+        else
+        {
+            o->value = v->value;
+        }
+    }
     else
     {
         Ooops("Incompatible assignment of $1", value);
