@@ -105,8 +105,7 @@ PREFIX(Solve, tree, "solve",
 // Array indexing and assignment. Assignment must be before other assignments
 INFIX(Assign, tree, source, ":=", tree,
       return xl_assign(context, &l, &r), )
-INFIX(Index, tree, tree, ".", tree,
-      return xl_index(context, &l, &r), )
+INFIX(Index, tree, tree, ".", tree, return xl_index(context, &l, &r), )
 PREFIX(Good, name, "good", PARM(V, tree, ""),
        XL_RBOOL(xl_evaluate(context, &V) != xl_false), )
 
@@ -492,6 +491,7 @@ INFIX(TextAt, text, text, "at", integer,
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS(text, ""))
+INFIX(ListIndex, tree, tree, "at", tree, return xl_index(context, &l, &r), )
 
 // Some other text primitives
 PREFIX(TextLength, integer, "text_length",
