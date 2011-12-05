@@ -1451,6 +1451,21 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                     needEvaluation = false;
                     needRTTypeTest = namedType != source_type;
                 }
+                if (namedType == reference_type)
+                {
+                    // Only evaluate local parameters
+                    if (tk == NAME)
+                    {
+                        Name *name = (Name *) (Tree *) test;
+                        Rewrite *rw = symbols->LookupEntry(name->value, false);
+                        if (rw && rw->kind == Rewrite::PARM)
+                            return DoName(varName);
+                    }
+
+                    // In other case, lazy evaluation, no runtime type test
+                    needEvaluation = false;
+                    needRTTypeTest = false;
+                }
             }
         }
 

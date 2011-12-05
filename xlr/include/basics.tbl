@@ -13,6 +13,7 @@ TYPE(tree);
 TYPE(source);
 TYPE(code);
 TYPE(lazy);
+TYPE(reference);
 TYPE(value);
 TYPE(symbol);
 TYPE(name);
@@ -103,7 +104,7 @@ PREFIX(Solve, tree, "solve",
        SYNOPSIS("Test for the property solver"))
 
 // Array indexing and assignment. Assignment must be before other assignments
-INFIX(Assign, tree, source, ":=", tree,
+INFIX(Assign, tree, reference, ":=", tree,
       return xl_assign(context, &l, &r), )
 INFIX(Index, tree, tree, ".", tree, return xl_index(context, &l, &r), )
 PREFIX(Good, name, "good", PARM(V, tree, ""),

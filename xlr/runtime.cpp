@@ -832,6 +832,15 @@ Tree *xl_lazy_cast(Context *context, Tree *source, Tree *value)
 }
 
 
+Tree *xl_reference_cast(Context *context, Tree *source, Tree *value)
+// ----------------------------------------------------------------------------
+//   Any reference argument can be accepted
+// ----------------------------------------------------------------------------
+{
+    return value;
+}
+
+
 Tree *xl_value_cast(Context *context, Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 //   Any value can be accepted (we evaluate first)
@@ -940,7 +949,7 @@ Tree *xl_block_cast(Context *context, Tree *source, Tree *value)
 
 Tree *xl_parameter(text symbol, text type)
 // ----------------------------------------------------------------------------
-//   Build an infix name:type, except if type is "source"
+//   Build an infix name:type, except if type is "lazy"
 // ----------------------------------------------------------------------------
 {
     Name *n = new Name(symbol);
@@ -2093,8 +2102,8 @@ Tree *xl_assign(Context *context, Tree *var, Tree *value)
         Rewrite *rw = xl_reference(context, var, true);
         if (rw)
         {
-            // Writing to an input parameter: only works if same type
-            if (rw->kind == Rewrite::PARM || rw->kind == Rewrite::LOCAL)
+            // Writing to an explicit rewrite: only works if same type
+            if (rw->kind == Rewrite::LOCAL)
                 return xl_assign_constant(context, rw->to, value);
 
             rw->to = value;

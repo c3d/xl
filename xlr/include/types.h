@@ -263,6 +263,7 @@ inline bool IsTreeType(Tree *type)
             type == source_type     ||
             type == code_type       ||
             type == lazy_type       ||
+            type == reference_type  ||
             type == value_type);
 }
 

@@ -98,6 +98,7 @@ Tree *xl_tree_cast(Context *, Tree *source, Tree *value);
 Tree *xl_source_cast(Context *, Tree *source, Tree *value);
 Tree *xl_code_cast(Context *, Tree *source, Tree *value);
 Tree *xl_lazy_cast(Context *, Tree *source, Tree *value);
+Tree *xl_reference_cast(Context *, Tree *source, Tree *value);
 Tree *xl_value_cast(Context *, Tree *source, Tree *value);
 Tree *xl_symbol_cast(Context *, Tree *source, Tree *value);
 Tree *xl_name_cast(Context *, Tree *source, Tree *value);
