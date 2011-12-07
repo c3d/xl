@@ -13,6 +13,7 @@ TYPE(tree);
 TYPE(source);
 TYPE(code);
 TYPE(lazy);
+TYPE(reference);
 TYPE(value);
 TYPE(symbol);
 TYPE(name);
@@ -102,12 +103,14 @@ PREFIX(Solve, tree, "solve",
        GROUP(basics:properties)
        SYNOPSIS("Test for the property solver"))
 
+// Array indexing and assignment. Assignment must be before other assignments
+INFIX(Assign, tree, reference, ":=", tree,
+      return xl_assign(context, &l, &r), )
+INFIX(Index, tree, tree, ".", tree, return xl_index(context, &l, &r), )
+PREFIX(Good, name, "good", PARM(V, tree, ""),
+       XL_RBOOL(xl_evaluate(context, &V) != xl_false), )
+
 // Integer arithmetic and comparisons
-INFIX(SetInt, integer,integer,":=",integer,XL_RINT(l.value = XL_INT(r)),
-      GROUP(basics)
-      SYNOPSIS("")
-      DESCRIPTION("")
-      RETURNS(integer,""))
 INFIX(AddInt,integer, integer,"+",integer, XL_RINT(XL_INT(l) + XL_INT(r)),
       GROUP(basics)
       SYNOPSIS("")
@@ -232,11 +235,6 @@ POSTFIX(PercentReal, real, PARM(x, real, ""), "%", XL_RREAL(x / 100.0),
         RETURNS( real, ""))
 
 // Real arithmetic and comparisons
-INFIX(SetReal, real, real, ":=",real, XL_RREAL(l.value = XL_REAL(r)),
-      GROUP(basics)
-      SYNOPSIS("")
-      DESCRIPTION("")
-      RETURNS( real, ""))
 INFIX(AddReal, real, real, "+", real, XL_RREAL(XL_REAL(l) + XL_REAL(r)),
       GROUP(basics)
       SYNOPSIS("")
@@ -418,14 +416,6 @@ PREFIX(PiConstant, real, "pi", , XL_RREAL(M_PI),
        RETURNS(real, ""))
 
 // Boolean operations
-INFIX(SetBool, boolean, boolean, ":=",boolean,
-      bool val = XL_BOOL(r);
-      l.value = val ? "true" : "false";
-      XL_RBOOL(val),
-      GROUP(basics)
-      SYNOPSIS("")
-      DESCRIPTION("")
-      RETURNS(boolean, ""))
 INFIX(AndBool, boolean, boolean, "and", boolean, XL_RBOOL(XL_BOOL(l) & XL_BOOL(r)),
       GROUP(basics)
       SYNOPSIS("")
@@ -459,11 +449,6 @@ INFIX(EQBool, boolean, boolean, "=", boolean, XL_RBOOL(XL_BOOL(l) == XL_BOOL(r))
       RETURNS(boolean, ""))
 
 // Text operations
-INFIX(SetText, text, text,":=", text, XL_RTEXT(l.value = XL_TEXT(r)),
-      GROUP(basics)
-      SYNOPSIS("")
-      DESCRIPTION("")
-      RETURNS(text, ""))
 INFIX(TextConcatenate, text, text, "&", text, XL_RTEXT(XL_TEXT(l) + XL_TEXT(r)),
       GROUP(basics)
       SYNOPSIS("")
@@ -507,6 +492,8 @@ INFIX(TextAt, text, text, "at", integer,
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS(text, ""))
+INFIX(ListIndex, tree, tree, "at", tree,
+      return xl_array_index(context, &l, &r), )
 
 // Some other text primitives
 PREFIX(TextLength, integer, "text_length",
@@ -780,14 +767,14 @@ INFIX(Range, tree, integer, "..", integer, return xl_range(l, r),
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS(tree, ""))
-INFIX(Index, tree, tree, "at", integer, return xl_nth(context, &l, &r),
-      GROUP(basics)
-      SYNOPSIS("")
-      DESCRIPTION("")
-      RETURNS(tree, ""))
+
 PREFIX(Length, integer, "length",
        PARM(l, tree, ""),
-       return xl_length(context, &l),
+       return xl_size(context, &l),
+       GROUP(basics))
+PREFIX(Size, integer, "size",
+       PARM(l, tree, ""),
+       return xl_size(context, &l),
        GROUP(basics))
 
 PREFIX(Springify, real, "springify",
@@ -870,6 +857,12 @@ PREFIX(WriteText, tree, "write", PARM(toWrite, text, ""),
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
+PREFIX(WriteOther, tree, "write", PARM(toWrite, tree, ""),
+       XL_RBOOL(xl_write_tree(&toWrite)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
 PREFIX(WriteLn, tree, "writeln", ,
        XL_RBOOL(xl_write_cr()),
        GROUP(basics)
@@ -879,38 +872,38 @@ PREFIX(WriteLn, tree, "writeln", ,
 
 // Loops
 FORM(IntegerForLoop, tree,
-     "for Var:integer in Low:integer..High:integer loop Body",
-     PARM(Var, integer, "")
+     "for Var in Low:integer..High:integer loop Body",
+     PARM(Var, tree, "")
      PARM(Low, integer, "")
      PARM(High, integer, "")
      PARM(Body, source, ""),
      return xl_integer_for_loop(context,self, &Var, Low, High, 1, &Body), )
 FORM(IntegerForLoopStep, tree,
-     "for Var:integer in Low:integer..High:integer step Step:integer loop Body",
-     PARM(Var, integer, "")
+     "for Var in Low:integer..High:integer by Step:integer loop Body",
+     PARM(Var, tree, "")
      PARM(Low, integer, "")
      PARM(High, integer, "")
      PARM(Step, integer, "")
      PARM(Body, source, ""),
      return xl_integer_for_loop(context,self, &Var, Low,High,Step, &Body), )
 FORM(RealForLoop, tree,
-     "for Var:real in Low:real..High:real loop Body",
-     PARM(Var, real, "")
+     "for Var in Low:real..High:real loop Body",
+     PARM(Var, tree, "")
      PARM(Low, real, "")
      PARM(High, real, "")
      PARM(Body, source, ""),
      return xl_real_for_loop(context,self, &Var, Low, High, 1.0, &Body), )
 FORM(RealForLoopStep, tree,
-     "for Var:real in Low:real..High:real step Step:real loop Body",
-     PARM(Var, real, "")
+     "for Var in Low:real..High:real by Step:real loop Body",
+     PARM(Var, tree, "")
      PARM(Low, real, "")
      PARM(High, real, "")
      PARM(Step, real, "")
      PARM(Body, source, ""),
      return xl_real_for_loop(context,self, &Var, Low,High,Step, &Body), )
 FORM(ListForLoop, tree,
-     "for Var:name in List loop Body",
-     PARM(Var, name, "")
+     "for Var in List loop Body",
+     PARM(Var, tree, "")
      PARM(List, tree, "")
      PARM(Body, source, ""),
      return xl_list_for_loop(context, self, &Var, &List, &Body), )

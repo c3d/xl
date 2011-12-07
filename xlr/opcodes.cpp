@@ -194,7 +194,7 @@ void xl_enter_prefix(Context *context, text name, native_fn fn, Tree *rtype,
         rw->type = rtype;
 
         Symbols *s = MAIN->globals;
-        s->EnterName(symbol, n, Property::GLOBAL);
+        s->EnterName(symbol, n, Rewrite::GLOBAL);
         n->code = fn;
         n->SetSymbols(s);
         TreeList noparms;
@@ -304,7 +304,7 @@ void xl_enter_name(Symbols *symbols, Name *name)
 {
     name->code = xl_identity;
     name->SetSymbols(symbols);
-    symbols->EnterName(name->value, name, Property::ENUM);
+    symbols->EnterName(name->value, name, Rewrite::ENUM);
 }
 
 
@@ -316,7 +316,7 @@ void xl_enter_type(Symbols *symbols, Name *name,
 {
     /* Enter the type name itself */
     name->code = xl_identity;
-    symbols->EnterName(name->value, name, Property::TYPE);
+    symbols->EnterName(name->value, name, Rewrite::TYPE);
     name->SetSymbols(symbols);
 
     /* Type as infix : evaluates to type check, e.g. 0 : integer */

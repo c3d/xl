@@ -451,8 +451,8 @@ int Main::LoadFile(text file,
         Text_p module_dir_value = new Text(ParentDir(file));
         ctx->Define(module_file, module_file_value);
         ctx->Define(module_dir, module_dir_value);
-        syms->EnterName(module_file->value, module_file_value,Property::LOCAL);
-        syms->EnterName(module_dir->value, module_dir_value,Property::LOCAL);
+        syms->EnterName(module_file->value, module_file_value,Rewrite::LOCAL);
+        syms->EnterName(module_dir->value, module_dir_value,Rewrite::LOCAL);
     }
 
     // Register the source file we had

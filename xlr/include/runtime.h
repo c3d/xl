@@ -79,6 +79,10 @@ Block   *xl_new_block(Block *source, Tree *child);
 Prefix  *xl_new_prefix(Prefix *source, Tree *left, Tree *right);
 Postfix *xl_new_postfix(Postfix *source, Tree *left, Tree *right);
 Infix   *xl_new_infix(Infix *source, Tree *left, Tree *right);
+Block   *xl_fill_block(Block *source, Tree *child);
+Prefix  *xl_fill_prefix(Prefix *source, Tree *left, Tree *right);
+Postfix *xl_fill_postfix(Postfix *source, Tree *left, Tree *right);
+Infix   *xl_fill_infix(Infix *source, Tree *left, Tree *right);
 Tree    *xl_real_list(Tree *self, uint n, double *values);
 Tree    *xl_integer_list(Tree *self, uint n, longlong *values);
 
@@ -94,6 +98,7 @@ Tree *xl_tree_cast(Context *, Tree *source, Tree *value);
 Tree *xl_source_cast(Context *, Tree *source, Tree *value);
 Tree *xl_code_cast(Context *, Tree *source, Tree *value);
 Tree *xl_lazy_cast(Context *, Tree *source, Tree *value);
+Tree *xl_reference_cast(Context *, Tree *source, Tree *value);
 Tree *xl_value_cast(Context *, Tree *source, Tree *value);
 Tree *xl_symbol_cast(Context *, Tree *source, Tree *value);
 Tree *xl_name_cast(Context *, Tree *source, Tree *value);
@@ -193,7 +198,6 @@ public:
 // ============================================================================
 
 Tree *xl_define(Context *, Tree *self, Tree *form, Tree *definition);
-Tree *xl_assign(Context *, Tree *form, Tree *definition);
 Tree *xl_evaluate_sequence(Context *, Tree *first, Tree *second);
 Tree *xl_evaluate_any(Context *, Tree *form);
 Tree *xl_evaluate_block(Context *, Tree *child);
@@ -224,8 +228,10 @@ XL_BEGIN
 
 Tree *xl_apply(Context *, Tree *code, Tree *data);
 Tree *xl_range(longlong l, longlong h);
-Tree *xl_nth(Context *, Tree *data, Integer *index);
-Integer *xl_length(Context *, Tree *data);
+Tree *xl_assign(Context *, Tree *name, Tree *value);
+Tree *xl_index(Context *, Tree *data, Tree *index);
+Tree *xl_array_index(Context *, Tree *data, Tree *index);
+Integer *xl_size(Context *, Tree *data);
 typedef GCPtr<Context> Context_p;
 
 
@@ -357,14 +363,14 @@ struct FilterFunctionInfo : FunctionInfo
 // ============================================================================
 
 Tree *xl_integer_for_loop(Context *, Tree *self,
-                          Integer *Variable,
+                          Tree *Variable,
                           longlong low, longlong high, longlong step,
                           Tree *body);
 Tree *xl_real_for_loop(Context *, Tree *self,
-                       Real *Variable,
+                       Tree *Variable,
                        double low, double high, double step, Tree *body);
 Tree *xl_list_for_loop(Context *, Tree *self,
-                       Name *Variable, Tree *list, Tree *body);
+                       Tree *Variable, Tree *list, Tree *body);
 Tree *xl_while_loop(Context *, Tree *self,
                     Tree *Condition, Tree *body, bool TestValue);
 
@@ -382,6 +388,7 @@ extern "C"
     bool xl_write_real(double);
     bool xl_write_text(kstring);
     bool xl_write_character(char c);
+    bool xl_write_tree(XL::Tree *t);
     bool xl_write_cr(void);
 }
 Tree *xl_list_files(Context *context, Tree *patterns);

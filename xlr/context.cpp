@@ -254,7 +254,7 @@ Rewrite *Context::Define(Tree *form, Tree *value, Tree *type)
     ulong key = HashForm(form);
 
     // Walk through existing rewrites
-    Rewrite_p *parent = &rewrites[key]; 
+    Rewrite_p *parent = &rewrites[key % REWRITE_HASH_SIZE]; 
 
     // Check if we insert a name. If so, we shouldn't redefine
     if (Name *name = form->AsName())
@@ -282,7 +282,9 @@ Rewrite *Context::Define(Tree *form, Tree *value, Tree *type)
                     }
                 }
             }
-            parent = &where->hash[key];
+
+            REWRITE_HASH_SHIFT(key);
+            parent = &where->hash[key % REWRITE_HASH_SIZE];
         }
     }           
     else
@@ -292,7 +294,8 @@ Rewrite *Context::Define(Tree *form, Tree *value, Tree *type)
         {
             if (where->from == form && where->to == value)
                 return where;
-            parent = &where->hash[key];
+            REWRITE_HASH_SHIFT(key);
+            parent = &where->hash[key % REWRITE_HASH_SIZE];
         }
     }
 
@@ -379,16 +382,14 @@ Tree *Context::AssignTree(Tree *tgt, Tree *val, Tree *tp,
         ValidateNames(name);
 
         // Build the hash key for the tree to evaluate
-        ulong key = Hash(name);
+        ulong hkey = Hash(name);
 
         // Loop over all contexts, searching for a pre-existing assignment
         FOR_CONTEXTS(this, context)
         {
-            rewrite_table &rwt = context->rewrites;
-            rewrite_table::iterator found = rwt.find(key);
-            if (found != rwt.end())
+            ulong key = hkey;
+            if (Rewrite *candidate = REWRITE_FIRST(context->rewrites, key))
             {
-                Rewrite *candidate = (*found).second;
                 while (candidate)
                 {
                     // Check if this is a redefinition for the given name
@@ -435,10 +436,8 @@ Tree *Context::AssignTree(Tree *tgt, Tree *val, Tree *tp,
                         Ooops("previously defined as $1", from);
                         return value;
                     }
-                    
-                    rewrite_table &rwh = candidate->hash;
-                    found = rwh.find(key);
-                    candidate = found == rwh.end() ? NULL : (*found).second;
+
+                    REWRITE_NEXT(candidate, key);
                 }
             }
 
@@ -458,9 +457,13 @@ Tree *Context::AssignTree(Tree *tgt, Tree *val, Tree *tp,
         Rewrite *rewrite = new Rewrite(name, value, type);
 
         // Walk through existing rewrites (we already checked for redefinitions)
-        Rewrite_p *parent = &rewrites[key]; 
+        ulong key = hkey;
+        Rewrite_p *parent = &rewrites[key % REWRITE_HASH_SIZE]; 
         while (Rewrite *where = *parent)
-            parent = &where->hash[key];
+        {
+            REWRITE_HASH_SHIFT(key);
+            parent = &where->hash[key % REWRITE_HASH_SIZE];
+        }
 
         // Insert the rewrite
         *parent = rewrite;
@@ -844,12 +847,29 @@ ulong Context::HashForm(Tree *form)
 // ----------------------------------------------------------------------------
 {
     // Check if we have a guard
-    while (Infix *infix = form->AsInfix())
+    while (Infix *infix = form->AsInfix())\
         if (infix->name == "when")
             form = infix->left;
         else
             break;
     return Hash(form);
+}
+
+
+ulong Context::Hash(text t)
+// ----------------------------------------------------------------------------
+//   Compute the hash code for a name in the rewrite table
+// ----------------------------------------------------------------------------
+{
+    kind  k = NAME;
+    ulong h = 0;
+
+    h = 0xC0DED;
+    for (text::iterator p = t.begin(); p != t.end(); p++)
+        h = (h * 0x301) ^ *p;
+    h = (h << 4) | (ulong) k;
+
+    return h;
 }
 
 
@@ -1276,16 +1296,14 @@ Tree *Context::Bound(Name *name, lookup_mode lookup,
 // ----------------------------------------------------------------------------
 {
     // Build the hash key for the tree to evaluate
-    ulong key = Hash(name);
+    ulong hkey = Hash(name);
 
     // Loop over all contexts
     FOR_CONTEXTS(this, context)
     {
-        rewrite_table &rwt = context->rewrites;
-        rewrite_table::iterator found = rwt.find(key);
-        if (found != rwt.end())
+        ulong key = hkey;
+        if (Rewrite *candidate = REWRITE_FIRST(context->rewrites, key))
         {
-            Rewrite *candidate = (*found).second;
             while (candidate)
             {
                 if (Name *from = candidate->from->AsName())
@@ -1297,15 +1315,13 @@ Tree *Context::Bound(Name *name, lookup_mode lookup,
                         if (rewrite)
                             *rewrite = candidate;
                         if (Tree *to = candidate->to)
-                                return to;
+                            return to;
                         else
                             return from;
                     }
                 }
 
-                rewrite_table &rwh = candidate->hash;
-                found = rwh.find(key);
-                candidate = found == rwh.end() ? NULL : (*found).second;
+                REWRITE_NEXT(candidate, key);
             }
         }
     }
@@ -1397,16 +1413,14 @@ Rewrite *Context::RewriteFor(Tree *form, lookup_mode lookup, Context_p *where)
         form = block->child;
 
     // Build the hash key for the tree to evaluate
-    ulong key = Hash(form);
+    ulong hkey = Hash(form);
 
     // Loop over all contexts
     FOR_CONTEXTS(this, context)
     {
-        rewrite_table &rwt = context->rewrites;
-        rewrite_table::iterator found = rwt.find(key);
-        if (found != rwt.end())
+        ulong key = hkey;
+        if (Rewrite *candidate = REWRITE_FIRST(context->rewrites, key))
         {
-            Rewrite *candidate = (*found).second;
             while (candidate)
             {
                 if (candidate->from == form)
@@ -1416,9 +1430,7 @@ Rewrite *Context::RewriteFor(Tree *form, lookup_mode lookup, Context_p *where)
                     return candidate;
                 }
 
-                rewrite_table &rwh = candidate->hash;
-                found = rwh.find(key);
-                candidate = found == rwh.end() ? NULL : (*found).second;
+                REWRITE_NEXT(candidate, key);
             }
         }
     }
@@ -1765,24 +1777,25 @@ static void ListNameRewrites(rewrite_table &table,
 //    List all the names matching in the given rewrite table
 // ----------------------------------------------------------------------------
 {
-    rewrite_table::iterator i;
-    for (i = table.begin(); i != table.end(); i++)
+    for (uint i = 0; i < REWRITE_HASH_SIZE; i++)
     {
-        Rewrite *rw = (*i).second;
-        Tree *from = rw->from;
-        Name *name = from->AsName();
-        if (!name && prefixesOk)
+        if (Rewrite *rw = table[i])
         {
-            if (Prefix *pre = from->AsPrefix())
-                name = pre->left->AsName();
-        }
-        if (name)
-        {
-
-            if (name->value.find(prefix) == 0)
+            Tree *from = rw->from;
+            Name *name = from->AsName();
+            if (!name && prefixesOk)
             {
-                list.push_back(rw);
-                ListNameRewrites(rw->hash, prefix, list, prefixesOk);
+                if (Prefix *pre = from->AsPrefix())
+                    name = pre->left->AsName();
+            }
+            if (name)
+            {
+                
+                if (name->value.find(prefix) == 0)
+                {
+                    list.push_back(rw);
+                    ListNameRewrites(rw->hash, prefix, list, prefixesOk);
+                }
             }
         }
     }
@@ -1852,7 +1865,8 @@ void Context::Clear()
 //   Clear the symbol table
 // ----------------------------------------------------------------------------
 {
-    rewrites.clear();
+    for (uint i = 0; i < REWRITE_HASH_SIZE; i++)
+        rewrites[i] = NULL;
     imported.clear();
 }
 
@@ -2181,17 +2195,28 @@ extern "C" void debugrw(XL::Rewrite *r)
 //   For the debugger, dump a rewrite
 // ----------------------------------------------------------------------------
 {
+    static kstring kinds[] = { "UNKNOWN", "ARG", "PARM", "LOCAL",
+                               "GLOBAL", "FORM", "TYPE", "ENUM",
+                               "PROPERTY", "IMPORTED", "ASSIGNED", "METADATA" };
+
     if (XL::Allocator<XL::Rewrite>::IsAllocated(r))
     {
+        if (r->description != "")
+            std::cerr << "// " << r->description << "\n";
+        if ((uint) r->kind < sizeof(kinds) / sizeof(kinds[0]))
+            std::cerr << kinds[r->kind] << "\t";
+
         if (!r->to)
             std::cerr << "data " << r->from << "\n";
         else if (r->native == XL::xl_assigned_value)
             std::cerr << r->from << " := " << r->to << "\n";
+        else if (r->type)
+            std::cerr << r->from << ":" << r->type << " -> " << r->to << "\n";
         else
             std::cerr << r->from << " -> " << r->to << "\n";
-        XL::rewrite_table::iterator i;
-        for (i = r->hash.begin(); i != r->hash.end(); i++)
-            debugrw((*i).second);
+        for (uint i = 0; i < REWRITE_HASH_SIZE; i++)
+            if (XL::Rewrite *rw = r->hash[i])
+                debugrw(rw);
     }
     else
     {
@@ -2237,10 +2262,10 @@ extern "C" void debugs(XL::Context *c)
     std::cerr << "REWRITES IN CONTEXT " << c << "\n";
     debugsn(c);
 
-    XL::rewrite_table::iterator i;
     uint n = 0;
-    for (i = c->rewrites.begin(); i != c->rewrites.end() && n++ < debugsm; i++)
-        debugrw((*i).second);
+    for (uint i = 0; i < REWRITE_HASH_SIZE; i++)
+        if (Rewrite *rw = c->rewrites[i])
+            debugrw(rw);
 
     if (n >= debugsm)
         std::cerr << "... MORE ELEMENTS NOT SHOWN\n";
