@@ -1789,14 +1789,9 @@ static void ListNameRewrites(rewrite_table &table,
                     name = pre->left->AsName();
             }
             if (name)
-            {
-                
                 if (name->value.find(prefix) == 0)
-                {
                     list.push_back(rw);
-                    ListNameRewrites(rw->hash, prefix, list, prefixesOk);
-                }
-            }
+            ListNameRewrites(rw->hash, prefix, list, prefixesOk);
         }
     }
 }
