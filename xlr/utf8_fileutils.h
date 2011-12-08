@@ -62,10 +62,20 @@ public:
     {}
 
     explicit
-    utf8_ifstream(const char* s)
+    utf8_ifstream(const char* s,
+                  std::ios::openmode mode = std::ios::in)
         : istream_type(&b),
-          b(_wopen(utf8_decode(s).c_str(), _O_RDONLY), std::ios_base::in)
+          b(_wopen(utf8_decode(s).c_str(), wflags(mode)), mode)
     {}
+
+protected:
+    int wflags(std::ios::openmode mode)
+    {
+        int flags = _O_RDONLY;
+        if (mode & std::ios::binary)
+            flags |= _O_BINARY;
+        return flags;
+    }
 
 protected:
     filebuf_type b;

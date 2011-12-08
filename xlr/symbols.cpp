@@ -386,10 +386,10 @@ uint Symbols::EnterProperty(Context *context,
     if (existing)
     {
         kind k = existing->Kind();
-        if (type == integer_type && k != INTEGER ||
-            type == real_type && k != REAL ||
-            type == text_type && k != TEXT ||
-            type == name_type && k != NAME)
+        if ((type == integer_type && k != INTEGER) ||
+            (type == real_type && k != REAL) ||
+            (type == text_type && k != TEXT) ||
+            (type == name_type && k != NAME))
         {
             Ooops("Ignoring existing value for name $1", name);
             Ooops("because its current value $1", existing);
@@ -403,10 +403,10 @@ uint Symbols::EnterProperty(Context *context,
     if (value)
     {
         kind k = value->Kind();
-        if (type == integer_type && k != INTEGER ||
-            type == real_type && k != REAL ||
-            type == text_type && k != TEXT ||
-            type == name_type && k != NAME)
+        if ((type == integer_type && k != INTEGER) ||
+            (type == real_type && k != REAL) ||
+            (type == text_type && k != TEXT) ||
+            (type == name_type && k != NAME))
         {
             Ooops("Value for property $1", name);
             Ooops("is declared as $1,", existing);

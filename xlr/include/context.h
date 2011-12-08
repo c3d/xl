@@ -191,7 +191,7 @@ typedef GCPtr<Context>             Context_p;
 typedef GCPtr<Rewrite>             Rewrite_p;
 typedef GCPtr<Constraint>          Constraint_p;
 #define REWRITE_HASH_SIZE          2
-#define REWRITE_HASH_SHIFT(h)      (h = ((h >> 1) | (h << 63)))
+#define REWRITE_HASH_SHIFT(h)      (h = ((h >> 1) | (h << 31)))
 #define REWRITE_FIRST(t, k)        (t[k % REWRITE_HASH_SIZE])
 #define REWRITE_NEXT(c, k)         (REWRITE_HASH_SHIFT(k),              \
                                     c = c->hash[k % REWRITE_HASH_SIZE])
