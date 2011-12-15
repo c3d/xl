@@ -101,52 +101,85 @@ static void BuildSymbolsList(Symbols *s,
 }
 
 
-Tree *Symbols::Named(text name, bool deep)
+Rewrite *Symbols::LookupEntry(text name, bool create)
 // ----------------------------------------------------------------------------
-//   Find the name in the current context
+//   Find the entry for a given name in all visible scopes
 // ----------------------------------------------------------------------------
 {
-    if (deep)
-    {
-        symbols_set visited;
-        symbols_list lookups;
+    symbols_set visited;
+    symbols_list lookups;
 
-        // Build all the symbol tables that we are going to look into
-        BuildSymbolsList(this, visited, lookups);
+    // Build all the symbol tables that we are going to look into
+    BuildSymbolsList(this, visited, lookups);
 
-        symbols_list::iterator li;
-        for (li = lookups.begin(); li != lookups.end(); li++)
-        {
-            Symbols *s = *li;
-            Property *found = s->Entry(name, false);
-            if (found)
-                return found->value;
-        }
-    }
-    else
+    symbols_list::iterator li;
+    for (li = lookups.begin(); li != lookups.end(); li++)
     {
-        Property *found = Entry(name, false);
-        if (found)
-            return found->value;
+        Symbols *s = *li;
+        if (Rewrite *found = s->Entry(name, false))
+            return found;
     }
+
+    // If we didn't find it, create it locally
+    if (create)
+        return Entry(name, create);
 
     return NULL;
 }
 
 
-void Symbols::EnterName(text name, Tree *value, Property::Kind kind)
+Rewrite *Symbols::LookupEntry(Tree *form, bool create)
+// ----------------------------------------------------------------------------
+//   Find the entry for a given name in all visible scopes
+// ----------------------------------------------------------------------------
+{
+    symbols_set visited;
+    symbols_list lookups;
+
+    // Build all the symbol tables that we are going to look into
+    BuildSymbolsList(this, visited, lookups);
+
+    symbols_list::iterator li;
+    for (li = lookups.begin(); li != lookups.end(); li++)
+    {
+        Symbols *s = *li;
+        if (Rewrite *found = s->Entry(form, false))
+            return found;
+    }
+
+    // If we didn't find it, create it locally
+    if (create)
+        return Entry(form, create);
+
+    return NULL;
+}
+
+
+Tree *Symbols::Named(text name, bool deep)
+// ----------------------------------------------------------------------------
+//   Find the name in the current context
+// ----------------------------------------------------------------------------
+{
+    Rewrite *found = deep ? LookupEntry(name, false) : Entry(name, false);
+    if (found)
+        return found->to;
+    return NULL;
+}
+
+
+void Symbols::EnterName(text name, Tree *value, Rewrite::Kind kind)
 // ----------------------------------------------------------------------------
 //   Enter a value in the namespace
 // ----------------------------------------------------------------------------
 {
-    Property *found = Entry(name, true);
-    if (found->value)
+    Rewrite *found = Entry(name, true);
+    if (found->to)
     {
         Ooops("Name $1 already exists", new Name(name, value->Position()));
-        Ooops("Previous value was $1", found->value);
+        Ooops("Previous value was $1", found->to);
     }
     found->kind = kind;
-    found->value = value;
+    found->to = value;
 }
 
 
@@ -157,9 +190,9 @@ void Symbols::ExtendName(text name, Tree *value)
 {
     if (!parent->Named(name))
     {
-        Property *found = Entry(name, true); 
-        found->kind = Property::FORM;
-        if (Tree *entry = found->value)
+        Rewrite *found = Entry(name, true); 
+        found->kind = Rewrite::FORM;
+        if (Tree *entry = found->to)
         {
             if (Block *block = entry->AsBlock())
                 block->child = new Infix("\n", block->child, value,
@@ -172,7 +205,7 @@ void Symbols::ExtendName(text name, Tree *value)
         }
         else
         {
-            found->value = value;
+            found->to = value;
         }
     }
 
@@ -186,30 +219,36 @@ Name *Symbols::Allocate(Name *n)
 //   Enter a value in the namespace
 // ----------------------------------------------------------------------------
 {
-    Property *entry = Entry(n->value, true);
-    if (Tree *existing = entry->value)
+    Rewrite *entry = Entry(n->value, true);
+    if (Tree *existing = entry->to)
     {
         if (Name *name = existing->AsName())
             if (name->value == n->value)
                 return name;
         Ooops("Parameter $1 previously had value $2", n, existing);
     }
-    entry->value = n;
-    entry->kind = Property::PARM;
+    entry->to = n;
+    entry->kind = Rewrite::PARM;
     return n;
 }
 
 
-ulong Symbols::Count(ulong mask)
+ulong Symbols::Count(ulong mask, Rewrite *rw)
 // ----------------------------------------------------------------------------
 //   Return the number of local variables
 // ----------------------------------------------------------------------------
 {
     ulong count = 0;
-    ulong i, max = entries.size();
-    for (i = 0; i < max; i++)
-        if (mask & (1 << entries[i].kind))
+    if (!rw)
+        rw = Rewrites();
+    if (rw)
+    {
+        if (mask & (1<<rw->kind))
             count++;
+        for (uint i = 0; i < REWRITE_HASH_SIZE; i++)
+            if (Rewrite *child = rw->hash[i])
+                count += Count(mask, child);
+    }
     return count;
 }
 
@@ -388,34 +427,31 @@ uint Symbols::EnterProperty(Context *context,
     }
 
     // Set information for the property
-    Property *prop = symbols->Entry(name->value, true);
-    assert(prop->name == name->value);
+    Rewrite *prop = symbols->Entry(name->value, true);
     prop->description = description;
     prop->type = type;
-    prop->value = value;
+    prop->to = value;
 
     return 1;
 }
 
 
-Property *Symbols::Entry(text name, uint min, uint max, bool create)
+Rewrite *Symbols::Entry(text name, bool create)
 // ----------------------------------------------------------------------------
 //   Binary search to find an entry
 // ----------------------------------------------------------------------------
 {
-    while (min < max)
+    ulong key = Context::Hash(name);
+    Rewrite *rw = Rewrites();
+    Rewrite *last = NULL;
+    while (rw)
     {
-        uint half = (min + max) / 2;
-        Property &mid = entries[half];
-        int cmp = name.compare(mid.name);
-        if (cmp == 0)
-            return &mid;
-        if (cmp > 0 && half > min)
-            min = half;
-        else if (cmp < 0 && half < max)
-            max = half;
-        else
-            break;
+        if (Name *from = rw->from->AsName())
+            if (from->value == name)
+                return rw;
+
+        last = rw;
+        REWRITE_NEXT(rw, key);
     }
 
     // Not found, check if we need to create it
@@ -423,10 +459,47 @@ Property *Symbols::Entry(text name, uint min, uint max, bool create)
         return NULL;
 
     // Create entry
-    Property prop(name, "", NULL, NULL);
-    prop.id = entries.size();
-    entry_list::iterator ins = entries.insert(entries.begin() + max, prop);
-    return &*ins;               // Just love C++ and shut up
+    Name *n = new Name(name);
+    rw = new Rewrite(n, NULL, NULL);
+    if (last)
+        last->hash[key % REWRITE_HASH_SIZE] = rw;
+    else
+        rewrites = rw;
+    return rw;
+}
+
+
+Rewrite *Symbols::Entry(Tree *form, bool create)
+// ----------------------------------------------------------------------------
+//   Find the entry for a given name in all visible scopes
+// ----------------------------------------------------------------------------
+{
+    ulong fromKey = Context::HashForm(form);
+    ulong hkey = fromKey;
+    Rewrite *rw = Rewrites();
+    Rewrite *last = NULL;
+    while (rw)
+    {
+        ulong testKey = Context::HashForm(rw->from);
+        if (testKey == fromKey)
+            if (Tree::Equal(form, rw->from, true))
+                return rw;
+
+        last = rw;
+        REWRITE_NEXT(rw, hkey);
+    }
+
+    // Not found, check if we need to create it
+    if (!create)
+        return NULL;
+
+    // Create entry
+    rw = new Rewrite(form, NULL, NULL);
+    if (last)
+        last->hash[hkey % REWRITE_HASH_SIZE] = rw;
+    else
+        rewrites = rw;
+    return rw;
 }
 
 
@@ -455,7 +528,6 @@ void Symbols::Clear()
     symbol_table empty;
     if (rewrites)
         rewrites = NULL;        // Decrease reference count
-    entries.clear();
     calls = empty;
     type_tests.clear();
     error_handler = NULL;
@@ -1246,7 +1318,7 @@ Tree *ArgumentMatch::DoName(Name *what)
             return NULL;
 
         // If first occurence of the name, enter it in symbol table
-        locals->EnterName(what->value, compiled, Property::ARG);
+        locals->EnterName(what->value, compiled, Rewrite::ARG);
         return what;
     }
 }
@@ -1379,6 +1451,21 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                     needEvaluation = false;
                     needRTTypeTest = namedType != source_type;
                 }
+                if (namedType == reference_type)
+                {
+                    // Only evaluate local parameters
+                    if (tk == NAME)
+                    {
+                        Name *name = (Name *) (Tree *) test;
+                        Rewrite *rw = symbols->LookupEntry(name->value, false);
+                        if (rw && rw->kind == Rewrite::PARM)
+                            return DoName(varName);
+                    }
+
+                    // In other case, lazy evaluation, no runtime type test
+                    needEvaluation = false;
+                    needRTTypeTest = false;
+                }
             }
         }
 
@@ -1415,7 +1502,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         }
 
         // Enter the compiled expression in the symbol table
-        locals->EnterName(varName->value, compiled, Property::ARG);
+        locals->EnterName(varName->value, compiled, Rewrite::ARG);
 
         return what;
     }
@@ -1661,7 +1748,7 @@ Tree *EvaluateChildren::DoPrefix(Prefix *what)
     Tree *right = what->right->Do(compile);
     if (!right)
         return NULL;
-    unit.CallNewPrefix(what);
+    unit.CallFillPrefix(what);
     return what;
 }
 
@@ -1676,7 +1763,7 @@ Tree *EvaluateChildren::DoPostfix(Postfix *what)
     if (!left)
         return NULL;
     unit.ConstantTree(what->right);
-    unit.CallNewPostfix(what);
+    unit.CallFillPostfix(what);
     return what;
 }
 
@@ -1693,7 +1780,7 @@ Tree *EvaluateChildren::DoInfix(Infix *what)
     Tree *right = what->right->Do(compile);
     if (!right)
         return NULL;
-    unit.CallNewInfix(what);
+    unit.CallFillInfix(what);
     return what;
 }
 
@@ -1707,7 +1794,7 @@ Tree *EvaluateChildren::DoBlock(Block *what)
     Tree *child = what->child->Do(compile);
     if (!child)
         return NULL;
-    unit.CallNewBlock(what);
+    unit.CallFillBlock(what);
     return what;
 }
 
@@ -1895,7 +1982,7 @@ void DeclarationAction::EnterRewrite(Tree *defined,
     {
         symbols->EnterName(name->value,
                            definition ? (Tree *) definition : (Tree *) name,
-                           Property::LOCAL);
+                           Rewrite::LOCAL);
     }
     else
     {
@@ -1976,59 +2063,71 @@ Tree *CompileAction::DoName(Name *what, bool forceEval)
 //   Build a unique reference in the context for the entity
 // ----------------------------------------------------------------------------
 {
-    // Normally, the name should have been declared in ParameterMatch
-    if (Tree *result = symbols->Named(what->value))
+    // Lookup rewrite for that name
+    Rewrite *rw = symbols->LookupEntry(what->value, false);
+    if (!rw || !rw->to)
     {
-        // Try to compile the definition of the name
-        TreeList xargs;
-        if (!result->AsName())
+        if (nullIfBad)
         {
-            Rewrite rw(symbols, what, result);
-            if (!what->Symbols())
-                what->SetSymbols(symbols);
-            result = rw.Compile(xargs);
-            if (!result)
-                return result;
-        }
-
-        // Check if there is code we need to call
-        Compiler *compiler = MAIN->compiler;
-        llvm::Function *function = compiler->TreeFunction(result);
-        if (function && function != unit.function)
-        {
-            // Case of "Name -> Foo": Invoke Name
-            unit.NeedStorage(what);
-            unit.Invoke(what, result, xargs);
+            unit.ConstantTree(what);
             return what;
         }
-        else if (forceEval && unit.IsKnown(result))
-        {
-            unit.CallEvaluate(result);
-        }
-        else if (unit.IsKnown(result))
-        {
-            // Case of "Foo(A,B) -> B" with B: evaluate B lazily
-            unit.Copy(result, what, false);
-            return what;
-        }
-        else
-        {
-            // Return the name itself by default
-            unit.ConstantTree(result);
-            unit.Copy(result, what);
-            if (!result->Symbols())
-                result->SetSymbols(symbols);
-        }
-
-        return result;
+        Ooops("Name $1 does not exist", what);
+        return NULL;
     }
-    if (nullIfBad)
+
+    // If this is an assigned value, then we directly use the rewrite address
+    if (rw->kind == Rewrite::ASSIGNED)
     {
-        unit.ConstantTree(what);
+        unit.ReadName(what, rw);
         return what;
     }
-    Ooops("Name $1 does not exist", what);
-    return NULL;
+
+    // Normally, the name should have been declared in ParameterMatch
+    Tree *result = rw->to;
+
+    // Try to compile the definition of the name
+    TreeList xargs;
+    if (!result->AsName())
+    {
+        Rewrite rw(symbols, what, result);
+        if (!what->Symbols())
+            what->SetSymbols(symbols);
+        result = rw.Compile(xargs);
+        if (!result)
+            return result;
+    }
+
+    // Check if there is code we need to call
+    Compiler *compiler = MAIN->compiler;
+    llvm::Function *function = compiler->TreeFunction(result);
+    if (function && function != unit.function)
+    {
+        // Case of "Name -> Foo": Invoke Name
+        unit.NeedStorage(what);
+        unit.Invoke(what, result, xargs);
+        return what;
+    }
+    else if (forceEval && unit.IsKnown(result))
+    {
+        unit.CallEvaluate(result);
+    }
+    else if (unit.IsKnown(result))
+    {
+        // Case of "Foo(A,B) -> B" with B: evaluate B lazily
+        unit.Copy(result, what, false);
+        return what;
+    }
+    else
+    {
+        // Return the name itself by default
+        unit.ConstantTree(result);
+        unit.Copy(result, what);
+        if (!result->Symbols())
+            result->SetSymbols(symbols);
+    }
+    
+    return result;
 }
 
 
@@ -2041,6 +2140,15 @@ Tree *CompileAction::DoBlock(Block *what)
         (what->opening == "{" && what->closing == "}") ||
         (what->opening == "(" && what->closing == ")"))
     {
+        if (Name *name = what->child->AsName())
+        {
+            if (name->value == "")
+            {
+                unit.ConstantTree(what);
+                return what;
+            }
+        }
+
         if (unit.IsKnown(what))
             unit.Copy(what, what->child, false);
         Tree *result = what->child->Do(this);
@@ -2137,6 +2245,22 @@ Tree *CompileAction::DoPrefix(Prefix *what)
             return Rewrites(what);
         }
     }
+
+    // Special case the A[B] notation
+    if (Block *br = what->right->AsBlock())
+    {
+        if (br->IsSquare())
+        {
+            what->left->SetSymbols(symbols);
+            what->right->SetSymbols(symbols);
+            br->child->SetSymbols(symbols);
+            what->left->Do(this);
+            br->child->Do(this);
+            unit.CallArrayIndex(what, what->left, br->child);
+            return what;
+        }
+    }
+
     return Rewrites(what);
 }
 
@@ -2173,6 +2297,8 @@ Tree *CompileAction::Rewrites(Tree *what)
         Symbols *s = *li;
 
         Rewrite *candidate = s->Rewrites();
+        ulong hkey = formKey;
+
         while (candidate && !foundUnconditional)
         {
             // Compute the hash key for the 'from' of the current rewrite
@@ -2216,8 +2342,8 @@ Tree *CompileAction::Rewrites(Tree *what)
                     {
                         // We should have same number of args and parms
                         Symbols &parms = *candidate->from->Symbols();
-                        ulong parmCount = parms.Count(1<<Property::PARM);
-                        ulong argCount = args->Count(1<<Property::ARG);
+                        ulong parmCount = parms.Count(1<<Rewrite::PARM);
+                        ulong argCount = args->Count(1<<Rewrite::ARG);
                         if (argCount != parmCount)
                         {
                             symbol_iter a, p;
@@ -2274,10 +2400,10 @@ Tree *CompileAction::Rewrites(Tree *what)
 
             // Otherwise, check if we have a key match in the hash table,
             // and if so follow it.
-            if (!foundUnconditional && candidate->hash.count(formKey) > 0)
-                candidate = candidate->hash[formKey];
-            else
+            if (foundUnconditional)
                 candidate = NULL;
+            else
+                REWRITE_NEXT(candidate, hkey);
         } // while(candidate)
     } // for(namespaces)
 
@@ -2336,18 +2462,18 @@ Rewrite *Rewrite::Add (Rewrite *rewrite)
     // Compute the hash key for the form we have to match
     Rewrite *parent = this;
     ulong formKey = Context::HashForm(rewrite->from);
+    ulong hkey = formKey;
 
     while (parent)
     {
-        // Check if we have a key match in the hash table,
-        // and if so follow it.
-        if (parent->hash.count(formKey) > 0)
+        REWRITE_HASH_SHIFT(hkey);
+        if (Rewrite *child = parent->hash[hkey % REWRITE_HASH_SIZE])
         {
-            parent = parent->hash[formKey];
+            parent = child;
         }
         else
         {
-            parent->hash[formKey] = rewrite;
+            parent->hash[hkey % REWRITE_HASH_SIZE] = rewrite;
             return parent;
         }
     }
@@ -2364,8 +2490,9 @@ Tree *Rewrite::Do(Action &a)
     Tree *result = from->Do(a);
     if (to)
         result = to->Do(a);
-    for (rewrite_table::iterator i = hash.begin(); i != hash.end(); i++)
-        result = (*i).second->Do(a);
+    for (uint i = 0; i < REWRITE_HASH_SIZE; i++)
+        if (Rewrite *rw = hash[i])
+            result = rw->Do(a);
     for (TreeList::iterator p=parameters.begin(); p!=parameters.end(); p++)
         result = (*p)->Do(a);
     return result;
@@ -2890,6 +3017,21 @@ llvm::Value *OCompiledUnit::Invoke(Tree *subexpr, Tree *callee, TreeList args)
 }
 
 
+Value *OCompiledUnit::ReadName(Name *what, Rewrite *rw)
+// ----------------------------------------------------------------------------
+//   Read a value directly from a rewrite
+// ----------------------------------------------------------------------------
+//   This is used for values created directly by xl_assign.
+//   WARNING: We assume that 'to' is the first field in a rewrite
+{
+    Constant *rwa = ConstantInt::get(LLVM_INTTYPE(int64), (int64) rw);
+    Value *rwp = ConstantExpr::getIntToPtr(rwa, compiler->treePtrPtrTy);
+    Value *val = code->CreateLoad(rwp, "assigned");
+    MarkComputed(what, val);
+    return val;
+}
+
+
 BasicBlock *OCompiledUnit::NeedTest()
 // ----------------------------------------------------------------------------
 //    Indicates that we need an exit basic block to jump to
@@ -3022,7 +3164,7 @@ Value *OCompiledUnit::CallEvaluate(Tree *tree)
 }
 
 
-Value *OCompiledUnit::CallNewBlock(Block *block)
+Value *OCompiledUnit::CallFillBlock(Block *block)
 // ----------------------------------------------------------------------------
 //    Compile code generating the children of the block
 // ----------------------------------------------------------------------------
@@ -3030,7 +3172,7 @@ Value *OCompiledUnit::CallNewBlock(Block *block)
     Value *blockValue = ConstantTree(block);
     Value *childValue = Known(block->child);
     blockValue = code->CreateBitCast(blockValue, compiler->blockTreePtrTy);
-    Value *result = code->CreateCall2(compiler->xl_new_block,
+    Value *result = code->CreateCall2(compiler->xl_fill_block,
                                       blockValue, childValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(block, result);
@@ -3038,7 +3180,7 @@ Value *OCompiledUnit::CallNewBlock(Block *block)
 }
 
 
-Value *OCompiledUnit::CallNewPrefix(Prefix *prefix)
+Value *OCompiledUnit::CallFillPrefix(Prefix *prefix)
 // ----------------------------------------------------------------------------
 //    Compile code generating the children of a prefix
 // ----------------------------------------------------------------------------
@@ -3047,7 +3189,7 @@ Value *OCompiledUnit::CallNewPrefix(Prefix *prefix)
     Value *leftValue = Known(prefix->left);
     Value *rightValue = Known(prefix->right);
     prefixValue = code->CreateBitCast(prefixValue, compiler->prefixTreePtrTy);
-    Value *result = code->CreateCall3(compiler->xl_new_prefix,
+    Value *result = code->CreateCall3(compiler->xl_fill_prefix,
                                       prefixValue, leftValue, rightValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(prefix, result);
@@ -3055,7 +3197,7 @@ Value *OCompiledUnit::CallNewPrefix(Prefix *prefix)
 }
 
 
-Value *OCompiledUnit::CallNewPostfix(Postfix *postfix)
+Value *OCompiledUnit::CallFillPostfix(Postfix *postfix)
 // ----------------------------------------------------------------------------
 //    Compile code generating the children of a postfix
 // ----------------------------------------------------------------------------
@@ -3064,7 +3206,7 @@ Value *OCompiledUnit::CallNewPostfix(Postfix *postfix)
     Value *leftValue = Known(postfix->left);
     Value *rightValue = Known(postfix->right);
     postfixValue = code->CreateBitCast(postfixValue,compiler->postfixTreePtrTy);
-    Value *result = code->CreateCall3(compiler->xl_new_postfix,
+    Value *result = code->CreateCall3(compiler->xl_fill_postfix,
                                       postfixValue, leftValue, rightValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(postfix, result);
@@ -3072,7 +3214,7 @@ Value *OCompiledUnit::CallNewPostfix(Postfix *postfix)
 }
 
 
-Value *OCompiledUnit::CallNewInfix(Infix *infix)
+Value *OCompiledUnit::CallFillInfix(Infix *infix)
 // ----------------------------------------------------------------------------
 //    Compile code generating the children of an infix
 // ----------------------------------------------------------------------------
@@ -3081,10 +3223,24 @@ Value *OCompiledUnit::CallNewInfix(Infix *infix)
     Value *leftValue = Known(infix->left);
     Value *rightValue = Known(infix->right);
     infixValue = code->CreateBitCast(infixValue, compiler->infixTreePtrTy);
-    Value *result = code->CreateCall3(compiler->xl_new_infix,
+    Value *result = code->CreateCall3(compiler->xl_fill_infix,
                                       infixValue, leftValue, rightValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(infix, result);
+    return result;
+}
+
+
+Value *OCompiledUnit::CallArrayIndex(Tree *self, Tree *left, Tree *right)
+// ----------------------------------------------------------------------------
+//    Compile code calling xl_index for a form like A[B]
+// ----------------------------------------------------------------------------
+{
+    Value *leftValue = Known(left);
+    Value *rightValue = Known(right);
+    Value *result = code->CreateCall3(compiler->xl_array_index,
+                                      contextPtr, leftValue, rightValue);
+    MarkComputed(self, result);
     return result;
 }
 
@@ -3572,24 +3728,6 @@ extern "C" void debugsy(XL::Symbols *s)
 {
     using namespace XL;
     std::cerr << "SYMBOLS AT " << s << "\n";
-
-    std::cerr << "ENTRIES IN " << s << ":\n";
-    uint p, max = s->entries.size();
-    kstring kinds[] = { "UNKNOWN", "ARG", "PARM", "LOCAL",
-                        "GLOBAL", "FORM", "TYPE", "ENUM",
-                        "PROPERTY", "IMPORTED" };
-    for (p = 0; p < max; p++)
-    {
-        Property &entry = s->entries[p];
-        std::cerr << "  " << kinds[entry.kind] << " " << entry.name;
-        if (entry.type)
-            std::cerr << "\t: " << entry.type;
-        if (entry.value)
-            std::cerr << "\t:= " << entry.value;
-        if (entry.description != "")
-            std::cerr << "\t// " << entry.description;
-        std::cerr << "\n";
-    }
     std::cerr << "REWRITES IN " << s << ":\n";
     if (s->rewrites)
         debugrw(s->rewrites);

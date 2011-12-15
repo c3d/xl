@@ -36,6 +36,7 @@
 #include "types.h"
 #include "save.h"
 #include "tree-clone.h"
+#include "utf8_fileutils.h"
 
 #include <iostream>
 #include <cstdarg>
@@ -543,6 +544,49 @@ Infix *xl_new_infix(Infix *source, Tree *left, Tree *right)
 }
 
 
+Block *xl_fill_block(Block *source, Tree *child)
+// ----------------------------------------------------------------------------
+//    Called by generated code to replace child of a Block
+// ----------------------------------------------------------------------------
+{
+    source->child = child;
+    return source;
+}
+
+
+Prefix *xl_fill_prefix(Prefix *source, Tree *left, Tree *right)
+// ----------------------------------------------------------------------------
+//    Called by generated code to replace children of a Prefix
+// ----------------------------------------------------------------------------
+{
+    source->left = left;
+    source->right = right;
+    return source;
+}
+
+
+Postfix *xl_fill_postfix(Postfix *source, Tree *left, Tree *right)
+// ----------------------------------------------------------------------------
+//    Called by generated code to replace children of a Postfix
+// ----------------------------------------------------------------------------
+{
+    source->left = left;
+    source->right = right;
+    return source;
+}
+
+
+Infix *xl_fill_infix(Infix *source, Tree *left, Tree *right)
+// ----------------------------------------------------------------------------
+//    Called by generated code to replace children of an Infix
+// ----------------------------------------------------------------------------
+{
+    source->left = left;
+    source->right = right;
+    return source;
+}
+
+
 Tree *xl_real_list(Tree *self, uint n, double *values)
 // ----------------------------------------------------------------------------
 //   Build an infix from a list of real numbers
@@ -788,6 +832,15 @@ Tree *xl_lazy_cast(Context *context, Tree *source, Tree *value)
 }
 
 
+Tree *xl_reference_cast(Context *context, Tree *source, Tree *value)
+// ----------------------------------------------------------------------------
+//   Any reference argument can be accepted
+// ----------------------------------------------------------------------------
+{
+    return value;
+}
+
+
 Tree *xl_value_cast(Context *context, Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 //   Any value can be accepted (we evaluate first)
@@ -896,7 +949,7 @@ Tree *xl_block_cast(Context *context, Tree *source, Tree *value)
 
 Tree *xl_parameter(text symbol, text type)
 // ----------------------------------------------------------------------------
-//   Build an infix name:type, except if type is "source"
+//   Build an infix name:type, except if type is "lazy"
 // ----------------------------------------------------------------------------
 {
     Name *n = new Name(symbol);
@@ -1110,6 +1163,16 @@ bool xl_write_text(kstring x)
 }
 
 
+bool xl_write_tree(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Write a text value
+// ----------------------------------------------------------------------------
+{
+    std::cout << tree;
+    return true;
+}
+
+
 bool xl_write_character(char x)
 // ----------------------------------------------------------------------------
 //   Write a character value
@@ -1137,14 +1200,73 @@ bool xl_write_cr()
 //
 // ============================================================================
 
+struct ImportedFileInfo : Info
+// ----------------------------------------------------------------------------
+//   Information about a file that was imported (save full path)
+// ----------------------------------------------------------------------------
+{
+    ImportedFileInfo(text path)
+        : path(path) {}
+    text      path;
+};
+
+
+static bool isAbsolute(text path)
+// ----------------------------------------------------------------------------
+//    Test absolute/relative path
+// ----------------------------------------------------------------------------
+{
+    if (path == "")
+        return false;
+#if defined (CONFIG_MINGW)
+    if (path[0] == '/' || path[0] == '\\')
+        return true;
+    if (path.length() >= 2 && path[1] == ':')
+        return true;
+    return false;
+#else
+    return (path[0] != '/');
+#endif
+}
+
 Tree *xl_import(Context *context, Tree *self, text name, bool execute)
 // ----------------------------------------------------------------------------
 //    Load a file from disk without evaluating it
 // ----------------------------------------------------------------------------
 {
-    text path = MAIN->SearchFile(name);
-    if (path == "")
-        return Ooops("Source file $1 not found", new Text(name));
+    text path = "";
+    ImportedFileInfo *info = self->GetInfo<ImportedFileInfo>();
+    if (info)
+    {
+        path = info->path;
+    }
+    else
+    {
+        if (!isAbsolute(path))
+        {
+            // Relative path: look in same directory as parent
+            if (Tree * dir = self->Symbols()->Named("module_dir"))
+            {
+                if (Text * txt = dir->AsText())
+                {
+                    path = txt->value + "/" + name;
+#if defined(CONFIG_MINGW)
+                    struct _stat st;
+#else
+                    struct stat st;
+#endif
+                    if (utf8_stat (path.c_str(), &st) < 0)
+                        path = "";
+                }
+            }
+        }
+        if (path == "")
+            path = MAIN->SearchFile(name);
+        if (path == "")
+            return Ooops("Source file $1 not found", new Text(name));
+        info = new ImportedFileInfo(path);
+        self->SetInfo<ImportedFileInfo> (info);
+    }
 
     // Check if the file has already been loaded somehwere.
     // If so, return the loaded file
@@ -1404,16 +1526,6 @@ Tree *xl_define(Context *context, Tree *self, Tree *form, Tree *definition)
 }
 
 
-Tree *xl_assign(Context *context, Tree *form, Tree *definition)
-// ----------------------------------------------------------------------------
-//   Assignment in interpreted mode
-// ----------------------------------------------------------------------------
-{
-    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
-    return context->Assign(form, definition);
-}
-
-
 Tree *xl_evaluate_sequence(Context *context, Tree *first, Tree *second)
 // ----------------------------------------------------------------------------
 //   Evaluate a sequence
@@ -1525,10 +1637,10 @@ Tree *xl_read_property_default(Context *context, Tree *self)
     Name *name = self->AsName();
     if (!symbols || !name)
         return xl_false;
-    Property *prop = symbols->Entry(name->value, false);
+    Rewrite *prop = symbols->Entry(name->value, false);
     if (!prop)
         return self;
-    return prop->value;
+    return prop->to;
 }
 
 
@@ -1545,7 +1657,7 @@ Tree *xl_write_property_default(Context *context, Tree *self, Tree *value)
     Name *name = prefix->left->AsName();
     if (!name)
         return xl_false;
-    Property *prop = symbols->Entry(name->value, true);
+    Rewrite *prop = symbols->Entry(name->value, true);
     kind k = value->Kind();
     Tree *type = prop->type;
     if ((type == integer_type && k != INTEGER) ||
@@ -1559,7 +1671,7 @@ Tree *xl_write_property_default(Context *context, Tree *self, Tree *value)
         return value;
     }
 
-    prop->value = value;
+    prop->to = value;
     return value;
 }
 
@@ -1753,101 +1865,348 @@ Tree *xl_range(longlong low, longlong high)
 }
 
 
-Tree *xl_nth(Context *context, Tree *data, Integer *indexTree)
+Rewrite *xl_data_reference(Context *context, Tree *expr)
 // ----------------------------------------------------------------------------
-//   Find the nth element in a data set
+//   Build a symbol table for a list
 // ----------------------------------------------------------------------------
 {
-    // Check that the index begins at 1
-    longlong index = indexTree->value;
-    if (index <= 0)
-    {
-        Ooops ("Negative or null list index $1", indexTree);
-        return xl_false;
-    }
+    Symbols *symbols = expr->Symbols();
 
-    // Check if we got (1,2,3,4) or something like f(3) as 'data'
-    Block *block = data->AsBlock();
-    if (block)
+    // Check if already built
+    if (symbols)
     {
-        // We got (1,2,3,4): Extract 1,2,3,4
-        data = block->child;
-        if (!data->Symbols())
-            data->SetSymbols(block->Symbols());
-    }
-
-    // Check if we have an infix
-    if (Infix *infix = data->AsInfix())
-    {
-        text separator = infix->name;
-        while (index > 1 && infix)
+        if (Rewrite *rewrite = symbols->Rewrites())
         {
-            data = infix->right;
-            infix = NULL;
-            if (Infix *rightInfix = data->AsInfix())
-                if (rightInfix->name == separator)
-                    infix = rightInfix;
-            index--;
-        }
-
-        if (infix)
-        {
-            assert (index == 1);
-            data = infix->left;
+            if (rewrite->kind == Rewrite::METADATA)
+            {
+                if (Name *name = rewrite->from->AsName())
+                    if (name->value == ":List:")
+                        return rewrite;
+                
+                // If we have a non-empty symbol table, create a new one
+                symbols = new Symbols(symbols);
+                expr->SetSymbols(symbols);
+            }
         }
     }
-
-    // When we get there, we should have the first item, i.e. in (1) or (1,2)
-    if (index != 1)
+    else
     {
-        Ooops ("Index $1 is out of range", indexTree);
-        return xl_false;
+        // No symbol table: create one - Should not happen too often
+        symbols = new Symbols(symbols);
+        expr->SetSymbols(symbols);
+    }
+        
+    // Create the original entry for the symbol table
+    longlong count = 0;
+    TreePosition pos = expr->Position();
+    Name_p listMarker = new Name(":List:", pos);
+    Integer_p listSize = new Integer(count, pos);
+    Rewrite_p top = symbols->EnterRewrite(listMarker, listSize);
+    top->kind = Rewrite::METADATA;
+    top->symbols = symbols;
+
+    // Evacuate block
+    if (Block *block = expr->AsBlock())
+        expr = block->child;
+
+    // Check the empty name case
+    if (Name *name = expr->AsName())
+        if (name->value == "")
+            return top;
+
+    // Populate the symbol table with the entries
+    while (expr)
+    {
+        Tree *next = NULL;
+
+        if (Infix *infix = expr->AsInfix())
+        {
+            if (infix->name == ",")
+            {
+                expr = infix->left;
+                next = infix->right;
+            }
+        }
+
+        Integer_p index = new Integer(++count, pos);
+        symbols->EnterRewrite(index, expr);
+        expr = next;
     }
 
-    // Return the value we got
-    return data;
+    // Update size of the list
+    listSize->value = count;
+
+    // Return the top-level entry
+    return top;
 }
 
 
-Integer *xl_length(Context *context, Tree *data)
+Rewrite *xl_reference(Context *context, Tree *expr, bool create)
 // ----------------------------------------------------------------------------
-//   Return the length of a given list
+//   Find the property associated with the given expression
 // ----------------------------------------------------------------------------
 {
-    TreePosition pos = data->Position();
+    Symbols *symbols = expr->Symbols();
+    Tree *type = NULL;
 
-    // Check if we got (1,2,3,4) or something like f(3) as 'data'
-    Block *block = data->AsBlock();
-    if (block)
+    // Deal with non-list cases
+    while (expr)
     {
-        // We got (1,2,3,4): Extract 1,2,3,4
-        data = block->child;
-        if (!data->Symbols())
-            data->SetSymbols(block->Symbols());
-    }
+        Tree *left = NULL;
+        Tree *right = NULL;
 
-    // Special case the empty name
-    if (Name *name = data->AsName())
-        if (name->value == "")
-            return new Integer(0, pos);
-
-    // Check if we have an infix
-    ulong len = 1;
-    if (Infix *infix = data->AsInfix())
-    {
-        text separator = infix->name;
-        while (infix)
+        // Lookup terminals
+        if (expr->IsLeaf())
         {
-            data = infix->right;
-            infix = NULL;
-            if (Infix *rightInfix = data->AsInfix())
-                if (rightInfix->name == separator)
-                    infix = rightInfix;
-            len++;
+            Rewrite *entry = symbols->LookupEntry(expr, create);
+            if (entry && type)
+            {
+                if (!entry->type)
+                {
+                    entry->type = type;
+                }
+                else if (entry->type != type)
+                {
+                    Ooops("Invalid type override with $1", type);
+                    Ooops("Previous type was $1", entry->type);
+                }
+            }
+            return entry;
+        }
+            
+        // Check special infix notations
+        else if (Infix *infix = expr->AsInfix())
+        {
+            if (infix->name == ":")
+            {
+                // A:B = record that we have a type
+                if (!type)
+                {
+                    type = xl_evaluate(context, infix->right);
+                }
+                else
+                {
+                    Ooops("Extraneous type specification $1", infix->right);
+                    Ooops("Previous type specification $1", type);
+                }
+            }
+            else if (infix->name == ".")
+            {
+                // A.B = Dereference A, then lookup B
+                left = infix->left;
+                right = infix->right;
+            }
+            else if (infix->name == ",")
+            {
+                // A,B = Infix list
+                return xl_data_reference(context, infix);
+            }
+        }
+            
+        // Check special prefix notation A[B]
+        else if (Prefix *prefix = expr->AsPrefix())
+        {
+            if (Block *br = prefix->right->AsBlock())
+            {
+                if (br->IsSquare())
+                {
+                    left = prefix->left;
+                    if (!br->child->Symbols())
+                        br->child->SetSymbols(symbols);
+                    right = xl_evaluate(context, br->child);
+                }
+            }
+        }
+
+        // Evacuate blocks
+        else if (Block *block = expr->AsBlock())
+        {
+            expr = block->child;
+            continue;           // Do not evaluate anything
+        }
+
+        // Check empty names
+        else if (Name *name = expr->AsName())
+        {
+            if (name->value == "")
+                return xl_data_reference(context, expr);
+        }
+
+        // Check constants
+        else if (expr->IsConstant())
+        {
+            return xl_data_reference(context, expr);
+        }
+
+        // Check if we were in a A.B or A[B] case
+        if (left && right)
+        {
+            // Find the reference on the left
+            if (!left->Symbols())
+                left->SetSymbols(symbols);
+            Rewrite *ref = xl_reference(context, left, true);
+                
+            // Create value and symbol table if they don't exist
+            Symbols *s = ref->symbols;
+            if (!s)
+                s = ref->symbols = ref->to->Symbols();
+            if (!s)
+                s = ref->symbols = new Symbols(symbols);
+            symbols = s;
+            expr = right;
+            if (!expr->Symbols())
+                expr->SetSymbols(symbols);
+        }
+        else
+        {
+            // All other cases: evaluate
+            Tree *evaluated = xl_evaluate(context, expr);
+            if (evaluated == expr)
+                return NULL;
+            expr = evaluated;
+        }
+
+    } // While (expr)
+
+    return NULL;
+}
+
+
+Tree *xl_assign_constant(Context *context, Tree *old, Tree *value)
+// ----------------------------------------------------------------------------
+//    Assign in place when the left is an integer, real or text
+// ----------------------------------------------------------------------------
+//    This is a backward compatible behavior
+{
+    kind ok = old->Kind();
+    kind vk = value->Kind();
+    if (ok == INTEGER && vk == INTEGER)
+    {
+        ((Integer *) old)->value = ((Integer *) value)->value;
+    }
+    else if (ok == REAL && vk == REAL)
+    {
+        ((Real *) old)->value = ((Real *) value)->value;
+    }
+    else if (ok == REAL && vk == INTEGER)
+    {
+        ((Real *) old)->value = ((Integer *) value)->value;
+    }
+    else if (ok == TEXT && vk == TEXT)
+    {
+        ((Text *) old)->value = ((Text *) value)->value;
+    }
+    else if (ok == NAME && vk == NAME)
+    {
+        Name *o = (Name *) old;
+        Name *v = (Name *) value;
+        if (o->code == xl_identity)
+        {
+            Ooops("Assigning to constant name $1", old);
+            Ooops("New value was $1", value);
+        }
+        else
+        {
+            o->value = v->value;
         }
     }
+    else
+    {
+        Ooops("Incompatible assignment of $1", value);
+        Ooops("Old value was $1", old);
+    }
+    return value;
+}
 
-    return new Integer(len, pos);
+
+Tree *xl_assign(Context *context, Tree *var, Tree *value)
+// ----------------------------------------------------------------------------
+//   Assignment in interpreted mode
+// ----------------------------------------------------------------------------
+{
+    ADJUST_CONTEXT_FOR_INTERPRETER(context);
+    if (XL::Options::options->optimize_level == 1)
+    {
+        value = xl_evaluate(context, value);
+        if (var->IsConstant())
+            return xl_assign_constant(context, var, value);
+
+
+        Rewrite *rw = xl_reference(context, var, true);
+        if (rw)
+        {
+            // Writing to an explicit rewrite: only works if same type
+            if (rw->kind == Rewrite::LOCAL)
+                return xl_assign_constant(context, rw->to, value);
+
+            rw->to = value;
+            if (rw->kind == Rewrite::UNKNOWN)
+                rw->kind = Rewrite::ASSIGNED;
+        }
+        return value;
+    }
+    return context->Assign(var, value);
+}
+
+
+Tree *xl_index(Context *context, Tree *data, Tree *indexTree)
+// ----------------------------------------------------------------------------
+//   Find the given element in a data set or return false, e.g. X.Y
+// ----------------------------------------------------------------------------
+{
+    // Identify the reference for X
+    Rewrite *rw = xl_reference(context, data, false);
+    if (!rw)
+        return xl_false;
+
+    // Get the symbol table for X
+    Symbols *symbols = rw->symbols;
+    if (!symbols)
+    {
+        symbols = rw->to->Symbols();
+        if (!symbols)
+            return xl_false;
+        rw->symbols = symbols;
+    }
+
+    // In X's symbol table, find Y (don't look up, we want only local results)
+    rw = symbols->Entry(indexTree, false);
+    if (!rw || !rw->to)
+        return xl_false;
+    return rw->to;
+}
+
+
+Tree *xl_array_index(Context *context, Tree *data, Tree *indexTree)
+// ----------------------------------------------------------------------------
+//   Evaluate things like A[B]
+// ----------------------------------------------------------------------------
+{
+    indexTree = xl_evaluate(context, indexTree);
+    return xl_index(context, data, indexTree);
+}
+
+
+Integer *xl_size(Context *context, Tree *data)
+// ----------------------------------------------------------------------------
+//   Return the length / size of a given list
+// ----------------------------------------------------------------------------
+{
+    Rewrite *rw = xl_data_reference(context, data);
+    ulong count = 0;
+    if (rw)
+    {
+        // Check if this is an already computed list, if so return size
+        Symbols *symbols = rw->symbols;
+        if (symbols)
+            if (rw->kind == Rewrite::METADATA)
+                if (Name *name = rw->from->AsName())
+                    if (name->value == ":List:")
+                        return rw->to->AsInteger();
+
+        count = symbols->Count(~(1<<Rewrite::METADATA));
+    }
+    return new Integer(count, data->Position());
 }
 
 
@@ -2118,62 +2477,8 @@ void xl_enter_declarator(text name, decl_fn fn)
 //
 // ============================================================================
 
-struct ForLoopInfo : Info
-// ----------------------------------------------------------------------------
-//    Specifically compiled body for list for loops
-// ----------------------------------------------------------------------------
-{
-    ForLoopInfo(Tree_p body) : body(body) {}
-    static Tree *LoopBody(Tree *self, Name *var, Tree *body);
-    Tree_p    body;
-};
-
-
-static Tree_p xl_list_for_loop_current_item;
-static Tree *xl_list_for_loop_item(Context *context, Tree *value)
-// ----------------------------------------------------------------------------
-//   Return the current value of a list for loop
-// ----------------------------------------------------------------------------
-{
-    return xl_list_for_loop_current_item
-        ?  (Tree *) xl_list_for_loop_current_item
-        :  (Tree *) xl_false;
-}
-
-
-Tree *ForLoopInfo::LoopBody(Tree *self, Name *var, Tree *body)
-// ----------------------------------------------------------------------------
-//   Create a clone of the loop body suitable for evaluation in a for loop
-// ----------------------------------------------------------------------------
-{
-    ForLoopInfo *info = self->GetInfo<ForLoopInfo>();
-    if (!info)
-    {
-        // Create a local scope containing only the named variable
-        Symbols_p scope = body->Symbols();
-        Symbols_p locals = new Symbols(scope);
-        locals->Allocate (var);
-        var->code = xl_list_for_loop_item;
-
-        // Create a clone for the body, that's what we will evaluate
-        TreeClone clone;
-        body = body->Do(clone);
-        body->SetSymbols(locals);
-
-        // Create the info and attach it
-        info = new ForLoopInfo(body);
-        self->SetInfo<ForLoopInfo>(info);
-    }
-    else
-    {
-        body = info->body;
-    }
-    return body;
-}
-
-
 Tree *xl_integer_for_loop(Context *context, Tree *self,
-                          Integer *Variable,
+                          Tree *Variable,
                           longlong low, longlong high, longlong step,
                           Tree *body)
 // ----------------------------------------------------------------------------
@@ -2186,11 +2491,13 @@ Tree *xl_integer_for_loop(Context *context, Tree *self,
         body->SetSymbols(self->Symbols());
 
     Tree_p result = xl_false;
+    Integer_p ival = new Integer(low, self->Position());
     if (step >= 0)
     {
         for (longlong i = low; i <= high; i += step)
         {
-            Variable->value = i;
+            ival->value = i;
+            xl_assign(context, Variable, ival);
             result = context->Evaluate(body);
         }
     }
@@ -2198,7 +2505,8 @@ Tree *xl_integer_for_loop(Context *context, Tree *self,
     {
         for (longlong i = low; i >= high; i += step)
         {
-            Variable->value = i;
+            ival->value = i;
+            xl_assign(context, Variable, ival);
             result = context->Evaluate(body);
         }
     }
@@ -2207,7 +2515,7 @@ Tree *xl_integer_for_loop(Context *context, Tree *self,
 
 
 Tree *xl_real_for_loop(Context *context, Tree *self,
-                       Real *Variable,
+                       Tree *Variable,
                        double low, double high, double step, Tree *body)
 // ----------------------------------------------------------------------------
 //    Loop over a real variable
@@ -2219,11 +2527,13 @@ Tree *xl_real_for_loop(Context *context, Tree *self,
         body->SetSymbols(self->Symbols());
 
     Tree_p result = xl_false;
+    Real_p rval = new Real(low, self->Position());
     if (step >= 0)
     {
         for (double i = low; i <= high; i += step)
         {
-            Variable->value = i;
+            rval->value = i;
+            xl_assign(context, Variable, rval);
             result = context->Evaluate(body);
         }
     }
@@ -2231,7 +2541,8 @@ Tree *xl_real_for_loop(Context *context, Tree *self,
     {
         for (double i = low; i >= high; i += step)
         {
-            Variable->value = i;
+            rval->value = i;
+            xl_assign(context, Variable, rval);
             result = context->Evaluate(body);
         }
     }
@@ -2240,7 +2551,7 @@ Tree *xl_real_for_loop(Context *context, Tree *self,
 
 
 Tree *xl_list_for_loop(Context *context, Tree *self,
-                       Name *Variable,
+                       Tree *Variable,
                        Tree *list, Tree *body)
 // ----------------------------------------------------------------------------
 //   Loop over a list
@@ -2248,6 +2559,7 @@ Tree *xl_list_for_loop(Context *context, Tree *self,
 {
     ADJUST_CONTEXT_FOR_INTERPRETER(context);
 
+    // Extract list value
     Tree_p result = xl_false;
     if (Block *block = list->AsBlock())
         list = block->child;
@@ -2255,11 +2567,7 @@ Tree *xl_list_for_loop(Context *context, Tree *self,
         if (name->value == "")
             return result;      // empty list
 
-    // Get body of loop for given variable
-    body = ForLoopInfo::LoopBody(self, Variable, body);
-
-    // Save current index, and loop on all items
-    Save<Tree_p> saveIndex(xl_list_for_loop_current_item, xl_false);
+    // Loop on list items
     Tree *next = list;
     while (next)
     {
@@ -2278,7 +2586,7 @@ Tree *xl_list_for_loop(Context *context, Tree *self,
         }
 
         // Set the loop index
-        xl_list_for_loop_current_item = value;
+        xl_assign(context, Variable, value);
         result = context->Evaluate(body);
     }
 

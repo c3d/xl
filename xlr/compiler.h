@@ -209,6 +209,11 @@ public:
     llvm::Function            *xl_new_prefix;
     llvm::Function            *xl_new_postfix;
     llvm::Function            *xl_new_infix;
+    llvm::Function            *xl_fill_block;
+    llvm::Function            *xl_fill_prefix;
+    llvm::Function            *xl_fill_postfix;
+    llvm::Function            *xl_fill_infix;
+    llvm::Function            *xl_array_index;
     llvm::Function            *xl_new_closure;
     functions_map              builtins;
     functions_map              functions;

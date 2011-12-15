@@ -1,7 +1,6 @@
 01.Evaluation/arguments-normalization.xl
 01.Evaluation/automatic-generation-of-blocks.xl
 01.Evaluation/bound-name-in-prefix.xl
-01.Evaluation/bug-842.xl
 01.Evaluation/bug1046.xl
 01.Evaluation/forward-declaration.xl
 01.Evaluation/guard-clause-for-range.xl
@@ -30,8 +29,6 @@
 05.Control/for-loops.xl
 05.Control/infinite-loop.xl
 05.Control/post-while-and-until-loops.xl
-05.Control/until-loop.xl
-05.Control/while-loop.xl
 09.Compiler/optimized-min-3args.xl
 20.Errors/bug357.xl
 20.Errors/error-handlers.xl
