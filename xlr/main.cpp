@@ -320,6 +320,16 @@ bool Main::Refresh(double delay)
 }
 
 
+text Main::Decrypt(text file)
+// ----------------------------------------------------------------------------
+//   Decryption hook
+// ----------------------------------------------------------------------------
+{
+    (void) file;
+    return "";
+}
+
+
 int Main::LoadFile(text file,
                    bool updateContext,
                    Context *importContext,
@@ -355,20 +365,34 @@ int Main::LoadFile(text file,
     }
     else
     {
-        std::string nt = "";
         utf8_ifstream ifs(file.c_str(), std::ios::in | std::ios::binary);
         Deserializer ds(ifs);
         tree = ds.ReadTree();
         if (!ds.IsValid())
         {
-            // File is not in serialized format, try to parse it as XL source
-            nt = "not ";
-            Parser parser (file.c_str(), syntax, positions, topLevelErrors);
-            tree = parser.Parse();
+            std::string decrypted = MAIN->Decrypt(file.c_str());
+            if (decrypted != "")
+            {
+                // Parse decrypted string as XL source
+                IFTRACE(fileload)
+                    std::cerr << "Info: file was succesfully decrypted\n";
+                std::istringstream iss;
+                iss.str(decrypted);
+                Parser parser (iss, syntax, positions, topLevelErrors);
+                tree = parser.Parse();
+            }
+            else
+            {
+                // Parse as XL source
+                Parser parser (file.c_str(), syntax, positions, topLevelErrors);
+                tree = parser.Parse();
+            }
         }
-        if (options.verbose)
-            std::cout << "Info: file " << file << " is "
-                      << nt << "in serialized format" << '\n';
+        else
+        {
+            IFTRACE(fileload)
+                std::cerr << "Info: file is in serialized format\n";
+        }
     }
 
     if (options.writeSerialized)
@@ -427,8 +451,8 @@ int Main::LoadFile(text file,
         Text_p module_dir_value = new Text(ParentDir(file));
         ctx->Define(module_file, module_file_value);
         ctx->Define(module_dir, module_dir_value);
-        syms->EnterName(module_file->value, module_file_value,Property::LOCAL);
-        syms->EnterName(module_dir->value, module_dir_value,Property::LOCAL);
+        syms->EnterName(module_file->value, module_file_value,Rewrite::LOCAL);
+        syms->EnterName(module_dir->value, module_dir_value,Rewrite::LOCAL);
     }
 
     // Register the source file we had

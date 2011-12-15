@@ -52,12 +52,10 @@ typedef std::map<text, Tree_p>     symbol_table; // Symbol table in context
 typedef std::set<Tree_p>           active_set;   // Not to be garbage collected
 typedef std::set<Symbols_p>        symbols_set;  // Set of symbol tables
 typedef std::vector<Symbols_p>     symbols_list; // List of symbols table
-typedef std::map<ulong, Rewrite_p> rewrite_table;// Hashing of rewrites
 typedef symbol_table::iterator     symbol_iter;  // Iterator over sym table
 typedef std::map<Name_p, Tree_p>   capture_table;// Symbol capture table
 typedef std::map<Tree_p, Tree_p>   value_table;  // Used for value caching
 typedef value_table::iterator      value_iter;   // Used to iterate over values
-typedef std::vector<Property>      entry_list;   // Sorted by name
 typedef Tree * (*typecheck_fn) (Context *context, Tree *src, Tree *value);
 typedef Tree * (*decl_fn) (Symbols *, Tree *source, bool execute);
 typedef std::map<text, decl_fn>    declarator_table; // To call at decl time
@@ -89,18 +87,21 @@ struct Symbols
     Rewrite *           Rewrites()              { return rewrites; }
 
     // Entering symbols in the symbol table
-    void                EnterName (text name, Tree *value, Property::Kind k);
+    void                EnterName (text name, Tree *value, Rewrite::Kind k);
     void                ExtendName (text name, Tree *value);
     Rewrite *           EnterRewrite(Rewrite *r);
     Rewrite *           EnterRewrite(Tree *from, Tree *to);
     Name *              Allocate(Name *varName);
-    ulong               Count(ulong kinds /* bit mask of PROPERTY::Kind */);
+    ulong               Count(ulong kinds /* bit mask of Rewrite::Kind */,
+                              Rewrite *top = NULL);
 
     // Enter properties, return number of properties found
     uint                EnterProperty(Context *context,
                                       Tree *self, Tree *storage, Tree *decls);
-    Property *          Entry(text name, bool create);
-    Property *          Entry(text name, uint min, uint max, bool create);
+    Rewrite *           Entry(text name, bool create);
+    Rewrite *           Entry(Tree *form, bool create);
+    Rewrite *           LookupEntry(text name, bool create);
+    Rewrite *           LookupEntry(Tree *form, bool create);
 
     // Performing the declarations on a given tree
     Tree *              ProcessDeclarations(Tree *tree);
@@ -129,7 +130,6 @@ struct Symbols
 public:
     Tree_p              source;
     Symbols_p           parent;
-    entry_list          entries; // Sorted by name
     Rewrite_p           rewrites;
     symbol_table        calls;
     value_table         type_tests;
@@ -167,15 +167,6 @@ inline Symbols::~Symbols()
 //   Delete all included rewrites if necessary and unlink from context
 // ----------------------------------------------------------------------------
 {}
-
-
-inline Property *Symbols::Entry(text name, bool create)
-// ----------------------------------------------------------------------------
-//   Find the entry associated with a given name
-// ----------------------------------------------------------------------------
-{
-    return Entry(name, 0, entries.size(), create);
-}
 
 
 
@@ -217,11 +208,13 @@ struct OCompiledUnit
     llvm::Value *       Right(Tree *);
     llvm::Value *       Copy(Tree *src, Tree *dst, bool markDone=true);
     llvm::Value *       Invoke(Tree *subexpr, Tree *callee, TreeList args);
+    llvm::Value *       ReadName(Name *what, Rewrite *rw);
     llvm::Value *       CallEvaluate(Tree *);
-    llvm::Value *       CallNewBlock(Block *);
-    llvm::Value *       CallNewPrefix(Prefix *);
-    llvm::Value *       CallNewPostfix(Postfix *);
-    llvm::Value *       CallNewInfix(Infix *);
+    llvm::Value *       CallFillBlock(Block *);
+    llvm::Value *       CallFillPrefix(Prefix *);
+    llvm::Value *       CallFillPostfix(Postfix *);
+    llvm::Value *       CallFillInfix(Infix *);
+    llvm::Value *       CallArrayIndex(Tree *self, Tree *l, Tree *r);
     llvm::Value *       CreateClosure(Tree *callee,
                                       TreeList &parms, TreeList &args,
                                       llvm::Function *);

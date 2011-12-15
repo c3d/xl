@@ -183,16 +183,19 @@ XL_BEGIN
 
 struct Context;                                 // Execution context
 struct Rewrite;                                 // Tree rewrite data
-struct Property;                                // Properties
 struct Constraint;                              // Constraints on properties
 struct Errors;                                  // Error handlers
 struct Action;                                  // Actions applied on trees
 
 typedef GCPtr<Context>             Context_p;
 typedef GCPtr<Rewrite>             Rewrite_p;
-typedef GCPtr<Property>            Property_p;
 typedef GCPtr<Constraint>          Constraint_p;
-typedef std::map<ulong, Rewrite_p> rewrite_table;// Hashing of rewrites
+#define REWRITE_HASH_SIZE          2
+#define REWRITE_HASH_SHIFT(h)      (h = ((h >> 1) | (h << 31)))
+#define REWRITE_FIRST(t, k)        (t[k % REWRITE_HASH_SIZE])
+#define REWRITE_NEXT(c, k)         (REWRITE_HASH_SHIFT(k),              \
+                                    c = c->hash[k % REWRITE_HASH_SIZE])
+typedef Rewrite_p                  rewrite_table[REWRITE_HASH_SIZE];
 typedef std::vector<Rewrite_p>     rewrite_list;
 typedef std::vector<Context_p>     context_list;
 typedef std::map<Tree_p, Tree_p>   tree_map;
@@ -261,6 +264,7 @@ struct Context
 
     // The hash code used in the rewrite table
     static ulong        Hash(Tree *input);
+    static ulong        Hash(text name);
     static ulong        HashForm(Tree *input);
 
     // Bind parameters in context based on arguments in form
@@ -337,10 +341,14 @@ struct Rewrite
 // ----------------------------------------------------------------------------
 //   Note that a rewrite with 'to' = NULL is used for 'data' statements
 {
+    enum Kind { UNKNOWN, ARG, PARM, LOCAL,
+                GLOBAL, FORM, TYPE, ENUM, 
+                PROPERTY, IMPORTED, ASSIGNED, METADATA };
+
     Rewrite (Tree *f, Tree *t, Tree *tp):
-        symbols(NULL), from(f), to(t), hash(), native(NULL), type(tp) {}
+        to(t), from(f), symbols(NULL), hash(), native(NULL), type(tp) {}
     Rewrite (Symbols * syms, Tree *f, Tree *t, Tree *tp = NULL):
-        symbols(syms), from(f), to(t), hash(), native(NULL), type(tp) {}
+        to(t), from(f), symbols(syms), hash(), native(NULL), type(tp) {}
     ~Rewrite() {}
 
     // Obsolete: old compiler stuff
@@ -349,39 +357,17 @@ struct Rewrite
     Tree *              Compile(TreeList &xargs);
 
 public:
-    Symbols_p           symbols; // Obsolete
-    Tree_p              from;
     Tree_p              to;
+    Tree_p              from;
+    Symbols_p           symbols; // Obsolete at -O3
     rewrite_table       hash;
     native_fn           native;
     Tree_p              type;
-    TreeList            parameters; // Obsolete
+    text                description;
+    Kind                kind;
+    TreeList            parameters; // Obsolete at -O3
 
     GARBAGE_COLLECT(Rewrite);
-};
-
-
-struct Property
-// ----------------------------------------------------------------------------
-//   Information about a property
-// ----------------------------------------------------------------------------
-{
-    enum Kind { UNKNOWN, ARG, PARM, LOCAL,
-                GLOBAL, FORM, TYPE, ENUM, 
-                PROPERTY, IMPORTED };
-    Property(text name, text descr, Tree *type, Tree *value = NULL)
-        : name(name), description(descr), type(type), value(value),
-          kind(UNKNOWN), id(0) {}
-    Property(): name(), description(), type(NULL), value(NULL),
-                kind(UNKNOWN), id(0) {}
-    text        name;
-    text        description;
-    Tree_p      type;
-    Tree_p      value;
-    Kind        kind;
-    ulong       id;
-
-    GARBAGE_COLLECT(Property);
 };
 
 
@@ -438,11 +424,9 @@ Tree *Context::Evaluate(Tree *what,
 //   Evaluate a tree using the given evaluator, only in given context
 // ----------------------------------------------------------------------------
 {
-    rewrite_table &rwt = rewrites;
-    rewrite_table::iterator found = rwt.find(key);
-    if (found != rwt.end())
+    if (Rewrite *candidate = REWRITE_FIRST(rewrites, key))
     {
-        Rewrite *candidate = (*found).second;
+        ulong hkey = key;
         while (candidate)
         {
             ulong formKey = HashForm(candidate->from);
@@ -454,9 +438,7 @@ Tree *Context::Evaluate(Tree *what,
             } // Matching key
 
             // Check next key
-            rewrite_table &rwh = candidate->hash;
-            found = rwh.find(key);
-            candidate = found == rwh.end() ? NULL : (*found).second;
+            REWRITE_NEXT(candidate, hkey);
         } // Loop on candidates
     } // If found candidate
 

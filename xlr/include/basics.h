@@ -59,7 +59,7 @@ inline longlong xl_text2int(text_r t)
 // ----------------------------------------------------------------------------
 {
     std::istringstream stream(t.value);
-    longlong result;
+    longlong result = 0.0;
     stream >> result;
     return result;
 }
@@ -71,7 +71,7 @@ inline double xl_text2real(text_r t)
 // ----------------------------------------------------------------------------
 {
     std::istringstream stream(t.value);
-    double result;
+    double result = 0.0;
     stream >> result;
     return result;
 }

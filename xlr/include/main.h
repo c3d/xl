@@ -88,6 +88,7 @@ struct Main
     virtual text SearchFile(text input);
     virtual text ParentDir(text input);
     virtual bool Refresh(double delay);
+    virtual text Decrypt(text input);
     int          Run();
     int          Diff();
     void         Log(Error &e)   { errors->Log(e); }

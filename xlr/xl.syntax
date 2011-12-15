@@ -6,19 +6,19 @@ INFIX
         50      then require ensure
         61      ;
         75      with
+        85      := += -= *= /= ^= |= &=
         100     STATEMENT
         110     is as 
         120     written
         130     where
         200     DEFAULT
         211     when
-        221     := += -= *= /= ^= |= &=
         231     ,
         240     return 
         250     and or xor
         260     in at contains
         271     of to
-        280     .. step
+        280     .. by
         290     = < > <= >= <>
         300     & |
         310     + -
