@@ -345,6 +345,7 @@ uint Symbols::EnterProperty(Context *context,
         {
             properties = infix->left;
             type = infix->right;
+            type->SetSymbols(symbols);
         }
     }
 
