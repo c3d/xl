@@ -1882,19 +1882,13 @@ Rewrite *xl_data_reference(Context *context, Tree *expr)
                 if (Name *name = rewrite->from->AsName())
                     if (name->value == ":List:")
                         return rewrite;
-                
-                // If we have a non-empty symbol table, create a new one
-                symbols = new Symbols(symbols);
-                expr->SetSymbols(symbols);
             }
         }
     }
-    else
-    {
-        // No symbol table: create one - Should not happen too often
-        symbols = new Symbols(symbols);
-        expr->SetSymbols(symbols);
-    }
+
+    // No symbol table, or invalid one: create data symbol table
+    symbols = new Symbols(symbols);
+    expr->SetSymbols(symbols);
         
     // Create the original entry for the symbol table
     longlong count = 0;
