@@ -518,7 +518,8 @@ void debuggc(void *ptr)
         }
         uintptr_t bits = chunk->bits;
         uintptr_t aligned = bits & ~TA::PTR_MASK;
-        std::cerr << "Allocator bits: " << std::hex << bits << "\n";
+        std::cerr << "Allocator bits: " << std::hex << bits
+                  << " count=" << chunk->count << "\n";
 
         GarbageCollector *gc = GarbageCollector::Singleton();
 
