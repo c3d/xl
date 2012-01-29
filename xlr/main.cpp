@@ -240,6 +240,18 @@ int Main::LoadContextFiles(source_names &ctxFiles)
     source_names::iterator file;
     bool hadError = false;
 
+    // Clear all existing symbols (#1777)
+    source_files::iterator sfi;
+    for (sfi = files.begin(); sfi != files.end(); sfi++)
+    {
+        SourceFile &sf = (*sfi).second;
+        if (sf.context)
+            sf.context->Clear();
+        if (sf.symbols)
+            sf.symbols->Clear();
+    }
+    files.clear();
+
     // Load builtins
     if (!options.builtins.empty())
         hadError |= LoadFile(options.builtins, true);
