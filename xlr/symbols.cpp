@@ -267,11 +267,20 @@ Rewrite *Symbols::EnterRewrite(Rewrite *rw)
     rw->from->SetSymbols(locals);
 
     // Enter parameters in the symbol table
-    ParameterMatch parms(locals);
-    Tree *check = rw->from->Do(parms);
-    if (!check)
-        Ooops("Parameter error for $1", rw->from);
-    rw->parameters = parms.order;
+    {
+        ParameterMatch parms(locals);
+        Tree *check = rw->from->Do(parms);
+        if (!check)
+            Ooops("Parameter error for $1", rw->from);
+        rw->parameters = parms.order;
+    }
+
+     // If no symbols entered, use parent symbol table (#1885)
+    if (rw->parameters.size() == 0)
+    {
+        rw->from->SetSymbols(this);
+        delete locals;
+    }
 
     if (rewrites)
     {

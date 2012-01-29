@@ -1870,7 +1870,8 @@ Rewrite *xl_data_reference(Context *context, Tree *expr)
 //   Build a symbol table for a list
 // ----------------------------------------------------------------------------
 {
-    Symbols *symbols = expr->Symbols();
+    Symbols *exprSymbols = expr->Symbols();
+    Symbols *symbols = exprSymbols;
 
     // Check if already built
     if (symbols)
@@ -1898,6 +1899,7 @@ Rewrite *xl_data_reference(Context *context, Tree *expr)
     Rewrite_p top = symbols->EnterRewrite(listMarker, listSize);
     top->kind = Rewrite::METADATA;
     top->symbols = symbols;
+    top->from->SetSymbols(exprSymbols);
 
     // Evacuate block
     if (Block *block = expr->AsBlock())
@@ -1923,8 +1925,9 @@ Rewrite *xl_data_reference(Context *context, Tree *expr)
         }
 
         Integer_p index = new Integer(++count, pos);
-        symbols->EnterRewrite(index, expr);
+        Rewrite *rw = symbols->EnterRewrite(index, expr);
         expr = next;
+        rw->from->SetSymbols(exprSymbols);
     }
 
     // Update size of the list

@@ -359,7 +359,7 @@ struct Rewrite
 public:
     Tree_p              to;
     Tree_p              from;
-    Symbols_p           symbols; // Obsolete at -O3
+    Symbols *           symbols; // Obsolete at -O3
     rewrite_table       hash;
     native_fn           native;
     Tree_p              type;
