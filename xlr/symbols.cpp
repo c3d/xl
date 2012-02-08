@@ -374,7 +374,7 @@ uint Symbols::EnterProperty(Context *context,
     // Enter local declarations for the property getter
     TreePosition pos = properties->Position();
     Name *getForm = new Name(name->value, pos);
-    Rewrite *rw = symbols->EnterRewrite(getForm, getForm);
+    symbols->EnterRewrite(getForm, getForm);
     getForm->code = xl_read_property;
     getForm->SetSymbols(symbols);
 
@@ -384,7 +384,7 @@ uint Symbols::EnterProperty(Context *context,
     if (type)
         setArg = new Infix(":", setArg, type, pos);
     Prefix *setPrefix = new Prefix(setName, setArg, pos);
-    rw = symbols->EnterRewrite(setPrefix, setName);
+    symbols->EnterRewrite(setPrefix, setName);
     setName->code = (eval_fn) xl_write_property;
     setName->SetSymbols(symbols);
 
