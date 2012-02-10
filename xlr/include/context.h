@@ -290,7 +290,7 @@ struct Context
     Tree *              Attribute(Tree *form,
                                   lookup_mode mode = SCOPE_LOOKUP,
                                   text kind = "property");
-    
+
 
     // Enter properties, return number of properties found
     uint                EnterProperty(Tree *self);
@@ -342,13 +342,15 @@ struct Rewrite
 //   Note that a rewrite with 'to' = NULL is used for 'data' statements
 {
     enum Kind { UNKNOWN, ARG, PARM, LOCAL,
-                GLOBAL, FORM, TYPE, ENUM, 
+                GLOBAL, FORM, TYPE, ENUM,
                 PROPERTY, IMPORTED, ASSIGNED, METADATA };
 
     Rewrite (Tree *f, Tree *t, Tree *tp):
-        to(t), from(f), symbols(NULL), hash(), native(NULL), type(tp) {}
+        to(t), from(f), symbols(NULL), hash(), native(NULL), type(tp),
+        kind(UNKNOWN) {}
     Rewrite (Symbols * syms, Tree *f, Tree *t, Tree *tp = NULL):
-        to(t), from(f), symbols(syms), hash(), native(NULL), type(tp) {}
+        to(t), from(f), symbols(syms), hash(), native(NULL), type(tp),
+        kind(UNKNOWN) {}
     ~Rewrite() {}
 
     // Obsolete: old compiler stuff
