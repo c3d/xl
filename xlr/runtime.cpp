@@ -549,7 +549,7 @@ Block *xl_fill_block(Block *source, Tree *child)
 //    Called by generated code to replace child of a Block
 // ----------------------------------------------------------------------------
 {
-    source->child = child;
+    if (child)  source->child = child;
     return source;
 }
 
@@ -559,8 +559,8 @@ Prefix *xl_fill_prefix(Prefix *source, Tree *left, Tree *right)
 //    Called by generated code to replace children of a Prefix
 // ----------------------------------------------------------------------------
 {
-    source->left = left;
-    source->right = right;
+    if (left)   source->left = left;
+    if (right)  source->right = right;
     return source;
 }
 
@@ -570,8 +570,8 @@ Postfix *xl_fill_postfix(Postfix *source, Tree *left, Tree *right)
 //    Called by generated code to replace children of a Postfix
 // ----------------------------------------------------------------------------
 {
-    source->left = left;
-    source->right = right;
+    if (left)   source->left = left;
+    if (right)  source->right = right;
     return source;
 }
 
@@ -581,8 +581,8 @@ Infix *xl_fill_infix(Infix *source, Tree *left, Tree *right)
 //    Called by generated code to replace children of an Infix
 // ----------------------------------------------------------------------------
 {
-    source->left = left;
-    source->right = right;
+    if (left)   source->left = left;
+    if (right)  source->right = right;
     return source;
 }
 
