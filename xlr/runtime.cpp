@@ -1293,12 +1293,14 @@ struct LoadDataInfo : Info
 //   Information about the data that was loaded
 // ----------------------------------------------------------------------------
 {
-    LoadDataInfo(text name, Tree *loaded, Symbols *symbols, Context *context)
-        : name(name), loaded(loaded), symbols(symbols), context(context) {}
-    text      name;
-    Tree_p    loaded;
-    Symbols_p symbols;
-    Context_p context;
+    LoadDataInfo() : data(), loaded() {}
+    struct Row
+    {
+        TreeList        args;
+    };
+    typedef std::vector<Row> Data;
+    Data        data;
+    Tree_p      loaded;
 };
 
 
@@ -1308,38 +1310,38 @@ Tree *xl_load_data(Context *context, Tree *self,
 //    Load a comma-separated or tab-separated file from disk
 // ----------------------------------------------------------------------------
 {
+    // Open data file
     text path = MAIN->SearchFile(name);
     if (path == "")
         return Ooops("CSV file $1 not found", new Text(name));
 
     // Check if the file has already been loaded somehwere.
     // If so, return the loaded data
+    Symbols *syms = self->Symbols();
     LoadDataInfo *info = self->GetInfo<LoadDataInfo>();
-    if (info && info->name == prefix)
+    if (info)
     {
-        context->Import(info->context);
-        Tree *tree = info->loaded;
-        Symbols *syms = info->symbols;
-        if (prefix != "")
+        Tree_p result = xl_false;
+        if (prefix.size())
         {
-            while (Infix *infix = tree->AsInfix())
+            ulong i, max = info->data.size();
+            for (i = 0; i < max; i++)
             {
-                if (!infix->left->Symbols())
-                    infix->left->SetSymbols(syms);
-                xl_evaluate(context, infix->left);
-                tree = infix->right;
+                LoadDataInfo::Row &row = info->data[i];
+                Tree *callee = syms->CompileCall(prefix, row.args);
+                if (callee && callee->code)
+                    result = callee->code(MAIN->context, callee);
             }
-            if (!tree->Symbols())
-                tree->SetSymbols(syms);
-            return xl_evaluate(context, tree);
+            return result;
         }
         return info->loaded;
     }
 
-    // Current symbols
-    Symbols *old       = self->Symbols(); assert(old);
-    Symbols *syms      = new Symbols(old);
+    // Create cache
+    info = new LoadDataInfo();
+    self->SetInfo<LoadDataInfo> (info);
 
+    // Read data from file
     char     buffer[256];
     char    *ptr       = buffer;
     char    *end       = buffer + sizeof(buffer) - 1;
@@ -1350,11 +1352,13 @@ Tree *xl_load_data(Context *context, Tree *self,
     bool     hasQuote  = false;
     bool     hasRecord = false;
     bool     hasField  = false;
+    bool     hasPrefix = prefix.size() != 0;
     FILE    *f         = fopen(path.c_str(), "r");
     if (!f)
         return Ooops("Unable to load data for $1: " + text(strerror(errno)),
                      self);
 
+    LoadDataInfo::Row row;
     *end = 0;
     while (!feof(f))
     {
@@ -1410,38 +1414,50 @@ Tree *xl_load_data(Context *context, Tree *self,
 
             // Combine data that we just read to current line
             child->SetSymbols(syms);
-            if (*linePtr)
+            if (hasPrefix)
             {
-                Infix *infix = new Infix(",", *linePtr, child);
-                *linePtr = infix;
-                linePtr = &infix->right;
+                row.args.push_back(child);
             }
             else
             {
-                *linePtr = child;
+                if (*linePtr)
+                {
+                    Infix *infix = new Infix(",", *linePtr, child);
+                    *linePtr = infix;
+                    linePtr = &infix->right;
+                }
+                else
+                {
+                    *linePtr = child;
+                }
             }
 
             // Combine as line if necessary
             if (hasRecord)
             {
-                if (prefix != "")
+                if (hasPrefix)
                 {
-                    line = new Prefix(new Name(prefix), line);
-                    line->SetSymbols(syms);
-                    xl_evaluate(context, line);
-                }
-                if (*treePtr)
-                {
-                    Infix *infix = new Infix("\n", *treePtr, line);
-                    *treePtr = infix;
-                    treePtr = &infix->right;
+                    info->data.push_back(row);
+                    Tree *callee = syms->CompileCall(prefix, row.args);
+                    if (callee && callee->code)
+                        tree = callee->code(MAIN->context, callee);
+                    row.args.clear();
                 }
                 else
                 {
-                    *treePtr = line;
+                    if (*treePtr)
+                    {
+                        Infix *infix = new Infix("\n", *treePtr, line);
+                        *treePtr = infix;
+                        treePtr = &infix->right;
+                    }
+                    else
+                    {
+                        *treePtr = line;
+                    }
+                    line = NULL;
+                    linePtr = &line;
                 }
-                line = NULL;
-                linePtr = &line;
             }
             ptr = buffer;
         }
@@ -1449,10 +1465,8 @@ Tree *xl_load_data(Context *context, Tree *self,
     fclose(f);
     if (!tree)
         return Ooops("Unable to load data from $1", new Text(path));
-
-    // Store that we loaded the file
-    info = new LoadDataInfo(prefix, tree, syms, context);
-    self->SetInfo<LoadDataInfo> (info);
+    if (!hasPrefix)
+        info->loaded = tree;
 
     return tree;
 }
