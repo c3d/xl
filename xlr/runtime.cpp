@@ -2059,7 +2059,7 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
                 
             // Create value and symbol table if they don't exist
             Symbols *s = ref->symbols;
-            if (!s)
+            if (!s && ref->to)
                 s = ref->symbols = ref->to->Symbols();
             if (!s)
                 s = ref->symbols = new Symbols(symbols);
