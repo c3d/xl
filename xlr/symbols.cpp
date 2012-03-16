@@ -36,6 +36,7 @@
 #include "runtime.h"
 #include "main.h"
 #include "types.h"
+#include "tree-clone.h"
 
 #include <llvm/Analysis/Verifier.h>
 #include <llvm/CallingConv.h>
@@ -708,8 +709,14 @@ Tree *Symbols::CompileCall(text callee, TreeList &arglist,
     if (arity)
     {
         Tree *args = arglist[arity + ~0];
+        TreeClone clone;
+        if (cached) args = args->Do(clone);
         for (uint a = 1; a < arity; a++)
-            args = new Infix(",", arglist[arity + ~a], args);
+        {
+            Tree *arg = arglist[arity + ~a];
+            if (cached) arg = arg->Do(clone);
+            args = new Infix(",", arg, args);
+        }
         call = new Prefix(call, args);
     }
     call = CompileAll(call, nullIfBad, true, false);
