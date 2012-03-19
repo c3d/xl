@@ -1,0 +1,8 @@
+// EXIT=1
+foo Bar ->
+   writeln "1"
+   Bar
+   writeln "2"
+
+foo
+    color_hsv model_hue + 60 *time, model_saturation, model_value

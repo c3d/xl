@@ -1,0 +1,8 @@
+1
+2
+true
+01.Evaluation/bug1935.xl:8: No form matches 'color_hsv model_hue + 60 (* ti...model_saturation, model_value'
+01.Evaluation/bug1935.xl:8: No form matches 'model_hue + 60 (* time)'
+01.Evaluation/bug1935.xl:8: No form matches '60 * time'
+01.Evaluation/bug1935.xl:8: No form matches '* time'
+01.Evaluation/bug1935.xl:8: No form matches '...    color_hsv model_hue + 6...model_saturation, model_value'
