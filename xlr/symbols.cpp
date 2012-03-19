@@ -633,96 +633,72 @@ Tree *Symbols::CompileAll(Tree *source,
 }
 
 
-Tree *Symbols::CompileCall(text callee, TreeList &arglist,
-                           bool nullIfBad, bool cached)
+Tree *Symbols::CompileCall(Context *context,
+                           text callee, TreeList &argList, bool callIt)
 // ----------------------------------------------------------------------------
 //   Compile a top-level call, reusing calls if possible
 // ----------------------------------------------------------------------------
+// bool nullIfBad=false, bool cached = true);
 {
-    uint arity = arglist.size();
+    uint arity = argList.size();
     text key = "";
-    if (cached)
+    if (callIt)
     {
         // Build key for this call
         const char keychars[] = "IRTN.[]|";
         std::ostringstream keyBuilder;
         keyBuilder << callee << ":";
         for (uint i = 0; i < arity; i++)
-            keyBuilder << keychars[arglist[i]->Kind()];
+            keyBuilder << keychars[argList[i]->Kind()];
         key = keyBuilder.str();
 
         // Check if we already have a call compiled
         if (Tree *previous = calls[key])
         {
-            if (arity)
-            {
-                // Replace arguments in place if necessary
-                Prefix *pfx = previous->AsPrefix();
-                Tree_p *args = &pfx->right;
-                uint argIndex = 0;
-                while (*args && argIndex < arity)
-                {
-                    Tree *value = arglist[argIndex++];
-                    Tree *existing = *args;
-                    if (Infix *infix = existing->AsInfix())
-                    {
-                        existing = infix->left;
-                        args = &infix->right;
-                    }
-                    if (Real *rs = value->AsReal())
-                    {
-                        if (Real *rt = existing->AsReal())
-                            rt->value = rs->value;
-                        else
-                            Ooops("Real $1 cannot replace non-real $2",
-                                  value, existing);
-                    }
-                    else if (Integer *is = value->AsInteger())
-                    {
-                        if (Integer *it = existing->AsInteger())
-                            it->value = is->value;
-                        else
-                            Ooops("Integer $1 cannot replace "
-                                  "non-integer $2", value, existing);
-                    }
-                    else if (Text *ts = value->AsText())
-                    {
-                        if (Text *tt = existing->AsText())
-                            tt->value = ts->value;
-                        else
-                            Ooops("Text $1 cannot replace non-text $2",
-                                  value, existing);
-                    }
-                    else
-                    {
-                        Ooops("Call has unsupported type for $1", value);
-                    }
-                }
-            }
-
-            // Call the previously compiled code
-            return previous;
+            native_fn called = previous->code;
+            Compiler *compiler = MAIN->compiler;
+            adapter_fn adapt = compiler->ArrayToArgsAdapter(arity);
+            Tree *res = adapt(called, context, previous, (Tree **) &argList[0]);
+            return res;
         }
     }
 
     Tree *call = new Name(callee);
     if (arity)
     {
-        Tree *args = arglist[arity + ~0];
-        TreeClone clone;
-        if (cached) args = args->Do(clone);
+        Tree *args = argList[arity + ~0];
         for (uint a = 1; a < arity; a++)
         {
-            Tree *arg = arglist[arity + ~a];
-            if (cached) arg = arg->Do(clone);
+            Tree *arg = argList[arity + ~a];
             args = new Infix(",", arg, args);
         }
         call = new Prefix(call, args);
     }
-    call = CompileAll(call, nullIfBad, true, false);
-    if (cached)
-        calls[key] = call;
-    return call;
+
+    Compiler *compiler = MAIN->compiler;
+    OCompiledUnit unit (compiler, call, argList, false);
+    if (unit.IsForwardCall())
+        return source;
+
+    bool nullIfBad = false;
+    bool keepAlternatives = true;
+    bool noData = false;
+    Tree *result = Compile(call, unit, nullIfBad, keepAlternatives, noData);
+    if (!result)
+        return call;
+
+    eval_fn fn = unit.Finalize();
+    result->code = fn;
+    result->symbols = this; // Fix for #1017
+    calls[key] = result;
+
+    if (callIt)
+    {
+        adapter_fn adapt = compiler->ArrayToArgsAdapter(arity);
+        result = adapt(fn, context, call, (Tree **) &argList[0]);
+    }
+
+    return result;
 }
 
 
@@ -1323,7 +1299,7 @@ Tree *ArgumentMatch::DoName(Name *what)
                 if (!thisCode || !unit.IsKnown(thisCode))
                     return NULL;
                 unit.ShapeTest(testCode, thisCode);
-                
+
                 // Return compilation success
                 return what;
             }
@@ -2143,7 +2119,7 @@ Tree *CompileAction::DoName(Name *what, bool forceEval)
         if (!result->Symbols())
             result->SetSymbols(symbols);
     }
-    
+
     return result;
 }
 

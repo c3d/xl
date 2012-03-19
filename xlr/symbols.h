@@ -118,8 +118,8 @@ struct Symbols
                                    bool nullIfBad = false,
                                    bool keepOtherConstants = false,
                                    bool noDataForms = false);
-    Tree *              CompileCall(text callee, TreeList &args,
-                                    bool nullIfBad=false, bool cached = true);
+    Tree *              CompileCall(Context *context,
+                                    text callee, TreeList &args,bool call=true);
     Infix *             CompileTypeTest(Tree *type);
     Tree *              Run(Context *, Tree *t);
 

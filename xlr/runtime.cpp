@@ -1328,9 +1328,7 @@ Tree *xl_load_data(Context *context, Tree *self,
             for (i = 0; i < max; i++)
             {
                 LoadDataInfo::Row &row = info->data[i];
-                Tree *callee = syms->CompileCall(prefix, row.args);
-                if (callee && callee->code)
-                    result = callee->code(MAIN->context, callee);
+                result = syms->CompileCall(context, prefix, row.args);
             }
             return result;
         }
@@ -1438,9 +1436,7 @@ Tree *xl_load_data(Context *context, Tree *self,
                 if (hasPrefix)
                 {
                     info->data.push_back(row);
-                    Tree *callee = syms->CompileCall(prefix, row.args);
-                    if (callee && callee->code)
-                        tree = callee->code(MAIN->context, callee);
+                    tree = syms->CompileCall(context, prefix, row.args);
                     row.args.clear();
                 }
                 else
@@ -1505,9 +1501,7 @@ Tree *XLCall::operator() (Symbols *syms, bool nullIfBad, bool cached)
 // ----------------------------------------------------------------------------
 {
     assert(syms);
-    Tree *callee = syms->CompileCall(name->value, args, nullIfBad, cached);
-    if (callee && callee->code)
-        callee = callee->code(MAIN->context, callee);
+    Tree *callee = syms->CompileCall(MAIN->context, name->value, args);
     return callee;
 }
 
@@ -1518,9 +1512,10 @@ Tree *XLCall::build(Symbols *syms)
 // ----------------------------------------------------------------------------
 {
     assert(syms);
-    Tree *callee = syms->CompileCall(name->value, args);
+    Tree *callee = syms->CompileCall(MAIN->context, name->value, args, false);
     return callee;
 }
+
 
 
 // ============================================================================
