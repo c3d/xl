@@ -25,6 +25,7 @@
 #include "base.h"
 #include "tree.h"
 #include <set>
+#include <istream>
 
 
 XL_BEGIN
@@ -405,6 +406,9 @@ Tree *xl_import(Context *, Tree *self, text name, bool execute);
 Tree *xl_load_data(Context *, Tree *self,
                    text name, text prefix,
                    text fieldSeps = ",;", text recordSeps = "\n");
+Tree *xl_load_data(Context *, Tree *self,
+                   std::istream &source, bool cached,
+                   text prefix, text fieldSeps = ",;", text recordSeps = "\n");
 Tree *xl_add_search_path(Context *, text prefix, text dir);
 Text *xl_find_in_search_path(Context *, text prefix, text file);
 
