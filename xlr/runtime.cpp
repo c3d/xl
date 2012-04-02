@@ -1718,6 +1718,20 @@ xl_write_property_fn     xl_write_property = xl_write_property_default;
 //
 // ============================================================================
 
+Tree *xl_range(longlong low, longlong high)
+// ----------------------------------------------------------------------------
+//   Return a range of values between low and high
+// ----------------------------------------------------------------------------
+//   This is so ugly, but lazy evalation doesn't work quite right yet
+{
+    Tree *result = new Integer(high);
+    for (longlong i = high-1; i >= low; i--)
+        result = new Infix(",", new Integer(i), result);
+    result->code = xl_identity;
+    return result;
+}
+
+
 Tree *xl_apply(Context *context, Tree *code, Tree *data)
 // ----------------------------------------------------------------------------
 //   Apply the input code on each piece of data
@@ -1881,19 +1895,239 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
 }
 
 
-Tree *xl_range(longlong low, longlong high)
+// ============================================================================
+//
+//   Map an operation on all elements
+//
+// ============================================================================
+
+Tree *MapFunctionInfo::Apply(Tree *what)
 // ----------------------------------------------------------------------------
-//   Return a range of values between low and high
+//   Apply a map operation
 // ----------------------------------------------------------------------------
-//   This is so ugly, but lazy evalation doesn't work quite right yet
 {
-    Tree *result = new Integer(high);
-    for (longlong i = high-1; i >= low; i--)
-        result = new Infix(",", new Integer(i), result);
-    result->code = xl_identity;
+    MapAction map(context, function, separators);
+    return what->Do(map);
+}
+
+
+Tree *MapAction::Do(Tree *what)
+// ----------------------------------------------------------------------------
+//   Apply the code to the given tree
+// ----------------------------------------------------------------------------
+{
+    what = xl_evaluate(context, what);
+    return function(context, what, what);
+}
+
+
+Tree *MapAction::DoInfix(Infix *infix)
+// ----------------------------------------------------------------------------
+//   Check if this is a separator, if so evaluate left and right
+// ----------------------------------------------------------------------------
+{
+    if (separators.count(infix->name))
+    {
+        Tree *left = infix->left->Do(this);
+        Tree *right = infix->right->Do(this);
+        if (left != infix->left || right != infix->right)
+        {
+            infix = new Infix(infix->name, left, right, infix->Position());
+            infix->code = xl_identity;
+        }
+        return infix;
+    }
+
+    // Otherwise simply apply the function to the infix
+    return Do(infix);
+}
+
+
+Tree *MapAction::DoPrefix(Prefix *prefix)
+// ----------------------------------------------------------------------------
+//   Apply to the whole prefix (don't decompose)
+// ----------------------------------------------------------------------------
+{
+    return Do(prefix);
+}
+
+
+Tree *MapAction::DoPostfix(Postfix *postfix)
+// ----------------------------------------------------------------------------
+//   Apply to the whole postfix (don't decompose)
+// ----------------------------------------------------------------------------
+{
+    return Do(postfix);
+}
+
+
+Tree *MapAction::DoBlock(Block *block)
+// ----------------------------------------------------------------------------
+//   Apply to the whole block (don't decompose)
+// ----------------------------------------------------------------------------
+{
+    return Do(block);
+}
+
+
+
+// ============================================================================
+//
+//   Reduce by applying operations to consecutive elements
+//
+// ============================================================================
+
+Tree *ReduceFunctionInfo::Apply(Tree *what)
+// ----------------------------------------------------------------------------
+//   Apply a reduce operation to the tree
+// ----------------------------------------------------------------------------
+{
+    ReduceAction reduce(context, function, separators);
+    return what->Do(reduce);
+}
+
+
+Tree *ReduceAction::Do(Tree *what)
+// ----------------------------------------------------------------------------
+//   By default, reducing non-list elements returns these elements
+// ----------------------------------------------------------------------------
+{
+    return what;
+}
+
+
+Tree *ReduceAction::DoInfix(Infix *infix)
+// ----------------------------------------------------------------------------
+//   Check if this is a separator, if so combine left and right
+// ----------------------------------------------------------------------------
+{
+    if (separators.count(infix->name))
+    {
+        Tree *left = infix->left->Do(this);
+        Tree *right = infix->right->Do(this);
+        return function(context, infix, left, right);
+    }
+
+    // Otherwise simply apply the function to the infix
+    return Do(infix);
+}
+
+
+Tree *ReduceAction::DoPrefix(Prefix *prefix)
+// ----------------------------------------------------------------------------
+//   Apply to the whole prefix (don't decompose)
+// ----------------------------------------------------------------------------
+{
+    return Do(prefix);
+}
+
+
+Tree *ReduceAction::DoPostfix(Postfix *postfix)
+// ----------------------------------------------------------------------------
+//   Apply to the whole postfix (don't decompose)
+// ----------------------------------------------------------------------------
+{
+    return Do(postfix);
+}
+
+
+Tree *ReduceAction::DoBlock(Block *block)
+// ----------------------------------------------------------------------------
+//   Apply to the whole block (don't decompose)
+// ----------------------------------------------------------------------------
+{
+    return Do(block);
+}
+
+
+// ============================================================================
+//
+//   Filter by selecting elements that match a given condition
+//
+// ============================================================================
+
+Tree *FilterFunctionInfo::Apply(Tree *what)
+// ----------------------------------------------------------------------------
+//   Apply a filter operation to the tree
+// ----------------------------------------------------------------------------
+{
+    FilterAction filter(context, function, separators);
+    Tree *result = what->Do(filter);
+    if (!result)
+        result = xl_false;
     return result;
 }
 
+
+Tree *FilterAction::Do(Tree *what)
+// ----------------------------------------------------------------------------
+//   By default, reducing non-list elements returns these elements
+// ----------------------------------------------------------------------------
+{
+    if (function(context, what, what) == xl_true)
+        return what;
+    return NULL;
+}
+
+
+Tree *FilterAction::DoInfix(Infix *infix)
+// ----------------------------------------------------------------------------
+//   Check if this is a separator, if so combine left and right
+// ----------------------------------------------------------------------------
+{
+    if (separators.count(infix->name))
+    {
+        Tree *left = infix->left->Do(this);
+        Tree *right = infix->right->Do(this);
+        if (left && right)
+        {
+            infix = new Infix(infix->name, left, right, infix->Position());
+            infix->code = xl_identity;
+            return infix;
+        }
+        if (left)
+            return left;
+        return right;
+    }
+
+    // Otherwise simply apply the function to the infix
+    return Do(infix);
+}
+
+
+Tree *FilterAction::DoPrefix(Prefix *prefix)
+// ----------------------------------------------------------------------------
+//   Apply to the whole prefix (don't decompose)
+// ----------------------------------------------------------------------------
+{
+    return Do(prefix);
+}
+
+
+Tree *FilterAction::DoPostfix(Postfix *postfix)
+// ----------------------------------------------------------------------------
+//   Apply to the whole postfix (don't decompose)
+// ----------------------------------------------------------------------------
+{
+    return Do(postfix);
+}
+
+
+Tree *FilterAction::DoBlock(Block *block)
+// ----------------------------------------------------------------------------
+//   Apply to the whole block (don't decompose)
+// ----------------------------------------------------------------------------
+{
+    return Do(block);
+}
+
+
+
+// ============================================================================
+// 
+//   References, indexing and assignment
+// 
+// ============================================================================
 
 Rewrite *xl_data_reference(Context *context, Tree *expr)
 // ----------------------------------------------------------------------------
@@ -2239,231 +2473,10 @@ Integer *xl_size(Context *context, Tree *data)
 
 
 // ============================================================================
-//
-//   Map an operation on all elements
-//
+// 
+//   File search path
+// 
 // ============================================================================
-
-Tree *MapFunctionInfo::Apply(Tree *what)
-// ----------------------------------------------------------------------------
-//   Apply a map operation
-// ----------------------------------------------------------------------------
-{
-    MapAction map(context, function, separators);
-    return what->Do(map);
-}
-
-
-Tree *MapAction::Do(Tree *what)
-// ----------------------------------------------------------------------------
-//   Apply the code to the given tree
-// ----------------------------------------------------------------------------
-{
-    what = xl_evaluate(context, what);
-    return function(context, what, what);
-}
-
-
-Tree *MapAction::DoInfix(Infix *infix)
-// ----------------------------------------------------------------------------
-//   Check if this is a separator, if so evaluate left and right
-// ----------------------------------------------------------------------------
-{
-    if (separators.count(infix->name))
-    {
-        Tree *left = infix->left->Do(this);
-        Tree *right = infix->right->Do(this);
-        if (left != infix->left || right != infix->right)
-        {
-            infix = new Infix(infix->name, left, right, infix->Position());
-            infix->code = xl_identity;
-        }
-        return infix;
-    }
-
-    // Otherwise simply apply the function to the infix
-    return Do(infix);
-}
-
-
-Tree *MapAction::DoPrefix(Prefix *prefix)
-// ----------------------------------------------------------------------------
-//   Apply to the whole prefix (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(prefix);
-}
-
-
-Tree *MapAction::DoPostfix(Postfix *postfix)
-// ----------------------------------------------------------------------------
-//   Apply to the whole postfix (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(postfix);
-}
-
-
-Tree *MapAction::DoBlock(Block *block)
-// ----------------------------------------------------------------------------
-//   Apply to the whole block (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(block);
-}
-
-
-
-// ============================================================================
-//
-//   Reduce by applying operations to consecutive elements
-//
-// ============================================================================
-
-Tree *ReduceFunctionInfo::Apply(Tree *what)
-// ----------------------------------------------------------------------------
-//   Apply a reduce operation to the tree
-// ----------------------------------------------------------------------------
-{
-    ReduceAction reduce(context, function, separators);
-    return what->Do(reduce);
-}
-
-
-Tree *ReduceAction::Do(Tree *what)
-// ----------------------------------------------------------------------------
-//   By default, reducing non-list elements returns these elements
-// ----------------------------------------------------------------------------
-{
-    return what;
-}
-
-
-Tree *ReduceAction::DoInfix(Infix *infix)
-// ----------------------------------------------------------------------------
-//   Check if this is a separator, if so combine left and right
-// ----------------------------------------------------------------------------
-{
-    if (separators.count(infix->name))
-    {
-        Tree *left = infix->left->Do(this);
-        Tree *right = infix->right->Do(this);
-        return function(context, infix, left, right);
-    }
-
-    // Otherwise simply apply the function to the infix
-    return Do(infix);
-}
-
-
-Tree *ReduceAction::DoPrefix(Prefix *prefix)
-// ----------------------------------------------------------------------------
-//   Apply to the whole prefix (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(prefix);
-}
-
-
-Tree *ReduceAction::DoPostfix(Postfix *postfix)
-// ----------------------------------------------------------------------------
-//   Apply to the whole postfix (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(postfix);
-}
-
-
-Tree *ReduceAction::DoBlock(Block *block)
-// ----------------------------------------------------------------------------
-//   Apply to the whole block (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(block);
-}
-
-
-// ============================================================================
-//
-//   Filter by selecting elements that match a given condition
-//
-// ============================================================================
-
-Tree *FilterFunctionInfo::Apply(Tree *what)
-// ----------------------------------------------------------------------------
-//   Apply a filter operation to the tree
-// ----------------------------------------------------------------------------
-{
-    FilterAction filter(context, function, separators);
-    Tree *result = what->Do(filter);
-    if (!result)
-        result = xl_false;
-    return result;
-}
-
-
-Tree *FilterAction::Do(Tree *what)
-// ----------------------------------------------------------------------------
-//   By default, reducing non-list elements returns these elements
-// ----------------------------------------------------------------------------
-{
-    if (function(context, what, what) == xl_true)
-        return what;
-    return NULL;
-}
-
-
-Tree *FilterAction::DoInfix(Infix *infix)
-// ----------------------------------------------------------------------------
-//   Check if this is a separator, if so combine left and right
-// ----------------------------------------------------------------------------
-{
-    if (separators.count(infix->name))
-    {
-        Tree *left = infix->left->Do(this);
-        Tree *right = infix->right->Do(this);
-        if (left && right)
-        {
-            infix = new Infix(infix->name, left, right, infix->Position());
-            infix->code = xl_identity;
-            return infix;
-        }
-        if (left)
-            return left;
-        return right;
-    }
-
-    // Otherwise simply apply the function to the infix
-    return Do(infix);
-}
-
-
-Tree *FilterAction::DoPrefix(Prefix *prefix)
-// ----------------------------------------------------------------------------
-//   Apply to the whole prefix (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(prefix);
-}
-
-
-Tree *FilterAction::DoPostfix(Postfix *postfix)
-// ----------------------------------------------------------------------------
-//   Apply to the whole postfix (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(postfix);
-}
-
-
-Tree *FilterAction::DoBlock(Block *block)
-// ----------------------------------------------------------------------------
-//   Apply to the whole block (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(block);
-}
-
 
 Tree *xl_add_search_path(Context *context, text prefix, text dir)
 // ----------------------------------------------------------------------------
