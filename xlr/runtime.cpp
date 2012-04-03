@@ -1923,6 +1923,13 @@ Tree * ListIterator::Next()
     if (!result->Symbols())
         result->SetSymbols(symbols);
     result = xl_evaluate(context, result);
+
+    if (separator == "")
+    {
+        data = result;
+        return Next();
+    }
+
     data = NULL;
     return result;
 }
