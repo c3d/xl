@@ -245,12 +245,16 @@ struct ListIterator
 
 public:
     Tree *      Next();
+    Tree *      EvaluateRange(Tree *input);
+    template<class num>   Tree *Next(num &start, num &end, num &step);
 
 public:
     Context_p   context;
     Symbols_p   symbols;
     Tree_p      data;
     text        separator;
+    longlong    startI, endI, stepI;
+    double      startF, endF, stepF;
 };
 
 
@@ -307,11 +311,11 @@ struct FilterFunctionInfo : FunctionInfo
 
 Tree *xl_integer_for_loop(Context *, Tree *self,
                           Tree *Variable,
-                          longlong low, longlong high, longlong step,
+                          longlong start, longlong end, longlong step,
                           Tree *body);
 Tree *xl_real_for_loop(Context *, Tree *self,
                        Tree *Variable,
-                       double low, double high, double step, Tree *body);
+                       double start, double end, double step, Tree *body);
 Tree *xl_list_for_loop(Context *, Tree *self,
                        Tree *Variable, Tree *list, Tree *body);
 Tree *xl_while_loop(Context *, Tree *self,

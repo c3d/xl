@@ -1878,7 +1878,9 @@ ListIterator::ListIterator(Context *context, Symbols *symbols, Tree *what)
 // ----------------------------------------------------------------------------
 //    Initialize the list iterator
 // ----------------------------------------------------------------------------
-    : context(context), symbols(symbols), data(what), separator()
+    : context(context), symbols(symbols), data(what), separator(),
+      startI(0), endI(0), stepI(0),
+      startF(0), endF(0), stepF(0)
 {
     if (Block *block = data->AsBlock())
     {
@@ -1893,11 +1895,140 @@ ListIterator::ListIterator(Context *context, Symbols *symbols, Tree *what)
 }
 
 
+static Tree *make(longlong i) { return new Integer(i); }
+static Tree *make(double r)   { return new Real(r); }
+
+
+template<class num>
+Tree *ListIterator::Next(num &start, num &end, num &step)
+// ----------------------------------------------------------------------------
+//    Optimize special numeric operators
+// ----------------------------------------------------------------------------
+{
+    if (step)
+    {
+        if (step > 0 && start <= end)
+        {
+            Tree *result = make(start);
+            start += step;
+            return result;
+        }
+        else if (step < 0 && start >= end)
+        {
+            Tree *result = make(start);
+            start += step;
+            return result;
+        }
+        step = 0;
+    }
+    return NULL;
+}
+
+
+Tree *ListIterator::EvaluateRange(Tree *input)
+// ----------------------------------------------------------------------------
+//   Check ranges like 1..5, otherwise evaluate input
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = input->AsInfix())
+    {
+        text sep = infix->name;
+
+        // Check stepped numerical ranges
+        if (sep == "by")
+        {
+            Tree_p left = infix->left;
+            if (Infix *inner = left->AsInfix())
+            {
+                if (inner->name == "..")
+                {
+                    sep = inner->name;
+
+                    Tree_p right = infix->right;
+                    Integer *si = right->AsInteger();
+                    Real *sr = right->AsReal();
+                    if (!si && !sr)
+                    {
+                        if (!right->Symbols())
+                            right->SetSymbols(symbols);
+                        right = xl_evaluate(context, right);
+                        si = right->AsInteger();
+                        sr = right->AsReal();
+                    }
+                    infix = inner;
+                    if (si)
+                        stepI = si->value;
+                    else if (sr)
+                        stepF = sr->value;
+                    else
+                        sep = "";
+                }
+            }
+        }
+
+        // Check numerical ranges
+        if (sep == "..")
+        {
+            Tree_p left = infix->left;
+            Tree_p right = infix->right;
+            Integer *li = left->AsInteger();
+            Integer *ri = right->AsInteger();
+            Real *lr = left->AsReal();
+            Real *rr = right->AsReal();
+            if (!li && !lr)
+            {
+                if (!left->Symbols())
+                    left->SetSymbols(symbols);
+                left = xl_evaluate(context, left);
+                li = left->AsInteger();
+                lr = left->AsReal();
+            }
+            if (!ri && !rr)
+            {
+                if (!right->Symbols())
+                    right->SetSymbols(symbols);
+                right = xl_evaluate(context, right);
+                ri = right->AsInteger();
+                rr = right->AsReal();
+            }
+            if (li && ri)
+            {
+                startI = li->value;
+                endI = ri->value;
+                if (!stepI)
+                    stepI = 1;
+                return Next(startI, endI, stepI);
+            }
+            if (lr && rr)
+            {
+                startF = lr->value;
+                endF = rr->value;
+                if (!stepF)
+                    stepF = 1.0;
+                return Next(startF, endF, stepF);
+            }
+        }
+    }
+
+    // Other cases: evaluate
+    if (!input->Symbols())
+        input->SetSymbols(symbols);
+    input = xl_evaluate(context, input);
+    return input;
+}
+        
+
 Tree * ListIterator::Next()
 // ----------------------------------------------------------------------------
 //   Compute the next element in a list
 // ----------------------------------------------------------------------------
 {
+    // Check if we are in an integer or float iterator
+    if (Tree *ival = Next(startI, endI, stepI))
+        return ival;
+    if (Tree *rval = Next(startF, endF, stepF))
+        return rval;
+
     // Check empty list
     if (!data)
         return NULL;
@@ -1905,32 +2036,27 @@ Tree * ListIterator::Next()
     if (Infix *infix = data->AsInfix())
     {
         text sep = infix->name;
+
+        // Check which separator we may have in the list
         if (separator == "" && (sep == "," || sep == ";" || sep == "\n"))
             separator = sep;
+
+        // Check other cases
         if (separator == sep)
         {
             Tree *result = infix->left;
             data = infix->right;
-            if (!result->Symbols())
-                result->SetSymbols(symbols);
-            result = xl_evaluate(context, result);
+            result = EvaluateRange(result);
+            if (!result)
+                result = Next();
             return result;
         }
     }
 
     // Last item in a list: evaluate and return
     Tree *result = data;
-    if (!result->Symbols())
-        result->SetSymbols(symbols);
-    result = xl_evaluate(context, result);
-
-    if (separator == "")
-    {
-        data = result;
-        return Next();
-    }
-
     data = NULL;
+    result = EvaluateRange(result);
     return result;
 }
 
