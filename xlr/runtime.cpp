@@ -1742,24 +1742,6 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
 //   - Code is in the form X,Y->f(X,Y): We reduce using the right-hand side
 //   - Code is in the form X where f(X): We filter based on f(X)
 {
-    // Check if we got (1,2,3,4) or something like f(3) as 'data'
-    Block *block = data->AsBlock();
-    if (!block)
-    {
-        // We got f(3) or Hello as input: evaluate it
-        data = xl_evaluate(context, data);
-
-        // The returned data may itself be something like (1,2,3,4,5)
-        block = data->AsBlock();
-    }
-    if (block)
-    {
-        // We got (1,2,3,4): Extract 1,2,3,4
-        data = block->child;
-        if (!data->Symbols())
-            data->SetSymbols(block->Symbols());
-    }
-
     // Check if we already compiled that code
     FunctionInfo *fninfo = code->GetInfo<FunctionInfo>();
     if (!fninfo)
@@ -1778,12 +1760,6 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
                 toCompile->SetSymbols(codeBlock->Symbols());
         }
 
-        // Define default data separators
-        std::set<text> separators;
-        separators.insert(",");
-        separators.insert(";");
-        separators.insert("\n");
-
         // Check the case where code is x->sin x  (map) or x,y->x+y (reduce)
         if (Infix *infix = toCompile->AsInfix())
         {
@@ -1800,9 +1776,6 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
                 // Case of x,y -> x+y
                 else if (Infix *op = ileft->AsInfix())
                 {
-                    // This defines the separator we use for data
-                    separators.insert(op->name);
-
                     Name *first = op->left->AsName();
                     Name *second = op->right->AsName();
                     if (first && second)
@@ -1879,7 +1852,6 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
         fninfo->context = context;
         fninfo->symbols = symbols;
         fninfo->compiled = toCompile;
-        fninfo->separators = separators;
 
         // Report compile error the first time
         if (!compiled)
@@ -1895,78 +1867,108 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
 }
 
 
+
+// ============================================================================
+//
+//  Iterator on lists of items
+//
+// ============================================================================
+
+ListIterator::ListIterator(Context *context, Symbols *symbols, Tree *what)
+// ----------------------------------------------------------------------------
+//    Initialize the list iterator
+// ----------------------------------------------------------------------------
+    : context(context), symbols(symbols), data(what), separator()
+{
+    if (Block *block = data->AsBlock())
+    {
+        // Check if we got () or (1,2,3). If so, extract child
+        data = block->child;
+    }
+
+    // Check the empty list case
+    if (Name *name = data->AsName())
+        if (name->value == "")
+            data = NULL;
+}
+
+
+Tree * ListIterator::Next()
+// ----------------------------------------------------------------------------
+//   Compute the next element in a list
+// ----------------------------------------------------------------------------
+{
+    // Check empty list
+    if (!data)
+        return NULL;
+
+    if (Infix *infix = data->AsInfix())
+    {
+        text sep = infix->name;
+        if (separator == "" && (sep == "," || sep == ";" || sep == "\n"))
+            separator = sep;
+        if (separator == sep)
+        {
+            Tree *result = infix->left;
+            data = infix->right;
+            if (!result->Symbols())
+                result->SetSymbols(symbols);
+            result = xl_evaluate(context, result);
+            return result;
+        }
+    }
+
+    // Last item in a list: evaluate and return
+    Tree *result = data;
+    if (!result->Symbols())
+        result->SetSymbols(symbols);
+    result = xl_evaluate(context, result);
+    data = NULL;
+    return result;
+}
+
+
+
 // ============================================================================
 //
 //   Map an operation on all elements
 //
 // ============================================================================
 
+typedef Tree * (*map_fn) (Context *context, Tree *self, Tree *arg);
+
 Tree *MapFunctionInfo::Apply(Tree *what)
 // ----------------------------------------------------------------------------
 //   Apply a map operation
 // ----------------------------------------------------------------------------
 {
-    MapAction map(context, function, separators);
-    return what->Do(map);
-}
+    ListIterator li(context, symbols, what);
+    map_fn map = (map_fn) function;
+    Tree_p result = NULL;
+    Tree_p *parent = &result;
 
-
-Tree *MapAction::Do(Tree *what)
-// ----------------------------------------------------------------------------
-//   Apply the code to the given tree
-// ----------------------------------------------------------------------------
-{
-    what = xl_evaluate(context, what);
-    return function(context, what, what);
-}
-
-
-Tree *MapAction::DoInfix(Infix *infix)
-// ----------------------------------------------------------------------------
-//   Check if this is a separator, if so evaluate left and right
-// ----------------------------------------------------------------------------
-{
-    if (separators.count(infix->name))
+    // Loop on all elements
+    while (Tree *next = li.Next())
     {
-        Tree *left = infix->left->Do(this);
-        Tree *right = infix->right->Do(this);
-        if (left != infix->left || right != infix->right)
+        next = map(context, next, next);
+        if (*parent != NULL)
         {
-            infix = new Infix(infix->name, left, right, infix->Position());
-            infix->code = xl_identity;
+            Infix *newList = new Infix(li.separator,
+                                       *parent, next,
+                                       next->Position());
+            *parent = newList;
+            parent = &newList->right;
         }
-        return infix;
+        else
+        {
+            *parent = next;
+        }
     }
 
-    // Otherwise simply apply the function to the infix
-    return Do(infix);
-}
-
-
-Tree *MapAction::DoPrefix(Prefix *prefix)
-// ----------------------------------------------------------------------------
-//   Apply to the whole prefix (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(prefix);
-}
-
-
-Tree *MapAction::DoPostfix(Postfix *postfix)
-// ----------------------------------------------------------------------------
-//   Apply to the whole postfix (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(postfix);
-}
-
-
-Tree *MapAction::DoBlock(Block *block)
-// ----------------------------------------------------------------------------
-//   Apply to the whole block (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(block);
+    // Return built list
+    if (!result)
+        return what;
+    return result;
 }
 
 
@@ -1977,67 +1979,31 @@ Tree *MapAction::DoBlock(Block *block)
 //
 // ============================================================================
 
+typedef Tree * (*reduce_fn) (Context *, Tree *self, Tree *t1,Tree *t2);
 Tree *ReduceFunctionInfo::Apply(Tree *what)
 // ----------------------------------------------------------------------------
 //   Apply a reduce operation to the tree
 // ----------------------------------------------------------------------------
 {
-    ReduceAction reduce(context, function, separators);
-    return what->Do(reduce);
-}
+    ListIterator li(context, symbols, what);
+    reduce_fn reduce = (reduce_fn) function;
+    Tree_p result = NULL;
 
-
-Tree *ReduceAction::Do(Tree *what)
-// ----------------------------------------------------------------------------
-//   By default, reducing non-list elements returns these elements
-// ----------------------------------------------------------------------------
-{
-    return what;
-}
-
-
-Tree *ReduceAction::DoInfix(Infix *infix)
-// ----------------------------------------------------------------------------
-//   Check if this is a separator, if so combine left and right
-// ----------------------------------------------------------------------------
-{
-    if (separators.count(infix->name))
+    // Loop on all elements
+    while (Tree *next = li.Next())
     {
-        Tree *left = infix->left->Do(this);
-        Tree *right = infix->right->Do(this);
-        return function(context, infix, left, right);
+        if (result)
+            result = reduce(context, next, result, next);
+        else
+            result = next;
     }
 
-    // Otherwise simply apply the function to the infix
-    return Do(infix);
+    // Return built list
+    if (!result)
+        result = xl_nil;
+    return result;
 }
 
-
-Tree *ReduceAction::DoPrefix(Prefix *prefix)
-// ----------------------------------------------------------------------------
-//   Apply to the whole prefix (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(prefix);
-}
-
-
-Tree *ReduceAction::DoPostfix(Postfix *postfix)
-// ----------------------------------------------------------------------------
-//   Apply to the whole postfix (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(postfix);
-}
-
-
-Tree *ReduceAction::DoBlock(Block *block)
-// ----------------------------------------------------------------------------
-//   Apply to the whole block (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(block);
-}
 
 
 // ============================================================================
@@ -2046,87 +2012,51 @@ Tree *ReduceAction::DoBlock(Block *block)
 //
 // ============================================================================
 
+typedef Tree * (*filter_fn) (Context *, Tree *self, Tree *arg);
 Tree *FilterFunctionInfo::Apply(Tree *what)
 // ----------------------------------------------------------------------------
 //   Apply a filter operation to the tree
 // ----------------------------------------------------------------------------
 {
-    FilterAction filter(context, function, separators);
-    Tree *result = what->Do(filter);
-    if (!result)
-        result = xl_false;
-    return result;
-}
+    ListIterator li(context, symbols, what);
+    filter_fn filter = (map_fn) function;
+    Tree_p result = NULL;
+    Tree_p *parent = &result;
 
-
-Tree *FilterAction::Do(Tree *what)
-// ----------------------------------------------------------------------------
-//   By default, reducing non-list elements returns these elements
-// ----------------------------------------------------------------------------
-{
-    if (function(context, what, what) == xl_true)
-        return what;
-    return NULL;
-}
-
-
-Tree *FilterAction::DoInfix(Infix *infix)
-// ----------------------------------------------------------------------------
-//   Check if this is a separator, if so combine left and right
-// ----------------------------------------------------------------------------
-{
-    if (separators.count(infix->name))
+    // Loop on all elements
+    while (Tree *next = li.Next())
     {
-        Tree *left = infix->left->Do(this);
-        Tree *right = infix->right->Do(this);
-        if (left && right)
+        Tree *test = filter(context, next, next);
+        if (test == xl_true)
         {
-            infix = new Infix(infix->name, left, right, infix->Position());
-            infix->code = xl_identity;
-            return infix;
+            if (*parent != NULL)
+            {
+                Infix *newList = new Infix(li.separator,
+                                           *parent, next,
+                                           next->Position());
+                *parent = newList;
+                parent = &newList->right;
+            }
+            else
+            {
+                *parent = next;
+            }
         }
-        if (left)
-            return left;
-        return right;
     }
 
-    // Otherwise simply apply the function to the infix
-    return Do(infix);
-}
+    // Return built list
+    if (!result)
+        return xl_false;
 
-
-Tree *FilterAction::DoPrefix(Prefix *prefix)
-// ----------------------------------------------------------------------------
-//   Apply to the whole prefix (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(prefix);
-}
-
-
-Tree *FilterAction::DoPostfix(Postfix *postfix)
-// ----------------------------------------------------------------------------
-//   Apply to the whole postfix (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(postfix);
-}
-
-
-Tree *FilterAction::DoBlock(Block *block)
-// ----------------------------------------------------------------------------
-//   Apply to the whole block (don't decompose)
-// ----------------------------------------------------------------------------
-{
-    return Do(block);
+    return result;
 }
 
 
 
 // ============================================================================
-// 
+//
 //   References, indexing and assignment
-// 
+//
 // ============================================================================
 
 Rewrite *xl_data_reference(Context *context, Tree *expr)
@@ -2154,7 +2084,7 @@ Rewrite *xl_data_reference(Context *context, Tree *expr)
     // No symbol table, or invalid one: create data symbol table
     symbols = new Symbols(symbols);
     expr->SetSymbols(symbols);
-        
+
     // Create the original entry for the symbol table
     longlong count = 0;
     TreePosition pos = expr->Position();
@@ -2234,7 +2164,7 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
             }
             return entry;
         }
-            
+
         // Check special infix notations
         else if (Infix *infix = expr->AsInfix())
         {
@@ -2263,7 +2193,7 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
                 return xl_data_reference(context, infix);
             }
         }
-            
+
         // Check special prefix notation A[B]
         else if (Prefix *prefix = expr->AsPrefix())
         {
@@ -2306,7 +2236,7 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
             if (!left->Symbols())
                 left->SetSymbols(symbols);
             Rewrite *ref = xl_reference(context, left, true);
-                
+
             // Create value and symbol table if they don't exist
             Symbols *s = ref->symbols;
             if (!s && ref->to)
@@ -2473,9 +2403,9 @@ Integer *xl_size(Context *context, Tree *data)
 
 
 // ============================================================================
-// 
+//
 //   File search path
-// 
+//
 // ============================================================================
 
 Tree *xl_add_search_path(Context *context, text prefix, text dir)

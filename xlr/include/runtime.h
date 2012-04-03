@@ -236,78 +236,21 @@ Integer *xl_size(Context *, Tree *data);
 typedef GCPtr<Context> Context_p;
 
 
-struct MapAction : Action
+struct ListIterator
 // ----------------------------------------------------------------------------
-//   Map a given operation onto each element in a data set
-// ----------------------------------------------------------------------------
-{
-    typedef Tree * (*map_fn) (Context *context, Tree *self, Tree *arg);
-
-public:
-    MapAction(Context *context, eval_fn function, std::set<text> &sep)
-        : context(context), function((map_fn) function), separators(sep) {}
-
-    virtual Tree *Do(Tree *what);
-
-    virtual Tree *DoInfix(Infix *what);
-    virtual Tree *DoPrefix(Prefix *what);
-    virtual Tree *DoPostfix(Postfix *what);
-    virtual Tree *DoBlock(Block *what);
-
-public:
-    Context_p           context;
-    map_fn              function;
-    std::set<text>      separators;
-};
-
-
-struct ReduceAction : Action
-// ----------------------------------------------------------------------------
-//   Reduce a given operation by combining successive elements
+//    Helper to perform operations on lists of items
 // ----------------------------------------------------------------------------
 {
-    typedef Tree * (*reduce_fn) (Context *, Tree *self, Tree *t1,Tree *t2);
+    ListIterator(Context *context, Symbols *symbols, Tree *what);
 
 public:
-    ReduceAction(Context *context, eval_fn function, std::set<text> &sep)
-        : context(context), function((reduce_fn) function), separators(sep) {}
-
-    virtual Tree *Do(Tree *what);
-
-    virtual Tree *DoInfix(Infix *what);
-    virtual Tree *DoPrefix(Prefix *what);
-    virtual Tree *DoPostfix(Postfix *what);
-    virtual Tree *DoBlock(Block *what);
+    Tree *      Next();
 
 public:
-    Context_p           context;
-    reduce_fn           function;
-    std::set<text>      separators;
-};
-
-
-struct FilterAction : Action
-// ----------------------------------------------------------------------------
-//   Filter a given operation onto each element in a data set
-// ----------------------------------------------------------------------------
-{
-    typedef Tree * (*filter_fn) (Context *, Tree *self, Tree *arg);
-
-public:
-    FilterAction(Context *context, eval_fn function, std::set<text> &sep)
-        : context(context), function((filter_fn) function), separators(sep) {}
-
-    virtual Tree *Do(Tree *what);
-
-    virtual Tree *DoInfix(Infix *what);
-    virtual Tree *DoPrefix(Prefix *what);
-    virtual Tree *DoPostfix(Postfix *what);
-    virtual Tree *DoBlock(Block *what);
-
-public:
-    Context_p           context;
-    filter_fn           function;
-    std::set<text>      separators;
+    Context_p   context;
+    Symbols_p   symbols;
+    Tree_p      data;
+    text        separator;
 };
 
 
@@ -325,7 +268,6 @@ public:
     Context_p      context;
     Symbols_p      symbols;
     Tree_p         compiled;
-    std::set<text> separators;
 };
 
 
