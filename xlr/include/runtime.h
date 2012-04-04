@@ -217,6 +217,17 @@ extern xl_read_property_fn      xl_read_property;
 extern xl_write_property_fn     xl_write_property;
 
 
+inline bool xl_closure(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Return true if a tree is a closure
+// ----------------------------------------------------------------------------
+{
+    // This is a hack - We may need a more explicit way
+    return tree->code && !tree->Symbols();
+}
+
+
+
 // ============================================================================
 //
 //    Actions used for functional applications (temporary / obsolete)

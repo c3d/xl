@@ -168,7 +168,6 @@ struct Tree
     template <class I>
     I*                  Remove(I *);
 
-
     // Conversion to text
                         operator text();
 

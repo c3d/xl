@@ -369,7 +369,7 @@ Tree *xl_infix_match_check(Context *context, Tree *value, kstring name)
 // ----------------------------------------------------------------------------
 {
     // The following test is a hack to detect closures
-    if (value->code && !value->Symbols())
+    if (xl_closure(value))
         value = context->Evaluate(value);
     while (Block *block = value->AsBlock())
         if (block->opening == "(" && block->closing == ")")
@@ -2032,6 +2032,10 @@ Tree * ListIterator::Next()
     // Check empty list
     if (!data)
         return NULL;
+
+    // The following test is a hack to detect closures
+    if (xl_closure(data))
+        data = context->Evaluate(data);
 
     if (Infix *infix = data->AsInfix())
     {
