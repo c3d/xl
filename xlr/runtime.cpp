@@ -1997,6 +1997,8 @@ Tree *ListIterator::EvaluateRange(Tree *input)
                 endI = ri->value;
                 if (!stepI)
                     stepI = 1;
+                if (separator == "")
+                    separator = ",";
                 return Next(startI, endI, stepI);
             }
             if (lr && rr)
@@ -2005,6 +2007,8 @@ Tree *ListIterator::EvaluateRange(Tree *input)
                 endF = rr->value;
                 if (!stepF)
                     stepF = 1.0;
+                if (separator == "")
+                    separator = ",";
                 return Next(startF, endF, stepF);
             }
         }
@@ -2095,6 +2099,8 @@ Tree *MapFunctionInfo::Apply(Tree *what)
                                        next->Position());
             *parent = newList;
             parent = &newList->right;
+            newList->code = xl_identity;
+            newList->SetSymbols(symbols);
         }
         else
         {
