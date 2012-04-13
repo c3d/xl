@@ -2065,6 +2065,11 @@ Tree * ListIterator::Next()
     Tree *result = data;
     data = NULL;
     result = EvaluateRange(result);
+    if (separator == "" && result->Kind() == INFIX)
+    {
+        data = result;
+        result = Next();
+    }
     return result;
 }
 
