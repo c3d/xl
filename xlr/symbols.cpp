@@ -1645,8 +1645,7 @@ Tree *EnvironmentScan::DoBlock(Block *what)
 //   Parameters in a block are in its child
 // ----------------------------------------------------------------------------
 {
-    if (!what->IsParentheses() || what->child->Kind() != NAME)
-        what->child->Do(this);
+    what->child->Do(this);
     return what;
 }
 
