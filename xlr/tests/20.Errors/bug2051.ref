@@ -1,0 +1,5 @@
+error "Couldn't compile $1", 'scrogneugneu'
+20.Errors/bug2051.xl:2: Name 'scrogneugneu' does not exist
+20.Errors/bug2051.xl:2: Couldn't compile 'scrogneugneu'
+20.Errors/bug2051.xl:2: Couldn't compile 'scrogneugneu'
+20.Errors/bug2051.xl:3: Couldn't compile '0'
