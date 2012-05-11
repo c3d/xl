@@ -778,8 +778,7 @@ Tree *xl_text_cast(Context *context, Tree *source, Tree *value)
 {
     value = xl_evaluate(context, value);
     if (Text *tt = value->AsText())
-        if (tt->opening != "'")
-            return tt;
+        return tt;
     return NULL;
 }
 

@@ -340,8 +340,12 @@ Text *FormatTreeForError(Tree *tree)
 //   Format a tree for error reporting
 // ----------------------------------------------------------------------------
 {
-    text t = ShortTreeForm(tree);
-    Text *result = new Text(t, "'", "'", tree->Position());
+    Text *result = tree->AsText();
+    if (result == NULL)
+    {
+        text t = ShortTreeForm(tree);
+        result = new Text(t, "'", "'", tree->Position());
+    }
     return result;
 }
 
