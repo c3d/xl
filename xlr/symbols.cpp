@@ -665,12 +665,13 @@ Tree *Symbols::CompileCall(Context *context,
     if (arity)
     {
         Tree *args = argList[arity + ~0];
+        TreePosition pos = args->Position();
         for (uint a = 1; a < arity; a++)
         {
             Tree *arg = argList[arity + ~a];
             args = new Infix(",", arg, args);
         }
-        call = new Prefix(call, args);
+        call = new Prefix(call, args, pos);
     }
 
     Compiler *compiler = MAIN->compiler;
@@ -688,7 +689,7 @@ Tree *Symbols::CompileCall(Context *context,
     eval_fn fn = unit.Finalize();
     calls[key] = fn;
     if (arity == 0)
-      result->code = fn;
+        result->code = fn;
     result->symbols = this; // Fix for #1017
 
     if (callIt)
