@@ -59,7 +59,6 @@ typedef value_table::iterator      value_iter;   // Used to iterate over values
 typedef Tree * (*typecheck_fn) (Context *context, Tree *src, Tree *value);
 typedef Tree * (*decl_fn) (Symbols *, Tree *source, bool execute);
 typedef std::map<text, decl_fn>    declarator_table; // To call at decl time
-typedef std::map<text, native_fn>  calls_table;  // To call at decl time
 
 
 
@@ -132,7 +131,7 @@ public:
     Tree_p              source;
     Symbols_p           parent;
     Rewrite_p           rewrites;
-    calls_table         calls;
+    symbol_table        calls;
     value_table         type_tests;
     symbols_set         imported;
     Tree_p              error_handler;

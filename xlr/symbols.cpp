@@ -538,7 +538,7 @@ void Symbols::Clear()
 {
     if (rewrites)
         rewrites = NULL;        // Decrease reference count
-    calls = calls_table();
+    calls = symbol_table();
     type_tests.clear();
     error_handler = NULL;
     has_rewrites_for_constants = false;
@@ -652,24 +652,28 @@ Tree *Symbols::CompileCall(Context *context,
         key = keyBuilder.str();
 
         // Check if we already have a call compiled
-        if (native_fn called = calls[key])
+        if (Tree *existing = calls[key])
         {
+            native_fn called = (native_fn) existing->code;
+            if (arity)
+                if (Block *block = existing->AsBlock())
+                    existing = block->child;
             Compiler *compiler = MAIN->compiler;
             adapter_fn adapt = compiler->ArrayToArgsAdapter(arity);
-            Tree *res = adapt(called, context, xl_false, (Tree **) &argList[0]);
+            Tree *res = adapt(called, context, existing, (Tree **) &argList[0]);
             return res;
         }
     }
 
-    Tree *call = new Name(callee);
+    TreePosition pos = arity ? argList[0]->Position() : ~0;
+    Tree *call = new Name(callee, pos);
     if (arity)
     {
         Tree *args = argList[arity + ~0];
-        TreePosition pos = args->Position();
         for (uint a = 1; a < arity; a++)
         {
             Tree *arg = argList[arity + ~a];
-            args = new Infix(",", arg, args);
+            args = new Infix(",", arg, args, pos);
         }
         call = new Prefix(call, args, pos);
     }
@@ -682,20 +686,30 @@ Tree *Symbols::CompileCall(Context *context,
     bool nullIfBad = false;
     bool keepAlternatives = true;
     bool noData = false;
-    Tree *result = Compile(call, unit, nullIfBad, keepAlternatives, noData);
-    if (!result)
+    Tree *compiled = Compile(call, unit, nullIfBad, keepAlternatives, noData);
+    if (!compiled)
         return call;
 
+    // We cannot store the 'code' directly in the generated tree
+    // if the arity is not zero, because we would then execute that code
+    // without passing argument if we ever came to evaluate the tree (#2051)
+    // So we keep the original code (which may itself be evaluated)
+    // and "shield" it with a protective Block where we store the code.
     eval_fn fn = unit.Finalize();
-    calls[key] = fn;
-    if (arity == 0)
-        result->code = fn;
+    Tree *result = compiled;
     result->symbols = this; // Fix for #1017
+    if (arity != 0)
+    {
+        compiled = new Block(compiled, "XLCall(", ")", pos);
+        compiled->symbols = this; // Fix for #1017
+    }
+    compiled->code = fn;
+    calls[key] = compiled;
 
     if (callIt)
     {
         adapter_fn adapt = compiler->ArrayToArgsAdapter(arity);
-        result = adapt(fn, context, call, (Tree **) &argList[0]);
+        result = adapt(fn, context, result, (Tree **) &argList[0]);
     }
 
     return result;
