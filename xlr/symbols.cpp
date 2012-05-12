@@ -536,10 +536,9 @@ void Symbols::Clear()
 //   Clear all symbol tables
 // ----------------------------------------------------------------------------
 {
-    symbol_table empty;
     if (rewrites)
         rewrites = NULL;        // Decrease reference count
-    calls = empty;
+    calls = calls_table();
     type_tests.clear();
     error_handler = NULL;
     has_rewrites_for_constants = false;
@@ -653,12 +652,11 @@ Tree *Symbols::CompileCall(Context *context,
         key = keyBuilder.str();
 
         // Check if we already have a call compiled
-        if (Tree *previous = calls[key])
+        if (native_fn called = calls[key])
         {
-            native_fn called = previous->code;
             Compiler *compiler = MAIN->compiler;
             adapter_fn adapt = compiler->ArrayToArgsAdapter(arity);
-            Tree *res = adapt(called, context, previous, (Tree **) &argList[0]);
+            Tree *res = adapt(called, context, xl_false, (Tree **) &argList[0]);
             return res;
         }
     }
@@ -688,9 +686,10 @@ Tree *Symbols::CompileCall(Context *context,
         return call;
 
     eval_fn fn = unit.Finalize();
-    result->code = fn;
+    calls[key] = fn;
+    if (arity == 0)
+      result->code = fn;
     result->symbols = this; // Fix for #1017
-    calls[key] = result;
 
     if (callIt)
     {
