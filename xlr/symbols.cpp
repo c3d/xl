@@ -3034,6 +3034,7 @@ Value *OCompiledUnit::ReadName(Name *what, Rewrite *rw)
     Constant *rwa = ConstantInt::get(LLVM_INTTYPE(int64), (int64) rw);
     Value *rwp = ConstantExpr::getIntToPtr(rwa, compiler->treePtrPtrTy);
     Value *val = code->CreateLoad(rwp, "assigned");
+    NeedStorage(what);
     MarkComputed(what, val);
     return val;
 }
