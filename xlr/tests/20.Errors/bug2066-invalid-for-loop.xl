@@ -1,0 +1,4 @@
+// EXIT=1
+A := 0
+for i in A..3
+    writeln "Hello"

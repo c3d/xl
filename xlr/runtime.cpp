@@ -230,14 +230,7 @@ Tree *xl_form_error(Context *context, Tree *what)
     Save<bool> saveRecursive(recursive, true);
 
     ADJUST_CONTEXT_FOR_INTERPRETER(context);
-    static Name_p errorName = new Name("error");
-    static Text_p errorText = new Text("No form matches $1");
-    Infix *args = new Infix(",", errorText, what, what->Position());
-    Prefix *error = new Prefix(errorName, args, what->Position());
-    Symbols *symbols = what->Symbols();
-    if (!symbols) symbols = MAIN->globals;
-    error->SetSymbols(symbols);
-    return context->Evaluate(error);
+    return Ooops("No form matches $1", what);
 }
 
 
