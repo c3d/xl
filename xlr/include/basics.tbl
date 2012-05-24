@@ -680,14 +680,14 @@ PREFIX(Identity,  tree, "identity",
        DESCRIPTION("")
        RETURNS(tree, "The input tree, not evaluated"))
 PREFIX(DoCode,    tree, "do",
-       PARM(input, value, "Input tree to evaluate"),
+       PARM(input, tree, "Input tree to evaluate"),
        Symbols *symbols = self->Symbols();
        if (!input.Symbols())
            input.SetSymbols(symbols);
        Tree *tree = xl_evaluate(context, &input);
        if (!tree->Symbols())
            tree->SetSymbols(symbols);
-       return tree,
+       return xl_evaluate(context, tree),
        GROUP(basics)
        SYNOPSIS("Evaluate the input immediately"))
 PREFIX(ParseText,    tree, "parse",
