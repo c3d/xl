@@ -1,2 +1,2 @@
-error "No form matches $1", cos "This is a very long long message, that should be shortened in errors"
+error "No form matches 'cos """"This is a very long long ...hould be shortened in errors""""'"
 20.Errors/long_error_messages.xl:2: No form matches 'cos "This is a very long long ...hould be shortened in errors"'
