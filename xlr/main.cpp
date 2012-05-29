@@ -342,6 +342,17 @@ text Main::Decrypt(text file)
 }
 
 
+Tree *Main::Normalize(Tree *input)
+// ----------------------------------------------------------------------------
+//   Tree normalization hook
+// ----------------------------------------------------------------------------
+//   Normalization allows a user application to change the shape of the tree
+//   to bring it in some "normal form" before using it.
+{
+    return input;
+}
+
+
 int Main::LoadFile(text file,
                    bool updateContext,
                    Context *importContext,
@@ -415,7 +426,11 @@ int Main::LoadFile(text file,
             tree->Do(writer);
     }
 
-    if (!tree)
+    if (tree)
+    {
+        tree = Normalize(tree);
+    }
+    else
     {
         if (options.doDiff)
         {
