@@ -2421,7 +2421,7 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
             Symbols *s = ref->symbols;
             if (!s && ref->to)
             {
-                s = ref->symbols = ref->to->Symbols();
+                s = ref->symbols = new Symbols(ref->to->Symbols());
                 IFTRACE(references)
                     std::cerr << " gets symbols " << s
                               << " from " << ref->to << "\n";
