@@ -2282,8 +2282,12 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
 //   Find the property associated with the given expression
 // ----------------------------------------------------------------------------
 {
+    bool outer = true;
     Symbols *symbols = expr->Symbols();
     Tree *type = NULL;
+
+    IFTRACE(references)
+        std::cerr << "Reference: " << expr << " in " << symbols << "\n";
 
     // Deal with non-list cases
     while (expr)
@@ -2291,10 +2295,15 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
         Tree *left = NULL;
         Tree *right = NULL;
 
+        IFTRACE(references)
+            std::cerr << " looking at " << expr << "\n";
+
         // Lookup terminals
         if (expr->IsLeaf())
         {
-            Rewrite *entry = symbols->LookupEntry(expr, create);
+            Rewrite *entry = outer
+                ? symbols->LookupEntry(expr, create)
+                : symbols->Entry(expr, create);
             if (entry && type)
             {
                 if (!entry->type)
@@ -2307,6 +2316,12 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
                     Ooops("Previous type was $1", entry->type);
                 }
             }
+
+            IFTRACE(references)
+                if (entry)
+                    std::cerr << " found " << entry << ": "
+                              << entry->from << "->" << entry->to << "\n";
+
             return entry;
         }
 
@@ -2348,8 +2363,17 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
                 {
                     left = prefix->left;
                     if (!br->child->Symbols())
+                    {
+                        IFTRACE(references)
+                            std::cerr << " child " << br->child
+                                      << " receives symbols " << symbols
+                                      << "\n";
                         br->child->SetSymbols(symbols);
+                    }
                     right = xl_evaluate(context, br->child);
+                    IFTRACE(references)
+                        std::cerr << "Array " << left << " index " << right
+                                  << " symbols " << symbols << "\n";
                 }
             }
         }
@@ -2380,12 +2404,30 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
             // Find the reference on the left
             if (!left->Symbols())
                 left->SetSymbols(symbols);
+
             Rewrite *ref = xl_reference(context, left, true);
+            IFTRACE(references)
+            {
+                std::cerr << "Reference " << left
+                          << " symbols " << symbols
+                          << "\n";
+                if (ref)
+                    std::cerr << " ref " << ref << ":"
+                              << ref->from << "->" << ref->to
+                              << "\n";
+            }
 
             // Create value and symbol table if they don't exist
             Symbols *s = ref->symbols;
             if (!s && ref->to)
+            {
                 s = ref->symbols = ref->to->Symbols();
+                IFTRACE(references)
+                    std::cerr << " gets symbols " << s
+                              << " from " << ref->to << "\n";
+            }
+            IFTRACE(references)
+                std::cerr << "  inner symbol table " << s << "\n";
             if (!s)
                 s = ref->symbols = new Symbols(symbols);
             symbols = s;
@@ -2401,6 +2443,9 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
                 return NULL;
             expr = evaluated;
         }
+
+        // From now on, we are looking at inner symbols, don't lookup
+        outer = false;
 
     } // While (expr)
 
@@ -2460,6 +2505,9 @@ Tree *xl_assign(Context *context, Tree *var, Tree *value)
 //   Assignment in interpreted mode
 // ----------------------------------------------------------------------------
 {
+    IFTRACE(references)
+        std::cerr << "Assigning " << var << ":=" << value << "\n";
+
     ADJUST_CONTEXT_FOR_INTERPRETER(context);
     if (XL::Options::options->optimize_level == 1)
     {
@@ -2467,10 +2515,13 @@ Tree *xl_assign(Context *context, Tree *var, Tree *value)
         if (var->IsConstant())
             return xl_assign_constant(context, var, value);
 
-
         Rewrite *rw = xl_reference(context, var, true);
         if (rw)
         {
+            IFTRACE(references)
+                std::cerr << " assign ref " << rw << ": "
+                          << rw->from << "->" << rw->to << "\n";
+
             // Writing to an explicit rewrite: only works if same type
             if (rw->kind == Rewrite::LOCAL)
                 return xl_assign_constant(context, rw->to, value);
@@ -2478,6 +2529,11 @@ Tree *xl_assign(Context *context, Tree *var, Tree *value)
             rw->to = value;
             if (rw->kind == Rewrite::UNKNOWN)
                 rw->kind = Rewrite::ASSIGNED;
+        }
+        else
+        {
+            IFTRACE(references)
+                std::cerr << "WARNING: No reference for " << var << "\n";
         }
         return value;
     }
@@ -2490,13 +2546,22 @@ Tree *xl_index(Context *context, Tree *data, Tree *indexTree)
 //   Find the given element in a data set or return false, e.g. X.Y
 // ----------------------------------------------------------------------------
 {
+    IFTRACE(references)
+        std::cerr << "Index " << data << "[" << indexTree << "]\n";
+
     // Identify the reference for X
     Rewrite *rw = xl_reference(context, data, false);
+    IFTRACE(references)
+        std::cerr << " index ref " << rw << "\n";
     if (!rw)
         return xl_false;
 
     // Get the symbol table for X
     Symbols *symbols = rw->symbols;
+    IFTRACE(references)
+        std::cerr << " rewrite " << rw << ": "
+                  << rw->from << "->" << rw->to
+                  << " symbols " << symbols << "\n";
     if (!symbols)
     {
         symbols = rw->to->Symbols();
@@ -2507,6 +2572,14 @@ Tree *xl_index(Context *context, Tree *data, Tree *indexTree)
 
     // In X's symbol table, find Y (don't look up, we want only local results)
     rw = symbols->Entry(indexTree, false);
+    IFTRACE(references)
+    {
+        std::cerr << " index inner " << rw;
+        if (rw)
+            std::cerr << ": "
+                      << rw->from << "->" << rw->to;
+        std::cerr << "\n";
+    }
     if (!rw || !rw->to)
         return xl_false;
     return rw->to;
