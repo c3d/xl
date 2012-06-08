@@ -1,0 +1,7 @@
+data a
+a[0] := "toto" 
+writeln "First: " & a[0]
+
+data b
+b[0] := "titi" 
+writeln "Second: " & a[0]

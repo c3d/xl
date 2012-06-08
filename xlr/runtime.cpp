@@ -2419,21 +2419,25 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
 
             // Create value and symbol table if they don't exist
             Symbols *s = ref->symbols;
-            if (!s && ref->to)
+            if (!s)
             {
-                s = ref->symbols = new Symbols(ref->to->Symbols());
-                IFTRACE(references)
-                    std::cerr << " gets symbols " << s
-                              << " from " << ref->to << "\n";
+                if (ref->to)
+                {
+                    s = ref->symbols = new Symbols(ref->to->Symbols());
+                    IFTRACE(references)
+                        std::cerr << " gets symbols " << s
+                                  << " from " << ref->to << "\n";
+                }
+                else
+                {
+                    s = ref->symbols = new Symbols(symbols);
+                }
             }
             IFTRACE(references)
                 std::cerr << "  inner symbol table " << s << "\n";
-            if (!s)
-                s = ref->symbols = new Symbols(symbols);
             symbols = s;
             expr = right;
-            if (!expr->Symbols())
-                expr->SetSymbols(symbols);
+            expr->SetSymbols(symbols);
         }
         else
         {
