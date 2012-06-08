@@ -2432,12 +2432,14 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
                 {
                     s = ref->symbols = new Symbols(symbols);
                 }
+                expr->SetSymbols(s);
             }
             IFTRACE(references)
                 std::cerr << "  inner symbol table " << s << "\n";
             symbols = s;
             expr = right;
-            expr->SetSymbols(symbols);
+            if (!expr->Symbols())
+                expr->SetSymbols(symbols);
         }
         else
         {
