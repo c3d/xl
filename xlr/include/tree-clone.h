@@ -140,6 +140,16 @@ typedef struct TreeCloneTemplate<DeepCloneMode>         TreeClone;
 typedef struct TreeCloneTemplate<ShallowCloneMode>      ShallowClone;
 typedef struct TreeCloneTemplate<NullCloneMode>         NullClone;
 
+inline Tree *xl_deep_clone(Tree *input)
+// ----------------------------------------------------------------------------
+//   Perform a deep clone of a tree
+// ----------------------------------------------------------------------------
+{
+    TreeClone clone;
+    input = input->Do(clone);
+    return input;
+}
+
 
 
 // ============================================================================
