@@ -505,6 +505,8 @@ Rewrite *Symbols::Entry(Tree *form, bool create)
         return NULL;
 
     // Create entry
+    if (form->IsLeaf())
+        form = xl_deep_clone(form);
     rw = new Rewrite(form, NULL, NULL);
     if (last)
         last->hash[hkey % REWRITE_HASH_SIZE] = rw;
