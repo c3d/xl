@@ -230,7 +230,7 @@ Tree *xl_form_error(Context *context, Tree *what)
     Save<bool> saveRecursive(recursive, true);
 
     ADJUST_CONTEXT_FOR_INTERPRETER(context);
-    return Ooops("No form matches $1", what);
+    return Ooops("No form match $1", what);
 }
 
 

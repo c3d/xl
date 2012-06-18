@@ -7,4 +7,4 @@ xl_write_integer (bar 5)
 opt-builtins.xl:59:  xl_write_integer (arg1:integer) doesn't match because
 09.Compiler/optimized-type-mismatch.xl:8:   Cannot unify type 'real' of '(bar 3.5)'
 <Unknown position>:   with type 'integer' of 'arg1'
-09.Compiler/optimized-type-mismatch.xl:8:  No form matches 'xl_write_integer (bar 3.5)'
+09.Compiler/optimized-type-mismatch.xl:8:  No form match 'xl_write_integer (bar 3.5)'
