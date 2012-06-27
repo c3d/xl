@@ -200,7 +200,7 @@
   The key takeaway is that the conversion of concept to code is necessarily
   <em|lossy>. Minimizing the loss remains a worthy goal, but doing so is
   difficult. By drawing our attention to the conversion process itself,
-  concept programming gives us new tools to solve old problems.
+  concept programming gives us new and useful tools to solve old problems.
 
   <paragraph|Pseudo-metrics>Among the tools brought by concept programming is
   a set of <em|pseudo-metrics> <index|pseudo-metric>allowing us to better
@@ -755,7 +755,7 @@
   precedence separate statements, whereas infix operators with a higher
   precedence separate expressions. For example, the semi-colon <verbatim|;>
   or <verbatim|else> separate statements, whereas <verbatim|+> or
-  <verbatim|and> separate instructions.
+  <verbatim|and> separate expressions.
 
   More precisely:
 
@@ -953,9 +953,12 @@
   </verbatim>|Use of the <verbatim|syntax> specification in a source
   file><label|source-syntax>
 
-  As a general stylistic rule, it is recommended to limit the introduction of
-  new operators using <verbatim|syntax> statements<index|syntax statement>,
-  as this can easily confuse a reader not familiar with the new notation.
+  As a general stylistic rule, it is recommended to use restraint when
+  introducing new operators using <verbatim|syntax> statements<index|syntax
+  statement>, as this can easily confuse a reader who is not familiar with
+  the new notation. On the other hand, there are cases where good use of new
+  and well-chosen operators will render the code much more readable and easy
+  to maintain.
 
   <paragraph|Format of syntax configuration>Spaces and
   indentation<index|indentation> are not significant in a syntax
@@ -1206,11 +1209,14 @@
   avoid infinite recursion if their return type is identical to their input
   type.
 
-  Rewrites in a sequence belong to the context<index|context> for the entire
-  sequence (contexts are defined in Section<nbsp><reference|binding>). In
-  other words, declarations are visible to prior elements in the sequence and
-  need not be evaluated, as shown in Figure<nbsp><reference|out-of-order-declarations>,
-  which computes <verbatim|4>:
+  An expression may use declarations that follow it in the same sequence.
+  Declarations are visible to prior elements in the sequence and need not be
+  evaluated, as shown in Figure<nbsp><reference|out-of-order-declarations>,
+  which computes <verbatim|4>. More generally, rewrites in a sequence belong
+  to the context<index|context> for the entire sequence (contexts are defined
+  in Section<nbsp><reference|binding>).
+
+  <strong|>
 
   <big-figure|<\verbatim>
     foo 3
@@ -1291,8 +1297,9 @@
     Ada is one of the few programming languages that have overloading based
     on return types.
   </footnote>. If there is a return type declaration and the implementation
-  does not actually return the declared return type, evaluation of that
-  implementation fails.
+  does not actually return the declared return type, a type error expression
+  of the form <verbatim|type_error ExpectedType, ActualValue> will attempt to
+  correct the problem.
 
   A type declaration can also be placed on the left of an assignment, see
   Section<nbsp><reference|assignment>.<subindex|type declaration|in
@@ -1306,19 +1313,31 @@
   assignment>.
 
   An assignment is valid even if the reference on the left of <verbatim|:=>
-  had not previously been bound. The assignment creates a binding in global
-  scope for that reference if there was no previous
-  binding<subindex|binding|in assignment>, or replaces the value of the
-  existing binding if there was one. This is shown in
-  Figure<nbsp><reference|local-and-nonlocal-assignment>:\ 
+  had not previously been bound. In that case, it creates a new
+  binding<subindex|binding|in assignment> in the current context. This is
+  shown in Figure<nbsp><reference|creating-a-new-binding>.
 
   <\big-figure>
     <\verbatim>
-      // Assigns to global X
+      // Assigns to locally created X
+
+      assigns_to_local -\<gtr\> X := 1
+    </verbatim>
+  </big-figure|Creating a new binding<label|creating-a-new-binding>>
+
+  On the other hand, if there is an existing binding, the assignment replaces
+  the corresponding bound value. This is shown in
+  Figure<nbsp><reference|nonlocal-assignment>:
+
+  <\big-figure>
+    <\verbatim>
+      // Assigns to global X defined below
 
       assigns_to_global -\<gtr\> X := 1
+
+      X -\<gtr\> 0
     </verbatim>
-  </big-figure|Assignment to global variable><label|local-and-nonlocal-assignment>
+  </big-figure|Assignment to existing binding<label|nonlocal-assignment>>
 
   <paragraph|Local variables>If the left side of an assignment is a type
   declaration<subindex|assignment|to type declaration><subindex|type
@@ -1344,79 +1363,27 @@
     assigns_new -\<gtr\> X:integer := 1
   </verbatim>|Assigning to new local variable><label|assign-to-new-local>
 
-  <paragraph|Assigning to parameters>If the left side of an assignment is a
-  parameter<subindex|assignment|to parameter> with a type declaration, that
-  assignment affects the binding of that parameter. However, if the parameter
-  has no type declaration, the assignment affects the binding referenced by
-  the argument bound to that parameter<subindex|scope|local>, as illustrated
-  in Figure<nbsp><reference|assign-to-parameter>. This makes it possible to
-  implement assignment-like operators:
+  <paragraph|Assigning to references>If the left side of an assignment is a
+  reference, then the assignment will apply to the referred value, as shown
+  in Figure<nbsp><reference|assign-to-reference-example>. This may either
+  modify the referred value if a binding already exists, or create a new
+  binding in the context being referred to if no binding exists.
 
   <big-figure|<\verbatim>
-    A : integer := 5
+    Data -\<gtr\>
 
-    A += 3
+    \ \ \ \ 0 -\<gtr\> 3
 
-    \;
+    \ \ \ \ 1 -\<gtr\> 2
 
-    // Effectively assign to A
+    Data.0 := 4 // replaces 3
 
-    X+=Y -\<gtr\> X:=X+Y
-  </verbatim>|Assigning to parameter>
+    Data.2 := 5 // Creates new binding 2-\<gtr\>5 in Data
+  </verbatim>|Assignment to references>
 
-  <label|assign-to-parameter>Using an assignment in an
-  expression<subindex|assignment|in expression><subindex|expression|assignment
-  as expression> is equivalent to using the value bound to the variable after
-  the assignment. For instance, <verbatim|sin(x:=f(0))> is equivalent to
-  <verbatim|x:=f(0)> followed by <verbatim|sin(x)>.
-
-  An assignment can override a binding<subindex|binding|override> established
-  by a parameter or rewrite declaration. However, assigning to a pattern
-  proves tricky because of lazy evaluation<subindex|evaluation|lazy> (see
-  Section<nbsp><reference|lazy-evaluation>), and is best avoided. The
-  rationale for this behavior is explained in
-  Section<nbsp><reference|index-operators>.
-
-  <big-figure|<\verbatim>
-    // Declare rewrites for prefix foo
-
-    foo 0 -\<gtr\> 3
-
-    foo N -\<gtr\> 5
-
-    \;
-
-    // This works as expected
-
-    foo 0 := 32
-
-    \;
-
-    // Illegal: on-demand evaluation of N fails
-
-    foo N := 5
-
-    \;
-
-    // Legal, changes foo 0
-
-    N := 0
-
-    foo N := 44
-
-    \;
-
-    // Legal, creates foo 5
-
-    N := 5
-
-    foo N := 55
-  </verbatim>|Assignments do not override
-  patterns><label|assignments-cant-override-patterns>
-
-  An assignment can also assign to the following
-  expressions<subindex|expression|allowed on left of assignment> (see
-  Section<nbsp><reference|tree-operations>):
+  <label|assign-to-reference-example>An assignment can also assign to the
+  following special references<subindex|expression|allowed on left of
+  assignment> (see Section<nbsp><reference|tree-operations>):
 
   <\itemize>
     <item><verbatim|left X>, <verbatim|right X> when <verbatim|X> is an
@@ -1430,6 +1397,41 @@
     <item><verbatim|opening X> and <verbatim|closing X> when <verbatim|X> is
     a block or text and the assigned value is a text
   </itemize>
+
+  <paragraph|Assigning to parameters>Assigning to a reference is particularly
+  useful for parameters<subindex|assignment|to parameter>. In some cases,
+  parameters may be bound without being evaluated (see
+  Section<nbsp><reference|lazy-evaluation>). This means that the parameter is
+  bound to a reference. In that case, assigning to the parameter will assign
+  to the reference, making it possible to implement assignment-like
+  operations, as illustrated in Figure<nbsp><reference|assign-to-parameter>.
+
+  <big-figure|<\verbatim>
+    A : integer := 5
+
+    A+=3
+
+    \;
+
+    // Effectively assign to A
+
+    X+=Y -\<gtr\> X:=X+Y
+  </verbatim>|Assigning to parameter>
+
+  <label|assign-to-parameter>In that example, the context for evaluating the
+  implementation <verbatim|X:=X+Y> will contain a binding for <verbatim|X> in
+  the form <verbatim|X-\<gtr\>(A-\<gtr\>5).A>, where <verbatim|(A-\<gtr\>5)>
+  is the original execution context. The expression <verbatim|(A-\<gtr\>5).A>
+  means that we evaluate <verbatim|A> in the context that existed at the
+  point where expression <verbatim|A+=3> was evaluated. Therefore, assigning
+  to <verbatim|X> will affect the existing binding,, resulting in the updated
+  binding <verbatim|A-\<gtr\>8> in the original context.
+
+  <paragraph|Assignments as expressions>Using an assignment in an
+  expression<subindex|assignment|in expression><subindex|expression|assignment
+  as expression> is equivalent to using the value bound to the variable after
+  the assignment. For instance, <verbatim|sin(x:=f(0))> is equivalent to
+  <verbatim|x:=f(0)> followed by <verbatim|sin(x)>.
 
   <subsubsection|Guards>
 
@@ -1615,10 +1617,10 @@
 
   <subsection|Binding References to Values><label|binding>
 
-  A rewrite declaration of the form <verbatim|Pattern-\<gtr\>Implementation>
+  A <em|rewrite declaration> of the form <verbatim|Pattern-\<gtr\>Implementation>
   is said to <em|bind><index|binding> its pattern to its implementation. A
-  sequence of declarations is called a <em|context><index|context>. For
-  example, <verbatim|{x-\<gtr\>3;y-\<gtr\>4}> is a context that binds
+  sequence of rewrite declarations is called a <em|context><index|context>.
+  For example, <verbatim|{x-\<gtr\>3;y-\<gtr\>4}> is a context that binds
   <verbatim|x> to <verbatim|3> and <verbatim|y> to <verbatim|4>.
 
   <subsubsection|Context Order>
@@ -1698,6 +1700,13 @@
     The index <verbatim|B> will be evaluated in the current context if
     required to match patterns in <verbatim|A>, as explained in
     Section<nbsp><reference|evaluation>.
+
+    <item>Special forms described in \ Section<nbsp><reference|tree-operations>,
+    such as <verbatim|left X> refer to children of <verbatim|infix>,
+    <verbatim|prefix>, <verbatim|postfix> or <verbatim|block> trees. They can
+    be used as a reference in an assignment, and will modify the tree being
+    referred to. This can be used to directly manipulate the program
+    structure.\ 
   </itemize>
 
   <subsection|Evaluation><label|evaluation>
@@ -1863,12 +1872,17 @@
     last statement, if there is one, or the newly created context if the
     sequence only contains declarations.
 
-    <item>A prefix with a sequence on the left evaluates as if the right
-    child was added at the end of the sequence, and the sequence then
-    evaluated. In other words, evaluating <verbatim|(A;B) C> is equivalent to
-    evaluating <verbatim|(A;B;C)>. For example,
-    <verbatim|(x-\<gtr\>3;y-\<gtr\>4)(x+y)> evaluates as <verbatim|7>, and
-    <verbatim|(x:integer-\<gtr\>x+1) 3> evaluates as <verbatim|4>.
+    <item>If <verbatim|C> is a context and <verbatim|E> is an expression,
+    evaluating <verbatim|C E> is equivalent to evaluating <verbatim|E> in the
+    current context, then evaluating the result in the context of
+    <verbatim|C>. For example, <verbatim|(0-\<gtr\>3)(1-1)> will evaluate
+    <verbatim|1-1>, resulting in <verbatim|0>, then evaluate the result in
+    the context <verbatim|0-\<gtr\>3>, resulting in the value <verbatim|3>.
+
+    <item>If <verbatim|C> is a context and <verbatim|E> is an expression,
+    evaluating <verbatim|C.E> is equivalent to evaluating <verbatim|E> in the
+    context of <verbatim|C>. For example,
+    <verbatim|(foo-\<gtr\>1;bar-\<gtr\>2).bar> will return <verbatim|2>.
   </enumerate>
 
   <subsubsection|Lazy evaluation><label|lazy-evaluation>
@@ -1927,6 +1941,11 @@
     needs to be evaluated to verify if it contains <verbatim|B>.
   </enumerate>
 
+  When lazy evaluation happens, the expression being bound is a closure as
+  explained in Section<nbsp><reference|standard-evaluation>, i.e. it will be
+  an expression of the form <verbatim|C.E> where <verbatim|C> is the original
+  evaluation context and <verbatim|E> is the original expression to evaluate.
+
   <subsubsection|Explicit evaluation><label|explicit-evaluation>
 
   <index|explicit evaluation><subindex|evaluation|explicit>Expressions are
@@ -1945,13 +1964,22 @@
     sequences.
   </enumerate>
 
+  The explicit evaluation of a name does not change the value bound to that
+  name in the current context. For example, if the current context contains
+  <verbatim|A-\<gtr\>write "Hello">, each explicit evaluation of <verbatim|A>
+  will cause the message <verbatim|Hello> to be written.
+
   <subsubsection|Memoization>
 
   <subindex|memoization|of parameters>Whenever a parameter is evaluated, the
-  evaluated result may be used for all subsequent demand-based evaluations, a
-  process called <em|memoization>. Memoization does not happen for explicit
-  evaluations. This is illustrated with the example in
-  Figure<nbsp><reference|explicit-vs-lazy-evaluation>:
+  evaluated result may be used for all subsequent demand-based evaluations of
+  the same tree, a process called <em|memoization>. What is memoized is
+  associated with the original tree.
+
+  \;
+
+  \ Memoization does not happen for explicit evaluations. This is illustrated
+  with the example in Figure<nbsp><reference|explicit-vs-lazy-evaluation>:
 
   <big-figure|<\verbatim>
     foo X -\<gtr\>
@@ -2908,7 +2936,7 @@
   in Figure<nbsp><reference|union-type-definition>:
 
   <big-figure|<\verbatim>
-    type A\|B -\<gtr\>
+    A\|B -\<gtr\>
 
     \ \ \ \ contains X:A -\<gtr\> true
 
@@ -2922,7 +2950,7 @@
   Figure<nbsp><reference|using-union-types>:
 
   <big-figure|<\verbatim>
-    type number \ \ \ \ \ \ \ \ \ \ -\<gtr\> X:(integer\|real)
+    number \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ -\<gtr\> type X:(integer\|real)
 
     succ X:number \ \ \ \ \ \ \ \ -\<gtr\> X + 1
 
@@ -2938,10 +2966,10 @@
   Figure<nbsp><reference|enum-type-definition>:
 
   <big-figure|<\verbatim>
-    type enumeration(A:name,Rest) -\<gtr\>
+    enumeration(A:name,Rest) -\<gtr\>
 
-    \ \ \ \ contains X:name -\<gtr\> text X = text A or enumeration(Rest) has
-    X
+    \ \ \ \ contains X:name -\<gtr\> text X = text A or enumeration(Rest)
+    contains X
 
     \ \ \ \ contains X -\<gtr\> false
   </verbatim>|Enumeration type definition><label|enum-type-definition>
@@ -3520,11 +3548,19 @@
     <no-break><pageref|auto-212>>
 
     <with|par-left|6fn|Local variables <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-218><vspace|0.15fn>>
+    <no-break><pageref|auto-219><vspace|0.15fn>>
+
+    <with|par-left|6fn|Assigning to references
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-228><vspace|0.15fn>>
 
     <with|par-left|6fn|Assigning to parameters
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-227><vspace|0.15fn>>
+    <no-break><pageref|auto-231><vspace|0.15fn>>
+
+    <with|par-left|6fn|Assignments as expressions
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-234><vspace|0.15fn>>
 
     <with|par-left|3fn|3.1.5<space|2spc>Guards
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
@@ -3689,205 +3725,220 @@
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-475>>
 
-    <with|par-left|3fn|4.2.2<space|2spc>Loops
-    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-477>>
-
-    <with|par-left|3fn|4.2.3<space|2spc>Error handling
-    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-478>>
-
-    <with|par-left|1.5fn|4.3<space|2spc>Library-defined types
-    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-479>>
-
-    <with|par-left|3fn|4.3.1<space|2spc>Range and range types
+    <with|par-left|3fn|4.2.2<space|2spc>Infinite Loops
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-480>>
 
-    <with|par-left|3fn|4.3.2<space|2spc>Union types
+    <with|par-left|3fn|4.2.3<space|2spc>Conditional Loops
+    (<with|font-family|tt|language|verbatim|while> and
+    <with|font-family|tt|language|verbatim|until> loops)
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-484>>
+    <no-break><pageref|auto-482>>
 
-    <with|par-left|3fn|4.3.3<space|2spc>Enumeration types
+    <with|par-left|3fn|4.2.4<space|2spc>Controlled Loops
+    (<with|font-family|tt|language|verbatim|for> loops)
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-487>>
+    <no-break><pageref|auto-485>>
 
-    <with|par-left|3fn|4.3.4<space|2spc>A type matching type declarations
+    <with|par-left|3fn|4.2.5<space|2spc>Excursions<with|font-series|bold|math-font-series|bold|>
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-489>>
 
-    <with|par-left|1.5fn|4.4<space|2spc>Modules
+    <with|par-left|3fn|4.2.6<space|2spc>Error handling
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-490>>
+
+    <with|par-left|1.5fn|4.3<space|2spc>Library-defined types
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-491>>
 
-    <with|par-left|3fn|4.4.1<space|2spc>Import statement
+    <with|par-left|3fn|4.3.1<space|2spc>Range and range types
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-492>>
 
-    <with|par-left|3fn|4.4.2<space|2spc>Declaring a module
+    <with|par-left|3fn|4.3.2<space|2spc>Union types
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-496>>
+
+    <with|par-left|3fn|4.3.3<space|2spc>Enumeration types
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-499>>
+
+    <with|par-left|3fn|4.3.4<space|2spc>A type matching type declarations
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-501>>
+
+    <with|par-left|1.5fn|4.4<space|2spc>Modules
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-503>>
+
+    <with|par-left|3fn|4.4.1<space|2spc>Import statement
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-504>>
 
-    <vspace*|1fn><with|font-series|bold|math-font-series|bold|5<space|2spc>Example
-    code> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-508><vspace|0.5fn>
-
-    <with|par-left|1.5fn|5.1<space|2spc>Minimum and maximum
-    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-509>>
-
-    <with|par-left|1.5fn|5.2<space|2spc>Complex numbers
-    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-510>>
-
-    <with|par-left|1.5fn|5.3<space|2spc>Vector and Matrix computations
-    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-511>>
-
-    <with|par-left|1.5fn|5.4<space|2spc>Linked lists with dynamic allocation
-    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-512>>
-
-    <with|par-left|1.5fn|5.5<space|2spc>Input / Output
-    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-513>>
-
-    <with|par-left|1.5fn|5.6<space|2spc>Object-Oriented Programming
-    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-514>>
-
-    <with|par-left|3fn|5.6.1<space|2spc>Classes
-    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-515>>
-
-    <with|par-left|3fn|5.6.2<space|2spc>Methods
+    <with|par-left|3fn|4.4.2<space|2spc>Declaring a module
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-516>>
 
-    <with|par-left|3fn|5.6.3<space|2spc>Dynamic dispatch
-    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-517>>
+    <vspace*|1fn><with|font-series|bold|math-font-series|bold|5<space|2spc>Example
+    code> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-520><vspace|0.5fn>
 
-    <with|par-left|3fn|5.6.4<space|2spc>Polymorphism
-    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-518>>
-
-    <with|par-left|3fn|5.6.5<space|2spc>Inheritance
-    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-519>>
-
-    <with|par-left|3fn|5.6.6<space|2spc>Multi-methods
-    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-520>>
-
-    <with|par-left|3fn|5.6.7<space|2spc>Object prototypes
+    <with|par-left|1.5fn|5.1<space|2spc>Minimum and maximum
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-521>>
 
-    <with|par-left|1.5fn|5.7<space|2spc>Functional-Programming
+    <with|par-left|1.5fn|5.2<space|2spc>Complex numbers
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-522>>
 
-    <with|par-left|3fn|5.7.1<space|2spc>Map
+    <with|par-left|1.5fn|5.3<space|2spc>Vector and Matrix computations
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-523>>
 
-    <with|par-left|3fn|5.7.2<space|2spc>Reduce
+    <with|par-left|1.5fn|5.4<space|2spc>Linked lists with dynamic allocation
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-524>>
 
-    <with|par-left|3fn|5.7.3<space|2spc>Filter
+    <with|par-left|1.5fn|5.5<space|2spc>Input / Output
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-525>>
 
-    <with|par-left|3fn|5.7.4<space|2spc>Functions as first-class objects
+    <with|par-left|1.5fn|5.6<space|2spc>Object-Oriented Programming
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-526>>
 
-    <with|par-left|3fn|5.7.5<space|2spc>Anonymous functions (Lambda)
+    <with|par-left|3fn|5.6.1<space|2spc>Classes
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-527>>
 
-    <with|par-left|3fn|5.7.6<space|2spc>Y-Combinator
+    <with|par-left|3fn|5.6.2<space|2spc>Methods
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-528>>
 
-    <with|par-left|3fn|5.7.7<space|2spc>Infinite data structures
+    <with|par-left|3fn|5.6.3<space|2spc>Dynamic dispatch
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-529>>
 
-    <vspace*|1fn><with|font-series|bold|math-font-series|bold|6<space|2spc>Implementation
-    notes> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-531><vspace|0.5fn>
+    <with|par-left|3fn|5.6.4<space|2spc>Polymorphism
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-530>>
 
-    <with|par-left|1.5fn|6.1<space|2spc>Lazy evaluation
+    <with|par-left|3fn|5.6.5<space|2spc>Inheritance
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-531>>
+
+    <with|par-left|3fn|5.6.6<space|2spc>Multi-methods
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-532>>
 
-    <with|par-left|1.5fn|6.2<space|2spc>Type inference
+    <with|par-left|3fn|5.6.7<space|2spc>Object prototypes
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-533>>
 
-    <with|par-left|1.5fn|6.3<space|2spc>Built-in operations
+    <with|par-left|1.5fn|5.7<space|2spc>Functional-Programming
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-534>>
 
-    <with|par-left|1.5fn|6.4<space|2spc>Controlled compilation
+    <with|par-left|3fn|5.7.1<space|2spc>Map
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-535>>
 
-    <with|par-left|1.5fn|6.5<space|2spc>Tree representation
+    <with|par-left|3fn|5.7.2<space|2spc>Reduce
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-536>>
+
+    <with|par-left|3fn|5.7.3<space|2spc>Filter
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-537>>
+
+    <with|par-left|3fn|5.7.4<space|2spc>Functions as first-class objects
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-538>>
 
-    <with|par-left|1.5fn|6.6<space|2spc>Evaluation of trees
+    <with|par-left|3fn|5.7.5<space|2spc>Anonymous functions (Lambda)
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-539>>
 
-    <with|par-left|1.5fn|6.7<space|2spc>Tree position
+    <with|par-left|3fn|5.7.6<space|2spc>Y-Combinator
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-540>>
 
-    <with|par-left|1.5fn|6.8<space|2spc>Actions on trees
+    <with|par-left|3fn|5.7.7<space|2spc>Infinite data structures
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-541>>
 
-    <with|par-left|1.5fn|6.9<space|2spc>Symbols
-    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-542>>
+    <vspace*|1fn><with|font-series|bold|math-font-series|bold|6<space|2spc>Implementation
+    notes> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-543><vspace|0.5fn>
 
-    <with|par-left|1.5fn|6.10<space|2spc>Evaluating trees
-    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-543>>
-
-    <with|par-left|1.5fn|6.11<space|2spc>Code generation for trees
+    <with|par-left|1.5fn|6.1<space|2spc>Lazy evaluation
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-544>>
 
-    <with|par-left|3fn|6.11.1<space|2spc>Right side of a rewrite
+    <with|par-left|1.5fn|6.2<space|2spc>Type inference
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-545>>
+
+    <with|par-left|1.5fn|6.3<space|2spc>Built-in operations
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-546>>
 
-    <with|par-left|3fn|6.11.2<space|2spc>Closures
+    <with|par-left|1.5fn|6.4<space|2spc>Controlled compilation
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-547>>
 
-    <with|par-left|1.5fn|6.12<space|2spc>Tail recursion
-    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-    <no-break><pageref|auto-549>>
-
-    <with|par-left|1.5fn|6.13<space|2spc>Partial recompilation
+    <with|par-left|1.5fn|6.5<space|2spc>Tree representation
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-550>>
 
-    <with|par-left|1.5fn|6.14<space|2spc>Machine Interface
+    <with|par-left|1.5fn|6.6<space|2spc>Evaluation of trees
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-551>>
 
-    <with|par-left|1.5fn|6.15<space|2spc>Machine Types and Normal Types
+    <with|par-left|1.5fn|6.7<space|2spc>Tree position
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
     <no-break><pageref|auto-552>>
+
+    <with|par-left|1.5fn|6.8<space|2spc>Actions on trees
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-553>>
+
+    <with|par-left|1.5fn|6.9<space|2spc>Symbols
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-554>>
+
+    <with|par-left|1.5fn|6.10<space|2spc>Evaluating trees
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-555>>
+
+    <with|par-left|1.5fn|6.11<space|2spc>Code generation for trees
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-556>>
+
+    <with|par-left|3fn|6.11.1<space|2spc>Right side of a rewrite
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-558>>
+
+    <with|par-left|3fn|6.11.2<space|2spc>Closures
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-559>>
+
+    <with|par-left|1.5fn|6.12<space|2spc>Tail recursion
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-561>>
+
+    <with|par-left|1.5fn|6.13<space|2spc>Partial recompilation
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-562>>
+
+    <with|par-left|1.5fn|6.14<space|2spc>Machine Interface
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-563>>
+
+    <with|par-left|1.5fn|6.15<space|2spc>Machine Types and Normal Types
+    <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+    <no-break><pageref|auto-564>>
 
     <vspace*|1fn><with|font-series|bold|math-font-series|bold|Index>
     <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
@@ -3930,11 +3981,11 @@
     <index-1|assignment|<pageref|auto-175>, <pageref|auto-213>,
     <pageref|auto-289>>
 
-    <index-2|in expression|<pageref|auto-231>>
+    <index-2|in expression|<pageref|auto-235>>
 
-    <index-2|to parameter|<pageref|auto-228>>
+    <index-2|to parameter|<pageref|auto-232>>
 
-    <index-2|to type declaration|<pageref|auto-211>, <pageref|auto-219>>
+    <index-2|to type declaration|<pageref|auto-211>, <pageref|auto-220>>
 
     <index-1|associativity|<pageref|auto-117>, <pageref|auto-125>>
 
@@ -3953,15 +4004,13 @@
 
     <index-2|in assignment|<pageref|auto-216>>
 
-    <index-2|local scope|<pageref|auto-221>>
+    <index-2|local scope|<pageref|auto-222>>
 
-    <index-2|of module names|<pageref|auto-503>>
-
-    <index-2|override|<pageref|auto-233>>
+    <index-2|of module names|<pageref|auto-515>>
 
     <index-2|parameters|<pageref|auto-302>>
 
-    <index-2|with return type declaration|<pageref|auto-225>>
+    <index-2|with return type declaration|<pageref|auto-226>>
 
     <index-1*|bindings>
 
@@ -4096,7 +4145,7 @@
 
     <index-2|in assignment|<pageref|auto-215>>
 
-    <index-2|lazy|<pageref|auto-234>, <pageref|auto-311>>
+    <index-2|lazy|<pageref|auto-311>>
 
     <index-2|mismatch|<pageref|auto-301>>
 
@@ -4122,9 +4171,9 @@
 
     <index-1*|expression>
 
-    <index-2|allowed on left of assignment|<pageref|auto-236>>
+    <index-2|allowed on left of assignment|<pageref|auto-230>>
 
-    <index-2|assignment as expression|<pageref|auto-232>>
+    <index-2|assignment as expression|<pageref|auto-236>>
 
     <index-1|expression (as opposed to statement)|<pageref|auto-137>>
 
@@ -4152,6 +4201,8 @@
 
     <index-1|getter|<pageref|auto-383>>
 
+    <index-1|good (function)|<pageref|auto-478>>
+
     <index-1|guard|<pageref|auto-238>>
 
     <index-1|guard (in a rewrite declaration)|<pageref|auto-174>>
@@ -4160,17 +4211,17 @@
 
     <index-1*|if-then-else>
 
-    <index-2|statement|<pageref|auto-28>>
+    <index-2|library definition|<pageref|auto-476>>
 
-    <index-1|if-then-else statement|<pageref|auto-184>>
+    <index-2|statement|<pageref|auto-28>, <pageref|auto-184>>
 
-    <index-1|if-then-else type|<pageref|auto-347>>
+    <index-2|type|<pageref|auto-347>>
 
     <index-1|implementation|<pageref|auto-171>>
 
-    <index-1|import|<pageref|auto-494>>
+    <index-1|import|<pageref|auto-506>>
 
-    <index-2|with a short name|<pageref|auto-499>>
+    <index-2|with a short name|<pageref|auto-511>>
 
     <index-1|indentation|<pageref|auto-55>, <pageref|auto-151>,
     <pageref|auto-156>>
@@ -4203,7 +4254,7 @@
 
     <index-1|integer type|<pageref|auto-7>>
 
-    <index-1|interval arithmetic|<pageref|auto-482>>
+    <index-1|interval arithmetic|<pageref|auto-494>>
 
     <index-1|is_a|<pageref|auto-402>>
 
@@ -4227,7 +4278,7 @@
 
     <index-1|literal node types|<pageref|auto-61>>
 
-    <index-1|local scope|<pageref|auto-222>>
+    <index-1|local scope|<pageref|auto-223>>
 
     <index-1|long text|<pageref|auto-83>>
 
@@ -4247,15 +4298,15 @@
 
     <index-1|meta-programming|<pageref|auto-21>>
 
-    <index-1|module|<pageref|auto-493>>
+    <index-1|module|<pageref|auto-505>>
 
-    <index-2|description|<pageref|auto-506>>
+    <index-2|description|<pageref|auto-518>>
 
-    <index-2|import|<pageref|auto-495>>
+    <index-2|import|<pageref|auto-507>>
 
-    <index-1|module description|<pageref|auto-505>>
+    <index-1|module description|<pageref|auto-517>>
 
-    <index-1|module path|<pageref|auto-497>>
+    <index-1|module path|<pageref|auto-509>>
 
     <index-1|music|<pageref|auto-43>>
 
@@ -4370,7 +4421,7 @@
 
     <index-1|return type declaration|<pageref|auto-207>>
 
-    <index-2|in assignment|<pageref|auto-224>>
+    <index-2|in assignment|<pageref|auto-225>>
 
     <index-1|rewrite declaration|<pageref|auto-183>>
 
@@ -4386,12 +4437,11 @@
 
     <index-2|enclosing|<pageref|auto-281>>
 
-    <index-2|for modules|<pageref|auto-501>>
+    <index-2|for modules|<pageref|auto-513>>
 
     <index-2|global|<pageref|auto-282>>
 
-    <index-2|local|<pageref|auto-223>, <pageref|auto-229>,
-    <pageref|auto-279>>
+    <index-2|local|<pageref|auto-224>, <pageref|auto-279>>
 
     <index-1|self|<pageref|auto-203>>
 
@@ -4411,9 +4461,9 @@
 
     <index-1*|shadowing>
 
-    <index-2|in modules|<pageref|auto-502>>
+    <index-2|in modules|<pageref|auto-514>>
 
-    <index-1|short module name|<pageref|auto-498>>
+    <index-1|short module name|<pageref|auto-510>>
 
     <index-1|signal-noise ratio|<pageref|auto-40>>
 
@@ -4441,7 +4491,7 @@
 
     <index-1*|syntax>
 
-    <index-2|in modules|<pageref|auto-500>>
+    <index-2|in modules|<pageref|auto-512>>
 
     <index-1|syntax configuration|<pageref|auto-49>, <pageref|auto-132>,
     <pageref|auto-141>>
@@ -4503,7 +4553,7 @@
 
     <index-1|type declaration|<pageref|auto-206>, <pageref|auto-325>>
 
-    <index-2|in assignment|<pageref|auto-210>, <pageref|auto-220>>
+    <index-2|in assignment|<pageref|auto-210>, <pageref|auto-221>>
 
     <index-2|vs. type definition|<pageref|auto-353>>
 
@@ -4585,13 +4635,15 @@
 
     <glossary-1|Simple type declarations|<pageref|auto-208>>
 
-    <glossary-1|Assignment to global variable|<pageref|auto-217>>
+    <glossary-1|Creating a new binding<label|creating-a-new-binding>|<pageref|auto-217>>
 
-    <glossary-1|Assigning to new local variable|<pageref|auto-226>>
+    <glossary-1|Assignment to existing binding<label|nonlocal-assignment>|<pageref|auto-218>>
 
-    <glossary-1|Assigning to parameter|<pageref|auto-230>>
+    <glossary-1|Assigning to new local variable|<pageref|auto-227>>
 
-    <glossary-1|Assignments do not override patterns|<pageref|auto-235>>
+    <glossary-1|Assignment to references|<pageref|auto-229>>
+
+    <glossary-1|Assigning to parameter|<pageref|auto-233>>
 
     <glossary-1|Guard limit the validity of operations|<pageref|auto-240>>
 
@@ -4657,35 +4709,51 @@
 
     <glossary-1|Declaration of a rewrite type|<pageref|auto-418>>
 
-    <glossary-1|Declaration of if-then-else|<pageref|auto-476>>
+    <glossary-1|Library definition of if-then-else|<pageref|auto-477>>
+
+    <glossary-1|The <with|font-family|tt|language|verbatim|good>
+    function|<pageref|auto-479>>
+
+    <glossary-1|Infinite loop|<pageref|auto-481>>
+
+    <glossary-1|While loop|<pageref|auto-483>>
+
+    <glossary-1|Until loop|<pageref|auto-484>>
+
+    <glossary-1|For loop on an integer range|<pageref|auto-486>>
+
+    <glossary-1|For loop on a container|<pageref|auto-487>>
+
+    <glossary-1|Other kinds of <with|font-family|tt|language|verbatim|for>
+    loop|<pageref|auto-488>>
 
     <\glossary-1>
       Range and range type definition
-    </glossary-1|<pageref|auto-481>>
+    </glossary-1|<pageref|auto-493>>
 
-    <glossary-1|Ranges as lists|<pageref|auto-483>>
+    <glossary-1|Ranges as lists|<pageref|auto-495>>
 
-    <glossary-1|Union type definition|<pageref|auto-485>>
+    <glossary-1|Union type definition|<pageref|auto-497>>
 
-    <glossary-1|Using union types|<pageref|auto-486>>
+    <glossary-1|Using union types|<pageref|auto-498>>
 
-    <glossary-1|Enumeration type definition|<pageref|auto-488>>
+    <glossary-1|Enumeration type definition|<pageref|auto-500>>
 
-    <glossary-1|Type matching a type declaration|<pageref|auto-490>>
+    <glossary-1|Type matching a type declaration|<pageref|auto-502>>
 
-    <glossary-1|Import statements examples|<pageref|auto-496>>
+    <glossary-1|Import statements examples|<pageref|auto-508>>
 
-    <glossary-1|Module definition|<pageref|auto-507>>
+    <glossary-1|Module definition|<pageref|auto-519>>
 
-    <glossary-1|Lazy evaluation of an infinite list|<pageref|auto-530>>
+    <glossary-1|Lazy evaluation of an infinite list|<pageref|auto-542>>
 
-    <glossary-1|Controlled compilation|<pageref|auto-536>>
-
-    <glossary-1|Signature for rewrite code with two
-    variables.|<pageref|auto-545>>
+    <glossary-1|Controlled compilation|<pageref|auto-548>>
 
     <glossary-1|Signature for rewrite code with two
-    variables.|<pageref|auto-548>>
+    variables.|<pageref|auto-557>>
+
+    <glossary-1|Signature for rewrite code with two
+    variables.|<pageref|auto-560>>
   </list-of-figures>
 
   <new-page*>
@@ -4713,7 +4781,7 @@
 
     <glossary-1|List operations|<pageref|auto-468>>
 
-    <glossary-1|LLVM operations|<pageref|auto-537>>
+    <glossary-1|LLVM operations|<pageref|auto-549>>
   </list-of-tables>
 </body>
 
@@ -4726,23 +4794,25 @@
 <\references>
   <\collection>
     <associate|Binding|<tuple|3.5|?>>
-    <associate|C-interface|<tuple|27|15>>
+    <associate|C-interface|<tuple|28|16>>
     <associate|C-library|<tuple|4.4|27>>
-    <associate|C-syntax-file|<tuple|13|10>>
+    <associate|C-syntax-file|<tuple|13|11>>
     <associate|C-types-conversion|<tuple|1|16>>
-    <associate|arbitrary-type|<tuple|44|23>>
+    <associate|arbitrary-type|<tuple|45|23>>
     <associate|arithmetic|<tuple|2|25>>
     <associate|array-assign|<tuple|22|?>>
-    <associate|assign-to-new-local|<tuple|21|13>>
-    <associate|assign-to-parameter|<tuple|22|?>>
+    <associate|assign-to-new-local|<tuple|22|13>>
+    <associate|assign-to-parameter|<tuple|24|14>>
+    <associate|assign-to-reference|<tuple|6.15|?>>
+    <associate|assign-to-reference-example|<tuple|23|?>>
     <associate|assignment|<tuple|3.1.4|13>>
-    <associate|assignments-cant-override-patterns|<tuple|23|14>>
+    <associate|assignments-cant-override-patterns|<tuple|24|14>>
     <associate|auto-1|<tuple|1|1>>
     <associate|auto-10|<tuple|1.2|1>>
-    <associate|auto-100|<tuple|4|7>>
-    <associate|auto-101|<tuple|4|7>>
-    <associate|auto-102|<tuple|2.4.1|7>>
-    <associate|auto-103|<tuple|2.4.1|7>>
+    <associate|auto-100|<tuple|4|6>>
+    <associate|auto-101|<tuple|4|6>>
+    <associate|auto-102|<tuple|2.4.1|6>>
+    <associate|auto-103|<tuple|2.4.1|6>>
     <associate|auto-104|<tuple|2.4.2|7>>
     <associate|auto-105|<tuple|2.4.2|7>>
     <associate|auto-106|<tuple|2.4.2|7>>
@@ -4762,11 +4832,11 @@
     <associate|auto-119|<tuple|4|7>>
     <associate|auto-12|<tuple|1.2|1>>
     <associate|auto-120|<tuple|2.5.1|7>>
-    <associate|auto-121|<tuple|2.5.1|8>>
-    <associate|auto-122|<tuple|2.5.1|8>>
-    <associate|auto-123|<tuple|2.5.1|8>>
-    <associate|auto-124|<tuple|2.5.2|8>>
-    <associate|auto-125|<tuple|2.5.2|8>>
+    <associate|auto-121|<tuple|2.5.1|7>>
+    <associate|auto-122|<tuple|2.5.1|7>>
+    <associate|auto-123|<tuple|2.5.1|7>>
+    <associate|auto-124|<tuple|2.5.2|7>>
+    <associate|auto-125|<tuple|2.5.2|7>>
     <associate|auto-126|<tuple|2.5.3|8>>
     <associate|auto-127|<tuple|2.5.3|8>>
     <associate|auto-128|<tuple|2.5.3|8>>
@@ -4784,12 +4854,12 @@
     <associate|auto-139|<tuple|2.5.4|8>>
     <associate|auto-14|<tuple|1.2|1>>
     <associate|auto-140|<tuple|2.6|8>>
-    <associate|auto-141|<tuple|2.6|9>>
-    <associate|auto-142|<tuple|2.6|10>>
-    <associate|auto-143|<tuple|2.6|10>>
-    <associate|auto-144|<tuple|2.6|10>>
-    <associate|auto-145|<tuple|2.6|10>>
-    <associate|auto-146|<tuple|11|10>>
+    <associate|auto-141|<tuple|2.6|8>>
+    <associate|auto-142|<tuple|2.6|8>>
+    <associate|auto-143|<tuple|2.6|8>>
+    <associate|auto-144|<tuple|2.6|8>>
+    <associate|auto-145|<tuple|2.6|8>>
+    <associate|auto-146|<tuple|11|9>>
     <associate|auto-147|<tuple|11|10>>
     <associate|auto-148|<tuple|12|10>>
     <associate|auto-149|<tuple|12|10>>
@@ -4798,14 +4868,14 @@
     <associate|auto-151|<tuple|2.6.0.1|10>>
     <associate|auto-152|<tuple|<with|mode|<quote|math>|<rigid|\<circ\>>>|10>>
     <associate|auto-153|<tuple|<with|mode|<quote|math>|<rigid|\<circ\>>>|10>>
-    <associate|auto-154|<tuple|<with|mode|<quote|math>|<rigid|\<circ\>>>|11>>
-    <associate|auto-155|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
-    <associate|auto-156|<tuple|<with|mode|<quote|math>|<rigid|\<circ\>>>|11>>
-    <associate|auto-157|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
-    <associate|auto-158|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
-    <associate|auto-159|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|auto-154|<tuple|<with|mode|<quote|math>|<rigid|\<circ\>>>|10>>
+    <associate|auto-155|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|auto-156|<tuple|<with|mode|<quote|math>|<rigid|\<circ\>>>|10>>
+    <associate|auto-157|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|auto-158|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|auto-159|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
     <associate|auto-16|<tuple|1.2|1>>
-    <associate|auto-160|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|auto-160|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
     <associate|auto-161|<tuple|13|11>>
     <associate|auto-162|<tuple|3|11>>
     <associate|auto-163|<tuple|3|11>>
@@ -4825,13 +4895,13 @@
     <associate|auto-176|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
     <associate|auto-177|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
     <associate|auto-178|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
-    <associate|auto-179|<tuple|<with|mode|<quote|math>|\<bullet\>>|12>>
+    <associate|auto-179|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
     <associate|auto-18|<tuple|1.2|2>>
-    <associate|auto-180|<tuple|<with|mode|<quote|math>|\<bullet\>>|12>>
-    <associate|auto-181|<tuple|3.1.1|12>>
-    <associate|auto-182|<tuple|3.1.1|12>>
-    <associate|auto-183|<tuple|3.1.1|12>>
-    <associate|auto-184|<tuple|3.1.1|12>>
+    <associate|auto-180|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|auto-181|<tuple|3.1.1|11>>
+    <associate|auto-182|<tuple|3.1.1|11>>
+    <associate|auto-183|<tuple|3.1.1|11>>
+    <associate|auto-184|<tuple|3.1.1|11>>
     <associate|auto-185|<tuple|14|12>>
     <associate|auto-186|<tuple|14|12>>
     <associate|auto-187|<tuple|14|12>>
@@ -4843,15 +4913,15 @@
     <associate|auto-192|<tuple|15|12>>
     <associate|auto-193|<tuple|15|12>>
     <associate|auto-194|<tuple|5|12>>
-    <associate|auto-195|<tuple|5|13>>
-    <associate|auto-196|<tuple|16|13>>
-    <associate|auto-197|<tuple|3.1.2|13>>
-    <associate|auto-198|<tuple|3.1.2|13>>
-    <associate|auto-199|<tuple|3.1.2|13>>
+    <associate|auto-195|<tuple|5|12>>
+    <associate|auto-196|<tuple|16|12>>
+    <associate|auto-197|<tuple|3.1.2|12>>
+    <associate|auto-198|<tuple|3.1.2|12>>
+    <associate|auto-199|<tuple|3.1.2|12>>
     <associate|auto-2|<tuple|1.1|1>>
     <associate|auto-20|<tuple|1.3|2>>
-    <associate|auto-200|<tuple|17|13>>
-    <associate|auto-201|<tuple|17|13>>
+    <associate|auto-200|<tuple|17|12>>
+    <associate|auto-201|<tuple|17|12>>
     <associate|auto-202|<tuple|18|13>>
     <associate|auto-203|<tuple|18|13>>
     <associate|auto-204|<tuple|3.1.3|13>>
@@ -4869,401 +4939,404 @@
     <associate|auto-215|<tuple|3.1.4|13>>
     <associate|auto-216|<tuple|3.1.4|13>>
     <associate|auto-217|<tuple|20|13>>
-    <associate|auto-218|<tuple|3.1.4.1|13>>
+    <associate|auto-218|<tuple|21|13>>
     <associate|auto-219|<tuple|3.1.4.1|13>>
     <associate|auto-22|<tuple|1|2>>
     <associate|auto-220|<tuple|3.1.4.1|13>>
     <associate|auto-221|<tuple|3.1.4.1|13>>
-    <associate|auto-222|<tuple|3.1.4.1|14>>
-    <associate|auto-223|<tuple|3.1.4.1|14>>
-    <associate|auto-224|<tuple|3.1.4.1|14>>
-    <associate|auto-225|<tuple|3.1.4.1|14>>
-    <associate|auto-226|<tuple|21|14>>
-    <associate|auto-227|<tuple|3.1.4.2|14>>
-    <associate|auto-228|<tuple|3.1.4.2|14>>
-    <associate|auto-229|<tuple|3.1.4.2|14>>
+    <associate|auto-222|<tuple|3.1.4.1|13>>
+    <associate|auto-223|<tuple|3.1.4.1|13>>
+    <associate|auto-224|<tuple|3.1.4.1|13>>
+    <associate|auto-225|<tuple|3.1.4.1|13>>
+    <associate|auto-226|<tuple|3.1.4.1|13>>
+    <associate|auto-227|<tuple|22|13>>
+    <associate|auto-228|<tuple|3.1.4.2|13>>
+    <associate|auto-229|<tuple|23|13>>
     <associate|auto-23|<tuple|1|2>>
-    <associate|auto-230|<tuple|22|14>>
-    <associate|auto-231|<tuple|22|14>>
-    <associate|auto-232|<tuple|22|14>>
-    <associate|auto-233|<tuple|22|14>>
-    <associate|auto-234|<tuple|22|14>>
-    <associate|auto-235|<tuple|23|15>>
-    <associate|auto-236|<tuple|23|15>>
-    <associate|auto-237|<tuple|3.1.5|15>>
-    <associate|auto-238|<tuple|3.1.5|15>>
-    <associate|auto-239|<tuple|3.1.5|15>>
+    <associate|auto-230|<tuple|23|14>>
+    <associate|auto-231|<tuple|3.1.4.3|14>>
+    <associate|auto-232|<tuple|3.1.4.3|14>>
+    <associate|auto-233|<tuple|24|14>>
+    <associate|auto-234|<tuple|3.1.4.4|14>>
+    <associate|auto-235|<tuple|3.1.4.4|14>>
+    <associate|auto-236|<tuple|3.1.4.4|14>>
+    <associate|auto-237|<tuple|3.1.5|14>>
+    <associate|auto-238|<tuple|3.1.5|14>>
+    <associate|auto-239|<tuple|3.1.5|14>>
     <associate|auto-24|<tuple|1|2>>
-    <associate|auto-240|<tuple|24|15>>
-    <associate|auto-241|<tuple|3.1.6|15>>
-    <associate|auto-242|<tuple|3.1.6|15>>
-    <associate|auto-243|<tuple|3.1.6|15>>
-    <associate|auto-244|<tuple|3.1.6|15>>
-    <associate|auto-245|<tuple|25|15>>
-    <associate|auto-246|<tuple|25|15>>
-    <associate|auto-247|<tuple|25|15>>
+    <associate|auto-240|<tuple|25|14>>
+    <associate|auto-241|<tuple|3.1.6|14>>
+    <associate|auto-242|<tuple|3.1.6|14>>
+    <associate|auto-243|<tuple|3.1.6|14>>
+    <associate|auto-244|<tuple|3.1.6|14>>
+    <associate|auto-245|<tuple|26|15>>
+    <associate|auto-246|<tuple|26|15>>
+    <associate|auto-247|<tuple|26|15>>
     <associate|auto-248|<tuple|3.1.7|15>>
     <associate|auto-249|<tuple|3.1.7|15>>
     <associate|auto-25|<tuple|1|2>>
     <associate|auto-250|<tuple|3.1.7|15>>
     <associate|auto-251|<tuple|3.1.7|15>>
-    <associate|auto-252|<tuple|3.1.7|16>>
-    <associate|auto-253|<tuple|3.1.7|16>>
-    <associate|auto-254|<tuple|3.1.7|16>>
-    <associate|auto-255|<tuple|3.1.7|16>>
-    <associate|auto-256|<tuple|26|16>>
-    <associate|auto-257|<tuple|3.1.7.1|16>>
-    <associate|auto-258|<tuple|<with|mode|<quote|math>|\<bullet\>>|16>>
-    <associate|auto-259|<tuple|3.1.8|16>>
+    <associate|auto-252|<tuple|3.1.7|15>>
+    <associate|auto-253|<tuple|3.1.7|15>>
+    <associate|auto-254|<tuple|3.1.7|15>>
+    <associate|auto-255|<tuple|3.1.7|15>>
+    <associate|auto-256|<tuple|27|15>>
+    <associate|auto-257|<tuple|3.1.7.1|15>>
+    <associate|auto-258|<tuple|<with|mode|<quote|math>|\<bullet\>>|15>>
+    <associate|auto-259|<tuple|3.1.8|15>>
     <associate|auto-26|<tuple|1|2>>
-    <associate|auto-260|<tuple|3.1.8|16>>
-    <associate|auto-261|<tuple|3.1.8|16>>
-    <associate|auto-262|<tuple|27|16>>
-    <associate|auto-263|<tuple|27|16>>
-    <associate|auto-264|<tuple|27|16>>
-    <associate|auto-265|<tuple|27|16>>
+    <associate|auto-260|<tuple|3.1.8|15>>
+    <associate|auto-261|<tuple|3.1.8|15>>
+    <associate|auto-262|<tuple|28|16>>
+    <associate|auto-263|<tuple|28|16>>
+    <associate|auto-264|<tuple|28|16>>
+    <associate|auto-265|<tuple|28|16>>
     <associate|auto-266|<tuple|1|16>>
     <associate|auto-267|<tuple|3.1.9|16>>
     <associate|auto-268|<tuple|3.1.9|16>>
     <associate|auto-269|<tuple|3.1.9|16>>
     <associate|auto-27|<tuple|2|2>>
-    <associate|auto-270|<tuple|28|16>>
+    <associate|auto-270|<tuple|29|16>>
     <associate|auto-271|<tuple|3.2|16>>
     <associate|auto-272|<tuple|3.2|16>>
     <associate|auto-273|<tuple|3.2|16>>
     <associate|auto-274|<tuple|3.2.1|16>>
-    <associate|auto-275|<tuple|3.2.1|17>>
-    <associate|auto-276|<tuple|3.2.1|17>>
-    <associate|auto-277|<tuple|3.2.2|17>>
-    <associate|auto-278|<tuple|3.2.2|17>>
-    <associate|auto-279|<tuple|3.2.2|17>>
+    <associate|auto-275|<tuple|3.2.1|16>>
+    <associate|auto-276|<tuple|3.2.1|16>>
+    <associate|auto-277|<tuple|3.2.2|16>>
+    <associate|auto-278|<tuple|3.2.2|16>>
+    <associate|auto-279|<tuple|3.2.2|16>>
     <associate|auto-28|<tuple|2|2>>
-    <associate|auto-280|<tuple|3.2.2|17>>
-    <associate|auto-281|<tuple|3.2.2|17>>
-    <associate|auto-282|<tuple|3.2.2|17>>
-    <associate|auto-283|<tuple|3.2.2|17>>
-    <associate|auto-284|<tuple|3.2.2|17>>
-    <associate|auto-285|<tuple|3.2.3|18>>
-    <associate|auto-286|<tuple|3.2.3|18>>
-    <associate|auto-287|<tuple|3.2.3|18>>
-    <associate|auto-288|<tuple|1|18>>
-    <associate|auto-289|<tuple|3|18>>
+    <associate|auto-280|<tuple|3.2.2|16>>
+    <associate|auto-281|<tuple|3.2.2|16>>
+    <associate|auto-282|<tuple|3.2.2|16>>
+    <associate|auto-283|<tuple|3.2.2|16>>
+    <associate|auto-284|<tuple|3.2.2|16>>
+    <associate|auto-285|<tuple|3.2.3|17>>
+    <associate|auto-286|<tuple|3.2.3|17>>
+    <associate|auto-287|<tuple|3.2.3|17>>
+    <associate|auto-288|<tuple|1|17>>
+    <associate|auto-289|<tuple|3|17>>
     <associate|auto-29|<tuple|3|2>>
-    <associate|auto-290|<tuple|3.2.4|18>>
-    <associate|auto-291|<tuple|3.2.4|18>>
-    <associate|auto-292|<tuple|3.2.4|18>>
-    <associate|auto-293|<tuple|3.3|18>>
-    <associate|auto-294|<tuple|3.3|18>>
-    <associate|auto-295|<tuple|3.3.1|19>>
-    <associate|auto-296|<tuple|3.3.1|19>>
-    <associate|auto-297|<tuple|2|19>>
-    <associate|auto-298|<tuple|3|19>>
-    <associate|auto-299|<tuple|<with|mode|<quote|math>|\<bullet\>>|19>>
+    <associate|auto-290|<tuple|3.2.4|17>>
+    <associate|auto-291|<tuple|3.2.4|17>>
+    <associate|auto-292|<tuple|3.2.4|17>>
+    <associate|auto-293|<tuple|3.3|17>>
+    <associate|auto-294|<tuple|3.3|17>>
+    <associate|auto-295|<tuple|3.3.1|17>>
+    <associate|auto-296|<tuple|3.3.1|17>>
+    <associate|auto-297|<tuple|2|17>>
+    <associate|auto-298|<tuple|3|17>>
+    <associate|auto-299|<tuple|<with|mode|<quote|math>|\<bullet\>>|18>>
     <associate|auto-3|<tuple|1.1|1>>
     <associate|auto-30|<tuple|1.4|2>>
-    <associate|auto-300|<tuple|<with|mode|<quote|math>|\<bullet\>>|19>>
-    <associate|auto-301|<tuple|4|19>>
-    <associate|auto-302|<tuple|5|19>>
-    <associate|auto-303|<tuple|<with|mode|<quote|math>|\<bullet\>>|19>>
-    <associate|auto-304|<tuple|<with|mode|<quote|math>|\<bullet\>>|19>>
-    <associate|auto-305|<tuple|6|19>>
-    <associate|auto-306|<tuple|3.3.2|20>>
-    <associate|auto-307|<tuple|3.3.2|20>>
-    <associate|auto-308|<tuple|3.3.2|20>>
-    <associate|auto-309|<tuple|3.3.3|20>>
+    <associate|auto-300|<tuple|<with|mode|<quote|math>|\<bullet\>>|18>>
+    <associate|auto-301|<tuple|4|18>>
+    <associate|auto-302|<tuple|5|18>>
+    <associate|auto-303|<tuple|<with|mode|<quote|math>|\<bullet\>>|18>>
+    <associate|auto-304|<tuple|<with|mode|<quote|math>|\<bullet\>>|18>>
+    <associate|auto-305|<tuple|6|18>>
+    <associate|auto-306|<tuple|3.3.2|18>>
+    <associate|auto-307|<tuple|3.3.2|18>>
+    <associate|auto-308|<tuple|3.3.2|18>>
+    <associate|auto-309|<tuple|3.3.3|19>>
     <associate|auto-31|<tuple|1.4|2>>
-    <associate|auto-310|<tuple|3.3.3|20>>
-    <associate|auto-311|<tuple|3.3.3|20>>
-    <associate|auto-312|<tuple|3.3.3|20>>
-    <associate|auto-313|<tuple|29|20>>
-    <associate|auto-314|<tuple|30|20>>
-    <associate|auto-315|<tuple|3.3.4|20>>
-    <associate|auto-316|<tuple|3.3.4|20>>
-    <associate|auto-317|<tuple|3.3.4|20>>
-    <associate|auto-318|<tuple|3.3.5|20>>
-    <associate|auto-319|<tuple|3.3.5|20>>
+    <associate|auto-310|<tuple|3.3.3|19>>
+    <associate|auto-311|<tuple|3.3.3|19>>
+    <associate|auto-312|<tuple|3.3.3|19>>
+    <associate|auto-313|<tuple|30|19>>
+    <associate|auto-314|<tuple|31|19>>
+    <associate|auto-315|<tuple|3.3.4|19>>
+    <associate|auto-316|<tuple|3.3.4|19>>
+    <associate|auto-317|<tuple|3.3.4|19>>
+    <associate|auto-318|<tuple|3.3.5|19>>
+    <associate|auto-319|<tuple|3.3.5|19>>
     <associate|auto-32|<tuple|1.4|2>>
-    <associate|auto-320|<tuple|31|20>>
-    <associate|auto-321|<tuple|31|20>>
+    <associate|auto-320|<tuple|32|20>>
+    <associate|auto-321|<tuple|32|20>>
     <associate|auto-322|<tuple|5|20>>
     <associate|auto-323|<tuple|3.4|20>>
     <associate|auto-324|<tuple|3.4|20>>
     <associate|auto-325|<tuple|3.4|20>>
     <associate|auto-326|<tuple|3.4|20>>
     <associate|auto-327|<tuple|3.4|20>>
-    <associate|auto-328|<tuple|3.4.1|21>>
-    <associate|auto-329|<tuple|3.4.1|21>>
-    <associate|auto-33|<tuple|1.4|3>>
-    <associate|auto-330|<tuple|3.4.1|21>>
-    <associate|auto-331|<tuple|<with|mode|<quote|math>|\<bullet\>>|21>>
-    <associate|auto-332|<tuple|<with|mode|<quote|math>|\<bullet\>>|21>>
-    <associate|auto-333|<tuple|<with|mode|<quote|math>|\<bullet\>>|21>>
-    <associate|auto-334|<tuple|<with|mode|<quote|math>|\<bullet\>>|21>>
-    <associate|auto-335|<tuple|<with|mode|<quote|math>|\<bullet\>>|21>>
-    <associate|auto-336|<tuple|<with|mode|<quote|math>|\<bullet\>>|21>>
-    <associate|auto-337|<tuple|<with|mode|<quote|math>|\<bullet\>>|21>>
-    <associate|auto-338|<tuple|<with|mode|<quote|math>|\<bullet\>>|21>>
-    <associate|auto-339|<tuple|<with|mode|<quote|math>|\<bullet\>>|21>>
+    <associate|auto-328|<tuple|3.4.1|20>>
+    <associate|auto-329|<tuple|3.4.1|20>>
+    <associate|auto-33|<tuple|1.4|2>>
+    <associate|auto-330|<tuple|3.4.1|20>>
+    <associate|auto-331|<tuple|<with|mode|<quote|math>|\<bullet\>>|20>>
+    <associate|auto-332|<tuple|<with|mode|<quote|math>|\<bullet\>>|20>>
+    <associate|auto-333|<tuple|<with|mode|<quote|math>|\<bullet\>>|20>>
+    <associate|auto-334|<tuple|<with|mode|<quote|math>|\<bullet\>>|20>>
+    <associate|auto-335|<tuple|<with|mode|<quote|math>|\<bullet\>>|20>>
+    <associate|auto-336|<tuple|<with|mode|<quote|math>|\<bullet\>>|20>>
+    <associate|auto-337|<tuple|<with|mode|<quote|math>|\<bullet\>>|20>>
+    <associate|auto-338|<tuple|<with|mode|<quote|math>|\<bullet\>>|20>>
+    <associate|auto-339|<tuple|<with|mode|<quote|math>|\<bullet\>>|20>>
     <associate|auto-34|<tuple|1|3>>
-    <associate|auto-340|<tuple|<with|mode|<quote|math>|\<bullet\>>|21>>
-    <associate|auto-341|<tuple|<with|mode|<quote|math>|\<bullet\>>|21>>
+    <associate|auto-340|<tuple|<with|mode|<quote|math>|\<bullet\>>|20>>
+    <associate|auto-341|<tuple|<with|mode|<quote|math>|\<bullet\>>|20>>
     <associate|auto-342|<tuple|<with|mode|<quote|math>|\<bullet\>>|21>>
     <associate|auto-343|<tuple|3.4.2|21>>
     <associate|auto-344|<tuple|3.4.2|21>>
     <associate|auto-345|<tuple|3.4.2|21>>
     <associate|auto-346|<tuple|3.4.2|21>>
     <associate|auto-347|<tuple|3.4.2|21>>
-    <associate|auto-348|<tuple|32|21>>
-    <associate|auto-349|<tuple|32|21>>
+    <associate|auto-348|<tuple|33|21>>
+    <associate|auto-349|<tuple|33|21>>
     <associate|auto-35|<tuple|2|3>>
-    <associate|auto-350|<tuple|32|21>>
-    <associate|auto-351|<tuple|32|21>>
-    <associate|auto-352|<tuple|33|22>>
-    <associate|auto-353|<tuple|33|22>>
-    <associate|auto-354|<tuple|33|22>>
-    <associate|auto-355|<tuple|34|22>>
-    <associate|auto-356|<tuple|34|22>>
-    <associate|auto-357|<tuple|34|22>>
-    <associate|auto-358|<tuple|34|22>>
-    <associate|auto-359|<tuple|35|22>>
+    <associate|auto-350|<tuple|33|21>>
+    <associate|auto-351|<tuple|33|21>>
+    <associate|auto-352|<tuple|34|21>>
+    <associate|auto-353|<tuple|34|21>>
+    <associate|auto-354|<tuple|34|21>>
+    <associate|auto-355|<tuple|35|21>>
+    <associate|auto-356|<tuple|35|21>>
+    <associate|auto-357|<tuple|35|21>>
+    <associate|auto-358|<tuple|35|21>>
+    <associate|auto-359|<tuple|36|21>>
     <associate|auto-36|<tuple|2|3>>
-    <associate|auto-360|<tuple|36|22>>
-    <associate|auto-361|<tuple|3.4.3|22>>
-    <associate|auto-362|<tuple|3.4.3|22>>
-    <associate|auto-363|<tuple|3.4.3|22>>
-    <associate|auto-364|<tuple|3.4.3|22>>
-    <associate|auto-365|<tuple|37|22>>
-    <associate|auto-366|<tuple|37|22>>
-    <associate|auto-367|<tuple|38|22>>
+    <associate|auto-360|<tuple|37|21>>
+    <associate|auto-361|<tuple|3.4.3|21>>
+    <associate|auto-362|<tuple|3.4.3|21>>
+    <associate|auto-363|<tuple|3.4.3|21>>
+    <associate|auto-364|<tuple|3.4.3|21>>
+    <associate|auto-365|<tuple|38|21>>
+    <associate|auto-366|<tuple|38|22>>
+    <associate|auto-367|<tuple|39|22>>
     <associate|auto-368|<tuple|3.4.4|22>>
     <associate|auto-369|<tuple|3.4.4|22>>
     <associate|auto-37|<tuple|1|3>>
     <associate|auto-370|<tuple|3.4.4|22>>
     <associate|auto-371|<tuple|2|22>>
-    <associate|auto-372|<tuple|3|23>>
-    <associate|auto-373|<tuple|39|23>>
-    <associate|auto-374|<tuple|39|23>>
-    <associate|auto-375|<tuple|39|23>>
-    <associate|auto-376|<tuple|39|23>>
-    <associate|auto-377|<tuple|39|23>>
-    <associate|auto-378|<tuple|39|23>>
-    <associate|auto-379|<tuple|39|23>>
+    <associate|auto-372|<tuple|3|22>>
+    <associate|auto-373|<tuple|40|22>>
+    <associate|auto-374|<tuple|40|22>>
+    <associate|auto-375|<tuple|40|22>>
+    <associate|auto-376|<tuple|40|22>>
+    <associate|auto-377|<tuple|40|22>>
+    <associate|auto-378|<tuple|40|22>>
+    <associate|auto-379|<tuple|40|22>>
     <associate|auto-38|<tuple|2|3>>
-    <associate|auto-380|<tuple|39|23>>
-    <associate|auto-381|<tuple|39|23>>
-    <associate|auto-382|<tuple|40|23>>
-    <associate|auto-383|<tuple|40|23>>
-    <associate|auto-384|<tuple|40|23>>
-    <associate|auto-385|<tuple|41|23>>
-    <associate|auto-386|<tuple|41|23>>
-    <associate|auto-387|<tuple|41|23>>
-    <associate|auto-388|<tuple|42|23>>
+    <associate|auto-380|<tuple|40|22>>
+    <associate|auto-381|<tuple|40|22>>
+    <associate|auto-382|<tuple|41|22>>
+    <associate|auto-383|<tuple|41|22>>
+    <associate|auto-384|<tuple|41|22>>
+    <associate|auto-385|<tuple|42|22>>
+    <associate|auto-386|<tuple|42|23>>
+    <associate|auto-387|<tuple|42|23>>
+    <associate|auto-388|<tuple|43|23>>
     <associate|auto-389|<tuple|3.4.5|23>>
     <associate|auto-39|<tuple|3|3>>
     <associate|auto-390|<tuple|3.4.5|23>>
     <associate|auto-391|<tuple|3.4.5|23>>
-    <associate|auto-392|<tuple|43|23>>
-    <associate|auto-393|<tuple|43|23>>
-    <associate|auto-394|<tuple|3.4.6|24>>
-    <associate|auto-395|<tuple|3.4.6|24>>
-    <associate|auto-396|<tuple|3.4.6|24>>
-    <associate|auto-397|<tuple|3.4.6|24>>
-    <associate|auto-398|<tuple|3.4.6|24>>
-    <associate|auto-399|<tuple|3.4.6|24>>
+    <associate|auto-392|<tuple|44|23>>
+    <associate|auto-393|<tuple|44|23>>
+    <associate|auto-394|<tuple|3.4.6|23>>
+    <associate|auto-395|<tuple|3.4.6|23>>
+    <associate|auto-396|<tuple|3.4.6|23>>
+    <associate|auto-397|<tuple|3.4.6|23>>
+    <associate|auto-398|<tuple|3.4.6|23>>
+    <associate|auto-399|<tuple|3.4.6|23>>
     <associate|auto-4|<tuple|1.1|1>>
     <associate|auto-40|<tuple|4|3>>
-    <associate|auto-400|<tuple|3.4.6|24>>
-    <associate|auto-401|<tuple|44|24>>
-    <associate|auto-402|<tuple|44|24>>
-    <associate|auto-403|<tuple|45|24>>
-    <associate|auto-404|<tuple|3.4.7|24>>
-    <associate|auto-405|<tuple|3.4.7|24>>
-    <associate|auto-406|<tuple|3.4.7|24>>
-    <associate|auto-407|<tuple|46|24>>
-    <associate|auto-408|<tuple|46|24>>
-    <associate|auto-409|<tuple|47|24>>
+    <associate|auto-400|<tuple|3.4.6|23>>
+    <associate|auto-401|<tuple|45|23>>
+    <associate|auto-402|<tuple|45|23>>
+    <associate|auto-403|<tuple|46|23>>
+    <associate|auto-404|<tuple|3.4.7|23>>
+    <associate|auto-405|<tuple|3.4.7|23>>
+    <associate|auto-406|<tuple|3.4.7|23>>
+    <associate|auto-407|<tuple|47|23>>
+    <associate|auto-408|<tuple|47|24>>
+    <associate|auto-409|<tuple|48|24>>
     <associate|auto-41|<tuple|4|3>>
     <associate|auto-410|<tuple|3.4.8|24>>
     <associate|auto-411|<tuple|3.4.8|24>>
     <associate|auto-412|<tuple|3.4.8|24>>
-    <associate|auto-413|<tuple|48|24>>
-    <associate|auto-414|<tuple|49|25>>
-    <associate|auto-415|<tuple|3.4.9|25>>
-    <associate|auto-416|<tuple|3.4.9|25>>
-    <associate|auto-417|<tuple|3.4.9|25>>
-    <associate|auto-418|<tuple|50|25>>
-    <associate|auto-419|<tuple|4|25>>
+    <associate|auto-413|<tuple|49|24>>
+    <associate|auto-414|<tuple|50|24>>
+    <associate|auto-415|<tuple|3.4.9|24>>
+    <associate|auto-416|<tuple|3.4.9|24>>
+    <associate|auto-417|<tuple|3.4.9|24>>
+    <associate|auto-418|<tuple|51|24>>
+    <associate|auto-419|<tuple|4|24>>
     <associate|auto-42|<tuple|4|3>>
-    <associate|auto-420|<tuple|4|25>>
-    <associate|auto-421|<tuple|4.1|25>>
-    <associate|auto-422|<tuple|4.1|25>>
-    <associate|auto-423|<tuple|4.1|25>>
-    <associate|auto-424|<tuple|4.1|25>>
-    <associate|auto-425|<tuple|4.1.1|26>>
-    <associate|auto-426|<tuple|4.1.1|26>>
-    <associate|auto-427|<tuple|4.1.1|26>>
-    <associate|auto-428|<tuple|2|26>>
-    <associate|auto-429|<tuple|4.1.2|26>>
+    <associate|auto-420|<tuple|4|24>>
+    <associate|auto-421|<tuple|4.1|24>>
+    <associate|auto-422|<tuple|4.1|24>>
+    <associate|auto-423|<tuple|4.1|24>>
+    <associate|auto-424|<tuple|4.1|24>>
+    <associate|auto-425|<tuple|4.1.1|24>>
+    <associate|auto-426|<tuple|4.1.1|24>>
+    <associate|auto-427|<tuple|4.1.1|24>>
+    <associate|auto-428|<tuple|2|25>>
+    <associate|auto-429|<tuple|4.1.2|25>>
     <associate|auto-43|<tuple|4|3>>
-    <associate|auto-430|<tuple|4.1.2|26>>
-    <associate|auto-431|<tuple|3|26>>
-    <associate|auto-432|<tuple|4.1.3|26>>
-    <associate|auto-433|<tuple|4.1.3|26>>
-    <associate|auto-434|<tuple|4.1.3|26>>
-    <associate|auto-435|<tuple|4|26>>
-    <associate|auto-436|<tuple|4.1.4|26>>
-    <associate|auto-437|<tuple|4.1.4|27>>
-    <associate|auto-438|<tuple|5|27>>
-    <associate|auto-439|<tuple|4.1.5|27>>
+    <associate|auto-430|<tuple|4.1.2|25>>
+    <associate|auto-431|<tuple|3|25>>
+    <associate|auto-432|<tuple|4.1.3|25>>
+    <associate|auto-433|<tuple|4.1.3|25>>
+    <associate|auto-434|<tuple|4.1.3|25>>
+    <associate|auto-435|<tuple|4|25>>
+    <associate|auto-436|<tuple|4.1.4|25>>
+    <associate|auto-437|<tuple|4.1.4|25>>
+    <associate|auto-438|<tuple|5|25>>
+    <associate|auto-439|<tuple|4.1.5|26>>
     <associate|auto-44|<tuple|3|3>>
-    <associate|auto-440|<tuple|4.1.5|27>>
-    <associate|auto-441|<tuple|6|27>>
-    <associate|auto-442|<tuple|4.1.6|27>>
-    <associate|auto-443|<tuple|4.1.6|27>>
-    <associate|auto-444|<tuple|7|27>>
-    <associate|auto-445|<tuple|4.1.7|27>>
-    <associate|auto-446|<tuple|4.1.7|27>>
-    <associate|auto-447|<tuple|4.1.7|27>>
-    <associate|auto-448|<tuple|8|27>>
-    <associate|auto-449|<tuple|8|27>>
+    <associate|auto-440|<tuple|4.1.5|26>>
+    <associate|auto-441|<tuple|6|26>>
+    <associate|auto-442|<tuple|4.1.6|26>>
+    <associate|auto-443|<tuple|4.1.6|26>>
+    <associate|auto-444|<tuple|7|26>>
+    <associate|auto-445|<tuple|4.1.7|26>>
+    <associate|auto-446|<tuple|4.1.7|26>>
+    <associate|auto-447|<tuple|4.1.7|26>>
+    <associate|auto-448|<tuple|8|26>>
+    <associate|auto-449|<tuple|8|26>>
     <associate|auto-45|<tuple|2|3>>
-    <associate|auto-450|<tuple|8|27>>
+    <associate|auto-450|<tuple|8|26>>
     <associate|auto-451|<tuple|4.1.8|27>>
     <associate|auto-452|<tuple|4.1.8|27>>
     <associate|auto-453|<tuple|9|27>>
     <associate|auto-454|<tuple|4.1.9|27>>
-    <associate|auto-455|<tuple|4.1.9|28>>
-    <associate|auto-456|<tuple|4.1.9|28>>
-    <associate|auto-457|<tuple|10|28>>
-    <associate|auto-458|<tuple|10|28>>
-    <associate|auto-459|<tuple|10|28>>
+    <associate|auto-455|<tuple|4.1.9|27>>
+    <associate|auto-456|<tuple|4.1.9|27>>
+    <associate|auto-457|<tuple|10|27>>
+    <associate|auto-458|<tuple|10|27>>
+    <associate|auto-459|<tuple|10|27>>
     <associate|auto-46|<tuple|2|3>>
-    <associate|auto-460|<tuple|10|28>>
-    <associate|auto-461|<tuple|10|28>>
-    <associate|auto-462|<tuple|10|28>>
-    <associate|auto-463|<tuple|10|28>>
-    <associate|auto-464|<tuple|4.1.10|28>>
-    <associate|auto-465|<tuple|4.1.10|28>>
-    <associate|auto-466|<tuple|4.1.10|28>>
-    <associate|auto-467|<tuple|4.1.10|29>>
-    <associate|auto-468|<tuple|11|29>>
-    <associate|auto-469|<tuple|11|29>>
-    <associate|auto-47|<tuple|2|4>>
-    <associate|auto-470|<tuple|11|29>>
-    <associate|auto-471|<tuple|11|29>>
-    <associate|auto-472|<tuple|11|29>>
-    <associate|auto-473|<tuple|11|29>>
-    <associate|auto-474|<tuple|4.2|29>>
-    <associate|auto-475|<tuple|4.2.1|29>>
-    <associate|auto-476|<tuple|4.2.1|29>>
-    <associate|auto-477|<tuple|51|29>>
-    <associate|auto-478|<tuple|51|29>>
-    <associate|auto-479|<tuple|52|30>>
-    <associate|auto-48|<tuple|2|4>>
-    <associate|auto-480|<tuple|4.2.2|30>>
-    <associate|auto-481|<tuple|53|30>>
-    <associate|auto-482|<tuple|4.2.3|30>>
-    <associate|auto-483|<tuple|54|30>>
-    <associate|auto-484|<tuple|55|30>>
-    <associate|auto-485|<tuple|4.2.4|30>>
-    <associate|auto-486|<tuple|56|30>>
-    <associate|auto-487|<tuple|57|30>>
-    <associate|auto-488|<tuple|58|30>>
+    <associate|auto-460|<tuple|10|27>>
+    <associate|auto-461|<tuple|10|27>>
+    <associate|auto-462|<tuple|10|27>>
+    <associate|auto-463|<tuple|10|27>>
+    <associate|auto-464|<tuple|4.1.10|27>>
+    <associate|auto-465|<tuple|4.1.10|27>>
+    <associate|auto-466|<tuple|4.1.10|27>>
+    <associate|auto-467|<tuple|4.1.10|27>>
+    <associate|auto-468|<tuple|11|27>>
+    <associate|auto-469|<tuple|11|28>>
+    <associate|auto-47|<tuple|2|3>>
+    <associate|auto-470|<tuple|11|28>>
+    <associate|auto-471|<tuple|11|28>>
+    <associate|auto-472|<tuple|11|28>>
+    <associate|auto-473|<tuple|11|28>>
+    <associate|auto-474|<tuple|4.2|28>>
+    <associate|auto-475|<tuple|4.2.1|28>>
+    <associate|auto-476|<tuple|4.2.1|28>>
+    <associate|auto-477|<tuple|52|28>>
+    <associate|auto-478|<tuple|52|28>>
+    <associate|auto-479|<tuple|53|28>>
+    <associate|auto-48|<tuple|2|3>>
+    <associate|auto-480|<tuple|4.2.2|28>>
+    <associate|auto-481|<tuple|54|28>>
+    <associate|auto-482|<tuple|4.2.3|29>>
+    <associate|auto-483|<tuple|55|29>>
+    <associate|auto-484|<tuple|56|29>>
+    <associate|auto-485|<tuple|4.2.4|29>>
+    <associate|auto-486|<tuple|57|29>>
+    <associate|auto-487|<tuple|58|29>>
+    <associate|auto-488|<tuple|59|29>>
     <associate|auto-489|<tuple|4.2.5|30>>
-    <associate|auto-49|<tuple|2|4>>
+    <associate|auto-49|<tuple|2|3>>
     <associate|auto-490|<tuple|4.2.6|30>>
     <associate|auto-491|<tuple|4.3|30>>
-    <associate|auto-492|<tuple|4.3.1|31>>
-    <associate|auto-493|<tuple|59|31>>
-    <associate|auto-494|<tuple|59|31>>
-    <associate|auto-495|<tuple|60|31>>
-    <associate|auto-496|<tuple|4.3.2|31>>
-    <associate|auto-497|<tuple|61|31>>
-    <associate|auto-498|<tuple|62|31>>
-    <associate|auto-499|<tuple|4.3.3|31>>
+    <associate|auto-492|<tuple|4.3.1|30>>
+    <associate|auto-493|<tuple|60|30>>
+    <associate|auto-494|<tuple|60|30>>
+    <associate|auto-495|<tuple|61|30>>
+    <associate|auto-496|<tuple|4.3.2|30>>
+    <associate|auto-497|<tuple|62|30>>
+    <associate|auto-498|<tuple|63|30>>
+    <associate|auto-499|<tuple|4.3.3|30>>
     <associate|auto-5|<tuple|1.1|1>>
-    <associate|auto-50|<tuple|2|4>>
-    <associate|auto-500|<tuple|63|31>>
+    <associate|auto-50|<tuple|2|3>>
+    <associate|auto-500|<tuple|64|31>>
     <associate|auto-501|<tuple|4.3.4|31>>
-    <associate|auto-502|<tuple|64|31>>
+    <associate|auto-502|<tuple|65|31>>
     <associate|auto-503|<tuple|4.4|31>>
     <associate|auto-504|<tuple|4.4.1|31>>
     <associate|auto-505|<tuple|4.4.1|31>>
     <associate|auto-506|<tuple|4.4.1|31>>
     <associate|auto-507|<tuple|4.4.1|31>>
-    <associate|auto-508|<tuple|65|31>>
+    <associate|auto-508|<tuple|66|31>>
     <associate|auto-509|<tuple|<with|mode|<quote|math>|\<bullet\>>|31>>
     <associate|auto-51|<tuple|2.1|4>>
     <associate|auto-510|<tuple|<with|mode|<quote|math>|\<bullet\>>|31>>
     <associate|auto-511|<tuple|<with|mode|<quote|math>|\<bullet\>>|31>>
     <associate|auto-512|<tuple|1|31>>
-    <associate|auto-513|<tuple|2|32>>
-    <associate|auto-514|<tuple|3|32>>
+    <associate|auto-513|<tuple|2|31>>
+    <associate|auto-514|<tuple|3|31>>
     <associate|auto-515|<tuple|4|32>>
     <associate|auto-516|<tuple|4.4.2|32>>
     <associate|auto-517|<tuple|4.4.2|32>>
     <associate|auto-518|<tuple|4.4.2|32>>
-    <associate|auto-519|<tuple|66|32>>
+    <associate|auto-519|<tuple|67|32>>
     <associate|auto-52|<tuple|2.1|4>>
     <associate|auto-520|<tuple|5|32>>
-    <associate|auto-521|<tuple|5.1|33>>
-    <associate|auto-522|<tuple|5.2|33>>
-    <associate|auto-523|<tuple|5.3|33>>
-    <associate|auto-524|<tuple|5.4|33>>
-    <associate|auto-525|<tuple|5.5|33>>
+    <associate|auto-521|<tuple|5.1|32>>
+    <associate|auto-522|<tuple|5.2|32>>
+    <associate|auto-523|<tuple|5.3|32>>
+    <associate|auto-524|<tuple|5.4|32>>
+    <associate|auto-525|<tuple|5.5|32>>
     <associate|auto-526|<tuple|5.6|33>>
     <associate|auto-527|<tuple|5.6.1|33>>
-    <associate|auto-528|<tuple|5.6.2|34>>
-    <associate|auto-529|<tuple|5.6.3|34>>
+    <associate|auto-528|<tuple|5.6.2|33>>
+    <associate|auto-529|<tuple|5.6.3|33>>
     <associate|auto-53|<tuple|2.1|4>>
-    <associate|auto-530|<tuple|5.6.4|34>>
-    <associate|auto-531|<tuple|5.6.5|34>>
-    <associate|auto-532|<tuple|5.6.6|34>>
-    <associate|auto-533|<tuple|5.6.7|34>>
-    <associate|auto-534|<tuple|5.7|?>>
-    <associate|auto-535|<tuple|5.7.1|?>>
-    <associate|auto-536|<tuple|5.7.2|?>>
-    <associate|auto-537|<tuple|5.7.3|?>>
-    <associate|auto-538|<tuple|5.7.4|?>>
-    <associate|auto-539|<tuple|5.7.5|?>>
+    <associate|auto-530|<tuple|5.6.4|33>>
+    <associate|auto-531|<tuple|5.6.5|33>>
+    <associate|auto-532|<tuple|5.6.6|33>>
+    <associate|auto-533|<tuple|5.6.7|33>>
+    <associate|auto-534|<tuple|5.7|33>>
+    <associate|auto-535|<tuple|5.7.1|33>>
+    <associate|auto-536|<tuple|5.7.2|33>>
+    <associate|auto-537|<tuple|5.7.3|33>>
+    <associate|auto-538|<tuple|5.7.4|33>>
+    <associate|auto-539|<tuple|5.7.5|33>>
     <associate|auto-54|<tuple|2.1|4>>
-    <associate|auto-540|<tuple|5.7.6|?>>
-    <associate|auto-541|<tuple|5.7.7|?>>
-    <associate|auto-542|<tuple|67|?>>
-    <associate|auto-543|<tuple|6|?>>
-    <associate|auto-544|<tuple|6.1|?>>
-    <associate|auto-545|<tuple|6.2|?>>
-    <associate|auto-546|<tuple|6.3|?>>
-    <associate|auto-547|<tuple|6.4|?>>
-    <associate|auto-548|<tuple|68|?>>
-    <associate|auto-549|<tuple|12|?>>
+    <associate|auto-540|<tuple|5.7.6|33>>
+    <associate|auto-541|<tuple|5.7.7|33>>
+    <associate|auto-542|<tuple|68|33>>
+    <associate|auto-543|<tuple|6|33>>
+    <associate|auto-544|<tuple|6.1|33>>
+    <associate|auto-545|<tuple|6.2|33>>
+    <associate|auto-546|<tuple|6.3|33>>
+    <associate|auto-547|<tuple|6.4|33>>
+    <associate|auto-548|<tuple|69|34>>
+    <associate|auto-549|<tuple|12|34>>
     <associate|auto-55|<tuple|2.1|4>>
-    <associate|auto-550|<tuple|6.5|?>>
-    <associate|auto-551|<tuple|6.6|?>>
-    <associate|auto-552|<tuple|6.7|?>>
-    <associate|auto-553|<tuple|6.8|?>>
-    <associate|auto-554|<tuple|6.9|?>>
-    <associate|auto-555|<tuple|6.10|?>>
-    <associate|auto-556|<tuple|6.11|?>>
-    <associate|auto-557|<tuple|69|?>>
-    <associate|auto-558|<tuple|6.11.1|?>>
-    <associate|auto-559|<tuple|6.11.2|?>>
+    <associate|auto-550|<tuple|6.5|34>>
+    <associate|auto-551|<tuple|6.6|34>>
+    <associate|auto-552|<tuple|6.7|34>>
+    <associate|auto-553|<tuple|6.8|35>>
+    <associate|auto-554|<tuple|6.9|35>>
+    <associate|auto-555|<tuple|6.10|35>>
+    <associate|auto-556|<tuple|6.11|35>>
+    <associate|auto-557|<tuple|70|35>>
+    <associate|auto-558|<tuple|6.11.1|35>>
+    <associate|auto-559|<tuple|6.11.2|35>>
     <associate|auto-56|<tuple|4|4>>
-    <associate|auto-560|<tuple|70|?>>
-    <associate|auto-561|<tuple|6.12|?>>
-    <associate|auto-562|<tuple|6.13|?>>
-    <associate|auto-563|<tuple|6.14|?>>
-    <associate|auto-564|<tuple|6.15|?>>
+    <associate|auto-560|<tuple|71|35>>
+    <associate|auto-561|<tuple|6.12|36>>
+    <associate|auto-562|<tuple|6.13|36>>
+    <associate|auto-563|<tuple|6.14|36>>
+    <associate|auto-564|<tuple|6.15|36>>
+    <associate|auto-565|<tuple|6.13|?>>
+    <associate|auto-566|<tuple|6.14|?>>
+    <associate|auto-567|<tuple|6.15|?>>
     <associate|auto-57|<tuple|2.2|4>>
     <associate|auto-58|<tuple|2.2|4>>
     <associate|auto-59|<tuple|5|4>>
     <associate|auto-6|<tuple|1.2|1>>
     <associate|auto-60|<tuple|2.3|4>>
     <associate|auto-61|<tuple|2.3|4>>
-    <associate|auto-62|<tuple|2.3.1|5>>
-    <associate|auto-63|<tuple|2.3.1|5>>
-    <associate|auto-64|<tuple|2|5>>
-    <associate|auto-65|<tuple|2|5>>
+    <associate|auto-62|<tuple|2.3.1|4>>
+    <associate|auto-63|<tuple|2.3.1|4>>
+    <associate|auto-64|<tuple|2|4>>
+    <associate|auto-65|<tuple|2|4>>
     <associate|auto-66|<tuple|2|5>>
     <associate|auto-67|<tuple|6|5>>
     <associate|auto-68|<tuple|2.3.2|5>>
@@ -5282,133 +5355,135 @@
     <associate|auto-8|<tuple|1.2|1>>
     <associate|auto-80|<tuple|2.3.3|5>>
     <associate|auto-81|<tuple|2.3.3|5>>
-    <associate|auto-82|<tuple|2.3.3|6>>
-    <associate|auto-83|<tuple|2.3.3|6>>
-    <associate|auto-84|<tuple|8|6>>
-    <associate|auto-85|<tuple|8|35>>
-    <associate|auto-86|<tuple|9|38>>
-    <associate|auto-87|<tuple|9|41>>
-    <associate|auto-88|<tuple|2.3.4|42>>
-    <associate|auto-89|<tuple|6.15|6>>
+    <associate|auto-82|<tuple|2.3.3|5>>
+    <associate|auto-83|<tuple|2.3.3|5>>
+    <associate|auto-84|<tuple|8|5>>
+    <associate|auto-85|<tuple|8|6>>
+    <associate|auto-86|<tuple|9|6>>
+    <associate|auto-87|<tuple|9|6>>
+    <associate|auto-88|<tuple|2.3.4|6>>
+    <associate|auto-89|<tuple|6.15|37>>
     <associate|auto-9|<tuple|1.2|1>>
-    <associate|auto-90|<tuple|6.15|6>>
-    <associate|auto-91|<tuple|6.15|6>>
-    <associate|auto-92|<tuple|6.15|6>>
+    <associate|auto-90|<tuple|6.15|40>>
+    <associate|auto-91|<tuple|6.15|43>>
+    <associate|auto-92|<tuple|6.15|45>>
     <associate|auto-93|<tuple|3|6>>
     <associate|auto-94|<tuple|10|6>>
     <associate|auto-95|<tuple|2.4|6>>
     <associate|auto-96|<tuple|2.4|6>>
     <associate|auto-97|<tuple|1|6>>
     <associate|auto-98|<tuple|2|6>>
-    <associate|auto-99|<tuple|3|7>>
-    <associate|automatic-type-conversion|<tuple|47|24>>
+    <associate|auto-99|<tuple|3|6>>
+    <associate|automatic-type-conversion|<tuple|48|24>>
     <associate|binding|<tuple|3.2|16>>
-    <associate|binding-for-complex-parameter|<tuple|35|21>>
+    <associate|binding-for-complex-parameter|<tuple|36|21>>
     <associate|bitwise-arithmetic|<tuple|4|25>>
-    <associate|block-type-declaration|<tuple|33|21>>
+    <associate|block-type-declaration|<tuple|34|21>>
     <associate|boolean-operations|<tuple|5|25>>
     <associate|built-ins|<tuple|4.1|24>>
     <associate|class-like-data|<tuple|22|?>>
-    <associate|closure-code|<tuple|70|34>>
-    <associate|color-properties|<tuple|40|22>>
+    <associate|closure-code|<tuple|71|35>>
+    <associate|color-properties|<tuple|41|22>>
     <associate|comma-separated-list|<tuple|6.13|11>>
     <associate|comma-separated-list-data-declaration|<tuple|17|12>>
     <associate|comments|<tuple|5|4>>
     <associate|comparisons|<tuple|3|25>>
-    <associate|complex-normal-form|<tuple|38|22>>
+    <associate|complex-normal-form|<tuple|39|22>>
     <associate|complex-type|<tuple|18|13>>
     <associate|concept-programming|<tuple|1.4|2>>
-    <associate|contains-tests|<tuple|45|23>>
+    <associate|contains-tests|<tuple|46|23>>
     <associate|conversions|<tuple|8|26>>
-    <associate|data-inheritance|<tuple|43|23>>
+    <associate|creating-a-new-binding|<tuple|6.15|?>>
+    <associate|data-inheritance|<tuple|44|23>>
     <associate|data-loading-operations|<tuple|11|26>>
-    <associate|enum-type-definition|<tuple|63|29>>
+    <associate|enum-type-definition|<tuple|64|31>>
     <associate|evaluation|<tuple|3.3|17>>
-    <associate|evaluation-for-comparison|<tuple|29|19>>
-    <associate|evaluation-for-type-comparison|<tuple|30|19>>
+    <associate|evaluation-for-comparison|<tuple|30|19>>
+    <associate|evaluation-for-type-comparison|<tuple|31|19>>
     <associate|explicit-and-automatic-type-conversions|<tuple|3.4.7|?>>
-    <associate|explicit-evaluation|<tuple|3.3.4|?>>
-    <associate|explicit-type-conversion|<tuple|46|23>>
-    <associate|explicit-vs-lazy-evaluation|<tuple|31|20>>
-    <associate|expression-vs-statement-section|<tuple|2.5.4|?>>
-    <associate|extra-code-for-properties|<tuple|42|23>>
+    <associate|explicit-evaluation|<tuple|3.3.4|19>>
+    <associate|explicit-type-conversion|<tuple|47|23>>
+    <associate|explicit-vs-lazy-evaluation|<tuple|32|20>>
+    <associate|expression-vs-statement-section|<tuple|2.5.4|8>>
+    <associate|extra-code-for-properties|<tuple|43|23>>
     <associate|factorial|<tuple|1|2>>
     <associate|footnote-1|<tuple|1|1>>
     <associate|footnote-2|<tuple|2|4>>
     <associate|footnote-3|<tuple|3|6>>
     <associate|footnote-4|<tuple|4|8>>
-    <associate|footnote-5|<tuple|5|18>>
-    <associate|footnote-6|<tuple|6|25>>
-    <associate|footnote-7|<tuple|7|32>>
-    <associate|footnote-8|<tuple|8|?>>
-    <associate|footnote-9|<tuple|9|?>>
+    <associate|footnote-5|<tuple|5|12>>
+    <associate|footnote-6|<tuple|6|13>>
+    <associate|footnote-7|<tuple|7|18>>
+    <associate|footnote-8|<tuple|8|25>>
+    <associate|footnote-9|<tuple|9|34>>
     <associate|footnr-1|<tuple|1|1>>
     <associate|footnr-2|<tuple|2|4>>
     <associate|footnr-3|<tuple|3|6>>
     <associate|footnr-4|<tuple|4|8>>
-    <associate|footnr-5|<tuple|5|18>>
-    <associate|footnr-6|<tuple|6|25>>
-    <associate|footnr-7|<tuple|7|32>>
-    <associate|footnr-8|<tuple|8|?>>
-    <associate|footnr-9|<tuple|9|?>>
-    <associate|for-loop-container|<tuple|57|?>>
-    <associate|for-loop-integer-range|<tuple|56|?>>
-    <associate|good-function|<tuple|52|?>>
-    <associate|guard|<tuple|24|14>>
+    <associate|footnr-5|<tuple|5|12>>
+    <associate|footnr-6|<tuple|6|13>>
+    <associate|footnr-7|<tuple|7|18>>
+    <associate|footnr-8|<tuple|8|25>>
+    <associate|footnr-9|<tuple|9|34>>
+    <associate|for-loop-container|<tuple|58|29>>
+    <associate|for-loop-integer-range|<tuple|57|29>>
+    <associate|good-function|<tuple|53|28>>
+    <associate|guard|<tuple|25|14>>
     <associate|if-then|<tuple|3|2>>
     <associate|if-then-else|<tuple|14|12>>
     <associate|if-then-else-colorized|<tuple|15|12>>
-    <associate|if-then-else-definition|<tuple|51|?>>
-    <associate|import-statement|<tuple|4.4.1|29>>
-    <associate|import-statement-example|<tuple|65|29>>
+    <associate|if-then-else-definition|<tuple|52|28>>
+    <associate|import-statement|<tuple|4.4.1|31>>
+    <associate|import-statement-example|<tuple|66|31>>
     <associate|index-operators|<tuple|3.1.7|15>>
-    <associate|infinite-data-structures|<tuple|5.7.7|31>>
-    <associate|infinite-list|<tuple|67|31>>
-    <associate|infinite-loop|<tuple|4.2.3|?>>
-    <associate|infix-type|<tuple|49|24>>
+    <associate|infinite-data-structures|<tuple|5.7.7|33>>
+    <associate|infinite-list|<tuple|68|33>>
+    <associate|infinite-loop|<tuple|4.2.3|29>>
+    <associate|infix-type|<tuple|50|24>>
     <associate|iterations|<tuple|3|?>>
     <associate|lazy-evaluation|<tuple|3.3.3|19>>
     <associate|list-operations|<tuple|4.1.10|27>>
     <associate|list-operations-table|<tuple|11|27>>
     <associate|literals|<tuple|2.3|4>>
-    <associate|llvm-operations|<tuple|12|32>>
-    <associate|local-and-nonlocal-assignment|<tuple|20|13>>
+    <associate|llvm-operations|<tuple|12|34>>
+    <associate|local-and-nonlocal-assignment|<tuple|21|13>>
     <associate|long-text-indent|<tuple|9|6>>
-    <associate|machine-interface|<tuple|6.14|34>>
-    <associate|machine-types|<tuple|6.15|34>>
-    <associate|making-two-types-equivalent|<tuple|36|21>>
+    <associate|machine-interface|<tuple|6.14|36>>
+    <associate|machine-types|<tuple|6.15|36>>
+    <associate|making-two-types-equivalent|<tuple|37|21>>
     <associate|map-reduce-filter|<tuple|2|2>>
     <associate|math-operations|<tuple|6|26>>
     <associate|mathematical-functions|<tuple|5|?>>
-    <associate|module-definition|<tuple|66|30>>
-    <associate|more-specific-complex-types|<tuple|37|21>>
-    <associate|object-oriented-programming|<tuple|5.6|31>>
+    <associate|module-definition|<tuple|67|32>>
+    <associate|more-specific-complex-types|<tuple|38|21>>
+    <associate|nonlocal-assignment|<tuple|6.15|?>>
+    <associate|object-oriented-programming|<tuple|5.6|33>>
     <associate|odd-type|<tuple|34|16>>
     <associate|off-side-rule|<tuple|4|4>>
-    <associate|opcode-declaration|<tuple|28|16>>
-    <associate|other-for-loops|<tuple|58|?>>
+    <associate|opcode-declaration|<tuple|29|16>>
+    <associate|other-for-loops|<tuple|59|29>>
     <associate|out-of-order-declarations|<tuple|16|12>>
-    <associate|parameterized-type|<tuple|48|24>>
+    <associate|parameterized-type|<tuple|49|24>>
     <associate|person-properties|<tuple|26|?>>
     <associate|precedence|<tuple|2.6|8>>
-    <associate|properties-declaration|<tuple|39|22>>
+    <associate|properties-declaration|<tuple|40|22>>
     <associate|range-type-definitino|<tuple|48|?>>
-    <associate|range-type-definition|<tuple|59|28>>
-    <associate|ranges-as-lists|<tuple|60|28>>
+    <associate|range-type-definition|<tuple|60|30>>
+    <associate|ranges-as-lists|<tuple|61|30>>
     <associate|references|<tuple|3.4|?>>
     <associate|return-type-declaration|<tuple|20|?>>
-    <associate|rewrite-code|<tuple|69|33>>
-    <associate|rewrite-type|<tuple|50|24>>
-    <associate|sequence|<tuple|25|14>>
-    <associate|setting-default-arguments|<tuple|41|22>>
-    <associate|simple-type|<tuple|32|21>>
+    <associate|rewrite-code|<tuple|70|35>>
+    <associate|rewrite-type|<tuple|51|24>>
+    <associate|sequence|<tuple|26|15>>
+    <associate|setting-default-arguments|<tuple|42|22>>
+    <associate|simple-type|<tuple|33|21>>
     <associate|simpleprog|<tuple|8|3>>
     <associate|simultaneously-type-and-data|<tuple|47|?>>
-    <associate|source-syntax|<tuple|12|11>>
+    <associate|source-syntax|<tuple|12|10>>
     <associate|standard-evaluation|<tuple|3.3.1|17>>
-    <associate|structured-data|<tuple|26|15>>
+    <associate|structured-data|<tuple|27|15>>
     <associate|syntax-file|<tuple|11|9>>
-    <associate|tail-recursion|<tuple|6.12|?>>
+    <associate|tail-recursion|<tuple|6.12|36>>
     <associate|text-operations|<tuple|7|26>>
     <associate|time-operations|<tuple|9|27>>
     <associate|tree-operations|<tuple|4.1.9|27>>
@@ -5417,16 +5492,16 @@
     <associate|type-conversion|<tuple|34|17>>
     <associate|type-conversions|<tuple|3.4.7|23>>
     <associate|type-declaration|<tuple|19|13>>
-    <associate|type-declaration-type|<tuple|64|29>>
+    <associate|type-declaration-type|<tuple|65|31>>
     <associate|type-definition|<tuple|3.4.2|21>>
     <associate|type-name|<tuple|34|17>>
     <associate|types|<tuple|3.4|20>>
-    <associate|union-type-definition|<tuple|61|28>>
-    <associate|until-loop|<tuple|4.2.4|?>>
+    <associate|union-type-definition|<tuple|62|30>>
+    <associate|until-loop|<tuple|4.2.4|29>>
     <associate|using-automatic-type-conversion|<tuple|35|?>>
-    <associate|using-complex|<tuple|34|21>>
-    <associate|using-union-types|<tuple|62|29>>
-    <associate|while-loop|<tuple|54|?>>
+    <associate|using-complex|<tuple|35|21>>
+    <associate|using-union-types|<tuple|63|30>>
+    <associate|while-loop|<tuple|55|29>>
     <associate|xlsyntax|<tuple|2.1|?>>
   </collection>
 </references>
@@ -5477,13 +5552,16 @@
 
       <tuple|normal|Simple type declarations|<pageref|auto-208>>
 
-      <tuple|normal|Assignment to global variable|<pageref|auto-217>>
+      <tuple|normal|Creating a new binding<label|creating-a-new-binding>|<pageref|auto-217>>
 
-      <tuple|normal|Assigning to new local variable|<pageref|auto-226>>
+      <tuple|normal|Assignment to existing
+      binding<label|nonlocal-assignment>|<pageref|auto-218>>
 
-      <tuple|normal|Assigning to parameter|<pageref|auto-230>>
+      <tuple|normal|Assigning to new local variable|<pageref|auto-227>>
 
-      <tuple|normal|Assignments do not override patterns|<pageref|auto-235>>
+      <tuple|normal|Assignment to references|<pageref|auto-229>>
+
+      <tuple|normal|Assigning to parameter|<pageref|auto-233>>
 
       <tuple|normal|Guard limit the validity of
       operations|<pageref|auto-240>>
@@ -5556,43 +5634,46 @@
       <tuple|normal|The <with|font-family|<quote|tt>|language|<quote|verbatim>|good>
       function|<pageref|auto-479>>
 
-      <tuple|normal|For loop on a container|<pageref|auto-481>>
+      <tuple|normal|Infinite loop|<pageref|auto-481>>
 
-      <tuple|normal|While loop|<pageref|auto-482>>
+      <tuple|normal|While loop|<pageref|auto-483>>
 
-      <tuple|normal|For loop on a container|<pageref|auto-483>>
+      <tuple|normal|Until loop|<pageref|auto-484>>
 
-      <tuple|normal|For loop on a container|<pageref|auto-484>>
+      <tuple|normal|For loop on an integer range|<pageref|auto-486>>
 
-      <tuple|normal|For loop on an integer range|<pageref|auto-485>>
+      <tuple|normal|For loop on a container|<pageref|auto-487>>
+
+      <tuple|normal|Other kinds of <with|font-family|<quote|tt>|language|<quote|verbatim>|for>
+      loop|<pageref|auto-488>>
 
       <\tuple|normal>
         Range and range type definition
-      </tuple|<pageref|auto-489>>
+      </tuple|<pageref|auto-493>>
 
-      <tuple|normal|Ranges as lists|<pageref|auto-491>>
+      <tuple|normal|Ranges as lists|<pageref|auto-495>>
 
-      <tuple|normal|Union type definition|<pageref|auto-493>>
+      <tuple|normal|Union type definition|<pageref|auto-497>>
 
-      <tuple|normal|Using union types|<pageref|auto-494>>
+      <tuple|normal|Using union types|<pageref|auto-498>>
 
-      <tuple|normal|Enumeration type definition|<pageref|auto-496>>
+      <tuple|normal|Enumeration type definition|<pageref|auto-500>>
 
-      <tuple|normal|Type matching a type declaration|<pageref|auto-498>>
+      <tuple|normal|Type matching a type declaration|<pageref|auto-502>>
 
-      <tuple|normal|Import statements examples|<pageref|auto-504>>
+      <tuple|normal|Import statements examples|<pageref|auto-508>>
 
-      <tuple|normal|Module definition|<pageref|auto-515>>
+      <tuple|normal|Module definition|<pageref|auto-519>>
 
-      <tuple|normal|Lazy evaluation of an infinite list|<pageref|auto-538>>
+      <tuple|normal|Lazy evaluation of an infinite list|<pageref|auto-542>>
 
-      <tuple|normal|Controlled compilation|<pageref|auto-544>>
-
-      <tuple|normal|Signature for rewrite code with two
-      variables.|<pageref|auto-553>>
+      <tuple|normal|Controlled compilation|<pageref|auto-548>>
 
       <tuple|normal|Signature for rewrite code with two
-      variables.|<pageref|auto-556>>
+      variables.|<pageref|auto-557>>
+
+      <tuple|normal|Signature for rewrite code with two
+      variables.|<pageref|auto-560>>
     </associate>
     <\associate|idx>
       <tuple|<tuple|programming paradigm>|<pageref|auto-3>>
@@ -5922,35 +6003,29 @@
 
       <tuple|<tuple|binding|in assignment>|<pageref|auto-216>>
 
-      <tuple|<tuple|assignment|to type declaration>|<pageref|auto-219>>
+      <tuple|<tuple|assignment|to type declaration>|<pageref|auto-220>>
 
-      <tuple|<tuple|type declaration|in assignment>|<pageref|auto-220>>
+      <tuple|<tuple|type declaration|in assignment>|<pageref|auto-221>>
 
-      <tuple|<tuple|binding|local scope>|<pageref|auto-221>>
+      <tuple|<tuple|binding|local scope>|<pageref|auto-222>>
 
-      <tuple|<tuple|local scope>|<pageref|auto-222>>
+      <tuple|<tuple|local scope>|<pageref|auto-223>>
 
-      <tuple|<tuple|scope|local>|<pageref|auto-223>>
+      <tuple|<tuple|scope|local>|<pageref|auto-224>>
 
       <tuple|<tuple|return type declaration|in
-      assignment>|<pageref|auto-224>>
+      assignment>|<pageref|auto-225>>
 
-      <tuple|<tuple|binding|with return type declaration>|<pageref|auto-225>>
-
-      <tuple|<tuple|assignment|to parameter>|<pageref|auto-228>>
-
-      <tuple|<tuple|scope|local>|<pageref|auto-229>>
-
-      <tuple|<tuple|assignment|in expression>|<pageref|auto-231>>
-
-      <tuple|<tuple|expression|assignment as expression>|<pageref|auto-232>>
-
-      <tuple|<tuple|binding|override>|<pageref|auto-233>>
-
-      <tuple|<tuple|evaluation|lazy>|<pageref|auto-234>>
+      <tuple|<tuple|binding|with return type declaration>|<pageref|auto-226>>
 
       <tuple|<tuple|expression|allowed on left of
-      assignment>|<pageref|auto-236>>
+      assignment>|<pageref|auto-230>>
+
+      <tuple|<tuple|assignment|to parameter>|<pageref|auto-232>>
+
+      <tuple|<tuple|assignment|in expression>|<pageref|auto-235>>
+
+      <tuple|<tuple|expression|assignment as expression>|<pageref|auto-236>>
 
       <tuple|<tuple|guard>|<pageref|auto-238>>
 
@@ -6278,31 +6353,31 @@
 
       <tuple|<tuple|good (function)>|<pageref|auto-478>>
 
-      <tuple|<tuple|interval arithmetic>|<pageref|auto-490>>
+      <tuple|<tuple|interval arithmetic>|<pageref|auto-494>>
 
-      <tuple|<tuple|module>|<pageref|auto-501>>
+      <tuple|<tuple|module>|<pageref|auto-505>>
 
-      <tuple|<tuple|import>|<pageref|auto-502>>
+      <tuple|<tuple|import>|<pageref|auto-506>>
 
-      <tuple|<tuple|module|import>|<pageref|auto-503>>
+      <tuple|<tuple|module|import>|<pageref|auto-507>>
 
-      <tuple|<tuple|module path>|<pageref|auto-505>>
+      <tuple|<tuple|module path>|<pageref|auto-509>>
 
-      <tuple|<tuple|short module name>|<pageref|auto-506>>
+      <tuple|<tuple|short module name>|<pageref|auto-510>>
 
-      <tuple|<tuple|import|with a short name>|<pageref|auto-507>>
+      <tuple|<tuple|import|with a short name>|<pageref|auto-511>>
 
-      <tuple|<tuple|syntax|in modules>|<pageref|auto-508>>
+      <tuple|<tuple|syntax|in modules>|<pageref|auto-512>>
 
-      <tuple|<tuple|scope|for modules>|<pageref|auto-509>>
+      <tuple|<tuple|scope|for modules>|<pageref|auto-513>>
 
-      <tuple|<tuple|shadowing|in modules>|<pageref|auto-510>>
+      <tuple|<tuple|shadowing|in modules>|<pageref|auto-514>>
 
-      <tuple|<tuple|binding|of module names>|<pageref|auto-511>>
+      <tuple|<tuple|binding|of module names>|<pageref|auto-515>>
 
-      <tuple|<tuple|module description>|<pageref|auto-513>>
+      <tuple|<tuple|module description>|<pageref|auto-517>>
 
-      <tuple|<tuple|module|description>|<pageref|auto-514>>
+      <tuple|<tuple|module|description>|<pageref|auto-518>>
 
       <tuple|<tuple|symbols>|<pageref|auto-89>>
     </associate>
@@ -6329,7 +6404,7 @@
 
       <tuple|normal|List operations|<pageref|auto-468>>
 
-      <tuple|normal|LLVM operations|<pageref|auto-545>>
+      <tuple|normal|LLVM operations|<pageref|auto-549>>
     </associate>
     <\associate|toc>
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|1<space|2spc>Introduction>
@@ -6467,11 +6542,19 @@
 
       <with|par-left|<quote|6fn>|Local variables
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-218><vspace|0.15fn>>
+      <no-break><pageref|auto-219><vspace|0.15fn>>
+
+      <with|par-left|<quote|6fn>|Assigning to references
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-228><vspace|0.15fn>>
 
       <with|par-left|<quote|6fn>|Assigning to parameters
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-227><vspace|0.15fn>>
+      <no-break><pageref|auto-231><vspace|0.15fn>>
+
+      <with|par-left|<quote|6fn>|Assignments as expressions
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-234><vspace|0.15fn>>
 
       <with|par-left|<quote|3fn>|3.1.5<space|2spc>Guards
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
@@ -6637,205 +6720,220 @@
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-475>>
 
-      <with|par-left|<quote|3fn>|4.2.2<space|2spc>Loops
+      <with|par-left|<quote|3fn>|4.2.2<space|2spc>Infinite Loops
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-480>>
 
-      <with|par-left|<quote|3fn>|4.2.3<space|2spc>Error handling
+      <with|par-left|<quote|3fn>|4.2.3<space|2spc>Conditional Loops
+      (<with|font-family|<quote|tt>|language|<quote|verbatim>|while> and
+      <with|font-family|<quote|tt>|language|<quote|verbatim>|until> loops)
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-486>>
+      <no-break><pageref|auto-482>>
+
+      <with|par-left|<quote|3fn>|4.2.4<space|2spc>Controlled Loops
+      (<with|font-family|<quote|tt>|language|<quote|verbatim>|for> loops)
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-485>>
+
+      <with|par-left|<quote|3fn>|4.2.5<space|2spc>Excursions<with|font-series|<quote|bold>|math-font-series|<quote|bold>|>
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-489>>
+
+      <with|par-left|<quote|3fn>|4.2.6<space|2spc>Error handling
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-490>>
 
       <with|par-left|<quote|1.5fn>|4.3<space|2spc>Library-defined types
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-487>>
+      <no-break><pageref|auto-491>>
 
       <with|par-left|<quote|3fn>|4.3.1<space|2spc>Range and range types
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-488>>
+      <no-break><pageref|auto-492>>
 
       <with|par-left|<quote|3fn>|4.3.2<space|2spc>Union types
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-492>>
+      <no-break><pageref|auto-496>>
 
       <with|par-left|<quote|3fn>|4.3.3<space|2spc>Enumeration types
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-495>>
+      <no-break><pageref|auto-499>>
 
       <with|par-left|<quote|3fn>|4.3.4<space|2spc>A type matching type
       declarations <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-497>>
+      <no-break><pageref|auto-501>>
 
       <with|par-left|<quote|1.5fn>|4.4<space|2spc>Modules
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-499>>
+      <no-break><pageref|auto-503>>
 
       <with|par-left|<quote|3fn>|4.4.1<space|2spc>Import statement
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-500>>
+      <no-break><pageref|auto-504>>
 
       <with|par-left|<quote|3fn>|4.4.2<space|2spc>Declaring a module
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-512>>
+      <no-break><pageref|auto-516>>
 
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|5<space|2spc>Example
       code> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-516><vspace|0.5fn>
+      <no-break><pageref|auto-520><vspace|0.5fn>
 
       <with|par-left|<quote|1.5fn>|5.1<space|2spc>Minimum and maximum
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-517>>
+      <no-break><pageref|auto-521>>
 
       <with|par-left|<quote|1.5fn>|5.2<space|2spc>Complex numbers
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-518>>
+      <no-break><pageref|auto-522>>
 
       <with|par-left|<quote|1.5fn>|5.3<space|2spc>Vector and Matrix
       computations <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-519>>
+      <no-break><pageref|auto-523>>
 
       <with|par-left|<quote|1.5fn>|5.4<space|2spc>Linked lists with dynamic
       allocation <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-520>>
+      <no-break><pageref|auto-524>>
 
       <with|par-left|<quote|1.5fn>|5.5<space|2spc>Input / Output
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-521>>
+      <no-break><pageref|auto-525>>
 
       <with|par-left|<quote|1.5fn>|5.6<space|2spc>Object-Oriented Programming
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-522>>
+      <no-break><pageref|auto-526>>
 
       <with|par-left|<quote|3fn>|5.6.1<space|2spc>Classes
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-523>>
+      <no-break><pageref|auto-527>>
 
       <with|par-left|<quote|3fn>|5.6.2<space|2spc>Methods
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-524>>
+      <no-break><pageref|auto-528>>
 
       <with|par-left|<quote|3fn>|5.6.3<space|2spc>Dynamic dispatch
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-525>>
+      <no-break><pageref|auto-529>>
 
       <with|par-left|<quote|3fn>|5.6.4<space|2spc>Polymorphism
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-526>>
+      <no-break><pageref|auto-530>>
 
       <with|par-left|<quote|3fn>|5.6.5<space|2spc>Inheritance
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-527>>
+      <no-break><pageref|auto-531>>
 
       <with|par-left|<quote|3fn>|5.6.6<space|2spc>Multi-methods
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-528>>
+      <no-break><pageref|auto-532>>
 
       <with|par-left|<quote|3fn>|5.6.7<space|2spc>Object prototypes
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-529>>
+      <no-break><pageref|auto-533>>
 
       <with|par-left|<quote|1.5fn>|5.7<space|2spc>Functional-Programming
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-530>>
+      <no-break><pageref|auto-534>>
 
       <with|par-left|<quote|3fn>|5.7.1<space|2spc>Map
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-531>>
+      <no-break><pageref|auto-535>>
 
       <with|par-left|<quote|3fn>|5.7.2<space|2spc>Reduce
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-532>>
+      <no-break><pageref|auto-536>>
 
       <with|par-left|<quote|3fn>|5.7.3<space|2spc>Filter
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-533>>
+      <no-break><pageref|auto-537>>
 
       <with|par-left|<quote|3fn>|5.7.4<space|2spc>Functions as first-class
       objects <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-534>>
+      <no-break><pageref|auto-538>>
 
       <with|par-left|<quote|3fn>|5.7.5<space|2spc>Anonymous functions
       (Lambda) <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-535>>
+      <no-break><pageref|auto-539>>
 
       <with|par-left|<quote|3fn>|5.7.6<space|2spc>Y-Combinator
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-536>>
+      <no-break><pageref|auto-540>>
 
       <with|par-left|<quote|3fn>|5.7.7<space|2spc>Infinite data structures
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-537>>
+      <no-break><pageref|auto-541>>
 
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|6<space|2spc>Implementation
       notes> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-539><vspace|0.5fn>
+      <no-break><pageref|auto-543><vspace|0.5fn>
 
       <with|par-left|<quote|1.5fn>|6.1<space|2spc>Lazy evaluation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-540>>
+      <no-break><pageref|auto-544>>
 
       <with|par-left|<quote|1.5fn>|6.2<space|2spc>Type inference
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-541>>
+      <no-break><pageref|auto-545>>
 
       <with|par-left|<quote|1.5fn>|6.3<space|2spc>Built-in operations
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-542>>
+      <no-break><pageref|auto-546>>
 
       <with|par-left|<quote|1.5fn>|6.4<space|2spc>Controlled compilation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-543>>
+      <no-break><pageref|auto-547>>
 
       <with|par-left|<quote|1.5fn>|6.5<space|2spc>Tree representation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-546>>
+      <no-break><pageref|auto-550>>
 
       <with|par-left|<quote|1.5fn>|6.6<space|2spc>Evaluation of trees
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-547>>
+      <no-break><pageref|auto-551>>
 
       <with|par-left|<quote|1.5fn>|6.7<space|2spc>Tree position
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-548>>
+      <no-break><pageref|auto-552>>
 
       <with|par-left|<quote|1.5fn>|6.8<space|2spc>Actions on trees
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-549>>
+      <no-break><pageref|auto-553>>
 
       <with|par-left|<quote|1.5fn>|6.9<space|2spc>Symbols
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-550>>
+      <no-break><pageref|auto-554>>
 
       <with|par-left|<quote|1.5fn>|6.10<space|2spc>Evaluating trees
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-551>>
+      <no-break><pageref|auto-555>>
 
       <with|par-left|<quote|1.5fn>|6.11<space|2spc>Code generation for trees
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-552>>
+      <no-break><pageref|auto-556>>
 
       <with|par-left|<quote|3fn>|6.11.1<space|2spc>Right side of a rewrite
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-554>>
+      <no-break><pageref|auto-558>>
 
       <with|par-left|<quote|3fn>|6.11.2<space|2spc>Closures
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-555>>
+      <no-break><pageref|auto-559>>
 
       <with|par-left|<quote|1.5fn>|6.12<space|2spc>Tail recursion
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-557>>
+      <no-break><pageref|auto-561>>
 
       <with|par-left|<quote|1.5fn>|6.13<space|2spc>Partial recompilation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-558>>
+      <no-break><pageref|auto-562>>
 
       <with|par-left|<quote|1.5fn>|6.14<space|2spc>Machine Interface
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-559>>
+      <no-break><pageref|auto-563>>
 
       <with|par-left|<quote|1.5fn>|6.15<space|2spc>Machine Types and Normal
       Types <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-560>>
+      <no-break><pageref|auto-564>>
 
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|Index>
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
