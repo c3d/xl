@@ -147,15 +147,15 @@ void xl_enter_infix(Context *context, text name, native_fn fn, Tree *rtype,
     Infix *from = new Infix(symbol, ldecl, rdecl);
     Name *to = new Name(symbol);
 
-    Rewrite *rw = context->Define(from, to);
-    rw->native = fn;
-    rw->type  = rtype;
-
     Symbols *s = MAIN->globals;
     Rewrite *rw2 = s->EnterRewrite(from, to);
-    to->code = fn;
     to->SetSymbols(s);
     xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
+
+    if (rtype && rtype != tree_type)
+        from = new Infix("as", from, rtype, from->Position());
+    to->code = fn;
+    context->Define(from, to);
 
     xl_set_documentation(from, doc);
 }
@@ -170,33 +170,35 @@ void xl_enter_prefix(Context *context, text name, native_fn fn, Tree *rtype,
     if (parameters.size())
     {
         Tree *parmtree = xl_parameters_tree(parameters);
-        Prefix *from = new Prefix(new Name(symbol), parmtree);
+        Tree *from = new Prefix(new Name(symbol), parmtree);
         Name *to = new Name(symbol);
-
-        Rewrite *rw = context->Define(from, to);
-        rw->native = fn;
-        rw->type = rtype;
 
         Symbols *s = MAIN->globals;
         Rewrite *rw2 = s->EnterRewrite(from, to);
-        to->code = fn;
         to->SetSymbols(s);
         xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
+
+        if (rtype && rtype != tree_type)
+            from = new Infix("as", from, rtype, from->Position());
+        context->Define(from, to);
+        to->code = fn;
 
         xl_set_documentation(from, doc);
     }
     else
     {
         Name *n  = new Name(symbol);
-        n->SetInfo<PrefixDefinitionsInfo>(new PrefixDefinitionsInfo());
-        Rewrite *rw = context->Define(n, n);
-        rw->native = fn;
-        rw->type = rtype;
 
         Symbols *s = MAIN->globals;
         s->EnterName(symbol, n, Rewrite::GLOBAL);
-        n->code = fn;
         n->SetSymbols(s);
+
+        Tree *from = n;
+        if (rtype && rtype != tree_type)
+            from = new Infix("as", from, rtype, from->Position());
+        context->Define(from, n);
+        n->code = fn;
+
         TreeList noparms;
         xl_enter_builtin(MAIN, name, n, noparms, fn);
 
@@ -212,18 +214,18 @@ void xl_enter_postfix(Context *context, text name, native_fn fn, Tree *rtype,
 // ----------------------------------------------------------------------------
 {
     Tree *parmtree = xl_parameters_tree(parameters);
-    Postfix *from = new Postfix(parmtree, new Name(symbol));
+    Tree *from = new Postfix(parmtree, new Name(symbol));
     Name *to = new Name(symbol);
-
-    Rewrite *rw = context->Define(from, to);
-    rw->native = (native_fn) fn;
-    rw->type = rtype;
 
     Symbols *s = MAIN->globals;
     Rewrite *rw2 = s->EnterRewrite(from, to);
-    to->code = fn;
     to->SetSymbols(s);
     xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
+
+    if (rtype && rtype != tree_type)
+        from = new Infix("as", from, rtype, from->Position());
+    context->Define(from, to);
+    to->code = fn;
 
     xl_set_documentation(from, doc);
 }
@@ -237,20 +239,19 @@ void xl_enter_block(Context *context, text name, native_fn fn, Tree *rtype,
 // ----------------------------------------------------------------------------
 {
     Tree *parms = xl_parameter("c", type);
-    Block *from = new Block(parms, open, close);
+    Tree *from = new Block(parms, open, close);
     Name *to = new Name(open + close);
-
-    from = new Block(from, open, close); // Extra block removed by Define
-
-    Rewrite *rw = context->Define(from, to);
-    rw->native = (native_fn) fn;
-    rw->type = rtype;
 
     Symbols *s = MAIN->globals;
     Rewrite *rw2 = s->EnterRewrite(from, to);
-    to->code = fn;
     to->SetSymbols(s);
     xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
+
+    if (rtype && rtype != tree_type)
+        from = new Infix("as", from, rtype, from->Position());
+    from = new Block(from, open, close); // Extra block removed by Define
+    context->Define(from, to);
+    to->code = fn;
 
     xl_set_documentation(from, doc);
 }
@@ -266,15 +267,15 @@ void xl_enter_form(Context *context, text name, native_fn fn,
     Tree *from = xl_parse_text(form);
     Name *to = new Name(name);
 
-    Rewrite *rw = context->Define(from, to);
-    rw->native = fn;
-    rw->type = rtype;
-
     Symbols *s = MAIN->globals;
     Rewrite *rw2 = s->EnterRewrite(from, to);
-    to->code = fn;
     to->SetSymbols(s);
     xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
+
+    if (rtype && rtype != tree_type)
+        from = new Infix("as", from, rtype, from->Position());
+    context->Define(from, to);
+    to->code = fn;
 
     ulong sz = parameters.size();
     if (sz != rw2->parameters.size())

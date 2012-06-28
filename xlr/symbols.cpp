@@ -376,7 +376,7 @@ uint Symbols::EnterProperty(Context *context,
     TreePosition pos = properties->Position();
     Name *getForm = new Name(name->value, pos);
     symbols->EnterRewrite(getForm, getForm);
-    getForm->code = xl_read_property;
+    //getForm->code = xl_read_property;
     getForm->SetSymbols(symbols);
 
     // Enter local declaration for the property setter
@@ -386,7 +386,7 @@ uint Symbols::EnterProperty(Context *context,
         setArg = new Infix(":", setArg, type, pos);
     Prefix *setPrefix = new Prefix(setName, setArg, pos);
     symbols->EnterRewrite(setPrefix, setName);
-    setName->code = (eval_fn) xl_write_property;
+    //setName->code = (eval_fn) xl_write_property;
     setName->SetSymbols(symbols);
 
     // Adjust information for the property
@@ -485,13 +485,13 @@ Rewrite *Symbols::Entry(Tree *form, bool create)
 //   Find the entry for a given name in all visible scopes
 // ----------------------------------------------------------------------------
 {
-    ulong fromKey = Context::HashForm(form);
+    ulong fromKey = Context::Hash(form, false);
     ulong hkey = fromKey;
     Rewrite *rw = Rewrites();
     Rewrite *last = NULL;
     while (rw)
     {
-        ulong testKey = Context::HashForm(rw->from);
+        ulong testKey = Context::Hash(rw->from, false);
         if (testKey == fromKey)
             if (Tree::Equal(form, rw->from, true))
                 return rw;
@@ -2289,7 +2289,7 @@ Tree *CompileAction::Rewrites(Tree *what)
 // ----------------------------------------------------------------------------
 {
     // Compute the hash key for the form we have to match
-    ulong formKey = Context::HashForm(what);
+    ulong formKey = Context::Hash(what, false);
     bool foundUnconditional = false;
     bool foundSomething = false;
     ExpressionReduction reduction (unit, what);
@@ -2311,7 +2311,7 @@ Tree *CompileAction::Rewrites(Tree *what)
         while (candidate && !foundUnconditional)
         {
             // Compute the hash key for the 'from' of the current rewrite
-            ulong testKey = Context::Hash(candidate->from);
+            ulong testKey = Context::Hash(candidate->from, true);
 
             // If we have an exact match for the keys, we may have a winner
             if (testKey == formKey && (!noDataForms || candidate->to))
@@ -2470,7 +2470,7 @@ Rewrite *Rewrite::Add (Rewrite *rewrite)
 {
     // Compute the hash key for the form we have to match
     Rewrite *parent = this;
-    ulong formKey = Context::HashForm(rewrite->from);
+    ulong formKey = Context::Hash(rewrite->from, false);
     ulong hkey = formKey;
 
     while (parent)
@@ -3770,5 +3770,40 @@ extern "C" void debugsym(XL::Symbols *symbols)
             debugsy(*import);
         }
         s = s->parent;
+    }
+}
+
+extern "C" void debugrw(XL::Rewrite *r)
+// ----------------------------------------------------------------------------
+//   For the debugger, dump a rewrite
+// ----------------------------------------------------------------------------
+{
+    static kstring kinds[] = { "UNKNOWN", "ARG", "PARM", "LOCAL",
+                               "GLOBAL", "FORM", "TYPE", "ENUM",
+                               "PROPERTY", "IMPORTED", "ASSIGNED", "METADATA" };
+
+    if (XL::Allocator<XL::Rewrite>::IsAllocated(r))
+    {
+        if (r->description != "")
+            std::cerr << "// " << r->description << "\n";
+        if ((uint) r->kind < sizeof(kinds) / sizeof(kinds[0]))
+            std::cerr << kinds[r->kind] << "\t";
+
+        if (!r->to)
+            std::cerr << "data " << r->from << "\n";
+        else if (r->native == XL::xl_assigned_value)
+            std::cerr << r->from << " := " << r->to << "\n";
+        else if (r->type)
+            std::cerr << r->from << ":" << r->type << " -> " << r->to << "\n";
+        else
+            std::cerr << r->from << " -> " << r->to << "\n";
+        for (uint i = 0; i < REWRITE_HASH_SIZE; i++)
+            if (XL::Rewrite *rw = r->hash[i])
+                debugrw(rw);
+    }
+    else
+    {
+        std::cout << "Cowardly refusing to show unknown Rewrite pointer"
+                  << (void *) r << "\n";
     }
 }

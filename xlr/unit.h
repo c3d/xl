@@ -42,6 +42,7 @@ struct CompiledUnit
 
 public:
     llvm_function       TopLevelFunction();
+    llvm_function       ExpressionFunction();
     llvm_function       ClosureFunction(Tree *expr, TypeInference *types);
     llvm_function       RewriteFunction(RewriteCandidate &rc);
 

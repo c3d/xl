@@ -60,6 +60,56 @@ typedef Tree * (*typecheck_fn) (Context *context, Tree *src, Tree *value);
 typedef Tree * (*decl_fn) (Symbols *, Tree *source, bool execute);
 typedef std::map<text, decl_fn>    declarator_table; // To call at decl time
 
+#define REWRITE_HASH_SIZE          2
+#define REWRITE_HASH_SHIFT(h)      (h = ((h >> 1) | (h << 31)))
+#define REWRITE_FIRST(t, k)        (t[k % REWRITE_HASH_SIZE])
+#define REWRITE_NEXT(c, k)         (REWRITE_HASH_SHIFT(k),              \
+                                    c = c->hash[k % REWRITE_HASH_SIZE])
+typedef Rewrite_p                  rewrite_table[REWRITE_HASH_SIZE];
+
+// ============================================================================
+// 
+//   Declaration of a rewrite
+// 
+// ============================================================================
+
+struct Rewrite
+// ----------------------------------------------------------------------------
+//   Information about a rewrite, e.g fact N -> N * fact(N-1)
+// ----------------------------------------------------------------------------
+//   Note that a rewrite with 'to' = NULL is used for 'data' statements
+{
+    enum Kind { UNKNOWN, ARG, PARM, LOCAL,
+                GLOBAL, FORM, TYPE, ENUM,
+                PROPERTY, IMPORTED, ASSIGNED, METADATA };
+
+    Rewrite (Tree *f, Tree *t, Tree *tp):
+        to(t), from(f), symbols(NULL), hash(), native(NULL), type(tp),
+        kind(UNKNOWN) {}
+    Rewrite (Symbols * syms, Tree *f, Tree *t, Tree *tp = NULL):
+        to(t), from(f), symbols(syms), hash(), native(NULL), type(tp),
+        kind(UNKNOWN) {}
+    ~Rewrite() {}
+
+    // Obsolete: old compiler stuff
+    Rewrite *           Add (Rewrite *rewrite);
+    Tree *              Do(Action &a);
+    Tree *              Compile(TreeList &xargs);
+
+public:
+    Tree_p              to;
+    Tree_p              from;
+    Symbols *           symbols; // Obsolete at -O3
+    rewrite_table       hash;
+    native_fn           native;
+    Tree_p              type;
+    text                description;
+    Kind                kind;
+    TreeList            parameters; // Obsolete at -O3
+
+    GARBAGE_COLLECT(Rewrite);
+};
+
 
 
 // ============================================================================
@@ -143,6 +193,7 @@ public:
 
     GARBAGE_COLLECT(Symbols);
 };
+
 
 
 
@@ -497,6 +548,7 @@ extern "C"
 {
     void debugsy(XL::Symbols *s);
     void debugsym(XL::Symbols *s);
+    void debugrw(XL::Rewrite *rw);
 }
 
 

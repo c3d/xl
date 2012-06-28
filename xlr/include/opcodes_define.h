@@ -139,6 +139,12 @@
     {                                           \
         Name *n = new Name(#symbol);            \
         xl_##symbol = n;                        \
+        if (n == xl_nil)                        \
+        {                                       \
+            Infix *infix = context->symbols;    \
+            infix->left = n;                    \
+            infix->right = n;                   \
+        }                                       \
         xl_enter_global(MAIN, n, &xl_##symbol); \
         context->Define(n, n);                  \
         xl_enter_name(MAIN->globals, n);        \

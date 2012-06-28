@@ -159,15 +159,11 @@ bool TypeInference::DoText(Text *what)
 
 bool TypeInference::DoConstant(Tree *what)
 // ----------------------------------------------------------------------------
-//   All constants have themselves as type, and don't normally evaluate
+//   All constants have themselves as type, and evaluate normally
 // ----------------------------------------------------------------------------
 {
     bool result = AssignType(what, what);
-
-    // Only try to evaluate constants if the context has constant rewrites
-    if (result && context->hasConstants)
-        result = Evaluate(what);
-
+    result = Evaluate(what);
     return result;
 }
 
@@ -311,7 +307,7 @@ bool TypeInference::Rewrite(Infix *what)
 // ----------------------------------------------------------------------------
 {
     // Create a context for the rewrite parameters
-    Context *childContext = new Context(context, context);
+    Context *childContext = new Context(context);
     Save<Context_p> saveContext(context, childContext);
 
     // Assign types on the left of the rewrite
@@ -373,6 +369,16 @@ bool TypeInference::Extern(Tree *what)
 }
 
 
+static Tree *lookupRewriteCalls(Context *c, Tree *what, Infix *entry, void *i)
+// ----------------------------------------------------------------------------
+//   Used to check if RewriteCalls pass
+// ----------------------------------------------------------------------------
+{
+    RewriteCalls *rc = (RewriteCalls *) i;
+    return rc->Check(c, what, entry);
+}
+
+
 bool TypeInference::Evaluate(Tree *what)
 // ----------------------------------------------------------------------------
 //   Find candidates for the given expression and infer types from that
@@ -390,10 +396,6 @@ bool TypeInference::Evaluate(Tree *what)
     while (Block *block = what->AsBlock())
         what = block->child;
 
-    // Evaluating constants is always successful
-    if (what->IsConstant() && !context->hasConstants)
-        return AssignType(what, what);
-
     // Test if we are already trying to evaluate this particular form
     rcall_map::iterator found = rcalls.find(what);
     bool recursive = found != rcalls.end();
@@ -404,10 +406,9 @@ bool TypeInference::Evaluate(Tree *what)
     RewriteCalls_p rc = new RewriteCalls(this);
     rcalls[what] = rc;
     uint count = 0;
-    ulong key = context->Hash(what);
     Errors errors;
     errors.Log (Error("Unable to evaluate $1 because", what), true);
-    context->Evaluate(what, *rc, key, Context::NORMAL_LOOKUP);
+    context->Lookup(what, lookupRewriteCalls, rc);
         
     // If we have no candidate, this is a failure
     count = rc->candidates.size();
@@ -895,8 +896,7 @@ Tree *ValueMatchesType(Context *ctx, Tree *type, Tree *value, bool convert)
             if (Integer *iv = value->AsInteger())
             {
                 Tree *result = new Real(iv->value);
-                if (ctx->keepSource)
-                    xl_set_source(result, value);
+                xl_set_source(result, value);
                 return result;
             }
         }
@@ -1404,7 +1404,7 @@ void debugr(XL::TypeInference *ti)
         for (RewriteCandidates::iterator r = rc.begin(); r != rc.end(); r++)
         {
             std::cout << "\t#" << ++j
-                      << "\t" << (*r).rewrite->from
+                      << "\t" << (*r).rewrite->left
                       << "\t: " << (*r).type << "\n";
 
             RewriteConditions &rt = (*r).conditions;

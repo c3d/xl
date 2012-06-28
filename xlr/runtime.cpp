@@ -82,7 +82,7 @@ Tree *xl_evaluate_children(Context *context, Tree *what)
     case TEXT:
         return what;
     case NAME:
-        if (Tree *bound = context->Bound((Name *) what, Context::LOCAL_LOOKUP))
+        if (Tree *bound = context->Bound((Name *) what, false))
             what = bound;
         return what;
     case INFIX:
@@ -229,7 +229,6 @@ Tree *xl_form_error(Context *context, Tree *what)
     }
     Save<bool> saveRecursive(recursive, true);
 
-    ADJUST_CONTEXT_FOR_INTERPRETER(context);
     return Ooops("No form match $1", what);
 }
 
@@ -308,7 +307,6 @@ Tree *xl_parse_tree(Context *context, Tree *code)
 {
     if (Block *block = code->AsBlock())
         code = block->child;
-    ADJUST_CONTEXT_FOR_INTERPRETER(context);
     return xl_parse_tree_inner(context, code);
 }
 
@@ -330,7 +328,6 @@ Tree *xl_bound(Context *context, Tree *form)
 // ----------------------------------------------------------------------------
 {
     // TODO: Equivalent in compiled mode
-    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
     if (Tree *bound = context->Bound(form))
         return bound;
     return XL::xl_false;
@@ -1547,7 +1544,6 @@ Tree *xl_define(Context *context, Tree *self, Tree *form, Tree *definition)
 //    Define a form in interpreted mode
 // ----------------------------------------------------------------------------
 {
-    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
     context->Define(form, definition);
     return self;
 }
@@ -1558,154 +1554,9 @@ Tree *xl_evaluate_sequence(Context *context, Tree *first, Tree *second)
 //   Evaluate a sequence
 // ----------------------------------------------------------------------------
 {
-    ADJUST_CONTEXT_FOR_INTERPRETER(context);
-    xl_evaluate(context, first);
-    return xl_evaluate(context, second);
+    context->Evaluate(first);
+    return context->Evaluate(second);
 }
-
-
-Tree *xl_evaluate_any(Context *context, Tree *form)
-// ----------------------------------------------------------------------------
-//   Evaluation in both stack and scope (any lookup)
-// ----------------------------------------------------------------------------
-{
-    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
-    return context->Evaluate(form, Context::ANY_LOOKUP);
-}
-
-
-Tree *xl_evaluate_block(Context *context, Tree *child)
-// ----------------------------------------------------------------------------
-//   Evaluate a block in interpreted mode
-// ----------------------------------------------------------------------------
-{
-    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
-    return context->EvaluateBlock(child);
-}
-
-
-Tree *xl_evaluate_code(Context *context, Tree *self, Tree *code)
-// ----------------------------------------------------------------------------
-//   Evaluate a code tree in interpreted mode
-// ----------------------------------------------------------------------------
-{
-    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
-    return context->EvaluateCode(self, code);
-}
-
-
-Tree *xl_evaluate_lazy(Context *context, Tree *self, Tree *code)
-// ----------------------------------------------------------------------------
-//   Evaluate a lazy tree in interpreted mode
-// ----------------------------------------------------------------------------
-{
-    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
-    return context->EvaluateLazy(self, code);
-}
-
-
-Tree *xl_evaluate_in_caller(Context *context, Tree *code)
-// ----------------------------------------------------------------------------
-//   Evaluate code in the caller's context (interpreted mode only)
-// ----------------------------------------------------------------------------
-{
-    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
-    return context->EvaluateInCaller(code);
-}
-
-
-Tree *xl_enter_properties(Context *context, Tree *self,
-                          Tree *storage, Tree *declarations)
-// ----------------------------------------------------------------------------
-//   Enter properties in interpreted mode
-// ----------------------------------------------------------------------------
-{
-    ADJUST_CONTEXT_FOR_INTERPRETER(context);
-    if (Symbols *symbols = self->Symbols())
-        return symbols->EnterProperty(context, self, storage, declarations)
-            ? xl_true : xl_false;
-
-    // Probably broken after #1635
-    return context->EnterProperty(self) ? xl_true : xl_false;
-}
-
-
-Tree *xl_enter_constraints(Context *context, Tree *self, Tree *constraints)
-// ----------------------------------------------------------------------------
-//   Enter constraints in interpreted mode
-// ----------------------------------------------------------------------------
-{
-    ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context);
-    (void) constraints;
-    return context->EnterConstraint(self) ? xl_true : xl_false;
-}
-
-
-Tree *xl_attribute(Context *context, text name, Tree *form)
-// ----------------------------------------------------------------------------
-//   Return the attribute associated to a given tree
-// ----------------------------------------------------------------------------
-{
-    ADJUST_CONTEXT_FOR_INTERPRETER(context);
-    Tree *found = context->Attribute(form, Context::SCOPE_LOOKUP, name);
-    if (!found)
-        found = xl_nil;
-    return found;
-}
-
-
-Tree *xl_read_property_default(Context *context, Tree *self)
-// ----------------------------------------------------------------------------
-//   Return the property associated with the given name
-// ----------------------------------------------------------------------------
-{
-    ADJUST_CONTEXT_FOR_INTERPRETER(context);
-    Symbols *symbols = self->Symbols();
-    Name *name = self->AsName();
-    if (!symbols || !name)
-        return xl_false;
-    Rewrite *prop = symbols->Entry(name->value, false);
-    if (!prop)
-        return self;
-    return prop->to;
-}
-
-
-Tree *xl_write_property_default(Context *context, Tree *self, Tree *value)
-// ----------------------------------------------------------------------------
-//   Set the property associated with the given name
-// ----------------------------------------------------------------------------
-{
-    ADJUST_CONTEXT_FOR_INTERPRETER(context);
-    Symbols *symbols = self->Symbols();
-    Prefix *prefix = self->AsPrefix();
-    if (!symbols || !prefix)
-        return xl_false;
-    Name *name = prefix->left->AsName();
-    if (!name)
-        return xl_false;
-    Rewrite *prop = symbols->Entry(name->value, true);
-    kind k = value->Kind();
-    Tree *type = prop->type;
-    if ((type == integer_type && k != INTEGER) ||
-        (type == real_type    && k != REAL)    ||
-        (type == text_type    && k != TEXT)    ||
-        (type == name_type    && k != NAME))
-    {
-        Ooops("Internal error: inconsistent type in property $1", self);
-        Ooops("Received value is $1", value);
-        Ooops("Expected type is $1", type);
-        return value;
-    }
-
-    prop->to = value;
-    return value;
-}
-
-
-// Default callbacks for reading and writing properties
-xl_read_property_fn      xl_read_property = xl_read_property_default;
-xl_write_property_fn     xl_write_property = xl_write_property_default;
 
 
 
@@ -2514,7 +2365,6 @@ Tree *xl_assign(Context *context, Tree *var, Tree *value)
     IFTRACE(references)
         std::cerr << "Assigning " << var << ":=" << value << "\n";
 
-    ADJUST_CONTEXT_FOR_INTERPRETER(context);
     if (XL::Options::options->optimize_level == 1)
     {
         value = xl_evaluate(context, value);
@@ -2636,10 +2486,9 @@ Tree *xl_add_search_path(Context *context, text prefix, text dir)
 // ----------------------------------------------------------------------------
 //   Add directory to the search path for prefix for the current context
 // ----------------------------------------------------------------------------
-{
-    ADJUST_CONTEXT_FOR_INTERPRETER(context);
-    context->AddSearchPath(prefix, dir);
-    return XL::xl_true;
+{ 
+    assert(!"Too cassed");
+   return XL::xl_true;
 }
 
 
@@ -2648,8 +2497,7 @@ Text *xl_find_in_search_path(Context *context, text prefix, text file)
 //   Add directory to the search path for prefix for the current context
 // ----------------------------------------------------------------------------
 {
-    ADJUST_CONTEXT_FOR_INTERPRETER(context);
-    return new Text(context->FindInSearchPath(prefix, file));
+    return new Text(file);
 }
 
 
@@ -2679,8 +2527,6 @@ Tree *xl_integer_for_loop(Context *context, Tree *self,
 //    Loop over an integer variable
 // ----------------------------------------------------------------------------
 {
-    ADJUST_CONTEXT_FOR_INTERPRETER(context);
-
     if (!body->Symbols())
         body->SetSymbols(self->Symbols());
 
@@ -2715,8 +2561,6 @@ Tree *xl_real_for_loop(Context *context, Tree *self,
 //    Loop over a real variable
 // ----------------------------------------------------------------------------
 {
-    ADJUST_CONTEXT_FOR_INTERPRETER(context);
-
     if (!body->Symbols())
         body->SetSymbols(self->Symbols());
 
@@ -2751,8 +2595,6 @@ Tree *xl_list_for_loop(Context *context, Tree *self,
 //   Loop over a list
 // ----------------------------------------------------------------------------
 {
-    ADJUST_CONTEXT_FOR_INTERPRETER(context);
-
     // Extract list value
     Tree_p result = xl_false;
     if (Block *block = list->AsBlock())
@@ -2794,8 +2636,6 @@ Tree *xl_while_loop(Context *context, Tree *self,
 //   Conditional loop (while and until)
 // ----------------------------------------------------------------------------
 {
-    ADJUST_CONTEXT_FOR_INTERPRETER(context);
-
     if (!condition->Symbols())
         condition->SetSymbols(self->Symbols());
     if (!body->Symbols())

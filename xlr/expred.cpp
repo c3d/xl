@@ -82,13 +82,14 @@ llvm_value CompileExpression::DoName(Name *what)
 // ----------------------------------------------------------------------------
 {
     Context_p  where;
-    Rewrite_p  rewrite;
+    Infix_p    rewrite;
     Context   *context  = unit->context;
-    Tree      *existing = context->Bound(what, Context::SCOPE_LOOKUP,
-                                         &where, &rewrite);
+    Tree      *existing = context->Bound(what, true, &rewrite);
+
     assert(existing || !"Type checking didn't realize a name is missing");
+    Tree *from = RewriteDefined(rewrite->left);
     if (where == context)
-        if (llvm_value result = unit->Known(rewrite->from))
+        if (llvm_value result = unit->Known(from))
             return result;
 
     // Check true and false values
@@ -100,10 +101,12 @@ llvm_value CompileExpression::DoName(Name *what)
     // Check if it is a global
     if (llvm_value global = unit->Global(existing))
         return global;
+    if (llvm_value global = unit->Global(from))
+        return global;
 
     // If we are in a context building a closure, record dependency
     if (unit->closureTy)
-        return unit->NeedClosure(rewrite->from);
+        return unit->NeedClosure(from);
 
     return DoCall(what);
 }
@@ -304,7 +307,7 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
 //   Generate code for a particular rewwrite candidate
 // ----------------------------------------------------------------------------
 {
-    Rewrite *rw = cand.rewrite;
+    Infix *rw = cand.rewrite;
     llvm_value result = NULL;
 
     // Evaluate parameters
@@ -329,8 +332,8 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
 
     // Check if this is an LLVM builtin
     Tree *builtin = NULL;
-    if (rw->to)
-        if (Prefix *prefix = rw->to->AsPrefix())
+    if (Tree *value = rw->right)
+        if (Prefix *prefix = value->AsPrefix())
             if (Name *name = prefix->left->AsName())
                 if (name->value == "opcode")
                     builtin = prefix->right;

@@ -67,58 +67,59 @@ llvm_value RewriteBinding::Closure(CompiledUnit *unit)
 }
 
 
-Tree *RewriteCalls::operator() (Context *context,
-                                Tree *what,
-                                Rewrite *candidate)
+Tree *RewriteCalls::Check (Context *context,
+                           Tree *what,
+                           Infix *candidate)
 // ----------------------------------------------------------------------------
 //   Check which candidates match, and what binding is required to match
 // ----------------------------------------------------------------------------
 {
     Errors errors;
-    errors.Log(Error("$1 doesn't match because", candidate->from), true);
+    errors.Log(Error("$1 doesn't match because", candidate->left), true);
     RewriteCandidate rc(candidate);
     inference->AssignType(what);
 
     // Create local type inference deriving from ours
-    Context_p valueContext = inference->context;
-    Context_p childContext = new Context(context, valueContext);
-    TypeInference_p childInference = new TypeInference(valueContext, inference);
+    Context_p childContext = new Context(context);
+    TypeInference_p childInference = new TypeInference(childContext, inference);
 
     // Attempt binding / unification of parameters to arguments
     XL::Save<TypeInference *> saveInference(inference, childInference);
-    BindingStrength binding = Bind(childContext, candidate->from, what, rc);
+    Tree *form = candidate->left;
+    Tree *defined = RewriteDefined(form);
+    Tree *defType = RewriteType(form);
+    BindingStrength binding = Bind(childContext, defined, what, rc);
     if (binding == FAILED)
         return NULL;
 
     // If argument/parameters binding worked, try to typecheck the definition
-    childInference->context = childContext;
-    if (candidate->to)
+    Tree *value = candidate->right;
+    if (value && value != xl_self)
     {
-        if (candidate->type)
+        // Check if we have a type to match
+        if (defType)
         {
-            if (!childInference->AssignType(candidate->to, candidate->type))
+            if (!childInference->AssignType(value, defType))
                 binding = FAILED;
-            if (!childInference->UnifyTypesOf(what, candidate->to))
+            if (!childInference->UnifyTypesOf(what, value))
                 binding = FAILED;
         }
 
-        if (!candidate->native)
-        {
-            bool builtin = false;
-            if (Name *name = candidate->to->AsName())
-                if (name->value == "C")
+        // Check built-ins and C functions
+        bool builtin = false;
+        if (Name *name = value->AsName())
+            if (name->value == "C")
+                builtin = true;
+        if (Prefix *prefix = value->AsPrefix())
+            if (Name *pfname = prefix->left->AsName())
+                if (pfname->value == "opcode" || pfname->value == "C")
                     builtin = true;
-            if (Prefix *prefix = candidate->to->AsPrefix())
-                if (Name *pfname = prefix->left->AsName())
-                    if (pfname->value == "opcode" || pfname->value == "C")
-                        builtin = true;
-
-            if (!builtin)
-            {
-                bool childSucceeded = childInference->TypeCheck(candidate->to);
-                if (!childSucceeded)
-                    binding = FAILED;
-            }
+        
+        if (!builtin)
+        {
+            bool childSucceeded = childInference->TypeCheck(value);
+            if (!childSucceeded)
+                binding = FAILED;
         }
     }
 
@@ -135,9 +136,7 @@ Tree *RewriteCalls::operator() (Context *context,
     if (binding != FAILED)
     {
         // Record the type for that specific expression
-        rc.type = childInference->Type(candidate->to
-                                       ? candidate->to
-                                       : candidate->from);
+        rc.type = childInference->Type(value ? value : form);
         rc.types = childInference;
         candidates.push_back(rc);
     }
@@ -208,7 +207,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         bool needArg = true;
 
         // Ignore function name if that is all we have
-        if (f == rc.rewrite->from)
+        if (f == rc.rewrite->left)
             return POSSIBLE;
 
         // Check if what we have as an expression evaluates correctly
@@ -220,7 +219,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         type = inference->Type(value);
 
         // Test if the name is already bound, and if so, if trees fail to match
-        if (Tree *bound = context->Bound(f, Context::SCOPE_LOOKUP))
+        if (Tree *bound = context->Bound(f, true))
         {
             if (bound != f)
             {

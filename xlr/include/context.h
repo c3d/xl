@@ -182,27 +182,14 @@ XL_BEGIN
 // ============================================================================
 
 struct Context;                                 // Execution context
-struct Rewrite;                                 // Tree rewrite data
-struct Constraint;                              // Constraints on properties
-struct Errors;                                  // Error handlers
+struct Constraint;                              // A constraint on values
 struct Action;                                  // Actions applied on trees
 
 typedef GCPtr<Context>             Context_p;
-typedef GCPtr<Rewrite>             Rewrite_p;
 typedef GCPtr<Constraint>          Constraint_p;
-#define REWRITE_HASH_SIZE          2
-#define REWRITE_HASH_SHIFT(h)      (h = ((h >> 1) | (h << 31)))
-#define REWRITE_FIRST(t, k)        (t[k % REWRITE_HASH_SIZE])
-#define REWRITE_NEXT(c, k)         (REWRITE_HASH_SHIFT(k),              \
-                                    c = c->hash[k % REWRITE_HASH_SIZE])
-typedef Rewrite_p                  rewrite_table[REWRITE_HASH_SIZE];
-typedef std::vector<Rewrite_p>     rewrite_list;
-typedef std::vector<Context_p>     context_list;
+typedef std::vector<Infix_p>       rewrite_list;
 typedef std::map<Tree_p, Tree_p>   tree_map;
 typedef Tree *(*native_fn) (Context *ctx, Tree *self);
-typedef std::vector<text>          path_list;
-typedef std::map<text, path_list>  search_paths;
-typedef std::map<text, text>       search_path_cache;
 
 
 
@@ -214,162 +201,70 @@ typedef std::map<text, text>       search_path_cache;
 
 struct Context
 // ----------------------------------------------------------------------------
-//   The evaluation context for a given tree
+//   Representation of the evaluation context
 // ----------------------------------------------------------------------------
+// A context is a represented by a sequence of the form L;E,
+// where L is the local scope, and E is the enclosing context
+// (which has itself a similar form).
+
+// The local scope is made of nodes that are equivalent to the old Rewrite class
+// They have the following structure: D \n L ; R, where D is the local
+// declaration for that node, and L and R are the left and right child when
+// walking through the local symbol table using a tree hash.
+// This makes it possible to implement tree balancing and O(log N) lookups
+// in a local symbol table.
+
+// A declaration generally has the form From->To, where From is the
+// form we match, and To is the implementation. There are variants in From:
+// - Guard clauses will have the form From when Condition
+// - Return type declarations will have the form From as Type
 {
-    Context(Context *scope, Context *stack);
+    Context();
+    Context(Context *parent);
+    Context(const Context &source);
+    Context(Infix *symbols);
     ~Context();
 
-    // Type of lookup
-    enum lookup_mode
-    {
-        LOCAL_LOOKUP    = 0,    // Only in the local context
-        SCOPE_LOOKUP    = 1,    // Lexical lookup
-        STACK_LOOKUP    = 2,    // Along the execution stack
-        IMPORTED_LOOKUP = 4,    // Lookup in imported scopes
-        AVOID_ERRORS    = 8,    // During binding, avoid errors
+public:
+    // Create and delete a local scope
+    void                CreateScope();
+    void                PopScope();
 
-        NORMAL_LOOKUP   = SCOPE_LOOKUP | IMPORTED_LOOKUP,
-        BIND_LOOKUP     = NORMAL_LOOKUP | AVOID_ERRORS,
-        ANY_LOOKUP      = NORMAL_LOOKUP | STACK_LOOKUP
-    };
+    // Evaluate a tree entirely (compile then run)
+    Tree *              Evaluate(Tree *what);
 
     // Process declarations for a given context, return non-declarations
     Tree *              ProcessDeclarations(Tree *what);
 
     // Adding definitions to the context
-    Rewrite *           Define(Tree *form, Tree *value, Tree *type = NULL);
-    Rewrite *           DefineData(Tree *form);
-    Tree *              Assign(Tree *target, Tree *source,
-                               lookup_mode mode = SCOPE_LOOKUP);
-    Tree *              AssignTree(Tree *target, Tree *source, Tree *type,
-                                   lookup_mode mode = SCOPE_LOOKUP);
+    Infix *             Enter(Infix *decl);
+    Infix *             Define(Tree *from, Tree *to);
+    Tree *              Assign(Tree *target, Tree *source);
 
-    // Rewriting things in the context
-    template <class Evaluator>
-    Tree *              Evaluate(Tree *what, Evaluator &eval, ulong hash);
-    template <class Evaluator, class ContextIterator>
-    static Tree *       Evaluate(Tree *, Evaluator &, ulong hash,
-                                 ContextIterator from, ContextIterator to);
-    template <class Evaluator>
-    Tree *              Evaluate(Tree *, Evaluator &, ulong, lookup_mode);
-    Tree *              Evaluate(Tree *what, lookup_mode mode = NORMAL_LOOKUP);
-    Tree *              Evaluate(Tree *what,
-                                 tree_map &valueCache,
-                                 lookup_mode mode = NORMAL_LOOKUP,
-                                 Context_p *tailContext = NULL,
-                                 Tree_p *tailTree = NULL);
-    Tree *              EvaluateBlock(Tree *child);
-    Tree *              EvaluateInCaller(Tree *child, uint stackLevel = 1);
-
-    // The hash code used in the rewrite table
-    static ulong        Hash(Tree *input);
-    static ulong        Hash(text name);
-    static ulong        HashForm(Tree *input);
-
-    // Bind parameters in context based on arguments in form
-    bool                Bind(Tree *form, Tree *value, tree_map &values,
-                             TreeList *args = NULL);
-    Tree_p *            NormalizeArguments(text sep, Tree_p *args);
-
-
-    // Find the rewrite that a form is bound to, or returns NULL
-    // The first form is optimized for quick lookup of names
-    Tree *              Bound(Name *name, lookup_mode mode = SCOPE_LOOKUP,
-                              Context_p *where = NULL,
-                              Rewrite_p *rewrite = NULL);
-    Tree *              Bound(Tree *form,
-                              lookup_mode mode = SCOPE_LOOKUP,
-                              Context_p *where = NULL,
-                              Rewrite_p *rewrite = NULL);
-    Rewrite *           RewriteFor(Tree *form,
-                                   lookup_mode = SCOPE_LOOKUP,
-                                   Context_p *where = NULL);
-
-    // Get an attribute for a given form, e.g. property
-    Tree *              Attribute(Tree *form,
-                                  lookup_mode mode = SCOPE_LOOKUP,
-                                  text kind = "property");
-
-
-    // Enter properties, return number of properties found
-    uint                EnterProperty(Tree *self);
-    uint                EnterConstraint(Tree *self);
-
-    // Create a closure in this context
-    Tree *              CreateCode(Tree *value);
-    Tree *              EvaluateCode(Tree *closure, Tree *value);
-    Tree *              CreateLazy(Tree *value);
-    Tree *              EvaluateLazy(Tree *closure, Tree *value);
-    Tree *              ClosureValue(Tree *input, Context_p *where = NULL);
+    // Looking up definitions in a context
+    typedef Tree *      (*lookup_fn)(Context *,Tree *what,Infix *entry, void *);
+    Tree *              Lookup(Tree *what,
+                               lookup_fn lookup, void *info,
+                               bool recurse=true);
+    Infix *             Reference(Tree *form);
+    Tree *              Bound(Tree *form, bool recurse=true, Infix_p *rw=NULL);
 
     // List rewrites of a given type
-    void                ListNames(text begin, rewrite_list &list,
-                                  lookup_mode lookup = SCOPE_LOOKUP,
-                                  bool prefixesOk = false);
+    ulong               ListNames(text begin,rewrite_list &list,
+                                  bool recurses = true,
+                                  bool includePrefixes = false);
 
-    // List the set of contexts to lookup (necessary for imported case)
-    void                Contexts(lookup_mode, context_list &);
-    bool                Import(Context *context);
+    // The hash code used in the rewrite table
+    static ulong        Hash(text name);
+    static ulong        Hash(Tree *input, bool inDecl);
+    static inline ulong Rehash(ulong h) { return (h>>1) | (h<<31); }
 
     // Clear the symbol table
     void                Clear();
 
-    // Search paths
-    void                AddSearchPath(text prefix, text dir);
-    text                FindInSearchPath(text prefix, text filename,
-                                         bool localonly = false);
-    text                ResolvePrefixedPath(text filename);
-
 public:
-    Context_p           scope;
-    Context_p           stack;
-    rewrite_table       rewrites;
-    context_list        imported;
-    search_paths        searchPaths;
-    search_path_cache   searchPathCache;
-    bool                hasConstants;
-    bool                keepSource;
-
+    Infix_p             symbols;
     GARBAGE_COLLECT(Context);
-};
-
-
-struct Rewrite
-// ----------------------------------------------------------------------------
-//   Information about a rewrite, e.g fact N -> N * fact(N-1)
-// ----------------------------------------------------------------------------
-//   Note that a rewrite with 'to' = NULL is used for 'data' statements
-{
-    enum Kind { UNKNOWN, ARG, PARM, LOCAL,
-                GLOBAL, FORM, TYPE, ENUM,
-                PROPERTY, IMPORTED, ASSIGNED, METADATA };
-
-    Rewrite (Tree *f, Tree *t, Tree *tp):
-        to(t), from(f), symbols(NULL), hash(), native(NULL), type(tp),
-        kind(UNKNOWN) {}
-    Rewrite (Symbols * syms, Tree *f, Tree *t, Tree *tp = NULL):
-        to(t), from(f), symbols(syms), hash(), native(NULL), type(tp),
-        kind(UNKNOWN) {}
-    ~Rewrite() {}
-
-    // Obsolete: old compiler stuff
-    Rewrite *           Add (Rewrite *rewrite);
-    Tree *              Do(Action &a);
-    Tree *              Compile(TreeList &xargs);
-
-public:
-    Tree_p              to;
-    Tree_p              from;
-    Symbols *           symbols; // Obsolete at -O3
-    rewrite_table       hash;
-    native_fn           native;
-    Tree_p              type;
-    text                description;
-    Kind                kind;
-    TreeList            parameters; // Obsolete at -O3
-
-    GARBAGE_COLLECT(Rewrite);
 };
 
 
@@ -389,120 +284,47 @@ struct Constraint
 };
 
 
-struct ClosureInfo : Info
-// ----------------------------------------------------------------------------
-//    Information recording the context in which we evaluate a given tree
-// ----------------------------------------------------------------------------
-{
-    typedef Context_p data_t;
-    ClosureInfo(Context *context): context(context) {}
-    operator data_t() { return context; }
-    Context_p context;
-};
-
-
-struct PrefixDefinitionsInfo : Info
-// ----------------------------------------------------------------------------
-//   Information recording definitions associated with a prefix
-// ----------------------------------------------------------------------------
-{
-    PrefixDefinitionsInfo(): last(NULL) {}
-    Infix_p   last;
-};
-
-
-
 // ============================================================================
-//
-//   Template functions in Context class
-//
+// 
+//    Helper functions to extract key elements from a rewrite
+// 
 // ============================================================================
 
-template<class Evaluator> inline
-Tree *Context::Evaluate(Tree *what,
-                        Evaluator &evaluator,
-                        ulong key)
+// Check what is actually defined based on the left of a ->
+inline Tree * RewriteDefined(Tree *form)
 // ----------------------------------------------------------------------------
-//   Evaluate a tree using the given evaluator, only in given context
+//   Find what we actually define based on the shape of the left of a ->
 // ----------------------------------------------------------------------------
 {
-    if (Rewrite *candidate = REWRITE_FIRST(rewrites, key))
-    {
-        ulong hkey = key;
-        while (candidate)
-        {
-            ulong formKey = HashForm(candidate->from);
-            if (formKey == key)
-            {
-                Tree *result = evaluator(this, what, candidate);
-                if (result)
-                    return result;
-            } // Matching key
+    // Check 'X as integer', we define X
+    if (Infix *typeDecl = form->AsInfix())
+        if (typeDecl->name == "as")
+            form = typeDecl->left;
 
-            // Check next key
-            REWRITE_NEXT(candidate, hkey);
-        } // Loop on candidates
-    } // If found candidate
+    // Check 'X when Condition', we define X
+    if (Infix *typeDecl = form->AsInfix())
+        if (typeDecl->name == "when")
+            form = typeDecl->left;
 
-    // Not found
-    return NULL;
+    // Check outermost (X): we define X
+    if (Block *block = form->AsBlock())
+        form = block->child;
+
+    return form;
 }
 
 
-template <class Evaluator, class ContextIterator> inline
-Tree *Context::Evaluate(Tree *what,
-                        Evaluator &evaluator,
-                        ulong key,
-                        ContextIterator begin,
-                        ContextIterator end)
+inline Tree * RewriteType(Tree *what)
 // ----------------------------------------------------------------------------
-//   Evaluate on a list of contexts
+//   If we have a declaration with 'X as Type', return Type
 // ----------------------------------------------------------------------------
 {
-    for (ContextIterator it = begin; it != end; it++)
-    {
-        Tree *result = (*it)->Evaluate(what, evaluator, key);
-        if (result)
-            return result;
-    }
+    if (Infix *typeDecl = what->AsInfix())
+        if (typeDecl->name == "as")
+            return typeDecl->right;
     return NULL;
-}
-
-
-template <class Evaluator> inline
-Tree *Context::Evaluate(Tree *what,
-                        Evaluator &evaluator,
-                        ulong key,
-                        lookup_mode mode)
-// ----------------------------------------------------------------------------
-//   Evaluate on a list of contexts defined by lookup rules
-// ----------------------------------------------------------------------------
-{
-    context_list list;
-    Contexts(mode, list);
-    return Evaluate(what, evaluator, key, list.begin(), list.end());
 }
 
 XL_END
-
-
-// In interpreted mode, the context actually holds the stack.
-// However, in compiled mode, there's only one level of context,
-// so attempting to unwind it ultimately causes a NULL-deref
-#define ADJUST_CONTEXT_FOR_INTERPRETER(context)         \
-    if (XL::Options::options->optimize_level == 0)      \
-        context = context->stack;
-#define ADJUST_CONTEXT_MUST_BE_IN_INTERPRETER(context)                  \
-    assert (XL::Options::options->optimize_level == 0 &&                \
-            "This routine should only be called in interpreted mode");  \
-    context = context->stack;
-
-extern "C"
-{
-    void debugrw(XL::Rewrite *rw);
-    void debugs(XL::Context *s);
-    void debugsc(XL::Context *s);
-    void debugst(XL::Context *s);
-}
 
 #endif // CONTEXT_H

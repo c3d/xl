@@ -117,6 +117,25 @@ Function *CompiledUnit::TopLevelFunction()
 }
 
 
+Function *CompiledUnit::ExpressionFunction()
+// ----------------------------------------------------------------------------
+//   Create a function to evaluate an XL tree in a given tree
+// ----------------------------------------------------------------------------
+{
+    // We must have verified the types before
+    assert(inference || !"TopLevelFunction called without type check");
+
+    llvm_types signature;
+    ParameterList parameters(this);
+    llvm_type retTy = compiler->treePtrTy;
+    signature.push_back(compiler->contextPtrTy);
+    signature.push_back(compiler->treePtrTy);
+    FunctionType *fnTy = FunctionType::get(retTy, signature, false);
+    return InitializeFunction(fnTy, &parameters.parameters,
+                              "xl_eval", true, false);
+}
+
+
 Function *CompiledUnit::ClosureFunction(Tree *expr, TypeInference *types)
 // ----------------------------------------------------------------------------
 //   Create a function for a closure
@@ -154,14 +173,14 @@ Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
 // ----------------------------------------------------------------------------
 {
     TypeInference *types = rc.types;
-    Rewrite *rewrite = rc.rewrite;
+    Infix *rewrite = rc.rewrite;
 
     // We must have verified the types before
     assert((types && !inference) || !"RewriteFunction: bogus type check");
     inference = types;
 
-    Tree *source = rewrite->from;
-    Tree *def = rewrite->to;
+    Tree *source = RewriteDefined(rewrite->left);
+    Tree *def = rewrite->right;
     IFTRACE(llvm)
         std::cerr << "CompiledUnit::RewriteFunction T" << (void *) source;
 
@@ -215,7 +234,7 @@ Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
         void *address = sys::DynamicLibrary::SearchForAddressOfSymbol(label);
         if (!address)
         {
-            Ooops("No library function matching $1", rewrite->from);
+            Ooops("No library function matching $1", rewrite->left);
             return NULL;
         }
         sys::DynamicLibrary::AddSymbol(label, address);
@@ -366,7 +385,7 @@ llvm_value CompiledUnit::Compile(RewriteCandidate &rc, llvm_values &args)
     if (function == NULL)
     {
         TypeInference *types = rc.types;
-        Rewrite *rewrite = rc.rewrite;
+        Infix *rewrite = rc.rewrite;
         Context_p rewriteContext = types->context;
         CompiledUnit rewriteUnit(compiler, rewriteContext);
 
@@ -377,10 +396,11 @@ llvm_value CompiledUnit::Compile(RewriteCandidate &rc, llvm_values &args)
         if (function && rewriteUnit.code)
         {
             rewriteUnit.ImportClosureInfo(this);
-            if (rewrite->to)
+            Tree *value = rewrite->right;
+            if (value && value != xl_self)
             {
                 // Regular function
-                llvm_value returned = rewriteUnit.CompileTopLevel(rewrite->to);
+                llvm_value returned = rewriteUnit.CompileTopLevel(value);
                 if (!returned)
                     return NULL;
                 if (!rewriteUnit.Return(returned))
@@ -390,7 +410,8 @@ llvm_value CompiledUnit::Compile(RewriteCandidate &rc, llvm_values &args)
             {
                 // Constructor for a 'data' form
                 uint index = 0;
-                llvm_value returned = rewriteUnit.Data(rewrite->from, index);
+                Tree *form = RewriteDefined(rewrite->left);
+                llvm_value returned = rewriteUnit.Data(form, index);
                 if (!returned)
                     return NULL;
             }
@@ -426,19 +447,17 @@ llvm_value CompiledUnit::Data(Tree *form, uint &index)
 
     case NAME:
     {
-        Context_p  where;
-        Rewrite_p  rw;
+        Infix_p   rw;
         Tree      *existing;
 
         // Bound names are returned as is, parameters are evaluated
-        existing = context->Bound(form, Context::SCOPE_LOOKUP, &where, &rw);
-        assert(existing || !"Type checking didn't realize a name is missing");
-        (void)existing;
+        existing = context->Bound(form, false, &rw);
 
         // Arguments bound here are returned directly as a tree
-        if (where == context)
+        if (existing)
         {
-            if (llvm_value result = Known(rw->from))
+            Tree *defined = RewriteDefined(rw->left);
+            if (llvm_value result = Known(defined))
             {
                 // Store that in the result tree
                 llvm_value ptr = code->CreateConstGEP2_32(returned, 0, index++);
@@ -448,7 +467,10 @@ llvm_value CompiledUnit::Data(Tree *form, uint &index)
         }
 
         // Arguments not bound here are returned as a constant
-        return compiler->EnterConstant(rw->from);
+        existing = context->Bound(form, true, &rw);
+        assert (existing || !"Type check didn't realize a name was missing");
+        Tree *form = RewriteDefined(rw->left);
+        return compiler->EnterConstant(form);
     }
 
     case INFIX:
@@ -512,16 +534,14 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
     case NAME:
     {
         Context_p  where;
-        Rewrite_p  rw;
+        Infix_p  rw;
         Tree      *existing;
 
         // Bound names are returned as is, parameters are evaluated
-        existing = context->Bound(form, Context::SCOPE_LOOKUP, &where, &rw);
-        assert(existing || !"Type checking didn't realize a name is missing");
-        (void)existing;
+        existing = context->Bound(form, false, &rw);
 
         // Arguments bound here are returned directly as a tree
-        if (where == context)
+        if (existing)
         {
             // Get element from input argument
             llvm_value ptr = code->CreateConstGEP2_32(boxed, 0, index++);
@@ -529,7 +549,10 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
         }
 
         // Arguments not bound here are returned as a constant
-        return compiler->EnterConstant(rw->from);
+        existing = context->Bound(form, true, &rw);
+        assert(existing || !"Type checking didn't realize a name is missing");
+        Tree *defined = RewriteDefined(rw->left);
+        return compiler->EnterConstant(defined);
     }
 
     case INFIX:

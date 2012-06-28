@@ -100,7 +100,7 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
       syntax(syntaxName.c_str()),
       options(inArgc, inArgv),
       compiler(new Compiler(compilerName.c_str())),
-      context(new Context(NULL, NULL)),
+      context(new Context),
       globals(new Symbols(NULL)),
       renderer(std::cout, styleSheetName, syntax),
       reader(NULL), writer(NULL)
@@ -188,7 +188,7 @@ void Main::CreateScope()
 //   Create a new scope containing a new symbol table and context
 // ----------------------------------------------------------------------------
 {
-    context = new Context(context, NULL);
+    context->CreateScope();
     globals = new Symbols(globals);
     globals->is_global = true;
 }
@@ -199,7 +199,7 @@ void Main::PopScope()
 //   Pop one-level of scope off the scope stack
 // ----------------------------------------------------------------------------
 {
-    context = context->scope;
+    context->PopScope();
     globals = globals->parent;
 }
 
@@ -454,7 +454,7 @@ int Main::LoadFile(text file,
     }
     else
     {
-        ctx = new Context(ctx, NULL);
+        ctx->CreateScope();
         syms = new Symbols(syms);
     }
     MAIN->context = ctx;
@@ -462,8 +462,6 @@ int Main::LoadFile(text file,
     syms->is_global = true;
 
     // Connect imports if any
-    if (importContext)
-        importContext->Import(ctx);
     if (importSymbols)
         importSymbols->Import(syms);
 

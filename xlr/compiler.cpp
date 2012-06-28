@@ -385,9 +385,7 @@ program_fn Compiler::CompileProgram(Context *context, Tree *program)
     if (!program)
         return NULL;
 
-    Context_p topContext = new Context(context, context);
-    CompiledUnit topUnit(this, topContext);
-
+    CompiledUnit topUnit(this, context);
     if (!topUnit.TypeCheck(program))
         return NULL;
     if (!topUnit.TopLevelFunction())
@@ -398,6 +396,37 @@ program_fn Compiler::CompileProgram(Context *context, Tree *program)
     if (!topUnit.Return(returned))
         return NULL;
     return (program_fn) topUnit.Finalize(true);
+}
+
+
+eval_fn Compiler::Compile(Context *context, Tree *program)
+// ----------------------------------------------------------------------------
+//   Compile a tree during execution of an XL program
+// ----------------------------------------------------------------------------
+//   This is the entry point used to compile a tree during regular execution
+//   It will process all the declarations in the program and then compile
+//   the rest of the code as a function taking no arguments.
+{
+    RECORD(COMPILER, "Compile", "program", (intptr_t) program);
+
+    if (!program)
+        return NULL;
+
+    CompiledUnit unit(this, context);
+    if (!unit.TypeCheck(program))
+        return NULL;
+    if (!unit.ExpressionFunction())
+        return NULL;
+    llvm_value returned = unit.Compile(program);
+    if (!returned)
+        return NULL;
+    if (!unit.Return(returned))
+        return NULL;
+
+    // Generate machine code
+    eval_fn result = unit.Finalize(true);
+    program->code = result;
+    return result;
 }
 
 
@@ -991,7 +1020,7 @@ bool Compiler::IsClosureType(llvm_type type)
 }
 
 
-text Compiler::FunctionKey(Rewrite *rw, llvm_values &args)
+text Compiler::FunctionKey(Infix *rw, llvm_values &args)
 // ----------------------------------------------------------------------------
 //    Return a unique function key corresponding to a given overload
 // ----------------------------------------------------------------------------

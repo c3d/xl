@@ -107,8 +107,10 @@ struct Compiler
     Compiler(kstring moduleName = "xl");
     ~Compiler();
 
-    // Top-level entry point: analyze and compile a whole program
+    // Top-level entry point: analyze and compile a tree or a whole program
     program_fn                CompileProgram(Context *context, Tree *program);
+    eval_fn                   Compile(Context *context, Tree *what);
+    
 
     void                      Setup(Options &options);
     void                      Reset();
@@ -143,7 +145,7 @@ struct Compiler
     bool                      MarkAsClosureType(llvm_type type);
     bool                      IsClosureType(llvm_type type);
 
-    text                      FunctionKey(Rewrite *rw, llvm_values &values);
+    text                      FunctionKey(Infix *rw, llvm_values &values);
     text                      ClosureKey(Tree *expr, Context *context);
     llvm::Function * &        FunctionFor(text fkey) { return functions[fkey]; }
 

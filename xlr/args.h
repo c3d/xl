@@ -63,10 +63,10 @@ struct RewriteCandidate
 //    A rewrite candidate for a particular tree form
 // ----------------------------------------------------------------------------
 {
-    RewriteCandidate(Rewrite *rewrite)
+    RewriteCandidate(Infix *rewrite)
         : rewrite(rewrite), bindings(), type(NULL), types(NULL) {}
 
-    Rewrite_p           rewrite;
+    Infix_p             rewrite;
     RewriteBindings     bindings;
     RewriteConditions   conditions;
     Tree_p              type;
@@ -84,14 +84,13 @@ struct RewriteCalls
 
     enum BindingStrength { FAILED, POSSIBLE, PERFECT };
 
-    Tree *operator() (Context *context, Tree *value, Rewrite *candidate);
+    Tree *              Check(Context *context, Tree *value, Infix *candidate);
     BindingStrength     Bind(Context *context,
                              Tree *ref, Tree *what, RewriteCandidate &rc);
 
 public:
     TypeInference *     inference;
     RewriteCandidates   candidates;
-
     GARBAGE_COLLECT(RewriteCalls);
 };
 typedef GCPtr<RewriteCalls> RewriteCalls_p;

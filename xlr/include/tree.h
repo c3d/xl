@@ -637,7 +637,7 @@ template <class I> inline I* Tree::Remove(I *toFind)
 extern Name_p   xl_true;
 extern Name_p   xl_false;
 extern Name_p   xl_nil;
-extern Name_p   xl_empty;
+extern Name_p   xl_self;
 
 XL_END
 

@@ -1,6 +1,6 @@
 // Types must come first for type info to be initialized correctly
 NAME(nil);
-NAME(empty);
+NAME(self);
 NAME(true);
 NAME(false);
 
@@ -54,48 +54,17 @@ PREFIX(DataDefinition, tree, "data",
        GROUP(basics)
        SYNOPSIS("Declare a data form"))
 BLOCK(Parentheses, tree, "(", source, ")",
-      return xl_evaluate_block(context, &child),
+      return context->Evaluate(&child),
       GROUP(basics:groups)
       SYNOPSIS("Grouping of expressions with parentheses"))
 BLOCK(CurlyBraces, tree, "{", source, "}",
-      return xl_evaluate_block(context, &child),
+      return context->Evaluate(&child),
       GROUP(basics:groups)
       SYNOPSIS("Groupoing of statements with curly braces"))
 BLOCK(IntentationBlock, tree, Block::indent, source, Block::unindent,
-      return xl_evaluate_block(context, &child),
+      return context->Evaluate(&child),
       GROUP(basics:groups)
       SYNOPSIS("Grouping of statements using indentation"))
-PREFIX(CodeClosure, tree, "<code>",
-       PARM(input, source, "Source code"),
-       return xl_evaluate_code(context, self, &input),
-       GROUP(basics:closure)
-       SYNOPSIS("Code closure, evaluated repeatedly in original code context"))
-PREFIX(LazyClosure, tree, "<lazy>",
-       PARM(input, source, "Source code"),
-       return xl_evaluate_lazy(context, self, &input),
-       GROUP(basics:closure)
-       SYNOPSIS("Lazy evaluation closure, evaluated once in original context"))
-PREFIX(EvaluatedClosure, tree, "<value>",
-       PARM(input, source, "Stored value"),
-       return &input,
-       GROUP(basics:closure)
-       SYNOPSIS("Result of a previous lazy evaluation"))
-PREFIX(AnyLookup, tree, "any",
-       PARM(expr, source, "Expression to evaluate"),
-       return xl_evaluate_any(context, &expr),
-       GROUP(basics:lookup)
-       SYNOPSIS("Evaluate the value along the call stack"))
-PREFIX(Properties, tree, "properties",
-       PARM(body, source, "Property storage")
-       PARM(declarations, source, "Property declarations"),
-       return xl_enter_properties(context, self, &body, &declarations),
-       GROUP(basics:properties)
-       SYNOPSIS("Declare properties"))
-PREFIX(Constraint, tree, "constraint",
-       PARM(declarations, source, "Constraint declarations"),
-       return xl_enter_constraints(context, self, &declarations),
-       GROUP(basics:properties)
-       SYNOPSIS("Declare constraints on properties or variables"))
 PREFIX(Solve, tree, "solve",
        PARM(n, name, "Name of variable to solve for")
        PARM(eq, source, "Equation to solve"),
@@ -698,11 +667,6 @@ PREFIX(ParseText,    tree, "parse",
        return tree,
        GROUP(basics)
        SYNOPSIS("Parse a tree from text"))
-PREFIX(InCaller,    tree, "in_caller",
-       PARM(input, source, "Input tree to evaluate"),
-       return xl_evaluate_in_caller(context, &input),
-       GROUP(basics)
-       SYNOPSIS("Evaluate the input in caller's context"))
 PREFIX(ParseTree, tree, "parse_tree",
        PARM(src, source, "Source tree to return"),
        return xl_parse_tree(context, &src),
@@ -713,12 +677,6 @@ PREFIX(BoundForm, tree, "bound",
        return xl_bound(context, &test),
        GROUP(source)
        SYNOPSIS("Test if a given name or form is bound in the current context"))
-PREFIX(GetAttribute, tree, "form_attribute",
-       PARM(name, text, "Name of the attribute, e.g. 'property'")
-       PARM(form, tree, "Form to test for in the current context"),
-       return xl_attribute(context, name, &form),
-       GROUP(source)
-       SYNOPSIS("Find the attribute associated to a given form"))
 PREFIX(LoadCSV,  tree, "load_csv", PARM(f, text, "") PARM(p, text, ""),
        return xl_load_data(context, self, f, p, ",;", "\n\f\r"),
        GROUP(basics)
