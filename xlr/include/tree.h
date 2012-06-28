@@ -149,24 +149,15 @@ struct Tree
     void                SetSymbols(XL::Symbols *s)      { symbols = s; }
 
     // Info management
-    template<class I>
-    typename I::data_t  Get() const;
-    template<class I>
-    void                Set(typename I::data_t data);
-    template<class I>
-    void                Set2(typename I::data_t data);
-    template<class I>
-    I*                  GetInfo() const;
-    template<class I>
-    void                SetInfo(I *);
-    template<class I>
-    bool                Exists() const;
-    template <class I>
-    bool                Purge();
-    template <class I>
-    I*                  Remove();
-    template <class I>
-    I*                  Remove(I *);
+    template<class I>    typename I::data_t  Get() const;
+    template<class I>    void                Set(typename I::data_t data);
+    template<class I>    void                Set2(typename I::data_t data);
+    template<class I>    I*                  GetInfo() const;
+    template<class I>    void                SetInfo(I *);
+    template<class I>    bool                Exists() const;
+    template<class I>    bool                Purge();
+    template<class I>    I*                  Remove();
+    template<class I>    I*                  Remove(I *);
 
     // Conversion to text
                         operator text();
