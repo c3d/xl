@@ -122,8 +122,7 @@ struct Compiler
     llvm::GlobalValue *       TreeGlobal(Tree *tree);
     void                      SetTreeGlobal(Tree*, llvm::GlobalValue*, void*);
     llvm::Function *          EnterBuiltin(text name,
-                                           Tree *to,
-                                           TreeList parms,
+                                           Tree *from, Tree *to,
                                            eval_fn code);
     llvm::Function *          ExternFunction(kstring name, void *address,
                                              const llvm::Type *retType,
@@ -193,7 +192,6 @@ public:
     llvm::PointerType         *evalFnTy;
     llvm::PointerType         *infoPtrTy;
     llvm::PointerType         *contextPtrTy;
-    llvm::PointerType         *symbolsPtrTy;
     llvm::Function            *strcmp_fn;
     llvm::Function            *xl_evaluate;
     llvm::Function            *xl_same_text;
@@ -216,7 +214,6 @@ public:
     llvm::Function            *xl_fill_postfix;
     llvm::Function            *xl_fill_infix;
     llvm::Function            *xl_array_index;
-    llvm::Function            *xl_new_closure;
     functions_map              builtins;
     functions_map              functions;
     adapter_map                array_to_args_adapters;
@@ -242,17 +239,16 @@ public:
 #define TAG_INDEX           0
 #define INFO_INDEX          1
 #define CODE_INDEX          2
-#define SYMBOLS_INDEX       3
-#define INTEGER_VALUE_INDEX 4
-#define REAL_VALUE_INDEX    4
-#define TEXT_VALUE_INDEX    4
-#define NAME_VALUE_INDEX    4
-#define BLOCK_CHILD_INDEX   4
-#define BLOCK_OPENING_INDEX 5
-#define BLOCK_CLOSING_INDEX 6
-#define LEFT_VALUE_INDEX    4
-#define RIGHT_VALUE_INDEX   5
-#define INFIX_NAME_INDEX    6
+#define INTEGER_VALUE_INDEX 3
+#define REAL_VALUE_INDEX    3
+#define TEXT_VALUE_INDEX    3
+#define NAME_VALUE_INDEX    3
+#define BLOCK_CHILD_INDEX   3
+#define BLOCK_OPENING_INDEX 4
+#define BLOCK_CLOSING_INDEX 5
+#define LEFT_VALUE_INDEX    3
+#define RIGHT_VALUE_INDEX   4
+#define INFIX_NAME_INDEX    5
 
 XL_END
 

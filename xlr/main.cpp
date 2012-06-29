@@ -37,7 +37,6 @@
 #include "errors.h"
 #include "tree.h"
 #include "context.h"
-#include "symbols.h"
 #include "compiler.h"
 #include "options.h"
 #include "basics.h"
@@ -57,11 +56,11 @@ XL_BEGIN
 
 Main *MAIN = NULL;
 
-SourceFile::SourceFile(text n, Tree *t, Context *c, Symbols *s, bool ro)
+SourceFile::SourceFile(text n, Tree *t, Context *c, bool ro)
 // ----------------------------------------------------------------------------
 //   Construct a source file given a name
 // ----------------------------------------------------------------------------
-    : name(n), tree(t), context(c), symbols(s),
+    : name(n), tree(t), context(c),
       modified(0), changed(false), readOnly(ro)
 {
 #if defined(CONFIG_MINGW)
@@ -74,8 +73,6 @@ SourceFile::SourceFile(text n, Tree *t, Context *c, Symbols *s, bool ro)
     modified = st.st_mtime;
     if (utf8_access (n.c_str(), W_OK) != 0)
         readOnly = true;
-    if (s)
-        s->is_global = true;
 }
 
 
@@ -83,7 +80,7 @@ SourceFile::SourceFile()
 // ----------------------------------------------------------------------------
 //   Default constructor
 // ----------------------------------------------------------------------------
-    : name(""), tree(NULL), context(NULL), symbols(NULL),
+    : name(""), tree(NULL), context(NULL),
       modified(0), changed(false), readOnly(false)
 {}
 
@@ -101,7 +98,6 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
       options(inArgc, inArgv),
       compiler(new Compiler(compilerName.c_str())),
       context(new Context),
-      globals(new Symbols(NULL)),
       renderer(std::cout, styleSheetName, syntax),
       reader(NULL), writer(NULL)
 {
@@ -115,7 +111,6 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
     FlightRecorder::SResize(options.flightRecorderSize);
     if (options.flightRecorderFlags)
         FlightRecorder::SFlags(options.flightRecorderFlags);
-    globals->is_global = true; // Duh...
 }
 
 
@@ -189,8 +184,6 @@ void Main::CreateScope()
 // ----------------------------------------------------------------------------
 {
     context->CreateScope();
-    globals = new Symbols(globals);
-    globals->is_global = true;
 }
 
 
@@ -200,7 +193,6 @@ void Main::PopScope()
 // ----------------------------------------------------------------------------
 {
     context->PopScope();
-    globals = globals->parent;
 }
 
 
@@ -226,7 +218,7 @@ SourceFile *Main::NewFile(text path)
 // ----------------------------------------------------------------------------
 {
     CreateScope();
-    files[path] = SourceFile(path,xl_nil, context, globals, true);
+    files[path] = SourceFile(path,xl_nil, context, true);
     PopScope();
     return &files[path];
 }
@@ -247,8 +239,6 @@ int Main::LoadContextFiles(source_names &ctxFiles)
         SourceFile &sf = (*sfi).second;
         if (sf.context)
             sf.context->Clear();
-        if (sf.symbols)
-            sf.symbols->Clear();
     }
     files.clear();
 
@@ -355,8 +345,7 @@ Tree *Main::Normalize(Tree *input)
 
 int Main::LoadFile(text file,
                    bool updateContext,
-                   Context *importContext,
-                   Symbols *importSymbols)
+                   Context *importContext)
 // ----------------------------------------------------------------------------
 //   Load an individual file
 // ----------------------------------------------------------------------------
@@ -442,28 +431,17 @@ int Main::LoadFile(text file,
     // Create new symbol table for the file, or clear it if we had one
     Context *ctx = MAIN->context;
     Context *savedCtx = ctx;
-    Symbols *syms = MAIN->globals;
-    Symbols *savedSyms = syms;
     if (sf.context)
     {
         updateContext = false;
         ctx = sf.context;
-        syms = sf.symbols;
         ctx->Clear();
-        syms->Clear();
     }
     else
     {
         ctx->CreateScope();
-        syms = new Symbols(syms);
     }
     MAIN->context = ctx;
-    MAIN->globals = syms;
-    syms->is_global = true;
-
-    // Connect imports if any
-    if (importSymbols)
-        importSymbols->Import(syms);
 
     // HACK - do not hide imported .xl
     if (file.find(".ddd") == file.npos &&
@@ -476,12 +454,10 @@ int Main::LoadFile(text file,
         Text_p module_dir_value = new Text(ParentDir(file));
         ctx->Define(module_file, module_file_value);
         ctx->Define(module_dir, module_dir_value);
-        syms->EnterName(module_file->value, module_file_value,Rewrite::LOCAL);
-        syms->EnterName(module_dir->value, module_dir_value,Rewrite::LOCAL);
     }
 
     // Register the source file we had
-    sf = SourceFile (file, tree, ctx, syms);
+    sf = SourceFile (file, tree, ctx);
     if (tree)
     {
         // Set symbols and compile if required
@@ -489,12 +465,10 @@ int Main::LoadFile(text file,
         {
             if (options.optimize_level == 1)
             {
-                tree->SetSymbols(syms);
                 if (!tree)
                     hadError = true;
                 else
                     files[file].tree = tree;
-                syms->ProcessDeclarations(tree);
             }
 
             // TODO: At -O3, do we need to do anything here?
@@ -518,10 +492,7 @@ int Main::LoadFile(text file,
 
     // Decide if we update symbols for next run
     if (!updateContext)
-    {
         MAIN->context = savedCtx;
-        MAIN->globals = savedSyms;
-    }
 
     IFTRACE(symbols)
         std::cerr << "Loaded file " << file
@@ -559,16 +530,12 @@ int Main::Run()
         if (Tree *tree = result)
         {
             Context *context = sf.context;
-            if (options.optimize_level == 0)
+            if (options.optimize_level < 3)
             {
                 // Slow interpreted evaluation
                 result = context->Evaluate(tree);
             }
-            else if (options.optimize_level == 1)
-            {
-                result = sf.symbols->Run(context, tree);
-            }
-            else if (options.optimize_level == 3)
+            else
             {
                 if (program_fn code = compiler->CompileProgram(context, tree))
                     result = code();

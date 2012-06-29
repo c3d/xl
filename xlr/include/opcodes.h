@@ -53,9 +53,8 @@ void            xl_enter_block(Context *context, text name, native_fn fn,
 void            xl_enter_form(Context *context, text name, native_fn fn,
                               Tree *rtype, text form, TreeList &parameters,
                               text doc);
-void            xl_enter_name(Symbols *symbols, Name *name);
-void            xl_enter_type(Symbols *symbols, Name *tname,
-                              text castfnname, typecheck_fn tc);
+void            xl_enter_name(Name *name);
+void            xl_enter_type(Name *tname, text castfnname, typecheck_fn tc);
 
 #define XL_TREE(v)      (v)
 #define XL_INT(v)       ((integer_t) (v))

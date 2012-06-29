@@ -39,7 +39,6 @@ SOURCES     =					\
 	parser.cpp				\
 	renderer.cpp				\
 	context.cpp				\
-	symbols.cpp				\
 	runtime.cpp				\
 	compiler.cpp				\
 	compiler-llvm.cpp			\

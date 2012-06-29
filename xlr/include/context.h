@@ -232,6 +232,7 @@ public:
 
     // Evaluate a tree entirely (compile then run)
     Tree *              Evaluate(Tree *what);
+    Tree *              Call(text prefix, TreeList &args);
 
     // Process declarations for a given context, return non-declarations
     Tree *              ProcessDeclarations(Tree *what);

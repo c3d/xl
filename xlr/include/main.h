@@ -48,12 +48,11 @@ struct SourceFile
 //    A source file and associated data
 // ----------------------------------------------------------------------------
 {
-    SourceFile(text n, Tree *t, Context *c, Symbols *s, bool readOnly = false);
+    SourceFile(text n, Tree *t, Context *c, bool readOnly = false);
     SourceFile();
     text        name;
     Tree_p      tree;
     Context_p   context;
-    Symbols_p   symbols;
     time_t      modified;
     text        hash;
     bool        changed;
@@ -83,7 +82,7 @@ struct Main
     void         EvaluateContextFiles(source_names &context_file_names);
     int          LoadFiles();
     int          LoadFile(text file, bool updateContext = false,
-                          Context *importContext=0, Symbols *importSymbols=0);
+                          Context *importContext=0);
     SourceFile * NewFile(text path);
     virtual text SearchFile(text input);
     virtual text ParentDir(text input);
@@ -107,7 +106,6 @@ public:
     Options      options;
     Compiler    *compiler;
     Context_p    context;
-    Symbols_p    globals;
     Renderer     renderer;
     source_files files;
     source_names file_names;

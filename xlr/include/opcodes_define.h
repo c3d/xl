@@ -147,7 +147,7 @@
         }                                       \
         xl_enter_global(MAIN, n, &xl_##symbol); \
         context->Define(n, n);                  \
-        xl_enter_name(MAIN->globals, n);        \
+        xl_enter_name(n);                       \
     } while (0);
 
 
@@ -159,6 +159,5 @@
         symbol##_type = n;                                              \
         xl_enter_global(MAIN, n, &symbol##_type);                       \
         context->Define(n, n);                                          \
-        xl_enter_type(MAIN->globals, n,                                 \
-                      "xl_" #symbol "_cast", xl_##symbol##_cast);       \
+        xl_enter_type(n, "xl_" #symbol "_cast", xl_##symbol##_cast);    \
     } while(0);

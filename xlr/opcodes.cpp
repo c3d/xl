@@ -26,7 +26,6 @@
 #include "parser.h"
 #include "errors.h"
 #include "types.h"
-#include "symbols.h"
 #include "runtime.h"
 #include <typeinfo>
 
@@ -147,15 +146,11 @@ void xl_enter_infix(Context *context, text name, native_fn fn, Tree *rtype,
     Infix *from = new Infix(symbol, ldecl, rdecl);
     Name *to = new Name(symbol);
 
-    Symbols *s = MAIN->globals;
-    Rewrite *rw2 = s->EnterRewrite(from, to);
-    to->SetSymbols(s);
-    xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
-
     if (rtype && rtype != tree_type)
         from = new Infix("as", from, rtype, from->Position());
     to->code = fn;
     context->Define(from, to);
+    xl_enter_builtin(MAIN, name, from, to, fn);
 
     xl_set_documentation(from, doc);
 }
@@ -173,15 +168,11 @@ void xl_enter_prefix(Context *context, text name, native_fn fn, Tree *rtype,
         Tree *from = new Prefix(new Name(symbol), parmtree);
         Name *to = new Name(symbol);
 
-        Symbols *s = MAIN->globals;
-        Rewrite *rw2 = s->EnterRewrite(from, to);
-        to->SetSymbols(s);
-        xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
-
         if (rtype && rtype != tree_type)
             from = new Infix("as", from, rtype, from->Position());
         context->Define(from, to);
         to->code = fn;
+        xl_enter_builtin(MAIN, name, from, to, fn);
 
         xl_set_documentation(from, doc);
     }
@@ -189,18 +180,12 @@ void xl_enter_prefix(Context *context, text name, native_fn fn, Tree *rtype,
     {
         Name *n  = new Name(symbol);
 
-        Symbols *s = MAIN->globals;
-        s->EnterName(symbol, n, Rewrite::GLOBAL);
-        n->SetSymbols(s);
-
         Tree *from = n;
         if (rtype && rtype != tree_type)
             from = new Infix("as", from, rtype, from->Position());
         context->Define(from, n);
         n->code = fn;
-
-        TreeList noparms;
-        xl_enter_builtin(MAIN, name, n, noparms, fn);
+        xl_enter_builtin(MAIN, name, from, n, fn);
 
         xl_set_documentation(n, doc);
     }
@@ -217,15 +202,11 @@ void xl_enter_postfix(Context *context, text name, native_fn fn, Tree *rtype,
     Tree *from = new Postfix(parmtree, new Name(symbol));
     Name *to = new Name(symbol);
 
-    Symbols *s = MAIN->globals;
-    Rewrite *rw2 = s->EnterRewrite(from, to);
-    to->SetSymbols(s);
-    xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
-
     if (rtype && rtype != tree_type)
         from = new Infix("as", from, rtype, from->Position());
     context->Define(from, to);
     to->code = fn;
+    xl_enter_builtin(MAIN, name, from, to, fn);
 
     xl_set_documentation(from, doc);
 }
@@ -242,16 +223,12 @@ void xl_enter_block(Context *context, text name, native_fn fn, Tree *rtype,
     Tree *from = new Block(parms, open, close);
     Name *to = new Name(open + close);
 
-    Symbols *s = MAIN->globals;
-    Rewrite *rw2 = s->EnterRewrite(from, to);
-    to->SetSymbols(s);
-    xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
-
     if (rtype && rtype != tree_type)
         from = new Infix("as", from, rtype, from->Position());
     from = new Block(from, open, close); // Extra block removed by Define
     context->Define(from, to);
     to->code = fn;
+    xl_enter_builtin(MAIN, name, from, to, fn);
 
     xl_set_documentation(from, doc);
 }
@@ -267,68 +244,40 @@ void xl_enter_form(Context *context, text name, native_fn fn,
     Tree *from = xl_parse_text(form);
     Name *to = new Name(name);
 
-    Symbols *s = MAIN->globals;
-    Rewrite *rw2 = s->EnterRewrite(from, to);
-    to->SetSymbols(s);
-    xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
-
     if (rtype && rtype != tree_type)
         from = new Infix("as", from, rtype, from->Position());
     context->Define(from, to);
     to->code = fn;
-
-    ulong sz = parameters.size();
-    if (sz != rw2->parameters.size())
-    {
-        std::cerr << "WARNING: Internal error on parameter count for\n"
-                  << "         " << form << "(" << name << ")\n";
-        ulong sz2 = rw2->parameters.size();
-        for (ulong i = 0; i < sz || i < sz2; i++)
-        {
-            std::cerr << "  #" << i << ": ";
-            if (i < sz)
-                std::cerr << "spec(" << parameters[i] << ") ";
-            if (i < sz2)
-                std::cerr << "form(" << rw2->parameters[i] << ") ";
-            std::cerr << "\n";
-        }
-    }
+    xl_enter_builtin(MAIN, name, from, to, fn);
 
     xl_set_documentation(from, doc);
 }
 
 
-void xl_enter_name(Symbols *symbols, Name *name)
+void xl_enter_name(Name *name)
 // ----------------------------------------------------------------------------
 //   Enter a global name in the symbol table
 // ----------------------------------------------------------------------------
 {
     name->code = xl_identity;
-    name->SetSymbols(symbols);
-    symbols->EnterName(name->value, name, Rewrite::ENUM);
 }
 
 
-void xl_enter_type(Symbols *symbols, Name *name,
-                   text castfnname, typecheck_fn tc)
+void xl_enter_type(Name *name, text castfnname, typecheck_fn tc)
 // ----------------------------------------------------------------------------
 //   Enter a type function into the symbol table
 // ----------------------------------------------------------------------------
 {
     /* Enter the type name itself */
     name->code = xl_identity;
-    symbols->EnterName(name->value, name, Rewrite::TYPE);
-    name->SetSymbols(symbols);
 
     /* Type as infix : evaluates to type check, e.g. 0 : integer */
     text nv = name->value;
     Infix *from = new Infix(":", new Name("V"), new Name(nv));
     Name *to = new Name(nv);
-    Rewrite *rw = symbols->EnterRewrite(from, to);
     eval_fn typeTestFn = (eval_fn) tc;
     to->code = typeTestFn;
-    to->SetSymbols(symbols);
-    xl_enter_builtin(MAIN, castfnname, to,rw->parameters,typeTestFn);
+    xl_enter_builtin(MAIN, castfnname, from, to, typeTestFn);
 }
 
 XL_END

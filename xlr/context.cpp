@@ -23,7 +23,6 @@
 // ****************************************************************************
 
 #include "context.h"
-#include "symbols.h"
 #include "tree.h"
 #include "errors.h"
 #include "options.h"
@@ -136,6 +135,28 @@ Tree *Context::Evaluate(Tree *what)
     }
 
     return what->code(this, what);
+}
+
+
+Tree *Context::Call(text prefix, TreeList &argList)
+// ----------------------------------------------------------------------------
+//    Compile a calll
+// ----------------------------------------------------------------------------
+{
+    uint arity = argList.size();
+    TreePosition pos = arity ? argList[0]->Position() : ~0;
+    Tree *call = new Name(prefix, pos);
+    if (arity)
+    {
+        Tree *args = argList[arity + ~0];
+        for (uint a = 1; a < arity; a++)
+        {
+            Tree *arg = argList[arity + ~a];
+            args = new Infix(",", arg, args, pos);
+        }
+        call = new Prefix(call, args, pos);
+    }
+    return Evaluate(call);
 }
 
 

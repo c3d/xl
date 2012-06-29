@@ -135,7 +135,7 @@ Real *xl_springify(Real &value, Real &target, Real &time,
 //
 // ============================================================================
 
-void xl_enter_builtin(Main *main, text name, Tree *to, TreeList parms, eval_fn);
+void xl_enter_builtin(Main *main, text name, Tree *from, Tree *to, eval_fn);
 void xl_enter_global(Main *main, Name *name, Name_p *address);
 
 
@@ -179,9 +179,8 @@ struct XLCall
     Tree *  operator() (SourceFile *sf);
 
     // Calling in a given symbol context
-    Tree *  operator() (Symbols *syms = NULL,
-                       bool nullIfBad = false, bool cached = true);
-    Tree *  build(Symbols *syms = NULL);
+    Tree *  operator() (Context *context);
+    Tree *  build(Context *context);
 
 public:
     Name_p      name;
@@ -200,16 +199,6 @@ public:
 
 Tree *xl_define(Context *, Tree *self, Tree *form, Tree *definition);
 Tree *xl_evaluate_sequence(Context *, Tree *first, Tree *second);
-
-
-inline bool xl_closure(Tree *tree)
-// ----------------------------------------------------------------------------
-//   Return true if a tree is a closure
-// ----------------------------------------------------------------------------
-{
-    // This is a hack - We may need a more explicit way
-    return tree->code && !tree->Symbols();
-}
 
 
 
@@ -237,7 +226,7 @@ struct ListIterator
 //    Helper to perform operations on lists of items
 // ----------------------------------------------------------------------------
 {
-    ListIterator(Context *context, Symbols *symbols, Tree *what);
+    ListIterator(Context *context, Tree *what);
 
 public:
     Tree *      Next();
@@ -246,7 +235,6 @@ public:
 
 public:
     Context_p   context;
-    Symbols_p   symbols;
     Tree_p      data;
     text        separator;
     longlong    startI, endI, stepI;
@@ -260,13 +248,12 @@ struct FunctionInfo : Info
 // ----------------------------------------------------------------------------
 //   REVISIT: According to Wikipedia, really a Moses Schönfinkel function
 {
-    FunctionInfo(): function(NULL), context(NULL), symbols(NULL) {}
+    FunctionInfo(): function(NULL), context(NULL) {}
     virtual Tree * Apply(Tree *what) { return what; }
 
 public:
     eval_fn        function;
     Context_p      context;
-    Symbols_p      symbols;
     Tree_p         compiled;
 };
 
@@ -353,9 +340,6 @@ Tree *xl_load_data(Context *, Tree *self,
                    text prefix, text fieldSeps = ",;", text recordSeps = "\n");
 Tree *xl_add_search_path(Context *, text prefix, text dir);
 Text *xl_find_in_search_path(Context *, text prefix, text file);
-
-typedef Tree * (*decl_fn) (Symbols *, Tree *source, bool execute);
-void xl_enter_declarator(text name, decl_fn fn);
 
 XL_END
 

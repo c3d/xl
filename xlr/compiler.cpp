@@ -25,6 +25,7 @@
 #include "compiler-llvm.h"
 #include "unit.h"
 #include "args.h"
+#include "parms.h"
 #include "options.h"
 #include "context.h"
 #include "renderer.h"
@@ -32,6 +33,7 @@
 #include "errors.h"
 #include "types.h"
 #include "flight_recorder.h"
+#include "main.h"
 
 #include <iostream>
 #include <sstream>
@@ -120,7 +122,7 @@ Compiler::Compiler(kstring moduleName)
       xl_new_prefix(NULL), xl_new_postfix(NULL), xl_new_infix(NULL),
       xl_fill_block(NULL),
       xl_fill_prefix(NULL), xl_fill_postfix(NULL), xl_fill_infix(NULL),
-      xl_array_index(NULL), xl_new_closure(NULL)
+      xl_array_index(NULL)
 {
 #ifdef CONFIG_MINGW
     llvm::sys::PrintStackTraceOnErrorSignal();
@@ -188,8 +190,6 @@ Compiler::Compiler(kstring moduleName)
     infoPtrTy = PointerType::get(structInfoTy, 0);      // Info *
     PATypeHolder structCtxTy = OpaqueType::get(*llvm);  // struct Context
     contextPtrTy = PointerType::get(structCtxTy, 0);    // Context *
-    PATypeHolder structSymTy = OpaqueType::get(*llvm);  // struct Symbols
-    symbolsPtrTy = PointerType::get(structSymTy, 0);    // Symbols *
 
     // Create the Tree and Tree pointer types
     PATypeHolder structTreeTy = OpaqueType::get(*llvm); // struct Tree
@@ -217,7 +217,6 @@ Compiler::Compiler(kstring moduleName)
         ulong     tag;
         XL::Info* info;
         eval_fn   code;
-        Symbols*  symbols;
     };
     // If this assert fails, you changed struct tree and need to modify here
     XL_CASSERT(sizeof(LocalTree) == sizeof(Tree));
@@ -227,7 +226,6 @@ Compiler::Compiler(kstring moduleName)
     treeElements.push_back(LLVM_INTTYPE(ulong));           // tag
     treeElements.push_back(infoPtrTy);                     // info
     treeElements.push_back(evalFnTy);                      // code
-    treeElements.push_back(symbolsPtrTy);                  // symbols
     treeTy = StructType::get(*llvm, treeElements);      // struct Tree {}
     cast<OpaqueType>(structTreeTy.get())->refineAbstractTypeTo(treeTy);
     treeTy = cast<StructType> (structTreeTy.get());
@@ -351,9 +349,6 @@ Compiler::Compiler(kstring moduleName)
     xl_array_index = ExternFunction(FN(xl_array_index),
                                     treePtrTy, 3,
                                     contextPtrTy, treePtrTy, treePtrTy);
-    xl_new_closure = ExternFunction(FN(xl_new_closure),
-                                    treePtrTy, -3,
-                                    evalFnTy, treePtrTy, LLVM_INTTYPE(uint));
 
     // Initialize the llvm_entries table
     for (CompilerLLVMTableEntry *le = CompilerLLVMTable; le->name; le++)
@@ -545,16 +540,18 @@ void Compiler::SetTreeGlobal(Tree *tree, llvm::GlobalValue *global, void *addr)
 }
 
 
-Function *Compiler::EnterBuiltin(text name,
-                                 Tree *to,
-                                 TreeList parms,
-                                 eval_fn code)
+Function *Compiler::EnterBuiltin(text name, Tree *from, Tree *to, eval_fn code)
 // ----------------------------------------------------------------------------
-//   Declare a built-in function
+//   Enter a built-in based on a form
 // ----------------------------------------------------------------------------
 //   The input is not technically an eval_fn, but has as many parameters as
 //   there are variables in the form
 {
+    CompiledUnit unit(this, MAIN->context);
+    ParameterList plist(&unit);
+    from->Do(plist);
+    Parameters &parms = plist.parameters;
+
     RECORD(COMPILER, "Enter Builtin",
            "parms", parms.size(),
            "src", (intptr_t) to,
@@ -579,8 +576,8 @@ Function *Compiler::EnterBuiltin(text name,
         std::vector<const Type *> parmTypes;
         parmTypes.push_back(contextPtrTy); // First arg is context pointer
         parmTypes.push_back(treePtrTy);    // Second arg is self
-        for (TreeList::iterator p = parms.begin(); p != parms.end(); p++)
-            parmTypes.push_back(treePtrTy);
+        for (Parameters::iterator p = parms.begin(); p != parms.end(); p++)
+            parmTypes.push_back(treePtrTy); // TODO: (*p).type
         FunctionType *fnTy = FunctionType::get(treePtrTy, parmTypes, false);
         result = Function::Create(fnTy, Function::ExternalLinkage,
                                   name, module);

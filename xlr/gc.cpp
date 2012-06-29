@@ -329,7 +329,6 @@ DEFINE_ALLOC(Prefix);
 DEFINE_ALLOC(Postfix);
 DEFINE_ALLOC(Infix);
 DEFINE_ALLOC(Context);
-DEFINE_ALLOC(Symbols);
 DEFINE_ALLOC(TypeInference);
 DEFINE_ALLOC(Rewrite);
 DEFINE_ALLOC(RewriteCalls);
