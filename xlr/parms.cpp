@@ -45,29 +45,34 @@ bool ParameterList::EnterName(Name *what,
     }
 
     // Check the LLVM type for the given form
-    llvm_type type = unit->ExpressionMachineType(what);
+    llvm_type type = NULL;
 
-    // Check if the name already exists in parameter list, e.g. in 'A+A'
-    text name = what->value;
-    Parameters::iterator it;
-    for (it = parameters.begin(); it != parameters.end(); it++)
+    if (unit->inference)
     {
-        if ((*it).name->value == name)
-        {
-            llvm_type nameType = unit->ExpressionMachineType((*it).name);
-            if (type == nameType)
-                return true;
+        type = unit->ExpressionMachineType(what);
 
-            Ooops("Conflicting machine types for $1", what);
-            return false;
+        // Check if the name already exists in parameter list, e.g. in 'A+A'
+        text name = what->value;
+        Parameters::iterator it;
+        for (it = parameters.begin(); it != parameters.end(); it++)
+        {
+            if ((*it).name->value == name)
+            {
+                llvm_type nameType = unit->ExpressionMachineType((*it).name);
+                if (type == nameType)
+                    return true;
+
+                Ooops("Conflicting machine types for $1", what);
+                return false;
+            }
         }
+
+        // Check if the name already exists in context, e.g. 'false'
+        if (untyped)
+            if (unit->context->Bound(what))
+                return true;
     }
 
-    // Check if the name already exists in context, e.g. 'false'
-    if (untyped)
-        if (unit->context->Bound(what))
-            return true;
-        
     // We need to record a new parameter
     parameters.push_back(Parameter(what, type));
     return true;
@@ -138,13 +143,16 @@ bool ParameterList::DoInfix(Infix *what)
         // Check the variable name, e.g. K in example above
         if (Name *varName = what->left->AsName())
         {
-            // Enter a name in the parameter list with adequate machine type
-            llvm_type mtype = unit->MachineType(what->right);
-            llvm_type ntype = unit->ExpressionMachineType(varName);
-            if (mtype != ntype)
+            if (unit->inference)
             {
-                Ooops("Conflicting machine type for declaration $1", what);
-                return false;
+                // Enter a name in the parameter list with adequate machine type
+                llvm_type mtype = unit->MachineType(what->right);
+                llvm_type ntype = unit->ExpressionMachineType(varName);
+                if (mtype != ntype)
+                {
+                    Ooops("Conflicting machine type for declaration $1", what);
+                    return false;
+                }
             }
             return EnterName(varName, false);
         }
@@ -158,7 +166,8 @@ bool ParameterList::DoInfix(Infix *what)
             }
 
             // Remember the specified returned value
-            returned = unit->ExpressionMachineType(what);
+            if (unit->inference)
+                returned = unit->ExpressionMachineType(what);
 
             // Keep going with the left-hand side
             return what->left->Do(this);
