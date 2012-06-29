@@ -177,6 +177,9 @@ bool ParameterList::DoInfix(Infix *what)
     // If this is the first one, this is what we define
     if (!defined)
     {
+        if (what->name == "as")
+            return what->left->Do(this);
+
         defined = what;
         name = what->name;
     }
