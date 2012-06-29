@@ -502,7 +502,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
             Infix *children = entry->right->AsInfix();
 
             // Check that hash matches
-            ulong declHash = Hash(decl->left, false);
+            ulong declHash = Hash(decl->left, true);
             if (declHash == h0)
             {
                 result = lookup(this, what, decl, info);

@@ -414,6 +414,12 @@ bool TypeInference::Evaluate(Tree *what)
     count = rc->candidates.size();
     if (count == 0)
     {
+        if (what->IsConstant())
+        {
+            Tree *wtype = Type(what);
+            return Unify(wtype, what, what, what);
+        }
+
         if (matchingPattern && what->Kind() > KIND_LEAF_LAST)
         {
             Tree *wtype = Type(what);
