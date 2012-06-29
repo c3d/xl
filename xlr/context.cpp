@@ -985,7 +985,7 @@ void debugi(XL::Infix *scope)
 {
     if (XL::Allocator<XL::Infix>::IsAllocated(scope))
     {
-        if (scope && scope->name == ";")
+        if (scope && (scope->name == ";" || scope->name == "\n"))
             scope = scope->left->AsInfix();
         else
             scope = NULL;
@@ -996,7 +996,7 @@ void debugi(XL::Infix *scope)
             XL::Infix *children = scope->right->AsInfix();
             if (decl && decl->name == "->")
             {
-                std::cout << decl->left
+                std::cerr << decl->left
                           << "\t->\t" 
                           << XL::ShortTreeForm(decl->right)
                           << "\n";
@@ -1027,14 +1027,14 @@ void debugi(XL::Infix *scope)
     } 
     else
     {
-        std::cout << "Cowardly refusing to render unknown scope pointer "
+        std::cerr << "Cowardly refusing to render unknown scope pointer "
                   << (void *) scope << "\n";
     }
 
 }
 
 
-void debugsc(XL::Context *context)
+void debugs(XL::Context *context)
 // ----------------------------------------------------------------------------
 //   Helper to show a single context for debugging purpose
 // ----------------------------------------------------------------------------
@@ -1043,12 +1043,12 @@ void debugsc(XL::Context *context)
     XL::Infix *scope = context->symbols;
     if (XL::Allocator<XL::Infix>::IsAllocated(scope))
     {
-        std::cout << "SYMBOLS AT " << (void *) scope << "\n";
+        std::cerr << "SYMBOLS AT " << (void *) scope << "\n";
         debugi(scope);
     } 
     else
     {
-        std::cout << "Cowardly refusing to render unknown scope pointer "
+        std::cerr << "Cowardly refusing to render unknown scope pointer "
                   << (void *) scope << "\n";
     }
    
@@ -1065,9 +1065,9 @@ void debugc(XL::Context *context)
     if (XL::Allocator<XL::Infix>::IsAllocated(scope))
     {
         ulong depth = 0;
-        while (scope && scope->name == ";")
+        while (scope && (scope->name == ";" || scope->name == "\n"))
         {
-            std::cout << "SYMBOLS #" << depth++
+            std::cerr << "SYMBOLS #" << depth++
                       << " AT " << (void *) scope << "\n";
             debugi(scope);
             scope = scope->right->AsInfix();
@@ -1075,7 +1075,7 @@ void debugc(XL::Context *context)
     } 
     else
     {
-        std::cout << "Cowardly refusing to render unknown scope pointer "
+        std::cerr << "Cowardly refusing to render unknown scope pointer "
                   << (void *) scope << "\n";
     }
    
