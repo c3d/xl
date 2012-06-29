@@ -973,3 +973,112 @@ bool Constraint::IsValid(Tree *eq, std::set<text> &vars)
 }
 
 XL_END
+
+
+extern "C"
+{
+void debugi(XL::Infix *scope)
+// ----------------------------------------------------------------------------
+//   Helper to show an infix as a symbol table for debugging purpose
+// ----------------------------------------------------------------------------
+//   The infix can be shown using debug(), but it's less convenient
+{
+    if (XL::Allocator<XL::Infix>::IsAllocated(scope))
+    {
+        if (scope && scope->name == ";")
+            scope = scope->left->AsInfix();
+        else
+            scope = NULL;
+
+        while (scope)
+        {
+            XL::Infix *decl = scope->left->AsInfix();
+            XL::Infix *children = scope->right->AsInfix();
+            if (decl && decl->name == "->")
+            {
+                std::cout << decl->left
+                          << "\t->\t" 
+                          << XL::ShortTreeForm(decl->right)
+                          << "\n";
+            }
+            if (children)
+            {
+                XL::Infix *left = children->left->AsInfix();
+                XL::Infix *right = children->right->AsInfix();
+                if (left && right)
+                {
+                    debugi(left);
+                    scope = right;
+                }
+                else if (left)
+                {
+                    scope = left;
+                }
+                else
+                {
+                    scope = right;
+                }
+            }
+            else
+            {
+                scope = NULL;
+            }
+        }
+    } 
+    else
+    {
+        std::cout << "Cowardly refusing to render unknown scope pointer "
+                  << (void *) scope << "\n";
+    }
+
+}
+
+
+void debugsc(XL::Context *context)
+// ----------------------------------------------------------------------------
+//   Helper to show a single context for debugging purpose
+// ----------------------------------------------------------------------------
+//   A context symbols can also be shown with debug(), but it's less convenient
+{
+    XL::Infix *scope = context->symbols;
+    if (XL::Allocator<XL::Infix>::IsAllocated(scope))
+    {
+        std::cout << "SYMBOLS AT " << (void *) scope << "\n";
+        debugi(scope);
+    } 
+    else
+    {
+        std::cout << "Cowardly refusing to render unknown scope pointer "
+                  << (void *) scope << "\n";
+    }
+   
+}
+
+
+void debugc(XL::Context *context)
+// ----------------------------------------------------------------------------
+//   Helper to show a context for debugging purpose
+// ----------------------------------------------------------------------------
+//   A context symbols can also be shown with debug(), but it's less convenient
+{
+    XL::Infix *scope = context->symbols;
+    if (XL::Allocator<XL::Infix>::IsAllocated(scope))
+    {
+        ulong depth = 0;
+        while (scope && scope->name == ";")
+        {
+            std::cout << "SYMBOLS #" << depth++
+                      << " AT " << (void *) scope << "\n";
+            debugi(scope);
+            scope = scope->right->AsInfix();
+        }
+    } 
+    else
+    {
+        std::cout << "Cowardly refusing to render unknown scope pointer "
+                  << (void *) scope << "\n";
+    }
+   
+}
+
+}
