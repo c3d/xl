@@ -392,7 +392,7 @@ program_fn Compiler::CompileProgram(Context *context, Tree *program)
         return NULL;
     llvm_value returned = topUnit.CompileTopLevel(program);
     if (!returned)
-        return NULL;
+        returned = topUnit.ConstantTree(program);
     if (!topUnit.Return(returned))
         return NULL;
     return (program_fn) topUnit.Finalize(true);
@@ -419,7 +419,7 @@ eval_fn Compiler::Compile(Context *context, Tree *program)
         return NULL;
     llvm_value returned = unit.Compile(program);
     if (!returned)
-        return NULL;
+        returned = unit.ConstantTree(program);
     if (!unit.Return(returned))
         return NULL;
 
