@@ -27,6 +27,7 @@
 #include "scanner.h"
 #include "errors.h"
 #include "syntax.h"
+#include "options.h"
 #include "utf8.h"
 #include "utf8_fileutils.h"
 
@@ -87,9 +88,10 @@ Scanner::Scanner(kstring name, Syntax &stx, Positions &pos, Errors &err)
       tokenText(""),
       textValue(""), realValue(0.0), intValue(0), base(10),
       indents(), indent(0), indentChar(0),
-      checkingIndent(false), settingIndent(false),
       position(0), lineStart(0),
       positions(pos), errors(err),
+      caseSensitive(Options::options ? Options::options->case_sensitive : true),
+      checkingIndent(false), settingIndent(false),
       hadSpaceBefore(false), hadSpaceAfter(false),
       mustDeleteInput(true)
 {
@@ -124,9 +126,10 @@ Scanner::Scanner(std::istream &input, Syntax &stx, Positions &pos, Errors &err)
       tokenText(""),
       textValue(""), realValue(0.0), intValue(0), base(10),
       indents(), indent(0), indentChar(0),
-      checkingIndent(false), settingIndent(false),
       position(0), lineStart(0),
       positions(pos), errors(err),
+      caseSensitive(Options::options ? Options::options->case_sensitive : true),
+      checkingIndent(false), settingIndent(false),
       hadSpaceBefore(false), hadSpaceAfter(false),
       mustDeleteInput(false)
 {
@@ -149,9 +152,10 @@ Scanner::Scanner(const Scanner &parent)
       indents(parent.indents),
       indent(parent.indent),
       indentChar(parent.indentChar),
-      checkingIndent(false), settingIndent(false),
       position(parent.position), lineStart(parent.lineStart),
       positions(parent.positions), errors(parent.errors),
+      caseSensitive(parent.caseSensitive),
+      checkingIndent(false), settingIndent(false),
       hadSpaceBefore(parent.hadSpaceBefore),
       hadSpaceAfter(parent.hadSpaceAfter),
       mustDeleteInput(false)

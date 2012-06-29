@@ -96,7 +96,7 @@ token_t Parser::NextToken()
         {
         case tokNAME:
         case tokSYMBOL:
-            opening = scanner.TokenText();
+            opening = scanner.NameValue();
             if (opening == "syntax")
             {
                 syntax.ReadSyntaxFile(scanner, 0);
@@ -311,7 +311,7 @@ Tree *Parser::Parse(text closing)
     bool                 new_statement      = true;
     ulong                pos                = 0;
     uint                 old_indent         = 0;
-    text                 infix, name, spelling;
+    text                 infix, name;
     text                 comment_end;
     token_t              tok;
     char                 separator;
@@ -366,7 +366,7 @@ Tree *Parser::Parse(text closing)
             break;
         case tokSTRING:
         case tokQUOTE:
-            separator = scanner.TokenText()[0];
+            separator = scanner.NameValue()[0];
             name = text(1, separator);
             right = new Text(scanner.TextValue(), name, name, pos);
             if (!result && new_statement)
@@ -375,13 +375,12 @@ Tree *Parser::Parse(text closing)
             break;
         case tokNAME:
         case tokSYMBOL:
-            name = scanner.TokenText();
-            spelling = scanner.TextValue();
+            name = scanner.NameValue();
             if (name == closing)
             {
                 done = true;
             }
-            else if (Syntax *cs = syntax.HasSpecialSyntax(spelling,blk_closing))
+            else if (Syntax *cs = syntax.HasSpecialSyntax(name,blk_closing))
             {
                 // Read the input with the special syntax
                 ulong pos = scanner.Position();
@@ -392,7 +391,7 @@ Tree *Parser::Parse(text closing)
             else if (!result)
             {
                 prefix_priority = syntax.PrefixPriority(name);
-                right = new Name(spelling, pos);
+                right = new Name(name, pos);
                 if (prefix_priority == default_priority)
                     prefix_priority = function_priority;
                 if (new_statement && tok == tokNAME)
@@ -406,7 +405,7 @@ Tree *Parser::Parse(text closing)
                 // parse this as "A and (not B)" rather than as
                 // "(A and not) B"
                 prefix_priority = syntax.PrefixPriority(name);
-                right = new Name(spelling, pos);
+                right = new Name(name, pos);
                 if (prefix_priority == default_priority)
                     prefix_priority = function_priority;
             }
@@ -429,7 +428,7 @@ Tree *Parser::Parse(text closing)
                     if (postfix_priority != default_priority)
                     {
                         // We have a postfix operator
-                        right = new Name(spelling, pos);
+                        right = new Name(name, pos);
                         right = new Postfix(result, right, pos);
                         prefix_priority = postfix_priority;
                         result = NULL;
@@ -437,7 +436,7 @@ Tree *Parser::Parse(text closing)
                     else
                     {
                         // No priority: take this as a prefix by default
-                        right = new Name(spelling, pos);
+                        right = new Name(name, pos);
                         prefix_priority = prefix_vs_infix;
                         if (prefix_priority == default_priority)
                         {
@@ -458,10 +457,10 @@ Tree *Parser::Parse(text closing)
             break;
         case tokPARCLOSE:
             // Check for mismatched parenthese here
-            if (scanner.TokenText() != closing)
+            if (scanner.NameValue() != closing)
                 errors.Log(Error("Mismatched parentheses: "
                                  "got $1, expected $2",
-                                 pos).Arg(scanner.TokenText()).Arg(closing));
+                                 pos).Arg(scanner.NameValue()).Arg(closing));
             done = true;
             break;
         case tokUNINDENT:
@@ -475,7 +474,7 @@ Tree *Parser::Parse(text closing)
             scanner.SetTokenText(Block::indent);
             // Fall-through
         case tokPAROPEN:
-            blk_opening = scanner.TokenText();
+            blk_opening = scanner.NameValue();
             if (!syntax.IsBlock(blk_opening, blk_closing))
                 errors.Log(Error("Unknown parenthese type: $1 (internal)",
                                  pos).Arg(blk_opening));
@@ -504,7 +503,7 @@ Tree *Parser::Parse(text closing)
                 char buffer[20];
                 sprintf(buffer, "%u", tok);
                 errors.Log(Error("Internal error: unknown token $1 ($2)",
-                                 pos).Arg(scanner.TokenText()).Arg(buffer));
+                                 pos).Arg(scanner.NameValue()).Arg(buffer));
             }
             break;
         } // switch(tok)

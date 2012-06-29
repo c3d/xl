@@ -99,6 +99,10 @@ OPTION(v, "Short form for -verbose.", verbose = true)
 OPTVAR(interpreted, bool, false)
 OPTION(i, "Select interpreted mode", interpreted = true)
 
+// Case sensitivity
+OPTVAR(case_sensitive, bool, true)
+OPTION(nocase, "Make programs case-insensitive", case_sensitive = false)
+
 // Stack depth
 OPTVAR(stack_depth, uint, 1000)
 OPTION(stack, "Select the evaluation stack depth",
