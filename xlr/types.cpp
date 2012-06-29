@@ -220,7 +220,7 @@ bool TypeInference::DoInfix(Infix *what)
 // ----------------------------------------------------------------------------
 {
     // Case of 'X : T' : Set type of X to T and unify X:T with X
-    if (what->name == ":")
+    if (what->name == ":" || what->name == "as")
         return (AssignType(what->left, what->right) &&
                 what->left->Do(this) &&
                 AssignType(what) &&
@@ -332,7 +332,7 @@ bool TypeInference::Rewrite(Infix *what)
     // The type of the definition is a pattern type, perform unification
     if (Infix *infix = what->left->AsInfix())
     {
-        if (infix->name == ":")
+        if (infix->name == ":" || what->name == "as")
         {
             // Explicit type declaration
             if (!Unify(valueType, infix->right, what->right, infix->right))

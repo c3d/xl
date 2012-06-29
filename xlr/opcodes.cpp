@@ -273,7 +273,7 @@ void xl_enter_type(Name *name, text castfnname, typecheck_fn tc)
 
     /* Type as infix : evaluates to type check, e.g. 0 : integer */
     text nv = name->value;
-    Infix *from = new Infix(":", new Name("V"), new Name(nv));
+    Infix *from = new Infix("as", new Name("V"), new Name(nv));
     Name *to = new Name(nv);
     eval_fn typeTestFn = (eval_fn) tc;
     to->code = typeTestFn;

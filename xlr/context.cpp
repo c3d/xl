@@ -683,8 +683,6 @@ ulong Context::Hash(Tree *what, bool inDecl)
         break;
     case INFIX:
         t = ((Infix *) what)->name;
-        if (t == ":")
-            t = "";
         break;
     case PREFIX:
         if (Name *name = ((Prefix *) what)->left->AsName())

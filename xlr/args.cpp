@@ -254,7 +254,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         Infix *fi = (Infix *) form;
 
         // Check type declarations
-        if (fi->name == ":")
+        if (fi->name == ":" || fi->name == "as")
         {
             // Check if we can bind the value from what we know
             if (Bind(context, fi->left, value, rc) == FAILED)

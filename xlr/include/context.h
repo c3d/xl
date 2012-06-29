@@ -299,7 +299,7 @@ inline Tree * RewriteDefined(Tree *form)
 {
     // Check 'X as integer', we define X
     if (Infix *typeDecl = form->AsInfix())
-        if (typeDecl->name == "as")
+        if (typeDecl->name == "as" || typeDecl->name == ":")
             form = typeDecl->left;
 
     // Check 'X when Condition', we define X

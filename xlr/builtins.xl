@@ -1,3 +1,57 @@
+// Binary operations on integers
+x:integer + y:integer as integer -> opcode Add
+x:integer - y:integer as integer -> opcode Sub
+x:integer * y:integer as integer -> opcode Mul
+x:integer / y:integer as integer -> opcode SDiv
+x:integer mod y:integer as integer -> opcode SRem
+x:integer and y:integer as integer -> opcode And
+x:integer or y:integer as integer -> opcode Or
+x:integer xor y:integer as integer -> opcode Xor
+x:integer shl y:integer as integer -> opcode Shl
+x:integer ashr y:integer as integer -> opcode AShr
+x:integer lshr y:integer as integer -> opcode LShr
+-x:integer as integer -> opcode Neg
+not x:real as integer -> opcode not
+
+// Binary operation on real numbers
+x:real + y:real as real -> opcode FAdd
+x:real - y:real as real -> opcode FSub
+x:real * y:real as real -> opcode FMul
+x:real / y:real as real -> opcode FDiv
+-x:real as real -> opcode FNeg
+
+// Comparison operators
+X:integer = Y:integer as boolean -> opcode ICmpEQ
+X:integer <> Y:integer as boolean -> opcode ICmpNE
+X:integer > Y:integer as boolean -> opcode ICmpSGT
+X:integer >= Y:integer as boolean -> opcode ICmpSGE
+X:integer < Y:integer as boolean -> opcode ICmpSLT
+X:integer <= Y:integer as boolean -> opcode ICmpSLE
+
+X:real = Y:real as boolean -> opcode FCmpOEQ
+X:real <> Y:real as boolean -> opcode FCmpONE
+X:real > Y:real as boolean -> opcode FCmpOGT
+X:real >= Y:real as boolean -> opcode FCmpOGE
+X:real < Y:real as boolean -> opcode FCmpOLT
+X:real <= Y:real as boolean -> opcode FCmpOLE
+
+// Basic math functions
+abs X:real as real -> C fabs
+extern real sqrt(real);
+extern real sin(real);
+extern real cos(real);
+extern real tan(real);
+extern real asin(real);
+extern real acos(real);
+extern real atan(real);
+extern real exp(real);
+extern real expm1(real);
+extern real log(real);
+extern real log10(real);
+extern real log2(real);
+extern real log1p(real);
+pi -> 3.1415926535897932384626433
+
 // If-then-else statement
 if true then TrueBody else FalseBody    -> do TrueBody
 if false then TrueBody else FalseBody   -> do FalseBody

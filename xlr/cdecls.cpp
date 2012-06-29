@@ -86,7 +86,7 @@ Infix *CDeclaration::Declaration(Tree *input)
             Tree *form = nullParms
                 ? name
                 : (Tree *) new Prefix(name, input, position);
-            Infix *decl = new Infix(":", form, returnType, position);
+            Infix *decl = new Infix("as", form, returnType, position);
 
             Name *C = new Name("C", source->Position());
             Prefix *cdecl = new Prefix(C, name);

@@ -138,7 +138,7 @@ bool ParameterList::DoInfix(Infix *what)
 // ----------------------------------------------------------------------------
 {
     // Check if we match a type, e.g. 2 vs. 'K : integer'
-    if (what->name == ":")
+    if (what->name == ":" || what->name == "as")
     {
         // Check the variable name, e.g. K in example above
         if (Name *varName = what->left->AsName())

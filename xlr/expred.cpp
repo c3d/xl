@@ -130,7 +130,7 @@ llvm_value CompileExpression::DoInfix(Infix *infix)
     }
 
     // Type casts - REVISIT: may need to do some actual conversion
-    if (infix->name == ":")
+    if (infix->name == ":" || infix->name == "as")
     {
         return infix->left->Do(this);
     }
