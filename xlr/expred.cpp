@@ -120,8 +120,13 @@ llvm_value CompileExpression::DoInfix(Infix *infix)
     // Sequences
     if (infix->name == "\n" || infix->name == ";")
     {
-        ForceEvaluation(infix->left);
-        return ForceEvaluation(infix->right);
+        llvm_value left = ForceEvaluation(infix->left);
+        llvm_value right = ForceEvaluation(infix->right);
+        if (right)
+            return right;
+        if (left)
+            return left;
+        return NULL;
     }
 
     // Type casts - REVISIT: may need to do some actual conversion

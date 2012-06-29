@@ -768,7 +768,7 @@ eval_fn CompiledUnit::Finalize(bool createCode)
     void *result = NULL;
     if (createCode)
     {
-        compiler->moduleOptimizer->run(*compiler->module);
+        // compiler->moduleOptimizer->run(*compiler->module);
         result = compiler->runtime->getPointerToFunction(function);
         IFTRACE(code)
         {
