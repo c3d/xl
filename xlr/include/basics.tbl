@@ -792,36 +792,6 @@ PREFIX(ExitProgram, boolean, "exit",
        exit(XL_INT(exitCode)); return xl_false,
        GROUP(basics)
        SYNOPSIS("Terminate the program with the given exit code"))
-PREFIX(WriteInteger, tree, "write", PARM(toWrite, integer, ""),
-       XL_RBOOL(xl_write_integer(toWrite.value)),
-       GROUP(basics)
-       SYNOPSIS("")
-       DESCRIPTION("")
-       RETURNS(tree, ""))
-PREFIX(WriteReal, tree, "write", PARM(toWrite, real, ""),
-       XL_RBOOL(xl_write_real(toWrite.value)),
-       GROUP(basics)
-       SYNOPSIS("")
-       DESCRIPTION("")
-       RETURNS(tree, ""))
-PREFIX(WriteText, tree, "write", PARM(toWrite, text, ""),
-       XL_RBOOL(xl_write_text(toWrite.value.c_str())),
-       GROUP(basics)
-       SYNOPSIS("")
-       DESCRIPTION("")
-       RETURNS(tree, ""))
-PREFIX(WriteOther, tree, "write", PARM(toWrite, tree, ""),
-       XL_RBOOL(xl_write_tree(&toWrite)),
-       GROUP(basics)
-       SYNOPSIS("")
-       DESCRIPTION("")
-       RETURNS(tree, ""))
-PREFIX(WriteLn, tree, "writeln", ,
-       XL_RBOOL(xl_write_cr()),
-       GROUP(basics)
-       SYNOPSIS("")
-       DESCRIPTION("")
-       RETURNS(tree, ""))
 
 // Loops
 FORM(IntegerForLoop, tree,

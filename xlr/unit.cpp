@@ -447,14 +447,15 @@ llvm_value CompiledUnit::Data(Tree *form, uint &index)
 
     case NAME:
     {
-        Infix_p   rw;
+        Infix_p   rw, scope;
         Tree      *existing;
 
         // Bound names are returned as is, parameters are evaluated
-        existing = context->Bound(form, false, &rw);
+        existing = context->Bound(form, true, &rw, &scope);
+        assert (existing || !"Type check didn't realize a name was missing");
 
         // Arguments bound here are returned directly as a tree
-        if (existing)
+        if (scope == context->Scope())
         {
             Tree *defined = RewriteDefined(rw->left);
             if (llvm_value result = Known(defined))
@@ -467,8 +468,6 @@ llvm_value CompiledUnit::Data(Tree *form, uint &index)
         }
 
         // Arguments not bound here are returned as a constant
-        existing = context->Bound(form, true, &rw);
-        assert (existing || !"Type check didn't realize a name was missing");
         Tree *form = RewriteDefined(rw->left);
         return compiler->EnterConstant(form);
     }
@@ -533,15 +532,15 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
 
     case NAME:
     {
-        Context_p  where;
-        Infix_p  rw;
-        Tree      *existing;
+        Infix_p rw, scope;
+        Tree    *existing;
 
         // Bound names are returned as is, parameters are evaluated
-        existing = context->Bound(form, false, &rw);
+        existing = context->Bound(form, true, &rw, &scope);
+        assert(existing || !"Type checking didn't realize a name is missing");
 
         // Arguments bound here are returned directly as a tree
-        if (existing)
+        if (scope == context->Scope())
         {
             // Get element from input argument
             llvm_value ptr = code->CreateConstGEP2_32(boxed, 0, index++);
@@ -549,8 +548,6 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
         }
 
         // Arguments not bound here are returned as a constant
-        existing = context->Bound(form, true, &rw);
-        assert(existing || !"Type checking didn't realize a name is missing");
         Tree *defined = RewriteDefined(rw->left);
         return compiler->EnterConstant(defined);
     }

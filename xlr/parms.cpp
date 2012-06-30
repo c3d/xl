@@ -30,7 +30,6 @@
 
 XL_BEGIN
 
-
 bool ParameterList::EnterName(Name *what,
                               bool untyped)
 // ----------------------------------------------------------------------------

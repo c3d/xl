@@ -229,6 +229,8 @@ public:
     // Create and delete a local scope
     void                CreateScope();
     void                PopScope();
+    Infix *             Scope()         { return symbols; }
+    Context *           Parent();
 
     // Evaluate a tree entirely (compile then run)
     Tree *              Evaluate(Tree *what);
@@ -243,12 +245,13 @@ public:
     Tree *              Assign(Tree *target, Tree *source);
 
     // Looking up definitions in a context
-    typedef Tree *      (*lookup_fn)(Context *,Tree *what,Infix *entry, void *);
+    typedef Tree *      (*lookup_fn)(Infix *sc,Tree *frm,Infix *dcl,void *info);
     Tree *              Lookup(Tree *what,
                                lookup_fn lookup, void *info,
                                bool recurse=true);
     Infix *             Reference(Tree *form);
-    Tree *              Bound(Tree *form, bool recurse=true, Infix_p *rw=NULL);
+    Tree *              Bound(Tree *form,bool recurse=true);
+    Tree *              Bound(Tree *form, bool rec, Infix_p *rw, Infix_p *ctx);
 
     // List rewrites of a given type
     ulong               ListNames(text begin,rewrite_list &list,

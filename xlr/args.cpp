@@ -67,7 +67,7 @@ llvm_value RewriteBinding::Closure(CompiledUnit *unit)
 }
 
 
-Tree *RewriteCalls::Check (Context *context,
+Tree *RewriteCalls::Check (Infix *scope,
                            Tree *what,
                            Infix *candidate)
 // ----------------------------------------------------------------------------
@@ -80,7 +80,8 @@ Tree *RewriteCalls::Check (Context *context,
     inference->AssignType(what);
 
     // Create local type inference deriving from ours
-    Context_p childContext = new Context(context);
+    Context_p childContext = new Context(scope);
+    childContext->CreateScope();
     TypeInference_p childInference = new TypeInference(childContext, inference);
 
     // Attempt binding / unification of parameters to arguments
@@ -94,7 +95,8 @@ Tree *RewriteCalls::Check (Context *context,
 
     // If argument/parameters binding worked, try to typecheck the definition
     Tree *value = candidate->right;
-    if (value && value != xl_self)
+    bool builtin = false;
+    if (value && value != xl_self && !value->code)
     {
         // Check if we have a type to match
         if (defType)
@@ -106,7 +108,6 @@ Tree *RewriteCalls::Check (Context *context,
         }
 
         // Check built-ins and C functions
-        bool builtin = false;
         if (Name *name = value->AsName())
             if (name->value == "C")
                 builtin = true;
@@ -136,7 +137,7 @@ Tree *RewriteCalls::Check (Context *context,
     if (binding != FAILED)
     {
         // Record the type for that specific expression
-        rc.type = childInference->Type(value ? value : form);
+        rc.type = childInference->Type(!builtin && value ? value : form);
         rc.types = childInference;
         candidates.push_back(rc);
     }

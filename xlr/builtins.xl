@@ -65,6 +65,13 @@ data x,y
 // Console / debugging operations
 write x,y -> write x; write y
 writeln x -> write x; writeln
+write X:integer         -> C xl_write_integer
+write X:real            -> C xl_write_real
+write X:text            -> C xl_write_text
+write X:character       -> C xl_write_character
+write X:tree            -> C xl_write_tree
+writeln                 -> C xl_write_cr
+
 
 // Min and max functions
 min x, y -> if x < min y then x else min y

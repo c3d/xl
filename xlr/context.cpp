@@ -118,6 +118,17 @@ void Context::PopScope()
 }
 
 
+Context *Context::Parent()
+// ----------------------------------------------------------------------------
+//   Return the parent context
+// ----------------------------------------------------------------------------
+{
+    if (Infix *psyms = symbols->right->AsInfix())
+        return new Context(psyms);
+    return NULL;
+}
+
+
 Tree *Context::Evaluate(Tree *what)
 // ----------------------------------------------------------------------------
 //   Evaluate 'what' in the given context
@@ -505,7 +516,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
             ulong declHash = Hash(decl->left, true);
             if (declHash == h0)
             {
-                result = lookup(this, what, decl, info);
+                result = lookup(scope, what, decl, info);
                 if (result)
                     return result;
             }
@@ -530,7 +541,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
 }
 
 
-static Tree *findReference(Context *context, Tree *what, Infix *decl, void *)
+static Tree *findReference(Infix *scope, Tree *what, Infix *decl, void *)
 // ----------------------------------------------------------------------------
 //   Return the reference we found
 // ----------------------------------------------------------------------------
@@ -552,26 +563,48 @@ Infix *Context::Reference(Tree *form)
 }
 
 
-static Tree *findValue(Context *context, Tree *what, Infix *decl, void *info)
+static Tree *findValue(Infix *scope, Tree *what, Infix *decl, void *info)
 // ----------------------------------------------------------------------------
 //   Return the value bound to a given form
 // ----------------------------------------------------------------------------
 {
-    if (info)
-    {
-        Infix_p *rewrite = (Infix_p *) info;
-        *rewrite = decl;
-    }
     return decl->right;
 }
 
 
-Tree *Context::Bound(Tree *form, bool recurse, Infix_p *rewrite)
+static Tree *findValueX(Infix *scope, Tree *what, Infix *decl, void *info)
+// ----------------------------------------------------------------------------
+//   Return the value bound to a given form
+// ----------------------------------------------------------------------------
+{
+    Infix_p *rewrite = (Infix_p *) info;
+    rewrite[0] = decl;
+    rewrite[1] = scope;
+    return decl->right;
+}
+
+
+Tree *Context::Bound(Tree *form, bool recurse)
 // ----------------------------------------------------------------------------
 //   Return the value bound to a given declaration
 // ----------------------------------------------------------------------------
 {
-    Tree *result = Lookup(form, findValue, rewrite, recurse);
+    Tree *result = Lookup(form, findValue, NULL, recurse);
+    return result;
+}
+
+
+Tree *Context::Bound(Tree *form, bool recurse, Infix_p *rewrite, Infix_p *ctx)
+// ----------------------------------------------------------------------------
+//   Return the value bound to a given declaration
+// ----------------------------------------------------------------------------
+{
+    Infix_p info[2];
+    Tree *result = Lookup(form, findValueX, info, recurse);
+    if (rewrite)
+        *rewrite = info[0];
+    if (ctx)
+        *ctx = info[1];
     return result;
 }
 

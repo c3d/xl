@@ -25,6 +25,7 @@
 #include "args.h"
 #include "types.h"
 #include "save.h"
+#include "errors.h"
 
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/GlobalVariable.h>
@@ -81,14 +82,14 @@ llvm_value CompileExpression::DoName(Name *what)
 //   Compile a name
 // ----------------------------------------------------------------------------
 {
-    Context_p  where;
+    Infix_p    where;
     Infix_p    rewrite;
     Context   *context  = unit->context;
-    Tree      *existing = context->Bound(what, true, &rewrite);
+    Tree      *existing = context->Bound(what, true, &rewrite, &where);
 
     assert(existing || !"Type checking didn't realize a name is missing");
     Tree *from = RewriteDefined(rewrite->left);
-    if (where == context)
+    if (where == context->Scope())
         if (llvm_value result = unit->Known(from))
             return result;
 
@@ -359,12 +360,19 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
         }
 
         Name *name = builtin->AsName();
-        assert(name || !"Malformed primitive");
-        Compiler *compiler = unit->compiler;
-        text op = name->value;
-        uint sz = args.size();
-        llvm_value *a = &args[0];
-        result = compiler->Primitive(bld, op, sz, a);
+        if (!name)
+        {
+            Ooops("Malformed primitive $1", builtin);
+            result = unit->CallFormError(builtin);
+        }
+        else
+        {
+            Compiler *compiler = unit->compiler;
+            text op = name->value;
+            uint sz = args.size();
+            llvm_value *a = &args[0];
+            result = compiler->Primitive(bld, op, sz, a);
+        }
     }
     else
     {
@@ -397,13 +405,19 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
 //   Perform a comparison between the two values and check if this matches
 // ----------------------------------------------------------------------------
 {
+    CompiledUnit &u = *unit;
+    Compiler &c = *u.compiler;
+
+    if (Name *vt = valueTree->AsName())
+        if (Name *tt = testTree->AsName())
+            if (vt->value == tt->value)
+                return ConstantInt::get(c.booleanTy, 1);
+
     llvm_value value = Value(valueTree);
     llvm_value test = Value(testTree);
     llvm_type valueType = value->getType();
     llvm_type testType = test->getType();
 
-    CompiledUnit &u = *unit;
-    Compiler &c = *u.compiler;
     llvm_builder code = u.code;
 
     // Comparison of boolean values
