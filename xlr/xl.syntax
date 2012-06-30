@@ -5,10 +5,10 @@ INFIX
         40      loop while until
         50      then require ensure
         61      ;
-        75      with
+        75      with as
         85      := += -= *= /= ^= |= &=
         100     STATEMENT
-        110     is as 
+        110     is
         120     written
         130     where
         200     DEFAULT
