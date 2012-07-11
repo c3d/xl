@@ -30,7 +30,7 @@
 
 XL_BEGIN
 
-class Syntax;
+struct Syntax;
 typedef std::map<text,Tree_p>                      formats_table;
 typedef std::map<Tree_p,text>                      highlights_table;
 typedef std::pair<std::streampos, std::streampos>  stream_range;

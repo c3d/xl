@@ -493,13 +493,9 @@ public:
     CompileAction *     compile;
 };
 
-extern "C"
-{
-    void debugsy(XL::Symbols *s);
-    void debugsym(XL::Symbols *s);
-}
-
-
 XL_END
+
+extern "C" void debugsy(XL::Symbols *s);
+extern "C" void debugsym(XL::Symbols *s);
 
 #endif // SYMBOLS_H

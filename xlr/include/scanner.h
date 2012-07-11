@@ -99,8 +99,8 @@
 
 XL_BEGIN
 
-class Syntax;
-class Errors;
+struct Syntax;
+struct Errors;
 
 enum token_t
 // ----------------------------------------------------------------------------
@@ -159,7 +159,7 @@ private:
 };
 
 
-class Scanner
+struct Scanner
 // ----------------------------------------------------------------------------
 //   Interface for invoking the scanner
 // ----------------------------------------------------------------------------

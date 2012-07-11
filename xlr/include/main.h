@@ -73,7 +73,7 @@ struct Main
          text syntax = "xl.syntax",
          text style = "xl.stylesheet",
          text builtins = "builtins.xl");
-    ~Main();
+    virtual ~Main();
 
     int          ParseOptions();
     void         SetupCompiler();
