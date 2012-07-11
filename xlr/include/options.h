@@ -29,10 +29,10 @@
 
 XL_BEGIN
 
-class Errors;
+struct Errors;
 
 
-class Options
+struct Options
 /*---------------------------------------------------------------------------*/
 /*  Class holding options for the compiler                                   */
 /*---------------------------------------------------------------------------*/

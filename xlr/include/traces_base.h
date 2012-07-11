@@ -77,7 +77,7 @@ public:
 
 protected:
 
-    static void  addGroup(std::string name, struct Traces * inst);
+    static void  addGroup(std::string name, Traces * inst);
 
 protected:
 

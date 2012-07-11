@@ -82,7 +82,7 @@ XL_BEGIN
 // 
 // ============================================================================
 
-class Errors;
+struct Errors;
 struct CommentsInfo;
 typedef std::vector<text> CommentsList;
 

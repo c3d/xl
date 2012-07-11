@@ -120,7 +120,7 @@ protected:
     uint                totalCount;
 
     friend void ::debuggc(void *ptr);
-    friend class GarbageCollector;
+    friend struct GarbageCollector;
 
 public:
     static void *       lowestAddress;

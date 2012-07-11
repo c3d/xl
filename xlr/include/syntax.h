@@ -37,7 +37,7 @@ typedef std::map<text, ChildSyntax>     subsyntax_table;
 typedef std::set<text>                  token_set;
 
 
-class Syntax
+struct Syntax
 // ----------------------------------------------------------------------------
 //   This is the execution environment for all trees
 // ----------------------------------------------------------------------------

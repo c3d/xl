@@ -360,8 +360,8 @@ Name *CDeclaration::NamedType(Name *input, uint &mods)
 
 
 Name *CDeclaration::BaroqueTypeMods(Name *first,
-                                           Name *second,
-                                           uint &mods)
+                                    Name *second,
+                                    uint &mods)
 // ----------------------------------------------------------------------------
 //   Perform type replacements such as "short int"
 // ----------------------------------------------------------------------------
@@ -369,7 +369,7 @@ Name *CDeclaration::BaroqueTypeMods(Name *first,
     text a = first->value;
     text b = second->value;
 
-    mods = mods;
+    (void) mods;
 
     static struct { kstring first, second, to; } cvt[] =
     {
