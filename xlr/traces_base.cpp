@@ -117,7 +117,7 @@ bool Traces::enable(std::string name, bool enable)
         enabledNames.erase(name);
 
     bool ok = false;
-    std::map<std::string, struct Traces *>::iterator it;
+    std::map<std::string, Traces *>::iterator it;
     for (it = groups.begin(); it != groups.end(); it++)
         if ((*it).second->groupEnableTrace(name, enable))
             ok = true;
@@ -140,7 +140,7 @@ std::set<std::string> Traces::names()
 // ----------------------------------------------------------------------------
 {
     std::set<std::string> ret;
-    std::map<std::string, struct Traces *>::iterator it;
+    std::map<std::string, Traces *>::iterator it;
     for (it = groups.begin(); it != groups.end(); it++)
     {
         Traces * group = (*it).second;
