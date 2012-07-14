@@ -1010,19 +1010,13 @@ XL_END
 
 extern "C"
 {
-void debugi(XL::Infix *scope)
+void debugl(XL::Infix *scope)
 // ----------------------------------------------------------------------------
-//   Helper to show an infix as a symbol table for debugging purpose
+//    Helper to show a local scope in a symbol table
 // ----------------------------------------------------------------------------
-//   The infix can be shown using debug(), but it's less convenient
 {
     if (XL::Allocator<XL::Infix>::IsAllocated(scope))
     {
-        if (scope && (scope->name == ";" || scope->name == "\n"))
-            scope = scope->left->AsInfix();
-        else
-            scope = NULL;
-
         while (scope)
         {
             XL::Infix *decl = scope->left->AsInfix();
@@ -1034,13 +1028,17 @@ void debugi(XL::Infix *scope)
                           << XL::ShortTreeForm(decl->right)
                           << "\n";
             }
+            else
+            {
+                std::cerr << "Unknown: " << scope->left << "\n";
+            }
             if (children)
             {
                 XL::Infix *left = children->left->AsInfix();
                 XL::Infix *right = children->right->AsInfix();
                 if (left && right)
                 {
-                    debugi(left);
+                    debugl(left);
                     scope = right;
                 }
                 else if (left)
@@ -1064,6 +1062,28 @@ void debugi(XL::Infix *scope)
                   << (void *) scope << "\n";
     }
 
+}
+
+
+void debugi(XL::Infix *scope)
+// ----------------------------------------------------------------------------
+//   Helper to show an infix as a symbol table for debugging purpose
+// ----------------------------------------------------------------------------
+//   The infix can be shown using debug(), but it's less convenient
+{
+    if (XL::Allocator<XL::Infix>::IsAllocated(scope))
+    {
+        if (scope && (scope->name == ";" || scope->name == "\n"))
+            scope = scope->left->AsInfix();
+        else
+            scope = NULL;
+        debugl(scope);
+    }
+    else
+    {
+        std::cerr << "Cowardly refusing to render unknown scope pointer "
+                  << (void *) scope << "\n";
+    }
 }
 
 
@@ -1105,6 +1125,8 @@ void debugc(XL::Context *context)
             debugi(scope);
             scope = scope->right->AsInfix();
         }
+        if (scope)
+            std::cerr << "FINAL: " << scope << "\n";
     } 
     else
     {
