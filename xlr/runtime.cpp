@@ -157,7 +157,7 @@ Tree *xl_form_error(Context *context, Tree *what)
     }
     Save<bool> saveRecursive(recursive, true);
 
-    return Ooops("No form match $1", what);
+    return Ooops("No form match $1 at runtime", what);
 }
 
 
