@@ -366,7 +366,7 @@ Tree *Parser::Parse(text closing)
             break;
         case tokSTRING:
         case tokQUOTE:
-            separator = scanner.NameValue()[0];
+            separator = scanner.TokenText()[0];
             name = text(1, separator);
             right = new Text(scanner.TextValue(), name, name, pos);
             if (!result && new_statement)
@@ -474,7 +474,7 @@ Tree *Parser::Parse(text closing)
             scanner.SetTokenText(Block::indent);
             // Fall-through
         case tokPAROPEN:
-            blk_opening = scanner.NameValue();
+            blk_opening = scanner.TokenText();
             if (!syntax.IsBlock(blk_opening, blk_closing))
                 errors.Log(Error("Unknown parenthese type: $1 (internal)",
                                  pos).Arg(blk_opening));
