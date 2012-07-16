@@ -82,7 +82,8 @@ Tree *RewriteCalls::Check (Infix *scope,
     // Create local type inference deriving from ours
     Context_p childContext = new Context(scope);
     childContext->CreateScope();
-    TypeInference_p childInference = new TypeInference(childContext, inference);
+    Context_p valueContext = inference->context;
+    TypeInference_p childInference = new TypeInference(valueContext, inference);
 
     // Attempt binding / unification of parameters to arguments
     XL::Save<TypeInference *> saveInference(inference, childInference);
@@ -94,6 +95,7 @@ Tree *RewriteCalls::Check (Infix *scope,
         return NULL;
 
     // If argument/parameters binding worked, try to typecheck the definition
+    childInference->context = childContext;
     Tree *value = candidate->right;
     bool builtin = false;
     if (value && value != xl_self && !value->code)
@@ -208,7 +210,8 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         bool needArg = true;
 
         // Ignore function name if that is all we have
-        if (f == rc.rewrite->left)
+        Tree *fname = RewriteDefined(rc.rewrite->left);
+        if (fname == f)
             return POSSIBLE;
 
         // Check if what we have as an expression evaluates correctly
