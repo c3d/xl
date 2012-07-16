@@ -1,4 +1,4 @@
-error "Couldn't compile $1", '<<>>>>'
-00.Parser/bug346.xl:2: No rewrite candidate for '<<>>>>'
-00.Parser/bug346.xl:2: Couldn't compile '<<>>>>'
-00.Parser/bug346.xl:2: Couldn't compile '<<>>>>'
+error "Error compiling '<<>>>>'"
+00.Parser/bug346.xl:2: Unable to evaluate <<>>>> because
+00.Parser/bug346.xl:2:  No form match '<<>>>>'
+00.Parser/bug346.xl:2: Error compiling '<<>>>>'
