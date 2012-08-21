@@ -431,7 +431,7 @@ INFIX(XorBool, boolean, boolean, "xor", boolean, XL_RBOOL(XL_BOOL(l) ^ XL_BOOL(r
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS(boolean, ""))
-PREFIX(NotBool, boolean, "not", PARM(x, boolean, ""), XL_RBOOL(!x),
+PREFIX(NotBool, boolean, "not", PARM(x, boolean, ""), XL_RBOOL(!XL_BOOL(x)),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
@@ -858,7 +858,10 @@ PREFIX(WriteText, tree, "write", PARM(toWrite, text, ""),
        DESCRIPTION("")
        RETURNS(tree, ""))
 PREFIX(WriteOther, tree, "write", PARM(toWrite, tree, ""),
-       XL_RBOOL(xl_write_tree(&toWrite)),
+       if (!toWrite.Symbols())
+           toWrite.SetSymbols(self->Symbols());
+       Tree *value = context->Evaluate(&toWrite);
+       XL_RBOOL(xl_write_tree(value)),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
