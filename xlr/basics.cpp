@@ -52,7 +52,7 @@ XL_BEGIN
 
 Tree *xl_process_import(Symbols *symbols, Tree *source, bool execute)
 // ----------------------------------------------------------------------------
-//   Standard connector for 'load' statements
+//   Standard connector for 'import' statements
 // ----------------------------------------------------------------------------
 {
     if (Prefix *prefix = source->AsPrefix())

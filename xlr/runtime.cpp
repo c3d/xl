@@ -2658,7 +2658,7 @@ void xl_enter_declarator(text name, decl_fn fn)
 //   Enter a declarator
 // ----------------------------------------------------------------------------
 //   The declarators are keywords that need to be processed during the
-//   declaration phase, e.g. 'load' or 'import'
+//   declaration phase, e.g. 'import'
 {
     Symbols::declarators[name] = fn;
 }
