@@ -560,6 +560,10 @@ Tree *Symbols::Compile(Tree *source, OCompiledUnit &unit,
 //    Return an optimized version of the source tree, ready to run
 // ----------------------------------------------------------------------------
 {
+    // Set symbols for the given source
+    if (!source->Symbols())
+        source->SetSymbols(this);
+
     // Record rewrites and data declarations in the current context
     Tree *result = source;
     if (this->source != source)
