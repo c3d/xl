@@ -1,0 +1,5 @@
+foo N:integer ->
+   writeln "N=", N
+
+foo with 1..0
+
