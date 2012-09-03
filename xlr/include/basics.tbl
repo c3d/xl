@@ -369,12 +369,12 @@ PREFIX(ArcCos, real, "acos", PARM(x, real, ""), XL_RREAL(acos(x)),
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(real, ""))
-PREFIX(ArcTan, real, "atan", PARM(x, real, ""), XL_RREAL(atan(x)),
+PREFIX(ArcTan2, real, "atan", PARM(y, real, "") PARM(x, real, ""), XL_RREAL(atan2(y,x)),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(real, ""))
-PREFIX(ArcTan2, real, "atan", PARM(y, real, "") PARM(x, real, ""), XL_RREAL(atan2(y,x)),
+PREFIX(ArcTan, real, "atan", PARM(x, real, ""), XL_RREAL(atan(x)),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
