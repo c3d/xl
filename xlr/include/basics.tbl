@@ -872,6 +872,14 @@ PREFIX(WriteLn, tree, "writeln", ,
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
+PREFIX(Env, text, "env", PARM(name, text, ""),
+       char *val = getenv(name.value.c_str());
+       return new XL::Text(val ? val : ""),
+       GROUP(basics)
+       SYNOPSIS("Get the value of an environment variable")
+       DESCRIPTION("Returns the current value of the environment variable "
+                   "'name' or an empty string if the variable is not set.")
+       RETURNS(text, ""))
 
 // Loops
 FORM(IntegerForLoop, tree,
