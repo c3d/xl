@@ -93,6 +93,8 @@ public:
     static bool         IsGarbageCollected(void *ptr);
     static bool         IsAllocated(void *ptr);
     static void         InUse(void *ptr);
+    void                DeleteLater(Chunk *);
+    void                DeleteAll();
 
     void *operator new(size_t size);
     void operator delete(void *ptr);
@@ -123,6 +125,7 @@ protected:
     std::set<Listener *>listeners;
     std::map<void*,uint>roots;
     Chunk *             freeList;
+    Chunk *             toDelete;
 #ifdef XLR_GC_LIFO
     // Make free list LIFO instead of FIFO. Not good performance-wise,
     // but may help valgrind detect re-use of freed pointers.
@@ -382,11 +385,12 @@ inline void TypeAllocator::Release(void *pointer)
         TypeAllocator *allocator = ValidPointer(chunk->allocator);
         assert(chunk->count);
         uint count = --chunk->count;
-        if (!count && (finalizing || !(chunk->bits & IN_USE)))
+        if (!count)
         {
-            finalizing++;
-            allocator->Finalize(pointer);
-            finalizing--;
+            if (finalizing)
+                allocator->DeleteLater(chunk);
+            else if (!chunk->bits & IN_USE)
+                allocator->Finalize(pointer);
         }
     }
 }
@@ -402,6 +406,32 @@ inline void TypeAllocator::InUse(void *pointer)
         assert (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
         Chunk *chunk = ((Chunk *) pointer) - 1;
         chunk->bits |= IN_USE;
+    }
+}
+
+
+inline void TypeAllocator::DeleteLater(TypeAllocator::Chunk *ptr)
+// ----------------------------------------------------------------------------
+//   Record that we will need to delete this
+// ----------------------------------------------------------------------------
+{
+    ptr->next = toDelete;
+    toDelete = ptr;
+}
+
+
+inline void TypeAllocator::DeleteAll()
+// ----------------------------------------------------------------------------
+//    Remove all the things that we have pushed on the toDelete list
+// ----------------------------------------------------------------------------
+{
+    while (toDelete)
+    {
+        Chunk *next = toDelete;
+        toDelete = toDelete->next;
+        next->allocator = this;
+        Finalize(next+1);
+        freedCount++;
     }
 }
 

@@ -68,7 +68,7 @@ TypeAllocator::TypeAllocator(kstring tn, uint os)
 // ----------------------------------------------------------------------------
 //    Setup an empty allocator
 // ----------------------------------------------------------------------------
-    : gc(NULL), name(tn), chunks(), freeList(NULL),
+    : gc(NULL), name(tn), chunks(), freeList(NULL), toDelete(NULL),
 #ifdef XLR_GC_LIFO
       freeListTail(NULL),
 #endif
@@ -258,10 +258,12 @@ void TypeAllocator::Sweep()
                 else
                 {
                     // Count is 0 : no longer referenced, may cascade free
+                    // We cannot just recurse in delete here because stack
+                    // space may be limited (#2488)
                     finalizing++;
-                    Finalize(ptr+1);
+                    DeleteLater(ptr);
+                    DeleteAll();
                     finalizing--;
-                    freedCount++;
                 }
             }
         }
