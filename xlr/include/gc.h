@@ -94,7 +94,7 @@ public:
     static bool         IsAllocated(void *ptr);
     static void         InUse(void *ptr);
     void                DeleteLater(Chunk *);
-    void                DeleteAll();
+    bool                DeleteAll();
 
     void *operator new(size_t size);
     void operator delete(void *ptr);
@@ -420,11 +420,12 @@ inline void TypeAllocator::DeleteLater(TypeAllocator::Chunk *ptr)
 }
 
 
-inline void TypeAllocator::DeleteAll()
+inline bool TypeAllocator::DeleteAll()
 // ----------------------------------------------------------------------------
 //    Remove all the things that we have pushed on the toDelete list
 // ----------------------------------------------------------------------------
 {
+    bool result = false;
     while (toDelete)
     {
         Chunk *next = toDelete;
@@ -432,7 +433,9 @@ inline void TypeAllocator::DeleteAll()
         next->allocator = this;
         Finalize(next+1);
         freedCount++;
+        result = true;
     }
+    return result;
 }
 
 

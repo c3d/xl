@@ -431,6 +431,15 @@ void GarbageCollector::RunCollection(bool force)
         for (a = allocators.begin(); a != allocators.end(); a++)
             (*a)->Sweep();
 
+        // Cleanup pending purges to maximize the effect of garbage collection
+        bool purging = true;
+        while (purging)
+        {
+            purging = false;
+            for (a = allocators.begin(); a != allocators.end(); a++)
+                purging |= (*a)->DeleteAll();
+        }
+
         // Notify all the listeners that we completed the collection
         for (l = listeners.begin(); l != listeners.end(); l++)
             (*l)->EndCollection();
