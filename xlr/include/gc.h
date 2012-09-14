@@ -450,7 +450,7 @@ Object *Allocator<Object>::Allocate(size_t size)
 template<class Object> inline
 void Allocator<Object>::Delete(Object *obj)
 // ----------------------------------------------------------------------------
-//   Allocate an object (invoked by operator new)
+//   Allocate an object (invoked by operator delete)
 // ----------------------------------------------------------------------------
 {
     Singleton()->TypeAllocator::Delete(obj);
