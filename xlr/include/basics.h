@@ -245,6 +245,22 @@ inline struct tm *localtime_r (const time_t * timep, struct tm * result)
 }
 #endif // CONFIG_MINGW
 
+
+inline text xl_text_replace(text txt, text before, text after)
+// ----------------------------------------------------------------------------
+//   Return a copy of txt with all occurrences of before replaced with after
+// ----------------------------------------------------------------------------
+{
+  size_t pos = 0;
+  while ((pos = txt.find(before, pos)) != std::string::npos)
+  {
+     txt.replace(pos, before.length(), after);
+     pos += after.length();
+  }
+  return txt;
+}
+
+
 XL_END
 
 #endif // BASICS_H
