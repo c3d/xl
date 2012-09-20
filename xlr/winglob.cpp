@@ -94,6 +94,8 @@ int glob(const char *pattern,
 //   Simulation of the glob() function on Windows
 // ----------------------------------------------------------------------------
 {
+    (void)flags;
+    (void)errfunc;
     globinternal("", pattern, pglob->gl_pathv);
     pglob->gl_pathc = pglob->gl_pathv.size();
     return 0;
