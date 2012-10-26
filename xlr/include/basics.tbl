@@ -678,6 +678,13 @@ PREFIX(RandomNumber, real, "random", , XL_RREAL(xl_random(0.0, 1.0)),
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(real, ""))
+PREFIX(RandomSeedNumber2i, boolean, "random_seed",
+       PARM(seed,integer, ""),
+       XL_RBOOL(xl_random_seed(XL_INT(seed))),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("Initialize random generator with seed number")
+       RETURNS(integer, ""))
 
 // Executing some code
 PREFIX(Identity,  tree, "identity",

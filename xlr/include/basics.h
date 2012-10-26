@@ -233,6 +233,19 @@ inline number xl_random(number low, number high)
     return number(base * (high-low) + low);
 }
 
+inline bool xl_random_seed(int seed)
+// ----------------------------------------------------------------------------
+//    Initialized random number generator using the argument passed as seed
+// ----------------------------------------------------------------------------
+{
+#ifndef CONFIG_MINGW
+    srand48(seed);
+#else
+    srand(seed);
+#endif // CONFIG_MINGW
+
+    return true;
+}
 
 #ifdef CONFIG_MINGW
 inline struct tm *localtime_r (const time_t * timep, struct tm * result)
