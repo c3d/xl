@@ -809,6 +809,13 @@ PREFIX(ListFiles, tree, "files", PARM(pat, tree, ""),
        DESCRIPTION("")
        RETURNS(tree, ""))
 #endif
+PREFIX(FileExists, boolean, "file_exists",
+       PARM(f, text, "filename"),
+       XL_RBOOL(xl_file_exists(context, self, f)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(boolean, ""))
 
 // Debugging code
 PREFIX(DebugTree, tree, "debug", PARM(toDebug, tree, ""),

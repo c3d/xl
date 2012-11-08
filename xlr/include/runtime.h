@@ -367,7 +367,7 @@ extern "C"
     bool xl_write_cr(void);
 }
 Tree *xl_list_files(Context *context, Tree *patterns);
-
+bool xl_file_exists(Context *context, Tree_p self, text path);
 
 
 // ============================================================================

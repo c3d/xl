@@ -1079,6 +1079,25 @@ void xl_enter_global(Main *main, Name *name, Name_p *address)
 //
 // ============================================================================
 
+static bool isAbsolute(text path)
+// ----------------------------------------------------------------------------
+//    Test absolute/relative path
+// ----------------------------------------------------------------------------
+{
+    if (path == "")
+        return false;
+#if defined (CONFIG_MINGW)
+    if (path[0] == '/' || path[0] == '\\')
+        return true;
+    if (path.length() >= 2 && path[1] == ':')
+        return true;
+    return false;
+#else
+    return (path[0] != '/');
+#endif
+}
+
+
 static void xl_list_files(Context *context, Tree *patterns, Tree_p *&parent)
 // ----------------------------------------------------------------------------
 //   Append all files found in the parent
@@ -1142,6 +1161,34 @@ Tree *xl_list_files(Context *context, Tree *patterns)
     return result;
 }
 
+
+bool xl_file_exists(Context *context, Tree_p self, text path)
+// ----------------------------------------------------------------------------
+//   Check if a file exists
+// ----------------------------------------------------------------------------
+{
+    if (!isAbsolute(path))
+    {
+        path = context->ResolvePrefixedPath(path);
+        if (!isAbsolute(path))
+        {
+            // Relative path: look in same directory as parent
+            if (Tree * dir = self->Symbols()->Named("module_dir"))
+            {
+                if (Text * txt = dir->AsText())
+                    path = txt->value + "/" + path;
+            }
+        }
+   }
+
+#if defined(CONFIG_MINGW)
+                struct _stat st;
+#else
+                struct stat st;
+#endif
+
+    return (utf8_stat (path.c_str(), &st) < 0) ? false : true;
+}
 
 bool xl_write_integer(longlong x)
 // ----------------------------------------------------------------------------
@@ -1220,24 +1267,6 @@ struct ImportedFileInfo : Info
     text      path;
 };
 
-
-static bool isAbsolute(text path)
-// ----------------------------------------------------------------------------
-//    Test absolute/relative path
-// ----------------------------------------------------------------------------
-{
-    if (path == "")
-        return false;
-#if defined (CONFIG_MINGW)
-    if (path[0] == '/' || path[0] == '\\')
-        return true;
-    if (path.length() >= 2 && path[1] == ':')
-        return true;
-    return false;
-#else
-    return (path[0] != '/');
-#endif
-}
 
 Tree *xl_import(Context *context, Tree *self, text name, bool execute)
 // ----------------------------------------------------------------------------
