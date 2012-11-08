@@ -1093,7 +1093,7 @@ static bool isAbsolute(text path)
         return true;
     return false;
 #else
-    return (path[0] != '/');
+    return (path[0] == '/');
 #endif
 }
 
