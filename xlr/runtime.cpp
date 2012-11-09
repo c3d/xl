@@ -1337,11 +1337,13 @@ struct LoadDataInfo : Info
     {
         TreeList        args;
     };
+
     typedef std::vector<Row> Data;
     Data        data;
     Tree_p      loaded;
 };
 
+static std::map<text, time_t> lastWriteTime; // Last write time of all files
 
 Tree *xl_load_data(Context *context, Tree *self,
                    text name, text prefix, text fieldSeps, text recordSeps)
@@ -1358,8 +1360,26 @@ Tree *xl_load_data(Context *context, Tree *self,
     if (!input.good())
         return Ooops("Unable to load data for $1", self);
 
+#if defined(CONFIG_MINGW)
+    struct _stat st;
+#else
+    struct stat st;
+#endif
+
+    // If file has been modified from the previous call,
+    // then reload the contents
+    bool cached = false;
+    utf8_stat (path.c_str(), &st);
+    if(lastWriteTime.count(path) > 0)
+    {
+        time_t oldTime = lastWriteTime[path];
+        if(st.st_mtime == oldTime)
+            cached = true;
+    }
+
+    lastWriteTime[path] = st.st_mtime;
     return xl_load_data(context, self,
-                        input, true,
+                        input, cached,
                         prefix, fieldSeps, recordSeps);
 }
 
