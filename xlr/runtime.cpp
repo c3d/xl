@@ -1458,9 +1458,18 @@ Tree *xl_load_data(Context *context, Tree *self,
             hasField = fieldSeps.find(c) != fieldSeps.npos;
         }
         if (hasRecord || hasField)
+        {
             c = 0;
+        }
         else if (c == '"')
-            hasQuote = !hasQuote;
+        {
+            int next = input.peek();
+            bool escapedQuote = (hasQuote && next == '"');
+            if (escapedQuote)
+                input.get();
+            else
+                hasQuote = !hasQuote;
+        }
 
         if (ptr < end)
             *ptr++ = c;
