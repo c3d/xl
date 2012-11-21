@@ -1303,14 +1303,19 @@ struct LoadDataInfo : Info
 //   Information about the data that was loaded
 // ----------------------------------------------------------------------------
 {
-    LoadDataInfo() : data(), loaded() {}
-    struct Row
+    LoadDataInfo(): files() {}
+    struct PerFile
     {
-        TreeList        args;
+        PerFile(): data(), loaded() {}
+        struct Row
+        {
+            TreeList        args;
+        };
+        typedef std::vector<Row> Data;
+        Data        data;
+        Tree_p      loaded;
     };
-    typedef std::vector<Row> Data;
-    Data        data;
-    Tree_p      loaded;
+    std::map<text, PerFile> files;
 };
 
 
@@ -1329,13 +1334,13 @@ Tree *xl_load_data(Context *context, Tree *self,
     if (!input.good())
         return Ooops("Unable to load data for $1", self);
 
-    return xl_load_data(context, self,
+    return xl_load_data(context, self, name,
                         input, true,
                         prefix, fieldSeps, recordSeps);
 }
 
 
-Tree *xl_load_data(Context *context, Tree *self,
+Tree *xl_load_data(Context *context, Tree *self, text inputName,
                    std::istream &input, bool cached,
                    text prefix, text fieldSeps, text recordSeps)
 // ----------------------------------------------------------------------------
@@ -1346,32 +1351,36 @@ Tree *xl_load_data(Context *context, Tree *self,
     // If so, return the loaded data
     Symbols *syms = self->Symbols();
     LoadDataInfo *info = self->GetInfo<LoadDataInfo>();
-    if (info)
+    if (!info)
+    {
+        // Create cache
+        info = new LoadDataInfo();
+        self->SetInfo<LoadDataInfo> (info);
+    }
+
+    // Load per-file cached data
+    LoadDataInfo::PerFile &perFile = info->files[inputName];
+    if (perFile.loaded)
     {
         if (cached)
         {
             Tree_p result = xl_false;
             if (prefix.size())
             {
-                ulong i, max = info->data.size();
+                ulong i, max = perFile.data.size();
                 for (i = 0; i < max; i++)
                 {
-                    LoadDataInfo::Row &row = info->data[i];
+                    LoadDataInfo::PerFile::Row &row = perFile.data[i];
                     result = syms->CompileCall(context, prefix, row.args);
                 }
                 return result;
             }
-            return info->loaded;
+            return perFile.loaded;
         }
 
         // Restart with clean data
-        info->data.clear();
-    }
-    else
-    {
-        // Create cache
-        info = new LoadDataInfo();
-        self->SetInfo<LoadDataInfo> (info);
+        perFile.data.clear();
+        perFile.loaded = NULL;
     }
 
     // Read data from file
@@ -1387,7 +1396,7 @@ Tree *xl_load_data(Context *context, Tree *self,
     bool     hasField  = false;
     bool     hasPrefix = prefix.size() != 0;
 
-    LoadDataInfo::Row row;
+    LoadDataInfo::PerFile::Row row;
     *end = 0;
     while (input.good())
     {
@@ -1471,7 +1480,7 @@ Tree *xl_load_data(Context *context, Tree *self,
             {
                 if (hasPrefix)
                 {
-                    info->data.push_back(row);
+                    perFile.data.push_back(row);
                     tree = syms->CompileCall(context, prefix, row.args);
                     row.args.clear();
                 }
@@ -1496,8 +1505,7 @@ Tree *xl_load_data(Context *context, Tree *self,
     }
     if (!tree)
         tree = xl_false;
-    if (!hasPrefix)
-        info->loaded = tree;
+perFile.loaded = tree;
 
     return tree;
 }
