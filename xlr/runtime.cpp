@@ -1079,6 +1079,25 @@ void xl_enter_global(Main *main, Name *name, Name_p *address)
 //
 // ============================================================================
 
+static bool isAbsolute(text path)
+// ----------------------------------------------------------------------------
+//    Test absolute/relative path
+// ----------------------------------------------------------------------------
+{
+    if (path == "")
+        return false;
+#if defined (CONFIG_MINGW)
+    if (path[0] == '/' || path[0] == '\\')
+        return true;
+    if (path.length() >= 2 && path[1] == ':')
+        return true;
+    return false;
+#else
+    return (path[0] == '/');
+#endif
+}
+
+
 static void xl_list_files(Context *context, Tree *patterns, Tree_p *&parent)
 // ----------------------------------------------------------------------------
 //   Append all files found in the parent
@@ -1142,6 +1161,34 @@ Tree *xl_list_files(Context *context, Tree *patterns)
     return result;
 }
 
+
+bool xl_file_exists(Context *context, Tree_p self, text path)
+// ----------------------------------------------------------------------------
+//   Check if a file exists
+// ----------------------------------------------------------------------------
+{
+    if (!isAbsolute(path))
+    {
+        path = context->ResolvePrefixedPath(path);
+        if (!isAbsolute(path))
+        {
+            // Relative path: look in same directory as parent
+            if (Tree * dir = self->Symbols()->Named("module_dir"))
+            {
+                if (Text * txt = dir->AsText())
+                    path = txt->value + "/" + path;
+            }
+        }
+   }
+
+#if defined(CONFIG_MINGW)
+                struct _stat st;
+#else
+                struct stat st;
+#endif
+
+    return (utf8_stat (path.c_str(), &st) < 0) ? false : true;
+}
 
 bool xl_write_integer(longlong x)
 // ----------------------------------------------------------------------------
@@ -1221,24 +1268,6 @@ struct ImportedFileInfo : Info
 };
 
 
-static bool isAbsolute(text path)
-// ----------------------------------------------------------------------------
-//    Test absolute/relative path
-// ----------------------------------------------------------------------------
-{
-    if (path == "")
-        return false;
-#if defined (CONFIG_MINGW)
-    if (path[0] == '/' || path[0] == '\\')
-        return true;
-    if (path.length() >= 2 && path[1] == ':')
-        return true;
-    return false;
-#else
-    return (path[0] != '/');
-#endif
-}
-
 Tree *xl_import(Context *context, Tree *self, text name, bool execute)
 // ----------------------------------------------------------------------------
 //    Load a file from disk without evaluating it
@@ -1314,6 +1343,7 @@ struct LoadDataInfo : Info
         typedef std::vector<Row> Data;
         Data        data;
         Tree_p      loaded;
+        time_t      mtime;
     };
     std::map<text, PerFile> files;
 };
@@ -1335,13 +1365,13 @@ Tree *xl_load_data(Context *context, Tree *self,
         return Ooops("Unable to load data for $1", self);
 
     return xl_load_data(context, self, name,
-                        input, true,
+                        input, true, true,
                         prefix, fieldSeps, recordSeps);
 }
 
 
 Tree *xl_load_data(Context *context, Tree *self, text inputName,
-                   std::istream &input, bool cached,
+                   std::istream &input, bool cached, bool statTime,
                    text prefix, text fieldSeps, text recordSeps)
 // ----------------------------------------------------------------------------
 //   Variant reading from a stream directly
@@ -1362,6 +1392,21 @@ Tree *xl_load_data(Context *context, Tree *self, text inputName,
     LoadDataInfo::PerFile &perFile = info->files[inputName];
     if (perFile.loaded)
     {
+        if (statTime)
+        {
+            // Check if we need to reload the contents of the file
+            // because it has been modified
+#if defined(CONFIG_MINGW)
+            struct _stat st;
+#else
+            struct stat st;
+#endif
+            utf8_stat (inputName.c_str(), &st);
+            if (perFile.mtime != st.st_mtime)
+                cached = false;
+            perFile.mtime = st.st_mtime;
+        }
+
         if (cached)
         {
             Tree_p result = xl_false;
