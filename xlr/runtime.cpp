@@ -1364,7 +1364,7 @@ Tree *xl_load_data(Context *context, Tree *self,
     if (!input.good())
         return Ooops("Unable to load data for $1", self);
 
-    return xl_load_data(context, self, name,
+    return xl_load_data(context, self, path,
                         input, true, true,
                         prefix, fieldSeps, recordSeps);
 }
