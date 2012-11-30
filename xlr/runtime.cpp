@@ -1362,7 +1362,9 @@ Tree *xl_load_data(Context *context, Tree *self,
 
     std::ifstream input(path.c_str(), std::ifstream::in);
     if (!input.good())
-        return Ooops("Unable to load data for $1", self);
+        return Ooops("Unable to load data for $1 with path \""
+                     + path + "\". Error " + strerror(errno),
+                     self);
 
     return xl_load_data(context, self, path,
                         input, true, true,
@@ -2094,7 +2096,7 @@ Tree *ListIterator::EvaluateRange(Tree *input)
     input = xl_evaluate(context, input);
     return input;
 }
-        
+
 
 Tree * ListIterator::Next()
 // ----------------------------------------------------------------------------
