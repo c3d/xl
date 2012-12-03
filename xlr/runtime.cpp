@@ -1360,7 +1360,7 @@ Tree *xl_load_data(Context *context, Tree *self,
     if (path == "")
         return Ooops("CSV file $1 not found", new Text(name));
 
-    std::ifstream input(path.c_str(), std::ifstream::in);
+    utf8_ifstream input(path.c_str(), std::ifstream::in);
     if (!input.good())
         return Ooops("Unable to load data for $1 with path \""
                      + path + "\". Error " + strerror(errno),
