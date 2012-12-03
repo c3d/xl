@@ -1365,9 +1365,11 @@ Tree *xl_load_data(Context *context, Tree *self,
 
     utf8_ifstream input(path.c_str(), std::ifstream::in);
     if (!input.good())
-        return Ooops("Unable to load data for $1 with path \""
-                     + path + "\". Error " + strerror(errno),
-                     self);
+        return Ooops("Unable to load data for $1.\n"
+                     "(Accessing $2 resulted in the following error: $3)",
+                     self,
+                     new Text(path, "\"", "\"", self->Position()),
+                     new Text(strerror(errno), "", "", self->Position()));
 
     return xl_load_data(context, self, path,
                         input, true, true,
