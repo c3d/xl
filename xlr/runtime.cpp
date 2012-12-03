@@ -204,8 +204,11 @@ Tree *xl_set_source(Tree *value, Tree *source)
 //   Set the source associated with the value (e.g. for integer->real casts)
 // ----------------------------------------------------------------------------
 {
-    if (source != value)
+    if (source != value && source != xl_source(value))
+    {
+        value->Purge<SourceInfo>();
         value->SetInfo<SourceInfo>(new SourceInfo(source));
+    }
     return value;
 }
 
