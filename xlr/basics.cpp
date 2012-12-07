@@ -67,7 +67,7 @@ XL_BEGIN
 #include "basics.tbl"
 
 
-Tree *xl_process_import(Symbols *symbols, Tree *source, bool execute)
+Tree *xl_process_import(Symbols *symbols, Tree *source, phase_t phase)
 // ----------------------------------------------------------------------------
 //   Standard connector for 'import' statements
 // ----------------------------------------------------------------------------
@@ -77,20 +77,20 @@ Tree *xl_process_import(Symbols *symbols, Tree *source, bool execute)
         if (Text *name = prefix->right->AsText())
         {
             source->SetSymbols(symbols);
-            return xl_import(MAIN->context, source, name->value, execute);
+            return xl_import(MAIN->context, source, name->value, phase);
         }
     }
     return NULL;
 }
 
 
-Tree *xl_process_load(Symbols *symbols, Tree *source, bool execute)
+Tree *xl_process_load(Symbols *symbols, Tree *source, phase_t phase)
 // ----------------------------------------------------------------------------
 //   Standard connector for 'load' statements
 // ----------------------------------------------------------------------------
 {
-    execute = false;            // 'load' statement doesn't execute loaded code
-    return xl_process_import(symbols, source, execute);
+    phase = DECLARATION_PHASE;
+    return xl_process_import(symbols, source, phase);
 }
 
 

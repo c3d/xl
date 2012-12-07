@@ -1271,7 +1271,7 @@ struct ImportedFileInfo : Info
 };
 
 
-Tree *xl_import(Context *context, Tree *self, text name, bool execute)
+Tree *xl_import(Context *context, Tree *self, text name, int phase)
 // ----------------------------------------------------------------------------
 //    Load a file from disk without evaluating it
 // ----------------------------------------------------------------------------
@@ -1324,7 +1324,7 @@ Tree *xl_import(Context *context, Tree *self, text name, bool execute)
 
     SourceFile &sf = MAIN->files[path];
     Tree *result = sf.tree;
-    if (execute && result)
+    if (phase == EXECUTION_PHASE && result)
         result = context->Evaluate(result);
     return result;
 }

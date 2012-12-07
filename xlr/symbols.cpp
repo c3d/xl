@@ -1929,7 +1929,7 @@ Tree *DeclarationAction::DoPrefix(Prefix *what)
         declarator_table::iterator fnd = Symbols::declarators.find(name->value);
         if (fnd != Symbols::declarators.end())
             if (decl_fn fn = (*fnd).second)
-                if (Tree *result = fn(symbols, what, false))
+                if (Tree *result = fn(symbols, what, DECLARATION_PHASE))
                     return result;
 
         if (name->value == "data")

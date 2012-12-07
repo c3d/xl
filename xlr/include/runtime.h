@@ -376,7 +376,7 @@ bool xl_file_exists(Context *context, Tree_p self, text path);
 //
 // ============================================================================
 
-Tree *xl_import(Context *, Tree *self, text name, bool execute);
+Tree *xl_import(Context *, Tree *self, text name, int phase);
 Tree *xl_load_data(Context *, Tree *self,
                    text name, text prefix,
                    text fieldSeps = ",;", text recordSeps = "\n");
@@ -386,7 +386,8 @@ Tree *xl_load_data(Context *, Tree *self, text inputName,
 Tree *xl_add_search_path(Context *, text prefix, text dir);
 Text *xl_find_in_search_path(Context *, text prefix, text file);
 
-typedef Tree * (*decl_fn) (Symbols *, Tree *source, bool execute);
+typedef enum { PARSING_PHASE, DECLARATION_PHASE, EXECUTION_PHASE } phase_t;
+typedef Tree * (*decl_fn) (Symbols *, Tree *source, phase_t phase);
 void xl_enter_declarator(text name, decl_fn fn);
 
 XL_END

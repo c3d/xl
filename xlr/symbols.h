@@ -48,6 +48,7 @@
 #include "context.h"
 #include "action.h"
 #include "compiler.h"
+#include "runtime.h"
 
 XL_BEGIN
 
@@ -74,7 +75,6 @@ typedef std::map<Name_p, Tree_p>   capture_table;// Symbol capture table
 typedef std::map<Tree_p, Tree_p>   value_table;  // Used for value caching
 typedef value_table::iterator      value_iter;   // Used to iterate over values
 typedef Tree * (*typecheck_fn) (Context *context, Tree *src, Tree *value);
-typedef Tree * (*decl_fn) (Symbols *, Tree *source, bool execute);
 typedef std::map<text, decl_fn>    declarator_table; // To call at decl time
 
 
