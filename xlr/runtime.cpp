@@ -2739,6 +2739,20 @@ void xl_enter_declarator(text name, decl_fn fn)
 }
 
 
+Name *xl_set_override_priority(Tree *self, float priority)
+// ----------------------------------------------------------------------------
+//   Set the override level for the current symbol table
+// ----------------------------------------------------------------------------
+{
+    if (Symbols *syms = self->Symbols())
+    {
+        syms->priority = priority;
+        return xl_true;
+    }
+    return xl_false;
+}
+
+
 
 // ============================================================================
 //

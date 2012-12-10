@@ -389,6 +389,7 @@ Text *xl_find_in_search_path(Context *, text prefix, text file);
 typedef enum { PARSING_PHASE, DECLARATION_PHASE, EXECUTION_PHASE } phase_t;
 typedef Tree * (*decl_fn) (Symbols *, Tree *source, phase_t phase);
 void xl_enter_declarator(text name, decl_fn fn);
+Name *xl_set_override_priority(Tree *self, float priority);
 
 XL_END
 

@@ -473,6 +473,7 @@ int Main::LoadFile(text file,
     {
         ctx = new Context(ctx, NULL);
         syms = new Symbols(syms);
+        syms->name = file;
     }
     MAIN->context = ctx;
     MAIN->globals = syms;

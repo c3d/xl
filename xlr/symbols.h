@@ -153,6 +153,8 @@ public:
     symbols_set         imported;
     Tree_p              error_handler;
     ulong               depth;
+    text                name;
+    float               priority;
     bool                has_rewrites_for_constants;
     bool                is_global;
 
@@ -174,7 +176,7 @@ inline Symbols::Symbols(Symbols *s)
 //   Create a "child" symbol table
 // ----------------------------------------------------------------------------
     : source(NULL), parent(s), rewrites(NULL), error_handler(NULL),
-      depth(s ? s->depth : 0),
+      depth(s ? s->depth : 0), name(""), priority(0.0),
       has_rewrites_for_constants(false), is_global(false)
 {}
 

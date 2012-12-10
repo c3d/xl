@@ -42,6 +42,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <sstream>
+#include <algorithm>
 #include "symbols.h"
 #include "save.h"
 #include "tree.h"
@@ -96,9 +97,9 @@ declarator_table Symbols::declarators;
 //
 // ============================================================================
 
-static void BuildSymbolsList(Symbols *s,
-                             symbols_set &visited,
-                             symbols_list &lookups)
+static void BuildSymbolsListInternal(Symbols *s,
+                                     symbols_set &visited,
+                                     symbols_list &lookups)
 // ----------------------------------------------------------------------------
 //   Build the list of symbols to visit
 // ----------------------------------------------------------------------------
@@ -107,15 +108,34 @@ static void BuildSymbolsList(Symbols *s,
     {
         if (!visited.count(s))
         {
-            lookups.push_back(s);
             visited.insert(s);
-
+            lookups.push_back(s);
             symbols_set::iterator si;
             for (si = s->imported.begin(); si != s->imported.end(); si++)
-                BuildSymbolsList(*si, visited, lookups);
+                BuildSymbolsListInternal(*si, visited, lookups);
         }
         s = s->parent;
     }
+}
+
+
+inline bool BuildSymbolsOrder(Symbols *left, Symbols *right)
+// ----------------------------------------------------------------------------
+//    Put symbol tables with an override priority at the top
+// ----------------------------------------------------------------------------
+{
+    return left->priority > right->priority;
+}
+
+
+static void BuildSymbolsList(Symbols *s, symbols_list &lookups)
+// ----------------------------------------------------------------------------
+//   Build a sorted symbol list
+// ----------------------------------------------------------------------------
+{
+    symbols_set visited;
+    BuildSymbolsListInternal(s, visited, lookups);
+    std::stable_sort(lookups.begin(), lookups.end(), BuildSymbolsOrder);
 }
 
 
@@ -124,11 +144,10 @@ Rewrite *Symbols::LookupEntry(text name, bool create)
 //   Find the entry for a given name in all visible scopes
 // ----------------------------------------------------------------------------
 {
-    symbols_set visited;
-    symbols_list lookups;
 
     // Build all the symbol tables that we are going to look into
-    BuildSymbolsList(this, visited, lookups);
+    symbols_list lookups;
+    BuildSymbolsList(this, lookups);
 
     symbols_list::iterator li;
     for (li = lookups.begin(); li != lookups.end(); li++)
@@ -151,11 +170,9 @@ Rewrite *Symbols::LookupEntry(Tree *form, bool create)
 //   Find the entry for a given name in all visible scopes
 // ----------------------------------------------------------------------------
 {
-    symbols_set visited;
-    symbols_list lookups;
-
     // Build all the symbol tables that we are going to look into
-    BuildSymbolsList(this, visited, lookups);
+    symbols_list lookups;
+    BuildSymbolsList(this, lookups);
 
     symbols_list::iterator li;
     for (li = lookups.begin(); li != lookups.end(); li++)
@@ -560,6 +577,7 @@ void Symbols::Clear()
     calls = symbol_table();
     type_tests.clear();
     error_handler = NULL;
+    priority = 0.0;
     has_rewrites_for_constants = false;
 }
 
@@ -2314,11 +2332,18 @@ Tree *CompileAction::Rewrites(Tree *what)
     bool foundUnconditional = false;
     bool foundSomething = false;
     ExpressionReduction reduction (unit, what);
-    symbols_set visited;
-    symbols_list lookups;
 
     // Build all the symbol tables that we are going to look into
-    BuildSymbolsList(symbols, visited, lookups);
+    symbols_list lookups;
+    BuildSymbolsList(symbols, lookups);
+
+    if (debugRewrites)
+    {
+        std::cerr << "Symbols from " << symbols << ": ";
+        for (symbols_list::iterator si = lookups.begin(); si != lookups.end(); si++)
+            std::cerr << *si << " ";
+        std::cerr << "\n";
+    }
 
     // Iterate over all symbol tables listed above
     symbols_list::iterator li;
@@ -3759,7 +3784,7 @@ extern "C" void debugsy(XL::Symbols *s)
 // ----------------------------------------------------------------------------
 {
     using namespace XL;
-    std::cerr << "SYMBOLS AT " << s << "\n";
+    std::cerr << "SYMBOLS AT " << s << " (" << s->name << ")\n";
     std::cerr << "REWRITES IN " << s << ":\n";
     if (s->rewrites)
         debugrw(s->rewrites);
@@ -3773,11 +3798,10 @@ extern "C" void debugsym(XL::Symbols *symbols)
 // ----------------------------------------------------------------------------
 {
     using namespace XL;
-    symbols_set visited;
-    symbols_list lookups;
 
     // Build all the symbol tables that we are going to look into
-    BuildSymbolsList(symbols, visited, lookups);
+    symbols_list lookups;
+    BuildSymbolsList(symbols, lookups);
 
     for (symbols_list::iterator i = lookups.begin(); i != lookups.end(); i++)
     {
@@ -3787,7 +3811,8 @@ extern "C" void debugsym(XL::Symbols *symbols)
         symbols_set::iterator import;
         for (import = s->imported.begin(); import!=s->imported.end(); import++)
         {
-            std::cerr << "IMPORT " << *import << " IN " << s << ":\n";
+            std::cerr << "IMPORT " << *import << " IN "
+                      << s << " (" << s->name << "):\n";
             debugsy(*import);
         }
         s = s->parent;

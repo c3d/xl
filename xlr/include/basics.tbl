@@ -958,3 +958,9 @@ PREFIX(ComputeSha1, text, "sha1", PARM(t, tree, ""), XL_RTEXT(sha1(&t)),
        DESCRIPTION("")
        RETURNS(tree, "")
        SEE("sha"))
+
+
+// Override level for symbol tables
+PREFIX(SetOverrideLevel, boolean, "override_priority", PARM(o, real, ""),
+       return xl_set_override_priority(self, o),
+       GROUP(basics))
