@@ -105,19 +105,9 @@ Tree *xl_process_override_priority(Symbols *symbols, Tree *self, phase_t phase)
         if (Prefix *prefix = self->AsPrefix())
         {
             if (Real *rp = prefix->right->AsReal())
-            {
-                std::cerr << "DECL REAL PRIORITY(" << symbols
-                          << ":" << symbols->name << ")="
-                          << rp->value << "\n";
                 symbols->priority = rp->value;
-            }
             else if (Integer *ip = prefix->right->AsInteger())
-            {
-                std::cerr << "DECL INTEGER PRIORITY(" << symbols
-                          << ":" << symbols->name << ")="
-                          << ip->value << "\n";
                 symbols->priority = ip->value;
-            }
         }
     }
     return NULL;
