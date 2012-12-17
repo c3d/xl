@@ -1286,7 +1286,7 @@ Tree *xl_import(Context *context, Tree *self, text name, int phase)
     {
         if (path == "")
             path = MAIN->SearchFile(name);
-        if (path == "" && !isAbsolute(path))
+        if (path == "" && !isAbsolute(name))
         {
             // Relative path: look in same directory as parent
             if (Tree * dir = self->Symbols()->Named("module_dir"))
