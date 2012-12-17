@@ -1289,7 +1289,10 @@ Tree *xl_import(Context *context, Tree *self, text name, int phase)
         if (path == "" && !isAbsolute(name))
         {
             // Relative path: look in same directory as parent
-            if (Tree * dir = self->Symbols()->Named("module_dir"))
+            // Ensure we lookup module_dir in current module first (#2660)
+            Symbols *syms = self->Symbols();
+            XL::Save<float> savePriority(syms->priority, 1e6);
+            if (Tree * dir = syms->Named("module_dir"))
             {
                 if (Text * txt = dir->AsText())
                 {

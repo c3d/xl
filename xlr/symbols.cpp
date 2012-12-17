@@ -135,7 +135,8 @@ static void BuildSymbolsList(Symbols *s, symbols_list &lookups)
 {
     symbols_set visited;
     BuildSymbolsListInternal(s, visited, lookups);
-    std::stable_sort(lookups.begin(), lookups.end(), BuildSymbolsOrder);
+    if (s->priority < 1e6)
+        std::stable_sort(lookups.begin(), lookups.end(), BuildSymbolsOrder);
 }
 
 
@@ -2339,9 +2340,11 @@ Tree *CompileAction::Rewrites(Tree *what)
 
     if (debugRewrites)
     {
-        std::cerr << "Symbols from " << symbols << ": ";
+        std::cerr << "Symbols from " << symbols << ":\n";
         for (symbols_list::iterator si = lookups.begin(); si != lookups.end(); si++)
-            std::cerr << *si << " ";
+            std::cerr << *si 
+                      << " " << (*si)->priority
+                      << " " << (*si)->name;
         std::cerr << "\n";
     }
 
@@ -2373,7 +2376,7 @@ Tree *CompileAction::Rewrites(Tree *what)
                 {
                     std::cerr << "REWRITE" << (int) debugRewrites
                               << ": " << candidate->from
-                              << (argsTest ? " MATCH" : "FAIL") << "\n";
+                              << (argsTest ? "\tMATCH" : "\tFAIL") << "\n";
                     debugRewrites = -debugRewrites;
                 }
 

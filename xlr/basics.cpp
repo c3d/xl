@@ -94,6 +94,36 @@ Tree *xl_process_load(Symbols *symbols, Tree *source, phase_t phase)
 }
 
 
+Tree *xl_process_override_priority(Symbols *symbols, Tree *self, phase_t phase)
+// ----------------------------------------------------------------------------
+//   Declaration-phase for overriding a priority
+// ----------------------------------------------------------------------------
+{
+    if (phase == DECLARATION_PHASE)
+    {
+        self->SetSymbols(symbols);
+        if (Prefix *prefix = self->AsPrefix())
+        {
+            if (Real *rp = prefix->right->AsReal())
+            {
+                std::cerr << "DECL REAL PRIORITY(" << symbols
+                          << ":" << symbols->name << ")="
+                          << rp->value << "\n";
+                symbols->priority = rp->value;
+            }
+            else if (Integer *ip = prefix->right->AsInteger())
+            {
+                std::cerr << "DECL INTEGER PRIORITY(" << symbols
+                          << ":" << symbols->name << ")="
+                          << ip->value << "\n";
+                symbols->priority = ip->value;
+            }
+        }
+    }
+    return NULL;
+}
+
+
 void EnterBasics()
 // ----------------------------------------------------------------------------
 //   Enter all the basic operations defined in basics.tbl
@@ -104,6 +134,8 @@ void EnterBasics()
 #include "basics.tbl"
     xl_enter_declarator("load", xl_process_load);
     xl_enter_declarator("import", xl_process_import);
+    xl_enter_declarator("override_priority", xl_process_override_priority);
+
 }
 
 void DeleteBasics()
