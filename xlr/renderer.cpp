@@ -802,11 +802,14 @@ std::ostream& operator<< (std::ostream &out, XL::Tree *t)
 XL_END
 
 
-void debug(XL::Tree *tree)
+static text debugBuffer;
+
+const char *debug(XL::Tree *tree)
 // ----------------------------------------------------------------------------
 //    Emit for debugging purpose
 // ----------------------------------------------------------------------------
 {
+    std::ostringstream out;
     if (XL::Allocator<XL::Integer>::IsAllocated(tree)   ||
         XL::Allocator<XL::Real>::IsAllocated(tree)      ||
         XL::Allocator<XL::Text>::IsAllocated(tree)      ||
@@ -816,25 +819,29 @@ void debug(XL::Tree *tree)
         XL::Allocator<XL::Postfix>::IsAllocated(tree)   ||
         XL::Allocator<XL::Block>::IsAllocated(tree))
     {
-        XL::Renderer render(std::cout);
+        XL::Renderer render(out);
         render.RenderFile(tree);
-        std::cout << "\n";
+        out << "\n";
+
     }
     else
     {
-        std::cout << "Cowardly refusing to render unknown pointer "
-                  << (void *) tree << "\n";
+        out << "Cowardly refusing to render unknown pointer "
+            << (void *) tree << "\n";
     }
+    debugBuffer = out.str();
+    return debugBuffer.c_str();
 }
 
 
 #include "sha1_ostream.h"
 
-void debugp(XL::Tree *tree)
+const char *debugp(XL::Tree *tree)
 // ----------------------------------------------------------------------------
 //    Emit for debugging purpose
 // ----------------------------------------------------------------------------
 {
+    std::ostringstream out;
     if (XL::Allocator<XL::Integer>::IsAllocated(tree)   ||
         XL::Allocator<XL::Real>::IsAllocated(tree)      ||
         XL::Allocator<XL::Text>::IsAllocated(tree)      ||
@@ -844,18 +851,20 @@ void debugp(XL::Tree *tree)
         XL::Allocator<XL::Postfix>::IsAllocated(tree)   ||
         XL::Allocator<XL::Block>::IsAllocated(tree))
     {
-        XL::Renderer render(std::cout);
+        XL::Renderer render(out);
         render.SelectStyleSheet("debug.stylesheet");
         render.RenderFile(tree);
         
         XL::TreeHashAction<> h_action(XL::TreeHashAction<>::Force);
         tree->Do(h_action);
         if (tree->Exists< XL::HashInfo<> >())
-            std::cout << "HASH: " << tree->Get< XL::HashInfo<> >() << '\n';
+            out << "HASH: " << tree->Get< XL::HashInfo<> >() << '\n';
     }
     else
     {
-        std::cout << "Cowardly refusing to render unknown pointer "
-                  << (void *) tree << "\n";
+        out << "Cowardly refusing to render unknown pointer "
+            << (void *) tree << "\n";
     }
+    debugBuffer = out.str();
+    return debugBuffer.c_str();
 }

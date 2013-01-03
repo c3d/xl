@@ -109,7 +109,7 @@ std::ostream& operator<< (std::ostream&out, XL::Tree *t);
 XL_END
 
 // For use in a debugger
-extern "C" void debug(XL::Tree *);
-extern "C" void debugp(XL::Tree *);
+extern "C" const char *debug(XL::Tree *);
+extern "C" const char *debugp(XL::Tree *);
 
 #endif // RENDERER_H
