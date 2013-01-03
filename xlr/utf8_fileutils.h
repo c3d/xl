@@ -89,8 +89,7 @@ protected:
     int wflags(std::ios::openmode mode)
     {
         int flags = _O_RDONLY;
-        if (mode & std::ios::binary)
-            flags |= _O_BINARY;
+        flags |= _O_BINARY;
         return flags;
     }
 
