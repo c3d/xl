@@ -86,7 +86,7 @@ public:
     {}
 
 protected:
-    int wflags(std::ios::openmode mode)
+    int wflags(std::ios::openmode)
     {
         int flags = _O_RDONLY;
         // Experience shows that some versions of GCC misbehave on input.unget()
