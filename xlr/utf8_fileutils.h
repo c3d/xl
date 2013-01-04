@@ -89,6 +89,8 @@ protected:
     int wflags(std::ios::openmode mode)
     {
         int flags = _O_RDONLY;
+        // Experience shows that some versions of GCC misbehave on input.unget()
+        // if binary mode is not set, see #2682
         flags |= _O_BINARY;
         return flags;
     }
