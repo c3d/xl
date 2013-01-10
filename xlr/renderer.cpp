@@ -44,6 +44,7 @@
 #include "syntax.h"
 #include "errors.h"
 #include "hash.h"
+#include "save.h"
 #include "options.h"
 #include <iostream>
 #include <sstream>
@@ -279,7 +280,11 @@ void Renderer::RenderFormat(Tree *format)
     {
         text t = tf->value;
         if (tf->opening == Text::textQuote)
+        {
+            if (need_newline && t != "")
+                RenderSeparators(t[0]);
             output << t;                        // As is, no formatting
+        }
         else
             RenderText(t);                      // Format contents
     }
@@ -322,6 +327,11 @@ void Renderer::RenderFormat(Tree *format)
                     escaped += t;
             }
             RenderText(escaped);
+        }
+        else if (n == "unindented_self")
+        {
+            Save<bool> saveNoIndents(no_indents, true);
+            RenderText(self);
         }
         else if (n ==  "left" || n == "child")
         {
@@ -600,7 +610,6 @@ void Renderer::RenderBody(Tree *what)
         text q2 = q1 + " " + w->closing;
         text saveq = this->current_quote;
         this->current_quote = w->opening;
-        this->no_indents = true;
 
         if (formats.count(q2) > 0)
         {
@@ -623,7 +632,6 @@ void Renderer::RenderBody(Tree *what)
             RenderText (t);
         }
         this->current_quote = saveq;
-        this->no_indents = false;
     }   break;
     case NAME:
         t = what->AsName()->value;
