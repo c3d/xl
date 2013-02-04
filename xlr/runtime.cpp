@@ -1341,7 +1341,7 @@ struct LoadDataInfo : Info
     LoadDataInfo(): files() {}
     struct PerFile
     {
-        PerFile(): data(), loaded() {}
+        PerFile(): data(), loaded(), mtime(0) {}
         struct Row
         {
             TreeList        args;
