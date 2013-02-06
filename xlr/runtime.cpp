@@ -2906,3 +2906,6 @@ Tree *xl_while_loop(Context *context, Tree *self,
 }
 
 XL_END
+
+
+uint xl_recursion_count = 0;

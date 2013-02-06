@@ -51,6 +51,7 @@
 TRACE(memory)
 TRACE(eval)
 TRACE(compile)
+TRACE(compile_progress)
 TRACE(parmatch)
 TRACE(argmatch)
 TRACE(rewrites)

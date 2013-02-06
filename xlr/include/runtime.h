@@ -393,4 +393,7 @@ Name *xl_set_override_priority(Tree *self, float priority);
 
 XL_END
 
+
+extern uint xl_recursion_count;
+
 #endif // RUNTIME_H

@@ -137,7 +137,8 @@ Compiler::Compiler(kstring moduleName)
       xl_new_prefix(NULL), xl_new_postfix(NULL), xl_new_infix(NULL),
       xl_fill_block(NULL),
       xl_fill_prefix(NULL), xl_fill_postfix(NULL), xl_fill_infix(NULL),
-      xl_array_index(NULL), xl_new_closure(NULL)
+      xl_array_index(NULL), xl_new_closure(NULL),
+      xl_recursion_count(NULL)
 {
 #ifdef CONFIG_MINGW
     llvm::sys::PrintStackTraceOnErrorSignal();
@@ -371,6 +372,13 @@ Compiler::Compiler(kstring moduleName)
     xl_new_closure = ExternFunction(FN(xl_new_closure),
                                     treePtrTy, -3,
                                     evalFnTy, treePtrTy, LLVM_INTTYPE(uint));
+
+    // Create a global value used to count recursions
+    Constant *zero = ConstantInt::get(LLVM_INTTYPE(uint), 0);
+    xl_recursion_count = new GlobalVariable (*module,
+                                             LLVM_INTTYPE(uint), false,
+                                             GlobalVariable::ExternalLinkage,
+                                             zero, "xl_recursion_count");
 
     // Initialize the llvm_entries table
     for (CompilerLLVMTableEntry *le = CompilerLLVMTable; le->name; le++)

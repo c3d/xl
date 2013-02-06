@@ -2663,6 +2663,14 @@ OCompiledUnit::OCompiledUnit(Compiler *comp,
     IFTRACE(llvm)
         std::cerr << "OCompiledUnit T" << (void *) src;
 
+    IFTRACE(compile_progress)
+    {
+        text  file, source;
+        ulong line, column;
+        MAIN->positions.GetInfo(src->Position(),&file,&line,&column,&source);
+        std::cerr << file << ":" << line << ": " << source << ": ";
+    }
+
     // If a compilation for that tree is alread in progress, fwd decl
     function = closure
         ? compiler->TreeClosure(src)
@@ -2722,9 +2730,15 @@ OCompiledUnit::OCompiledUnit(Compiler *comp,
         parmsCount++;
     }
 
-    // Create the exit basic block and return statement
+    // Create the exit basic block, stack pop and return statement
     exitbb = BasicBlock::Create(*llvm, "exit", function);
     IRBuilder<> exitcode(exitbb);
+
+    Value *recExit = exitcode.CreateLoad(compiler->xl_recursion_count);
+    Constant *subtrOne = ConstantInt::get(LLVM_INTTYPE(uint), 1);
+    Value *decreased = exitcode.CreateSub(recExit, subtrOne);
+    exitcode.CreateStore(decreased, compiler->xl_recursion_count);
+
     Value *retVal = exitcode.CreateLoad(resultStorage, "retval");
     exitcode.CreateRet(retVal);
 
@@ -2760,15 +2774,28 @@ eval_fn OCompiledUnit::Finalize()
     IFTRACE(llvm)
         std::cerr << "OCompiledUnit Finalize T" << (void *) source
                   << " F" << function;
+    IFTRACE(compile_progress)
+        std::cerr << " Verify ";
 
     // Branch to the exit block from the last test we did
     code->CreateBr(exitbb);
 
-    // Connect the "allocas" to the actual entry point
-    data->CreateBr(entrybb);
+    // Check that we are not in some infinite recursion
+    Value *recursionCount = data->CreateLoad(compiler->xl_recursion_count);
+    Constant *addedOne = ConstantInt::get(LLVM_INTTYPE(uint), 1);
+    Value *increased = data->CreateAdd(recursionCount, addedOne);
+    data->CreateStore(increased, compiler->xl_recursion_count);
+    uint maxDepthOption = Options::options->stack_depth;
+    Constant *maxDepth = ConstantInt::get(LLVM_INTTYPE(uint), maxDepthOption);
+ 
+    // If overflowing, connect directly to exit, otherwise to entry
+    Value *isOverflow = data->CreateICmpUGT(increased, maxDepth, "stackCheck");
+    data->CreateCondBr(isOverflow, exitbb, entrybb);
 
     // Verify the function we built
     verifyFunction(*function);
+    IFTRACE(compile_progress)
+        std::cerr << "Optimize ";
     if (compiler->optimizer)
         compiler->optimizer->run(*function);
 
@@ -2780,6 +2807,8 @@ eval_fn OCompiledUnit::Finalize()
     void *result = compiler->runtime->getPointerToFunction(function);
     IFTRACE(llvm)
         std::cerr << " C" << (void *) result << "\n";
+    IFTRACE(compile_progress)
+        std::cerr << "Finalized\n";
 
     exitbb = NULL;              // Tell destructor we were successful
     return (eval_fn) result;
