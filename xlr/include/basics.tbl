@@ -205,6 +205,11 @@ INFIX(NEInt, boolean, integer, "<>", integer, XL_RBOOL(XL_INT(l) != XL_INT(r)),
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS(boolean, ""))
+INFIX(NEInt2, boolean, integer, "!=", integer, XL_RBOOL(XL_INT(l) != XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
 INFIX(EQInt, boolean, integer, "=", integer, XL_RBOOL(XL_INT(l) == XL_INT(r)),
       GROUP(basics)
       SYNOPSIS("")
@@ -302,7 +307,12 @@ INFIX(GEReal, boolean, real, ">=", real, XL_RBOOL(XL_REAL(l) >= XL_REAL(r)),
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS(boolean, ""))
-INFIX(NEReal, boolean, real, "<>", real, XL_RBOOL(XL_REAL(l) != XL_REAL(r)),
+INFIX(NEReal2, boolean, real, "<>", real, XL_RBOOL(XL_REAL(l) != XL_REAL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(NEReal, boolean, real, "!=", real, XL_RBOOL(XL_REAL(l) != XL_REAL(r)),
       GROUP(basics)
       SYNOPSIS("")
       DESCRIPTION("")
@@ -442,6 +452,11 @@ INFIX(NEBool, boolean, boolean, "<>", boolean, XL_RBOOL(XL_BOOL(l) != XL_BOOL(r)
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS(boolean, ""))
+INFIX(NEBool2, boolean, boolean, "!=", boolean, XL_RBOOL(XL_BOOL(l) != XL_BOOL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
 INFIX(EQBool, boolean, boolean, "=", boolean, XL_RBOOL(XL_BOOL(l) == XL_BOOL(r)),
       GROUP(basics)
       SYNOPSIS("")
@@ -475,6 +490,11 @@ INFIX(GEText, boolean, text, ">=", text, XL_RBOOL(XL_TEXT(l) >= XL_TEXT(r)),
       DESCRIPTION("")
       RETURNS(boolean, ""))
 INFIX(NEText, boolean, text, "<>", text, XL_RBOOL(XL_TEXT(l) != XL_TEXT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(NEText2, boolean, text, "!=", text, XL_RBOOL(XL_TEXT(l) != XL_TEXT(r)),
       GROUP(basics)
       SYNOPSIS("")
       DESCRIPTION("")
