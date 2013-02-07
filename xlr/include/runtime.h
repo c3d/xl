@@ -78,6 +78,7 @@ Tree *xl_source(Tree *);
 Tree *xl_set_source(Tree *value, Tree *source);
 Tree *xl_error(Tree *self, text msg, Tree *a1=0, Tree *a2=0, Tree *a3=0);
 Tree *xl_form_error(Context *c, Tree *tree);
+Tree *xl_stack_overflow(Tree *tree);
 
 Tree *xl_parse_tree(Context *, Tree *tree);
 Tree *xl_parse_text(text source);

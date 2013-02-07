@@ -254,6 +254,15 @@ Tree *xl_form_error(Context *context, Tree *what)
 }
 
 
+Tree *xl_stack_overflow(Tree *what)
+// ----------------------------------------------------------------------------
+//   Return an error evaluating a tree
+// ----------------------------------------------------------------------------
+{
+    return Ooops("Stack overflow evaluating $1", what);
+}
+
+
 Tree *xl_parse_tree_inner(Context *context, Tree *tree)
 // ----------------------------------------------------------------------------
 //   Build a parse tree in the current context

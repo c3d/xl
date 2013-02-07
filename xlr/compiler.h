@@ -216,6 +216,7 @@ public:
     llvm::Function            *xl_infix_match_check;
     llvm::Function            *xl_type_check;
     llvm::Function            *xl_form_error;
+    llvm::Function            *xl_stack_overflow;
     llvm::Function            *xl_new_integer;
     llvm::Function            *xl_new_real;
     llvm::Function            *xl_new_character;

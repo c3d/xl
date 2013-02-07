@@ -130,7 +130,8 @@ Compiler::Compiler(kstring moduleName)
       strcmp_fn(NULL),
       xl_evaluate(NULL),
       xl_same_text(NULL), xl_same_shape(NULL),
-      xl_infix_match_check(NULL), xl_type_check(NULL), xl_form_error(NULL),
+      xl_infix_match_check(NULL), xl_type_check(NULL),
+      xl_form_error(NULL), xl_stack_overflow(NULL),
       xl_new_integer(NULL), xl_new_real(NULL), xl_new_character(NULL),
       xl_new_text(NULL), xl_new_ctext(NULL), xl_new_xtext(NULL),
       xl_new_block(NULL),
@@ -340,6 +341,8 @@ Compiler::Compiler(kstring moduleName)
                                    3, contextPtrTy, treePtrTy, treePtrTy);
     xl_form_error = ExternFunction(FN(xl_form_error),
                                    treePtrTy, 2, contextPtrTy, treePtrTy);
+    xl_stack_overflow = ExternFunction(FN(xl_stack_overflow),
+                                       treePtrTy, 1, treePtrTy);
     xl_new_integer = ExternFunction(FN(xl_new_integer),
                                     integerTreePtrTy, 1, integerTy);
     xl_new_real = ExternFunction(FN(xl_new_real),

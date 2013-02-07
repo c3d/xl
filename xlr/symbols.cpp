@@ -2780,6 +2780,13 @@ eval_fn OCompiledUnit::Finalize()
     // Branch to the exit block from the last test we did
     code->CreateBr(exitbb);
 
+    // Code for overflow: call xl_stack_overflow
+    BasicBlock *overflow = BasicBlock::Create(*llvm, "overflow", function);
+    IRBuilder<> ovcode(overflow);
+    Value *ptr = ovcode.CreateLoad(storage[source]);
+    ovcode.CreateCall(compiler->xl_stack_overflow, ptr);
+    ovcode.CreateBr(exitbb);
+
     // Check that we are not in some infinite recursion
     Value *recursionCount = data->CreateLoad(compiler->xl_recursion_count);
     Constant *addedOne = ConstantInt::get(LLVM_INTTYPE(uint), 1);
@@ -2790,7 +2797,7 @@ eval_fn OCompiledUnit::Finalize()
  
     // If overflowing, connect directly to exit, otherwise to entry
     Value *isOverflow = data->CreateICmpUGT(increased, maxDepth, "stackCheck");
-    data->CreateCondBr(isOverflow, exitbb, entrybb);
+    data->CreateCondBr(isOverflow, overflow, entrybb);
 
     // Verify the function we built
     verifyFunction(*function);
