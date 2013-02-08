@@ -1257,7 +1257,7 @@ bool xl_write_cr()
 //   Write a line separator
 // ----------------------------------------------------------------------------
 {
-    std::cout << '\n';
+    std::cout << '\n' << std::flush;
     return true;
 }
 
