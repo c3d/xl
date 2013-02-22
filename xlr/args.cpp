@@ -381,7 +381,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         Name *valueName = postfixValue->right->AsName();
         if (!valueName)
             return FAILED;
-        if (formName != valueName)
+        if (formName->value != valueName->value)
             return FAILED;
 
         return Bind(context, postfixForm->left, postfixValue->left, rc);
