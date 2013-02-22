@@ -435,7 +435,7 @@ bool TypeInference::Evaluate(Tree *what)
             Tree *wtype = Type(what);
             return Unify(wtype, tree_type, what, what);
         }
-        Ooops("No form match $1", what);
+        Ooops("No form matches $1", what);
         return false;
     }
     errors.Clear();
