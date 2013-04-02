@@ -423,7 +423,7 @@ int Main::LoadFile(text file,
     {
         if (options.doDiff)
         {
-            files[file] = SourceFile (file, NULL, NULL, NULL);
+            files[file] = SourceFile (file, NULL, NULL, false);
             hadError = false;
         }
     }
