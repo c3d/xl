@@ -79,7 +79,8 @@ SourceFile::SourceFile(text n, Tree *t, Context *c, Symbols *s, bool ro)
 //   Construct a source file given a name
 // ----------------------------------------------------------------------------
     : name(n), tree(t), context(c), symbols(s),
-      modified(0), changed(false), readOnly(ro)
+      modified(0), changed(false), readOnly(ro),
+      info(NULL)
 {
 #if defined(CONFIG_MINGW)
     struct _stat st;
@@ -101,8 +102,22 @@ SourceFile::SourceFile()
 //   Default constructor
 // ----------------------------------------------------------------------------
     : name(""), tree(NULL), context(NULL), symbols(NULL),
-      modified(0), changed(false), readOnly(false)
+      modified(0), changed(false), readOnly(false), info(NULL)
 {}
+
+
+SourceFile::~SourceFile()
+// ----------------------------------------------------------------------------
+//   Delete info
+// ----------------------------------------------------------------------------
+{
+    Info *next = NULL;
+    for (Info *i = info; i; i = next)
+    {
+        next = i->next;
+        i->Delete();
+    }
+}
 
 
 Main::Main(int inArgc, char **inArgv, text compilerName,

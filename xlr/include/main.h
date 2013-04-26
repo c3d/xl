@@ -48,6 +48,7 @@
 #include "syntax.h"
 #include "context.h"
 #include "options.h"
+#include "info.h"
 #include <map>
 #include <set>
 #include <time.h>
@@ -67,6 +68,18 @@ struct SourceFile
 {
     SourceFile(text n, Tree *t, Context *c, Symbols *s, bool readOnly = false);
     SourceFile();
+    ~SourceFile();
+
+    // Info management
+    template<class I>
+    I*                  GetInfo() const;
+    template<class I>
+    void                SetInfo(I *);
+    template <class I>
+    bool                Purge();
+    template <class I>
+    I*                  Remove(I *);
+
     text        name;
     Tree_p      tree;
     Context_p   context;
@@ -75,6 +88,7 @@ struct SourceFile
     text        hash;
     bool        changed;
     bool        readOnly;
+    Info *      info;
 };
 typedef std::map<text, SourceFile> source_files;
 typedef std::vector<text> source_names;
@@ -133,6 +147,92 @@ public:
 };
 
 extern Main *MAIN;
+
+
+
+// ============================================================================
+//
+//    Template members for info management
+//
+// ============================================================================
+
+template <class I> inline I* SourceFile::GetInfo() const
+// ----------------------------------------------------------------------------
+//   Find if we have an information of the right type in 'info'
+// ----------------------------------------------------------------------------
+{
+    for (Info *i = info; i; i = i->next)
+        if (I *ic = dynamic_cast<I *> (i))
+            return ic;
+    return NULL;
+}
+
+
+template <class I> inline void SourceFile::SetInfo(I *i)
+// ----------------------------------------------------------------------------
+//   Set the information given as an argument
+// ----------------------------------------------------------------------------
+{
+    Info *last = i;
+    while(last->next)
+        last = last->next;
+    last->next = info;
+    info = i;
+}
+
+
+template <class I> inline bool SourceFile::Purge()
+// ----------------------------------------------------------------------------
+//   Find and purge information of the given type
+// ----------------------------------------------------------------------------
+{
+    Info *last = NULL;
+    Info *next = NULL;
+    bool purged = false;
+    for (Info *i = info; i; i = next)
+    {
+        next = i->next;
+        if (I *ic = dynamic_cast<I *> (i))
+        {
+            if (last)
+                last->next = next;
+            else
+                info = next;
+            ic->Delete();
+            purged = true;
+        }
+        else
+        {
+            last = i;
+        }
+    }
+    return purged;
+}
+
+
+template <class I> inline I* SourceFile::Remove(I *toFind)
+// ----------------------------------------------------------------------------
+//   Find information matching input and remove it if it exists
+// ----------------------------------------------------------------------------
+{
+    Info *prev = NULL;
+    for (Info *i = info; i; i = i->next)
+    {
+        I *ic = dynamic_cast<I *> (i);
+        if (ic == toFind)
+        {
+            if (prev)
+                prev->next = i->next;
+            else
+                info = i->next;
+            i->next = NULL;
+            return ic;
+        }
+        prev = i;
+    }
+    return NULL;
+}
+
 
 XL_END
 
