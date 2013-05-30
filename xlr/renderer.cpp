@@ -838,6 +838,7 @@ const char *debug(XL::Tree *tree)
             << (void *) tree << "\n";
     }
     debugBuffer = out.str();
+    std::cerr << debugBuffer;
     return debugBuffer.c_str();
 }
 
@@ -874,5 +875,6 @@ const char *debugp(XL::Tree *tree)
             << (void *) tree << "\n";
     }
     debugBuffer = out.str();
+    std::cerr << debugBuffer;
     return debugBuffer.c_str();
 }
