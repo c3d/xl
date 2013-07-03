@@ -616,44 +616,50 @@ llvm_value CompiledUnit::Closure(Name *name, Tree *expr)
     // Record the function that we build
     text fkey = compiler->ClosureKey(expr, context);
     llvm_function &function = compiler->FunctionFor(fkey);
-    assert (function == NULL);
 
-    // Create the evaluation function
-    CompiledUnit cunit(compiler, context);
-    function = cunit.ClosureFunction(expr, inference);
-    if (!function || !cunit.code || !cunit.closureTy)
-        return NULL;
-    cunit.ImportClosureInfo(this);
-    llvm_value returned = cunit.CompileTopLevel(expr);
-    if (!returned)
-        return NULL;
-    if (!cunit.Return(returned))
-        return NULL;
-    cunit.Finalize(false);
-
-    // Values imported from closure are now in cunit.closure[]
-    // Allocate a local data block to pass as the closure
-    llvm_value stackPtr = data->CreateAlloca(cunit.closureTy);
-    compiler->MarkAsClosureType(stackPtr->getType());
-
-    // First, store the function pointer
-    uint field = 0;
-    llvm_value fptr = code->CreateConstGEP2_32(stackPtr, 0, field++);
-    code->CreateStore(function, fptr);
-
-    // Then loop over all values that were detected while evaluating expr
-    value_map &cls = cunit.closure;
-    for (value_map::iterator v = cls.begin(); v != cls.end(); v++)
+    llvm_type closureType = NULL;
+    llvm_value stackPtr = NULL;
+    if (function == NULL)
     {
-        Tree *subexpr = (*v).first;
-        llvm_value subval = Compile(subexpr);
-        fptr = code->CreateConstGEP2_32(stackPtr, 0, field++);
-        code->CreateStore(subval, fptr);
-    }
+        // Create the evaluation function
+        CompiledUnit cunit(compiler, context);
+        function = cunit.ClosureFunction(expr, inference);
+        if (!function || !cunit.code || !cunit.closureTy)
+            return NULL;
+        cunit.ImportClosureInfo(this);
+        llvm_value returned = cunit.CompileTopLevel(expr);
+        if (!returned)
+            return NULL;
+        if (!cunit.Return(returned))
+            return NULL;
+        cunit.Finalize(false);
 
-    // Remember the machine type associated with this closure
-    llvm_type mtype = stackPtr->getType();
-    ExpressionMachineType(name, mtype);
+        closureType = cunit.closureTy;
+
+        // Values imported from closure are now in cunit.closure[]
+        // Allocate a local data block to pass as the closure
+        stackPtr = data->CreateAlloca(closureType);
+        compiler->MarkAsClosureType(stackPtr->getType());
+
+        // First, store the function pointer
+        uint field = 0;
+        llvm_value fptr = code->CreateConstGEP2_32(stackPtr, 0, field++);
+        code->CreateStore(function, fptr);
+
+        // Then loop over all values that were detected while evaluating expr
+        value_map &cls = cunit.closure;
+        for (value_map::iterator v = cls.begin(); v != cls.end(); v++)
+        {
+            Tree *subexpr = (*v).first;
+            llvm_value subval = Compile(subexpr);
+            fptr = code->CreateConstGEP2_32(stackPtr, 0, field++);
+            code->CreateStore(subval, fptr);
+        }
+
+        // Remember the machine type associated with this closure
+        llvm_type mtype = stackPtr->getType();
+        ExpressionMachineType(name, mtype);
+    }
 
     // Return the stack pointer that we'll use later to evaluate the closure
     return stackPtr;

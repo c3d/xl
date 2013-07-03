@@ -53,10 +53,10 @@ extern real log1p(real);
 pi -> 3.1415926535897932384626433
 
 // If-then-else statement
-if true then TrueBody else FalseBody    -> do TrueBody
-if false then TrueBody else FalseBody   -> do FalseBody
+if true then TrueBody else FalseBody    -> TrueBody
+if false then TrueBody else FalseBody   -> FalseBody
 
-if true then TrueBody                   -> do TrueBody
+if true then TrueBody                   -> TrueBody
 if false then TrueBody                  -> false
 
 // Building lists, notably lists of arguments
