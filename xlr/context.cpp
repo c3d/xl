@@ -1888,7 +1888,7 @@ void Context::AddSearchPath(text prefix, text dir)
 //   Add directory to the search path for prefix
 // ----------------------------------------------------------------------------
 {
-    searchPaths[prefix].push_back(dir);
+    searchPaths[prefix].insert(dir);
 }
 
 
@@ -1899,8 +1899,8 @@ text Context::FindInSearchPath(text prefix, text filename, bool localonly)
 {
     if (searchPaths.count(prefix) > 0)
     {
-        path_list dirs = searchPaths[prefix];
-        path_list::iterator it;
+        path_set dirs = searchPaths[prefix];
+        path_set::iterator it;
         for (it = dirs.begin(); it != dirs.end(); it++)
         {
             text path = (*it) + "/" + filename;
