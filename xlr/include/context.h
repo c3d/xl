@@ -200,8 +200,8 @@ typedef std::vector<Rewrite_p>     rewrite_list;
 typedef std::vector<Context_p>     context_list;
 typedef std::map<Tree_p, Tree_p>   tree_map;
 typedef Tree *(*native_fn) (Context *ctx, Tree *self);
-typedef std::vector<text>          path_list;
-typedef std::map<text, path_list>  search_paths;
+typedef std::set<text>             path_set;
+typedef std::map<text, path_set>   search_paths;
 typedef std::map<text, text>       search_path_cache;
 
 
