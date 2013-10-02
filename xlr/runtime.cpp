@@ -396,6 +396,8 @@ Tree *xl_infix_match_check(Context *context, Tree *value, kstring name)
     while (Block *block = value->AsBlock())
         if (block->opening == "(" && block->closing == ")")
             value = block->child;
+        else
+            break;
     if (Infix *infix = value->AsInfix())
         if (infix->name == name)
             return infix;
