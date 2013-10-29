@@ -138,6 +138,7 @@ Compiler::Compiler(kstring moduleName)
       xl_new_prefix(NULL), xl_new_postfix(NULL), xl_new_infix(NULL),
       xl_fill_block(NULL),
       xl_fill_prefix(NULL), xl_fill_postfix(NULL), xl_fill_infix(NULL),
+      xl_integer2real(NULL),
       xl_array_index(NULL), xl_new_closure(NULL),
       xl_recursion_count(NULL)
 {
@@ -369,6 +370,8 @@ Compiler::Compiler(kstring moduleName)
                                     postfixTreePtrTy, treePtrTy, treePtrTy);
     xl_fill_infix = ExternFunction(FN(xl_fill_infix), infixTreePtrTy, 3,
                                   infixTreePtrTy,treePtrTy,treePtrTy);
+    xl_integer2real = ExternFunction(FN(xl_integer2real), treePtrTy, 1,
+                                     treePtrTy);
     xl_array_index = ExternFunction(FN(xl_array_index),
                                     treePtrTy, 3,
                                     contextPtrTy, treePtrTy, treePtrTy);

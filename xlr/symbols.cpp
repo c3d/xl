@@ -1546,11 +1546,11 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                                 Tree *cast = new Real(test->AsInteger()->value,
                                                       test->Position());
                                 cast->SetSymbols(test->Symbols());
-                                test = cast;
                                 IFTRACE(statictypes)
                                     std::cerr << "Types: Generated real cast "
                                               << cast
                                               << " for " << test << "\n";
+                                test = cast;
                             }
                         }
                         needEvaluation = false;
@@ -1675,24 +1675,35 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                           << exprType << " to " << typeExpr << "\n";
             if (!typeExpr->Symbols())
                 typeExpr->SetSymbols(symbols);
-            if (exprType && exprType != tree_type &&
-                typeExpr && typeExpr != exprType)
-            {
-                IFTRACE(statictypes)
-                    std::cerr << "Types: Static type mismatch\n";
-                return NULL;
-            }
 
-            if (exprType != typeExpr)
+            if (typeExpr == real_type && exprType == integer_type)
             {
                 IFTRACE(statictypes)
-                    std::cerr << "Types: Dynamic type check\n";
-                unit.TypeTest(compiled, typeExpr);
+                    std::cerr << "Types: Promote integer to real\n";
+                unit.CallInteger2Real(compiled);
             }
             else
             {
-                IFTRACE(statictypes)
-                    std::cerr << "Types: Static type match\n";
+                if (exprType && exprType != tree_type &&
+                    typeExpr && typeExpr != exprType)
+                {
+                    
+                    IFTRACE(statictypes)
+                        std::cerr << "Types: Static type mismatch\n";
+                    return NULL;
+                }
+                
+                if (exprType != typeExpr)
+                {
+                    IFTRACE(statictypes)
+                        std::cerr << "Types: Dynamic type check\n";
+                    unit.TypeTest(compiled, typeExpr);
+                }
+                else
+                {
+                    IFTRACE(statictypes)
+                        std::cerr << "Types: Static type match\n";
+                }
             }
         }
 
@@ -2264,6 +2275,8 @@ Tree *CompileAction::DoName(Name *what, bool forceEval)
 {
     // Lookup rewrite for that name
     Rewrite *rw = symbols->LookupEntry(what->value, false);
+    if (rw && rw->type)
+        symbols->types[what] = rw->type;
     if (!rw || !rw->to)
     {
         if (nullIfBad)
@@ -2357,6 +2370,8 @@ Tree *CompileAction::DoBlock(Block *what)
             what->child->SetSymbols(symbols);
         if (unit.IsKnown(result))
             unit.Copy(result, what);
+        if (Tree *type = symbols->TypeOf(result))
+            symbols->types[what] = type;
         return what;
     }
 
@@ -3484,6 +3499,18 @@ Value *OCompiledUnit::CallFillInfix(Infix *infix)
                                       infixValue, leftValue, rightValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(infix, result);
+    return result;
+}
+
+
+Value *OCompiledUnit::CallInteger2Real(Tree *integer)
+// ----------------------------------------------------------------------------
+//    Compile code generating the children of an infix
+// ----------------------------------------------------------------------------
+{
+    Value *integerValue = Known(integer);
+    Value *result = code->CreateCall(compiler->xl_integer2real, integerValue);
+    MarkComputed(integer, result);
     return result;
 }
 

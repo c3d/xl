@@ -104,6 +104,7 @@ Postfix *xl_fill_postfix(Postfix *source, Tree *left, Tree *right);
 Infix   *xl_fill_infix(Infix *source, Tree *left, Tree *right);
 Tree    *xl_real_list(Tree *self, uint n, double *values);
 Tree    *xl_integer_list(Tree *self, uint n, longlong *values);
+Real    *xl_integer2real(Integer *ival);
 
 Tree *xl_new_closure(eval_fn toCall, Tree *expr, uint ntrees, ...);
 Tree *xl_tree_copy(Tree *from, Tree *to);

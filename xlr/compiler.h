@@ -231,6 +231,7 @@ public:
     llvm::Function            *xl_fill_prefix;
     llvm::Function            *xl_fill_postfix;
     llvm::Function            *xl_fill_infix;
+    llvm::Function            *xl_integer2real;
     llvm::Function            *xl_array_index;
     llvm::Function            *xl_new_closure;
     llvm::GlobalValue         *xl_recursion_count;
