@@ -203,7 +203,7 @@ Tree *Symbols::Named(text name, bool deep)
 }
 
 
-void Symbols::EnterName(text name, Tree *value, Rewrite::Kind kind)
+Rewrite *Symbols::EnterName(text name, Tree *value, Rewrite::Kind kind)
 // ----------------------------------------------------------------------------
 //   Enter a value in the namespace
 // ----------------------------------------------------------------------------
@@ -216,6 +216,7 @@ void Symbols::EnterName(text name, Tree *value, Rewrite::Kind kind)
     }
     found->kind = kind;
     found->to = value;
+    return found;
 }
 
 
@@ -576,6 +577,7 @@ void Symbols::Clear()
     if (rewrites)
         rewrites = NULL;        // Decrease reference count
     calls = symbol_table();
+    types.clear();
     type_tests.clear();
     error_handler = NULL;
     priority = 0.0;
@@ -604,6 +606,11 @@ Tree *Symbols::Compile(Tree *source, OCompiledUnit &unit,
     Tree *result = source;
     if (this->source != source)
         result = ProcessDeclarations(result);
+
+    IFTRACE(statictypes)
+        std::cerr << "\n\nTypes: Compile " << source
+                  << (keepAlternatives ? " with " : " without ")
+                  << "alternatives\n";
 
     // Compile code for that tree
     CompileAction compile(this, unit, nullIfBad, keepAlternatives, noData);
@@ -845,6 +852,18 @@ Tree *Symbols::Run(Context *context, Tree *code)
     IFTRACE(eval)
         std::cerr << "RSLT" << index-- << ": " << result << '\n';
     return result;
+}
+
+
+Tree *Symbols::TypeOf(Tree *what)
+// ----------------------------------------------------------------------------
+//   Return the type of the given input argument as found in the types table
+// ----------------------------------------------------------------------------
+{
+    value_table::iterator found = types.find(what);
+    if (found != types.end())
+        return (*found).second;
+    return NULL;    
 }
 
 
@@ -1472,6 +1491,10 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
     // Check if we match a type, e.g. 2 vs. 'K : integer'
     if (what->name == ":")
     {
+        IFTRACE(statictypes)
+            std::cerr << "Types: Matching " << test
+                      << " against " << what << "\n";
+
         // Check the variable name, e.g. K in example above
         Name *varName = what->left->AsName();
         if (!varName)
@@ -1481,17 +1504,61 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
         }
 
         // Check for types that don't require a type check
+        Tree *typeExpr = what->right;
         bool needEvaluation = true;
         bool needRTTypeTest = true;
+        bool needTypeExprCompilation = true;
         if (Name *declTypeName = what->right->AsName())
         {
             if (Tree *namedType = symbols->Named(declTypeName->value))
             {
+                IFTRACE(statictypes)
+                    std::cerr << "Types: Found type name " << namedType << "\n";
+
+                typeExpr = namedType;
+                needTypeExprCompilation = false;
                 if (namedType == tree_type ||
                     namedType == code_type ||
                     namedType == lazy_type)
                     return DoName(varName);
                 kind tk = test->Kind();
+
+                // Check built-in types against built-in constants
+                if (tk == INTEGER || tk == REAL || tk == TEXT)
+                {
+                    if (namedType == text_type   ||
+                        namedType == integer_type ||
+                        namedType == real_type)
+                    {
+                        IFTRACE(statictypes)
+                            std::cerr << "Types: Built-in types and constant\n";
+
+                        if (namedType == text_type    && tk != TEXT)
+                            return NULL;
+                        if (namedType == integer_type && tk != INTEGER)
+                            return NULL;
+                        if (namedType == real_type)
+                        {
+                            if (tk == TEXT)
+                                return NULL;
+                            if (tk == INTEGER)
+                            {
+                                Tree *cast = new Real(test->AsInteger()->value,
+                                                      test->Position());
+                                cast->SetSymbols(test->Symbols());
+                                test = cast;
+                                IFTRACE(statictypes)
+                                    std::cerr << "Types: Generated real cast "
+                                              << cast
+                                              << " for " << test << "\n";
+                            }
+                        }
+                        needEvaluation = false;
+                        needRTTypeTest = false;
+                        IFTRACE(statictypes)
+                            std::cerr << "Types: Constant matches type\n";
+                    }
+                }
                 if ((namedType == source_type) ||
                     (namedType == name_type && tk == NAME) ||
                     (namedType == block_type && tk == BLOCK) ||
@@ -1500,59 +1567,142 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                 {
                     needEvaluation = false;
                     needRTTypeTest = namedType != source_type;
+                    IFTRACE(statictypes)
+                        std::cerr << "Types: No evaluation when passing tree, "
+                                  << "typecheck=" << needRTTypeTest << "\n";
                 }
                 if (namedType == reference_type)
                 {
+                    IFTRACE(statictypes)
+                        std::cerr << "Types: Reference evaluation\n";
+
                     // Only evaluate local parameters
                     if (tk == NAME)
                     {
+                        IFTRACE(statictypes)
+                            std::cerr << "Types: Passing a name\n";
                         Name *name = (Name *) (Tree *) test;
                         Rewrite *rw = symbols->LookupEntry(name->value, false);
                         if (rw && rw->kind == Rewrite::PARM)
+                        {
+                            IFTRACE(statictypes)
+                                std::cerr << "Types: Evaluating name "
+                                          << varName << "\n";
                             return DoName(varName);
+                        }
                     }
 
                     // In other case, lazy evaluation, no runtime type test
                     needEvaluation = false;
                     needRTTypeTest = false;
+
+                    IFTRACE(statictypes)
+                        std::cerr << "Types: Lazy name evaluation for "
+                                  << varName << "\n";
                 }
             }
         }
 
         // Evaluate type expression, e.g. 'integer' in example above
-        Tree *typeExpr = what->right;
         if (needRTTypeTest)
         {
-            typeExpr = Compile(what->right, true);
-            if (!typeExpr)
-                return NULL;
+            if (needTypeExprCompilation)
+            {
+                typeExpr = Compile(what->right, true);
+                if (!typeExpr)
+                {
+                    IFTRACE(statictypes)
+                        std::cerr << "Types: Invalid type "
+                                  << what->right << "\n";
+                    return NULL;
+                }
+            }
+            if (typeExpr == tree_type)
+            {
+                IFTRACE(statictypes)
+                    std::cerr << "Types: Disabling type check for tree type "
+                              << typeExpr << "\n";
+                needRTTypeTest = false;
+            }
         }
 
         // Compile what we are testing against
         Tree *compiled = test;
+        Tree *exprType = NULL;
         if (needEvaluation)
         {
+            IFTRACE(statictypes)
+                std::cerr << "Types: Need evaluation for " << test << "\n";
             compiled = Compile(compiled, true);
+            IFTRACE(statictypes)
+                std::cerr << "Types: Compiled as " << compiled << "\n";
             if (!compiled)
                 return NULL;
+            exprType = symbols->TypeOf(compiled);
+            IFTRACE(statictypes)
+                std::cerr << "Types: Type of compiled is " << exprType << "\n";
         }
         else
         {
+            IFTRACE(statictypes)
+                std::cerr << "Types: Return constant tree " << compiled << "\n";
+
             unit.ConstantTree(compiled);
             if (!compiled->Symbols())
                 compiled->SetSymbols(symbols);
+            kind tk = compiled->Kind();
+            switch(tk)
+            {
+            case INTEGER:       exprType = integer_type; break;
+            case REAL:          exprType = real_type;    break;
+            case TEXT:          exprType = text_type;    break;
+            case NAME:          exprType = name_type;    break;
+            case BLOCK:         exprType = block_type;   break;
+            case PREFIX:        exprType = prefix_type;  break;
+            case POSTFIX:       exprType = postfix_type; break;
+            case INFIX:         exprType = infix_type;   break;
+            }
+
+            IFTRACE(statictypes)
+                std::cerr << "Types: Type for constant is " << exprType << "\n";
         }
 
         // Insert a run-time type test
         if (needRTTypeTest)
         {
+            IFTRACE(statictypes)
+                std::cerr << "Types: Runtime type check matching "
+                          << exprType << " to " << typeExpr << "\n";
             if (!typeExpr->Symbols())
                 typeExpr->SetSymbols(symbols);
-            unit.TypeTest(compiled, typeExpr);
+            if (exprType && exprType != tree_type &&
+                typeExpr && typeExpr != exprType)
+            {
+                IFTRACE(statictypes)
+                    std::cerr << "Types: Static type mismatch\n";
+                return NULL;
+            }
+
+            if (exprType != typeExpr)
+            {
+                IFTRACE(statictypes)
+                    std::cerr << "Types: Dynamic type check\n";
+                unit.TypeTest(compiled, typeExpr);
+            }
+            else
+            {
+                IFTRACE(statictypes)
+                    std::cerr << "Types: Static type match\n";
+            }
         }
 
         // Enter the compiled expression in the symbol table
-        locals->EnterName(varName->value, compiled, Rewrite::ARG);
+        Rewrite *rw = locals->EnterName(varName->value, compiled, Rewrite::ARG);
+        rw->type = typeExpr;
+        IFTRACE(statictypes)
+            std::cerr << "Types: Entering " << compiled << " as "
+                      << varName << ":" << typeExpr << "\n";
+
 
         return what;
     }
@@ -2333,6 +2483,7 @@ Tree *CompileAction::Rewrites(Tree *what)
     bool foundUnconditional = false;
     bool foundSomething = false;
     ExpressionReduction reduction (unit, what);
+    Tree *returnType   = NULL;
 
     // Build all the symbol tables that we are going to look into
     symbols_list lookups;
@@ -2341,8 +2492,8 @@ Tree *CompileAction::Rewrites(Tree *what)
     if (debugRewrites)
     {
         std::cerr << "Symbols from " << symbols << ":\n";
-        for (symbols_list::iterator si = lookups.begin(); si != lookups.end(); si++)
-            std::cerr << *si 
+        for (symbols_list::iterator si=lookups.begin();si!=lookups.end();si++)
+            std::cerr << *si
                       << " " << (*si)->priority
                       << " " << (*si)->name;
         std::cerr << "\n";
@@ -2437,6 +2588,13 @@ Tree *CompileAction::Rewrites(Tree *what)
 
                             // This is the end of a successful invokation
                             reduction.Succeeded();
+
+                            // Compute return type of expression
+                            Tree *exprType = candidate->type;
+                            if (!returnType)
+                                returnType = exprType;
+                            else if (exprType != returnType)
+                                returnType = tree_type;
                         }
                         else
                         {
@@ -2488,6 +2646,10 @@ Tree *CompileAction::Rewrites(Tree *what)
     // Set the symbols for the result
     if (!what->Symbols())
         what->SetSymbols(symbols);
+
+    // Store the return type if we found one
+    if (returnType)
+        symbols->types[what] = returnType;
 
     return what;
 }

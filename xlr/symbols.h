@@ -104,7 +104,7 @@ struct Symbols
     Rewrite *           Rewrites()              { return rewrites; }
 
     // Entering symbols in the symbol table
-    void                EnterName (text name, Tree *value, Rewrite::Kind k);
+    Rewrite *           EnterName (text name, Tree *value, Rewrite::Kind k);
     void                ExtendName (text name, Tree *value);
     Rewrite *           EnterRewrite(Rewrite *r);
     Rewrite *           EnterRewrite(Tree *from, Tree *to);
@@ -139,6 +139,7 @@ struct Symbols
                                     text callee, TreeList &args,bool call=true);
     Infix *             CompileTypeTest(Tree *type);
     Tree *              Run(Context *, Tree *t);
+    Tree *              TypeOf(Tree *t);
 
     // Error handling
     Tree *              Ooops (text message,
@@ -149,6 +150,7 @@ public:
     Symbols_p           parent;
     Rewrite_p           rewrites;
     symbol_table        calls;
+    value_table         types;
     value_table         type_tests;
     symbols_set         imported;
     Tree_p              error_handler;

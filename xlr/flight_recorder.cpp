@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>

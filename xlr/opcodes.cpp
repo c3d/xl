@@ -170,6 +170,7 @@ void xl_enter_infix(Context *context, text name, native_fn fn, Tree *rtype,
 
     Symbols *s = MAIN->globals;
     Rewrite *rw2 = s->EnterRewrite(from, to);
+    rw2->type = rtype;
     to->code = fn;
     to->SetSymbols(s);
     xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
@@ -196,6 +197,7 @@ void xl_enter_prefix(Context *context, text name, native_fn fn, Tree *rtype,
 
         Symbols *s = MAIN->globals;
         Rewrite *rw2 = s->EnterRewrite(from, to);
+        rw2->type = rtype;
         to->code = fn;
         to->SetSymbols(s);
         xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
@@ -211,7 +213,8 @@ void xl_enter_prefix(Context *context, text name, native_fn fn, Tree *rtype,
         rw->type = rtype;
 
         Symbols *s = MAIN->globals;
-        s->EnterName(symbol, n, Rewrite::GLOBAL);
+        Rewrite *rw2 = s->EnterName(symbol, n, Rewrite::GLOBAL);
+        rw2->type = rtype;
         n->code = fn;
         n->SetSymbols(s);
         TreeList noparms;
@@ -238,6 +241,7 @@ void xl_enter_postfix(Context *context, text name, native_fn fn, Tree *rtype,
 
     Symbols *s = MAIN->globals;
     Rewrite *rw2 = s->EnterRewrite(from, to);
+    rw2->type = rtype;
     to->code = fn;
     to->SetSymbols(s);
     xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
@@ -265,6 +269,7 @@ void xl_enter_block(Context *context, text name, native_fn fn, Tree *rtype,
 
     Symbols *s = MAIN->globals;
     Rewrite *rw2 = s->EnterRewrite(from, to);
+    rw2->type = rtype;
     to->code = fn;
     to->SetSymbols(s);
     xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);
@@ -289,6 +294,7 @@ void xl_enter_form(Context *context, text name, native_fn fn,
 
     Symbols *s = MAIN->globals;
     Rewrite *rw2 = s->EnterRewrite(from, to);
+    rw2->type = rtype;
     to->code = fn;
     to->SetSymbols(s);
     xl_enter_builtin(MAIN, name, to, rw2->parameters, fn);

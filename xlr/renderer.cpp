@@ -843,6 +843,15 @@ const char *debug(XL::Tree *tree)
 }
 
 
+const char *debugxl(XL::Tree *tree)
+// ----------------------------------------------------------------------------
+//    Avoid ambiguities in name lookup in the debugger
+// ----------------------------------------------------------------------------
+{
+    return debug(tree);
+}
+
+
 #include "sha1_ostream.h"
 
 const char *debugp(XL::Tree *tree)
