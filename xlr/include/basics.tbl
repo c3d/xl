@@ -464,11 +464,15 @@ INFIX(EQBool, boolean, boolean, "=", boolean, XL_RBOOL(XL_BOOL(l) == XL_BOOL(r))
       RETURNS(boolean, ""))
 
 // Text operations
-INFIX(TextConcatenate, text, text, "&", text, XL_RTEXT(XL_TEXT(l) + XL_TEXT(r)),
-      GROUP(basics)
-      SYNOPSIS("")
-      DESCRIPTION("")
-      RETURNS(text, ""))
+INFIX(TextConcatenate, text, text, "&", text,
+      XL_RTEXT(XL_TEXT(l) + XL_TEXT(r)),
+      GROUP(basics) SYNOPSIS("") DESCRIPTION("") RETURNS(text, ""))
+INFIX(TextConcatenateRightNumber, text, text, "&", real,
+      XL_RTEXT(XL_TEXT(l) + xl_real2text(r)),
+      GROUP(basics) SYNOPSIS("") DESCRIPTION("") RETURNS(text, ""))
+INFIX(TextConcatenateLeftNumber, text, real, "&", text,
+      XL_RTEXT(xl_real2text(l) + XL_TEXT(r)),
+      GROUP(basics) SYNOPSIS("") DESCRIPTION("") RETURNS(text, ""))
 INFIX(LTText, boolean, text, "<", text, XL_RBOOL(XL_TEXT(l) < XL_TEXT(r)),
       GROUP(basics)
       SYNOPSIS("")
