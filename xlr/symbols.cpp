@@ -1558,15 +1558,59 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                         IFTRACE(statictypes)
                             std::cerr << "Types: Constant matches type\n";
                     }
+                    else if (namedType == name_type ||
+                             namedType == operator_type ||
+                             namedType == boolean_type ||
+                             namedType == block_type ||
+                             namedType == infix_type ||
+                             namedType == prefix_type ||
+                             namedType == postfix_type)
+                    {
+                        IFTRACE(statictypes)
+                            std::cerr << "Types: Structure type mismatch\n";
+                        return NULL;
+                    }
+                            
                 }
+
+                // Check special cases of symbol and operator
+                if (tk == NAME)
+                {
+                    Name *nameTest = test->AsName();
+                    text n = nameTest->value;
+                    if (namedType == symbol_type)
+                    {
+                        IFTRACE(statictypes)
+                            std::cerr << "Types: Symbol check: "
+                                      << (n.length() && isalpha(n[0])
+                                          ? "pass\n" : "fail\n");
+                        if (n.length() && isalpha(n[0]))
+                            namedType = name_type;
+                        else
+                            return NULL;
+                    }
+                    if (namedType == operator_type)
+                    {
+                        IFTRACE(statictypes)
+                            std::cerr << "Types: Operator check: "
+                                      << (n.length() && isalpha(n[0])
+                                          ? "pass\n" : "fail\n");
+                        if (n.length() && !isalpha(n[0]))
+                            namedType = name_type;
+                        else
+                            return NULL;
+                    }
+                }
+
                 if ((namedType == source_type) ||
-                    (namedType == name_type && tk == NAME) ||
-                    (namedType == block_type && tk == BLOCK) ||
-                    (namedType == infix_type && tk == INFIX) ||
-                    (namedType == prefix_type && tk == PREFIX))
+                    (tk == NAME && namedType == name_type) ||
+                    (tk == BLOCK && namedType == block_type) ||
+                    (tk == INFIX && namedType == infix_type) ||
+                    (tk == PREFIX && namedType == prefix_type) ||
+                    (tk == POSTFIX && namedType == postfix_type))
                 {
                     needEvaluation = false;
-                    needRTTypeTest = namedType != source_type;
+                    needRTTypeTest = false;
                     IFTRACE(statictypes)
                         std::cerr << "Types: No evaluation when passing tree, "
                                   << "typecheck=" << needRTTypeTest << "\n";
