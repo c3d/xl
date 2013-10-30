@@ -1537,22 +1537,8 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                             return NULL;
                         if (namedType == integer_type && tk != INTEGER)
                             return NULL;
-                        if (namedType == real_type)
-                        {
-                            if (tk == TEXT)
-                                return NULL;
-                            if (tk == INTEGER)
-                            {
-                                Tree *cast = new Real(test->AsInteger()->value,
-                                                      test->Position());
-                                cast->SetSymbols(test->Symbols());
-                                IFTRACE(statictypes)
-                                    std::cerr << "Types: Generated real cast "
-                                              << cast
-                                              << " for " << test << "\n";
-                                test = cast;
-                            }
-                        }
+                        if (namedType == real_type && tk == TEXT)
+                            return NULL;
                         needEvaluation = false;
                         needRTTypeTest = false;
                         IFTRACE(statictypes)
@@ -1697,7 +1683,14 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
             kind tk = compiled->Kind();
             switch(tk)
             {
-            case INTEGER:       exprType = integer_type; break;
+            case INTEGER:       exprType = integer_type;
+                                if (typeExpr == real_type)
+                                {
+                                    IFTRACE(statictypes)
+                                        std::cerr << "Types: Promote to real\n";
+                                    unit.CallInteger2Real(compiled);
+                                }
+                                break;
             case REAL:          exprType = real_type;    break;
             case TEXT:          exprType = text_type;    break;
             case NAME:          exprType = name_type;    break;
@@ -3231,8 +3224,8 @@ llvm::Value *OCompiledUnit::MarkComputed(Tree *subexpr, Value *val)
     // Store the value we were given as the result
     if (val)
     {
-        if (storage.count(subexpr) > 0)
-            code->CreateStore(val, storage[subexpr]);
+        Value *ptr = NeedStorage(subexpr);
+        code->CreateStore(val, ptr);
     }
 
     // Set the 'lazy' flag or lazy evaluation
