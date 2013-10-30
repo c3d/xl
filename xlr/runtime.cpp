@@ -2604,7 +2604,7 @@ Tree *xl_assign_constant(Context *context, Tree *old, Tree *value)
 }
 
 
-Tree *xl_assign(Context *context, Tree *var, Tree *value)
+Tree *xl_assign(Context *context, Tree *var, Tree *value, Tree *type)
 // ----------------------------------------------------------------------------
 //   Assignment in interpreted mode
 // ----------------------------------------------------------------------------
@@ -2633,6 +2633,8 @@ Tree *xl_assign(Context *context, Tree *var, Tree *value)
             rw->to = value;
             if (rw->kind == Rewrite::UNKNOWN)
                 rw->kind = Rewrite::ASSIGNED;
+            if (type && !rw->type)
+                rw->type = type;
         }
         else
         {
@@ -2803,7 +2805,7 @@ Tree *xl_integer_for_loop(Context *context, Tree *self,
         for (longlong i = low; i <= high; i += step)
         {
             ival->value = i;
-            xl_assign(context, Variable, ival);
+            xl_assign(context, Variable, ival, integer_type);
             result = context->Evaluate(body);
         }
     }
@@ -2812,7 +2814,7 @@ Tree *xl_integer_for_loop(Context *context, Tree *self,
         for (longlong i = low; i >= high; i += step)
         {
             ival->value = i;
-            xl_assign(context, Variable, ival);
+            xl_assign(context, Variable, ival, integer_type);
             result = context->Evaluate(body);
         }
     }
@@ -2839,7 +2841,7 @@ Tree *xl_real_for_loop(Context *context, Tree *self,
         for (double i = low; i <= high; i += step)
         {
             rval->value = i;
-            xl_assign(context, Variable, rval);
+            xl_assign(context, Variable, rval, real_type);
             result = context->Evaluate(body);
         }
     }
@@ -2848,7 +2850,7 @@ Tree *xl_real_for_loop(Context *context, Tree *self,
         for (double i = low; i >= high; i += step)
         {
             rval->value = i;
-            xl_assign(context, Variable, rval);
+            xl_assign(context, Variable, rval, real_type);
             result = context->Evaluate(body);
         }
     }

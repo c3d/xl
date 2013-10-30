@@ -3737,7 +3737,7 @@ BasicBlock *OCompiledUnit::RealTest(Tree *tree, double value)
     assert(treeValue);
     treeValue = code->CreateBitCast(treeValue, compiler->realTreePtrTy);
     Value *valueFieldPtr = code->CreateConstGEP2_32(treeValue, 0,
-                                                       REAL_VALUE_INDEX);
+                                                    REAL_VALUE_INDEX);
     Value *tval = code->CreateLoad(valueFieldPtr, "treeValue");
     Constant *rval = ConstantFP::get(tval->getType(), value);
     Value *isGood = code->CreateFCmpOEQ(tval, rval, "isGood");
@@ -3855,13 +3855,67 @@ BasicBlock *OCompiledUnit::TypeTest(Tree *value, Tree *type)
 //   Test if the given value has the given type
 // ----------------------------------------------------------------------------
 {
-    Value *valueVal = Known(value);     assert(valueVal);
+    // Don't do a type cast for any type where type test is a no-op
+    if (type == tree_type       ||
+        type == source_type     ||
+        type == code_type       ||
+        type == lazy_type       ||
+        type == reference_type  ||
+        type == value_type)
+        return NULL;
+
+    Value *treeValue = Known(value);     assert(treeValue);
+
+    // Quick inline check with the tag to see if need runtime test
+    Value *tagPtr = code->CreateConstGEP2_32(treeValue, 0, 0, "tagPtr");
+    Value *tag = code->CreateLoad(tagPtr, "tag");
+    Value *mask = ConstantInt::get(tag->getType(), Tree::KINDMASK);
+    Value *kindValue = code->CreateAnd(tag, mask, "tagAndMask");
+
+    uint kind = ~0U;
+    if (type == integer_type)           kind = INTEGER;
+    else if (type == real_type)         kind = REAL;
+    else if (type == text_type)         kind = TEXT;
+    else if (type == name_type)         kind = NAME;
+    else if (type == operator_type)     kind = NAME;
+    else if (type == boolean_type)      kind = NAME;
+    else if (type == infix_type)        kind = INFIX;
+    else if (type == prefix_type)       kind = PREFIX;
+    else if (type == postfix_type)      kind = POSTFIX;
+    else if (type == block_type)        kind = BLOCK;
+
+    Constant *refTag = ConstantInt::get(tag->getType(), kind);
+    Value *isRightTag = code->CreateICmpEQ(kindValue, refTag, "isTagOK");
+    BasicBlock *isKindOK = BasicBlock::Create(*llvm, "isKindOK", function);
+    BasicBlock *isKindBad = BasicBlock::Create(*llvm, "isKindBad", function);
+    code->CreateCondBr(isRightTag, isKindOK, isKindBad);
+
+    // Degraded for integer: may simply need to promote to real
+    code->SetInsertPoint(isKindBad);
+    if (type == real_type)
+    {
+        Constant *intTag = ConstantInt::get(tag->getType(), INTEGER);
+        Value *isInt = code->CreateICmpEQ(kindValue, intTag, "isInt");
+        BasicBlock *isIntOK = BasicBlock::Create(*llvm, "isIntOK", function);
+        BasicBlock *isIntBad = BasicBlock::Create(*llvm, "isIntBad", function);
+        code->CreateCondBr(isInt, isIntOK, isIntBad);
+
+        code->SetInsertPoint(isIntOK);
+        Value *asReal = code->CreateCall(compiler->xl_integer2real, treeValue);
+        Value *realPtr = NeedStorage(value);
+        code->CreateStore(asReal, realPtr);
+        code->CreateBr(isKindOK);
+
+        code->SetInsertPoint(isIntBad);
+        treeValue = Known(value);
+    }
+    
     Value *typeVal = Known(type);       assert(typeVal);
 
     // Where we go if the tests fail
     BasicBlock *notGood = NeedTest();
     Value *afterCast = code->CreateCall3(compiler->xl_type_check,
-                                         contextPtr, valueVal, typeVal);
+                                         contextPtr, treeValue, typeVal);
     Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
     Value *isGood = code->CreateICmpNE(afterCast, null, "isGoodType");
     BasicBlock *isGoodBB = BasicBlock::Create(*llvm, "isGood", function);
@@ -3871,8 +3925,10 @@ BasicBlock *OCompiledUnit::TypeTest(Tree *value, Tree *type)
     code->SetInsertPoint(isGoodBB);
     Value *ptr = NeedStorage(value);
     code->CreateStore(afterCast, ptr);
+    code->CreateBr(isKindOK);
 
-    return isGoodBB;
+    code->SetInsertPoint(isKindOK);
+    return isKindOK;
 }
 
 

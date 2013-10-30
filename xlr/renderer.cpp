@@ -577,206 +577,219 @@ void Renderer::RenderBody(Tree *what)
     int   old_priority = this->priority;
     text  t;
     std::ostringstream toText;
+    static uint recursionCount = 0;
 
-    if (!what)
+    recursionCount++;
+    if (recursionCount < 300)
     {
-        RenderFormat("?null?", "?null?", "error ");
+        if (!what)
+        {
+            RenderFormat("?null?", "?null?", "error ");
+        }
+        else switch (what->Kind())
+             {
+             case INTEGER:
+                 toText << what->AsInteger()->value;
+                 t = toText.str();
+                 RenderFormat (t, t, "integer ");
+                 break;
+             case REAL:
+                 toText << what->AsReal()->value;
+                 t = toText.str();
+                 if (t.find(".") == t.npos)
+                 {
+                     size_t exponent = t.find("e");
+                     if (exponent == t.npos)
+                         t += ".0";
+                     else
+                         t.insert(exponent, ".0");
+                 }
+                 RenderFormat (t, t, "real ");
+                 break;
+             case TEXT: {
+                 Text *w = what->AsText();
+                 t = w->value;
+                 text q0 = t.find("\n") != t.npos ? "longtext " : "text ";
+                 text q1 = q0 + w->opening;
+                 text q2 = q1 + " " + w->closing;
+                 text saveq = this->current_quote;
+                 this->current_quote = w->opening;
+
+                 if (formats.count(q2) > 0)
+                 {
+                     this->self = t;
+                     RenderFormat(formats[q2]);
+                 }
+                 else if (formats.count(q1) > 0)
+                 {
+                     this->self = t;
+                     RenderFormat(formats[q1]);
+                 }
+                 else if (formats.count(q0) > 0)
+                 {
+                     this->self = t;
+                     RenderFormat(formats[q0]);
+                 }
+                 else
+                 {
+                     t = w->opening + t + w->closing;
+                     RenderText (t);
+                 }
+                 this->current_quote = saveq;
+             }   break;
+             case NAME:
+                 t = what->AsName()->value;
+                 RenderFormat (t, t, "name ");
+                 break;
+             case PREFIX: {
+                 Prefix *w = what->AsPrefix();
+                 Tree *l = w->left;
+                 Tree *r = w->right;
+
+                 // Create blocks for implicit parentheses
+                 if (IsAmbiguousPrefix(l, false, true) ||
+                     IsSubFunctionInfix(l))
+                     l = ImplicitBlock(l);
+                 if (priority > syntax.statement_priority)
+                     if (IsAmbiguousPrefix(r, true, true) ||
+                         IsSubFunctionInfix(r))
+                         r = ImplicitBlock(r);
+                 left = l;
+                 right = r;
+
+                 text n0 = "prefix ";
+                 if (Name *lf = left->AsName())
+                 {
+                     text n = n0 + lf->value;
+                     if (formats.count(n) > 0)
+                         RenderFormat (formats[n]);
+                     else if (formats.count(n0) > 0)
+                         RenderFormat (formats[n0]);
+                     else
+                     {
+                         Render (l);
+                         Render (r);
+                     }
+                 }
+                 else if (formats.count(n0) > 0)
+                 {
+                     RenderFormat (formats[n0]);
+                 }
+                 else
+                 {
+                     Render (l);
+                     Render (r);
+                 }
+             }   break;
+             case POSTFIX: {
+                 Postfix *w = what->AsPostfix();
+                 Tree *l = w->left;
+                 Tree *r = w->right;
+
+                 // Create blocks for implicit parentheses
+                 if (priority > syntax.statement_priority)
+                     if (IsAmbiguousPrefix(l, true, false) ||
+                         IsSubFunctionInfix(l))
+                         l = ImplicitBlock(l);
+                 if (IsAmbiguousPrefix(r, true, true) ||
+                     IsSubFunctionInfix(r))
+                     r = ImplicitBlock(r);
+                 left = l;
+                 right = r;
+
+                 text n0 = "postfix ";
+                 if (Name *rf = right->AsName())
+                 {
+                     text n = n0 + rf->value;
+                     if (formats.count(n) > 0)
+                         RenderFormat (formats[n]);
+                     else if (formats.count(n0) > 0)
+                         RenderFormat (formats[n0]);
+                     else
+                     {
+                         Render (l);
+                         Render (r);
+                     }
+                 }
+                 else if (formats.count(n0) > 0)
+                 {
+                     RenderFormat (formats[n0]);
+                 }
+                 else
+                 {
+                     Render (l);
+                     Render (r);
+                 }
+             }   break;
+             case INFIX: {
+                 Infix *w = what->AsInfix();
+                 text in = w->name;
+                 if (in == "\n")
+                     in = "cr";
+                 text n0 = "infix ";
+                 text n = n0 + in;
+                 Tree *l = w->left;
+                 Tree *r = w->right;
+
+                 // Create blocks for implicit parentheses, dealing with assoc.
+                 int  p0 = InfixPriority(w);
+                 int  pl = InfixPriority(l);
+                 int  pr = InfixPriority(r);
+                 bool la = (p0 & 1) == 0;                // Left associative
+                 bool ra = (p0 & 1) == 1;                // Right associative
+
+                 if (pl < p0 || (pl == p0 && ra) ||
+                     IsAmbiguousPrefix(l, false, true))
+                     l = ImplicitBlock(l);
+                 if (pr < p0 || (pr == p0 && la) ||
+                     IsAmbiguousPrefix(r, false, true))
+                     r = ImplicitBlock(r);
+
+                 this->priority = p0;
+                 this->left = l;
+                 this->right = r;
+                 this->self = w->name;
+
+                 if (formats.count(n) > 0)
+                     RenderFormat(formats[n]);
+                 else if (formats.count(n0) > 0)
+                     RenderFormat(formats[n0]);
+                 else
+                 {
+                     Render (l);
+                     RenderFormat (w->name, w->name);
+                     Render (r);
+                 }
+             }   break;
+             case BLOCK: {
+                 Block *w  = what->AsBlock();
+                 text   n0 = "block ";
+                 text   n  = n0 + w->opening + " " + w->closing;
+                 Tree *l  = w->child;
+                 this->left = l;
+                 this->right = w;
+                 this->self = w->opening + w->closing;
+                 this->priority = syntax.InfixPriority(w->opening);
+                 if (formats.count(n) > 0)
+                     RenderFormat(formats[n]);
+                 else if (formats.count(n0) > 0)
+                     RenderFormat (formats[n0]);
+                 else
+                 {
+                     RenderFormat (w->opening, w->opening, "opening ");
+                     Render (w->child);
+                     RenderFormat (w->closing, w->closing, "closing ");
+                 }
+             }   break;
+             }
+
+        this->self = old_self;
+        this->left = old_left;
+        this->right = old_right;
+        this->priority = old_priority;
     }
-    else switch (what->Kind())
-    {
-    case INTEGER:
-        toText << what->AsInteger()->value;
-        t = toText.str();
-        RenderFormat (t, t, "integer ");
-        break;
-    case REAL:
-        toText << what->AsReal()->value;
-        t = toText.str();
-        if (t.find(".") == t.npos)
-        {
-            size_t exponent = t.find("e");
-            if (exponent == t.npos)
-                t += ".0";
-            else
-                t.insert(exponent, ".0");
-        }
-        RenderFormat (t, t, "real ");
-        break;
-    case TEXT: {
-        Text *w = what->AsText();
-        t = w->value;
-        text q0 = t.find("\n") != t.npos ? "longtext " : "text ";
-        text q1 = q0 + w->opening;
-        text q2 = q1 + " " + w->closing;
-        text saveq = this->current_quote;
-        this->current_quote = w->opening;
 
-        if (formats.count(q2) > 0)
-        {
-            this->self = t;
-            RenderFormat(formats[q2]);
-        }
-        else if (formats.count(q1) > 0)
-        {
-            this->self = t;
-            RenderFormat(formats[q1]);
-        }
-        else if (formats.count(q0) > 0)
-        {
-            this->self = t;
-            RenderFormat(formats[q0]);
-        }
-        else
-        {
-            t = w->opening + t + w->closing;
-            RenderText (t);
-        }
-        this->current_quote = saveq;
-    }   break;
-    case NAME:
-        t = what->AsName()->value;
-        RenderFormat (t, t, "name ");
-        break;
-    case PREFIX: {
-        Prefix *w = what->AsPrefix();
-        Tree *l = w->left;
-        Tree *r = w->right;
-
-        // Create blocks for implicit parentheses
-        if (IsAmbiguousPrefix(l, false, true) || IsSubFunctionInfix(l))
-            l = ImplicitBlock(l);
-        if (priority > syntax.statement_priority)
-            if (IsAmbiguousPrefix(r, true, true) || IsSubFunctionInfix(r))
-                r = ImplicitBlock(r);
-        left = l;
-        right = r;
-
-        text n0 = "prefix ";
-        if (Name *lf = left->AsName())
-        {
-            text n = n0 + lf->value;
-            if (formats.count(n) > 0)
-                RenderFormat (formats[n]);
-            else if (formats.count(n0) > 0)
-                RenderFormat (formats[n0]);
-            else
-            {
-                Render (l);
-                Render (r);
-            }
-        }
-        else if (formats.count(n0) > 0)
-        {
-            RenderFormat (formats[n0]);
-        }
-        else
-        {
-            Render (l);
-            Render (r);
-        }
-    }   break;
-    case POSTFIX: {
-        Postfix *w = what->AsPostfix();
-        Tree *l = w->left;
-        Tree *r = w->right;
-
-        // Create blocks for implicit parentheses
-        if (priority > syntax.statement_priority)
-            if (IsAmbiguousPrefix(l, true, false) || IsSubFunctionInfix(l))
-                l = ImplicitBlock(l);
-        if (IsAmbiguousPrefix(r, true, true) || IsSubFunctionInfix(r))
-            r = ImplicitBlock(r);
-        left = l;
-        right = r;
-
-        text n0 = "postfix ";
-        if (Name *rf = right->AsName())
-        {
-            text n = n0 + rf->value;
-            if (formats.count(n) > 0)
-                RenderFormat (formats[n]);
-            else if (formats.count(n0) > 0)
-                RenderFormat (formats[n0]);
-            else
-            {
-                Render (l);
-                Render (r);
-            }
-        }
-        else if (formats.count(n0) > 0)
-        {
-            RenderFormat (formats[n0]);
-        }
-        else
-        {
-            Render (l);
-            Render (r);
-        }
-    }   break;
-    case INFIX: {
-        Infix *w = what->AsInfix();
-        text in = w->name;
-        if (in == "\n")
-            in = "cr";
-        text n0 = "infix ";
-        text n = n0 + in;
-        Tree *l = w->left;
-        Tree *r = w->right;
-
-        // Create blocks for implicit parentheses, dealing with assoc.
-        int  p0 = InfixPriority(w);
-        int  pl = InfixPriority(l);
-        int  pr = InfixPriority(r);
-        bool la = (p0 & 1) == 0;                // Left associative
-        bool ra = (p0 & 1) == 1;                // Right associative
-
-        if (pl < p0 || (pl == p0 && ra) || IsAmbiguousPrefix(l, false, true))
-            l = ImplicitBlock(l);
-        if (pr < p0 || (pr == p0 && la) || IsAmbiguousPrefix(r, false, true))
-            r = ImplicitBlock(r);
-
-        this->priority = p0;
-        this->left = l;
-        this->right = r;
-        this->self = w->name;
-
-        if (formats.count(n) > 0)
-            RenderFormat(formats[n]);
-        else if (formats.count(n0) > 0)
-            RenderFormat(formats[n0]);
-        else
-        {
-            Render (l);
-            RenderFormat (w->name, w->name);
-            Render (r);
-        }
-    }   break;
-    case BLOCK: {
-        Block *w  = what->AsBlock();
-        text   n0 = "block ";
-        text   n  = n0 + w->opening + " " + w->closing;
-        Tree *l  = w->child;
-        this->left = l;
-        this->right = w;
-        this->self = w->opening + w->closing;
-        this->priority = syntax.InfixPriority(w->opening);
-        if (formats.count(n) > 0)
-            RenderFormat(formats[n]);
-        else if (formats.count(n0) > 0)
-            RenderFormat (formats[n0]);
-        else
-        {
-            RenderFormat (w->opening, w->opening, "opening ");
-            Render (w->child);
-            RenderFormat (w->closing, w->closing, "closing ");
-        }
-    }   break;
-    }
-
-    this->self = old_self;
-    this->left = old_left;
-    this->right = old_right;
-    this->priority = old_priority;
+    recursionCount--;
 }
 
 
