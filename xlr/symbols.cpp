@@ -1828,7 +1828,7 @@ Tree *ArgumentMatch::DoPostfix(Postfix *what)
             if (Block *br = test->AsBlock())
             {
                 test = br->child;
-                lr = what->right->Do(this);
+                lr = what->left->Do(this);
             }
         }
         test = pt;
