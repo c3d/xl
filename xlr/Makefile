@@ -67,7 +67,7 @@ LLVM_LIBS=$(shell llvm-config --libs)
 LLVM_LDFLAGS=$(shell llvm-config --ldflags)
 
 CPPFLAGS+=-DXLR $(LLVM_FLAGS) -I . -I include
-LDFLAGS=-L/usr/local/lib $(LLVM_LIBS) $(LLVM_LDFLAGS)
+LDFLAGS=$(LLVM_LIBS) $(LLVM_LDFLAGS)
 
 test: unit_tests xl_tests
 
