@@ -61,12 +61,12 @@ PRODUCT=xlr$(EXE)
 
 include $(BROOT)Makefile.config
 
-LLVM_FLAGS=`llvm-config --cppflags | sed -e s/-DNDEBUG//g`
-LLVM_LIBS=`llvm-config --libs`
-LLVM_LDFLAGS=`llvm-config --ldflags`
+LLVM_FLAGS=`llvm-config-2.9 --cppflags | sed -e s/-DNDEBUG//g`
+LLVM_LIBS=`llvm-config-2.9 --libs`
+LLVM_LDFLAGS=`llvm-config-2.9 --ldflags`
 
 CPPFLAGS+=-DXLR $(LLVM_FLAGS) -I. -Iinclude
-LDFLAGS=-L/usr/local/lib $(LLVM_LIBS) $(LLVM_LDFLAGS)
+LDFLAGS=$(LLVM_LIBS) $(LLVM_LDFLAGS)
 
 test: unit_tests xl_tests
 

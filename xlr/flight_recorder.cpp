@@ -24,8 +24,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <fcntl.h>
-
-#define __STDC_FORMAT_MACROS
+#include <unistd.h>
 #include <inttypes.h>
 
 XL_BEGIN
