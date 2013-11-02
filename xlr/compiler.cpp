@@ -14,7 +14,24 @@
 // 
 // 
 // ****************************************************************************
-// This document is released under the GNU General Public License.
+// This document is released under the GNU General Public License, with the
+// following clarification and exception.
+//
+// Linking this library statically or dynamically with other modules is making
+// a combined work based on this library. Thus, the terms and conditions of the
+// GNU General Public License cover the whole combination.
+//
+// As a special exception, the copyright holders of this library give you
+// permission to link this library with independent modules to produce an
+// executable, regardless of the license terms of these independent modules,
+// and to copy and distribute the resulting executable under terms of your
+// choice, provided that you also meet, for each linked independent module,
+// the terms and conditions of the license of that module. An independent
+// module is a module which is not derived from or based on this library.
+// If you modify this library, you may extend this exception to your version
+// of the library, but you are not obliged to do so. If you do not wish to
+// do so, delete this exception statement from your version.
+//
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
 //  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
 //  (C) 2010 Taodyne SAS
@@ -115,14 +132,17 @@ Compiler::Compiler(kstring moduleName)
       strcmp_fn(NULL),
       xl_evaluate(NULL),
       xl_same_text(NULL), xl_same_shape(NULL),
-      xl_infix_match_check(NULL), xl_type_check(NULL), xl_form_error(NULL),
+      xl_infix_match_check(NULL), xl_type_check(NULL),
+      xl_form_error(NULL), xl_stack_overflow(NULL),
       xl_new_integer(NULL), xl_new_real(NULL), xl_new_character(NULL),
       xl_new_text(NULL), xl_new_ctext(NULL), xl_new_xtext(NULL),
       xl_new_block(NULL),
       xl_new_prefix(NULL), xl_new_postfix(NULL), xl_new_infix(NULL),
       xl_fill_block(NULL),
       xl_fill_prefix(NULL), xl_fill_postfix(NULL), xl_fill_infix(NULL),
-      xl_array_index(NULL)
+      xl_integer2real(NULL),
+      xl_array_index(NULL), xl_new_closure(NULL),
+      xl_recursion_count(NULL)
 {
 #ifdef CONFIG_MINGW
     llvm::sys::PrintStackTraceOnErrorSignal();
@@ -320,6 +340,8 @@ Compiler::Compiler(kstring moduleName)
                                    3, contextPtrTy, treePtrTy, treePtrTy);
     xl_form_error = ExternFunction(FN(xl_form_error),
                                    treePtrTy, 2, contextPtrTy, treePtrTy);
+    xl_stack_overflow = ExternFunction(FN(xl_stack_overflow),
+                                       treePtrTy, 1, treePtrTy);
     xl_new_integer = ExternFunction(FN(xl_new_integer),
                                     integerTreePtrTy, 1, integerTy);
     xl_new_real = ExternFunction(FN(xl_new_real),
@@ -346,9 +368,18 @@ Compiler::Compiler(kstring moduleName)
                                     postfixTreePtrTy, treePtrTy, treePtrTy);
     xl_fill_infix = ExternFunction(FN(xl_fill_infix), infixTreePtrTy, 3,
                                   infixTreePtrTy,treePtrTy,treePtrTy);
+    xl_integer2real = ExternFunction(FN(xl_integer2real), treePtrTy, 1,
+                                     treePtrTy);
     xl_array_index = ExternFunction(FN(xl_array_index),
                                     treePtrTy, 3,
                                     contextPtrTy, treePtrTy, treePtrTy);
+
+    // Create a global value used to count recursions
+    Constant *zero = ConstantInt::get(LLVM_INTTYPE(uint), 0);
+    xl_recursion_count = new GlobalVariable (*module,
+                                             LLVM_INTTYPE(uint), false,
+                                             GlobalVariable::ExternalLinkage,
+                                             zero, "xl_recursion_count");
 
     // Initialize the llvm_entries table
     for (CompilerLLVMTableEntry *le = CompilerLLVMTable; le->name; le++)

@@ -242,7 +242,16 @@ public:
     // Adding definitions to the context
     Infix *             Enter(Infix *decl);
     Infix *             Define(Tree *from, Tree *to);
+    Infix *             Define(text name, Tree *to);
     Tree *              Assign(Tree *target, Tree *source);
+
+    // Set context attributes
+    Infix *             SetOverridePriority(double priority);
+    Infix *             SetFileName(text filename);
+    Infix *             EnterDeclarator(text name, eval_fn decl);
+
+    // Path management
+    text                ResolvePrefixedPath(text path);
 
     // Looking up definitions in a context
     typedef Tree *      (*lookup_fn)(Infix *sc,Tree *frm,Infix *dcl,void *info);
@@ -252,6 +261,7 @@ public:
     Infix *             Reference(Tree *form);
     Tree *              Bound(Tree *form,bool recurse=true);
     Tree *              Bound(Tree *form, bool rec, Infix_p *rw, Infix_p *ctx);
+    Tree *              Named(text name, bool recurse=true);
 
     // List rewrites of a given type
     ulong               ListNames(text begin,rewrite_list &list,

@@ -16,7 +16,24 @@
 //
 //
 // ****************************************************************************
-// This document is released under the GNU General Public License.
+// This document is released under the GNU General Public License, with the
+// following clarification and exception.
+//
+// Linking this library statically or dynamically with other modules is making
+// a combined work based on this library. Thus, the terms and conditions of the
+// GNU General Public License cover the whole combination.
+//
+// As a special exception, the copyright holders of this library give you
+// permission to link this library with independent modules to produce an
+// executable, regardless of the license terms of these independent modules,
+// and to copy and distribute the resulting executable under terms of your
+// choice, provided that you also meet, for each linked independent module,
+// the terms and conditions of the license of that module. An independent
+// module is a module which is not derived from or based on this library.
+// If you modify this library, you may extend this exception to your version
+// of the library, but you are not obliged to do so. If you do not wish to
+// do so, delete this exception statement from your version.
+//
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
 //  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
 //  (C) 2010 Taodyne SAS
@@ -76,6 +93,8 @@ public:
     static bool         IsGarbageCollected(void *ptr);
     static bool         IsAllocated(void *ptr);
     static void         InUse(void *ptr);
+    void                DeleteLater(Chunk *);
+    bool                DeleteAll();
 
     void *operator new(size_t size);
     void operator delete(void *ptr);
@@ -106,6 +125,7 @@ protected:
     std::set<Listener *>listeners;
     std::map<void*,uint>roots;
     Chunk *             freeList;
+    Chunk *             toDelete;
 #ifdef XLR_GC_LIFO
     // Make free list LIFO instead of FIFO. Not good performance-wise,
     // but may help valgrind detect re-use of freed pointers.
@@ -365,11 +385,12 @@ inline void TypeAllocator::Release(void *pointer)
         TypeAllocator *allocator = ValidPointer(chunk->allocator);
         assert(chunk->count);
         uint count = --chunk->count;
-        if (!count && (finalizing || !(chunk->bits & IN_USE)))
+        if (!count)
         {
-            finalizing++;
-            allocator->Finalize(pointer);
-            finalizing--;
+            if (finalizing)
+                allocator->DeleteLater(chunk);
+            else if (!chunk->bits & IN_USE)
+                allocator->Finalize(pointer);
         }
     }
 }
@@ -386,6 +407,35 @@ inline void TypeAllocator::InUse(void *pointer)
         Chunk *chunk = ((Chunk *) pointer) - 1;
         chunk->bits |= IN_USE;
     }
+}
+
+
+inline void TypeAllocator::DeleteLater(TypeAllocator::Chunk *ptr)
+// ----------------------------------------------------------------------------
+//   Record that we will need to delete this
+// ----------------------------------------------------------------------------
+{
+    ptr->next = toDelete;
+    toDelete = ptr;
+}
+
+
+inline bool TypeAllocator::DeleteAll()
+// ----------------------------------------------------------------------------
+//    Remove all the things that we have pushed on the toDelete list
+// ----------------------------------------------------------------------------
+{
+    bool result = false;
+    while (toDelete)
+    {
+        Chunk *next = toDelete;
+        toDelete = toDelete->next;
+        next->allocator = this;
+        Finalize(next+1);
+        freedCount++;
+        result = true;
+    }
+    return result;
 }
 
 
@@ -433,7 +483,7 @@ Object *Allocator<Object>::Allocate(size_t size)
 template<class Object> inline
 void Allocator<Object>::Delete(Object *obj)
 // ----------------------------------------------------------------------------
-//   Allocate an object (invoked by operator new)
+//   Allocate an object (invoked by operator delete)
 // ----------------------------------------------------------------------------
 {
     Singleton()->TypeAllocator::Delete(obj);

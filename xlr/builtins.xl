@@ -84,4 +84,4 @@ X:real in A:real..B:real -> X >= A and X <= B
 
 // Factorial function
 0! -> 1
-N! -> N * (N-1)!
+N:integer! -> N * (N-1)!

@@ -174,6 +174,11 @@ INFIX(NEInt, boolean, integer, "<>", integer, XL_RBOOL(XL_INT(l) != XL_INT(r)),
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS(boolean, ""))
+INFIX(NEInt2, boolean, integer, "!=", integer, XL_RBOOL(XL_INT(l) != XL_INT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
 INFIX(EQInt, boolean, integer, "=", integer, XL_RBOOL(XL_INT(l) == XL_INT(r)),
       GROUP(basics)
       SYNOPSIS("")
@@ -271,7 +276,12 @@ INFIX(GEReal, boolean, real, ">=", real, XL_RBOOL(XL_REAL(l) >= XL_REAL(r)),
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS(boolean, ""))
-INFIX(NEReal, boolean, real, "<>", real, XL_RBOOL(XL_REAL(l) != XL_REAL(r)),
+INFIX(NEReal2, boolean, real, "<>", real, XL_RBOOL(XL_REAL(l) != XL_REAL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(NEReal, boolean, real, "!=", real, XL_RBOOL(XL_REAL(l) != XL_REAL(r)),
       GROUP(basics)
       SYNOPSIS("")
       DESCRIPTION("")
@@ -338,12 +348,12 @@ PREFIX(ArcCos, real, "acos", PARM(x, real, ""), XL_RREAL(acos(x)),
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(real, ""))
-PREFIX(ArcTan, real, "atan", PARM(x, real, ""), XL_RREAL(atan(x)),
+PREFIX(ArcTan2, real, "atan", PARM(y, real, "") PARM(x, real, ""), XL_RREAL(atan2(y,x)),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(real, ""))
-PREFIX(ArcTan2, real, "atan", PARM(y, real, "") PARM(x, real, ""), XL_RREAL(atan2(y,x)),
+PREFIX(ArcTan, real, "atan", PARM(x, real, ""), XL_RREAL(atan(x)),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
@@ -400,13 +410,18 @@ INFIX(XorBool, boolean, boolean, "xor", boolean, XL_RBOOL(XL_BOOL(l) ^ XL_BOOL(r
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS(boolean, ""))
-PREFIX(NotBool, boolean, "not", PARM(x, boolean, ""), XL_RBOOL(!x),
+PREFIX(NotBool, boolean, "not", PARM(x, boolean, ""), XL_RBOOL(!XL_BOOL(x)),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS( boolean, ""))
 
 INFIX(NEBool, boolean, boolean, "<>", boolean, XL_RBOOL(XL_BOOL(l) != XL_BOOL(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(NEBool2, boolean, boolean, "!=", boolean, XL_RBOOL(XL_BOOL(l) != XL_BOOL(r)),
       GROUP(basics)
       SYNOPSIS("")
       DESCRIPTION("")
@@ -418,11 +433,15 @@ INFIX(EQBool, boolean, boolean, "=", boolean, XL_RBOOL(XL_BOOL(l) == XL_BOOL(r))
       RETURNS(boolean, ""))
 
 // Text operations
-INFIX(TextConcatenate, text, text, "&", text, XL_RTEXT(XL_TEXT(l) + XL_TEXT(r)),
-      GROUP(basics)
-      SYNOPSIS("")
-      DESCRIPTION("")
-      RETURNS(text, ""))
+INFIX(TextConcatenate, text, text, "&", text,
+      XL_RTEXT(XL_TEXT(l) + XL_TEXT(r)),
+      GROUP(basics) SYNOPSIS("") DESCRIPTION("") RETURNS(text, ""))
+INFIX(TextConcatenateRightNumber, text, text, "&", real,
+      XL_RTEXT(XL_TEXT(l) + xl_real2text(r)),
+      GROUP(basics) SYNOPSIS("") DESCRIPTION("") RETURNS(text, ""))
+INFIX(TextConcatenateLeftNumber, text, real, "&", text,
+      XL_RTEXT(xl_real2text(l) + XL_TEXT(r)),
+      GROUP(basics) SYNOPSIS("") DESCRIPTION("") RETURNS(text, ""))
 INFIX(LTText, boolean, text, "<", text, XL_RBOOL(XL_TEXT(l) < XL_TEXT(r)),
       GROUP(basics)
       SYNOPSIS("")
@@ -444,6 +463,11 @@ INFIX(GEText, boolean, text, ">=", text, XL_RBOOL(XL_TEXT(l) >= XL_TEXT(r)),
       DESCRIPTION("")
       RETURNS(boolean, ""))
 INFIX(NEText, boolean, text, "<>", text, XL_RBOOL(XL_TEXT(l) != XL_TEXT(r)),
+      GROUP(basics)
+      SYNOPSIS("")
+      DESCRIPTION("")
+      RETURNS(boolean, ""))
+INFIX(NEText2, boolean, text, "!=", text, XL_RBOOL(XL_TEXT(l) != XL_TEXT(r)),
       GROUP(basics)
       SYNOPSIS("")
       DESCRIPTION("")
@@ -486,6 +510,14 @@ PREFIX(TextFind, integer, "text_find",
        XL_RINT(t.find(f)),
        GROUP(text)
        SYNOPSIS("Find a text into another larger text"))
+PREFIX(TextReplace, text, "text_replace",
+       PARM(txt, text, "Input text to find into")
+       PARM(before, text, "The string to be replaced")
+       PARM(after, text, "The replacement string"),
+       XL_RTEXT(xl_text_replace(txt, before, after)),
+       GROUP(text)
+       SYNOPSIS("Replace every occurrence of a string")
+       DESCRIPTION("Replace every occurence of before with after in txt."))
 INFIX(TextContains, boolean, text, "contains", text,
       text t = l;
       text f = r;
@@ -639,6 +671,13 @@ PREFIX(RandomNumber, real, "random", , XL_RREAL(xl_random(0.0, 1.0)),
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(real, ""))
+PREFIX(RandomSeedNumber2i, boolean, "random_seed",
+       PARM(seed,integer, ""),
+       XL_RBOOL(xl_random_seed(XL_INT(seed))),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("Initialize random generator with seed number")
+       RETURNS(integer, ""))
 
 // Executing some code
 PREFIX(Identity,  tree, "identity",
@@ -747,6 +786,13 @@ PREFIX(ListFiles, tree, "files", PARM(pat, tree, ""),
        DESCRIPTION("")
        RETURNS(tree, ""))
 #endif
+PREFIX(FileExists, boolean, "file_exists",
+       PARM(f, text, "filename"),
+       XL_RBOOL(xl_file_exists(context, self, f)),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(boolean, ""))
 
 // Debugging code
 PREFIX(DebugTree, tree, "debug", PARM(toDebug, tree, ""),
@@ -848,3 +894,9 @@ PREFIX(ComputeSha1, text, "sha1", PARM(t, tree, ""), XL_RTEXT(sha1(&t)),
        DESCRIPTION("")
        RETURNS(tree, "")
        SEE("sha"))
+
+
+// Override level for symbol tables
+PREFIX(SetOverrideLevel, boolean, "override_priority", PARM(o, real, ""),
+       return xl_set_override_priority(context, self, o),
+       GROUP(basics))

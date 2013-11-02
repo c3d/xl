@@ -102,18 +102,12 @@ Scanner::Scanner(kstring name, Syntax &stx, Positions &pos, Errors &err)
                 Arg(name).Arg(strerror(errno)));
 
     // Skip UTF-8 BOM if present
-    input.seekg(0, std::ios::end);
-    int length = input.tellg();
-    input.seekg(0, std::ios::beg);
-    if (length >= 3)
-    {
-        unsigned char c1, c2, c3;
-        c1 = input.get(); c2 = input.get(); c3 = input.get();
-        if (!(c1 == 0xEF && c2 == 0xBB  && c3 == 0xBF))
-        {
-            input.unget(); input.unget(); input.unget();
-        }
-    }
+    if (input.get() != 0xEF)
+        input.unget();
+    else if (input.get() != 0xBB)
+        input.unget(), input.unget();
+    else if(input.get() != 0xBF)
+        input.unget(), input.unget(), input.unget();
 }
 
 
@@ -363,24 +357,21 @@ token_t Scanner::NextToken(bool hungry)
         realValue = intValue;
         if (c == '.')
         {
-            c = input.get();
-            position++;
-            if (digit_values[c] >= base)
+            int nextDigit = input.peek();
+            if (digit_values[nextDigit] >= base)
             {
                 // This is something else following an integer: 1..3, 1.(3)
                 input.unget();
-                input.unget();
-                position -= 2;
+                position--;
                 hadSpaceAfter = false;
                 return tokINTEGER;
             }
             else
             {
-                tokenText += '.';
-                textValue += '.';
                 floating_point = true;
-
                 double comma_position = 1.0;
+
+                NEXT_CHAR(c);
                 while (digit_values[c] < base)
                 {
                     comma_position /= base;

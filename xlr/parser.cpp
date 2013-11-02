@@ -542,7 +542,7 @@ Tree *Parser::Parse(text closing)
             if (infix_priority < statement_priority)
             {
                 new_statement = true;
-                is_expression = true;
+                is_expression = false;
             }
 
             // We got left and infix-op, we are now looking for right
@@ -604,7 +604,7 @@ Tree *Parser::Parse(text closing)
             if (prefix_priority < statement_priority)
             {
                 new_statement = true;
-                is_expression = true;
+                is_expression = false;
             }
 
             // Check priorities for something like "A.B x,y" -> "(A.B) (x,y)"

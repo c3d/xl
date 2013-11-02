@@ -16,7 +16,24 @@
 //
 //
 // ****************************************************************************
-// This document is released under the GNU General Public License.
+// This document is released under the GNU General Public License, with the
+// following clarification and exception.
+//
+// Linking this library statically or dynamically with other modules is making
+// a combined work based on this library. Thus, the terms and conditions of the
+// GNU General Public License cover the whole combination.
+//
+// As a special exception, the copyright holders of this library give you
+// permission to link this library with independent modules to produce an
+// executable, regardless of the license terms of these independent modules,
+// and to copy and distribute the resulting executable under terms of your
+// choice, provided that you also meet, for each linked independent module,
+// the terms and conditions of the license of that module. An independent
+// module is a module which is not derived from or based on this library.
+// If you modify this library, you may extend this exception to your version
+// of the library, but you are not obliged to do so. If you do not wish to
+// do so, delete this exception statement from your version.
+//
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
 //  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
 //  (C) 2010 Taodyne SAS
@@ -337,6 +354,16 @@ Infix *Context::Define(Tree *form, Tree *value)
 }
 
 
+Infix *Context::Define(text name, Tree *value)
+// ----------------------------------------------------------------------------
+//   Enter a rewrite in the current context
+// ----------------------------------------------------------------------------
+{
+    Name *nameTree = new Name(name, value->Position());
+    return Define(nameTree, value);
+}
+
+
 Infix *Context::Enter(Infix *rewrite)
 // ----------------------------------------------------------------------------
 //   Enter a known declaration
@@ -481,6 +508,59 @@ Tree *Context::Assign(Tree *ref, Tree *value)
 
 // ============================================================================
 // 
+//    Context attributes
+// 
+// ============================================================================
+
+Infix *Context::SetOverridePriority(double priority)
+// ----------------------------------------------------------------------------
+//   Set the override priority for the innermost scope in the context
+// ----------------------------------------------------------------------------
+{
+    return Define("override_priority", new Real(priority));
+}
+
+
+Infix *Context::SetFileName(text filename)
+// ----------------------------------------------------------------------------
+//   Set the file name the innermost scope in the context
+// ----------------------------------------------------------------------------
+{
+    return Define("file_name", new Text(filename));
+}
+
+
+Infix *Context::EnterDeclarator(text declarator, eval_fn declFn)
+// ----------------------------------------------------------------------------
+//   Set the file name the innermost scope in the context
+// ----------------------------------------------------------------------------
+{
+    Infix *infix = Define("decl:" + declarator, new Text(declarator));
+    infix->right->code = (eval_fn) declFn;
+    return infix;
+}
+
+
+
+
+// ============================================================================
+// 
+//    Path management
+// 
+// ============================================================================
+
+text Context::ResolvePrefixedPath(text path)
+// ----------------------------------------------------------------------------
+//   Resolve the file name in the current paths
+// ----------------------------------------------------------------------------
+{
+    return path;
+}
+
+
+
+// ============================================================================
+// 
 //    Looking up symbols
 // 
 // ============================================================================
@@ -609,6 +689,16 @@ Tree *Context::Bound(Tree *form, bool recurse, Infix_p *rewrite, Infix_p *ctx)
 }
 
 
+Tree *Context::Named(text name, bool recurse)
+// ----------------------------------------------------------------------------
+//   Return the value bound to a given name
+// ----------------------------------------------------------------------------
+{
+    Name nameTree(name);
+    return Bound(&nameTree, recurse);
+}
+
+
 static ulong listNames(Infix *where, text begin, rewrite_list &list, bool pfx)
 // ----------------------------------------------------------------------------
 //   List names in the given tree
@@ -683,7 +773,7 @@ ulong Context::Hash(Tree *what, bool inDecl)
 // ----------------------------------------------------------------------------
 //   Compute the hash code in the rewrite table
 // ----------------------------------------------------------------------------
-// When 'inDecl', we eliminate guards (X when Cond) and types (X as Type)
+// In 'inDecl', we eliminate guards (X when Cond) and types (X as Type)
 {
     if (inDecl)
         what = RewriteDefined(what);

@@ -15,7 +15,24 @@
 //
 //
 // ****************************************************************************
-// This document is released under the GNU General Public License.
+// This document is released under the GNU General Public License, with the
+// following clarification and exception.
+//
+// Linking this library statically or dynamically with other modules is making
+// a combined work based on this library. Thus, the terms and conditions of the
+// GNU General Public License cover the whole combination.
+//
+// As a special exception, the copyright holders of this library give you
+// permission to link this library with independent modules to produce an
+// executable, regardless of the license terms of these independent modules,
+// and to copy and distribute the resulting executable under terms of your
+// choice, provided that you also meet, for each linked independent module,
+// the terms and conditions of the license of that module. An independent
+// module is a module which is not derived from or based on this library.
+// If you modify this library, you may extend this exception to your version
+// of the library, but you are not obliged to do so. If you do not wish to
+// do so, delete this exception statement from your version.
+//
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
 //  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
 //  (C) 2010 Taodyne SAS
@@ -115,8 +132,11 @@ Tree *xl_set_source(Tree *value, Tree *source)
 //   Set the source associated with the value (e.g. for integer->real casts)
 // ----------------------------------------------------------------------------
 {
-    if (source != value)
+    if (source != value && source != xl_source(value))
+    {
+        value->Purge<SourceInfo>();
         value->SetInfo<SourceInfo>(new SourceInfo(source));
+    }
     return value;
 }
 
@@ -158,6 +178,15 @@ Tree *xl_form_error(Context *context, Tree *what)
     Save<bool> saveRecursive(recursive, true);
 
     return Ooops("No form match $1 at runtime", what);
+}
+
+
+Tree *xl_stack_overflow(Tree *what)
+// ----------------------------------------------------------------------------
+//   Return an error evaluating a tree
+// ----------------------------------------------------------------------------
+{
+    return Ooops("Stack overflow evaluating $1", what);
 }
 
 
@@ -290,6 +319,8 @@ Tree *xl_infix_match_check(Context *context, Tree *value, kstring name)
     while (Block *block = value->AsBlock())
         if (block->opening == "(" && block->closing == ")")
             value = block->child;
+        else
+            break;
     if (Infix *infix = value->AsInfix())
         if (infix->name == name)
             return infix;
@@ -755,6 +786,15 @@ Tree *xl_block_cast(Context *context, Tree *source, Tree *value)
 }
 
 
+Real *xl_integer2real(Integer *iv)
+// ----------------------------------------------------------------------------
+//   Promote integer to real
+// ----------------------------------------------------------------------------
+{
+    return new Real(iv->value, iv->Position());
+}
+
+
 
 // ============================================================================
 //
@@ -883,6 +923,25 @@ void xl_enter_global(Main *main, Name *name, Name_p *address)
 //
 // ============================================================================
 
+static bool isAbsolute(text path)
+// ----------------------------------------------------------------------------
+//    Test absolute/relative path
+// ----------------------------------------------------------------------------
+{
+    if (path == "")
+        return false;
+#if defined (CONFIG_MINGW)
+    if (path[0] == '/' || path[0] == '\\')
+        return true;
+    if (path.length() >= 2 && path[1] == ':')
+        return true;
+    return false;
+#else
+    return (path[0] == '/');
+#endif
+}
+
+
 static void xl_list_files(Context *context, Tree *patterns, Tree_p *&parent)
 // ----------------------------------------------------------------------------
 //   Append all files found in the parent
@@ -945,6 +1004,33 @@ Tree *xl_list_files(Context *context, Tree *patterns)
 }
 
 
+bool xl_file_exists(Context *context, Tree_p self, text path)
+// ----------------------------------------------------------------------------
+//   Check if a file exists
+// ----------------------------------------------------------------------------
+{
+    if (!isAbsolute(path))
+    {
+        path = context->ResolvePrefixedPath(path);
+        if (!isAbsolute(path))
+        {
+            // Relative path: look in same directory as parent
+            if (Tree * dir = context->Named("module_dir"))
+            {
+                if (Text * txt = dir->AsText())
+                    path = txt->value + "/" + path;
+            }
+        }
+   }
+
+#if defined(CONFIG_MINGW)
+    struct _stat st;
+#else
+    struct stat st;
+#endif
+
+    return (utf8_stat (path.c_str(), &st) < 0) ? false : true;
+}
 
 // ============================================================================
 //
@@ -963,25 +1049,7 @@ struct ImportedFileInfo : Info
 };
 
 
-static bool isAbsolute(text path)
-// ----------------------------------------------------------------------------
-//    Test absolute/relative path
-// ----------------------------------------------------------------------------
-{
-    if (path == "")
-        return false;
-#if defined (CONFIG_MINGW)
-    if (path[0] == '/' || path[0] == '\\')
-        return true;
-    if (path.length() >= 2 && path[1] == ':')
-        return true;
-    return false;
-#else
-    return (path[0] != '/');
-#endif
-}
-
-Tree *xl_import(Context *context, Tree *self, text name, bool execute)
+Tree *xl_import(Context *context, Tree *self, text name, int phase)
 // ----------------------------------------------------------------------------
 //    Load a file from disk without evaluating it
 // ----------------------------------------------------------------------------
@@ -996,7 +1064,7 @@ Tree *xl_import(Context *context, Tree *self, text name, bool execute)
     {
         if (path == "")
             path = MAIN->SearchFile(name);
-        if (path == "" && !isAbsolute(path))
+        if (path == "" && !isAbsolute(name))
         {
             // Relative path: look in same directory as parent
             static Name_p module_dir = new Name("module_dir");
@@ -1035,7 +1103,7 @@ Tree *xl_import(Context *context, Tree *self, text name, bool execute)
 
     SourceFile &sf = MAIN->files[path];
     Tree *result = sf.tree;
-    if (execute && result)
+    if (phase == EXECUTION_PHASE && result)
         result = context->Evaluate(result);
     return result;
 }
@@ -1046,14 +1114,20 @@ struct LoadDataInfo : Info
 //   Information about the data that was loaded
 // ----------------------------------------------------------------------------
 {
-    LoadDataInfo() : data(), loaded() {}
-    struct Row
+    LoadDataInfo(): files() {}
+    struct PerFile
     {
-        TreeList        args;
+        PerFile(): data(), loaded(), mtime(0) {}
+        struct Row
+        {
+            TreeList        args;
+        };
+        typedef std::vector<Row> Data;
+        Data        data;
+        Tree_p      loaded;
+        time_t      mtime;
     };
-    typedef std::vector<Row> Data;
-    Data        data;
-    Tree_p      loaded;
+    std::map<text, PerFile> files;
 };
 
 
@@ -1068,18 +1142,22 @@ Tree *xl_load_data(Context *context, Tree *self,
     if (path == "")
         return Ooops("CSV file $1 not found", new Text(name));
 
-    std::ifstream input(path.c_str(), std::ifstream::in);
+    utf8_ifstream input(path.c_str(), std::ifstream::in);
     if (!input.good())
-        return Ooops("Unable to load data for $1", self);
+        return Ooops("Unable to load data for $1.\n"
+                     "(Accessing $2 resulted in the following error: $3)",
+                     self,
+                     new Text(path, "\"", "\"", self->Position()),
+                     new Text(strerror(errno), "", "", self->Position()));
 
-    return xl_load_data(context, self,
-                        input, true,
+    return xl_load_data(context, self, path,
+                        input, true, true,
                         prefix, fieldSeps, recordSeps);
 }
 
 
-Tree *xl_load_data(Context *context, Tree *self,
-                   std::istream &input, bool cached,
+Tree *xl_load_data(Context *context, Tree *self, text inputName,
+                   std::istream &input, bool cached, bool statTime,
                    text prefix, text fieldSeps, text recordSeps)
 // ----------------------------------------------------------------------------
 //   Variant reading from a stream directly
@@ -1088,32 +1166,51 @@ Tree *xl_load_data(Context *context, Tree *self,
     // Check if the file has already been loaded somehwere.
     // If so, return the loaded data
     LoadDataInfo *info = self->GetInfo<LoadDataInfo>();
-    if (info)
+    if (!info)
     {
+        // Create cache
+        info = new LoadDataInfo();
+        self->SetInfo<LoadDataInfo> (info);
+    }
+
+    // Load per-file cached data
+    LoadDataInfo::PerFile &perFile = info->files[inputName];
+    if (perFile.loaded)
+    {
+        if (statTime)
+        {
+            // Check if we need to reload the contents of the file
+            // because it has been modified
+#if defined(CONFIG_MINGW)
+            struct _stat st;
+#else
+            struct stat st;
+#endif
+            utf8_stat (inputName.c_str(), &st);
+            if (perFile.mtime != st.st_mtime)
+                cached = false;
+            perFile.mtime = st.st_mtime;
+        }
+
         if (cached)
         {
             Tree_p result = xl_false;
             if (prefix.size())
             {
-                ulong i, max = info->data.size();
+                ulong i, max = perFile.data.size();
                 for (i = 0; i < max; i++)
                 {
-                    LoadDataInfo::Row &row = info->data[i];
+                    LoadDataInfo::PerFile::Row &row = perFile.data[i];
                     result = context->Call(prefix, row.args);
                 }
                 return result;
             }
-            return info->loaded;
+            return perFile.loaded;
         }
 
         // Restart with clean data
-        info->data.clear();
-    }
-    else
-    {
-        // Create cache
-        info = new LoadDataInfo();
-        self->SetInfo<LoadDataInfo> (info);
+        perFile.data.clear();
+        perFile.loaded = NULL;
     }
 
     // Read data from file
@@ -1129,15 +1226,13 @@ Tree *xl_load_data(Context *context, Tree *self,
     bool     hasField  = false;
     bool     hasPrefix = prefix.size() != 0;
 
-    LoadDataInfo::Row row;
+    LoadDataInfo::PerFile::Row row;
     *end = 0;
     while (input.good())
     {
         int c = input.get();
 
-        if (c == 0xA0)          // Hard space generated by Numbers, skip
-            c = ' ';
-        if (!hasQuote && ptr == buffer && isspace(c))
+        if (!hasQuote && ptr == buffer && c != '\n' && isspace(c))
             continue;
 
         if (hasQuote)
@@ -1151,9 +1246,18 @@ Tree *xl_load_data(Context *context, Tree *self,
             hasField = fieldSeps.find(c) != fieldSeps.npos;
         }
         if (hasRecord || hasField)
+        {
             c = 0;
+        }
         else if (c == '"')
-            hasQuote = !hasQuote;
+        {
+            int next = input.peek();
+            bool escapedQuote = (hasQuote && next == '"');
+            if (escapedQuote)
+                input.get();
+            else
+                hasQuote = !hasQuote;
+        }
 
         if (ptr < end)
             *ptr++ = c;
@@ -1212,7 +1316,7 @@ Tree *xl_load_data(Context *context, Tree *self,
             {
                 if (hasPrefix)
                 {
-                    info->data.push_back(row);
+                    perFile.data.push_back(row);
                     tree = context->Call(prefix, row.args);
                     row.args.clear();
                 }
@@ -1237,8 +1341,7 @@ Tree *xl_load_data(Context *context, Tree *self,
     }
     if (!tree)
         tree = xl_false;
-    if (!hasPrefix)
-        info->loaded = tree;
+perFile.loaded = tree;
 
     return tree;
 }
@@ -1611,7 +1714,7 @@ Tree *ListIterator::EvaluateRange(Tree *input)
     input = context->Evaluate(input);
     return input;
 }
-        
+
 
 Tree * ListIterator::Next()
 // ----------------------------------------------------------------------------
@@ -1793,13 +1896,16 @@ Tree *FilterFunctionInfo::Apply(Tree *what)
 //
 // ============================================================================
 
-Tree *xl_assign(Context *context, Tree *var, Tree *value)
+Tree *xl_assign(Context *context, Tree *var, Tree *value, Tree *type)
 // ----------------------------------------------------------------------------
 //   Assignment in interpreted mode
 // ----------------------------------------------------------------------------
 {
     IFTRACE(references)
         std::cerr << "Assigning " << var << ":=" << value << "\n";
+
+    if (type && type != tree_type)
+        var = new Infix("as", var, type, var->Position());
 
     return context->Assign(var, value);
 }
@@ -1884,6 +1990,25 @@ Text *xl_find_in_search_path(Context *context, text prefix, text file)
 }
 
 
+void xl_enter_declarator(Context *context, text name, decl_fn fn)
+// ----------------------------------------------------------------------------
+//   Enter a declarator in the given context
+// ----------------------------------------------------------------------------
+{
+    context->EnterDeclarator(name, (eval_fn) fn);
+}
+
+
+Name *xl_set_override_priority(Context *context, Tree *self, float priority)
+// ----------------------------------------------------------------------------
+//   Set the override level for the current symbol table
+// ----------------------------------------------------------------------------
+{
+    context->SetOverridePriority(priority);
+    return xl_false;
+}
+
+
 
 // ============================================================================
 //
@@ -1906,7 +2031,7 @@ Tree *xl_integer_for_loop(Context *context, Tree *self,
         for (longlong i = low; i <= high; i += step)
         {
             ival->value = i;
-            xl_assign(context, Variable, ival);
+            xl_assign(context, Variable, ival, integer_type);
             result = context->Evaluate(body);
         }
     }
@@ -1915,7 +2040,7 @@ Tree *xl_integer_for_loop(Context *context, Tree *self,
         for (longlong i = low; i >= high; i += step)
         {
             ival->value = i;
-            xl_assign(context, Variable, ival);
+            xl_assign(context, Variable, ival, integer_type);
             result = context->Evaluate(body);
         }
     }
@@ -1937,7 +2062,7 @@ Tree *xl_real_for_loop(Context *context, Tree *self,
         for (double i = low; i <= high; i += step)
         {
             rval->value = i;
-            xl_assign(context, Variable, rval);
+            xl_assign(context, Variable, rval, real_type);
             result = context->Evaluate(body);
         }
     }
@@ -1946,7 +2071,7 @@ Tree *xl_real_for_loop(Context *context, Tree *self,
         for (double i = low; i >= high; i += step)
         {
             rval->value = i;
-            xl_assign(context, Variable, rval);
+            xl_assign(context, Variable, rval, real_type);
             result = context->Evaluate(body);
         }
     }
@@ -2087,3 +2212,6 @@ bool xl_write_cr()
 } // extern "C"
 
 XL_END
+
+
+uint xl_recursion_count = 0;

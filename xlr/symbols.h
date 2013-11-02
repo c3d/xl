@@ -16,7 +16,24 @@
 // 
 // 
 // ****************************************************************************
-// This document is released under the GNU General Public License.
+// This document is released under the GNU General Public License, with the
+// following clarification and exception.
+//
+// Linking this library statically or dynamically with other modules is making
+// a combined work based on this library. Thus, the terms and conditions of the
+// GNU General Public License cover the whole combination.
+//
+// As a special exception, the copyright holders of this library give you
+// permission to link this library with independent modules to produce an
+// executable, regardless of the license terms of these independent modules,
+// and to copy and distribute the resulting executable under terms of your
+// choice, provided that you also meet, for each linked independent module,
+// the terms and conditions of the license of that module. An independent
+// module is a module which is not derived from or based on this library.
+// If you modify this library, you may extend this exception to your version
+// of the library, but you are not obliged to do so. If you do not wish to
+// do so, delete this exception statement from your version.
+//
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
 //  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
 //  (C) 2010 Taodyne SAS
@@ -31,6 +48,7 @@
 #include "context.h"
 #include "action.h"
 #include "compiler.h"
+#include "runtime.h"
 
 XL_BEGIN
 
@@ -57,7 +75,6 @@ typedef std::map<Name_p, Tree_p>   capture_table;// Symbol capture table
 typedef std::map<Tree_p, Tree_p>   value_table;  // Used for value caching
 typedef value_table::iterator      value_iter;   // Used to iterate over values
 typedef Tree * (*typecheck_fn) (Context *context, Tree *src, Tree *value);
-typedef Tree * (*decl_fn) (Symbols *, Tree *source, bool execute);
 typedef std::map<text, decl_fn>    declarator_table; // To call at decl time
 
 
@@ -87,7 +104,7 @@ struct Symbols
     Rewrite *           Rewrites()              { return rewrites; }
 
     // Entering symbols in the symbol table
-    void                EnterName (text name, Tree *value, Rewrite::Kind k);
+    Rewrite *           EnterName (text name, Tree *value, Rewrite::Kind k);
     void                ExtendName (text name, Tree *value);
     Rewrite *           EnterRewrite(Rewrite *r);
     Rewrite *           EnterRewrite(Tree *from, Tree *to);
@@ -122,6 +139,7 @@ struct Symbols
                                     text callee, TreeList &args,bool call=true);
     Infix *             CompileTypeTest(Tree *type);
     Tree *              Run(Context *, Tree *t);
+    Tree *              TypeOf(Tree *t);
 
     // Error handling
     Tree *              Ooops (text message,
@@ -132,10 +150,13 @@ public:
     Symbols_p           parent;
     Rewrite_p           rewrites;
     symbol_table        calls;
+    value_table         types;
     value_table         type_tests;
     symbols_set         imported;
     Tree_p              error_handler;
     ulong               depth;
+    text                name;
+    float               priority;
     bool                has_rewrites_for_constants;
     bool                is_global;
 
@@ -157,7 +178,7 @@ inline Symbols::Symbols(Symbols *s)
 //   Create a "child" symbol table
 // ----------------------------------------------------------------------------
     : source(NULL), parent(s), rewrites(NULL), error_handler(NULL),
-      depth(s ? s->depth : 0),
+      depth(s ? s->depth : 0), name(""), priority(0.0),
       has_rewrites_for_constants(false), is_global(false)
 {}
 
@@ -214,6 +235,7 @@ struct OCompiledUnit
     llvm::Value *       CallFillPrefix(Prefix *);
     llvm::Value *       CallFillPostfix(Postfix *);
     llvm::Value *       CallFillInfix(Infix *);
+    llvm::Value *       CallInteger2Real(Tree *integer);
     llvm::Value *       CallArrayIndex(Tree *self, Tree *l, Tree *r);
     llvm::Value *       CreateClosure(Tree *callee,
                                       TreeList &parms, TreeList &args,

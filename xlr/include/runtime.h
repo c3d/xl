@@ -16,7 +16,24 @@
 //
 //
 // ****************************************************************************
-// This document is released under the GNU General Public License.
+// This document is released under the GNU General Public License, with the
+// following clarification and exception.
+//
+// Linking this library statically or dynamically with other modules is making
+// a combined work based on this library. Thus, the terms and conditions of the
+// GNU General Public License cover the whole combination.
+//
+// As a special exception, the copyright holders of this library give you
+// permission to link this library with independent modules to produce an
+// executable, regardless of the license terms of these independent modules,
+// and to copy and distribute the resulting executable under terms of your
+// choice, provided that you also meet, for each linked independent module,
+// the terms and conditions of the license of that module. An independent
+// module is a module which is not derived from or based on this library.
+// If you modify this library, you may extend this exception to your version
+// of the library, but you are not obliged to do so. If you do not wish to
+// do so, delete this exception statement from your version.
+//
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
 //  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
 //  (C) 2010 Taodyne SAS
@@ -61,6 +78,7 @@ Tree *xl_source(Tree *);
 Tree *xl_set_source(Tree *value, Tree *source);
 Tree *xl_error(Tree *self, text msg, Tree *a1=0, Tree *a2=0, Tree *a3=0);
 Tree *xl_form_error(Context *c, Tree *tree);
+Tree *xl_stack_overflow(Tree *tree);
 
 Tree *xl_parse_tree(Context *, Tree *tree);
 Tree *xl_parse_text(text source);
@@ -86,6 +104,7 @@ Postfix *xl_fill_postfix(Postfix *source, Tree *left, Tree *right);
 Infix   *xl_fill_infix(Infix *source, Tree *left, Tree *right);
 Tree    *xl_real_list(Tree *self, uint n, double *values);
 Tree    *xl_integer_list(Tree *self, uint n, longlong *values);
+Real    *xl_integer2real(Integer *ival);
 
 Tree *xl_new_closure(eval_fn toCall, Tree *expr, uint ntrees, ...);
 Tree *xl_tree_copy(Tree *from, Tree *to);
@@ -214,7 +233,7 @@ XL_BEGIN
 
 Tree *xl_apply(Context *, Tree *code, Tree *data);
 Tree *xl_range(longlong l, longlong h);
-Tree *xl_assign(Context *, Tree *name, Tree *value);
+Tree *xl_assign(Context *, Tree *name, Tree *value, Tree *type=NULL);
 Tree *xl_index(Context *, Tree *data, Tree *index);
 Tree *xl_array_index(Context *, Tree *data, Tree *index);
 Integer *xl_size(Context *, Tree *data);
@@ -322,7 +341,7 @@ extern "C"
     bool xl_write_cr(void);
 }
 Tree *xl_list_files(Context *context, Tree *patterns);
-
+bool xl_file_exists(Context *context, Tree_p self, text path);
 
 
 // ============================================================================
@@ -331,16 +350,24 @@ Tree *xl_list_files(Context *context, Tree *patterns);
 //
 // ============================================================================
 
-Tree *xl_import(Context *, Tree *self, text name, bool execute);
+Tree *xl_import(Context *, Tree *self, text name, int phase);
 Tree *xl_load_data(Context *, Tree *self,
                    text name, text prefix,
                    text fieldSeps = ",;", text recordSeps = "\n");
-Tree *xl_load_data(Context *, Tree *self,
-                   std::istream &source, bool cached,
+Tree *xl_load_data(Context *, Tree *self, text inputName,
+                   std::istream &source, bool cached, bool statTime,
                    text prefix, text fieldSeps = ",;", text recordSeps = "\n");
 Tree *xl_add_search_path(Context *, text prefix, text dir);
 Text *xl_find_in_search_path(Context *, text prefix, text file);
 
+typedef enum { PARSING_PHASE, DECLARATION_PHASE, EXECUTION_PHASE } phase_t;
+typedef Tree * (*decl_fn) (Context *, Tree *source, phase_t phase);
+void xl_enter_declarator(Context *context, text name, decl_fn fn);
+Name *xl_set_override_priority(Context *context, Tree *self, float priority);
+
 XL_END
+
+
+extern uint xl_recursion_count;
 
 #endif // RUNTIME_H

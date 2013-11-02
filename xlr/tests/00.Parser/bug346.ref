@@ -1,4 +1,4 @@
 error "Error compiling '<<>>>>'"
 00.Parser/bug346.xl:2: Unable to evaluate <<>>>> because
-00.Parser/bug346.xl:2:  No form match '<<>>>>'
+00.Parser/bug346.xl:2:  No form matches '<<>>>>'
 00.Parser/bug346.xl:2: Error compiling '<<>>>>'

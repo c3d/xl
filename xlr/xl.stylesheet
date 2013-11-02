@@ -40,8 +40,8 @@ indents = "    "
 "postfix %" = separator left "%" separator
 "postfix !" = separator left "!" separator
 "text "" """ = """" quoted_self """"
-"text << >>" = "<<" self ">>"
-"longtext "" """ = "<<" self ">>"
-"longtext << >>" = "<<" self ">>"
+"text << >>" = "<<" unindented_self ">>"
+"longtext "" """ = "<<" unindented_self ">>"
+"longtext << >>" = "<<" unindented_self ">>"
 "comment " = ""
 
