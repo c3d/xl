@@ -612,12 +612,40 @@ Infix *xl_fill_infix(Infix *source, Tree *left, Tree *right)
 }
 
 
+struct RealList : Info
+// ----------------------------------------------------------------------------
+//   Cache real lists to avoid reconstructing them each time
+// ----------------------------------------------------------------------------
+{
+    RealList(Tree *list, uint size): list(list), size(size) {}
+    Tree_p      list;
+    uint        size;
+};
+
+
 Tree *xl_real_list(Tree *self, uint n, double *values)
 // ----------------------------------------------------------------------------
 //   Build an infix from a list of real numbers
 // ----------------------------------------------------------------------------
 {
+    RealList *saved = self->GetInfo<RealList>();
+    if (saved && saved->size == n)
+    {
+        // We already generated a list, just update it in place
+        Tree *list = saved->list;
+        while (Infix *infix = list->AsInfix())
+        {
+            Real *left = infix->left->AsReal();
+            list = infix->right;
+            left->value = *values++;
+        }
+        Real *last = list->AsReal();
+        last->value = *values++;
+        return saved->list;
+    }
+
     Tree *result = NULL;
+    uint size = n;
     while (n)
     {
         Tree *left = new Real(values[--n], self->Position());
@@ -628,16 +656,48 @@ Tree *xl_real_list(Tree *self, uint n, double *values)
         result->code = xl_identity;
         result->SetSymbols(self->Symbols());
     }
+    if (!saved)
+        self->SetInfo(new RealList(result, size));
+    else
+        saved->list = result, saved->size = size;
     return result;
 }
 
 
-Tree *xl_integer_list(Tree *self, uint n, longlong *values)
+struct IntegerList : Info
 // ----------------------------------------------------------------------------
-//   Build an infix from a list of real numbers
+//   Cache integer lists to avoid reconstructing them each time
 // ----------------------------------------------------------------------------
 {
+    IntegerList(Tree *list, uint size): list(list), size(size) {}
+    Tree_p      list;
+    uint        size;
+};
+
+
+Tree *xl_integer_list(Tree *self, uint n, longlong *values)
+// ----------------------------------------------------------------------------
+//   Build an infix from a list of integer numbers
+// ----------------------------------------------------------------------------
+{
+    IntegerList *saved = self->GetInfo<IntegerList>();
+    if (saved && saved->size == n)
+    {
+        // We already generated a list, just update it in place
+        Tree *list = saved->list;
+        while (Infix *infix = list->AsInfix())
+        {
+            Integer *left = infix->left->AsInteger();
+            list = infix->right;
+            left->value = *values++;
+        }
+        Integer *last = list->AsInteger();
+        last->value = *values++;
+        return saved->list;
+    }
+
     Tree *result = NULL;
+    uint size = n;
     while (n)
     {
         Tree *left = new Integer(values[--n], self->Position());
@@ -648,6 +708,10 @@ Tree *xl_integer_list(Tree *self, uint n, longlong *values)
         result->code = xl_identity;
         result->SetSymbols(self->Symbols());
     }
+    if (!saved)
+        self->SetInfo(new IntegerList(result, size));
+    else
+        saved->list = result, saved->size = size;
     return result;
 }
 
