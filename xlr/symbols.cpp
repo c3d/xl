@@ -3618,12 +3618,14 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
 // ----------------------------------------------------------------------------
 //   We build it with an indirect call so that we generate one closure call
 //   subroutine per number of arguments only.
-//   The input is a sequence of infix \n that looks like:
+//   The input is a block containing a sequence of infix \n that looks like:
+//   {
 //      P1 -> V1
 //      P2 -> V2
 //      P3 -> V3
 //      [...]
 //      E
+//   }
 //   where P1..Pn are the parameter names, V1..Vn their values, and E is the
 //   original expression to evaluate.
 //   The generated function takes the 'code' field of the last infix before E,
@@ -3632,6 +3634,7 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
     // Load left tree
     Type *treeTy = compiler->treePtrTy;
     Type *infixTy = compiler->infixTreePtrTy;
+    Type *blockTy = compiler->blockTreePtrTy;
     Value *ptr = Known(callee); assert(ptr);
     Value *decl = NULL;
 
@@ -3642,6 +3645,13 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
     signature.push_back(compiler->contextPtrTy);
     argV.push_back(ptr);          // Self is the closure expression
     signature.push_back(treeTy);
+
+    // Extract child of surrounding block
+    Value *block = code->CreateBitCast(ptr, blockTy);
+    ptr = code->CreateConstGEP2_32(block, 0, BLOCK_CHILD_INDEX);
+    ptr = code->CreateLoad(ptr);
+
+    // Build additional arguments
     for (uint i = 0; i < ntrees; i++)
     {
         // Load the left of the \n which is a decl of the form P->V

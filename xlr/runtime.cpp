@@ -767,6 +767,9 @@ Tree *xl_new_closure(eval_fn toCall, Tree *expr, uint ntrees, ...)
     *treePtr = new Infix("\n", *treePtr, expr);
     decl->code = toCall;
 
+    // Wrap everything in a block so that all closures look like blocks
+    result = new Block(result, "{", "}", expr->Position());
+
     // Generate the code for the arguments
     Compiler *compiler = MAIN->compiler;
     eval_fn fn = compiler->closures[ntrees];
