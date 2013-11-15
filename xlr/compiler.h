@@ -121,7 +121,7 @@ struct Compiler
 //   Just-in-time compiler data
 // ----------------------------------------------------------------------------
 {
-    Compiler(kstring moduleName = "xl");
+    Compiler(kstring moduleName, int argc, char **argv);
     ~Compiler();
 
     // Top-level entry point: analyze and compile a whole program
@@ -165,6 +165,7 @@ struct Compiler
     llvm::Function * &        FunctionFor(text fkey) { return functions[fkey]; }
 
     bool                      FreeResources(Tree *tree);
+    void                      Dump();
 
 
 public:

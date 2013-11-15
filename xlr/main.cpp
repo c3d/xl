@@ -131,7 +131,7 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
       topLevelErrors(),
       syntax(syntaxName.c_str()),
       options(inArgc, inArgv),
-      compiler(new Compiler(compilerName.c_str())),
+      compiler(new Compiler(compilerName.c_str(), inArgc, inArgv)),
       context(new Context(NULL, NULL)),
       globals(new Symbols(NULL)),
       renderer(std::cout, styleSheetName, syntax),
@@ -685,6 +685,8 @@ int main(int argc, char **argv)
 
     if (!rc && MAIN->HadErrors())
         rc = 1;
+
+    MAIN->compiler->Dump();
 
 #if CONFIG_USE_SBRK
     IFTRACE(memory)

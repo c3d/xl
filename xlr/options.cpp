@@ -190,6 +190,15 @@ static ulong OptionInteger(kstring &command_line, Options &opt,
 }
 
 
+static void PassOptionToLLVM(kstring &command_line)
+// ----------------------------------------------------------------------------
+//   An option beginning with -llvm is passed to llvm as is
+// ----------------------------------------------------------------------------
+{
+    while (*command_line++) /* Skip */;
+}
+
+
 text Options::ParseFirst(bool consumeFile)
 // ----------------------------------------------------------------------------
 //   Start parsing options, return first non-option
