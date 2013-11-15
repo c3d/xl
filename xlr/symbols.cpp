@@ -1228,7 +1228,8 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     }
 
     // Create a call to xl_new_closure to save the required trees
-    unit.CreateClosure(source, parms, args, subUnit.function);
+    if (!isCallableDirectly)
+        unit.CreateClosure(source, parms, args, subUnit.function);
 
     return source;
 }
@@ -1688,7 +1689,9 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                                 {
                                     IFTRACE(statictypes)
                                         std::cerr << "Types: Promote to real\n";
-                                    unit.CallInteger2Real(compiled);
+                                    compiled = new Prefix(real_type, compiled,
+                                                          compiled->Position());
+                                    unit.CallInteger2Real(compiled, test);
                                 }
                                 break;
             case REAL:          exprType = real_type;    break;
@@ -1717,7 +1720,9 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
             {
                 IFTRACE(statictypes)
                     std::cerr << "Types: Promote integer to real\n";
-                unit.CallInteger2Real(compiled);
+                compiled = new Prefix(real_type, compiled,
+                                      compiled->Position());
+                unit.CallInteger2Real(compiled, test);
             }
             else
             {
@@ -3540,14 +3545,15 @@ Value *OCompiledUnit::CallFillInfix(Infix *infix)
 }
 
 
-Value *OCompiledUnit::CallInteger2Real(Tree *integer)
+Value *OCompiledUnit::CallInteger2Real(Tree *compiled, Tree *integer)
 // ----------------------------------------------------------------------------
 //    Compile code generating the children of an infix
 // ----------------------------------------------------------------------------
 {
-    Value *integerValue = Known(integer);
-    Value *result = code->CreateCall(compiler->xl_integer2real, integerValue);
-    MarkComputed(integer, result);
+    Value *result = Known(integer);
+    result = code->CreateCall(compiler->xl_integer2real, result);
+    NeedStorage(compiled);
+    MarkComputed(compiled, result);
     return result;
 }
 
