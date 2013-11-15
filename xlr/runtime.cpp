@@ -2055,10 +2055,13 @@ ListIterator::ListIterator(Context *context, Symbols *symbols, Tree *what)
       startI(0), endI(0), stepI(0),
       startF(0), endF(0), stepF(0)
 {
-    if (Block *block = data->AsBlock())
+    if (!xl_closure(data))
     {
-        // Check if we got () or (1,2,3). If so, extract child
-        data = block->child;
+        if (Block *block = data->AsBlock())
+        {
+            // Check if we got () or (1,2,3). If so, extract child
+            data = block->child;
+        }
     }
 
     // Check the empty list case
