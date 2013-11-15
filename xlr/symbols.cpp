@@ -3545,12 +3545,12 @@ Value *OCompiledUnit::CallFillInfix(Infix *infix)
 }
 
 
-Value *OCompiledUnit::CallInteger2Real(Tree *compiled, Tree *integer)
+Value *OCompiledUnit::CallInteger2Real(Tree *compiled, Tree *value)
 // ----------------------------------------------------------------------------
 //    Compile code generating the children of an infix
 // ----------------------------------------------------------------------------
 {
-    Value *result = Known(integer);
+    Value *result = Known(value);
     result = code->CreateCall(compiler->xl_integer2real, result);
     NeedStorage(compiled);
     MarkComputed(compiled, result);
