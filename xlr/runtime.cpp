@@ -1036,7 +1036,9 @@ Real *xl_integer2real(Integer *iv)
 //   Promote integer to real
 // ----------------------------------------------------------------------------
 {
-    return new Real(iv->value, iv->Position());
+    Real *result = new Real(iv->value, iv->Position());
+    xl_set_source(result, iv);
+    return result;
 }
 
 
