@@ -1888,12 +1888,15 @@ Tree *EnvironmentScan::DoName(Name *what)
 {
     for (Symbols *s = symbols; s && !s->is_global; s = s->Parent())
     {
-        if (Tree *existing = s->Named(what->value, false))
+        if (Rewrite *entry = s->Entry(what->value, false))
         {
-            // Found the symbol in the given symbol table
-            if (!captured.count(what))
-                captured[what] = existing;
-            break;
+            if (Name *name = entry->from->AsName())
+            {
+                // Found the symbol in the given symbol table
+                if (!captured.count(name))
+                    captured[name] = entry->to;
+                break;
+            }
         }
     }
     return what;
