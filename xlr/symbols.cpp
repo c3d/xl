@@ -765,6 +765,51 @@ Tree *Symbols::CompileCall(Context *context,
 }
 
 
+Tree *Symbols::CompileWith(Context *, Tree *source, TreeList &parms)
+// ----------------------------------------------------------------------------
+//   Compile the given body as a separate function with additional parameters
+// ----------------------------------------------------------------------------
+{
+    EnvironmentScan env(this);
+    Tree *envOK = source->Do(env);
+    assert(envOK && "Invalid environment scanning variables to pass");
+
+    // Create the parameter list with all imported locals
+    capture_table::iterator c;
+    for (c = env.captured.begin(); c != env.captured.end(); c++)
+    {
+        Tree *name = (*c).first;
+        parms.push_back(name);
+    }
+
+    Compiler *compiler = MAIN->compiler;
+    OCompiledUnit unit (compiler, source, parms, true);
+    assert (!unit.IsForwardCall());
+
+    bool nullIfBad = false;
+    bool keepAlternatives = true;
+    bool noData = false;
+    Tree *compiled = Compile(source, unit, nullIfBad, keepAlternatives, noData);
+    if (!compiled)
+        return source;
+    compiled->symbols = this;
+
+    // We cannot store the 'code' directly in the generated tree
+    // if the arity is not zero, because we would then execute that code
+    // without passing argument if we ever came to evaluate the tree (#2051)
+    // So we keep the original code (which may itself be evaluated)
+    // and "shield" it with a protective Block where we store the code.
+    eval_fn fn = unit.Finalize();
+    if (parms.size() != 0)
+    {
+        compiled = new Block(compiled, "XLWith(", ")", source->Position());
+        compiled->symbols = this;
+    }
+    compiled->code = fn;
+    return compiled;
+}
+
+
 Infix *Symbols::CompileTypeTest(Tree *type)
 // ----------------------------------------------------------------------------
 //   Compile a type test

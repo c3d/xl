@@ -340,14 +340,14 @@ struct FilterFunctionInfo : FunctionInfo
 // ============================================================================
 
 Tree *xl_integer_for_loop(Context *, Tree *self,
-                          Tree *Variable,
+                          Name *Variable,
                           longlong start, longlong end, longlong step,
                           Tree *body);
 Tree *xl_real_for_loop(Context *, Tree *self,
-                       Tree *Variable,
+                       Name *Variable,
                        double start, double end, double step, Tree *body);
 Tree *xl_list_for_loop(Context *, Tree *self,
-                       Tree *Variable, Tree *list, Tree *body);
+                       Name *Variable, Tree *list, Tree *body);
 Tree *xl_while_loop(Context *, Tree *self,
                     Tree *Condition, Tree *body, bool TestValue);
 
