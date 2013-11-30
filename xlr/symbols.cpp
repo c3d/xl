@@ -772,6 +772,7 @@ Tree *Symbols::CompileWith(Context *, Tree *source, TreeList &parms)
 {
     EnvironmentScan env(this);
     Tree *envOK = source->Do(env);
+    (void)envOK;
     assert(envOK && "Invalid environment scanning variables to pass");
 
     // Create the parameter list with all imported locals
