@@ -2857,50 +2857,8 @@ Name *xl_set_override_priority(Tree *self, float priority)
 //
 // ============================================================================
 
-struct LoopCallback : Info
-// ----------------------------------------------------------------------------
-//   Store information about the loop callback for a given loop
-// ----------------------------------------------------------------------------
-{
-    Tree_p      compiled;
-    TreeList    parms;
-    adapter_fn  adapter;
-};
-
-
-static LoopCallback *make_loop_callback(Context *context,
-                                        Tree *self, Tree *body, Name *var)
-// ----------------------------------------------------------------------------
-//   Create a loop callback structure for the three variants of the for loop
-// ----------------------------------------------------------------------------
-{
-    // Check if we already built the loop callback. If not, build it
-    LoopCallback *lc = self->GetInfo<LoopCallback>();
-    if (!lc)
-    {
-        lc = new LoopCallback;
-
-        // Enter variable name in symbol table
-        Symbols *symbols = new Symbols(self->Symbols());
-        body->SetSymbols(symbols);
-        symbols->EnterName(var->value, var, Rewrite::PARM);
-        
-        // Build the loop callback from the body
-        TreeList &parms = lc->parms;
-        parms.push_back(var);
-        lc->compiled = symbols->CompileWith(context, body, parms);
-
-        uint arity = parms.size();
-        Compiler *compiler = MAIN->compiler;
-        lc->adapter = (adapter_fn) compiler->ArrayToArgsAdapter(arity);
-        self->SetInfo<LoopCallback>(lc);
-    }
-    return lc;
-}
-
-
 Tree *xl_integer_for_loop(Context *context, Tree *self,
-                          Name *var,
+                          Tree *Variable,
                           longlong low, longlong high, longlong step,
                           Tree *body)
 // ----------------------------------------------------------------------------
@@ -2909,20 +2867,18 @@ Tree *xl_integer_for_loop(Context *context, Tree *self,
 {
     ADJUST_CONTEXT_FOR_INTERPRETER(context);
 
-    LoopCallback *lc       = make_loop_callback(context, self, body, var);
-    adapter_fn    adapt    = lc->adapter;
-    eval_fn       code     = lc->compiled->code;
-    Tree **       parmsPtr = (Tree **) &lc->parms[0];
-    Tree_p        result   = xl_false;
-    Integer_p     ival     = new Integer(low, var->Position());
+    if (!body->Symbols())
+        body->SetSymbols(self->Symbols());
 
-    lc->parms[0] = ival;
+    Tree_p result = xl_false;
+    Integer_p ival = new Integer(low, self->Position());
     if (step >= 0)
     {
         for (longlong i = low; i <= high; i += step)
         {
             ival->value = i;
-            result = adapt(code, context, body, parmsPtr);
+            xl_assign(context, Variable, ival, integer_type);
+            result = context->Evaluate(body);
         }
     }
     else
@@ -2930,7 +2886,8 @@ Tree *xl_integer_for_loop(Context *context, Tree *self,
         for (longlong i = low; i >= high; i += step)
         {
             ival->value = i;
-            result = adapt(code, context, body, parmsPtr);
+            xl_assign(context, Variable, ival, integer_type);
+            result = context->Evaluate(body);
         }
     }
     return result;
@@ -2938,29 +2895,26 @@ Tree *xl_integer_for_loop(Context *context, Tree *self,
 
 
 Tree *xl_real_for_loop(Context *context, Tree *self,
-                       Name *var,
-                       double low, double high, double step,
-                       Tree *body)
+                       Tree *Variable,
+                       double low, double high, double step, Tree *body)
 // ----------------------------------------------------------------------------
 //    Loop over a real variable
 // ----------------------------------------------------------------------------
 {
     ADJUST_CONTEXT_FOR_INTERPRETER(context);
 
-    LoopCallback *lc       = make_loop_callback(context, self, body, var);
-    adapter_fn    adapt    = lc->adapter;
-    eval_fn       code     = lc->compiled->code;
-    Tree **       parmsPtr = (Tree **) &lc->parms[0];
-    Tree_p        result   = xl_false;
-    Real_p        rval     = new Real(low, self->Position());
-    lc->parms[0] = rval;
+    if (!body->Symbols())
+        body->SetSymbols(self->Symbols());
 
+    Tree_p result = xl_false;
+    Real_p rval = new Real(low, self->Position());
     if (step >= 0)
     {
         for (double i = low; i <= high; i += step)
         {
             rval->value = i;
-            result = adapt(code, context, body, parmsPtr);
+            xl_assign(context, Variable, rval, real_type);
+            result = context->Evaluate(body);
         }
     }
     else
@@ -2968,7 +2922,8 @@ Tree *xl_real_for_loop(Context *context, Tree *self,
         for (double i = low; i >= high; i += step)
         {
             rval->value = i;
-            result = adapt(code, context, body, parmsPtr);
+            xl_assign(context, Variable, rval, real_type);
+            result = context->Evaluate(body);
         }
     }
     return result;
@@ -2976,7 +2931,8 @@ Tree *xl_real_for_loop(Context *context, Tree *self,
 
 
 Tree *xl_list_for_loop(Context *context, Tree *self,
-                       Name *var, Tree *list, Tree *body)
+                       Tree *Variable,
+                       Tree *list, Tree *body)
 // ----------------------------------------------------------------------------
 //   Loop over a list
 // ----------------------------------------------------------------------------
@@ -2990,11 +2946,6 @@ Tree *xl_list_for_loop(Context *context, Tree *self,
     if (Name *name = list->AsName())
         if (name->value == "")
             return result;      // empty list
-
-    LoopCallback *lc       = make_loop_callback(context, self, body, var);
-    adapter_fn    adapt    = lc->adapter;
-    eval_fn       code     = lc->compiled->code;
-    Tree **       parmsPtr = (Tree **) &lc->parms[0];
 
     // Loop on list items
     Tree *next = list;
@@ -3015,8 +2966,8 @@ Tree *xl_list_for_loop(Context *context, Tree *self,
         }
 
         // Set the loop index
-        *parmsPtr = value;
-        result = adapt(code, context, body, parmsPtr);
+        xl_assign(context, Variable, value);
+        result = context->Evaluate(body);
     }
 
     return result;
