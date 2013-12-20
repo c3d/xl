@@ -24,3 +24,7 @@ X:real in A:real..B:real -> X >= A and X <= B
 // Factorial function
 0! -> 1
 N:integer! -> N * (N-1)!
+
+// Boolean to text conversion
+text true -> "true"
+text false -> "false"
