@@ -53,18 +53,6 @@ PREFIX(DataDefinition, tree, "data",
        return xl_define(context, self, &form, NULL),
        GROUP(basics)
        SYNOPSIS("Declare a data form"))
-BLOCK(Parentheses, tree, "(", source, ")",
-      return xl_evaluate_block(context, &child),
-      GROUP(basics:groups)
-      SYNOPSIS("Grouping of expressions with parentheses"))
-BLOCK(CurlyBraces, tree, "{", source, "}",
-      return xl_evaluate_block(context, &child),
-      GROUP(basics:groups)
-      SYNOPSIS("Groupoing of statements with curly braces"))
-BLOCK(IntentationBlock, tree, Block::indent, source, Block::unindent,
-      return xl_evaluate_block(context, &child),
-      GROUP(basics:groups)
-      SYNOPSIS("Grouping of statements using indentation"))
 PREFIX(CodeClosure, tree, "<code>",
        PARM(input, source, "Source code"),
        return xl_evaluate_code(context, self, &input),

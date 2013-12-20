@@ -1522,14 +1522,22 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                     namedType == code_type ||
                     namedType == lazy_type)
                     return DoName(varName);
+                
+                bool isConstantType = (namedType == text_type ||
+                                       namedType == integer_type ||
+                                       namedType == real_type);
+                if (isConstantType)
+                {
+                    Block *block;
+                    while ((block = test->AsBlock()) && block->IsParentheses())
+                        test = block->child;
+                }
                 kind tk = test->Kind();
 
                 // Check built-in types against built-in constants
                 if (tk == INTEGER || tk == REAL || tk == TEXT)
                 {
-                    if (namedType == text_type   ||
-                        namedType == integer_type ||
-                        namedType == real_type)
+                    if (isConstantType)
                     {
                         IFTRACE(statictypes)
                             std::cerr << "Types: Built-in types and constant\n";
@@ -2393,35 +2401,32 @@ Tree *CompileAction::DoBlock(Block *what)
 //   Optimize away indent or parenthese blocks, evaluate others
 // ----------------------------------------------------------------------------
 {
-    if ((what->opening == Block::indent && what->closing == Block::unindent) ||
-        (what->opening == "{" && what->closing == "}") ||
-        (what->opening == "(" && what->closing == ")"))
+    // If the block only contains an empty name, return that (it's for () )
+    if (Name *name = what->child->AsName())
     {
-        if (Name *name = what->child->AsName())
+        if (name->value == "")
         {
-            if (name->value == "")
-            {
-                unit.ConstantTree(what);
-                return what;
-            }
+            unit.ConstantTree(what);
+            return what;
         }
+    }
 
-        if (unit.IsKnown(what))
-            unit.Copy(what, what->child, false);
-        Tree *result = what->child->Do(this);
-        if (!result)
-            return NULL;
+    // Evaluate the child
+    Tree *result = what->child->Do(this);
+    if (result)
+    {
         if (!what->child->Symbols())
             what->child->SetSymbols(symbols);
         if (unit.IsKnown(result))
             unit.Copy(result, what);
         if (Tree *type = symbols->TypeOf(result))
             symbols->types[what] = type;
-        return what;
+        return result;
     }
 
-    // In other cases, we need to evaluate rewrites
-    return Rewrites(what);
+    // If evaluating the child failed, see if we have a rewrite that works
+    result = Rewrites(what);
+    return result;
 }
 
 
@@ -3022,6 +3027,11 @@ eval_fn OCompiledUnit::Finalize()
     data->CreateCondBr(isOverflow, overflow, entrybb);
 
     // Verify the function we built
+    IFTRACE(unoptimized_code)
+    {
+        errs() << "UNOPTIMIZED:\n";
+        function->print(errs());
+    }
     verifyFunction(*function);
     IFTRACE(compile_progress)
         std::cerr << "Optimize ";
