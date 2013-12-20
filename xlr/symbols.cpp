@@ -2401,35 +2401,32 @@ Tree *CompileAction::DoBlock(Block *what)
 //   Optimize away indent or parenthese blocks, evaluate others
 // ----------------------------------------------------------------------------
 {
-    if ((what->opening == Block::indent && what->closing == Block::unindent) ||
-        (what->opening == "{" && what->closing == "}") ||
-        (what->opening == "(" && what->closing == ")"))
+    // If the block only contains an empty name, return that (it's for () )
+    if (Name *name = what->child->AsName())
     {
-        if (Name *name = what->child->AsName())
+        if (name->value == "")
         {
-            if (name->value == "")
-            {
-                unit.ConstantTree(what);
-                return what;
-            }
+            unit.ConstantTree(what);
+            return what;
         }
+    }
 
-        if (unit.IsKnown(what))
-            unit.Copy(what, what->child, false);
-        Tree *result = what->child->Do(this);
-        if (!result)
-            return NULL;
+    // Evaluate the child
+    Tree *result = what->child->Do(this);
+    if (result)
+    {
         if (!what->child->Symbols())
             what->child->SetSymbols(symbols);
         if (unit.IsKnown(result))
             unit.Copy(result, what);
         if (Tree *type = symbols->TypeOf(result))
             symbols->types[what] = type;
-        return what;
+        return result;
     }
 
-    // In other cases, we need to evaluate rewrites
-    return Rewrites(what);
+    // If evaluating the child failed, see if we have a rewrite that works
+    result = Rewrites(what);
+    return result;
 }
 
 
