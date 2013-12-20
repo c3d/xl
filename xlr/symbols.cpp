@@ -1522,14 +1522,22 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                     namedType == code_type ||
                     namedType == lazy_type)
                     return DoName(varName);
+                
+                bool isConstantType = (namedType == text_type ||
+                                       namedType == integer_type ||
+                                       namedType == real_type);
+                if (isConstantType)
+                {
+                    Block *block;
+                    while ((block = test->AsBlock()) && block->IsParentheses())
+                        test = block->child;
+                }
                 kind tk = test->Kind();
 
                 // Check built-in types against built-in constants
                 if (tk == INTEGER || tk == REAL || tk == TEXT)
                 {
-                    if (namedType == text_type   ||
-                        namedType == integer_type ||
-                        namedType == real_type)
+                    if (isConstantType)
                     {
                         IFTRACE(statictypes)
                             std::cerr << "Types: Built-in types and constant\n";
@@ -3022,6 +3030,11 @@ eval_fn OCompiledUnit::Finalize()
     data->CreateCondBr(isOverflow, overflow, entrybb);
 
     // Verify the function we built
+    IFTRACE(unoptimized_code)
+    {
+        errs() << "UNOPTIMIZED:\n";
+        function->print(errs());
+    }
     verifyFunction(*function);
     IFTRACE(compile_progress)
         std::cerr << "Optimize ";
