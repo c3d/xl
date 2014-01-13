@@ -889,7 +889,6 @@ Tree *Symbols::Ooops(text message, Tree *arg1, Tree *arg2, Tree *arg3)
         call, FormatTreeForError(arg3);
 
     Tree *result = call(this, true, false);
-    result->code = xl_identity;
     if (!result)
     {
         // Fallback to displaying error on std::err
@@ -897,6 +896,7 @@ Tree *Symbols::Ooops(text message, Tree *arg1, Tree *arg2, Tree *arg3)
         err.Display();
         return XL::xl_false;
     }
+    result->code = xl_identity;
     return result;
 }
 
