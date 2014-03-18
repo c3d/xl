@@ -115,21 +115,21 @@ INFIX(MulInt,integer, integer,"*",integer, XL_RINT(XL_INT(l) * XL_INT(r)),
       DESCRIPTION("")
       RETURNS(integer,""))
 INFIX(DivInt,integer, integer,"/",integer,
-      if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RINT(0LL); }
+      if (XL_INT(r) == 0) { Ooops("$1 divides by $2", self, &r); XL_RINT(0LL); }
       XL_RINT(XL_INT(l) / XL_INT(r)),
       GROUP(basics)
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS(integer,""))
 INFIX(RemInt,integer, integer,"rem",integer,
-      if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RINT(0LL); }
+      if (XL_INT(r) == 0) { Ooops("$1 divides by $2", self, &r); XL_RINT(0LL); }
       XL_RINT(XL_INT(l) % XL_INT(r)),
       GROUP(basics)
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS(integer,""))
 INFIX(ModInt,integer, integer,"mod",integer,
-      if (XL_INT(r) == 0) { Ooops("Divide by $1", &r); XL_RINT(0LL); }
+      if (XL_INT(r) == 0) { Ooops("$1 divides by $2", self, &r); XL_RINT(0LL); }
       XL_RINT(xl_mod(l, r)),
       GROUP(basics)
       SYNOPSIS("")
@@ -244,21 +244,21 @@ INFIX(MulReal, real, real, "*", real, XL_RREAL(XL_REAL(l) * XL_REAL(r)),
       DESCRIPTION("")
       RETURNS( real, ""))
 INFIX(DivReal, real, real, "/", real,
-      if (XL_REAL(r) == 0) { Ooops("Divide by $1", &r); XL_RREAL(0.0); }
+      if (XL_REAL(r) == 0) { Ooops("$1 divides by $2", self, &r); XL_RREAL(0.0); }
       XL_RREAL(XL_REAL(l) / XL_REAL(r)),
       GROUP(basics)
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS( real, ""))
 INFIX(RemReal, real, real, "rem", real,
-      if (XL_REAL(r) == 0) { Ooops("Divide by $1", &r); XL_RREAL(0.0); }
+      if (XL_REAL(r) == 0) { Ooops("$1 divides by $2", self, &r); XL_RREAL(0.0); }
       XL_RREAL(fmod(XL_REAL(l), XL_REAL(r))),
       GROUP(basics)
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS( real, ""))
 INFIX(ModReal, real, real, "mod", real,
-      if (XL_REAL(r) == 0) { Ooops("Divide by $1", &r); XL_RREAL(0.0); }
+      if (XL_REAL(r) == 0) { Ooops("$1 divides by $2", self, &r); XL_RREAL(0.0); }
       XL_RREAL(xl_modf(l,r)),
       GROUP(basics)
       SYNOPSIS("")
