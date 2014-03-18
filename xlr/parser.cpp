@@ -54,23 +54,6 @@ struct Pending
 };
 
 
-static inline text ErrorNameOf(text what)
-// ----------------------------------------------------------------------------
-//   Return a visible name for special characters
-// ----------------------------------------------------------------------------
-{
-    if (what == "\n")
-        return "<newline>";
-    if (what == "\t")
-        return "<tab>";
-    if (what == "I+")
-        return "<indent>";
-    if (what == "I-")
-        return "<unindent>";
-    return what;
-}
-
-
 token_t Parser::NextToken()
 // ----------------------------------------------------------------------------
 //    Return the next token, skipping comments and gathering long text
