@@ -889,7 +889,6 @@ Tree *Symbols::Ooops(text message, Tree *arg1, Tree *arg2, Tree *arg3)
         call, FormatTreeForError(arg3);
 
     Tree *result = call(this, true, false);
-    result->code = xl_identity;
     if (!result)
     {
         // Fallback to displaying error on std::err
@@ -897,6 +896,7 @@ Tree *Symbols::Ooops(text message, Tree *arg1, Tree *arg2, Tree *arg3)
         err.Display();
         return XL::xl_false;
     }
+    result->code = xl_identity;
     return result;
 }
 
@@ -2689,8 +2689,10 @@ Tree *CompileAction::Rewrites(Tree *what)
     } // for(namespaces)
 
     // If we didn't match anything, then emit an error at runtime
-    if (!foundUnconditional)
+    if (!foundUnconditional) {
         unit.CallTypeError(what);
+        returnType = NULL;
+    }
 
     // If we didn't find anything, report it
     if (!foundSomething)
