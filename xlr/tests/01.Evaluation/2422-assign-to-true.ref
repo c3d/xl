@@ -1,0 +1,10 @@
+A (true)=true
+A (false)=true
+A (true)=true
+true
+01.Evaluation/2422-assign-to-true.xl:2: Assigning to constant name 'true'
+<Unknown position>: New value was 'true'
+01.Evaluation/2422-assign-to-true.xl:2: Assigning to constant name 'true'
+<Unknown position>: New value was 'false'
+01.Evaluation/2422-assign-to-true.xl:2: Assigning to constant name 'true'
+<Unknown position>: New value was 'false'
