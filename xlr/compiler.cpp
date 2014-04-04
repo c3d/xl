@@ -78,6 +78,8 @@
 #include <llvm/Transforms/Utils/BasicBlockUtils.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/Signals.h>
+#include <llvm/Support/CommandLine.h>
+#include <llvm/ADT/Statistic.h>
 
 XL_BEGIN
 
@@ -108,7 +110,7 @@ static void* unresolved_external(const std::string& name)
 }
 
 
-Compiler::Compiler(kstring moduleName)
+Compiler::Compiler(kstring moduleName, int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Initialize the various instances we may need
 // ----------------------------------------------------------------------------
@@ -141,9 +143,17 @@ Compiler::Compiler(kstring moduleName)
       xl_fill_block(NULL),
       xl_fill_prefix(NULL), xl_fill_postfix(NULL), xl_fill_infix(NULL),
       xl_integer2real(NULL),
-      xl_array_index(NULL), xl_new_closure(NULL),
+      xl_array_index(NULL),
       xl_recursion_count(NULL)
 {
+    std::vector<char *> llvmArgv;
+    llvmArgv.push_back(argv[0]);
+    for (int arg = 1; arg < argc; arg++)
+        if (strncmp(argv[arg], "-llvm", 5) == 0)
+            llvmArgv.push_back(argv[arg] + 5);
+        
+    llvm::cl::ParseCommandLineOptions(llvmArgv.size(), &llvmArgv[0]);
+
 #ifdef CONFIG_MINGW
     llvm::sys::PrintStackTraceOnErrorSignal();
 #endif
@@ -398,6 +408,17 @@ Compiler::~Compiler()
 }
 
 
+void Compiler::Dump()
+// ----------------------------------------------------------------------------
+//   Debug dump of the whole compiler program at exit
+// ----------------------------------------------------------------------------
+{
+    IFTRACE(llvmdump)
+        llvm::errs() << "; MODULE:\n" << *module << "\n";
+    llvm::PrintStatistics(llvm::errs());
+}
+
+
 program_fn Compiler::CompileProgram(Context *context, Tree *program)
 // ----------------------------------------------------------------------------
 //   Compile a whole XL program
@@ -456,6 +477,50 @@ eval_fn Compiler::Compile(Context *context, Tree *program)
 }
 
 
+static inline void createXLFunctionPasses(PassManagerBase *PM)
+// ----------------------------------------------------------------------------
+//   Add XL function passes
+// ----------------------------------------------------------------------------
+{
+     createStandardAliasAnalysisPasses(PM);
+
+     PM->add(createInstructionCombiningPass()); // Clean up after IPCP & DAE
+     PM->add(createCFGSimplificationPass()); // Clean up after IPCP & DAE
+     
+    // Start of function pass.
+    // Break up aggregate allocas, using SSAUpdater.
+     PM->add(createScalarReplAggregatesPass(-1, false));
+     PM->add(createEarlyCSEPass());              // Catch trivial redundancies
+     PM->add(createSimplifyLibCallsPass());    // Library Call Optimizations
+     PM->add(createJumpThreadingPass());         // Thread jumps.
+     PM->add(createCorrelatedValuePropagationPass()); // Propagate conditionals
+     PM->add(createCFGSimplificationPass());     // Merge & remove BBs
+     PM->add(createInstructionCombiningPass());  // Combine silly seq's
+     PM->add(createCFGSimplificationPass());     // Merge & remove BBs
+     PM->add(createReassociatePass());           // Reassociate expressions
+     PM->add(createLoopRotatePass());            // Rotate Loop
+     PM->add(createLICMPass());                  // Hoist loop invariants
+     PM->add(createInstructionCombiningPass());  
+     PM->add(createIndVarSimplifyPass());        // Canonicalize indvars
+     PM->add(createLoopIdiomPass());             // Recognize idioms like memset.
+     PM->add(createLoopDeletionPass());          // Delete dead loops
+     PM->add(createLoopUnrollPass());            // Unroll small loops
+     PM->add(createInstructionCombiningPass());  // Clean up after the unroller
+     PM->add(createGVNPass());                 // Remove redundancies
+     PM->add(createMemCpyOptPass());             // Remove memcpy / form memset
+     PM->add(createSCCPPass());                  // Constant prop with SCCP
+
+     // Run instcombine after redundancy elimination to exploit opportunities
+     // opened up by them.
+     PM->add(createInstructionCombiningPass());
+     PM->add(createJumpThreadingPass());         // Thread jumps
+     PM->add(createCorrelatedValuePropagationPass());
+     PM->add(createDeadStoreEliminationPass());  // Delete dead stores
+     PM->add(createAggressiveDCEPass());         // Delete dead instructions
+     PM->add(createCFGSimplificationPass());     // Merge & remove BBs
+}
+
+
 void Compiler::Setup(Options &options)
 // ----------------------------------------------------------------------------
 //   Setup the compiler after we have parsed the options
@@ -469,18 +534,21 @@ void Compiler::Setup(Options &options)
     if (optimize_level == 1)
         runtime->DisableLazyCompilation(false);
 
-    createStandardFunctionPasses(optimizer, optimize_level);
+    optimize_level = 99;
     createStandardModulePasses(moduleOptimizer, optimize_level,
                                true,    /* Optimize size */
-                               false,   /* Unit at a time */
+                               true,    /* Unit at a time */
                                true,    /* Unroll loops */
                                true,    /* Simplify lib calls */
-                               false,    /* Have exception */
+                               false,   /* Have exception */
                                llvm::createFunctionInliningPass());
     createStandardLTOPasses(moduleOptimizer,
                             true, /* Internalize */
                             true, /* RunInliner */
                             true  /* Verify Each */);
+
+    createStandardFunctionPasses(optimizer, optimize_level);
+    createXLFunctionPasses(optimizer);
 
     // Adjust frame pointer elimination based on the -g option
     NoFramePointerElim = options.debug;

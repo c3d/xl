@@ -889,7 +889,6 @@ Tree *Symbols::Ooops(text message, Tree *arg1, Tree *arg2, Tree *arg3)
         call, FormatTreeForError(arg3);
 
     Tree *result = call(this, true, false);
-    result->code = xl_identity;
     if (!result)
     {
         // Fallback to displaying error on std::err
@@ -897,6 +896,7 @@ Tree *Symbols::Ooops(text message, Tree *arg1, Tree *arg2, Tree *arg3)
         err.Display();
         return XL::xl_false;
     }
+    result->code = xl_identity;
     return result;
 }
 
@@ -1228,7 +1228,8 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     }
 
     // Create a call to xl_new_closure to save the required trees
-    unit.CreateClosure(source, parms, args, subUnit.function);
+    if (!isCallableDirectly)
+        unit.CreateClosure(source, parms, args, subUnit.function);
 
     return source;
 }
@@ -1521,14 +1522,22 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                     namedType == code_type ||
                     namedType == lazy_type)
                     return DoName(varName);
+                
+                bool isConstantType = (namedType == text_type ||
+                                       namedType == integer_type ||
+                                       namedType == real_type);
+                if (isConstantType)
+                {
+                    Block *block;
+                    while ((block = test->AsBlock()) && block->IsParentheses())
+                        test = block->child;
+                }
                 kind tk = test->Kind();
 
                 // Check built-in types against built-in constants
                 if (tk == INTEGER || tk == REAL || tk == TEXT)
                 {
-                    if (namedType == text_type   ||
-                        namedType == integer_type ||
-                        namedType == real_type)
+                    if (isConstantType)
                     {
                         IFTRACE(statictypes)
                             std::cerr << "Types: Built-in types and constant\n";
@@ -1688,7 +1697,9 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                                 {
                                     IFTRACE(statictypes)
                                         std::cerr << "Types: Promote to real\n";
-                                    unit.CallInteger2Real(compiled);
+                                    compiled = new Prefix(real_type, compiled,
+                                                          compiled->Position());
+                                    unit.CallInteger2Real(compiled, test);
                                 }
                                 break;
             case REAL:          exprType = real_type;    break;
@@ -1717,7 +1728,9 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
             {
                 IFTRACE(statictypes)
                     std::cerr << "Types: Promote integer to real\n";
-                unit.CallInteger2Real(compiled);
+                compiled = new Prefix(real_type, compiled,
+                                      compiled->Position());
+                unit.CallInteger2Real(compiled, test);
             }
             else
             {
@@ -1883,12 +1896,15 @@ Tree *EnvironmentScan::DoName(Name *what)
 {
     for (Symbols *s = symbols; s && !s->is_global; s = s->Parent())
     {
-        if (Tree *existing = s->Named(what->value, false))
+        if (Rewrite *entry = s->Entry(what->value, false))
         {
-            // Found the symbol in the given symbol table
-            if (!captured.count(what))
-                captured[what] = existing;
-            break;
+            if (Name *name = entry->from->AsName())
+            {
+                // Found the symbol in the given symbol table
+                if (!captured.count(name))
+                    captured[name] = entry->to;
+                break;
+            }
         }
     }
     return what;
@@ -2385,35 +2401,32 @@ Tree *CompileAction::DoBlock(Block *what)
 //   Optimize away indent or parenthese blocks, evaluate others
 // ----------------------------------------------------------------------------
 {
-    if ((what->opening == Block::indent && what->closing == Block::unindent) ||
-        (what->opening == "{" && what->closing == "}") ||
-        (what->opening == "(" && what->closing == ")"))
+    // If the block only contains an empty name, return that (it's for () )
+    if (Name *name = what->child->AsName())
     {
-        if (Name *name = what->child->AsName())
+        if (name->value == "")
         {
-            if (name->value == "")
-            {
-                unit.ConstantTree(what);
-                return what;
-            }
+            unit.ConstantTree(what);
+            return what;
         }
+    }
 
-        if (unit.IsKnown(what))
-            unit.Copy(what, what->child, false);
-        Tree *result = what->child->Do(this);
-        if (!result)
-            return NULL;
+    // Evaluate the child
+    Tree *result = what->child->Do(this);
+    if (result)
+    {
         if (!what->child->Symbols())
             what->child->SetSymbols(symbols);
         if (unit.IsKnown(result))
             unit.Copy(result, what);
         if (Tree *type = symbols->TypeOf(result))
             symbols->types[what] = type;
-        return what;
+        return result;
     }
 
-    // In other cases, we need to evaluate rewrites
-    return Rewrites(what);
+    // If evaluating the child failed, see if we have a rewrite that works
+    result = Rewrites(what);
+    return result;
 }
 
 
@@ -2676,8 +2689,10 @@ Tree *CompileAction::Rewrites(Tree *what)
     } // for(namespaces)
 
     // If we didn't match anything, then emit an error at runtime
-    if (!foundUnconditional)
+    if (!foundUnconditional) {
         unit.CallTypeError(what);
+        returnType = NULL;
+    }
 
     // If we didn't find anything, report it
     if (!foundSomething)
@@ -3014,6 +3029,11 @@ eval_fn OCompiledUnit::Finalize()
     data->CreateCondBr(isOverflow, overflow, entrybb);
 
     // Verify the function we built
+    IFTRACE(unoptimized_code)
+    {
+        errs() << "UNOPTIMIZED:\n";
+        function->print(errs());
+    }
     verifyFunction(*function);
     IFTRACE(compile_progress)
         std::cerr << "Optimize ";
@@ -3540,14 +3560,15 @@ Value *OCompiledUnit::CallFillInfix(Infix *infix)
 }
 
 
-Value *OCompiledUnit::CallInteger2Real(Tree *integer)
+Value *OCompiledUnit::CallInteger2Real(Tree *compiled, Tree *value)
 // ----------------------------------------------------------------------------
 //    Compile code generating the children of an infix
 // ----------------------------------------------------------------------------
 {
-    Value *integerValue = Known(integer);
-    Value *result = code->CreateCall(compiler->xl_integer2real, integerValue);
-    MarkComputed(integer, result);
+    Value *result = Known(value);
+    result = code->CreateCall(compiler->xl_integer2real, result);
+    NeedStorage(compiled);
+    MarkComputed(compiled, result);
     return result;
 }
 
@@ -3618,12 +3639,14 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
 // ----------------------------------------------------------------------------
 //   We build it with an indirect call so that we generate one closure call
 //   subroutine per number of arguments only.
-//   The input is a sequence of infix \n that looks like:
+//   The input is a block containing a sequence of infix \n that looks like:
+//   {
 //      P1 -> V1
 //      P2 -> V2
 //      P3 -> V3
 //      [...]
 //      E
+//   }
 //   where P1..Pn are the parameter names, V1..Vn their values, and E is the
 //   original expression to evaluate.
 //   The generated function takes the 'code' field of the last infix before E,
@@ -3632,6 +3655,7 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
     // Load left tree
     Type *treeTy = compiler->treePtrTy;
     Type *infixTy = compiler->infixTreePtrTy;
+    Type *blockTy = compiler->blockTreePtrTy;
     Value *ptr = Known(callee); assert(ptr);
     Value *decl = NULL;
 
@@ -3642,6 +3666,13 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
     signature.push_back(compiler->contextPtrTy);
     argV.push_back(ptr);          // Self is the closure expression
     signature.push_back(treeTy);
+
+    // Extract child of surrounding block
+    Value *block = code->CreateBitCast(ptr, blockTy);
+    ptr = code->CreateConstGEP2_32(block, 0, BLOCK_CHILD_INDEX);
+    ptr = code->CreateLoad(ptr);
+
+    // Build additional arguments
     for (uint i = 0; i < ntrees; i++)
     {
         // Load the left of the \n which is a decl of the form P->V

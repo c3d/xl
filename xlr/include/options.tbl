@@ -94,6 +94,9 @@ OPTION(compile, "Only compile file, do not run", compileOnly = true)
 OPTVAR(debug, bool, false)
 OPTION(g, "Compile with debugging information", debug=true)
 
+// LLVM options
+OPTION(llvm, "Pass an LLVM option", PassOptionToLLVM(argval))
+
 // Warning-level option
 OPTVAR(warning_level, uint, 0)
 OPTION(w, "Set the warning level, from 0 to 5",

@@ -121,7 +121,7 @@ struct Compiler
 //   Just-in-time compiler data
 // ----------------------------------------------------------------------------
 {
-    Compiler(kstring moduleName = "xl");
+    Compiler(kstring moduleName, int argc, char **argv);
     ~Compiler();
 
     // Top-level entry point: analyze and compile a tree or a whole program
@@ -166,6 +166,7 @@ struct Compiler
     llvm::Function * &        FunctionFor(text fkey) { return functions[fkey]; }
 
     bool                      FreeResources(Tree *tree);
+    void                      Dump();
 
 
 public:
@@ -233,7 +234,6 @@ public:
     llvm::Function            *xl_fill_infix;
     llvm::Function            *xl_integer2real;
     llvm::Function            *xl_array_index;
-    llvm::Function            *xl_new_closure;
     llvm::GlobalValue         *xl_recursion_count;
     functions_map              builtins;
     functions_map              functions;
