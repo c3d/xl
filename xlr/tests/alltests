@@ -26,13 +26,13 @@
 
 # Environment - Note that 'xl' is typically a symbolic link to real compiler
 OS=$(uname)
-TESTDIR=.
+TESTDIR="$(pwd)"
 SUBDIRS="[0-9]*"
 XL=./xl
-SUCCESS=$TESTDIR/success.out
-FAILURE=$TESTDIR/failure.out
-EXPECTED=$TESTDIR/expected.out
-BASEFILE=$TESTDIR/baseline.txt
+SUCCESS="$TESTDIR/success.out"
+FAILURE="$TESTDIR/failure.out"
+EXPECTED="$TESTDIR/expected.out"
+BASEFILE="$TESTDIR/baseline.txt"
 PASS="pass"
 ONE_FAILED=
 PATTERN='[A-Za-z]*'
@@ -78,21 +78,23 @@ $LN ../builtins.xl .
 $LN ../opt-builtins.xl .
 
 # Cleanup the test results
-echo Tests successfully run on $(date) on $HOSTNAME > $SUCCESS
-echo Failed tests on $(date) on $HOSTNAME > $FAILURE
-echo Expected test failures on $(date) on $HOSTNAME > $EXPECTED
+echo Tests successfully run on $(date) on $HOSTNAME > "$SUCCESS"
+echo Failed tests on $(date) on $HOSTNAME > "$FAILURE"
+echo Expected test failures on $(date) on $HOSTNAME > "$EXPECTED"
 export XL
 
 # Clear the baseline if we are updating it
 if [ ! -z "$BASELINE" ]; then
-    rm -f $BASEFILE
-    touch $BASEFILE
+    rm -f "$BASEFILE"
+    touch "$BASEFILE"
 fi
 
 # Look for all possible tests in the test directory
-for SUBDIR in "$(find $TESTDIR -type d -a -name '*'$SUBDIRS'*')"
+SAVEIFS=$IFS
+IFS=$(echo -en "\n\b")
+for SUBDIR in $(find "$TESTDIR" -type d -a -name '*'$SUBDIRS'*')
 do
-for TEST in $(find $SUBDIR -name "$PATTERN".xl -print)
+for TEST in $(find "$SUBDIR" -name "$PATTERN".xl -print)
 do
     TESTNAME=${TEST/$TESTDIR\/}
 
@@ -247,3 +249,4 @@ else
     echo "  Excluded from run          : " $EXCLUDED
     echo "  Expected test failures     : " $EXPECTED_FAILURES
 fi
+IFS=$SAVEIFS
