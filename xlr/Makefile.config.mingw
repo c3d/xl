@@ -31,7 +31,7 @@ ifndef BUILDENV
 BUILDENV=mingw
 endif
 
-DEFINES_mingw=-DCONFIG_MINGW
+DEFINES_mingw=-DCONFIG_MINGW -DUNICODE
 EXE=.exe
 
 include $(BROOT)Makefile.config.gnu
