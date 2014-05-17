@@ -58,11 +58,8 @@ struct Error
     text                Position();
     text                Message();
 
-    // Converting to an error tree
-    operator Tree *     ();
-    operator Tree_p     ()      { return Tree_p((Tree *) *this); }
-    Tree *operator ->   ()      { return (Tree *) *this; }
 
+public:
     text                message;
     std::vector<text>   arguments;
     ulong               position;
