@@ -746,8 +746,28 @@ PREFIX(GetAttribute, tree, "form_attribute",
        return xl_attribute(context, name, &form),
        GROUP(source)
        SYNOPSIS("Find the attribute associated to a given form"))
-PREFIX(LoadCSV,  tree, "load_csv", PARM(f, text, "") PARM(p, text, ""),
+PREFIX(LoadCSVBody,  tree, "load_csv",
+       PARM(f, text, "")
+       PARM(p, text, "")
+       PARM(body, tree, ""),
+       return xl_load_data(context, self, f, p, ",;", "\n\f\r", &body),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
+PREFIX(LoadCSV,  tree, "load_csv",
+       PARM(f, text, "")
+       PARM(p, text, ""),
        return xl_load_data(context, self, f, p, ",;", "\n\f\r"),
+       GROUP(basics)
+       SYNOPSIS("")
+       DESCRIPTION("")
+       RETURNS(tree, ""))
+PREFIX(LoadTSVBody,  tree, "load_tsv",
+       PARM(f, text, "File name")
+       PARM(p, text, "Prefix to apply")
+       PARM(body, text, "Prefix to apply"),
+       return xl_load_data(context, self, f, p, "\t", "\n\f\r", &body),
        GROUP(basics)
        SYNOPSIS("")
        DESCRIPTION("")
@@ -760,16 +780,21 @@ PREFIX(LoadTSV,  tree, "load_tsv",
        SYNOPSIS("")
        DESCRIPTION("")
        RETURNS(tree, ""))
+PREFIX(LoadDataBody,  tree, "load_data",
+       PARM(f, text, "File name")
+       PARM(p, text, "Prefix to apply")
+       PARM(fs, text, "Field separator")
+       PARM(rs, text, "Row separator")
+       PARM(body, tree, "Body"),
+       return xl_load_data(context, self, f, p, fs, rs, &body),
+       GROUP(basics) SYNOPSIS("") DESCRIPTION("") RETURNS(tree, ""))
 PREFIX(LoadData,  tree, "load_data",
        PARM(f, text, "File name")
        PARM(p, text, "Prefix to apply")
        PARM(fs, text, "Field separator")
        PARM(rs, text, "Row separator"),
        return xl_load_data(context, self, f, p, fs, rs),
-       GROUP(basics)
-       SYNOPSIS("")
-       DESCRIPTION("")
-       RETURNS(tree, ""))
+       GROUP(basics) SYNOPSIS("") DESCRIPTION("") RETURNS(tree, ""))
 PREFIX(AddSearchPath, tree, "add_search_path", PARM(prefix, text, "") PARM(dir, text, ""),
        return xl_add_search_path(context, prefix, dir),
        GROUP(basics)

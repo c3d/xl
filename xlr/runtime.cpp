@@ -1276,9 +1276,9 @@ bool xl_file_exists(Context *context, Tree_p self, text path)
    }
 
 #if defined(CONFIG_MINGW)
-                struct _stat st;
+    struct _stat st;
 #else
-                struct stat st;
+    struct stat st;
 #endif
 
     return (utf8_stat (path.c_str(), &st) < 0) ? false : true;
@@ -1453,7 +1453,8 @@ struct LoadDataInfo : Info
 
 
 Tree *xl_load_data(Context *context, Tree *self,
-                   text name, text prefix, text fieldSeps, text recordSeps)
+                   text name, text prefix, text fieldSeps, text recordSeps,
+                   Tree *body)
 // ----------------------------------------------------------------------------
 //    Load a comma-separated or tab-separated file from disk
 // ----------------------------------------------------------------------------
@@ -1477,13 +1478,15 @@ Tree *xl_load_data(Context *context, Tree *self,
 
     return xl_load_data(context, self, path,
                         input, true, true,
-                        prefix, fieldSeps, recordSeps);
+                        prefix, fieldSeps, recordSeps,
+                        body);
 }
 
 
 Tree *xl_load_data(Context *context, Tree *self, text inputName,
                    std::istream &input, bool cached, bool statTime,
-                   text prefix, text fieldSeps, text recordSeps)
+                   text prefix, text fieldSeps, text recordSeps,
+                   Tree *body)
 // ----------------------------------------------------------------------------
 //   Variant reading from a stream directly
 // ----------------------------------------------------------------------------
@@ -1643,12 +1646,27 @@ Tree *xl_load_data(Context *context, Tree *self, text inputName,
             {
                 if (hasPrefix)
                 {
+                    if (body)
+                        row.args.push_back(body);
                     perFile.data.push_back(row);
                     tree = syms->CompileCall(context, prefix, row.args);
                     row.args.clear();
                 }
                 else
                 {
+                    if (body)
+                    {
+                        if (*linePtr)
+                        {
+                            Infix *infix = new Infix(",", *linePtr, body);
+                            *linePtr = infix;
+                            linePtr = &infix->right;
+                        }
+                        else
+                        {
+                            *linePtr = body;
+                        }
+                    }
                     if (*treePtr)
                     {
                         Infix *infix = new Infix("\n", *treePtr, line);
@@ -1668,7 +1686,7 @@ Tree *xl_load_data(Context *context, Tree *self, text inputName,
     }
     if (!tree)
         tree = xl_false;
-perFile.loaded = tree;
+    perFile.loaded = tree;
 
     return tree;
 }

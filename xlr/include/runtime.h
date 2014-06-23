@@ -381,10 +381,12 @@ bool xl_file_exists(Context *context, Tree_p self, text path);
 Tree *xl_import(Context *, Tree *self, text name, int phase);
 Tree *xl_load_data(Context *, Tree *self,
                    text name, text prefix,
-                   text fieldSeps = ",;", text recordSeps = "\n");
+                   text fieldSeps = ",;", text recordSeps = "\n",
+                   Tree *body = NULL);
 Tree *xl_load_data(Context *, Tree *self, text inputName,
                    std::istream &source, bool cached, bool statTime,
-                   text prefix, text fieldSeps = ",;", text recordSeps = "\n");
+                   text prefix, text fieldSeps = ",;", text recordSeps = "\n",
+                   Tree *body = NULL);
 Tree *xl_add_search_path(Context *, text prefix, text dir);
 Text *xl_find_in_search_path(Context *, text prefix, text file);
 
