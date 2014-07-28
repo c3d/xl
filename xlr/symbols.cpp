@@ -1597,8 +1597,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                     }
                 }
 
-                if ((namedType == source_type) ||
-                    (tk == NAME && namedType == name_type) ||
+                if ((namedType == source_type && tk != NAME) ||
                     (tk == BLOCK && namedType == block_type) ||
                     (tk == INFIX && namedType == infix_type) ||
                     (tk == PREFIX && namedType == prefix_type) ||

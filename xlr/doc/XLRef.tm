@@ -3,6 +3,8 @@
 <style|article>
 
 <\body>
+  \;
+
   <doc-data|<doc-title|The XLR Programming
   Language>|<\doc-author-data|<author-name|Christophe de
   Dinechin>|<\author-address>
@@ -2318,16 +2320,16 @@
   </verbatim>|Using the <verbatim|complex> type><label|using-complex>
 
   Parameters<subindex|parameters|of types> of types such as
-  <verbatim|complex> are contexts with declarations for the individual
-  variables of the pattern of the type. For example, a <verbatim|complex>
-  like <verbatim|Z1> in Figure<nbsp><reference|using-complex> contains a
-  rewrite for <verbatim|re> and a rewrite for <verbatim|im>.
-  Figure<nbsp><reference|binding-for-complex-parameter> possible
-  bindings<subindex|bindings|in type definitions> when using the complex
-  addition operator defined in Figure<nbsp><reference|using-complex>. The
-  standard index notation<subindex|index|for user-defined types> described in
-  Section<nbsp><reference|index-operators> applies, e.g. in <verbatim|Z1.re>,
-  and these bindings can be assigned to.
+  <verbatim|complex> are bound to contexts with declarations for the
+  individual variables of the pattern of the type. For example, a
+  <verbatim|complex> like <verbatim|Z1> in
+  Figure<nbsp><reference|using-complex> contains a rewrite for <verbatim|re>
+  and a rewrite for <verbatim|im>. Figure<nbsp><reference|binding-for-complex-parameter>
+  possible bindings<subindex|bindings|in type definitions> when using the
+  complex addition operator defined in Figure<nbsp><reference|using-complex>.
+  The standard index notation<subindex|index|for user-defined types>
+  described in Section<nbsp><reference|index-operators> applies, e.g. in
+  <verbatim|Z1.re>, and these bindings can be assigned to.
 
   <big-figure|<\verbatim>
     // Expression being evaluated
@@ -3370,7 +3372,20 @@
 
   <subsection|Minimum and maximum>
 
-  \;
+  The minumum and maximum can be defined as follows:
+
+  <big-figure|<\verbatim>
+    min x, y -\<gtr\> m:tree := min y; if m \<less\> x then m else x
+
+    min x \ \ \ -\<gtr\> x
+
+    max x, y -\<gtr\> m:tree := max y; if m \<gtr\> x then m else x
+
+    max x \ \ \ -\<gtr\> x
+  </verbatim>|Computing a minimum and a maximum>
+
+  The functions as defined will work with any number of arguments, as well as
+  with lists of items.
 
   <subsection|Complex numbers>
 
@@ -5559,53 +5574,54 @@
     <associate|auto-528|<tuple|5|33>>
     <associate|auto-529|<tuple|5.1|33>>
     <associate|auto-53|<tuple|2.1|4>>
-    <associate|auto-530|<tuple|5.2|33>>
-    <associate|auto-531|<tuple|5.3|33>>
-    <associate|auto-532|<tuple|5.4|33>>
-    <associate|auto-533|<tuple|5.5|33>>
-    <associate|auto-534|<tuple|5.6|33>>
-    <associate|auto-535|<tuple|5.6.1|33>>
-    <associate|auto-536|<tuple|5.6.2|33>>
-    <associate|auto-537|<tuple|5.6.3|33>>
-    <associate|auto-538|<tuple|5.6.4|33>>
-    <associate|auto-539|<tuple|5.6.5|33>>
+    <associate|auto-530|<tuple|75|33>>
+    <associate|auto-531|<tuple|5.2|33>>
+    <associate|auto-532|<tuple|5.3|33>>
+    <associate|auto-533|<tuple|5.4|33>>
+    <associate|auto-534|<tuple|5.5|33>>
+    <associate|auto-535|<tuple|5.6|33>>
+    <associate|auto-536|<tuple|5.6.1|33>>
+    <associate|auto-537|<tuple|5.6.2|33>>
+    <associate|auto-538|<tuple|5.6.3|33>>
+    <associate|auto-539|<tuple|5.6.4|33>>
     <associate|auto-54|<tuple|2.1|4>>
-    <associate|auto-540|<tuple|5.6.6|33>>
-    <associate|auto-541|<tuple|5.6.7|33>>
-    <associate|auto-542|<tuple|5.7|33>>
-    <associate|auto-543|<tuple|5.7.1|34>>
-    <associate|auto-544|<tuple|5.7.2|34>>
-    <associate|auto-545|<tuple|5.7.3|34>>
-    <associate|auto-546|<tuple|5.7.4|34>>
-    <associate|auto-547|<tuple|5.7.5|34>>
-    <associate|auto-548|<tuple|5.7.6|34>>
-    <associate|auto-549|<tuple|5.7.7|34>>
+    <associate|auto-540|<tuple|5.6.5|33>>
+    <associate|auto-541|<tuple|5.6.6|33>>
+    <associate|auto-542|<tuple|5.6.7|33>>
+    <associate|auto-543|<tuple|5.7|34>>
+    <associate|auto-544|<tuple|5.7.1|34>>
+    <associate|auto-545|<tuple|5.7.2|34>>
+    <associate|auto-546|<tuple|5.7.3|34>>
+    <associate|auto-547|<tuple|5.7.4|34>>
+    <associate|auto-548|<tuple|5.7.5|34>>
+    <associate|auto-549|<tuple|5.7.6|34>>
     <associate|auto-55|<tuple|2.1|4>>
-    <associate|auto-550|<tuple|75|34>>
-    <associate|auto-551|<tuple|6|34>>
-    <associate|auto-552|<tuple|6.1|35>>
-    <associate|auto-553|<tuple|6.2|35>>
-    <associate|auto-554|<tuple|6.3|35>>
-    <associate|auto-555|<tuple|6.4|35>>
-    <associate|auto-556|<tuple|76|35>>
-    <associate|auto-557|<tuple|12|35>>
-    <associate|auto-558|<tuple|6.5|35>>
-    <associate|auto-559|<tuple|6.6|36>>
+    <associate|auto-550|<tuple|5.7.7|34>>
+    <associate|auto-551|<tuple|76|34>>
+    <associate|auto-552|<tuple|6|35>>
+    <associate|auto-553|<tuple|6.1|35>>
+    <associate|auto-554|<tuple|6.2|35>>
+    <associate|auto-555|<tuple|6.3|35>>
+    <associate|auto-556|<tuple|6.4|35>>
+    <associate|auto-557|<tuple|77|35>>
+    <associate|auto-558|<tuple|12|35>>
+    <associate|auto-559|<tuple|6.5|36>>
     <associate|auto-56|<tuple|2.1|4>>
-    <associate|auto-560|<tuple|6.7|36>>
-    <associate|auto-561|<tuple|6.8|36>>
-    <associate|auto-562|<tuple|6.9|36>>
-    <associate|auto-563|<tuple|6.10|36>>
-    <associate|auto-564|<tuple|6.11|36>>
-    <associate|auto-565|<tuple|77|?>>
-    <associate|auto-566|<tuple|6.11.1|?>>
-    <associate|auto-567|<tuple|6.11.2|?>>
-    <associate|auto-568|<tuple|78|?>>
-    <associate|auto-569|<tuple|6.12|?>>
+    <associate|auto-560|<tuple|6.6|36>>
+    <associate|auto-561|<tuple|6.7|36>>
+    <associate|auto-562|<tuple|6.8|36>>
+    <associate|auto-563|<tuple|6.9|36>>
+    <associate|auto-564|<tuple|6.10|36>>
+    <associate|auto-565|<tuple|6.11|?>>
+    <associate|auto-566|<tuple|78|?>>
+    <associate|auto-567|<tuple|6.11.1|?>>
+    <associate|auto-568|<tuple|6.11.2|?>>
+    <associate|auto-569|<tuple|79|?>>
     <associate|auto-57|<tuple|4|4>>
-    <associate|auto-570|<tuple|6.13|?>>
-    <associate|auto-571|<tuple|6.14|?>>
-    <associate|auto-572|<tuple|6.15|?>>
+    <associate|auto-570|<tuple|6.12|?>>
+    <associate|auto-571|<tuple|6.13|?>>
+    <associate|auto-572|<tuple|6.14|?>>
+    <associate|auto-573|<tuple|6.15|?>>
     <associate|auto-58|<tuple|2.2|4>>
     <associate|auto-59|<tuple|2.2|4>>
     <associate|auto-6|<tuple|1.2|1>>
@@ -5660,7 +5676,7 @@
     <associate|boolean-operations|<tuple|5|26>>
     <associate|built-ins|<tuple|4.1|25>>
     <associate|class-like-data|<tuple|22|?>>
-    <associate|closure-code|<tuple|78|36>>
+    <associate|closure-code|<tuple|79|36>>
     <associate|color-properties|<tuple|48|23>>
     <associate|comma-separated-list|<tuple|6.13|11>>
     <associate|comma-separated-list-data-declaration|<tuple|24|12>>
@@ -5719,7 +5735,7 @@
     <associate|import-statement-example|<tuple|73|31>>
     <associate|index-operators|<tuple|3.1.7|15>>
     <associate|infinite-data-structures|<tuple|5.7.7|33>>
-    <associate|infinite-list|<tuple|75|33>>
+    <associate|infinite-list|<tuple|76|33>>
     <associate|infinite-loop|<tuple|4.2.3|29>>
     <associate|infix-type|<tuple|57|24>>
     <associate|iterations|<tuple|3|?>>
@@ -5754,7 +5770,7 @@
     <associate|ranges-as-lists|<tuple|68|30>>
     <associate|references|<tuple|3.4|?>>
     <associate|return-type-declaration|<tuple|20|?>>
-    <associate|rewrite-code|<tuple|77|35>>
+    <associate|rewrite-code|<tuple|78|35>>
     <associate|rewrite-type|<tuple|58|25>>
     <associate|sequence|<tuple|33|15>>
     <associate|setting-default-arguments|<tuple|49|23>>

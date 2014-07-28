@@ -414,8 +414,10 @@ void Compiler::Dump()
 // ----------------------------------------------------------------------------
 {
     IFTRACE(llvmdump)
+    {
         llvm::errs() << "; MODULE:\n" << *module << "\n";
-    llvm::PrintStatistics(llvm::errs());
+        llvm::PrintStatistics(llvm::errs());
+    }
 }
 
 

@@ -157,9 +157,15 @@ Tree *Context::Evaluate(Tree *what)
     if (!what->code)
     {
         if (!MAIN->compiler->Compile(this, what))
-            return Ooops("Error compiling $1", what);
+        {
+            Ooops("Error compiling $1", what);
+            return what;
+        }
         if (!what->code)
-            return Ooops("Internal error: no code generated for $1", what);
+        {
+            Ooops("Internal error: no code generated for $1", what);
+            return what;
+        }
     }
 
     return what->code(this, what);

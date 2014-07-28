@@ -177,7 +177,8 @@ Tree *xl_form_error(Context *context, Tree *what)
     }
     Save<bool> saveRecursive(recursive, true);
 
-    return Ooops("No form match $1 at runtime", what);
+    Ooops("No form match $1 at runtime", what);
+    return what;
 }
 
 
@@ -186,7 +187,8 @@ Tree *xl_stack_overflow(Tree *what)
 //   Return an error evaluating a tree
 // ----------------------------------------------------------------------------
 {
-    return Ooops("Stack overflow evaluating $1", what);
+    Ooops("Stack overflow evaluating $1", what);
+    return what;
 }
 
 
@@ -1150,7 +1152,10 @@ Tree *xl_import(Context *context, Tree *self, text name, int phase)
             }
         }
         if (path == "")
-            return Ooops("Source file $1 not found", new Text(name));
+        {
+            Ooops("Source file $2 not found for $1", self).Arg(name);
+            return XL::xl_false;
+        }
         info = new ImportedFileInfo(path);
         self->SetInfo<ImportedFileInfo> (info);
     }
@@ -1164,7 +1169,10 @@ Tree *xl_import(Context *context, Tree *self, text name, int phase)
                 std::cout << "Loading: " << path << "\n";
         bool hadError = MAIN->LoadFile(path, false, context);
         if (hadError)
-            return Ooops("Unable to load file $1", new Text(path));
+        {
+            Ooops("Unable to load file $2 for $1", self).Arg(path);
+            return XL::xl_false;
+        }
     }
 
     SourceFile &sf = MAIN->files[path];
@@ -1198,7 +1206,8 @@ struct LoadDataInfo : Info
 
 
 Tree *xl_load_data(Context *context, Tree *self,
-                   text name, text prefix, text fieldSeps, text recordSeps)
+                   text name, text prefix, text fieldSeps, text recordSeps,
+                   Tree *body)
 // ----------------------------------------------------------------------------
 //    Load a comma-separated or tab-separated file from disk
 // ----------------------------------------------------------------------------
@@ -1206,25 +1215,31 @@ Tree *xl_load_data(Context *context, Tree *self,
     // Open data file
     text path = MAIN->SearchFile(name);
     if (path == "")
-        return Ooops("CSV file $1 not found", new Text(name));
+    {
+        Ooops("CSV file $2 not found in $1", self).Arg(name);
+        return XL::xl_false;
+    }
 
     utf8_ifstream input(path.c_str(), std::ifstream::in);
     if (!input.good())
-        return Ooops("Unable to load data for $1.\n"
+    {
+        Ooops("Unable to load data for $1.\n"
                      "(Accessing $2 resulted in the following error: $3)",
-                     self,
-                     new Text(path, "\"", "\"", self->Position()),
-                     new Text(strerror(errno), "", "", self->Position()));
+              self).Arg(path).Arg(strerror(errno));
+        return XL::xl_nil;
+    }
 
     return xl_load_data(context, self, path,
                         input, true, true,
-                        prefix, fieldSeps, recordSeps);
+                        prefix, fieldSeps, recordSeps,
+                        body);
 }
 
 
 Tree *xl_load_data(Context *context, Tree *self, text inputName,
                    std::istream &input, bool cached, bool statTime,
-                   text prefix, text fieldSeps, text recordSeps)
+                   text prefix, text fieldSeps, text recordSeps,
+                   Tree *body)
 // ----------------------------------------------------------------------------
 //   Variant reading from a stream directly
 // ----------------------------------------------------------------------------
@@ -1382,12 +1397,27 @@ Tree *xl_load_data(Context *context, Tree *self, text inputName,
             {
                 if (hasPrefix)
                 {
+                    if (body)
+                        row.args.push_back(body);
                     perFile.data.push_back(row);
                     tree = context->Call(prefix, row.args);
                     row.args.clear();
                 }
                 else
                 {
+                    if (body)
+                    {
+                        if (*linePtr)
+                        {
+                            Infix *infix = new Infix(",", *linePtr, body);
+                            *linePtr = infix;
+                            linePtr = &infix->right;
+                        }
+                        else
+                        {
+                            *linePtr = body;
+                        }
+                    }
                     if (*treePtr)
                     {
                         Infix *infix = new Infix("\n", *treePtr, line);
@@ -1407,7 +1437,7 @@ Tree *xl_load_data(Context *context, Tree *self, text inputName,
     }
     if (!tree)
         tree = xl_false;
-perFile.loaded = tree;
+    perFile.loaded = tree;
 
     return tree;
 }
@@ -1577,7 +1607,8 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
         else
         {
             // OK, we don't know what to do with this stuff...
-            return Ooops("Malformed map/reduce code $1", toCompile);
+            Ooops("Malformed map/reduce code $1", toCompile);
+            return XL::xl_false;
         }
 
         // We have now decided what this is, so we compile the code
@@ -1623,14 +1654,20 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
 
         // Report compile error the first time
         if (!compiled)
-            return Ooops("Cannot compile map/reduce code $1", toCompile);
+        {
+            Ooops("Cannot compile map/reduce code $1", toCompile);
+            return XL::xl_false;
+        }
     }
 
-    if (fninfo->function)
-        result = fninfo->Apply(result);
-    else
-        result = Ooops("Invalid map/reduce code $1", code);
-#endif // 0
+    if (!fninfo->function)
+    {
+        Ooops("Invalid map/reduce code $1", code);
+        return result;
+    }
+    result = fninfo->Apply(result);
+#endif
+
     return result;
 }
 

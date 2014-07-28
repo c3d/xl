@@ -158,18 +158,6 @@ text Error::Message()
 }
 
 
-Error::operator Tree *()
-// ----------------------------------------------------------------------------
-//   Convert an error message to a tree encapsulating the error
-// ----------------------------------------------------------------------------
-{
-    Text *msg = new Text(Message(), "\"", "\"", position);
-    Name *name = new Name("error", position);
-    Prefix *result = new Prefix(name, msg, position);
-    return result;
-}
-
-
 
 // ============================================================================
 //
