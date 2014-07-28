@@ -298,6 +298,7 @@ struct Constraint
 };
 
 
+
 // ============================================================================
 // 
 //    Helper functions to extract key elements from a rewrite
