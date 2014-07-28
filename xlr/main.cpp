@@ -172,7 +172,6 @@ int Main::ParseOptions()
 // ----------------------------------------------------------------------------
 {
     text cmd, end = "";
-    int  filenum  = 0;
 
     // Make sure debug function is linked in...
     if (getenv("SHOW_INITIAL_DEBUG"))
@@ -186,15 +185,6 @@ int Main::ParseOptions()
     // Scan options and build list of files we need to process
     for (cmd = options.ParseFirst(); cmd != end; cmd = options.ParseNext())
     {
-        if (options.doDiff)
-        {
-            options.parseOnly = true;
-            if (++filenum > 2)
-            {
-                std::cerr << "Error: -diff option needs exactly 2 files\n";
-                return true;
-            }
-        }
         file_names.push_back(cmd);
     }
     return false;
@@ -451,14 +441,6 @@ int Main::LoadFile(text file,
     {
         tree = Normalize(tree);
     }
-    else
-    {
-        if (options.doDiff)
-        {
-            files[file] = SourceFile (file, NULL, NULL, false);
-            hadError = false;
-        }
-    }
 
     // Create new symbol table for the file, or clear it if we had one
     Context *ctx = MAIN->context;
@@ -545,7 +527,7 @@ int Main::Run()
     bool hadError = false;
 
     // If we only parse or compile, return
-    if (options.parseOnly || options.compileOnly || options.doDiff)
+    if (options.parseOnly || options.compileOnly)
         return -1;
 
     // Evaluate builtins
@@ -643,9 +625,7 @@ int main(int argc, char **argv)
     }
     rc = MAIN->LoadFiles();
 
-    if (!rc && Options::options->doDiff)
-        rc = MAIN->Diff();
-    else if (!rc && !Options::options->parseOnly)
+    if (!rc && !Options::options->parseOnly)
         rc = MAIN->Run();
 
     if (!rc && MAIN->HadErrors())
