@@ -182,11 +182,9 @@ XL_BEGIN
 // ============================================================================
 
 struct Context;                                 // Execution context
-struct Constraint;                              // A constraint on values
 struct Action;                                  // Actions applied on trees
 
 typedef GCPtr<Context>             Context_p;
-typedef GCPtr<Constraint>          Constraint_p;
 typedef std::vector<Infix_p>       rewrite_list;
 typedef std::map<Tree_p, Tree_p>   tree_map;
 typedef Tree *(*native_fn) (Context *ctx, Tree *self);
@@ -279,22 +277,6 @@ public:
 public:
     Infix_p             symbols;
     GARBAGE_COLLECT(Context);
-};
-
-
-struct Constraint
-// ----------------------------------------------------------------------------
-//   Information about a constraint
-// ----------------------------------------------------------------------------
-{
-    Constraint(Tree *eq): equation(eq) {}
-    Tree *      SolveFor(Name *name);
-    static uint CountName(Name *name, Tree *tree);
-    static bool IsValid(Tree *eq, std::set<text> &variables);
-
-    Tree_p      equation;
-
-    GARBAGE_COLLECT(Constraint);
 };
 
 

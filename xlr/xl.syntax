@@ -30,7 +30,7 @@ INFIX
 PREFIX
         30      data
         40      loop while until
-        50      property constraint
+        50      property
         121     case if return yield transform
         350     not in out constant variable const var
         360     ! ~

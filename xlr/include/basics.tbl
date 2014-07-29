@@ -65,12 +65,6 @@ BLOCK(IntentationBlock, tree, Block::indent, source, Block::unindent,
       return context->Evaluate(&child),
       GROUP(basics:groups)
       SYNOPSIS("Grouping of statements using indentation"))
-PREFIX(Solve, tree, "solve",
-       PARM(n, name, "Name of variable to solve for")
-       PARM(eq, source, "Equation to solve"),
-       return Constraint(&eq).SolveFor(&n),
-       GROUP(basics:properties)
-       SYNOPSIS("Test for the property solver"))
 
 // Array indexing and assignment. Assignment must be before other assignments
 INFIX(Assign, tree, reference, ":=", tree,
