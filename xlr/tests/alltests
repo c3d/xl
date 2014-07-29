@@ -29,10 +29,6 @@ OS=$(uname)
 TESTDIR="$(pwd)"
 SUBDIRS="[0-9]*"
 XL=./xl
-SUCCESS="$TESTDIR/success.out"
-FAILURE="$TESTDIR/failure.out"
-EXPECTED="$TESTDIR/expected.out"
-BASEFILE="$TESTDIR/baseline.txt"
 PASS="pass"
 ONE_FAILED=
 PATTERN='[A-Za-z0-9]*'
@@ -64,6 +60,11 @@ if [ "$1" == "-dir" -o "$1" == "-d" ]; then
     SUBDIRS="$2"; shift; shift;
 fi
 if [ ! -z "$1" ]; then PATTERN='*'"$1"'*'; shift; fi
+
+SUCCESS="$TESTDIR/success-"$RUNTIME".out"
+FAILURE="$TESTDIR/failure-"$RUNTIME".out"
+EXPECTED="$TESTDIR/expected-"$RUNTIME".out"
+BASEFILE="$TESTDIR/baseline-"$RUNTIME".txt"
 
 export TESTDIR XL SUCCESS FAILURE PASS UPDATE BASELINE
 
@@ -100,15 +101,13 @@ do
     # Setup useful variables - These can be set in the test files
     BASE=${TESTNAME/\.xl}                           # Basename
     DIR="$(dirname $TEST)"                          # Directory
-    REF=$BASE.ref                                   # Reference file
-    LOG=$BASE.log                                   # Log file
+    REF=$BASE-$RUNTIME.ref                          # Reference file
+    LOG=$BASE-$RUNTIME.log                          # Log file
     CMD=                                            # Command to execute
     EXIT=0                                          # Expected exit code
     RUN=                                            # What to run afterwards
-    COMPILE=                                        # Compile command
     OPT=                                            # XL compiler options
     #INC="-I $DIR -I $TESTDIR/library"              # XL include directory
-    EXT=                                            # Extension for output
     EXCLUDE=                                        # Runtimes to exclude
     CACHED=
     OUTLINE=
@@ -124,10 +123,9 @@ do
 
     # Defaults if not set by the test
     eval $(grep TO_REMOVE alltests_$RUNTIME)
+    [ -z "$OPT" ] && { eval $(grep OPT alltests_$RUNTIME); }
     if [ -z "$CMD" ]; then
         CMD="$XL $OPT $TESTNAME";
-        [ -z "$EXT" ] && { eval $(grep EXT alltests_$RUNTIME); }
-        [ -z "$COMPILE" ] && { eval $(grep COMPILE alltests_$RUNTIME); }
         [ -z "$RUN" ] && { eval $(grep RUN alltests_$RUNTIME); }
     fi
 

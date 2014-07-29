@@ -1,11 +1,12 @@
 # *****************************************************************************
-#  alltests_default                 (C) 1992-2006 Christophe de Dinechin (ddd) 
+#  alltests_O3                      (C) 1992-2006 Christophe de Dinechin (ddd) 
 #                                                                  XL2 project 
 # *****************************************************************************
 # 
 #   File Description:
 # 
-#    Parameters for alltest for 'default' runtime (compile with default opts)
+#    Parameters for alltest for 'O0' runtime (run at lowest optimization levels)
+# 
 # 
 # 
 # 
@@ -22,3 +23,4 @@
 
 RUN="./a.out"
 TO_REMOVE="./a.out"
+OPT="-O0"

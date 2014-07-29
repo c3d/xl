@@ -1,0 +1,59 @@
+(infix CR
+ // CMD=%x -nobuiltins -parse %f -style debug -show
+ (prefix
+  extern
+  (prefix
+   int
+   (prefix
+    foo
+    (block( )
+     (infix,
+      (prefix
+       int
+       x)
+      (prefix
+       (postfix
+        int
+        *)
+       y))))))
+ (infix CR
+  (infix;
+   (prefix
+    int
+    (prefix
+     foo
+     (block( )
+      (infix,
+       (prefix
+        int
+        x)
+       (infix*
+        int
+        y)))))
+   (infix*
+    int
+    z
+
+   ))
+  (prefix
+   extern
+   (prefix
+    double
+    (prefix
+     bar
+     (block( )
+      (infix,
+       (prefix
+        (postfix
+         char
+         *)
+        (prefix
+         ptr
+         (block[ ]
+         )))
+       (prefix
+        long
+        (prefix
+         long
+         x)))))))
+ ))

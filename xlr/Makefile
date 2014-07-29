@@ -75,3 +75,11 @@ unit_tests: sha1_test
 
 xl_tests:
 	cd tests; ./alltests
+
+opt_tests:
+	cd tests;		\
+	./alltests -r O0;	\
+	./alltests -r O1;	\
+	./alltests -r O2;	\
+	./alltests -r O3
+
