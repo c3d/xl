@@ -76,7 +76,7 @@ unit_tests: sha1_test
 xl_tests:
 	cd tests; ./alltests
 
-opt_tests:
+opt_tests opt-tests:
 	cd tests;		\
 	./alltests -r O0;	\
 	./alltests -r O1;	\
