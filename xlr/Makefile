@@ -51,8 +51,6 @@ SOURCES     =					\
 	unit.cpp				\
         sha1.cpp				\
 	serializer.cpp				\
-        diff.cpp				\
-        lcs.cpp                                 \
         traces_base.cpp                         \
 	opcodes.cpp				\
 	winglob.cpp
@@ -70,7 +68,7 @@ LDFLAGS+=$(LLVM_LIBS) $(LLVM_LDFLAGS)
 
 test: unit_tests xl_tests
 
-unit_tests: sha1_test lcs_test
+unit_tests: sha1_test 
 
 %_test: %.cpp
 	$(CXX) -DUNIT_TEST -Iinclude $(CXXFLAGS) -o $*.exe $*.cpp && ./$*.exe && rm ./$*.exe

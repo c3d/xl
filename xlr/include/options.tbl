@@ -67,8 +67,6 @@ OPTION(parse, "Only parse file, do not compile nor run", parseOnly = true)
 OPTVAR(signedConstants, bool, false)
 OPTION(signed, "Parse -1 as a constant, not unary minus prefix",
        signedConstants = true)
-OPTVAR(showGV, bool, false)
-OPTION(showgv, "Generate Graphviz output", showGV = true)
 OPTVAR(showSource, bool, false)
 OPTION(show, "Show source file", showSource = true)
 

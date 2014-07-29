@@ -58,9 +58,6 @@
 #include "options.h"
 #include "basics.h"
 #include "serializer.h"
-#include "diff.h"
-#include "bfs.h"
-#include "gv.h"
 #include "runtime.h"
 #include "traces.h"
 #include "flight_recorder.h"
@@ -488,16 +485,6 @@ int Main::LoadFile(text file,
 
             // TODO: At -O3, do we need to do anything here?
         }
-       
-        // Graph of the input tree
-        if (options.showGV)
-        {
-            SetNodeIdAction sni;
-            BreadthFirstSearch<SetNodeIdAction> bfs(sni);
-            tree->Do(bfs);
-            GvOutput gvout(std::cout);
-            tree->Do(gvout);
-        }
     }
 
     if (options.showSource)
@@ -574,27 +561,6 @@ int Main::Run()
 
     return hadError;
 }
-
-
-int Main::Diff()
-// ----------------------------------------------------------------------------
-//   Perform a tree diff between the two loaded files
-// ----------------------------------------------------------------------------
-{
-    source_names::iterator file;
-
-    file = file_names.begin();
-    SourceFile &sf1 = files[*file];
-    file++;
-    SourceFile &sf2 = files[*file];
-
-    Tree_p t1 = sf1.tree;
-    Tree_p t2 = sf2.tree;
-
-    TreeDiff d(t1, t2);
-    return d.Diff(std::cout);
-}
-
 
 XL_END
 

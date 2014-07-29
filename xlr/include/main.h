@@ -121,7 +121,6 @@ struct Main
     virtual text Decrypt(text input);
     virtual Tree*Normalize(Tree *input);
     int          Run();
-    int          Diff();
     void         Log(Error &e)   { errors->Log(e); }
     Errors *     InitErrorsAndMAIN();
     uint         HadErrors() { return errors->Count(); }
