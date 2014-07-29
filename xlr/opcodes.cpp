@@ -48,6 +48,10 @@
 
 XL_BEGIN
 
+
+Name_p xl_native = NULL;
+
+
 // ============================================================================
 //
 //    Helper functions for native code
@@ -152,6 +156,16 @@ void xl_set_documentation(Tree *node, text doc)
 }
 
 
+Tree *xl_native_function(text symbol)
+// ----------------------------------------------------------------------------
+//   Return a native function for the given address
+// ----------------------------------------------------------------------------
+{
+    Name *result = new Name(symbol);
+    return result;
+}
+
+
 void xl_enter_infix(Context *context, text name, native_fn fn, Tree *rtype,
                     text t1, text symbol, text t2, text doc)
 // ----------------------------------------------------------------------------
@@ -160,15 +174,12 @@ void xl_enter_infix(Context *context, text name, native_fn fn, Tree *rtype,
 {
     Tree *ldecl = xl_parameter("l", t1);
     Tree *rdecl = xl_parameter("r", t2);
+    Tree *to = xl_native_function(symbol);
     Infix *from = new Infix(symbol, ldecl, rdecl);
-    Name *to = new Name(symbol);
-
     if (rtype && rtype != tree_type)
         from = new Infix("as", from, rtype, from->Position());
-    to->code = fn;
     context->Define(from, to);
     xl_enter_builtin(MAIN, name, from, to, fn);
-
     xl_set_documentation(from, doc);
 }
 
@@ -179,32 +190,25 @@ void xl_enter_prefix(Context *context, text name, native_fn fn, Tree *rtype,
 //   Enter a prefix into the context (called from .tbl files)
 // ----------------------------------------------------------------------------
 {
+    Tree *to = xl_native_function(symbol);
     if (parameters.size())
     {
         Tree *parmtree = xl_parameters_tree(parameters);
         Tree *from = new Prefix(new Name(symbol), parmtree);
-        Name *to = new Name(symbol);
-
         if (rtype && rtype != tree_type)
             from = new Infix("as", from, rtype, from->Position());
         context->Define(from, to);
-        to->code = fn;
         xl_enter_builtin(MAIN, name, from, to, fn);
-
         xl_set_documentation(from, doc);
     }
     else
     {
-        Name *n  = new Name(symbol);
-
-        Tree *from = n;
+        Tree *from = new Name(symbol);
         if (rtype && rtype != tree_type)
             from = new Infix("as", from, rtype, from->Position());
-        context->Define(from, n);
-        n->code = fn;
-        xl_enter_builtin(MAIN, name, from, n, fn);
-
-        xl_set_documentation(n, doc);
+        context->Define(from, to);
+        xl_enter_builtin(MAIN, name, from, to, fn);
+        xl_set_documentation(from, doc);
     }
 }
 
@@ -215,16 +219,13 @@ void xl_enter_postfix(Context *context, text name, native_fn fn, Tree *rtype,
 //   Enter a postfdix into the context (called from .tbl files)
 // ----------------------------------------------------------------------------
 {
+    Tree *to = xl_native_function(symbol);
     Tree *parmtree = xl_parameters_tree(parameters);
     Tree *from = new Postfix(parmtree, new Name(symbol));
-    Name *to = new Name(symbol);
-
     if (rtype && rtype != tree_type)
         from = new Infix("as", from, rtype, from->Position());
     context->Define(from, to);
-    to->code = fn;
     xl_enter_builtin(MAIN, name, from, to, fn);
-
     xl_set_documentation(from, doc);
 }
 
@@ -236,17 +237,14 @@ void xl_enter_block(Context *context, text name, native_fn fn, Tree *rtype,
 //    Enter a block into the context (called from .tbl files)
 // ----------------------------------------------------------------------------
 {
-    Tree *parms = xl_parameter("c", type);
+    Tree *to = xl_native_function(open + close);
+    Tree *parms = xl_parameter("child", type);
     Tree *from = new Block(parms, open, close);
-    Name *to = new Name(open + close);
-
     if (rtype && rtype != tree_type)
         from = new Infix("as", from, rtype, from->Position());
     from = new Block(from, open, close); // Extra block removed by Define
     context->Define(from, to);
-    to->code = fn;
     xl_enter_builtin(MAIN, name, from, to, fn);
-
     xl_set_documentation(from, doc);
 }
 
@@ -258,15 +256,12 @@ void xl_enter_form(Context *context, text name, native_fn fn,
 //    Enter an arbitrary form in the symbol table
 // ----------------------------------------------------------------------------
 {
+    Tree *to = xl_native_function(form);
     Tree *from = xl_parse_text(form);
-    Name *to = new Name(name);
-
     if (rtype && rtype != tree_type)
         from = new Infix("as", from, rtype, from->Position());
     context->Define(from, to);
-    to->code = fn;
     xl_enter_builtin(MAIN, name, from, to, fn);
-
     xl_set_documentation(from, doc);
 }
 
@@ -276,7 +271,7 @@ void xl_enter_name(Name *name)
 //   Enter a global name in the symbol table
 // ----------------------------------------------------------------------------
 {
-    name->code = xl_identity;
+    (void) name;
 }
 
 
@@ -285,16 +280,11 @@ void xl_enter_type(Name *name, text castfnname, typecheck_fn tc)
 //   Enter a type function into the symbol table
 // ----------------------------------------------------------------------------
 {
-    /* Enter the type name itself */
-    name->code = xl_identity;
-
     /* Type as infix : evaluates to type check, e.g. 0 : integer */
     text nv = name->value;
     Infix *from = new Infix("as", new Name("V"), new Name(nv));
     Name *to = new Name(nv);
-    eval_fn typeTestFn = (eval_fn) tc;
-    to->code = typeTestFn;
-    xl_enter_builtin(MAIN, castfnname, from, to, typeTestFn);
+    xl_enter_builtin(MAIN, castfnname, from, to, (eval_fn) tc);
 }
 
 XL_END

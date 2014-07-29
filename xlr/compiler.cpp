@@ -246,7 +246,6 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
         LocalTree (const Tree &o): tag(o.tag), info(o.info) {}
         ulong     tag;
         XL::Info* info;
-        eval_fn   code;
     };
     // If this assert fails, you changed struct tree and need to modify here
     XL_CASSERT(sizeof(LocalTree) == sizeof(Tree));
@@ -445,37 +444,6 @@ program_fn Compiler::CompileProgram(Context *context, Tree *program)
     if (!topUnit.Return(returned))
         return NULL;
     return (program_fn) topUnit.Finalize(true);
-}
-
-
-eval_fn Compiler::Compile(Context *context, Tree *program)
-// ----------------------------------------------------------------------------
-//   Compile a tree during execution of an XL program
-// ----------------------------------------------------------------------------
-//   This is the entry point used to compile a tree during regular execution
-//   It will process all the declarations in the program and then compile
-//   the rest of the code as a function taking no arguments.
-{
-    RECORD(COMPILER, "Compile", "program", (intptr_t) program);
-
-    if (!program)
-        return NULL;
-
-    CompiledUnit unit(this, context);
-    if (!unit.TypeCheck(program))
-        return NULL;
-    if (!unit.ExpressionFunction())
-        return NULL;
-    llvm_value returned = unit.Compile(program);
-    if (!returned)
-        returned = unit.ConstantTree(program);
-    if (!unit.Return(returned))
-        return NULL;
-
-    // Generate machine code
-    eval_fn result = unit.Finalize(true);
-    program->code = result;
-    return result;
 }
 
 
@@ -1197,7 +1165,6 @@ bool Compiler::FreeResources(Tree *tree)
                 // Not in use, we can delete it directly
                 f->eraseFromParent();
                 info->function = NULL;
-                tree->code = NULL; // Bug #1011: Tree may remain live for global
             }
         }
         

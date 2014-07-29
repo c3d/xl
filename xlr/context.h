@@ -246,7 +246,6 @@ public:
     // Set context attributes
     Infix *             SetOverridePriority(double priority);
     Infix *             SetFileName(text filename);
-    Infix *             EnterDeclarator(text name, eval_fn decl);
 
     // Path management
     text                ResolvePrefixedPath(text path);

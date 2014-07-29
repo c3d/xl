@@ -126,8 +126,6 @@ struct Compiler
 
     // Top-level entry point: analyze and compile a tree or a whole program
     program_fn                CompileProgram(Context *context, Tree *program);
-    eval_fn                   Compile(Context *context, Tree *what);
-    
 
     void                      Setup(Options &options);
     void                      Reset();
@@ -259,17 +257,16 @@ public:
 // Index in data structures of fields in Tree types
 #define TAG_INDEX           0
 #define INFO_INDEX          1
-#define CODE_INDEX          2
-#define INTEGER_VALUE_INDEX 3
-#define REAL_VALUE_INDEX    3
-#define TEXT_VALUE_INDEX    3
-#define NAME_VALUE_INDEX    3
-#define BLOCK_CHILD_INDEX   3
-#define BLOCK_OPENING_INDEX 4
-#define BLOCK_CLOSING_INDEX 5
-#define LEFT_VALUE_INDEX    3
-#define RIGHT_VALUE_INDEX   4
-#define INFIX_NAME_INDEX    5
+#define INTEGER_VALUE_INDEX 2
+#define REAL_VALUE_INDEX    2
+#define TEXT_VALUE_INDEX    2
+#define NAME_VALUE_INDEX    2
+#define BLOCK_CHILD_INDEX   2
+#define BLOCK_OPENING_INDEX 3
+#define BLOCK_CLOSING_INDEX 4
+#define LEFT_VALUE_INDEX    2
+#define RIGHT_VALUE_INDEX   3
+#define INFIX_NAME_INDEX    4
 
 XL_END
 

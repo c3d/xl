@@ -115,10 +115,6 @@ void EnterBasics()
     Context *context = MAIN->context;
 #include "opcodes_define.h"
 #include "basics.tbl"
-    Context *c = context;
-    xl_enter_declarator(c, "load", xl_process_load);
-    xl_enter_declarator(c, "import", xl_process_import);
-    xl_enter_declarator(c, "override_priority", xl_process_override_priority);
 }
 
 void DeleteBasics()

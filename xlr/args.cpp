@@ -115,7 +115,7 @@ Tree *RewriteCalls::Check (Infix *scope,
     childInference->context = childContext;
     Tree *value = candidate->right;
     bool builtin = false;
-    if (value && value != xl_self && !value->code)
+    if (value && value != xl_self)
     {
         // Check if we have a type to match
         if (defType)

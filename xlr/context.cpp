@@ -153,22 +153,13 @@ Tree *Context::Evaluate(Tree *what)
 {
     assert (!GarbageCollector::Running());
 
-    // Check if we need to compile the tree in the current context
-    if (!what->code)
-    {
-        if (!MAIN->compiler->Compile(this, what))
-        {
-            Ooops("Error compiling $1", what);
-            return what;
-        }
-        if (!what->code)
-        {
-            Ooops("Internal error: no code generated for $1", what);
-            return what;
-        }
-    }
-
-    return what->code(this, what);
+    Compiler *compiler = MAIN->compiler;
+    Tree *result = what;
+    if (program_fn code = compiler->CompileProgram(this, what))
+        result = code();
+    else
+        Ooops("Error compiling $1", what);
+    return result;
 }
 
 
@@ -533,17 +524,6 @@ Infix *Context::SetFileName(text filename)
 // ----------------------------------------------------------------------------
 {
     return Define("file_name", new Text(filename));
-}
-
-
-Infix *Context::EnterDeclarator(text declarator, eval_fn declFn)
-// ----------------------------------------------------------------------------
-//   Set the file name the innermost scope in the context
-// ----------------------------------------------------------------------------
-{
-    Infix *infix = Define("decl:" + declarator, new Text(declarator));
-    infix->right->code = (eval_fn) declFn;
-    return infix;
 }
 
 

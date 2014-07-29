@@ -425,7 +425,6 @@ Block *xl_new_block(Block *source, Tree *child)
 // ----------------------------------------------------------------------------
 {
     Block *result = new Block(source, child);
-    result->code = xl_identity;
     return result;
 }
 
@@ -436,7 +435,6 @@ Prefix *xl_new_prefix(Prefix *source, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 {
     Prefix *result = new Prefix(source, left, right);
-    result->code = xl_identity;
     return result;
 }
 
@@ -447,7 +445,6 @@ Postfix *xl_new_postfix(Postfix *source, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 {
     Postfix *result = new Postfix(source, left, right);
-    result->code = xl_identity;
     return result;
 }
 
@@ -458,7 +455,6 @@ Infix *xl_new_infix(Infix *source, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 {
     Infix *result = new Infix(source, left, right);
-    result->code = xl_identity;
     return result;
 }
 
@@ -547,7 +543,6 @@ Tree *xl_real_list(Tree *self, uint n, double *values)
             result = new Infix(",", left, result, self->Position());
         else
             result = left;
-        result->code = xl_identity;
     }
     if (!saved)
         self->SetInfo(new RealList(result, size));
@@ -598,7 +593,6 @@ Tree *xl_integer_list(Tree *self, uint n, longlong *values)
             result = new Infix(",", left, result, self->Position());
         else
             result = left;
-        result->code = xl_identity;
     }
     if (!saved)
         self->SetInfo(new IntegerList(result, size));
@@ -1526,7 +1520,6 @@ Tree *xl_range(longlong low, longlong high)
     Tree *result = new Integer(high);
     for (longlong i = high-1; i >= low; i--)
         result = new Infix(",", new Integer(i), result);
-    result->code = xl_identity;
     return result;
 }
 
@@ -1897,7 +1890,6 @@ Tree *MapFunctionInfo::Apply(Tree *what)
                                        next->Position());
             *parent = newList;
             parent = &newList->right;
-            newList->code = xl_identity;
         }
         else
         {
@@ -2090,15 +2082,6 @@ Text *xl_find_in_search_path(Context *context, text prefix, text file)
 // ----------------------------------------------------------------------------
 {
     return new Text(file);
-}
-
-
-void xl_enter_declarator(Context *context, text name, decl_fn fn)
-// ----------------------------------------------------------------------------
-//   Enter a declarator in the given context
-// ----------------------------------------------------------------------------
-{
-    context->EnterDeclarator(name, (eval_fn) fn);
 }
 
 

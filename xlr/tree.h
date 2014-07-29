@@ -111,9 +111,9 @@ struct Tree
 
     // Constructor and destructor
     Tree (kind k, TreePosition pos = NOWHERE):
-        tag((pos<<KINDBITS) | k), info(NULL), code(NULL) {}
+        tag((pos<<KINDBITS) | k), info(NULL) {}
     Tree(kind k, Tree *from):
-        tag(from->tag), info(from->info ? from->info->Copy() : NULL), code(NULL)
+        tag(from->tag), info(from->info ? from->info->Copy() : NULL)
     {
         assert(k == Kind()); (void) k;
     }
@@ -162,9 +162,6 @@ public:
 public:
     ulong       tag;                            // Position + kind
     Info *      info;                           // Information for tree
-
-    // OBSOLETE FIELDS (should go away soon)
-    eval_fn     code;                           // Compiled code
 
     GARBAGE_COLLECT(Tree);
 
