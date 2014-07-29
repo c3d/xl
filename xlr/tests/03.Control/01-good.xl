@@ -1,0 +1,5 @@
+writeln good 1
+writeln good 1.3
+writeln good "ABC"
+writeln good true
+writeln good (1,3,4)

@@ -104,5 +104,14 @@ X:real in A:real..B:real -> X >= A and X <= B
 N:integer! -> N * (N-1)!
 
 // Boolean to text conversion
-text true -> "true"
+text true  -> "true"
 text false -> "false"
+
+// A utility function for C-style testing
+good false -> false
+good 0     -> false
+good 0.0   -> false
+good ""    -> false
+good nil   -> false
+good Other -> true
+      
