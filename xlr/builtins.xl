@@ -11,13 +11,14 @@ x:integer shl y:integer as integer -> opcode Shl
 x:integer ashr y:integer as integer -> opcode AShr
 x:integer lshr y:integer as integer -> opcode LShr
 -x:integer as integer -> opcode Neg
-not x:real as integer -> opcode not
+not x:integer as integer -> opcode Not
 
 // Binary operation on real numbers
 x:real + y:real as real -> opcode FAdd
 x:real - y:real as real -> opcode FSub
 x:real * y:real as real -> opcode FMul
 x:real / y:real as real -> opcode FDiv
+x:real mod y:real as real -> C fmod
 -x:real as real -> opcode FNeg
 
 // Comparison operators
@@ -34,6 +35,20 @@ X:real > Y:real as boolean -> opcode FCmpOGT
 X:real >= Y:real as boolean -> opcode FCmpOGE
 X:real < Y:real as boolean -> opcode FCmpOLT
 X:real <= Y:real as boolean -> opcode FCmpOLE
+
+X:text = Y:text as boolean -> C xl_text_eq
+X:text <> Y:text as boolean -> C xl_text_ne
+X:text > Y:text as boolean -> C xl_text_gt
+X:text >= Y:text as boolean -> C xl_text_ge
+X:text < Y:text as boolean -> C xl_text_lt
+X:text <= Y:text as boolean -> C xl_text_le
+
+X:boolean = Y:boolean as boolean -> opcode ICmpEQ
+X:boolean <> Y:boolean as boolean -> opcode ICmpNE
+X:boolean > Y:boolean as boolean -> opcode ICmpSGT
+X:boolean >= Y:boolean as boolean -> opcode ICmpSGE
+X:boolean < Y:boolean as boolean -> opcode ICmpSLT
+X:boolean <= Y:boolean as boolean -> opcode ICmpSLE
 
 // Basic math functions
 abs X:real as real -> C fabs
@@ -59,9 +74,6 @@ if false then TrueBody else FalseBody   -> FalseBody
 if true then TrueBody                   -> TrueBody
 if false then TrueBody                  -> false
 
-// Building lists, notably lists of arguments
-data x,y
-
 // Console / debugging operations
 extern bool xl_write_integer(integer);
 extern bool xl_write_real(real);
@@ -73,6 +85,8 @@ write x:text            -> xl_write_text x
 write x:integer         -> xl_write_integer x
 write x:real            -> xl_write_real x
 write x:character       -> xl_write_character x
+write true              -> xl_write_text "true"
+write false             -> xl_write_text "false"
 write x, y              -> write x; write y
 writeln a               -> write a; xl_write_cr
 

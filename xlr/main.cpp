@@ -532,16 +532,7 @@ int Main::Run()
         if (Tree *tree = result)
         {
             Context *context = sf.context;
-            if (options.optimize_level < 3)
-            {
-                // Slow interpreted evaluation
-                result = context->Evaluate(tree);
-            }
-            else
-            {
-                if (program_fn code = compiler->CompileProgram(context, tree))
-                    result = code();
-            }
+            result = context->Evaluate(tree);
         }
 
         if (!result)

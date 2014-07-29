@@ -47,17 +47,17 @@ EXCLUDED=0
 TOTAL_TESTS=0
 
 if [ "$1" == '-xl' ]; then XL="$2"; shift; shift; fi
-if [ "$1" == "-update" -o "$1" == "-u" ]; then
-   shift; UPDATE='*'$1'*'; PATTERN="$UPDATE"; shift;
-fi
-if [ "$1" == "-baseline" -o "$1" == "-b" ]; then
-   shift; BASELINE='*'; PATTERN="$BASELINE";
-fi
 if [ "$1" == "-r" -o "$1" == "-runtime" ]; then
     shift; RUNTIME="$1"; shift;
 fi
 if [ "$1" == "-dir" -o "$1" == "-d" ]; then
     SUBDIRS="$2"; shift; shift;
+fi
+if [ "$1" == "-baseline" -o "$1" == "-b" ]; then
+   shift; BASELINE='*'; PATTERN="$BASELINE";
+fi
+if [ "$1" == "-update" -o "$1" == "-u" ]; then
+   shift; UPDATE='*'$1'*'; PATTERN="$UPDATE"; shift;
 fi
 if [ ! -z "$1" ]; then PATTERN='*'"$1"'*'; shift; fi
 
@@ -101,8 +101,8 @@ do
     # Setup useful variables - These can be set in the test files
     BASE=${TESTNAME/\.xl}                           # Basename
     DIR="$(dirname $TEST)"                          # Directory
-    REF=$BASE-$RUNTIME.ref                          # Reference file
-    LOG=$BASE-$RUNTIME.log                          # Log file
+    REF=$BASE.ref                                   # Reference file
+    LOG=$BASE.log                                   # Log file
     CMD=                                            # Command to execute
     EXIT=0                                          # Expected exit code
     RUN=                                            # What to run afterwards

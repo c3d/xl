@@ -1,0 +1,26 @@
+run_test x, y ->
+    writeln x=y
+    writeln x<>y
+    writeln x<y
+    writeln x>y
+    writeln x<=y
+    writeln x>=y
+
+run_test 0, 0
+run_test 0, 1
+run_test 1, 0
+
+run_test 0.0, 0.0
+run_test 0.0, 1.0
+run_test 1.0, 1.0
+
+run_test "ABC", "ABC"
+run_test "ABC", "DEF"
+run_test "DEF", "ABC"
+run_test "A", "ABC"
+run_test "ABC", "A"
+
+run_test true, true
+run_test true, false
+run_test false, true
+run_test false, false

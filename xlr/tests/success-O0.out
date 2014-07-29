@@ -1,12 +1,20 @@
-Tests successfully run on Tue Jul 29 17:47:26 CEST 2014 on Marypuce.local
+Tests successfully run on Tue Jul 29 19:45:38 CEST 2014 on Marypuce.local
 /Users/ddd/Work/xlr/xlr/tests/00.Parser/bug346.xl
 /Users/ddd/Work/xlr/xlr/tests/00.Parser/C-syntax.xl
 /Users/ddd/Work/xlr/xlr/tests/00.Parser/comment-closing-backtrack.xl
 /Users/ddd/Work/xlr/xlr/tests/00.Parser/preserve_comments.xl
 /Users/ddd/Work/xlr/xlr/tests/00.Parser/reject_symbols_in_pattern.xl
 /Users/ddd/Work/xlr/xlr/tests/00.Parser/trailing_opcode.xl
-/Users/ddd/Work/xlr/xlr/tests/01.Arithmetic/01-arith-add-fp.xl
-/Users/ddd/Work/xlr/xlr/tests/01.Arithmetic/01-arith-add-with-const.xl
-/Users/ddd/Work/xlr/xlr/tests/01.Arithmetic/01-arith-add.xl
-/Users/ddd/Work/xlr/xlr/tests/01.Arithmetic/01.arith-add-fp-with-const.xl
+/Users/ddd/Work/xlr/xlr/tests/01.Evaluation/01-simple-writeln.xl
 /Users/ddd/Work/xlr/xlr/tests/01.Evaluation/2422-assign-to-true.xl
+/Users/ddd/Work/xlr/xlr/tests/02.Arithmetic/01-arith-add-fp.xl
+/Users/ddd/Work/xlr/xlr/tests/02.Arithmetic/01-arith-add-with-const.xl
+/Users/ddd/Work/xlr/xlr/tests/02.Arithmetic/01-arith-add.xl
+/Users/ddd/Work/xlr/xlr/tests/02.Arithmetic/01.arith-add-fp-with-const.xl
+/Users/ddd/Work/xlr/xlr/tests/02.Arithmetic/02-basic-operators.xl
+/Users/ddd/Work/xlr/xlr/tests/02.Arithmetic/03-basic-fp.xl
+/Users/ddd/Work/xlr/xlr/tests/02.Arithmetic/04-basic-operators-in-function.xl
+/Users/ddd/Work/xlr/xlr/tests/02.Arithmetic/05-basic-fp-operators-in-function.xl
+/Users/ddd/Work/xlr/xlr/tests/02.Arithmetic/06-basic-comparisons.xl
+/Users/ddd/Work/xlr/xlr/tests/02.Arithmetic/07-math-functions.xl
+/Users/ddd/Work/xlr/xlr/tests/03.Control/03-basic-if-then-else.xl
