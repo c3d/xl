@@ -43,10 +43,12 @@
 #include "types.h"
 #include "save.h"
 #include "errors.h"
+#include "renderer.h"
 
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/GlobalVariable.h>
 #include <llvm/Function.h>
+#include "llvm/Support/raw_ostream.h"
 
 XL_BEGIN
 
@@ -270,6 +272,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
     llvm_value storage = unit->NeedStorage(call);
     llvm_type storageType = unit->ExpressionMachineType(call);
 
+    Save<value_map> saveComputed(computed, computed);
     for (i = 0; i < max; i++)
     {
         // Now evaluate in that candidate's type system
@@ -295,9 +298,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
             llvm_block isGood = BasicBlock::Create(llvm, "good", function);
             code->CreateCondBr(condition, isGood, isBad);
             code->SetInsertPoint(isGood);
-            value_map saveComputed = computed;
             result = DoRewrite(cand);
-            computed = saveComputed;
             result = unit->Autobox(result, storageType);
             code->CreateStore(result, storage);
             code->CreateBr(isDone);
