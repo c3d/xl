@@ -36,9 +36,9 @@ include $(BROOT)Makefile.config.gnu
 
 # Apple gives them special names...
 CC=cc -Qunused-arguments
-CXX=llvm-g++ -Qunused-arguments -mmacosx-version-min=10.6
+CXX=c++ -Qunused-arguments -mmacosx-version-min=10.6
 CPP=cpp -Qunused-arguments
-LD=llvm-g++ -Qunused-arguments -mmacosx-version-min=10.6
+LD=c++ -Qunused-arguments -mmacosx-version-min=10.6
 
 # And doesn't have the -MG flag
 CC_DEPEND=$(CC) $(CPPFLAGS) $(CPPFLAGS_$*) -M -MG
