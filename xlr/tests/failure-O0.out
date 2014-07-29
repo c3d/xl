@@ -1,5 +1,0 @@
-Failed tests on Tue Jul 29 19:45:38 CEST 2014 on Marypuce.local
-* FAILED (EXPECTED): 01.Evaluation/02-complex-writeln.xl:
-* FAILED (EXPECTED): 01.Evaluation/2422-2427-boolean-in-writeln.xl:
-* FAILED (EXPECTED): 01.Evaluation/bug2279.xl:
-* FAILED (EXPECTED): 01.Evaluation/bug3327.xl:
