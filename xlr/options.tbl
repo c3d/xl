@@ -150,7 +150,7 @@ OPTION(frf, "Select the flight recorder flags",
 //
 // ============================================================================
 
-#include <options2.tbl>
+#include "options2.tbl"
 
 // Undefine for next use...
 #undef OPTVAR
