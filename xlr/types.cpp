@@ -259,7 +259,7 @@ bool TypeInference::DoInfix(Infix *what)
             return false;
         if (!what->right->Do(this))
             return false;
-        return UnifyTypesOf(what, what->right);
+        return UnifyTypesOfStatements(what, what->left, what->right);
     }
 
     // Success depends on successful evaluation of the complete form
@@ -424,7 +424,7 @@ bool TypeInference::Evaluate(Tree *what)
     rcalls[what] = rc;
     uint count = 0;
     Errors errors;
-    errors.Log (Error("Unable to evaluate $1 because", what), true);
+    errors.Log (Error("Unable to evaluate '$1':", what), true);
     context->Lookup(what, lookupRewriteCalls, rc);
         
     // If we have no candidate, this is a failure
@@ -440,7 +440,7 @@ bool TypeInference::Evaluate(Tree *what)
         if (matchingPattern && what->Kind() > KIND_LEAF_LAST)
         {
             Tree *wtype = Type(what);
-            return Unify(wtype, tree_type, what, what);
+            return Unify(wtype, what, what, what);
         }
         Ooops("No form matches $1", what);
         return false;
@@ -492,6 +492,35 @@ bool TypeInference::UnifyTypesOf(Tree *expr1, Tree *expr2)
 }
 
 
+bool TypeInference::UnifyTypesOfStatements(Tree *expr, Tree *left, Tree *right)
+// ----------------------------------------------------------------------------
+//   Return the type of a combo statement, skipping declarations
+// ----------------------------------------------------------------------------
+{
+    // Check if right term is a declaration
+    Tree *t2 = Type(right);
+    if (Infix *t2inf = t2->AsInfix())
+    {
+        if (t2inf->name == "=>")
+        {
+            // Check left term
+            Tree *t1 = Type(left);
+            if (Infix *t1inf = t1->AsInfix())
+            {
+                // If both terms are declarations, leave expr type unchanged
+                if (t1inf->name == "=>")
+                    return true;
+            }
+
+            // Unify with left term
+            return UnifyTypesOf(expr, left);
+        }
+    }
+
+    return UnifyTypesOf(expr, right);
+}
+
+
 bool TypeInference::Unify(Tree *t1, Tree *t2,
                           Tree *x1, Tree *x2,
                           unify_mode mode)
@@ -513,8 +542,7 @@ bool TypeInference::Unify(Tree *t1, Tree *t2, unify_mode mode)
 //   - A type name              integer
 //   - A generic type name      #ABC
 //   - A litteral value         0       1.5             "Hello"
-//   - A range of values        0..4    1.3..8.9        "A".."Z"
-//   - A union of types         0,3,5   integer|real
+//   - A union of types         integer|real
 //   - A block for precedence   (real)
 //   - A rewrite specifier      integer => real
 //   - The type of a pattern    type (X:integer, Y:integer)
@@ -572,7 +600,7 @@ bool TypeInference::Unify(Tree *t1, Tree *t2, unify_mode mode)
         }
         
         // Union types: Unify with either side
-        if (i1->name == "|" || i1->name == ",")
+        if (i1->name == "|")
         {
             if (mode != DECLARATION)
             {
@@ -593,7 +621,7 @@ bool TypeInference::Unify(Tree *t1, Tree *t2, unify_mode mode)
     if (Infix *i2 = t2->AsInfix())
     {
         // Union types: Unify with either side
-        if (i2->name == "|" || i2->name == ",")
+        if (i2->name == "|")
         {
             Errors errors;
             if (Unify(t1, i2->left))
@@ -1252,13 +1280,12 @@ Tree *UnionType(Context *ctx, Tree *t1, Tree *t2)
 }
 
 
-Tree *CanonicalType(Context *ctx, Tree *value)
+Tree *CanonicalType(Tree *value)
 // ----------------------------------------------------------------------------
 //   Return the canonical type for the given value
 // ----------------------------------------------------------------------------
 {
     Tree *type = tree_type;
-    (void) ctx;
     switch (value->Kind())
     {
     case INTEGER:

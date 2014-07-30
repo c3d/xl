@@ -92,7 +92,7 @@ Tree *RewriteCalls::Check (Infix *scope,
 // ----------------------------------------------------------------------------
 {
     Errors errors;
-    errors.Log(Error("$1 doesn't match because", candidate->left), true);
+    errors.Log(Error("Pattern '$1' doesn't match:", candidate->left), true);
     RewriteCandidate rc(candidate);
     inference->AssignType(what);
 

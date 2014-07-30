@@ -121,6 +121,7 @@ public:
 
     // Indicates that two trees must have compatible types
     bool        UnifyTypesOf(Tree *expr1, Tree *expr2);
+    bool        UnifyTypesOfStatements(Tree *expr, Tree *left, Tree *right);
     bool        Unify(Tree *t1, Tree *t2,
                       Tree *x1, Tree *x2, unify_mode mode = STANDARD);
     bool        Unify(Tree *t1, Tree *t2, unify_mode mode = STANDARD);
@@ -170,7 +171,7 @@ Tree *ValueMatchesType(Context *, Tree *type, Tree *value, bool conversions);
 Tree *TypeCoversType(Context *, Tree *type, Tree *test, bool conversions);
 Tree *TypeIntersectsType(Context *, Tree *type, Tree *test, bool conversions);
 Tree *UnionType(Context *, Tree *t1, Tree *t2);
-Tree *CanonicalType(Context *, Tree *value);
+Tree *CanonicalType(Tree *value);
 Tree *StructuredType(Context *, Tree *value);
 bool  IsTreeType(Tree *type);
 
