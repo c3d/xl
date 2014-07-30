@@ -650,14 +650,21 @@ bool TypeInference::Unify(Tree *t1, Tree *t2, unify_mode mode)
     }
 
     // Check prefix constructor types
-    if (Prefix *p1 = t1->AsPrefix())
-        if (Name *pn1 = p1->left->AsName())
-            if (pn1->value == "type")
-                if (Prefix *p2 = t2->AsPrefix())
-                    if (Name *pn2 = p2->right->AsName())
-                        if (pn2->value == "type")
-                            if (UnifyPatterns(p1->right, p2->right))
-                                return Join(t1, t2);
+    if (Tree *pat1 = TypePattern(t1))
+    {
+        // If we have two type patterns, they must be structurally identical
+        if (Tree *pat2 = TypePattern(t2))
+        {
+            if (UnifyPatterns(pat1, pat2))
+                return Join(t1, t2);
+            return TypeError(t1, t2);
+        }
+
+        // Match a type pattern with another value
+        return UnifyPatternAndValue(pat1, t2);
+    }
+    if (Tree *pat2 = TypePattern(t2))
+        return UnifyPatternAndValue(pat2, t1);
 
     // None of the above: fail
     return TypeError(t1, t2);
@@ -689,6 +696,20 @@ Tree *TypeInference::Base(Tree *type)
     }
 
     return type;
+}
+
+
+Tree *TypeInference::TypePattern(Tree *type)
+// ----------------------------------------------------------------------------
+//   Check if type is a type pattern, i.e. type ( ... )
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *pfx = type->AsPrefix())
+        if (Name *tname = pfx->left->AsName())
+            if (tname->value == "type")
+                return pfx->right;
+
+    return NULL;
 }
 
 
@@ -780,6 +801,7 @@ bool TypeInference::UnifyPatterns(Tree *t1, Tree *t2)
             if (Integer *x2 = t2->AsInteger())
                 return x1->value == x2->value;
         return false;
+
     case REAL:
         if (Real *x1 = t1->AsReal())
             if (Real *x2 = t2->AsReal())
@@ -834,6 +856,86 @@ bool TypeInference::UnifyPatterns(Tree *t1, Tree *t2)
                     x1->opening == x2->opening &&
                     x1->closing == x2->closing &&
                     UnifyPatterns(x1->child, x2->child);
+
+        return false;
+
+    }
+
+    return false;
+}
+
+
+bool TypeInference::UnifyPatternAndValue(Tree *pat, Tree *val)
+// ----------------------------------------------------------------------------
+//   Check if two patterns describe the same tree shape
+// ----------------------------------------------------------------------------
+{
+    switch(pat->Kind())
+    {
+    case INTEGER:
+        if (Integer *x1 = pat->AsInteger())
+            if (Integer *x2 = val->AsInteger())
+                return x1->value == x2->value;
+        return false;
+
+    case REAL:
+        if (Real *x1 = pat->AsReal())
+            if (Real *x2 = val->AsReal())
+                return x1->value == x2->value;
+        return false;
+
+    case TEXT:
+        if (Text *x1 = pat->AsText())
+            if (Text *x2 = val->AsText())
+                return x1->value == x2->value;
+        return false;
+
+    case NAME:
+        // A name at that stage is a variable, so we match
+        // PROBLEM: matching X+X will match twice?
+        return UnifyTypesOf(pat, val);
+
+    case INFIX:
+        if (Infix *x1 = pat->AsInfix())
+        {
+            // Check if the pattern is a type declaration
+            if (x1->name == ":")
+                return Unify(x1->right, val);
+
+            if (Infix *x2 = val->AsInfix())
+                return
+                    x1->name == x2->name &&
+                    UnifyPatternAndValue(x1->left, x2->left) &&
+                    UnifyPatternAndValue(x1->right, x2->right);
+        }
+
+        return false;
+
+    case PREFIX:
+        if (Prefix *x1 = pat->AsPrefix())
+            if (Prefix *x2 = val->AsPrefix())
+                return
+                    UnifyPatterns(x1->left, x2->left) &&
+                    UnifyPatternAndValue(x1->right, x2->right);
+
+        return false;
+
+    case POSTFIX:
+        if (Postfix *x1 = pat->AsPostfix())
+            if (Postfix *x2 = val->AsPostfix())
+                return
+                    UnifyPatternAndValue(x1->left, x2->left) &&
+                    UnifyPatterns(x1->right, x2->right);
+
+        return false;
+
+    case BLOCK:
+        if (Block *x1 = pat->AsBlock())
+            if (Block *x2 = val->AsBlock())
+                return
+                    x1->opening == x2->opening &&
+                    x1->closing == x2->closing &&
+                    UnifyPatternAndValue(x1->child, x2->child);
 
         return false;
 

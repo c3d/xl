@@ -128,6 +128,7 @@ public:
     bool        Join(Tree *base, Tree *other, bool knownGood = false);
     bool        JoinConstant(Tree *cst, Name *tname);
     bool        UnifyPatterns(Tree *t1, Tree *t2);
+    bool        UnifyPatternAndValue(Tree *pat, Tree *val);
     bool        Commit(TypeInference *child);
 
     // Return the base type associated with a given tree
@@ -135,6 +136,9 @@ public:
     bool        IsGeneric(text name);
     bool        IsGeneric(Tree *type);
     bool        IsTypeName(Tree *type);
+
+    // Type constructors
+    Tree *      TypePattern(Tree *type);
 
     // Generation of type names
     Name *      NewTypeName(TreePosition pos);
