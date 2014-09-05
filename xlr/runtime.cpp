@@ -2634,7 +2634,7 @@ Rewrite *xl_reference(Context *context, Tree *expr, bool create)
 
             // Create value and symbol table if they don't exist
             Symbols *s = ref->symbols;
-            if (!s)
+            if (!s || (ref->to && s == ref->to->Symbols()))
             {
                 if (ref->to)
                 {
