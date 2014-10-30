@@ -40,8 +40,5 @@ document description language for 3D animations. See
 http://www.taodyne.com for more information on Tao. The YouTube video
 below shows Tao (and therefore XL) in action:
 
-<iframe width="560" height="315"
- src="//www.youtube.com/embed/Fvi29XAo4SI?list=UUY8oU0JGGl42mRw2qzTZ3oA"
- frameborder="0" allowfullscreen>
-</iframe>
+<iframe width="560" height="315" src="//www.youtube.com/embed/Fvi29XAo4SI?list=UUY8oU0JGGl42mRw2qzTZ3oA" frameborder="0" allowfullscreen></iframe>
 
