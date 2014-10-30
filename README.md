@@ -3,8 +3,9 @@ The XL programming language
 
 Xl is a super-flexible language based entirely on parse tree rewrites.
 
-In XL, you don't define functions or variables. You define "rewrites" of the code.
-This is done with the rewrite operator `->` which reads as "transforms into".
+In XL, you don't define functions or variables. You define "rewrites"
+of the code. This is done with the rewrite operator `->` which reads
+as "transforms into".
 
 For example, `X -> 0` means that you should transform `X` into `0`.
 Below is the definition of a factorial in XL:
@@ -14,7 +15,8 @@ Below is the definition of a factorial in XL:
 N! -> N * (N-1)!
 ```
 
-Internally, XL parses source input into a parse tree containing only 8 node types.
+Internally, XL parses source input into a parse tree containing only 8
+node types.
 
 Four node types represent leafs in the parse tree:
 
@@ -33,5 +35,13 @@ Four other node types represent inner nodes in the parse tree:
 Block nodes are used to represent indentation in the source code.
 Infix nodes are used to represent line breaks in the source code.
 
-XL is used as the basis for Tao, a functional, reactive, dynamic document description language for 3D animations.
-See http://www.taodyne.com for more information on Tao.
+XL is used as the basis for Tao, a functional, reactive, dynamic
+document description language for 3D animations. See
+http://www.taodyne.com for more information on Tao. The YouTube video
+below shows Tao (and therefore XL) in action:
+
+<iframe width="560" height="315"
+ src="//www.youtube.com/embed/Fvi29XAo4SI?list=UUY8oU0JGGl42mRw2qzTZ3oA"
+ frameborder="0" allowfullscreen>
+</iframe>
+
