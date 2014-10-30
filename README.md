@@ -36,9 +36,6 @@ Block nodes are used to represent indentation in the source code.
 Infix nodes are used to represent line breaks in the source code.
 
 XL is used as the basis for Tao, a functional, reactive, dynamic
-document description language for 3D animations. See
-http://www.taodyne.com for more information on Tao. The YouTube video
-below shows Tao (and therefore XL) in action:
-
-<iframe width="560" height="315" src="//www.youtube.com/embed/Fvi29XAo4SI?list=UUY8oU0JGGl42mRw2qzTZ3oA" frameborder="0" allowfullscreen></iframe>
-
+document description language for 3D animations.
+See http://www.taodyne.com for more information on Tao.
+In action: http://www.youtube.com/embed/Fvi29XAo4SI.
