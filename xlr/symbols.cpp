@@ -559,9 +559,10 @@ Tree *Symbols::ProcessDeclarations(Tree *tree)
 {
     if (source == tree)
         return tree;
+    else if (!source)
+        source = tree;
 
     // Process all declarations
-    source = tree;
     DeclarationAction declare(this);
     tree = tree->Do(declare);
 
