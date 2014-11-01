@@ -577,6 +577,7 @@ void Symbols::Clear()
 {
     if (rewrites)
         rewrites = NULL;        // Decrease reference count
+    source = NULL;
     calls = symbol_table();
     types.clear();
     type_tests.clear();
