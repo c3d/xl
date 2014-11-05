@@ -190,6 +190,44 @@ int Tree::Compare(Tree *left, Tree *right, bool recurse)
 }
 
 
+void Tree::SetPosition(TreePosition pos, bool recurse)
+// ----------------------------------------------------------------------------
+//   Set the position for the tree and possibly its children
+// ----------------------------------------------------------------------------
+{
+    Tree *tree = this;
+    do
+    {
+        ulong kind = tree->Kind();
+        tree->tag = (pos << KINDBITS) | kind;
+        if (recurse)
+        {
+            switch(kind)
+            {
+            case INFIX:
+                ((Infix *) tree)->left->SetPosition(pos, recurse);
+                tree = ((Infix *) tree)->right;
+                break;
+            case PREFIX:
+                ((Prefix *) tree)->left->SetPosition(pos, recurse);
+                tree = ((Prefix *) tree)->right;
+                break;
+            case POSTFIX:
+                ((Postfix *) tree)->right->SetPosition(pos, recurse);
+                tree = ((Postfix *) tree)->left;
+                break;
+            case BLOCK:
+                tree = ((Block *) tree)->child;
+                break;
+            default:
+                recurse = false;
+                break;
+            }
+        }
+    } while(recurse);
+}
+
+
 text Block::indent   = "I+";
 text Block::unindent = "I-";
 text Text::textQuote = "\"";
