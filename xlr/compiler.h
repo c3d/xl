@@ -235,7 +235,7 @@ public:
     llvm::Function            *xl_integer2real;
     llvm::Function            *xl_array_index;
     llvm::Function            *xl_new_closure;
-    llvm::GlobalValue         *xl_recursion_count;
+    llvm::Constant            *xl_recursion_count_ptr;
     functions_map              builtins;
     functions_map              functions;
     adapter_map                array_to_args_adapters;

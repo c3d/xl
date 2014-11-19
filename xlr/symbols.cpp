@@ -2511,21 +2511,6 @@ Tree *CompileAction::DoPrefix(Prefix *what)
         }
     }
 
-    // Special case the A[B] notation
-    if (Block *br = what->right->AsBlock())
-    {
-        if (br->IsSquare())
-        {
-            what->left->SetSymbols(symbols);
-            what->right->SetSymbols(symbols);
-            br->child->SetSymbols(symbols);
-            what->left->Do(this);
-            br->child->Do(this);
-            unit.CallArrayIndex(what, what->left, br->child);
-            return what;
-        }
-    }
-
     return Rewrites(what);
 }
 
@@ -2690,9 +2675,39 @@ Tree *CompileAction::Rewrites(Tree *what)
     } // for(namespaces)
 
     // If we didn't match anything, then emit an error at runtime
-    if (!foundUnconditional) {
-        unit.CallTypeError(what);
-        returnType = NULL;
+    if (!foundUnconditional)
+    {
+        // Special case the A[B] notation
+        if (Prefix *pfx = what->AsPrefix())
+        {
+            if (Block *br = pfx->right->AsBlock())
+            {
+                if (br->IsSquare())
+                {
+                    if (!pfx->left->Symbols())
+                        pfx->left->SetSymbols(symbols);
+                    if (!pfx->right->Symbols())
+                        pfx->right->SetSymbols(symbols);
+                    if (!br->child->Symbols())
+                        br->child->SetSymbols(symbols);
+
+                    pfx->left->Do(this);
+                    br->child->Do(this);
+                    if (unit.IsKnown(pfx->left) && unit.IsKnown(br->child))
+                    {
+                        unit.CallArrayIndex(pfx, pfx->left, br->child);
+                        foundUnconditional = true;
+                        foundSomething = true;
+                    }
+                }
+            }
+        }
+
+        if (!foundUnconditional)
+        {
+            unit.CallTypeError(what);
+            returnType = NULL;
+        }
     }
 
     // If we didn't find anything, report it
@@ -2964,10 +2979,10 @@ OCompiledUnit::OCompiledUnit(Compiler *comp,
     exitbb = BasicBlock::Create(*llvm, "exit", function);
     IRBuilder<> exitcode(exitbb);
 
-    Value *recExit = exitcode.CreateLoad(compiler->xl_recursion_count);
+    Value *recExit = exitcode.CreateLoad(compiler->xl_recursion_count_ptr);
     Constant *subtrOne = ConstantInt::get(LLVM_INTTYPE(uint), 1);
     Value *decreased = exitcode.CreateSub(recExit, subtrOne);
-    exitcode.CreateStore(decreased, compiler->xl_recursion_count);
+    exitcode.CreateStore(decreased, compiler->xl_recursion_count_ptr);
 
     Value *retVal = exitcode.CreateLoad(resultStorage, "retval");
     exitcode.CreateRet(retVal);
@@ -3018,10 +3033,10 @@ eval_fn OCompiledUnit::Finalize()
     ovcode.CreateBr(exitbb);
 
     // Check that we are not in some infinite recursion
-    Value *recursionCount = data->CreateLoad(compiler->xl_recursion_count);
+    Value *recursionCount = data->CreateLoad(compiler->xl_recursion_count_ptr);
     Constant *addedOne = ConstantInt::get(LLVM_INTTYPE(uint), 1);
     Value *increased = data->CreateAdd(recursionCount, addedOne);
-    data->CreateStore(increased, compiler->xl_recursion_count);
+    data->CreateStore(increased, compiler->xl_recursion_count_ptr);
     uint maxDepthOption = Options::options->stack_depth;
     Constant *maxDepth = ConstantInt::get(LLVM_INTTYPE(uint), maxDepthOption);
  

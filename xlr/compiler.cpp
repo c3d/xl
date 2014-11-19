@@ -142,7 +142,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
       xl_fill_prefix(NULL), xl_fill_postfix(NULL), xl_fill_infix(NULL),
       xl_integer2real(NULL),
       xl_array_index(NULL), xl_new_closure(NULL),
-      xl_recursion_count(NULL)
+      xl_recursion_count_ptr(NULL)
 {
     std::vector<char *> llvmArgv;
     llvmArgv.push_back(argv[0]);
@@ -390,11 +390,9 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
                                     evalFnTy, treePtrTy, LLVM_INTTYPE(uint));
 
     // Create a global value used to count recursions
-    Constant *zero = ConstantInt::get(LLVM_INTTYPE(uint), 0);
-    xl_recursion_count = new GlobalVariable (*module,
-                                             LLVM_INTTYPE(uint), false,
-                                             GlobalVariable::ExternalLinkage,
-                                             zero, "xl_recursion_count");
+    llvm::PointerType *uintPtrTy = PointerType::get(LLVM_INTTYPE(uint), 0);
+    APInt addr(64, (uint64_t) &xl_recursion_count);
+    xl_recursion_count_ptr = Constant::getIntegerValue(uintPtrTy, addr);
 
     // Initialize the llvm_entries table
     for (CompilerLLVMTableEntry *le = CompilerLLVMTable; le->name; le++)
