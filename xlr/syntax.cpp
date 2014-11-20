@@ -54,6 +54,16 @@ XL_BEGIN
 Syntax *Syntax::syntax = NULL;
 
 
+Syntax::~Syntax()
+// ----------------------------------------------------------------------------
+//   Destroy the children syntaxen
+// ----------------------------------------------------------------------------
+{
+    for (subsyntax_table::iterator i=subsyntax.begin();i!=subsyntax.end();i++)
+        delete (*i).second;
+}
+
+
 int Syntax::InfixPriority(text n)
 // ----------------------------------------------------------------------------
 //   Return infix priority, which is either this or parent's
@@ -240,17 +250,17 @@ Syntax *Syntax::HasSpecialSyntax(text Begin, text &End)
 
     // Find associated child syntax
     text filename = (*found).second;
-    ChildSyntax &child = subsyntax[filename];
-    assert(child.filename == filename);
+    ChildSyntax *child = subsyntax[filename];
+    assert(child && child->filename == filename);
 
     // Find delimiters in that child syntax
-    delimiter_table::iterator dfound = child.delimiters.find(Begin);
-    if (dfound == child.delimiters.end())
+    delimiter_table::iterator dfound = child->delimiters.find(Begin);
+    if (dfound == child->delimiters.end())
         return NULL;            // Defensive codeing, should not happen
 
     // Success, return the syntax we found
     End = (*dfound).second;
-    return &child;
+    return child;
 }
 
 
@@ -386,11 +396,11 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
             case inSyntaxName:
                 if (txt.find(".syntax") == txt.npos)
                     txt += ".syntax";
-                childSyntax = &subsyntax[txt];
-                if (childSyntax->filename == "")
+                childSyntax = subsyntax[txt];
+                if (!childSyntax)
                 {
-                    childSyntax->filename = txt;
-                    childSyntax->ReadSyntaxFile(txt);
+                    childSyntax = new ChildSyntax(txt);
+                    subsyntax[txt] = childSyntax;
                 }
                 state = inSyntax;
                 break;

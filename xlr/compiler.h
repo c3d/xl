@@ -54,26 +54,6 @@
 // 
 // ============================================================================
 
-namespace llvm
-// ----------------------------------------------------------------------------
-//   Forward classes from LLVM
-// ----------------------------------------------------------------------------
-{
-    class LLVMContext;
-    class Module;
-    class ExecutionEngine;
-    class FunctionPassManager;
-    class PassManager;
-    class StructType;
-    class PointerType;
-    class FunctionType;
-    class BasicBlock;
-    class Value;
-    class Function;
-    class GlobalValue;
-    class Type;
-};
-
 XL_BEGIN
 
 struct CompiledUnit;

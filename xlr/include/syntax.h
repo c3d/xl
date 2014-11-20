@@ -50,13 +50,13 @@ struct ChildSyntax;
 
 typedef std::map<text, int>             priority_table;
 typedef std::map<text, text>            delimiter_table;
-typedef std::map<text, ChildSyntax>     subsyntax_table;
+typedef std::map<text, ChildSyntax *>   subsyntax_table;
 typedef std::set<text>                  token_set;
 
 
 struct Syntax
 // ----------------------------------------------------------------------------
-//   This is the execution environment for all trees
+//   Describe the syntax table (typically read from xl.syntax)
 // ----------------------------------------------------------------------------
 {
 public:
@@ -75,6 +75,7 @@ public:
     {
         ReadSyntaxFile(name);
     }
+    ~Syntax();
 
 public:
     // Managing priorities
