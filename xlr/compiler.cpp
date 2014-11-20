@@ -424,7 +424,7 @@ static inline void createXLFunctionPasses(PassManagerBase *PM)
     // Break up aggregate allocas, using SSAUpdater.
      PM->add(createScalarReplAggregatesPass(-1, false));
      PM->add(createEarlyCSEPass());              // Catch trivial redundancies
-#if LLVM_VERSION < 350
+#if LLVM_VERSION < 342
      PM->add(createSimplifyLibCallsPass());      // Library Call Optimizations
 #endif
      PM->add(createJumpThreadingPass());         // Thread jumps.
