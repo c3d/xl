@@ -260,9 +260,11 @@ inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::Module *module)
 //    Initialization of LLVM parameters
 // ----------------------------------------------------------------------------
 {
-    // Initialize native target (new features)
-    LLVMInitializeAllTargets();
+#if LLVM_VERSION >= 33
+    // I get a crash on Linux if I don't do that. Unclear why.
     LLVMInitializeAllTargetMCs();
+#endif
+    // Initialize native target (new features)
     llvm::InitializeNativeTarget();
 
 #if LLVM_VERSION < 31
