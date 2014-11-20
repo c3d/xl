@@ -141,7 +141,7 @@
 
 // Repeat at nauseam. If you can figure out why the verifier moved
 // from "analysis" to "IR", let me know.
-#if LLVM_VERSION < 35
+#if LLVM_VERSION < 350
 #include <llvm/Analysis/Verifier.h>
 #else
 #include <llvm/IR/Verifier.h>
@@ -228,7 +228,11 @@ inline void LLVMS_SetName(llvm::Module *module, llvm_type type, text name)
 #else
     // Not sure if it's possible to set the name for non-struct types anymore
     if (type->isStructTy())
-        ((llvm::StructType *) type)->setName(name);
+    {
+        llvm::StructType *stype = (llvm::StructType *) type;
+        if (!stype->isLiteral())
+            stype->setName(name);
+    }
 #endif
 }
 
@@ -257,6 +261,8 @@ inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::Module *module)
 // ----------------------------------------------------------------------------
 {
     // Initialize native target (new features)
+    LLVMInitializeAllTargets();
+    LLVMInitializeAllTargetMCs();
     llvm::InitializeNativeTarget();
 
 #if LLVM_VERSION < 31
