@@ -55,29 +55,7 @@
 #include "main.h"
 #include "types.h"
 #include "tree-clone.h"
-
-#include <llvm/Analysis/Verifier.h>
-#include <llvm/CallingConv.h>
-#include "llvm/Constants.h"
-#include "llvm/LLVMContext.h"
-#include "llvm/DerivedTypes.h"
-#include "llvm/ExecutionEngine/JIT.h"
-#include "llvm/ExecutionEngine/GenericValue.h"
-#include <llvm/ExecutionEngine/ExecutionEngine.h>
-#include "llvm/Instructions.h"
-#include "llvm/Module.h"
-#include <llvm/PassManager.h>
-#include "llvm/Support/raw_ostream.h"
-#include <llvm/Support/IRBuilder.h>
-#include <llvm/Support/StandardPasses.h>
-#include <llvm/Support/DynamicLibrary.h>
-#include <llvm/Target/TargetData.h>
-#include <llvm/Target/TargetSelect.h>
-#include <llvm/Target/TargetOptions.h>
-#include <llvm/Transforms/Scalar.h>
-#include <llvm/Transforms/Utils/BasicBlockUtils.h>
-#include <llvm/Support/raw_ostream.h>
-
+#include "llvm-crap.h"
 
 XL_BEGIN
 
@@ -2929,7 +2907,7 @@ OCompiledUnit::OCompiledUnit(Compiler *comp,
     }
 
     // Create the function signature, one entry per parameter + one for source
-    std::vector<const Type *> signature;
+    llvm_types signature;
     signature.push_back(compiler->contextPtrTy);
     Type *treePtrTy = compiler->treePtrTy;
     for (ulong p = 0; p <= parms.size(); p++)
@@ -2950,11 +2928,11 @@ OCompiledUnit::OCompiledUnit(Compiler *comp,
         std::cerr << " new F" << function << "\n";
 
     // Create function entry point, where we will have all allocas
-    allocabb = BasicBlock::Create(*llvm, "allocas", function);
+    allocabb = BasicBlock::Create(llvm, "allocas", function);
     data = new IRBuilder<> (allocabb);
 
     // Create entry block for the function
-    entrybb = BasicBlock::Create(*llvm, "entry", function);
+    entrybb = BasicBlock::Create(llvm, "entry", function);
     code = new IRBuilder<> (entrybb);
 
     // Associate the value for the input tree
@@ -2976,7 +2954,7 @@ OCompiledUnit::OCompiledUnit(Compiler *comp,
     }
 
     // Create the exit basic block, stack pop and return statement
-    exitbb = BasicBlock::Create(*llvm, "exit", function);
+    exitbb = BasicBlock::Create(llvm, "exit", function);
     IRBuilder<> exitcode(exitbb);
 
     Value *recExit = exitcode.CreateLoad(compiler->xl_recursion_count_ptr);
@@ -3026,7 +3004,7 @@ eval_fn OCompiledUnit::Finalize()
     code->CreateBr(exitbb);
 
     // Code for overflow: call xl_stack_overflow
-    BasicBlock *overflow = BasicBlock::Create(*llvm, "overflow", function);
+    BasicBlock *overflow = BasicBlock::Create(llvm, "overflow", function);
     IRBuilder<> ovcode(overflow);
     Value *ptr = ovcode.CreateLoad(storage[source]);
     ovcode.CreateCall(compiler->xl_stack_overflow, ptr);
@@ -3289,8 +3267,8 @@ BasicBlock *OCompiledUnit::BeginLazy(Tree *subexpr)
         lwork += lbl;
         llazy += lbl;
     }
-    BasicBlock *skip = BasicBlock::Create(*llvm, lskip, function);
-    BasicBlock *work = BasicBlock::Create(*llvm, lwork, function);
+    BasicBlock *skip = BasicBlock::Create(llvm, lskip, function);
+    BasicBlock *work = BasicBlock::Create(llvm, lwork, function);
 
     Value *lazyFlagPtr = NeedLazy(subexpr);
     Value *lazyFlag = code->CreateLoad(lazyFlagPtr, llazy);
@@ -3335,7 +3313,7 @@ llvm::Value *OCompiledUnit::Invoke(Tree *subexpr, Tree *callee, TreeList args)
     Function *toCall = compiler->TreeFunction(callee); assert(toCall);
 
     // Add the context argument
-    std::vector<Value *> argV;
+    llvm_values argV;
     argV.push_back(contextPtr);
 
     // Add the 'self' argument
@@ -3352,7 +3330,7 @@ llvm::Value *OCompiledUnit::Invoke(Tree *subexpr, Tree *callee, TreeList args)
         argV.push_back(value);
     }
 
-    Value *callVal = code->CreateCall(toCall, argV.begin(), argV.end());
+    Value *callVal = code->CreateCall(toCall, LLVMS_ARGS(argV));
 
     // Store the flags indicating that we computed the value
     MarkComputed(subexpr, callVal);
@@ -3383,7 +3361,7 @@ BasicBlock *OCompiledUnit::NeedTest()
 // ----------------------------------------------------------------------------
 {
     if (!failbb)
-        failbb = BasicBlock::Create(*llvm, "fail", function);
+        failbb = BasicBlock::Create(llvm, "fail", function);
     return failbb;
 }
 
@@ -3612,7 +3590,7 @@ Value *OCompiledUnit::CreateClosure(Tree *callee,
 //   Create a closure for an expression we want to evaluate later
 // ----------------------------------------------------------------------------
 {
-    std::vector<Value *> argV;
+    llvm_values argV;
     Value *calleeVal = Known(callee);
     if (!calleeVal)
         return NULL;
@@ -3638,7 +3616,7 @@ Value *OCompiledUnit::CreateClosure(Tree *callee,
     }
 
     Value *callVal = code->CreateCall(compiler->xl_new_closure,
-                                      argV.begin(), argV.end());
+                                      LLVMS_ARGS(argV));
 
     // Need to store result, but not mark it as evaluated
     NeedStorage(callee);
@@ -3676,8 +3654,8 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
     Value *decl = NULL;
 
     // Build argument list
-    std::vector<Value *> argV;
-    std::vector<const Type *> signature;
+    llvm_values argV;
+    llvm_types signature;
     argV.push_back(contextPtr);   // Pass context pointer
     signature.push_back(compiler->contextPtrTy);
     argV.push_back(ptr);          // Self is the closure expression
@@ -3719,7 +3697,7 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
     FunctionType *fnTy = FunctionType::get(treeTy, signature, false);
     PointerType *fnPtrTy = PointerType::get(fnTy, 0);
     Value *toCall = code->CreateBitCast(callCode, fnPtrTy);
-    Value *callVal = code->CreateCall(toCall, argV.begin(), argV.end());
+    Value *callVal = code->CreateCall(toCall, LLVMS_ARGS(argV));
 
     // Store the flags indicating that we computed the value
     MarkComputed(callee, callVal);
@@ -3762,7 +3740,7 @@ BasicBlock *OCompiledUnit::TagTest(Tree *tree, ulong tagValue)
     Value *kind = code->CreateAnd(tag, mask, "tagAndMask");
     Constant *refTag = ConstantInt::get(tag->getType(), tagValue);
     Value *isRightTag = code->CreateICmpEQ(kind, refTag, "isRightTag");
-    BasicBlock *isRightKindBB = BasicBlock::Create(*llvm,
+    BasicBlock *isRightKindBB = BasicBlock::Create(llvm,
                                                    "isRightKind", function);
     code->CreateCondBr(isRightTag, isRightKindBB, notGood);
 
@@ -3793,7 +3771,7 @@ BasicBlock *OCompiledUnit::IntegerTest(Tree *tree, longlong value)
     Value *tval = code->CreateLoad(valueFieldPtr, "treeValue");
     Constant *rval = ConstantInt::get(tval->getType(), value, "refValue");
     Value *isGood = code->CreateICmpEQ(tval, rval, "isGood");
-    BasicBlock *isGoodBB = BasicBlock::Create(*llvm,
+    BasicBlock *isGoodBB = BasicBlock::Create(llvm,
                                               "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
@@ -3825,8 +3803,7 @@ BasicBlock *OCompiledUnit::RealTest(Tree *tree, double value)
     Value *tval = code->CreateLoad(valueFieldPtr, "treeValue");
     Constant *rval = ConstantFP::get(tval->getType(), value);
     Value *isGood = code->CreateFCmpOEQ(tval, rval, "isGood");
-    BasicBlock *isGoodBB = BasicBlock::Create(*llvm,
-                                              "isGood", function);
+    BasicBlock *isGoodBB = BasicBlock::Create(llvm, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
@@ -3851,15 +3828,15 @@ BasicBlock *OCompiledUnit::TextTest(Tree *tree, text value)
     // Check if the value is the same, call xl_same_text
     Value *treeValue = Known(tree);
     assert(treeValue);
-    Constant *refVal = ConstantArray::get(*llvm, value);
-    const Type *refValTy = refVal->getType();
+    Constant *refVal = LLVMS_TextConstant(llvm, value);
+    llvm_type refValTy = refVal->getType();
     GlobalVariable *gvar = new GlobalVariable(*compiler->module, refValTy, true,
                                               GlobalValue::InternalLinkage,
                                               refVal, "str");
     Value *refPtr = code->CreateConstGEP2_32(gvar, 0, 0);
     Value *isGood = code->CreateCall2(compiler->xl_same_text,
                                       treeValue, refPtr);
-    BasicBlock *isGoodBB = BasicBlock::Create(*llvm, "isGood", function);
+    BasicBlock *isGoodBB = BasicBlock::Create(llvm, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
@@ -3884,7 +3861,7 @@ BasicBlock *OCompiledUnit::ShapeTest(Tree *left, Tree *right)
     BasicBlock *notGood = NeedTest();
     Value *isGood = code->CreateCall2(compiler->xl_same_shape,
                                       leftVal, rightVal);
-    BasicBlock *isGoodBB = BasicBlock::Create(*llvm, "isGood", function);
+    BasicBlock *isGoodBB = BasicBlock::Create(llvm, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
@@ -3903,8 +3880,8 @@ BasicBlock *OCompiledUnit::InfixMatchTest(Tree *actual, Infix *reference)
     Value *refVal = NeedStorage(reference);     assert (refVal);
 
     // Extract the name of the reference
-    Constant *refNameVal = ConstantArray::get(*llvm, reference->name);
-    const Type *refNameTy = refNameVal->getType();
+    Constant *refNameVal = LLVMS_TextConstant(llvm, reference->name);
+    llvm_type refNameTy = refNameVal->getType();
     GlobalVariable *gvar = new GlobalVariable(*compiler->module,refNameTy,true,
                                               GlobalValue::InternalLinkage,
                                               refNameVal, "infix_name");
@@ -3916,7 +3893,7 @@ BasicBlock *OCompiledUnit::InfixMatchTest(Tree *actual, Infix *reference)
                                             contextPtr, actualVal, refNamePtr);
     Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
     Value *isGood = code->CreateICmpNE(afterExtract, null, "isGoodInfix");
-    BasicBlock *isGoodBB = BasicBlock::Create(*llvm, "isGood", function);
+    BasicBlock *isGoodBB = BasicBlock::Create(llvm, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value is the same, then go on, switch to the isGood basic block
@@ -3970,8 +3947,8 @@ BasicBlock *OCompiledUnit::TypeTest(Tree *value, Tree *type)
 
     Constant *refTag = ConstantInt::get(tag->getType(), kind);
     Value *isRightTag = code->CreateICmpEQ(kindValue, refTag, "isTagOK");
-    BasicBlock *isKindOK = BasicBlock::Create(*llvm, "isKindOK", function);
-    BasicBlock *isKindBad = BasicBlock::Create(*llvm, "isKindBad", function);
+    BasicBlock *isKindOK = BasicBlock::Create(llvm, "isKindOK", function);
+    BasicBlock *isKindBad = BasicBlock::Create(llvm, "isKindBad", function);
     code->CreateCondBr(isRightTag, isKindOK, isKindBad);
 
     // Degraded for integer: may simply need to promote to real
@@ -3980,8 +3957,8 @@ BasicBlock *OCompiledUnit::TypeTest(Tree *value, Tree *type)
     {
         Constant *intTag = ConstantInt::get(tag->getType(), INTEGER);
         Value *isInt = code->CreateICmpEQ(kindValue, intTag, "isInt");
-        BasicBlock *isIntOK = BasicBlock::Create(*llvm, "isIntOK", function);
-        BasicBlock *isIntBad = BasicBlock::Create(*llvm, "isIntBad", function);
+        BasicBlock *isIntOK = BasicBlock::Create(llvm, "isIntOK", function);
+        BasicBlock *isIntBad = BasicBlock::Create(llvm, "isIntBad", function);
         code->CreateCondBr(isInt, isIntOK, isIntBad);
 
         code->SetInsertPoint(isIntOK);
@@ -4002,7 +3979,7 @@ BasicBlock *OCompiledUnit::TypeTest(Tree *value, Tree *type)
                                          contextPtr, treeValue, typeVal);
     Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
     Value *isGood = code->CreateICmpNE(afterCast, null, "isGoodType");
-    BasicBlock *isGoodBB = BasicBlock::Create(*llvm, "isGood", function);
+    BasicBlock *isGoodBB = BasicBlock::Create(llvm, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
     // If the value matched, we may have a type cast, remember it
@@ -4080,7 +4057,7 @@ void ExpressionReduction::NewForm ()
     assert(savedbb || !"NewForm called after unconditional success");
 
     // Create entry / exit basic blocks for this expression
-    entrybb = BasicBlock::Create(*llvm, "subexpr", u.function);
+    entrybb = BasicBlock::Create(llvm, "subexpr", u.function);
     u.failbb = NULL;
 
     // Set the insertion point to the new invokation code
@@ -4112,7 +4089,7 @@ void ExpressionReduction::Succeeded(void)
     else
     {
         // Create a fake basic block in case someone decides to add code
-        BasicBlock *empty = BasicBlock::Create(*llvm, "empty", u.function);
+        BasicBlock *empty = BasicBlock::Create(llvm, "empty", u.function);
         u.code->SetInsertPoint(empty);
     }
     u.failbb = NULL;

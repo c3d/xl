@@ -42,9 +42,6 @@
 #include "unit.h"
 #include "errors.h"
 
-#include "llvm/DerivedTypes.h"
-#include "llvm/Function.h"
-
 XL_BEGIN
 
 

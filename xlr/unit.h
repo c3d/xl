@@ -113,7 +113,7 @@ public:
     TypeInference_p     inference;      // Type inferences for this unit
 
     Compiler *          compiler;       // The compiler environment we use
-    llvm::LLVMContext * llvm;           // The LLVM context we got from compiler
+    llvm::LLVMContext & llvm;           // The LLVM context we got from compiler
 
     llvm_builder        code;           // Instruction builder for code
     llvm_builder        data;           // Instruction builder for data
@@ -128,7 +128,7 @@ public:
     value_map           storage;        // Map tree -> LLVM alloca space
     type_map            machineType;    // Map tree -> machine type
 
-    llvm::PATypeHolder  closureTy;      // Argument type for closures
+    llvm_struct         closureTy;      // Argument type for closures
     value_map           closure;        // Arguments that need closures
     type_map            boxed;          // Boxed struct types
     unboxing_map        unboxed;        // Unboxed source for a boxed type

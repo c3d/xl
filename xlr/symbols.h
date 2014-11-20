@@ -253,7 +253,7 @@ struct OCompiledUnit
 
 public:
     Compiler *          compiler;       // The compiler environment we use
-    llvm::LLVMContext * llvm;           // The LLVM context we got from compiler
+    llvm::LLVMContext & llvm;           // The LLVM context we got from compiler
     Tree_p              source;         // The original source we compile
 
     llvm::IRBuilder<> * code;           // Instruction builder for code
@@ -288,7 +288,7 @@ struct ExpressionReduction
 public:
     OCompiledUnit &     unit;           // Compilation unit we use
     Tree *              source;         // Tree we build (mostly for debugging)
-    llvm::LLVMContext * llvm;           // Inherited context
+    llvm::LLVMContext & llvm;           // Inherited context
 
     llvm::Value *       storage;        // Storage for expression value
     llvm::Value *       computed;       // Flag telling if value was computed
