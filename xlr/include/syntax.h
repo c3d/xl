@@ -75,6 +75,7 @@ public:
     {
         ReadSyntaxFile(name);
     }
+    Syntax(const Syntax &other);
     ~Syntax();
 
 public:
@@ -131,6 +132,9 @@ struct ChildSyntax : Syntax
 {
     ChildSyntax() : Syntax(), filename(), delimiters() {}
     ChildSyntax(text fn) : Syntax(fn.c_str()), filename(fn), delimiters() {}
+    ChildSyntax(const ChildSyntax &other)
+        : Syntax(other),
+          filename(other.filename), delimiters(other.delimiters) {}
     text                filename;
     delimiter_table     delimiters;
 };

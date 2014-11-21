@@ -54,6 +54,30 @@ XL_BEGIN
 Syntax *Syntax::syntax = NULL;
 
 
+Syntax::Syntax(const Syntax &other)
+// ----------------------------------------------------------------------------
+//   Copy from another syntax
+// ----------------------------------------------------------------------------
+    : infix_priority(other.infix_priority),
+      prefix_priority(other.prefix_priority),
+      postfix_priority(other.postfix_priority),
+      comment_delimiters(other.comment_delimiters),
+      text_delimiters(other.text_delimiters),
+      block_delimiters(other.block_delimiters),
+      subsyntax_file(other.subsyntax_file),
+      subsyntax(other.subsyntax),
+      known_tokens(other.known_tokens),
+      known_prefixes(other.known_prefixes),
+      priority(other.priority),
+      default_priority(other.default_priority),
+      statement_priority(other.statement_priority),
+      function_priority(other.function_priority)
+{
+    for (subsyntax_table::iterator i=subsyntax.begin();i!=subsyntax.end();i++)
+        (*i).second = new ChildSyntax(*(*i).second);
+}
+
+
 Syntax::~Syntax()
 // ----------------------------------------------------------------------------
 //   Destroy the children syntaxen
