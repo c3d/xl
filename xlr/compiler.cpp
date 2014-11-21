@@ -147,11 +147,8 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     Allocator<Postfix>  ::Singleton()->AddListener(cgcl);
     Allocator<Block>    ::Singleton()->AddListener(cgcl);
 
-    // Create module where we will build the code
-    module = new Module(moduleName, llvm);
-
     // Create the runtime environment for just-in-time compilation
-    runtime = LLVMS_InitializeJIT(module);
+    runtime = LLVMS_InitializeJIT(llvm, moduleName, &module);
 
     // Setup the optimizer - REVISIT: Adjust with optimization level
     optimizer = new FunctionPassManager(module);

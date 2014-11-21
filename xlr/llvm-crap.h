@@ -255,36 +255,56 @@ inline llvm::StructType *LLVMS_Struct(llvm::LLVMContext &llvm,
 }
 
 
-inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::Module *module)
+inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
+                                                  text moduleName,
+                                                  llvm::Module **module)
 // ----------------------------------------------------------------------------
 //    Initialization of LLVM parameters
 // ----------------------------------------------------------------------------
 {
+    using namespace llvm;
+
+#if LLVM_VERSION < 360
+    // Create module where we will build the code
+    *module = new Module(moduleName, llvm);
+#else
+    // WTF version of the above
+    std::unique_ptr<Module> moduleOwner = make_unique<Module>(moduleName, llvm);
+    *module = moduleOwner.get();
+#endif
+
+
 #if LLVM_VERSION >= 33
     // I get a crash on Linux if I don't do that. Unclear why.
     LLVMInitializeAllTargetMCs();
 #endif
     // Initialize native target (new features)
-    llvm::InitializeNativeTarget();
+    InitializeNativeTarget();
 
 #if LLVM_VERSION < 31
-    llvm::JITExceptionHandling = false;  // Bug #1026
-    llvm::JITEmitDebugInfo = true;
-    llvm::NoFramePointerElim = true;
+    JITExceptionHandling = false;  // Bug #1026
+    JITEmitDebugInfo = true;
+    NoFramePointerElim = true;
 #endif
 #if LLVM_VERSION < 30
-    llvm::UnwindTablesMandatory = true;
+    UnwindTablesMandatory = true;
 #endif
 
+#if LLVM_VERSION < 360
     // Select the fast JIT
-    llvm::EngineBuilder engineBuilder(module);
+    EngineBuilder engineBuilder(module);
+#else
+    // WTF version of the above
+    EngineBuilder engineBuilder(std::move(moduleOwner));
+#endif
+
 #if LLVM_VERSION >= 31
-    llvm::TargetOptions targetOpts;
+    TargetOptions targetOpts;
     // targetOpts.JITEmitDebugInfo = true;
-    engineBuilder.setEngineKind(llvm::EngineKind::JIT);
+    engineBuilder.setEngineKind(EngineKind::JIT);
     engineBuilder.setTargetOptions(targetOpts);
 #endif
-    llvm::ExecutionEngine *runtime = engineBuilder.create();
+    ExecutionEngine *runtime = engineBuilder.create();
 
     // Make sure that code is generated as early as possible
     runtime->DisableLazyCompilation(true);
@@ -297,7 +317,7 @@ inline void LLVMS_SetupOpts(llvm::PassManager *moduleOptimizer,
                             llvm::FunctionPassManager *optimizer,
                             uint optLevel)
 // ----------------------------------------------------------------------------
-//   
+//   Setup the optimizations depending on the optimization level
 // ----------------------------------------------------------------------------
 {
 #if LLVM_VERSION < 30

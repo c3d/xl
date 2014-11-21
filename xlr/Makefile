@@ -63,7 +63,7 @@ PRODUCT=xlr$(EXE)
 include $(BROOT)Makefile.config
 
 LLVM_CONFIG=llvm-config
-LLVM_VERSION=$(shell $(LLVM_CONFIG) --version | sed -e s/[.]//g)
+LLVM_VERSION=$(shell $(LLVM_CONFIG) --version | sed -e s/[.a-z-]//g)
 
 LLVM_FLAGS=$(shell $(LLVM_CONFIG) --cppflags | sed -e s/-DNDEBUG//g) \
 	   -DLLVM_VERSION=$(LLVM_VERSION)
@@ -75,7 +75,9 @@ LDFLAGS=$(LLVM_LIBS) $(LLVM_LDFLAGS)
 CPPFLAGS_llvm31=-Wno-unused-local-typedefs
 CPPFLAGS_llvm30=-Wno-unused-local-typedefs
 CPPFLAGS_llvm350=-std=c++11
+CPPFLAGS_llvm360=-std=c++11
 LDFLAGS_llvm350=-lz -lncurses
+LDFLAGS_llvm360=-lz -lncurses
 
 test: unit_tests xl_tests
 
