@@ -292,7 +292,7 @@ inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
 
 #if LLVM_VERSION < 360
     // Select the fast JIT
-    EngineBuilder engineBuilder(module);
+    EngineBuilder engineBuilder(*module);
 #else
     // WTF version of the above
     EngineBuilder engineBuilder(std::move(moduleOwner));
