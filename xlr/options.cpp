@@ -109,70 +109,47 @@ static void Usage(kstring appName)
 }
 
 
-static bool OptionMatches(kstring &command_line, kstring optdescr)
+static bool OptionMatches(kstring command_line, kstring optdescr)
 // ----------------------------------------------------------------------------
 //   Check if a given option matches the command line
 // ----------------------------------------------------------------------------
 // Single character options may accept argument as same or next parameter
 {
-    size_t len = strlen(optdescr);
-    if (strncmp(command_line, optdescr, len) == 0)
-    {
-        command_line += len;
-        return true;
-    }
-    return false;
+    return text(command_line) == text(optdescr);
 }
 
 
-static kstring OptionString(kstring &command_line, Options &opt)
+static kstring OptionString(Options &opt)
 // ----------------------------------------------------------------------------
 //   Check if we find an integer between low and high on the command line
 // ----------------------------------------------------------------------------
 {
-    if (*command_line)
-    {
-        kstring result = command_line;
-        command_line = "";
-        return result;
-    }
     opt.arg += 1;
     if (opt.arg  < opt.args.size())
-    {
-        command_line = "";
         return opt.args[opt.arg].c_str();
-    }
-    Ooops("Option #$1 does not exist", Error::COMMAND_LINE)
-        .Arg(opt.arg);
+    Ooops("Option #$1 does not exist", Error::COMMAND_LINE).Arg(opt.arg);
     return "";
 }
 
 
-static ulong OptionInteger(kstring &command_line, Options &opt,
-                           ulong low, ulong high)
+static ulong OptionInteger(Options &opt, ulong low, ulong high)
 // ----------------------------------------------------------------------------
 //   Check if we find an integer between low and high on the command line
 // ----------------------------------------------------------------------------
 {
     uint result = low;
-    kstring old = command_line;
-    if (*command_line)
+    opt.arg += 1;
+    if (opt.arg  < opt.args.size())
     {
-        if (isdigit(*command_line))
-            result = strtol(command_line, (char**) &command_line, 10);
+        kstring val = opt.args[opt.arg].c_str();
+        if (isdigit(*val))
+            result = strtol(val, (char**) &val, 10);
         else
             Ooops("Option $1 is not an integer value", Error::COMMAND_LINE)
-                .Arg(command_line);
-    }
-    else
-    {
-        opt.arg += 1;
-        if (opt.arg  < opt.args.size() && isdigit(opt.args[opt.arg][0]))
-            result = strtol(old = opt.args[opt.arg].c_str(),
-                            (char **) &command_line, 10);
-        else
-            Ooops("Option $1 is not an integer value", Error::COMMAND_LINE)
-                .Arg(old);
+                .Arg(val);
+        if (*val)
+            Ooops("Garbage $1 after integer value", Error::COMMAND_LINE)
+                .Arg(val);
     }
     if (result < low || result > high)
     {
@@ -180,22 +157,13 @@ static ulong OptionInteger(kstring &command_line, Options &opt,
         sprintf(lowstr, "%lu", low);
         sprintf(highstr, "%lu", high);
         Ooops("Option $1 is out of range $2..$3", Error::COMMAND_LINE)
-            .Arg(old).Arg(lowstr).Arg(highstr);
+            .Arg(opt.args[opt.arg].c_str()).Arg(lowstr).Arg(highstr);
         if (result < low)
             result = low;
         else
             result = high;
     }
     return result;
-}
-
-
-static void PassOptionToLLVM(kstring &command_line)
-// ----------------------------------------------------------------------------
-//   An option beginning with -llvm is passed to llvm as is
-// ----------------------------------------------------------------------------
-{
-    while (*command_line++) /* Skip */;
 }
 
 
@@ -231,28 +199,28 @@ text Options::ParseNext(bool consumeFiles)
                 kstring trace_name = argval + 1;
                 Traces::enable(trace_name);
             }
-            else
 #endif
+            // Pass LLVM options as is (they are caught in compiler init)
+            if (strncmp(argval, "llvm", 4))
+            {
+                arg++;
+                continue;
+            }
 
 #define OPTVAR(name, type, value)
 #define OPTION(name, descr, code)                                       \
             if (OptionMatches(argval, #name))                           \
             {                                                           \
                 code;                                                   \
-                                                                        \
-                if (*argval)                                            \
-                    Ooops("Garbage found after option -$1 : $2",        \
-                          Error::COMMAND_LINE).Arg(#name).Arg(option);  \
             }                                                           \
             else
-#define INTEGER(n, m)           OptionInteger(argval, *this, n, m)
-#define STRING                  OptionString(argval, *this)
+#define INTEGER(n, m)           OptionInteger(*this, n, m)
+#define STRING                  OptionString(*this)
 #include "options.tbl"
             {
                 // Default: Output usage
                 Ooops("Unknown option $1 ignored", Error::COMMAND_LINE)
                     .Arg(argval);
-                Usage(args[0].c_str());
             }
             arg++;
         }
