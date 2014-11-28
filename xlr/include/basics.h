@@ -248,6 +248,7 @@ inline bool xl_random_seed(int seed)
 }
 
 #ifdef CONFIG_MINGW
+#ifndef localtime_r
 inline struct tm *localtime_r (const time_t * timep, struct tm * result)
 // ----------------------------------------------------------------------------
 //   MinGW doesn't have localtime_r, but its localtime is thread-local storage
@@ -256,6 +257,7 @@ inline struct tm *localtime_r (const time_t * timep, struct tm * result)
     *result = *localtime (timep);
     return result;
 }
+#endif
 #endif // CONFIG_MINGW
 
 
