@@ -191,6 +191,8 @@ text Options::ParseNext(bool consumeFiles)
             kstring option = args[arg].c_str() + 1;
             kstring argval = option;
 
+            std::cerr << "Loooking at option " << argval << "\n";            
+
             RECORD(INFO, "Parse option", "Index", arg, option);
 
 #if XL_DEBUG
@@ -201,7 +203,7 @@ text Options::ParseNext(bool consumeFiles)
             }
 #endif
             // Pass LLVM options as is (they are caught in compiler init)
-            if (strncmp(argval, "llvm", 4))
+            if (strncmp(argval, "llvm", 4) == 0)
             {
                 arg++;
                 continue;
