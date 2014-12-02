@@ -191,8 +191,6 @@ text Options::ParseNext(bool consumeFiles)
             kstring option = args[arg].c_str() + 1;
             kstring argval = option;
 
-            std::cerr << "Loooking at option " << argval << "\n";            
-
             RECORD(INFO, "Parse option", "Index", arg, option);
 
 #if XL_DEBUG
