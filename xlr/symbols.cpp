@@ -268,6 +268,53 @@ ulong Symbols::Count(ulong mask, Rewrite *rw)
 }
 
 
+static void ListNameRewrites(Rewrite *rw,
+                             text begin,
+                             name_set &names,
+                             name_set &infix,
+                             name_set &prefix,
+                             name_set &postfix)
+// ----------------------------------------------------------------------------
+//    List all the names matching in the given rewrite table
+// ----------------------------------------------------------------------------
+{
+    if (rw)
+    {
+        Tree *from = rw->from;
+        if (Name *name = from->AsName())
+            if (name->value.find(begin) == 0)
+                names.insert(name->value);
+        if (Infix *inf = from->AsInfix())
+            if (inf->name.find(begin) == 0)
+                infix.insert(inf->name);
+        if (Prefix *pre = from->AsPrefix())
+            if (Name *name = pre->left->AsName())
+                if (name->value.find(begin) == 0)
+                    prefix.insert(name->value);
+        if (Postfix *post = from->AsPostfix())
+            if (Name *name = post->right->AsName())
+                if (name->value.find(begin) == 0)
+                    postfix.insert(name->value);
+        for (uint i = 0; i < REWRITE_HASH_SIZE; i++)
+            ListNameRewrites(rw->hash[i], begin, names, infix, prefix, postfix);
+    }
+}
+
+
+void Symbols::ListNames(text begin,
+                        name_set &names,
+                        name_set &infix,
+                        name_set &prefix,
+                        name_set &postfix)
+// ----------------------------------------------------------------------------
+//   Enumerate all names of each type
+// ----------------------------------------------------------------------------
+{
+    for (Symbols *s = this; s; s = s->Parent())
+        ListNameRewrites(s->rewrites, begin, names, infix, prefix, postfix);
+}
+
+
 Rewrite *Symbols::EnterRewrite(Rewrite *rw)
 // ----------------------------------------------------------------------------
 //   Enter the given rewrite in the rewrites table

@@ -1786,56 +1786,6 @@ Tree *Context::ClosureValue(Tree *value, Context_p *where)
 }
 
 
-static void ListNameRewrites(rewrite_table &table,
-                             text prefix,
-                             rewrite_list &list,
-                             bool prefixesOk)
-// ----------------------------------------------------------------------------
-//    List all the names matching in the given rewrite table
-// ----------------------------------------------------------------------------
-{
-    for (uint i = 0; i < REWRITE_HASH_SIZE; i++)
-    {
-        if (Rewrite *rw = table[i])
-        {
-            Tree *from = rw->from;
-            Name *name = from->AsName();
-            if (!name && prefixesOk)
-            {
-                if (Prefix *pre = from->AsPrefix())
-                    name = pre->left->AsName();
-            }
-            if (name)
-                if (name->value.find(prefix) == 0)
-                    list.push_back(rw);
-            ListNameRewrites(rw->hash, prefix, list, prefixesOk);
-        }
-    }
-}
-
-
-void Context::ListNames(text prefix, rewrite_list &list, lookup_mode lookup,
-                        bool prefixesOk)
-// ----------------------------------------------------------------------------
-//   List all names that begin with the given text
-// ----------------------------------------------------------------------------
-//   If prefixesOk == true, also return names that are prefixes
-{
-    Context *next = NULL;
-    for (Context *context = this; context; context = next)
-    {
-        // List names in the given context
-        ListNameRewrites(context->rewrites, prefix, list, prefixesOk);
-
-        // Select which scope to use next
-        if (lookup & SCOPE_LOOKUP)
-            next = context->scope;
-        else if (lookup & STACK_LOOKUP)
-            next = context->stack;
-    }
-}
-
-
 void Context::Contexts(lookup_mode lookup, context_list &list)
 // ----------------------------------------------------------------------------
 //   List all the contexts we need to lookup for a given lookup mode

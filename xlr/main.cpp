@@ -120,6 +120,20 @@ SourceFile::~SourceFile()
 }
 
 
+void SourceFile::ListNames(text begin,
+                           name_set &names,
+                           name_set &infix,
+                           name_set &prefix,
+                           name_set &postfix)
+// ----------------------------------------------------------------------------
+//   List names from the symbol table
+// ----------------------------------------------------------------------------
+{
+    if (symbols)
+        symbols->ListNames(begin, names, infix, prefix, postfix);
+}
+
+
 Main::Main(int inArgc, char **inArgv, text compilerName,
            text syntaxName, text styleSheetName, text builtinsName)
 // ----------------------------------------------------------------------------
@@ -324,6 +338,21 @@ void Main::EvaluateContextFiles(source_names &ctxFiles)
             sf.context->Evaluate(sf.tree);
     }
 }
+
+
+void Main::ListNames(text begin,
+                     XL::name_set &names,
+                     XL::name_set &infix,
+                     XL::name_set &prefix,
+                     XL::name_set &postfix)
+// ----------------------------------------------------------------------------
+//    List the names beginning with the prefix in all symbol tables
+// ----------------------------------------------------------------------------
+{
+    XL::source_files &files = XL::MAIN->files;
+    for (XL::source_files::iterator f = files.begin(); f != files.end(); ++f)
+        (*f).second.ListNames(begin, names, infix, prefix, postfix);
+}    
 
 
 text Main::SearchFile(text file)

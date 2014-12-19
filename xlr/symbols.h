@@ -112,6 +112,13 @@ struct Symbols
     ulong               Count(ulong kinds /* bit mask of Rewrite::Kind */,
                               Rewrite *top = NULL);
 
+    // List rewrites of a given type
+    void                ListNames(text begin,
+                                  name_set &names,
+                                  name_set &infix,
+                                  name_set &prefix,
+                                  name_set &postfix);
+
     // Enter properties, return number of properties found
     uint                EnterProperty(Context *context,
                                       Tree *self, Tree *storage, Tree *decls);

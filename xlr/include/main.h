@@ -80,6 +80,13 @@ struct SourceFile
     template <class I>
     I*                  Remove(I *);
 
+    void                ListNames(text begin,
+                                  name_set &names,
+                                  name_set &infix,
+                                  name_set &prefix,
+                                  name_set &postfix);
+
+public:
     text        name;
     Tree_p      tree;
     Context_p   context;
@@ -126,6 +133,11 @@ struct Main
     void         Log(Error &e)   { errors->Log(e); }
     Errors *     InitErrorsAndMAIN();
     uint         HadErrors() { return errors->Count(); }
+    void         ListNames(text begin,
+                           name_set &names,
+                           name_set &infix,
+                           name_set &prefix,
+                           name_set &postfix);
 
 public:
     int          argc;

@@ -200,6 +200,7 @@ typedef std::vector<Rewrite_p>     rewrite_list;
 typedef std::vector<Context_p>     context_list;
 typedef std::map<Tree_p, Tree_p>   tree_map;
 typedef Tree *(*native_fn) (Context *ctx, Tree *self);
+typedef std::set<text>             name_set;
 typedef std::set<text>             path_set;
 typedef std::map<text, path_set>   search_paths;
 typedef std::map<text, text>       search_path_cache;
@@ -302,11 +303,6 @@ struct Context
     Tree *              CreateLazy(Tree *value);
     Tree *              EvaluateLazy(Tree *closure, Tree *value);
     Tree *              ClosureValue(Tree *input, Context_p *where = NULL);
-
-    // List rewrites of a given type
-    void                ListNames(text begin, rewrite_list &list,
-                                  lookup_mode lookup = SCOPE_LOOKUP,
-                                  bool prefixesOk = false);
 
     // List the set of contexts to lookup (necessary for imported case)
     void                Contexts(lookup_mode, context_list &);
