@@ -141,12 +141,12 @@ INFIX(PowerInt, integer, integer, "^", integer, XL_RINT(xl_pow(l,r)),
       DESCRIPTION("")
       RETURNS(integer,""))
 
-INFIX(LShift, integer, integer,"<<",integer, XL_RINT(XL_INT(l) << XL_INT(r)),
+INFIX(LShift, integer, integer,"shl",integer, XL_RINT(XL_INT(l) << XL_INT(r)),
       GROUP(basics)
       SYNOPSIS("")
       DESCRIPTION("")
       RETURNS(integer,""))
-INFIX(RShift, integer, integer,">>",integer, XL_RINT(XL_INT(l) >> XL_INT(r)),
+INFIX(RShift, integer, integer,"shr",integer, XL_RINT(XL_INT(l) >> XL_INT(r)),
       GROUP(basics)
       SYNOPSIS("")
       DESCRIPTION("")
