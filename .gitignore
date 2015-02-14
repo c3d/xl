@@ -1,2 +1,12 @@
 **/*.log
 xlr/obj/
+xlr/xlr
+xlr/tests/*.stylesheet
+xlr/tests/xl.syntax
+xlr/tests/builtins.xl
+xlr/tests/opt-builtins.xl
+xlr/tests/xl
+xlr/tests/success.out
+xlr/tests/failure.out
+xlr/tests/expected.out
+
