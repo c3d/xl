@@ -578,12 +578,6 @@ bool TypeInference::Unify(Tree *t1, Tree *t2, unify_mode mode)
         if (Name *t1n = t1->AsName())
             return JoinConstant(t2, t1n);
 
-    // If either is a generic, unify with the other
-    if (IsGeneric(t1))
-        return Join(t1, t2);
-    if (IsGeneric(t2))
-        return Join(t1, t2);
-
     // Check if t1 is one of the infix constructor types
     if (Infix *i1 = t1->AsInfix())
     {
@@ -635,6 +629,12 @@ bool TypeInference::Unify(Tree *t1, Tree *t2, unify_mode mode)
         Ooops("Malformed type definition $2 for $1", right, i2);
         return false;
     }
+
+    // If either is a generic, unify with the other
+    if (IsGeneric(t1))
+        return Join(t1, t2);
+    if (IsGeneric(t2))
+        return Join(t1, t2);
 
     // If we have a type name at this stage, this is a failure
     if (IsTypeName(t1))
