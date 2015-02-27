@@ -101,6 +101,9 @@ protected:
 
 
 inline time_t fileTimeToTime_t(FILETIME ft)
+// ----------------------------------------------------------------------------
+//   Conversion to more portable file time
+// ----------------------------------------------------------------------------
 {
    ULARGE_INTEGER ull;
    ull.LowPart = ft.dwLowDateTime;
@@ -110,11 +113,15 @@ inline time_t fileTimeToTime_t(FILETIME ft)
 
 
 inline int utf8_stat(const char *path, struct _stat *buffer)
+// ----------------------------------------------------------------------------
+//   Stat function taking a UTF-8 path
+// ----------------------------------------------------------------------------
 {
     std::wstring wpath = utf8_decode(std::string(path));
     int status = _wstat(wpath.c_str(), buffer);
     if (status < 0)
         return status;
+    
     // Bug#1567: _wsat returns bogus file times when daylight saving
     // time setting changes
     // By using GetFileAttributesEx we are consistent with
@@ -133,6 +140,9 @@ inline int utf8_stat(const char *path, struct _stat *buffer)
 
 
 inline int utf8_access(const char *path, int mode)
+// ----------------------------------------------------------------------------
+//   Access function taking a UTF-8 path
+// ----------------------------------------------------------------------------
 {
     std::wstring wpath = utf8_decode(std::string(path));
     return _waccess(wpath.c_str(), mode);
@@ -140,6 +150,7 @@ inline int utf8_access(const char *path, int mode)
 
 #else
 
+// Real systems
 typedef std::ifstream utf8_ifstream;
 #define utf8_stat(path, buffer) stat(path, buffer)
 #define utf8_access(path, mode) access(path, mode)
