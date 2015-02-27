@@ -166,6 +166,8 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <iostream>
+
 #include "base.h"
 #include "tree.h"
 
@@ -269,6 +271,10 @@ public:
     // Clear the symbol table
     void                Clear();
 
+    // Dump symbol tables
+    static void         Dump(std::ostream &out, Infix *symbols);
+    void                Dump(std::ostream &out) { Dump(out, symbols); }
+
 public:
     Infix_p             symbols;
     GARBAGE_COLLECT(Context);
@@ -316,6 +322,18 @@ inline Tree * RewriteType(Tree *what)
             return typeDecl->right;
     return NULL;
 }
+
+
+inline std::ostream &operator<< (std::ostream &out, Context *c)
+// ----------------------------------------------------------------------------
+//   Dump a context
+// ----------------------------------------------------------------------------
+{
+    out << "Context " << (void *) out << ":\n";
+    c->Dump(out);
+    return out;
+}
+
 
 XL_END
 

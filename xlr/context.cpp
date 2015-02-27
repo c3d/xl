@@ -66,13 +66,18 @@ XL_BEGIN
 //
 // ============================================================================
 
+#define SCOPE_NAME      "\n"
+#define ENTRY_NAME      ";"
+#define CHILDREN_NAME   ";"
+
+
 Context::Context()
 // ----------------------------------------------------------------------------
 //   Constructor for a top-level evaluation context
 // ----------------------------------------------------------------------------
     : symbols()
 {
-    symbols = new Infix("\n", xl_nil, xl_nil);
+    symbols = new Infix(SCOPE_NAME, xl_nil, xl_nil);
 }
 
 
@@ -121,7 +126,7 @@ void Context::CreateScope()
 //    Add a local scope to the current context
 // ----------------------------------------------------------------------------
 {
-    symbols = new Infix("\n", xl_nil, symbols, symbols->Position());
+    symbols = new Infix(SCOPE_NAME, xl_nil, symbols, symbols->Position());
 }
 
 
@@ -207,10 +212,11 @@ Tree *Context::ProcessDeclarations(Tree *what)
 
         if (Infix *infix = what->AsInfix())
         {
-            if (infix->name == "\n")
+            if (infix->name == "\n" || infix->name == ";")
             {
-                // Chain of \n. Normally, we don't need to recurse,
-                // except if we have \n on the left of a \n (malformed list)
+                // Chain of declarations. Normally, we don't need to recurse,
+                // except if we have a list that was not parsed and
+                // contains some priority inversion
                 what = infix->left;
                 if (next)
                     instr = ProcessDeclarations(what);
@@ -386,7 +392,7 @@ Infix *Context::Enter(Infix *rewrite)
     // In order to allow for log(N) lookup in the locals, we maintain a
     // structure matching the old Rewrite class, which has a declaration
     // and two or more possible children (currently two).
-    // That structure has the following layout: (A->B \n (L; R)), where
+    // That structure has the following layout: (A->B ; (L; R)), where
     // A->B is the local declaration, L and R are the possible children.
     // Children are initially nil.
     Infix *scope = symbols;
@@ -399,11 +405,11 @@ Infix *Context::Enter(Infix *rewrite)
         if (*parent == xl_nil)
         {
             // Initialize the local entry with nil children
-            Infix *nil_children = new Infix(";", xl_nil, xl_nil,
+            Infix *nil_children = new Infix(ENTRY_NAME, xl_nil, xl_nil,
                                             rewrite->Position());
 
             // Create the local entry
-            Infix *entry = new Infix("\n", rewrite, nil_children,
+            Infix *entry = new Infix(CHILDREN_NAME, rewrite, nil_children,
                                      rewrite->Position());
 
             // Insert the entry in the parent
@@ -575,8 +581,11 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
 
             // This should be a rewrite entry, follow it
             Infix *entry = (*parent)->AsInfix();
+            XL_ASSERT(entry && entry->name == ENTRY_NAME);
             Infix *decl = entry->left->AsInfix();
+            XL_ASSERT(!decl || decl->name == "->");
             Infix *children = entry->right->AsInfix();
+            XL_ASSERT(children && children->name == CHILDREN_NAME);
 
             // Check that hash matches
             ulong declHash = Hash(decl->left, true);
@@ -831,6 +840,78 @@ void Context::Clear()
     symbols->left = xl_nil;
 }
 
+
+void Context::Dump(std::ostream &out, Infix *scope)
+// ----------------------------------------------------------------------------
+//   Dump the symbol table to the given stream
+// ----------------------------------------------------------------------------
+//   Normal scopes are built with a declaration on the left, and the
+//   children entrie
+{
+    while (scope)
+    {
+        XL::Tree  *left = scope->left;
+        XL::Tree  *right = scope->right;
+        XL::Infix *decl = left->AsInfix();
+        XL::Infix *next = right->AsInfix();
+        bool isScope = scope->name == SCOPE_NAME;
+
+        if (scope->name == "->")
+        {
+            decl = scope;
+            next = NULL;
+        }
+        else if (!isScope &&
+                 scope->name != ENTRY_NAME && scope->name != CHILDREN_NAME)
+        {
+            out << "SCOPE?" << scope << "\n";
+        }
+
+        if (decl)
+        {
+            if (decl->name == "->")
+                out << decl->left << "\t->\t" << decl->right << "\n";
+            else if (decl->name == SCOPE_NAME ||
+                     decl->name == ENTRY_NAME ||
+                     decl->name == CHILDREN_NAME)
+                Dump(out, decl);
+            else
+                out << "DECL?" << decl << "\n";
+        }
+        else if (left != xl_nil)
+            out << "LEFT?" << left << "\n";
+
+        
+        // Iterate, avoid recursion in the common case of enclosed scopes
+        if (next)
+        {
+            XL::Infix *left = next->left->AsInfix();
+            XL::Infix *right = next->right->AsInfix();
+            
+            if (left && right)
+            {
+                Dump(out, left);
+                scope = right;
+            }
+            else if (left)
+            {
+                scope = left;
+            }
+            else
+            {
+                scope = right;
+            }
+        }
+        else
+        {
+            scope = NULL;
+        }
+        if (scope && isScope)
+            out << "// Parent " << (void *) scope << "\n";
+    }
+}
+
+
 XL_END
 
 
@@ -842,52 +923,10 @@ void debugl(XL::Infix *scope)
 // ----------------------------------------------------------------------------
 {
     if (XL::Allocator<XL::Infix>::IsAllocated(scope))
-    {
-        while (scope)
-        {
-            XL::Infix *decl = scope->left->AsInfix();
-            XL::Infix *children = scope->right->AsInfix();
-            if (decl && decl->name == "->")
-            {
-                std::cerr << decl->left
-                          << "\t->\t" 
-                          << XL::ShortTreeForm(decl->right)
-                          << "\n";
-            }
-            else
-            {
-                std::cerr << "Unknown: " << scope->left << "\n";
-            }
-            if (children)
-            {
-                XL::Infix *left = children->left->AsInfix();
-                XL::Infix *right = children->right->AsInfix();
-                if (left && right)
-                {
-                    debugl(left);
-                    scope = right;
-                }
-                else if (left)
-                {
-                    scope = left;
-                }
-                else
-                {
-                    scope = right;
-                }
-            }
-            else
-            {
-                scope = NULL;
-            }
-        }
-    } 
+        XL::Context::Dump(std::cerr, scope);
     else
-    {
         std::cerr << "Cowardly refusing to render unknown scope pointer "
                   << (void *) scope << "\n";
-    }
-
 }
 
 
