@@ -96,9 +96,6 @@ bool TypeInference::TypeCheck(Tree *program)
 //   Perform all the steps of type inference on the given program
 // ----------------------------------------------------------------------------
 {
-    // First process all the declarations of the program in current context
-    context->ProcessDeclarations(program);
-
     // Once this is done, record all type information for the program
     bool result = program->Do(this);
 

@@ -386,6 +386,7 @@ eval_fn Compiler::Compile(Context *context, Tree *program)
     if (!program)
         return NULL;
 
+    context->ProcessDeclarations(program);
     CompiledUnit unit(this, context);
     if (!unit.TypeCheck(program))
         return NULL;
