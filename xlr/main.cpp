@@ -285,6 +285,8 @@ static inline kstring endOfPath(kstring path)
         p--;
     while (p != path && !isDirectorySeparator(*p))
         p--;
+    if (isDirectorySeparator(*p))
+        p++;
     return p;
 }
 
@@ -296,7 +298,7 @@ text Main::ModuleDirectory(text path)
 {
     kstring str = path.c_str();
     kstring dirSep = endOfPath(str);
-    text    result = path.substr(0, dirSep+1 - str);
+    text    result = path.substr(0, dirSep - str);
     if (result == "")
         result = "./";
     return result;
@@ -310,8 +312,6 @@ text Main::ModuleBaseName(text path)
 {
     kstring str = path.c_str();
     kstring dirSep = endOfPath(str);
-    if (isDirectorySeparator(*dirSep))
-        dirSep++;
     return text(dirSep);
 }
 
@@ -325,8 +325,6 @@ text Main::ModuleName(text path)
     bool    hadUnderscore = false;
     kstring str = path.c_str();
     kstring p = endOfPath(str);
-    if (isDirectorySeparator(*p))
-        p++;
     while (char c = *p++)
     {
         if (c == '.')
@@ -517,6 +515,10 @@ int Main::LoadFile(text file, text modname)
             
     // Register the source file we had
     sf = SourceFile (file, tree, ctx);
+
+    // Process declarations from the program
+    IFTRACE(fileload)
+        std::cout << "File loaded in " << ctx << "\n";
     
     // We were OK, done
     return false;
