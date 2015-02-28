@@ -160,7 +160,10 @@ eval_fn Context::Compile(Tree *what)
     {
         code = MAIN->compiler->Compile(this, what);
         if (!code)
-            return code;
+        {
+            Ooops("Error compiling $1", what);
+            return NULL;
+        }
         compiled[what] = code;
     }
     return code;
@@ -173,13 +176,9 @@ Tree *Context::Evaluate(Tree *what)
 // ----------------------------------------------------------------------------
 {
     assert (!GarbageCollector::Running());
-    eval_fn code = Compile(what);
-    if (!code)
-    {
-        Ooops("Error compiling $1", what);
-        return what;
-    }
-    Tree *result = code(this, what);
+    Tree *result = what;
+    if (eval_fn code = Compile(what))
+        result = code(this, what);
     return result;
 }
 
