@@ -1011,24 +1011,31 @@ void debugc(XL::Context *context)
 // ----------------------------------------------------------------------------
 //   A context symbols can also be shown with debug(), but it's less convenient
 {
-    XL::Prefix *scope = context->symbols;
-    if (XL::Allocator<XL::Infix>::IsAllocated(scope))
+    if (XL::Allocator<XL::Context>::IsAllocated(context))
     {
-        ulong depth = 0;
-        while (scope)
+        XL::Prefix *scope = context->symbols;
+        if (XL::Allocator<XL::Prefix>::IsAllocated(scope))
         {
-            std::cerr << "SYMBOLS #" << depth++
-                      << " AT " << (void *) scope << "\n";
-            debugl(scope->right->AsInfix());
-            scope = scope->left->AsPrefix();
+            ulong depth = 0;
+            while (scope)
+            {
+                std::cerr << "SYMBOLS #" << depth++
+                          << " AT " << (void *) scope << "\n";
+                debugl(scope->right->AsInfix());
+                scope = scope->left->AsPrefix();
+            }
+        } 
+        else
+        {
+            std::cerr << "Cowardly refusing to render unknown scope pointer "
+                      << (void *) scope << "\n";
         }
-    } 
+    }
     else
     {
-        std::cerr << "Cowardly refusing to render unknown scope pointer "
-                  << (void *) scope << "\n";
+            std::cerr << "Cowardly refusing to render unknown context pointer "
+                      << (void *) context << "\n";
     }
-   
 }
 
 }
