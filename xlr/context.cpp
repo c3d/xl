@@ -150,19 +150,36 @@ Context *Context::Parent()
 }
 
 
+eval_fn Context::Compile(Tree *what)
+// ----------------------------------------------------------------------------
+//   Evaluate 'what' in the given context
+// ----------------------------------------------------------------------------
+{
+    eval_fn code = compiled[what];
+    if (!code)
+    {
+        code = MAIN->compiler->Compile(this, what);
+        if (!code)
+            return code;
+        compiled[what] = code;
+    }
+    return code;
+}
+
+
 Tree *Context::Evaluate(Tree *what)
 // ----------------------------------------------------------------------------
 //   Evaluate 'what' in the given context
 // ----------------------------------------------------------------------------
 {
     assert (!GarbageCollector::Running());
-
-    Compiler *compiler = MAIN->compiler;
-    Tree *result = what;
-    if (program_fn code = compiler->CompileProgram(this, what))
-        result = code();
-    else
+    eval_fn code = Compile(what);
+    if (!code)
+    {
         Ooops("Error compiling $1", what);
+        return what;
+    }
+    Tree *result = code(this, what);
     return result;
 }
 
@@ -374,6 +391,9 @@ Infix *Context::Enter(Infix *rewrite)
     // If the rewrite is not good, just exit
     if (rewrite->name != "->")
         return NULL;
+
+    // Updating a symbol in the context invalidates any cached code we may have
+    compiled.clear();
 
     // Find 'from', 'to' and 'hash' for the rewrite
     Tree *from = rewrite->left;

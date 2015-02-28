@@ -73,10 +73,7 @@ typedef llvm::IRBuilder<> *                    llvm_builder;
 typedef llvm::Function *                       llvm_function;
 typedef llvm::BasicBlock *                     llvm_block;
 
-typedef Tree * (*program_fn) (void);
-typedef Tree * (*eval_fn) (Context *, Tree *);
-typedef Tree * (*adapter_fn) (native_fn callee, Context *ctx,
-                              Tree *src, Tree **args);
+typedef Tree *(*adapter_fn) (eval_fn callee,Context *ctx,Tree *src,Tree **args);
 typedef std::map<text, llvm_function>          functions_map;
 typedef std::map<Tree *, llvm_value>           value_map;
 typedef std::map<Tree *, llvm_type>            type_map;
@@ -105,7 +102,7 @@ struct Compiler
     ~Compiler();
 
     // Top-level entry point: analyze and compile a tree or a whole program
-    program_fn                CompileProgram(Context *context, Tree *program);
+    eval_fn                   Compile(Context *context, Tree *program);
 
     void                      Setup(Options &options);
     void                      Reset();

@@ -373,9 +373,9 @@ void Compiler::Dump()
 }
 
 
-program_fn Compiler::CompileProgram(Context *context, Tree *program)
+eval_fn Compiler::Compile(Context *context, Tree *program)
 // ----------------------------------------------------------------------------
-//   Compile a whole XL program
+//   Compile an XL tree and return the machine function for it
 // ----------------------------------------------------------------------------
 //   This is the entry point used to compile a top-level XL program.
 //   It will process all the declarations in the program and then compile
@@ -386,17 +386,17 @@ program_fn Compiler::CompileProgram(Context *context, Tree *program)
     if (!program)
         return NULL;
 
-    CompiledUnit topUnit(this, context);
-    if (!topUnit.TypeCheck(program))
+    CompiledUnit unit(this, context);
+    if (!unit.TypeCheck(program))
         return NULL;
-    if (!topUnit.TopLevelFunction())
+    if (!unit.ExpressionFunction())
         return NULL;
-    llvm_value returned = topUnit.CompileTopLevel(program);
+    llvm_value returned = unit.CompileTopLevel(program);
     if (!returned)
-        returned = topUnit.ConstantTree(program);
-    if (!topUnit.Return(returned))
+        returned = unit.ConstantTree(program); // Error case
+    if (!unit.Return(returned))
         return NULL;
-    return (program_fn) topUnit.Finalize(true);
+    return unit.Finalize(true);
 }
 
 

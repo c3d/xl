@@ -87,7 +87,7 @@
   facilitate the interaction with other code.
 
   At top-level, the compiler generates only functions with the same
-  prototype as native_fn, i.e. Tree * (Tree *). The code is being
+  prototype as native_fn, i.e. Tree * (Context *, Tree *). The code is being
   generated on invokation of a form, and helps rewriting it, although
   attempts are made to leverage existing rewrites.
 
@@ -185,7 +185,8 @@ struct Action;                                  // Actions applied on trees
 typedef GCPtr<Context>             Context_p;
 typedef std::vector<Infix_p>       rewrite_list;
 typedef std::map<Tree_p, Tree_p>   tree_map;
-typedef Tree *(*native_fn) (Context *ctx, Tree *self);
+typedef Tree * (*eval_fn) (Context *, Tree *);
+typedef std::map<Tree_p, eval_fn>              code_map;
 
 
 
@@ -228,7 +229,8 @@ public:
     Prefix *            Scope()         { return symbols; }
     Context *           Parent();
 
-    // Evaluate a tree in the current context
+    // Compile and evaluate a tree in the current context
+    eval_fn             Compile(Tree *what);
     Tree *              Evaluate(Tree *what);
 
     // Special forms of evaluation
@@ -287,6 +289,7 @@ public:
 
 public:
     Prefix_p            symbols;
+    code_map            compiled;
     GARBAGE_COLLECT(Context);
 };
 

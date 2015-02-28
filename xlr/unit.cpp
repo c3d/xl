@@ -96,30 +96,13 @@ CompiledUnit::~CompiledUnit()
 }
 
 
-Function *CompiledUnit::TopLevelFunction()
-// ----------------------------------------------------------------------------
-//   Create a function for a top-level program
-// ----------------------------------------------------------------------------
-{
-    // We must have verified the types before
-    assert(inference || !"TopLevelFunction called without type check");
-
-    llvm_types signature;
-    ParameterList parameters(this);
-    llvm_type retTy = compiler->treePtrTy;
-    FunctionType *fnTy = FunctionType::get(retTy, signature, false);
-    return InitializeFunction(fnTy, &parameters.parameters,
-                              "xl_program", true, false);
-}
-
-
 Function *CompiledUnit::ExpressionFunction()
 // ----------------------------------------------------------------------------
 //   Create a function to evaluate an XL tree in a given tree
 // ----------------------------------------------------------------------------
 {
-    // We must have verified the types before
-    assert(inference || !"TopLevelFunction called without type check");
+    // We must have verified or at least scanned the types before
+    assert(inference || !"ExpressionFunction called without type check");
 
     llvm_types signature;
     ParameterList parameters(this);

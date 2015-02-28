@@ -56,19 +56,19 @@ Tree *          xl_parameter(text symbol, text type);
 Tree *          xl_parameters_tree(TreeList parameters);
 void            xl_set_documentation(Tree *node, text doc);
 Tree *          xl_native_function(text symbol);
-void            xl_enter_infix(Context *context, text name, native_fn fn,
+void            xl_enter_infix(Context *context, text name, eval_fn fn,
                                Tree *rtype, text t1, text symbol, text t2,
                                text doc);
-void            xl_enter_prefix(Context *context, text name, native_fn fn,
+void            xl_enter_prefix(Context *context, text name, eval_fn fn,
                                 Tree *rtype, TreeList &parameters,
                                 text symbol, text doc);
-void            xl_enter_postfix(Context *context, text name, native_fn fn,
+void            xl_enter_postfix(Context *context, text name, eval_fn fn,
                                  Tree *rtype, TreeList &parameters,
                                  text symbol, text doc);
-void            xl_enter_block(Context *context, text name, native_fn fn,
+void            xl_enter_block(Context *context, text name, eval_fn fn,
                                Tree *rtype,
                                text open, text type, text close, text doc);
-void            xl_enter_form(Context *context, text name, native_fn fn,
+void            xl_enter_form(Context *context, text name, eval_fn fn,
                               Tree *rtype, text form, TreeList &parameters,
                               text doc);
 void            xl_enter_name(Name *name);

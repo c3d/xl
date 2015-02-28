@@ -166,7 +166,7 @@ Tree *xl_native_function(text symbol)
 }
 
 
-void xl_enter_infix(Context *context, text name, native_fn fn, Tree *rtype,
+void xl_enter_infix(Context *context, text name, eval_fn fn, Tree *rtype,
                     text t1, text symbol, text t2, text doc)
 // ----------------------------------------------------------------------------
 //   Enter an infix into the context (called from .tbl files)
@@ -184,7 +184,7 @@ void xl_enter_infix(Context *context, text name, native_fn fn, Tree *rtype,
 }
 
 
-void xl_enter_prefix(Context *context, text name, native_fn fn, Tree *rtype,
+void xl_enter_prefix(Context *context, text name, eval_fn fn, Tree *rtype,
                      TreeList &parameters, text symbol, text doc)
 // ----------------------------------------------------------------------------
 //   Enter a prefix into the context (called from .tbl files)
@@ -213,7 +213,7 @@ void xl_enter_prefix(Context *context, text name, native_fn fn, Tree *rtype,
 }
 
 
-void xl_enter_postfix(Context *context, text name, native_fn fn, Tree *rtype,
+void xl_enter_postfix(Context *context, text name, eval_fn fn, Tree *rtype,
                       TreeList &parameters, text symbol, text doc)
 // ----------------------------------------------------------------------------
 //   Enter a postfdix into the context (called from .tbl files)
@@ -230,7 +230,7 @@ void xl_enter_postfix(Context *context, text name, native_fn fn, Tree *rtype,
 }
 
 
-void xl_enter_block(Context *context, text name, native_fn fn, Tree *rtype,
+void xl_enter_block(Context *context, text name, eval_fn fn, Tree *rtype,
                     text open, text type, text close,
                     text doc)
 // ----------------------------------------------------------------------------
@@ -249,7 +249,7 @@ void xl_enter_block(Context *context, text name, native_fn fn, Tree *rtype,
 }
 
 
-void xl_enter_form(Context *context, text name, native_fn fn,
+void xl_enter_form(Context *context, text name, eval_fn fn,
                    Tree *rtype, text form, TreeList &parameters,
                    text doc)
 // ----------------------------------------------------------------------------
