@@ -166,7 +166,8 @@ struct Scanner
 {
 public:
     Scanner(kstring fileName, Syntax &stx, Positions &pos, Errors &err);
-    Scanner(std::istream &input, Syntax &stx, Positions &pos, Errors &err);
+    Scanner(std::istream &input, Syntax &stx, Positions &pos, Errors &err,
+            kstring fileName = "<stream>");
     Scanner(const Scanner &parent);
     ~Scanner();
     

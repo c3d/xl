@@ -306,7 +306,11 @@ int Main::LoadFile(text file, text modname)
     // Read in standard format if we could not read it from packed format
     if (!tree)
     {
-        Parser parser (*input, syntax, positions, topLevelErrors);
+        // Set the name used for error messages
+        kstring errName = file.c_str();
+        if (file == "-")
+            errName = "<stdin>";
+        Parser parser (*input, syntax, positions, topLevelErrors, errName);
         tree = parser.Parse();
     }
 

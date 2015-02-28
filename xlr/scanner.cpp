@@ -111,7 +111,9 @@ Scanner::Scanner(kstring name, Syntax &stx, Positions &pos, Errors &err)
 }
 
 
-Scanner::Scanner(std::istream &input, Syntax &stx, Positions &pos, Errors &err)
+Scanner::Scanner(std::istream &input,
+                 Syntax &stx, Positions &pos, Errors &err,
+                 kstring fileName)
 // ----------------------------------------------------------------------------
 //   Open the file and make sure it's readable
 // ----------------------------------------------------------------------------
@@ -128,7 +130,7 @@ Scanner::Scanner(std::istream &input, Syntax &stx, Positions &pos, Errors &err)
       mustDeleteInput(false)
 {
     indents.push_back(0);       // We start with an indent of 0
-    position = positions.OpenFile("<stream>");
+    position = positions.OpenFile(fileName);
     if (input.fail())
         err.Log(Error("Input stream cannot be read: $1", position)
                 .Arg(strerror(errno)));

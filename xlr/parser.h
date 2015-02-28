@@ -98,8 +98,9 @@ public:
           syntax(stx), errors(err), pending(tokNONE),
           openquote(), closequote(), comments(), commented(NULL),
           hadSpaceBefore(false), hadSpaceAfter(false), beginningLine(true) {}
-    Parser(std::istream &input, Syntax &stx, Positions &pos, Errors &err)
-        : scanner(input, stx, pos, err),
+    Parser(std::istream &input, Syntax &stx, Positions &pos, Errors &err,
+           kstring name="<stream>")
+        : scanner(input, stx, pos, err, name),
           syntax(stx), errors(err), pending(tokNONE),
           openquote(), closequote(), comments(), commented(NULL),
           hadSpaceBefore(false), hadSpaceAfter(false), beginningLine(true) {}
