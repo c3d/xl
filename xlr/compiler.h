@@ -42,9 +42,9 @@
 
 #include "tree.h"
 #include "context.h"
+#include "llvm-crap.h"
 #include <map>
 #include <set>
-#include <llvm/Support/IRBuilder.h>
 
 
 
@@ -53,26 +53,6 @@
 //    Forward declarations
 // 
 // ============================================================================
-
-namespace llvm
-// ----------------------------------------------------------------------------
-//   Forward classes from LLVM
-// ----------------------------------------------------------------------------
-{
-    class LLVMContext;
-    class Module;
-    class ExecutionEngine;
-    class FunctionPassManager;
-    class PassManager;
-    class StructType;
-    class PointerType;
-    class FunctionType;
-    class BasicBlock;
-    class Value;
-    class Function;
-    class GlobalValue;
-    class Type;
-};
 
 XL_BEGIN
 
@@ -83,7 +63,7 @@ struct Options;
 struct CompilerLLVMTableEntry;
 struct RewriteCandidate;
 
-typedef const llvm::Type *                     llvm_type;
+// llvm_type defined in llvm-crap.h, 3.0 API breakage
 typedef std::vector<llvm_type>                 llvm_types;
 typedef llvm::Value *                          llvm_value;
 typedef std::vector<llvm_value>                llvm_values;
@@ -140,7 +120,7 @@ struct Compiler
                                            Tree *from, Tree *to,
                                            eval_fn code);
     llvm::Function *          ExternFunction(kstring name, void *address,
-                                             const llvm::Type *retType,
+                                             llvm_type retType,
                                              int parmCount, ...);
     adapter_fn                ArrayToArgsAdapter(uint numtrees);
     llvm::Value *             EnterGlobal(Name *name, Name_p *address);
@@ -168,19 +148,19 @@ struct Compiler
 
 
 public:
-    llvm::LLVMContext         *llvm;
+    llvm::LLVMContext         &llvm;
     llvm::Module              *module;
     llvm::ExecutionEngine     *runtime;
     llvm::FunctionPassManager *optimizer;
     llvm::PassManager         *moduleOptimizer;
-    const llvm::IntegerType   *booleanTy;
-    const llvm::IntegerType   *integerTy;
-    const llvm::IntegerType   *integer8Ty;
-    const llvm::IntegerType   *integer16Ty;
-    const llvm::IntegerType   *integer32Ty;
-    const llvm::Type          *realTy;
-    const llvm::Type          *real32Ty;
-    const llvm::IntegerType   *characterTy;
+    llvm_integer_type          booleanTy;
+    llvm_integer_type          integerTy;
+    llvm_integer_type          integer8Ty;
+    llvm_integer_type          integer16Ty;
+    llvm_integer_type          integer32Ty;
+    llvm_type                  realTy;
+    llvm_type                  real32Ty;
+    llvm_integer_type          characterTy;
     llvm::PointerType         *charPtrTy;
     llvm::StructType          *textTy;
     llvm::StructType          *treeTy;
@@ -232,7 +212,7 @@ public:
     llvm::Function            *xl_fill_infix;
     llvm::Function            *xl_integer2real;
     llvm::Function            *xl_array_index;
-    llvm::GlobalValue         *xl_recursion_count;
+    llvm::Constant            *xl_recursion_count_ptr;
     functions_map              builtins;
     functions_map              functions;
     adapter_map                array_to_args_adapters;
@@ -251,8 +231,8 @@ public:
 // 
 // ============================================================================
 
-#define LLVM_INTTYPE(t)         llvm::IntegerType::get(*llvm, sizeof(t) * 8)
-#define LLVM_BOOLTYPE           llvm::Type::getInt1Ty(*llvm)
+#define LLVM_INTTYPE(t)         llvm::IntegerType::get(llvm, sizeof(t) * 8)
+#define LLVM_BOOLTYPE           llvm::Type::getInt1Ty(llvm)
 
 // Index in data structures of fields in Tree types
 #define TAG_INDEX           0

@@ -56,28 +56,7 @@
 #include "expred.h"
 #include "errors.h"
 #include "types.h"
-
-#include <llvm/Analysis/Verifier.h>
-#include <llvm/CallingConv.h>
-#include "llvm/Constants.h"
-#include "llvm/LLVMContext.h"
-#include "llvm/DerivedTypes.h"
-#include "llvm/ExecutionEngine/JIT.h"
-#include "llvm/ExecutionEngine/GenericValue.h"
-#include <llvm/ExecutionEngine/ExecutionEngine.h>
-#include "llvm/Instructions.h"
-#include "llvm/Module.h"
-#include <llvm/PassManager.h>
-#include "llvm/Support/raw_ostream.h"
-#include <llvm/Support/IRBuilder.h>
-#include <llvm/Support/StandardPasses.h>
-#include <llvm/Support/DynamicLibrary.h>
-#include <llvm/Target/TargetData.h>
-#include <llvm/Target/TargetSelect.h>
-#include <llvm/Target/TargetOptions.h>
-#include <llvm/Transforms/Scalar.h>
-#include <llvm/Transforms/Utils/BasicBlockUtils.h>
-#include <llvm/Support/raw_ostream.h>
+#include "llvm-crap.h"
 #include <stdio.h>
 
 
@@ -163,10 +142,10 @@ Function *CompiledUnit::ClosureFunction(Tree *expr, TypeInference *types)
     inference = types;
 
     // We have a closure type that we will build as we evaluate expression
-    closureTy = OpaqueType::get(*llvm);
+    closureTy = LLVMS_getOpaqueType(llvm);
     static char buffer[80]; static int count = 0;
     snprintf(buffer, 80, "closure%d", count++);
-    compiler->module->addTypeName(buffer, closureTy);
+    LLVMS_SetName(compiler->module, closureTy, buffer);
 
     // Add a single parameter to the signature
     llvm_types signature;
@@ -282,11 +261,11 @@ Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
     if (!isC)
     {
         // Create function entry point, where we will have all allocas
-        allocabb = BasicBlock::Create(*llvm, "allocas", function);
+        allocabb = BasicBlock::Create(llvm, "allocas", function);
         data = new IRBuilder<> (allocabb);
 
         // Create entry block for the function
-        entrybb = BasicBlock::Create(*llvm, "entry", function);
+        entrybb = BasicBlock::Create(llvm, "entry", function);
         code = new IRBuilder<> (entrybb);
 
         // Build storage for the return value
@@ -308,7 +287,7 @@ Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
         }
 
         // Create the exit basic block and return statement
-        exitbb = BasicBlock::Create(*llvm, "exit", function);
+        exitbb = BasicBlock::Create(llvm, "exit", function);
         IRBuilder<> exitcode(exitbb);
         Value *retVal = exitcode.CreateLoad(returned, "retval");
         exitcode.CreateRet(retVal);
@@ -635,6 +614,7 @@ llvm_value CompiledUnit::Closure(Name *name, Tree *expr)
     // Record the function that we build
     text fkey = compiler->ClosureKey(expr, context);
     llvm_function &function = compiler->FunctionFor(fkey);
+    assert (function == NULL);
 
     llvm_type closureType = NULL;
     llvm_value stackPtr = NULL;
@@ -755,8 +735,7 @@ eval_fn CompiledUnit::Finalize(bool createCode)
         }
 
         // Build the structure type and unify it with opaque type used in decl
-        llvm_type structTy = StructType::get(*llvm, sig);
-        cast<OpaqueType>(closureTy.get())->refineAbstractTypeTo(structTy);
+        closureTy = LLVMS_Struct(llvm, closureTy, sig);
 
         // Load the elements from the closure
         Function::arg_iterator args = function->arg_begin();
@@ -1016,11 +995,11 @@ llvm_type CompiledUnit::StructureType(llvm_types &signature, Tree *source)
         return found;
 
     // Build the corresponding structure type
-    StructType *stype = StructType::get(*llvm, signature);
+    StructType *stype = StructType::get(llvm, signature);
     text tname = "boxed";
     IFTRACE(labels)
         tname += "[" + text(*source) + "]";
-    compiler->module->addTypeName(tname, stype);
+    LLVMS_SetName(compiler->module, stype, tname);
 
     // Record boxing and unboxing for that particular tree
     machineType[source] = stype;
@@ -1161,9 +1140,9 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
         assert(req == compiler->treePtrTy || req == compiler->nameTreePtrTy);
 
         // Insert code corresponding to value ? xl_true : xl_false
-        BasicBlock *isTrue = BasicBlock::Create(*llvm, "isTrue", function);
-        BasicBlock *isFalse = BasicBlock::Create(*llvm, "isFalse", function);
-        BasicBlock *exit = BasicBlock::Create(*llvm, "booleanBoxed", function);
+        BasicBlock *isTrue = BasicBlock::Create(llvm, "isTrue", function);
+        BasicBlock *isFalse = BasicBlock::Create(llvm, "isFalse", function);
+        BasicBlock *exit = BasicBlock::Create(llvm, "booleanBoxed", function);
         Value *ptr = data->CreateAlloca(compiler->treePtrTy);
         code->CreateCondBr(value, isTrue, isFalse);
 

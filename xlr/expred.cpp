@@ -44,11 +44,7 @@
 #include "save.h"
 #include "errors.h"
 #include "renderer.h"
-
-#include <llvm/Support/IRBuilder.h>
-#include <llvm/GlobalVariable.h>
-#include <llvm/Function.h>
-#include "llvm/Support/raw_ostream.h"
+#include "llvm-crap.h"
 
 XL_BEGIN
 
@@ -247,7 +243,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
     assert(found != rcalls.end() || !"Type analysis botched on expression");
 
     Function *function = unit->function;
-    LLVMContext &llvm = *unit->llvm;
+    LLVMContext &llvm = unit->llvm;
     RewriteCalls *rc = (*found).second;
     RewriteCandidates &calls = rc->candidates;
 
@@ -396,7 +392,7 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
     {
         llvm_value function = unit->Compile(cand, args);
         if (function)
-            result = unit->code->CreateCall(function, args.begin(), args.end());
+            result = unit->code->CreateCall(function, LLVMS_ARGS(args));
     }
 
     return result;

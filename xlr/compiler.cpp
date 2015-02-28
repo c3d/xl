@@ -40,6 +40,7 @@
 #include "compiler.h"
 #include "compiler-gc.h"
 #include "compiler-llvm.h"
+#include "main.h"
 #include "unit.h"
 #include "args.h"
 #include "parms.h"
@@ -50,36 +51,11 @@
 #include "errors.h"
 #include "types.h"
 #include "flight_recorder.h"
-#include "main.h"
+#include "llvm-crap.h"
 
 #include <iostream>
 #include <sstream>
 #include <cstdarg>
-
-#include <llvm/Analysis/Verifier.h>
-#include <llvm/CallingConv.h>
-#include "llvm/Constants.h"
-#include "llvm/LLVMContext.h"
-#include "llvm/DerivedTypes.h"
-#include "llvm/ExecutionEngine/JIT.h"
-#include "llvm/ExecutionEngine/GenericValue.h"
-#include <llvm/ExecutionEngine/ExecutionEngine.h>
-#include "llvm/Instructions.h"
-#include "llvm/Module.h"
-#include <llvm/PassManager.h>
-#include "llvm/Support/raw_ostream.h"
-#include <llvm/Support/IRBuilder.h>
-#include <llvm/Support/StandardPasses.h>
-#include <llvm/Support/DynamicLibrary.h>
-#include <llvm/Target/TargetData.h>
-#include <llvm/Target/TargetSelect.h>
-#include <llvm/Target/TargetOptions.h>
-#include <llvm/Transforms/Scalar.h>
-#include <llvm/Transforms/Utils/BasicBlockUtils.h>
-#include <llvm/Support/raw_ostream.h>
-#include <llvm/Support/Signals.h>
-#include <llvm/Support/CommandLine.h>
-#include <llvm/ADT/Statistic.h>
 
 XL_BEGIN
 
@@ -114,7 +90,8 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Initialize the various instances we may need
 // ----------------------------------------------------------------------------
-    : module(NULL), runtime(NULL), optimizer(NULL), moduleOptimizer(NULL),
+    : llvm(llvm::getGlobalContext()),
+      module(NULL), runtime(NULL), optimizer(NULL), moduleOptimizer(NULL),
       booleanTy(NULL),
       integerTy(NULL), integer8Ty(NULL), integer16Ty(NULL), integer32Ty(NULL),
       realTy(NULL), real32Ty(NULL),
@@ -144,7 +121,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
       xl_fill_prefix(NULL), xl_fill_postfix(NULL), xl_fill_infix(NULL),
       xl_integer2real(NULL),
       xl_array_index(NULL),
-      xl_recursion_count(NULL)
+      xl_recursion_count_ptr(NULL)
 {
     std::vector<char *> llvmArgv;
     llvmArgv.push_back(argv[0]);
@@ -172,24 +149,8 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     Allocator<Postfix>  ::Singleton()->AddListener(cgcl);
     Allocator<Block>    ::Singleton()->AddListener(cgcl);
 
-    // Set initial target options
-    JITExceptionHandling = false;  // Bug #1026
-    JITEmitDebugInfo = true;
-    UnwindTablesMandatory = true;
-    NoFramePointerElim = true;
-
-    // Initialize native target (new features)
-    InitializeNativeTarget();
-
-    // LLVM Context (new feature)
-    llvm = new llvm::LLVMContext();
-
-    // Create module where we will build the code
-    module = new Module(moduleName, *llvm);
-
-    // Select "fast JIT" if optimize level is 0, optimizing JIT otherwise
-    runtime = EngineBuilder(module).create();
-    runtime->DisableLazyCompilation(true);
+    // Create the runtime environment for just-in-time compilation
+    runtime = LLVMS_InitializeJIT(llvm, moduleName, &module);
 
     // Setup the optimizer - REVISIT: Adjust with optimization level
     optimizer = new FunctionPassManager(module);
@@ -200,41 +161,41 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     runtime->InstallLazyFunctionCreator(unresolved_external);
 
     // Get the basic types
-    booleanTy = Type::getInt1Ty(*llvm);
-    integerTy = llvm::IntegerType::get(*llvm, 64);
-    integer8Ty = llvm::IntegerType::get(*llvm, 8);
-    integer16Ty = llvm::IntegerType::get(*llvm, 16);
-    integer32Ty = llvm::IntegerType::get(*llvm, 32);
+    booleanTy = Type::getInt1Ty(llvm);
+    integerTy = llvm::IntegerType::get(llvm, 64);
+    integer8Ty = llvm::IntegerType::get(llvm, 8);
+    integer16Ty = llvm::IntegerType::get(llvm, 16);
+    integer32Ty = llvm::IntegerType::get(llvm, 32);
     characterTy = LLVM_INTTYPE(char);
-    realTy = Type::getDoubleTy(*llvm);
-    real32Ty = Type::getFloatTy(*llvm);
+    realTy = Type::getDoubleTy(llvm);
+    real32Ty = Type::getFloatTy(llvm);
     charPtrTy = PointerType::get(LLVM_INTTYPE(char), 0);
 
     // Create the 'text' type, assume it contains a single char *
-    std::vector<const Type *> textElements;
+    llvm_types textElements;
     textElements.push_back(charPtrTy);             // _M_p in gcc's impl
-    textTy = StructType::get(*llvm, textElements); // text
+    textTy = StructType::get(llvm, textElements); // text
 
     // Create the Info and Symbol pointer types
-    PATypeHolder structInfoTy = OpaqueType::get(*llvm); // struct Info
+    OpaqueType *structInfoTy = LLVMS_getOpaqueType(llvm);// struct Info
     infoPtrTy = PointerType::get(structInfoTy, 0);      // Info *
-    PATypeHolder structCtxTy = OpaqueType::get(*llvm);  // struct Context
+    OpaqueType *structCtxTy = LLVMS_getOpaqueType(llvm);// struct Context
     contextPtrTy = PointerType::get(structCtxTy, 0);    // Context *
 
     // Create the Tree and Tree pointer types
-    PATypeHolder structTreeTy = OpaqueType::get(*llvm); // struct Tree
+    llvm_struct structTreeTy = LLVMS_getOpaqueType(llvm);// struct Tree
     treePtrTy = PointerType::get(structTreeTy, 0);      // Tree *
     treePtrPtrTy = PointerType::get(treePtrTy, 0);      // Tree **
 
     // Create the native_fn type
-    std::vector<const Type *> nativeParms;
+    llvm_types nativeParms;
     nativeParms.push_back(contextPtrTy);
     nativeParms.push_back(treePtrTy);
     nativeTy = FunctionType::get(treePtrTy, nativeParms, false);
     nativeFnTy = PointerType::get(nativeTy, 0);
 
     // Create the eval_fn type
-    std::vector<const Type *> evalParms;
+    llvm_types evalParms;
     evalParms.push_back(contextPtrTy);
     evalParms.push_back(treePtrTy);
     evalTy = FunctionType::get(treePtrTy, evalParms, false);
@@ -251,86 +212,83 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     XL_CASSERT(sizeof(LocalTree) == sizeof(Tree));
                
     // Create the Tree type
-    std::vector<const Type *> treeElements;
+    llvm_types treeElements;
     treeElements.push_back(LLVM_INTTYPE(ulong));           // tag
     treeElements.push_back(infoPtrTy);                     // info
-    treeElements.push_back(evalFnTy);                      // code
-    treeTy = StructType::get(*llvm, treeElements);      // struct Tree {}
-    cast<OpaqueType>(structTreeTy.get())->refineAbstractTypeTo(treeTy);
-    treeTy = cast<StructType> (structTreeTy.get());
+    treeTy = LLVMS_Struct(llvm, structTreeTy, treeElements);
 
     // Create the Integer type
-    std::vector<const Type *> integerElements = treeElements;
-    integerElements.push_back(LLVM_INTTYPE(longlong));       // value
-    integerTreeTy = StructType::get(*llvm, integerElements); // struct Integer
-    integerTreePtrTy = PointerType::get(integerTreeTy,0);    // Integer *
+    llvm_types integerElements = treeElements;
+    integerElements.push_back(LLVM_INTTYPE(longlong));      // value
+    integerTreeTy = StructType::get(llvm, integerElements); // struct Integer
+    integerTreePtrTy = PointerType::get(integerTreeTy,0);   // Integer *
 
     // Create the Real type
-    std::vector<const Type *> realElements = treeElements;
-    realElements.push_back(Type::getDoubleTy(*llvm));    // value
-    realTreeTy = StructType::get(*llvm, realElements);   // struct Real{}
+    llvm_types realElements = treeElements;
+    realElements.push_back(Type::getDoubleTy(llvm));     // value
+    realTreeTy = StructType::get(llvm, realElements);    // struct Real{}
     realTreePtrTy = PointerType::get(realTreeTy, 0);     // Real *
 
     // Create the Text type
-    std::vector<const Type *> textTreeElements = treeElements;
-    textTreeElements.push_back(textTy);                        // value
-    textTreeElements.push_back(textTy);                        // opening
-    textTreeElements.push_back(textTy);                        // closing
-    textTreeTy = StructType::get(*llvm, textTreeElements);     // struct Text
-    textTreePtrTy = PointerType::get(textTreeTy, 0);           // Text *
+    llvm_types textTreeElements = treeElements;
+    textTreeElements.push_back(textTy);                  // value
+    textTreeElements.push_back(textTy);                  // opening
+    textTreeElements.push_back(textTy);                  // closing
+    textTreeTy = StructType::get(llvm, textTreeElements);// struct Text
+    textTreePtrTy = PointerType::get(textTreeTy, 0);     // Text *
 
     // Create the Name type
-    std::vector<const Type *> nameElements = treeElements;
+    llvm_types nameElements = treeElements;
     nameElements.push_back(textTy);
-    nameTreeTy = StructType::get(*llvm, nameElements);    // struct Name{}
-    nameTreePtrTy = PointerType::get(nameTreeTy, 0);      // Name *
+    nameTreeTy = StructType::get(llvm, nameElements);    // struct Name{}
+    nameTreePtrTy = PointerType::get(nameTreeTy, 0);     // Name *
 
     // Create the Block type
-    std::vector<const Type *> blockElements = treeElements;
+    llvm_types blockElements = treeElements;
     blockElements.push_back(treePtrTy);                  // Tree *
     blockElements.push_back(textTy);                     // opening
     blockElements.push_back(textTy);                     // closing
-    blockTreeTy = StructType::get(*llvm, blockElements); // struct Block
+    blockTreeTy = StructType::get(llvm, blockElements);  // struct Block
     blockTreePtrTy = PointerType::get(blockTreeTy, 0);   // Block *
 
     // Create the Prefix type
-    std::vector<const Type *> prefixElements = treeElements;
+    llvm_types prefixElements = treeElements;
     prefixElements.push_back(treePtrTy);                   // Tree *
     prefixElements.push_back(treePtrTy);                   // Tree *
-    prefixTreeTy = StructType::get(*llvm, prefixElements); // struct Prefix
+    prefixTreeTy = StructType::get(llvm, prefixElements);  // struct Prefix
     prefixTreePtrTy = PointerType::get(prefixTreeTy, 0);   // Prefix *
 
     // Create the Postfix type
-    std::vector<const Type *> postfixElements = prefixElements;
-    postfixTreeTy = StructType::get(*llvm, postfixElements); // Postfix
+    llvm_types postfixElements = prefixElements;
+    postfixTreeTy = StructType::get(llvm, postfixElements);  // Postfix
     postfixTreePtrTy = PointerType::get(postfixTreeTy, 0);   // Postfix *
 
     // Create the Infix type
-    std::vector<const Type *> infixElements = prefixElements;
+    llvm_types infixElements = prefixElements;
     infixElements.push_back(textTy);                        // name
-    infixTreeTy = StructType::get(*llvm, infixElements);    // Infix
+    infixTreeTy = StructType::get(llvm, infixElements);     // Infix
     infixTreePtrTy = PointerType::get(infixTreeTy, 0);      // Infix *
 
     // Record the type names
-    module->addTypeName("boolean", booleanTy);
-    module->addTypeName("integer", integerTy);
-    module->addTypeName("character", characterTy);
-    module->addTypeName("real", realTy);
-    module->addTypeName("text", charPtrTy);
+    LLVMS_SetName(module, booleanTy, "boolean");
+    LLVMS_SetName(module, integerTy, "integer");
+    LLVMS_SetName(module, characterTy, "character");
+    LLVMS_SetName(module, realTy, "real");
+    LLVMS_SetName(module, charPtrTy, "text");
 
-    module->addTypeName("Tree", treeTy);
-    module->addTypeName("Integer", integerTreeTy);
-    module->addTypeName("Real", realTreeTy);
-    module->addTypeName("Text", textTreeTy);
-    module->addTypeName("Block", blockTreeTy);
-    module->addTypeName("Name", nameTreeTy);
-    module->addTypeName("Prefix", prefixTreeTy);
-    module->addTypeName("Postfix", postfixTreeTy);
-    module->addTypeName("Infix", infixTreeTy);
-    module->addTypeName("eval_fn", evalTy);
-    module->addTypeName("native_fn", nativeTy);
-    module->addTypeName("Info*", infoPtrTy);
-    module->addTypeName("Context*", contextPtrTy);
+    LLVMS_SetName(module, treeTy, "Tree");
+    LLVMS_SetName(module, integerTreeTy, "Integer");
+    LLVMS_SetName(module, realTreeTy, "Real");
+    LLVMS_SetName(module, textTreeTy, "Text");
+    LLVMS_SetName(module, blockTreeTy, "Block");
+    LLVMS_SetName(module, nameTreeTy, "Name");
+    LLVMS_SetName(module, prefixTreeTy, "Prefix");
+    LLVMS_SetName(module, postfixTreeTy, "Postfix");
+    LLVMS_SetName(module, infixTreeTy, "Infix");
+    LLVMS_SetName(module, evalTy, "eval_fn");
+    LLVMS_SetName(module, nativeTy, "native_fn");
+    LLVMS_SetName(module, infoPtrTy, "Info*");
+    LLVMS_SetName(module, contextPtrTy, "Context*");
 
     // Create a reference to the evaluation function
 #define FN(x) #x, (void *) XL::x
@@ -384,11 +342,9 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
                                     contextPtrTy, treePtrTy, treePtrTy);
 
     // Create a global value used to count recursions
-    Constant *zero = ConstantInt::get(LLVM_INTTYPE(uint), 0);
-    xl_recursion_count = new GlobalVariable (*module,
-                                             LLVM_INTTYPE(uint), false,
-                                             GlobalVariable::ExternalLinkage,
-                                             zero, "xl_recursion_count");
+    llvm::PointerType *uintPtrTy = PointerType::get(LLVM_INTTYPE(uint), 0);
+    APInt addr(64, (uint64_t) &xl_recursion_count);
+    xl_recursion_count_ptr = Constant::getIntegerValue(uintPtrTy, addr);
 
     // Initialize the llvm_entries table
     for (CompilerLLVMTableEntry *le = CompilerLLVMTable; le->name; le++)
@@ -401,7 +357,6 @@ Compiler::~Compiler()
 //    Destructor deletes the various things we had created
 // ----------------------------------------------------------------------------
 {
-    delete llvm;
     delete optimizer;
     delete moduleOptimizer;
 }
@@ -413,10 +368,8 @@ void Compiler::Dump()
 // ----------------------------------------------------------------------------
 {
     IFTRACE(llvmdump)
-    {
         llvm::errs() << "; MODULE:\n" << *module << "\n";
-        llvm::PrintStatistics(llvm::errs());
-    }
+    llvm::PrintStatistics(llvm::errs());
 }
 
 
@@ -452,8 +405,6 @@ static inline void createXLFunctionPasses(PassManagerBase *PM)
 //   Add XL function passes
 // ----------------------------------------------------------------------------
 {
-     createStandardAliasAnalysisPasses(PM);
-
      PM->add(createInstructionCombiningPass()); // Clean up after IPCP & DAE
      PM->add(createCFGSimplificationPass()); // Clean up after IPCP & DAE
      
@@ -461,7 +412,9 @@ static inline void createXLFunctionPasses(PassManagerBase *PM)
     // Break up aggregate allocas, using SSAUpdater.
      PM->add(createScalarReplAggregatesPass(-1, false));
      PM->add(createEarlyCSEPass());              // Catch trivial redundancies
-     PM->add(createSimplifyLibCallsPass());    // Library Call Optimizations
+#if LLVM_VERSION < 342
+     PM->add(createSimplifyLibCallsPass());      // Library Call Optimizations
+#endif
      PM->add(createJumpThreadingPass());         // Thread jumps.
      PM->add(createCorrelatedValuePropagationPass()); // Propagate conditionals
      PM->add(createCFGSimplificationPass());     // Merge & remove BBs
@@ -496,32 +449,14 @@ void Compiler::Setup(Options &options)
 //   Setup the compiler after we have parsed the options
 // ----------------------------------------------------------------------------
 {
-    uint optimize_level = options.optimize_level;
-
-    RECORD(COMPILER, "Compiler setup", "opt", optimize_level);
-
-    // If we use the old compiler, we need lazy compilation, see bug #718
-    if (optimize_level == 1)
-        runtime->DisableLazyCompilation(false);
-
-    optimize_level = 99;
-    createStandardModulePasses(moduleOptimizer, optimize_level,
-                               true,    /* Optimize size */
-                               true,    /* Unit at a time */
-                               true,    /* Unroll loops */
-                               true,    /* Simplify lib calls */
-                               false,   /* Have exception */
-                               llvm::createFunctionInliningPass());
-    createStandardLTOPasses(moduleOptimizer,
-                            true, /* Internalize */
-                            true, /* RunInliner */
-                            true  /* Verify Each */);
-
-    createStandardFunctionPasses(optimizer, optimize_level);
+    uint optLevel = options.optimize_level;
+    RECORD(COMPILER, "Compiler setup", "opt", optLevel);
+    LLVMS_SetupOpts(moduleOptimizer, optimizer, optLevel);
     createXLFunctionPasses(optimizer);
 
-    // Adjust frame pointer elimination based on the -g option
-    NoFramePointerElim = options.debug;
+    // If we use the old compiler, we need lazy compilation, see bug #718
+    if (optLevel == 1)
+        runtime->DisableLazyCompilation(false);
 }
 
 
@@ -609,9 +544,11 @@ void Compiler::SetTreeGlobal(Tree *tree, llvm::GlobalValue *global, void *addr)
 }
 
 
-Function *Compiler::EnterBuiltin(text name, Tree *from, Tree *to, eval_fn code)
+Function *Compiler::EnterBuiltin(text name,
+                                 Tree *from, Tree *to,
+                                 eval_fn code)
 // ----------------------------------------------------------------------------
-//   Enter a built-in based on a form
+//   Declare a built-in function
 // ----------------------------------------------------------------------------
 //   The input is not technically an eval_fn, but has as many parameters as
 //   there are variables in the form
@@ -642,7 +579,7 @@ Function *Compiler::EnterBuiltin(text name, Tree *from, Tree *to, eval_fn code)
     else
     {
         // Create the LLVM function
-        std::vector<const Type *> parmTypes;
+        llvm_types parmTypes;
         parmTypes.push_back(contextPtrTy); // First arg is context pointer
         parmTypes.push_back(treePtrTy);    // Second arg is self
         for (Parameters::iterator p = parms.begin(); p != parms.end(); p++)
@@ -691,7 +628,7 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
 
     // Generate the function type:
     // Tree *generated(Context *, native_fn, Tree *, Tree **)
-    std::vector<const Type *> parms;
+    llvm_types parms;
     parms.push_back(nativeFnTy);
     parms.push_back(contextPtrTy);
     parms.push_back(treePtrTy);
@@ -701,7 +638,7 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
                                         "xl_adapter", module);
 
     // Generate the function type for the called function
-    std::vector<const Type *> called;
+    llvm_types called;
     called.push_back(contextPtrTy);
     called.push_back(treePtrTy);
     for (uint a = 0; a < numargs; a++)
@@ -710,7 +647,7 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
     PointerType *calledPtrType = PointerType::get(calledType, 0);
 
     // Create the entry for the function we generate
-    BasicBlock *entry = BasicBlock::Create(*llvm, "adapt", adapter);
+    BasicBlock *entry = BasicBlock::Create(llvm, "adapt", adapter);
     IRBuilder<> code(entry);
 
     // Read the arguments from the function we are generating
@@ -737,7 +674,7 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
     }
 
     // Call the function
-    Value *retVal = code.CreateCall(fnTyped, outArgs.begin(), outArgs.end());
+    Value *retVal = code.CreateCall(fnTyped, LLVMS_ARGS(outArgs));
 
     // Return the result
     code.CreateRet(retVal);
@@ -760,7 +697,7 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
 
 
 Function *Compiler::ExternFunction(kstring name, void *address,
-                                   const Type *retType, int parmCount, ...)
+                                   llvm_type retType, int parmCount, ...)
 // ----------------------------------------------------------------------------
 //   Return a Function for some given external symbol
 // ----------------------------------------------------------------------------
@@ -773,7 +710,7 @@ Function *Compiler::ExternFunction(kstring name, void *address,
                   << " C" << address;
 
     va_list va;
-    std::vector<const Type *> parms;
+    llvm_types parms;
     bool isVarArg = parmCount < 0;
     if (isVarArg)
         parmCount = -parmCount;
@@ -865,8 +802,8 @@ GlobalVariable *Compiler::TextConstant(text value)
     text_constants_map::iterator found = text_constants.find(value);
     if (found == text_constants.end())
     {
-        Constant *refVal = ConstantArray::get(*llvm, value);
-        const Type *refValTy = refVal->getType();
+        Constant *refVal = LLVMS_TextConstant(llvm, value);
+        llvm_type refValTy = refVal->getType();
         global = new GlobalVariable(*module, refValTy, true,
                                     GlobalValue::InternalLinkage,
                                     refVal, "text");

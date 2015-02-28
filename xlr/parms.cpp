@@ -41,9 +41,7 @@
 #include "args.h"
 #include "unit.h"
 #include "errors.h"
-
-#include "llvm/DerivedTypes.h"
-#include "llvm/Function.h"
+#include "llvm-crap.h"
 
 XL_BEGIN
 
