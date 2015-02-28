@@ -65,3 +65,21 @@ what it represents. Specifically:
   and its right node being an `;` infix, where the left and right node
   are hash-balanced children declarations.
 
+
+
+XL2 vs. XLR
+===========
+
+The current work happens in the XLR directory, which originally was
+the runtime subset of XL. It was supposed to be simpler and more
+lightweight variant of the language, used only as a back-end language
+for dynamic code generation, basically a way to connect the front-end
+with LLVM. It turns out that even very simple and lightweight makes
+for a quite useful language.
+
+So at this point in time, the "higher-level" version, XL2, has been
+put largely on hold. It may be revived one day for those who like a
+more Algolish/Adaesque syntax. It did offer a number of interesting
+features, notably the notion of "true generic type". But at this
+point, I believe that none of the interesting features in XL2 is hard
+to replicate dynamically in XLR. Time will tell.
