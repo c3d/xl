@@ -386,7 +386,7 @@ bool TypeInference::Extern(Tree *what)
 }
 
 
-static Tree *lookupRewriteCalls(Infix *sc, Tree *what, Infix *entry, void *i)
+static Tree *lookupRewriteCalls(Prefix *sc, Tree *what, Infix *entry, void *i)
 // ----------------------------------------------------------------------------
 //   Used to check if RewriteCalls pass
 // ----------------------------------------------------------------------------

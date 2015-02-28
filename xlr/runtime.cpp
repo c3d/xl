@@ -2006,9 +2006,9 @@ Tree *xl_index(Context *context, Tree *data, Tree *indexTree)
         std::cerr << "Index " << data << "[" << indexTree << "]\n";
 
     data = context->Evaluate(data);
-    Infix_p syms = new Infix(";", data, xl_nil, data->Position());
+    Prefix_p syms = new Prefix(xl_nil, data, data->Position());
     Context_p scope = new Context(syms);
-    return context->Bound(indexTree);
+    return scope->Bound(indexTree);
 }
 
 

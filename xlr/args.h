@@ -101,7 +101,7 @@ struct RewriteCalls
 
     enum BindingStrength { FAILED, POSSIBLE, PERFECT };
 
-    Tree *              Check(Infix *scope, Tree *value, Infix *candidate);
+    Tree *              Check(Prefix *scope, Tree *value, Infix *candidate);
     BindingStrength     Bind(Context *context,
                              Tree *ref, Tree *what, RewriteCandidate &rc);
 

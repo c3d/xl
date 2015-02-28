@@ -158,9 +158,9 @@
         xl_##symbol = n;                        \
         if (n == xl_nil)                        \
         {                                       \
-            Infix *infix = context->symbols;    \
-            infix->left = n;                    \
-            infix->right = n;                   \
+            Prefix *globals = context->symbols; \
+            globals->left = n;                  \
+            globals->right = n;                 \
         }                                       \
         xl_enter_global(MAIN, n, &xl_##symbol); \
         context->Define(n, n);                  \

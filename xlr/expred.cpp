@@ -101,7 +101,7 @@ llvm_value CompileExpression::DoName(Name *what)
 //   Compile a name
 // ----------------------------------------------------------------------------
 {
-    Infix_p    where;
+    Prefix_p   where;
     Infix_p    rewrite;
     Context   *context  = unit->context;
     Tree      *existing = context->Bound(what, true, &rewrite, &where);

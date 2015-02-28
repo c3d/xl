@@ -84,7 +84,7 @@ llvm_value RewriteBinding::Closure(CompiledUnit *unit)
 }
 
 
-Tree *RewriteCalls::Check (Infix *scope,
+Tree *RewriteCalls::Check (Prefix *scope,
                            Tree *what,
                            Infix *candidate)
 // ----------------------------------------------------------------------------
@@ -98,7 +98,6 @@ Tree *RewriteCalls::Check (Infix *scope,
 
     // Create local type inference deriving from ours
     Context_p childContext = new Context(scope);
-    childContext->CreateScope();
     Context_p valueContext = inference->context;
     TypeInference_p childInference = new TypeInference(valueContext, inference);
 

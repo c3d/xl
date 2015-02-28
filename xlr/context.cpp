@@ -66,8 +66,7 @@ XL_BEGIN
 //
 // ============================================================================
 
-#define SCOPE_NAME      "\n"
-#define ENTRY_NAME      ";"
+#define ENTRY_NAME      "\n"
 #define CHILDREN_NAME   ";"
 
 
@@ -77,7 +76,7 @@ Context::Context()
 // ----------------------------------------------------------------------------
     : symbols()
 {
-    symbols = new Infix(SCOPE_NAME, xl_nil, xl_nil);
+    symbols = new Prefix(xl_nil, xl_nil);
 }
 
 
@@ -99,7 +98,7 @@ Context::Context(const Context &source)
 {}
 
 
-Context::Context(Infix *symbols)
+Context::Context(Prefix *symbols)
 // ----------------------------------------------------------------------------
 //   Constructor from a known symbol table
 // ----------------------------------------------------------------------------
@@ -126,7 +125,7 @@ void Context::CreateScope(TreePosition pos)
 //    Add a local scope to the current context
 // ----------------------------------------------------------------------------
 {
-    symbols = new Infix(SCOPE_NAME, xl_nil, symbols, pos);
+    symbols = new Prefix(symbols, xl_nil, pos);
 }
 
 
@@ -135,7 +134,7 @@ void Context::PopScope()
 //   Remove the innermost local scope
 // ----------------------------------------------------------------------------
 {
-    if (Infix *enclosing = symbols->right->AsInfix())
+    if (Prefix *enclosing = symbols->left->AsPrefix())
         symbols = enclosing;
 }
 
@@ -145,7 +144,7 @@ Context *Context::Parent()
 //   Return the parent context
 // ----------------------------------------------------------------------------
 {
-    if (Infix *psyms = symbols->right->AsInfix())
+    if (Prefix *psyms = symbols->left->AsPrefix())
         return new Context(psyms);
     return NULL;
 }
@@ -395,8 +394,8 @@ Infix *Context::Enter(Infix *rewrite)
     // That structure has the following layout: (A->B ; (L; R)), where
     // A->B is the local declaration, L and R are the possible children.
     // Children are initially nil.
-    Infix *scope = symbols;
-    Tree_p &locals = scope->left;
+    Prefix *scope = symbols;
+    Tree_p &locals = scope->right;
     Tree_p *parent = &locals;
     Infix *result = NULL;
     while (!result)
@@ -405,11 +404,11 @@ Infix *Context::Enter(Infix *rewrite)
         if (*parent == xl_nil)
         {
             // Initialize the local entry with nil children
-            Infix *nil_children = new Infix(ENTRY_NAME, xl_nil, xl_nil,
+            Infix *nil_children = new Infix(CHILDREN_NAME, xl_nil, xl_nil,
                                             rewrite->Position());
 
             // Create the local entry
-            Infix *entry = new Infix(CHILDREN_NAME, rewrite, nil_children,
+            Infix *entry = new Infix(ENTRY_NAME, rewrite, nil_children,
                                      rewrite->Position());
 
             // Insert the entry in the parent
@@ -571,13 +570,13 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
 //   Lookup a tree using the given lookup function
 // ----------------------------------------------------------------------------
 {
-    Infix *scope = symbols;
-    ulong h0 = Hash(what, false);
+    Prefix *scope = symbols;
+    ulong   h0    = Hash(what, false);
 
     while (scope)
     {
         // Initialize local scope
-        Tree_p &locals = scope->left;
+        Tree_p &locals = scope->right;
         Tree_p *parent = &locals;
         Tree *result = NULL;
         ulong h = h0;
@@ -590,7 +589,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
 
             // This should be a rewrite entry, follow it
             Infix *entry = (*parent)->AsInfix();
-            XL_ASSERT(entry && entry->name == ENTRY_NAME);
+            XL_ASSERT(entry && entry->name == ENTRY_NAME)
             Infix *decl = entry->left->AsInfix();
             XL_ASSERT(!decl || decl->name == "->");
             Infix *children = entry->right->AsInfix();
@@ -617,7 +616,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
         // The last top-level global will be nil, so we will end with scope=NULL
         if (!recurse)
             break;
-        scope = scope->right->AsInfix();
+        scope = scope->left->AsPrefix();
     }
 
     // Return NULL if all evaluations failed
@@ -625,7 +624,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
 }
 
 
-static Tree *findReference(Infix *scope, Tree *what, Infix *decl, void *)
+static Tree *findReference(Prefix *scope, Tree *what, Infix *decl, void *)
 // ----------------------------------------------------------------------------
 //   Return the reference we found
 // ----------------------------------------------------------------------------
@@ -647,7 +646,7 @@ Infix *Context::Reference(Tree *form)
 }
 
 
-static Tree *findValue(Infix *scope, Tree *what, Infix *decl, void *info)
+static Tree *findValue(Prefix *scope, Tree *what, Infix *decl, void *info)
 // ----------------------------------------------------------------------------
 //   Return the value bound to a given form
 // ----------------------------------------------------------------------------
@@ -656,14 +655,14 @@ static Tree *findValue(Infix *scope, Tree *what, Infix *decl, void *info)
 }
 
 
-static Tree *findValueX(Infix *scope, Tree *what, Infix *decl, void *info)
+static Tree *findValueX(Prefix *scope, Tree *what, Infix *decl, void *info)
 // ----------------------------------------------------------------------------
 //   Return the value bound to a given form
 // ----------------------------------------------------------------------------
 {
-    Infix_p *rewrite = (Infix_p *) info;
-    rewrite[0] = decl;
-    rewrite[1] = scope;
+    Prefix *rewriteInfo = (Prefix *) info;
+    rewriteInfo->left = scope;
+    rewriteInfo->right = decl;
     return decl->right;
 }
 
@@ -678,17 +677,17 @@ Tree *Context::Bound(Tree *form, bool recurse)
 }
 
 
-Tree *Context::Bound(Tree *form, bool recurse, Infix_p *rewrite, Infix_p *ctx)
+Tree *Context::Bound(Tree *form, bool recurse, Infix_p *rewrite, Prefix_p *ctx)
 // ----------------------------------------------------------------------------
 //   Return the value bound to a given declaration
 // ----------------------------------------------------------------------------
 {
-    Infix_p info[2];
-    Tree *result = Lookup(form, findValueX, info, recurse);
-    if (rewrite)
-        *rewrite = info[0];
+    Prefix info(NULL, NULL);
+    Tree *result = Lookup(form, findValueX, &info, recurse);
     if (ctx)
-        *ctx = info[1];
+        *ctx = info.left->AsPrefix();
+    if (rewrite)
+        *rewrite = info.right->AsInfix();
     return result;
 }
 
@@ -737,15 +736,23 @@ static ulong listNames(Infix *where, text begin, rewrite_list &list, bool pfx)
 
 
 ulong Context::ListNames(text begin, rewrite_list &list,
-                        bool recurse, bool includePrefixes)
+                         bool recurse, bool includePrefixes)
 // ----------------------------------------------------------------------------
 //    List names in a context
 // ----------------------------------------------------------------------------
 {
-    Infix *scope = symbols;
-    if (!recurse)
-        scope = scope->left->AsInfix();
-    return listNames(scope, begin, list, includePrefixes);
+    Prefix *scope = symbols;
+    ulong count = 0;
+    while (scope)
+    {
+        Infix *locals = scope->right->AsInfix();
+        count += listNames(locals, begin, list, includePrefixes);
+        if (!recurse)
+            scope = NULL;
+        else
+            scope = scope->left->AsPrefix();
+    }
+    return count;
 }
 
 
@@ -850,74 +857,77 @@ void Context::Clear()
 }
 
 
-void Context::Dump(std::ostream &out, Infix *scope)
+void Context::Dump(std::ostream &out, Prefix *scope)
 // ----------------------------------------------------------------------------
 //   Dump the symbol table to the given stream
 // ----------------------------------------------------------------------------
-//   Normal scopes are built with a declaration on the left, and the
-//   children entrie
 {
     while (scope)
     {
-        XL::Tree  *left = scope->left;
-        XL::Tree  *right = scope->right;
-        XL::Infix *decl = left->AsInfix();
-        XL::Infix *next = right->AsInfix();
-        bool isScope = scope->name == SCOPE_NAME;
+        Tree  *left = scope->left;
+        Tree  *right = scope->right;
+        Prefix *parent = left->AsPrefix();
+        Infix *locals = right->AsInfix();
+        Dump(out, locals);
+        if (parent)
+            out << "// Parent " << (void *) parent << "\n";
+        scope = parent;
+    }
+}
 
-        if (scope->name == "->")
+
+void Context::Dump(std::ostream &out, Infix *locals)
+// ----------------------------------------------------------------------------
+//   Dump the symbol table to the given stream
+// ----------------------------------------------------------------------------
+{
+    while (locals)
+    {
+        Infix *decl = locals->left->AsInfix();
+        Infix *next = locals->right->AsInfix();
+
+        if (locals->name != ENTRY_NAME && locals->name != CHILDREN_NAME)
         {
-            decl = scope;
-            next = NULL;
-        }
-        else if (!isScope &&
-                 scope->name != ENTRY_NAME && scope->name != CHILDREN_NAME)
-        {
-            out << "SCOPE?" << scope << "\n";
+            out << "SCOPE?" << locals << "\n";
         }
 
         if (decl)
         {
             if (decl->name == "->")
                 out << decl->left << "\t->\t" << decl->right << "\n";
-            else if (decl->name == SCOPE_NAME ||
-                     decl->name == ENTRY_NAME ||
-                     decl->name == CHILDREN_NAME)
-                Dump(out, decl);
             else
                 out << "DECL?" << decl << "\n";
         }
-        else if (left != xl_nil)
-            out << "LEFT?" << left << "\n";
+        else if (locals->left != xl_nil)
+        {
+            out << "LEFT?" << locals->left << "\n";
+        }
 
-        
         // Iterate, avoid recursion in the common case of enclosed scopes
         if (next)
         {
-            XL::Infix *left = next->left->AsInfix();
-            XL::Infix *right = next->right->AsInfix();
+            Infix *nextl = next->left->AsInfix();
+            Infix *nextr = next->right->AsInfix();
             
-            if (left && right)
+            if (nextl && nextr)
             {
-                Dump(out, left);
-                scope = right;
+                Dump(out, nextl);
+                locals = nextr;
             }
-            else if (left)
+            else if (nextl)
             {
-                scope = left;
+                locals = nextl;
             }
             else
             {
-                scope = right;
+                locals = nextr;
             }
         }
         else
         {
-            scope = NULL;
+            locals = NULL;
         }
-        if (scope && isScope)
-            out << "// Parent " << (void *) scope << "\n";
-    }
+    } // while (locals)
 }
 
 
@@ -926,12 +936,12 @@ XL_END
 
 extern "C"
 {
-void debugl(XL::Infix *scope)
+void debugg(XL::Prefix *scope)
 // ----------------------------------------------------------------------------
-//    Helper to show a local scope in a symbol table
+//    Helper to show a global scope in a symbol table
 // ----------------------------------------------------------------------------
 {
-    if (XL::Allocator<XL::Infix>::IsAllocated(scope))
+    if (XL::Allocator<XL::Prefix>::IsAllocated(scope))
         XL::Context::Dump(std::cerr, scope);
     else
         std::cerr << "Cowardly refusing to render unknown scope pointer "
@@ -939,24 +949,20 @@ void debugl(XL::Infix *scope)
 }
 
 
-void debugi(XL::Infix *scope)
+void debugl(XL::Infix *locals)
 // ----------------------------------------------------------------------------
-//   Helper to show an infix as a symbol table for debugging purpose
+//   Helper to show an infix as a local symbol table for debugging purpose
 // ----------------------------------------------------------------------------
 //   The infix can be shown using debug(), but it's less convenient
 {
-    if (XL::Allocator<XL::Infix>::IsAllocated(scope))
+    if (XL::Allocator<XL::Infix>::IsAllocated(locals))
     {
-        if (scope && (scope->name == ";" || scope->name == "\n"))
-            scope = scope->left->AsInfix();
-        else
-            scope = NULL;
-        debugl(scope);
+        XL::Context::Dump(std::cerr, locals);
     }
     else
     {
-        std::cerr << "Cowardly refusing to render unknown scope pointer "
-                  << (void *) scope << "\n";
+        std::cerr << "Cowardly refusing to render unknown locals pointer "
+                  << (void *) locals << "\n";
     }
 }
 
@@ -967,16 +973,14 @@ void debugs(XL::Context *context)
 // ----------------------------------------------------------------------------
 //   A context symbols can also be shown with debug(), but it's less convenient
 {
-    XL::Infix *scope = context->symbols;
-    if (XL::Allocator<XL::Infix>::IsAllocated(scope))
+    if (XL::Allocator<XL::Context>::IsAllocated(context))
     {
-        std::cerr << "SYMBOLS AT " << (void *) scope << "\n";
-        debugi(scope);
+        debugp(context->symbols);
     } 
     else
     {
-        std::cerr << "Cowardly refusing to render unknown scope pointer "
-                  << (void *) scope << "\n";
+        std::cerr << "Cowardly refusing to render unknown context pointer "
+                  << (void *) context << "\n";
     }
    
 }
@@ -988,19 +992,17 @@ void debugc(XL::Context *context)
 // ----------------------------------------------------------------------------
 //   A context symbols can also be shown with debug(), but it's less convenient
 {
-    XL::Infix *scope = context->symbols;
+    XL::Prefix *scope = context->symbols;
     if (XL::Allocator<XL::Infix>::IsAllocated(scope))
     {
         ulong depth = 0;
-        while (scope && (scope->name == ";" || scope->name == "\n"))
+        while (scope)
         {
             std::cerr << "SYMBOLS #" << depth++
                       << " AT " << (void *) scope << "\n";
-            debugi(scope);
-            scope = scope->right->AsInfix();
+            debugl(scope->right->AsInfix());
+            scope = scope->left->AsPrefix();
         }
-        if (scope)
-            std::cerr << "FINAL: " << scope << "\n";
     } 
     else
     {

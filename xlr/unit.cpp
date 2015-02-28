@@ -464,7 +464,8 @@ llvm_value CompiledUnit::Data(Tree *form, uint &index)
 
     case NAME:
     {
-        Infix_p   rw, scope;
+        Infix_p    rw;
+        Prefix_p   scope;
         Tree      *existing;
 
         // Bound names are returned as is, parameters are evaluated
@@ -549,7 +550,8 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
 
     case NAME:
     {
-        Infix_p rw, scope;
+        Infix_p  rw;
+        Prefix_p scope;
         Tree    *existing;
 
         // Bound names are returned as is, parameters are evaluated

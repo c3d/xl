@@ -218,14 +218,14 @@ struct Context
     Context();
     Context(Context *parent, TreePosition pos = Tree::NOWHERE);
     Context(const Context &source);
-    Context(Infix *symbols);
+    Context(Prefix *symbols);
     ~Context();
 
 public:
     // Create and delete a local scope
     void                CreateScope(TreePosition pos = Tree::NOWHERE);
     void                PopScope();
-    Infix *             Scope()         { return symbols; }
+    Prefix *            Scope()         { return symbols; }
     Context *           Parent();
 
     // Evaluate a tree entirely (compile then run)
@@ -256,13 +256,13 @@ public:
     text                ResolvePrefixedPath(text path);
 
     // Looking up definitions in a context
-    typedef Tree *      (*lookup_fn)(Infix *sc,Tree *frm,Infix *dcl,void *info);
+    typedef Tree *      (*lookup_fn)(Prefix *sc,Tree *frm,Infix *dcl,void *inf);
     Tree *              Lookup(Tree *what,
                                lookup_fn lookup, void *info,
                                bool recurse=true);
     Infix *             Reference(Tree *form);
     Tree *              Bound(Tree *form,bool recurse=true);
-    Tree *              Bound(Tree *form, bool rec, Infix_p *rw, Infix_p *ctx);
+    Tree *              Bound(Tree *form, bool rec, Infix_p *rw,Prefix_p *ctx);
     Tree *              Named(text name, bool recurse=true);
 
     // List rewrites of a given type
@@ -279,11 +279,12 @@ public:
     void                Clear();
 
     // Dump symbol tables
-    static void         Dump(std::ostream &out, Infix *symbols);
+    static void         Dump(std::ostream &out, Prefix *symbols);
+    static void         Dump(std::ostream &out, Infix *locals);
     void                Dump(std::ostream &out) { Dump(out, symbols); }
 
 public:
-    Infix_p             symbols;
+    Prefix_p            symbols;
     GARBAGE_COLLECT(Context);
 };
 
