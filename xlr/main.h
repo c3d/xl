@@ -106,13 +106,22 @@ struct Main
          text builtins = "builtins.xl");
     virtual ~Main();
 
+    // Entry point that does everythin
+    int          LoadAndRun();
+
+    // Individual phases of the above
+    Errors *     InitErrorsAndMAIN();
     int          ParseOptions();
     void         SetupCompiler();
-    void         CreateScope();
-    void         PopScope();
     int          LoadFiles();
     int          LoadFile(text file, text modname="");
-    void         EvaluateContextFiles(source_names &context_file_names);
+    int          Run();
+
+    // Error checking
+    void         Log(Error &e)   { errors->Log(e); }
+    uint         HadErrors() { return errors->Count(); }
+
+    // Hooks for use as a library in an application
     virtual text SearchFile(text input);
     virtual text ModuleDirectory(text path);
     virtual text ModuleBaseName(text path);
@@ -121,10 +130,7 @@ struct Main
     virtual text Decrypt(text input);
     virtual text Encrypt(text input);
     virtual Tree*Normalize(Tree *input);
-    int          Run();
-    void         Log(Error &e)   { errors->Log(e); }
-    Errors *     InitErrorsAndMAIN();
-    uint         HadErrors() { return errors->Count(); }
+
 
 public:
     int          argc;
