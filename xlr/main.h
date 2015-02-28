@@ -52,6 +52,7 @@
 #include <map>
 #include <set>
 #include <time.h>
+#include <fstream>
 
 
 XL_BEGIN
@@ -66,7 +67,7 @@ struct SourceFile
 //    A source file and associated data
 // ----------------------------------------------------------------------------
 {
-    SourceFile(text n, Tree *t, Context *c, bool readOnly = false);
+    SourceFile(text n, Tree *t, Context *ctx, bool readOnly = false);
     SourceFile();
     ~SourceFile();
 
@@ -109,16 +110,16 @@ struct Main
     void         SetupCompiler();
     void         CreateScope();
     void         PopScope();
-    int          LoadContextFiles(source_names &context_file_names);
-    void         EvaluateContextFiles(source_names &context_file_names);
     int          LoadFiles();
-    int          LoadFile(text file, bool updateContext = false,
-                          Context *importContext=0);
-    SourceFile * NewFile(text path);
+    int          LoadFile(text file, text modname="");
+    void         EvaluateContextFiles(source_names &context_file_names);
     virtual text SearchFile(text input);
-    virtual text ParentDir(text input);
+    virtual text ModuleDirectory(text path);
+    virtual text ModuleBaseName(text path);
+    virtual text ModuleName(text path);
     virtual bool Refresh(double delay);
     virtual text Decrypt(text input);
+    virtual text Encrypt(text input);
     virtual Tree*Normalize(Tree *input);
     int          Run();
     void         Log(Error &e)   { errors->Log(e); }

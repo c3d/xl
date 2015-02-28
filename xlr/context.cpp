@@ -81,13 +81,13 @@ Context::Context()
 }
 
 
-Context::Context(Context *parent)
+Context::Context(Context *parent, TreePosition pos)
 // ----------------------------------------------------------------------------
 //   Constructor creating a child context in a parent context
 // ----------------------------------------------------------------------------
     : symbols(parent->symbols)
 {
-    CreateScope();
+    CreateScope(pos);
 }
 
 
@@ -121,12 +121,12 @@ Context::~Context()
 // 
 // ============================================================================
 
-void Context::CreateScope()
+void Context::CreateScope(TreePosition pos)
 // ----------------------------------------------------------------------------
 //    Add a local scope to the current context
 // ----------------------------------------------------------------------------
 {
-    symbols = new Infix(SCOPE_NAME, xl_nil, symbols, symbols->Position());
+    symbols = new Infix(SCOPE_NAME, xl_nil, symbols, pos);
 }
 
 
@@ -515,21 +515,30 @@ Tree *Context::Assign(Tree *ref, Tree *value)
 // 
 // ============================================================================
 
-Infix *Context::SetOverridePriority(double priority)
+Infix *Context::SetAttribute(text attribute, longlong value)
+// ----------------------------------------------------------------------------
+//   Set an attribute for the innermost context
+// ----------------------------------------------------------------------------
+{
+    return Define(attribute, new Real(value, symbols->Position()));
+}
+
+
+Infix *Context::SetAttribute(text attribute, double value)
 // ----------------------------------------------------------------------------
 //   Set the override priority for the innermost scope in the context
 // ----------------------------------------------------------------------------
 {
-    return Define("override_priority", new Real(priority));
+    return Define(attribute, new Real(value, symbols->Position()));
 }
 
 
-Infix *Context::SetFileName(text filename)
+Infix *Context::SetAttribute(text attribute, text value)
 // ----------------------------------------------------------------------------
 //   Set the file name the innermost scope in the context
 // ----------------------------------------------------------------------------
 {
-    return Define("file_name", new Text(filename));
+    return Define(attribute, new Text(value, "\"", "\"", symbols->Position()));
 }
 
 

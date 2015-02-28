@@ -49,6 +49,9 @@
 #include <windows.h>
 #include <fcntl.h>
 
+typedef struct _stat utf8_filestat_t;
+
+
 inline std::wstring utf8_decode(const std::string &str)
 // ----------------------------------------------------------------------------
 //    Convert a UTF-8 std::string into a UTF-16 std::wstring
@@ -148,12 +151,30 @@ inline int utf8_access(const char *path, int mode)
     return _waccess(wpath.c_str(), mode);
 }
 
+
+inline bool isDirectorySeparator(int c)
+// ----------------------------------------------------------------------------
+//   For Losedows, can be / or \
+// ----------------------------------------------------------------------------
+{
+    return c == '/' || c == '\\';
+}
+
 #else
 
 // Real systems
+typedef struct stat   utf8_filestat_t;
 typedef std::ifstream utf8_ifstream;
 #define utf8_stat(path, buffer) stat(path, buffer)
 #define utf8_access(path, mode) access(path, mode)
+
+inline bool isDirectorySeparator(int c)
+// ----------------------------------------------------------------------------
+//   For real systems, the directory separator is /
+// ----------------------------------------------------------------------------
+{
+    return c == '/';
+}
 
 #endif
 

@@ -216,14 +216,14 @@ struct Context
 // - Return type declarations will have the form From as Type
 {
     Context();
-    Context(Context *parent);
+    Context(Context *parent, TreePosition pos = Tree::NOWHERE);
     Context(const Context &source);
     Context(Infix *symbols);
     ~Context();
 
 public:
     // Create and delete a local scope
-    void                CreateScope();
+    void                CreateScope(TreePosition pos = Tree::NOWHERE);
     void                PopScope();
     Infix *             Scope()         { return symbols; }
     Context *           Parent();
@@ -243,7 +243,14 @@ public:
 
     // Set context attributes
     Infix *             SetOverridePriority(double priority);
-    Infix *             SetFileName(text filename);
+    Infix *             SetModulePath(text name);
+    Infix *             SetModuleDirectory(text name);
+    Infix *             SetModuleFile(text name);
+    Infix *             SetModuleName(text name);
+
+    Infix *             SetAttribute(text attribute, longlong value);
+    Infix *             SetAttribute(text attribute, double value);
+    Infix *             SetAttribute(text attribute, text value);
 
     // Path management
     text                ResolvePrefixedPath(text path);
@@ -288,7 +295,51 @@ public:
 // 
 // ============================================================================
 
-// Check what is actually defined based on the left of a ->
+inline Infix *Context::SetOverridePriority(double priority)
+// ----------------------------------------------------------------------------
+//   Set the override_priority attribute
+// ----------------------------------------------------------------------------
+{
+    return SetAttribute("override_priority", priority);
+}
+
+
+inline Infix *Context::SetModulePath(text path)
+// ----------------------------------------------------------------------------
+//   Set the module_path attribute
+// ----------------------------------------------------------------------------
+{
+    return SetAttribute("module_path", path);
+}
+
+
+inline Infix *Context::SetModuleDirectory(text directory)
+// ----------------------------------------------------------------------------
+//   Set the module_directory attribute
+// ----------------------------------------------------------------------------
+{
+    return SetAttribute("module_directory", directory);
+}
+
+
+inline Infix *Context::SetModuleFile(text file)
+// ----------------------------------------------------------------------------
+//   Set the module_file attribute
+// ----------------------------------------------------------------------------
+{
+    return SetAttribute("module_file", file);
+}
+
+
+inline Infix *Context::SetModuleName(text name)
+// ----------------------------------------------------------------------------
+//   Set the module_name attribute
+// ----------------------------------------------------------------------------
+{
+    return SetAttribute("module_name", name);
+}
+
+
 inline Tree * RewriteDefined(Tree *form)
 // ----------------------------------------------------------------------------
 //   Find what we actually define based on the shape of the left of a ->

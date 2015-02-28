@@ -40,13 +40,6 @@
 
 #include "configuration.h"
 #include "tree-clone.h"
-#include <unistd.h>
-#include <stdlib.h>
-#include <map>
-#include <iostream>
-#include <fstream>
-#include <stdio.h>
-#include <sys/stat.h>
 #include "main.h"
 #include "scanner.h"
 #include "parser.h"
@@ -63,6 +56,16 @@
 #include "flight_recorder.h"
 #include "utf8_fileutils.h"
 
+#include <unistd.h>
+#include <stdlib.h>
+#include <map>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <stdio.h>
+#include <ctype.h>
+#include <sys/stat.h>
+
 
 XL_DEFINE_TRACES
 
@@ -70,19 +73,15 @@ XL_BEGIN
 
 Main *MAIN = NULL;
 
-SourceFile::SourceFile(text n, Tree *t, Context *c, bool ro)
+SourceFile::SourceFile(text n, Tree *t, Context *ctx, bool ro)
 // ----------------------------------------------------------------------------
 //   Construct a source file given a name
 // ----------------------------------------------------------------------------
-    : name(n), tree(t), context(c),
+    : name(n), tree(t), context(ctx),
       modified(0), changed(false), readOnly(ro),
       info(NULL)
 {
-#if defined(CONFIG_MINGW)
-    struct _stat st;
-#else
-    struct stat st;
-#endif
+    utf8_filestat_t st;
     if (utf8_stat (n.c_str(), &st) < 0)
         return;
     modified = st.st_mtime;
@@ -223,51 +222,13 @@ int Main::LoadFiles()
     source_names::iterator  file;
     bool hadError = false;
 
+    // Load builtins
+    if (!options.builtins.empty())
+        hadError |= LoadFile(options.builtins);
+
     // Loop over files we will process
     for (file = file_names.begin(); file != file_names.end(); file++)
         hadError |= LoadFile(*file);
-
-    return hadError;
-}
-
-
-SourceFile *Main::NewFile(text path)
-// ----------------------------------------------------------------------------
-//   Allocate an entry for updating programs (untitled)
-// ----------------------------------------------------------------------------
-{
-    CreateScope();
-    files[path] = SourceFile(path,xl_nil, context, true);
-    PopScope();
-    return &files[path];
-}
-
-
-int Main::LoadContextFiles(source_names &ctxFiles)
-// ----------------------------------------------------------------------------
-//   Load all files given on the command line and compile them
-// ----------------------------------------------------------------------------
-{
-    source_names::iterator file;
-    bool hadError = false;
-
-    // Clear all existing symbols (#1777)
-    source_files::iterator sfi;
-    for (sfi = files.begin(); sfi != files.end(); sfi++)
-    {
-        SourceFile &sf = (*sfi).second;
-        if (sf.context)
-            sf.context->Clear();
-    }
-    files.clear();
-
-    // Load builtins
-    if (!options.builtins.empty())
-        hadError |= LoadFile(options.builtins, true);
-
-    // Loop over files we will process
-    for (file = ctxFiles.begin(); file != ctxFiles.end(); file++)
-        hadError |= LoadFile(*file, true);
 
     return hadError;
 }
@@ -312,22 +273,75 @@ text Main::SearchFile(text file)
 }
 
 
-text Main::ParentDir(text path)
+static inline kstring endOfPath(kstring path)
 // ----------------------------------------------------------------------------
-//   Return path of parent directory
+//   Find the end of the path
 // ----------------------------------------------------------------------------
 {
-    text resolved = SearchFile(path);
-    if (resolved == "")
-        return "";
-    const char *p, *str = resolved.c_str();
-    for (p = &str[strlen(str) - 1] ; p != str && *p == '/'; p--) {};
-    if (p == str)
-        return "/";
-    for ( ; p != str && *p != '/'; p--) {};
-    if (p != str)
+    const char *p = path;
+    while (*p) p++;
+    p--;
+    while (p != path && isDirectorySeparator(*p))
         p--;
-    return resolved.substr(0, p - str + 1);
+    while (p != path && !isDirectorySeparator(*p))
+        p--;
+    return p;
+}
+
+
+text Main::ModuleDirectory(text path)
+// ----------------------------------------------------------------------------
+//   Return parent directory for a given file name
+// ----------------------------------------------------------------------------
+{
+    kstring str = path.c_str();
+    kstring dirSep = endOfPath(str);
+    text    result = path.substr(0, dirSep+1 - str);
+    if (result == "")
+        result = "./";
+    return result;
+}
+
+
+text Main::ModuleBaseName(text path)
+// ----------------------------------------------------------------------------
+//   Return the base name for the path
+// ----------------------------------------------------------------------------
+{
+    kstring str = path.c_str();
+    kstring dirSep = endOfPath(str);
+    if (isDirectorySeparator(*dirSep))
+        dirSep++;
+    return text(dirSep);
+}
+
+
+text Main::ModuleName(text path)
+// ----------------------------------------------------------------------------
+//   Return the module name, e.g. turn foo/bar-bi-tu.xl into bar_bi_tu
+// ----------------------------------------------------------------------------
+{
+    text    result = "";
+    bool    hadUnderscore = false;
+    kstring str = path.c_str();
+    kstring p = endOfPath(str);
+    if (isDirectorySeparator(*p))
+        p++;
+    while (char c = *p++)
+    {
+        if (c == '.')
+            break;
+
+        bool punct = ispunct(c);
+        if (!punct)
+            result += c;
+        else if (!hadUnderscore)
+            result += '_';
+
+        hadUnderscore = punct;
+    }
+                
+    return result;
 }
 
 
@@ -343,10 +357,18 @@ bool Main::Refresh(double delay)
 
 text Main::Decrypt(text file)
 // ----------------------------------------------------------------------------
-//   Decryption hook
+//   Decryption hook - Return decrypted file if possible
 // ----------------------------------------------------------------------------
 {
-    (void) file;
+    return "";
+}
+
+
+text Main::Encrypt(text file)
+// ----------------------------------------------------------------------------
+//   Encryption hook - Encrypt file if possible
+// ----------------------------------------------------------------------------
+{
     return "";
 }
 
@@ -362,145 +384,142 @@ Tree *Main::Normalize(Tree *input)
 }
 
 
-int Main::LoadFile(text file,
-                   bool updateContext,
-                   Context *importContext)
+int Main::LoadFile(text file, text modname)
 // ----------------------------------------------------------------------------
 //   Load an individual file
 // ----------------------------------------------------------------------------
 {
-    Tree_p tree = NULL;
-    bool hadError = false;
-
-    IFTRACE(fileload)
-        std::cout << "Loading: " << file << "\n";
-
     // Find which source file we are referencing
-    SourceFile &sf = files[file];
+    SourceFile         &sf       = files[file];
+    std::istream       *input    = NULL;
+    Tree_p              tree     = NULL;
+    utf8_ifstream       inputFile(file.c_str(), std::ios::in|std::ios::binary);
+    std::stringstream   inputStream;
 
-    // Parse program - Local parser to delete scanner and close file
-    // This ensures positions are updated even if there is a 'load'
-    // being called during execution.
-    if (options.readSerialized)
+
+    // See if we read from standard input
+    if (file == "-")
     {
-        if (!reader)
-            reader = new Deserializer(std::cin);
-        tree = reader->ReadTree();
-        if (!reader->IsValid())
-        {
-            errors->Log(Error("Serialized stream cannot be read: $1")
-                        .Arg(file));
-            hadError = true;
-            return hadError;
-        }
+        IFTRACE(fileload)
+            std::cerr << "Loading from standard input\n";
+        input = &std::cin;
     }
     else
     {
-        utf8_ifstream ifs(file.c_str(), std::ios::in | std::ios::binary);
-        Deserializer ds(ifs);
-        tree = ds.ReadTree();
-        if (!ds.IsValid())
+        IFTRACE(fileload)
+            std::cerr << "Loading from " << file << "\n";
+        input = &inputFile;
+    }
+
+    // Check if we need to decrypt an input file first
+    if (options.crypted)
+    {
+        inputStream << input->rdbuf();
+        text decrypted = Decrypt(inputStream.str());
+        if (decrypted != "")
         {
-            std::string decrypted = MAIN->Decrypt(file.c_str());
-            if (decrypted != "")
+            IFTRACE(fileload)
+                std::cerr << "Input was crypted\n";
+            inputStream.str(decrypted);
+        }
+        input = &inputStream;
+    }
+
+    // Check if we need to deserialize the input file first
+    if (options.packed)
+    {
+        Deserializer deserializer(*input);
+        tree = deserializer.ReadTree();
+        if (deserializer.IsValid())
+        {
+            IFTRACE(fileload)
+                std::cerr << "Input was in serialized format\n";
+        }
+    }
+
+    // Read in standard format if we could not read it from packed format
+    if (!tree)
+    {
+        Parser parser (*input, syntax, positions, topLevelErrors);
+        tree = parser.Parse();
+    }
+
+    // If at this stage we don't have a tree, this is an error
+    if (!tree)
+    {
+        IFTRACE(fileload)
+            std::cerr << "File load error for " << file << "\n";
+        return false;
+    }
+    
+    // Output packed if this was requested
+    if (options.pack)
+    {
+        std::stringstream output;
+        Serializer serialize(output);
+        tree->Do(serialize);
+        text packed = output.str();
+        if (options.crypt)
+        {
+            text crypted = Encrypt(packed);
+            if (crypted == "")
             {
-                // Parse decrypted string as XL source
                 IFTRACE(fileload)
-                    std::cerr << "Info: file was succesfully decrypted\n";
-                std::istringstream iss;
-                iss.str(decrypted);
-                Parser parser (iss, syntax, positions, topLevelErrors);
-                tree = parser.Parse();
+                    std::cerr << "No encryption, output is packed\n";
+                std::cout << packed;
             }
-            else
-            {
-                // Parse as XL source
-                Parser parser (file.c_str(), syntax, positions, topLevelErrors);
-                tree = parser.Parse();
-            }
+                else
+                {
+                    IFTRACE(fileload)
+                        std::cerr << "Encrypted output\n";
+                    std::cout << crypted;
+                }
         }
         else
         {
             IFTRACE(fileload)
-                std::cerr << "Info: file is in serialized format\n";
+                std::cerr << "Packed output\n";
+            std::cout << packed;
         }
     }
+    
+    // Normalize if necessary
+    tree = Normalize(tree);
+    
+    // Show source if requested
+    if (options.showSource || options.verbose)
+        std::cout << tree << "\n";
+    
+    // Create new symbol table for the file
+    Context *parent = MAIN->context;
+    Context *ctx = new Context(parent, tree->Position());
 
-    if (options.writeSerialized)
-    {
-        if (!writer)
-            writer = new Serializer(std::cout);
-        if (tree)
-            tree->Do(writer);
-    }
+    // Set the module path, directory and file
+    ctx->SetModulePath(file);
+    ctx->SetModuleDirectory(ModuleDirectory(file));
+    ctx->SetModuleFile(ModuleBaseName(file));
 
-    if (tree)
+    // Check if the module name is given
+    if (modname != "")
     {
-        tree = Normalize(tree);
-    }
-
-    // Create new symbol table for the file, or clear it if we had one
-    Context *ctx = MAIN->context;
-    Context *savedCtx = ctx;
-    if (sf.context)
-    {
-        updateContext = false;
-        ctx = sf.context;
-        ctx->Clear();
+        // If we have an explicit module name (e.g. import),
+        // we will refer to the content using that name
+        ctx->SetModuleName(modname);
+        parent->Define(modname, tree);
+        MAIN->context = parent;
     }
     else
     {
-        ctx->CreateScope();
-        ctx->SetFileName(file);
+        // No explicit module name: update current context
+        modname = ModuleName(file);
+        ctx->SetModuleName(modname);
     }
-    MAIN->context = ctx;
-
-    // HACK - do not hide imported .xl
-    if (file.find(".ddd") == file.npos &&
-        file.find("tao.xl") == file.npos &&
-        file.find("builtins.xl") == file.npos)
-    {
-        Name_p module_file = new Name("module_file"); // TODO: Position
-        Name_p module_dir = new Name("module_dir");
-        Text_p module_file_value = new Text(file);
-        Text_p module_dir_value = new Text(ParentDir(file));
-        ctx->Define(module_file, module_file_value);
-        ctx->Define(module_dir, module_dir_value);
-    }
-
+            
     // Register the source file we had
     sf = SourceFile (file, tree, ctx);
-    if (tree)
-    {
-        // Set symbols and compile if required
-        if (!options.parseOnly)
-        {
-            if (options.optimize_level == 1)
-            {
-                if (!tree)
-                    hadError = true;
-                else
-                    files[file].tree = tree;
-            }
-
-            // TODO: At -O3, do we need to do anything here?
-        }
-    }
-
-    if (options.showSource)
-        std::cout << tree << "\n";
-    if (options.verbose)
-        debugp(tree);
-
-    // Decide if we update symbols for next run
-    if (!updateContext)
-        MAIN->context = savedCtx;
-
-    IFTRACE(symbols)
-        std::cerr << "Loaded file " << file
-                  << " with context " << MAIN->context << '\n';
-
-    return hadError;
+    
+    // We were OK, done
+    return false;
 }
 
 
@@ -574,18 +593,10 @@ int main(int argc, char **argv)
     Main main(argc, argv);
     EnterBasics();
     main.SetupCompiler();
-    int rc = MAIN->LoadContextFiles(noSpecificContext);
-    if (rc)
-    {
-        delete MAIN;
-        return rc;
-    }
-    rc = MAIN->LoadFiles();
-
+    int rc = main.LoadFiles();
     if (!rc && !Options::options->parseOnly)
-        rc = MAIN->Run();
-
-    if (!rc && MAIN->HadErrors())
+        rc = main.Run();
+    if (!rc && main.HadErrors())
         rc = 1;
 
     MAIN->compiler->Dump();

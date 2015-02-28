@@ -130,6 +130,7 @@ struct Tree
     TreePosition        Position()            { return (long) tag>>KINDBITS; }
     bool                IsLeaf()              { return Kind() <= NAME; }
     bool                IsConstant()          { return Kind() <= TEXT; }
+    void                SetPosition(TreePosition pos, bool recurse = true);
 
     // Safe cast to an appropriate subclass
     Integer *           AsInteger();

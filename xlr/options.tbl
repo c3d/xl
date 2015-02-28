@@ -78,11 +78,16 @@ OPTION(builtins, "Select the builtins file", builtins = STRING)
 OPTION(nobuiltins, "Do not load builtins", builtins = "")
 OPTION(nb, "Short form for -nobuiltins", builtins = "")
 
-// Read or write from serialized format
-OPTVAR(readSerialized, bool, false)
-OPTION(read, "Read file from serialized input", readSerialized = true)
-OPTVAR(writeSerialized, bool, false)
-OPTION(write, "Write file to serialized output", writeSerialized = true)
+// Select if we read or write in serialized or crypted format
+OPTVAR(packed,  bool, false)
+OPTVAR(crypted, bool, false)
+OPTION(packed,  "Allow packed input", packed = true)
+OPTION(crypted, "Allow crypted input", crypted = true)
+
+OPTVAR(pack,    bool, false)
+OPTVAR(crypt,   bool, false)
+OPTION(pack,    "Write packed format", pack = true)
+OPTION(crypt,   "Write crypted format", crypt = true)
 
 // Compile only
 OPTVAR(compileOnly, bool, false)

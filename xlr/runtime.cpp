@@ -1085,12 +1085,7 @@ bool xl_file_exists(Context *context, Tree_p self, text path)
         }
    }
 
-#if defined(CONFIG_MINGW)
-    struct _stat st;
-#else
-    struct stat st;
-#endif
-
+    utf8_filestat_t st;
     return (utf8_stat (path.c_str(), &st) < 0) ? false : true;
 }
 
@@ -1135,11 +1130,7 @@ Tree *xl_import(Context *context, Tree *self, text name, int phase)
                 if (Text * txt = dir->AsText())
                 {
                     path = txt->value + "/" + name;
-#if defined(CONFIG_MINGW)
-                    struct _stat st;
-#else
-                    struct stat st;
-#endif
+                    utf8_filestat_t st;
                     if (utf8_stat (path.c_str(), &st) < 0)
                         path = "";
                 }
@@ -1161,7 +1152,7 @@ Tree *xl_import(Context *context, Tree *self, text name, int phase)
     {
         IFTRACE(fileload)
                 std::cout << "Loading: " << path << "\n";
-        bool hadError = MAIN->LoadFile(path, false, context);
+        bool hadError = MAIN->LoadFile(path);
         if (hadError)
         {
             Ooops("Unable to load file $2 for $1", self).Arg(path);
