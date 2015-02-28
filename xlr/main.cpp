@@ -214,9 +214,12 @@ int Main::ParseOptions()
 
     // Scan options and build list of files we need to process
     for (cmd = options.ParseFirst(); cmd != end; cmd = options.ParseNext())
-    {
         file_names.push_back(cmd);
-    }
+
+    // Load builtins before the rest (only after parsing options for builtins)
+    if (!options.builtins.empty())
+        file_names.insert(file_names.begin(), options.builtins);
+    
     return false;
 }
 
@@ -237,10 +240,6 @@ int Main::LoadFiles()
 {
     source_names::iterator  file;
     bool hadError = false;
-
-    // Load builtins
-    if (!options.builtins.empty())
-        hadError |= LoadFile(options.builtins);
 
     // Loop over files we will process
     for (file = file_names.begin(); file != file_names.end(); file++)
@@ -376,13 +375,13 @@ int Main::LoadFile(text file, text modname)
         // we will refer to the content using that name
         ctx->SetModuleName(modname);
         parent->Define(modname, tree);
-        MAIN->context = parent;
     }
     else
     {
         // No explicit module name: update current context
         modname = ModuleName(file);
         ctx->SetModuleName(modname);
+        MAIN->context = ctx;
     }
 
     // Register the source file we had
@@ -411,14 +410,14 @@ int Main::Run()
         return -1;
 
     // Loop over files we will process
+    Tree_p result = xl_nil;
     for (file = file_names.begin(); file != file_names.end(); file++)
     {
         SourceFile &sf = files[*file];
 
         // Evaluate the given tree
-        Tree_p result = sf.tree;
         Errors errors;
-        if (Tree *tree = result)
+        if (Tree *tree = sf.tree)
         {
             Context *context = sf.context;
             result = context->Evaluate(tree);
@@ -428,16 +427,15 @@ int Main::Run()
         {
             hadError = true;
         }
-        else
+        else if (options.verbose)
         {
-#ifdef LIBXLR
-            if (options.verbose)
-                std::cout << "RESULT of " << sf.name << "\n" << result << "\n";
-#else
-            std::cout << result << "\n";
-#endif // LIBXLR
+            std::cout << "RESULT of " << sf.name << "\n" << result << "\n";
         }
     }
+
+    // Output the result
+    if (result)
+        std::cerr << result << "\n";
 
     return hadError;
 }
