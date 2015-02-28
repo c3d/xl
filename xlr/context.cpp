@@ -840,7 +840,7 @@ void Context::Clear()
 //   Clear the symbol table
 // ----------------------------------------------------------------------------
 {
-    symbols->left = xl_nil;
+    symbols->right = xl_nil;
 }
 
 
