@@ -237,7 +237,7 @@ public:
     Tree *              Call(text prefix, TreeList &args);
 
     // Phases of evaluation
-    Tree *              ProcessDeclarations(Tree *what);
+    void                ProcessDeclarations(Tree *what);
 
     // Adding definitions to the context
     Infix *             Enter(Infix *decl);

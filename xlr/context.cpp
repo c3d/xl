@@ -212,52 +212,44 @@ Tree *Context::Call(text prefix, TreeList &argList)
 // 
 // ============================================================================
 
-Tree *Context::ProcessDeclarations(Tree *what)
+void Context::ProcessDeclarations(Tree *what)
 // ----------------------------------------------------------------------------
 //   Process all declarations, return instructions (non-declarations) or NULL
 // ----------------------------------------------------------------------------
 {
-    Tree_p  instrs = NULL;
-    Tree_p *instrP = &instrs;
     Tree_p  next   = NULL;
-
     while (what)
     {
-        Tree_p instr = NULL;
-
         if (Infix *infix = what->AsInfix())
         {
-            if (infix->name == "\n" || infix->name == ";")
-            {
-                // Chain of declarations. Normally, we don't need to recurse,
-                // except if we have a list that was not parsed and
-                // contains some priority inversion
-                what = infix->left;
-                if (next)
-                    instr = ProcessDeclarations(what);
-                else
-                    next = infix->right;
-                continue;
-            }
-            else if (infix->name == "->")
+            if (infix->name == "->")
             {
                 Enter(infix);
             }
-            else
+            else if (infix->name == "\n" || infix->name == ";")
             {
-                // Other infix is an instruction
-                instr = what;
+                // Chain of declarations, avoiding recursing if possible.
+                if (Infix *left = infix->left->AsInfix())
+                {
+                    if (left->name == "->")
+                        Enter(left);
+                    else
+                        ProcessDeclarations(left);
+                }
+                else if (Prefix *left = infix->left->AsPrefix())
+                {
+                    ProcessDeclarations(left);
+                }
+                next = infix->right;
             }
         }
         else if (Prefix *prefix = what->AsPrefix())
         {
-            instr = what;
             if (Name *pname = prefix->left->AsName())
             {
                 if (pname->value == "data")
                 {
                     Define(prefix->right, xl_self);
-                    instr = NULL;
                 }
                 else if (pname->value == "extern")
                 {
@@ -271,7 +263,6 @@ Tree *Context::ProcessDeclarations(Tree *what)
                         Define(normalForm->left, normalForm->right);
                         prefix->SetInfo<CDeclaration>(pcd);
                         prefix->right->SetInfo<CDeclaration>(pcd);
-                        instr = NULL;
                     }
                     else
                     {
@@ -280,34 +271,11 @@ Tree *Context::ProcessDeclarations(Tree *what)
                 }
             }
         }
-        else
-        {
-            // Other cases are instructions
-            instr = what;
-        }
-
-        // Check if we had an instruction to append to the list
-        if (instr)
-        {
-            if (*instrP)
-            {
-                Infix *chain = new Infix("\n", *instrP, instr,
-                                         instr->Position());
-                *instrP = chain;
-                instrP = &chain->right;
-            }
-            else
-            {
-                *instrP = instr;
-            }
-        }
 
         // Consider next in chain
         what = next;
         next = NULL;
     }
-
-    return instrs;
 }
 
 
