@@ -913,7 +913,8 @@ void Context::Dump(std::ostream &out, Infix *locals)
         if (decl)
         {
             if (decl->name == "->")
-                out << decl->left << "\t->\t" << decl->right << "\n";
+                out << decl->left << " -> "
+                    << ShortTreeForm(decl->right) << "\n";
             else
                 out << "DECL?" << decl << "\n";
         }
