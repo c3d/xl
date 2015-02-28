@@ -228,11 +228,13 @@ public:
     Prefix *            Scope()         { return symbols; }
     Context *           Parent();
 
-    // Evaluate a tree entirely (compile then run)
+    // Evaluate a tree in the current context
     Tree *              Evaluate(Tree *what);
+
+    // Special forms of evaluation
     Tree *              Call(text prefix, TreeList &args);
 
-    // Process declarations for a given context, return non-declarations
+    // Phases of evaluation
     Tree *              ProcessDeclarations(Tree *what);
 
     // Adding definitions to the context
