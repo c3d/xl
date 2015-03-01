@@ -43,8 +43,8 @@
 
 XL_BEGIN
 
-struct TypeInference;
-typedef GCPtr<TypeInference> TypeInference_p;
+struct Types;
+typedef GCPtr<Types> Types_p;
 
 
 struct RewriteBinding
@@ -87,7 +87,7 @@ struct RewriteCandidate
     RewriteBindings     bindings;
     RewriteConditions   conditions;
     Tree_p              type;
-    TypeInference_p     types;
+    Types_p     types;
 };
 typedef std::vector<RewriteCandidate> RewriteCandidates;
 
@@ -97,7 +97,7 @@ struct RewriteCalls
 //   Identify the way to invoke rewrites for a particular form
 // ----------------------------------------------------------------------------
 {
-    RewriteCalls(TypeInference *ti): inference(ti), candidates() {}
+    RewriteCalls(Types *ti): types(ti), candidates() {}
 
     enum BindingStrength { FAILED, POSSIBLE, PERFECT };
 
@@ -106,7 +106,7 @@ struct RewriteCalls
                              Tree *ref, Tree *what, RewriteCandidate &rc);
 
 public:
-    TypeInference *     inference;
+    Types *             types;
     RewriteCandidates   candidates;
     GARBAGE_COLLECT(RewriteCalls);
 };

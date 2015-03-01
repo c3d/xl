@@ -56,9 +56,9 @@ XL_BEGIN
 //
 // ============================================================================
 
-ulong TypeInference::id = 0;
+ulong Types::id = 0;
 
-TypeInference::TypeInference(Context *context)
+Types::Types(Context *context)
 // ----------------------------------------------------------------------------
 //   Constructor for top-level type inferences
 // ----------------------------------------------------------------------------
@@ -71,7 +71,7 @@ TypeInference::TypeInference(Context *context)
 {}
 
 
-TypeInference::TypeInference(Context *context, TypeInference *parent)
+Types::Types(Context *context, Types *parent)
 // ----------------------------------------------------------------------------
 //   Constructor for "child" type inferences, i.e. done within a parent
 // ----------------------------------------------------------------------------
@@ -84,14 +84,14 @@ TypeInference::TypeInference(Context *context, TypeInference *parent)
 {}
 
 
-TypeInference::~TypeInference()
+Types::~Types()
 // ----------------------------------------------------------------------------
 //    Destructor - Nothing to explicitly delete, but useful for debugging
 // ----------------------------------------------------------------------------
 {}
 
 
-bool TypeInference::TypeCheck(Tree *program)
+bool Types::TypeCheck(Tree *program)
 // ----------------------------------------------------------------------------
 //   Perform all the steps of type inference on the given program
 // ----------------------------------------------------------------------------
@@ -116,7 +116,7 @@ bool TypeInference::TypeCheck(Tree *program)
 }
 
 
-Tree *TypeInference::Type(Tree *expr)
+Tree *Types::Type(Tree *expr)
 // ----------------------------------------------------------------------------
 //   Return the base type associated with a given expression
 // ----------------------------------------------------------------------------
@@ -144,7 +144,7 @@ Tree *TypeInference::Type(Tree *expr)
 
 
 
-bool TypeInference::DoInteger(Integer *what)
+bool Types::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------
 //   Annotate an integer tree with its value
 // ----------------------------------------------------------------------------
@@ -153,7 +153,7 @@ bool TypeInference::DoInteger(Integer *what)
 }
 
 
-bool TypeInference::DoReal(Real *what)
+bool Types::DoReal(Real *what)
 // ----------------------------------------------------------------------------
 //   Annotate a real tree with its value
 // ----------------------------------------------------------------------------
@@ -162,7 +162,7 @@ bool TypeInference::DoReal(Real *what)
 }
 
 
-bool TypeInference::DoText(Text *what)
+bool Types::DoText(Text *what)
 // ----------------------------------------------------------------------------
 //   Annotate a text tree with its own value
 // ----------------------------------------------------------------------------
@@ -171,7 +171,7 @@ bool TypeInference::DoText(Text *what)
 }
 
 
-bool TypeInference::DoConstant(Tree *what)
+bool Types::DoConstant(Tree *what)
 // ----------------------------------------------------------------------------
 //   All constants have themselves as type, and evaluate normally
 // ----------------------------------------------------------------------------
@@ -182,7 +182,7 @@ bool TypeInference::DoConstant(Tree *what)
 }
 
 
-bool TypeInference::DoName(Name *what)
+bool Types::DoName(Name *what)
 // ----------------------------------------------------------------------------
 //   Assign an unknown type to a name
 // ----------------------------------------------------------------------------
@@ -193,7 +193,7 @@ bool TypeInference::DoName(Name *what)
 }
 
 
-bool TypeInference::DoPrefix(Prefix *what)
+bool Types::DoPrefix(Prefix *what)
 // ----------------------------------------------------------------------------
 //   Assign an unknown type to a prefix and then to its children
 // ----------------------------------------------------------------------------
@@ -215,7 +215,7 @@ bool TypeInference::DoPrefix(Prefix *what)
 }
 
 
-bool TypeInference::DoPostfix(Postfix *what)
+bool Types::DoPostfix(Postfix *what)
 // ----------------------------------------------------------------------------
 //   Assign an unknown type to a postfix and then to its children
 // ----------------------------------------------------------------------------
@@ -228,7 +228,7 @@ bool TypeInference::DoPostfix(Postfix *what)
 }
 
 
-bool TypeInference::DoInfix(Infix *what)
+bool Types::DoInfix(Infix *what)
 // ----------------------------------------------------------------------------
 //   Special treatment for the special infix forms
 // ----------------------------------------------------------------------------
@@ -264,7 +264,7 @@ bool TypeInference::DoInfix(Infix *what)
 }
 
 
-bool TypeInference::DoBlock(Block *what)
+bool Types::DoBlock(Block *what)
 // ----------------------------------------------------------------------------
 //   A block has the same type as its children, except if child alone fails
 // ----------------------------------------------------------------------------
@@ -282,7 +282,7 @@ bool TypeInference::DoBlock(Block *what)
 }
 
 
-bool TypeInference::AssignType(Tree *expr, Tree *type)
+bool Types::AssignType(Tree *expr, Tree *type)
 // ----------------------------------------------------------------------------
 //   Assign a type to a given tree
 // ----------------------------------------------------------------------------
@@ -315,7 +315,7 @@ bool TypeInference::AssignType(Tree *expr, Tree *type)
 }
 
 
-bool TypeInference::Rewrite(Infix *what)
+bool Types::Rewrite(Infix *what)
 // ----------------------------------------------------------------------------
 //   Assign a type to a rewrite
 // ----------------------------------------------------------------------------
@@ -359,7 +359,7 @@ bool TypeInference::Rewrite(Infix *what)
 }
 
 
-bool TypeInference::Data(Tree *what)
+bool Types::Data(Tree *what)
 // ----------------------------------------------------------------------------
 //   Build the structure type associated to the data form
 // ----------------------------------------------------------------------------
@@ -371,7 +371,7 @@ bool TypeInference::Data(Tree *what)
 }
 
 
-bool TypeInference::Extern(Tree *what)
+bool Types::Extern(Tree *what)
 // ----------------------------------------------------------------------------
 //   Recover the transformed rewrite and enter that
 // ----------------------------------------------------------------------------
@@ -393,7 +393,7 @@ static Tree *lookupRewriteCalls(Prefix *sc, Tree *what, Infix *entry, void *i)
 }
 
 
-bool TypeInference::Evaluate(Tree *what)
+bool Types::Evaluate(Tree *what)
 // ----------------------------------------------------------------------------
 //   Find candidates for the given expression and infer types from that
 // ----------------------------------------------------------------------------
@@ -470,7 +470,7 @@ bool TypeInference::Evaluate(Tree *what)
 }
 
 
-bool TypeInference::UnifyTypesOf(Tree *expr1, Tree *expr2)
+bool Types::UnifyTypesOf(Tree *expr1, Tree *expr2)
 // ----------------------------------------------------------------------------
 //   Indicates that the two trees must have identical types
 // ----------------------------------------------------------------------------
@@ -489,7 +489,7 @@ bool TypeInference::UnifyTypesOf(Tree *expr1, Tree *expr2)
 }
 
 
-bool TypeInference::UnifyTypesOfStatements(Tree *expr, Tree *left, Tree *right)
+bool Types::UnifyTypesOfStatements(Tree *expr, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 //   Return the type of a combo statement, skipping declarations
 // ----------------------------------------------------------------------------
@@ -518,7 +518,7 @@ bool TypeInference::UnifyTypesOfStatements(Tree *expr, Tree *left, Tree *right)
 }
 
 
-bool TypeInference::Unify(Tree *t1, Tree *t2,
+bool Types::Unify(Tree *t1, Tree *t2,
                           Tree *x1, Tree *x2,
                           unify_mode mode)
 // ----------------------------------------------------------------------------
@@ -531,7 +531,7 @@ bool TypeInference::Unify(Tree *t1, Tree *t2,
 }
 
 
-bool TypeInference::Unify(Tree *t1, Tree *t2, unify_mode mode)
+bool Types::Unify(Tree *t1, Tree *t2, unify_mode mode)
 // ----------------------------------------------------------------------------
 //   Unify two type forms
 // ----------------------------------------------------------------------------
@@ -668,7 +668,7 @@ bool TypeInference::Unify(Tree *t1, Tree *t2, unify_mode mode)
 }
 
 
-Tree *TypeInference::Base(Tree *type)
+Tree *Types::Base(Tree *type)
 // ----------------------------------------------------------------------------
 //   Return the base type for a given type, i.e. after all substitutions
 // ----------------------------------------------------------------------------
@@ -696,7 +696,7 @@ Tree *TypeInference::Base(Tree *type)
 }
 
 
-Tree *TypeInference::TypePattern(Tree *type)
+Tree *Types::TypePattern(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if type is a type pattern, i.e. type ( ... )
 // ----------------------------------------------------------------------------
@@ -710,7 +710,7 @@ Tree *TypeInference::TypePattern(Tree *type)
 }
 
 
-bool TypeInference::Join(Tree *base, Tree *other, bool knownGood)
+bool Types::Join(Tree *base, Tree *other, bool knownGood)
 // ----------------------------------------------------------------------------
 //   Use 'base' as the prototype for the other type
 // ----------------------------------------------------------------------------
@@ -737,7 +737,7 @@ bool TypeInference::Join(Tree *base, Tree *other, bool knownGood)
 }
 
 
-bool TypeInference::JoinConstant(Tree *cst, Name *type)
+bool Types::JoinConstant(Tree *cst, Name *type)
 // ----------------------------------------------------------------------------
 //    Join a constant with a type name
 // ----------------------------------------------------------------------------
@@ -783,7 +783,7 @@ bool TypeInference::JoinConstant(Tree *cst, Name *type)
 }
 
 
-bool TypeInference::UnifyPatterns(Tree *t1, Tree *t2)
+bool Types::UnifyPatterns(Tree *t1, Tree *t2)
 // ----------------------------------------------------------------------------
 //   Check if two patterns describe the same tree shape
 // ----------------------------------------------------------------------------
@@ -862,7 +862,7 @@ bool TypeInference::UnifyPatterns(Tree *t1, Tree *t2)
 }
 
 
-bool TypeInference::UnifyPatternAndValue(Tree *pat, Tree *val)
+bool Types::UnifyPatternAndValue(Tree *pat, Tree *val)
 // ----------------------------------------------------------------------------
 //   Check if two patterns describe the same tree shape
 // ----------------------------------------------------------------------------
@@ -942,7 +942,7 @@ bool TypeInference::UnifyPatternAndValue(Tree *pat, Tree *val)
 }
 
 
-bool TypeInference::Commit(TypeInference *child)
+bool Types::Commit(Types *child)
 // ----------------------------------------------------------------------------
 //   Commit all the inferences from 'child' into the current
 // ----------------------------------------------------------------------------
@@ -960,7 +960,7 @@ bool TypeInference::Commit(TypeInference *child)
 }
 
 
-Name * TypeInference::NewTypeName(TreePosition pos)
+Name * Types::NewTypeName(TreePosition pos)
 // ----------------------------------------------------------------------------
 //   Automatically generate new type names
 // ----------------------------------------------------------------------------
@@ -976,7 +976,7 @@ Name * TypeInference::NewTypeName(TreePosition pos)
 }
 
 
-Tree *TypeInference::LookupTypeName(Tree *type)
+Tree *Types::LookupTypeName(Tree *type)
 // ----------------------------------------------------------------------------
 //   If we have a type name, lookup its definition
 // ----------------------------------------------------------------------------
@@ -1001,7 +1001,7 @@ Tree *TypeInference::LookupTypeName(Tree *type)
 }
 
 
-bool TypeInference::TypeError(Tree *t1, Tree *t2)
+bool Types::TypeError(Tree *t1, Tree *t2)
 // ----------------------------------------------------------------------------
 //   Show type matching errors
 // ----------------------------------------------------------------------------
@@ -1466,14 +1466,14 @@ Tree *StructuredType(Context *ctx, Tree *value)
 XL_END
 
 
-void debugt(XL::TypeInference *ti)
+void debugt(XL::Types *ti)
 // ----------------------------------------------------------------------------
 //   Dump a type inference
 // ----------------------------------------------------------------------------
 {
-    if (!XL::Allocator<XL::TypeInference>::IsAllocated(ti))
+    if (!XL::Allocator<XL::Types>::IsAllocated(ti))
     {
-        std::cout << "Cowardly refusing to show bad TypeInference pointer "
+        std::cout << "Cowardly refusing to show bad Types pointer "
                   << (void *) ti << "\n";
         return;
     }
@@ -1497,14 +1497,14 @@ void debugt(XL::TypeInference *ti)
 }
 
 
-void debugu(XL::TypeInference *ti)
+void debugu(XL::Types *ti)
 // ----------------------------------------------------------------------------
 //   Dump type unifications in a given inference system
 // ----------------------------------------------------------------------------
 {
-    if (!XL::Allocator<XL::TypeInference>::IsAllocated(ti))
+    if (!XL::Allocator<XL::Types>::IsAllocated(ti))
     {
-        std::cout << "Cowardly refusing to show bad TypeInference pointer "
+        std::cout << "Cowardly refusing to show bad Types pointer "
                   << (void *) ti << "\n";
         return;
     }
@@ -1526,14 +1526,14 @@ void debugu(XL::TypeInference *ti)
 
 
 
-void debugr(XL::TypeInference *ti)
+void debugr(XL::Types *ti)
 // ----------------------------------------------------------------------------
 //   Dump rewrite calls associated with each tree in this type inference system
 // ----------------------------------------------------------------------------
 {
-    if (!XL::Allocator<XL::TypeInference>::IsAllocated(ti))
+    if (!XL::Allocator<XL::Types>::IsAllocated(ti))
     {
-        std::cout << "Cowardly refusing to show bad TypeInference pointer "
+        std::cout << "Cowardly refusing to show bad Types pointer "
                   << (void *) ti << "\n";
         return;
     }

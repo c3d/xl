@@ -238,7 +238,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
 {
     llvm_value result = NULL;
 
-    rcall_map &rcalls = unit->inference->rcalls;
+    rcall_map &rcalls = unit->types->rcalls;
     rcall_map::iterator found = rcalls.find(call);
     assert(found != rcalls.end() || !"Type analysis botched on expression");
 
@@ -253,7 +253,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
     {
         // We now evaluate in that rewrite's type system
         RewriteCandidate &cand = calls[0];
-        Save<TypeInference_p> saveTypes(unit->inference, cand.types);
+        Save<Types_p> saveTypes(unit->types, cand.types);
 
         if (cand.conditions.size() == 0)
         {
@@ -273,7 +273,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
     {
         // Now evaluate in that candidate's type system
         RewriteCandidate &cand = calls[i];
-        Save<TypeInference_p> saveTypes(unit->inference, cand.types);
+        Save<Types_p> saveTypes(unit->types, cand.types);
         llvm_value condition = NULL;
 
         // Perform the tests to check if this candidate is valid

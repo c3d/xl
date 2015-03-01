@@ -68,7 +68,7 @@ CompiledUnit::CompiledUnit(Compiler *compiler, Context *context)
 // ----------------------------------------------------------------------------
 //   CompiledUnit constructor
 // ----------------------------------------------------------------------------
-    : context(context), inference(NULL),
+    : context(context), types(NULL),
       compiler(compiler), llvm(compiler->llvm),
       code(NULL), data(NULL), function(NULL),
       allocabb(NULL), entrybb(NULL), exitbb(NULL),
@@ -102,7 +102,7 @@ Function *CompiledUnit::ExpressionFunction()
 // ----------------------------------------------------------------------------
 {
     // We must have verified or at least scanned the types before
-    assert(inference || !"ExpressionFunction called without type check");
+    assert(types || !"ExpressionFunction called without type check");
 
     llvm_types signature;
     ParameterList parameters(this);
@@ -115,14 +115,14 @@ Function *CompiledUnit::ExpressionFunction()
 }
 
 
-Function *CompiledUnit::ClosureFunction(Tree *expr, TypeInference *types)
+Function *CompiledUnit::ClosureFunction(Tree *expr, Types *types)
 // ----------------------------------------------------------------------------
 //   Create a function for a closure
 // ----------------------------------------------------------------------------
 {
     // We must have verified the types before
-    assert((types && !inference) || !"ClosureFunction botched types");
-    inference = types;
+    assert((types && !this->types) || !"ClosureFunction botched types");
+    this->types = types;
 
     // We have a closure type that we will build as we evaluate expression
     closureTy = LLVMS_getOpaqueType(llvm);
@@ -136,7 +136,7 @@ Function *CompiledUnit::ClosureFunction(Tree *expr, TypeInference *types)
     signature.push_back(closurePtrTy);
 
     // Figure out the return type and function type
-    Tree *rtype = inference->Type(expr);
+    Tree *rtype = this->types->Type(expr);
     llvm_type retTy = compiler->MachineType(rtype);
     FunctionType *fnTy = FunctionType::get(retTy, signature, false);
     llvm_function fn = InitializeFunction(fnTy,NULL,"xl_closure",true,false);
@@ -151,12 +151,12 @@ Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
 //   Create a function for a tree rewrite
 // ----------------------------------------------------------------------------
 {
-    TypeInference *types = rc.types;
+    Types *types = rc.types;
     Infix *rewrite = rc.rewrite;
 
     // We must have verified the types before
-    assert((types && !inference) || !"RewriteFunction: bogus type check");
-    inference = types;
+    assert((types && !this->types) || !"RewriteFunction: bogus type check");
+    this->types = types;
 
     Tree *source = RewriteDefined(rewrite->left);
     Tree *def = rewrite->right;
@@ -319,10 +319,10 @@ bool CompiledUnit::TypeCheck(Tree *program)
 //   Verify that the given program/expression is valid in current context
 // ----------------------------------------------------------------------------
 {
-    TypeInference_p inferTypes = new TypeInference(context);
+    Types_p inferTypes = new Types(context);
     bool result = inferTypes->TypeCheck(program);
     if (result)
-        inference = inferTypes;
+        this->types = inferTypes;
     return result;
 }
 
@@ -332,7 +332,7 @@ llvm_value CompiledUnit::CompileTopLevel(Tree *tree)
 //    Compile a given tree at top level (evaluate closures)
 // ----------------------------------------------------------------------------
 {
-    assert (inference || !"Compile() called without type checking");
+    assert (types || !"Compile() called without type checking");
     CompileExpression cexpr(this);
     llvm_value result = cexpr.TopLevelEvaluation(tree);
     return result;
@@ -344,7 +344,7 @@ llvm_value CompiledUnit::Compile(Tree *tree)
 //    Compile a given tree
 // ----------------------------------------------------------------------------
 {
-    assert (inference || !"Compile() called without type checking");
+    assert (types || !"Compile() called without type checking");
     CompileExpression cexpr(this);
     llvm_value result = tree->Do(cexpr);
     return result;
@@ -363,7 +363,7 @@ llvm_value CompiledUnit::Compile(RewriteCandidate &rc, llvm_values &args)
     // If we have not, then we need to build it
     if (function == NULL)
     {
-        TypeInference *types = rc.types;
+        Types *types = rc.types;
         Infix *rewrite = rc.rewrite;
         Context_p rewriteContext = types->context;
         CompiledUnit rewriteUnit(compiler, rewriteContext);
@@ -605,7 +605,7 @@ llvm_value CompiledUnit::Closure(Name *name, Tree *expr)
     {
         // Create the evaluation function
         CompiledUnit cunit(compiler, context);
-        function = cunit.ClosureFunction(expr, inference);
+        function = cunit.ClosureFunction(expr, types);
         if (!function || !cunit.code || !cunit.closureTy)
             return NULL;
         cunit.ImportClosureInfo(this);
@@ -773,7 +773,7 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
 //    Allocate storage for a given tree
 // ----------------------------------------------------------------------------
 {
-    assert(inference || !"Storage() called without type check");
+    assert(types || !"Storage() called without type check");
 
     Value *result = storage[tree];
     if (!result)
@@ -961,7 +961,7 @@ llvm_type CompiledUnit::ReturnType(Tree *form)
 // ----------------------------------------------------------------------------
 {
     // Type inference gives us the return type for this form
-    Tree *type = inference->Type(form);
+    Tree *type = types->Type(form);
     llvm_type mtype = compiler->MachineType(type);
     return mtype;
 }
@@ -989,7 +989,7 @@ llvm_type CompiledUnit::StructureType(llvm_types &signature, Tree *source)
     unboxed[stype] = source;
 
     // Record boxing for the given type
-    Tree *baseType = inference->Type(source);
+    Tree *baseType = types->Type(source);
     boxed[baseType] = stype;
 
     return stype;
@@ -1017,8 +1017,8 @@ llvm_type CompiledUnit::ExpressionMachineType(Tree *expr)
     llvm_type type = machineType[expr];
     if (!type)
     {
-        assert(inference || !"ExpressionMachineType without type check");
-        Tree *typeTree = inference->Type(expr);
+        assert(types || !"ExpressionMachineType without type check");
+        Tree *typeTree = types->Type(expr);
         type = MachineType(typeTree);
         machineType[expr] = type;
     }
@@ -1031,13 +1031,13 @@ llvm_type CompiledUnit::MachineType(Tree *type)
 //   Return the machine type associated with a given type
 // ----------------------------------------------------------------------------
 {
-    assert(inference || !"ExpressionMachineType without type check");
+    assert(types || !"ExpressionMachineType without type check");
 
-    type = inference->Base(type);
+    type = types->Base(type);
 
     // First check if we have something matching in our boxed types
     for (type_map::iterator t = boxed.begin(); t != boxed.end(); t++)
-        if (inference->Base((*t).first) == type)
+        if (types->Base((*t).first) == type)
             return (*t).second;
 
     // Otherwise, return the default representation for the type

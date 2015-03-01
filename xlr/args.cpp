@@ -94,15 +94,15 @@ Tree *RewriteCalls::Check (Prefix *scope,
     Errors errors;
     errors.Log(Error("Pattern '$1' doesn't match:", candidate->left), true);
     RewriteCandidate rc(candidate);
-    inference->AssignType(what);
+    types->AssignType(what);
 
     // Create local type inference deriving from ours
     Context_p childContext = new Context(scope);
-    Context_p valueContext = inference->context;
-    TypeInference_p childInference = new TypeInference(valueContext, inference);
+    Context_p valueContext = types->context;
+    Types_p childTypes = new Types(valueContext, types);
 
     // Attempt binding / unification of parameters to arguments
-    XL::Save<TypeInference *> saveInference(inference, childInference);
+    XL::Save<Types *> saveTypes(types, childTypes);
     Tree *form = candidate->left;
     Tree *defined = RewriteDefined(form);
     Tree *defType = RewriteType(form);
@@ -111,7 +111,7 @@ Tree *RewriteCalls::Check (Prefix *scope,
         return NULL;
 
     // If argument/parameters binding worked, try to typecheck the definition
-    childInference->context = childContext;
+    childTypes->context = childContext;
     Tree *value = candidate->right;
     bool builtin = false;
     if (value && value != xl_self)
@@ -119,9 +119,9 @@ Tree *RewriteCalls::Check (Prefix *scope,
         // Check if we have a type to match
         if (defType)
         {
-            if (!childInference->AssignType(value, defType))
+            if (!childTypes->AssignType(value, defType))
                 binding = FAILED;
-            if (!childInference->UnifyTypesOf(what, value))
+            if (!childTypes->UnifyTypesOf(what, value))
                 binding = FAILED;
         }
 
@@ -136,7 +136,7 @@ Tree *RewriteCalls::Check (Prefix *scope,
         
         if (!builtin)
         {
-            bool childSucceeded = childInference->TypeCheck(value);
+            bool childSucceeded = childTypes->TypeCheck(value);
             if (!childSucceeded)
                 binding = FAILED;
         }
@@ -148,15 +148,15 @@ Tree *RewriteCalls::Check (Prefix *scope,
         binding = FAILED;
 
     if (binding != FAILED)
-        if (!saveInference.saved->Commit(childInference))
+        if (!saveTypes.saved->Commit(childTypes))
             binding = FAILED;
 
     // Record the rewrite candidate if we had any success with binding
     if (binding != FAILED)
     {
         // Record the type for that specific expression
-        rc.type = childInference->Type(!builtin && value ? value : form);
-        rc.types = childInference;
+        rc.type = childTypes->Type(!builtin && value ? value : form);
+        rc.types = childTypes;
         candidates.push_back(rc);
     }
 
@@ -185,8 +185,8 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         Integer *f = (Integer *) form;
         if (Integer *iv = value->AsInteger())
             return iv->value == f->value ? PERFECT : FAILED;
-        type = inference->Type(value);
-        if (inference->Unify(type, integer_type, value, form))
+        type = types->Type(value);
+        if (types->Unify(type, integer_type, value, form))
         {
             rc.conditions.push_back(RewriteCondition(value, form));
             return POSSIBLE;
@@ -198,8 +198,8 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         Real *f = (Real *) form;
         if (Real *iv = value->AsReal())
             return iv->value == f->value ? PERFECT : FAILED;
-        type = inference->Type(value);
-        if (inference->Unify(type, real_type, value, form))
+        type = types->Type(value);
+        if (types->Unify(type, real_type, value, form))
         {
             rc.conditions.push_back(RewriteCondition(value, form));
             return POSSIBLE;
@@ -211,8 +211,8 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         Text *f = (Text *) form;
         if (Text *iv = value->AsText())
             return iv->value == f->value ? PERFECT : FAILED;
-        type = inference->Type(value);
-        if (inference->Unify(type, text_type, value, form))
+        type = types->Type(value);
+        if (types->Unify(type, text_type, value, form))
         {
             rc.conditions.push_back(RewriteCondition(value, form));
             return POSSIBLE;
@@ -231,20 +231,20 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
             return POSSIBLE;
 
         // Check if what we have as an expression evaluates correctly
-        bool old_matching = inference->matching;
-        inference->matching = true;
-        if (!value->Do(inference))
+        bool old_matching = types->matching;
+        types->matching = true;
+        if (!value->Do(types))
             return FAILED;
-        inference->matching = old_matching;
-        type = inference->Type(value);
+        types->matching = old_matching;
+        type = types->Type(value);
 
         // Test if the name is already bound, and if so, if trees fail to match
         if (Tree *bound = context->Bound(f, true))
         {
             if (bound != f)
             {
-                Tree *boundType = inference->Type(bound);
-                if (!inference->Unify(boundType, type, form, value))
+                Tree *boundType = types->Type(bound);
+                if (!types->Unify(boundType, type, form, value))
                     return FAILED;
 
                 // We need to have the same value
@@ -256,8 +256,8 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         }
 
         // Check if we can unify the value and name types
-        Tree *nameType = inference->Type(f);
-        if (!inference->Unify(type, nameType, value, form))
+        Tree *nameType = types->Type(f);
+        if (!types->Unify(type, nameType, value, form))
             return FAILED;
 
         // Enter the name in the context and in the bindings
@@ -281,9 +281,9 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
                 return FAILED;
 
             // Add type binding with the given type
-            type = inference->Type(value);
-            if (!inference->Unify(type, fi->right, value, fi->left,
-                                  TypeInference::DECLARATION))
+            type = types->Type(value);
+            if (!types->Unify(type, fi->right, value, fi->left,
+                                  Types::DECLARATION))
                 return FAILED;
 
             // Having been successful makes it a strong binding
@@ -297,12 +297,12 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
                 return FAILED;
 
             // Check if we can evaluate the guard
-            if (!fi->right->Do(inference))
+            if (!fi->right->Do(types))
                 return FAILED;
 
             // Check that the type of the guard is a boolean
-            Tree *guardType = inference->Type(fi->right);
-            if (!inference->Unify(guardType, boolean_type, fi->right, fi->left))
+            Tree *guardType = types->Type(fi->right);
+            if (!types->Unify(guardType, boolean_type, fi->right, fi->left))
                 return FAILED;
 
             // Add the guard condition
@@ -332,15 +332,15 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         // We may have an expression that evaluates as an infix
 
         // Check if what we have as an expression evaluates correctly
-        bool old_matching = inference->matching;
-        inference->matching = true;
-        if (!value->Do(inference))
+        bool old_matching = types->matching;
+        types->matching = true;
+        if (!value->Do(types))
             return FAILED;
-        inference->matching = old_matching;
+        types->matching = old_matching;
 
         // Then check if the type matches
-        type = inference->Type(value);
-        if (!inference->Unify(type, infix_type, value, form))
+        type = types->Type(value);
+        if (!types->Unify(type, infix_type, value, form))
             return FAILED;
 
         // If we had to evaluate, we need a runtime pattern match (weak binding)

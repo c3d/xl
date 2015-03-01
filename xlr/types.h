@@ -79,14 +79,14 @@ typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
 //
 // ============================================================================
 
-struct TypeInference
+struct Types
 // ----------------------------------------------------------------------------
 //   Scan a tree, record required types and perform type analysis
 // ----------------------------------------------------------------------------
 {
-    TypeInference(Context *context);
-    TypeInference(Context *context, TypeInference *parent);
-    ~TypeInference();
+    Types(Context *context);
+    Types(Context *context, Types *parent);
+    ~Types();
     typedef bool value_type;
     enum unify_mode { STANDARD, DECLARATION };
 
@@ -129,7 +129,7 @@ public:
     bool        JoinConstant(Tree *cst, Name *tname);
     bool        UnifyPatterns(Tree *t1, Tree *t2);
     bool        UnifyPatternAndValue(Tree *pat, Tree *val);
-    bool        Commit(TypeInference *child);
+    bool        Commit(Types *child);
 
     // Return the base type associated with a given tree
     Tree *      Base(Tree *type);
@@ -159,9 +159,9 @@ public:
     bool        matching;       // Matching a pattern
     static ulong id;            // Id of next type
 
-    GARBAGE_COLLECT(TypeInference);
+    GARBAGE_COLLECT(Types);
 };
-typedef GCPtr<TypeInference> TypeInference_p;
+typedef GCPtr<Types> Types_p;
 
 
 
@@ -245,7 +245,7 @@ struct TypeInfo : Info
 //
 // ============================================================================
 
-inline bool TypeInference::IsGeneric(text name)
+inline bool Types::IsGeneric(text name)
 // ----------------------------------------------------------------------------
 //   Check if a given type is a generated generic type name
 // ----------------------------------------------------------------------------
@@ -254,7 +254,7 @@ inline bool TypeInference::IsGeneric(text name)
 }
 
 
-inline bool TypeInference::IsGeneric(Tree *type)
+inline bool Types::IsGeneric(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if a given type is a generated generic type name
 // ----------------------------------------------------------------------------
@@ -265,7 +265,7 @@ inline bool TypeInference::IsGeneric(Tree *type)
 }
 
 
-inline bool TypeInference::IsTypeName(Tree *type)
+inline bool Types::IsTypeName(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if a given type is a 'true' type name, i.e. not generated
 // ----------------------------------------------------------------------------
@@ -291,8 +291,8 @@ inline bool IsTreeType(Tree *type)
 
 XL_END
 
-extern "C" void debugt(XL::TypeInference *ti);
-extern "C" void debugu(XL::TypeInference *ti);
-extern "C" void debugr(XL::TypeInference *ti);
+extern "C" void debugt(XL::Types *ti);
+extern "C" void debugu(XL::Types *ti);
+extern "C" void debugr(XL::Types *ti);
 
 #endif // TYPES_H

@@ -45,8 +45,8 @@
 
 XL_BEGIN
 
-struct TypeInference;
-typedef GCPtr<TypeInference> TypeInference_p;
+struct Types;
+typedef GCPtr<Types> Types_p;
 
 
 struct CompiledUnit
@@ -59,7 +59,7 @@ struct CompiledUnit
 
 public:
     llvm_function       ExpressionFunction();
-    llvm_function       ClosureFunction(Tree *expr, TypeInference *types);
+    llvm_function       ClosureFunction(Tree *expr, Types *types);
     llvm_function       RewriteFunction(RewriteCandidate &rc);
 
     llvm_function       InitializeFunction(llvm::FunctionType *,
@@ -110,7 +110,7 @@ public:
 
 public:
     Context_p           context;        // Context in which we compile
-    TypeInference_p     inference;      // Type inferences for this unit
+    Types_p             types;          // Type inferences for this unit
 
     Compiler *          compiler;       // The compiler environment we use
     llvm::LLVMContext & llvm;           // The LLVM context we got from compiler

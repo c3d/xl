@@ -61,7 +61,7 @@ bool ParameterList::EnterName(Name *what,
     // Check the LLVM type for the given form
     llvm_type type = NULL;
 
-    if (unit->inference)
+    if (unit->types)
     {
         type = unit->ExpressionMachineType(what);
 
@@ -158,7 +158,7 @@ bool ParameterList::DoInfix(Infix *what)
         // Check the variable name, e.g. K in example above
         if (Name *varName = what->left->AsName())
         {
-            if (unit->inference)
+            if (unit->types)
             {
                 // Enter a name in the parameter list with adequate machine type
                 llvm_type mtype = unit->MachineType(what->right);
@@ -181,7 +181,7 @@ bool ParameterList::DoInfix(Infix *what)
             }
 
             // Remember the specified returned value
-            if (unit->inference)
+            if (unit->types)
                 returned = unit->ExpressionMachineType(what);
 
             // Keep going with the left-hand side
