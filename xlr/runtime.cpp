@@ -711,51 +711,6 @@ Tree *xl_tree_cast(Context *context, Tree *source, Tree *value)
 }
 
 
-Tree *xl_source_cast(Context *context, Tree *source, Tree *value)
-// ----------------------------------------------------------------------------
-//   Any source can be accepted
-// ----------------------------------------------------------------------------
-{
-    return value;
-}
-
-
-Tree *xl_code_cast(Context *context, Tree *source, Tree *value)
-// ----------------------------------------------------------------------------
-//   Any code can be accepted
-// ----------------------------------------------------------------------------
-{
-    return value;
-}
-
-
-Tree *xl_lazy_cast(Context *context, Tree *source, Tree *value)
-// ----------------------------------------------------------------------------
-//   Any lazy argument can be accepted
-// ----------------------------------------------------------------------------
-{
-    return value;
-}
-
-
-Tree *xl_reference_cast(Context *context, Tree *source, Tree *value)
-// ----------------------------------------------------------------------------
-//   Any reference argument can be accepted
-// ----------------------------------------------------------------------------
-{
-    return value;
-}
-
-
-Tree *xl_value_cast(Context *context, Tree *source, Tree *value)
-// ----------------------------------------------------------------------------
-//   Any value can be accepted (we evaluate first)
-// ----------------------------------------------------------------------------
-{
-    return value;
-}
-
-
 Tree *xl_symbol_cast(Context *context, Tree *source, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if argument can be evaluated as a symbol

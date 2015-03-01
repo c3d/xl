@@ -53,7 +53,7 @@ struct RewriteBinding
 // ----------------------------------------------------------------------------
 {
     RewriteBinding(Name *name, Tree *value)
-        : name(name), value(value), closure(NULL) {}\
+        : name(name), value(value), closure(NULL) {}
     bool       IsDeferred();
     llvm_value Closure(CompiledUnit *unit);
     Name_p     name;

@@ -14,6 +14,7 @@ TYPE(symbol);
 TYPE(name);
 TYPE(operator);
 TYPE(infix);
+TYPE(declaration);
 TYPE(prefix);
 TYPE(postfix);
 TYPE(block);
@@ -29,4 +30,3 @@ TYPE(unsigned32);
 TYPE(unsigned64);
 TYPE(real32);
 TYPE(real64);
-

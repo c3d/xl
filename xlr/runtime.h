@@ -115,11 +115,6 @@ Tree *xl_real_cast(Context *, Tree *source, Tree *value);
 Tree *xl_text_cast(Context *, Tree *source, Tree *value);
 Tree *xl_character_cast(Context *, Tree *source, Tree *value);
 Tree *xl_tree_cast(Context *, Tree *source, Tree *value);
-Tree *xl_source_cast(Context *, Tree *source, Tree *value);
-Tree *xl_code_cast(Context *, Tree *source, Tree *value);
-Tree *xl_lazy_cast(Context *, Tree *source, Tree *value);
-Tree *xl_reference_cast(Context *, Tree *source, Tree *value);
-Tree *xl_value_cast(Context *, Tree *source, Tree *value);
 Tree *xl_symbol_cast(Context *, Tree *source, Tree *value);
 Tree *xl_name_cast(Context *, Tree *source, Tree *value);
 Tree *xl_operator_cast(Context *, Tree *source, Tree *value);
@@ -127,17 +122,18 @@ Tree *xl_infix_cast(Context *, Tree *source, Tree *value);
 Tree *xl_prefix_cast(Context *, Tree *source, Tree *value);
 Tree *xl_postfix_cast(Context *, Tree *source, Tree *value);
 Tree *xl_block_cast(Context *, Tree *source, Tree *value);
-#define xl_integer8_cast   xl_integer_cast
-#define xl_integer16_cast  xl_integer_cast
-#define xl_integer32_cast  xl_integer_cast
-#define xl_integer64_cast  xl_integer_cast
-#define xl_unsigned_cast   xl_integer_cast
-#define xl_unsigned8_cast  xl_integer_cast
-#define xl_unsigned16_cast xl_integer_cast
-#define xl_unsigned32_cast xl_integer_cast
-#define xl_unsigned64_cast xl_integer_cast
-#define xl_real32_cast     xl_real_cast
-#define xl_real64_cast     xl_real_cast
+#define xl_integer8_cast        xl_integer_cast
+#define xl_integer16_cast       xl_integer_cast
+#define xl_integer32_cast       xl_integer_cast
+#define xl_integer64_cast       xl_integer_cast
+#define xl_unsigned_cast        xl_integer_cast
+#define xl_unsigned8_cast       xl_integer_cast
+#define xl_unsigned16_cast      xl_integer_cast
+#define xl_unsigned32_cast      xl_integer_cast
+#define xl_unsigned64_cast      xl_integer_cast
+#define xl_real32_cast          xl_real_cast
+#define xl_real64_cast          xl_real_cast
+#define xl_declaration_cast     xl_infix_cast
 
 Tree *xl_parameter(text name, text type);
 void xl_infix_to_list(Infix *infix, TreeList &list);

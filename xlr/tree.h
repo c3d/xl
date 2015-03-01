@@ -28,10 +28,11 @@
 #include "gc.h"
 #include "info.h"
 #include <map>
+
 #include <vector>
 #include <cassert>
-
 #include <iostream>
+#include <cctype>
 
 XL_BEGIN
 
@@ -224,7 +225,7 @@ struct Text : Tree
     static text         textQuote, charQuote;
     operator text()     { return value; }
     bool IsCharacter()  { return opening == charQuote && closing == charQuote; }
-    bool IsText()       { return opening == textQuote && closing == textQuote; }
+    bool IsText()       { return !IsCharacter(); }
 
     GARBAGE_COLLECT(Text);
 };
@@ -240,8 +241,12 @@ struct Name : Tree
         Tree(NAME, pos), value(n) {}
     Name(Name *n):
         Tree(NAME, n), value(n->value) {}
-    text                value;
-    operator bool();
+    bool        IsEmpty()       { return value.length() == 0; }
+    bool        IsOperator()    { return !IsEmpty() && !isalpha(value[0]); }
+    bool        IsName()        { return !IsEmpty() && isalpha(value[0]); }
+    bool        IsBoolean()     { return value=="true" || value=="false"; }
+    text        value;
+    operator    bool();
     GARBAGE_COLLECT(Name);
 };
 
@@ -315,6 +320,7 @@ struct Infix : Tree
     Infix(Infix *i, Tree *l, Tree *r):
         Tree(INFIX, i), left(l), right(r), name(i->name) {}
     Infix *             LastStatement();
+    bool                IsDeclaration() { return name == "->"; }
     Tree_p              left;
     Tree_p              right;
     text                name;

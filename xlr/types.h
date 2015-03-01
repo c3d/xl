@@ -115,13 +115,13 @@ public:
     bool        Rewrite(Infix *rewrite);
     bool        Data(Tree *form);
     bool        Extern(Tree *form);
+    bool        Statements(Tree *expr, Tree *left, Tree *right);
 
     // Attempt to evaluate an expression and perform required unifications
     bool        Evaluate(Tree *tree);
 
     // Indicates that two trees must have compatible types
-    bool        UnifyTypesOf(Tree *expr1, Tree *expr2);
-    bool        UnifyTypesOfStatements(Tree *expr, Tree *left, Tree *right);
+    bool        UnifyExpressionTypes(Tree *expr1, Tree *expr2);
     bool        Unify(Tree *t1, Tree *t2,
                       Tree *x1, Tree *x2, unify_mode mode = STANDARD);
     bool        Unify(Tree *t1, Tree *t2, unify_mode mode = STANDARD);

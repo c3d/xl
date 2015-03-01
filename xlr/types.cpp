@@ -176,7 +176,8 @@ bool Types::DoConstant(Tree *what)
 //   All constants have themselves as type, and evaluate normally
 // ----------------------------------------------------------------------------
 {
-    bool result = AssignType(what, what);
+    Tree *canon = CanonicalType(what);
+    bool result = AssignType(what, canon);
     result = Evaluate(what);
     return result;
 }
@@ -205,9 +206,9 @@ bool Types::DoPrefix(Prefix *what)
     if (Name *name = what->left->AsName())
     {
         if (name->value == "data")
-            return Data(what->right);
+            return AssignType(what, declaration_type) && Data(what->right);
         else if (name->value == "extern")
-            return Extern(what->right);
+            return AssignType(what, declaration_type) && Extern(what->right);
     }
 
     // What really matters is if we can evaluate the top-level expression
@@ -240,12 +241,7 @@ bool Types::DoInfix(Infix *what)
         // Assign types to left and right
         if (!AssignType(what))
             return false;
-
-        if (!what->left->Do(this))
-            return false;
-        if (!what->right->Do(this))
-            return false;
-        return UnifyTypesOfStatements(what, what->left, what->right);
+        return Statements(what, what->left, what->right);
     }
 
     // Case of 'X : T' : Set type of X to T and unify X:T with X
@@ -253,7 +249,7 @@ bool Types::DoInfix(Infix *what)
         return (AssignType(what->left, what->right) &&
                 what->left->Do(this) &&
                 AssignType(what) &&
-                UnifyTypesOf(what, what->left));
+                UnifyExpressionTypes(what, what->left));
 
     // Case of 'X -> Y': Analyze type of X and Y, unify them, set type of result
     if (what->name == "->")
@@ -279,7 +275,7 @@ bool Types::DoBlock(Block *what)
 
     // If child succeeds, the block and its child have the same type
     if (what->child->Do(this))
-        return UnifyTypesOf(what, what->child);
+        return UnifyExpressionTypes(what, what->child);
 
     // Otherwise, try to find a matching form
     return Evaluate(what);
@@ -339,7 +335,7 @@ bool Types::Rewrite(Infix *what)
     // The rewrite itself is an infix (in case we have to manage it)
     Tree *formType = Type(what->left);
     Tree *valueType = Type(what->right);
-    if (!AssignType(what, infix_type))
+    if (!AssignType(what, declaration_type))
         return false;
 
     // We need to be able to unify pattern and definition types
@@ -367,19 +363,7 @@ bool Types::Data(Tree *what)
 //   Use the structure type associated to the data form
 // ----------------------------------------------------------------------------
 {
-    switch(what->Kind())
-    {
-    case INTEGER:       AssignType(what, integer_type); break;
-    case REAL:          AssignType(what, real_type);    break;
-    case TEXT:          AssignType(what, text_type);    break;
-    case NAME:          AssignType(what, name_type);    break;
-    case INFIX:         AssignType(what, infix_type);   break;
-    case PREFIX:        AssignType(what, prefix_type);  break;
-    case POSTFIX:       AssignType(what, postfix_type); break;
-    case BLOCK:         AssignType(what, block_type);   break;
-    }
-
-    return true;
+    return AssignType(what, CanonicalType(what));
 }
 
 
@@ -392,6 +376,24 @@ bool Types::Extern(Tree *what)
     if (!cdecl)
         return false;
     return Rewrite(cdecl->rewrite);
+}
+
+
+bool Types::Statements(Tree *expr, Tree *left, Tree *right)
+// ----------------------------------------------------------------------------
+//   Return the type of a combo statement, skipping declarations
+// ----------------------------------------------------------------------------
+{
+    if (!left->Do(this))
+        return false;
+    if (!right->Do(this))
+        return false;
+
+    // Check if right term is a declaration, otherwise return that
+    Tree *t2 = Type(right);
+    if (t2 != declaration_type)
+        return t2;
+    return Type(left);
 }
 
 
@@ -482,14 +484,11 @@ bool Types::Evaluate(Tree *what)
 }
 
 
-bool Types::UnifyTypesOf(Tree *expr1, Tree *expr2)
+bool Types::UnifyExpressionTypes(Tree *expr1, Tree *expr2)
 // ----------------------------------------------------------------------------
 //   Indicates that the two trees must have identical types
 // ----------------------------------------------------------------------------
 {
-    Save<Tree_p> saveLeft(left, expr1);
-    Save<Tree_p> saveRight(right, expr2);
-
     Tree *t1 = Type(expr1);
     Tree *t2 = Type(expr2);
 
@@ -497,36 +496,7 @@ bool Types::UnifyTypesOf(Tree *expr1, Tree *expr2)
     if (t1 == t2)
         return true;
 
-    return Unify(t1, t2);
-}
-
-
-bool Types::UnifyTypesOfStatements(Tree *expr, Tree *left, Tree *right)
-// ----------------------------------------------------------------------------
-//   Return the type of a combo statement, skipping declarations
-// ----------------------------------------------------------------------------
-{
-    // Check if right term is a declaration
-    Tree *t2 = Type(right);
-    if (Infix *t2inf = t2->AsInfix())
-    {
-        if (t2inf->name == "=>")
-        {
-            // Check left term
-            Tree *t1 = Type(left);
-            if (Infix *t1inf = t1->AsInfix())
-            {
-                // If both terms are declarations, leave expr type unchanged
-                if (t1inf->name == "=>")
-                    return true;
-            }
-
-            // Unify with left term
-            return UnifyTypesOf(expr, left);
-        }
-    }
-
-    return UnifyTypesOf(expr, right);
+    return Unify(t1, t2, expr1, expr2);
 }
 
 
@@ -586,58 +556,6 @@ bool Types::Unify(Tree *t1, Tree *t2, unify_mode mode)
     if (t2->IsConstant())
         if (Name *t1n = t1->AsName())
             return JoinConstant(t2, t1n);
-
-    // Check if t1 is one of the infix constructor types
-    if (Infix *i1 = t1->AsInfix())
-    {
-        // Function types: Unifies only with a function type
-        if (i1->name == "=>")
-        {
-            if (Infix *i2 = t2->AsInfix())
-                if (i2->name == "=>")
-                    return
-                        Unify(i1->left, i2->left, i1, i2) &&
-                        Unify(i1->right, i2->right, i1, i2);
-            
-            return TypeError(i1, t2);
-        }
-        
-        // Union types: Unify with either side
-        if (i1->name == "|")
-        {
-            if (mode != DECLARATION)
-            {
-                Errors errors;
-                if (Unify(i1->left, t2))
-                    return true;
-                errors.Swallowed();
-                if (Unify(i1->right, t2))
-                    return true;
-            }
-            return TypeError(t1, t2);
-        }
-        
-        Ooops("Malformed type definition $2 for $1", left, i1);
-        return false;
-    }
-
-    if (Infix *i2 = t2->AsInfix())
-    {
-        // Union types: Unify with either side
-        if (i2->name == "|")
-        {
-            Errors errors;
-            if (Unify(t1, i2->left))
-                return true;
-            errors.Swallowed();
-            if (Unify(t1, i2->right))
-                return true;
-            return false;
-        }
-
-        Ooops("Malformed type definition $2 for $1", right, i2);
-        return false;
-    }
 
     // If either is a generic, unify with the other
     if (IsGeneric(t1))
@@ -902,7 +820,7 @@ bool Types::UnifyPatternAndValue(Tree *pat, Tree *val)
     case NAME:
         // A name at that stage is a variable, so we match
         // PROBLEM: matching X+X will match twice?
-        return UnifyTypesOf(pat, val);
+        return UnifyExpressionTypes(pat, val);
 
     case INFIX:
         if (Infix *x1 = pat->AsInfix())
@@ -1065,15 +983,15 @@ Tree *ValueMatchesType(Context *ctx, Tree *type, Tree *value, bool convert)
     }
     if (type == text_type)
         if (Text *tv = value->AsText())
-            if (tv->opening != "'" && tv->closing != "'")
+            if (tv->IsText())
                 return tv;
     if (type == character_type)
         if (Text *cv = value->AsText())
-            if (cv->opening == "'" && cv->closing == "'")
+            if (cv->IsCharacter())
                 return cv;
     if (type == boolean_type)
         if (Name *nv = value->AsName())
-            if (nv->value == "true" || nv->value == "false")
+            if (nv->IsBoolean())
                 return nv;
     if (IsTreeType(type))
         return value;
@@ -1082,12 +1000,16 @@ Tree *ValueMatchesType(Context *ctx, Tree *type, Tree *value, bool convert)
             return nv;
     if (type == name_type)
         if (Name *nv = value->AsName())
-            if (nv->value.length() && isalpha(nv->value[0]))
+            if (nv->IsName())
                 return nv;
     if (type == operator_type)
         if (Name *nv = value->AsName())
-            if (nv->value.length() && !isalpha(nv->value[0]))
+            if (nv->IsOperator())
                 return nv;
+    if (type == declaration_type)
+        if (Infix *iv = value->AsInfix())
+            if (iv->IsDeclaration())
+                return iv;
     if (type == infix_type)
         if (Infix *iv = value->AsInfix())
             return iv;
@@ -1391,6 +1313,43 @@ Tree *UnionType(Context *ctx, Tree *t1, Tree *t2)
 }
 
 
+Tree *CanonicalType(Text *value)
+// ----------------------------------------------------------------------------
+//    Return the canonical type for a text value
+// ----------------------------------------------------------------------------
+{
+    if (value->IsCharacter())
+        return character_type;
+    return text_type;
+}
+
+
+Tree *CanonicalType(Name *value)
+// ----------------------------------------------------------------------------
+//    Return the canonical type for a name value
+// ----------------------------------------------------------------------------
+{
+    if (value->IsBoolean())
+        return boolean_type;
+    if (value->IsOperator())
+        return operator_type;
+    if (value->IsName())
+        return name_type;
+    return symbol_type;         // Only occurs for empty names today
+}
+
+
+Tree *CanonicalType(Infix *value)
+// ----------------------------------------------------------------------------
+//   Return a canonical type for an infix value
+// ----------------------------------------------------------------------------
+{
+    if (value->IsDeclaration())
+        return declaration_type;
+    return infix_type;
+}
+
+
 Tree *CanonicalType(Tree *value)
 // ----------------------------------------------------------------------------
 //   Return the canonical type for the given value
@@ -1399,14 +1358,14 @@ Tree *CanonicalType(Tree *value)
     Tree *type = tree_type;
     switch (value->Kind())
     {
-    case INTEGER:
-    case REAL:
-    case TEXT:          type = value; break;
-    case NAME:          type = symbol_type; break;
-    case INFIX:         type = infix_type; break;
-    case PREFIX:        type = prefix_type; break;
-    case POSTFIX:       type = postfix_type; break;
-    case BLOCK:         type = block_type; break;
+    case INTEGER:       type = integer_type;                    break;
+    case REAL:          type = real_type;                       break;
+    case TEXT:          type = CanonicalType((Text *) value);   break;
+    case NAME:          type = CanonicalType((Name *) value);   break;
+    case INFIX:         type = CanonicalType((Infix *) value);  break;
+    case PREFIX:        type = prefix_type;                     break;
+    case POSTFIX:       type = postfix_type;                    break;
+    case BLOCK:         type = block_type;                      break;
     }
     return type;
 }

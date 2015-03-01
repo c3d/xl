@@ -121,7 +121,7 @@ Tree *RewriteCalls::Check (Prefix *scope,
         {
             if (!childTypes->AssignType(value, defType))
                 binding = FAILED;
-            if (!childTypes->UnifyTypesOf(what, value))
+            if (!childTypes->UnifyExpressionTypes(what, value))
                 binding = FAILED;
         }
 
