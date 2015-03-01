@@ -81,7 +81,7 @@ typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
 
 struct Types
 // ----------------------------------------------------------------------------
-//   Scan a tree, record required types and perform type analysis
+//   Record type information
 // ----------------------------------------------------------------------------
 {
     Types(Context *context);
@@ -92,8 +92,8 @@ struct Types
 
 public:
     // Main entry point
-    bool TypeCheck(Tree *what);
-    Tree *Type(Tree *expr);
+    bool        TypeCheck(Tree *what);
+    Tree *      Type(Tree *expr);
 
 public:
     // Interface for Tree::Do() to annotate the tree
