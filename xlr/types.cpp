@@ -336,11 +336,10 @@ bool Types::Rewrite(Infix *what)
         return false;
     }
 
-    // Create a new function type for the rewrite tree
+    // The rewrite itself is an infix (in case we have to manage it)
     Tree *formType = Type(what->left);
     Tree *valueType = Type(what->right);
-    Infix *fntype = new Infix("=>", formType, valueType, what->Position());
-    if (!AssignType(what, fntype))
+    if (!AssignType(what, infix_type))
         return false;
 
     // We need to be able to unify pattern and definition types
@@ -365,12 +364,21 @@ bool Types::Rewrite(Infix *what)
 
 bool Types::Data(Tree *what)
 // ----------------------------------------------------------------------------
-//   Build the structure type associated to the data form
+//   Use the structure type associated to the data form
 // ----------------------------------------------------------------------------
 {
-    (void) what;
+    switch(what->Kind())
+    {
+    case INTEGER:       AssignType(what, integer_type); break;
+    case REAL:          AssignType(what, real_type);    break;
+    case TEXT:          AssignType(what, text_type);    break;
+    case NAME:          AssignType(what, name_type);    break;
+    case INFIX:         AssignType(what, infix_type);   break;
+    case PREFIX:        AssignType(what, prefix_type);  break;
+    case POSTFIX:       AssignType(what, postfix_type); break;
+    case BLOCK:         AssignType(what, block_type);   break;
+    }
 
-    // TODO
     return true;
 }
 
@@ -523,8 +531,8 @@ bool Types::UnifyTypesOfStatements(Tree *expr, Tree *left, Tree *right)
 
 
 bool Types::Unify(Tree *t1, Tree *t2,
-                          Tree *x1, Tree *x2,
-                          unify_mode mode)
+                  Tree *x1, Tree *x2,
+                  unify_mode mode)
 // ----------------------------------------------------------------------------
 //   Unification with expressions
 // ----------------------------------------------------------------------------
