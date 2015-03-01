@@ -36,6 +36,8 @@ UPDATE=
 BASELINE=
 NOCACHE=
 RUNTIME=default
+POSITIVE_SUCCESS=0
+NEGATIVE_SUCCESS=0
 POSITIVE_MISMATCHES=0
 NEGATIVE_MISMATCHES=0
 EXPECTED_FAILURES=0
@@ -187,8 +189,10 @@ do
         echo $TEST >> $SUCCESS
         if [ "$RC" -ne "0" ] ; then
             echo Success - negative test;
+            NEGATIVE_SUCCESS=$((NEGATIVE_SUCCESS+1))
         else
             echo Success $CACHED;
+            POSITIVE_SUCCESS=$((POSITIVE_SUCCESS+1))
         fi
         rm -f $LOG
     else
@@ -234,9 +238,11 @@ done
 
 if [ "$ONE_FAILED" ]; then
     echo "*** SUMMARY OF" $TOTAL_TESTS "TESTS: FAILURE ***"
-    echo "  Unexpected error exit      : " $UNEXPECTED_FAILURES
-    echo "  Unexpected successful exit : " $UNEXPECTED_SUCCESSES
+    echo "  Positive success           : " $POSITIVE_SUCCESS
+    echo "  Negative success           : " $NEGATIVE_SUCCESS
     echo "  Expected test failures     : " $EXPECTED_FAILURES
+    echo "  Invalid error exit         : " $UNEXPECTED_FAILURES
+    echo "  Invalid successful exit    : " $UNEXPECTED_SUCCESSES
     echo "  Positive mismatches        : " $POSITIVE_MISMATCHES
     echo "  Negative mismatches        : " $NEGATIVE_MISMATCHES
     echo "  Missing references         : " $MISSING_REFERENCE
@@ -244,7 +250,9 @@ if [ "$ONE_FAILED" ]; then
     echo "  Excluded from run          : " $EXCLUDED
 else
     echo "*** SUMMARY OF" $TOTAL_TESTS "TESTS: SUCCESS ***"
-    echo "  Excluded from run          : " $EXCLUDED
+    echo "  Positive success           : " $POSITIVE_SUCCESS
+    echo "  Negative success           : " $NEGATIVE_SUCCESS
     echo "  Expected test failures     : " $EXPECTED_FAILURES
+    echo "  Excluded from run          : " $EXCLUDED
 fi
 IFS=$SAVEIFS
