@@ -427,7 +427,7 @@ static inline void createXLFunctionPasses(PassManagerBase *PM)
      PM->add(createLICMPass());                  // Hoist loop invariants
      PM->add(createInstructionCombiningPass());  
      PM->add(createIndVarSimplifyPass());        // Canonicalize indvars
-     PM->add(createLoopIdiomPass());             // Recognize idioms like memset.
+     PM->add(createLoopIdiomPass());             // Recognize idioms like memset
      PM->add(createLoopDeletionPass());          // Delete dead loops
      PM->add(createLoopUnrollPass());            // Unroll small loops
      PM->add(createInstructionCombiningPass());  // Clean up after the unroller
