@@ -233,6 +233,21 @@ bool Types::DoInfix(Infix *what)
 //   Special treatment for the special infix forms
 // ----------------------------------------------------------------------------
 {
+    // For a sequence, both sub-expressions must succeed individually.
+    // The type of the sequence is the type of the last statement
+    if (what->name == "\n" || what->name == ";")
+    {
+        // Assign types to left and right
+        if (!AssignType(what))
+            return false;
+
+        if (!what->left->Do(this))
+            return false;
+        if (!what->right->Do(this))
+            return false;
+        return UnifyTypesOfStatements(what, what->left, what->right);
+    }
+
     // Case of 'X : T' : Set type of X to T and unify X:T with X
     if (what->name == ":" || what->name == "as")
         return (AssignType(what->left, what->right) &&
@@ -247,17 +262,6 @@ bool Types::DoInfix(Infix *what)
     // For other cases, we assign types to left and right
     if (!AssignType(what))
         return false;
-
-    // For a sequence, both sub-expressions must succeed individually.
-    // The type of the sequence is the type of the last statement
-    if (what->name == "\n" || what->name == ";")
-    {
-        if (!what->left->Do(this))
-            return false;
-        if (!what->right->Do(this))
-            return false;
-        return UnifyTypesOfStatements(what, what->left, what->right);
-    }
 
     // Success depends on successful evaluation of the complete form
     return Evaluate(what);
