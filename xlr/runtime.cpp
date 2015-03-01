@@ -866,12 +866,10 @@ Real *xl_integer2real(Integer *iv)
 
 Tree *xl_parameter(text symbol, text type)
 // ----------------------------------------------------------------------------
-//   Build an infix name:type, except if type is "lazy"
+//   Build an infix name:type
 // ----------------------------------------------------------------------------
 {
     Name *n = new Name(symbol);
-    if (type == lazy_type->value)
-        return n;
     Name *t = new Name(type);
     Infix *i = new Infix(":", n, t);
     return i;
