@@ -126,7 +126,7 @@ public:
                       Tree *x1, Tree *x2, unify_mode mode = STANDARD);
     bool        Unify(Tree *t1, Tree *t2, unify_mode mode = STANDARD);
     bool        Join(Tree *base, Tree *other, bool knownGood = false);
-    bool        JoinConstant(Tree *cst, Name *tname);
+    bool        JoinConstant(Name *tname, Tree *cst);
     bool        UnifyPatterns(Tree *t1, Tree *t2);
     bool        UnifyPatternAndValue(Tree *pat, Tree *val);
     bool        Commit(Types *child);

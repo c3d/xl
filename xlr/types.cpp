@@ -549,14 +549,6 @@ bool Types::Unify(Tree *t1, Tree *t2, unify_mode mode)
     if (t1 == t2)
         return true;            // This may have been enough for unifiation
 
-    // Special case of constants
-    if (t1->IsConstant())
-        if (Name *t2n = t2->AsName())
-            return JoinConstant(t1, t2n);
-    if (t2->IsConstant())
-        if (Name *t1n = t1->AsName())
-            return JoinConstant(t2, t1n);
-
     // If either is a generic, unify with the other
     if (IsGeneric(t1))
         return Join(t1, t2);
@@ -566,6 +558,9 @@ bool Types::Unify(Tree *t1, Tree *t2, unify_mode mode)
     // If we have a type name at this stage, this is a failure
     if (IsTypeName(t1))
     {
+        if (JoinConstant((Name *) t1, t2))
+            return true;
+
         // In declaration mode, we have success if t2 covers t1
         if (mode == DECLARATION && TypeCoversType(context, t2, t1, false))
             return true;
@@ -573,6 +568,8 @@ bool Types::Unify(Tree *t1, Tree *t2, unify_mode mode)
     }
     if (IsTypeName(t2))
     {
+        if (JoinConstant((Name *) t2, t1))
+            return true;
         return TypeError(t1, t2);
     }
 
@@ -667,7 +664,7 @@ bool Types::Join(Tree *base, Tree *other, bool knownGood)
 }
 
 
-bool Types::JoinConstant(Tree *cst, Name *type)
+bool Types::JoinConstant(Name *type, Tree *cst)
 // ----------------------------------------------------------------------------
 //    Join a constant with a type name
 // ----------------------------------------------------------------------------
@@ -705,9 +702,11 @@ bool Types::JoinConstant(Tree *cst, Name *type)
             return Join(type, cst, true);
         return Unify(text_type, type) && Join(cst, text_type);
     }
-
     default:
-        assert(!"JoinConstant() called with incorrect input");
+    {
+        Tree *canon = CanonicalType(cst);
+        return type == canon;
+    }
     }
     return false;
 }
