@@ -521,9 +521,7 @@ bool Types::Unify(Tree *t1, Tree *t2, unify_mode mode)
 //   - A type name              integer
 //   - A generic type name      #ABC
 //   - A litteral value         0       1.5             "Hello"
-//   - A union of types         integer|real
 //   - A block for precedence   (real)
-//   - A rewrite specifier      integer => real
 //   - The type of a pattern    type (X:integer, Y:integer)
 //
 // Unification happens almost as "usual" for Algorithm W, except for how
@@ -1102,90 +1100,12 @@ Tree *TypeCoversType(Context *ctx, Tree *type, Tree *test, bool convert)
         return test;
     if (IsTreeType(type))
         return test;
+
+    // Numerical conversion
     if (convert)
     {
-        // REVISIT: Could we deduce this without knowing xl_real_cast?
         if (type == real_type && test == integer_type)
             return test;
-    }
-
-    // Check if test is constructed
-    if (Infix *itst = test->AsInfix())
-    {
-        if (itst->name == "|")
-        {
-            // Does 'integer' cover 0 | 1 ? Yes if it covers both
-            if (TypeCoversType(ctx, type, itst->left, convert) &&
-                TypeCoversType(ctx, type, itst->right, convert))
-                return test;
-        }
-        else if (itst->name == "=>")
-        {
-            if (Infix *it = type->AsInfix())
-            {
-                if (it->name == "=>")
-                {
-                    // REVISIT: Coverage of function types
-                    Ooops("Unimplemented: "
-                          "Coverage of function $1 by $2",
-                          test, type);
-                    return test;
-                }
-            }
-        }
-    }
-    if (Block *btst = test->AsBlock())
-        return TypeCoversType(ctx, type, btst->child, convert);
-
-    // General case where the tested type is a value of the type
-    if (test->IsConstant())
-        if (ValueMatchesType(ctx, type, test, convert))
-            return test;
-
-    // Check if we match one of the constructed types
-    if (Block *bt = type->AsBlock())
-        return TypeCoversType(ctx, bt->child, test, convert);
-    if (Infix *it = type->AsInfix())
-    {
-        if (it->name == "|")
-        {
-            if (Tree *lfOK = TypeCoversType(ctx, it->left, test, convert))
-                return lfOK;
-            if (Tree *rtOK = TypeCoversType(ctx, it->right, test, convert))
-                return rtOK;
-        }
-        else if (it->name == "->")
-        {
-            if (Infix *iv = test->AsInfix())
-                if (iv->name == "->")
-                {
-                    // REVISIT: Compare function signatures
-                    Ooops("Unimplemented: "
-                          "Signature comparison of $1 against $2",
-                          test, type);
-                    return iv;
-                }
-        }
-    }
-    if (Prefix *pt = type->AsPrefix())
-    {
-        if (Name *typeKeyword = pt->left->AsName())
-        {
-            if (typeKeyword->value == "type")
-            {
-                if (Block *block = pt->right->AsBlock())
-                {
-                    if (block->child)
-                    {
-                        // REVISIT: Match test with pattern
-                        Ooops("Unimplemented: "
-                              "Pattern type comparison of $1 against $2",
-                              test, type);
-                        return test;
-                    }
-                }
-            }
-        }
     }
 
     // Failed to match type
@@ -1308,7 +1228,7 @@ Tree *UnionType(Context *ctx, Tree *t1, Tree *t2)
         return t1;
     if (TypeCoversType(ctx, t2, t1, false))
         return t2;
-    return new Infix("|", t1, t2);
+    return tree_type;
 }
 
 

@@ -42,6 +42,7 @@
 #include "types.h"
 #include "errors.h"
 #include "unit.h"
+#include "renderer.h"
 
 XL_BEGIN
 
