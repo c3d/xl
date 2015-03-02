@@ -87,6 +87,13 @@ struct RewriteCandidate
     {
         conditions.push_back(RewriteCondition(value, test));
     }
+    void KindCondition(Tree *value, kind k)
+    {
+        TreePosition pos = value->Position();
+        Tree *kindExpr = new Prefix(new Name("kind", pos), value, pos);
+        Tree *cstExpr = new Integer((int) k, pos);
+        Condition(kindExpr, cstExpr);
+    }
 
     Infix_p             rewrite;
     RewriteBindings     bindings;
