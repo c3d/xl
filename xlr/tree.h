@@ -217,6 +217,8 @@ struct Text : Tree
 {
     Text(text t, text open="\"", text close="\"", TreePosition pos=NOWHERE):
         Tree(TEXT, pos), value(t), opening(open), closing(close) {}
+    Text(text t, TreePosition pos):
+        Tree(TEXT, pos), value(t), opening(textQuote), closing(textQuote) {}
     Text(Text *t):
         Tree(TEXT, t),
         value(t->value), opening(t->opening), closing(t->closing) {}

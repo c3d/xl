@@ -171,8 +171,11 @@ llvm_value CompileExpression::DoPrefix(Prefix *what)
         if (name->value == "data" || name->value == "extern")
             return NULL;
 
-        if (name->value == "opcode")
+        if (name->value == "opcode" || name->value == "C")
         {
+            if (name->value == "C")
+                std::cerr << "Prefix=" << what << "\n";
+            
             // This is a builtin, find if we write to code or data
             llvm_builder bld = unit->code;
             Tree *builtin = what->right;

@@ -294,6 +294,24 @@ public:
 };
 
 
+struct ContextStack
+// ----------------------------------------------------------------------------
+//   For debug purpose: display the context stack on a std::ostream
+// ----------------------------------------------------------------------------
+{
+    ContextStack(Prefix *scope) : scope(scope) {}
+    friend std::ostream &operator<<(std::ostream &out, const ContextStack &data)
+    {
+        out << "[ ";
+        for (Prefix *s = data.scope; s; s = s->left->AsPrefix())
+            out << (void *) s << " ";
+        out << "]";
+        return out;
+    }
+    Prefix *scope;
+};
+
+
 
 // ============================================================================
 // 

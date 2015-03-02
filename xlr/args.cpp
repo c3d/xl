@@ -64,7 +64,7 @@ bool RewriteBinding::IsDeferred()
             val = infix;
     }
 
-    // Defere sequences and function definitions
+    // Defer sequences and function definitions
     if (Infix *infix = val->AsInfix())
         return infix->name == ";" || infix->name == "\n" || infix->name == "->";
 
@@ -77,9 +77,8 @@ llvm_value RewriteBinding::Closure(CompiledUnit *unit)
 //   Return closure for this value if we need one
 // ----------------------------------------------------------------------------
 {
-    if (!closure)
-        if (IsDeferred())
-            closure = unit->Closure(name, value);
+    if (!closure && IsDeferred())
+        closure = unit->Closure(name, value);
 
     return closure;
 }
@@ -98,15 +97,19 @@ Tree *RewriteCalls::Check (Prefix *scope,
     types->AssignType(what);
 
     // Create local type inference deriving from ours
-    Context_p childContext = new Context(scope);
     Context_p valueContext = types->context;
     Types_p childTypes = new Types(valueContext, types);
+
+    // Create local context in which we will do the bindings
+    Context_p childContext = new Context(scope);
+    childContext->CreateScope();
 
     // Attempt binding / unification of parameters to arguments
     XL::Save<Types *> saveTypes(types, childTypes);
     Tree *form = candidate->left;
     Tree *defined = RewriteDefined(form);
     Tree *defType = RewriteType(form);
+
     BindingStrength binding = Bind(childContext, defined, what, rc);
     if (binding == FAILED)
         return NULL;
@@ -189,7 +192,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         type = types->Type(value);
         if (types->Unify(type, integer_type, value, form))
         {
-            rc.conditions.push_back(RewriteCondition(value, form));
+            rc.Condition(value, form);
             return POSSIBLE;
         }
         return FAILED;
@@ -202,7 +205,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         type = types->Type(value);
         if (types->Unify(type, real_type, value, form))
         {
-            rc.conditions.push_back(RewriteCondition(value, form));
+            rc.Condition(value, form);
             return POSSIBLE;
         }
         return FAILED;
@@ -215,7 +218,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
         type = types->Type(value);
         if (types->Unify(type, text_type, value, form))
         {
-            rc.conditions.push_back(RewriteCondition(value, form));
+            rc.Condition(value, form);
             return POSSIBLE;
         }
         return FAILED;
@@ -249,7 +252,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
                     return FAILED;
 
                 // We need to have the same value
-                rc.conditions.push_back(RewriteCondition(value, form));
+                rc.Condition(value, form);
 
                 // Since we are testing an existing value, don't pass arg
                 needArg = false;
@@ -307,7 +310,7 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
                 return FAILED;
 
             // Add the guard condition
-            rc.conditions.push_back(RewriteCondition(fi->right, xl_true));
+            rc.Condition(fi->right, xl_true);
 
             // The guard makes the binding weak
             return POSSIBLE;
@@ -345,28 +348,46 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
             return FAILED;
 
         // If we had to evaluate, we need a runtime pattern match (weak binding)
-        return POSSIBLE;
+        TreePosition pos = form->Position();
+        Tree *infixLeft  = new Prefix(new Name("left", pos), value);
+        BindingStrength left  = Bind(context, fi->left, infixLeft, rc);
+        if (left == FAILED)
+            return FAILED;
+        Tree *infixRight = new Prefix(new Name("right", pos), value);
+        BindingStrength right = Bind(context, fi->right, infixRight, rc);
+
+        // Add a condition on the infix name
+        Tree *infixName = new Prefix(new Name("name", pos), value);
+        if (!infixName->Do(types))
+            return FAILED;
+        Tree *infixRequiredName = new Text(fi->name, pos);
+        if (!infixRequiredName->Do(types))
+            return FAILED;
+        rc.Condition(infixName, infixRequiredName);
+
+        // Return weakest binding
+        if (left > right)
+            left = right;
+        return left;
     }
 
     case PREFIX:
     {
         Prefix *prefixForm = (Prefix *) form;
 
-        // Must match a prefix with the same name
-        // REVISIT: Variables that denote a function name...
-        Prefix *prefixValue = value->AsPrefix();
-        if (!prefixValue)
-            return FAILED;
-        Name *formName = prefixForm->left->AsName();
-        if (!formName)
-            return FAILED;
-        Name *valueName = prefixValue->left->AsName();
-        if (!valueName)
-            return FAILED;
-        if (formName->value != valueName->value)
-            return FAILED;
-
-        return Bind(context, prefixForm->right, prefixValue->right, rc);
+        // Must match a postfix with the same name
+        if (Prefix *prefixValue = value->AsPrefix())
+        {
+            BindingStrength ok = BindBinary(context,
+                                            prefixForm->left,
+                                            prefixValue->left,
+                                            prefixForm->right,
+                                            prefixValue->right,
+                                            rc);
+            if (ok != FAILED)
+                return ok;
+        }
+        return FAILED;
     }
 
     case POSTFIX:
@@ -375,19 +396,18 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
 
         // Must match a postfix with the same name
         // REVISIT: Variables that denote a function name...
-        Postfix *postfixValue = value->AsPostfix();
-        if (!postfixValue)
-            return FAILED;
-        Name *formName = postfixForm->right->AsName();
-        if (!formName)
-            return FAILED;
-        Name *valueName = postfixValue->right->AsName();
-        if (!valueName)
-            return FAILED;
-        if (formName->value != valueName->value)
-            return FAILED;
-
-        return Bind(context, postfixForm->left, postfixValue->left, rc);
+        if (Postfix *postfixValue = value->AsPostfix())
+        {
+            BindingStrength ok = BindBinary(context,
+                                            postfixForm->right,
+                                            postfixValue->right,
+                                            postfixForm->left,
+                                            postfixValue->left,
+                                            rc);
+            if (ok != FAILED)
+                return ok;
+        }
+        return FAILED;
     }
 
     case BLOCK:
@@ -400,6 +420,30 @@ RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
 
     // Default is to return false
     return FAILED;
+}
+
+
+RewriteCalls::BindingStrength
+RewriteCalls::BindBinary(Context *context,
+                         Tree *form1, Tree *value1,
+                         Tree *form2, Tree *value2,
+                         RewriteCandidate &rc)
+// ----------------------------------------------------------------------------
+//    Bind a binary form (prefix or postfix)
+// ----------------------------------------------------------------------------
+{
+    // Check if we have the same name as operand, e.g 'sin X' vs 'sin (A+B)'
+    Name *formName = form1->AsName();
+    if (!formName)
+        return FAILED;
+    Name *valueName = value1->AsName();
+    if (!valueName)
+        return FAILED;
+    if (formName->value != valueName->value)
+        return FAILED;
+
+    return Bind(context, form2, value2, rc);
+    
 }
 
 XL_END

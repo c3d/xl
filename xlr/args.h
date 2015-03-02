@@ -40,6 +40,7 @@
 // ****************************************************************************
 
 #include "compiler.h"
+#include "renderer.h"
 
 XL_BEGIN
 
@@ -82,12 +83,16 @@ struct RewriteCandidate
 {
     RewriteCandidate(Infix *rewrite)
         : rewrite(rewrite), bindings(), type(NULL), types(NULL) {}
+    void Condition(Tree *value, Tree *test)
+    {
+        conditions.push_back(RewriteCondition(value, test));
+    }
 
     Infix_p             rewrite;
     RewriteBindings     bindings;
     RewriteConditions   conditions;
     Tree_p              type;
-    Types_p     types;
+    Types_p             types;
 };
 typedef std::vector<RewriteCandidate> RewriteCandidates;
 
@@ -104,6 +109,10 @@ struct RewriteCalls
     Tree *              Check(Prefix *scope, Tree *value, Infix *candidate);
     BindingStrength     Bind(Context *context,
                              Tree *ref, Tree *what, RewriteCandidate &rc);
+    BindingStrength     BindBinary(Context *context,
+                                   Tree *form1, Tree *value1,
+                                   Tree *form2, Tree *value2,
+                                   RewriteCandidate &rc);
 
 public:
     Types *             types;

@@ -90,6 +90,10 @@ write false             -> xl_write_text "false"
 write head, rest        -> write head; write rest
 writeln a               -> write a; xl_write_cr
 
+left  X:infix           -> C xl_infix_left
+right X:infix           -> C xl_infix_right
+name  X:infix           -> C xl_infix_name
+
 // Min and max functions
 min x, y -> if x < min y then x else min y
 min y    -> y
