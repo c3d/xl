@@ -854,48 +854,72 @@ llvm_type Compiler::MachineType(Tree *tree)
     if (found != machineTypes.end())
         return (*found).second;
 
-    // Check all "basic" types in basics.tbl
-    if (tree == boolean_type || tree == xl_true || tree == xl_false)
-        return booleanTy;
-    if (tree == integer_type|| tree == integer64_type ||
-        tree == unsigned_type || tree == unsigned64_type ||
-        tree->Kind() == INTEGER)
-        return integerTy;
-    if (tree == real_type || tree == real64_type || tree->Kind() == REAL)
-        return realTy;
-    if (tree == character_type)
-        return characterTy;
-    if (tree == text_type)
-        return charPtrTy;
-    if (Text *text = tree->AsText())
+    switch (tree->Kind())
     {
-        if (text->opening == "'" && text->closing == "'")
-            return characterTy;
-        if (text->opening == "\"" && text->closing == "\"")
-            return charPtrTy;
+    case INTEGER:
+        return integerTy;
+    case REAL:
+        return realTy;
+    case TEXT:
+    {
+        if (Text *text = tree->AsText())
+        {
+            if (text->opening == "'" && text->closing == "'")
+                return characterTy;
+            if (text->opening == "\"" && text->closing == "\"")
+                return charPtrTy;
+        }
     }
+    case NAME:
+    {
+        // Check all "basic" types in basics.tbl
+        if (tree == boolean_type || tree == xl_true || tree == xl_false)
+            return booleanTy;
+        if (tree == integer_type|| tree == integer64_type ||
+            tree == unsigned_type || tree == unsigned64_type ||
+            tree->Kind() == INTEGER)
+            return integerTy;
+        if (tree == real_type || tree == real64_type || tree->Kind() == REAL)
+            return realTy;
+        if (tree == character_type)
+            return characterTy;
+        if (tree == text_type)
+            return charPtrTy;
 
-    // Sized types
-    if (tree == integer8_type || tree == unsigned8_type)
-        return integer8Ty;
-    if (tree == integer16_type || tree == unsigned16_type)
-        return integer16Ty;
-    if (tree == integer32_type || tree == unsigned32_type)
-        return integer32Ty;
-    if (tree == real32_type)
-        return real32Ty;
+        // Sized types
+        if (tree == integer8_type || tree == unsigned8_type)
+            return integer8Ty;
+        if (tree == integer16_type || tree == unsigned16_type)
+            return integer16Ty;
+        if (tree == integer32_type || tree == unsigned32_type)
+            return integer32Ty;
+        if (tree == real32_type)
+            return real32Ty;
     
-    // Check special tree types in basics.tbl
-    if (tree == symbol_type || tree == name_type || tree == operator_type)
-        return nameTreePtrTy;
-    if (tree == infix_type)
-        return infixTreePtrTy;
-    if (tree == prefix_type)
-        return prefixTreePtrTy;
-    if (tree == postfix_type)
-        return postfixTreePtrTy;
-    if (tree == block_type)
+        // Check special tree types in basics.tbl
+        if (tree == symbol_type || tree == name_type || tree == operator_type)
+            return nameTreePtrTy;
+        if (tree == infix_type)
+            return infixTreePtrTy;
+        if (tree == prefix_type)
+            return prefixTreePtrTy;
+        if (tree == postfix_type)
+            return postfixTreePtrTy;
+        if (tree == block_type)
+            return blockTreePtrTy;
+
+        // Otherwise, it's a Tree *
+        return treePtrTy;
+    }
+    case BLOCK:
         return blockTreePtrTy;
+    case PREFIX:
+        return prefixTreePtrTy;
+    case POSTFIX:
+        return postfixTreePtrTy;
+    case INFIX:
+        return infixTreePtrTy;
+    }
 
     // Otherwise, it's a Tree *
     return treePtrTy;
@@ -1191,4 +1215,3 @@ void debugv(llvm::Type *t)
 {
     llvm::errs() << *t << "\n";
 }
-
