@@ -37,6 +37,12 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
+// ============================================================================
+// 
+//   Standard LLVM opcodes
+// 
+// ============================================================================
+
 BINARY(Add)
 BINARY(FAdd)
 BINARY(Sub)
@@ -92,5 +98,141 @@ BINARY(FCmpUGE)
 BINARY(FCmpULT)
 BINARY(FCmpULE)
 
+
+// ============================================================================
+// 
+//   Special opcodes that perform XL-specific operations
+// 
+// ============================================================================
+
+SPECIAL(TreeKind, 1,
+// ----------------------------------------------------------------------------
+//   Return the kind for the input tree
+// ----------------------------------------------------------------------------
+        llvm_value treeValue = unit.Autobox(args[0], compiler.treePtrTy);
+        llvm_value ptr = bld->CreateConstGEP2_32(treeValue, 0,
+                                             TAG_INDEX, "tagPtr");
+        llvm_value tag = bld->CreateLoad(ptr, "tag");
+        llvm_value mask = llvm::ConstantInt::get(tag->getType(),
+                                                 Tree::KINDMASK);
+        llvm_value kind = bld->CreateAnd(tag, mask, "tagAndMask");
+        return kind;
+    )
+
+
+SPECIAL(TreeLeft, 1,
+// ----------------------------------------------------------------------------
+//   Return the left for an infix, prefix, or postfix trees
+// ----------------------------------------------------------------------------
+        llvm_value treeValue = unit.Autobox(args[0], compiler.treePtrTy);
+        llvm_value prefixValue = bld->CreateBitCast(treeValue,
+                                                    compiler.prefixTreePtrTy);
+        llvm_value ptr = bld->CreateConstGEP2_32(prefixValue, 0,
+                                                 LEFT_VALUE_INDEX, "leftPtr");
+        llvm_value result = bld->CreateLoad(ptr, "left");
+        return result;
+    )
+
+
+SPECIAL(TreeRight, 1,
+// ----------------------------------------------------------------------------
+//   Return the right for the infix, prefix or postfix trees
+// ----------------------------------------------------------------------------
+        llvm_value treeValue = unit.Autobox(args[0], compiler.treePtrTy);
+        llvm_value prefixValue = bld->CreateBitCast(treeValue,
+                                                    compiler.prefixTreePtrTy);
+        llvm_value ptr = bld->CreateConstGEP2_32(prefixValue, 0,
+                                                 RIGHT_VALUE_INDEX, "rightPtr");
+        llvm_value result = bld->CreateLoad(ptr, "right");
+        return result;
+    )
+
+
+SPECIAL(InfixName, 1,
+// ----------------------------------------------------------------------------
+//   Return the name for an infix tree
+// ----------------------------------------------------------------------------
+        llvm_value treeValue = unit.Autobox(args[0], compiler.treePtrTy);
+        llvm_value infixValue = bld->CreateBitCast(treeValue,
+                                                    compiler.infixTreePtrTy);
+        llvm_value ptr = bld->CreateConstGEP2_32(infixValue, 0,
+                                                 INFIX_NAME_INDEX, "namePtr");
+        llvm_value result = bld->CreateLoad(ptr, "name");
+        return result;
+    )
+
+
+SPECIAL(TextOpening, 1,
+// ----------------------------------------------------------------------------
+//   Return the text opening for a text tree
+// ----------------------------------------------------------------------------
+        llvm_value treeValue = unit.Autobox(args[0], compiler.treePtrTy);
+        llvm_value textValue = bld->CreateBitCast(treeValue,
+                                                  compiler.textTreePtrTy);
+        llvm_value ptr = bld->CreateConstGEP2_32(textValue, 0,
+                                                 TEXT_OPENING_INDEX, "opPtr");
+        llvm_value result = bld->CreateLoad(ptr, "opening");
+        return result;
+    )
+
+
+SPECIAL(TextClosing, 1,
+// ----------------------------------------------------------------------------
+//   Return the text closing for a text tree
+// ----------------------------------------------------------------------------
+        llvm_value treeValue = unit.Autobox(args[0], compiler.treePtrTy);
+        llvm_value textValue = bld->CreateBitCast(treeValue,
+                                                  compiler.textTreePtrTy);
+        llvm_value ptr = bld->CreateConstGEP2_32(textValue, 0,
+                                                 TEXT_CLOSING_INDEX, "clPtr");
+        llvm_value result = bld->CreateLoad(ptr, "closing");
+        return result;
+    )
+
+
+SPECIAL(BlockChild, 1,
+// ----------------------------------------------------------------------------
+//   Return the child for a block tree
+// ----------------------------------------------------------------------------
+        llvm_value treeValue = unit.Autobox(args[0], compiler.textTreePtrTy);
+        llvm_value blockValue = bld->CreateBitCast(treeValue,
+                                                   compiler.blockTreePtrTy);
+        llvm_value ptr = bld->CreateConstGEP2_32(blockValue, 0,
+                                                 BLOCK_CHILD_INDEX, "childPtr");
+        llvm_value result = bld->CreateLoad(ptr, "child");
+        return result;
+    )
+
+
+SPECIAL(BlockOpening, 1,
+// ----------------------------------------------------------------------------
+//   Return the opening text for a block tree
+// ----------------------------------------------------------------------------
+        llvm_value treeValue = unit.Autobox(args[0], compiler.textTreePtrTy);
+        llvm_value blockValue = bld->CreateBitCast(treeValue,
+                                                   compiler.blockTreePtrTy);
+        llvm_value ptr = bld->CreateConstGEP2_32(blockValue, 0,
+                                             BLOCK_OPENING_INDEX, "bloPtr");
+        llvm_value result = bld->CreateLoad(ptr, "blockOpen");
+        return result;
+    )
+
+
+SPECIAL(BlockClosing, 1,
+// ----------------------------------------------------------------------------
+//   Return the closing text for a block tree
+// ----------------------------------------------------------------------------
+        llvm_value treeValue = unit.Autobox(args[0], compiler.textTreePtrTy);
+        llvm_value blockValue = bld->CreateBitCast(treeValue,
+                                                   compiler.blockTreePtrTy);
+        llvm_value ptr = bld->CreateConstGEP2_32(blockValue, 0,
+                                                 BLOCK_CLOSING_INDEX, "blcPtr");
+        llvm_value result = bld->CreateLoad(ptr, "blockClose");
+        return result;
+    )
+
+
+
 #undef UNARY
 #undef BINARY
+#undef SPECIAL

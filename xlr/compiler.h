@@ -131,7 +131,8 @@ struct Compiler
     llvm_type                 TreeMachineType(Tree *tree);
     llvm_function             UnboxFunction(Context_p ctx, llvm_type type,
                                             Tree *form);
-    llvm_value                Primitive(llvm_builder builder, text name,
+    llvm_value                Primitive(CompiledUnit &unit,
+                                        llvm_builder builder, text name,
                                         uint arity, llvm_value *args);
     bool                      MarkAsClosureType(llvm_type type);
     bool                      IsClosureType(llvm_type type);
@@ -236,6 +237,8 @@ public:
 #define INTEGER_VALUE_INDEX 2
 #define REAL_VALUE_INDEX    2
 #define TEXT_VALUE_INDEX    2
+#define TEXT_OPENING_INDEX  3
+#define TEXT_CLOSING_INDEX  4
 #define NAME_VALUE_INDEX    2
 #define BLOCK_CHILD_INDEX   2
 #define BLOCK_OPENING_INDEX 3

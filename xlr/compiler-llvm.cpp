@@ -39,6 +39,7 @@
 
 #include "compiler.h"
 #include "compiler-llvm.h"
+#include "unit.h"
 
 
 
@@ -51,16 +52,30 @@ XL_BEGIN
 // ============================================================================
 
 #define UNARY(name)                                                     \
-static llvm_value xl_llvm_##name(llvm_builder bld, llvm_value *args)    \
+static llvm_value xl_llvm_##name(CompiledUnit &,                        \
+                                 llvm_builder bld, llvm_value *args)    \
 {                                                                       \
     return bld->Create##name(args[0]);                                  \
 }
 
 #define BINARY(name)                                                    \
-static llvm_value xl_llvm_##name(llvm_builder bld, llvm_value *args)    \
+static llvm_value xl_llvm_##name(CompiledUnit &,                        \
+                                 llvm_builder bld, llvm_value *args)    \
 {                                                                       \
     return bld->Create##name(args[0], args[1]);                         \
 }
+
+#define SPECIAL(name, arity, code)                                      \
+static llvm_value xl_llvm_##name(CompiledUnit &unit,                    \
+                                 llvm_builder bld, llvm_value *args)    \
+{                                                                       \
+    Compiler &compiler = *unit.compiler;                                \
+    llvm::LLVMContext &llvm = unit.llvm;                                \
+    (void) compiler;                                                    \
+    (void) llvm;                                                        \
+    code                                                                \
+}
+
 #include "llvm.tbl"
 
 
@@ -69,8 +84,10 @@ CompilerLLVMTableEntry CompilerLLVMTable[] =
 //   A table initialized with the various LLVM entry points
 // ----------------------------------------------------------------------------
 {
-#define UNARY(name)             { #name, xl_llvm_##name, 1 },
-#define BINARY(name)            { #name, xl_llvm_##name, 2 },
+#define UNARY(name)                     { #name, xl_llvm_##name, 1 },
+#define BINARY(name)                    { #name, xl_llvm_##name, 2 },
+#define SPECIAL(name, arity, code)      { #name, xl_llvm_##name, arity },
+    
 #include "llvm.tbl"
 
     // Terminator

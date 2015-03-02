@@ -87,23 +87,19 @@ write head, rest        -> write head; write rest
 writeln a               -> write a; writeln
 
 // Tree shape and attributes
-extern integer xl_tree_kind(tree);
-extern tree xl_prefix_left(prefix);
-extern tree xl_prefix_right(prefix);
-extern tree xl_postfix_left(postfix);
-extern tree xl_postfix_right(postfix);
-extern tree xl_infix_left(infix);
-extern tree xl_infix_right(infix);
-extern text xl_infix_name(infix);
-
-kind  X:tree            -> opcode TreeKind
-left  X:prefix          -> xl_prefix_left X
-right X:prefix          -> xl_prefix_right X
-left  X:postfix         -> xl_postfix_left X
-right X:postfix         -> xl_postfix_right X
-left  X:infix           -> xl_infix_left X
-right X:infix           -> xl_infix_right X
-name  X:infix           -> xl_infix_name X
+kind  X:tree            as integer      -> opcode TreeKind
+left  X:prefix          as tree         -> opcode TreeLeft
+right X:prefix          as tree         -> opcode TreeRight
+left  X:postfix         as tree         -> opcode TreeLeft
+right X:postfix         as tree         -> opcode TreeRight
+left  X:infix           as tree         -> opcode TreeLeft
+right X:infix           as tree         -> opcode TreeRight
+name  X:infix           as text         -> opcode InfixName
+opening X:text          as text         -> opcode TextOpening
+closing X:text          as text         -> opcode TextClosing
+child X:block           as tree         -> opcode BlockChild
+opening X:block         as text         -> opcode BlockOpening
+closing X:block         as text         -> opcode BlockClosing
 
 // Min and max functions
 min x, y -> if x < min y then x else min y

@@ -352,7 +352,7 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
             text op = name->value;
             uint sz = args.size();
             llvm_value *a = &args[0];
-            result = compiler->Primitive(bld, op, sz, a);
+            result = compiler->Primitive(*unit, bld, op, sz, a);
             if (!result)
                 Ooops("Invalid primitive $1", builtin);
         }

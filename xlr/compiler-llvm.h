@@ -43,7 +43,9 @@
 
 XL_BEGIN
 
-typedef llvm_value (*llvm_fn) (llvm_builder builder, llvm_value *args);
+typedef llvm_value (*llvm_fn) (CompiledUnit &unit,
+                               llvm_builder builder,
+                               llvm_value *args);
 
 struct CompilerLLVMTableEntry
 // ----------------------------------------------------------------------------

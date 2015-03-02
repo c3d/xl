@@ -968,7 +968,8 @@ llvm_function Compiler::UnboxFunction(Context_p ctx, llvm_type type, Tree *form)
 }
 
 
-llvm_value Compiler::Primitive(llvm_builder builder, text name,
+llvm_value Compiler::Primitive(CompiledUnit &unit,
+                               llvm_builder builder, text name,
                                uint arity, llvm_value *args)
 // ----------------------------------------------------------------------------
 //   Invoke an LLVM primitive, assuming it's found in the table
@@ -985,7 +986,7 @@ llvm_value Compiler::Primitive(llvm_builder builder, text name,
         return NULL;
 
     // Invoke the entry
-    llvm_value result = entry->function(builder, args);
+    llvm_value result = entry->function(unit, builder, args);
     return result;
 }
 
