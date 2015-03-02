@@ -75,20 +75,16 @@ if true then TrueBody                   -> TrueBody
 if false then TrueBody                  -> false
 
 // Console / debugging operations
-extern bool xl_write_integer(integer);
-extern bool xl_write_real(real);
-extern bool xl_write_text(text);
-extern bool xl_write_character(char);
-extern bool xl_write_cr(void);
+write x:text            as boolean      -> C xl_write_text
+write x:integer         as boolean      -> C xl_write_integer
+write x:real            as boolean      -> C xl_write_real
+write x:character       as boolean      -> C xl_write_character
+writeln                 as boolean      -> C xl_write_cr
 
-write x:text            -> xl_write_text x
-write x:integer         -> xl_write_integer x
-write x:real            -> xl_write_real x
-write x:character       -> xl_write_character x
-write true              -> xl_write_text "true"
-write false             -> xl_write_text "false"
+write true              -> write "true"
+write false             -> write "false"
 write head, rest        -> write head; write rest
-writeln a               -> write a; xl_write_cr
+writeln a               -> write a; writeln
 
 // Tree shape and attributes
 extern integer xl_tree_kind(tree);
@@ -100,7 +96,7 @@ extern tree xl_infix_left(infix);
 extern tree xl_infix_right(infix);
 extern text xl_infix_name(infix);
 
-kind  X:tree            -> xl_tree_kind X
+kind  X:tree            -> opcode TreeKind
 left  X:prefix          -> xl_prefix_left X
 right X:prefix          -> xl_prefix_right X
 left  X:postfix         -> xl_postfix_left X
