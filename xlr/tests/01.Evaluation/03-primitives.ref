@@ -1,0 +1,3 @@
+foo X:integer as integer -> opcode Nonexistent
+foo 3
+01.Evaluation/03-primitives.xl:2: Invalid primitive 'Nonexistent'

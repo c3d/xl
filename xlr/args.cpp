@@ -288,7 +288,7 @@ RewriteCalls::Bind(Context *context,
             // Add type binding with the given type
             type = types->Type(value);
             if (!types->Unify(type, fi->right, value, fi->left,
-                                  Types::DECLARATION))
+                              Types::DECLARATION))
                 return FAILED;
 
             // Having been successful makes it a strong binding

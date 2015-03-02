@@ -167,51 +167,9 @@ llvm_value CompileExpression::DoPrefix(Prefix *what)
 // ----------------------------------------------------------------------------
 {
     if (Name *name = what->left->AsName())
-    {
         if (name->value == "data" || name->value == "extern")
             return NULL;
 
-        if (name->value == "opcode" || name->value == "C")
-        {
-            if (name->value == "C")
-                std::cerr << "Prefix=" << what << "\n";
-            
-            // This is a builtin, find if we write to code or data
-            llvm_builder bld = unit->code;
-            Tree *builtin = what->right;
-            if (Prefix *prefix = builtin->AsPrefix())
-            {
-                if (Name *name = prefix->left->AsName())
-                {
-                    if (name->value == "data")
-                    {
-                        bld = unit->data;
-                        builtin = prefix->right;
-                    }
-                }
-            }
-
-            // Take args list for current function as input
-            llvm_values args;
-            Function *function = unit->function;
-            uint i, max = function->arg_size();
-            Function::arg_iterator arg = function->arg_begin();
-            for (i = 0; i < max; i++)
-            {
-                llvm_value inputArg = arg++;
-                args.push_back(inputArg);
-            }
-
-            // Call the primitive (effectively creating a wrapper for it)
-            Name *name = builtin->AsName();
-            assert(name || !"Malformed primitive");
-            Compiler *compiler = unit->compiler;
-            text op = name->value;
-            uint sz = args.size();
-            llvm_value *a = &args[0];
-            return compiler->Primitive(bld, op, sz, a);
-        }
-    }
     return DoCall(what);
 }
 
@@ -395,6 +353,8 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
             uint sz = args.size();
             llvm_value *a = &args[0];
             result = compiler->Primitive(bld, op, sz, a);
+            if (!result)
+                Ooops("Invalid primitive $1", builtin);
         }
     }
     else
