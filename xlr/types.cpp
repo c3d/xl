@@ -553,15 +553,16 @@ bool Types::Unify(Tree *t1, Tree *t2, unify_mode mode)
     if (IsGeneric(t2))
         return Join(t1, t2);
 
+    // In declaration mode, we have success if t2 covers t1
+    if (mode == DECLARATION && TypeCoversType(context, t2, t1, false))
+        return true;
+
     // If we have a type name at this stage, this is a failure
     if (IsTypeName(t1))
     {
         if (JoinConstant((Name *) t1, t2))
             return true;
 
-        // In declaration mode, we have success if t2 covers t1
-        if (mode == DECLARATION && TypeCoversType(context, t2, t1, false))
-            return true;
         return TypeError(t1, t2);
     }
     if (IsTypeName(t2))
