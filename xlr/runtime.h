@@ -71,9 +71,6 @@ struct SourceFile;
 
 Tree *xl_identity(Context*, Tree *);
 Tree *xl_evaluate(Context *, Tree *);
-Tree *xl_evaluate_children(Context *, Tree *);
-Tree *xl_assigned_value(Context *, Tree *);
-Tree *xl_named_value(Context *, Tree *);
 Tree *xl_source(Tree *);
 Tree *xl_set_source(Tree *value, Tree *source);
 Tree *xl_error(Tree *self, text msg, Tree *a1=0, Tree *a2=0, Tree *a3=0);
@@ -102,12 +99,7 @@ Block   *xl_fill_block(Block *source, Tree *child);
 Prefix  *xl_fill_prefix(Prefix *source, Tree *left, Tree *right);
 Postfix *xl_fill_postfix(Postfix *source, Tree *left, Tree *right);
 Infix   *xl_fill_infix(Infix *source, Tree *left, Tree *right);
-Tree    *xl_real_list(Tree *self, uint n, double *values);
-Tree    *xl_integer_list(Tree *self, uint n, longlong *values);
 Real    *xl_integer2real(Integer *ival);
-
-Tree *xl_new_closure(eval_fn toCall, Tree *expr, uint ntrees, ...);
-Tree *xl_tree_copy(Tree *from, Tree *to);
 
 Tree *xl_boolean_cast(Context *, Tree *source, Tree *value);
 Tree *xl_integer_cast(Context *, Tree *source, Tree *value);
@@ -135,13 +127,6 @@ Tree *xl_block_cast(Context *, Tree *source, Tree *value);
 #define xl_real64_cast          xl_real_cast
 #define xl_declaration_cast     xl_infix_cast
 
-Tree *xl_parameter(text name, text type);
-void xl_infix_to_list(Infix *infix, TreeList &list);
-Tree *xl_list_to_tree(TreeList v, text infix, Infix **deepest = NULL);
-
-Real *xl_springify(Real &value, Real &target, Real &time,
-                   Real &damp, Real &kspring, Real &lt, Real &ls);
-
 
 
 // ============================================================================
@@ -150,6 +135,7 @@ Real *xl_springify(Real &value, Real &target, Real &time,
 //
 // ============================================================================
 
+Tree *xl_parameter(text name, text type);
 void xl_enter_builtin(Main *main, text name, Tree *from, Tree *to, eval_fn);
 void xl_enter_global(Main *main, Name *name, Name_p *address);
 
@@ -203,121 +189,6 @@ public:
     Tree_p      arguments;
     Tree_p *    pointer;
 };
-
-
-
-// ============================================================================
-//
-//    Interfaces to make old and new compiler compatible (temporary)
-//
-// ============================================================================
-
-Tree *xl_define(Context *, Tree *self, Tree *form, Tree *definition);
-Tree *xl_evaluate_sequence(Context *, Tree *first, Tree *second);
-
-
-
-// ============================================================================
-//
-//    Actions used for functional applications (temporary / obsolete)
-//
-// ============================================================================
-
-XL_END
-#include "action.h"
-XL_BEGIN
-
-Tree *xl_apply(Context *, Tree *code, Tree *data);
-Tree *xl_range(longlong l, longlong h);
-Tree *xl_assign(Context *, Tree *name, Tree *value, Tree *type=NULL);
-Tree *xl_index(Context *, Tree *data, Tree *index);
-Tree *xl_array_index(Context *, Tree *data, Tree *index);
-Integer *xl_size(Context *, Tree *data);
-typedef GCPtr<Context> Context_p;
-
-
-struct ListIterator
-// ----------------------------------------------------------------------------
-//    Helper to perform operations on lists of items
-// ----------------------------------------------------------------------------
-{
-    ListIterator(Context *context, Tree *what);
-
-public:
-    Tree *      Next();
-    Tree *      EvaluateRange(Tree *input);
-    template<class num>   Tree *Next(num &start, num &end, num &step);
-
-public:
-    Context_p   context;
-    Tree_p      data;
-    text        separator;
-    longlong    startI, endI, stepI;
-    double      startF, endF, stepF;
-};
-
-
-struct FunctionInfo : Info
-// ----------------------------------------------------------------------------
-//   Hold a single-argument function for a given tree
-// ----------------------------------------------------------------------------
-//   REVISIT: According to Wikipedia, really a Moses Schönfinkel function
-{
-    FunctionInfo(): function(NULL), context(NULL) {}
-    virtual Tree * Apply(Tree *what) { return what; }
-
-public:
-    eval_fn        function;
-    Context_p      context;
-    Tree_p         compiled;
-};
-
-
-struct MapFunctionInfo : FunctionInfo
-// ----------------------------------------------------------------------------
-//   Record the code for a map operation
-// ----------------------------------------------------------------------------
-{
-    virtual Tree * Apply(Tree *what);
-};
-
-
-struct ReduceFunctionInfo : FunctionInfo
-// ----------------------------------------------------------------------------
-//   Record the code for a reduce operation
-// ----------------------------------------------------------------------------
-{
-    virtual Tree * Apply(Tree *what);
-};
-
-
-struct FilterFunctionInfo : FunctionInfo
-// ----------------------------------------------------------------------------
-//   Record the code for a filter operation
-// ----------------------------------------------------------------------------
-{
-    virtual Tree * Apply(Tree *what);
-};
-
-
-
-// ============================================================================
-//
-//   Loops
-//
-// ============================================================================
-
-Tree *xl_integer_for_loop(Context *, Tree *self,
-                          Tree *Variable,
-                          longlong start, longlong end, longlong step,
-                          Tree *body);
-Tree *xl_real_for_loop(Context *, Tree *self,
-                       Tree *Variable,
-                       double start, double end, double step, Tree *body);
-Tree *xl_list_for_loop(Context *, Tree *self,
-                       Tree *Variable, Tree *list, Tree *body);
-Tree *xl_while_loop(Context *, Tree *self,
-                    Tree *Condition, Tree *body, bool TestValue);
 
 
 

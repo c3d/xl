@@ -208,7 +208,6 @@ public:
     llvm::Function            *xl_fill_postfix;
     llvm::Function            *xl_fill_infix;
     llvm::Function            *xl_integer2real;
-    llvm::Function            *xl_array_index;
     llvm::Constant            *xl_recursion_count_ptr;
     functions_map              builtins;
     functions_map              functions;

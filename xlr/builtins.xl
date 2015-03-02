@@ -80,10 +80,6 @@ extern bool xl_write_real(real);
 extern bool xl_write_text(text);
 extern bool xl_write_character(char);
 extern bool xl_write_cr(void);
-extern integer xl_tree_kind(tree);
-extern tree xl_infix_left(infix);
-extern tree xl_infix_right(infix);
-extern text xl_infix_name(infix);
 
 write x:text            -> xl_write_text x
 write x:integer         -> xl_write_integer x
@@ -94,6 +90,21 @@ write false             -> xl_write_text "false"
 write head, rest        -> write head; write rest
 writeln a               -> write a; xl_write_cr
 
+// Tree shape and attributes
+extern integer xl_tree_kind(tree);
+extern tree xl_prefix_left(prefix);
+extern tree xl_prefix_right(prefix);
+extern tree xl_postfix_left(postfix);
+extern tree xl_postfix_right(postfix);
+extern tree xl_infix_left(infix);
+extern tree xl_infix_right(infix);
+extern text xl_infix_name(infix);
+
+kind  X:tree            -> xl_tree_kind X
+left  X:prefix          -> xl_prefix_left X
+right X:prefix          -> xl_prefix_right X
+left  X:postfix         -> xl_postfix_left X
+right X:postfix         -> xl_postfix_right X
 left  X:infix           -> xl_infix_left X
 right X:infix           -> xl_infix_right X
 name  X:infix           -> xl_infix_name X

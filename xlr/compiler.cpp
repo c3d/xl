@@ -120,7 +120,6 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
       xl_fill_block(NULL),
       xl_fill_prefix(NULL), xl_fill_postfix(NULL), xl_fill_infix(NULL),
       xl_integer2real(NULL),
-      xl_array_index(NULL),
       xl_recursion_count_ptr(NULL)
 {
     std::vector<char *> llvmArgv;
@@ -337,10 +336,6 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
                                   infixTreePtrTy,treePtrTy,treePtrTy);
     xl_integer2real = ExternFunction(FN(xl_integer2real), treePtrTy, 1,
                                      treePtrTy);
-    xl_array_index = ExternFunction(FN(xl_array_index),
-                                    treePtrTy, 3,
-                                    contextPtrTy, treePtrTy, treePtrTy);
-
     // Create a global value used to count recursions
     llvm::PointerType *uintPtrTy = PointerType::get(LLVM_INTTYPE(uint), 0);
     APInt addr(64, (uint64_t) &xl_recursion_count);
