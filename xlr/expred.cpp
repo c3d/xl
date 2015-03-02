@@ -264,6 +264,12 @@ llvm_value CompileExpression::DoCall(Tree *call)
             return result;
         }
     }
+    else if (max == 0)
+    {
+        // If it passed type check and there is no candidate, return tree as is
+        result = unit->ConstantTree(call);
+        return result;
+    }
 
     // More general case: we need to generate expression reduction
     llvm_block isDone = BasicBlock::Create(llvm, "done", function);

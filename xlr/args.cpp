@@ -171,10 +171,11 @@ Tree *RewriteCalls::Check (Prefix *scope,
 }
 
 
-RewriteCalls::BindingStrength RewriteCalls::Bind(Context *context,
-                                                 Tree *form,
-                                                 Tree *value,
-                                                 RewriteCandidate &rc)
+RewriteCalls::BindingStrength
+RewriteCalls::Bind(Context *context,
+                   Tree *form,
+                   Tree *value,
+                   RewriteCandidate &rc)
 // ----------------------------------------------------------------------------
 //   Attempts to bind 'value' to the pattern form given in 'form'
 // ----------------------------------------------------------------------------
