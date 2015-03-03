@@ -76,6 +76,20 @@ struct RewriteCondition
 typedef std::vector<RewriteCondition> RewriteConditions;
 
 
+struct RewriteKind
+// ----------------------------------------------------------------------------
+//   Structure recording a condition for a given rewrite to be valid
+// ----------------------------------------------------------------------------
+{
+    RewriteKind(Tree *value, kind test, llvm_type mtype)
+        : value(value), test(test), machineType(mtype) {}
+    Tree_p      value;
+    kind        test;
+    llvm_type   machineType;
+};
+typedef std::vector<RewriteKind> RewriteKinds;
+
+
 struct RewriteCandidate
 // ----------------------------------------------------------------------------
 //    A rewrite candidate for a particular tree form
@@ -87,16 +101,14 @@ struct RewriteCandidate
     {
         conditions.push_back(RewriteCondition(value, test));
     }
-    void KindCondition(Tree *value, kind k)
+    void KindCondition(Tree *value, kind k, llvm_type mtype)
     {
-        TreePosition pos = value->Position();
-        Tree *kindExpr = new Prefix(new Name("kind", pos), value, pos);
-        Tree *cstExpr = new Integer((int) k, pos);
-        Condition(kindExpr, cstExpr);
+        kinds.push_back(RewriteKind(value, k, mtype));
     }
 
     Infix_p             rewrite;
     RewriteBindings     bindings;
+    RewriteKinds        kinds;
     RewriteConditions   conditions;
     Tree_p              type;
     Types_p             types;
@@ -120,6 +132,10 @@ struct RewriteCalls
                                    Tree *form1, Tree *value1,
                                    Tree *form2, Tree *value2,
                                    RewriteCandidate &rc);
+    bool                Unify(RewriteCandidate &rc,
+                              Tree *valueType, Tree *formType,
+                              Tree *value, Tree *form,
+                              bool declaration = false);
 
 public:
     Types *             types;

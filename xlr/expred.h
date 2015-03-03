@@ -69,6 +69,7 @@ public:
     llvm_value DoRewrite(RewriteCandidate &candidate);
     llvm_value Value(Tree *expr);
     llvm_value Compare(Tree *value, Tree *test);
+    llvm_value KindTest(Tree *value, kind test);
     llvm_value ForceEvaluation(Tree *expr);
     llvm_value TopLevelEvaluation(Tree *expr);
 

@@ -742,6 +742,8 @@ eval_fn CompiledUnit::Finalize(bool createCode)
     data->CreateBr(entrybb);
 
     // Verify the function we built
+    IFTRACE(unoptimized_code)
+        function->print(errs());
     verifyFunction(*function);
     if (compiler->optimizer)
         compiler->optimizer->run(*function);

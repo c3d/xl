@@ -68,7 +68,7 @@ public:
         : unit(unit), defined(NULL), returned(NULL) {}
 
 public:
-    bool EnterName(Name *what, bool untyped);
+    bool EnterName(Name *what, llvm_type declaredType = NULL);
 
     bool DoInteger(Integer *what);
     bool DoReal(Real *what);

@@ -129,6 +129,10 @@ struct Compiler
     void                      MachineType(Tree *source, llvm_type mtype);
     llvm_type                 MachineType(Tree *tree);
     llvm_type                 TreeMachineType(Tree *tree);
+    bool                      IsTreePtrType(llvm_type t);
+    bool                      IsIntegerType(llvm_type t);
+    bool                      IsRealType(llvm_type t);
+    bool                      CanCastMachineType(llvm_type from, llvm_type to);
     llvm_function             UnboxFunction(Context_p ctx, llvm_type type,
                                             Tree *form);
     llvm_value                Primitive(CompiledUnit &unit,
@@ -219,6 +223,42 @@ public:
     llvm_types                 closure_types;
     type_map                   machineTypes;
 };
+
+
+inline bool Compiler::IsTreePtrType(llvm_type t)
+// ----------------------------------------------------------------------------
+//   Check if it's any of the tree ptr types
+// ----------------------------------------------------------------------------
+{
+    return (t == blockTreePtrTy         ||
+            t == prefixTreePtrTy        ||
+            t == postfixTreePtrTy       ||
+            t == infixTreePtrTy         ||
+            t == treePtrTy);
+}
+
+
+inline bool Compiler::IsIntegerType(llvm_type t)
+// ----------------------------------------------------------------------------
+//   Check if it's any of the integer types
+// ----------------------------------------------------------------------------
+{
+    return (t == booleanTy              ||
+            t == integerTy              ||
+            t == integer8Ty             ||
+            t == integer16Ty            ||
+            t == integer32Ty            ||
+            t == characterTy);
+}
+
+
+inline bool Compiler::IsRealType(llvm_type t)
+// ----------------------------------------------------------------------------
+//   Check if it's any of the integer types
+// ----------------------------------------------------------------------------
+{
+    return (t == realTy || t == real32Ty);
+}
 
 
 

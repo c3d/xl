@@ -45,8 +45,7 @@
 
 XL_BEGIN
 
-bool ParameterList::EnterName(Name *what,
-                              bool untyped)
+bool ParameterList::EnterName(Name *what, llvm_type declaredType)
 // ----------------------------------------------------------------------------
 //   Enter a name in the parameter list
 // ----------------------------------------------------------------------------
@@ -82,11 +81,15 @@ bool ParameterList::EnterName(Name *what,
         }
 
         // Check if the name already exists in context, e.g. 'false'
-        if (untyped)
+        if (!declaredType)
             if (Context *parent = unit->context->Parent())
                 if (parent->Bound(what))
                     return true;
     }
+
+    // If there is a declared parameter type, use it
+    if (declaredType)
+        type = declaredType;
 
     // We need to record a new parameter
     parameters.push_back(Parameter(what, type));
@@ -134,7 +137,7 @@ bool ParameterList::DoName(Name *what)
         return true;
     }
     // We need to record a new parameter, type is Tree * by default
-    return EnterName(what, true);
+    return EnterName(what);
 }
 
 
@@ -158,18 +161,19 @@ bool ParameterList::DoInfix(Infix *what)
         // Check the variable name, e.g. K in example above
         if (Name *varName = what->left->AsName())
         {
+            llvm_type mtype = NULL;
             if (unit->types)
             {
                 // Enter a name in the parameter list with adequate machine type
-                llvm_type mtype = unit->MachineType(what->right);
                 llvm_type ntype = unit->ExpressionMachineType(varName);
-                if (mtype != ntype)
+                mtype = unit->MachineType(what->right);
+                if (!unit->compiler->CanCastMachineType(mtype, ntype))
                 {
                     Ooops("Conflicting machine type for declaration $1", what);
                     return false;
                 }
             }
-            return EnterName(varName, false);
+            return EnterName(varName, mtype);
         }
         else
         {

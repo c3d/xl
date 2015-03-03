@@ -43,6 +43,8 @@
 #include "errors.h"
 #include "unit.h"
 #include "renderer.h"
+#include "main.h"
+#include "compiler.h"
 
 XL_BEGIN
 
@@ -191,7 +193,7 @@ RewriteCalls::Bind(Context *context,
         if (Integer *iv = value->AsInteger())
             return iv->value == f->value ? PERFECT : FAILED;
         type = types->Type(value);
-        if (types->Unify(type, integer_type, value, form))
+        if (Unify(rc, type, integer_type, value, form))
         {
             rc.Condition(value, form);
             return POSSIBLE;
@@ -204,7 +206,7 @@ RewriteCalls::Bind(Context *context,
         if (Real *iv = value->AsReal())
             return iv->value == f->value ? PERFECT : FAILED;
         type = types->Type(value);
-        if (types->Unify(type, real_type, value, form))
+        if (Unify(rc, type, real_type, value, form))
         {
             rc.Condition(value, form);
             return POSSIBLE;
@@ -217,7 +219,7 @@ RewriteCalls::Bind(Context *context,
         if (Text *iv = value->AsText())
             return iv->value == f->value ? PERFECT : FAILED;
         type = types->Type(value);
-        if (types->Unify(type, text_type, value, form))
+        if (Unify(rc, type, text_type, value, form))
         {
             rc.Condition(value, form);
             return POSSIBLE;
@@ -249,7 +251,7 @@ RewriteCalls::Bind(Context *context,
             if (bound != f)
             {
                 Tree *boundType = types->Type(bound);
-                if (!types->Unify(boundType, type, form, value))
+                if (!Unify(rc, type, boundType, value, form))
                     return FAILED;
 
                 // We need to have the same value
@@ -262,7 +264,7 @@ RewriteCalls::Bind(Context *context,
 
         // Check if we can unify the value and name types
         Tree *nameType = types->Type(f);
-        if (!types->Unify(type, nameType, value, form))
+        if (!Unify(rc, type, nameType, value, form))
             return FAILED;
 
         // Enter the name in the context and in the bindings
@@ -287,8 +289,7 @@ RewriteCalls::Bind(Context *context,
 
             // Add type binding with the given type
             type = types->Type(value);
-            if (!types->Unify(type, fi->right, value, fi->left,
-                              Types::DECLARATION))
+            if (!Unify(rc, type, fi->right, value, fi->left, true))
                 return FAILED;
 
             // Having been successful makes it a strong binding
@@ -307,7 +308,7 @@ RewriteCalls::Bind(Context *context,
 
             // Check that the type of the guard is a boolean
             Tree *guardType = types->Type(fi->right);
-            if (!types->Unify(guardType, boolean_type, fi->right, fi->left))
+            if (!Unify(rc, guardType, boolean_type, fi->right, fi->left))
                 return FAILED;
 
             // Add the guard condition
@@ -345,7 +346,7 @@ RewriteCalls::Bind(Context *context,
 
         // Then check if the type matches
         type = types->Type(value);
-        if (!types->Unify(type, infix_type, value, form))
+        if (!Unify(rc, type, infix_type, value, form))
             return FAILED;
 
         // If we had to evaluate, we need a runtime pattern match (weak binding)
@@ -446,5 +447,46 @@ RewriteCalls::BindBinary(Context *context,
     return Bind(context, form2, value2, rc);
     
 }
+
+
+bool RewriteCalls::Unify(RewriteCandidate &rc,
+                         Tree *valueType, Tree *formType,
+                         Tree *value, Tree *form,
+                         bool declaration)
+// ----------------------------------------------------------------------------
+//   Check unification for types in a given candidate
+// ----------------------------------------------------------------------------
+{
+    Tree *refType = types->LookupTypeName(formType);
+    
+    // If we have a tree, it may have the right type, must check at runtime
+    if (refType == tree_type)
+    {
+        Tree *vrefType = types->LookupTypeName(valueType);
+        kind k = valueType->Kind();
+        Compiler &compiler = *MAIN->compiler;
+        if (k == INTEGER || vrefType == integer_type)
+            rc.KindCondition(value, INTEGER, compiler.integerTy);
+        else if (k == REAL || vrefType == real_type)
+            rc.KindCondition(value, REAL, compiler.realTy);
+        else if (k == TEXT || vrefType == text_type)
+            rc.KindCondition(value, TEXT, compiler.charPtrTy);
+        else if (vrefType == name_type || vrefType == boolean_type)
+            rc.KindCondition(value, NAME, compiler.nameTreePtrTy);
+        else if (vrefType == block_type)
+            rc.KindCondition(value, BLOCK, compiler.blockTreePtrTy);
+        else if (k == INFIX || vrefType == infix_type)
+            rc.KindCondition(value, INFIX, compiler.infixTreePtrTy);
+        else if (vrefType == prefix_type)
+            rc.KindCondition(value, PREFIX, compiler.prefixTreePtrTy);
+        else if (vrefType == postfix_type)
+            rc.KindCondition(value, POSTFIX, compiler.postfixTreePtrTy);
+    }
+
+    // Otherwise, do type inference
+    return types->Unify(valueType, formType, value, form,
+                        declaration ? Types::DECLARATION : Types::STANDARD);
+}
+
 
 XL_END

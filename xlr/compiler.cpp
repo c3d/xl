@@ -955,6 +955,23 @@ llvm_type Compiler::TreeMachineType(Tree *tree)
 }
 
 
+bool Compiler::CanCastMachineType(llvm_type from, llvm_type to)
+// ----------------------------------------------------------------------------
+//   Return true if a cast is valid between machine types
+// ----------------------------------------------------------------------------
+{
+    if (from == to)
+        return true;
+    if (IsTreePtrType(from) && IsTreePtrType(to))
+        return true;
+    if (IsIntegerType(from) && IsIntegerType(to))
+        return true;
+    if (IsRealType(from) && IsRealType(to))
+        return true;
+    return false;
+}
+
+
 llvm_function Compiler::UnboxFunction(Context_p ctx, llvm_type type, Tree *form)
 // ----------------------------------------------------------------------------
 //    Create a function transforming a boxed (structure) value into tree form

@@ -339,7 +339,7 @@ bool Types::Rewrite(Infix *what)
         return false;
 
     // We need to be able to unify pattern and definition types
-    if (!Unify(formType, valueType, what->left, what->right))
+    if (!Unify(valueType, formType, what->right, what->left))
         return false;
 
     // The type of the definition is a pattern type, perform unification

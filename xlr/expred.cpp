@@ -235,32 +235,45 @@ llvm_value CompileExpression::DoCall(Tree *call)
     llvm_value storage = unit->NeedStorage(call);
     llvm_type storageType = unit->ExpressionMachineType(call);
 
-    Save<value_map> saveComputed(computed, computed);
     for (i = 0; i < max; i++)
     {
+        Save<value_map> saveComputed(computed, computed);
+        
         // Now evaluate in that candidate's type system
         RewriteCandidate &cand = calls[i];
         Save<Types_p> saveTypes(unit->types, cand.types);
-        llvm_value condition = NULL;
+        bool conditional = false;
+        llvm_block isBad = BasicBlock::Create(llvm, "skip", function);
 
+        // Perform the tests on type kind to see if candidate is valid
+        RewriteKinds &kinds = cand.kinds;
+        RewriteKinds::iterator k;
+        for (k = kinds.begin(); k != kinds.end(); k++)
+        {
+            llvm_value compare = KindTest((*k).value, (*k).test);
+            llvm_block isGood = BasicBlock::Create(llvm, "kindT", function);
+            code->CreateCondBr(compare, isGood, isBad);
+            code->SetInsertPoint(isGood);
+            llvm_value treeValue = Value((*k).value);
+            computed[(*k).value] = unit->Autobox(treeValue, (*k).machineType);
+            conditional = true;
+        }
+
+        
         // Perform the tests to check if this candidate is valid
-        std::vector<RewriteCondition> &conds = cand.conditions;
-        std::vector<RewriteCondition>::iterator t;
+        RewriteConditions &conds = cand.conditions;
+        RewriteConditions::iterator t;
         for (t = conds.begin(); t != conds.end(); t++)
         {
             llvm_value compare = Compare((*t).value, (*t).test);
-            if (condition)
-                condition = code->CreateAnd(condition, compare);
-            else
-                condition = compare;
+            llvm_block isGood = BasicBlock::Create(llvm, "condT", function);
+            code->CreateCondBr(compare, isGood, isBad);
+            code->SetInsertPoint(isGood);
+            conditional = true;
         }
 
-        if (condition)
+        if (conditional)
         {
-            llvm_block isBad = BasicBlock::Create(llvm, "bad", function);
-            llvm_block isGood = BasicBlock::Create(llvm, "good", function);
-            code->CreateCondBr(condition, isGood, isBad);
-            code->SetInsertPoint(isGood);
             result = DoRewrite(cand);
             result = unit->Autobox(result, storageType);
             code->CreateStore(result, storage);
@@ -273,6 +286,8 @@ llvm_value CompileExpression::DoCall(Tree *call)
             result = DoRewrite(cand);
             result = unit->Autobox(result, storageType);
             code->CreateStore(result, storage);
+            code->CreateBr(isDone);
+            code->SetInsertPoint(isBad);
             code->CreateBr(isDone);
             code->SetInsertPoint(isDone);
             result = code->CreateLoad(storage);
@@ -539,6 +554,30 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
 
     // Other comparisons fail for now
     return ConstantInt::get(c.booleanTy, 0);
+}
+
+
+llvm_value CompileExpression::KindTest(Tree *valueTree, kind test)
+// ----------------------------------------------------------------------------
+//   Perform a comparison between the two values and check if this matches
+// ----------------------------------------------------------------------------
+{
+    CompiledUnit &u = *unit;
+    Compiler &c = *u.compiler;
+    llvm_builder code = u.code;
+
+    llvm_value value = Value(valueTree);
+
+    llvm_value treeValue = u.Autobox(value, c.treePtrTy);
+    llvm_value ptr = code->CreateConstGEP2_32(treeValue, 0,
+                                              TAG_INDEX, "tagPtr");
+    llvm_value tag = code->CreateLoad(ptr, "tag");
+    llvm_value mask = llvm::ConstantInt::get(tag->getType(), Tree::KINDMASK);
+    llvm_value kind = code->CreateAnd(tag, mask, "tagAndMask");
+
+    llvm_value ref = llvm::ConstantInt::get(tag->getType(), test);
+    llvm_value result = code->CreateICmpEQ(kind, ref);
+    return result;
 }
 
 
