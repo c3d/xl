@@ -103,8 +103,15 @@ struct RewriteCandidate
     }
     void KindCondition(Tree *value, kind k, llvm_type mtype)
     {
+        IFTRACE(calltypes)
+        {
+            std::cerr << "Check if " << value
+                      << " has type " << (int) k << "\n";
+            llvm::errs() << "  machine type is " << *mtype << "\n";
+        }
         kinds.push_back(RewriteKind(value, k, mtype));
     }
+    bool Unconditional() { return kinds.size() == 0 && conditions.size() == 0; }
 
     Infix_p             rewrite;
     RewriteBindings     bindings;

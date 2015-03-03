@@ -216,7 +216,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
         RewriteCandidate &cand = calls[0];
         Save<Types_p> saveTypes(unit->types, cand.types);
 
-        if (cand.conditions.size() == 0)
+        if (cand.Unconditional())
         {
             result = DoRewrite(cand);
             return result;
@@ -256,6 +256,9 @@ llvm_value CompileExpression::DoCall(Tree *call)
             code->SetInsertPoint(isGood);
             llvm_value treeValue = Value((*k).value);
             computed[(*k).value] = unit->Autobox(treeValue, (*k).machineType);
+            IFTRACE(calltypes)
+                llvm::errs() << "Kind test: " << *treeValue
+                             << " as " << *computed[(*k).value] << "\n";
             conditional = true;
         }
 
@@ -312,6 +315,9 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
     Infix *rw = cand.rewrite;
     llvm_value result = NULL;
 
+    IFTRACE(calltypes)
+        std::cerr << "Rewrite: " << rw << "\n";
+
     // Evaluate parameters
     llvm_values args;
     RewriteBindings &bnds = cand.bindings;
@@ -319,9 +325,13 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
     for (b = bnds.begin(); b != bnds.end(); b++)
     {
         Tree *tree = (*b).value;
+        IFTRACE(calltypes)
+            std::cerr << "  Arg: " << tree << ": ";
         if (llvm_value closure = (*b).Closure(unit))
         {
             args.push_back(closure);
+            IFTRACE(calltypes)
+                llvm::errs() << "  closure " << *closure << "\n";
         }
         else if (llvm_value value = Value(tree))
         {
@@ -329,6 +339,9 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
             llvm_type mtype = value->getType();
             if (unit->compiler->IsClosureType(mtype))
                 (*b).closure = value;
+            IFTRACE(calltypes)
+                llvm::errs() << "  value " << *value
+                             << " mtype " << *mtype << "\n";
         }
     }
 
@@ -370,13 +383,19 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
             result = compiler->Primitive(*unit, bld, op, sz, a);
             if (!result)
                 Ooops("Invalid primitive $1", builtin);
+            IFTRACE(calltypes)
+                llvm::errs() << "  = Primitive: " << *result << "\n";
         }
     }
     else
     {
         llvm_value function = unit->Compile(cand, args);
+        IFTRACE(calltypes)
+            llvm::errs() << "  < Function: " << *function << "\n";
         if (function)
             result = unit->code->CreateCall(function, LLVMS_ARGS(args));
+        IFTRACE(calltypes)
+            llvm::errs() << "  =Call: " << *result << "\n";
     }
 
     return result;

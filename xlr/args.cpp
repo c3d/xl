@@ -293,7 +293,7 @@ RewriteCalls::Bind(Context *context,
                 return FAILED;
 
             // Having been successful makes it a strong binding
-            return PERFECT;
+            return rc.Unconditional() ? PERFECT : POSSIBLE;
 
         } // We have an infix :
         else if (fi->name == "when")
@@ -457,20 +457,27 @@ bool RewriteCalls::Unify(RewriteCandidate &rc,
 //   Check unification for types in a given candidate
 // ----------------------------------------------------------------------------
 {
-    Tree *refType = types->LookupTypeName(formType);
+    Tree *refType = types->LookupTypeName(valueType);
+    IFTRACE(calltypes)
+    {
+        std::cerr << "Unify: " << value
+                  << " as " << valueType << " [" << types->Type(value) << "]"
+                  << " with " << form
+                  << " as " << formType << " [" << types->Type(form) << "]\n";
+    }
     
     // If we have a tree, it may have the right type, must check at runtime
     if (refType == tree_type)
     {
-        Tree *vrefType = types->LookupTypeName(valueType);
+        Tree *vrefType = types->LookupTypeName(formType);
         kind k = valueType->Kind();
         Compiler &compiler = *MAIN->compiler;
         if (k == INTEGER || vrefType == integer_type)
-            rc.KindCondition(value, INTEGER, compiler.integerTy);
+            rc.KindCondition(value, INTEGER, compiler.integerTreePtrTy);
         else if (k == REAL || vrefType == real_type)
-            rc.KindCondition(value, REAL, compiler.realTy);
+            rc.KindCondition(value, REAL, compiler.realTreePtrTy);
         else if (k == TEXT || vrefType == text_type)
-            rc.KindCondition(value, TEXT, compiler.charPtrTy);
+            rc.KindCondition(value, TEXT, compiler.textTreePtrTy);
         else if (vrefType == name_type || vrefType == boolean_type)
             rc.KindCondition(value, NAME, compiler.nameTreePtrTy);
         else if (vrefType == block_type)

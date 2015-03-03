@@ -742,7 +742,7 @@ eval_fn CompiledUnit::Finalize(bool createCode)
     data->CreateBr(entrybb);
 
     // Verify the function we built
-    IFTRACE(unoptimized_code)
+    IFTRACE(ucode)
         function->print(errs());
     verifyFunction(*function);
     if (compiler->optimizer)
