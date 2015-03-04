@@ -412,6 +412,24 @@ Tree *Parser::Parse(text closing)
                     {
                         // We have a postfix operator
                         right = new Name(name, pos);
+
+                        // Flush higher priority items on stack
+                        // This is the case for X:integer!
+                        while (stack.size())
+                        {
+                            Pending &prev = stack.back();
+                            if (!done &&
+                                prev.priority != default_priority &&
+                                postfix_priority > (prev.priority & ~1))
+                                break;
+                            if (prev.opcode == prefix)
+                                result = CreatePrefix(prev.argument, result,
+                                                      prev.position);
+                            else
+                                result = new Infix(prev.opcode, prev.argument,
+                                                   result, prev.position);
+                            stack.pop_back();
+                        }
                         right = new Postfix(result, right, pos);
                         prefix_priority = postfix_priority;
                         result = NULL;
