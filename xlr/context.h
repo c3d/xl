@@ -244,12 +244,12 @@ public:
     Tree *              Call(text prefix, TreeList &args);
 
     // Phases of evaluation
-    void                ProcessDeclarations(Tree *what);
+    bool                ProcessDeclarations(Tree *what);
 
     // Adding definitions to the context
-    Rewrite *           Enter(Infix *decl);
-    Rewrite *           Define(Tree *from, Tree *to);
-    Rewrite *           Define(text name, Tree *to);
+    Rewrite *           Enter(Infix *decl, bool overwrite=false);
+    Rewrite *           Define(Tree *from, Tree *to, bool overwrite=false);
+    Rewrite *           Define(text name, Tree *to, bool overwrite=false);
     Tree *              Assign(Tree *target, Tree *source);
 
     // Set context attributes
@@ -259,9 +259,10 @@ public:
     Rewrite *           SetModuleFile(text name);
     Rewrite *           SetModuleName(text name);
 
-    Rewrite *           SetAttribute(text attribute, longlong value);
-    Rewrite *           SetAttribute(text attribute, double value);
-    Rewrite *           SetAttribute(text attribute, text value);
+    Rewrite *           SetAttribute(text attr, Tree *value, bool ovwr=false);
+    Rewrite *           SetAttribute(text attr, longlong value, bool ow=false);
+    Rewrite *           SetAttribute(text attr, double value, bool ow=false);
+    Rewrite *           SetAttribute(text attr, text value, bool ow=false);
 
     // Path management
     text                ResolvePrefixedPath(text path);
@@ -276,6 +277,10 @@ public:
     Tree *              Bound(Tree *form,bool recurse=true);
     Tree *              Bound(Tree *form, bool rec, Rewrite_p *rw,Scope_p *ctx);
     Tree *              Named(text name, bool recurse=true);
+    bool                HasRewritesFor(kind k);
+    void                HasOneRewriteFor(kind k);
+    uint                StoredRewriteKinds();
+    void                StoreRewriteKinds(uint kinds);
 
     // List rewrites of a given type
     ulong               ListNames(text begin,rewrite_list &list,
@@ -298,6 +303,7 @@ public:
 public:
     Scope_p             symbols;
     code_map            compiled;
+    uint                hasRewritesForKind;
     GARBAGE_COLLECT(Context);
 };
 
@@ -411,6 +417,29 @@ inline Rewrite *Context::SetModuleName(text name)
 // ----------------------------------------------------------------------------
 {
     return SetAttribute("module_name", name);
+}
+
+
+inline bool Context::HasRewritesFor(kind k)
+// ----------------------------------------------------------------------------
+//    Check if we detected rewrites for a specific kind
+// ----------------------------------------------------------------------------
+//    This is used to avoid useless lookups for reals, integers, etc.
+{
+    return (hasRewritesForKind & (1<<k)) != 0;
+}
+
+
+inline void Context::HasOneRewriteFor(kind k)
+// ----------------------------------------------------------------------------
+//    Record that we have a new rewrite for a given kind
+// ----------------------------------------------------------------------------
+{
+    if (!HasRewritesFor(k))
+    {
+        hasRewritesForKind |= 1<<k;
+        StoreRewriteKinds(hasRewritesForKind);
+    }
 }
 
 

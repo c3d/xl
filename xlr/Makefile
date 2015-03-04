@@ -40,6 +40,7 @@ SOURCES     =					\
 	renderer.cpp				\
 	context.cpp				\
 	runtime.cpp				\
+	interpreter.cpp				\
 	compiler.cpp				\
 	compiler-llvm.cpp			\
 	compiler-gc.cpp				\

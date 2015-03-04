@@ -103,6 +103,10 @@ enum kind
 };
 
 
+// Must be out of the enum to avoid warnings about unhandled enum cases
+const int KIND_COUNT = KIND_LAST+1;
+
+
 struct Tree
 // ----------------------------------------------------------------------------
 //   The base class for all XL trees
@@ -227,7 +231,13 @@ struct Text : Tree
     text                opening, closing;
     static text         textQuote, charQuote;
     operator text()     { return value; }
-    bool IsCharacter()  { return opening == charQuote && closing == charQuote; }
+    bool IsCharacter()
+    {
+        return
+            opening == charQuote &&
+            closing == charQuote &&
+            value.length() == 1;
+    }
     bool IsText()       { return !IsCharacter(); }
 
     GARBAGE_COLLECT(Text);

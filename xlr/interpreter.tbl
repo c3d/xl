@@ -1,0 +1,111 @@
+// ****************************************************************************
+//  interpreter.tbl                                                XLR project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Opcode interpretation
+//
+//     Normally, opcodes defined here should match those in llvm.tbl
+//     although there is strictly speaking no reason other than
+//     the convenience for maintaining builtins.xl
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2015 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2015 Taodyne SAS
+// ****************************************************************************
+
+#define LEFT    left->value
+#define RIGHT   right->value
+#define ULEFT   (ulonglong) LEFT
+#define URIGHT  (ulonglong) RIGHT
+#define IVAL(x) new Integer(x, left->Position())
+#define RVAL(x) new Real(x, left->Position())
+#define BVAL(x) x ? xl_true : xl_false
+#define TVAL(x) new Text(x, left->Position())
+
+
+BINARY(Add,     Integer, Integer, Integer,      IVAL( LEFT +  RIGHT))
+BINARY(FAdd,    Real,    Real,    Real,         RVAL( LEFT +  RIGHT))
+BINARY(Sub,     Integer, Integer, Integer,      IVAL( LEFT -  RIGHT))
+BINARY(FSub,    Real,    Real,    Real,         RVAL( LEFT -  RIGHT))
+BINARY(Mul,     Integer, Integer, Integer,      IVAL( LEFT *  RIGHT))
+BINARY(FMul,    Real,    Real,    Real,         RVAL( LEFT *  RIGHT))
+BINARY(UDiv,    Integer, Integer, Integer,      IVAL(ULEFT / URIGHT))
+BINARY(SDiv,    Integer, Integer, Integer,      IVAL( LEFT /  RIGHT))
+BINARY(FDiv,    Real,    Real,    Real,         RVAL( LEFT /  RIGHT))
+BINARY(URem,    Integer, Integer, Integer,      IVAL(ULEFT % URIGHT))
+BINARY(SRem,    Integer, Integer, Integer,      IVAL( LEFT /  RIGHT))
+BINARY(Shl,     Integer, Integer, Integer,      IVAL( LEFT << RIGHT))
+BINARY(LShr,    Integer, Integer, Integer,      IVAL(ULEFT >> RIGHT))
+BINARY(AShr,    Integer, Integer, Integer,      IVAL( LEFT >> RIGHT))
+BINARY(And,     Integer, Integer, Integer,      IVAL( LEFT &  RIGHT))
+BINARY(Or,      Integer, Integer, Integer,      IVAL( LEFT |  RIGHT))
+BINARY(Xor,     Integer, Integer, Integer,      IVAL( LEFT ^  RIGHT))
+
+UNARY(Neg,      Integer, Integer,               IVAL(-LEFT))
+UNARY(FNeg,     Real,    Real,                  RVAL(-LEFT))
+UNARY(Not,      Integer, Integer,               IVAL(~LEFT))
+
+BINARY(ICmpEQ,  Name,    Integer, Integer,      BVAL( LEFT ==  RIGHT))
+BINARY(ICmpNE,  Name,    Integer, Integer,      BVAL( LEFT !=  RIGHT))
+BINARY(ICmpUGT, Name,    Integer, Integer,      BVAL(ULEFT >  URIGHT))
+BINARY(ICmpUGE, Name,    Integer, Integer,      BVAL(ULEFT >= URIGHT))
+BINARY(ICmpULT, Name,    Integer, Integer,      BVAL(ULEFT <  URIGHT))
+BINARY(ICmpULE, Name,    Integer, Integer,      BVAL(ULEFT <= URIGHT))
+BINARY(ICmpSGT, Name,    Integer, Integer,      BVAL( LEFT >   RIGHT))
+BINARY(ICmpSGE, Name,    Integer, Integer,      BVAL( LEFT >=  RIGHT))
+BINARY(ICmpSLT, Name,    Integer, Integer,      BVAL( LEFT <   RIGHT))
+BINARY(ICmpSLE, Name,    Integer, Integer,      BVAL( LEFT <=  RIGHT))
+
+BINARY(FCmpOEQ, Name,    Real,    Real,         BVAL(LEFT == RIGHT))
+BINARY(FCmpONE, Name,    Real,    Real,         BVAL(LEFT != RIGHT))
+BINARY(FCmpOGT, Name,    Real,    Real,         BVAL(LEFT >  RIGHT))
+BINARY(FCmpOGE, Name,    Real,    Real,         BVAL(LEFT >= RIGHT))
+BINARY(FCmpOLT, Name,    Real,    Real,         BVAL(LEFT <  RIGHT))
+BINARY(FCmpOLE, Name,    Real,    Real,         BVAL(LEFT <= RIGHT))
+
+// BINARY(FCmpORD, Name,    Real,    Real,         BVAL(LEFT == RIGHT))
+// BINARY(FCmpUNO, Name,    Real,    Real,         BVAL(LEFT == RIGHT))
+
+BINARY(FCmpUEQ, Name,    Real,    Real,         BVAL(LEFT == RIGHT))
+BINARY(FCmpUNE, Name,    Real,    Real,         BVAL(LEFT != RIGHT))
+BINARY(FCmpUGT, Name,    Real,    Real,         BVAL(LEFT >  RIGHT))
+BINARY(FCmpUGE, Name,    Real,    Real,         BVAL(LEFT >= RIGHT))
+BINARY(FCmpULT, Name,    Real,    Real,         BVAL(LEFT <  RIGHT))
+BINARY(FCmpULE, Name,    Real,    Real,         BVAL(LEFT <= RIGHT))
+
+
+// ============================================================================
+// 
+//   Special opcodes that perform XL-specific operations
+// 
+// ============================================================================
+
+UNARY(TreeKind,         Integer, Tree,          IVAL(left->Kind()))
+UNARY(TreeLeft,         Tree,    Prefix,        left->left)
+UNARY(TreeRight,        Tree,    Prefix,        left->right)
+UNARY(InfixName,        Text,    Infix,         TVAL(left->name))
+UNARY(TextOpening,      Text,    Text,          TVAL(left->opening))
+UNARY(TextClosing,      Text,    Text,          TVAL(left->closing))
+UNARY(BlockChild,       Tree,    Block,         left->child)
+UNARY(BlockOpening,     Text,    Block,         TVAL(left->opening))
+UNARY(BlockClosing,     Text,    Block,         TVAL(left->closing))
+
+
+#undef UNARY
+#undef BINARY
+#undef SPECIAL
+
+#undef LEFT
+#undef RIGHT
+#undef ULEFT
+#undef URIGHT
+#undef IVAL
+#undef RVAL
+#undef BVAL
+#undef TVAL
+

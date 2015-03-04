@@ -52,6 +52,7 @@
 #include "types.h"
 #include "save.h"
 #include "cdecls.h"
+#include "interpreter.h"
 
 #include <iostream>
 #include <cstdlib>
@@ -74,7 +75,7 @@ Context::Context()
 // ----------------------------------------------------------------------------
 //   Constructor for a top-level evaluation context
 // ----------------------------------------------------------------------------
-    : symbols()
+    : symbols(), hasRewritesForKind(0)
 {
     symbols = new Scope(xl_nil, xl_nil);
 }
@@ -84,7 +85,8 @@ Context::Context(Context *parent, TreePosition pos)
 // ----------------------------------------------------------------------------
 //   Constructor creating a child context in a parent context
 // ----------------------------------------------------------------------------
-    : symbols(parent->symbols)
+    : symbols(parent->symbols),
+      hasRewritesForKind(parent ? parent->hasRewritesForKind : 0)
 {
     CreateScope(pos);
 }
@@ -94,7 +96,8 @@ Context::Context(const Context &source)
 // ----------------------------------------------------------------------------
 //   Constructor for a top-level evaluation context
 // ----------------------------------------------------------------------------
-    : symbols(source.symbols)
+    : symbols(source.symbols),
+      hasRewritesForKind(source.hasRewritesForKind)
 {}
 
 
@@ -102,7 +105,8 @@ Context::Context(Scope *symbols)
 // ----------------------------------------------------------------------------
 //   Constructor from a known symbol table
 // ----------------------------------------------------------------------------
-    : symbols(symbols)
+    : symbols(symbols),
+      hasRewritesForKind(StoredRewriteKinds())
 {}
 
 
@@ -212,12 +216,13 @@ Tree *Context::Call(text prefix, TreeList &argList)
 // 
 // ============================================================================
 
-void Context::ProcessDeclarations(Tree *what)
+bool Context::ProcessDeclarations(Tree *what)
 // ----------------------------------------------------------------------------
-//   Process all declarations, return instructions (non-declarations) or NULL
+//   Process all declarations, return true if there are instructions
 // ----------------------------------------------------------------------------
 {
     Tree_p  next   = NULL;
+    bool result = false;
     while (what)
     {
         if (Infix *infix = what->AsInfix())
@@ -234,11 +239,15 @@ void Context::ProcessDeclarations(Tree *what)
                     if (left->name == "->")
                         Enter(left);
                     else
-                        ProcessDeclarations(left);
+                        result |= ProcessDeclarations(left);
                 }
                 else if (Prefix *left = infix->left->AsPrefix())
                 {
-                    ProcessDeclarations(left);
+                    result |= ProcessDeclarations(left);
+                }
+                else
+                {
+                    result = true;
                 }
                 next = infix->right;
             }
@@ -269,6 +278,10 @@ void Context::ProcessDeclarations(Tree *what)
                         delete pcd;
                     }
                 }
+                else
+                {
+                    result = true;
+                }
             }
         }
 
@@ -276,6 +289,7 @@ void Context::ProcessDeclarations(Tree *what)
         what = next;
         next = NULL;
     }
+    return true;
 }
 
 
@@ -330,27 +344,27 @@ static void ValidateNames(Tree *form)
 }
 
 
-Rewrite *Context::Define(Tree *form, Tree *value)
+Rewrite *Context::Define(Tree *form, Tree *value, bool overwrite)
 // ----------------------------------------------------------------------------
 //   Enter a rewrite in the current context
 // ----------------------------------------------------------------------------
 {
     Infix *decl = new Infix("->", form, value, form->Position());
-    return Enter(decl);
+    return Enter(decl, overwrite);
 }
 
 
-Rewrite *Context::Define(text name, Tree *value)
+Rewrite *Context::Define(text name, Tree *value, bool overwrite)
 // ----------------------------------------------------------------------------
 //   Enter a rewrite in the current context
 // ----------------------------------------------------------------------------
 {
     Name *nameTree = new Name(name, value->Position());
-    return Define(nameTree, value);
+    return Define(nameTree, value, overwrite);
 }
 
 
-Rewrite *Context::Enter(Infix *rewrite)
+Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
 // ----------------------------------------------------------------------------
 //   Enter a known declaration
 // ----------------------------------------------------------------------------
@@ -369,6 +383,9 @@ Rewrite *Context::Enter(Infix *rewrite)
     // Check what we are really defining, and verify if it's a name
     Tree *defined = RewriteDefined(from);
     Name *name = defined->AsName();
+
+    // Record which kinds we have rewrites for
+    HasOneRewriteFor(defined->Kind());
 
     // Validate form names, emit errors in case of problem.
     ValidateNames(from);
@@ -420,8 +437,16 @@ Rewrite *Context::Enter(Infix *rewrite)
             {
                 if (declName->value == name->value)
                 {
-                    Ooops("Name $1 is redefined", name);
-                    Ooops("Previous definition was in $1", decl);
+                    if (overwrite)
+                    {
+                        decl->right = rewrite->right;
+                        return entry;
+                    }
+                    else
+                    {
+                        Ooops("Name $1 is redefined", name);
+                        Ooops("Previous definition was in $1", decl);
+                    }
                 }
             }
         }
@@ -473,7 +498,7 @@ Tree *Context::Assign(Tree *ref, Tree *value)
             if (typeDecl->name == "as")
             {
                 Tree *type = typeDecl->right;
-                Tree *castedValue = ValueMatchesType(this, type, value, true);
+                Tree *castedValue = TypeCheck(this, type, value);
                 if (castedValue)
                 {
                     value = castedValue;
@@ -503,32 +528,40 @@ Tree *Context::Assign(Tree *ref, Tree *value)
 // 
 // ============================================================================
 
-Rewrite *Context::SetAttribute(text attribute, longlong value)
+Rewrite *Context::SetAttribute(text attribute, Tree *value, bool owr)
 // ----------------------------------------------------------------------------
 //   Set an attribute for the innermost context
 // ----------------------------------------------------------------------------
 {
-    return Define(attribute, new Real(value, symbols->Position()));
+    return Define(attribute, value, owr);
 }
 
 
-Rewrite *Context::SetAttribute(text attribute, double value)
+Rewrite *Context::SetAttribute(text attribute, longlong value, bool owr)
+// ----------------------------------------------------------------------------
+//   Set an attribute for the innermost context
+// ----------------------------------------------------------------------------
+{
+    return SetAttribute(attribute,new Integer(value,symbols->Position()),owr);
+}
+
+
+Rewrite *Context::SetAttribute(text attribute, double value, bool owr)
 // ----------------------------------------------------------------------------
 //   Set the override priority for the innermost scope in the context
 // ----------------------------------------------------------------------------
 {
-    return Define(attribute, new Real(value, symbols->Position()));
+    return Define(attribute, new Real(value, symbols->Position()), owr);
 }
 
 
-Rewrite *Context::SetAttribute(text attribute, text value)
+Rewrite *Context::SetAttribute(text attribute, text value, bool owr)
 // ----------------------------------------------------------------------------
 //   Set the file name the innermost scope in the context
 // ----------------------------------------------------------------------------
 {
-    return Define(attribute, new Text(value, "\"", "\"", symbols->Position()));
+    return Define(attribute, new Text(value, symbols->Position()), owr);
 }
-
 
 
 
@@ -559,6 +592,10 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
 //   Lookup a tree using the given lookup function
 // ----------------------------------------------------------------------------
 {
+    // Quick exit if we have no rewrite for that tree kind
+    if (!HasRewritesFor(what->Kind()))
+        return NULL;
+    
     Scope * scope = symbols;
     ulong   h0    = Hash(what, false);
 
@@ -688,6 +725,27 @@ Tree *Context::Named(text name, bool recurse)
 {
     Name nameTree(name);
     return Bound(&nameTree, recurse);
+}
+
+
+uint Context::StoredRewriteKinds()
+// ----------------------------------------------------------------------------
+//    Return the rewrite kinds stored in the scope
+// ----------------------------------------------------------------------------
+{
+    if (Tree *bnd = Named("[kind]"))
+        if (Integer *ival = bnd->AsInteger())
+            return (uint) ival->value;
+    return 0;
+}
+
+
+void Context::StoreRewriteKinds(uint kinds)
+// ----------------------------------------------------------------------------
+//    Store the rewrite kinds we have rewrites for
+// ----------------------------------------------------------------------------
+{
+    SetAttribute("[kind]", longlong(kinds), true);
 }
 
 

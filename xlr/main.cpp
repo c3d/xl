@@ -55,6 +55,7 @@
 #include "traces.h"
 #include "flight_recorder.h"
 #include "utf8_fileutils.h"
+#include "interpreter.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -411,6 +412,7 @@ int Main::Run()
 
     // Loop over files we will process
     Tree_p result = xl_nil;
+    uint optLevel = options.optimize_level;
     for (file = file_names.begin(); file != file_names.end(); file++)
     {
         SourceFile &sf = files[*file];
@@ -419,8 +421,21 @@ int Main::Run()
         Errors errors;
         if (Tree *tree = sf.tree)
         {
-            Context *context = sf.context;
-            result = context->Evaluate(tree);
+#ifdef INTERPRETER_ONLY
+            // Interpreter-only mode
+            result = Evaluate(context, tree);
+#else // !INTERPRETER_ONLY
+            // Select interpreter or compiler at run-time
+            if (optLevel)
+            {
+                Context *context = sf.context;
+                result = context->Evaluate(tree);
+            }
+            else
+            {
+                result = Evaluate(context, tree);
+            }
+#endif // INTERPRETER_ONLY
         }
 
         if (!result)
