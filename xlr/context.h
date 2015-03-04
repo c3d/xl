@@ -279,8 +279,6 @@ public:
     Tree *              Named(text name, bool recurse=true);
     bool                HasRewritesFor(kind k);
     void                HasOneRewriteFor(kind k);
-    uint                StoredRewriteKinds();
-    void                StoreRewriteKinds(uint kinds);
 
     // List rewrites of a given type
     ulong               ListNames(text begin,rewrite_list &list,
@@ -303,7 +301,7 @@ public:
 public:
     Scope_p             symbols;
     code_map            compiled;
-    uint                hasRewritesForKind;
+    static uint         hasRewritesForKind;
     GARBAGE_COLLECT(Context);
 };
 
@@ -435,11 +433,7 @@ inline void Context::HasOneRewriteFor(kind k)
 //    Record that we have a new rewrite for a given kind
 // ----------------------------------------------------------------------------
 {
-    if (!HasRewritesFor(k))
-    {
-        hasRewritesForKind |= 1<<k;
-        StoreRewriteKinds(hasRewritesForKind);
-    }
+    hasRewritesForKind |= 1<<k;
 }
 
 

@@ -71,11 +71,13 @@ XL_BEGIN
 #define REWRITE_CHILDREN_NAME   ";"
 
 
+uint Context::hasRewritesForKind = 0;
+
 Context::Context()
 // ----------------------------------------------------------------------------
 //   Constructor for a top-level evaluation context
 // ----------------------------------------------------------------------------
-    : symbols(), hasRewritesForKind(0)
+    : symbols()
 {
     symbols = new Scope(xl_nil, xl_nil);
 }
@@ -85,8 +87,7 @@ Context::Context(Context *parent, TreePosition pos)
 // ----------------------------------------------------------------------------
 //   Constructor creating a child context in a parent context
 // ----------------------------------------------------------------------------
-    : symbols(parent->symbols),
-      hasRewritesForKind(parent ? parent->hasRewritesForKind : 0)
+    : symbols(parent->symbols)
 {
     CreateScope(pos);
 }
@@ -96,8 +97,7 @@ Context::Context(const Context &source)
 // ----------------------------------------------------------------------------
 //   Constructor for a top-level evaluation context
 // ----------------------------------------------------------------------------
-    : symbols(source.symbols),
-      hasRewritesForKind(source.hasRewritesForKind)
+    : symbols(source.symbols)
 {}
 
 
@@ -105,8 +105,7 @@ Context::Context(Scope *symbols)
 // ----------------------------------------------------------------------------
 //   Constructor from a known symbol table
 // ----------------------------------------------------------------------------
-    : symbols(symbols),
-      hasRewritesForKind(StoredRewriteKinds())
+    : symbols(symbols)
 {}
 
 
@@ -726,40 +725,6 @@ Tree *Context::Named(text name, bool recurse)
 {
     Name nameTree(name);
     return Bound(&nameTree, recurse);
-}
-
-
-struct RewriteKindsInfo : Info
-// ----------------------------------------------------------------------------
-//    Persist information about the rewrite kinds in the tree
-// ----------------------------------------------------------------------------
-{
-    RewriteKindsInfo(uint which): kinds(which) {}
-    uint kinds;
-};
-
-
-uint Context::StoredRewriteKinds()
-// ----------------------------------------------------------------------------
-//    Return the rewrite kinds stored in the scope
-// ----------------------------------------------------------------------------
-{
-    if (RewriteKindsInfo *info = symbols->GetInfo<RewriteKindsInfo>())
-        return info->kinds;
-    return 0;
-}
-
-
-void Context::StoreRewriteKinds(uint kinds)
-// ----------------------------------------------------------------------------
-//    Store the rewrite kinds we have rewrites for
-// ----------------------------------------------------------------------------
-{
-    RewriteKindsInfo *info = symbols->GetInfo<RewriteKindsInfo>();
-    if (info)
-        info->kinds = kinds;
-    else
-        symbols->SetInfo<RewriteKindsInfo>(new RewriteKindsInfo(kinds));
 }
 
 
