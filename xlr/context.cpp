@@ -226,29 +226,28 @@ bool Context::ProcessDeclarations(Tree *what)
 
     while (what)
     {
+        bool isInstruction = true;
         if (Infix *infix = what->AsInfix())
         {
             if (infix->name == "->")
             {
                 Enter(infix);
+                isInstruction = false;
             }
             else if (infix->name == "\n" || infix->name == ";")
             {
                 // Chain of declarations, avoiding recursing if possible.
                 if (Infix *left = infix->left->AsInfix())
                 {
+                    isInstruction = false;
                     if (left->name == "->")
                         Enter(left);
                     else
-                        result |= ProcessDeclarations(left);
+                        isInstruction = ProcessDeclarations(left);
                 }
                 else if (Prefix *left = infix->left->AsPrefix())
                 {
-                    result |= ProcessDeclarations(left);
-                }
-                else
-                {
-                    result = true;
+                    isInstruction = ProcessDeclarations(left);
                 }
                 next = infix->right;
             }
@@ -260,6 +259,7 @@ bool Context::ProcessDeclarations(Tree *what)
                 if (pname->value == "data")
                 {
                     Define(prefix->right, xl_self);
+                    isInstruction = false;
                 }
                 else if (pname->value == "extern")
                 {
@@ -273,26 +273,18 @@ bool Context::ProcessDeclarations(Tree *what)
                         Define(normalForm->left, normalForm->right);
                         prefix->SetInfo<CDeclaration>(pcd);
                         prefix->right->SetInfo<CDeclaration>(pcd);
+                        isInstruction = false;
                     }
                     else
                     {
                         delete pcd;
                     }
                 }
-                else
-                {
-                    result = true;
-                }
-            }
-            else
-            {
-                result = true;
             }
         }
-        else
-        {
-            result = true;
-        }
+
+        // Check if we see instructions
+        result |= isInstruction;
 
         // Consider next in chain
         what = next;
@@ -737,14 +729,23 @@ Tree *Context::Named(text name, bool recurse)
 }
 
 
+struct RewriteKindsInfo : Info
+// ----------------------------------------------------------------------------
+//    Persist information about the rewrite kinds in the tree
+// ----------------------------------------------------------------------------
+{
+    RewriteKindsInfo(uint which): kinds(which) {}
+    uint kinds;
+};
+
+
 uint Context::StoredRewriteKinds()
 // ----------------------------------------------------------------------------
 //    Return the rewrite kinds stored in the scope
 // ----------------------------------------------------------------------------
 {
-    if (Tree *bnd = Named("[kind]"))
-        if (Integer *ival = bnd->AsInteger())
-            return (uint) ival->value;
+    if (RewriteKindsInfo *info = symbols->GetInfo<RewriteKindsInfo>())
+        return info->kinds;
     return 0;
 }
 
@@ -754,7 +755,11 @@ void Context::StoreRewriteKinds(uint kinds)
 //    Store the rewrite kinds we have rewrites for
 // ----------------------------------------------------------------------------
 {
-    SetAttribute("[kind]", longlong(kinds), true);
+    RewriteKindsInfo *info = symbols->GetInfo<RewriteKindsInfo>();
+    if (info)
+        info->kinds = kinds;
+    else
+        symbols->SetInfo<RewriteKindsInfo>(new RewriteKindsInfo(kinds));
 }
 
 
