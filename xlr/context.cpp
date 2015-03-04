@@ -221,8 +221,9 @@ bool Context::ProcessDeclarations(Tree *what)
 //   Process all declarations, return true if there are instructions
 // ----------------------------------------------------------------------------
 {
-    Tree_p  next   = NULL;
-    bool result = false;
+    Tree_p next   = NULL;
+    bool   result = false;
+
     while (what)
     {
         if (Infix *infix = what->AsInfix())
@@ -283,13 +284,21 @@ bool Context::ProcessDeclarations(Tree *what)
                     result = true;
                 }
             }
+            else
+            {
+                result = true;
+            }
+        }
+        else
+        {
+            result = true;
         }
 
         // Consider next in chain
         what = next;
         next = NULL;
     }
-    return true;
+    return result;
 }
 
 
