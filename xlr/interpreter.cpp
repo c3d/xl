@@ -417,6 +417,10 @@ static Tree *evalLookup(Scope *scope,
     if (!decl->left->Do(bindings))
         return NULL;
 
+    // Check if the right is "self"
+    if (decl->right == xl_self)
+        return form;
+
     // Check if we have builtins (opcode or C bindings)
     if (OpcodeInfo *info = decl->GetInfo<OpcodeInfo>())
     {
@@ -519,8 +523,10 @@ static Tree *Instructions(Context *context, Tree *what)
             // If we have a name on the left, lookup name and start again
             if (Name *name = callee->AsName())
             {
-                // If we have 'type X', return source as is
-                if (name->value == "type")
+                // A few cases where we don't interpret the result
+                if (name->value == "type"   ||
+                    name->value == "extern" ||
+                    name->value == "data")
                     return what;
 
                 if (Tree *found = context->Bound(name))
@@ -622,6 +628,17 @@ static Tree *Instructions(Context *context, Tree *what)
             Infix *infix = (Infix *) what;
             text name = infix->name;
 
+            // Check sequences
+            if (name == ";" || name == "\n")
+            {
+                // Sequences: evaluate left, then right
+                Tree *left = Instructions(context, infix->left);
+                if (left != infix->left)
+                    result = left;
+                what = infix->right;
+                continue;
+            }
+
             // Check declarations
             if (name == "->")
             {
@@ -657,17 +674,6 @@ static Tree *Instructions(Context *context, Tree *what)
                 continue;
             }
 
-            // Check sequences
-            if (name == ";" || name == "\n")
-            {
-                // Sequences: evaluate left, then right
-                Tree *left = Instructions(context, infix->left);
-                if (left != infix->left)
-                    result = left;
-                what = infix->right;
-                continue;
-            }
-
             // All other cases: evaluate
             EvalCache cache;
             if (Tree *eval = context->Lookup(what, evalLookup, &cache))
@@ -691,7 +697,7 @@ Tree *Evaluate(Context *context, Tree *what)
     if (context->ProcessDeclarations(what))
         result = Instructions(context, what);
 
-    // At end of evaluattion, check if need to cleanup
+    // At end of evaluation, check if need to cleanup
     GarbageCollector::Collect();
     return result;
 }
