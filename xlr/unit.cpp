@@ -184,7 +184,7 @@ Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
     else
         retTy = StructureType(signature, source);
 
-    text label = "xl_eval_" + parameters.name;
+    text label = "_XL_" + parameters.name;
     IFTRACE(labels)
         label += "[" + text(*source) + "]";
 
