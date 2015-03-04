@@ -181,11 +181,19 @@ XL_BEGIN
 
 struct Context;                                 // Execution context
 
-typedef GCPtr<Context>             Context_p;
-typedef std::vector<Infix_p>       rewrite_list;
-typedef std::map<Tree_p, Tree_p>   tree_map;
-typedef Tree * (*eval_fn) (Context *, Tree *);
-typedef std::map<Tree_p, eval_fn>              code_map;
+// Give names to components of a symbol table
+typedef Prefix                          Scope;
+typedef GCPtr<Scope>                    Scope_p;
+typedef Infix                           Rewrite;
+typedef GCPtr<Rewrite>                  Rewrite_p;
+typedef Infix                           RewriteChildren;
+typedef GCPtr<RewriteChildren>          RewriteChildren_p;
+
+typedef GCPtr<Context>                  Context_p;
+typedef std::vector<Infix_p>            rewrite_list;
+typedef std::map<Tree_p, Tree_p>        tree_map;
+typedef Tree *                          (*eval_fn) (Context *, Tree *);
+typedef std::map<Tree_p, eval_fn>       code_map;
 
 
 
@@ -218,14 +226,14 @@ struct Context
     Context();
     Context(Context *parent, TreePosition pos = Tree::NOWHERE);
     Context(const Context &source);
-    Context(Prefix *symbols);
+    Context(Scope *symbols);
     ~Context();
 
 public:
     // Create and delete a local scope
     void                CreateScope(TreePosition pos = Tree::NOWHERE);
     void                PopScope();
-    Prefix *            Scope()         { return symbols; }
+    Scope *             CurrentScope()          { return symbols; }
     Context *           Parent();
 
     // Compile and evaluate a tree in the current context
@@ -239,33 +247,34 @@ public:
     void                ProcessDeclarations(Tree *what);
 
     // Adding definitions to the context
-    Infix *             Enter(Infix *decl);
-    Infix *             Define(Tree *from, Tree *to);
-    Infix *             Define(text name, Tree *to);
+    Rewrite *           Enter(Infix *decl);
+    Rewrite *           Define(Tree *from, Tree *to);
+    Rewrite *           Define(text name, Tree *to);
     Tree *              Assign(Tree *target, Tree *source);
 
     // Set context attributes
-    Infix *             SetOverridePriority(double priority);
-    Infix *             SetModulePath(text name);
-    Infix *             SetModuleDirectory(text name);
-    Infix *             SetModuleFile(text name);
-    Infix *             SetModuleName(text name);
+    Rewrite *           SetOverridePriority(double priority);
+    Rewrite *           SetModulePath(text name);
+    Rewrite *           SetModuleDirectory(text name);
+    Rewrite *           SetModuleFile(text name);
+    Rewrite *           SetModuleName(text name);
 
-    Infix *             SetAttribute(text attribute, longlong value);
-    Infix *             SetAttribute(text attribute, double value);
-    Infix *             SetAttribute(text attribute, text value);
+    Rewrite *           SetAttribute(text attribute, longlong value);
+    Rewrite *           SetAttribute(text attribute, double value);
+    Rewrite *           SetAttribute(text attribute, text value);
 
     // Path management
     text                ResolvePrefixedPath(text path);
 
     // Looking up definitions in a context
-    typedef Tree *      (*lookup_fn)(Prefix *sc,Tree *frm,Infix *dcl,void *inf);
+    typedef Tree *      (*lookup_fn)(Scope *,
+                                     Tree *form, Infix *decl, void *info);
     Tree *              Lookup(Tree *what,
                                lookup_fn lookup, void *info,
                                bool recurse=true);
-    Infix *             Reference(Tree *form);
+    Rewrite *           Reference(Tree *form);
     Tree *              Bound(Tree *form,bool recurse=true);
-    Tree *              Bound(Tree *form, bool rec, Infix_p *rw,Prefix_p *ctx);
+    Tree *              Bound(Tree *form, bool rec, Rewrite_p *rw,Scope_p *ctx);
     Tree *              Named(text name, bool recurse=true);
 
     // List rewrites of a given type
@@ -282,15 +291,57 @@ public:
     void                Clear();
 
     // Dump symbol tables
-    static void         Dump(std::ostream &out, Prefix *symbols);
-    static void         Dump(std::ostream &out, Infix *locals);
+    static void         Dump(std::ostream &out, Scope *symbols);
+    static void         Dump(std::ostream &out, Rewrite *locals);
     void                Dump(std::ostream &out) { Dump(out, symbols); }
 
 public:
-    Prefix_p            symbols;
+    Scope_p             symbols;
     code_map            compiled;
     GARBAGE_COLLECT(Context);
 };
+
+
+// ============================================================================
+// 
+//    Meaning adapters - Make it more explicit what happens in code
+// 
+// ============================================================================
+
+inline Scope *ScopeParent(Scope *scope)
+// ----------------------------------------------------------------------------
+//   Find parent for a given scope
+// ----------------------------------------------------------------------------
+{
+    return scope->left->AsPrefix();
+}
+
+
+inline Rewrite *ScopeRewrites(Scope *scope)
+// ----------------------------------------------------------------------------
+//   Find top rewrite for a given scope
+// ----------------------------------------------------------------------------
+{
+    return scope->right->AsInfix();
+}
+
+
+inline Infix *RewriteDeclaration(Rewrite *rw)
+// ----------------------------------------------------------------------------
+//   Find what a rewrite declares
+// ----------------------------------------------------------------------------
+{
+    return rw->left->AsInfix();
+}
+
+
+inline RewriteChildren *RewriteNext(Rewrite *rw)
+// ----------------------------------------------------------------------------
+//   Find the children of a rewrite during lookup
+// ----------------------------------------------------------------------------
+{
+    return rw->right->AsInfix();
+}
 
 
 struct ContextStack
@@ -298,16 +349,16 @@ struct ContextStack
 //   For debug purpose: display the context stack on a std::ostream
 // ----------------------------------------------------------------------------
 {
-    ContextStack(Prefix *scope) : scope(scope) {}
+    ContextStack(Scope *scope) : scope(scope) {}
     friend std::ostream &operator<<(std::ostream &out, const ContextStack &data)
     {
         out << "[ ";
-        for (Prefix *s = data.scope; s; s = s->left->AsPrefix())
+        for (Scope *s = data.scope; s; s = ScopeParent(s))
             out << (void *) s << " ";
         out << "]";
         return out;
     }
-    Prefix *scope;
+    Scope *scope;
 };
 
 
@@ -318,7 +369,7 @@ struct ContextStack
 // 
 // ============================================================================
 
-inline Infix *Context::SetOverridePriority(double priority)
+inline Rewrite *Context::SetOverridePriority(double priority)
 // ----------------------------------------------------------------------------
 //   Set the override_priority attribute
 // ----------------------------------------------------------------------------
@@ -327,7 +378,7 @@ inline Infix *Context::SetOverridePriority(double priority)
 }
 
 
-inline Infix *Context::SetModulePath(text path)
+inline Rewrite *Context::SetModulePath(text path)
 // ----------------------------------------------------------------------------
 //   Set the module_path attribute
 // ----------------------------------------------------------------------------
@@ -336,7 +387,7 @@ inline Infix *Context::SetModulePath(text path)
 }
 
 
-inline Infix *Context::SetModuleDirectory(text directory)
+inline Rewrite *Context::SetModuleDirectory(text directory)
 // ----------------------------------------------------------------------------
 //   Set the module_directory attribute
 // ----------------------------------------------------------------------------
@@ -345,7 +396,7 @@ inline Infix *Context::SetModuleDirectory(text directory)
 }
 
 
-inline Infix *Context::SetModuleFile(text file)
+inline Rewrite *Context::SetModuleFile(text file)
 // ----------------------------------------------------------------------------
 //   Set the module_file attribute
 // ----------------------------------------------------------------------------
@@ -354,7 +405,7 @@ inline Infix *Context::SetModuleFile(text file)
 }
 
 
-inline Infix *Context::SetModuleName(text name)
+inline Rewrite *Context::SetModuleName(text name)
 // ----------------------------------------------------------------------------
 //   Set the module_name attribute
 // ----------------------------------------------------------------------------

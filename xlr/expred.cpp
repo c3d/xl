@@ -104,7 +104,7 @@ llvm_value CompileExpression::DoName(Name *what)
 
     assert(existing || !"Type checking didn't realize a name is missing");
     Tree *from = RewriteDefined(rewrite->left);
-    if (where == context->Scope())
+    if (where == context->CurrentScope())
         if (llvm_value result = unit->Known(from))
             return result;
 

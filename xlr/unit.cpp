@@ -435,7 +435,7 @@ llvm_value CompiledUnit::Data(Tree *form, uint &index)
         assert (existing || !"Type check didn't realize a name was missing");
 
         // Arguments bound here are returned directly as a tree
-        if (scope == context->Scope())
+        if (scope == context->CurrentScope())
         {
             Tree *defined = RewriteDefined(rw->left);
             if (llvm_value result = Known(defined))
@@ -521,7 +521,7 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
         assert(existing || !"Type checking didn't realize a name is missing");
 
         // Arguments bound here are returned directly as a tree
-        if (scope == context->Scope())
+        if (scope == context->CurrentScope())
         {
             // Get element from input argument
             llvm_value ptr = code->CreateConstGEP2_32(boxed, 0, index++);

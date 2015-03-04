@@ -66,8 +66,8 @@ XL_BEGIN
 //
 // ============================================================================
 
-#define ENTRY_NAME      "\n"
-#define CHILDREN_NAME   ";"
+#define REWRITE_NAME            "\n"
+#define REWRITE_CHILDREN_NAME   ";"
 
 
 Context::Context()
@@ -76,7 +76,7 @@ Context::Context()
 // ----------------------------------------------------------------------------
     : symbols()
 {
-    symbols = new Prefix(xl_nil, xl_nil);
+    symbols = new Scope(xl_nil, xl_nil);
 }
 
 
@@ -98,7 +98,7 @@ Context::Context(const Context &source)
 {}
 
 
-Context::Context(Prefix *symbols)
+Context::Context(Scope *symbols)
 // ----------------------------------------------------------------------------
 //   Constructor from a known symbol table
 // ----------------------------------------------------------------------------
@@ -125,7 +125,7 @@ void Context::CreateScope(TreePosition pos)
 //    Add a local scope to the current context
 // ----------------------------------------------------------------------------
 {
-    symbols = new Prefix(symbols, xl_nil, pos);
+    symbols = new Scope(symbols, xl_nil, pos);
 }
 
 
@@ -134,7 +134,7 @@ void Context::PopScope()
 //   Remove the innermost local scope
 // ----------------------------------------------------------------------------
 {
-    if (Prefix *enclosing = symbols->left->AsPrefix())
+    if (Scope *enclosing = ScopeParent(symbols))
         symbols = enclosing;
 }
 
@@ -144,7 +144,7 @@ Context *Context::Parent()
 //   Return the parent context
 // ----------------------------------------------------------------------------
 {
-    if (Prefix *psyms = symbols->left->AsPrefix())
+    if (Scope *psyms = ScopeParent(symbols))
         return new Context(psyms);
     return NULL;
 }
@@ -330,7 +330,7 @@ static void ValidateNames(Tree *form)
 }
 
 
-Infix *Context::Define(Tree *form, Tree *value)
+Rewrite *Context::Define(Tree *form, Tree *value)
 // ----------------------------------------------------------------------------
 //   Enter a rewrite in the current context
 // ----------------------------------------------------------------------------
@@ -340,7 +340,7 @@ Infix *Context::Define(Tree *form, Tree *value)
 }
 
 
-Infix *Context::Define(text name, Tree *value)
+Rewrite *Context::Define(text name, Tree *value)
 // ----------------------------------------------------------------------------
 //   Enter a rewrite in the current context
 // ----------------------------------------------------------------------------
@@ -350,7 +350,7 @@ Infix *Context::Define(text name, Tree *value)
 }
 
 
-Infix *Context::Enter(Infix *rewrite)
+Rewrite *Context::Enter(Infix *rewrite)
 // ----------------------------------------------------------------------------
 //   Enter a known declaration
 // ----------------------------------------------------------------------------
@@ -381,22 +381,24 @@ Infix *Context::Enter(Infix *rewrite)
     // That structure has the following layout: (A->B ; (L; R)), where
     // A->B is the local declaration, L and R are the possible children.
     // Children are initially nil.
-    Prefix *scope = symbols;
-    Tree_p &locals = scope->right;
-    Tree_p *parent = &locals;
-    Infix *result = NULL;
+    Scope   *scope  = symbols;
+    Tree_p  &locals = scope->right;
+    Tree_p  *parent = &locals;
+    Rewrite *result = NULL;
     while (!result)
     {
         // If we have found a nil spot, that's where we can insert
         if (*parent == xl_nil)
         {
             // Initialize the local entry with nil children
-            Infix *nil_children = new Infix(CHILDREN_NAME, xl_nil, xl_nil,
-                                            rewrite->Position());
+            RewriteChildren *nil_children =
+                new RewriteChildren(REWRITE_CHILDREN_NAME,
+                                    xl_nil, xl_nil,
+                                    rewrite->Position());
 
             // Create the local entry
-            Infix *entry = new Infix(ENTRY_NAME, rewrite, nil_children,
-                                     rewrite->Position());
+            Rewrite *entry = new Rewrite(REWRITE_NAME, rewrite, nil_children,
+                                         rewrite->Position());
 
             // Insert the entry in the parent
             *parent = entry;
@@ -407,12 +409,12 @@ Infix *Context::Enter(Infix *rewrite)
         }
 
         // This should be a rewrite entry, follow it
-        Infix *entry = (*parent)->AsInfix();
+        Rewrite *entry = (*parent)->AsInfix();
 
         // If we are definig a name, signal if we redefine it
         if (name)
         {
-            Infix *decl = entry->left->AsInfix();
+            Infix *decl = RewriteDeclaration(entry);
             Tree *declDef = RewriteDefined(decl->left);
             if (Name *declName = declDef->AsName())
             {
@@ -424,7 +426,7 @@ Infix *Context::Enter(Infix *rewrite)
             }
         }
 
-        Infix *children = entry->right->AsInfix();
+        RewriteChildren *children = RewriteNext(entry);
         if (h & 1)
             parent = &children->right;
         else
@@ -501,7 +503,7 @@ Tree *Context::Assign(Tree *ref, Tree *value)
 // 
 // ============================================================================
 
-Infix *Context::SetAttribute(text attribute, longlong value)
+Rewrite *Context::SetAttribute(text attribute, longlong value)
 // ----------------------------------------------------------------------------
 //   Set an attribute for the innermost context
 // ----------------------------------------------------------------------------
@@ -510,7 +512,7 @@ Infix *Context::SetAttribute(text attribute, longlong value)
 }
 
 
-Infix *Context::SetAttribute(text attribute, double value)
+Rewrite *Context::SetAttribute(text attribute, double value)
 // ----------------------------------------------------------------------------
 //   Set the override priority for the innermost scope in the context
 // ----------------------------------------------------------------------------
@@ -519,7 +521,7 @@ Infix *Context::SetAttribute(text attribute, double value)
 }
 
 
-Infix *Context::SetAttribute(text attribute, text value)
+Rewrite *Context::SetAttribute(text attribute, text value)
 // ----------------------------------------------------------------------------
 //   Set the file name the innermost scope in the context
 // ----------------------------------------------------------------------------
@@ -557,7 +559,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
 //   Lookup a tree using the given lookup function
 // ----------------------------------------------------------------------------
 {
-    Prefix *scope = symbols;
+    Scope * scope = symbols;
     ulong   h0    = Hash(what, false);
 
     while (scope)
@@ -575,12 +577,12 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
                 break;
 
             // This should be a rewrite entry, follow it
-            Infix *entry = (*parent)->AsInfix();
-            XL_ASSERT(entry && entry->name == ENTRY_NAME)
-            Infix *decl = entry->left->AsInfix();
+            Rewrite *entry = (*parent)->AsInfix();
+            XL_ASSERT(entry && entry->name == REWRITE_NAME);
+            Infix *decl = RewriteDeclaration(entry);
             XL_ASSERT(!decl || decl->name == "->");
-            Infix *children = entry->right->AsInfix();
-            XL_ASSERT(children && children->name == CHILDREN_NAME);
+            RewriteChildren *children = RewriteNext(entry);
+            XL_ASSERT(children && children->name == REWRITE_CHILDREN_NAME);
 
             // Check that hash matches
             ulong declHash = Hash(decl->left, true);
@@ -603,7 +605,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
         // The last top-level global will be nil, so we will end with scope=NULL
         if (!recurse)
             break;
-        scope = scope->left->AsPrefix();
+        scope = ScopeParent(scope);
     }
 
     // Return NULL if all evaluations failed
@@ -611,7 +613,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
 }
 
 
-static Tree *findReference(Prefix *scope, Tree *what, Infix *decl, void *)
+static Tree *findReference(Scope *scope, Tree *what, Infix *decl, void *)
 // ----------------------------------------------------------------------------
 //   Return the reference we found
 // ----------------------------------------------------------------------------
@@ -633,7 +635,7 @@ Infix *Context::Reference(Tree *form)
 }
 
 
-static Tree *findValue(Prefix *scope, Tree *what, Infix *decl, void *info)
+static Tree *findValue(Scope *scope, Tree *what, Infix *decl, void *info)
 // ----------------------------------------------------------------------------
 //   Return the value bound to a given form
 // ----------------------------------------------------------------------------
@@ -642,9 +644,9 @@ static Tree *findValue(Prefix *scope, Tree *what, Infix *decl, void *info)
 }
 
 
-static Tree *findValueX(Prefix *scope, Tree *what, Infix *decl, void *info)
+static Tree *findValueX(Scope *scope, Tree *what, Infix *decl, void *info)
 // ----------------------------------------------------------------------------
-//   Return the value bound to a given form
+//   Return the value bound to a given form, as well as its scope and decl
 // ----------------------------------------------------------------------------
 {
     Prefix *rewriteInfo = (Prefix *) info;
@@ -664,7 +666,7 @@ Tree *Context::Bound(Tree *form, bool recurse)
 }
 
 
-Tree *Context::Bound(Tree *form, bool recurse, Infix_p *rewrite, Prefix_p *ctx)
+Tree *Context::Bound(Tree *form, bool recurse, Infix_p *rewrite, Scope_p *ctx)
 // ----------------------------------------------------------------------------
 //   Return the value bound to a given declaration
 // ----------------------------------------------------------------------------
@@ -689,7 +691,7 @@ Tree *Context::Named(text name, bool recurse)
 }
 
 
-static ulong listNames(Infix *where, text begin, rewrite_list &list, bool pfx)
+static ulong listNames(Rewrite *where, text begin, rewrite_list &list, bool pfx)
 // ----------------------------------------------------------------------------
 //   List names in the given tree
 // ----------------------------------------------------------------------------
@@ -697,7 +699,7 @@ static ulong listNames(Infix *where, text begin, rewrite_list &list, bool pfx)
     ulong count = 0;
     while (where)
     {
-        Infix *decl = where->left->AsInfix();
+        Infix *decl = RewriteDeclaration(where);
         if (decl && decl->name == "->")
         {
             Tree *declared = decl->left;
@@ -728,16 +730,16 @@ ulong Context::ListNames(text begin, rewrite_list &list,
 //    List names in a context
 // ----------------------------------------------------------------------------
 {
-    Prefix *scope = symbols;
+    Scope *scope = symbols;
     ulong count = 0;
     while (scope)
     {
-        Infix *locals = scope->right->AsInfix();
+        Rewrite *locals = ScopeRewrites(scope);
         count += listNames(locals, begin, list, includePrefixes);
         if (!recurse)
             scope = NULL;
         else
-            scope = scope->left->AsPrefix();
+            scope = ScopeParent(scope);
     }
     return count;
 }
@@ -844,18 +846,16 @@ void Context::Clear()
 }
 
 
-void Context::Dump(std::ostream &out, Prefix *scope)
+void Context::Dump(std::ostream &out, Scope *scope)
 // ----------------------------------------------------------------------------
 //   Dump the symbol table to the given stream
 // ----------------------------------------------------------------------------
 {
     while (scope)
     {
-        Tree  *left = scope->left;
-        Tree  *right = scope->right;
-        Prefix *parent = left->AsPrefix();
-        Infix *locals = right->AsInfix();
-        Dump(out, locals);
+        Scope *parent = ScopeParent(scope);
+        Rewrite *rw = ScopeRewrites(scope);
+        Dump(out, rw);
         if (parent)
             out << "// Parent " << (void *) parent << "\n";
         scope = parent;
@@ -863,19 +863,19 @@ void Context::Dump(std::ostream &out, Prefix *scope)
 }
 
 
-void Context::Dump(std::ostream &out, Infix *locals)
+void Context::Dump(std::ostream &out, Rewrite *rw)
 // ----------------------------------------------------------------------------
 //   Dump the symbol table to the given stream
 // ----------------------------------------------------------------------------
 {
-    while (locals)
+    while (rw)
     {
-        Infix *decl = locals->left->AsInfix();
-        Infix *next = locals->right->AsInfix();
+        Infix * decl = RewriteDeclaration(rw);
+        Rewrite *next = RewriteNext(rw);
 
-        if (locals->name != ENTRY_NAME && locals->name != CHILDREN_NAME)
+        if (rw->name != REWRITE_NAME && rw->name != REWRITE_CHILDREN_NAME)
         {
-            out << "SCOPE?" << locals << "\n";
+            out << "SCOPE?" << rw << "\n";
         }
 
         if (decl)
@@ -886,9 +886,9 @@ void Context::Dump(std::ostream &out, Infix *locals)
             else
                 out << "DECL?" << decl << "\n";
         }
-        else if (locals->left != xl_nil)
+        else if (rw->left != xl_nil)
         {
-            out << "LEFT?" << locals->left << "\n";
+            out << "LEFT?" << rw->left << "\n";
         }
 
         // Iterate, avoid recursion in the common case of enclosed scopes
@@ -900,22 +900,22 @@ void Context::Dump(std::ostream &out, Infix *locals)
             if (nextl && nextr)
             {
                 Dump(out, nextl);
-                locals = nextr;
+                rw = nextr;
             }
             else if (nextl)
             {
-                locals = nextl;
+                rw = nextl;
             }
             else
             {
-                locals = nextr;
+                rw = nextr;
             }
         }
         else
         {
-            locals = NULL;
+            rw = NULL;
         }
-    } // while (locals)
+    } // while (rw)
 }
 
 
@@ -924,12 +924,12 @@ XL_END
 
 extern "C"
 {
-void debugg(XL::Prefix *scope)
+void debugg(XL::Scope *scope)
 // ----------------------------------------------------------------------------
 //    Helper to show a global scope in a symbol table
 // ----------------------------------------------------------------------------
 {
-    if (XL::Allocator<XL::Prefix>::IsAllocated(scope))
+    if (XL::Allocator<XL::Scope>::IsAllocated(scope))
         XL::Context::Dump(std::cerr, scope);
     else
         std::cerr << "Cowardly refusing to render unknown scope pointer "
@@ -937,20 +937,20 @@ void debugg(XL::Prefix *scope)
 }
 
 
-void debugl(XL::Infix *locals)
+void debugl(XL::Rewrite *rw)
 // ----------------------------------------------------------------------------
 //   Helper to show an infix as a local symbol table for debugging purpose
 // ----------------------------------------------------------------------------
 //   The infix can be shown using debug(), but it's less convenient
 {
-    if (XL::Allocator<XL::Infix>::IsAllocated(locals))
+    if (XL::Allocator<XL::Rewrite>::IsAllocated(rw))
     {
-        XL::Context::Dump(std::cerr, locals);
+        XL::Context::Dump(std::cerr, rw);
     }
     else
     {
-        std::cerr << "Cowardly refusing to render unknown locals pointer "
-                  << (void *) locals << "\n";
+        std::cerr << "Cowardly refusing to render unknown rewrite pointer "
+                  << (void *) rw << "\n";
     }
 }
 
@@ -982,16 +982,16 @@ void debugc(XL::Context *context)
 {
     if (XL::Allocator<XL::Context>::IsAllocated(context))
     {
-        XL::Prefix *scope = context->symbols;
-        if (XL::Allocator<XL::Prefix>::IsAllocated(scope))
+        XL::Scope *scope = context->CurrentScope();
+        if (XL::Allocator<XL::Scope>::IsAllocated(scope))
         {
             ulong depth = 0;
             while (scope)
             {
                 std::cerr << "SYMBOLS #" << depth++
                           << " AT " << (void *) scope << "\n";
-                debugl(scope->right->AsInfix());
-                scope = scope->left->AsPrefix();
+                debugl(ScopeRewrites(scope));
+                scope = ScopeParent(scope);
             }
         } 
         else
