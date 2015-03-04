@@ -291,7 +291,7 @@ Tree *Bindings::MustEvaluate(Tree *tval)
     Tree *evaluated = cache[tval];
     if (!evaluated)
     {
-        Tree *evaluated = Evaluate(context, tval);
+        evaluated = Evaluate(context, tval);
             cache[tval] = evaluated;
     }
     return evaluated;
