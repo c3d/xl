@@ -789,23 +789,6 @@ ulong Context::ListNames(text begin, rewrite_list &list,
 // 
 // ============================================================================
 
-ulong Context::Hash(text t)
-// ----------------------------------------------------------------------------
-//   Compute the hash code for a name in the rewrite table
-// ----------------------------------------------------------------------------
-{
-    kind  k = NAME;
-    ulong h = 0;
-
-    h = 0xC0DED;
-    for (text::iterator p = t.begin(); p != t.end(); p++)
-        h = (h * 0x301) ^ *p;
-    h = (h << 4) | (ulong) k;
-
-    return h;
-}
-
-
 ulong Context::Hash(Tree *what, bool inDecl)
 // ----------------------------------------------------------------------------
 //   Compute the hash code in the rewrite table
