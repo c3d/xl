@@ -846,22 +846,20 @@ ulong Context::Hash(Tree *what, bool inDecl)
         break;
     case PREFIX:
         if (Name *name = ((Prefix *) what)->left->AsName())
-            h = Hash(name, false);
+            t = name->value;
         break;
     case POSTFIX:
         if (Name *name = ((Postfix *) what)->right->AsName())
-            h = Hash(name, false);
+            t = name->value;
         break;
     }
 
+    h = 0xC0DED + 0x29912837*k;
     if (t.length())
     {
-        h = 0xC0DED;
         for (text::iterator p = t.begin(); p != t.end(); p++)
             h = (h * 0x301) ^ *p;
     }
-
-    h = (h << 4) | (ulong) k;
 
     return h;
 }
