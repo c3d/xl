@@ -178,7 +178,7 @@ Tree *Context::Evaluate(Tree *what)
     assert (!GarbageCollector::Running());
     Tree *result = what;
     if (eval_fn code = Compile(what))
-        result = code(this, what);
+        result = code(this->CurrentScope(), what);
     return result;
 }
 

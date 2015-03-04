@@ -193,13 +193,6 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     nativeTy = FunctionType::get(treePtrTy, nativeParms, false);
     nativeFnTy = PointerType::get(nativeTy, 0);
 
-    // Create the eval_fn type
-    llvm_types evalParms;
-    evalParms.push_back(contextPtrTy);
-    evalParms.push_back(treePtrTy);
-    evalTy = FunctionType::get(treePtrTy, evalParms, false);
-    evalFnTy = PointerType::get(evalTy, 0);
-
     // Verify that there wasn't a change in the Tree type invalidating us
     struct LocalTree
     {
@@ -267,6 +260,13 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     infixElements.push_back(textTy);                        // name
     infixTreeTy = StructType::get(llvm, infixElements);     // Infix
     infixTreePtrTy = PointerType::get(infixTreeTy, 0);      // Infix *
+
+    // Create the eval_fn type
+    llvm_types evalParms;
+    evalParms.push_back(prefixTreePtrTy);
+    evalParms.push_back(treePtrTy);
+    evalTy = FunctionType::get(treePtrTy, evalParms, false);
+    evalFnTy = PointerType::get(evalTy, 0);
 
     // Record the type names
     LLVMS_SetName(module, booleanTy, "boolean");
@@ -627,7 +627,7 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
     // Tree *generated(Context *, native_fn, Tree *, Tree **)
     llvm_types parms;
     parms.push_back(nativeFnTy);
-    parms.push_back(contextPtrTy);
+    parms.push_back(prefixTreePtrTy);
     parms.push_back(treePtrTy);
     parms.push_back(treePtrPtrTy);
     FunctionType *fnType = FunctionType::get(treePtrTy, parms, false);
@@ -636,7 +636,7 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
 
     // Generate the function type for the called function
     llvm_types called;
-    called.push_back(contextPtrTy);
+    called.push_back(prefixTreePtrTy);
     called.push_back(treePtrTy);
     for (uint a = 0; a < numargs; a++)
         called.push_back(treePtrTy);

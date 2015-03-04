@@ -192,7 +192,7 @@ typedef GCPtr<RewriteChildren>          RewriteChildren_p;
 typedef GCPtr<Context>                  Context_p;
 typedef std::vector<Infix_p>            rewrite_list;
 typedef std::map<Tree_p, Tree_p>        tree_map;
-typedef Tree *                          (*eval_fn) (Context *, Tree *);
+typedef Tree *                          (*eval_fn) (Scope *, Tree *);
 typedef std::map<Tree_p, eval_fn>       code_map;
 
 
