@@ -180,7 +180,6 @@ XL_BEGIN
 // ============================================================================
 
 struct Context;                                 // Execution context
-struct Action;                                  // Actions applied on trees
 
 typedef GCPtr<Context>             Context_p;
 typedef std::vector<Infix_p>       rewrite_list;
