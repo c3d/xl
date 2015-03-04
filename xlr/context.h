@@ -286,7 +286,7 @@ public:
                                   bool includePrefixes = false);
 
     // The hash code used in the rewrite table
-    static ulong        Hash(Tree *input, bool inDecl);
+    static ulong        Hash(Tree *input);
     static inline ulong Rehash(ulong h) { return (h>>1) | (h<<31); }
 
     // Clear the symbol table

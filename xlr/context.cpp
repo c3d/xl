@@ -378,11 +378,11 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
 
     // Find 'from', 'to' and 'hash' for the rewrite
     Tree *from = rewrite->left;
-    ulong h = Hash(from, true);
-
+    
     // Check what we are really defining, and verify if it's a name
     Tree *defined = RewriteDefined(from);
     Name *name = defined->AsName();
+    ulong h = Hash(defined);
 
     // Record which kinds we have rewrites for
     HasOneRewriteFor(defined->Kind());
@@ -597,7 +597,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
         return NULL;
     
     Scope * scope = symbols;
-    ulong   h0    = Hash(what, false);
+    ulong   h0    = Hash(what);
 
     while (scope)
     {
@@ -622,7 +622,8 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
             XL_ASSERT(children && children->name == REWRITE_CHILDREN_NAME);
 
             // Check that hash matches
-            ulong declHash = Hash(decl->left, true);
+            Tree *defined = RewriteDefined(decl->left);
+            ulong declHash = Hash(defined);
             if (declHash == h0)
             {
                 result = lookup(scope, what, decl, info);
@@ -789,15 +790,12 @@ ulong Context::ListNames(text begin, rewrite_list &list,
 // 
 // ============================================================================
 
-ulong Context::Hash(Tree *what, bool inDecl)
+ulong Context::Hash(Tree *what)
 // ----------------------------------------------------------------------------
 //   Compute the hash code in the rewrite table
 // ----------------------------------------------------------------------------
 // In 'inDecl', we eliminate guards (X when Cond) and types (X as Type)
 {
-    if (inDecl)
-        what = RewriteDefined(what);
- 
     kind  k = what->Kind();
     ulong h = 0;
     text  t;
