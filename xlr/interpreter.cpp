@@ -75,7 +75,7 @@ inline bool Bindings::DoInteger(Integer *what)
 //   The pattern contains an integer: check we have the same
 // ----------------------------------------------------------------------------
 {
-    test = MustEvaluate(what);
+    test = MustEvaluate(test);
     if (Integer *ival = test->AsInteger())
         if (ival->value == what->value)
             return true;
@@ -88,7 +88,7 @@ inline bool Bindings::DoReal(Real *what)
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
 {
-    test = MustEvaluate(what);
+    test = MustEvaluate(test);
     if (Real *rval = test->AsReal())
         if (rval->value == what->value)
             return true;
@@ -101,7 +101,7 @@ inline bool Bindings::DoText(Text *what)
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
 {
-    test = MustEvaluate(what);
+    test = MustEvaluate(test);
     if (Text *tval = test->AsText())
         if (tval->value == what->value)         // Do delimiters matter?
             return true;
