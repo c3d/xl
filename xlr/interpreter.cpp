@@ -122,9 +122,15 @@ inline bool Bindings::DoName(Name *what)
     
     // If there is already a binding for that name, value must match
     // This covers both a pattern with 'pi' in it and things like 'X+X'
-    if (Tree *bound = context->Bound(what))
+    if (Tree *bound = locals->Bound(what))
+    {
+        IFTRACE(eval)
+            std::cerr << "Arg check: " << bound << " != " << test << "\n";
         return Tree::Equal(bound, test);
+    }
 
+    IFTRACE(eval)
+        std::cerr << "CLOSURE " << what << " = " << test << "\n";
     BindClosure(what, test);
     return true;
 }
@@ -310,7 +316,7 @@ void Bindings::Bind(Name *name, Tree *value)
 // ----------------------------------------------------------------------------
 {
     IFTRACE(eval)
-        std::cerr << "  BIND " << name << "=" << value <<"\n";
+        std::cerr << "  BIND " << name << "=" << ShortTreeForm(value) <<"\n";
     if (left == xl_nil)
         left = value;
     else if (right == xl_nil)
@@ -331,7 +337,7 @@ struct ClosureInfo : Info
 
 void Bindings::BindClosure(Name *name, Tree *value)
 // ----------------------------------------------------------------------------
-//   Enter a new binding in the current context, preserving scope
+//   Enter a new binding in the current context, preserving its environment
 // ----------------------------------------------------------------------------
 {
     if (context->HasRewritesFor(value->Kind()))
@@ -494,7 +500,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
 
     // If the bindings had a return type, check it
     if (bindings.resultType)
-        if (!TypeCheck(context, result, bindings.resultType))
+        if (!TypeCheck(context, bindings.resultType, result))
             Ooops("Result $1 does not have expected type $2",
                   result, bindings.resultType);
 
@@ -811,7 +817,7 @@ TYPE_CHECK(operator,    NAME,  ((Name *)  what)->IsOperator());
 TYPE_CHECK(declaration, INFIX, ((Infix *) what)->IsDeclaration());
 
 
-Tree *TypeCheck(Context *scope, Tree *value, Tree *type)
+Tree *TypeCheck(Context *scope, Tree *type, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if 'value' matches 'type' in the given context
 // ----------------------------------------------------------------------------
@@ -845,15 +851,25 @@ Tree *TypeCheck(Context *scope, Tree *value, Tree *type)
         inited = true;
     }
 
-    // Accelerated type check for the builtin types
+    IFTRACE(eval)
+        std::cerr << "TYPECHECK " << value << " in " << type << "\n";
+
+    // Accelerated type check for the builtin or constructed types
     if (TypeCheckInfo *builtin = type->GetInfo<TypeCheckInfo>())
     {
         // If this is marked as builtin, check if the test passes
         if (Tree *converted = builtin->Check(scope, value))
+        {
+            IFTRACE(eval)
+                std::cerr << "TYPECHECK " << value
+                          << " as " << converted << "\n";
             return converted;
+        }
     }
 
     // No direct or converted match, end of game
+    IFTRACE(eval)
+        std::cerr << "TYPECHECK " << value << " FAILED\n";
     return NULL;
 }
 
