@@ -397,7 +397,8 @@ bool Types::Statements(Tree *expr, Tree *left, Tree *right)
 }
 
 
-static Tree *lookupRewriteCalls(Prefix *sc, Tree *what, Infix *entry, void *i)
+static Tree *lookupRewriteCalls(Scope *evalScope, Scope *sc,
+                                Tree *what, Infix *entry, void *i)
 // ----------------------------------------------------------------------------
 //   Used to check if RewriteCalls pass
 // ----------------------------------------------------------------------------

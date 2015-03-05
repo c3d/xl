@@ -626,7 +626,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
             ulong declHash = Hash(defined);
             if (declHash == h0)
             {
-                result = lookup(scope, what, decl, info);
+                result = lookup(symbols, scope, what, decl, info);
                 if (result)
                     return result;
             }
@@ -651,7 +651,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
 }
 
 
-static Tree *findReference(Scope *scope, Tree *what, Infix *decl, void *)
+static Tree *findReference(Scope *, Scope *, Tree *what, Infix *decl, void *)
 // ----------------------------------------------------------------------------
 //   Return the reference we found
 // ----------------------------------------------------------------------------
@@ -673,7 +673,7 @@ Infix *Context::Reference(Tree *form)
 }
 
 
-static Tree *findValue(Scope *scope, Tree *what, Infix *decl, void *info)
+static Tree *findValue(Scope *, Scope *, Tree *what, Infix *decl, void *info)
 // ----------------------------------------------------------------------------
 //   Return the value bound to a given form
 // ----------------------------------------------------------------------------
@@ -682,7 +682,8 @@ static Tree *findValue(Scope *scope, Tree *what, Infix *decl, void *info)
 }
 
 
-static Tree *findValueX(Scope *scope, Tree *what, Infix *decl, void *info)
+static Tree *findValueX(Scope *, Scope *scope,
+                        Tree *what, Infix *decl, void *info)
 // ----------------------------------------------------------------------------
 //   Return the value bound to a given form, as well as its scope and decl
 // ----------------------------------------------------------------------------
@@ -979,7 +980,16 @@ void debugs(XL::Context *context)
 {
     if (XL::Allocator<XL::Context>::IsAllocated(context))
     {
-        debugp(context->symbols);
+        XL::Scope *scope = context->CurrentScope();
+        if (XL::Allocator<XL::Scope>::IsAllocated(scope))
+        {
+            debugl(ScopeRewrites(scope));
+        } 
+        else
+        {
+            std::cerr << "Cowardly refusing to render unknown scope pointer "
+                      << (void *) scope << "\n";
+        }
     } 
     else
     {

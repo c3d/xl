@@ -23,6 +23,7 @@
 #include "info.h"
 #include "errors.h"
 #include "types.h"
+#include "renderer.h"
 
 XL_BEGIN
 
@@ -114,6 +115,11 @@ inline bool Bindings::DoName(Name *what)
 //   The pattern contains a name: bind it as a closure, no evaluation
 // ----------------------------------------------------------------------------
 {
+    // The test value may have been evaluated
+    EvalCache::iterator found = cache.find(test);
+    if (found != cache.end())
+        test = (*found).second;
+    
     // If there is already a binding for that name, value must match
     // This covers both a pattern with 'pi' in it and things like 'X+X'
     if (Tree *bound = context->Bound(what))
@@ -223,7 +229,7 @@ bool Bindings::DoInfix(Infix *what)
         }
 
         // Typed name: evaluate type and check match
-        Tree *type = Evaluate(context, what->right);
+        Tree *type = MustEvaluate(what->right);
         Tree *value = MustEvaluate(test);
         Tree *checked = TypeCheck(context, type, value);
         if (checked)
@@ -244,7 +250,7 @@ bool Bindings::DoInfix(Infix *what)
             Ooops("Duplicate return type declaration $1", what);
             Ooops("Previously declared type was $1", resultType);
         }
-        resultType = Evaluate(context, what->right);
+        resultType = MustEvaluate(what->right);
         return what->left->Do(this);
     }
 
@@ -292,7 +298,7 @@ Tree *Bindings::MustEvaluate(Tree *tval)
     if (!evaluated)
     {
         evaluated = Evaluate(context, tval);
-            cache[tval] = evaluated;
+        cache[tval] = evaluated;
     }
     return evaluated;
 }
@@ -303,6 +309,8 @@ void Bindings::Bind(Name *name, Tree *value)
 //   Enter a new binding in the current context, remember left and right
 // ----------------------------------------------------------------------------
 {
+    IFTRACE(eval)
+        std::cerr << "  BIND " << name << "=" << value <<"\n";
     if (left == xl_nil)
         left = value;
     else if (right == xl_nil)
@@ -382,14 +390,29 @@ static OpcodeCallback OpcodeCallbacks[] =
 //    The list of callbacks
 // ----------------------------------------------------------------------------
 {
-#define BINARY(Name, ResTy, LeftTy, RightTy, Code) \
+#define BINARY(Name, ResTy, LeftTy, RightTy, Code)      \
     { #Name, (OpcodeInfo::callback_fn) opcode##Name },
-#define UNARY(Name, ResTy, LeftTy, Code)           \
+#define UNARY(Name, ResTy, LeftTy, Code)                \
     { #Name, (OpcodeInfo::callback_fn) opcode##Name },
 #include "interpreter.tbl"
     { NULL, NULL }
 };
 
+
+static inline OpcodeInfo *opcodeInfo(Tree *defined)
+// ----------------------------------------------------------------------------
+//    Check if we have an opcode in the definition
+// ----------------------------------------------------------------------------
+{   
+    if (Prefix *prefix = defined->AsPrefix())
+        if (Name *name = prefix->left->AsName())
+            if (name->value == "opcode")
+                if (Name *opcode = prefix->right->AsName())
+                    for (OpcodeCallback *cb = OpcodeCallbacks; cb->name; cb++)
+                        if (cb->name == opcode->value)
+                            return new OpcodeInfo(cb->callback);
+    return NULL;
+}
 
 
 
@@ -399,59 +422,75 @@ static OpcodeCallback OpcodeCallbacks[] =
 //
 // ============================================================================
 
-static Tree *evalLookup(Scope *scope,
+static Tree *evalLookup(Scope *evalScope, Scope *declScope,
                         Tree *form, Infix *decl, void *ec)
 // ----------------------------------------------------------------------------
 //   Calllback function to check if the candidate matches
 // ----------------------------------------------------------------------------
 {
+    static uint id = 0;
+    IFTRACE(eval)
+        std::cerr << "EVAL" << ++id << "(" << form
+                  << ") from " << decl->left << "\n";
+
     // Retrieve the evaluation cache for arguments
     EvalCache *cache = (EvalCache *) ec;
 
     // Create the scope for evaluation and local bindings
-    Context_p context = new Context(scope);
-    Context_p locals = new Context(context);
+    Context_p context = new Context(evalScope);
+    Context_p locals = new Context(declScope);
+    locals->CreateScope();
 
     // Check bindings of arguments to declaration, exit if fails
     Bindings  bindings(context, locals, form, *cache);
     if (!decl->left->Do(bindings))
+    {
+        IFTRACE(eval)
+            std::cerr << "EVAL" << id-- << "(" << form
+                      << ") from " << decl->left
+                      << " MISMATCH\n";
         return NULL;
+    }
 
     // Check if the right is "self"
     if (decl->right == xl_self)
+    {
+        IFTRACE(eval)
+            std::cerr << "EVAL" << id-- << "(" << form
+                      << ") from " << decl->left
+                      << " SELF\n";
         return form;
+    }
 
     // Check if we have builtins (opcode or C bindings)
     if (OpcodeInfo *info = decl->GetInfo<OpcodeInfo>())
     {
         // Cached callback
-        return info->Invoke(bindings.left, bindings.right);
+        Tree *result = info->Invoke(bindings.left, bindings.right);
+        IFTRACE(eval)
+            std::cerr << "EVAL" << id-- << "(" << form
+                      << ") OPCODE(" << bindings.left
+                      << ", " << bindings.right
+                      << ") = " << result << "\n";
+        return result;
     }
-    else if (Prefix *prefix = decl->right->AsPrefix())
-    {
-        if (Name *name = prefix->left->AsName())
-        {
-            if (name->value == "opcode")
-            {
-                if (Name *opcode = prefix->right->AsName())
-                {
-                    for (OpcodeCallback *cb = OpcodeCallbacks; cb->name; cb++)
-                    {
-                        if (cb->name == opcode->value)
-                        {
-                            // First use, cache the result in decl
-                            OpcodeInfo *info = new OpcodeInfo(cb->callback);
-                            decl->SetInfo<OpcodeInfo>(info);
-                            return cb->callback(bindings.left, bindings.right);
-                        }
-                    }
-                }
-            }
-        }
+    else if (OpcodeInfo *info = opcodeInfo(decl->right))
+    {        
+        decl->SetInfo<OpcodeInfo>(info);
+        Tree *result = info->Invoke(bindings.left, bindings.right);
+        IFTRACE(eval)
+            std::cerr << "EVAL" << id-- << "(" << form
+                      << ") NEW OPCODE("
+                      << bindings.left << ", " << bindings.right
+                      << ") = " << result << "\n";
+        return result;
     }
 
     // Normal case: evaluate body of the declaration in the new context
     Tree *result = Evaluate(locals, decl->right);
+    IFTRACE(eval)
+        std::cerr << "EVAL" << id-- << "(" << form
+                  << ") = (" << result << ")\n";
 
     // If the bindings had a return type, check it
     if (bindings.resultType)
@@ -698,7 +737,7 @@ Tree *Evaluate(Context *context, Tree *what)
         result = Instructions(context, what);
 
     // At end of evaluation, check if need to cleanup
-    GarbageCollector::Collect();
+    // GarbageCollector::Collect();
     return result;
 }
 
@@ -708,30 +747,68 @@ struct TypeCheckInfo : Info
 //    A structure to quickly do the most common type checks
 // ----------------------------------------------------------------------------
 {
-    TypeCheckInfo(kind k): expected(k) {}
-    virtual bool Check(Tree *what)      { return what->Kind() == expected; }
+    TypeCheckInfo()                     {}
+    virtual Tree *Check(Context *ctx, Tree *what)
+    {
+        return what;
+    }
+};
+
+
+struct TypeContainsInfo : Info
+// ----------------------------------------------------------------------------
+//    For types that have a 'contains' declaration
+// ----------------------------------------------------------------------------
+{
+    TypeContainsInfo(Tree *type) : type(type) {}
+    virtual Tree *Check(Context *ctx, Tree *value)
+    {
+        // Check if the expression "Type contains Value" works
+        TreePosition pos = value->Position();
+        Infix *typeCheck = new Infix("contains", type, value, pos);
+        Tree *converted = Evaluate(ctx, typeCheck);
+        if (converted != typeCheck && converted != value)
+            return converted;
+        return NULL;
+    }
+    Tree *type;
+};
+
+
+struct KindTypeCheckInfo : TypeCheckInfo
+// ----------------------------------------------------------------------------
+//    A structure to quickly do the most common type checks
+// ----------------------------------------------------------------------------
+{
+    KindTypeCheckInfo(kind k): expected(k) {}
+    virtual Tree *Check(Context *, Tree *what)
+    {
+        return what->Kind() == expected ? what : NULL;
+    }
     kind expected;
 };
 
 
-#define TYPE_CHECK(x, k, Code)                  \
-struct x##TypeCheckInfo : TypeCheckInfo         \
-{                                               \
-    x##TypeCheckInfo(): TypeCheckInfo(k) {}     \
-    virtual bool Check(Tree *what)              \
-    {                                           \
-        if (!TypeCheckInfo::Check(what))        \
-            return false;                       \
-        Code;                                   \
-    }                                           \
-}
+#define TYPE_CHECK(x, k, Condition)                     \
+    struct x##TypeCheckInfo : KindTypeCheckInfo         \
+    {                                                   \
+        x##TypeCheckInfo(): KindTypeCheckInfo(k) {}     \
+        virtual Tree *Check(Context *ctx, Tree *what)   \
+        {                                               \
+            if (!KindTypeCheckInfo::Check(ctx, what))   \
+                return NULL;                            \
+            if (Condition)                              \
+                return what;                            \
+            return NULL;                                \
+        }                                               \
+    }
 
-TYPE_CHECK(boolean,     NAME,  return ((Name *)  what)->IsBoolean());
-TYPE_CHECK(character,   TEXT,  return ((Text *)  what)->IsCharacter());
-TYPE_CHECK(text,        TEXT,  return ((Text *)  what)->IsText());
-TYPE_CHECK(symbol,      NAME,  return ((Name *)  what)->IsName());
-TYPE_CHECK(operator,    NAME,  return ((Name *)  what)->IsOperator());
-TYPE_CHECK(declaration, INFIX, return ((Infix *) what)->IsDeclaration());
+TYPE_CHECK(boolean,     NAME,  ((Name *)  what)->IsBoolean());
+TYPE_CHECK(character,   TEXT,  ((Text *)  what)->IsCharacter());
+TYPE_CHECK(text,        TEXT,  ((Text *)  what)->IsText());
+TYPE_CHECK(symbol,      NAME,  ((Name *)  what)->IsName());
+TYPE_CHECK(operator,    NAME,  ((Name *)  what)->IsOperator());
+TYPE_CHECK(declaration, INFIX, ((Infix *) what)->IsDeclaration());
 
 
 Tree *TypeCheck(Context *scope, Tree *value, Tree *type)
@@ -743,10 +820,12 @@ Tree *TypeCheck(Context *scope, Tree *value, Tree *type)
     if (!inited)
     {
 #define BASIC_TYPE_CHECK(type, kind)                                    \
-        type##_type->SetInfo<TypeCheckInfo>(new TypeCheckInfo(kind))
+        type##_type->SetInfo<TypeCheckInfo>(new KindTypeCheckInfo(kind))
 #define EXTENDED_TYPE_CHECK(type)                                       \
         type##_type->SetInfo<type##TypeCheckInfo>(new type##TypeCheckInfo)
 
+        tree_type->SetInfo<TypeCheckInfo>(new TypeCheckInfo);
+        
         BASIC_TYPE_CHECK(integer, INTEGER);
         BASIC_TYPE_CHECK(real,    REAL);
         BASIC_TYPE_CHECK(text,    TEXT);
@@ -770,15 +849,9 @@ Tree *TypeCheck(Context *scope, Tree *value, Tree *type)
     if (TypeCheckInfo *builtin = type->GetInfo<TypeCheckInfo>())
     {
         // If this is marked as builtin, check if the test passes
-        if (builtin->Check(value))
-            return value;
+        if (Tree *converted = builtin->Check(scope, value))
+            return converted;
     }
-
-    // Check if the expression "Type contains Value" works
-    Infix *typeCheck = new Infix("contains", type, value, value->Position());
-    Tree *converted = Evaluate(scope, typeCheck);
-    if (converted != value)
-        return converted;
 
     // No direct or converted match, end of game
     return NULL;

@@ -268,7 +268,7 @@ public:
     text                ResolvePrefixedPath(text path);
 
     // Looking up definitions in a context
-    typedef Tree *      (*lookup_fn)(Scope *,
+    typedef Tree *      (*lookup_fn)(Scope *evalContext, Scope *declContext,
                                      Tree *form, Infix *decl, void *info);
     Tree *              Lookup(Tree *what,
                                lookup_fn lookup, void *info,
