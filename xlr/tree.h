@@ -147,6 +147,7 @@ struct Tree
     Infix *             AsInfix();
     Prefix *            AsPrefix();
     Postfix *           AsPostfix();
+    Tree *              AsTree();
 
     // Info management
     template<class I>    typename I::data_t  Get() const;
@@ -433,6 +434,15 @@ inline Postfix *Tree::AsPostfix()
     if (this && Kind() == POSTFIX)
         return (Postfix *) this;
     return NULL;
+}
+
+
+inline Tree *Tree::AsTree()
+// ----------------------------------------------------------------------------
+//    Return tree as is, used for consistency in macros
+// ----------------------------------------------------------------------------
+{
+    return this;
 }
 
 

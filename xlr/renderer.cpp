@@ -820,6 +820,24 @@ std::ostream& operator<< (std::ostream &out, XL::Tree *t)
     return out;
 }
 
+
+std::ostream& operator<< (std::ostream &out, XL::TreeList &list)
+// ----------------------------------------------------------------------------
+//   Just in case you want to emit a tree using normal ostream interface
+// ----------------------------------------------------------------------------
+{
+    bool separator = false;
+    for (XL::TreeList::iterator it = list.begin(); it != list.end(); it++)
+    {
+        if (separator)
+            out << ",";
+        else
+            separator = true;
+        out << *it;
+    }
+    return out;
+}
+
 XL_END
 
 
