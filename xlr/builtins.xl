@@ -1,57 +1,57 @@
 // Binary operations on integers
-x:integer + y:integer as integer -> opcode Add
-x:integer - y:integer as integer -> opcode Sub
-x:integer * y:integer as integer -> opcode Mul
-x:integer / y:integer as integer -> opcode SDiv
-x:integer mod y:integer as integer -> opcode SRem
-x:integer and y:integer as integer -> opcode And
-x:integer or y:integer as integer -> opcode Or
-x:integer xor y:integer as integer -> opcode Xor
-x:integer shl y:integer as integer -> opcode Shl
-x:integer ashr y:integer as integer -> opcode AShr
-x:integer lshr y:integer as integer -> opcode LShr
--x:integer as integer -> opcode Neg
-not x:integer as integer -> opcode Not
+x:integer + y:integer           as integer -> opcode Add
+x:integer - y:integer           as integer -> opcode Sub
+x:integer * y:integer           as integer -> opcode Mul
+x:integer / y:integer           as integer -> opcode SDiv
+x:integer mod y:integer         as integer -> opcode SRem
+x:integer and y:integer         as integer -> opcode And
+x:integer or y:integer          as integer -> opcode Or
+x:integer xor y:integer         as integer -> opcode Xor
+x:integer shl y:integer         as integer -> opcode Shl
+x:integer ashr y:integer        as integer -> opcode AShr
+x:integer lshr y:integer        as integer -> opcode LShr
+-x:integer                      as integer -> opcode Neg
+not x:integer                   as integer -> opcode Not
 
 // Binary operation on real numbers
-x:real + y:real as real -> opcode FAdd
-x:real - y:real as real -> opcode FSub
-x:real * y:real as real -> opcode FMul
-x:real / y:real as real -> opcode FDiv
-x:real mod y:real as real -> C fmod
--x:real as real -> opcode FNeg
+x:real + y:real                 as real -> opcode FAdd
+x:real - y:real                 as real -> opcode FSub
+x:real * y:real                 as real -> opcode FMul
+x:real / y:real                 as real -> opcode FDiv
+x:real mod y:real               as real -> C fmod
+-x:real                         as real -> opcode FNeg
 
 // Comparison operators
-X:integer = Y:integer as boolean -> opcode ICmpEQ
-X:integer <> Y:integer as boolean -> opcode ICmpNE
-X:integer > Y:integer as boolean -> opcode ICmpSGT
-X:integer >= Y:integer as boolean -> opcode ICmpSGE
-X:integer < Y:integer as boolean -> opcode ICmpSLT
-X:integer <= Y:integer as boolean -> opcode ICmpSLE
+X:integer = Y:integer           as boolean -> opcode ICmpEQ
+X:integer <> Y:integer          as boolean -> opcode ICmpNE
+X:integer > Y:integer           as boolean -> opcode ICmpSGT
+X:integer >= Y:integer          as boolean -> opcode ICmpSGE
+X:integer < Y:integer           as boolean -> opcode ICmpSLT
+X:integer <= Y:integer          as boolean -> opcode ICmpSLE
 
-X:real = Y:real as boolean -> opcode FCmpOEQ
-X:real <> Y:real as boolean -> opcode FCmpONE
-X:real > Y:real as boolean -> opcode FCmpOGT
-X:real >= Y:real as boolean -> opcode FCmpOGE
-X:real < Y:real as boolean -> opcode FCmpOLT
-X:real <= Y:real as boolean -> opcode FCmpOLE
+X:real = Y:real                 as boolean -> opcode FCmpOEQ
+X:real <> Y:real                as boolean -> opcode FCmpONE
+X:real > Y:real                 as boolean -> opcode FCmpOGT
+X:real >= Y:real                as boolean -> opcode FCmpOGE
+X:real < Y:real                 as boolean -> opcode FCmpOLT
+X:real <= Y:real                as boolean -> opcode FCmpOLE
 
-X:text = Y:text as boolean -> C xl_text_eq
-X:text <> Y:text as boolean -> C xl_text_ne
-X:text > Y:text as boolean -> C xl_text_gt
-X:text >= Y:text as boolean -> C xl_text_ge
-X:text < Y:text as boolean -> C xl_text_lt
-X:text <= Y:text as boolean -> C xl_text_le
+X:text = Y:text                 as boolean -> C xl_text_eq
+X:text <> Y:text                as boolean -> C xl_text_ne
+X:text > Y:text                 as boolean -> C xl_text_gt
+X:text >= Y:text                as boolean -> C xl_text_ge
+X:text < Y:text                 as boolean -> C xl_text_lt
+X:text <= Y:text                as boolean -> C xl_text_le
 
-X:boolean = Y:boolean as boolean -> opcode ICmpEQ
-X:boolean <> Y:boolean as boolean -> opcode ICmpNE
-X:boolean > Y:boolean as boolean -> opcode ICmpSGT
-X:boolean >= Y:boolean as boolean -> opcode ICmpSGE
-X:boolean < Y:boolean as boolean -> opcode ICmpSLT
-X:boolean <= Y:boolean as boolean -> opcode ICmpSLE
+X:boolean = Y:boolean           as boolean -> opcode ICmpEQ
+X:boolean <> Y:boolean          as boolean -> opcode ICmpNE
+X:boolean > Y:boolean           as boolean -> opcode ICmpSGT
+X:boolean >= Y:boolean          as boolean -> opcode ICmpSGE
+X:boolean < Y:boolean           as boolean -> opcode ICmpSLT
+X:boolean <= Y:boolean          as boolean -> opcode ICmpSLE
 
 // Basic math functions
-abs X:real as real -> C fabs
+abs X:real                      as real -> C fabs
 extern real sqrt(real);
 extern real sin(real);
 extern real cos(real);
@@ -68,10 +68,10 @@ extern real log1p(real);
 pi -> 3.1415926535897932384626433
 
 // If-then-else statement
-if true then TrueBody else FalseBody    -> TrueBody
+if true  then TrueBody else FalseBody   -> TrueBody
 if false then TrueBody else FalseBody   -> FalseBody
 
-if true then TrueBody                   -> TrueBody
+if true  then TrueBody                  -> TrueBody
 if false then TrueBody                  -> false
 
 // Console / debugging operations
@@ -125,4 +125,6 @@ good 0.0   -> false
 good ""    -> false
 good nil   -> false
 good Other -> true
-      
+
+bad X      -> not good X
+
