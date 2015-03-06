@@ -37,11 +37,6 @@
 //  (C) 2015 Taodyne SAS
 // ****************************************************************************
 
-#include <iostream>
-#include <sstream>
-#include <ctime>
-#include <cstdio>
-
 #include "basics.h"
 #include "context.h"
 #include "renderer.h"
@@ -50,6 +45,11 @@
 #include "runtime.h"
 #include "types.h"
 #include "main.h"
+
+#include <iostream>
+#include <sstream>
+#include <ctime>
+#include <cstdio>
 
 XL_BEGIN
 
