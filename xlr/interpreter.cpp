@@ -325,7 +325,13 @@ bool Bindings::DoInfix(Infix *what)
     }
 
     // In all other cases, we need an infix with matching name
-    if (Infix *ifx = test->AsInfix())
+    Infix *ifx = test->AsInfix();
+    if (!ifx)
+    {
+        test = MustEvaluate(test);
+        ifx = test->AsInfix();
+    }
+    if (ifx)
     {
         if (ifx->name != what->name)
             return false;
@@ -369,16 +375,6 @@ void Bindings::Bind(Name *name, Tree *value)
         args.push_back(value);
     locals->Define(name, value);
 }
-
-
-struct ClosureInfo : Info
-// ----------------------------------------------------------------------------
-//   Mark a given Prefix as a closure
-// ----------------------------------------------------------------------------
-{
-    // We use a shared ClosureInfo marker for everybody, don't delete it
-    virtual void Delete() {}
-};
 
 
 void Bindings::BindClosure(Name *name, Tree *value)
@@ -501,8 +497,29 @@ static Tree *Instructions(Context *context, Tree *what)
         case NAME:
             // Check if there is a specific rewrite in current scope
             if (context->HasRewritesFor(whatK))
+            {
                 if (Tree *found = context->Bound(what))
+                {
+                    // If lookup returned a closure, need to evaluate it
+                    if (Prefix *pfx = found->AsPrefix())
+                    {
+                        if (Prefix *lpfx = pfx->left->AsPrefix())
+                        {
+                            if (pfx->GetInfo<ClosureInfo>())
+                            {
+                                // We normally have a scope on the left
+                                Scope *scope = lpfx;
+                                context = new Context(scope);
+                                what = pfx->right;
+                                continue;
+                            }
+                        }
+                    }
+
+                    // Otherwise, we are done here
                     return found;
+                }
+            }
             return what;
 
         case BLOCK:
@@ -557,9 +574,9 @@ static Tree *Instructions(Context *context, Tree *what)
             // If we have a prefix on the left, check if it's a closure
             if (Prefix *lpfx = callee->AsPrefix())
             {
-                if (lpfx->GetInfo<ClosureInfo>())
+                if (pfx->GetInfo<ClosureInfo>())
                 {
-                    // We normally have a scope on the right
+                    // We normally have a scope on the left
                     Scope *scope = lpfx;
                     context = new Context(scope);
                     what = arg;

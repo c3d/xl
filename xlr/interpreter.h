@@ -30,6 +30,17 @@ XL_BEGIN
 Tree *Evaluate(Context *scope, Tree *code);
 Tree *TypeCheck(Context *scope, Tree *type, Tree *value);
 
+
+struct ClosureInfo : Info
+// ----------------------------------------------------------------------------
+//   Mark a given Prefix as a closure
+// ----------------------------------------------------------------------------
+{
+    // We use a shared ClosureInfo marker for everybody, don't delete it
+    virtual void Delete() {}
+};
+
+
 XL_END
 
 #endif // INTERPRETER_H
