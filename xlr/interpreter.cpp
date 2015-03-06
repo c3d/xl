@@ -172,9 +172,15 @@ inline bool Bindings::DoName(Name *what)
     // This covers both a pattern with 'pi' in it and things like 'X+X'
     if (Tree *bound = locals->Bound(what))
     {
+        Tree *eval = MustEvaluate(test);
+        bool result = Tree::Equal(bound, eval);
         IFTRACE(eval)
-            std::cerr << "  ARGCHECK: " << bound << " != " << test << "\n";
-        return Tree::Equal(bound, test);
+            std::cerr << "  ARGCHECK: "
+                      << test << "=" << eval
+                      << " vs " << bound
+                      << (result ? " MATCH" : " FAILED")
+                      << "\n";
+        return result;
     }
 
     IFTRACE(eval)
