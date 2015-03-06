@@ -46,13 +46,17 @@
 #include "context.h"
 #include "options.h"
 #include "opcodes.h"
-#include "compiler.h"
-#include "compiler-gc.h"
 #include "main.h"
-#include "types.h"
 #include "save.h"
 #include "tree-clone.h"
 #include "utf8_fileutils.h"
+#include "interpreter.h"
+
+#ifndef INTERPRETER_ONLY
+#include "compiler.h"
+#include "compiler-gc.h"
+#include "types.h"
+#endif // INTERPRETER_ONLY
 
 #include <iostream>
 #include <cstdarg>
@@ -318,7 +322,7 @@ Tree *xl_type_check(Context *context, Tree *value, Tree *type)
     IFTRACE(typecheck)
         std::cerr << "Type check " << value << " against " << type << ':';
 
-    if (Tree *works = ValueMatchesType(context, value, type, true))
+    if (Tree *works = TypeCheck(context, type, value))
     {
         IFTRACE(typecheck)
             std::cerr << "Success\n";

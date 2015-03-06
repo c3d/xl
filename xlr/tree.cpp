@@ -21,17 +21,16 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
-#include <sstream>
-#include <cassert>
-#include <iostream>
 #include "tree.h"
 #include "context.h"
 #include "renderer.h"
 #include "opcodes.h"
 #include "options.h"
-#include "sha1.h"
-#include "hash.h"
 #include "errors.h"
+
+#include <sstream>
+#include <cassert>
+#include <iostream>
 
 XL_BEGIN
 

@@ -53,7 +53,6 @@ struct Postfix;                                 // Postfix: 3!
 struct Infix;                                   // Infix: A+B, newline
 struct Info;                                    // Information in trees
 struct Context;                                 // Execution context
-struct Sha1;                                    // Hash used for id-ing trees
 
 
 

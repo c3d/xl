@@ -45,7 +45,10 @@
 #include "types.h"
 #include "runtime.h"
 #include "renderer.h"
+
+#ifndef INTERPRETER_ONLY
 #include "compiler.h"
+#endif // INTERPRETER_ONLY
 
 #include <typeinfo>
 
@@ -130,8 +133,10 @@ void NameOpcode::Register(Context *context)
     decl->SetInfo<Opcode> (this);
     toDefine->SetInfo<Opcode> (this);
 
+#ifndef INTERPRETER_ONLY
     if (MAIN->options.optimize_level > 0)
         MAIN->compiler->EnterGlobal(toDefine, &toDefine);
+#endif
 }
 
 

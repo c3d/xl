@@ -1,6 +1,5 @@
 #******************************************************************************
-# Makefile                          (C) 1992-2003 Christophe de Dinechin (ddd) 
-#                                                                  XLR project 
+# Makefile                                                         XLR project 
 #******************************************************************************
 #
 #  File Description:
@@ -17,56 +16,70 @@
 #******************************************************************************
 # This program is released under the GNU General Public License.
 # See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+#  (C) 2000-2015 Christophe de Dinechin <christophe@taodyne.com>
+#  (C) 2010-2015 Taodyne SAS
 #******************************************************************************
-#* File       : $RCSFile$
-#* Revision   : $Revision$
-#* Date       : $Date$
-#******************************************************************************
+
+# Set to 'none' to disable compiler
+COMPILER=llvm
+#COMPILER=none
+
+# Name of 'llvm-config' to use (e.g. llvm-config-2.9)
+LLVM_CONFIG=llvm-config
+
 
 # List of source files to process
 SOURCES     =					\
-	basics.cpp				\
-	flight_recorder.cpp			\
 	main.cpp				\
-	options.cpp				\
-	errors.cpp				\
 	tree.cpp				\
-	hash.cpp				\
 	action.cpp				\
-	gc.cpp					\
-	syntax.cpp				\
+	options.cpp				\
 	scanner.cpp				\
 	parser.cpp				\
+	flight_recorder.cpp			\
+	errors.cpp				\
+	basics.cpp				\
+	gc.cpp					\
+	syntax.cpp				\
 	renderer.cpp				\
 	context.cpp				\
 	runtime.cpp				\
 	interpreter.cpp				\
+	opcodes.cpp				\
+	cdecls.cpp				\
+	serializer.cpp				\
+        traces_base.cpp                         \
+	winglob.cpp				\
+	$(SOURCES_$(COMPILER))
+
+SOURCES_llvm =					\
 	compiler.cpp				\
 	compiler-llvm.cpp			\
 	compiler-gc.cpp				\
 	types.cpp				\
 	args.cpp				\
-	cdecls.cpp				\
 	expred.cpp				\
 	parms.cpp				\
 	unit.cpp				\
-        sha1.cpp				\
-	serializer.cpp				\
-        traces_base.cpp                         \
-	opcodes.cpp				\
-	winglob.cpp
 
 PRODUCT=xlr$(EXE)
 
 include $(BROOT)Makefile.config
 
-LLVM_CONFIG=llvm-config
-LLVM_VERSION=$(shell $(LLVM_CONFIG) --version | sed -e s/[.a-z-]//g)
+LLVM_VERSION=$(LLVM_VERSION_$(COMPILER))
+LLVM_FLAGS=$(LLVM_FLAGS_$(COMPILER))
+LLVM_LIBS=$(LLVM_LIBS_$(COMPILER))
+LLVM_LDFLAGS=$(LLVM_LDFLAGS_$(COMPILER))
 
-LLVM_FLAGS=$(shell $(LLVM_CONFIG) --cppflags | sed -e s/-DNDEBUG//g) \
-	   -DLLVM_VERSION=$(LLVM_VERSION)
-LLVM_LIBS=$(shell $(LLVM_CONFIG) --libs)
-LLVM_LDFLAGS=$(shell $(LLVM_CONFIG) --ldflags) $(LDFLAGS_llvm$(LLVM_VERSION))
+# When LLVM is enabled, we get those
+LLVM_VERSION_llvm=$(shell $(LLVM_CONFIG) --version | sed -e s/[.a-z-]//g)
+LLVM_FLAGS_llvm=$(shell $(LLVM_CONFIG) --cppflags | sed -e s/-DNDEBUG//g) \
+		  -DLLVM_VERSION=$(LLVM_VERSION)
+LLVM_LIBS_llvm=$(shell $(LLVM_CONFIG) --libs)
+LLVM_LDFLAGS_llvm=$(shell $(LLVM_CONFIG) --ldflags) $(LDFLAGS_llvm$(LLVM_VERSION))
+
+# When LLVM is not enabled
+LLVM_FLAGS_none=-DINTERPRETER_ONLY
 
 CPPFLAGS+=-DXLR $(LLVM_FLAGS) -I . -I include $(CPPFLAGS_llvm$(LLVM_VERSION))
 LDFLAGS=$(LLVM_LIBS) $(LLVM_LDFLAGS)
@@ -77,15 +90,10 @@ CPPFLAGS_llvm360=-std=c++11
 LDFLAGS_llvm350=-lz -lncurses
 LDFLAGS_llvm360=-lz -lncurses
 
-test: unit_tests xl_tests
+test: xl_tests
 hello: show_llvm_version
 show_llvm_version:
-	@echo Building wiht LLVM version $(LLVM_VERSION)
-
-unit_tests: sha1_test 
-
-%_test: %.cpp
-	$(CXX) -DUNIT_TEST -Iinclude $(CXXFLAGS) -o $*.exe $*.cpp && ./$*.exe && rm ./$*.exe
+	@echo Building with LLVM version $(LLVM_VERSION)
 
 xl_tests:
 	cd tests; ./alltests

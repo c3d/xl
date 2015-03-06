@@ -424,6 +424,4 @@ void Syntax::ReadSyntaxFile (text filename, uint indents)
     ReadSyntaxFile(scanner, indents);
 }
 
-
-
 XL_END

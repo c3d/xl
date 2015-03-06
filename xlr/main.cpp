@@ -47,7 +47,6 @@
 #include "errors.h"
 #include "tree.h"
 #include "context.h"
-#include "compiler.h"
 #include "options.h"
 #include "basics.h"
 #include "serializer.h"
@@ -57,6 +56,10 @@
 #include "utf8_fileutils.h"
 #include "interpreter.h"
 #include "opcodes.h"
+
+#ifndef INTERPRETER_ONLY
+#include "compiler.h"
+#endif // INTERPRETER_ONLY
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -141,7 +144,9 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
       topLevelErrors(),
       syntax(syntaxName.c_str()),
       options(inArgc, inArgv),
+#ifndef INTERPRETER_ONLY
       compiler(new Compiler(compilerName.c_str(), inArgc, inArgv)),
+#endif // INTERPRETER_ONLY
       context(new Context),
       renderer(std::cout, styleSheetName, syntax),
       reader(NULL), writer(NULL)
@@ -156,6 +161,12 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
     FlightRecorder::SResize(options.flightRecorderSize);
     if (options.flightRecorderFlags)
         FlightRecorder::SFlags(options.flightRecorderFlags);
+
+    // Once all options have been read, enter symbols and setup compiler
+    Opcode::Enter(context);
+#ifndef INTERPRETER_ONLY
+    compiler->Setup(options);
+#endif // INTERPRETER_ONLY
 }
 
 
@@ -174,13 +185,15 @@ int Main::LoadAndRun()
 //   An single entry point for the normal phases
 // ----------------------------------------------------------------------------
 {
-    SetupCompiler();
     int rc = LoadFiles();
     if (!rc && !options.parseOnly)
         rc = Run();
     if (!rc && HadErrors())
         rc = 1;
+
+#ifndef INTERPRETER_ONLY
     compiler->Dump();
+#endif // INTERPRETER_ONLY
 
     return rc;
 }
@@ -221,16 +234,6 @@ int Main::ParseOptions()
         file_names.insert(file_names.begin(), options.builtins);
     
     return false;
-}
-
-
-void Main::SetupCompiler()
-// ----------------------------------------------------------------------------
-//    Setup the compiler once all possible options have been set
-// ----------------------------------------------------------------------------
-{
-    Opcode::Enter(context);
-    compiler->Setup(options);
 }
 
 
@@ -424,6 +427,7 @@ int Main::Run()
 #ifdef INTERPRETER_ONLY
             // Interpreter-only mode
             result = Evaluate(context, tree);
+            (void) optLevel;
 #else // !INTERPRETER_ONLY
             // Select interpreter or compiler at run-time
             if (optLevel)

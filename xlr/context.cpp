@@ -45,14 +45,17 @@
 #include "options.h"
 #include "renderer.h"
 #include "basics.h"
-#include "compiler.h"
 #include "runtime.h"
 #include "main.h"
 #include "opcodes.h"
-#include "types.h"
 #include "save.h"
 #include "cdecls.h"
 #include "interpreter.h"
+
+#ifndef INTERPRETER_ONLY
+#include "compiler.h"
+#include "types.h"
+#endif // INTERPRETER_ONLY
 
 #include <iostream>
 #include <cstdlib>
@@ -159,6 +162,8 @@ eval_fn Context::Compile(Tree *what)
 // ----------------------------------------------------------------------------
 {
     eval_fn code = compiled[what];
+
+#ifndef INTERPRETER_ONLY
     if (!code)
     {
         code = MAIN->compiler->Compile(this, what);
@@ -169,6 +174,8 @@ eval_fn Context::Compile(Tree *what)
         }
         compiled[what] = code;
     }
+#endif // INTERPRETER_ONLY
+
     return code;
 }
 
@@ -375,7 +382,9 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
         return NULL;
 
     // In interpreted mode, just skip any C declaration
+#ifndef INTERPRETER_ONLY
     if (MAIN->options.optimize_level == 0)
+#endif
         if (Prefix *cdecl = rewrite->right->AsPrefix())
             if (Name *cname = cdecl->left->AsName())
                 if (cname->value == "C")

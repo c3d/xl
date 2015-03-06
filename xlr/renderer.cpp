@@ -43,10 +43,11 @@
 #include "tree.h"
 #include "syntax.h"
 #include "errors.h"
-#include "hash.h"
 #include "save.h"
+#include "action.h"
 #include "options.h"
 #include "interpreter.h"
+
 #include <iostream>
 #include <sstream>
 #include <cctype>
@@ -879,7 +880,7 @@ const char *debug(XL::Tree *tree)
 }
 
 
-const char *debugxl(void *tree)
+const char *debugx(void *tree)
 // ----------------------------------------------------------------------------
 //    Avoid ambiguities in name lookup in the debugger
 // ----------------------------------------------------------------------------
@@ -887,8 +888,6 @@ const char *debugxl(void *tree)
     return debug((XL::Tree *) tree);
 }
 
-
-#include "sha1_ostream.h"
 
 const char *debugp(XL::Tree *tree)
 // ----------------------------------------------------------------------------
@@ -908,11 +907,6 @@ const char *debugp(XL::Tree *tree)
         XL::Renderer render(out);
         render.SelectStyleSheet("debug.stylesheet");
         render.RenderFile(tree);
-        
-        XL::TreeHashAction<> h_action(XL::TreeHashAction<>::Force);
-        tree->Do(h_action);
-        if (tree->Exists< XL::HashInfo<> >())
-            out << "HASH: " << tree->Get< XL::HashInfo<> >() << '\n';
     }
     else
     {

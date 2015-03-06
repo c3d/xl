@@ -112,7 +112,6 @@ struct Main
     // Individual phases of the above
     Errors *     InitErrorsAndMAIN();
     int          ParseOptions();
-    void         SetupCompiler();
     int          LoadFiles();
     int          LoadFile(text file, text modname="");
     int          Run();
@@ -141,7 +140,9 @@ public:
     Errors       topLevelErrors;
     Syntax       syntax;
     Options      options;
+#ifndef INTERPRETER_ONLY
     Compiler    *compiler;
+#endif // INTERPRETER_ONLY
     Context_p    context;
     Renderer     renderer;
     source_files files;
