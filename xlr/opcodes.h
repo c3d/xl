@@ -54,6 +54,17 @@ XL_BEGIN
 //    Forward types declared here
 // 
 // ============================================================================
+//
+//  Each XL type defined in opcodes or in .tbl file is represented as:
+//  - A C++ class deriving from one of the parse tree types.
+//    The name is [name]_r, for example class boolean_r derives from Name.
+//  - A pointer type [name]_p, for example boolean_p
+//  - A Name_p for the type name, called [name]_type, for example boolean_type
+//
+//  The TYPE macro also creates:
+//  - A specialization for Tree::As that does the proper type checks
+//    or return NULL if the item does not have the expected type
+//  - A function called OpcodeType() to get [name]_type from a [name]_p.
 
 extern Name_p   tree_type;
 extern Name_p   integer_type;
@@ -65,21 +76,15 @@ extern Name_p   prefix_type;
 extern Name_p   postfix_type;
 extern Name_p   infix_type;
 
-// Aliases for the macros below
-#define Integer_type    integer_type
-#define Real_type       real_type
-#define Text_type       text_type
-#define Name_type       name_type
-#define Block_type      block_type
-#define Prefix_type     prefix_type
-#define Postfix_type    postfix_type
-#define Infix_type      infix_type
-#define Tree_type       tree_type
-
-// Value types
-typedef longlong        integer_t;
-typedef double          real_t;
-typedef text            text_t;
+typedef Tree    Tree_r;
+typedef Integer Integer_r;
+typedef Real    Real_r;
+typedef Text    Text_r;
+typedef Name    Name_r;
+typedef Block   Block_r;
+typedef Prefix  Prefix_r;
+typedef Postfix Postfix_r;
+typedef Infix   Infix_r;
 
 
 // ============================================================================
@@ -241,32 +246,18 @@ struct FunctionOpcode : Opcode
         : Opcode(name, fn), result(NULL), ptr(&result) {}
     virtual Tree *Shape() = 0;
 
-    Tree *TreeParm(kstring name, Tree *type = tree_type)
+    template<class TreeType>
+    TreeType *Parameter(kstring name)
     {
+        Tree *type = OpcodeType((TreeType *) 0);
         Infix *parmDecl = new Infix(":", new Name(name), type);
         if (!result)
             *ptr = parmDecl;
         else
             *ptr = new Infix(",", *ptr, parmDecl);
         ptr = &parmDecl->right;
-        return parmDecl;
+        return (TreeType *) parmDecl; // Only need it to be non-zero
     }
-
-#define PTYPE(Type)                                     \
-    Type *Type##Parm(kstring name)                      \
-    {                                                   \
-        return (Type *) TreeParm(name, Type##_type);    \
-    }
-
-    PTYPE(Integer)
-    PTYPE(Real)
-    PTYPE(Text)
-    PTYPE(Name)
-    PTYPE(Block)
-    PTYPE(Prefix)
-    PTYPE(Postfix)
-    PTYPE(Infix)
-#undef PTYPE
 
     Tree_p  result;
     Tree_p *ptr;
@@ -280,36 +271,21 @@ struct FunctionArguments
 {
     FunctionArguments(TreeList &args) : args(args), index(0) {}
 
-    Tree *TreeParm(kstring name)
+    template <class TreeType>
+    TreeType *Parameter(kstring name)
     {
         if (index >= args.size())
         {
             Ooops("Not enough arguments for parameter $1").Arg(name);
             return NULL;
         }
-        return args[index++];
+        Tree *tree = args[index++];
+        TreeType *result = tree->As<TreeType>();
+        if (!result)
+            Ooops("Value of $2 is $1, expected $3", tree)
+                .Arg(name).Arg(OpcodeType((TreeType *) 0));
+        return result;
     }
-
-#define PTYPE(Type)                                             \
-    Type *Type##Parm(kstring name)                              \
-    {                                                           \
-        Tree *tree = TreeParm(name);                            \
-        Type *result = tree->As##Type();                        \
-        if (!result)                                            \
-            Ooops("Value of $2 is $1, expected a " #Type)       \
-                .Arg(tree).Arg(name);                           \
-        return result;                                          \
-    }
-
-    PTYPE(Integer)
-    PTYPE(Real)
-    PTYPE(Text)
-    PTYPE(Name)
-    PTYPE(Block)
-    PTYPE(Prefix)
-    PTYPE(Postfix)
-    PTYPE(Infix)
-#undef PTYPE
 
     TreeList &  args;
     uint        index;
@@ -339,6 +315,7 @@ XL_END
 #undef INFIX
 #undef PREFIX
 #undef POSTFIX
+#undef OVERLOAD
 #undef FUNCTION
 #undef PARM
 #undef NAME
@@ -359,10 +336,32 @@ XL_END
 #define INFIX(Name, ResTy, LeftTy, Symbol, RightTy, Code)
 #define PREFIX(Name, ResTy, Symbol, RightTy, Code)
 #define POSTFIX(Name, ResTy, RightTy, Symbol, Code)
+#define OVERLOAD(Name, Symbol, ResTy, Parms, Code)
 #define FUNCTION(Name, ResTy, Parms, Code)
 #define PARM(Name, Type)
-#define NAME(symbol)                    extern Name_p xl_##symbol;
-#define TYPE(symbol, Condition)         extern Name_p symbol##_type;
+#define NAME(symbol)            extern Name_p xl_##symbol;
+
+#define TYPE(symbol, BaseType, Condition)                               \
+/* ------------------------------------------------------------ */      \
+/*  Declare a type and the related type conversions             */      \
+/* ------------------------------------------------------------ */      \
+    extern  Name_p symbol##_type;                                       \
+    struct  symbol##_r : BaseType##_r {};                               \
+    typedef symbol##_r *symbol##_p;                                     \
+    typedef symbol##_r::value_t symbol##_t;                             \
+    template<> inline                                                   \
+    symbol##_r *Tree::As<symbol##_r>(Context *context)                  \
+    {                                                                   \
+        (void) context;                                                 \
+        Condition;                                                      \
+        return NULL;                                                    \
+    }                                                                   \
+                                                                        \
+    inline Tree *OpcodeType(symbol##_p)                                 \
+    {                                                                   \
+        return symbol##_type;                                           \
+    }
+    
 
 #undef OPCODES_TBL
 #undef TBL_HEADER
@@ -375,6 +374,31 @@ XL_END
 //
 // ============================================================================
 
+#define ARG(Name, Type, Value)                                          \
+/* ------------------------------------------------------------ */      \
+/*  Extract an argument from the argument list                  */      \
+/* ------------------------------------------------------------ */      \
+    Type##_p Name##Ptr = (Value)->As<Type##_r>();                       \
+    if (!Name##Ptr)                                                     \
+    {                                                                   \
+        Ooops("Argument $1 is not a " #Type, (Value));                  \
+        return self;                                                    \
+    }                                                                   \
+    Type##_r &Name = *Name##Ptr; (void) Name;
+
+
+#define ARGCOUNT(N)                                                     \
+/* ------------------------------------------------------------ */      \
+/*  Check if the argument count matches what is expected        */      \
+/* ------------------------------------------------------------ */      \
+    (void) context;  /* Get rid of warnings */                          \
+    if (args.size() != N)                                               \
+    {                                                                   \
+        Ooops("Invalid opcode argument count in $1", self);             \
+        return self;                                                    \
+    }
+
+
 #define UNARY(Name, ResTy, LeftTy, Code)                                \
 /* ------------------------------------------------------------ */      \
 /*  Create a unary opcode (for 'opcode X' declarations)         */      \
@@ -382,20 +406,8 @@ XL_END
     static Tree *                                                       \
     opcode_U_##Name(Context *context, Tree *self, TreeList &args)       \
     {                                                                   \
-        (void) context;                                                 \
-        if (args.size() != 1)                                           \
-        {                                                               \
-            Ooops("Invalid argument count for " #Name " in $1", self);  \
-            return self;                                                \
-        }                                                               \
-                                                                        \
-        LeftTy *leftPtr = args[0]->As##LeftTy();                        \
-        if (!leftPtr)                                                   \
-        {                                                               \
-            Ooops("Argument $1 is not a " #LeftTy, args[0]);            \
-            return self;                                                \
-        }                                                               \
-        LeftTy &left = *leftPtr;                                        \
+        ARGCOUNT(1);                                                    \
+        ARG(left, LeftTy, args[0]);                                     \
         return Code;                                                    \
     }                                                                   \
     static Opcode init_opcode_U_##Name(#Name, opcode_U_##Name);
@@ -408,29 +420,9 @@ XL_END
     static Tree *                                                       \
     opcode_B_##Name(Context *context, Tree *self, TreeList &args)       \
     {                                                                   \
-        (void) context;                                                 \
-        if (args.size() != 2)                                           \
-        {                                                               \
-            Ooops("Invalid argument count for " #Name " in $1", self);  \
-            return self;                                                \
-        }                                                               \
-                                                                        \
-        LeftTy *leftPtr = args[0]->As##LeftTy();                        \
-        if (!leftPtr)                                                   \
-        {                                                               \
-            Ooops("Argument $1 is not a " #LeftTy, args[0]);            \
-            return self;                                                \
-        }                                                               \
-        LeftTy &left = *leftPtr;                                        \
-                                                                        \
-        RightTy *rightPtr = args[1]->As##RightTy();                     \
-        if (!rightPtr)                                                  \
-        {                                                               \
-            Ooops("Argument $1 is not a " #RightTy, args[1]);           \
-            return self;                                                \
-        }                                                               \
-        RightTy &right = *rightPtr;                                     \
-                                                                        \
+        ARGCOUNT(2);                                                    \
+        ARG(left,  LeftTy,  args[0]);                                   \
+        ARG(right, RightTy, args[1]);                                   \
         return Code;                                                    \
     }                                                                   \
     static Opcode init_opcode_B_##Name(#Name, opcode_B_##Name);
@@ -443,29 +435,9 @@ XL_END
     static Tree *                                                       \
     opcode_I_##Name(Context *context, Tree *self, TreeList &args)       \
     {                                                                   \
-        (void) context;                                                 \
-        if (args.size() != 2)                                           \
-        {                                                               \
-            Ooops("Invalid argument count for " #Name " in $1", self);  \
-            return self;                                                \
-        }                                                               \
-                                                                        \
-        LeftTy *leftPtr = args[0]->As##LeftTy();                        \
-        if (!leftPtr)                                                   \
-        {                                                               \
-            Ooops("Argument $1 is not a " #LeftTy, args[0]);            \
-            return self;                                                \
-        }                                                               \
-        LeftTy &left = *leftPtr;                                        \
-                                                                        \
-        RightTy *rightPtr = args[1]->As##RightTy();                     \
-        if (!rightPtr)                                                  \
-        {                                                               \
-            Ooops("Argument $1 is not a " #RightTy, args[1]);           \
-            return self;                                                \
-        }                                                               \
-        RightTy &right = *rightPtr;                                     \
-                                                                        \
+        ARGCOUNT(2);                                                    \
+        ARG(left,  LeftTy,  args[0]);                                   \
+        ARG(right, RightTy, args[1]);                                   \
         Code;                                                           \
     }                                                                   \
     static InfixOpcode                                                  \
@@ -480,21 +452,8 @@ XL_END
     static Tree *                                                       \
     opcode_P_##Name(Context *context, Tree *self, TreeList &args)       \
     {                                                                   \
-        (void) context;                                                 \
-        if (args.size() != 1)                                           \
-        {                                                               \
-            Ooops("Invalid argument count for " #Name " in $1", self);  \
-            return self;                                                \
-        }                                                               \
-                                                                        \
-        RightTy *argPtr = args[0]->As##RightTy();                       \
-        if (!argPtr)                                                    \
-        {                                                               \
-            Ooops("Argument $1 is not a " #RightTy, args[0]);           \
-            return self;                                                \
-        }                                                               \
-        RightTy &arg = *argPtr;                                         \
-                                                                        \
+        ARGCOUNT(1);                                                    \
+        ARG(arg, RightTy, args[0]);                                     \
         Code;                                                           \
     }                                                                   \
     static PrefixOpcode                                                 \
@@ -502,85 +461,80 @@ XL_END
                           RightTy##_type, ResTy##_type);
 
 
-#define POSTFIX(Name, ResTy, RightTy, Symbol, Code)                     \
+#define POSTFIX(Name, ResTy, LeftTy, Symbol, Code)                      \
 /* ------------------------------------------------------------ */      \
 /*  Create a prefixopcode, also generates prefix declaration    */      \
 /* ------------------------------------------------------------ */      \
     static Tree *                                                       \
     opcode_P_##Name(Context *context, Tree *self, TreeList &args)       \
     {                                                                   \
-        (void) context;                                                 \
-        if (args.size() != 1)                                           \
-        {                                                               \
-            Ooops("Invalid argument count for " #Name " in $1", self);  \
-            return self;                                                \
-        }                                                               \
-                                                                        \
-        LeftTy *argPtr = args[0]->As##LeftTy();                         \
-        if (!argPtr)                                                    \
-        {                                                               \
-            Ooops("Argument $1 is not a " #RightTy, args[0]);           \
-            return self;                                                \
-        }                                                               \
-        LeftTy &arg = *argPtr;                                          \
-                                                                        \
+        ARGCOUNT(1);                                                    \
+        ARG(arg, LeftTy, args[0]);                                      \
         Code;                                                           \
     }                                                                   \
     static PostfixOpcode                                                \
     init_opcode_P_##Name (#Name, opcode_Pl_##Name, Symbol,              \
-                          RightTy##_type, ResTy##_type);
+                          LeftTy##_type, ResTy##_type);
 
 
-#define FUNCTION(Name, ResTy, Parms, Code)                              \
+#define OVERLOAD(FName, Symbol, ResTy, Parms, Code)                     \
 /* ------------------------------------------------------------ */      \
 /*  Create a function opcode, also generates prefix declaration */      \
 /* ------------------------------------------------------------ */      \
     static Tree *                                                       \
-    opcode_F_##Name(Context *context, Tree *self, TreeList &args)       \
+    opcode_F_##FName(Context *context, Tree *self, TreeList &args)      \
     {                                                                   \
         (void) context;                                                 \
-        FunctionArguments parms(args);                                  \
+        FunctionArguments _XLparms(args);                               \
         Parms;                                                          \
-        if (parms.index != args.size())                                 \
+        if (_XLparms.index != args.size())                              \
         {                                                               \
-            Ooops("Invalid argument count for " #Name " in $1", self);  \
+            Ooops("Invalid argument count for " #FName " in $1", self); \
             return self;                                                \
         }                                                               \
                                                                         \
         Code;                                                           \
     }                                                                   \
                                                                         \
-    struct Name##FunctionOpcode : FunctionOpcode                        \
+    struct FName##FunctionOpcode : FunctionOpcode                       \
     {                                                                   \
-        Name##FunctionOpcode(kstring name,  callback_fn fn)             \
+        FName##FunctionOpcode(kstring name, callback_fn fn)             \
             : FunctionOpcode(name, fn) {}                               \
         virtual Tree *Shape()                                           \
         {                                                               \
             Tree *self = xl_nil;                                        \
+            FName##FunctionOpcode &_XLparms = *this;                    \
             Parms;                                                      \
             if (result)                                                 \
-                result = new Prefix(new Name(name), result);            \
+                result = new Prefix(new Name(Symbol), result);          \
             else                                                        \
                 result = new Name(name);                                \
             self = new Infix("as",                                      \
-                             new Prefix(new Name(name), result),        \
-                             ResTy);                                    \
+                             new Prefix(new Name(Symbol), result),      \
+                             ResTy##_type);                             \
             return self;                                                \
         }                                                               \
     };                                                                  \
                                                                         \
-    static Name##FunctionOpcode                                         \
-    init_opcode_F_##Name (#Name, opcode_F_##Name);
+    static FName##FunctionOpcode                                        \
+    init_opcode_F_##FName (#FName, opcode_F_##FName);
+
+
+#define FUNCTION(Name, ResTy, Parms, Code)                              \
+/* ------------------------------------------------------------ */      \
+/*  Declare a function with the given name                      */      \
+/* ------------------------------------------------------------ */      \
+        OVERLOAD(Name, Name, ResTy, Parms, Code)
 
 
 #define PARM(Name, Type)                                                \
 /* ------------------------------------------------------------ */      \
 /*  Declare a parameter for the FUNCTION macro above            */      \
 /* ------------------------------------------------------------ */      \
-    Type *Name##Ptr = parms.Type##Parm(#Name);                          \
+    Type##_p Name##Ptr = _XLparms.Parameter<Type##_r>(#Name);           \
     if (!Name##Ptr)                                                     \
         return self;                                                    \
-    Type &Name = *Name##Ptr;
+    Type##_r &Name = *Name##Ptr; (void) &Name;
 
 
 #define NAME(symbol)                                                    \
@@ -591,7 +545,7 @@ XL_END
     static NameOpcode init_opcode_N_##symbol(#symbol, xl_##symbol);
 
 
-#define TYPE(symbol, Conversion)                                        \
+#define TYPE(symbol, BaseType, Conversion)                              \
 /* ------------------------------------------------------------ */      \
 /*  Declare a type with the condition to match it               */      \
 /* ------------------------------------------------------------ */      \
@@ -603,10 +557,7 @@ XL_END
                                                                         \
         virtual Tree *Check(Context *context, Tree *what)               \
         {                                                               \
-            (void) context;                                             \
-            (void) what;                                                \
-            Conversion;                                                 \
-            return NULL;                                                \
+            return what->As<symbol##_r>(context);                       \
         }                                                               \
     };                                                                  \
                                                                         \

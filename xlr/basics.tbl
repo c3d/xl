@@ -1,125 +1,166 @@
-// Types must come first for type info to be initialized correctly
+// ============================================================================
+// 
+//   Built-in names
+// 
+// ============================================================================
+
 NAME(nil);
 NAME(self);
 NAME(true);
 NAME(false);
 
-TYPE(boolean,
-     if (Name *name = what->AsName())
+
+
+// ============================================================================
+// 
+//   Built-in types
+// 
+// ============================================================================
+
+TYPE(boolean, Name,
+     if (Name *name = AsName())
          if (name->value == "true" || name->value == "false")
-             return what;
+             return (boolean_p) name;
     );
-TYPE(integer,
-     if (Integer *ival = what->AsInteger())
-         return ival;
+TYPE(integer, Integer,
+     if (Integer *ival = AsInteger())
+         return (integer_p) ival;
     );
-TYPE(real,
-     if (Real *rval = what->AsReal())
-         return rval;
-     if (Integer *ival = what->AsInteger())
-         return new Real(ival->value, ival->Position());
+TYPE(real, Real,
+     if (Real *rval = AsReal())
+         return (real_r *) rval;
+     if (Integer *ival = AsInteger())
+         return (real_p) new Real(ival->value, ival->Position());
     );
-TYPE(text,
-     if (Text *text = what->AsText())
-         return text;
+TYPE(text, Text,
+     if (Text *text = AsText())
+         return (text_p) text;
     );
-TYPE(character,
-     if (Text *tval = what->AsText())
+TYPE(character, Text,
+     if (Text *tval = AsText())
          if (tval->IsCharacter())
-             return tval;
+             return (character_p) tval;
     );
-TYPE(tree,    return what);
-TYPE(value,   return what);
-TYPE(symbol,
-     if (Name *name = what->AsName())
-         return name;
+TYPE(tree,    Tree, return (tree_p)  this);
+TYPE(value,   Tree, return (value_p) this);
+TYPE(symbol,  Name,
+     if (Name *name = AsName())
+         return (symbol_p) name;
     );
-TYPE(name,
-     if (Name *name = what->AsName())
+TYPE(name,    Name,
+     if (Name *name = AsName())
          if (name->IsName())
-             return name;
+             return (name_p) name;
     );
-TYPE(operator,
-     if (Name *name = what->AsName())
+TYPE(operator,Name,
+     if (Name *name = AsName())
          if (name->IsOperator())
-             return name;
+             return (operator_p) name;
     );
-TYPE(infix,
-     if (Infix *infix = what->AsInfix())
-         return infix;
+TYPE(infix,Infix,
+     if (Infix *infix = AsInfix())
+         return (infix_p) infix;
     );
-TYPE(declaration,
-     if (Infix *infix = what->AsInfix())
+TYPE(declaration,Infix,
+     if (Infix *infix = AsInfix())
          if (infix->IsDeclaration())
-             return infix;
+             return (declaration_p) infix;
     );
-TYPE(prefix,
-     if (Prefix *prefix = what->AsPrefix())
-         return prefix;
+TYPE(prefix,Prefix,
+     if (Prefix *prefix = AsPrefix())
+         return (prefix_p) prefix;
     );
-TYPE(postfix,
-     if (Postfix *postfix = what->AsPostfix())
-         return postfix;
+TYPE(postfix,Postfix,
+     if (Postfix *postfix = AsPostfix())
+         return (postfix_p) postfix;
     );
-TYPE(block,
-     if (Block *block = what->AsBlock())
-         return block;
+TYPE(block,Block,
+     if (Block *block = AsBlock())
+         return (block_p) block;
     );
 
-TYPE(integer8,
-     if (Integer *ival = what->AsInteger())
+TYPE(integer8,integer,
+     if (Integer *ival = AsInteger())
          if (ival->value >= -0x80 && ival->value < 0x80)
-             return ival;
+             return (integer8_p) ival;
     );
             
-TYPE(integer16,
-     if (Integer *ival = what->AsInteger())
+TYPE(integer16,integer,
+     if (Integer *ival = AsInteger())
          if (ival->value >= -0x8000 && ival->value < 0x8000)
-             return ival;
+             return (integer16_p) ival;
     );
-TYPE(integer32,
-     if (Integer *ival = what->AsInteger())
+TYPE(integer32,integer,
+     if (Integer *ival = AsInteger())
          if (ival->value >= -0x80000000LL && ival->value < 0x80000000LL)
-             return ival;
+             return (integer32_p) ival;
     );
-TYPE(integer64,
-     if (Integer *ival = what->AsInteger())
-         return ival;
+TYPE(integer64,integer,
+     if (Integer *ival = AsInteger())
+         return (integer64_p) ival;
     );
-TYPE(unsigned,
-     if (Integer *ival = what->AsInteger())
+TYPE(unsigned,integer,
+     if (Integer *ival = AsInteger())
          if (ival->value >= 0)
-             return ival;
+             return (unsigned_p) ival;
     );
-TYPE(unsigned8,
-     if (Integer *ival = what->AsInteger())
+TYPE(unsigned8,unsigned,
+     if (Integer *ival = AsInteger())
          if (ival->value >= 0 && ival->value < 0x100)
-             return ival;
+             return (unsigned8_p) ival;
     );
-TYPE(unsigned16,
-     if (Integer *ival = what->AsInteger())
+TYPE(unsigned16,unsigned,
+     if (Integer *ival = AsInteger())
          if (ival->value >= 0 && ival->value < 0x10000)
-             return ival;
+             return (unsigned16_p) ival;
     );
-TYPE(unsigned32,
-     if (Integer *ival = what->AsInteger())
+TYPE(unsigned32,unsigned,
+     if (Integer *ival = AsInteger())
          if (ival->value >= 0 && ival->value < 0x100000000)
-             return ival;
+             return (unsigned32_p) ival;
     );
-TYPE(unsigned64,
-     if (Integer *ival = what->AsInteger())
+TYPE(unsigned64,unsigned,
+     if (Integer *ival = AsInteger())
          if (ival->value >= 0)
-             return ival;
+             return (unsigned64_p) ival;
     );
-TYPE(real32,
-     if (Real *rval = what->AsReal())
-         return rval;
+TYPE(real32,real,
+     if (Real *rval = AsReal())
+         return (real32_p) rval;
     );
-TYPE(real64,
-     if (Real *rval = what->AsReal())
-         return rval;
+TYPE(real64,real,
+     if (Real *rval = AsReal())
+         return (real64_p) rval;
     );
 
 
-// Array indexing and assignment
-INFIX(Assign, Tree, Tree, ":=", Tree, return context->Assign(&left, &right))
+
+// ============================================================================
+// 
+//   Basic operations
+// 
+// ============================================================================
+
+INFIX(Assign, tree, tree, ":=", tree, return context->Assign(&left, &right))
+
+
+
+// ============================================================================
+// 
+//   Simple I/O
+// 
+// ============================================================================
+
+OVERLOAD(WriteText, "write", boolean,
+         PARM(x, text),
+         return (std::cout << x.value) ? xl_true : xl_false)
+OVERLOAD(WriteInteger, "write", boolean,
+         PARM(x, integer),
+         return (std::cout << x.value) ? xl_true : xl_false)
+OVERLOAD(WriteReal, "write", boolean,
+         PARM(x, real),
+         return (std::cout << x.value) ? xl_true : xl_false)
+OVERLOAD(WriteCharacter, "write", boolean,
+         PARM(x, character),
+         return (std::cout << x.value) ? xl_true : xl_false)
+

@@ -68,20 +68,6 @@ Tree::operator text()
 }
 
 
-Name::operator bool()
-// ----------------------------------------------------------------------------
-//    Conversion of a name to text
-// ----------------------------------------------------------------------------
-{
-    if (this == xl_true)
-        return true;
-    else if (this == xl_false)
-        return false;
-    Ooops("Value $1 is not a boolean value", this);
-    return false;
-}
-
-
 int Tree::Compare(Tree *left, Tree *right, bool recurse)
 // ----------------------------------------------------------------------------
 //   Return true if two trees are equal

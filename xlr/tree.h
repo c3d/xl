@@ -114,6 +114,8 @@ struct Tree
 {
     enum { KINDBITS = 3, KINDMASK=7 };
     enum { NOWHERE = ~0UL };
+    typedef Tree        self_t;
+    typedef Tree *      value_t;
 
     // Constructor and destructor
     Tree (kind k, TreePosition pos = NOWHERE):
@@ -139,6 +141,8 @@ struct Tree
     void                SetPosition(TreePosition pos, bool recurse = true);
 
     // Safe cast to an appropriate subclass
+    template<class T>
+    T *                 As(Context *context = NULL);
     Integer *           AsInteger();
     Real *              AsReal();
     Text *              AsText();
@@ -148,6 +152,7 @@ struct Tree
     Prefix *            AsPrefix();
     Postfix *           AsPostfix();
     Tree *              AsTree();
+
 
     // Info management
     template<class I>    typename I::data_t  Get() const;
@@ -190,15 +195,18 @@ struct Integer : Tree
 //   Integer constants
 // ----------------------------------------------------------------------------
 {
-    Integer(longlong i = 0, TreePosition pos = NOWHERE):
+    enum { KIND = INTEGER };
+    typedef Integer  self_t;
+    typedef longlong value_t;
+    
+    Integer(value_t i = 0, TreePosition pos = NOWHERE):
         Tree(INTEGER, pos), value(i) {}
     Integer(Integer *i): Tree(INTEGER, i), value(i->value) {}
-    longlong            value;
-    operator longlong()         { return value; }
+    value_t  value;
+    operator value_t()         { return value; }
 
     GARBAGE_COLLECT(Integer);
 };
-template<>inline Integer_p::operator longlong() const { return pointer->value; }
 
 
 struct Real : Tree
@@ -206,14 +214,17 @@ struct Real : Tree
 //   Real numbers
 // ----------------------------------------------------------------------------
 {
-    Real(double d = 0.0, TreePosition pos = NOWHERE):
+    enum { KIND = REAL };
+    typedef Real   self_t;
+    typedef double value_t;
+    
+    Real(value_t d = 0.0, TreePosition pos = NOWHERE):
         Tree(REAL, pos), value(d) {}
     Real(Real *r): Tree(REAL, r), value(r->value) {}
-    double              value;
-    operator double()           { return value; }
+    value_t  value;
+    operator value_t()           { return value; }
     GARBAGE_COLLECT(Real);
 };
-template<> inline Real_p::operator double() const   { return pointer->value; }
 
 
 struct Text : Tree
@@ -221,17 +232,21 @@ struct Text : Tree
 //   Text, e.g. "Hello World"
 // ----------------------------------------------------------------------------
 {
-    Text(text t, text open="\"", text close="\"", TreePosition pos=NOWHERE):
+    enum { KIND = TEXT };
+    typedef Text self_t;
+    typedef text value_t;
+    
+    Text(value_t t, text open="\"", text close="\"", TreePosition pos=NOWHERE):
         Tree(TEXT, pos), value(t), opening(open), closing(close) {}
-    Text(text t, TreePosition pos):
+    Text(value_t t, TreePosition pos):
         Tree(TEXT, pos), value(t), opening(textQuote), closing(textQuote) {}
     Text(Text *t):
         Tree(TEXT, t),
         value(t->value), opening(t->opening), closing(t->closing) {}
-    text                value;
+    value_t             value;
     text                opening, closing;
     static text         textQuote, charQuote;
-    operator text()     { return value; }
+    operator value_t()  { return value; }
     bool IsCharacter()
     {
         return
@@ -243,7 +258,6 @@ struct Text : Tree
 
     GARBAGE_COLLECT(Text);
 };
-template<> inline Text_p::operator text() const  { return pointer->value; }
 
 
 struct Name : Tree
@@ -251,7 +265,11 @@ struct Name : Tree
 //   A node representing a name or symbol
 // ----------------------------------------------------------------------------
 {
-    Name(text n, TreePosition pos = NOWHERE):
+    enum { KIND = NAME };
+    typedef Name self_t;
+    typedef text value_t;
+    
+    Name(value_t n, TreePosition pos = NOWHERE):
         Tree(NAME, pos), value(n) {}
     Name(Name *n):
         Tree(NAME, n), value(n->value) {}
@@ -259,8 +277,8 @@ struct Name : Tree
     bool        IsOperator()    { return !IsEmpty() && !isalpha(value[0]); }
     bool        IsName()        { return !IsEmpty() && isalpha(value[0]); }
     bool        IsBoolean()     { return value=="true" || value=="false"; }
-    text        value;
-    operator    bool();
+    value_t     value;
+    operator    value_t()       { return value; }
     GARBAGE_COLLECT(Name);
 };
 
@@ -277,6 +295,10 @@ struct Block : Tree
 //   A block, such as (X), {X}, [X] or indented block
 // ----------------------------------------------------------------------------
 {
+    enum { KIND = BLOCK };
+    typedef Block       self_t;
+    typedef Block *     value_t;
+
     Block(Tree *c, text open, text close, TreePosition pos = NOWHERE):
         Tree(BLOCK, pos), child(c), opening(open), closing(close) {}
     Block(Block *b, Tree *ch):
@@ -299,6 +321,10 @@ struct Prefix : Tree
 //   A prefix operator, e.g. sin X, +3
 // ----------------------------------------------------------------------------
 {
+    enum { KIND = PREFIX };
+    typedef Prefix      self_t;
+    typedef Prefix *    value_t;
+
     Prefix(Tree *l, Tree *r, TreePosition pos = NOWHERE):
         Tree(PREFIX, pos), left(l), right(r) {}
     Prefix(Prefix *p, Tree *l, Tree *r):
@@ -314,6 +340,10 @@ struct Postfix : Tree
 //   A postfix operator, e.g. 3!
 // ----------------------------------------------------------------------------
 {
+    enum { KIND = POSTFIX };
+    typedef Postfix     self_t;
+    typedef Postfix *   value_t;
+    
     Postfix(Tree *l, Tree *r, TreePosition pos = NOWHERE):
         Tree(POSTFIX, pos), left(l), right(r) {}
     Postfix(Postfix *p, Tree *l, Tree *r):
@@ -329,11 +359,14 @@ struct Infix : Tree
 //   Infix operators, e.g. A+B, A and B, A,B,C,D,E
 // ----------------------------------------------------------------------------
 {
+    enum { KIND = INFIX };
+    typedef Infix       self_t;
+    typedef Infix *     value_t;
+
     Infix(text n, Tree *l, Tree *r, TreePosition pos = NOWHERE):
         Tree(INFIX, pos), left(l), right(r), name(n) {}
     Infix(Infix *i, Tree *l, Tree *r):
         Tree(INFIX, i), left(l), right(r), name(i->name) {}
-    Infix *             LastStatement();
     bool                IsDeclaration() { return name == "->"; }
     Tree_p              left;
     Tree_p              right;
@@ -349,115 +382,37 @@ struct Infix : Tree
 //
 // ============================================================================
 
-inline Integer *Tree::AsInteger()
+template<class T>
+inline T * Tree::As(Context *)
 // ----------------------------------------------------------------------------
-//    Return a pointer to an Integer or NULL
+//   Return a pointer to the given class
 // ----------------------------------------------------------------------------
+//   By default, we only check the kind, see opcode.h for specializations
 {
-    if (this && Kind() == INTEGER)
-        return (Integer *) this;
+    if (this && Kind() == T::KIND)
+        return (T *) this;
     return NULL;
 }
 
-
-inline Real *Tree::AsReal()
+template<>
+inline Tree *Tree::As<Tree>(Context *)
 // ----------------------------------------------------------------------------
-//    Return a pointer to an Real or NULL
-// ----------------------------------------------------------------------------
-{
-    if (this && Kind() == REAL)
-        return (Real *) this;
-    return NULL;
-}
-
-
-inline Text *Tree::AsText()
-// ----------------------------------------------------------------------------
-//    Return a pointer to an Text or NULL
-// ----------------------------------------------------------------------------
-{
-    if (this && Kind() == TEXT)
-        return (Text *) this;
-    return NULL;
-}
-
-
-inline Name *Tree::AsName()
-// ----------------------------------------------------------------------------
-//    Return a pointer to an Name or NULL
-// ----------------------------------------------------------------------------
-{
-    if (this && Kind() == NAME)
-        return (Name *) this;
-    return NULL;
-}
-
-
-inline Block *Tree::AsBlock()
-// ----------------------------------------------------------------------------
-//    Return a pointer to an Block or NULL
-// ----------------------------------------------------------------------------
-{
-    if (this && Kind() == BLOCK)
-        return (Block *) this;
-    return NULL;
-}
-
-
-inline Infix *Tree::AsInfix()
-// ----------------------------------------------------------------------------
-//    Return a pointer to an Infix or NULL
-// ----------------------------------------------------------------------------
-{
-    if (this && Kind() == INFIX)
-        return (Infix *) this;
-    return NULL;
-}
-
-
-inline Prefix *Tree::AsPrefix()
-// ----------------------------------------------------------------------------
-//    Return a pointer to an Prefix or NULL
-// ----------------------------------------------------------------------------
-{
-    if (this && Kind() == PREFIX)
-        return (Prefix *) this;
-    return NULL;
-}
-
-
-inline Postfix *Tree::AsPostfix()
-// ----------------------------------------------------------------------------
-//    Return a pointer to an Postfix or NULL
-// ----------------------------------------------------------------------------
-{
-    if (this && Kind() == POSTFIX)
-        return (Postfix *) this;
-    return NULL;
-}
-
-
-inline Tree *Tree::AsTree()
-// ----------------------------------------------------------------------------
-//    Return tree as is, used for consistency in macros
+//    Special case for Tree
 // ----------------------------------------------------------------------------
 {
     return this;
 }
 
 
-inline Infix *Infix::LastStatement()
-// ----------------------------------------------------------------------------
-//   Return the last statement following a given infix
-// ----------------------------------------------------------------------------
-{
-    Infix *last = this;
-    Infix *next;
-    while ((next = last->right->AsInfix()) &&
-           (next->name == "\n" || next->name == ";"))
-        last = next;
-    return last;
-}
+inline Integer *Tree::AsInteger()       { return As<Integer>(); }
+inline Real    *Tree::AsReal()          { return As<Real>(); }
+inline Text    *Tree::AsText()          { return As<Text>(); }
+inline Name    *Tree::AsName()          { return As<Name>(); }
+inline Block   *Tree::AsBlock()         { return As<Block>(); }
+inline Prefix  *Tree::AsPrefix()        { return As<Prefix>(); }
+inline Postfix *Tree::AsPostfix()       { return As<Postfix>(); }
+inline Infix   *Tree::AsInfix()         { return As<Infix>(); }
+inline Tree    *Tree::AsTree()          { return As<Tree>(); }
 
 
 

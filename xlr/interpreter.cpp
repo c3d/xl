@@ -173,12 +173,12 @@ inline bool Bindings::DoName(Name *what)
     if (Tree *bound = locals->Bound(what))
     {
         IFTRACE(eval)
-            std::cerr << "Arg check: " << bound << " != " << test << "\n";
+            std::cerr << "  ARGCHECK: " << bound << " != " << test << "\n";
         return Tree::Equal(bound, test);
     }
 
     IFTRACE(eval)
-        std::cerr << "CLOSURE " << what << " = " << test << "\n";
+        std::cerr << "  CLOSURE " << what << "=" << test << "\n";
     BindClosure(what, test);
     return true;
 }
@@ -456,8 +456,9 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
         Tree *result = opcode->Invoke(locals, self, bindings.args);
         IFTRACE(eval)
             std::cerr << "EVAL" << id-- << "(" << self
-                      << ") OPCODE(" << bindings.args
-                      << ") = " << result << "\n";
+                      << ") OPCODE " << opcode->name
+                      << "(" << bindings.args << ") = "
+                      << result << "\n";
         return result;
     }
 

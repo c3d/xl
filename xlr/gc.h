@@ -199,7 +199,6 @@ struct GCPtr
     Object *Pointer() const                     { return pointer; }
     Object *operator->() const                  { return pointer; }
     Object& operator*() const                   { return *pointer; }
-    operator ValueType() const                  { return pointer; }
 
     GCPtr &operator= (const GCPtr &o)
     {
