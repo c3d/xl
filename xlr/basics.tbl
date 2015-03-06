@@ -163,4 +163,6 @@ OVERLOAD(WriteReal, "write", boolean,
 OVERLOAD(WriteCharacter, "write", boolean,
          PARM(x, character),
          return (std::cout << x.value) ? xl_true : xl_false)
-
+OVERLOAD(WriteNewLine, "writeln", boolean, ,
+         return (std::cout << "\n") ? xl_true : xl_false)
+         

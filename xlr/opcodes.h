@@ -508,7 +508,7 @@ XL_END
             if (result)                                                 \
                 result = new Prefix(new Name(Symbol), result);          \
             else                                                        \
-                result = new Name(name);                                \
+                result = new Name(Symbol);                              \
             self = new Infix("as", result, ResTy##_type);               \
             return self;                                                \
         }                                                               \

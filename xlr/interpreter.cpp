@@ -474,6 +474,16 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
 }
 
 
+inline Tree *lookup(Context *context, Tree *what)
+// ----------------------------------------------------------------------------
+//   lookup for evaluation
+// ----------------------------------------------------------------------------
+{
+    EvalCache cache;
+    return context->Lookup(what, evalLookup, &cache);
+}
+
+
 static Tree *Instructions(Context *context, Tree *what)
 // ----------------------------------------------------------------------------
 //   Evaluate the input tree once declarations have been processed
@@ -500,6 +510,14 @@ static Tree *Instructions(Context *context, Tree *what)
             {
                 if (Tree *found = context->Bound(what))
                 {
+                    // If the declaration has an opcode, evaluate it
+                    if (Opcode *opcode = found->GetInfo<Opcode>())
+                    {
+                        TreeList noArgs;
+                        Tree *result = opcode->Invoke(context, found, noArgs);
+                        return result;
+                    }
+                        
                     // If lookup returned a closure, need to evaluate it
                     if (Prefix *pfx = found->AsPrefix())
                     {
@@ -525,8 +543,7 @@ static Tree *Instructions(Context *context, Tree *what)
         case BLOCK:
         {
             // Check if there is a block form
-            EvalCache cache;
-            if (Tree *eval = context->Lookup(what, evalLookup, &cache))
+            if (Tree *eval = lookup(context, what))
                 return eval;
 
             // Otherwise, evaluate child in a new context
@@ -539,8 +556,7 @@ static Tree *Instructions(Context *context, Tree *what)
         case PREFIX:
         {
             // Check if there is a form that matches
-            EvalCache cache;
-            if (Tree *eval = context->Lookup(what, evalLookup, &cache))
+            if (Tree *eval = lookup(context, what))
                 return eval;
 
             // Calling with an expression or scope on the left
@@ -649,8 +665,7 @@ static Tree *Instructions(Context *context, Tree *what)
         case POSTFIX:
         {
             // Check if there is a form that matches
-            EvalCache cache;
-            if (Tree *eval = context->Lookup(what, evalLookup, &cache))
+            if (Tree *eval = lookup(context, what))
                 return eval;
             return what;
         }
@@ -707,8 +722,7 @@ static Tree *Instructions(Context *context, Tree *what)
             }
 
             // All other cases: evaluate
-            EvalCache cache;
-            if (Tree *eval = context->Lookup(what, evalLookup, &cache))
+            if (Tree *eval = lookup(context, what))
                 return eval;
             return what;
         }
@@ -748,7 +762,7 @@ Tree *TypeCheck(Context *scope, Tree *type, Tree *value)
 // ----------------------------------------------------------------------------
 {
     IFTRACE(eval)
-        std::cerr << "TYPECHECK " << value << " in " << type << "\n";
+        std::cerr << "TYPECHECK " << value << " against " << type << "\n";
 
     // Accelerated type check for the builtin or constructed types
     if (TypeCheckOpcode *builtin = type->GetInfo<TypeCheckOpcode>())
@@ -762,6 +776,14 @@ Tree *TypeCheck(Context *scope, Tree *type, Tree *value)
             return converted;
         }
     }
+    else
+    {
+        IFTRACE(eval)
+            std::cerr << "TYPECHECK: no code for " << type
+                      << " opcode is " << type->GetInfo<Opcode>()
+                      << "\n";
+    }
+   
 
     // No direct or converted match, end of game
     IFTRACE(eval)
