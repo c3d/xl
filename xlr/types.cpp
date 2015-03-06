@@ -46,6 +46,8 @@
 #include "args.h"
 #include "cdecls.h"
 #include "renderer.h"
+#include "basics.h"
+
 #include <iostream>
 
 XL_BEGIN

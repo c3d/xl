@@ -56,6 +56,7 @@
 #include "flight_recorder.h"
 #include "utf8_fileutils.h"
 #include "interpreter.h"
+#include "opcodes.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -173,8 +174,6 @@ int Main::LoadAndRun()
 //   An single entry point for the normal phases
 // ----------------------------------------------------------------------------
 {
-    EnterBasics();
-
     SetupCompiler();
     int rc = LoadFiles();
     if (!rc && !options.parseOnly)
@@ -230,6 +229,7 @@ void Main::SetupCompiler()
 //    Setup the compiler once all possible options have been set
 // ----------------------------------------------------------------------------
 {
+    Opcode::Enter(context);
     compiler->Setup(options);
 }
 

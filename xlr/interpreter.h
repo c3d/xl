@@ -22,6 +22,7 @@
 
 #include "tree.h"
 #include "context.h"
+#include "opcodes.h"
 
 
 XL_BEGIN

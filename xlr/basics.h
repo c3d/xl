@@ -41,8 +41,11 @@
 
 #include "tree.h"
 #include "context.h"
-#include "opcodes.h"
 #include "main.h"
+
+#define TBL_HEADER
+#include "opcodes.h"
+
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
@@ -50,17 +53,7 @@
 
 XL_BEGIN
 
-// ============================================================================
-//
-//   Top level entry point
-//
-// ============================================================================
-
-// Top-level entry point: enter all basic operations in the context
-void EnterBasics();
-
-// Top-level entry point: delete all globals related to basic operations
-void DeleteBasics();
+#include "basics.tbl"
 
 
 
@@ -70,31 +63,31 @@ void DeleteBasics();
 // 
 // ============================================================================
 
-inline longlong xl_text2int(text_r t)
+inline integer_t xl_text2int(Text &t)
 // ----------------------------------------------------------------------------
 //   Converts text to a numerical value
 // ----------------------------------------------------------------------------
 {
-    std::istringstream stream(t.value);
-    longlong result = 0.0;
+    std::istringstream stream(t);
+    integer_t result = 0.0;
     stream >> result;
     return result;
 }
 
 
-inline double xl_text2real(text_r t)
+inline real_t xl_text2real(Text &t)
 // ----------------------------------------------------------------------------
 //   Converts text to a numerical value
 // ----------------------------------------------------------------------------
 {
-    std::istringstream stream(t.value);
-    double result = 0.0;
+    std::istringstream stream(t);
+    real_t result = 0.0;
     stream >> result;
     return result;
 }
 
 
-inline text xl_int2text(longlong value)
+inline text xl_int2text(integer_t value)
 // ----------------------------------------------------------------------------
 //   Convert a numerical value to text
 // ----------------------------------------------------------------------------
@@ -105,7 +98,7 @@ inline text xl_int2text(longlong value)
 }
 
 
-inline text xl_real2text(double value)
+inline text xl_real2text(real_t value)
 // ----------------------------------------------------------------------------
 //   Convert a numerical value to text
 // ----------------------------------------------------------------------------
@@ -116,13 +109,13 @@ inline text xl_real2text(double value)
 }
 
 
-inline integer_t xl_mod(integer_r xr, integer_r yr)
+inline integer_t xl_mod(Integer &xr, Integer &yr)
 // ----------------------------------------------------------------------------
 //   Compute a mathematical 'mod' from the C99 % operator
 // ----------------------------------------------------------------------------
 {
-    integer_t x = XL_INT(xr);
-    integer_t y = XL_INT(yr);
+    integer_t x = xr;
+    integer_t y = yr;
     integer_t tmp = x % y;
     if (tmp && (x^y) < 0)
         tmp += y;
@@ -130,13 +123,13 @@ inline integer_t xl_mod(integer_r xr, integer_r yr)
 }
 
 
-inline integer_t xl_pow(integer_r xr, integer_r yr)
+inline integer_t xl_pow(Integer &xr, Integer &yr)
 // ----------------------------------------------------------------------------
 //   Compute integer power
 // ----------------------------------------------------------------------------
 {
-    integer_t x = XL_INT(xr);
-    integer_t y = XL_INT(yr);
+    integer_t x = xr;
+    integer_t y = yr;
     integer_t tmp = 0;
     if (y >= 0)
     {
@@ -153,13 +146,13 @@ inline integer_t xl_pow(integer_r xr, integer_r yr)
 }
 
 
-inline real_t xl_modf(real_r xr, real_r yr)
+inline real_t xl_modf(Real &xr, Real &yr)
 // ----------------------------------------------------------------------------
 //   Compute a mathematical 'mod' from fmod
 // ----------------------------------------------------------------------------
 {
-    real_t x = XL_REAL(xr);
-    real_t y = XL_REAL(yr);
+    real_t x = xr;
+    real_t y = yr;
     real_t tmp = fmod(x,y);
     if (tmp != 0.0 && x*y < 0.0)
         tmp += y;
@@ -167,15 +160,15 @@ inline real_t xl_modf(real_r xr, real_r yr)
 }
 
 
-inline real_t xl_powf(real_r xr, integer_r yr)
+inline real_t xl_powf(Real &xr, Integer &yr)
 // ----------------------------------------------------------------------------
 //   Compute real power with an integer on the right
 // ----------------------------------------------------------------------------
 {
-    real_t x = XL_REAL(xr);
-    integer_t y = XL_INT(yr);
-    boolean_t negative = y < 0;
-    real_t tmp = 1.0;
+    real_t   x        = xr;
+    integer_t y        = yr;
+    bool     negative = y < 0;
+    real_t   tmp      = 1.0;
     if (negative)
         y = -y;
     while (y)
@@ -191,7 +184,7 @@ inline real_t xl_powf(real_r xr, integer_r yr)
 }
 
 
-inline integer_t xl_time(double delay)
+inline integer_t xl_time(real_t delay)
 // ----------------------------------------------------------------------------
 //   Return the current system time
 // ----------------------------------------------------------------------------
@@ -226,9 +219,9 @@ inline number xl_random(number low, number high)
 // ----------------------------------------------------------------------------
 {
 #ifndef CONFIG_MINGW
-    double base = drand48();
+    real_t base = drand48();
 #else
-    double base = double(rand()) / RAND_MAX;
+    real_t base = real_t(rand()) / RAND_MAX;
 #endif // CONFIG_MINGW
     return number(base * (high-low) + low);
 }
@@ -272,7 +265,6 @@ inline text xl_text_replace(text txt, text before, text after)
   }
   return txt;
 }
-
 
 XL_END
 

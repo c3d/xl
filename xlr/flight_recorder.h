@@ -128,6 +128,7 @@ public:
                          kstring l2="", intptr_t a2=0,
                          kstring l3="", intptr_t a3=0)
     {
+        Initialize();
         return recorder->Record(what, caller, l1, a1, l2, a2, l3, a3);
     }
     static void SDump(int fd, bool kill=false) { recorder->Dump(fd,kill); }

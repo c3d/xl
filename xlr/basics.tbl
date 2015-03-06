@@ -4,29 +4,122 @@ NAME(self);
 NAME(true);
 NAME(false);
 
-TYPE(boolean);
-TYPE(integer);
-TYPE(real);
-TYPE(text);
-TYPE(character);
-TYPE(tree);
-TYPE(symbol);
-TYPE(name);
-TYPE(operator);
-TYPE(infix);
-TYPE(declaration);
-TYPE(prefix);
-TYPE(postfix);
-TYPE(block);
+TYPE(boolean,
+     if (Name *name = what->AsName())
+         if (name->value == "true" || name->value == "false")
+             return what;
+    );
+TYPE(integer,
+     if (Integer *ival = what->AsInteger())
+         return ival;
+    );
+TYPE(real,
+     if (Real *rval = what->AsReal())
+         return rval;
+     if (Integer *ival = what->AsInteger())
+         return new Real(ival->value, ival->Position());
+    );
+TYPE(text,
+     if (Text *text = what->AsText())
+         return text;
+    );
+TYPE(character,
+     if (Text *tval = what->AsText())
+         if (tval->IsCharacter())
+             return tval;
+    );
+TYPE(tree,    return what);
+TYPE(value,   return what);
+TYPE(symbol,
+     if (Name *name = what->AsName())
+         return name;
+    );
+TYPE(name,
+     if (Name *name = what->AsName())
+         if (name->IsName())
+             return name;
+    );
+TYPE(operator,
+     if (Name *name = what->AsName())
+         if (name->IsOperator())
+             return name;
+    );
+TYPE(infix,
+     if (Infix *infix = what->AsInfix())
+         return infix;
+    );
+TYPE(declaration,
+     if (Infix *infix = what->AsInfix())
+         if (infix->IsDeclaration())
+             return infix;
+    );
+TYPE(prefix,
+     if (Prefix *prefix = what->AsPrefix())
+         return prefix;
+    );
+TYPE(postfix,
+     if (Postfix *postfix = what->AsPostfix())
+         return postfix;
+    );
+TYPE(block,
+     if (Block *block = what->AsBlock())
+         return block;
+    );
 
-TYPE(integer8);
-TYPE(integer16);
-TYPE(integer32);
-TYPE(integer64);
-TYPE(unsigned);
-TYPE(unsigned8);
-TYPE(unsigned16);
-TYPE(unsigned32);
-TYPE(unsigned64);
-TYPE(real32);
-TYPE(real64);
+TYPE(integer8,
+     if (Integer *ival = what->AsInteger())
+         if (ival->value >= -0x80 && ival->value < 0x80)
+             return ival;
+    );
+            
+TYPE(integer16,
+     if (Integer *ival = what->AsInteger())
+         if (ival->value >= -0x8000 && ival->value < 0x8000)
+             return ival;
+    );
+TYPE(integer32,
+     if (Integer *ival = what->AsInteger())
+         if (ival->value >= -0x80000000LL && ival->value < 0x80000000LL)
+             return ival;
+    );
+TYPE(integer64,
+     if (Integer *ival = what->AsInteger())
+         return ival;
+    );
+TYPE(unsigned,
+     if (Integer *ival = what->AsInteger())
+         if (ival->value >= 0)
+             return ival;
+    );
+TYPE(unsigned8,
+     if (Integer *ival = what->AsInteger())
+         if (ival->value >= 0 && ival->value < 0x100)
+             return ival;
+    );
+TYPE(unsigned16,
+     if (Integer *ival = what->AsInteger())
+         if (ival->value >= 0 && ival->value < 0x10000)
+             return ival;
+    );
+TYPE(unsigned32,
+     if (Integer *ival = what->AsInteger())
+         if (ival->value >= 0 && ival->value < 0x100000000)
+             return ival;
+    );
+TYPE(unsigned64,
+     if (Integer *ival = what->AsInteger())
+         if (ival->value >= 0)
+             return ival;
+    );
+TYPE(real32,
+     if (Real *rval = what->AsReal())
+         return rval;
+    );
+TYPE(real64,
+     if (Real *rval = what->AsReal())
+         return rval;
+    );
+
+
+// Array indexing and assignment
+INFIX(Assign, Tree, Tree, ":=", Tree, return context->Assign(&left, &right))

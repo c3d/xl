@@ -71,6 +71,7 @@ struct RewriteCalls;
 typedef GCPtr<RewriteCalls> RewriteCalls_p;
 typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
 
+extern Name_p tree_type;
 
 
 // ============================================================================
@@ -197,45 +198,6 @@ struct TypeInfo : Info
     operator             data_t()  { return type; }
     Tree_p               type;
 };
-
-
-
-// ============================================================================
-//
-//   Declare the basic types
-//
-// ============================================================================
-
-#undef INFIX
-#undef PREFIX
-#undef POSTFIX
-#undef BLOCK
-#undef FORM
-#undef NAME
-#undef TYPE
-#undef PARM
-#undef DS
-#undef RS
-#undef RETURNS
-#undef GROUP
-#undef SYNOPSIS
-#undef DESCRIPTION
-#undef SEE
-
-#define SEE(see)
-#define RETURNS(type, rdoc)
-#define GROUP(grp)
-#define SYNOPSIS(syno)
-#define DESCRIPTION(desc)
-#define INFIX(name, rtype, t1, symbol, t2, code, docinfo)
-#define PARM(symbol, type, pdoc)
-#define PREFIX(name, rtype, symbol, parms, code, docinfo)
-#define POSTFIX(name, rtype, parms, symbol, code, docinfo)
-#define BLOCK(name, rtype, open, type, close, code, docinfo)
-#define FORM(name, rtype, form, parms, _code, docinfo)
-#define NAME(symbol)
-#define TYPE(symbol)    extern Name_p symbol##_type;
-#include "basics.tbl"
 
 
 

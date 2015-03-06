@@ -24,6 +24,8 @@
 #include "errors.h"
 #include "types.h"
 #include "renderer.h"
+#include "basics.h"
+
 
 XL_BEGIN
 
@@ -36,120 +38,33 @@ typedef std::map<Tree_p, Tree_p>        EvalCache;
 //
 // ============================================================================
 
-struct OpcodeInfo : Info
-// ----------------------------------------------------------------------------
-//    Store the opcode info for the builtins
-// ----------------------------------------------------------------------------
-{
-    typedef Tree *(*callback_fn) (Context *ctx, Tree *self, TreeList &args);
-    OpcodeInfo(callback_fn cb): Invoke(cb) {}
-    callback_fn Invoke;
-};
-
-
-// Create the opcode tables
-#define BINARY(Name, ResTy, LeftTy, RightTy, Code)                      \
-    static Tree *                                                       \
-    opcode##Name(Context *context, Tree *self, TreeList &args)          \
-    {                                                                   \
-        (void) context;                                                 \
-        if (args.size() != 2)                                           \
-        {                                                               \
-            Ooops("Invalid argument count for " #Name " in $1", self);  \
-            return self;                                                \
-        }                                                               \
-                                                                        \
-        LeftTy *left = args[0]->As##LeftTy();                           \
-        if (!left)                                                      \
-        {                                                               \
-            Ooops("Argument $1 is not a " #LeftTy, args[0]);            \
-            return self;                                                \
-        }                                                               \
-                                                                        \
-        RightTy *right = args[1]->As##RightTy();                        \
-        if (!left)                                                      \
-        {                                                               \
-            Ooops("Argument $1 is not a " #RightTy, args[1]);           \
-            return self;                                                \
-        }                                                               \
-                                                                        \
-        return Code;                                                    \
-    }
-
-#define UNARY(Name, ResTy, LeftTy, Code)                                \
-    static Tree *                                                       \
-    opcode##Name(Context *context, Tree *self, TreeList &args)          \
-    {                                                                   \
-        (void) context;                                                 \
-        if (args.size() != 1)                                           \
-        {                                                               \
-            Ooops("Invalid argument count for " #Name " in $1", self);  \
-            return self;                                                \
-        }                                                               \
-                                                                        \
-        LeftTy *left = args[0]->As##LeftTy();                           \
-        if (!left)                                                      \
-        {                                                               \
-            Ooops("Argument $1 is not a " #LeftTy, args[0]);            \
-            return self;                                                \
-        }                                                               \
-        return Code;                                                    \
-    }
-
-#include "interpreter.tbl"
-
-
-struct OpcodeCallback
-// ----------------------------------------------------------------------------
-//   The callback for a given opcode
-// ----------------------------------------------------------------------------
-{
-    kstring                     name;
-    OpcodeInfo::callback_fn     callback;
-};
-
-
-static OpcodeCallback OpcodeCallbacks[] =
-// ----------------------------------------------------------------------------
-//    The list of callbacks
-// ----------------------------------------------------------------------------
-{
-#define BINARY(Name, ResTy, LeftTy, RightTy, Code)      \
-    { #Name, (OpcodeInfo::callback_fn) opcode##Name },
-#define UNARY(Name, ResTy, LeftTy, Code)                \
-    { #Name, (OpcodeInfo::callback_fn) opcode##Name },
-#include "interpreter.tbl"
-    { NULL, NULL }
-};
-
-
-static inline OpcodeInfo *setInfo(Infix *decl, OpcodeInfo::callback_fn fn)
+static inline Opcode *setInfo(Infix *decl, Opcode *opcode)
 // ----------------------------------------------------------------------------
 //    Create a new info for the given callback
 // ----------------------------------------------------------------------------
 {
-    OpcodeInfo *info = new OpcodeInfo(fn);
-    decl->SetInfo<OpcodeInfo>(info);
-    return info;
+    decl->SetInfo<Opcode>(opcode);
+    return opcode;
 }
 
 
-static inline OpcodeInfo *opcodeInfo(Infix *decl)
+static inline Opcode *opcodeInfo(Infix *decl)
 // ----------------------------------------------------------------------------
 //    Check if we have an opcode in the definition
 // ----------------------------------------------------------------------------
 {
-    OpcodeInfo *info = decl->GetInfo<OpcodeInfo>();
+    Opcode *info = decl->GetInfo<Opcode>();
     if (info)
         return info;
 
+    // Check if the declaration is something like 'X -> opcode Foo'
+    // If so, lookup 'Foo' in the opcode table the first time to record it
     if (Prefix *prefix = decl->right->AsPrefix())
         if (Name *name = prefix->left->AsName())
             if (name->value == "opcode")
-                if (Name *opcode = prefix->right->AsName())
-                    for (OpcodeCallback *cb = OpcodeCallbacks; cb->name; cb++)
-                        if (cb->name == opcode->value)
-                            return setInfo(decl, cb->callback);
+                if (Name *opcodeName = prefix->right->AsName())
+                    if (Opcode *opcode = Opcode::Find(opcodeName->value))
+                        return setInfo(decl, opcode);
 
     return NULL;
 }
@@ -171,7 +86,7 @@ struct Bindings
 
     Bindings(Context *context, Context *locals,
              Tree *test, EvalCache &cache,
-             OpcodeInfo *opcode)
+             Opcode *opcode)
         : context(context), locals(locals),
           test(test), cache(cache), opcode(opcode), resultType(NULL) {}
 
@@ -198,7 +113,7 @@ private:
     EvalCache  &cache;
 
 public:
-    OpcodeInfo *opcode;
+    Opcode *opcode;
     TreeList    args;
     Tree       *resultType;
 };
@@ -369,7 +284,7 @@ bool Bindings::DoInfix(Infix *what)
 
         // Typed name: evaluate type and check match
         Tree *type = MustEvaluate(what->right);
-        Tree *value = MustEvaluate(test);
+        Tree *value = type == tree_type ? test : MustEvaluate(test);
         Tree *checked = TypeCheck(context, type, value);
         if (checked)
         {
@@ -511,7 +426,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     locals->CreateScope();
 
     // Check if the decl is an opcode or C binding
-    OpcodeInfo *opcode = opcodeInfo(decl);
+    Opcode *opcode = opcodeInfo(decl);
     
     // Check bindings of arguments to declaration, exit if fails
     Bindings  bindings(context, locals, self, *cache, opcode);
@@ -748,8 +663,8 @@ static Tree *Instructions(Context *context, Tree *what)
             // Check assignments
             if (name == ":=")
             {
-                Tree *target = Instructions(context, infix->left);
-                Tree *value = Instructions(context, infix->right);
+                Tree *target   = Instructions(context, infix->left);
+                Tree *value    = Instructions(context, infix->right);
                 Tree *assigned = context->Assign(target, value);
                 return assigned;
             }
@@ -809,114 +724,16 @@ Tree *Evaluate(Context *context, Tree *what)
 // 
 // ============================================================================
 
-struct TypeCheckInfo : Info
-// ----------------------------------------------------------------------------
-//    A structure to quickly do the most common type checks
-// ----------------------------------------------------------------------------
-{
-    TypeCheckInfo()                     {}
-    virtual Tree *Check(Context *ctx, Tree *what)
-    {
-        return what;
-    }
-};
-
-
-struct TypeContainsInfo : Info
-// ----------------------------------------------------------------------------
-//    For types that have a 'contains' declaration
-// ----------------------------------------------------------------------------
-{
-    TypeContainsInfo(Tree *type) : type(type) {}
-    virtual Tree *Check(Context *ctx, Tree *value)
-    {
-        // Check if the expression "Type contains Value" works
-        TreePosition pos = value->Position();
-        Infix *typeCheck = new Infix("contains", type, value, pos);
-        Tree *converted = Evaluate(ctx, typeCheck);
-        if (converted != typeCheck && converted != value)
-            return converted;
-        return NULL;
-    }
-    Tree *type;
-};
-
-
-struct KindTypeCheckInfo : TypeCheckInfo
-// ----------------------------------------------------------------------------
-//    A structure to quickly do the most common type checks
-// ----------------------------------------------------------------------------
-{
-    KindTypeCheckInfo(kind k): expected(k) {}
-    virtual Tree *Check(Context *, Tree *what)
-    {
-        return what->Kind() == expected ? what : NULL;
-    }
-    kind expected;
-};
-
-
-#define TYPE_CHECK(x, k, Condition)                     \
-    struct x##TypeCheckInfo : KindTypeCheckInfo         \
-    {                                                   \
-        x##TypeCheckInfo(): KindTypeCheckInfo(k) {}     \
-        virtual Tree *Check(Context *ctx, Tree *what)   \
-        {                                               \
-            if (!KindTypeCheckInfo::Check(ctx, what))   \
-                return NULL;                            \
-            if (Condition)                              \
-                return what;                            \
-            return NULL;                                \
-        }                                               \
-    }
-
-TYPE_CHECK(boolean,     NAME,  ((Name *)  what)->IsBoolean());
-TYPE_CHECK(character,   TEXT,  ((Text *)  what)->IsCharacter());
-TYPE_CHECK(text,        TEXT,  ((Text *)  what)->IsText());
-TYPE_CHECK(symbol,      NAME,  ((Name *)  what)->IsName());
-TYPE_CHECK(operator,    NAME,  ((Name *)  what)->IsOperator());
-TYPE_CHECK(declaration, INFIX, ((Infix *) what)->IsDeclaration());
-
-
 Tree *TypeCheck(Context *scope, Tree *type, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if 'value' matches 'type' in the given context
 // ----------------------------------------------------------------------------
 {
-    static bool inited = false;
-    if (!inited)
-    {
-#define BASIC_TYPE_CHECK(type, kind)                                    \
-        type##_type->SetInfo<TypeCheckInfo>(new KindTypeCheckInfo(kind))
-#define EXTENDED_TYPE_CHECK(type)                                       \
-        type##_type->SetInfo<type##TypeCheckInfo>(new type##TypeCheckInfo)
-
-        tree_type->SetInfo<TypeCheckInfo>(new TypeCheckInfo);
-
-        BASIC_TYPE_CHECK(integer, INTEGER);
-        BASIC_TYPE_CHECK(real,    REAL);
-        BASIC_TYPE_CHECK(text,    TEXT);
-        BASIC_TYPE_CHECK(name,    NAME);
-        BASIC_TYPE_CHECK(block,   BLOCK);
-        BASIC_TYPE_CHECK(prefix,  PREFIX);
-        BASIC_TYPE_CHECK(postfix, POSTFIX);
-        BASIC_TYPE_CHECK(infix,   INFIX);
-
-        EXTENDED_TYPE_CHECK(boolean);
-        EXTENDED_TYPE_CHECK(character);
-        EXTENDED_TYPE_CHECK(text);
-        EXTENDED_TYPE_CHECK(symbol);
-        EXTENDED_TYPE_CHECK(operator);
-        EXTENDED_TYPE_CHECK(declaration);
-
-        inited = true;
-    }
-
     IFTRACE(eval)
         std::cerr << "TYPECHECK " << value << " in " << type << "\n";
 
     // Accelerated type check for the builtin or constructed types
-    if (TypeCheckInfo *builtin = type->GetInfo<TypeCheckInfo>())
+    if (TypeCheckOpcode *builtin = type->GetInfo<TypeCheckOpcode>())
     {
         // If this is marked as builtin, check if the test passes
         if (Tree *converted = builtin->Check(scope, value))
@@ -933,5 +750,16 @@ Tree *TypeCheck(Context *scope, Tree *type, Tree *value)
         std::cerr << "TYPECHECK " << value << " FAILED\n";
     return NULL;
 }
+
+
+
+// ============================================================================
+// 
+//    Include the opcodes
+// 
+// ============================================================================
+
+#include "opcodes.h"
+#include "interpreter.tbl"
 
 XL_END

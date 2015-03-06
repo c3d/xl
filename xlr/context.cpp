@@ -269,9 +269,13 @@ bool Context::ProcessDeclarations(Tree *what)
                                   << "XL: " << normalForm << "\n";
                     if (normalForm)
                     {
-                        Define(normalForm->left, normalForm->right);
-                        prefix->SetInfo<CDeclaration>(pcd);
-                        prefix->right->SetInfo<CDeclaration>(pcd);
+                        // Process C declarations only in optimized mode
+                        if (MAIN->options.optimize_level)
+                        {
+                            Define(normalForm->left, normalForm->right);
+                            prefix->SetInfo<CDeclaration>(pcd);
+                            prefix->right->SetInfo<CDeclaration>(pcd);
+                        }
                         isInstruction = false;
                     }
                     else

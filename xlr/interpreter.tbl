@@ -18,14 +18,17 @@
 //  (C) 2015 Taodyne SAS
 // ****************************************************************************
 
-#define LEFT    left->value
-#define RIGHT   right->value
+#define LEFT    left.value
+#define RIGHT   right.value
 #define ULEFT   (ulonglong) LEFT
 #define URIGHT  (ulonglong) RIGHT
-#define IVAL(x) new Integer(x, left->Position())
-#define RVAL(x) new Real(x, left->Position())
+#define RIGHT0  ( RIGHT != 0 ? RIGHT : DIV0)
+#define URIGHT0 (URIGHT != 0 ? URIGHT : DIV0)
+#define DIV0    (Ooops("Divide by 0 in $1", self), 1)
+#define IVAL(x) new Integer(x, left.Position())
+#define RVAL(x) new Real(x, left.Position())
 #define BVAL(x) x ? xl_true : xl_false
-#define TVAL(x) new Text(x, left->Position())
+#define TVAL(x) new Text(x, left.Position())
 
 
 BINARY(Add,     Integer, Integer, Integer,      IVAL( LEFT +  RIGHT))
@@ -34,11 +37,12 @@ BINARY(Sub,     Integer, Integer, Integer,      IVAL( LEFT -  RIGHT))
 BINARY(FSub,    Real,    Real,    Real,         RVAL( LEFT -  RIGHT))
 BINARY(Mul,     Integer, Integer, Integer,      IVAL( LEFT *  RIGHT))
 BINARY(FMul,    Real,    Real,    Real,         RVAL( LEFT *  RIGHT))
-BINARY(UDiv,    Integer, Integer, Integer,      IVAL(ULEFT / URIGHT))
-BINARY(SDiv,    Integer, Integer, Integer,      IVAL( LEFT /  RIGHT))
-BINARY(FDiv,    Real,    Real,    Real,         RVAL( LEFT /  RIGHT))
-BINARY(URem,    Integer, Integer, Integer,      IVAL(ULEFT % URIGHT))
-BINARY(SRem,    Integer, Integer, Integer,      IVAL( LEFT /  RIGHT))
+BINARY(UDiv,    Integer, Integer, Integer,      IVAL(ULEFT / URIGHT0))
+BINARY(SDiv,    Integer, Integer, Integer,      IVAL( LEFT /  RIGHT0))
+BINARY(FDiv,    Real,    Real,    Real,         RVAL( LEFT /  RIGHT0))
+BINARY(URem,    Integer, Integer, Integer,      IVAL(ULEFT % URIGHT0))
+BINARY(SRem,    Integer, Integer, Integer,      IVAL( LEFT %  RIGHT0))
+BINARY(FRem,    Real,    Real,    Real,         IVAL(fmod(LEFT,RIGHT0)))
 BINARY(Shl,     Integer, Integer, Integer,      IVAL( LEFT << RIGHT))
 BINARY(LShr,    Integer, Integer, Integer,      IVAL(ULEFT >> RIGHT))
 BINARY(AShr,    Integer, Integer, Integer,      IVAL( LEFT >> RIGHT))
@@ -85,27 +89,12 @@ BINARY(FCmpULE, Name,    Real,    Real,         BVAL(LEFT <= RIGHT))
 // 
 // ============================================================================
 
-UNARY(TreeKind,         Integer, Tree,          IVAL(left->Kind()))
-UNARY(TreeLeft,         Tree,    Prefix,        left->left)
-UNARY(TreeRight,        Tree,    Prefix,        left->right)
-UNARY(InfixName,        Text,    Infix,         TVAL(left->name))
-UNARY(TextOpening,      Text,    Text,          TVAL(left->opening))
-UNARY(TextClosing,      Text,    Text,          TVAL(left->closing))
-UNARY(BlockChild,       Tree,    Block,         left->child)
-UNARY(BlockOpening,     Text,    Block,         TVAL(left->opening))
-UNARY(BlockClosing,     Text,    Block,         TVAL(left->closing))
-
-
-#undef UNARY
-#undef BINARY
-#undef SPECIAL
-
-#undef LEFT
-#undef RIGHT
-#undef ULEFT
-#undef URIGHT
-#undef IVAL
-#undef RVAL
-#undef BVAL
-#undef TVAL
-
+UNARY(TreeKind,         Integer, Tree,          IVAL(left.Kind()))
+UNARY(TreeLeft,         Tree,    Prefix,        left.left)
+UNARY(TreeRight,        Tree,    Prefix,        left.right)
+UNARY(InfixName,        Text,    Infix,         TVAL(left.name))
+UNARY(TextOpening,      Text,    Text,          TVAL(left.opening))
+UNARY(TextClosing,      Text,    Text,          TVAL(left.closing))
+UNARY(BlockChild,       Tree,    Block,         left.child)
+UNARY(BlockOpening,     Text,    Block,         TVAL(left.opening))
+UNARY(BlockClosing,     Text,    Block,         TVAL(left.closing))
