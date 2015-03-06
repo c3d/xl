@@ -1,6 +1,0 @@
-01.Evaluation/02-complex-writeln.xl
-01.Evaluation/2422-2427-boolean-in-writeln.xl
-01.Evaluation/2422-assign-to-true.xl
-01.Evaluation/bug2279.xl
-01.Evaluation/bug3327.xl
-03.Control/01-good.xl
