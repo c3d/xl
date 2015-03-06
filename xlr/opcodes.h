@@ -503,15 +503,13 @@ XL_END
         virtual Tree *Shape()                                           \
         {                                                               \
             Tree *self = xl_nil;                                        \
-            FName##FunctionOpcode &_XLparms = *this;                    \
+            FName##FunctionOpcode &_XLparms = *this; (void) _XLparms;   \
             Parms;                                                      \
             if (result)                                                 \
                 result = new Prefix(new Name(Symbol), result);          \
             else                                                        \
                 result = new Name(name);                                \
-            self = new Infix("as",                                      \
-                             new Prefix(new Name(Symbol), result),      \
-                             ResTy##_type);                             \
+            self = new Infix("as", result, ResTy##_type);               \
             return self;                                                \
         }                                                               \
     };                                                                  \
