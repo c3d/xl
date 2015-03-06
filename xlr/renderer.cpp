@@ -46,6 +46,7 @@
 #include "hash.h"
 #include "save.h"
 #include "options.h"
+#include "interpreter.h"
 #include <iostream>
 #include <sstream>
 #include <cctype>
@@ -646,6 +647,14 @@ void Renderer::RenderBody(Tree *what)
                  Tree *l = w->left;
                  Tree *r = w->right;
 
+                 // Don't display closures, only the value inside
+                 if (w->GetInfo<ClosureInfo>())
+                 {
+                     RenderText("[closure]");
+                     Render(r);
+                     break;
+                 }
+
                  // Create blocks for implicit parentheses
                  if (IsAmbiguousPrefix(l, false, true) ||
                      IsSubFunctionInfix(l))
@@ -662,16 +671,12 @@ void Renderer::RenderBody(Tree *what)
                  {
                      text n = n0 + lf->value;
                      if (formats.count(n) > 0)
-                         RenderFormat (formats[n]);
-                     else if (formats.count(n0) > 0)
-                         RenderFormat (formats[n0]);
-                     else
                      {
-                         Render (l);
-                         Render (r);
+                         RenderFormat (formats[n]);
+                         break;
                      }
                  }
-                 else if (formats.count(n0) > 0)
+                 if (formats.count(n0) > 0)
                  {
                      RenderFormat (formats[n0]);
                  }
