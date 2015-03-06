@@ -294,6 +294,30 @@ struct FunctionArguments
 
 XL_END
 
+
+
+// ============================================================================
+// 
+//    Macros to make it easier to write computation built-ins
+// 
+// ============================================================================
+
+#define LEFT            left.value
+#define RIGHT           right.value
+#define ULEFT           ((ulonglong) LEFT)
+#define URIGHT          ((ulonglong) RIGHT)
+#define RIGHT0          ( RIGHT != 0 ? RIGHT : DIV0)
+#define URIGHT0         (URIGHT != 0 ? URIGHT : DIV0)
+#define DIV0            (Ooops("Divide by 0 in $1", self), 1)
+#define IVAL(x)         (new Integer(x, left.Position()))
+#define RVAL(x)         (new Real(x, left.Position()))
+#define BVAL(x)         (x ? xl_true : xl_false)
+#define TVAL(x)         (new Text(x, left.Position()))
+#define RIVAL(x)        return IVAL(x)
+#define RRVAL(x)        return RVAL(x)
+#define RBVAL(x)        return BVAL(x)
+#define RTVAL(x)        return TVAL(x)
+
 #endif // OPCODES_H
 
 
@@ -522,7 +546,7 @@ XL_END
 /* ------------------------------------------------------------ */      \
 /*  Declare a function with the given name                      */      \
 /* ------------------------------------------------------------ */      \
-        OVERLOAD(Name, Name, ResTy, Parms, Code)
+        OVERLOAD(Name, #Name, ResTy, Parms, Code)
 
 
 #define PARM(Name, Type)                                                \

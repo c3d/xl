@@ -18,19 +18,6 @@
 //  (C) 2015 Taodyne SAS
 // ****************************************************************************
 
-#define LEFT    left.value
-#define RIGHT   right.value
-#define ULEFT   (ulonglong) LEFT
-#define URIGHT  (ulonglong) RIGHT
-#define RIGHT0  ( RIGHT != 0 ? RIGHT : DIV0)
-#define URIGHT0 (URIGHT != 0 ? URIGHT : DIV0)
-#define DIV0    (Ooops("Divide by 0 in $1", self), 1)
-#define IVAL(x) new Integer(x, left.Position())
-#define RVAL(x) new Real(x, left.Position())
-#define BVAL(x) x ? xl_true : xl_false
-#define TVAL(x) new Text(x, left.Position())
-
-
 BINARY(Add,     Integer, Integer, Integer,      IVAL( LEFT +  RIGHT))
 BINARY(FAdd,    Real,    Real,    Real,         RVAL( LEFT +  RIGHT))
 BINARY(Sub,     Integer, Integer, Integer,      IVAL( LEFT -  RIGHT))
