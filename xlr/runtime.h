@@ -136,8 +136,6 @@ Tree *xl_block_cast(Context *, Tree *source, Tree *value);
 // ============================================================================
 
 Tree *xl_parameter(text name, text type);
-void xl_enter_builtin(Main *main, text name, Tree *from, Tree *to, eval_fn);
-void xl_enter_global(Main *main, Name *name, Name_p *address);
 
 
 
