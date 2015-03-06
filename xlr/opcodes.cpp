@@ -45,6 +45,7 @@
 #include "types.h"
 #include "runtime.h"
 #include "renderer.h"
+#include "compiler.h"
 
 #include <typeinfo>
 
@@ -128,6 +129,9 @@ void NameOpcode::Register(Context *context)
     Infix *decl = RewriteDeclaration(rw);
     decl->SetInfo<Opcode> (this);
     toDefine->SetInfo<Opcode> (this);
+
+    if (MAIN->options.optimize_level > 0)
+        MAIN->compiler->EnterGlobal(toDefine, &toDefine);
 }
 
 
