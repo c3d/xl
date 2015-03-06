@@ -270,12 +270,9 @@ bool Context::ProcessDeclarations(Tree *what)
                     if (normalForm)
                     {
                         // Process C declarations only in optimized mode
-                        if (MAIN->options.optimize_level)
-                        {
-                            Define(normalForm->left, normalForm->right);
-                            prefix->SetInfo<CDeclaration>(pcd);
-                            prefix->right->SetInfo<CDeclaration>(pcd);
-                        }
+                        Define(normalForm->left, normalForm->right);
+                        prefix->SetInfo<CDeclaration>(pcd);
+                        prefix->right->SetInfo<CDeclaration>(pcd);
                         isInstruction = false;
                     }
                     else
@@ -376,6 +373,13 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
     // If the rewrite is not good, just exit
     if (rewrite->name != "->")
         return NULL;
+
+    // In interpreted mode, just skip any C declaration
+    if (MAIN->options.optimize_level == 0)
+        if (Prefix *cdecl = rewrite->right->AsPrefix())
+            if (Name *cname = cdecl->left->AsName())
+                if (cname->value == "C")
+                    return NULL;
 
     // Updating a symbol in the context invalidates any cached code we may have
     compiled.clear();
