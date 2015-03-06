@@ -514,7 +514,10 @@ static Tree *Instructions(Context *context, Tree *what)
             // Check if there is a specific rewrite in current scope
             if (context->HasRewritesFor(whatK))
             {
-                if (Tree *found = context->Bound(what))
+                Rewrite_p rw;
+                Scope_p   scope;
+
+                if (Tree *found = context->Bound(what, true, &rw, &scope))
                 {
                     // If the declaration has an opcode, evaluate it
                     if (Opcode *opcode = found->GetInfo<Opcode>())
@@ -523,21 +526,30 @@ static Tree *Instructions(Context *context, Tree *what)
                         Tree *result = opcode->Invoke(context, found, noArgs);
                         return result;
                     }
-                        
-                    // If lookup returned a closure, need to evaluate it
-                    if (Prefix *pfx = found->AsPrefix())
+
+                    // Check if we need to keep evaluating
+                    if (found->Kind() > NAME)
                     {
-                        if (Prefix *lpfx = pfx->left->AsPrefix())
+                        // If lookup returned a closure, need to evaluate it
+                        if (Prefix *pfx = found->AsPrefix())
                         {
-                            if (pfx->GetInfo<ClosureInfo>())
+                            if (Prefix *lpfx = pfx->left->AsPrefix())
                             {
-                                // We normally have a scope on the left
-                                Scope *scope = lpfx;
-                                context = new Context(scope);
-                                what = pfx->right;
-                                continue;
+                                if (pfx->GetInfo<ClosureInfo>())
+                                {
+                                    // We normally have a scope on the left
+                                    scope = lpfx;
+                                    context = new Context(scope);
+                                    what = pfx->right;
+                                    continue;
+                                }
                             }
                         }
+
+                        // Keep evaluating in the scope where it was defined
+                        context = new Context(scope);
+                        what = found;
+                        continue;
                     }
 
                     // Otherwise, we are done here
