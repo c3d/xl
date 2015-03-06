@@ -145,24 +145,3 @@ INFIX(Assign, tree, tree, ":=", tree, return context->Assign(&left, &right))
 
 
 
-// ============================================================================
-// 
-//   Simple I/O
-// 
-// ============================================================================
-
-OVERLOAD(WriteText, "write", boolean,
-         PARM(x, text),
-         return (std::cout << x.value) ? xl_true : xl_false)
-OVERLOAD(WriteInteger, "write", boolean,
-         PARM(x, integer),
-         return (std::cout << x.value) ? xl_true : xl_false)
-OVERLOAD(WriteReal, "write", boolean,
-         PARM(x, real),
-         return (std::cout << x.value) ? xl_true : xl_false)
-OVERLOAD(WriteCharacter, "write", boolean,
-         PARM(x, character),
-         return (std::cout << x.value) ? xl_true : xl_false)
-OVERLOAD(WriteNewLine, "writeln", boolean, ,
-         return (std::cout << "\n") ? xl_true : xl_false)
-         

@@ -99,14 +99,4 @@ Tree *xl_process_override_priority(Context *context, Tree *self, phase_t phase)
     return NULL;
 }
 
-
-// ============================================================================
-//
-//    Basic definitions
-//
-// ============================================================================
-
-#include "basics.tbl"
-
-
 XL_END

@@ -1,0 +1,35 @@
+// ****************************************************************************
+//  io.tbl                                                         XLR project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Implementation of basic text I/O
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2015 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2015 Taodyne SAS
+// ****************************************************************************
+
+OVERLOAD(WriteText, "write", boolean,
+         PARM(x, text),
+         return (std::cout << x.value) ? xl_true : xl_false)
+OVERLOAD(WriteInteger, "write", boolean,
+         PARM(x, integer),
+         return (std::cout << x.value) ? xl_true : xl_false)
+OVERLOAD(WriteReal, "write", boolean,
+         PARM(x, real),
+         return (std::cout << x.value) ? xl_true : xl_false)
+OVERLOAD(WriteCharacter, "write", boolean,
+         PARM(x, character),
+         return (std::cout << x.value) ? xl_true : xl_false)
+OVERLOAD(WriteNewLine, "writeln", boolean, ,
+         return (std::cout << "\n") ? xl_true : xl_false)
+

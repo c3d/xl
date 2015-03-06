@@ -27,6 +27,9 @@ COMPILER=llvm
 # Name of 'llvm-config' to use (e.g. llvm-config-2.9)
 LLVM_CONFIG=llvm-config
 
+# List of modules to build
+MODULES=basics io
+MODULES_SOURCES=$(MODULES:%=%-module.cpp)
 
 # List of source files to process
 SOURCES     =					\
@@ -38,7 +41,6 @@ SOURCES     =					\
 	parser.cpp				\
 	flight_recorder.cpp			\
 	errors.cpp				\
-	basics.cpp				\
 	gc.cpp					\
 	syntax.cpp				\
 	renderer.cpp				\
@@ -50,6 +52,7 @@ SOURCES     =					\
 	serializer.cpp				\
         traces_base.cpp                         \
 	winglob.cpp				\
+	$(MODULES_SOURCES)			\
 	$(SOURCES_$(COMPILER))
 
 SOURCES_llvm =					\
@@ -91,9 +94,11 @@ LDFLAGS_llvm350=-lz -lncurses
 LDFLAGS_llvm360=-lz -lncurses
 
 test: xl_tests
-hello: show_llvm_version
+hello: show_$(COMPILER)_version
 show_llvm_version:
 	@echo Building with LLVM version $(LLVM_VERSION)
+show_none_version:
+	@echo Building in interpreter-only mode
 
 xl_tests:
 	cd tests; ./alltests
@@ -105,3 +110,17 @@ opt_tests opt-tests:
 	./alltests -r O2;	\
 	./alltests -r O3
 
+
+# Module-related rules
+clean: modules-clean
+
+modules-clean:
+	rm -f $(MODULES_SOURCES)
+
+%-module.cpp: %.tbl
+	@echo Generating $@ from $<
+	@echo '#include "basics.h"'	>  $@
+	@echo '#include "opcodes.h"'	>> $@
+	@echo 'XL_BEGIN'		>> $@
+	@echo '#include "'$<'"'		>> $@
+	@echo 'XL_END'			>> $@
