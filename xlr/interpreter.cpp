@@ -26,6 +26,8 @@
 #include "renderer.h"
 #include "basics.h"
 
+#include <cmath>
+
 
 XL_BEGIN
 

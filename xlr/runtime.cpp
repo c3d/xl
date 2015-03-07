@@ -51,6 +51,7 @@
 #include "tree-clone.h"
 #include "utf8_fileutils.h"
 #include "interpreter.h"
+#include "winglob.h"
 
 #ifndef INTERPRETER_ONLY
 #include "compiler.h"
@@ -64,84 +65,11 @@
 #include <sstream>
 #include <iostream>
 #include <errno.h>
-#include "winglob.h"
 #include <sys/stat.h>
+#include <sys/time.h>
 
 
 XL_BEGIN
-
-
-Tree *xl_identity(Context *, Tree *what)
-// ----------------------------------------------------------------------------
-//   Return the input tree unchanged
-// ----------------------------------------------------------------------------
-{
-    return what;
-}
-
-
-Tree *xl_evaluate(Context *context, Tree *what)
-// ----------------------------------------------------------------------------
-//   Compile the tree if necessary, then evaluate it
-// ----------------------------------------------------------------------------
-// This is similar to Context::Run, but we save stack space for recursion
-{
-    return context->Evaluate(what);
-}
-
-
-struct SourceInfo : Info
-// ----------------------------------------------------------------------------
-//   Record the source for a given tree
-// ----------------------------------------------------------------------------
-{
-    SourceInfo(Tree *source) : Info(), source(source) {}
-    Tree_p source;
-};
-
-
-Tree *xl_source(Tree *value)
-// ----------------------------------------------------------------------------
-//   Return the source for the given value
-// ----------------------------------------------------------------------------
-{
-    while (SourceInfo *info = value->GetInfo<SourceInfo>())
-        value = info->source;
-    return value;
-}
-
-
-Tree *xl_set_source(Tree *value, Tree *source)
-// ----------------------------------------------------------------------------
-//   Set the source associated with the value (e.g. for integer->real casts)
-// ----------------------------------------------------------------------------
-{
-    if (source != value && source != xl_source(value))
-    {
-        value->Purge<SourceInfo>();
-        value->SetInfo<SourceInfo>(new SourceInfo(source));
-    }
-    return value;
-}
-
-
-Tree *xl_error(Tree *self, text msg, Tree *a1, Tree *a2, Tree *a3)
-// ----------------------------------------------------------------------------
-//   The default runtime error message mechanism (if not overriden)
-// ----------------------------------------------------------------------------
-{
-    if (a1) a1 = FormatTreeForError(a1);
-    if (a2) a2 = FormatTreeForError(a2);
-    if (a3) a3 = FormatTreeForError(a3);
-    Error err(msg, self->Position());
-    if (a1) err.Arg(a1);
-    if (a2) err.Arg(a2);
-    if (a3) err.Arg(a3);
-    MAIN->errors->Log(err);
-
-    return self;
-}
-
 
 Tree *xl_form_error(Context *context, Tree *what)
 // ----------------------------------------------------------------------------
@@ -176,163 +104,12 @@ Tree *xl_stack_overflow(Tree *what)
 }
 
 
-Tree *xl_parse_tree_inner(Context *context, Tree *tree)
-// ----------------------------------------------------------------------------
-//   Build a parse tree in the current context
-// ----------------------------------------------------------------------------
-{
-    switch(tree->Kind())
-    {
-    case INTEGER:
-    case REAL:
-    case TEXT:
-    case NAME:
-        return tree;
-    case INFIX:
-    {
-        Infix *infix = (Infix *) tree;
-        Tree *left = xl_parse_tree_inner(context, infix->left);
-        Tree *right = xl_parse_tree_inner(context, infix->right);
-        Infix *result = new Infix(infix, left, right);
-        return result;
-    }
-    case PREFIX:
-    {
-        Prefix *prefix = (Prefix *) tree;
-        Tree *left = xl_parse_tree_inner(context, prefix->left);
-        Tree *right = xl_parse_tree_inner(context, prefix->right);
-        Prefix *result = new Prefix(prefix, left, right);
-        return result;
-    }
-    case POSTFIX:
-    {
-        Postfix *postfix = (Postfix *) tree;
-        Tree *left = xl_parse_tree_inner(context, postfix->left);
-        Tree *right = xl_parse_tree_inner(context, postfix->right);
-        Postfix *result = new Postfix(postfix, left, right);
-        return result;
-    }
-    case BLOCK:
-    {
-        Block *block = (Block *) tree;
-        Tree *result = block->child;
-        if (block->opening == "{" && block->closing == "}")
-        {
-            Block *child = result->AsBlock();
-            if (child && child->opening == "{" && child->closing == "}")
-            {
-                // Case where we have parse_tree {{x}}: Return {x}
-                result = xl_parse_tree_inner(context, child->child);
-                result = new Block(block, result);
-                return result;
-            }
-
-            // Name or expression in { }
-            if (Name *name = result->AsName())
-                if (Tree *bound = context->Bound(name))
-                    return bound;
-            result = context->Evaluate(result);
-            return result;
-        }
-        result = xl_parse_tree_inner(context, result);
-        result = new Block(block, result);
-        return result;
-    }
-    }
-    return tree;
-}
-
-
-Tree *xl_parse_tree(Context *context, Tree *code)
-// ----------------------------------------------------------------------------
-//   Entry point for parse_tree
-// ----------------------------------------------------------------------------
-{
-    if (Block *block = code->AsBlock())
-        code = block->child;
-    return xl_parse_tree_inner(context, code);
-}
-
-
-Tree *xl_parse_text(text source)
-// ----------------------------------------------------------------------------
-//   Generate a tree from text
-// ----------------------------------------------------------------------------
-{
-    std::istringstream input(source);
-    Parser parser(input, MAIN->syntax,MAIN->positions,*MAIN->errors, "<text>");
-    return parser.Parse();
-}
-
-
-Tree *xl_bound(Context *context, Tree *form)
-// ----------------------------------------------------------------------------
-//   Return the bound value for a name/form, or nil if not bound
-// ----------------------------------------------------------------------------
-{
-    // TODO: Equivalent in compiled mode
-    if (Tree *bound = context->Bound(form))
-        return bound;
-    return XL::xl_nil;
-}
-
-
-bool xl_same_text(Tree *what, const char *ref)
-// ----------------------------------------------------------------------------
-//   Compile the tree if necessary, then evaluate it
-// ----------------------------------------------------------------------------
-{
-    Text *tval = what->AsText(); assert(tval);
-    return tval->value == text(ref);
-}
-
-
 bool xl_same_shape(Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 //   Check equality of two trees
 // ----------------------------------------------------------------------------
 {
     return Tree::Equal(left, right);
-}
-
-
-Tree *xl_infix_match_check(Context *context, Tree *value, kstring name)
-// ----------------------------------------------------------------------------
-//   Check if the value is matching the given infix
-// ----------------------------------------------------------------------------
-{
-    // The following test is a hack to detect closures
-    while (Block *block = value->AsBlock())
-        if (block->opening == "(" && block->closing == ")")
-            value = block->child;
-        else
-            break;
-    if (Infix *infix = value->AsInfix())
-        if (infix->name == name)
-            return infix;
-    return NULL;
-}
-
-
-Tree *xl_type_check(Context *context, Tree *value, Tree *type)
-// ----------------------------------------------------------------------------
-//   Check if value has the type of 'type'
-// ----------------------------------------------------------------------------
-{
-    IFTRACE(typecheck)
-        std::cerr << "Type check " << value << " against " << type << ':';
-
-    if (Tree *works = TypeCheck(context, type, value))
-    {
-        IFTRACE(typecheck)
-            std::cerr << "Success\n";
-        return works;
-    }
-
-    IFTRACE(typecheck)
-        std::cerr << "Failed (mismatch)\n";
-
-    return NULL;
 }
 
 
@@ -443,247 +220,99 @@ Infix *xl_new_infix(Infix *source, Tree *left, Tree *right)
 }
 
 
-Block *xl_fill_block(Block *source, Tree *child)
-// ----------------------------------------------------------------------------
-//    Called by generated code to replace child of a Block
-// ----------------------------------------------------------------------------
-{
-    if (child)  source->child = child;
-    return source;
-}
-
-
-Prefix *xl_fill_prefix(Prefix *source, Tree *left, Tree *right)
-// ----------------------------------------------------------------------------
-//    Called by generated code to replace children of a Prefix
-// ----------------------------------------------------------------------------
-{
-    if (left)   source->left = left;
-    if (right)  source->right = right;
-    return source;
-}
-
-
-Postfix *xl_fill_postfix(Postfix *source, Tree *left, Tree *right)
-// ----------------------------------------------------------------------------
-//    Called by generated code to replace children of a Postfix
-// ----------------------------------------------------------------------------
-{
-    if (left)   source->left = left;
-    if (right)  source->right = right;
-    return source;
-}
-
-
-Infix *xl_fill_infix(Infix *source, Tree *left, Tree *right)
-// ----------------------------------------------------------------------------
-//    Called by generated code to replace children of an Infix
-// ----------------------------------------------------------------------------
-{
-    if (left)   source->left = left;
-    if (right)  source->right = right;
-    return source;
-}
-
-
-Real *xl_integer2real(Integer *iv)
-// ----------------------------------------------------------------------------
-//   Promote integer to real
-// ----------------------------------------------------------------------------
-{
-    Real *result = new Real(iv->value, iv->Position());
-    xl_set_source(result, iv);
-    return result;
-}
-
-
 
 // ============================================================================
 //
-//    Type matching
+//    Parsing trees
 //
 // ============================================================================
 
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
-Tree *xl_boolean_cast(Context *context, Tree *source, Tree *value)
+Tree *xl_parse_tree_inner(Context *context, Tree *tree)
 // ----------------------------------------------------------------------------
-//   Check if argument can be evaluated as a boolean value (true/false)
+//   Build a parse tree in the current context
 // ----------------------------------------------------------------------------
 {
-    value = context->Evaluate(value);
-    if (value == xl_true || value == xl_false)
-        return value;
-    return NULL;
+    switch(tree->Kind())
+    {
+    case INTEGER:
+    case REAL:
+    case TEXT:
+    case NAME:
+        return tree;
+    case INFIX:
+    {
+        Infix *infix = (Infix *) tree;
+        Tree *left = xl_parse_tree_inner(context, infix->left);
+        Tree *right = xl_parse_tree_inner(context, infix->right);
+        Infix *result = new Infix(infix, left, right);
+        return result;
+    }
+    case PREFIX:
+    {
+        Prefix *prefix = (Prefix *) tree;
+        Tree *left = xl_parse_tree_inner(context, prefix->left);
+        Tree *right = xl_parse_tree_inner(context, prefix->right);
+        Prefix *result = new Prefix(prefix, left, right);
+        return result;
+    }
+    case POSTFIX:
+    {
+        Postfix *postfix = (Postfix *) tree;
+        Tree *left = xl_parse_tree_inner(context, postfix->left);
+        Tree *right = xl_parse_tree_inner(context, postfix->right);
+        Postfix *result = new Postfix(postfix, left, right);
+        return result;
+    }
+    case BLOCK:
+    {
+        Block *block = (Block *) tree;
+        Tree *result = block->child;
+        if (block->opening == "{" && block->closing == "}")
+        {
+            Block *child = result->AsBlock();
+            if (child && child->opening == "{" && child->closing == "}")
+            {
+                // Case where we have parse_tree {{x}}: Return {x}
+                result = xl_parse_tree_inner(context, child->child);
+                result = new Block(block, result);
+                return result;
+            }
+
+            // Name or expression in { }
+            if (Name *name = result->AsName())
+                if (Tree *bound = context->Bound(name))
+                    return bound;
+            result = context->Evaluate(result);
+            return result;
+        }
+        result = xl_parse_tree_inner(context, result);
+        result = new Block(block, result);
+        return result;
+    }
+    }
+    return tree;
 }
 
 
-Tree *xl_integer_cast(Context *context, Tree *source, Tree *value)
+Tree *xl_parse_tree(Context *context, Tree *code)
 // ----------------------------------------------------------------------------
-//   Check if argument can be evaluated as an integer
+//   Entry point for parse_tree
 // ----------------------------------------------------------------------------
 {
-    value = context->Evaluate(value);
-    if (Integer *it = value->AsInteger())
-        return it;
-    return NULL;
+    if (Block *block = code->AsBlock())
+        code = block->child;
+    return xl_parse_tree_inner(context, code);
 }
 
 
-Tree *xl_real_cast(Context *context, Tree *source, Tree *value)
+Tree *xl_parse_text(text source)
 // ----------------------------------------------------------------------------
-//   Check if argument can be evaluated as a real
-// ----------------------------------------------------------------------------
-{
-    value = context->Evaluate(value);
-    if (Real *rt = value->AsReal())
-        return rt;
-    if (Integer *it = value->AsInteger())
-        return new Real(it->value);
-    return NULL;
-}
-
-
-Tree *xl_text_cast(Context *context, Tree *source, Tree *value)
-// ----------------------------------------------------------------------------
-//   Check if argument can be evaluated as a text
+//   Generate a tree from text
 // ----------------------------------------------------------------------------
 {
-    value = context->Evaluate(value);
-    if (Text *tt = value->AsText())
-        return tt;
-    return NULL;
-}
-
-
-Tree *xl_character_cast(Context *context, Tree *source, Tree *value)
-// ----------------------------------------------------------------------------
-//   Check if argument can be evaluated as a character
-// ----------------------------------------------------------------------------
-{
-    value = context->Evaluate(value);
-    if (Text *tt = value->AsText())
-        if (tt->opening == "'")
-            return tt;
-    return NULL;
-}
-
-
-Tree *xl_tree_cast(Context *context, Tree *source, Tree *value)
-// ----------------------------------------------------------------------------
-//   Any input tree can be accepted
-// ----------------------------------------------------------------------------
-{
-    return value;
-}
-
-
-Tree *xl_symbol_cast(Context *context, Tree *source, Tree *value)
-// ----------------------------------------------------------------------------
-//   Check if argument can be evaluated as a symbol
-// ----------------------------------------------------------------------------
-{
-    if (Name *nt = value->AsName())
-        return nt;
-    value = context->Evaluate(value);
-    if (Name *afterEval = value->AsName())
-        return afterEval;
-    return NULL;
-}
-
-
-Tree *xl_name_cast(Context *context, Tree *source, Tree *value)
-// ----------------------------------------------------------------------------
-//   Check if argument can be evaluated as a name
-// ----------------------------------------------------------------------------
-{
-    if (Name *nt = value->AsName())
-        if (nt->value.length() && isalpha(nt->value[0]))
-            return nt;
-    value = context->Evaluate(value);
-    if (Name *afterEval = value->AsName())
-        if (afterEval->value.length() && isalpha(afterEval->value[0]))
-            return afterEval;
-    return NULL;
-}
-
-
-Tree *xl_operator_cast(Context *context, Tree *source, Tree *value)
-// ----------------------------------------------------------------------------
-//   Check if argument can be evaluated as an operator symbol
-// ----------------------------------------------------------------------------
-{
-    if (Name *nt = value->AsName())
-        if (nt->value.length() && !isalpha(nt->value[0]))
-            return nt;
-    value = context->Evaluate(value);
-    if (Name *afterEval = value->AsName())
-        if (afterEval->value.length() && !isalpha(afterEval->value[0]))
-            return afterEval;
-    return NULL;
-}
-
-
-Tree *xl_infix_cast(Context *context, Tree *source, Tree *value)
-// ----------------------------------------------------------------------------
-//   Check if argument can be evaluated as an infix
-// ----------------------------------------------------------------------------
-{
-    if (Infix *it = value->AsInfix())
-        return it;
-    return NULL;
-}
-
-
-Tree *xl_prefix_cast(Context *context, Tree *source, Tree *value)
-// ----------------------------------------------------------------------------
-//   Check if argument can be evaluated as a prefix
-// ----------------------------------------------------------------------------
-{
-    if (Prefix *it = value->AsPrefix())
-        return it;
-    return NULL;
-}
-
-
-Tree *xl_postfix_cast(Context *context, Tree *source, Tree *value)
-// ----------------------------------------------------------------------------
-//   Check if argument can be evaluated as a postfix
-// ----------------------------------------------------------------------------
-{
-    if (Postfix *it = value->AsPostfix())
-        return it;
-    return NULL;
-}
-
-
-Tree *xl_block_cast(Context *context, Tree *source, Tree *value)
-// ----------------------------------------------------------------------------
-//   Check if argument can be evaluated as a block
-// ----------------------------------------------------------------------------
-{
-    if (Block *it = value->AsBlock())
-        return it;
-    return NULL;
-}
-
-
-
-// ============================================================================
-//
-//   Animation utilities
-//
-// ============================================================================
-
-Tree *xl_parameter(text symbol, text type)
-// ----------------------------------------------------------------------------
-//   Build an infix name:type
-// ----------------------------------------------------------------------------
-{
-    Name *n = new Name(symbol);
-    Name *t = new Name(type);
-    Infix *i = new Infix(":", n, t);
-    return i;
+    std::istringstream input(source);
+    Parser parser(input, MAIN->syntax,MAIN->positions,*MAIN->errors, "<text>");
+    return parser.Parse();
 }
 
 
@@ -761,6 +390,13 @@ static void xl_list_files(Context *context, Tree *patterns, Tree_p *&parent)
 }
 
 
+
+// ============================================================================
+//
+//   File utilities
+//
+// ============================================================================
+
 Tree *xl_list_files(Context *context, Tree *patterns)
 // ----------------------------------------------------------------------------
 //   List all files in the given pattern
@@ -797,6 +433,8 @@ bool xl_file_exists(Context *context, Tree_p self, text path)
     utf8_filestat_t st;
     return (utf8_stat (path.c_str(), &st) < 0) ? false : true;
 }
+
+
 
 // ============================================================================
 //
@@ -1136,48 +774,8 @@ Tree *xl_load_data(Context *context, Tree *self, text inputName,
 
 // ============================================================================
 //
-//   Managing calls to/from XL
+//    C functions called from builtins.xl
 //
-// ============================================================================
-
-Tree *XLCall::operator() (SourceFile *sf)
-// ----------------------------------------------------------------------------
-//   Invoke the call in the context of a given source file
-// ----------------------------------------------------------------------------
-{
-    Context *context = sf->context;
-    Tree *call = name;
-    if (arguments)
-        call = new Prefix(call, arguments);
-    return context->Evaluate(call);
-}
-
-
-Tree *XLCall::operator() (Context *context)
-// ----------------------------------------------------------------------------
-//    Perform the given call in the given context
-// ----------------------------------------------------------------------------
-{
-    Tree *callee = context->Call(name->value, args);
-    return callee;
-}
-
-
-Tree *XLCall::build(Context *context)
-// ----------------------------------------------------------------------------
-//    Perform the given call in the given context
-// ----------------------------------------------------------------------------
-{
-    Tree *callee = context->Call(name->value, args);
-    return callee;
-}
-
-
-
-// ============================================================================
-// 
-//    C functions defined in builtins.xl
-// 
 // ============================================================================
 
 extern "C"
@@ -1294,6 +892,210 @@ bool xl_text_ge(kstring x, kstring y)
 // ----------------------------------------------------------------------------
 {
     return strcmp(x, y) >= 0;
+}
+
+
+integer_t xl_text2int(kstring tval)
+// ----------------------------------------------------------------------------
+//   Converts text to a numerical value
+// ----------------------------------------------------------------------------
+{
+    text t = tval;
+    std::istringstream stream(t);
+    integer_t result = 0.0;
+    stream >> result;
+    return result;
+}
+
+
+real_t xl_text2real(kstring tval)
+// ----------------------------------------------------------------------------
+//   Converts text to a numerical value
+// ----------------------------------------------------------------------------
+{
+    text t = tval;
+    std::istringstream stream(t);
+    real_t result = 0.0;
+    stream >> result;
+    return result;
+}
+
+
+text xl_int2text(integer_t value)
+// ----------------------------------------------------------------------------
+//   Convert a numerical value to text
+// ----------------------------------------------------------------------------
+{
+    std::ostringstream out;
+    out << value;
+    return out.str();
+}
+
+
+text xl_real2text(real_t value)
+// ----------------------------------------------------------------------------
+//   Convert a numerical value to text
+// ----------------------------------------------------------------------------
+{
+    std::ostringstream out;
+    out << value;
+    return out.str();
+}
+
+
+integer_t xl_mod(integer_t x, integer_t y)
+// ----------------------------------------------------------------------------
+//   Compute a mathematical 'mod' from the C99 % operator
+// ----------------------------------------------------------------------------
+{
+    integer_t tmp = x % y;
+    if (tmp && (x^y) < 0)
+        tmp += y;
+    return tmp;
+}
+
+
+integer_t xl_pow(integer_t x, integer_t y)
+// ----------------------------------------------------------------------------
+//   Compute integer power
+// ----------------------------------------------------------------------------
+{
+    integer_t tmp = 0;
+    if (y >= 0)
+    {
+        tmp = 1;
+        while (y)
+        {
+            if (y & 1)
+                tmp *= x;
+            x *= x;
+            y >>= 1;
+        }
+    }
+    return tmp;
+}
+
+
+real_t xl_modf(real_t x, real_t y)
+// ----------------------------------------------------------------------------
+//   Compute a mathematical 'mod' from fmod
+// ----------------------------------------------------------------------------
+{
+    real_t tmp = fmod(x,y);
+    if (tmp != 0.0 && x*y < 0.0)
+        tmp += y;
+    return tmp;
+}
+
+
+real_t xl_powf(real_t x, integer_t y)
+// ----------------------------------------------------------------------------
+//   Compute real power with an integer on the right
+// ----------------------------------------------------------------------------
+{
+    bool     negative = y < 0;
+    real_t   tmp      = 1.0;
+    if (negative)
+        y = -y;
+    while (y)
+    {
+        if (y & 1)
+            tmp *= x;
+        x *= x;
+        y >>= 1;
+    }
+    if (negative)
+        tmp = 1.0/tmp;
+    return tmp;
+}
+
+
+text xl_text_replace(text txt, text before, text after)
+// ----------------------------------------------------------------------------
+//   Return a copy of txt with all occurrences of before replaced with after
+// ----------------------------------------------------------------------------
+{
+    size_t pos = 0;
+    while ((pos = txt.find(before, pos)) != std::string::npos)
+    {
+        txt.replace(pos, before.length(), after);
+        pos += after.length();
+    }
+    return txt;
+}
+
+
+real_t xl_time(real_t delay)
+// ----------------------------------------------------------------------------
+//   Return the current system time
+// ----------------------------------------------------------------------------
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    MAIN->Refresh(delay);
+    return tv.tv_sec * 1000000 + tv.tv_usec;
+}
+
+
+#define XL_TIME(tmfield, delay)                 \
+    struct tm tm;                               \
+    time_t clock;                               \
+    time(&clock);                               \
+    localtime_r(&clock, &tm);                   \
+    MAIN->Refresh(delay);                       \
+    return tm.tmfield
+
+
+#ifdef CONFIG_MINGW
+struct tm *localtime_r (const time_t * timep, struct tm * result)
+// ----------------------------------------------------------------------------
+//   MinGW doesn't have localtime_r, but its localtime is thread-local storage
+// ----------------------------------------------------------------------------
+{
+    *result = *localtime (timep);
+    return result;
+}
+#endif // CONFIG_MINGW
+
+
+integer_t  xl_seconds()     { XL_TIME(tm_sec,       1.0); }
+integer_t  xl_minutes()     { XL_TIME(tm_min,      60.0); }
+integer_t  xl_hours()       { XL_TIME(tm_hour,    3600.0); }
+integer_t  xl_month_day()   { XL_TIME(tm_mday,   86400.0); }
+integer_t  xl_mon()         { XL_TIME(tm_mon,    86400.0); }
+integer_t  xl_year()        { XL_TIME(tm_year,   86400.0); }
+integer_t  xl_week_day()    { XL_TIME(tm_wday,   86400.0); }
+integer_t  xl_year_day()    { XL_TIME(tm_yday,   86400.0); }
+integer_t  xl_summer_time() { XL_TIME(tm_isdst,  86400.0); }
+text_t     xl_timezone()    { XL_TIME(tm_zone,   86400.0); }
+integer_t  xl_GMT_offset()  { XL_TIME(tm_gmtoff, 86400.0); }
+
+
+real_t xl_random()
+// ----------------------------------------------------------------------------
+//    Return a pseudo-random number in the low..high range
+// ----------------------------------------------------------------------------
+{
+#ifndef CONFIG_MINGW
+    return drand48();
+#else
+    return real_t(rand()) / RAND_MAX;
+#endif // CONFIG_MINGW
+}
+
+
+bool xl_random_seed(int seed)
+// ----------------------------------------------------------------------------
+//    Initialized random number generator using the argument passed as seed
+// ----------------------------------------------------------------------------
+{
+#ifndef CONFIG_MINGW
+    srand48(seed);
+#else
+    srand(seed);
+#endif // CONFIG_MINGW
+
+    return true;
 }
 
 } // extern "C"

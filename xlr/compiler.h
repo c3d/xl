@@ -191,11 +191,7 @@ public:
     llvm::PointerType         *infoPtrTy;
     llvm::PointerType         *contextPtrTy;
     llvm::Function            *strcmp_fn;
-    llvm::Function            *xl_evaluate;
-    llvm::Function            *xl_same_text;
     llvm::Function            *xl_same_shape;
-    llvm::Function            *xl_infix_match_check;
-    llvm::Function            *xl_type_check;
     llvm::Function            *xl_form_error;
     llvm::Function            *xl_stack_overflow;
     llvm::Function            *xl_new_integer;
@@ -208,11 +204,6 @@ public:
     llvm::Function            *xl_new_prefix;
     llvm::Function            *xl_new_postfix;
     llvm::Function            *xl_new_infix;
-    llvm::Function            *xl_fill_block;
-    llvm::Function            *xl_fill_prefix;
-    llvm::Function            *xl_fill_postfix;
-    llvm::Function            *xl_fill_infix;
-    llvm::Function            *xl_integer2real;
     llvm::Constant            *xl_recursion_count_ptr;
     functions_map              builtins;
     functions_map              functions;

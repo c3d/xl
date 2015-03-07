@@ -977,7 +977,6 @@ Tree *ValueMatchesType(Context *ctx, Tree *type, Tree *value, bool convert)
             if (Integer *iv = value->AsInteger())
             {
                 Tree *result = new Real(iv->value);
-                xl_set_source(result, value);
                 return result;
             }
         }

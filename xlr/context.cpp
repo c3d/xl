@@ -195,7 +195,7 @@ Tree *Context::Evaluate(Tree *what)
 
 Tree *Context::Call(text prefix, TreeList &argList)
 // ----------------------------------------------------------------------------
-//    Compile a calll
+//    Generate a call and evaluate it
 // ----------------------------------------------------------------------------
 {
     uint arity = argList.size();

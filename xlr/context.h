@@ -66,9 +66,6 @@
 
   - Finally, in case of type mismatch, X:Y evaluates to the same X:Y tree.
 
-  At run-time, this is checked by xl_type_check, which returns NULL in case
-  of mismatch, and the converted value otherwise.
-
   The compiler is allowed to special-case any such form. For example, if it
   determines that the type of a tree is "integer", it may represent it using a
   machine integer. It must however convert to/from tree when connecting to
@@ -116,7 +113,7 @@
 
   The code for a rewrite is kept in the 'code' field of the definition.
   This definition should never be evaluated directly, because the code field
-  doesn't have the expected signature for xl_evaluate(). Specifically,
+  doesn't have the expected signature for evaluation. Specifically,
   it has additional Tree * parameters, corresponding to the variables
   in the pattern (the left-hand side of the rewrite).
 

@@ -41,8 +41,9 @@
 
 #include "base.h"
 #include "tree.h"
-#include <set>
-#include <istream>
+#include "basics.h"
+
+#include <cmath>
 
 
 XL_BEGIN
@@ -65,25 +66,13 @@ struct SourceFile;
 
 // ============================================================================
 //
-//    Runtime functions with C interface
+//    Runtime functions called by the compiler
 //
 // ============================================================================
 
-Tree *xl_identity(Context*, Tree *);
-Tree *xl_evaluate(Context *, Tree *);
-Tree *xl_source(Tree *);
-Tree *xl_set_source(Tree *value, Tree *source);
-Tree *xl_error(Tree *self, text msg, Tree *a1=0, Tree *a2=0, Tree *a3=0);
-Tree *xl_form_error(Context *c, Tree *tree);
-Tree *xl_stack_overflow(Tree *tree);
-
-Tree *xl_parse_tree(Context *, Tree *tree);
-Tree *xl_parse_text(text source);
-Tree *xl_bound(Context *, Tree *form);
-bool  xl_same_text(Tree * , const char *);
-bool  xl_same_shape(Tree *t1, Tree *t2);
-Tree *xl_infix_match_check(Context *, Tree *value, kstring name);
-Tree *xl_type_check(Context *, Tree *value, Tree *type);
+Tree *  xl_form_error(Context *c, Tree *tree);
+Tree *  xl_stack_overflow(Tree *tree);
+bool    xl_same_shape(Tree *t1, Tree *t2);
 
 Integer *xl_new_integer(longlong value);
 Real    *xl_new_real(double value);
@@ -95,98 +84,53 @@ Block   *xl_new_block(Block *source, Tree *child);
 Prefix  *xl_new_prefix(Prefix *source, Tree *left, Tree *right);
 Postfix *xl_new_postfix(Postfix *source, Tree *left, Tree *right);
 Infix   *xl_new_infix(Infix *source, Tree *left, Tree *right);
-Block   *xl_fill_block(Block *source, Tree *child);
-Prefix  *xl_fill_prefix(Prefix *source, Tree *left, Tree *right);
-Postfix *xl_fill_postfix(Postfix *source, Tree *left, Tree *right);
-Infix   *xl_fill_infix(Infix *source, Tree *left, Tree *right);
-Real    *xl_integer2real(Integer *ival);
-
-Tree *xl_boolean_cast(Context *, Tree *source, Tree *value);
-Tree *xl_integer_cast(Context *, Tree *source, Tree *value);
-Tree *xl_real_cast(Context *, Tree *source, Tree *value);
-Tree *xl_text_cast(Context *, Tree *source, Tree *value);
-Tree *xl_character_cast(Context *, Tree *source, Tree *value);
-Tree *xl_tree_cast(Context *, Tree *source, Tree *value);
-Tree *xl_symbol_cast(Context *, Tree *source, Tree *value);
-Tree *xl_name_cast(Context *, Tree *source, Tree *value);
-Tree *xl_operator_cast(Context *, Tree *source, Tree *value);
-Tree *xl_infix_cast(Context *, Tree *source, Tree *value);
-Tree *xl_prefix_cast(Context *, Tree *source, Tree *value);
-Tree *xl_postfix_cast(Context *, Tree *source, Tree *value);
-Tree *xl_block_cast(Context *, Tree *source, Tree *value);
-#define xl_integer8_cast        xl_integer_cast
-#define xl_integer16_cast       xl_integer_cast
-#define xl_integer32_cast       xl_integer_cast
-#define xl_integer64_cast       xl_integer_cast
-#define xl_unsigned_cast        xl_integer_cast
-#define xl_unsigned8_cast       xl_integer_cast
-#define xl_unsigned16_cast      xl_integer_cast
-#define xl_unsigned32_cast      xl_integer_cast
-#define xl_unsigned64_cast      xl_integer_cast
-#define xl_real32_cast          xl_real_cast
-#define xl_real64_cast          xl_real_cast
-#define xl_declaration_cast     xl_infix_cast
 
 
 
 // ============================================================================
-//
-//   Initialization code
-//
+// 
+//    Some utility functions used in basics.tbl
+// 
 // ============================================================================
 
-Tree *xl_parameter(text name, text type);
+extern "C"
+{
+#pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
+integer_t       xl_text2int(kstring t);
+real_t          xl_text2real(kstring t);
+text            xl_int2text(integer_t value);
+text            xl_real2text(real_t value);
+integer_t       xl_mod(integer_t x, integer_t y);
+integer_t       xl_pow(integer_t x, integer_t y);
+real_t          xl_modf(real_t x, real_t y);
+real_t          xl_powf(real_t x, integer_t y);
+text            xl_text_replace(text txt, text before, text after);
 
+real_t          xl_time(real_t delay);
+integer_t       xl_seconds();
+integer_t       xl_minutes();
+integer_t       xl_hours();
+integer_t       xl_month_day();
+integer_t       xl_mon();
+integer_t       xl_year();
+integer_t       xl_week_day();
+integer_t       xl_year_day();
+integer_t       xl_summer_time();
+text_t          xl_timezone();
+integer_t       xl_GMT_offset();
 
+real_t          xl_random();
+bool            xl_random_seed(int seed);
+}
 
-// ============================================================================
-//
-//    Call management
-//
-// ============================================================================
-
-struct XLCall
+template<typename number>
+inline number   xl_random(number low, number high)
 // ----------------------------------------------------------------------------
-//    A structure that encapsulates a call to an XL tree
+//    Return a pseudo-random number in the low..high range
 // ----------------------------------------------------------------------------
 {
-    XLCall(text name):
-        name(new Name(name)), arguments(NULL), pointer(&arguments) {}
-
-    // Adding arguments
-    XLCall &operator, (Tree *tree)
-    {
-        if (*pointer)
-        {
-            Infix *infix = new Infix(",", *pointer, tree);
-            *pointer = infix;
-            pointer = (Tree_p *) &infix->right;
-        }
-        else
-        {
-            *pointer = tree;
-        }
-        args.push_back(tree);
-        return *this;
-    }
-    XLCall &operator, (Tree &tree) { return *this, &tree; }
-    XLCall &operator, (longlong v) { return *this, new Integer(v); }
-    XLCall &operator, (double  v)  { return *this, new Real(v); }
-    XLCall &operator, (text  v)    { return *this, new Text(v); }
-
-    // Calling in a given symbol context
-    Tree *  operator() (SourceFile *sf);
-
-    // Calling in a given symbol context
-    Tree *  operator() (Context *context);
-    Tree *  build(Context *context);
-
-public:
-    Name_p      name;
-    TreeList    args;
-    Tree_p      arguments;
-    Tree_p *    pointer;
-};
+    return number(xl_random() * (high-low) + low);
+}
 
 
 
@@ -198,38 +142,72 @@ public:
 
 extern "C"
 {
-    bool xl_write_integer(longlong);
-    bool xl_write_real(double);
-    bool xl_write_text(kstring);
-    bool xl_write_character(char c);
-    bool xl_write_tree(XL::Tree *t);
-    bool xl_write_cr(void);
+    bool      xl_write_integer(longlong);
+    bool      xl_write_real(double);
+    bool      xl_write_text(kstring);
+    bool      xl_write_character(char c);
+    bool      xl_write_tree(XL::Tree *t);
+    bool      xl_write_cr(void);
 }
-Tree *xl_list_files(Context *context, Tree *patterns);
-bool xl_file_exists(Context *context, Tree_p self, text path);
+
+
+
+// ============================================================================
+// 
+//    Basic runtime functions callable from generated code or opcodes
+// 
+// ============================================================================
+
+extern "C"
+{
+    integer_t xl_mod(integer_t, integer_t);
+    real_t    xl_modf(real_t, real_t);
+}
 
 
 // ============================================================================
 //
-//    Loading trees from external files
+//    Parsing trees
 //
 // ============================================================================
 
-Tree *xl_import(Context *, Tree *self, text name, int phase);
-Tree *xl_load_data(Context *, Tree *self,
-                   text name, text prefix,
-                   text fieldSeps = ",;", text recordSeps = "\n",
-                   Tree *body = NULL);
-Tree *xl_load_data(Context *, Tree *self, text inputName,
-                   std::istream &source, bool cached, bool statTime,
-                   text prefix, text fieldSeps = ",;", text recordSeps = "\n",
-                   Tree *body = NULL);
-Tree *xl_add_search_path(Context *, text prefix, text dir);
-Text *xl_find_in_search_path(Context *, text prefix, text file);
+Tree *  xl_parse_tree(Context *, Tree *tree);
+Tree *  xl_parse_text(text source);
+
+
+
+// ============================================================================
+// 
+//   File utilities
+// 
+// ============================================================================
+
+Tree *  xl_list_files(Context *context, Tree *patterns);
+bool    xl_file_exists(Context *context, Tree_p self, text path);
+
+
+
+// ============================================================================
+// 
+//   Loading trees from external files
+// 
+// ============================================================================
+
+Tree *  xl_import(Context *, Tree *self, text name, int phase);
+Tree *  xl_load_data(Context *, Tree *self,
+                     text name, text prefix,
+                     text fieldSeps = ",;", text recordSeps = "\n",
+                     Tree *body = NULL);
+Tree *  xl_load_data(Context *, Tree *self, text inputName,
+                     std::istream &source, bool cached, bool statTime,
+                     text prefix, text fieldSeps = ",;", text recordSeps = "\n",
+                     Tree *body = NULL);
+Tree *  xl_add_search_path(Context *, text prefix, text dir);
+Text *  xl_find_in_search_path(Context *, text prefix, text file);
 
 typedef enum { PARSING_PHASE, DECLARATION_PHASE, EXECUTION_PHASE } phase_t;
 typedef Tree * (*decl_fn) (Context *, Tree *source, phase_t phase);
-Name *xl_set_override_priority(Context *context, Tree *self, float priority);
+Name *  xl_set_override_priority(Context *context, Tree *self, float priority);
 
 XL_END
 

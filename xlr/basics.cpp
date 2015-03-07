@@ -46,57 +46,6 @@
 #include "types.h"
 #include "main.h"
 
-#include <iostream>
-#include <sstream>
-#include <ctime>
-#include <cstdio>
-
 XL_BEGIN
-
-// ============================================================================
-//
-//    Top-level operation
-//
-// ============================================================================
-
-Tree *xl_process_import(Context *context, Tree *source, phase_t phase)
-// ----------------------------------------------------------------------------
-//   Standard connector for 'import' statements
-// ----------------------------------------------------------------------------
-{
-    if (Prefix *prefix = source->AsPrefix())
-        if (Text *name = prefix->right->AsText())
-            return xl_import(context, source, name->value, phase);
-    return NULL;
-}
-
-
-Tree *xl_process_load(Context *context, Tree *source, phase_t phase)
-// ----------------------------------------------------------------------------
-//   Standard connector for 'load' statements
-// ----------------------------------------------------------------------------
-{
-    phase = DECLARATION_PHASE;
-    return xl_process_import(context, source, phase);
-}
-
-
-Tree *xl_process_override_priority(Context *context, Tree *self, phase_t phase)
-// ----------------------------------------------------------------------------
-//   Declaration-phase for overriding a priority
-// ----------------------------------------------------------------------------
-{
-    if (phase == DECLARATION_PHASE)
-    {
-        if (Prefix *prefix = self->AsPrefix())
-        {
-            if (Real *rp = prefix->right->AsReal())
-                context->SetOverridePriority(rp->value);
-            else if (Integer *ip = prefix->right->AsInteger())
-                context->SetOverridePriority(ip->value);
-        }
-    }
-    return NULL;
-}
 
 XL_END

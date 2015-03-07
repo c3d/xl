@@ -50,7 +50,6 @@
 #include "runtime.h"
 #include "errors.h"
 #include "types.h"
-#include "basics.h"
 #include "flight_recorder.h"
 #include "llvm-crap.h"
 
@@ -110,17 +109,12 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
       evalTy(NULL), evalFnTy(NULL),
       infoPtrTy(NULL), contextPtrTy(NULL),
       strcmp_fn(NULL),
-      xl_evaluate(NULL),
-      xl_same_text(NULL), xl_same_shape(NULL),
-      xl_infix_match_check(NULL), xl_type_check(NULL),
+      xl_same_shape(NULL),
       xl_form_error(NULL), xl_stack_overflow(NULL),
       xl_new_integer(NULL), xl_new_real(NULL), xl_new_character(NULL),
       xl_new_text(NULL), xl_new_ctext(NULL), xl_new_xtext(NULL),
       xl_new_block(NULL),
       xl_new_prefix(NULL), xl_new_postfix(NULL), xl_new_infix(NULL),
-      xl_fill_block(NULL),
-      xl_fill_prefix(NULL), xl_fill_postfix(NULL), xl_fill_infix(NULL),
-      xl_integer2real(NULL),
       xl_recursion_count_ptr(NULL)
 {
     std::vector<char *> llvmArgv;
@@ -294,21 +288,12 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
 #define FN(x) #x, (void *) XL::x
     strcmp_fn = ExternFunction("strcmp", (void *) strcmp,
                                LLVM_INTTYPE(int), 2, charPtrTy, charPtrTy);
-    xl_evaluate = ExternFunction(FN(xl_evaluate),
-                                 treePtrTy, 2, contextPtrTy, treePtrTy);
-    xl_same_text = ExternFunction(FN(xl_same_text),
-                                  booleanTy, 2, treePtrTy, charPtrTy);
-    xl_same_shape = ExternFunction(FN(xl_same_shape),
-                                   booleanTy, 2, treePtrTy, treePtrTy);
-    xl_infix_match_check = ExternFunction(FN(xl_infix_match_check),
-                                          treePtrTy, 3,
-                                          contextPtrTy, treePtrTy, charPtrTy);
-    xl_type_check = ExternFunction(FN(xl_type_check), treePtrTy,
-                                   3, contextPtrTy, treePtrTy, treePtrTy);
     xl_form_error = ExternFunction(FN(xl_form_error),
                                    treePtrTy, 2, contextPtrTy, treePtrTy);
     xl_stack_overflow = ExternFunction(FN(xl_stack_overflow),
                                        treePtrTy, 1, treePtrTy);
+    xl_same_shape = ExternFunction(FN(xl_same_shape),
+                                   booleanTy, 2, treePtrTy, treePtrTy);
     xl_new_integer = ExternFunction(FN(xl_new_integer),
                                     integerTreePtrTy, 1, integerTy);
     xl_new_real = ExternFunction(FN(xl_new_real),
@@ -327,16 +312,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
                                     postfixTreePtrTy, treePtrTy, treePtrTy);
     xl_new_infix = ExternFunction(FN(xl_new_infix), infixTreePtrTy, 3,
                                   infixTreePtrTy,treePtrTy,treePtrTy);
-    xl_fill_block = ExternFunction(FN(xl_fill_block), blockTreePtrTy, 2,
-                                  blockTreePtrTy,treePtrTy);
-    xl_fill_prefix = ExternFunction(FN(xl_fill_prefix), prefixTreePtrTy, 3,
-                                   prefixTreePtrTy, treePtrTy, treePtrTy);
-    xl_fill_postfix = ExternFunction(FN(xl_fill_postfix), postfixTreePtrTy, 3,
-                                    postfixTreePtrTy, treePtrTy, treePtrTy);
-    xl_fill_infix = ExternFunction(FN(xl_fill_infix), infixTreePtrTy, 3,
-                                  infixTreePtrTy,treePtrTy,treePtrTy);
-    xl_integer2real = ExternFunction(FN(xl_integer2real), treePtrTy, 1,
-                                     treePtrTy);
+
     // Create a global value used to count recursions
     llvm::PointerType *uintPtrTy = PointerType::get(LLVM_INTTYPE(uint), 0);
     APInt addr(64, (uint64_t) &xl_recursion_count);

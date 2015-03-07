@@ -119,7 +119,7 @@ modules-clean:
 
 %-module.cpp: %.tbl
 	@echo Generating $@ from $<
-	@echo '#include "basics.h"'	>  $@
+	@echo '#include "runtime.h"'	>  $@
 	@echo '#include "opcodes.h"'	>> $@
 	@echo 'XL_BEGIN'		>> $@
 	@echo '#include "'$<'"'		>> $@
