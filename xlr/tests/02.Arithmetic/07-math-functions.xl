@@ -13,6 +13,7 @@ run_test x ->
     writeln log10 x
     writeln log2 x
     writeln log1p x
+    writeln "---"
 
 run_test 0.13331
 run_test 1.3331
