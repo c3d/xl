@@ -51,9 +51,9 @@ struct Info
 {
                         Info(): next(NULL) {}
                         Info(const Info &) : next(NULL) {}
-    virtual             ~Info() {}
-    virtual void        Delete() { delete this; }
-    virtual Info *      Copy() { return next ? next->Copy() : NULL; }
+    virtual             ~Info()         {}
+    virtual void        Delete()        { delete this; }
+    virtual Info *      Copy()          { return next ? next->Copy() : NULL; }
     Info *next;
 };
 

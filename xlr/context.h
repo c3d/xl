@@ -231,6 +231,7 @@ public:
     void                CreateScope(TreePosition pos = Tree::NOWHERE);
     void                PopScope();
     Scope *             CurrentScope()          { return symbols; }
+    void                SetScope(Scope *s)      { symbols = s; }
     Context *           Parent();
 
     // Compile and evaluate a tree in the current context

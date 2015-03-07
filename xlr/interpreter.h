@@ -36,8 +36,6 @@ struct ClosureInfo : Info
 //   Mark a given Prefix as a closure
 // ----------------------------------------------------------------------------
 {
-    // We use a shared ClosureInfo marker for everybody, don't delete it
-    virtual void Delete() {}
 };
 
 

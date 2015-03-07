@@ -93,14 +93,14 @@ struct Bindings
           test(test), cache(cache), opcode(opcode), resultType(NULL) {}
 
     // Tree::Do interface
-    bool DoInteger(Integer *what);
-    bool DoReal(Real *what);
-    bool DoText(Text *what);
-    bool DoName(Name *what);
-    bool DoPrefix(Prefix *what);
-    bool DoPostfix(Postfix *what);
-    bool DoInfix(Infix *what);
-    bool DoBlock(Block *what);
+    bool  DoInteger(Integer *what);
+    bool  DoReal(Real *what);
+    bool  DoText(Text *what);
+    bool  DoName(Name *what);
+    bool  DoPrefix(Prefix *what);
+    bool  DoPostfix(Postfix *what);
+    bool  DoInfix(Infix *what);
+    bool  DoBlock(Block *what);
 
     // Evaluation and binding of values
     Tree *MustEvaluate(Tree *tval);
@@ -115,9 +115,9 @@ private:
     EvalCache  &cache;
 
 public:
-    Opcode *opcode;
+    Opcode *    opcode;
     TreeList    args;
-    Tree       *resultType;
+    Tree *      resultType;
 };
 
 
@@ -392,11 +392,11 @@ void Bindings::BindClosure(Name *name, Tree *value)
 {
     if (context->HasRewritesFor(value->Kind()))
     {
-        static ClosureInfo closureMarker;
         Scope *scope = context->CurrentScope();
-        Prefix *closure = new Prefix(scope, value);
-        closure->SetInfo(&closureMarker);
-        value = closure;
+        value = new Prefix(scope, value);
+
+        ClosureInfo *closureMarker = new ClosureInfo;
+        value->SetInfo(closureMarker);
     }
     Bind(name, value);
 }
@@ -711,15 +711,6 @@ static Tree *Instructions(Context *context, Tree *what)
             {
                 // Declarations evaluate last non-declaration result, or self
                 return result;
-            }
-
-            // Check assignments
-            if (name == ":=")
-            {
-                Tree *target   = Instructions(context, infix->left);
-                Tree *value    = Instructions(context, infix->right);
-                Tree *assigned = context->Assign(target, value);
-                return assigned;
             }
 
             // Check scoped reference
