@@ -4,6 +4,7 @@ run_test x,y ->
     writeln x*y
     writeln x/y
     writeln x mod y
+    writeln x rem y
     writeln x and y
     writeln x or y
     writeln x xor y
@@ -12,7 +13,7 @@ run_test x,y ->
     writeln x lshr y
     writeln -x
     writeln not x
-
+    writeln "---"
 
 run_test 75,17
 run_test 75,-17

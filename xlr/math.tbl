@@ -20,6 +20,8 @@
 
 INFIX(IntMod,  integer, integer, "mod", integer, RIVAL(xl_mod(LEFT, RIGHT0)))
 INFIX(RealMod, real,    real,    "mod", real,    RRVAL(xl_modf(LEFT, RIGHT0)))
+INFIX(IntRem,  integer, integer, "rem", integer, RIVAL(LEFT % RIGHT0))
+INFIX(RealRem, real,    real,    "rem", real,    RRVAL(fmod(LEFT, RIGHT0)))
 INFIX(IntPow,  integer, integer, "^",   integer, RIVAL(xl_pow(LEFT, RIGHT)))
 INFIX(RealPowI,real,    real,    "^",   integer, RRVAL(xl_powf(LEFT, RIGHT)))
 INFIX(RealPow, real,    real,    "^",   real,    RRVAL(pow(LEFT, RIGHT)))

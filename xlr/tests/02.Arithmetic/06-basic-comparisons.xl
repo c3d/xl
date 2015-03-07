@@ -5,6 +5,7 @@ run_test x, y ->
     writeln x>y
     writeln x<=y
     writeln x>=y
+    writeln "---"
 
 run_test 0, 0
 run_test 0, 1
@@ -12,7 +13,7 @@ run_test 1, 0
 
 run_test 0.0, 0.0
 run_test 0.0, 1.0
-run_test 1.0, 1.0
+run_test 1.0, 0.0
 
 run_test "ABC", "ABC"
 run_test "ABC", "DEF"

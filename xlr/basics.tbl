@@ -144,4 +144,9 @@ TYPE(real64,real,
 INFIX(Assign, tree, tree, ":=", tree, return context->Assign(&left, &right))
 
 
-
+INFIX(TextEQ, boolean, text, "=",  text, RBVAL(LEFT == RIGHT))
+INFIX(TextNE, boolean, text, "<>", text, RBVAL(LEFT != RIGHT))
+INFIX(TextLT, boolean, text, "<",  text, RBVAL(LEFT <  RIGHT))
+INFIX(TextGT, boolean, text, ">",  text, RBVAL(LEFT >  RIGHT))
+INFIX(TextLE, boolean, text, "<=", text, RBVAL(LEFT <= RIGHT))
+INFIX(TextGE, boolean, text, ">=", text, RBVAL(LEFT >= RIGHT))

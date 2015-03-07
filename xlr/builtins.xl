@@ -19,7 +19,7 @@ x:real + y:real                 as real -> opcode FAdd
 x:real - y:real                 as real -> opcode FSub
 x:real * y:real                 as real -> opcode FMul
 x:real / y:real                 as real -> opcode FDiv
-x:real rem y:real               as real -> opcode FRem
+x:real rem y:real               as real -> C fmod
 x:real mod y:real               as real -> C xl_modf
 -x:real                         as real -> opcode FNeg
 

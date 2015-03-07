@@ -4,7 +4,9 @@ run_test x, y ->
     writeln x*y
     writeln x/y
     writeln x mod y
+    writeln x rem y
     writeln -x
+    writeln "---"
 
 run_test 3.154,2.1872
 run_test -3.154,17.1872
