@@ -52,6 +52,14 @@ BINARY(ICmpSGE, Name,    Integer, Integer,      BVAL( LEFT >=  RIGHT))
 BINARY(ICmpSLT, Name,    Integer, Integer,      BVAL( LEFT <   RIGHT))
 BINARY(ICmpSLE, Name,    Integer, Integer,      BVAL( LEFT <=  RIGHT))
 
+// The following relies on 'true' > 'false' alphabetically!!!
+BINARY(BCmpEQ,  Name,    Name,    Name,         BVAL( LEFT ==  RIGHT))
+BINARY(BCmpNE,  Name,    Name,    Name,         BVAL( LEFT !=  RIGHT))
+BINARY(BCmpGT,  Name,    Name,    Name,         BVAL( LEFT >   RIGHT))
+BINARY(BCmpGE,  Name,    Name,    Name,         BVAL( LEFT >=  RIGHT))
+BINARY(BCmpLT,  Name,    Name,    Name,         BVAL( LEFT <   RIGHT))
+BINARY(BCmpLE,  Name,    Name,    Name,         BVAL( LEFT <=  RIGHT))
+
 BINARY(FCmpOEQ, Name,    Real,    Real,         BVAL(LEFT == RIGHT))
 BINARY(FCmpONE, Name,    Real,    Real,         BVAL(LEFT != RIGHT))
 BINARY(FCmpOGT, Name,    Real,    Real,         BVAL(LEFT >  RIGHT))

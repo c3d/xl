@@ -76,6 +76,8 @@ static llvm_value xl_llvm_##name(CompiledUnit &unit,                    \
     code                                                                \
 }
 
+#define ALIAS(from, to)
+
 #include "llvm.tbl"
 
 
@@ -87,6 +89,7 @@ CompilerLLVMTableEntry CompilerLLVMTable[] =
 #define UNARY(name)                     { #name, xl_llvm_##name, 1 },
 #define BINARY(name)                    { #name, xl_llvm_##name, 2 },
 #define SPECIAL(name, arity, code)      { #name, xl_llvm_##name, arity },
+#define ALIAS(from, to)                 { #from, xl_llvm_##to, 2 },
     
 #include "llvm.tbl"
 
