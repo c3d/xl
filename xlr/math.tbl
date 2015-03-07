@@ -1,0 +1,26 @@
+// ****************************************************************************
+//  math.tbl                                                       XLR project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Implementation of simple math
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2015 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2015 Taodyne SAS
+// ****************************************************************************
+
+INFIX(IntMod,  integer, integer, "mod", integer, RIVAL(xl_mod(LEFT, RIGHT0)))
+INFIX(RealMod, real,    real,    "mod", real,    RRVAL(xl_modf(LEFT, RIGHT0)))
+INFIX(IntPow,  integer, integer, "^",   integer, RIVAL(xl_pow(LEFT, RIGHT)))
+INFIX(RealPowI,real,    real,    "^",   integer, RRVAL(xl_powf(LEFT, RIGHT)))
+INFIX(RealPow, real,    real,    "^",   real,    RRVAL(pow(LEFT, RIGHT)))
+

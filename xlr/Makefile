@@ -28,7 +28,7 @@ COMPILER=llvm
 LLVM_CONFIG=llvm-config
 
 # List of modules to build
-MODULES=basics io
+MODULES=basics io math
 MODULES_SOURCES=$(MODULES:%=%-module.cpp)
 
 # List of source files to process

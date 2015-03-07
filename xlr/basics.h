@@ -109,13 +109,11 @@ inline text xl_real2text(real_t value)
 }
 
 
-inline integer_t xl_mod(Integer &xr, Integer &yr)
+inline integer_t xl_mod(integer_t x, integer_t y)
 // ----------------------------------------------------------------------------
 //   Compute a mathematical 'mod' from the C99 % operator
 // ----------------------------------------------------------------------------
 {
-    integer_t x = xr;
-    integer_t y = yr;
     integer_t tmp = x % y;
     if (tmp && (x^y) < 0)
         tmp += y;
@@ -123,13 +121,11 @@ inline integer_t xl_mod(Integer &xr, Integer &yr)
 }
 
 
-inline integer_t xl_pow(Integer &xr, Integer &yr)
+inline integer_t xl_pow(integer_t x, integer_t y)
 // ----------------------------------------------------------------------------
 //   Compute integer power
 // ----------------------------------------------------------------------------
 {
-    integer_t x = xr;
-    integer_t y = yr;
     integer_t tmp = 0;
     if (y >= 0)
     {
@@ -146,13 +142,11 @@ inline integer_t xl_pow(Integer &xr, Integer &yr)
 }
 
 
-inline real_t xl_modf(Real &xr, Real &yr)
+inline real_t xl_modf(real_t x, real_t y)
 // ----------------------------------------------------------------------------
 //   Compute a mathematical 'mod' from fmod
 // ----------------------------------------------------------------------------
 {
-    real_t x = xr;
-    real_t y = yr;
     real_t tmp = fmod(x,y);
     if (tmp != 0.0 && x*y < 0.0)
         tmp += y;
@@ -160,13 +154,11 @@ inline real_t xl_modf(Real &xr, Real &yr)
 }
 
 
-inline real_t xl_powf(Real &xr, Integer &yr)
+inline real_t xl_powf(real_t x, integer_t y)
 // ----------------------------------------------------------------------------
 //   Compute real power with an integer on the right
 // ----------------------------------------------------------------------------
 {
-    real_t   x        = xr;
-    integer_t y        = yr;
     bool     negative = y < 0;
     real_t   tmp      = 1.0;
     if (negative)

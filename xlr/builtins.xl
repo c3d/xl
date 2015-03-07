@@ -3,7 +3,8 @@ x:integer + y:integer           as integer -> opcode Add
 x:integer - y:integer           as integer -> opcode Sub
 x:integer * y:integer           as integer -> opcode Mul
 x:integer / y:integer           as integer -> opcode SDiv
-x:integer mod y:integer         as integer -> opcode SRem
+x:integer rem y:integer         as integer -> opcode SRem
+x:integer mod y:integer         as integer -> C xl_mod
 x:integer and y:integer         as integer -> opcode And
 x:integer or y:integer          as integer -> opcode Or
 x:integer xor y:integer         as integer -> opcode Xor
@@ -18,7 +19,8 @@ x:real + y:real                 as real -> opcode FAdd
 x:real - y:real                 as real -> opcode FSub
 x:real * y:real                 as real -> opcode FMul
 x:real / y:real                 as real -> opcode FDiv
-x:real mod y:real               as real -> C fmod
+x:real rem y:real               as real -> opcode FRem
+x:real mod y:real               as real -> C xl_modf
 -x:real                         as real -> opcode FNeg
 
 // Comparison operators
@@ -43,12 +45,12 @@ X:text >= Y:text                as boolean -> C xl_text_ge
 X:text < Y:text                 as boolean -> C xl_text_lt
 X:text <= Y:text                as boolean -> C xl_text_le
 
-X:boolean = Y:boolean           as boolean -> opcode ICmpEQ
-X:boolean <> Y:boolean          as boolean -> opcode ICmpNE
-X:boolean > Y:boolean           as boolean -> opcode ICmpSGT
-X:boolean >= Y:boolean          as boolean -> opcode ICmpSGE
-X:boolean < Y:boolean           as boolean -> opcode ICmpSLT
-X:boolean <= Y:boolean          as boolean -> opcode ICmpSLE
+X:boolean = Y:boolean           as boolean -> opcode BCmpEQ
+X:boolean <> Y:boolean          as boolean -> opcode BCmpNE
+X:boolean > Y:boolean           as boolean -> opcode BCmpGT
+X:boolean >= Y:boolean          as boolean -> opcode BCmpGE
+X:boolean < Y:boolean           as boolean -> opcode BCmpLT
+X:boolean <= Y:boolean          as boolean -> opcode BCmpLE
 
 // Basic math functions
 abs X:real                      as real -> C fabs
