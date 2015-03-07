@@ -141,7 +141,9 @@ TYPE(real64,real,
 // 
 // ============================================================================
 
-INFIX(Assign, tree, tree, ":=", tree, return context->Assign(&left, &right))
+INFIX(Assign, tree, tree, ":=", tree,
+      XL::Save<Scope_p> save(context->symbols, ScopeParent(context->symbols));
+      return context->Assign(&left, &right))
 
 
 INFIX(TextEQ, boolean, text, "=",  text, RBVAL(LEFT == RIGHT))

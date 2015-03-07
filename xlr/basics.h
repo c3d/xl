@@ -43,6 +43,7 @@
 #include "tree.h"
 #include "context.h"
 #include "main.h"
+#include "save.h"
 
 #define TBL_HEADER
 #include "opcodes.h"
