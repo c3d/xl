@@ -503,9 +503,6 @@ Tree *Context::Assign(Tree *ref, Tree *value)
 //   Perform an assignment in the given context
 // ----------------------------------------------------------------------------
 {
-    // Evaluate the value
-    value = Evaluate(value);
-
     // Check if the reference already exists
     Infix *decl = Reference(ref);
     if (!decl)

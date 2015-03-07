@@ -51,6 +51,8 @@ X:boolean > Y:boolean           as boolean -> opcode BCmpGT
 X:boolean >= Y:boolean          as boolean -> opcode BCmpGE
 X:boolean < Y:boolean           as boolean -> opcode BCmpLT
 X:boolean <= Y:boolean          as boolean -> opcode BCmpLE
+not true  -> false
+not false -> true
 
 // Basic math functions
 abs X:real                      as real -> C fabs
