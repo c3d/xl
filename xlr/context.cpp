@@ -185,10 +185,27 @@ Tree *Context::Evaluate(Tree *what)
 //   Evaluate 'what' in the given context
 // ----------------------------------------------------------------------------
 {
-    assert (!GarbageCollector::Running());
     Tree *result = what;
-    if (eval_fn code = Compile(what))
-        result = code(this->CurrentScope(), what);
+    assert (!GarbageCollector::Running());
+
+#ifdef INTERPRETER_ONLY
+    // Interpreter-only mode
+    result = XL::Evaluate(this, what);
+#else // !INTERPRETER_ONLY
+    uint optLevel = MAIN->options.optimize_level;
+    // Select interpreter or compiler at run-time
+    if (optLevel)
+    {
+        if (eval_fn code = Compile(what))
+            result = code(this->CurrentScope(), what);
+    }
+    else
+    {
+        result = XL::Evaluate(this, what);
+    }
+#endif // INTERPRETER_ONLY
+
+
     return result;
 }
 

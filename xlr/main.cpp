@@ -415,7 +415,6 @@ int Main::Run()
 
     // Loop over files we will process
     Tree_p result = xl_nil;
-    uint optLevel = options.optimize_level;
     for (file = file_names.begin(); file != file_names.end(); file++)
     {
         SourceFile &sf = files[*file];
@@ -424,22 +423,8 @@ int Main::Run()
         Errors errors;
         if (Tree *tree = sf.tree)
         {
-#ifdef INTERPRETER_ONLY
-            // Interpreter-only mode
-            result = Evaluate(context, tree);
-            (void) optLevel;
-#else // !INTERPRETER_ONLY
-            // Select interpreter or compiler at run-time
-            if (optLevel)
-            {
-                Context *context = sf.context;
-                result = context->Evaluate(tree);
-            }
-            else
-            {
-                result = Evaluate(context, tree);
-            }
-#endif // INTERPRETER_ONLY
+            Context *context = sf.context;
+            result = context->Evaluate(tree);
         }
 
         if (!result)
