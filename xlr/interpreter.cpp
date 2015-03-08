@@ -326,7 +326,7 @@ bool Bindings::DoInfix(Infix *what)
         Tree *checked = TypeCheck(context, type, value);
         if (checked)
         {
-            Bind(name, value);
+            Bind(name, checked);
             return true;
         }
 

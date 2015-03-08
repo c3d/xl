@@ -405,7 +405,8 @@ XL_END
     Type##_p Name##Ptr = (Value)->As<Type##_r>();                       \
     if (!Name##Ptr)                                                     \
     {                                                                   \
-        Ooops("Argument $1 is not a " #Type, (Value));                  \
+        Ooops("Argument $1 to $2 is not a " #Type, (Value))             \
+            .Arg(__FUNCTION__);                                         \
         return self;                                                    \
     }                                                                   \
     Type##_r &Name = *Name##Ptr; (void) Name;
