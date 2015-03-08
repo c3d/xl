@@ -62,11 +62,19 @@ static inline Opcode *opcodeInfo(Infix *decl)
     // Check if the declaration is something like 'X -> opcode Foo'
     // If so, lookup 'Foo' in the opcode table the first time to record it
     if (Prefix *prefix = decl->right->AsPrefix())
+    {
         if (Name *name = prefix->left->AsName())
+        {
             if (name->value == "opcode")
+            {
                 if (Name *opcodeName = prefix->right->AsName())
                     if (Opcode *opcode = Opcode::Find(opcodeName->value))
                         return setInfo(decl, opcode);
+                Ooops("Invalid primitive $1", prefix->right);
+            }
+        }
+    }
+        
 
     return NULL;
 }
