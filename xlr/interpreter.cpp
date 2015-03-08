@@ -40,6 +40,28 @@ typedef std::map<Tree_p, Tree_p>        EvalCache;
 //
 // ============================================================================
 
+static inline Tree *isClosure(Tree *tree, Context **context)
+// ----------------------------------------------------------------------------
+//   Check if something is a closure, if so set scope and/or context
+// ----------------------------------------------------------------------------
+{
+    if (Scope *closure = tree->AsPrefix())
+    {
+        if (Scope *scope = ScopeParent(closure))
+        {
+            if (closure->GetInfo<ClosureInfo>())
+            {
+                // We normally have a scope on the left
+                if (context)
+                    *context = new Context(scope);
+                return closure->right;
+            }
+        }
+    }
+    return NULL;
+}
+
+    
 static inline Opcode *setInfo(Infix *decl, Opcode *opcode)
 // ----------------------------------------------------------------------------
 //    Create a new info for the given callback
@@ -344,6 +366,10 @@ bool Bindings::DoInfix(Infix *what)
     Infix *ifx = test->AsInfix();
     if (!ifx)
     {
+        // Update scope if we have '[closure] A,B
+        // to ensure that we evaluate A and B in closure context
+        if (Tree *closed = isClosure(test, &context))
+            test = closed;
         test = MustEvaluate(test);
         ifx = test->AsInfix();
     }
@@ -541,22 +567,13 @@ static Tree *Instructions(Context *context, Tree *what)
                     if (found->Kind() > NAME)
                     {
                         // If lookup returned a closure, need to evaluate it
-                        if (Prefix *pfx = found->AsPrefix())
+                        if (Tree *closed = isClosure(what, &context))
                         {
-                            if (Prefix *lpfx = pfx->left->AsPrefix())
-                            {
-                                if (pfx->GetInfo<ClosureInfo>())
-                                {
-                                    // We normally have a scope on the left
-                                    scope = lpfx;
-                                    context = new Context(scope);
-                                    what = pfx->right;
-                                    continue;
-                                }
-                            }
+                            what = closed;
+                            continue;
                         }
 
-                        // Keep evaluating in the scope where it was defined
+                        // Keep evaluating in the scope where name was defined
                         context = new Context(scope);
                         what = found;
                         continue;
@@ -616,16 +633,10 @@ static Tree *Instructions(Context *context, Tree *what)
             }
 
             // If we have a prefix on the left, check if it's a closure
-            if (Prefix *lpfx = callee->AsPrefix())
+            if (Tree *closed = isClosure(pfx, &context))
             {
-                if (pfx->GetInfo<ClosureInfo>())
-                {
-                    // We normally have a scope on the left
-                    Scope *scope = lpfx;
-                    context = new Context(scope);
-                    what = arg;
-                    continue;
-                }
+                what = closed;
+                continue;
             }
 
             // This variable records if we evaluated the callee
