@@ -425,6 +425,11 @@ int Main::Run()
         {
             Context *context = sf.context;
             result = context->Evaluate(tree);
+            if (errors.HadErrors())
+            {
+                errors.Display();
+                errors.Clear();
+            }
         }
 
         if (!result)

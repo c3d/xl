@@ -37,7 +37,7 @@ typedef std::map<Tree_p, Tree_p> EvalCache;
 
 // ============================================================================
 //
-//    Primitive cache for 'opcode' and 'C' bindings
+//    Closure management (keeping scoping information with values)
 //
 // ============================================================================
 
@@ -83,6 +83,13 @@ static inline Tree *makeClosure(Context *context, Tree *value)
 }
 
 
+
+// ============================================================================
+//
+//    Primitive cache for 'opcode' and 'C' bindings
+//
+// ============================================================================
+
 static inline Opcode *setInfo(Infix *decl, Opcode *opcode)
 // ----------------------------------------------------------------------------
 //    Create a new info for the given callback
@@ -105,19 +112,11 @@ static inline Opcode *opcodeInfo(Infix *decl)
     // Check if the declaration is something like 'X -> opcode Foo'
     // If so, lookup 'Foo' in the opcode table the first time to record it
     if (Prefix *prefix = decl->right->AsPrefix())
-    {
         if (Name *name = prefix->left->AsName())
-        {
             if (name->value == "opcode")
-            {
                 if (Name *opcodeName = prefix->right->AsName())
                     if (Opcode *opcode = Opcode::Find(opcodeName->value))
-                        return setInfo(decl, opcode);
-                Ooops("Invalid primitive $1", prefix->right);
-            }
-        }
-    }
-        
+                        return setInfo(decl, opcode);        
 
     return NULL;
 }
@@ -237,7 +236,7 @@ inline bool Bindings::DoName(Name *what)
                       << (result ? " MATCH" : " FAILED")
                       << "\n";
         if (!result)
-            Ooops("Name $1 does not match $2", what, test);
+            Ooops("Name $1 does not match $2", bound, test);
         return result;
     }
 
@@ -510,7 +509,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
 //   Calllback function to check if the candidate matches
 // ----------------------------------------------------------------------------
 {
-    Errors errors("Candidate $1 does not match", decl);
+    Errors errors(" Candidate $1 does not match", decl);
 
     static uint id = 0;
     IFTRACE(eval)
@@ -538,9 +537,6 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
                       << " MISMATCH\n";
         return NULL;
     }
-
-    // If we suceeded in binding, we are OK so far
-    errors.Clear();
 
     // Check if the right is "self"
     if (decl->right == xl_self)
@@ -573,9 +569,14 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
 
     // If the bindings had a return type, check it
     if (bindings.resultType)
+    {
         if (!TypeCheck(context, bindings.resultType, result))
+        {
             Ooops("Result $1 does not have expected type $2",
                   result, bindings.resultType);
+            return NULL;
+        }
+    }
 
     return result;
 }
@@ -587,7 +588,10 @@ inline Tree *lookup(Context *context, Tree *what)
 // ----------------------------------------------------------------------------
 {
     EvalCache cache;
-    return context->Lookup(what, evalLookup, &cache);
+    Tree *result = context->Lookup(what, evalLookup, &cache);
+    if (result)
+        MAIN->errors->Clear();
+    return result;
 }
 
 
@@ -632,6 +636,9 @@ static Tree *Instructions(Context *context, Tree *what)
 
                 if (Tree *found = context->Bound(what, true, &rw, &scope))
                 {
+                    // If we found something, no error at this level
+                    MAIN->errors->Clear();
+
                     // If the declaration has an opcode, evaluate it
                     if (Opcode *opcode = found->GetInfo<Opcode>())
                     {
@@ -659,6 +666,11 @@ static Tree *Instructions(Context *context, Tree *what)
                     // Otherwise, we are done here
                     return encloseResult(context, oldContext, found);
                 }
+
+                Ooops(whatK == NAME
+                      ? "No name matches $1"
+                      : "No value matches $1",
+                      what);
             }
             return encloseResult(context, oldContext, what);
 
@@ -680,6 +692,13 @@ static Tree *Instructions(Context *context, Tree *what)
             // Check if there is a form that matches
             if (Tree *eval = lookup(context, what))
                 return encloseResult(context, oldContext, eval);
+
+            // If we have a prefix on the left, check if it's a closure
+            if (Tree *closed = isClosure(what, &context))
+            {
+                what = closed;
+                continue;
+            }
 
             // Calling with an expression or scope on the left
             Prefix *pfx = (Prefix *) what;
@@ -709,13 +728,6 @@ static Tree *Instructions(Context *context, Tree *what)
                         continue;
                     }
                 }
-            }
-
-            // If we have a prefix on the left, check if it's a closure
-            if (Tree *closed = isClosure(pfx, &context))
-            {
-                what = closed;
-                continue;
             }
 
             // This variable records if we evaluated the callee
@@ -777,6 +789,7 @@ static Tree *Instructions(Context *context, Tree *what)
             }
 
             // If we get there, we didn't find anything interesting to do
+            Ooops("No prefix matches $1", what);
             return encloseResult(context, oldContext, what);
         }
 
@@ -784,7 +797,8 @@ static Tree *Instructions(Context *context, Tree *what)
         {
             // Check if there is a form that matches
             if (Tree *eval = lookup(context, what))
-                what = eval;
+                return encloseResult(context, oldContext, eval);
+            Ooops("No postifx matches $1", what);
             return encloseResult(context, oldContext, what);
         }
 
@@ -822,7 +836,9 @@ static Tree *Instructions(Context *context, Tree *what)
 
             // All other cases: evaluate
             if (Tree *eval = lookup(context, what))
-                what = eval;
+                return encloseResult(context, oldContext, eval);
+
+            Ooops("No infix matches $1", what);
             return encloseResult(context, oldContext, what);
         }
         } // switch
@@ -841,10 +857,8 @@ Tree *EvaluateClosure(Context *context, Tree *what)
     Tree_p result = what;
     if (context->ProcessDeclarations(what))
     {
-        Errors errors("Unable to evaluate $1", what);
+        Errors errors(" Cannot evaluate $1", what);
         result = Instructions(context, what);
-        if (result != what)
-            errors.Clear();
     }            
 
     // At end of evaluation, check if need to cleanup

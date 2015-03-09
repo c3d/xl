@@ -1,3 +1,11 @@
-opcode Nonexistent
-01.Evaluation/03-primitives.xl:2: Invalid primitive 'Nonexistent'
-01.Evaluation/03-primitives.xl:2: Result 'opcode Nonexistent' does not have expected type 'integer'
+foo 3
+01.Evaluation/03-primitives.xl:2: Cannot evaluate 'foo X:integer as integer -> opcode Nonexistent...foo 3'
+01.Evaluation/03-primitives.xl:2:  Candidate 'foo X:integer as integer -> opcode Nonexistent' does not match
+01.Evaluation/03-primitives.xl:2:   Cannot evaluate 'opcode Nonexistent'
+01.Evaluation/03-primitives.xl:2:    Cannot evaluate 'opcode'
+01.Evaluation/03-primitives.xl:2:     No name matches 'opcode'
+01.Evaluation/03-primitives.xl:2:    No prefix matches 'opcode Nonexistent'
+01.Evaluation/03-primitives.xl:2:   Result 'opcode Nonexistent' does not have expected type 'integer'
+01.Evaluation/03-primitives.xl:4:  Cannot evaluate 'foo'
+01.Evaluation/03-primitives.xl:4:   No name matches 'foo'
+01.Evaluation/03-primitives.xl:4:  No prefix matches 'foo 3'
