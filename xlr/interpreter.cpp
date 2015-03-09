@@ -683,7 +683,8 @@ static Tree *Instructions(Context *context, Tree *what)
             // Otherwise, evaluate child in a new context
             context = new Context(context);
             what = ((Block *) what)->child;
-            context->ProcessDeclarations(what);
+            if (!context->ProcessDeclarations(what))
+                return encloseResult(context, oldContext, what);
             continue;
         }
 
@@ -700,40 +701,27 @@ static Tree *Instructions(Context *context, Tree *what)
                 continue;
             }
 
-            // Calling with an expression or scope on the left
-            Prefix *pfx = (Prefix *) what;
-            Tree *callee = pfx->left;
-            Tree *arg = pfx->right;
-
-            // Strip away blocks
-            while (Block *block = callee->AsBlock())
-                callee = block->child;
-
             // If we have a name on the left, lookup name and start again
+            Prefix *pfx = (Prefix *) what;
+            Tree   *callee = pfx->left;
+
+            // Check if we had something like '(X->X+1) 31' as closure
+            Context *calleeContext = NULL;
+            if (Tree *inside = isClosure(callee, &calleeContext))
+                callee = inside;
+                
             if (Name *name = callee->AsName())
-            {
                 // A few cases where we don't interpret the result
                 if (name->value == "type"   ||
                     name->value == "extern" ||
                     name->value == "data")
-                {
                     return what;
-                }
-
-                if (Tree *found = context->Bound(name))
-                {
-                    if (found != name)
-                    {
-                        what = new Prefix(found, arg, pfx->Position());
-                        continue;
-                    }
-                }
-            }
 
             // This variable records if we evaluated the callee
             Tree *newCallee = NULL;
+            Tree *arg = pfx->right;
 
-            // If we have an infix on the left, can be a function or sequence
+            // If we have an infix on the left, check if it's a single rewrite
             if (Infix *lifx = callee->AsInfix())
             {
                 // Check if we have a function definition
@@ -758,21 +746,6 @@ static Tree *Instructions(Context *context, Tree *what)
                     what = arg;
                     continue;
                 }
-
-                if (lifx->name == ";" || lifx->name == "\n")
-                {
-                    Context *newContext = new Context(context);
-                    if (!newContext->ProcessDeclarations(lifx))
-                    {
-                        // No instructions on left: evaluate in that context
-                        context = newContext;
-                        what = arg;
-                        continue;
-                    }
-
-                    // If we had instructions in the callee, evaluate the body
-                    newCallee = Instructions(newContext, callee);
-                }
             }
 
             // Other cases: evaluate the callee, and if it changed, retry
@@ -784,7 +757,20 @@ static Tree *Instructions(Context *context, Tree *what)
 
             if (newCallee != callee)
             {
-                what = new Prefix(newCallee, arg, pfx->Position());
+                // We built a new context if left was a block
+                if (Tree *inside = isClosure(newCallee, &context))
+                {
+                    what = arg;
+                    // Check if we have a single definition on the left
+                    if (Infix *ifx = inside->AsInfix())
+                        if (ifx->name == "->")
+                            what = new Prefix(newCallee, arg, pfx->Position());
+                }
+                else
+                {
+                    // Other more regular cases
+                    what = new Prefix(newCallee, arg, pfx->Position());
+                }
                 continue;
             }
 
