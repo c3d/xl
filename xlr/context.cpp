@@ -709,6 +709,9 @@ static Tree *findValue(Scope *, Scope *, Tree *what, Infix *decl, void *info)
 //   Return the value bound to a given form
 // ----------------------------------------------------------------------------
 {
+    if (what->IsLeaf())
+        if (!Tree::Equal(what, RewriteDefined(decl->left)))
+            return NULL;
     return decl->right;
 }
 
@@ -719,6 +722,9 @@ static Tree *findValueX(Scope *, Scope *scope,
 //   Return the value bound to a given form, as well as its scope and decl
 // ----------------------------------------------------------------------------
 {
+    if (what->IsLeaf())
+        if (!Tree::Equal(what, RewriteDefined(decl->left)))
+            return NULL;
     Prefix *rewriteInfo = (Prefix *) info;
     rewriteInfo->left = scope;
     rewriteInfo->right = decl;
@@ -839,9 +845,9 @@ ulong Context::Hash(Tree *what)
         break;
     case REAL:
         {
-	    size_t s = sizeof(ulong);
-	    if (sizeof(double) < s)
-	        s = sizeof(double);
+	    const size_t s = (sizeof(ulong) < sizeof(double))
+                ? sizeof(ulong)
+                : sizeof(double);
             memcpy(&h, &((Real *) what)->value, s);
         }
         break;
@@ -867,7 +873,7 @@ ulong Context::Hash(Tree *what)
         break;
     }
 
-    h = 0xC0DED + 0x29912837*k;
+    h += 0xC0DED + 0x29912837*k;
     if (t.length())
     {
         for (text::iterator p = t.begin(); p != t.end(); p++)
