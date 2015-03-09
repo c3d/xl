@@ -27,7 +27,8 @@
 
 XL_BEGIN
 
-Tree *Evaluate(Context *scope, Tree *code);
+Tree *Evaluate(Context *context, Tree *code);
+Tree *EvaluateClosure(Context *context, Tree *code);
 Tree *TypeCheck(Context *scope, Tree *type, Tree *value);
 
 

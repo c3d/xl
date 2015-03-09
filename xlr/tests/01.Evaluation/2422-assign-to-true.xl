@@ -1,4 +1,3 @@
-// EXIT=1
 A -> true
 A := true
 writeln "A (true)=", A
