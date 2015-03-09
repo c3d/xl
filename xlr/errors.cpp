@@ -1,6 +1,5 @@
 // ****************************************************************************
-//   Christophe de Dinechin                                       XL2 PROJECT
-//   XL COMPILER: errors.cpp
+//  errors.cpp                                                     Tao project 
 // ****************************************************************************
 //
 //   File Description:
@@ -17,8 +16,8 @@
 // ****************************************************************************
 // This document is distributed under the GNU General Public License
 // See the enclosed COPYING file or http://www.gnu.org for information
-//  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
-//  (C) 2010 Taodyne SAS
+//  (C) 1992-2015 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2010-2015 Taodyne SAS
 // ****************************************************************************
 
 #include <sstream>
@@ -39,7 +38,7 @@ XL_BEGIN
 //
 // ============================================================================
 
-Error::Error(text m, ulong p)
+Error::Error(kstring m, ulong p)
 // ----------------------------------------------------------------------------
 //   Error without arguments
 // ----------------------------------------------------------------------------
@@ -47,7 +46,7 @@ Error::Error(text m, ulong p)
 {}
 
 
-Error::Error(text m, Tree *a)
+Error::Error(kstring m, Tree *a)
 // ----------------------------------------------------------------------------
 //   Error with a tree argument
 // ----------------------------------------------------------------------------
@@ -57,7 +56,7 @@ Error::Error(text m, Tree *a)
 }
 
 
-Error::Error(text m, Tree *a, Tree *b)
+Error::Error(kstring m, Tree *a, Tree *b)
 // ----------------------------------------------------------------------------
 //   Error with two tree arguments
 // ----------------------------------------------------------------------------
@@ -67,7 +66,7 @@ Error::Error(text m, Tree *a, Tree *b)
 }
 
 
-Error::Error(text m, Tree *a, Tree *b, Tree *c)
+Error::Error(kstring m, Tree *a, Tree *b, Tree *c)
 // ----------------------------------------------------------------------------
 //   Error with three tree arguments
 // ----------------------------------------------------------------------------
@@ -175,47 +174,51 @@ Errors::Errors()
 }
 
 
-Errors::Errors (text m, ulong pos)
+#define ERROR_OR_CONTEXT(e)                     \
+    bool context = *m == ' ' && m++;            \
+    Log(e, context);
+
+Errors::Errors (kstring m, ulong pos)
 // ----------------------------------------------------------------------------
 //   Save errors from the top-level error handler
 // ----------------------------------------------------------------------------
     : parent(MAIN->errors), count(0), context(0)
 {
     MAIN->errors = this;
-    Context(Error(m, pos));
+    ERROR_OR_CONTEXT(Error(m, pos));
 }
 
 
-Errors::Errors (text m, Tree *a)
+Errors::Errors (kstring m, Tree *a)
 // ----------------------------------------------------------------------------
 //   Save errors from the top-level error handler
 // ----------------------------------------------------------------------------
     : parent(MAIN->errors), count(0), context(0)
 {
     MAIN->errors = this;
-    Context(Error(m, a));
+    ERROR_OR_CONTEXT(Error(m, a));
 }
 
 
-Errors::Errors (text m, Tree *a, Tree *b)
+Errors::Errors (kstring m, Tree *a, Tree *b)
 // ----------------------------------------------------------------------------
 //   Save errors from the top-level error handler
 // ----------------------------------------------------------------------------
     : parent(MAIN->errors), count(0), context(0)
 {
     MAIN->errors = this;
-    Context(Error(m, a, b));
+    ERROR_OR_CONTEXT(Error(m, a, b));
 }
 
 
-Errors::Errors (text m, Tree *a, Tree *b, Tree *c)
+Errors::Errors (kstring m, Tree *a, Tree *b, Tree *c)
 // ----------------------------------------------------------------------------
 //   Save errors from the top-level error handler
 // ----------------------------------------------------------------------------
     : parent(MAIN->errors), count(0), context(0)
 {
     MAIN->errors = this;
-    Context(Error(m, a, b, c));
+    ERROR_OR_CONTEXT(Error(m, a, b, c));
 }
 
 
@@ -299,7 +302,7 @@ Error &Errors::Log(const Error &e, bool isContext)
 //
 // ============================================================================
 
-Error &Ooops (text m, ulong pos)
+Error &Ooops (kstring m, ulong pos)
 // ----------------------------------------------------------------------------
 //   Report an error message without arguments
 // ----------------------------------------------------------------------------
@@ -308,7 +311,7 @@ Error &Ooops (text m, ulong pos)
 }
 
 
-Error &Ooops (text m, Tree *a)
+Error &Ooops (kstring m, Tree *a)
 // ----------------------------------------------------------------------------
 //   Report an error message with one tree argument
 // ----------------------------------------------------------------------------
@@ -317,7 +320,7 @@ Error &Ooops (text m, Tree *a)
 }
 
 
-Error &Ooops (text m, Tree *a, Tree *b)
+Error &Ooops (kstring m, Tree *a, Tree *b)
 // ----------------------------------------------------------------------------
 //   Report an error message with two tree arguments
 // ----------------------------------------------------------------------------
@@ -328,7 +331,7 @@ Error &Ooops (text m, Tree *a, Tree *b)
 }
 
 
-Error &Ooops (text m, Tree *a, Tree *b, Tree *c)
+Error &Ooops (kstring m, Tree *a, Tree *b, Tree *c)
 // ----------------------------------------------------------------------------
 //   Report an error message with three tree arguments
 // ----------------------------------------------------------------------------

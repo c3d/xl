@@ -42,10 +42,10 @@ struct Error
 {
     enum { UNKNOWN_POSITION = ~0UL, COMMAND_LINE=~1UL };
 
-    Error (text m, ulong pos = UNKNOWN_POSITION);
-    Error (text m, Tree *a);
-    Error (text m, Tree *a, Tree *b);
-    Error (text m, Tree *a, Tree *b, Tree *c);
+    Error (kstring m, ulong pos = UNKNOWN_POSITION);
+    Error (kstring m, Tree *a);
+    Error (kstring m, Tree *a, Tree *b);
+    Error (kstring m, Tree *a, Tree *b, Tree *c);
     ~Error() {}
 
     // Adding arguments to an error message
@@ -73,10 +73,10 @@ struct Errors
 // ----------------------------------------------------------------------------
 {
     Errors();
-    Errors(text m, ulong pos = Error::UNKNOWN_POSITION);
-    Errors(text m, Tree *a);
-    Errors(text m, Tree *a, Tree *b);
-    Errors(text m, Tree *a, Tree *b, Tree *c);
+    Errors(kstring m, ulong pos = Error::UNKNOWN_POSITION);
+    Errors(kstring m, Tree *a);
+    Errors(kstring m, Tree *a, Tree *b);
+    Errors(kstring m, Tree *a, Tree *b, Tree *c);
     ~Errors();
 
     void                Clear();
@@ -95,10 +95,10 @@ struct Errors
 
 
 // Helper to quickly report errors
-Error &Ooops (text m, ulong pos = Error::UNKNOWN_POSITION);
-Error &Ooops (text m, Tree *a);
-Error &Ooops (text m, Tree *a, Tree *b);
-Error &Ooops (text m, Tree *a, Tree *b, Tree *c);
+Error &Ooops (kstring m, ulong pos = Error::UNKNOWN_POSITION);
+Error &Ooops (kstring m, Tree *a);
+Error &Ooops (kstring m, Tree *a, Tree *b);
+Error &Ooops (kstring m, Tree *a, Tree *b, Tree *c);
 
 // Formatting a tree for error reporting
 Text *FormatTreeForError(Tree *tree);
