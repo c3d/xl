@@ -105,7 +105,7 @@ Error &Error::Arg(Tree *arg)
 {
     if (arg && position == UNKNOWN_POSITION)
         position = arg->Position();
-    arguments.push_back(text(*arg));
+    arguments.push_back(FormatTreeForError(arg));
     return *this;
 }
 
@@ -230,7 +230,7 @@ Errors::~Errors()
     assert (MAIN->errors == this);
     MAIN->errors = parent;
 
-    if (errors.size() > context)
+    if (HadErrors())
         Display();
 }
 
@@ -316,7 +316,7 @@ Error &Ooops (kstring m, Tree *a)
 //   Report an error message with one tree argument
 // ----------------------------------------------------------------------------
 {
-    return MAIN->errors->Log(Error(m, FormatTreeForError(a)));
+    return MAIN->errors->Log(Error(m, a));
 }
 
 
@@ -325,9 +325,7 @@ Error &Ooops (kstring m, Tree *a, Tree *b)
 //   Report an error message with two tree arguments
 // ----------------------------------------------------------------------------
 {
-    return MAIN->errors->Log(Error(m,
-                                   FormatTreeForError(a),
-                                   FormatTreeForError(b)));
+    return MAIN->errors->Log(Error(m, a, b));
 }
 
 
@@ -336,10 +334,7 @@ Error &Ooops (kstring m, Tree *a, Tree *b, Tree *c)
 //   Report an error message with three tree arguments
 // ----------------------------------------------------------------------------
 {
-    return MAIN->errors->Log(Error(m,
-                                   FormatTreeForError(a),
-                                   FormatTreeForError(b),
-                                   FormatTreeForError(c)));
+    return MAIN->errors->Log(Error(m, a, b, c));
 }
 
 
@@ -370,18 +365,15 @@ text ShortTreeForm(Tree *tree, uint maxWidth)
 }
 
 
-Text *FormatTreeForError(Tree *tree)
+text FormatTreeForError(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Format a tree for error reporting
 // ----------------------------------------------------------------------------
 {
-    Text *result = tree->AsText();
-    if (result == NULL)
-    {
-        text t = ShortTreeForm(tree);
-        result = new Text(t, "'", "'", tree->Position());
-    }
-    return result;
+    if (Text *t = tree->AsText())
+        return "\"" + t->value + "\"";
+    text result = ShortTreeForm(tree);
+    return "'" + result + "'";
 }
 
 XL_END
