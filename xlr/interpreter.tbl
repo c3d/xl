@@ -77,6 +77,17 @@ BINARY(FCmpUGE, Name,    Real,    Real,         BVAL(LEFT >= RIGHT))
 BINARY(FCmpULT, Name,    Real,    Real,         BVAL(LEFT <  RIGHT))
 BINARY(FCmpULE, Name,    Real,    Real,         BVAL(LEFT <= RIGHT))
 
+BINARY(BCmpUEQ, Name,    Name,    Name,         BVAL(LEFT_B ==  RIGHT_B))
+BINARY(BCmpUNE, Name,    Name,    Name,         BVAL(LEFT_B !=  RIGHT_B))
+BINARY(BCmpUGT, Name,    Name,    Name,         BVAL(LEFT_B >   RIGHT_B))
+BINARY(BCmpUGE, Name,    Name,    Name,         BVAL(LEFT_B >=  RIGHT_B))
+BINARY(BCmpULT, Name,    Name,    Name,         BVAL(LEFT_B <   RIGHT_B))
+BINARY(BCmpULE, Name,    Name,    Name,         BVAL(LEFT_B <=  RIGHT_B))
+BINARY(BAnd,    Name,    Name,    Name,         BVAL(LEFT_B and RIGHT_B))
+BINARY(BOr,     Name,    Name,    Name,         BVAL(LEFT_B or  RIGHT_B))
+BINARY(BXor,    Name,    Name,    Name,         BVAL(LEFT_B xor RIGHT_B))
+UNARY(BNot,     Name,    Name,                  BVAL(not LEFT_B))
+
 
 // ============================================================================
 // 

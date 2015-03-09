@@ -175,6 +175,50 @@ Errors::Errors()
 }
 
 
+Errors::Errors (text m, ulong pos)
+// ----------------------------------------------------------------------------
+//   Save errors from the top-level error handler
+// ----------------------------------------------------------------------------
+    : parent(MAIN->errors), count(0), context(0)
+{
+    MAIN->errors = this;
+    Context(Error(m, pos));
+}
+
+
+Errors::Errors (text m, Tree *a)
+// ----------------------------------------------------------------------------
+//   Save errors from the top-level error handler
+// ----------------------------------------------------------------------------
+    : parent(MAIN->errors), count(0), context(0)
+{
+    MAIN->errors = this;
+    Context(Error(m, a));
+}
+
+
+Errors::Errors (text m, Tree *a, Tree *b)
+// ----------------------------------------------------------------------------
+//   Save errors from the top-level error handler
+// ----------------------------------------------------------------------------
+    : parent(MAIN->errors), count(0), context(0)
+{
+    MAIN->errors = this;
+    Context(Error(m, a, b));
+}
+
+
+Errors::Errors (text m, Tree *a, Tree *b, Tree *c)
+// ----------------------------------------------------------------------------
+//   Save errors from the top-level error handler
+// ----------------------------------------------------------------------------
+    : parent(MAIN->errors), count(0), context(0)
+{
+    MAIN->errors = this;
+    Context(Error(m, a, b, c));
+}
+
+
 Errors::~Errors()
 // ----------------------------------------------------------------------------
 //   Display errors to top-levle handler

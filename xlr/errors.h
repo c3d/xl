@@ -73,14 +73,19 @@ struct Errors
 // ----------------------------------------------------------------------------
 {
     Errors();
+    Errors(text m, ulong pos = Error::UNKNOWN_POSITION);
+    Errors(text m, Tree *a);
+    Errors(text m, Tree *a, Tree *b);
+    Errors(text m, Tree *a, Tree *b, Tree *c);
     ~Errors();
 
-    void Clear();
-    bool Swallowed();
-    void Display();
-    Error &Log(const Error &e, bool context = false);
-    uint Count()        { return errors.size() + count; }
-    bool HadErrors()    { return errors.size() > context; }
+    void                Clear();
+    bool                Swallowed();
+    void                Display();
+    Error &             Log(const Error &e, bool context = false);
+    Error &             Context(const Error &e) { return Log(e, true); }
+    uint                Count()        { return errors.size() + count; }
+    bool                HadErrors()    { return errors.size() > context; }
 
     std::vector<Error>  errors;
     Errors *            parent;

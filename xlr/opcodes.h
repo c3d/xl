@@ -309,6 +309,8 @@ XL_END
 #define RIGHT0          ( RIGHT != 0 ? RIGHT : DIV0)
 #define URIGHT0         (URIGHT != 0 ? URIGHT : DIV0)
 #define DIV0            (Ooops("Divide by 0 in $1", self), 1)
+#define LEFT_B          (left.value == "true")
+#define RIGHT_B         (right.value == "true")
 #define IVAL(x)         (new Integer(x, self->Position()))
 #define RVAL(x)         (new Real(x, self->Position()))
 #define BVAL(x)         (x ? xl_true : xl_false)

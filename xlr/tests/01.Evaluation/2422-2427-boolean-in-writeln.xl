@@ -4,4 +4,3 @@ A := not A
 writeln "A (false)=", A
 A := not A
 writeln "A (true)=", A
-

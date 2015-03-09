@@ -1,4 +1,2 @@
-if first_condition and second_condition then 
-    writeln "both are true"
-first_condition -> true
-second_condition -> 1 > 0
+both are true
+true

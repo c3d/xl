@@ -182,6 +182,7 @@ inline bool Bindings::DoInteger(Integer *what)
     if (Integer *ival = test->AsInteger())
         if (ival->value == what->value)
             return true;
+    Ooops("Integer $1 does not match $2", what, test);
     return false;
 }
 
@@ -195,6 +196,7 @@ inline bool Bindings::DoReal(Real *what)
     if (Real *rval = test->AsReal())
         if (rval->value == what->value)
             return true;
+    Ooops("Real $1 does not match $2", what, test);
     return false;
 }
 
@@ -208,6 +210,7 @@ inline bool Bindings::DoText(Text *what)
     if (Text *tval = test->AsText())
         if (tval->value == what->value)         // Do delimiters matter?
             return true;
+    Ooops("Text $1 does not match $2", what, test);
     return false;
 }
 
@@ -233,6 +236,8 @@ inline bool Bindings::DoName(Name *what)
                       << test << " vs " << bound
                       << (result ? " MATCH" : " FAILED")
                       << "\n";
+        if (!result)
+            Ooops("Name $1 does not match $2", what, test);
         return result;
     }
 
@@ -284,6 +289,7 @@ bool Bindings::DoPrefix(Prefix *what)
     }
 
     // All other cases are a mismatch
+    Ooops("Prefix $1 does not match $2", what, test);
     return false;
 }
 
@@ -320,6 +326,7 @@ bool Bindings::DoPostfix(Postfix *what)
     }
 
     // All other cases are a mismatch
+    Ooops("Postfix $1 does not match $2", what, test);
     return false;
 }
 
@@ -352,6 +359,7 @@ bool Bindings::DoInfix(Infix *what)
         }
 
         // Type mismatch
+        Ooops("Type $1 does not contain $2", type, test);
         return false;
     }
 
@@ -380,6 +388,8 @@ bool Bindings::DoInfix(Infix *what)
             return true;
         else if (check != xl_false)
             Ooops ("Invalid guard clause, $1 is not a boolean", check);
+        else
+            Ooops("Guard clause $1 is not verified", what->right);
         return false;
     }
 
@@ -394,7 +404,11 @@ bool Bindings::DoInfix(Infix *what)
     if (ifx)
     {
         if (ifx->name != what->name)
+        {
+            Ooops("Infix names $1 and $2 don't match", what->Position())
+                .Arg(ifx->name).Arg(what->name);
             return false;
+        }
 
         test = ifx->left;
         if (!what->left->Do(this))
@@ -405,6 +419,7 @@ bool Bindings::DoInfix(Infix *what)
     }
 
     // Mismatch
+    Ooops("Infix $1 does not match $2", what, test);    
     return false;
 }
 
@@ -495,6 +510,8 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
 //   Calllback function to check if the candidate matches
 // ----------------------------------------------------------------------------
 {
+    Errors errors("Candidate $1 does not match", decl);
+
     static uint id = 0;
     IFTRACE(eval)
         std::cerr << "EVAL" << ++id << "(" << self
@@ -521,6 +538,9 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
                       << " MISMATCH\n";
         return NULL;
     }
+
+    // If we suceeded in binding, we are OK so far
+    errors.Clear();
 
     // Check if the right is "self"
     if (decl->right == xl_self)
@@ -820,7 +840,12 @@ Tree *EvaluateClosure(Context *context, Tree *what)
     // Create scope for declarations, and evaluate in this context
     Tree_p result = what;
     if (context->ProcessDeclarations(what))
+    {
+        Errors errors("Unable to evaluate $1", what);
         result = Instructions(context, what);
+        if (result != what)
+            errors.Clear();
+    }            
 
     // At end of evaluation, check if need to cleanup
     // GarbageCollector::Collect();
@@ -833,7 +858,6 @@ Tree *Evaluate(Context *context, Tree *what)
 //    Evaluate 'what', finding the final, non-closure result
 // ----------------------------------------------------------------------------
 {
-    // Create scope for declarations, and evaluate in this context
     Tree *result = EvaluateClosure(context, what);
     if (Tree *inside = isClosure(result, NULL))
         result = inside;
