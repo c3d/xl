@@ -150,3 +150,6 @@ INFIX(TextLT, boolean, text, "<",  text, RBVAL(LEFT <  RIGHT))
 INFIX(TextGT, boolean, text, ">",  text, RBVAL(LEFT >  RIGHT))
 INFIX(TextLE, boolean, text, "<=", text, RBVAL(LEFT <= RIGHT))
 INFIX(TextGE, boolean, text, ">=", text, RBVAL(LEFT >= RIGHT))
+
+FUNCTION(quote, tree, PARM(form, tree), return xl_parse_tree(context, formPtr));
+FUNCTION(parse, tree, PARM(form, text), return xl_parse_text(form));

@@ -1,0 +1,13 @@
+writeln "Z+1=", quote(Z+1)
+writeln "X+2*if=", quote(X+2*if X then Y else Z)
+
+writeln "A+B*C-D*E+F=", parse "A+B*C-D*E+F"
+writeln "A+B*C-D*E+=", parse "A+B*C-D*E+"
+writeln "2__3=", parse "2__3"
+writeln "16#FF+2#1001+8#7.001e-4=", parse "16#FF+2#1001+8#7.001e-4"
+writeln "2#1001=", parse "2"
+
+writeln "foo 3=", foo 3
+writeln "foo 551.3=", foo 551.3
+writeln "foo Z+1=", foo (Z+1)
+foo X -> quote(X + 2 * {X+1})

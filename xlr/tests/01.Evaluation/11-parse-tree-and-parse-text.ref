@@ -1,0 +1,11 @@
+Z+1=Z + 1
+X+2*if=X + 2 * if X then Y else Z
+A+B*C-D*E+F=A + B * C - D * E + F
+A+B*C-D*E+=A + B * C - D * E+
+2__3=2 _ 3
+16#FF+2#1001+8#7.001e-4=255 + 9 + 0.00170946
+2#1001=2
+foo 3=X + 2 * 4
+foo 551.3=X + 2 * 552.3
+foo Z+1=X + 2 * (X + 1)
+true
