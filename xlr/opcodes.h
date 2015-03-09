@@ -311,14 +311,14 @@ XL_END
 #define DIV0            (Ooops("Divide by 0 in $1", self), 1)
 #define LEFT_B          (left.value == "true")
 #define RIGHT_B         (right.value == "true")
-#define IVAL(x)         (new Integer(x, self->Position()))
-#define RVAL(x)         (new Real(x, self->Position()))
-#define BVAL(x)         (x ? xl_true : xl_false)
-#define TVAL(x)         (new Text(x, self->Position()))
-#define RIVAL(x)        return IVAL(x)
-#define RRVAL(x)        return RVAL(x)
-#define RBVAL(x)        return BVAL(x)
-#define RTVAL(x)        return TVAL(x)
+#define AS_INT(x)       (new Integer((x), self->Position()))
+#define AS_REAL(x)      (new Real((x), self->Position()))
+#define AS_BOOL(x)      ((x) ? xl_true : xl_false)
+#define AS_TEXT(x)      (new Text(x, self->Position()))
+#define R_INT(x)        return AS_INT(x)
+#define R_REAL(x)       return AS_REAL(x)
+#define R_BOOL(x)       return AS_BOOL(x)
+#define R_TEXT(x)       return AS_TEXT(x)
 
 #endif // OPCODES_H
 

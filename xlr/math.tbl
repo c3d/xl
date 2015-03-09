@@ -18,18 +18,18 @@
 //  (C) 2015 Taodyne SAS
 // ****************************************************************************
 
-INFIX(IntMod,  integer, integer, "mod", integer, RIVAL(xl_mod(LEFT, RIGHT0)))
-INFIX(RealMod, real,    real,    "mod", real,    RRVAL(xl_modf(LEFT, RIGHT0)))
-INFIX(IntRem,  integer, integer, "rem", integer, RIVAL(LEFT % RIGHT0))
-INFIX(RealRem, real,    real,    "rem", real,    RRVAL(fmod(LEFT, RIGHT0)))
-INFIX(IntPow,  integer, integer, "^",   integer, RIVAL(xl_pow(LEFT, RIGHT)))
-INFIX(RealPowI,real,    real,    "^",   integer, RRVAL(xl_powf(LEFT, RIGHT)))
-INFIX(RealPow, real,    real,    "^",   real,    RRVAL(pow(LEFT, RIGHT)))
+INFIX(IntMod,  integer, integer, "mod", integer, R_INT (xl_mod(LEFT, RIGHT0)))
+INFIX(IntRem,  integer, integer, "rem", integer, R_INT (LEFT % RIGHT0))
+INFIX(RealMod, real,    real,    "mod", real,    R_REAL(xl_modf(LEFT, RIGHT0)))
+INFIX(RealRem, real,    real,    "rem", real,    R_REAL(fmod(LEFT, RIGHT0)))
+INFIX(IntPow,  integer, integer, "^",   integer, R_INT (xl_pow(LEFT, RIGHT)))
+INFIX(RealPowI,real,    real,    "^",   integer, R_INT (xl_powf(LEFT, RIGHT)))
+INFIX(RealPow, real,    real,    "^",   real,    R_REAL(pow(LEFT, RIGHT)))
 
-OVERLOAD(AbsI, "abs", integer, PARM(x, integer), RIVAL(x < 0 ? -x : x))
-OVERLOAD(AbsR, "abs", real,    PARM(x, real),    RRVAL(fabs(x)))
+OVERLOAD(AbsI, "abs", integer, PARM(x, integer), R_INT(x < 0 ? -x : x))
+OVERLOAD(AbsR, "abs", real,    PARM(x, real),    R_REAL(fabs(x)))
 
-#define REALFN(fn)  FUNCTION(fn, real, PARM(x, real), RRVAL(fn(x)))
+#define REALFN(fn)  FUNCTION(fn, real, PARM(x, real), R_REAL(fn(x)))
 REALFN(sqrt)
 REALFN(sin)
 REALFN(cos)
