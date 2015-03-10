@@ -153,3 +153,4 @@ INFIX(TextGE, boolean, text, ">=", text, R_BOOL(LEFT >= RIGHT));
 
 FUNCTION(quote, tree, PARM(form, tree), return xl_parse_tree(context, formPtr));
 FUNCTION(parse, tree, PARM(form, text), return xl_parse_text(form));
+FUNCTION(exit,  tree, PARM(code, integer), exit(code); R_INT(0))
