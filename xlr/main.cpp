@@ -175,6 +175,12 @@ Main::~Main()
 //   Destructor
 // ----------------------------------------------------------------------------
 {
+    if (topLevelErrors.HadErrors())
+    {
+        topLevelErrors.Display();
+        topLevelErrors.Clear();
+    }
+    
     delete reader;
     delete writer;
 }

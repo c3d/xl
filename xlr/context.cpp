@@ -767,6 +767,15 @@ Tree *Context::Named(text name, bool recurse)
 }
 
 
+bool Context::IsEmpty()
+// ----------------------------------------------------------------------------
+//   Return true if the context has no declaration inside
+// ----------------------------------------------------------------------------
+{
+    return symbols->right == xl_nil;
+}
+
+
 static ulong listNames(Rewrite *where, text begin, rewrite_list &list, bool pfx)
 // ----------------------------------------------------------------------------
 //   List names in the given tree
@@ -1051,7 +1060,7 @@ void debugc(XL::Context *context)
             ulong depth = 0;
             while (scope)
             {
-                std::cerr << "SYMBOLS #" << depth++
+                std::cerr << "\n\nSYMBOLS #" << depth++
                           << " AT " << (void *) scope << "\n";
                 debugl(ScopeRewrites(scope));
                 scope = ScopeParent(scope);

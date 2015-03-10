@@ -138,3 +138,11 @@ good nil   -> false
 good Other -> true
 
 bad X      -> not good X
+
+// Loops
+while Condition loop Body ->
+    if Condition then
+        Body
+        while Condition loop Body
+until Condition loop Body               -> while not Condition loop Body
+loop Body                               -> Body; loop Body

@@ -23,12 +23,13 @@
 /*  (C) 2010 Taodyne SAS                                                     */
 /* ***************************************************************************/
 
+#include "base.h"
+#include "tree.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <string>
 #include <vector>
-#include "base.h"
-#include "tree.h"
 
 XL_BEGIN
 
@@ -48,9 +49,12 @@ struct Error
     Error (kstring m, Tree *a, Tree *b, Tree *c);
     ~Error() {}
 
-    // Adding arguments to an error message
-    Error &             Arg(text t);
-    Error &             Arg(long value);
+    // Adding arguments to an error message    
+    Error &             Arg(int value) { return Arg(Integer::value_t(value)); }
+    Error &             Arg(uint value){ return Arg(Integer::value_t(value)); }
+    Error &             Arg(Integer::value_t value);
+    Error &             Arg(Real::value_t value);
+    Error &             Arg(Text::value_t t);
     Error &             Arg(Tree *arg);
 
     // Displaying the message
@@ -61,7 +65,7 @@ struct Error
 
 public:
     text                message;
-    std::vector<text>   arguments;
+    std::vector<Tree *> arguments;
     ulong               position;
     ulong               indent;
 };

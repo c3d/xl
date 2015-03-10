@@ -275,6 +275,7 @@ public:
     Tree *              Bound(Tree *form,bool recurse=true);
     Tree *              Bound(Tree *form, bool rec, Rewrite_p *rw,Scope_p *ctx);
     Tree *              Named(text name, bool recurse=true);
+    bool                IsEmpty();
     bool                HasRewritesFor(kind k);
     void                HasOneRewriteFor(kind k);
 

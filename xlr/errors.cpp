@@ -76,24 +76,32 @@ Error::Error(kstring m, Tree *a, Tree *b, Tree *c)
 }
 
 
-Error &Error::Arg(text t)
+Error &Error::Arg(Integer::value_t value)
 // ----------------------------------------------------------------------------
 //   Add an argument to the message, replacing $1, $2, ...
 // ----------------------------------------------------------------------------
 {
-    arguments.push_back(t);
+    arguments.push_back(new Integer(value, position));
     return *this;
 }
 
 
-Error &Error::Arg(long value)
+Error &Error::Arg(Real::value_t value)
 // ----------------------------------------------------------------------------
 //   Add an argument to the message, replacing $1, $2, ...
 // ----------------------------------------------------------------------------
 {
-    std::ostringstream out;
-    out << value;
-    arguments.push_back(out.str());
+    arguments.push_back(new Real(value, position));
+    return *this;
+}
+
+
+Error &Error::Arg(Text::value_t t)
+// ----------------------------------------------------------------------------
+//   Add an argument to the message, replacing $1, $2, ...
+// ----------------------------------------------------------------------------
+{
+    arguments.push_back(new Text(t, position));
     return *this;
 }
 
@@ -105,7 +113,7 @@ Error &Error::Arg(Tree *arg)
 {
     if (arg && position == UNKNOWN_POSITION)
         position = arg->Position();
-    arguments.push_back(FormatTreeForError(arg));
+    arguments.push_back(arg);
     return *this;
 }
 
@@ -151,7 +159,8 @@ text Error::Message()
         sprintf(buffer, "$%d", i+1);
         size_t found = result.find(buffer);
         if (found != result.npos)
-            result.replace(found, strlen(buffer), arguments[i]);
+            result.replace(found, strlen(buffer),
+                           FormatTreeForError(arguments[i]));
     }
     return result;
 }

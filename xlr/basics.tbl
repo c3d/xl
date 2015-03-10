@@ -142,6 +142,10 @@ TYPE(real64,real,
 // ============================================================================
 
 INFIX(Assign, tree, tree, ":=", value,  return context->Assign(&left, &right));
+INFIX(As,     tree, tree, "as", tree,
+      if (Tree *cast = TypeCheck(context, rightPtr, leftPtr))
+          return cast;
+      return xl_nil);
 
 
 INFIX(TextEQ, boolean, text, "=",  text, R_BOOL(LEFT == RIGHT));
