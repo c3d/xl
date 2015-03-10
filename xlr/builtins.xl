@@ -125,7 +125,7 @@ text true  -> "true"
 text false -> "false"
 
 // A few additional text notations
-Source:text / From:text / To:text       -> text_replace Source, From, To
+Source:text / From:text /  To:text      -> text_replace Source, From, To
 Pat:text in Src:text                    -> text_index Src, Pat, 0
 Pat:text in Src:text from Idx:integer   -> text_index Src, Pat, Idx
 
