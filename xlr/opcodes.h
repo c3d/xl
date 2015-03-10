@@ -252,10 +252,15 @@ struct FunctionOpcode : Opcode
         Tree *type = OpcodeType((TreeType *) 0);
         Infix *parmDecl = new Infix(":", new Name(name), type);
         if (!result)
+        {
             *ptr = parmDecl;
+        }
         else
-            *ptr = new Infix(",", *ptr, parmDecl);
-        ptr = &parmDecl->right;
+        {
+            Infix *comma = new Infix(",", *ptr, parmDecl);
+            *ptr = comma;
+            ptr = &comma->right;
+        }
         return (TreeType *) parmDecl; // Only need it to be non-zero
     }
 
