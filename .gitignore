@@ -6,6 +6,7 @@
 xlr/cscope.files
 xlr/cscope.out
 xlr/*-module.cpp
+xlr/*-module.h
 xlr/obj/**/Makefile.depend
 xlr/obj/**/created
 xlr/p.xl

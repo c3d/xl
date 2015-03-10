@@ -41,6 +41,7 @@
 
 #include "base.h"
 #include "tree.h"
+#include "main.h"
 #include "basics.h"
 
 #include <cmath>
@@ -105,6 +106,7 @@ integer_t       xl_pow(integer_t x, integer_t y);
 real_t          xl_modf(real_t x, real_t y);
 real_t          xl_powf(real_t x, integer_t y);
 text            xl_text_replace(text txt, text before, text after);
+text            xl_text_repeat(uint count, text data);
 
 real_t          xl_time(real_t delay);
 integer_t       xl_seconds();

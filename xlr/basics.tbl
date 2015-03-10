@@ -141,15 +141,15 @@ TYPE(real64,real,
 // 
 // ============================================================================
 
-INFIX(Assign, tree, tree, ":=", value,  return context->Assign(&left, &right))
+INFIX(Assign, tree, tree, ":=", value,  return context->Assign(&left, &right));
 
 
-INFIX(TextEQ, boolean, text, "=",  text, R_BOOL(LEFT == RIGHT))
-INFIX(TextNE, boolean, text, "<>", text, R_BOOL(LEFT != RIGHT))
-INFIX(TextLT, boolean, text, "<",  text, R_BOOL(LEFT <  RIGHT))
-INFIX(TextGT, boolean, text, ">",  text, R_BOOL(LEFT >  RIGHT))
-INFIX(TextLE, boolean, text, "<=", text, R_BOOL(LEFT <= RIGHT))
-INFIX(TextGE, boolean, text, ">=", text, R_BOOL(LEFT >= RIGHT))
+INFIX(TextEQ, boolean, text, "=",  text, R_BOOL(LEFT == RIGHT));
+INFIX(TextNE, boolean, text, "<>", text, R_BOOL(LEFT != RIGHT));
+INFIX(TextLT, boolean, text, "<",  text, R_BOOL(LEFT <  RIGHT));
+INFIX(TextGT, boolean, text, ">",  text, R_BOOL(LEFT >  RIGHT));
+INFIX(TextLE, boolean, text, "<=", text, R_BOOL(LEFT <= RIGHT));
+INFIX(TextGE, boolean, text, ">=", text, R_BOOL(LEFT >= RIGHT));
 
 FUNCTION(quote, tree, PARM(form, tree), return xl_parse_tree(context, formPtr));
 FUNCTION(parse, tree, PARM(form, text), return xl_parse_text(form));

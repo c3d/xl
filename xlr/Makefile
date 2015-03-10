@@ -28,7 +28,7 @@ COMPILER=llvm
 LLVM_CONFIG=llvm-config
 
 # List of modules to build
-MODULES=basics io math
+MODULES=basics io math text
 MODULES_SOURCES=$(MODULES:%=%-module.cpp)
 
 # List of source files to process
@@ -117,10 +117,10 @@ clean: modules-clean
 modules-clean:
 	rm -f $(MODULES_SOURCES)
 
-%-module.cpp: %.tbl
+%-module.cpp: %.tbl %-module.h Makefile
 	@echo Generating $@ from $<
-	@echo '#include "runtime.h"'	>  $@
-	@echo '#include "opcodes.h"'	>> $@
-	@echo 'XL_BEGIN'		>> $@
-	@echo '#include "'$<'"'		>> $@
-	@echo 'XL_END'			>> $@
+	./generate-module-body $* > $@
+
+%-module.h: %.tbl Makefile
+	@echo Generating $@ from $<
+	./generate-module-header $* >  $@

@@ -44,14 +44,6 @@
 #include "context.h"
 #include "main.h"
 #include "save.h"
-
-#define TBL_HEADER
-#include "opcodes.h"
-
-XL_BEGIN
-
-#include "basics.tbl"
-
-XL_END
+#include "basics-module.h"
 
 #endif // BASICS_H

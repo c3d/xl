@@ -19,15 +19,15 @@
 // ****************************************************************************
 
 OVERLOAD(WriteText, "write", boolean,           PARM(x, text),
-         R_BOOL(std::cout << x.value))
+         R_BOOL(std::cout << x.value));
 OVERLOAD(WriteInteger, "write", boolean,        PARM(x, integer),
-         R_BOOL(std::cout << x.value))
+         R_BOOL(std::cout << x.value));
 OVERLOAD(WriteReal, "write", boolean,           PARM(x, real),
-         R_BOOL(std::cout << x.value))
+         R_BOOL(std::cout << x.value));
 OVERLOAD(WriteCharacter, "write", boolean,      PARM(x, character),
-         R_BOOL(std::cout << x.value))
+         R_BOOL(std::cout << x.value));
 OVERLOAD(WriteTree, "write", boolean,           PARM(x, value),
-         R_BOOL(std::cout << xPtr))
+         R_BOOL(std::cout << xPtr));
 OVERLOAD(WriteNewLine, "writeln", boolean,      ,
-         R_BOOL(std::cout << "\n"))
+         R_BOOL(std::cout << "\n"));
 

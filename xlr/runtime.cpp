@@ -1016,12 +1016,36 @@ text xl_text_replace(text txt, text before, text after)
 // ----------------------------------------------------------------------------
 {
     size_t pos = 0;
-    while ((pos = txt.find(before, pos)) != std::string::npos)
+    while ((pos = txt.find(before, pos)) != text::npos)
     {
         txt.replace(pos, before.length(), after);
         pos += after.length();
     }
     return txt;
+}
+
+
+text xl_text_repeat(uint count, text txt)
+// ----------------------------------------------------------------------------
+//   Return a copy of txt with all occurrences of before replaced with after
+// ----------------------------------------------------------------------------
+{
+    text result = "";
+    uint shift = 1;
+    while (count)
+    {
+        if (count & shift)
+        {
+            result += txt;
+            count &= ~shift;
+        }
+        if (count)
+        {
+            shift <<= 1;
+            txt += txt;
+        }
+    }
+    return result;
 }
 
 
