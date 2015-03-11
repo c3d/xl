@@ -281,6 +281,11 @@ bool Bindings::DoPrefix(Prefix *what)
                     test = pfx->right;
                     return what->right->Do(this);
                 }
+                else
+                {
+                    Ooops("Prefix name $1 does not match $2", name, testName);
+                    return false;                    
+                }
             }
         }
 
@@ -317,6 +322,11 @@ bool Bindings::DoPostfix(Postfix *what)
                 {
                     test = pfx->left;
                     return what->left->Do(this);
+                }
+                else
+                {
+                    Ooops("Postfix name $1 does not match $2", name, testName);
+                    return false;                    
                 }
             }
         }
