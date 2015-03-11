@@ -657,6 +657,7 @@ static Tree *Instructions(Context *context, Tree *what)
         if (Tree *eval = context->Lookup(what, evalLookup, &cache))
         {
             MAIN->errors->Clear();
+            result = eval;
             if (Tree *inside = isClosure(eval, &context))
             {
                 what = inside;
