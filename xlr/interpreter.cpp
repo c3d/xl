@@ -357,9 +357,13 @@ bool Bindings::DoInfix(Infix *what)
 
         // Typed name: evaluate type and check match
         Tree *type = MustEvaluate(context, what->right);
-        if (type != tree_type)
+        Tree *checked = TypeCheck(context, type, test);
+        if (!checked || type == XL::value_type)
+        {
             MustEvaluate(true);
-        if (Tree *checked = TypeCheck(context, type, test))
+            checked = TypeCheck(context, type, test);
+        }
+        if (checked)
         {
             Bind(name, checked);
             return true;
