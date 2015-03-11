@@ -8,4 +8,17 @@ writeln good 1
 writeln good 1.3
 writeln good "ABC"
 writeln good true
+writeln good ABC
+
+writeln bad 1
+writeln bad 1.3
+writeln bad "ABC"
+writeln bad true
+writeln bad ABC
+
+writeln bad 0
+writeln bad 0.0
+writeln bad ""
+writeln bad false
+writeln bad nil
 
