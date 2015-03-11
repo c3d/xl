@@ -8,6 +8,7 @@ NAME(nil);
 NAME(self);
 NAME(true);
 NAME(false);
+NAME(error);
 
 
 

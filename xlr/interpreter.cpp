@@ -527,6 +527,9 @@ void Bindings::BindClosure(Name *name, Tree *value)
 //
 // ============================================================================
 
+static Tree *error_result = NULL;
+
+
 static Tree *evalLookup(Scope *evalScope, Scope *declScope,
                         Tree *self, Infix *decl, void *ec)
 // ----------------------------------------------------------------------------
@@ -535,10 +538,20 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
 {
     Errors errors(" Candidate $1 does not match", decl);
 
-    static uint id = 0;
+    static uint depth = 0;
+    Save<uint> saveDepth(depth, depth+1);
     IFTRACE(eval)
-        std::cerr << "EVAL" << ++id << "(" << self
+        std::cerr << "EVAL" << depth << "(" << self
                   << ") from " << decl->left << "\n";
+    if (depth > MAIN->options.stack_depth)
+    {
+        Ooops("Stack depth exceeded evaluating $1", self);
+        return error_result = xl_error;
+    }
+    else if (error_result)
+    {
+        return error_result;
+    }
 
     // Create the scope for evaluation
     Context_p context = new Context(evalScope);
@@ -558,7 +571,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
         if (!Tree::Equal(defined, self))
         {
             IFTRACE(eval)
-                std::cerr << "EVAL" << id-- << "(" << self
+                std::cerr << "EVAL" << depth << "(" << self
                           << ") from constant " << decl->left
                           << " MISMATCH\n";
             return NULL;
@@ -579,7 +592,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
         if (!decl->left->Do(bindings))
         {
             IFTRACE(eval)
-                std::cerr << "EVAL" << id-- << "(" << self
+                std::cerr << "EVAL" << depth << "(" << self
                           << ") from " << decl->left
                           << " MISMATCH\n";
             return NULL;
@@ -592,7 +605,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     if (result == xl_self)
     {
         IFTRACE(eval)
-            std::cerr << "EVAL" << id-- << "(" << self
+            std::cerr << "EVAL" << depth << "(" << self
                       << ") from " << decl->left
                       << " SELF\n";
         return self;
@@ -604,7 +617,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
         // Cached callback
         result = opcode->Invoke(context, result, args);
         IFTRACE(eval)
-            std::cerr << "EVAL" << id-- << "(" << self
+            std::cerr << "EVAL" << depth << "(" << self
                       << ") OPCODE " << opcode->name
                       << "(" << args << ") = "
                       << result << "\n";
@@ -617,7 +630,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
 
     result = makeClosure(locals, result);
     IFTRACE(eval)
-        std::cerr << "EVAL" << id-- << " BINDINGS: "
+        std::cerr << "EVAL" << depth << " BINDINGS: "
                   << ContextStack(locals->CurrentScope())
                   << "\n" << locals << "\n"
                   << "EVAL(" << self
@@ -656,6 +669,8 @@ static Tree *Instructions(Context *context, Tree *what)
         EvalCache cache;
         if (Tree *eval = context->Lookup(what, evalLookup, &cache))
         {
+            if (eval == xl_error)
+                return eval;
             MAIN->errors->Clear();
             result = eval;
             if (Tree *inside = isClosure(eval, &context))
