@@ -50,8 +50,10 @@ struct Error
     ~Error() {}
 
     // Adding arguments to an error message    
-    Error &             Arg(int value) { return Arg(Integer::value_t(value)); }
-    Error &             Arg(uint value){ return Arg(Integer::value_t(value)); }
+    Error &             Arg(int x)      { return Arg(Integer::value_t(x)); }
+    Error &             Arg(uint x)     { return Arg(Integer::value_t(x)); }
+    Error &             Arg(long x)     { return Arg(Integer::value_t(x)); }
+    Error &             Arg(ulong x)    { return Arg(Integer::value_t(x)); }
     Error &             Arg(Integer::value_t value);
     Error &             Arg(Real::value_t value);
     Error &             Arg(Text::value_t t);
@@ -65,7 +67,7 @@ struct Error
 
 public:
     text                message;
-    std::vector<Tree *> arguments;
+    std::vector<Tree_p> arguments;
     ulong               position;
     ulong               indent;
 };

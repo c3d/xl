@@ -180,7 +180,7 @@ static ulong OptionInteger(kstring &command_line, Options &opt,
         sprintf(lowstr, "%lu", low);
         sprintf(highstr, "%lu", high);
         Ooops("Option $1 is out of range $2..$3", Error::COMMAND_LINE)
-            .Arg(old).Arg(lowstr).Arg(highstr);
+            .Arg(result).Arg(low).Arg(high);
         if (result < low)
             result = low;
         else
