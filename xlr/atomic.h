@@ -49,39 +49,44 @@ XL_BEGIN
 //
 // ============================================================================
 
-struct OrderedAtomicMode;
-struct AcquireAtomicMode;       // REVISIT: Not implemented yet
-struct ReleaseAtomicMode;       // REVISIT: Not implemented yet
-
-
-template <typename Value, typename Mode = OrderedAtomicMode>
+template <typename Value>
 struct Atomic
 // ----------------------------------------------------------------------------
 //   A value of type T with atomic properties
 // ----------------------------------------------------------------------------
 {
-    typedef Value               value_t;
-    typedef int                 diff_t;
+    typedef Value                               value_t;
 
 public:
-    Atomic()                    : value() {}
-    Atomic(value_t v)           : value(v) {}
-    Atomic(const Atomic &o)     : value(o.Get()) {}
+    Atomic()                                    : value() {}
+    Atomic(value_t v)                           : value(v) {}
+    Atomic(const Atomic &o)                     : value(o.Get()) {}
 
-    operator value_t() cons     { return value; }
-    operator value_t&()         { return value; }
+    operator            value_t() const         { return value; }
+    operator            value_t&()              { return value; }
 
-    bool  Get()                 { return value; }
-    bool  Set(value_t from, value_t to);
-    value_t Swap(value_t swap);
-    value_t Add(diff_t delta);
+    bool                Get()                   { return value; }
+
+    value_t             Set(value_t from, value_t to);
+    bool                SetQ(value_t from, value_t to);
+    value_t             Add(value_t delta);
+    value_t             Sub(value_t delta);
 
     // Increment and decrement can be specialized for processors that
     // have special instructions with limited constant range (e.g. Itanium)
-    template <int delta = 1>
-    value_t Increment()         { return Add(delta); }
-    template <int delta = 1>
-    value_t Decrement()         { return Add(-delta); }
+    template <int d>
+    value_t             Increment()             { return Add(d); }
+    template <int d>
+    value_t             Decrement()             { return Sub(d); }
+
+    Atomic<Value> &     operator+=(value_t d)   { Add(d); return *this; }
+    Atomic<Value> &     operator-=(value_t d)   { Sub(d); return *this; }
+
+    value_t             operator++()            { return Increment<1>(); }
+    value_t             operator--()            { return Decrement<1>(); }
+
+    value_t             operator++(int)         { return Increment<1>() - 1; }
+    value_t             operator--(int)         { return Decrement<1>() + 1; }
 
 protected:
     volatile value_t            value;
@@ -89,155 +94,51 @@ protected:
 
 
 
-#if defined(__x86_64__)
+#ifdef __GNUC__
 // ============================================================================
 //
-//   Implementation for x86-64
+//   Implementation using GCC builtins
 //
 // ============================================================================
 
-template<> inline
-bool Atomic<int,OrderedAtomicMode>::Set(int from, int to)
+template<typename Value> inline
+Value Atomic<Value>::Set(Value from, Value to)
+// ----------------------------------------------------------------------------
+//   Test that we have 'from' and set to 'to', return value before write
+// ----------------------------------------------------------------------------
+{
+    return __sync_val_compare_and_swap(&value, from, to);
+}
+
+
+template<typename Value> inline
+bool Atomic<Value>::SetQ(Value from, Value to)
 // ----------------------------------------------------------------------------
 //   Test that we have 'from' and set to 'to'
 // ----------------------------------------------------------------------------
 {
-    unsigned char ret;
-    asm volatile("lock\n"
-                 "cmpxchgl %3,%2\n"
-                 "sete %1\n"
-                 : "=a" (to), "=qm" (ret), "+m" (value)
-                 : "r" (to), "0" (from)
-                 : "memory");
-    return ret != 0;
+    return __sync_bool_compare_and_swap(&value, from, to);
 }
 
 
-template<> inline
-int Atomic<int,OrderedAtomicMode>::Swap(int swap)
+template<typename Value> inline
+Value Atomic<Value>::Add(value_t delta)
 // ----------------------------------------------------------------------------
-//   Atomically swap the value and return what was there before
+//   Atomically add the value, return the the value after update
 // ----------------------------------------------------------------------------
 {
-    asm volatile("xchgl %0,%1"
-                 : "=r" (swap), "+m" (value)
-                 : "0" (swap)
-                 : "memory");
-    return swap;
+    return __sync_add_and_fetch(&value, delta);
 }
 
 
-template<> inline
-int Atomic<int,OrderedAtomicMode>::Add(int delta)
+template<typename Value> inline
+Value Atomic<Value>::Sub(value_t delta)
 // ----------------------------------------------------------------------------
-//   Atomically increment the given value
+//   Atomically subtract the value, return the the value after update
 // ----------------------------------------------------------------------------
 {
-    asm volatile("lock\n"
-                 "xaddl %0,%1"
-                 : "=r" (delta), "+m" (value)
-                 : "0" (delta)
-                 : "memory");
-    return delta;
+    return __sync_sub_and_fetch(&value, delta);
 }
-
-
-template<typename V> inline
-bool Atomic<V *,OrderedAtomicMode>::Set(V *from, V *to)
-// ----------------------------------------------------------------------------
-//   Test that we have 'from' and set to 'to'
-// ----------------------------------------------------------------------------
-{
-    unsigned char ret;
-    asm volatile("lock\n"
-                 "cmpxchgq %3,%2\n"
-                 "sete %1\n"
-                 : "=a" (to), "=qm" (ret), "+m" (value)
-                 : "r" (to), "0" (from)
-                 : "memory");
-    return ret != 0;
-}
-
-
-template<typename V> inline
-V Atomic<V *,OrderedAtomicMode>::Swap(V *swap)
-// ----------------------------------------------------------------------------
-//   Atomically swap the value and return what was there before
-// ----------------------------------------------------------------------------
-{
-    asm volatile("xchgq %0,%1"
-                 : "=r" (swap), "+m" (value)
-                 : "0" (swap)
-                 : "memory");
-    return swap;
-}
-
-
-template<typename V> inline
-V *Atomic<V*, OrderedAtomicMode>::Add(int delta)
-// ----------------------------------------------------------------------------
-//   Atomically increment the given value for pointers
-// ----------------------------------------------------------------------------
-{
-    asm volatile("lock\n"
-                 "xaddq %0,%1"
-                 : "=r" (delta), "+m" (value)
-                 : "0" (delta * sizeof(V))
-                 : "memory");
-    return reinterpret_cast<V> (delta);
-}
-
-
-template<> inline
-int Atomic<int,OrderedAtomicMode>::Increment<1>()
-// ----------------------------------------------------------------------------
-//   If we increment by 1, use increment instead of add
-// ----------------------------------------------------------------------------
-{
-    unsigned char ret;
-    asm volatile("lock\n"
-                 "incl %0"
-                 : "=m" (value)
-                 : "m" (value)
-                 : "memory");
-    return value;
-}
-
-
-template<> inline
-int Atomic<int,OrderedAtomicMode>::Decrement<1>()
-// ----------------------------------------------------------------------------
-//   If we decrement by 1, use increment instead of add
-// ----------------------------------------------------------------------------
-{
-    unsigned char ret;
-    asm volatile("lock\n"
-                 "decl %0"
-                 : "=m" (value)
-                 : "m" (value)
-                 : "memory");
-    return value;
-    
-}
-
-
-#elif defined(__i386__)
-// ============================================================================
-// 
-//   Implementation for "regular" x86
-// 
-// ============================================================================
-
-#error "Not yet implemented"
-
-#elif defined(__ppc__)
-// ============================================================================
-// 
-//   Implementation for PowerPC
-// 
-// ============================================================================
-
-#error "Not yet implemented"
 
 #else
 // ============================================================================
@@ -248,7 +149,7 @@ int Atomic<int,OrderedAtomicMode>::Decrement<1>()
 
 #include <pthread.h>
 
-#error "Not yet implemented"
+#error "Not yet implemented if GCC primitives are not available"
 
 #endif
 

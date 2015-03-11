@@ -40,6 +40,8 @@
 // ****************************************************************************
 
 #include "base.h"
+#include "atomic.h"
+
 #include <vector>
 #include <map>
 #include <set>
