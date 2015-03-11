@@ -360,7 +360,7 @@ bool Bindings::DoInfix(Infix *what)
         Tree *checked = TypeCheck(context, type, test);
         if (!checked || type == XL::value_type)
         {
-            MustEvaluate(true);
+            MustEvaluate(type != XL::value_type);
             checked = TypeCheck(context, type, test);
         }
         if (checked)
@@ -455,8 +455,9 @@ void Bindings::MustEvaluate(bool updateContext)
                       << "OLD(" << evaluated << ")\n";
     }
     test = evaluated;
-    if (Tree *inside = isClosure(test, updateContext ? &context : NULL))
-        test = inside;
+    if (updateContext)
+        if (Tree *inside = isClosure(test, updateContext ? &context : NULL))
+            test = inside;
             
 }
 

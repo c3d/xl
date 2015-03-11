@@ -2,4 +2,6 @@ infix
 real
 prefix
 block
+name
+operator
 true
