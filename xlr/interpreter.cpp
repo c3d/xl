@@ -861,6 +861,15 @@ Tree *Evaluate(Context *context, Tree *what)
 }
 
 
+Tree *IsClosure(Tree *value, Context **context)
+// ----------------------------------------------------------------------------
+//   Externally usable variant of isClosure
+// ----------------------------------------------------------------------------
+{
+    return isClosure(value, context);
+}
+
+
 
 // ============================================================================
 //

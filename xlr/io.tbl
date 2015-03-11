@@ -27,7 +27,10 @@ OVERLOAD(WriteReal, "write", boolean,           PARM(x, real),
 OVERLOAD(WriteCharacter, "write", boolean,      PARM(x, character),
          R_BOOL(std::cout << x.value));
 OVERLOAD(WriteTree, "write", boolean,           PARM(x, value),
-         R_BOOL(std::cout << xPtr));
+         Tree *value = xPtr;
+         if (Tree *eval = IsClosure(value, NULL))
+             value = eval;
+         R_BOOL(std::cout << value));
 OVERLOAD(WriteNewLine, "writeln", boolean,      ,
          R_BOOL(std::cout << "\n"));
 
