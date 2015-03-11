@@ -30,7 +30,7 @@ XL_BEGIN
 Tree *Evaluate(Context *context, Tree *code);
 Tree *EvaluateClosure(Context *context, Tree *code);
 Tree *TypeCheck(Context *scope, Tree *type, Tree *value);
-Tree *IsClosure(Tree *value, Context **context);
+Tree *IsClosure(Tree *value, Context_p *context);
 
 
 struct ClosureInfo : Info

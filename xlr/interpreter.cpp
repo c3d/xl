@@ -41,7 +41,7 @@ typedef std::map<Tree_p, Tree_p> EvalCache;
 //
 // ============================================================================
 
-static inline Tree *isClosure(Tree *tree, Context **context)
+static inline Tree *isClosure(Tree *tree, Context_p *context)
 // ----------------------------------------------------------------------------
 //   Check if something is a closure, if so set scope and/or context
 // ----------------------------------------------------------------------------
@@ -162,15 +162,15 @@ struct Bindings
 
 
 private:
-    Context    *context;
-    Context    *locals;
-    Tree       *test;
+    Context_p  context;
+    Context_p  locals;
+    Tree_p     test;
     EvalCache  &cache;
 
 public:
     Opcode *    opcode;
     TreeList &  args;
-    Tree *      resultType;
+    Tree_p      resultType;
 };
 
 
@@ -207,7 +207,7 @@ inline bool Bindings::DoText(Text *what)
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
 {
-    Save<Context *> saveContext(context, context);
+    Save<Context_p> saveContext(context, context);
     MustEvaluate();
     if (Text *tval = test->AsText())
         if (tval->value == what->value)         // Do delimiters matter?
@@ -222,7 +222,7 @@ inline bool Bindings::DoName(Name *what)
 //   The pattern contains a name: bind it as a closure, no evaluation
 // ----------------------------------------------------------------------------
 {
-    Save<Context *> saveContext(context, context);
+    Save<Context_p> saveContext(context, context);
 
     // The test value may have been evaluated
     EvalCache::iterator found = cache.find(test);
@@ -258,6 +258,11 @@ bool Bindings::DoBlock(Block *what)
 //   The pattern contains a block: look inside
 // ----------------------------------------------------------------------------
 {
+    if (Block *testBlock = test->AsBlock())
+        if (testBlock->opening == what->opening &&
+            testBlock->closing == what->closing)
+            test = testBlock->child;
+    
     return what->child->Do(this);
 }
 
@@ -351,7 +356,7 @@ bool Bindings::DoInfix(Infix *what)
 //   The complicated case: various declarations
 // ----------------------------------------------------------------------------
 {
-    Save<Context *> saveContext(context, context);
+    Save<Context_p> saveContext(context, context);
 
     // Check if we have typed arguments, e.g. X:integer
     if (what->name == ":")
@@ -650,21 +655,17 @@ inline Tree *encloseResult(Context *context, Scope *old, Tree *what)
 }
 
 
-static Tree *Instructions(Context *context, Tree *what)
+static Tree *Instructions(Context_p context, Tree_p what)
 // ----------------------------------------------------------------------------
 //   Evaluate the input tree once declarations have been processed
 // ----------------------------------------------------------------------------
 {
     Tree_p      result = what;
-    Scope *     originalScope = context->CurrentScope();
+    Scope_p     originalScope = context->CurrentScope();
 
     // Loop to avoid recursion for a few common cases, e.g. sequences, blocks
     while (what)
     {
-        // Make sure garbage collections doesn't destroy key objects
-        Tree_p    gcWhat    = what;
-        Context_p gcContext = context;
-
         // First attempt to look things up
         EvalCache cache;
         if (Tree *eval = context->Lookup(what, evalLookup, &cache))
@@ -697,7 +698,7 @@ static Tree *Instructions(Context *context, Tree *what)
         {
             // Evaluate child in a new context
             context->CreateScope();
-            what = ((Block *) what)->child;
+            what = ((Block *) (Tree *) what)->child;
             bool hasInstructions = context->ProcessDeclarations(what);
             if (context->IsEmpty())
                 context->PopScope();
@@ -716,11 +717,11 @@ static Tree *Instructions(Context *context, Tree *what)
             }
 
             // If we have a name on the left, lookup name and start again
-            Prefix *pfx = (Prefix *) what;
+            Prefix *pfx = (Prefix *) (Tree *) what;
             Tree   *callee = pfx->left;
 
             // Check if we had something like '(X->X+1) 31' as closure
-            Context *calleeContext = NULL;
+            Context_p calleeContext = NULL;
             if (Tree *inside = isClosure(callee, &calleeContext))
                 callee = inside;
 
@@ -765,7 +766,7 @@ static Tree *Instructions(Context *context, Tree *what)
             // Other cases: evaluate the callee, and if it changed, retry
             if (!newCallee)
             {
-                Context *newContext = new Context(context);
+                Context_p newContext = new Context(context);
                 newCallee = EvaluateClosure(newContext, callee);
             }
 
@@ -805,7 +806,7 @@ static Tree *Instructions(Context *context, Tree *what)
 
         case INFIX:
         {
-            Infix *infix = (Infix *) what;
+            Infix *infix = (Infix *) (Tree *) what;
             text name = infix->name;
 
             // Check sequences
@@ -849,7 +850,15 @@ static Tree *Instructions(Context *context, Tree *what)
                 continue;
             }
 
-            // All other cases: evaluate
+            // All other cases: evaluate left and right
+            Tree_p left  = Instructions(context, infix->left);
+            Tree_p right = Instructions(context, infix->right);
+            if (left != infix->left || right != infix->right)
+            {
+                result = new Infix(infix->name, left, right, infix->Position());
+                return encloseResult(context, originalScope, result);
+            }
+            
             Ooops("No infix matches $1", what);
             return encloseResult(context, originalScope, what);
         }
@@ -891,7 +900,7 @@ Tree *Evaluate(Context *context, Tree *what)
 }
 
 
-Tree *IsClosure(Tree *value, Context **context)
+Tree *IsClosure(Tree *value, Context_p *context)
 // ----------------------------------------------------------------------------
 //   Externally usable variant of isClosure
 // ----------------------------------------------------------------------------
@@ -906,6 +915,29 @@ Tree *IsClosure(Tree *value, Context **context)
 //     Type checking
 //
 // ============================================================================
+
+static Tree *formTypeCheck(Context *context, Tree *shape, Tree *value)
+// ----------------------------------------------------------------------------
+//    Check a value against a type shape
+// ----------------------------------------------------------------------------
+{
+    Context_p locals = new Context(context);
+    EvalCache cache;
+    TreeList  args;
+    Bindings  bindings(context, locals, value, cache, NULL, args);
+    if (!shape->Do(bindings))
+    {
+        IFTRACE(eval)
+            std::cerr << "TYPECHECK: shape mismatch for " << value << "\n";
+        return NULL;
+    }
+
+    // The value is associated to the symbols we extracted
+    IFTRACE(eval)
+        std::cerr << "TYPECHECK: shape match for " << value << "\n";
+    return makeClosure(locals, value);
+}
+
 
 Tree *TypeCheck(Context *scope, Tree *type, Tree *value)
 // ----------------------------------------------------------------------------
@@ -929,6 +961,12 @@ Tree *TypeCheck(Context *scope, Tree *type, Tree *value)
     }
     else
     {
+        // Check a type like 'type (X, Y)'
+        if (Prefix *ptype = type->AsPrefix())
+            if (Name *ptypename = ptype->left->AsName())
+                if (ptypename->value == "type")
+                    return formTypeCheck(scope, ptype->right, value);
+        
         IFTRACE(eval)
             std::cerr << "TYPECHECK: no code for " << type
                       << " opcode is " << type->GetInfo<Opcode>()

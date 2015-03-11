@@ -1,0 +1,19 @@
+complex -> type(re:real, im:real)
+Z1:complex + Z2:complex -> (Z1.re + Z2.re, Z1.im + Z2.im)
+Z1:complex + Z2:real    -> (Z1.re + Z2, Z1.im)
+Z1:complex - Z2:complex -> (Z1.re - Z2.re, Z1.im - Z2.im)
+Z1:complex + Z2:real    -> (Z1.re - Z2, Z1.im)
+Z1:complex * Z2:real    -> (Z1.re * Z2, Z1.im * Z2)
+Z1:complex * Z2:complex -> (Z1.re * Z2.re - Z1.im * Z2.im, Z1.re * Z2.im + Z1.im * Z2.re)
+Z1:complex / Z2:real    -> (Z1.re / Z2, Z1.im / Z2)
+Z1:complex / Z2:complex ->
+    denom -> Z2.re^2 + Z2.im^2
+    (Z1.re*Z2.re + Z1.im*Z2.im, Z1.im*Z2.re - Z1.re*Z2.im) / denom
+
+write Z:complex         -> write "(", Z.re, ",", Z.im, ")"
+writeln T, C:complex    -> writeln T, "(", C.re, ", ", C.im, ")"
+
+writeln "(3,4) + (5,6)=", (3,4) + (5,6)
+writeln "(3,4) - (5,6)=", (3,4) - (5,6)
+writeln "(3,4) * (5,6)=", (3,4) * (5,6)
+writeln "(3,4) / (5,6)=", (3,4) / (5,6)
