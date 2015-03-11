@@ -771,6 +771,9 @@ static Tree *Instructions(Context *context, Tree *what)
 
             if (newCallee != callee)
             {
+                // We need to evaluate argument in current context
+                arg = Instructions(context, arg);
+                
                 // We built a new context if left was a block
                 if (Tree *inside = isClosure(newCallee, &context))
                 {
@@ -840,7 +843,8 @@ static Tree *Instructions(Context *context, Tree *what)
             // Check scoped reference
             if (name == ".")
             {
-                Instructions(context, infix->left);
+                Tree *left = Instructions(context, infix->left);
+                isClosure(left, &context);
                 what = infix->right;
                 continue;
             }
