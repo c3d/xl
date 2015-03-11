@@ -128,9 +128,9 @@ struct Tree
 
     // Perform recursive actions on a tree
     template<typename Action>
-    typename Action::value_type Do(Action &a);
+    typename Action::value_type Do(Action *a);
     template<typename Action>
-    typename Action::value_type Do(Action *a) { return Do<Action>(*a); }
+    typename Action::value_type Do(Action &a) { return Do<Action>(&a); }
 
     // Attributes
     kind                Kind()                { return kind(tag & KINDMASK); }
@@ -422,21 +422,21 @@ inline Tree    *Tree::AsTree()          { return As<Tree>(); }
 // ============================================================================
 
 template<typename Action>
-typename Action::value_type Tree::Do(Action &action)
+typename Action::value_type Tree::Do(Action *action)
 // ----------------------------------------------------------------------------
 //   Perform an action on the tree 
 // ----------------------------------------------------------------------------
 {
     switch(Kind())
     {
-    case INTEGER:       return action.DoInteger((Integer *) this);
-    case REAL:          return action.DoReal((Real *) this);
-    case TEXT:          return action.DoText((Text *) this);
-    case NAME:          return action.DoName((Name *) this);
-    case BLOCK:         return action.DoBlock((Block *) this);
-    case PREFIX:        return action.DoPrefix((Prefix *) this);
-    case POSTFIX:       return action.DoPostfix((Postfix *) this);
-    case INFIX:         return action.DoInfix((Infix *) this);
+    case INTEGER:       return action->DoInteger((Integer *) this);
+    case REAL:          return action->DoReal((Real *) this);
+    case TEXT:          return action->DoText((Text *) this);
+    case NAME:          return action->DoName((Name *) this);
+    case BLOCK:         return action->DoBlock((Block *) this);
+    case PREFIX:        return action->DoPrefix((Prefix *) this);
+    case POSTFIX:       return action->DoPostfix((Postfix *) this);
+    case INFIX:         return action->DoInfix((Infix *) this);
     default:            assert(!"Unexpected tree kind");
     }
     return typename Action::value_type();

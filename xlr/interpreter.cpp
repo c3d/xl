@@ -850,15 +850,7 @@ static Tree *Instructions(Context_p context, Tree_p what)
                 continue;
             }
 
-            // All other cases: evaluate left and right
-            Tree_p left  = Instructions(context, infix->left);
-            Tree_p right = Instructions(context, infix->right);
-            if (left != infix->left || right != infix->right)
-            {
-                result = new Infix(infix->name, left, right, infix->Position());
-                return encloseResult(context, originalScope, result);
-            }
-            
+            // All other cases: failure
             Ooops("No infix matches $1", what);
             return encloseResult(context, originalScope, what);
         }
@@ -916,11 +908,87 @@ Tree *IsClosure(Tree *value, Context_p *context)
 //
 // ============================================================================
 
+struct Expansion
+// ----------------------------------------------------------------------------
+//   A structure to expand a type-matched structure
+// ----------------------------------------------------------------------------
+{
+    Expansion(Context *context): context(context) {}
+
+    typedef Tree *value_type;
+
+    Tree *  DoInteger(Integer *what)
+    {
+        return what;
+    }
+    Tree *  DoReal(Real *what)
+    {
+        return what;
+    }
+    Tree *  DoText(Text *what)
+    {
+        return what;
+    }
+    Tree *  DoName(Name *what)
+    {
+        if (Tree *bound = context->Bound(what))
+        {
+            if (Tree *eval = isClosure(bound, NULL))
+                bound = eval;
+            return bound;
+        }
+        return what;
+    }
+    Tree *  DoPrefix(Prefix *what)
+    {
+        Tree *left  = what->left->Do(this);
+        Tree *right = what->right->Do(this);
+        if (left != what->left || right != what->right)
+            return new Prefix(left, right, what->Position());
+        return what;
+    }
+    Tree *  DoPostfix(Postfix *what)
+    {
+        Tree *left  = what->left->Do(this);
+        Tree *right = what->right->Do(this);
+        if (left != what->left || right != what->right)
+            return new Postfix(left, right, what->Position());
+        return what;
+        
+    }
+    Tree *  DoInfix(Infix *what)
+    {
+        if (what->name == ":" || what->name == "as" || what->name == "when")
+            return what->left->Do(this);
+        Tree *left  = what->left->Do(this);
+        Tree *right = what->right->Do(this);
+        if (left != what->left || right != what->right)
+            return new Infix(what->name, left, right, what->Position());
+        return what;
+    }
+    
+    Tree *  DoBlock(Block *what)
+    {
+        Tree *chld = what->child->Do(this);
+        if (chld != what->child)
+            return new Block(chld,what->opening,what->closing,what->Position());
+        return what;
+    }
+
+    Context_p context;
+};
+
+
 static Tree *formTypeCheck(Context *context, Tree *shape, Tree *value)
 // ----------------------------------------------------------------------------
 //    Check a value against a type shape
 // ----------------------------------------------------------------------------
 {
+    // Strip outermost block if there is one
+    if (Block *block = shape->AsBlock())
+        shape = block->child;
+
+    // Check if the shape matches
     Context_p locals = new Context(context);
     EvalCache cache;
     TreeList  args;
@@ -931,6 +999,10 @@ static Tree *formTypeCheck(Context *context, Tree *shape, Tree *value)
             std::cerr << "TYPECHECK: shape mismatch for " << value << "\n";
         return NULL;
     }
+
+    // Reconstruct the resulting value from the shape
+    Expansion expand(locals);
+    value = shape->Do(expand);
 
     // The value is associated to the symbols we extracted
     IFTRACE(eval)
