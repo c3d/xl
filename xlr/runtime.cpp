@@ -279,9 +279,6 @@ Tree *xl_parse_tree_inner(Context *context, Tree *tree)
             }
 
             // Name or expression in { }
-            if (Name *name = result->AsName())
-                if (Tree *bound = context->Bound(name))
-                    return bound;
             result = context->Evaluate(result);
             return result;
         }

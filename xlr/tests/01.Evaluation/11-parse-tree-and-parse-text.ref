@@ -8,5 +8,5 @@ A+B*C-D*E+=A + B * C - D * E+
 foo 3=X + 2 * 4
 foo 551.3=X + 2 * 552.3
 foo Z+1=X + 2 * (X + 1)
-bar Z+1=X + 2 * ( (Z + 1) + 1)
+bar Z+1=X + 2 * (Z + 1 + 1)
 true
