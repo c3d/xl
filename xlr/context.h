@@ -475,7 +475,7 @@ inline std::ostream &operator<< (std::ostream &out, Context *c)
 //   Dump a context
 // ----------------------------------------------------------------------------
 {
-    out << "Context " << (void *) out << ":\n";
+    out << "Context " << (void *) c->CurrentScope() << ":\n";
     Context::Dump(out, ScopeRewrites(c->symbols));
     return out;
 }
