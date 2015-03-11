@@ -371,8 +371,7 @@ bool Bindings::DoInfix(Infix *what)
     }
 
     // Check if we have typed declarations, e.g. X+Y as integer
-    Infix *ifx = test->AsInfix();
-    if (what->name == "as" && (!ifx || ifx->name != "as"))
+    if (what->name == "as")
     {
         if (resultType)
         {
@@ -402,6 +401,7 @@ bool Bindings::DoInfix(Infix *what)
     }
 
     // In all other cases, we need an infix with matching name
+    Infix *ifx = test->AsInfix();
     if (!ifx)
     {
         // Try to get an infix by evaluating what we have
@@ -790,6 +790,19 @@ static Tree *Instructions(Context *context, Tree *what)
             if (name == "->")
             {
                 // Declarations evaluate last non-declaration result, or self
+                return encloseResult(context, originalScope, result);
+            }
+
+            // Check type matching
+            if (name == "as")
+            {
+                result = TypeCheck(context, infix->right, infix->left);
+                if (!result)
+                {
+                    Ooops("Value $1 does not match type $2",
+                          infix->left, infix->right);
+                    result = infix->left;
+                }
                 return encloseResult(context, originalScope, result);
             }
 
