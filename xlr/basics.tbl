@@ -1,5 +1,32 @@
 // ============================================================================
 // 
+//    Garbage collection initialization
+// 
+// ============================================================================
+
+INIT_GC;
+
+INIT_ALLOCATOR(Tree);
+INIT_ALLOCATOR(Integer);
+INIT_ALLOCATOR(Real);
+INIT_ALLOCATOR(Text);
+INIT_ALLOCATOR(Name);
+INIT_ALLOCATOR(Block);
+INIT_ALLOCATOR(Prefix);
+INIT_ALLOCATOR(Postfix);
+INIT_ALLOCATOR(Infix);
+
+INIT_ALLOCATOR(Context);
+
+#ifndef INTERPRETER_ONLY
+INIT_ALLOCATOR(Types);
+INIT_ALLOCATOR(RewriteCalls);
+#endif // INTERPRETER_ONLY
+
+
+
+// ============================================================================
+// 
 //   Built-in names
 // 
 // ============================================================================

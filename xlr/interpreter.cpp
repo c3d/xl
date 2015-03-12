@@ -874,8 +874,9 @@ Tree *EvaluateClosure(Context *context, Tree *what)
         result = Instructions(context, what);
     }
 
-    // At end of evaluation, check if need to cleanup
-    GarbageCollector::Collect();
+    // This is a safe point for checking collection status
+    // GarbageCollector::SafePoint();
+
     return result;
 }
 

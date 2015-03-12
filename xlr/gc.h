@@ -8,10 +8,12 @@
 //
 //     Garbage collector managing memory for us
 //
-//
-//
-//
-//
+//     Garbage collectio in XL is based on reference counting.
+//     The GCPtr class does the reference counting.
+//     The rule is that as soon as you assign an object to a GCPtr,
+//     it becomes "tracked". Objects created during a cycle and not assigned
+//     to a GCPtr by the next cycle are an error, which is flagged
+//     in debug mode.
 //
 //
 //
@@ -45,7 +47,6 @@
 #include <vector>
 #include <map>
 #include <set>
-#include <cassert>
 #include <stdint.h>
 #include <typeinfo>
 
@@ -53,13 +54,16 @@ extern void debuggc(void *);
 
 XL_BEGIN
 
-// ============================================================================
-//
-//   Class declarations
-//
-// ============================================================================
-
 struct GarbageCollector;
+template <class Object, typename ValueType=void> struct GCPtr;
+
+
+
+// ****************************************************************************
+//
+//   Type Allocator - Manage allocation for a given type
+//
+// ****************************************************************************
 
 struct TypeAllocator
 // ----------------------------------------------------------------------------
@@ -70,12 +74,14 @@ struct TypeAllocator
     {
         union
         {
-            Chunk *         next;           // Next in free list
+            volatile Chunk *next;           // Next in free list
             TypeAllocator * allocator;      // Allocator for this object
             uintptr_t       bits;           // Allocation bits
         };
         uint                count;          // Ref count
     };
+    typedef volatile Chunk *Chunk_vp;
+    typedef std::vector<Chunk_vp> Chunks;
 
 public:
     TypeAllocator(kstring name, uint objectSize);
@@ -85,8 +91,6 @@ public:
     void                Delete(void *);
     virtual void        Finalize(void *);
 
-    void                Sweep();
-
     static TypeAllocator *ValidPointer(TypeAllocator *ptr);
     static TypeAllocator *AllocatorPointer(TypeAllocator *ptr);
 
@@ -94,9 +98,10 @@ public:
     static void         Release(void *ptr);
     static bool         IsGarbageCollected(void *ptr);
     static bool         IsAllocated(void *ptr);
-    static void         InUse(void *ptr);
-    void                DeleteLater(Chunk *);
-    bool                DeleteAll();
+    static void *       InUse(void *ptr);
+    void                ScheduleDelete(Chunk_vp);
+    bool                CheckLeakedPointers();
+    bool                Sweep();
 
     void *operator new(size_t size);
     void operator delete(void *ptr);
@@ -117,29 +122,27 @@ public:
         virtual bool CanDelete(void *)          { return true; }
         virtual void EndCollection()            {}
     };
+    typedef std::set<Listener *> Listeners;
     void AddListener(Listener *l) { listeners.insert(l); }
     bool CanDelete(void *object);
 
 protected:
     GarbageCollector *  gc;
     kstring             name;
-    std::vector<Chunk*> chunks;
-    std::set<Listener *>listeners;
-    std::map<void*,uint>roots;
-    Chunk *             freeList;
-    Chunk *             toDelete;
-#ifdef XLR_GC_LIFO
-    // Make free list LIFO instead of FIFO. Not good performance-wise,
-    // but may help valgrind detect re-use of freed pointers.
-    Chunk *             freeListTail;
-#endif
+    Atomic<uint>        locked;
+    Chunks              chunks;
+    Listeners           listeners;
+    Atomic<Chunk_vp>    freeList;
+    Atomic<Chunk_vp>    toDelete;
+    Atomic<uint>        available;
+
     uint                chunkSize;
     uint                objectSize;
     uint                alignedSize;
-    uint                available;
     uint                allocatedCount;
     uint                freedCount;
     uint                totalCount;
+    uint                rootCount;
 
     friend void ::debuggc(void *ptr);
     friend struct GarbageCollector;
@@ -149,11 +152,8 @@ public:
     static void *       highestAddress;
     static void *       lowestAllocatorAddress;
     static void *       highestAllocatorAddress;
-    static uint         finalizing;
+    static Atomic<uint> finalizing;
 } __attribute__((aligned(16)));
-
-
-template <class Object, typename ValueType=void> struct GCPtr;
 
 
 template <class Object>
@@ -168,11 +168,11 @@ struct Allocator : TypeAllocator
 public:
     Allocator();
 
-    static Allocator *  Singleton();
+    static Allocator *  CreateSingleton();
+    static Allocator *  Singleton()             { return allocator; }
     static Object *     Allocate(size_t size);
     static void         Delete(Object *);
     virtual void        Finalize(void *object);
-    void                RegisterPointers();
     static bool         IsAllocated(void *ptr);
 
 private:
@@ -180,49 +180,80 @@ private:
 };
 
 
+
+// ****************************************************************************
+//
+//   Garbage collection root pointer
+//
+// ****************************************************************************
+
 template<class Object, typename ValueType>
 struct GCPtr
 // ----------------------------------------------------------------------------
 //   A root pointer to an object in a garbage-collected pool
 // ----------------------------------------------------------------------------
+//   This class is made a bit more complex by thread safety.
+//   It is supposed to work correctly when two threads assign to
+//   the same GCPtr at the same time. This is managed by 'Assign'
 {
+    typedef TypeAllocator TA;
+
     GCPtr(): pointer(0)                         { }
-    GCPtr(Object *ptr): pointer(ptr)            { Acquire(); }
-    GCPtr(Object &ptr): pointer(&ptr)           { Acquire(); }
+    GCPtr(Object *ptr): pointer(ptr)            { TA::Acquire(pointer); }
+    GCPtr(Object &ptr): pointer(&ptr)           { TA::Acquire(pointer); }
     GCPtr(const GCPtr &ptr)
-        : pointer(ptr.Pointer())                { Acquire(); }
+        : pointer(ptr.Pointer())                { TA::Acquire(pointer); }
     template<class U, typename V>
     GCPtr(const GCPtr<U,V> &p)
-        : pointer((U*) p.Pointer())             { Acquire(); }
-    ~GCPtr()                                    { Release(); }
+        : pointer((U*) p.Pointer())             { TA::Acquire(pointer); }
+    ~GCPtr()                                    { TA::Release(pointer); }
 
-    operator Object* () const                   { InUse(); return pointer; }
+
+    // ------------------------------------------------------------------------
+    // Thread safety section
+    // ------------------------------------------------------------------------
+
+    operator Object* () const
+    {
+        // If an object 'escapes' a GCPtr, it is marked as 'in use'
+        // That way, it survives until captured by another GCPtr
+        // We pass what we think is the current pointer at the moment
+        // to make sure what is marked as 'in use' is also what escapes
+        // in the current thread.
+        return (Object *) TA::InUse(pointer);
+    }
+
+    // These operators are not marking the pointer as escaping.
+    // If you use them, the resulting pointer becomes possibly invalid as soon
+    // as this GCPtr is destroyed
     const Object *ConstPointer() const          { return pointer; }
     Object *Pointer() const                     { return pointer; }
     Object *operator->() const                  { return pointer; }
     Object& operator*() const                   { return *pointer; }
 
-    GCPtr &operator= (const GCPtr &o)
+    // Two threads may be assigning to this GCPtr at the same time,
+    // e.g. if we update a same Tree child from two different threads.
+    GCPtr& Assign(Object *oldVal, Object *newVal)
     {
-        if (o.ConstPointer() != pointer)
+        while (!Atomic<Object *>::SetQ(pointer, oldVal, newVal))
+            oldVal = pointer;
+        if (newVal != oldVal)
         {
-            Release();
-            pointer = (Object *) o.ConstPointer();
-            Acquire();
+            TA::Acquire(newVal);
+            TA::Release(oldVal);
         }
         return *this;
     }
 
+    GCPtr &operator= (const GCPtr &o)
+    {
+        return Assign(pointer, (Object *) o.ConstPointer());
+    }
+            
     template<class U, typename V>
     GCPtr& operator=(const GCPtr<U,V> &o)
     {
-        if (o.ConstPointer() != pointer)
-        {
-            Release();
-            pointer = (U *) o.ConstPointer();
-            Acquire();
-        }
-        return *this;
+        return Assign(pointer, (Object *) o.ConstPointer());
     }
 
 #define DEFINE_CMP(CMP)                                 \
@@ -230,7 +261,7 @@ struct GCPtr
     bool operator CMP(const GCPtr<U,V> &o) const        \
     {                                                   \
         return pointer CMP o.ConstPointer();            \
-    }                                           
+    }
 
     DEFINE_CMP(==)
     DEFINE_CMP(!=)
@@ -239,15 +270,17 @@ struct GCPtr
     DEFINE_CMP(>)
     DEFINE_CMP(>=)
 
-    void        InUse() const   { TypeAllocator::InUse(pointer); }
-
 protected:
-    void        Acquire() const { TypeAllocator::Acquire(pointer); }
-    void        Release() const { TypeAllocator::Release(pointer); }
-
     Object *    pointer;
 };
 
+
+
+// ****************************************************************************
+// 
+//    The GarbageCollector class
+// 
+// ****************************************************************************
 
 struct GarbageCollector
 // ----------------------------------------------------------------------------
@@ -257,21 +290,31 @@ struct GarbageCollector
     GarbageCollector();
     ~GarbageCollector();
 
-    void        Register(TypeAllocator *a);
-    void        RunCollection(bool force=false);
-    void        MustRun()    { mustRun = true; }
-    void        Statistics(uint &tot, uint &alloc, uint &freed);
-
-    static GarbageCollector *   Singleton();
+    static GarbageCollector *   GC()            { return gc; }
+    static GarbageCollector *   CreateSingleton();
     static void                 Delete();
-    static void                 Collect(bool force=false);
-    static void                 CollectionNeeded() { Singleton()->MustRun(); }
-    static bool                 Running() { return Singleton()->running; }
 
-protected:
-    std::vector<TypeAllocator *> allocators;
-    bool mustRun, running;
-    static GarbageCollector *    gc;
+    static void                 MustRun()       { gc->mustRun |= 1U; }
+    static bool                 Running()       { return gc->running; }
+    static bool                 SafePoint();
+    static bool                 Sweep();
+    
+    void                        Statistics(uint &tot, uint &alloc, uint &freed);
+    void                        Register(TypeAllocator *a);
+
+private:
+    // Collection happens at SafePoint, you can't trigger it manually.
+    bool                        Collect();
+
+private:
+    typedef std::vector<TypeAllocator *> Allocators;
+    typedef TypeAllocator::Listeners     Listeners;
+
+    static GarbageCollector *   gc;
+
+    Allocators                  allocators;
+    Atomic<uint>                mustRun;
+    Atomic<uint>                running;
 
     friend void ::debuggc(void *ptr);
 };
@@ -287,6 +330,9 @@ protected:
 // Define a garbage collected tree
 
 #define GARBAGE_COLLECT(type)                                           \
+/* ------------------------------------------------------------ */      \
+/*  Declare a garbage-collected type and the related Mark       */      \
+/* ------------------------------------------------------------ */      \
     void *operator new(size_t size)                                     \
     {                                                                   \
         return XL::Allocator<type>::Allocate(size);                     \
@@ -301,7 +347,7 @@ protected:
 
 // ============================================================================
 //
-//   Inline functions for base allocator
+//   Inline functions for TypeAllocator
 //
 // ============================================================================
 
@@ -311,7 +357,7 @@ inline TypeAllocator *TypeAllocator::ValidPointer(TypeAllocator *ptr)
 // ----------------------------------------------------------------------------
 {
     TypeAllocator *result = (TypeAllocator *) (((uintptr_t) ptr) & ~PTR_MASK);
-    assert(result && result->gc == GarbageCollector::Singleton());
+    XL_ASSERT(result && result->gc == GarbageCollector::GC());
     return result;
 }
 
@@ -345,10 +391,10 @@ inline bool TypeAllocator::IsAllocated(void *ptr)
         if ((uintptr_t) ptr & CHUNKALIGN_MASK)
             return false;
 
-        Chunk *chunk = (Chunk *) ptr - 1;
+        Chunk_vp chunk = (Chunk_vp) ptr - 1;
         TypeAllocator *alloc = AllocatorPointer(chunk->allocator);
         if (alloc >= lowestAllocatorAddress && alloc <= highestAllocatorAddress)
-            if (alloc->gc == GarbageCollector::Singleton())
+            if (alloc->gc == GarbageCollector::GC())
                 return true;
     }
     return false;
@@ -362,11 +408,10 @@ inline void TypeAllocator::Acquire(void *pointer)
 {
     if (IsGarbageCollected(pointer))
     {
-        assert (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
-        assert (IsAllocated(pointer));
+        XL_ASSERT (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
+        XL_ASSERT (IsAllocated(pointer));
 
-        Chunk *chunk = ((Chunk *) pointer) - 1;
-        assert (chunk->count || !GarbageCollector::Running());
+        Chunk_vp chunk = ((Chunk_vp) pointer) - 1;
         ++chunk->count;
     }
 }
@@ -379,73 +424,44 @@ inline void TypeAllocator::Release(void *pointer)
 {
     if (IsGarbageCollected(pointer))
     {
-        assert (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
-        assert (IsAllocated(pointer));
+        XL_ASSERT (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
+        XL_ASSERT (IsAllocated(pointer));
 
-        Chunk *chunk = ((Chunk *) pointer) - 1;
+        Chunk_vp chunk = ((Chunk_vp) pointer) - 1;
         TypeAllocator *allocator = ValidPointer(chunk->allocator);
-        assert(chunk->count);
+        XL_ASSERT(chunk->count);
         uint count = --chunk->count;
-        if (!count)
-        {
-            if (finalizing)
-                allocator->DeleteLater(chunk);
-            else if (!chunk->bits & IN_USE)
-                allocator->Finalize(pointer);
-        }
+        if (!count && (~chunk->bits & IN_USE))
+            allocator->ScheduleDelete(chunk);
     }
 }
 
 
-inline void TypeAllocator::InUse(void *pointer)
+inline void *TypeAllocator::InUse(void *pointer)
 // ----------------------------------------------------------------------------
 //   Mark the current pointer as in use, to preserve in next GC cycle
 // ----------------------------------------------------------------------------
 {
     if (IsGarbageCollected(pointer))
     {
-        assert (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
-        Chunk *chunk = ((Chunk *) pointer) - 1;
-        chunk->bits |= IN_USE;
+        XL_ASSERT (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
+        Chunk_vp chunk = ((Chunk_vp) pointer) - 1;
+        Atomic<uintptr_t>::Or(chunk->bits, IN_USE);
     }
-}
-
-
-inline void TypeAllocator::DeleteLater(TypeAllocator::Chunk *ptr)
-// ----------------------------------------------------------------------------
-//   Record that we will need to delete this
-// ----------------------------------------------------------------------------
-{
-    ptr->next = toDelete;
-    toDelete = ptr;
-}
-
-
-inline bool TypeAllocator::DeleteAll()
-// ----------------------------------------------------------------------------
-//    Remove all the things that we have pushed on the toDelete list
-// ----------------------------------------------------------------------------
-{
-    bool result = false;
-    while (toDelete)
-    {
-        Chunk *next = toDelete;
-        toDelete = toDelete->next;
-        next->allocator = this;
-        Finalize(next+1);
-        freedCount++;
-        result = true;
-    }
-    return result;
+    return pointer;
 }
 
 
 
 // ============================================================================
 //
-//   Definitions for template Allocator
+//   Inline functions for template Allocator
 //
 // ============================================================================
+
+template<class Object>
+Allocator<Object> *Allocator<Object>::allocator = NULL;
+
 
 template<class Object> inline
 Allocator<Object>::Allocator()
@@ -457,7 +473,7 @@ Allocator<Object>::Allocator()
 
 
 template<class Object> inline
-Allocator<Object> * Allocator<Object>::Singleton()
+Allocator<Object> * Allocator<Object>::CreateSingleton()
 // ----------------------------------------------------------------------------
 //    Return a singleton for the allocation class
 // ----------------------------------------------------------------------------
@@ -476,8 +492,8 @@ Object *Allocator<Object>::Allocate(size_t size)
 //   Allocate an object (invoked by operator new)
 // ----------------------------------------------------------------------------
 {
-    assert(size == Singleton()->TypeAllocator::objectSize); (void) size;
-    return (Object *) Singleton()->TypeAllocator::Allocate();
+    XL_ASSERT(size == allocator->TypeAllocator::objectSize); (void) size;
+    return (Object *) allocator->TypeAllocator::Allocate();
 }
 
 
@@ -487,7 +503,7 @@ void Allocator<Object>::Delete(Object *obj)
 //   Allocate an object (invoked by operator delete)
 // ----------------------------------------------------------------------------
 {
-    Singleton()->TypeAllocator::Delete(obj);
+    allocator->TypeAllocator::Delete(obj);
 }
 
 
@@ -499,13 +515,15 @@ void Allocator<Object>::Finalize(void *obj)
 {
     if (CanDelete(obj))
     {
+        finalizing++;
         Object *object = (Object *) obj;
         delete object;
+        finalizing--;
     }
     else
     {
-        Chunk *chunk = ((Chunk *) obj) - 1;
-        chunk->bits |= IN_USE;
+        Chunk_vp chunk = ((Chunk_vp) obj) - 1;
+        Atomic<uintptr_t>::Or(chunk->bits, IN_USE);
     }
 }
 
@@ -521,11 +539,33 @@ bool Allocator<Object>::IsAllocated(void *ptr)
         if ((uintptr_t) ptr & CHUNKALIGN_MASK)
             return false;
 
-        Chunk *chunk = (Chunk *) ptr - 1;
+        Chunk_vp chunk = (Chunk_vp) ptr - 1;
         TypeAllocator *alloc = AllocatorPointer(chunk->allocator);
-        if (alloc == Singleton())
+        if (alloc == allocator)
             return true;
     }
+    return false;
+}
+
+
+
+// ============================================================================
+//
+//    Inline functions for the GarbageCollector class
+//
+// ============================================================================
+
+inline bool GarbageCollector::SafePoint()
+// ----------------------------------------------------------------------------
+//    Check if we need to run the garbage collector, and if so run it
+// ----------------------------------------------------------------------------
+//    When calling this function, the current thread should not have any
+//    allocation "in flight", i.e. not recorded using a root pointer
+//    This looks for pointers that were allocated since the last
+//    safe point and not assigned to any GCPtr yet.
+{
+    if (gc->mustRun)
+        return gc->Collect();
     return false;
 }
 

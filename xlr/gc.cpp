@@ -4,12 +4,14 @@
 //
 //   File Description:
 //
-//     Garbage collector managing memory for us
+//     Garbage collector and memory management
 //
-//
-//
-//
-//
+//     Garbage collectio in XL is based on reference counting.
+//     The GCPtr class does the reference counting.
+//     The rule is that as soon as you assign an object to a GCPtr,
+//     it becomes "tracked". Objects created during a cycle and not assigned
+//     to a GCPtr by the next cycle are an error, which is flagged
+//     in debug mode.
 //
 //
 //
@@ -41,9 +43,11 @@
 #include "options.h"
 #include "flight_recorder.h"
 #include "valgrind/memcheck.h"
+
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
+#include <pthread.h>
 
 #ifdef CONFIG_MINGW // Windows: When getting in the way becomes an art form...
 #include <malloc.h>
@@ -62,17 +66,19 @@ void *TypeAllocator::lowestAddress = (void *) ~0;
 void *TypeAllocator::highestAddress = (void *) 0;
 void *TypeAllocator::lowestAllocatorAddress = (void *) ~0;
 void *TypeAllocator::highestAllocatorAddress = (void *) 0;
-uint  TypeAllocator::finalizing = 0;
+Atomic<uint> TypeAllocator::finalizing = 0;
+
+// Identifier of the thread currently collecting if any
+static pthread_t collecting = NULL;
+
 
 TypeAllocator::TypeAllocator(kstring tn, uint os)
 // ----------------------------------------------------------------------------
 //    Setup an empty allocator
 // ----------------------------------------------------------------------------
-    : gc(NULL), name(tn), chunks(), freeList(NULL), toDelete(NULL),
-#ifdef XLR_GC_LIFO
-      freeListTail(NULL),
-#endif
-      chunkSize(1022), objectSize(os), alignedSize(os), available(0),
+    : gc(NULL), name(tn), locked(0), chunks(),
+      freeList(NULL), toDelete(NULL), available(0),
+      chunkSize(1022), objectSize(os), alignedSize(os),
       allocatedCount(0), freedCount(0), totalCount(0)
 {
     RECORD(MEMORY, "New type allocator",
@@ -88,13 +94,13 @@ TypeAllocator::TypeAllocator(kstring tn, uint os)
     }
 
     // Use the address of the garbage collector as signature
-    gc = GarbageCollector::Singleton();
+    gc = GarbageCollector::GC();
 
     // Register the allocator with the garbage collector
     gc->Register(this);
 
     // Make sure that we have the correct alignment
-    assert(this == ValidPointer(this));
+    XL_ASSERT(this == ValidPointer(this));
 
     // Update allocator addresses
     if (lowestAllocatorAddress > this)
@@ -116,9 +122,8 @@ TypeAllocator::~TypeAllocator()
 
     VALGRIND_DESTROY_MEMPOOL(this);
 
-    std::vector<Chunk *>::iterator c;
-    for (c = chunks.begin(); c != chunks.end(); c++)
-        free(*c);
+    for (Chunks::iterator c = chunks.begin(); c != chunks.end(); c++)
+        free((void *) *c);
 }
 
 
@@ -127,53 +132,76 @@ void *TypeAllocator::Allocate()
 //   Allocate a chunk of the given size
 // ----------------------------------------------------------------------------
 {
-    RECORD(MEMORY_DETAILS, "Allocate", "free", (intptr_t) freeList);
+    RECORD(MEMORY_DETAILS, "Allocate", "free", (intptr_t) freeList.Get());
 
-    Chunk *result = freeList;
-    if (!result)
+    Chunk_vp result;
+    do
     {
-        // Nothing free: allocate a big enough chunk
-        size_t  itemSize  = alignedSize + sizeof(Chunk);
-        size_t  allocSize = (chunkSize + 1) * itemSize;
-
-        void   *allocated = malloc(allocSize);
-        (void)VALGRIND_MAKE_MEM_NOACCESS(allocated, allocSize);
-
-        RECORD(MEMORY_DETAILS, "New Chunk", "addr", (intptr_t) allocated);
-
-        char   *chunkBase = (char *) allocated + alignedSize;
-        chunks.push_back((Chunk *) allocated);
-        for (uint i = 0; i < chunkSize; i++)
+        result = freeList;
+        while (!result)
         {
-            Chunk *ptr = (Chunk *) (chunkBase + i * itemSize);
-            (void)VALGRIND_MAKE_MEM_UNDEFINED(&ptr->next, sizeof(ptr->next));
-            ptr->next = result;
-            result = ptr;
+            // Make sure only one thread allocates chunks
+            uint wasLocked = locked++;
+            if (wasLocked)
+            {
+                locked--;
+                result = freeList;
+                continue;
+            }
+        
+            // Nothing free: allocate a big enough chunk
+            size_t  itemSize  = alignedSize + sizeof(Chunk);
+            size_t  allocSize = (chunkSize + 1) * itemSize;
+
+            void   *allocated = malloc(allocSize);
+            (void)VALGRIND_MAKE_MEM_NOACCESS(allocated, allocSize);
+
+            RECORD(MEMORY_DETAILS, "New Chunk", "addr", (intptr_t) allocated);
+
+            char *chunkBase = (char *) allocated + alignedSize;
+            Chunk_vp last = (Chunk_vp) chunkBase;
+            Chunk_vp free = result;
+            for (uint i = 0; i < chunkSize; i++)
+            {
+                Chunk_vp ptr = (Chunk_vp) (chunkBase + i * itemSize);
+                VALGRIND_MAKE_MEM_UNDEFINED(&ptr->next,sizeof(ptr->next));
+                ptr->next = free;
+                free = ptr;
+            }
+
+            // Update the chunks list
+            chunks.push_back((Chunk *) allocated);
+            available += chunkSize;
+            if (lowestAddress > allocated)
+                lowestAddress = allocated;
+            char *highMark = (char *) allocated + (chunkSize+1) * itemSize;
+            if (highestAddress < (void *) highMark)
+                highestAddress = highMark;
+
+            // Update the freelist
+            while (!freeList.SetQ(result, free))
+            {
+                result = freeList;
+                last->next = result;
+            }
+
+            // Unlock the chunks
+            --locked;
+
+            // Read back the free list
+            result = freeList;
         }
-        freeList = result;
-        available += chunkSize;
-
-        if (lowestAddress > allocated)
-            lowestAddress = allocated;
-        char *highMark = (char *) allocated + (chunkSize+1) * itemSize;
-        if (highestAddress < (void *) highMark)
-            highestAddress = highMark;
     }
+    while (!freeList.SetQ(result, result->next));
 
-    // REVISIT: Atomic operations here
-    freeList = result->next;
-#ifdef XLR_GC_LIFO
-    if (!freeList)
-        freeListTail = NULL;
-#endif
-    (void)VALGRIND_MAKE_MEM_UNDEFINED(result, sizeof(Chunk));
+    VALGRIND_MAKE_MEM_UNDEFINED(result, sizeof(Chunk));
     result->allocator = this;
-    result->bits |= IN_USE;     // In case a collection is running right now
+    result->bits |= IN_USE;     // Mark it as in use for current collection
     result->count = 0;
     if (--available < chunkSize * 0.9)
-        GarbageCollector::CollectionNeeded();
+        gc->MustRun();
 
-    void *ret =  &result[1];
+    void *ret =  (void *) &result[1];
     VALGRIND_MEMPOOL_ALLOC(this, ret, objectSize);
     return ret;
 }
@@ -189,30 +217,25 @@ void TypeAllocator::Delete(void *ptr)
     if (!ptr)
         return;
 
-    Chunk *chunk = (Chunk *) ptr - 1;
-    assert(IsGarbageCollected(ptr) || !"Deleted pointer is not managed by GC");
-    assert(IsAllocated(ptr) || !"Deleted GC pointer that was already freed");
-    assert(!chunk->count || !"Deleted pointer has live references");
+    Chunk_vp chunk = (Chunk_vp) ptr - 1;
+    XL_ASSERT(IsGarbageCollected(ptr) && "Deleted pointer not managed by GC");
+    XL_ASSERT(IsAllocated(ptr) && "Deleted GC pointer that was already freed");
+    XL_ASSERT(!chunk->count && "Deleted pointer has live references");
 
     // Put the pointer back on the free list
-#ifndef XLR_GC_LIFO
-    chunk->next = freeList;
-    freeList = chunk;
-#else
-    chunk->next = NULL;
-    if (freeListTail)
-        freeListTail->next = chunk;
-    freeListTail = chunk;
-    if (!freeList)
-        freeList = chunk;
-#endif
+    do
+    {
+        chunk->next = freeList;
+    }
+    while (!freeList.SetQ(chunk->next, chunk));
     available++;
+    freedCount++;
 
-#if 1
+#ifdef DEBUG
     // Scrub all the pointers
     uint32 *base = (uint32 *) ptr;
     uint32 *last = (uint32 *) (((char *) ptr) + alignedSize);
-    (void)VALGRIND_MAKE_MEM_UNDEFINED(ptr, alignedSize);
+    VALGRIND_MAKE_MEM_UNDEFINED(ptr, alignedSize);
     for (uint *p = base; p < last; p++)
         *p = 0xDeadBeef;
 #endif
@@ -221,32 +244,73 @@ void TypeAllocator::Delete(void *ptr)
 }
 
 
-void TypeAllocator::Finalize(void *ptr)
+void TypeAllocator::ScheduleDelete(TypeAllocator::Chunk_vp ptr)
 // ----------------------------------------------------------------------------
-//   We should never reach this one
+//   Delete now if possible, or record that we will need to delete it later
 // ----------------------------------------------------------------------------
 {
-    std::cerr << "No finalizer installed for " << ptr << "\n";
-    assert(!"No finalizer installed");
+    XL_ASSERT((ptr->bits & IN_USE) == 0 && "Deleting in-use object");
+    XL_ASSERT(ptr->count == 0 && "Deleting referenced object");
+
+    if (finalizing)
+    {
+        // Put it on the to-delete list to avoid deep recursion
+        Chunk_vp next;
+        do
+        {
+            next = toDelete;
+            ptr->next = next;
+        } while(!toDelete.SetQ(next, ptr));
+    }
+    else
+    {
+        // Delete current object immediately
+        Finalize((void *) (ptr + 1));
+
+        // Delete the children put on the toDelete list
+        GarbageCollector::Sweep();
+    }
 }
 
 
-void TypeAllocator::Sweep()
+bool TypeAllocator::Sweep()
 // ----------------------------------------------------------------------------
-//   Once we have marked everything, sweep what is not in use
+//    Remove all the things that we have pushed on the toDelete list
 // ----------------------------------------------------------------------------
 {
     RECORD(MEMORY_DETAILS, "Sweep");
 
-    allocatedCount = freedCount = totalCount = 0;
-    std::vector<Chunk *>::iterator chunk;
-    for (chunk = chunks.begin(); chunk != chunks.end(); chunk++)
+    bool result = false;
+    while (toDelete)
     {
-        char *chunkBase = (char *) *chunk + alignedSize;
+        Chunk_vp next = toDelete;
+        while (!toDelete.SetQ(next, next->next))
+            next = toDelete;
+        Finalize((void *) (next+1));
+        result = true;
+    }
+    return result;
+}
+
+
+bool TypeAllocator::CheckLeakedPointers()
+// ----------------------------------------------------------------------------
+//   Check if any pointers were allocated and not captured between safe points
+// ----------------------------------------------------------------------------
+{
+    RECORD(MEMORY_DETAILS, "CheckLeaks");
+
+    allocatedCount = freedCount = totalCount = 0;
+    uint leaked = 0;
+    void *leakedPtr = NULL;
+    
+    for (Chunks::iterator chk = chunks.begin(); chk != chunks.end(); chk++)
+    {
+        char *chunkBase = (char *) *chk + alignedSize;
         size_t  itemSize  = alignedSize + sizeof(Chunk);
         for (uint i = 0; i < chunkSize; i++)
         {
-            Chunk *ptr = (Chunk *) (chunkBase + i * itemSize);
+            Chunk_vp ptr = (Chunk_vp) (chunkBase + i * itemSize);
             totalCount++;
             if (AllocatorPointer(ptr->allocator) == this)
             {
@@ -257,19 +321,30 @@ void TypeAllocator::Sweep()
                 }
                 else
                 {
-                    // Count is 0 : no longer referenced, may cascade free
-                    // We cannot just recurse in delete here because stack
-                    // space may be limited (#2488)
-                    finalizing++;
-                    DeleteLater(ptr);
-                    DeleteAll();
-                    finalizing--;
+                    leaked++;
+                    leakedPtr = (void *) (ptr+1);
                 }
             }
         }
     }
 
-    RECORD(MEMORY_DETAILS, "Sweep Done", "freed", freedCount);
+    IFTRACE(memory)
+        if (leakedPtr)
+            std::cerr << "Leaked " << leaked << " " << name
+                      << " including " << leakedPtr << "\n";
+    
+    RECORD(MEMORY_DETAILS, "CheckLeaks", "leaks", leaked);
+    return leakedPtr != NULL;
+}
+
+
+void TypeAllocator::Finalize(void *ptr)
+// ----------------------------------------------------------------------------
+//   We should never reach this one
+// ----------------------------------------------------------------------------
+{
+    std::cerr << "No finalizer installed for " << ptr << "\n";
+    XL_ASSERT(!"No finalizer installed");
 }
 
 
@@ -312,7 +387,7 @@ bool TypeAllocator::CanDelete(void *obj)
 // ----------------------------------------------------------------------------
 {
     bool result = true;
-    std::set<Listener *>::iterator i;
+    Listeners::iterator i;
     for (i = listeners.begin(); i != listeners.end(); i++)
         if (!(*i)->CanDelete(obj))
             result = false;
@@ -320,41 +395,6 @@ bool TypeAllocator::CanDelete(void *obj)
            "addr", (intptr_t) obj, "ok", result);
     return result;
 }
-
-
-
-
-// ============================================================================
-//
-//   Allocator class
-//
-// ============================================================================
-
-// Define the allocator singleton for each object type.
-// Previously, Allocator::Singleton() had a static local 'allocator' variable,
-// but we ended up with several instances on Windows. See #903.
-
-#define DEFINE_ALLOC(_type) \
-    struct _type;           \
-    template<> Allocator<_type> * Allocator<_type>::allocator = NULL;
-
-DEFINE_ALLOC(Tree);
-DEFINE_ALLOC(Integer);
-DEFINE_ALLOC(Real);
-DEFINE_ALLOC(Text);
-DEFINE_ALLOC(Name);
-DEFINE_ALLOC(Block);
-DEFINE_ALLOC(Prefix);
-DEFINE_ALLOC(Postfix);
-DEFINE_ALLOC(Infix);
-DEFINE_ALLOC(Context);
-DEFINE_ALLOC(Types);
-DEFINE_ALLOC(Rewrite);
-DEFINE_ALLOC(RewriteCalls);
-
-#undef DEFINE_ALLOC
-
-
 
 
 
@@ -377,10 +417,11 @@ GarbageCollector::~GarbageCollector()
 //    Destroy the garbage collector
 // ----------------------------------------------------------------------------
 {
-    RunCollection(true);
-    RunCollection(true);
+    MustRun();
+    Collect();
+    Collect();
 
-    std::vector<TypeAllocator *>::iterator i;
+    Allocators::iterator i;
     for (i = allocators.begin(); i != allocators.end(); i++)
         delete *i;
 
@@ -402,20 +443,35 @@ void GarbageCollector::Register(TypeAllocator *allocator)
 }
 
 
-void GarbageCollector::RunCollection(bool force)
+bool GarbageCollector::Sweep()
+// ----------------------------------------------------------------------------
+//    Cleanup all the pending deletions
+// ----------------------------------------------------------------------------
+{
+    bool purging = false;
+    Allocators &allocators = gc->allocators;
+    for (Allocators::iterator a=allocators.begin(); a!=allocators.end(); a++)
+        purging |= (*a)->Sweep();
+    return purging;
+}
+
+
+bool GarbageCollector::Collect()
 // ----------------------------------------------------------------------------
 //   Run garbage collection on all the allocators we own
 // ----------------------------------------------------------------------------
 {
-    if (mustRun || force)
-    {
-        RECORD(MEMORY, "Garbage collection", "force", force);
+    pthread_t self = pthread_self();
 
-        std::vector<TypeAllocator *>::iterator a;
-        std::set<TypeAllocator::Listener *> listeners;
-        std::set<TypeAllocator::Listener *>::iterator l;
-        mustRun = false;
-        running = true;
+    // If we get here, we are at a safe point.
+    // Only one thread enters collecting, the others spin and wait
+    if (Atomic<pthread_t>::SetQ(collecting, NULL, self))
+    {
+        RECORD(MEMORY, "Garbage collection", "self", (intptr_t) self);
+
+        Allocators::iterator a;
+        Listeners listeners;
+        Listeners::iterator l;
 
         // Build the listeners from all allocators
         for (a = allocators.begin(); a != allocators.end(); a++)
@@ -426,23 +482,19 @@ void GarbageCollector::RunCollection(bool force)
         for (l = listeners.begin(); l != listeners.end(); l++)
             (*l)->BeginCollection();
 
-        // Sweep whatever is not referenced at this point in time
-        for (a = allocators.begin(); a != allocators.end(); a++)
-            (*a)->Sweep();
-
         // Cleanup pending purges to maximize the effect of garbage collection
-        bool purging = true;
-        while (purging)
-        {
-            purging = false;
-            for (a = allocators.begin(); a != allocators.end(); a++)
-                purging |= (*a)->DeleteAll();
-        }
+        while (Sweep())
+            /* Keep purging */;
+
+        // Check if any object was allocated and not captured at this stage
+        for (a = allocators.begin(); a != allocators.end(); a++)
+            (*a)->CheckLeakedPointers();
 
         // Notify all the listeners that we completed the collection
         for (l = listeners.begin(); l != listeners.end(); l++)
             (*l)->EndCollection();
 
+        // Print statistics (inside lock, to increase race pressure)
         IFTRACE(memory)
         {
             uint tot = 0, alloc = 0, freed = 0;
@@ -462,9 +514,17 @@ void GarbageCollector::RunCollection(bool force)
                    "Kilobytes", tot >> 10, alloc >> 10, freed >> 10);
         }
 
-        running = false;
-        RECORD(MEMORY, "Garbage collection", "force", force);
+        // We are done, mark it so
+        if (!Atomic<pthread_t>::SetQ(collecting, self, NULL))
+        {
+            XL_ASSERT(!"Someone else stole the collection lock?");
+        }
+
+        RECORD(MEMORY, "Garbage collection", "self", (intptr_t) self);
+
+        return true;
     }
+    return false;
 }
 
 
@@ -490,7 +550,7 @@ void GarbageCollector::Statistics(uint &tot, uint &alloc, uint &freed)
 
 GarbageCollector *GarbageCollector::gc = NULL;
 
-GarbageCollector *GarbageCollector::Singleton()
+GarbageCollector *GarbageCollector::CreateSingleton()
 // ----------------------------------------------------------------------------
 //   Return the garbage collector
 // ----------------------------------------------------------------------------
@@ -513,15 +573,6 @@ void GarbageCollector::Delete()
     }
 }
 
-
-void GarbageCollector::Collect(bool force)
-// ----------------------------------------------------------------------------
-//   Collect garbage in this garbage collector
-// ----------------------------------------------------------------------------
-{
-    Singleton()->RunCollection(force);
-}
-
 XL_END
 
 
@@ -533,14 +584,17 @@ void debuggc(void *ptr)
     using namespace XL;
     if (TypeAllocator::IsGarbageCollected(ptr))
     {
-        typedef TypeAllocator::Chunk Chunk;
-        typedef TypeAllocator TA;
+        typedef TypeAllocator::Chunk    Chunk;
+        typedef TypeAllocator::Chunks   Chunks;
+        typedef TypeAllocator::Chunk_vp Chunk_vp;
+        typedef TypeAllocator           TA;
 
-        Chunk *chunk = (Chunk *) ptr - 1;
-        if ((uintptr_t) chunk & TA::CHUNKALIGN_MASK)
+        Chunk_vp chunk = (Chunk_vp) ptr - 1;
+        if ((uintptr_t) (void *) chunk & TA::CHUNKALIGN_MASK)
         {
             std::cerr << "WARNING: Pointer " << ptr << " is not aligned\n";
-            chunk = (Chunk *) (((uintptr_t) chunk) & ~TA::CHUNKALIGN_MASK);
+            chunk = (Chunk_vp)
+                (((uintptr_t) (void *) chunk) & ~TA::CHUNKALIGN_MASK);
             std::cerr << "         Using " << chunk << " as chunk\n";
         }
         uintptr_t bits = chunk->bits;
@@ -548,7 +602,7 @@ void debuggc(void *ptr)
         std::cerr << "Allocator bits: " << std::hex << bits
                   << " count=" << chunk->count << "\n";
 
-        GarbageCollector *gc = GarbageCollector::Singleton();
+        GarbageCollector *gc = GarbageCollector::GC();
 
         TA *alloc = (TA *) aligned;
         bool allocated = alloc->gc == gc;
@@ -569,7 +623,7 @@ void debuggc(void *ptr)
         uint found = 0;
         for (a = gc->allocators.begin(); a != gc->allocators.end(); a++)
         {
-            std::vector<TA::Chunk *>::iterator c;
+            Chunks::iterator c;
             alloc = *a;
             uint itemBytes = alloc->alignedSize + sizeof(Chunk);
             uint chunkBytes = alloc->chunkSize * itemBytes;
@@ -586,8 +640,8 @@ void debuggc(void *ptr)
                                   << alloc << " (" << alloc->name << ") "
                                   << "chunk #" << chunkIndex << " at position ";
                     uint freeIndex = 0;
-                    Chunk *prev = NULL;
-                    for (Chunk *f = alloc->freeList; f; f = f->next)
+                    Chunk_vp prev = NULL;
+                    for (Chunk_vp f = alloc->freeList; f; f = f->next)
                     {
                         freeIndex++;
                         if (f == chunk)

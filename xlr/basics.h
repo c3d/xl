@@ -42,6 +42,12 @@
 
 #include "tree.h"
 #include "context.h"
+
+#ifndef INTERPRETER_ONLY
+#include "types.h"
+#include "args.h"
+#endif
+
 #include "main.h"
 #include "save.h"
 #include "interpreter.h"

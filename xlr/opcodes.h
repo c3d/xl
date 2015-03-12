@@ -341,6 +341,8 @@ XL_END
 //
 // ============================================================================
 
+#undef INIT_GC
+#undef INIT_ALLOCATOR
 #undef UNARY
 #undef BINARY
 #undef INFIX
@@ -362,6 +364,8 @@ XL_END
 //
 // ============================================================================
 
+#define INIT_GC
+#define INIT_ALLOCATOR(type)
 #define UNARY(Name, ResTy, LeftTy, Code)
 #define BINARY(Name, ResTy, LeftTy, RightTy, Code)
 #define INFIX(Name, ResTy, LeftTy, Symbol, RightTy, Code)
@@ -404,6 +408,23 @@ XL_END
 //    Definitions in implementation files
 //
 // ============================================================================
+
+#define INIT_GC                                                         \
+/* ------------------------------------------------------------ */      \
+/*  Initialize the garbage collector                            */      \
+/* ------------------------------------------------------------ */      \
+    static void *init_allocator_for_##type =                            \
+        (void *) GarbageCollector::CreateSingleton();
+
+
+#define INIT_ALLOCATOR(type)                                            \
+/* ------------------------------------------------------------ */      \
+/*  Initialize a type allocator                                 */      \
+/* ------------------------------------------------------------ */      \
+    template<>                                                          \
+    Allocator<type> *Allocator<type>::allocator =                       \
+        Allocator<type>::CreateSingleton();
+
 
 #define ARG(Name, Type, Value)                                          \
 /* ------------------------------------------------------------ */      \

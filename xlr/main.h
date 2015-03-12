@@ -110,7 +110,7 @@ struct Main
     int          LoadAndRun();
 
     // Individual phases of the above
-    Errors *     InitErrorsAndMAIN();
+    Errors *     InitMAIN();
     int          ParseOptions();
     int          LoadFiles();
     int          LoadFile(text file, text modname="");

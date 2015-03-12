@@ -56,6 +56,7 @@ struct Atomic
 // ----------------------------------------------------------------------------
 {
     typedef Value                               value_t;
+    typedef volatile Value &                    value_v;
 
 public:
     Atomic()                                    : value() {}
@@ -63,33 +64,49 @@ public:
     Atomic(const Atomic &o)                     : value(o.Get()) {}
 
     operator            value_t() const         { return value; }
-    operator            value_t&()              { return value; }
+    operator            volatile value_t&()     { return value; }
 
-    bool                Get()                   { return value; }
+    value_t             Get() const             { return value; }
 
-    value_t             Set(value_t from, value_t to);
-    bool                SetQ(value_t from, value_t to);
-    value_t             Add(value_t delta);
-    value_t             Sub(value_t delta);
 
-    // Increment and decrement can be specialized for processors that
-    // have special instructions with limited constant range (e.g. Itanium)
-    template <int d>
-    value_t             Increment()             { return Add(d); }
-    template <int d>
-    value_t             Decrement()             { return Sub(d); }
+    static value_t      Set (value_v ref, value_t from, value_t to);
+    static bool         SetQ(value_v ref, value_t from, value_t to);
+    static value_t      Add (value_v ref, value_t delta);
+    static value_t      Sub (value_v ref, value_t delta);
+    static value_t      Or  (value_v ref, value_t delta);
+    static value_t      Xor (value_v ref, value_t delta);
+    static value_t      And (value_v ref, value_t delta);
+    static value_t      Nand(value_v ref, value_t delta);
 
-    Atomic<Value> &     operator+=(value_t d)   { Add(d); return *this; }
-    Atomic<Value> &     operator-=(value_t d)   { Sub(d); return *this; }
+    value_t             Set(value_t f,value_t t){ return Set (value, f, t); }
+    bool                SetQ(value_t f,value_t t){ return SetQ(value, f, t); }
+    value_t             Add(value_t delta)      { return Add (value, delta); }
+    value_t             Sub(value_t delta)      { return Sub (value, delta); }
+    value_t             Or (value_t delta)      { return Or  (value, delta); }
+    value_t             Xor(value_t delta)      { return Xor (value, delta); }
+    value_t             And(value_t delta)      { return And (value, delta); }
+    value_t             Nand(value_t delta)     { return Nand(value, delta); }
 
-    value_t             operator++()            { return Increment<1>(); }
-    value_t             operator--()            { return Decrement<1>(); }
+    value_t             operator++()            { return Add(1) + 1; }
+    value_t             operator--()            { return Sub(1) - 1; }
 
-    value_t             operator++(int)         { return Increment<1>() - 1; }
-    value_t             operator--(int)         { return Decrement<1>() + 1; }
+    value_t             operator++(int)         { return Add(1); }
+    value_t             operator--(int)         { return Sub(1); }
+
+    // WARNING: The following operators differ from the C equivalents
+    // in that they return the value BEFORE operation. That's on purpose,
+    // as in general, that's the value which is useful for testing
+    value_t             operator +=(value_t d)  { return Add(d); }
+    value_t             operator -=(value_t d)  { return Sub(d); }
+    value_t             operator |=(value_t d)  { return Or(d); }
+    value_t             operator &=(value_t d)  { return And(d); }
+    value_t             operator ^=(value_t d)  { return Xor(d); }
 
 protected:
-    volatile value_t            value;
+    volatile value_t    value;
+
+private:
+    value_t             operator =(value_t d)   { value = d; return value; }
 };
 
 
@@ -102,42 +119,79 @@ protected:
 // ============================================================================
 
 template<typename Value> inline
-Value Atomic<Value>::Set(Value from, Value to)
+Value Atomic<Value>::Set(value_v ref, value_t from, value_t to)
 // ----------------------------------------------------------------------------
 //   Test that we have 'from' and set to 'to', return value before write
 // ----------------------------------------------------------------------------
 {
-    return __sync_val_compare_and_swap(&value, from, to);
+    return __sync_val_compare_and_swap(&ref, from, to);
 }
 
 
 template<typename Value> inline
-bool Atomic<Value>::SetQ(Value from, Value to)
+bool Atomic<Value>::SetQ(value_v ref, value_t from, value_t to)
 // ----------------------------------------------------------------------------
 //   Test that we have 'from' and set to 'to'
 // ----------------------------------------------------------------------------
 {
-    return __sync_bool_compare_and_swap(&value, from, to);
+    return __sync_bool_compare_and_swap(&ref, from, to);
 }
 
 
 template<typename Value> inline
-Value Atomic<Value>::Add(value_t delta)
+Value Atomic<Value>::Add(value_v ref, value_t delta)
 // ----------------------------------------------------------------------------
-//   Atomically add the value, return the the value after update
+//   Atomically add the value, return the value before update
 // ----------------------------------------------------------------------------
 {
-    return __sync_add_and_fetch(&value, delta);
+    return __sync_fetch_and_add(&ref, delta);
 }
 
 
 template<typename Value> inline
-Value Atomic<Value>::Sub(value_t delta)
+Value Atomic<Value>::Sub(value_v ref, value_t delta)
 // ----------------------------------------------------------------------------
-//   Atomically subtract the value, return the the value after update
+//   Atomically subtract the value, return the value before update
 // ----------------------------------------------------------------------------
 {
-    return __sync_sub_and_fetch(&value, delta);
+    return __sync_fetch_and_sub(&ref, delta);
+}
+
+template<typename Value> inline
+Value Atomic<Value>::Or(value_v ref, value_t delta)
+// ----------------------------------------------------------------------------
+//   Atomically or the value, return the value before update
+// ----------------------------------------------------------------------------
+{
+    return __sync_fetch_and_or(&ref, delta);
+}
+
+template<typename Value> inline
+Value Atomic<Value>::Xor(value_v ref, value_t delta)
+// ----------------------------------------------------------------------------
+//   Atomically xor the value, return the value before update
+// ----------------------------------------------------------------------------
+{
+    return __sync_fetch_and_xor(&ref, delta);
+}
+
+template<typename Value> inline
+Value Atomic<Value>::And(value_v ref, value_t delta)
+// ----------------------------------------------------------------------------
+//   Atomically and the value, return the value before update
+// ----------------------------------------------------------------------------
+{
+    return __sync_fetch_and_and(&ref, delta);
+}
+
+
+template<typename Value> inline
+Value Atomic<Value>::Nand(value_v ref, value_t delta)
+// ----------------------------------------------------------------------------
+//   Atomically and the value, return the value before update
+// ----------------------------------------------------------------------------
+{
+    return __sync_fetch_and_and(&ref, ~delta);
 }
 
 #else

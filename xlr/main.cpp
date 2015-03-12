@@ -47,6 +47,8 @@
 #include "errors.h"
 #include "tree.h"
 #include "context.h"
+#include "types.h"
+#include "args.h"
 #include "options.h"
 #include "basics.h"
 #include "serializer.h"
@@ -140,7 +142,7 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
 // ----------------------------------------------------------------------------
     : argc(inArgc), argv(inArgv),
       positions(),
-      errors(InitErrorsAndMAIN()),
+      errors(InitMAIN()),
       topLevelErrors(),
       syntax(syntaxName.c_str()),
       options(inArgc, inArgv),
@@ -205,7 +207,7 @@ int Main::LoadAndRun()
 }
 
 
-Errors *Main::InitErrorsAndMAIN()
+Errors *Main::InitMAIN()
 // ----------------------------------------------------------------------------
 //   Make sure MAIN is set so that its globals can be accessed
 // ----------------------------------------------------------------------------
