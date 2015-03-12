@@ -1202,7 +1202,7 @@ void debugv(llvm::Value *v)
 }
 
 
-void debugv(llvm::Type *t)
+void debugv(llvm_type *t)
 // ----------------------------------------------------------------------------
 //   Dump a value for the debugger
 // ----------------------------------------------------------------------------
@@ -1211,7 +1211,7 @@ void debugv(llvm::Type *t)
 }
 
 
-void debugv(const llvm::Type *t)
+void debugv(const llvm_type *t)
 // ----------------------------------------------------------------------------
 //   Dump a value for the debugger
 // ----------------------------------------------------------------------------
