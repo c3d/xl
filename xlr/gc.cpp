@@ -77,9 +77,10 @@ TypeAllocator::TypeAllocator(kstring tn, uint os)
 //    Setup an empty allocator
 // ----------------------------------------------------------------------------
     : gc(NULL), name(tn), locked(0), chunks(),
-      freeList(NULL), toDelete(NULL), available(0),
+      freeList(NULL), toDelete(NULL),
+      available(0), freedCount(0),
       chunkSize(1022), objectSize(os), alignedSize(os),
-      allocatedCount(0), freedCount(0), totalCount(0)
+      allocatedCount(0), collectedCount(0), totalCount(0)
 {
     RECORD(MEMORY, "New type allocator",
            tn, os, "this", (intptr_t) this);
@@ -300,10 +301,8 @@ bool TypeAllocator::CheckLeakedPointers()
 {
     RECORD(MEMORY_DETAILS, "CheckLeaks");
 
-    allocatedCount = freedCount = totalCount = 0;
-    uint leaked = 0;
-    void *leakedPtr = NULL;
-    
+    totalCount = allocatedCount = 0;
+    uint collected = 0;
     for (Chunks::iterator chk = chunks.begin(); chk != chunks.end(); chk++)
     {
         char *chunkBase = (char *) *chk + alignedSize;
@@ -321,20 +320,16 @@ bool TypeAllocator::CheckLeakedPointers()
                 }
                 else
                 {
-                    leaked++;
-                    leakedPtr = (void *) (ptr+1);
+                    Finalize((void *) (ptr+1));
+                    collected++;
                 }
             }
         }
     }
 
-    IFTRACE(memory)
-        if (leakedPtr)
-            std::cerr << "Leaked " << leaked << " " << name
-                      << " including " << leakedPtr << "\n";
-    
-    RECORD(MEMORY_DETAILS, "CheckLeaks", "leaks", leaked);
-    return leakedPtr != NULL;
+    collectedCount += collected;
+    RECORD(MEMORY_DETAILS, "CheckLeaks done", "collect", collected);
+    return collected;
 }
 
 
@@ -496,23 +491,7 @@ bool GarbageCollector::Collect()
 
         // Print statistics (inside lock, to increase race pressure)
         IFTRACE(memory)
-        {
-            uint tot = 0, alloc = 0, freed = 0;
-            printf("%15s %8s %8s %8s\n", "NAME", "TOTAL", "ALLOC", "FREED");
-            for (a = allocators.begin(); a != allocators.end(); a++)
-            {
-                TypeAllocator *ta = *a;
-                printf("%15s %8u %8u %8u\n",
-                       ta->name, ta->totalCount,
-                       ta->allocatedCount, ta->freedCount);
-                tot   += ta->totalCount     * ta->alignedSize;
-                alloc += ta->allocatedCount * ta->alignedSize;
-                freed += ta->freedCount     * ta->alignedSize;
-            }
-            printf("%15s %8s %8s %8s\n", "=====", "=====", "=====", "=====");
-            printf("%15s %7uK %7uK %7uK\n",
-                   "Kilobytes", tot >> 10, alloc >> 10, freed >> 10);
-        }
+            PrintStatistics();
 
         // We are done, mark it so
         if (!Atomic<pthread_t>::SetQ(collecting, self, NULL))
@@ -528,23 +507,63 @@ bool GarbageCollector::Collect()
 }
 
 
-void GarbageCollector::Statistics(uint &tot, uint &alloc, uint &freed)
+void GarbageCollector::PrintStatistics()
+// ----------------------------------------------------------------------------
+//    Print statistics about collection
+// ----------------------------------------------------------------------------
+{
+    uint tot = 0, alloc = 0, avail = 0, freed = 0, collect = 0;
+    printf("%24s %8s %8s %8s %8s %8s\n",
+           "NAME", "TOTAL", "ALLOC", "AVAIL", "FREED", "COLLECT");
+
+    Allocators::iterator a;
+    for (a = allocators.begin(); a != allocators.end(); a++)
+    {
+        TypeAllocator *ta = *a;
+        printf("%24s %8u %8u %8u %8u %8u\n",
+               ta->name, ta->totalCount,
+               ta->allocatedCount,
+               ta->available.Get(), ta->freedCount.Get(),
+               ta->collectedCount);
+        tot     += ta->totalCount     * ta->alignedSize;
+        alloc   += ta->allocatedCount * ta->alignedSize;
+        avail   += ta->available      * ta->alignedSize;
+        freed   += ta->freedCount     * ta->alignedSize;
+        collect += ta->collectedCount * ta->alignedSize;
+    }
+    printf("%24s %8s %8s %8s %8s %8s\n",
+           "=====", "=====", "=====", "=====", "=====", "=====");
+    printf("%24s %7uK %7uK %7uK %7uK %7uK\n",
+           "Kilobytes",
+           tot >> 10, alloc >> 10, avail >> 10,
+           freed >> 10, collect >> 10);
+}
+
+
+void GarbageCollector::Statistics(uint &total,
+                                  uint &allocated, uint &available,
+                                  uint &freed, uint &collected)
 // ----------------------------------------------------------------------------
 //   Get statistics about garbage collections
 // ----------------------------------------------------------------------------
 {
-    tot = 0;
-    alloc = 0;
-    freed = 0;
-
+    uint tot = 0, alloc = 0, avail = 0, free = 0, collect = 0;
     std::vector<TypeAllocator *>::iterator a;
     for (a = allocators.begin(); a != allocators.end(); a++)
     {
         TypeAllocator *ta = *a;
-        tot   += ta->totalCount     * ta->alignedSize;
-        alloc += ta->allocatedCount * ta->alignedSize;
-        freed += ta->freedCount     * ta->alignedSize;
+        tot     += ta->totalCount     * ta->alignedSize;
+        alloc   += ta->allocatedCount * ta->alignedSize;
+        avail   += ta->available      * ta->alignedSize;
+        free    += ta->freedCount     * ta->alignedSize;
+        collect += ta->collectedCount * ta->alignedSize;
     }
+
+    total     = tot;
+    allocated = alloc;
+    available = avail;
+    freed     = free;
+    collected = collect;
 }
 
 

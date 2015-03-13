@@ -135,12 +135,13 @@ protected:
     Atomic<Chunk_vp>    freeList;
     Atomic<Chunk_vp>    toDelete;
     Atomic<uint>        available;
+    Atomic<uint>        freedCount;
 
     uint                chunkSize;
     uint                objectSize;
     uint                alignedSize;
     uint                allocatedCount;
-    uint                freedCount;
+    uint                collectedCount;
     uint                totalCount;
     uint                rootCount;
 
@@ -299,7 +300,12 @@ struct GarbageCollector
     static bool                 SafePoint();
     static bool                 Sweep();
     
-    void                        Statistics(uint &tot, uint &alloc, uint &freed);
+    void                        Statistics(uint &totalBytes,
+                                           uint &allocBytes,
+                                           uint &availableBytes,
+                                           uint &freedBytes,
+                                           uint &collectedBytes);
+    void                        PrintStatistics();
     void                        Register(TypeAllocator *a);
 
 private:
