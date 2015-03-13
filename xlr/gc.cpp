@@ -200,6 +200,7 @@ void *TypeAllocator::Allocate()
     result->bits |= IN_USE;     // Mark it as in use for current collection
     result->count = 0;
     UpdateInUseRange(result);
+    allocatedCount++;
     if (--available < chunkSize * 0.9)
         gc->MustRun();
 
@@ -308,7 +309,7 @@ bool TypeAllocator::CheckLeakedPointers()
 
     lowestInUse.Set((uintptr_t) lo, ~0UL);
     highestInUse.Set((uintptr_t) hi, 0UL);
- 
+
     uint  collected = 0;
     for (Chunks::iterator chk = chunks.begin(); chk != chunks.end(); chk++)
     {
@@ -332,13 +333,9 @@ bool TypeAllocator::CheckLeakedPointers()
                 Chunk_vp ptr = (Chunk_vp) addr;
                 if (AllocatorPointer(ptr->allocator) == this)
                 {
-                    if (ptr->count)
+                    if (!ptr->count)
                     {
-                        // Non-zero count, still alive somewhere
-                        allocatedCount++;
-                    }
-                    else
-                    {
+                        // It is dead, Jim
                         Finalize((void *) (ptr+1));
                         collected++;
                     }
