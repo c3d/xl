@@ -875,7 +875,7 @@ Tree *EvaluateClosure(Context *context, Tree *what)
     }
 
     // This is a safe point for checking collection status
-    // GarbageCollector::SafePoint();
+    GarbageCollector::SafePoint();
 
     return result;
 }
