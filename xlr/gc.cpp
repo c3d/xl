@@ -274,12 +274,7 @@ void TypeAllocator::ScheduleDelete(TypeAllocator::Chunk_vp ptr)
         if (allocator->finalizing)
         {
             // Put it on the to-delete list to avoid deep recursion
-            Chunk_vp next;
-            do
-            {
-                next = allocator->toDelete;
-                ptr->next = next;
-            } while(!allocator->toDelete.SetQ(next, ptr));
+            LinkedListInsert(allocator->toDelete, ptr);
         }
         else
         {
@@ -359,9 +354,7 @@ bool TypeAllocator::Sweep()
     bool result = false;
     while (toDelete)
     {
-        Chunk_vp next = toDelete;
-        while (!toDelete.SetQ(next, next->next))
-            next = toDelete;
+        Chunk_vp next = LinkedListPopFront(toDelete);
         next->allocator = this;
         Finalize((void *) (next+1));
         result = true;

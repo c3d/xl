@@ -125,6 +125,34 @@ private:
 };
 
 
+template <class Link>
+inline void LinkedListInsert(Atomic<Link> &list, Link link)
+// ----------------------------------------------------------------------------
+//    Insert an element in a linked list
+// ----------------------------------------------------------------------------
+{
+    Link next;
+    do
+    {
+        next = list;
+        link->next = next;
+    } while (!list.SetQ(next, link));
+}
+
+
+template <class Link>
+inline Link LinkedListPopFront(Atomic<Link> &list)
+// ----------------------------------------------------------------------------
+//    Remove the head of a linked list
+// ----------------------------------------------------------------------------
+{
+    Link head = list;
+    while (!list.SetQ(head, head->next))
+        head = list;
+    return head;
+}
+
+
 
 #ifdef __GNUC__
 // ============================================================================
