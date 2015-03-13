@@ -82,7 +82,8 @@ struct Renderer
     bool                IsAmbiguousPrefix(Tree *test, bool testL, bool testR);
     bool                IsSubFunctionInfix(Tree *t);
     int                 InfixPriority(Tree *test);
-
+    
+protected:
     std::ostream &      output;
     Syntax &            syntax;
     formats_table       formats;
@@ -101,6 +102,7 @@ struct Renderer
     bool                need_newline;
     bool                no_indents;
 
+public:
     static Renderer *   renderer;
 };
 

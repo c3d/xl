@@ -296,7 +296,6 @@ bool Context::ProcessDeclarations(Tree *what)
                         // Process C declarations only in optimized mode
                         Define(normalForm->left, normalForm->right);
                         prefix->SetInfo<CDeclaration>(pcd);
-                        prefix->right->SetInfo<CDeclaration>(pcd);
                         isInstruction = false;
                     }
                     else

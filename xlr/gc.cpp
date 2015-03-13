@@ -264,7 +264,7 @@ void TypeAllocator::UpdateInUseRange(Chunk_vp chunk)
 {
     TypeAllocator *allocator = ValidPointer(chunk->allocator);
     allocator->lowestInUse.Minimize((uintptr_t) chunk);
-    allocator->highestInUse.Maximize((uintptr_t) chunk);
+    allocator->highestInUse.Maximize((uintptr_t) (chunk + 1));
 }
 
 
@@ -311,6 +311,7 @@ bool TypeAllocator::CheckLeakedPointers()
     highestInUse.Set((uintptr_t) hi, 0UL);
 
     uint  collected = 0;
+    totalCount = 0;
     for (Chunks::iterator chk = chunks.begin(); chk != chunks.end(); chk++)
     {
         char   *chunkBase = (char *) *chk + alignedSize;
@@ -333,6 +334,7 @@ bool TypeAllocator::CheckLeakedPointers()
                 Chunk_vp ptr = (Chunk_vp) addr;
                 if (AllocatorPointer(ptr->allocator) == this)
                 {
+                    Atomic<uintptr_t>::And(ptr->bits, ~(uintptr_t) IN_USE);
                     if (!ptr->count)
                     {
                         // It is dead, Jim
@@ -364,6 +366,7 @@ bool TypeAllocator::Sweep()
         Chunk_vp next = toDelete;
         while (!toDelete.SetQ(next, next->next))
             next = toDelete;
+        next->allocator = this;
         Finalize((void *) (next+1));
         result = true;
     }
@@ -519,12 +522,14 @@ bool GarbageCollector::Collect()
             (*l)->BeginCollection();
 
         // Cleanup pending purges to maximize the effect of garbage collection
-        while (Sweep())
-            /* Keep purging */;
-
-        // Check if any object was allocated and not captured at this stage
-        for (a = allocators.begin(); a != allocators.end(); a++)
-            (*a)->CheckLeakedPointers();
+        bool sweeping = true;
+        while (sweeping)
+        {
+            // Check if any object was allocated and not captured at this stage
+            for (a = allocators.begin(); a != allocators.end(); a++)
+                (*a)->CheckLeakedPointers();
+            sweeping = Sweep();
+        }
 
         // Notify all the listeners that we completed the collection
         for (l = listeners.begin(); l != listeners.end(); l++)
@@ -535,6 +540,7 @@ bool GarbageCollector::Collect()
             PrintStatistics();
 
         // We are done, mark it so
+        mustRun &= 0U;
         if (!Atomic<pthread_t>::SetQ(collecting, self, NULL))
         {
             XL_ASSERT(!"Someone else stole the collection lock?");
@@ -640,7 +646,6 @@ void GarbageCollector::Delete()
 
 XL_END
 
-
 void debuggc(void *ptr)
 // ----------------------------------------------------------------------------
 //   Show allocation information about the given pointer
@@ -664,7 +669,7 @@ void debuggc(void *ptr)
         }
         uintptr_t bits = chunk->bits;
         uintptr_t aligned = bits & ~TA::PTR_MASK;
-        std::cerr << "Allocator bits: " << std::hex << bits
+        std::cerr << "Allocator bits: " << std::hex << bits << std::dec
                   << " count=" << chunk->count << "\n";
 
         GarbageCollector *gc = GarbageCollector::GC();
@@ -691,19 +696,22 @@ void debuggc(void *ptr)
             Chunks::iterator c;
             alloc = *a;
             uint itemBytes = alloc->alignedSize + sizeof(Chunk);
-            uint chunkBytes = alloc->chunkSize * itemBytes;
+            uint chunkBytes = (alloc->chunkSize+1) * itemBytes;
             uint chunkIndex = 0;
             for (c = alloc->chunks.begin(); c != alloc->chunks.end(); c++)
             {
                 char *start = (char *) *c;
                 char *end = start + chunkBytes;
+                char *base = start + alloc->alignedSize + sizeof(Chunk);
+
                 chunkIndex++;
                 if (ptr >= start && ptr <= end)
                 {
                     if (!allocated)
                         std::cerr << "Free item in "
                                   << alloc << " (" << alloc->name << ") "
-                                  << "chunk #" << chunkIndex << " at position ";
+                                  << "chunk #" << chunkIndex << " ";
+
                     uint freeIndex = 0;
                     Chunk_vp prev = NULL;
                     for (Chunk_vp f = alloc->freeList; f; f = f->next)
@@ -711,7 +719,21 @@ void debuggc(void *ptr)
                         freeIndex++;
                         if (f == chunk)
                         {
-                            std::cerr << "#" << freeIndex
+                            std::cerr << " freelist #" << freeIndex
+                                      << " after " << prev << " ";
+                            found++;
+                        }
+                        prev = f;
+                    }
+
+                    freeIndex = 0;
+                    prev = NULL;
+                    for (Chunk_vp f = alloc->toDelete; f; f = f->next)
+                    {
+                        freeIndex++;
+                        if (f == chunk)
+                        {
+                            std::cerr << " to-delete #" << freeIndex
                                       << " after " << prev << " ";
                             found++;
                         }
@@ -719,7 +741,24 @@ void debuggc(void *ptr)
                     }
 
                     if (!allocated || found)
-                        std::cerr << "in free list\n";
+                        std::cerr << "\n";
+                }
+
+                for (char *addr = start; addr < end; addr += sizeof (void *))
+                {
+                    void **ref = (void **) addr;
+                    if (*ref == ptr)
+                    {
+                        uint diff = addr-base;
+                        uint index = diff / itemBytes;
+                        char *obj = base + index * itemBytes;
+                        uint offset = addr - obj;
+                        std::cerr << "Referenced from " << ref
+                                  << " at offset " << offset
+                                  << " in item #" << index
+                                  << " at addr " << (void *) obj
+                                  << "\n";
+                    }
                 }
             }
         }
