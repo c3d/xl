@@ -76,11 +76,11 @@ TypeAllocator::TypeAllocator(kstring tn, uint os)
 // ----------------------------------------------------------------------------
 //    Setup an empty allocator
 // ----------------------------------------------------------------------------
-    : gc(NULL), name(tn), locked(0), chunks(),
-      freeList(NULL), toDelete(NULL),
+    : gc(NULL), name(tn), locked(0), lowestInUse(~0UL), highestInUse(0),
+      chunks(), freeList(NULL), toDelete(NULL),
       available(0), freedCount(0),
       chunkSize(1022), objectSize(os), alignedSize(os),
-      allocatedCount(0), collectedCount(0), totalCount(0)
+      allocatedCount(0), scannedCount(0), collectedCount(0), totalCount(0)
 {
     RECORD(MEMORY, "New type allocator",
            tn, os, "this", (intptr_t) this);
@@ -199,6 +199,7 @@ void *TypeAllocator::Allocate()
     result->allocator = this;
     result->bits |= IN_USE;     // Mark it as in use for current collection
     result->count = 0;
+    UpdateInUseRange(result);
     if (--available < chunkSize * 0.9)
         gc->MustRun();
 
@@ -242,6 +243,17 @@ void TypeAllocator::Delete(void *ptr)
 #endif
 
     VALGRIND_MEMPOOL_FREE(this, ptr);
+}
+
+
+void TypeAllocator::UpdateInUseRange(Chunk_vp chunk)
+// ----------------------------------------------------------------------------
+//    Update the range of in-use pointers when in-use bit is set
+// ----------------------------------------------------------------------------
+{
+    TypeAllocator *allocator = ValidPointer(chunk->allocator);
+    allocator->lowestInUse.Minimize((uintptr_t) chunk);
+    allocator->highestInUse.Maximize((uintptr_t) chunk);
 }
 
 
@@ -301,34 +313,54 @@ bool TypeAllocator::CheckLeakedPointers()
 {
     RECORD(MEMORY_DETAILS, "CheckLeaks");
 
-    totalCount = allocatedCount = 0;
-    uint collected = 0;
+    char *lo = (char *) lowestInUse.Get();
+    char *hi = (char *) highestInUse.Get();
+
+    lowestInUse.Set((uintptr_t) lo, ~0UL);
+    highestInUse.Set((uintptr_t) hi, 0UL);
+ 
+    uint  collected = 0;
+    totalCount = allocatedCount = scannedCount = 0;
     for (Chunks::iterator chk = chunks.begin(); chk != chunks.end(); chk++)
     {
-        char *chunkBase = (char *) *chk + alignedSize;
+        char   *chunkBase = (char *) *chk + alignedSize;
         size_t  itemSize  = alignedSize + sizeof(Chunk);
-        for (uint i = 0; i < chunkSize; i++)
+        char   *chunkEnd = chunkBase + itemSize * chunkSize;
+        totalCount += chunkSize;
+        
+        if (chunkBase <= hi && chunkEnd  >= lo)
         {
-            Chunk_vp ptr = (Chunk_vp) (chunkBase + i * itemSize);
-            totalCount++;
-            if (AllocatorPointer(ptr->allocator) == this)
+            char *start = (char *) chunkBase;
+            char *end = (char *) chunkEnd;
+            if (start < lo)
+                start = lo;
+            if (end > hi)
+                end = hi;
+            scannedCount += (end - start) / itemSize;
+
+            for (char *addr = start; addr < end; addr += itemSize)
             {
-                if (ptr->count)
+                Chunk_vp ptr = (Chunk_vp) addr;
+                if (AllocatorPointer(ptr->allocator) == this)
                 {
-                    // Non-zero count, still alive somewhere
-                    allocatedCount++;
-                }
-                else
-                {
-                    Finalize((void *) (ptr+1));
-                    collected++;
+                    if (ptr->count)
+                    {
+                        // Non-zero count, still alive somewhere
+                        allocatedCount++;
+                    }
+                    else
+                    {
+                        Finalize((void *) (ptr+1));
+                        collected++;
+                    }
                 }
             }
         }
     }
 
     collectedCount += collected;
-    RECORD(MEMORY_DETAILS, "CheckLeaks done", "collect", collected);
+    RECORD(MEMORY_DETAILS, "CheckLeaks done",
+           "scanned", scannedCount, "collect", collected);
     return collected;
 }
 
@@ -512,42 +544,43 @@ void GarbageCollector::PrintStatistics()
 //    Print statistics about collection
 // ----------------------------------------------------------------------------
 {
-    uint tot = 0, alloc = 0, avail = 0, freed = 0, collect = 0;
-    printf("%24s %8s %8s %8s %8s %8s\n",
-           "NAME", "TOTAL", "ALLOC", "AVAIL", "FREED", "COLLECT");
+    uint tot = 0, alloc = 0, avail = 0, freed = 0, scan = 0, collect = 0;
+    printf("%24s %8s %8s %8s %8s %8s %8s\n",
+           "NAME", "TOTAL", "ALLOC", "AVAIL", "FREED", "SCANNED", "COLLECT");
 
     Allocators::iterator a;
     for (a = allocators.begin(); a != allocators.end(); a++)
     {
         TypeAllocator *ta = *a;
-        printf("%24s %8u %8u %8u %8u %8u\n",
+        printf("%24s %8u %8u %8u %8u %8u %8u\n",
                ta->name, ta->totalCount,
                ta->allocatedCount,
                ta->available.Get(), ta->freedCount.Get(),
-               ta->collectedCount);
+               ta->scannedCount, ta->collectedCount);
         tot     += ta->totalCount     * ta->alignedSize;
         alloc   += ta->allocatedCount * ta->alignedSize;
         avail   += ta->available      * ta->alignedSize;
         freed   += ta->freedCount     * ta->alignedSize;
+        scan    += ta->scannedCount   * ta->alignedSize;
         collect += ta->collectedCount * ta->alignedSize;
     }
-    printf("%24s %8s %8s %8s %8s %8s\n",
-           "=====", "=====", "=====", "=====", "=====", "=====");
-    printf("%24s %7uK %7uK %7uK %7uK %7uK\n",
+    printf("%24s %8s %8s %8s %8s %8s %8s\n",
+           "=====", "=====", "=====", "=====", "=====", "=====", "=====");
+    printf("%24s %7uK %7uK %7uK %7uK %7uK %7uK\n",
            "Kilobytes",
            tot >> 10, alloc >> 10, avail >> 10,
-           freed >> 10, collect >> 10);
+           freed >> 10, scan >> 0, collect >> 10);
 }
 
 
 void GarbageCollector::Statistics(uint &total,
                                   uint &allocated, uint &available,
-                                  uint &freed, uint &collected)
+                                  uint &freed, uint &scanned, uint &collected)
 // ----------------------------------------------------------------------------
 //   Get statistics about garbage collections
 // ----------------------------------------------------------------------------
 {
-    uint tot = 0, alloc = 0, avail = 0, free = 0, collect = 0;
+    uint tot = 0, alloc = 0, avail = 0, free = 0, scan = 0, collect = 0;
     std::vector<TypeAllocator *>::iterator a;
     for (a = allocators.begin(); a != allocators.end(); a++)
     {
@@ -556,6 +589,7 @@ void GarbageCollector::Statistics(uint &total,
         alloc   += ta->allocatedCount * ta->alignedSize;
         avail   += ta->available      * ta->alignedSize;
         free    += ta->freedCount     * ta->alignedSize;
+        scan    += ta->scannedCount   * ta->alignedSize;
         collect += ta->collectedCount * ta->alignedSize;
     }
 

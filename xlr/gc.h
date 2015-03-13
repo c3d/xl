@@ -99,6 +99,7 @@ public:
     static bool         IsGarbageCollected(void *ptr);
     static bool         IsAllocated(void *ptr);
     static void *       InUse(void *ptr);
+    static void         UpdateInUseRange(Chunk_vp chunk);
     void                ScheduleDelete(Chunk_vp);
     bool                CheckLeakedPointers();
     bool                Sweep();
@@ -130,6 +131,8 @@ protected:
     GarbageCollector *  gc;
     kstring             name;
     Atomic<uint>        locked;
+    Atomic<uintptr_t>   lowestInUse;
+    Atomic<uintptr_t>   highestInUse;
     Chunks              chunks;
     Listeners           listeners;
     Atomic<Chunk_vp>    freeList;
@@ -141,9 +144,9 @@ protected:
     uint                objectSize;
     uint                alignedSize;
     uint                allocatedCount;
+    uint                scannedCount;
     uint                collectedCount;
     uint                totalCount;
-    uint                rootCount;
 
     friend void ::debuggc(void *ptr);
     friend struct GarbageCollector;
@@ -304,6 +307,7 @@ struct GarbageCollector
                                            uint &allocBytes,
                                            uint &availableBytes,
                                            uint &freedBytes,
+                                           uint &scannedBytes,
                                            uint &collectedBytes);
     void                        PrintStatistics();
     void                        Register(TypeAllocator *a);
@@ -452,7 +456,9 @@ inline void *TypeAllocator::InUse(void *pointer)
     {
         XL_ASSERT (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
         Chunk_vp chunk = ((Chunk_vp) pointer) - 1;
-        Atomic<uintptr_t>::Or(chunk->bits, IN_USE);
+        uint bits = Atomic<uintptr_t>::Or(chunk->bits, IN_USE);
+        if (~bits & IN_USE)
+            UpdateInUseRange(chunk);
     }
     return pointer;
 }
@@ -528,8 +534,7 @@ void Allocator<Object>::Finalize(void *obj)
     }
     else
     {
-        Chunk_vp chunk = ((Chunk_vp) obj) - 1;
-        Atomic<uintptr_t>::Or(chunk->bits, IN_USE);
+        InUse(obj);
     }
 }
 

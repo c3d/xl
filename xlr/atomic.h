@@ -102,6 +102,21 @@ public:
     value_t             operator &=(value_t d)  { return And(d); }
     value_t             operator ^=(value_t d)  { return Xor(d); }
 
+    value_t             Minimize(value_t newValue)
+    {
+        value_t old = value;
+        while (old > newValue && !SetQ(old, newValue))
+            old = value;
+        return old;
+    }
+    value_t             Maximize(value_t newValue)
+    {
+        value_t old = value;
+        while (old < newValue && !SetQ(old, newValue))
+            old = value;
+        return old;
+    }
+
 protected:
     volatile value_t    value;
 
