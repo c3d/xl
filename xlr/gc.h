@@ -96,6 +96,7 @@ public:
 
     static void         Acquire(void *ptr);
     static void         Release(void *ptr);
+    static uint         RefCount(void *ptr);
     static bool         IsGarbageCollected(void *ptr);
     static bool         IsAllocated(void *ptr);
     static void *       InUse(void *ptr);
@@ -445,6 +446,21 @@ inline void TypeAllocator::Release(void *pointer)
         if (!count && (~chunk->bits & IN_USE))
             allocator->ScheduleDelete(chunk);
     }
+}
+
+
+inline uint TypeAllocator::RefCount(void *pointer)
+// ----------------------------------------------------------------------------
+//   Return reference count for given pointer
+// ----------------------------------------------------------------------------
+{
+    XL_ASSERT (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
+    if (IsAllocated(pointer))
+    {
+        Chunk_vp chunk = ((Chunk_vp) pointer) - 1;
+        return chunk->count;
+    }
+    return ~0U;
 }
 
 
