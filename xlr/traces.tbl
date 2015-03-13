@@ -49,6 +49,7 @@
 #endif
 
 TRACE(memory)
+TRACE(gcstats)
 TRACE(eval)
 TRACE(compile)
 TRACE(compile_progress)

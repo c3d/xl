@@ -606,6 +606,9 @@ int main(int argc, char **argv)
     XL::Main main(argc, argv);
     int rc = main.LoadAndRun();
 
+    IFTRACE(gcstats)
+        XL::GarbageCollector::GC()->PrintStatistics();
+
 #if CONFIG_USE_SBRK
     IFTRACE(memory)
         fprintf(stderr, "Total memory usage: %ldK\n",
