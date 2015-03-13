@@ -103,6 +103,7 @@ public:
     void                ScheduleDelete(Chunk_vp);
     bool                CheckLeakedPointers();
     bool                Sweep();
+    void                ResetStatistics();
 
     void *operator new(size_t size);
     void operator delete(void *ptr);

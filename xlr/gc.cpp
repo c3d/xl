@@ -246,6 +246,16 @@ void TypeAllocator::Delete(void *ptr)
 }
 
 
+void TypeAllocator::Finalize(void *ptr)
+// ----------------------------------------------------------------------------
+//   We should never reach this one
+// ----------------------------------------------------------------------------
+{
+    std::cerr << "No finalizer installed for " << ptr << "\n";
+    XL_ASSERT(!"No finalizer installed");
+}
+
+
 void TypeAllocator::UpdateInUseRange(Chunk_vp chunk)
 // ----------------------------------------------------------------------------
 //    Update the range of in-use pointers when in-use bit is set
@@ -286,26 +296,6 @@ void TypeAllocator::ScheduleDelete(TypeAllocator::Chunk_vp ptr)
 }
 
 
-bool TypeAllocator::Sweep()
-// ----------------------------------------------------------------------------
-//    Remove all the things that we have pushed on the toDelete list
-// ----------------------------------------------------------------------------
-{
-    RECORD(MEMORY_DETAILS, "Sweep");
-
-    bool result = false;
-    while (toDelete)
-    {
-        Chunk_vp next = toDelete;
-        while (!toDelete.SetQ(next, next->next))
-            next = toDelete;
-        Finalize((void *) (next+1));
-        result = true;
-    }
-    return result;
-}
-
-
 bool TypeAllocator::CheckLeakedPointers()
 // ----------------------------------------------------------------------------
 //   Check if any pointers were allocated and not captured between safe points
@@ -320,7 +310,6 @@ bool TypeAllocator::CheckLeakedPointers()
     highestInUse.Set((uintptr_t) hi, 0UL);
  
     uint  collected = 0;
-    totalCount = allocatedCount = scannedCount = 0;
     for (Chunks::iterator chk = chunks.begin(); chk != chunks.end(); chk++)
     {
         char   *chunkBase = (char *) *chk + alignedSize;
@@ -365,13 +354,36 @@ bool TypeAllocator::CheckLeakedPointers()
 }
 
 
-void TypeAllocator::Finalize(void *ptr)
+bool TypeAllocator::Sweep()
 // ----------------------------------------------------------------------------
-//   We should never reach this one
+//    Remove all the things that we have pushed on the toDelete list
 // ----------------------------------------------------------------------------
 {
-    std::cerr << "No finalizer installed for " << ptr << "\n";
-    XL_ASSERT(!"No finalizer installed");
+    RECORD(MEMORY_DETAILS, "Sweep");
+
+    bool result = false;
+    while (toDelete)
+    {
+        Chunk_vp next = toDelete;
+        while (!toDelete.SetQ(next, next->next))
+            next = toDelete;
+        Finalize((void *) (next+1));
+        result = true;
+    }
+    return result;
+}
+
+
+void TypeAllocator::ResetStatistics()
+// ----------------------------------------------------------------------------
+//    Reset the statistics counters
+// ----------------------------------------------------------------------------
+{
+    freedCount -= freedCount;
+    allocatedCount = 0;
+    scannedCount = 0;
+    collectedCount = 0;
+    totalCount = 0;
 }
 
 
@@ -546,7 +558,7 @@ void GarbageCollector::PrintStatistics()
 {
     uint tot = 0, alloc = 0, avail = 0, freed = 0, scan = 0, collect = 0;
     printf("%24s %8s %8s %8s %8s %8s %8s\n",
-           "NAME", "TOTAL", "ALLOC", "AVAIL", "FREED", "SCANNED", "COLLECT");
+           "NAME", "TOTAL", "AVAIL", "ALLOC", "FREED", "SCANNED", "COLLECT");
 
     Allocators::iterator a;
     for (a = allocators.begin(); a != allocators.end(); a++)
@@ -554,22 +566,23 @@ void GarbageCollector::PrintStatistics()
         TypeAllocator *ta = *a;
         printf("%24s %8u %8u %8u %8u %8u %8u\n",
                ta->name, ta->totalCount,
-               ta->allocatedCount,
-               ta->available.Get(), ta->freedCount.Get(),
-               ta->scannedCount, ta->collectedCount);
+               ta->available.Get(), ta->allocatedCount,
+               ta->freedCount.Get(), ta->scannedCount, ta->collectedCount);
         tot     += ta->totalCount     * ta->alignedSize;
         alloc   += ta->allocatedCount * ta->alignedSize;
         avail   += ta->available      * ta->alignedSize;
         freed   += ta->freedCount     * ta->alignedSize;
         scan    += ta->scannedCount   * ta->alignedSize;
         collect += ta->collectedCount * ta->alignedSize;
+
+        ta->ResetStatistics();            
     }
     printf("%24s %8s %8s %8s %8s %8s %8s\n",
            "=====", "=====", "=====", "=====", "=====", "=====", "=====");
     printf("%24s %7uK %7uK %7uK %7uK %7uK %7uK\n",
            "Kilobytes",
-           tot >> 10, alloc >> 10, avail >> 10,
-           freed >> 10, scan >> 0, collect >> 10);
+           tot >> 10, avail >> 10, alloc >> 10,
+           freed >> 10, scan >> 10, collect >> 10);
 }
 
 
@@ -591,6 +604,8 @@ void GarbageCollector::Statistics(uint &total,
         free    += ta->freedCount     * ta->alignedSize;
         scan    += ta->scannedCount   * ta->alignedSize;
         collect += ta->collectedCount * ta->alignedSize;
+
+        ta->ResetStatistics();
     }
 
     total     = tot;
