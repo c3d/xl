@@ -63,14 +63,31 @@ static inline Tree *isClosure(Tree *tree, Context_p *context)
 }
 
 
-static inline Tree *makeClosure(Context *context, Tree *value)
+static inline Tree *makeClosure(Context_p context, Tree *value)
 // ----------------------------------------------------------------------------
 //   Create a closure encapsulating the current context
 // ----------------------------------------------------------------------------
 {
+retry:
     kind valueKind = value->Kind();
+
     if (valueKind >= NAME || context->HasRewritesFor(valueKind))
     {
+        if (valueKind == NAME)
+        {
+            if (Tree *bound = context->Bound(value))
+            {
+                if (Tree *inside = isClosure(bound, &context))
+                {
+                    if (value != inside)
+                    {
+                        value = inside;
+                        goto retry;
+                    }
+                }
+            }
+        }
+
         if (valueKind != PREFIX || !value->GetInfo<ClosureInfo>())
         {
             Scope *scope = context->CurrentScope();
