@@ -165,14 +165,14 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
         FlightRecorder::SFlags(options.flightRecorderFlags);
 
     // Once all options have been read, enter symbols and setup compiler
-    Opcode::Enter(context);
 #ifndef INTERPRETER_ONLY
-    if (options.optimize_level)
+    if (options.optimize_level > 0)
     {
         compiler = new Compiler(compilerName.c_str(), inArgc, inArgv);
         compiler->Setup(options);
     }
 #endif // INTERPRETER_ONLY
+    Opcode::Enter(context);
 }
 
 
