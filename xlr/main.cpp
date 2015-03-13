@@ -147,7 +147,7 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
       syntax(syntaxName.c_str()),
       options(inArgc, inArgv),
 #ifndef INTERPRETER_ONLY
-      compiler(new Compiler(compilerName.c_str(), inArgc, inArgv)),
+      compiler(NULL),
 #endif // INTERPRETER_ONLY
       context(new Context),
       renderer(std::cout, styleSheetName, syntax),
@@ -167,7 +167,11 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
     // Once all options have been read, enter symbols and setup compiler
     Opcode::Enter(context);
 #ifndef INTERPRETER_ONLY
-    compiler->Setup(options);
+    if (options.optimize_level)
+    {
+        compiler = new Compiler(compilerName.c_str(), inArgc, inArgv);
+        compiler->Setup(options);
+    }
 #endif // INTERPRETER_ONLY
 }
 
