@@ -101,7 +101,7 @@ public:
     static bool         IsAllocated(void *ptr);
     static void *       InUse(void *ptr);
     static void         UpdateInUseRange(Chunk_vp chunk);
-    void                ScheduleDelete(Chunk_vp);
+    static void         ScheduleDelete(Chunk_vp);
     bool                CheckLeakedPointers();
     bool                Sweep();
     void                ResetStatistics();
@@ -440,11 +440,10 @@ inline void TypeAllocator::Release(void *pointer)
         XL_ASSERT (IsAllocated(pointer));
 
         Chunk_vp chunk = ((Chunk_vp) pointer) - 1;
-        TypeAllocator *allocator = ValidPointer(chunk->allocator);
         XL_ASSERT(chunk->count);
         uint count = --chunk->count;
-        if (!count && (~chunk->bits & IN_USE))
-            allocator->ScheduleDelete(chunk);
+        if (!count)
+            ScheduleDelete(chunk);
     }
 }
 
@@ -474,10 +473,21 @@ inline void *TypeAllocator::InUse(void *pointer)
         XL_ASSERT (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
         Chunk_vp chunk = ((Chunk_vp) pointer) - 1;
         uint bits = Atomic<uintptr_t>::Or(chunk->bits, IN_USE);
-        if (~bits & IN_USE)
+        if (!chunk->count && (~bits & IN_USE))
             UpdateInUseRange(chunk);
     }
     return pointer;
+}
+
+
+inline void TypeAllocator::UpdateInUseRange(Chunk_vp chunk)
+// ----------------------------------------------------------------------------
+//    Update the range of in-use pointers when in-use bit is set
+// ----------------------------------------------------------------------------
+{
+    TypeAllocator *allocator = ValidPointer(chunk->allocator);
+    allocator->lowestInUse.Minimize((uintptr_t) chunk);
+    allocator->highestInUse.Maximize((uintptr_t) (chunk + 1));
 }
 
 

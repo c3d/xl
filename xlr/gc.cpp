@@ -257,42 +257,38 @@ void TypeAllocator::Finalize(void *ptr)
 }
 
 
-void TypeAllocator::UpdateInUseRange(Chunk_vp chunk)
-// ----------------------------------------------------------------------------
-//    Update the range of in-use pointers when in-use bit is set
-// ----------------------------------------------------------------------------
-{
-    TypeAllocator *allocator = ValidPointer(chunk->allocator);
-    allocator->lowestInUse.Minimize((uintptr_t) chunk);
-    allocator->highestInUse.Maximize((uintptr_t) (chunk + 1));
-}
-
-
 void TypeAllocator::ScheduleDelete(TypeAllocator::Chunk_vp ptr)
 // ----------------------------------------------------------------------------
 //   Delete now if possible, or record that we will need to delete it later
 // ----------------------------------------------------------------------------
 {
-    XL_ASSERT((ptr->bits & IN_USE) == 0 && "Deleting in-use object");
-    XL_ASSERT(ptr->count == 0 && "Deleting referenced object");
-
-    if (finalizing)
+    if (ptr->bits & IN_USE)
     {
-        // Put it on the to-delete list to avoid deep recursion
-        Chunk_vp next;
-        do
-        {
-            next = toDelete;
-            ptr->next = next;
-        } while(!toDelete.SetQ(next, ptr));
+        UpdateInUseRange(ptr);
     }
     else
     {
-        // Delete current object immediately
-        Finalize((void *) (ptr + 1));
+        XL_ASSERT(ptr->count == 0 && "Deleting referenced object");
+        TypeAllocator *allocator = ValidPointer(ptr->allocator);
 
-        // Delete the children put on the toDelete list
-        GarbageCollector::Sweep();
+        if (allocator->finalizing)
+        {
+            // Put it on the to-delete list to avoid deep recursion
+            Chunk_vp next;
+            do
+            {
+                next = allocator->toDelete;
+                ptr->next = next;
+            } while(!allocator->toDelete.SetQ(next, ptr));
+        }
+        else
+        {
+            // Delete current object immediately
+            allocator->Finalize((void *) (ptr + 1));
+            
+            // Delete the children put on the toDelete list
+            GarbageCollector::Sweep();
+        }
     }
 }
 
