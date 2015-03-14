@@ -102,11 +102,10 @@ struct Opcode : Info
 //    Can't use C++ static objects here, as they may be initialized later
 //    than the objects we register.
 {
-    typedef Tree *(*callback_fn) (Context *ctx, Tree *self, TreeList &args);
     typedef std::vector<Opcode *> List;
 
 public:
-    Opcode(kstring name, callback_fn fn) : Invoke(fn), name(name)
+    Opcode(kstring name) : name(name)
     {
         if (!list)
             list = new List;
@@ -115,8 +114,12 @@ public:
     virtual void                Delete() { /* Not owned by the tree */ }
     virtual void                Register(Context *);
     virtual Tree *              Shape()  { return NULL; }
+    virtual Tree *              Evaluate(Context *, Tree *self, TreeList &args)
+    {
+        return self;
+    }
 
-    callback_fn                 Invoke;
+public:
     kstring                     name;
 
 public:
@@ -132,13 +135,13 @@ struct NameOpcode : Opcode
 // ----------------------------------------------------------------------------
 {
     NameOpcode(kstring name, Name_p &toDefine)
-        : Opcode(name, Evaluate), toDefine(toDefine)
+        : Opcode(name), toDefine(toDefine)
     {
         toDefine = new Name(name);
     }
     
     virtual void                Register(Context *);
-    static Tree *               Evaluate(Context *, Tree *self, TreeList&);
+    virtual Tree *              Evaluate(Context *, Tree *self, TreeList&);
     Name_p &                    toDefine;
 };
 
@@ -164,9 +167,9 @@ struct InfixOpcode : Opcode
 //   We need to keep references to the original type names, as they
 //   may not be initialized at construction time yet
 {
-    InfixOpcode(kstring name,  callback_fn fn,
+    InfixOpcode(kstring name,
                 kstring infix, Name_p &leftTy, Name_p &rightTy, Name_p &resTy)
-        : Opcode(name, fn),
+        : Opcode(name),
           infix(infix), leftTy(leftTy), rightTy(rightTy), resTy(resTy) {}
 
     virtual Tree *Shape()
@@ -191,9 +194,9 @@ struct PrefixOpcode : Opcode
 //   An unary prefix opcode, regisered at initialization time
 // ----------------------------------------------------------------------------
 {
-    PrefixOpcode(kstring name,  callback_fn fn,
+    PrefixOpcode(kstring name,
                  kstring prefix, Name_p &argTy, Name_p &resTy)
-        : Opcode(name, fn),
+        : Opcode(name),
           prefix(prefix), argTy(argTy), resTy(resTy) {}
 
     virtual Tree *Shape()
@@ -216,9 +219,9 @@ struct PostfixOpcode : Opcode
 //   An unary postfix opcode, regisered at initialization time
 // ----------------------------------------------------------------------------
 {
-    PostfixOpcode(kstring name,  callback_fn fn,
+    PostfixOpcode(kstring name,
                  kstring postfix, Name_p &argTy, Name_p &resTy)
-        : Opcode(name, fn),
+        : Opcode(name),
           postfix(postfix), argTy(argTy), resTy(resTy) {}
 
     virtual Tree *Shape()
@@ -242,8 +245,8 @@ struct FunctionOpcode : Opcode
 // ----------------------------------------------------------------------------
 //   This is intended to be used with the PARM macro below
 {
-    FunctionOpcode(kstring name,  callback_fn fn)
-        : Opcode(name, fn), result(NULL), ptr(&result) {}
+    FunctionOpcode(kstring name)
+        : Opcode(name), result(NULL), ptr(&result) {}
     virtual Tree *Shape() = 0;
 
     template<class TreeType>
@@ -456,107 +459,142 @@ XL_END
 /* ------------------------------------------------------------ */      \
 /*  Create a unary opcode (for 'opcode X' declarations)         */      \
 /* ------------------------------------------------------------ */      \
-    static Tree *                                                       \
-    opcode_U_##Name(Context *context, Tree *self, TreeList &args)       \
+    struct Opcode_U_##Name : Opcode                                     \
     {                                                                   \
-        ARGCOUNT(1);                                                    \
-        ARG(left, LeftTy, args[0]);                                     \
-        return Code;                                                    \
-    }                                                                   \
-    static Opcode init_opcode_U_##Name(#Name, opcode_U_##Name);
+        Opcode_U_##Name(kstring name): Opcode(name) {}                  \
+                                                                        \
+        virtual Tree *                                                  \
+        Evaluate(Context *context, Tree *self, TreeList &args)          \
+        {                                                               \
+            ARGCOUNT(1);                                                \
+            ARG(left, LeftTy, args[0]);                                 \
+            return Code;                                                \
+        }                                                               \
+    };                                                                  \
+   static Opcode_U_##Name init_opcode_U_##Name(#Name);
 
 
 #define BINARY(Name, ResTy, LeftTy, RightTy, Code)                      \
 /* ------------------------------------------------------------ */      \
 /*  Create a binary opcode (for 'opcode X' declarations)        */      \
 /* ------------------------------------------------------------ */      \
-    static Tree *                                                       \
-    opcode_B_##Name(Context *context, Tree *self, TreeList &args)       \
+    struct Opcode_B_##Name : Opcode                                     \
     {                                                                   \
-        ARGCOUNT(2);                                                    \
-        ARG(left,  LeftTy,  args[0]);                                   \
-        ARG(right, RightTy, args[1]);                                   \
-        return Code;                                                    \
-    }                                                                   \
-    static Opcode init_opcode_B_##Name(#Name, opcode_B_##Name);
+        Opcode_B_##Name(kstring name): Opcode(name) {}                  \
+                                                                        \
+        virtual Tree *                                                  \
+        Evaluate(Context *context, Tree *self, TreeList &args)          \
+        {                                                               \
+            ARGCOUNT(2);                                                \
+            ARG(left,  LeftTy,  args[0]);                               \
+            ARG(right, RightTy, args[1]);                               \
+            return Code;                                                \
+        }                                                               \
+    };                                                                  \
+    static Opcode_B_##Name init_opcode_B_##Name(#Name);
 
 
 #define INFIX(Name, ResTy, LeftTy, Symbol, RightTy, Code)               \
 /* ------------------------------------------------------------ */      \
 /*  Create an infix opcode, also generates infix declaration    */      \
 /* ------------------------------------------------------------ */      \
-    static Tree *                                                       \
-    opcode_I_##Name(Context *context, Tree *self, TreeList &args)       \
+    struct Opcode_I_##Name : InfixOpcode                                \
     {                                                                   \
-        ARGCOUNT(2);                                                    \
-        ARG(left,  LeftTy,  args[0]);                                   \
-        ARG(right, RightTy, args[1]);                                   \
-        Code;                                                           \
-    }                                                                   \
-    static InfixOpcode                                                  \
-    init_opcode_I_##Name (#Name, opcode_I_##Name, Symbol,               \
-                          LeftTy##_type, RightTy##_type, ResTy##_type);
+        Opcode_I_##Name(kstring name,                                   \
+                        kstring i, Name_p &l, Name_p &r, Name_p &res)   \
+            : InfixOpcode(name, i, l, r, res) {}                        \
+                                                                        \
+        virtual Tree *                                                  \
+        Evaluate(Context *context, Tree *self, TreeList &args)          \
+        {                                                               \
+            ARGCOUNT(2);                                                \
+            ARG(left,  LeftTy,  args[0]);                               \
+            ARG(right, RightTy, args[1]);                               \
+            Code;                                                       \
+        }                                                               \
+    };                                                                  \
+                                                                        \
+    static Opcode_I_##Name                                              \
+    init_opcode_I_##Name (#Name, Symbol,                                \
+                          LeftTy##_type, RightTy##_type,                \
+                          ResTy##_type);
 
 
 #define PREFIX(Name, ResTy, Symbol, RightTy, Code)                      \
 /* ------------------------------------------------------------ */      \
 /*  Create a prefixopcode, also generates prefix declaration    */      \
 /* ------------------------------------------------------------ */      \
-    static Tree *                                                       \
-    opcode_P_##Name(Context *context, Tree *self, TreeList &args)       \
+    struct Opcode_P_##Name : PrefixOpcode                               \
     {                                                                   \
-        ARGCOUNT(1);                                                    \
-        ARG(arg, RightTy, args[0]);                                     \
-        Code;                                                           \
-    }                                                                   \
-    static PrefixOpcode                                                 \
-    init_opcode_P_##Name (#Name, opcode_Pl_##Name, Symbol,              \
-                          RightTy##_type, ResTy##_type);
+        Opcode_P_##Name(kstring name,                                   \
+                        kstring prefix, Name_p &r, Name_p &res)         \
+            : PrefixOpcode(name, prefix, r, res) {}                     \
+                                                                        \
+        virtual Tree *                                                  \
+        Evaluate(Context *context, Tree *self, TreeList &args)          \
+        {                                                               \
+            ARGCOUNT(1);                                                \
+            ARG(arg, RightTy,  args[0]);                                \
+            Code;                                                       \
+        }                                                               \
+    };                                                                  \
+                                                                        \
+    static Opcode_P_##Name                                              \
+    init_opcode_P_##Name (#Name, Symbol, RightTy##_type, ResTy##_type);
 
 
 #define POSTFIX(Name, ResTy, LeftTy, Symbol, Code)                      \
 /* ------------------------------------------------------------ */      \
 /*  Create a prefixopcode, also generates prefix declaration    */      \
 /* ------------------------------------------------------------ */      \
-    static Tree *                                                       \
-    opcode_P_##Name(Context *context, Tree *self, TreeList &args)       \
+    struct Opcode_P_##Name : PostfixOpcode                              \
     {                                                                   \
-        ARGCOUNT(1);                                                    \
-        ARG(arg, LeftTy, args[0]);                                      \
-        Code;                                                           \
-    }                                                                   \
-    static PostfixOpcode                                                \
-    init_opcode_P_##Name (#Name, opcode_Pl_##Name, Symbol,              \
-                          LeftTy##_type, ResTy##_type);
+        Opcode_P_##Name(kstring name,                                   \
+                        kstring postfix, Name_p &l, Name_p &res)        \
+            : PostfixOpcode(name, prefix, l, res) {}                    \
+                                                                        \
+        virtual Tree *                                                  \
+        Evaluate(Context *context, Tree *self, TreeList &args)          \
+        {                                                               \
+            ARGCOUNT(1);                                                \
+            ARG(arg, LeftTy,  args[0]);                                 \
+            Code;                                                       \
+        }                                                               \
+    };                                                                  \
+                                                                        \
+    static Opcode_P_##Name                                              \
+    init_opcode_P_##Name (#Name, Symbol, LeftTy##_type, ResTy##_type);
 
 
 #define OVERLOAD(FName, Symbol, ResTy, Parms, Code)                     \
 /* ------------------------------------------------------------ */      \
 /*  Create a function opcode, also generates prefix declaration */      \
 /* ------------------------------------------------------------ */      \
-    static Tree *                                                       \
-    opcode_F_##FName(Context *context, Tree *self, TreeList &args)      \
+    struct Opcode_F_##FName : FunctionOpcode                            \
     {                                                                   \
-        (void) context;                                                 \
-        FunctionArguments _XLparms(args);                               \
-        Parms;                                                          \
-        if (_XLparms.index != args.size())                              \
+        Opcode_F_##FName(kstring name)                                  \
+            : FunctionOpcode(name) {}                                   \
+                                                                        \
+        virtual Tree *                                                  \
+        Evaluate(Context *context, Tree *self, TreeList &args)          \
         {                                                               \
-            Ooops("Invalid argument count for " #FName " in $1", self); \
-            return self;                                                \
+            (void) context;                                             \
+            FunctionArguments _XLparms(args);                           \
+            Parms;                                                      \
+            if (_XLparms.index != args.size())                          \
+            {                                                           \
+                Ooops("Invalid argument count for "                     \
+                      #FName " in $1", self);                           \
+                return self;                                            \
+            }                                                           \
+                                                                        \
+            Code;                                                       \
         }                                                               \
                                                                         \
-        Code;                                                           \
-    }                                                                   \
-                                                                        \
-    struct FName##FunctionOpcode : FunctionOpcode                       \
-    {                                                                   \
-        FName##FunctionOpcode(kstring name, callback_fn fn)             \
-            : FunctionOpcode(name, fn) {}                               \
         virtual Tree *Shape()                                           \
         {                                                               \
             Tree *self = xl_nil;                                        \
-            FName##FunctionOpcode &_XLparms = *this; (void) _XLparms;   \
+            Opcode_F_##FName &_XLparms = *this; (void) _XLparms;        \
             Parms;                                                      \
             if (result)                                                 \
                 result = new Prefix(new Name(Symbol), result);          \
@@ -567,8 +605,7 @@ XL_END
         }                                                               \
     };                                                                  \
                                                                         \
-    static FName##FunctionOpcode                                        \
-    init_opcode_F_##FName (#FName, opcode_F_##FName);
+    static Opcode_F_##FName init_opcode_F_##FName (#FName);
 
 
 #define FUNCTION(Name, ResTy, Parms, Code)                              \
