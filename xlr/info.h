@@ -52,13 +52,10 @@ struct Info
 //   Information associated with a tree
 // ----------------------------------------------------------------------------
 {
-#ifdef XL_DEBUG
-                        Info()          : next(NULL), owner(NULL) {}
-#else
-                        Info()          : next(NULL)              {}
-#endif
-    virtual             ~Info()         {}
-    virtual void        Delete()        { delete this; }
+public:    
+                        Info()                  : next(NULL) {}
+    virtual             ~Info()                 {}
+    virtual void        Delete()                { delete this; }
 
 public:
     friend struct Tree;
@@ -67,8 +64,9 @@ public:
     Atomic<Tree *>      owner;
 #endif
 
+private:
     // Can't copy info
-    Info(const Info &)      : next(NULL), owner(NULL) {}
+                        Info(const Info &)      : next(NULL) {}
 };
 
 XL_END
