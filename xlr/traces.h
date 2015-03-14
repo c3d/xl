@@ -88,10 +88,10 @@ public:
 extern XL_TRACE_CLASSNAME *XL_TRACE_INSTNAME;
 
 #define XL_DEFINE_TRACES  XL_TRACE_CLASSNAME *XL_TRACE_INSTNAME = NULL;
-#define XL_INIT_TRACES() \
-    do { \
-        if (!XL_TRACE_INSTNAME) \
-            XL_TRACE_INSTNAME = new XL_TRACE_CLASSNAME(); \
+#define XL_INIT_TRACES()                                        \
+    do {                                                        \
+        if (!XL_TRACE_INSTNAME)                                 \
+            XL_TRACE_INSTNAME = new XL_TRACE_CLASSNAME();       \
     } while(0)
 
 #endif // XL_TRACE_GROUP
