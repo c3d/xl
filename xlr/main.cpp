@@ -93,8 +93,7 @@ SourceFile::SourceFile(text n, Tree *t, Context *ctx, bool ro)
 //   Construct a source file given a name
 // ----------------------------------------------------------------------------
     : name(n), tree(t), context(ctx),
-      modified(0), changed(false), readOnly(ro),
-      info(NULL)
+      modified(0), changed(false), readOnly(ro)
 {
     utf8_filestat_t st;
     if (utf8_stat (n.c_str(), &st) < 0)
@@ -110,7 +109,7 @@ SourceFile::SourceFile()
 //   Default constructor
 // ----------------------------------------------------------------------------
     : name(""), tree(NULL), context(NULL),
-      modified(0), changed(false), readOnly(false), info(NULL)
+      modified(0), changed(false), readOnly(false)
 {}
 
 
@@ -118,14 +117,7 @@ SourceFile::~SourceFile()
 // ----------------------------------------------------------------------------
 //   Delete info
 // ----------------------------------------------------------------------------
-{
-    Info *next = NULL;
-    for (Info *i = info; i; i = next)
-    {
-        next = i->next;
-        i->Delete();
-    }
-}
+{}
 
 
 

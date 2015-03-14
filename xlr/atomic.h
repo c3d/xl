@@ -87,6 +87,8 @@ public:
     value_t             And(value_t delta)      { return And (value, delta); }
     value_t             Nand(value_t delta)     { return Nand(value, delta); }
 
+    value_t             operator =(value_t d)   { value = d; return value; }
+
     value_t             operator++()            { return Add(1) + 1; }
     value_t             operator--()            { return Sub(1) - 1; }
 
@@ -119,9 +121,6 @@ public:
 
 protected:
     volatile value_t    value;
-
-private:
-    value_t             operator =(value_t d)   { value = d; return value; }
 };
 
 
@@ -151,7 +150,6 @@ inline Link LinkedListPopFront(Atomic<Link> &list)
         head = list;
     return head;
 }
-
 
 
 #ifdef __GNUC__

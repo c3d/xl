@@ -102,7 +102,6 @@ void Opcode::Register(Context *context)
                                 new Prefix(opcodeName,
                                            new Name(this->name)));
         context->Enter(decl);
-        decl->SetInfo<Opcode> (this);
         decl->right->SetInfo<Opcode> (this);
     }
     else
@@ -130,7 +129,6 @@ void NameOpcode::Register(Context *context)
     
     Rewrite *rw = context->Define(toDefine, toDefine);
     Infix *decl = RewriteDeclaration(rw);
-    decl->SetInfo<Opcode> (this);
     toDefine->SetInfo<Opcode> (this);
 
 #ifndef INTERPRETER_ONLY

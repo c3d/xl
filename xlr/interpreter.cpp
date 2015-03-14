@@ -113,7 +113,7 @@ static inline Opcode *setInfo(Infix *decl, Opcode *opcode)
 //    Create a new info for the given callback
 // ----------------------------------------------------------------------------
 {
-    decl->SetInfo<Opcode>(opcode);
+    decl->right->SetInfo<Opcode>(opcode);
     return opcode;
 }
 
@@ -123,13 +123,14 @@ static inline Opcode *opcodeInfo(Infix *decl)
 //    Check if we have an opcode in the definition
 // ----------------------------------------------------------------------------
 {
-    Opcode *info = decl->GetInfo<Opcode>();
+    Tree *right = decl->right;
+    Opcode *info = right->GetInfo<Opcode>();
     if (info)
         return info;
 
     // Check if the declaration is something like 'X -> opcode Foo'
     // If so, lookup 'Foo' in the opcode table the first time to record it
-    if (Prefix *prefix = decl->right->AsPrefix())
+    if (Prefix *prefix = right->AsPrefix())
         if (Name *name = prefix->left->AsName())
             if (name->value == "opcode")
                 if (Name *opcodeName = prefix->right->AsName())

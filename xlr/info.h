@@ -40,21 +40,35 @@
 // ****************************************************************************
 
 #include "base.h"
+#include "atomic.h"
 
 
 XL_BEGIN
+
+struct Tree;
 
 struct Info
 // ----------------------------------------------------------------------------
 //   Information associated with a tree
 // ----------------------------------------------------------------------------
 {
-                        Info(): next(NULL) {}
-                        Info(const Info &) : next(NULL) {}
+#ifdef XL_DEBUG
+                        Info()          : next(NULL), owner(NULL) {}
+#else
+                        Info()          : next(NULL)              {}
+#endif
     virtual             ~Info()         {}
     virtual void        Delete()        { delete this; }
-    virtual Info *      Copy()          { return next ? next->Copy() : NULL; }
-    Info *next;
+
+public:
+    friend struct Tree;
+    Atomic<Info *>      next;
+#ifdef XL_DEBUG    
+    Atomic<Tree *>      owner;
+#endif
+
+    // Can't copy info
+    Info(const Info &)      : next(NULL), owner(NULL) {}
 };
 
 XL_END

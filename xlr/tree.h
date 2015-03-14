@@ -120,7 +120,7 @@ struct Tree
     Tree (kind k, TreePosition pos = NOWHERE):
         tag((pos<<KINDBITS) | k), info(NULL) {}
     Tree(kind k, Tree *from):
-        tag(from->tag), info(from->info ? from->info->Copy() : NULL)
+        tag(from->tag), info(NULL)
     {
         assert(k == Kind()); (void) k;
     }
@@ -156,7 +156,6 @@ struct Tree
     // Info management
     template<class I>    typename I::data_t  Get() const;
     template<class I>    void                Set(typename I::data_t data);
-    template<class I>    void                Set2(typename I::data_t data);
     template<class I>    I*                  GetInfo() const;
     template<class I>    void                SetInfo(I *);
     template<class I>    bool                Exists() const;
@@ -172,8 +171,8 @@ public:
     static bool         Equal(Tree *t1, Tree *t2, bool recurse = true);
 
 public:
-    ulong       tag;                            // Position + kind
-    Info *      info;                           // Information for tree
+    ulong               tag;                            // Position + kind
+    Atomic<Info *>      info;                           // Information for tree
 
     GARBAGE_COLLECT(Tree);
 
@@ -477,8 +476,9 @@ template <class I> inline void Tree::Set(typename I::data_t data)
 // ----------------------------------------------------------------------------
 {
     Info *i = new I(data);
-    i->next = info;
-    info = i;
+    // The info can only be owned by a single tree, should not be linked
+    XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, NULL, this));
+    LinkedListInsert(info, i);
 }
 
 
@@ -494,29 +494,17 @@ template <class I> inline I* Tree::GetInfo() const
 }
 
 
-template <class I> inline void Tree::Set2(typename I::data_t data)
-// ----------------------------------------------------------------------------
-//   Set the information given as an argument. Do not add new info if exists.
-// ----------------------------------------------------------------------------
-{
-    I *i = GetInfo<I>();
-    if (i)
-        (*i) = data;
-    else
-        Set<I>(data);
-}
-
-
 template <class I> inline void Tree::SetInfo(I *i)
 // ----------------------------------------------------------------------------
 //   Set the information given as an argument
 // ----------------------------------------------------------------------------
 {
-    Info *last = i;
-    while(last->next)
-        last = last->next;
-    last->next = info;
-    info = i;
+    // The info can only be owned by a single tree, should not be linked
+    XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, NULL, this));
+    XL_ASSERT(!i->next);
+    
+    Info *asInfo = i;           // For proper deduction if I is a derived class
+    LinkedListInsert(info, asInfo);
 }
 
 
@@ -537,7 +525,8 @@ template <class I> inline bool Tree::Purge()
 //   Find and purge information of the given type
 // ----------------------------------------------------------------------------
 {
-    Info *last = NULL;
+retry:
+    Info *prev = NULL;
     Info *next = NULL;
     bool purged = false;
     for (Info *i = info; i; i = next)
@@ -545,16 +534,17 @@ template <class I> inline bool Tree::Purge()
         next = i->next;
         if (I *ic = dynamic_cast<I *> (i))
         {
-            if (last)
-                last->next = next;
-            else
-                info = next;
+            if (!Atomic<Info *>::SetQ(i->next, next, NULL))
+                goto retry;
+            if (!Atomic<Info *>::SetQ(prev ? prev->next : info, i, next))
+                goto retry;
+            XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
             ic->Delete();
             purged = true;
         }
         else
         {
-            last = i;
+            prev = i;
         }
     }
     return purged;
@@ -566,16 +556,18 @@ template <class I> inline I* Tree::Remove()
 //   Find information and unlinks it if it exists
 // ----------------------------------------------------------------------------
 {
+retry:
     Info *prev = NULL;
     for (Info *i = info; i; i = i->next)
     {
         if (I *ic = dynamic_cast<I *> (i))
         {
-            if (prev)
-                prev->next = i->next;
-            else
-                info = i->next;
-            i->next = NULL;
+            Info *next = i->next;
+            if (!Atomic<Info *>::SetQ(i->next, next, NULL))
+                goto retry;
+            if (!Atomic<Info *>::SetQ(prev ? prev->next : info, i, next))
+                goto retry;
+            XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
             return ic;
         }
         prev = i;
@@ -589,17 +581,19 @@ template <class I> inline I* Tree::Remove(I *toFind)
 //   Find information matching input and remove it if it exists
 // ----------------------------------------------------------------------------
 {
+retry:
     Info *prev = NULL;
     for (Info *i = info; i; i = i->next)
     {
         I *ic = dynamic_cast<I *> (i);
         if (ic == toFind)
         {
-            if (prev)
-                prev->next = i->next;
-            else
-                info = i->next;
-            i->next = NULL;
+            Info *next = i->next;
+            if (!Atomic<Info *>::SetQ(i->next, next, NULL))
+                goto retry;
+            if (!Atomic<Info *>::SetQ(prev ? prev->next : info, i, next))
+                goto retry;
+            XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
             return ic;
         }
         prev = i;

@@ -49,10 +49,10 @@ Tree::~Tree()
     assert (info != (Info *) 0xD00DEL && "Please report this in bug #922");
     for (Info *i = info; i; i = next)
     {
+        XL_ASSERT(i->owner == this);
         next = i->next;
         i->Delete();
     }
-    info = (Info *) 0xD00DEL;
 }
 
 
