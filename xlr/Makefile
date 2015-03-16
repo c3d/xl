@@ -30,6 +30,7 @@ LLVM_CONFIG=llvm-config
 # List of modules to build
 MODULES=basics io math text
 MODULES_SOURCES=$(MODULES:%=%-module.cpp)
+MODULES_HEADERS=$(MODULES:%=%-module.h)
 
 # List of source files to process
 SOURCES     =					\
@@ -115,7 +116,13 @@ opt_tests opt-tests:
 clean: modules-clean
 
 modules-clean:
-	rm -f $(MODULES_SOURCES)
+	rm -f $(MODULES_SOURCES) $(MODULES_HEADERS)
+
+interp-%:
+	make COMPILER=none $*
+ionly-%:
+	make COMPILER=none $*
+
 
 %-module.cpp: %.tbl %-module.h Makefile
 	@echo Generating $@ from $<

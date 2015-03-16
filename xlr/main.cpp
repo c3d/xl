@@ -48,7 +48,6 @@
 #include "tree.h"
 #include "context.h"
 #include "types.h"
-#include "args.h"
 #include "options.h"
 #include "basics.h"
 #include "serializer.h"
@@ -60,6 +59,7 @@
 #include "opcodes.h"
 
 #ifndef INTERPRETER_ONLY
+#include "args.h"
 #include "compiler.h"
 #endif // INTERPRETER_ONLY
 
