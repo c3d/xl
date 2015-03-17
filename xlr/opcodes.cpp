@@ -97,6 +97,7 @@ void Opcode::Register(Context *context)
             std::cerr << "Opcode " << this->name
                       << " for " << shape << "\n";
 
+        Save<TreePosition> savePos(Tree::NOWHERE, Tree::BUILTIN);
         static Name_p opcodeName = new Name("opcode");
         Infix *decl = new Infix("->", shape,
                                 new Prefix(opcodeName,
@@ -134,15 +135,6 @@ void NameOpcode::Register(Context *context)
     if (MAIN->options.optimize_level > 1)
         MAIN->compiler->EnterGlobal(toDefine, &toDefine);
 #endif
-}
-
-
-Tree * NameOpcode::Evaluate(Context *, Tree *self, TreeList&)
-// ----------------------------------------------------------------------------
-//   A name evaluates as itself by default
-// ----------------------------------------------------------------------------
-{
-    return self;
 }
 
 XL_END

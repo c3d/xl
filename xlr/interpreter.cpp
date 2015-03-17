@@ -32,178 +32,6 @@
 XL_BEGIN
 
 
-// ============================================================================
-//
-//    Closure management (keeping scoping information with values)
-//
-// ============================================================================
-
-static inline Tree *isClosure(Tree *tree, Context_p *context)
-// ----------------------------------------------------------------------------
-//   Check if something is a closure, if so set scope and/or context
-// ----------------------------------------------------------------------------
-{
-    if (Scope *closure = tree->AsPrefix())
-    {
-        if (Scope *scope = ScopeParent(closure))
-        {
-            if (closure->GetInfo<ClosureInfo>())
-            {
-                // We normally have a scope on the left
-                if (context)
-                    *context = new Context(scope);
-                return closure->right;
-            }
-        }
-    }
-    return NULL;
-}
-
-
-static inline Tree *makeClosure(Context_p context, Tree *value)
-// ----------------------------------------------------------------------------
-//   Create a closure encapsulating the current context
-// ----------------------------------------------------------------------------
-{
-retry:
-    kind valueKind = value->Kind();
-
-    if (valueKind >= NAME || context->HasRewritesFor(valueKind))
-    {
-        if (valueKind == NAME)
-        {
-            if (Tree *bound = context->Bound(value))
-            {
-                if (Tree *inside = isClosure(bound, &context))
-                {
-                    if (value != inside)
-                    {
-                        value = inside;
-                        goto retry;
-                    }
-                }
-            }
-        }
-
-        if (valueKind != PREFIX || !value->GetInfo<ClosureInfo>())
-        {
-            Scope *scope = context->CurrentScope();
-            value = new Prefix(scope, value);
-
-            ClosureInfo *closureMarker = new ClosureInfo;
-            value->SetInfo(closureMarker);
-        }
-    }
-    return value;
-}
-
-
-
-// ============================================================================
-//
-//    Code and Data - Replaying the evaluation of a given expression
-//
-// ============================================================================
-
-struct Op;
-typedef std::vector<Op *>    Ops;
-
-
-struct Code : Info
-// ----------------------------------------------------------------------------
-//    Sequence of ops to evaluate an expression
-// ----------------------------------------------------------------------------
-{
-    Code(Scope *scope): scope(scope), fail(NULL) {}
-    ~Code();
-
-    Tree *              Run(Context *context, Tree *source);
-    void                Add(Op *op)     { ops.push_back(op); }
-
-public:
-    Scope_p             scope;
-    Ops                 ops;
-    Code *              fail;
-};
-
-
-struct Data
-// ----------------------------------------------------------------------------
-//    Data storage for evaluating an expression
-// ----------------------------------------------------------------------------
-{
-    Data(Context *ctx) : context(ctx), locals(NULL) {}
-
-    void Reset(Scope *scope, Tree *src)
-    {
-        locals = new Context(scope);
-        locals->CreateScope();
-
-        stack.clear();
-        stack.push_back(src);
-    }
-
-    void Push(Tree *t)
-    {
-        stack.push_back(t);
-    }
-    
-    Tree *Pop()
-    {
-        XL_ASSERT(stack.size());
-        Tree *result = stack.back();
-        stack.pop_back();
-        return result;
-    }
-
-    void Bind(Tree *t)
-    {
-        vars.push_back(t);
-    }
-    
-    void MustEvaluate(uint index, bool updateContext)
-    {
-        XL_ASSERT(index < evals.size());
-        Tree *test = evals[index];
-        if (!test)
-        {
-            test = stack.back();
-            test = EvaluateClosure(context, test);
-            evals[index] = test;
-        }
-        if (updateContext)
-            if (Tree *inside = isClosure(test, &context))
-                test = inside;
-        stack.back() = test;
-    }
-
-public:
-    Context_p           context;
-    Context_p           locals;
-    TreeList            stack;
-    TreeList            vars;
-    TreeList            evals;
-};
-
-
-
-// ============================================================================
-//
-//    Op - Evaluation of a single operation
-//
-// ============================================================================
-
-struct Op
-// ----------------------------------------------------------------------------
-//    Evaluate a single instruction in a 'Code' instance
-// ----------------------------------------------------------------------------
-{
-    Op() {}
-    virtual ~Op() {}
-    virtual bool Run(Data &data) = 0;
-};
-
-
 
 // ============================================================================
 //
@@ -211,35 +39,154 @@ struct Op
 //
 // ============================================================================
 
+Code::Code(Scope *scope)
+// ----------------------------------------------------------------------------
+//   Build an empty list of instructions
+// ----------------------------------------------------------------------------
+    : scope(scope)
+{}
+
+
 Code::~Code()
 // ----------------------------------------------------------------------------
 //    Delete all instructions
 // ----------------------------------------------------------------------------
 {
     for (Ops::iterator o = ops.begin(); o != ops.end(); o++)
-        delete *o;
+        (*o)->Delete();
 }
 
 
-Tree *Code::Run(Context *ctx, Tree *src)
+bool Code::Run(Data &data)
 // ----------------------------------------------------------------------------
-//     Run the recorded code in the given context on the given tree
+//    Evaluate the code on the given data
 // ----------------------------------------------------------------------------
 {
-    Data data(ctx);
+    Data inner(data.context);
 
-    for (Code *code = this; code; code = code->fail)
+    bool ok = true;
+    Tree *self = data.Pop();
+    Scope *scope = data.locals->CurrentScope();
+    inner.Init(scope, self);
+    
+    for (Ops::iterator o = ops.begin(); ok && o != ops.end(); o++)
+        ok = (*o)->Run(inner);
+
+    if (ok)
     {
-        bool ok = true;
-        data.Reset(code->scope, src);
-        for (Ops::iterator o=code->ops.begin(); ok && o!=code->ops.end(); o++)
-            ok = (*o)->Run(data);
-        if (ok)
-            return data.Pop();
+        Tree *result = inner.Pop();
+        data.Push(result);
     }
-
-    return NULL;
+    return ok;
 }
+
+
+
+// ============================================================================
+// 
+//    Data context
+// 
+// ============================================================================
+
+void Data::Init(Scope *scope, Tree *src)
+// ----------------------------------------------------------------------------
+//   Initialize a data context to evaluate in the given scope
+// ----------------------------------------------------------------------------
+{
+    locals = new Context(scope);
+    locals->CreateScope();
+    
+    stack.clear();
+    stack.push_back(src);
+}
+
+
+void Data::Push(Tree *t)
+// ----------------------------------------------------------------------------
+//    Push a data value on top of the stack
+// ----------------------------------------------------------------------------
+{
+    stack.push_back(t);
+}
+
+
+Tree *Data::Pop()
+// ----------------------------------------------------------------------------
+//    Pop a value from the top of the stack
+// ----------------------------------------------------------------------------
+{
+    XL_ASSERT(stack.size());
+    Tree *result = stack.back();
+    stack.pop_back();
+    return result;
+}
+
+
+uint Data::Bind(Tree *t)
+// ----------------------------------------------------------------------------
+//    Add a variable to the locals, return its index
+// ----------------------------------------------------------------------------
+{
+    uint index = vars.size();
+    vars.push_back(t);
+    return index;
+}
+
+
+void Data::MustEvaluate(uint index, bool updateContext)
+// ----------------------------------------------------------------------------
+//   Check if we need to evaluate item at given index
+// ----------------------------------------------------------------------------
+{
+    XL_ASSERT(index < evals.size());
+    XL_ASSERT(stack.size());
+
+    Tree *test = evals[index];
+    if (!test)
+    {
+        test = stack.back();
+        test = EvaluateClosure(context, test);
+        evals[index] = test;
+    }
+    if (updateContext)
+        if (Tree *inside = IsClosure(test, &context))
+            test = inside;
+    stack.back() = test;
+}
+
+
+
+// ============================================================================
+// 
+//   Operations
+// 
+// ============================================================================
+
+struct DispatchOp : Code
+// ----------------------------------------------------------------------------
+//    Dispatch evaluation to the first op that matches
+// ----------------------------------------------------------------------------
+{
+    virtual bool Run(Data &data)
+    {
+        Tree    *self = data.Pop();
+        Context *context = data.context;
+        Scope   *scope = data.locals->CurrentScope();
+        
+        for (Ops::iterator o = ops.begin(); o != ops.end(); o++)
+        {
+            Data inner(context);
+            inner.Init(scope, self);
+            if ((*o)->Run(inner))
+            {
+                Tree *result = inner.Pop();
+                data.Push(result);
+                return true;
+            }
+        }
+        return false;
+    }
+};
 
 
 template<class T>
@@ -310,7 +257,7 @@ struct BindClosureOp : Op
     bool Run(Data &data)
     {
         Tree * test = data.Pop();
-        Tree * closed = makeClosure(data.context, test);
+        Tree * closed = MakeClosure(data.context, test);
         data.locals->Define(name, closed);
         data.Bind(closed);
         return true;
@@ -561,7 +508,7 @@ struct EvaluateUpdateOp : Op
             result = Evaluate(data.context, test);
             data.evals[index] = result;
         }
-        if (Tree *inside = isClosure(result, &data.context))
+        if (Tree *inside = IsClosure(result, &data.context))
             result = inside;
         data.Push(result);
         return true;
@@ -589,29 +536,11 @@ struct EvaluateTreeOp : Op
             result = Evaluate(locals ? data.locals : data.context, tree);
             data.evals[index] = result;
         }
-        if (Tree *inside = isClosure(result, NULL))
+        if (Tree *inside = IsClosure(result, NULL))
             result = inside;
         data.Push(result);
         return true;
         
-    }
-};
-
-
-struct EvaluateOpcodeOp : Op
-// ----------------------------------------------------------------------------
-//    Evaluate an opcode
-// ----------------------------------------------------------------------------
-{
-    EvaluateOpcodeOp(Opcode *opcode, Tree *self): opcode(opcode), self(self) {}
-    Opcode *opcode;
-    Tree_p  self;
-
-    bool Run(Data &data)
-    {
-        Tree *result = opcode->Evaluate(data.context, self, data.vars);
-        data.Push(result);
-        return true;
     }
 };
 
@@ -626,7 +555,7 @@ struct BodyOp : Op
 
     bool Run(Data &data)
     {
-        Tree *result = makeClosure(data.locals, body);
+        Tree *result = MakeClosure(data.locals, body);
         data.Push(result);
         return true;
     }
@@ -646,7 +575,7 @@ struct EvalCache: std::map<Tree_p, uint>
 //    Recording evaluations and other operations
 // ----------------------------------------------------------------------------
 {
-    EvalCache(): code(NULL) {}
+    EvalCache(Code *code = NULL): code(code) {}
 
 public:
     Code *              code;
@@ -746,7 +675,11 @@ public:
 /* ------------------------------------------------------------ */      \
 /*  Add an operation to the current code                        */      \
 /* ------------------------------------------------------------ */      \
-    do { if (cache.code) cache.code->Add(new X); } while (0)
+    do                                                                  \
+    {                                                                   \
+        if (cache.code)                                                 \
+            cache.code->Add(new X);                                     \
+    } while (0)
 
 
 inline bool Bindings::DoInteger(Integer *what)
@@ -1089,7 +1022,7 @@ void Bindings::MustEvaluate(bool updateContext)
     
     test = evaluated;
     if (updateContext)
-        if (Tree *inside = isClosure(test, &context))
+        if (Tree *inside = IsClosure(test, &context))
             test = inside;
 
 }
@@ -1117,7 +1050,7 @@ Tree *Bindings::MustEvaluate(Context *context, Tree *tval)
             std::cerr << "  NEED(" << tval << ") = "
                       << "OLD(" << evaluated << ")\n";
     }
-    if (Tree *inside = isClosure(evaluated, NULL))
+    if (Tree *inside = IsClosure(evaluated, NULL))
         evaluated = inside;
     return evaluated;
 }
@@ -1140,7 +1073,7 @@ void Bindings::BindClosure(Name *name, Tree *value)
 //   Enter a new binding in the current context, preserving its environment
 // ----------------------------------------------------------------------------
 {
-    value = makeClosure(context, value);
+    value = MakeClosure(context, value);
     Bind(name, value);
 }
 
@@ -1188,7 +1121,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
 
     // If we lookup a name or a number, just return it
     Tree *defined = RewriteDefined(decl->left);
-    TreeList args;
+    Data data(context);
     Tree *resultType = tree_type;
     if (defined->IsLeaf())
     {
@@ -1213,7 +1146,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
         locals->CreateScope();
 
         // Check bindings of arguments to declaration, exit if fails
-        Bindings  bindings(context, locals, self, *cache, args);
+        Bindings  bindings(context, locals, self, *cache, data.vars);
         if (!decl->left->Do(bindings))
         {
             IFTRACE(eval)
@@ -1240,11 +1173,15 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     if (opcode)
     {
         // Cached callback
-        result = opcode->Evaluate(context, result, args);
+        data.Init(declScope, result);
+        if (opcode->Run(data))
+            result = data.Pop();
+        else
+            result = NULL;
         IFTRACE(eval)
             std::cerr << "EVAL" << depth << "(" << self
                       << ") OPCODE " << opcode->name
-                      << "(" << args << ") = "
+                      << "(" << data.vars << ") = "
                       << result << "\n";
         return result;
     }
@@ -1253,7 +1190,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     if (resultType != tree_type)
         result = new Infix("as", result, resultType, self->Position());
 
-    result = makeClosure(locals, result);
+    result = MakeClosure(locals, result);
     IFTRACE(eval)
         std::cerr << "EVAL" << depth << " BINDINGS: "
                   << ContextStack(locals->CurrentScope())
@@ -1270,7 +1207,7 @@ inline Tree *encloseResult(Context *context, Scope *old, Tree *what)
 // ----------------------------------------------------------------------------
 {
     if (context->CurrentScope() != old)
-        what = makeClosure(context, what);
+        what = MakeClosure(context, what);
     return what;
 }
 
@@ -1287,14 +1224,15 @@ static Tree *Instructions(Context_p context, Tree_p what)
     while (what)
     {
         // First attempt to look things up
-        EvalCache cache;
+        Code *code = what->GetInfo<Code>();
+        EvalCache cache(code);
         if (Tree *eval = context->Lookup(what, evalLookup, &cache))
         {
             if (eval == xl_error)
                 return eval;
             MAIN->errors->Clear();
             result = eval;
-            if (Tree *inside = isClosure(eval, &context))
+            if (Tree *inside = IsClosure(eval, &context))
             {
                 what = inside;
                 continue;
@@ -1330,7 +1268,7 @@ static Tree *Instructions(Context_p context, Tree_p what)
         case PREFIX:
         {
             // If we have a prefix on the left, check if it's a closure
-            if (Tree *closed = isClosure(what, &context))
+            if (Tree *closed = IsClosure(what, &context))
             {
                 what = closed;
                 continue;
@@ -1342,7 +1280,7 @@ static Tree *Instructions(Context_p context, Tree_p what)
 
             // Check if we had something like '(X->X+1) 31' as closure
             Context_p calleeContext = NULL;
-            if (Tree *inside = isClosure(callee, &calleeContext))
+            if (Tree *inside = IsClosure(callee, &calleeContext))
                 callee = inside;
 
             if (Name *name = callee->AsName())
@@ -1396,7 +1334,7 @@ static Tree *Instructions(Context_p context, Tree_p what)
                 arg = Instructions(context, arg);
 
                 // We built a new context if left was a block
-                if (Tree *inside = isClosure(newCallee, &context))
+                if (Tree *inside = IsClosure(newCallee, &context))
                 {
                     what = arg;
                     // Check if we have a single definition on the left
@@ -1465,7 +1403,7 @@ static Tree *Instructions(Context_p context, Tree_p what)
             if (name == ".")
             {
                 Tree *left = Instructions(context, infix->left);
-                isClosure(left, &context);
+                IsClosure(left, &context);
                 what = infix->right;
                 continue;
             }
@@ -1501,27 +1439,6 @@ Tree *EvaluateClosure(Context *context, Tree *what)
 }
 
 
-Tree *Evaluate(Context *context, Tree *what)
-// ----------------------------------------------------------------------------
-//    Evaluate 'what', finding the final, non-closure result
-// ----------------------------------------------------------------------------
-{
-    Tree *result = EvaluateClosure(context, what);
-    if (Tree *inside = isClosure(result, NULL))
-        result = inside;
-    return result;
-}
-
-
-Tree *IsClosure(Tree *value, Context_p *context)
-// ----------------------------------------------------------------------------
-//   Externally usable variant of isClosure
-// ----------------------------------------------------------------------------
-{
-    return isClosure(value, context);
-}
-
-
 
 // ============================================================================
 //
@@ -1554,7 +1471,7 @@ struct Expansion
     {
         if (Tree *bound = context->Bound(what))
         {
-            if (Tree *eval = isClosure(bound, NULL))
+            if (Tree *eval = IsClosure(bound, NULL))
                 bound = eval;
             return bound;
         }
@@ -1628,7 +1545,7 @@ static Tree *formTypeCheck(Context *context, Tree *shape, Tree *value)
     // The value is associated to the symbols we extracted
     IFTRACE(eval)
         std::cerr << "TYPECHECK: shape match for " << value << "\n";
-    return makeClosure(locals, value);
+    return MakeClosure(locals, value);
 }
 
 

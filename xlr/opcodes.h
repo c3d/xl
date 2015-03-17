@@ -44,6 +44,8 @@
 #include "tree.h"
 #include "context.h"
 #include "errors.h"
+#include "save.h"
+#include "interpreter.h"
 
 XL_BEGIN
 
@@ -93,7 +95,7 @@ typedef Infix   Infix_r;
 //
 // ============================================================================
 
-struct Opcode : Info
+struct Opcode : Info, Op
 // ----------------------------------------------------------------------------
 //    An opcode, registered at initialization time
 // ----------------------------------------------------------------------------
@@ -114,9 +116,10 @@ public:
     virtual void                Delete() { /* Not owned by the tree */ }
     virtual void                Register(Context *);
     virtual Tree *              Shape()  { return NULL; }
-    virtual Tree *              Evaluate(Context *, Tree *self, TreeList &args)
+    virtual bool                Run(Data &data)
     {
-        return self;
+        XL_ASSERT(!"Unimplemented opcode");
+        return false;
     }
 
 public:
@@ -141,7 +144,7 @@ struct NameOpcode : Opcode
     }
     
     virtual void                Register(Context *);
-    virtual Tree *              Evaluate(Context *, Tree *self, TreeList&);
+    virtual bool                Run(Data &data) { return true; }
     Name_p &                    toDefine;
 };
 
@@ -174,11 +177,14 @@ struct InfixOpcode : Opcode
 
     virtual Tree *Shape()
     {
+        Save<TreePosition> savePos(Tree::NOWHERE, Tree::BUILTIN);
         return
             new Infix("as",
                       new Infix(infix,
-                                new Infix(":", new Name("left"), leftTy),
-                                new Infix(":", new Name("right"), rightTy)),
+                                new Infix(":", new Name("left"),
+                                          leftTy),
+                                new Infix(":", new Name("right"),
+                                          rightTy)),
                       resTy);
     }
 
@@ -201,6 +207,7 @@ struct PrefixOpcode : Opcode
 
     virtual Tree *Shape()
     {
+        Save<TreePosition> savePos(Tree::NOWHERE, Tree::BUILTIN);
         return
             new Infix("as",
                       new Prefix(new Name(prefix),
@@ -226,6 +233,7 @@ struct PostfixOpcode : Opcode
 
     virtual Tree *Shape()
     {
+        Save<TreePosition> savePos(Tree::NOWHERE, Tree::BUILTIN);
         return
             new Infix("as",
                       new Postfix(new Infix(":", new Name("left"), argTy),
@@ -252,6 +260,7 @@ struct FunctionOpcode : Opcode
     template<class TreeType>
     TreeType *Parameter(kstring name)
     {
+        Save<TreePosition> savePos(Tree::NOWHERE, Tree::BUILTIN);
         Tree *type = OpcodeType((TreeType *) 0);
         Infix *parmDecl = new Infix(":", new Name(name), type);
         if (!result)
@@ -310,6 +319,23 @@ XL_END
 // 
 // ============================================================================
 
+#define INIT_CONTEXT_AND_SELF                                           \
+/* ------------------------------------------------------------ */      \
+/*  Check if the argument count matches what is expected        */      \
+/* ------------------------------------------------------------ */      \
+    Context *context = data.context;                                    \
+    (void) context;  /* Get rid of warnings */                          \
+    Tree *self = data.Pop();                                            \
+
+
+#define RESULT(Code)                                                    \
+/* ------------------------------------------------------------ */      \
+/*  Check if the argument count matches what is expected        */      \
+/* ------------------------------------------------------------ */      \
+    Tree *result = Code;                                                \
+    data.Push(result);                                                  \
+    return true;
+
 #define LEFT            left.value
 #define RIGHT           right.value
 #define ULEFT           ((ulonglong) LEFT)
@@ -323,10 +349,10 @@ XL_END
 #define AS_REAL(x)      (new Real((x), self->Position()))
 #define AS_BOOL(x)      ((x) ? xl_true : xl_false)
 #define AS_TEXT(x)      (new Text(x, self->Position()))
-#define R_INT(x)        return AS_INT(x)
-#define R_REAL(x)       return AS_REAL(x)
-#define R_BOOL(x)       return AS_BOOL(x)
-#define R_TEXT(x)       return AS_TEXT(x)
+#define R_INT(x)        RESULT(AS_INT(x))
+#define R_REAL(x)       RESULT(AS_REAL(x))
+#define R_BOOL(x)       RESULT(AS_BOOL(x))
+#define R_TEXT(x)       RESULT(AS_TEXT(x))
 
 #endif // OPCODES_H
 
@@ -429,16 +455,16 @@ XL_END
         Allocator<type>::CreateSingleton();
 
 
-#define ARG(Name, Type, Value)                                          \
+#define ARG(Name, Type, Index)                                          \
 /* ------------------------------------------------------------ */      \
 /*  Extract an argument from the argument list                  */      \
 /* ------------------------------------------------------------ */      \
-    Type##_p Name##Ptr = (Value)->As<Type##_r>();                       \
+    Type##_r *Name##Ptr = data.vars[Index]->As<Type##_r>();             \
     if (!Name##Ptr)                                                     \
     {                                                                   \
-        Ooops("Argument $1 to $2 is not a " #Type, (Value))             \
+        Ooops("Argument $1 to $2 is not a " #Type, data.vars[Index])    \
             .Arg(__FUNCTION__);                                         \
-        return self;                                                    \
+        return false;                                                   \
     }                                                                   \
     Type##_r &Name = *Name##Ptr; (void) Name;
 
@@ -447,11 +473,11 @@ XL_END
 /* ------------------------------------------------------------ */      \
 /*  Check if the argument count matches what is expected        */      \
 /* ------------------------------------------------------------ */      \
-    (void) context;  /* Get rid of warnings */                          \
-    if (args.size() != N)                                               \
+    INIT_CONTEXT_AND_SELF;                                              \
+    if (data.vars.size() != N)                                          \
     {                                                                   \
         Ooops("Invalid opcode argument count in $1", self);             \
-        return self;                                                    \
+        return false;                                                   \
     }
 
 
@@ -463,12 +489,11 @@ XL_END
     {                                                                   \
         Opcode_U_##Name(kstring name): Opcode(name) {}                  \
                                                                         \
-        virtual Tree *                                                  \
-        Evaluate(Context *context, Tree *self, TreeList &args)          \
+        virtual bool Run(Data &data)                                    \
         {                                                               \
             ARGCOUNT(1);                                                \
-            ARG(left, LeftTy, args[0]);                                 \
-            return Code;                                                \
+            ARG(left, LeftTy, 0);                                       \
+            RESULT(Code);                                               \
         }                                                               \
     };                                                                  \
    static Opcode_U_##Name init_opcode_U_##Name(#Name);
@@ -482,13 +507,12 @@ XL_END
     {                                                                   \
         Opcode_B_##Name(kstring name): Opcode(name) {}                  \
                                                                         \
-        virtual Tree *                                                  \
-        Evaluate(Context *context, Tree *self, TreeList &args)          \
+        virtual bool Run(Data &data)                                    \
         {                                                               \
             ARGCOUNT(2);                                                \
-            ARG(left,  LeftTy,  args[0]);                               \
-            ARG(right, RightTy, args[1]);                               \
-            return Code;                                                \
+            ARG(left,  LeftTy,  0);                                     \
+            ARG(right, RightTy, 1);                                     \
+            RESULT(Code);                                               \
         }                                                               \
     };                                                                  \
     static Opcode_B_##Name init_opcode_B_##Name(#Name);
@@ -504,12 +528,11 @@ XL_END
                         kstring i, Name_p &l, Name_p &r, Name_p &res)   \
             : InfixOpcode(name, i, l, r, res) {}                        \
                                                                         \
-        virtual Tree *                                                  \
-        Evaluate(Context *context, Tree *self, TreeList &args)          \
+        virtual bool Run(Data &data)                                    \
         {                                                               \
             ARGCOUNT(2);                                                \
-            ARG(left,  LeftTy,  args[0]);                               \
-            ARG(right, RightTy, args[1]);                               \
+            ARG(left,  LeftTy,  0);                                     \
+            ARG(right, RightTy, 1);                                     \
             Code;                                                       \
         }                                                               \
     };                                                                  \
@@ -530,11 +553,10 @@ XL_END
                         kstring prefix, Name_p &r, Name_p &res)         \
             : PrefixOpcode(name, prefix, r, res) {}                     \
                                                                         \
-        virtual Tree *                                                  \
-        Evaluate(Context *context, Tree *self, TreeList &args)          \
+        virtual bool Run(Data &data)                                    \
         {                                                               \
             ARGCOUNT(1);                                                \
-            ARG(arg, RightTy,  args[0]);                                \
+            ARG(arg, RightTy,  0);                                      \
             Code;                                                       \
         }                                                               \
     };                                                                  \
@@ -553,8 +575,7 @@ XL_END
                         kstring postfix, Name_p &l, Name_p &res)        \
             : PostfixOpcode(name, prefix, l, res) {}                    \
                                                                         \
-        virtual Tree *                                                  \
-        Evaluate(Context *context, Tree *self, TreeList &args)          \
+        virtual bool Run(Data &data)                                    \
         {                                                               \
             ARGCOUNT(1);                                                \
             ARG(arg, LeftTy,  args[0]);                                 \
@@ -575,17 +596,16 @@ XL_END
         Opcode_F_##FName(kstring name)                                  \
             : FunctionOpcode(name) {}                                   \
                                                                         \
-        virtual Tree *                                                  \
-        Evaluate(Context *context, Tree *self, TreeList &args)          \
+        virtual bool Run(Data &data)                                    \
         {                                                               \
-            (void) context;                                             \
-            FunctionArguments _XLparms(args);                           \
+            INIT_CONTEXT_AND_SELF;                                      \
+            FunctionArguments _XLparms(data.vars);                      \
             Parms;                                                      \
-            if (_XLparms.index != args.size())                          \
+            if (_XLparms.index != data.vars.size())                     \
             {                                                           \
                 Ooops("Invalid argument count for "                     \
                       #FName " in $1", self);                           \
-                return self;                                            \
+                return false;                                           \
             }                                                           \
                                                                         \
             Code;                                                       \
@@ -619,9 +639,9 @@ XL_END
 /* ------------------------------------------------------------ */      \
 /*  Declare a parameter for the FUNCTION macro above            */      \
 /* ------------------------------------------------------------ */      \
-    Type##_p Name##Ptr = _XLparms.Parameter<Type##_r>(#Name);           \
+    Type##_r *Name##Ptr = _XLparms.Parameter<Type##_r>(#Name);          \
     if (!Name##Ptr)                                                     \
-        return self;                                                    \
+        return 0;                                                       \
     Type##_r &Name = *Name##Ptr; (void) &Name;
 
 
@@ -637,7 +657,6 @@ XL_END
 /* ------------------------------------------------------------ */      \
 /*  Declare a type with the condition to match it               */      \
 /* ------------------------------------------------------------ */      \
-                                                                        \
     struct symbol##TypeCheckOpcode : TypeCheckOpcode                    \
     {                                                                   \
         symbol##TypeCheckOpcode(kstring name, Name_p &which):           \
