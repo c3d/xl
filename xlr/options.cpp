@@ -142,7 +142,7 @@ static kstring OptionString(kstring &command_line, Options &opt)
         command_line = "";
         return opt.args[opt.arg].c_str();
     }
-    Ooops("Option #$1 does not exist", Error::COMMAND_LINE)
+    Ooops("Option #$1 does not exist", Tree::COMMAND_LINE)
         .Arg(opt.arg);
     return "";
 }
@@ -161,7 +161,7 @@ static ulong OptionInteger(kstring &command_line, Options &opt,
         if (isdigit(*command_line))
             result = strtol(command_line, (char**) &command_line, 10);
         else
-            Ooops("Option $1 is not an integer value", Error::COMMAND_LINE)
+            Ooops("Option $1 is not an integer value", Tree::COMMAND_LINE)
                 .Arg(command_line);
     }
     else
@@ -171,7 +171,7 @@ static ulong OptionInteger(kstring &command_line, Options &opt,
             result = strtol(old = opt.args[opt.arg].c_str(),
                             (char **) &command_line, 10);
         else
-            Ooops("Option $1 is not an integer value", Error::COMMAND_LINE)
+            Ooops("Option $1 is not an integer value", Tree::COMMAND_LINE)
                 .Arg(old);
     }
     if (result < low || result > high)
@@ -179,7 +179,7 @@ static ulong OptionInteger(kstring &command_line, Options &opt,
         char lowstr[15], highstr[15];
         sprintf(lowstr, "%lu", low);
         sprintf(highstr, "%lu", high);
-        Ooops("Option $1 is out of range $2..$3", Error::COMMAND_LINE)
+        Ooops("Option $1 is out of range $2..$3", Tree::COMMAND_LINE)
             .Arg(result).Arg(low).Arg(high);
         if (result < low)
             result = low;
@@ -242,7 +242,7 @@ text Options::ParseNext(bool consumeFiles)
                                                                         \
                 if (*argval)                                            \
                     Ooops("Garbage found after option -$1 : $2",        \
-                          Error::COMMAND_LINE).Arg(#name).Arg(option);  \
+                          Tree::COMMAND_LINE).Arg(#name).Arg(option);   \
             }                                                           \
             else
 #define INTEGER(n, m)           OptionInteger(argval, *this, n, m)
@@ -250,7 +250,7 @@ text Options::ParseNext(bool consumeFiles)
 #include "options.tbl"
             {
                 // Default: Output usage
-                Ooops("Unknown option $1 ignored", Error::COMMAND_LINE)
+                Ooops("Unknown option $1 ignored", Tree::COMMAND_LINE)
                     .Arg(argval);
                 Usage(args[0].c_str());
             }

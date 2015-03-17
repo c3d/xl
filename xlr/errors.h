@@ -41,9 +41,7 @@ struct Error
 //   Encapsulate a single error
 // ----------------------------------------------------------------------------
 {
-    enum { UNKNOWN_POSITION = ~0UL, COMMAND_LINE=~1UL };
-
-    Error (kstring m, ulong pos = UNKNOWN_POSITION);
+    Error (kstring m, TreePosition pos = Tree::NOWHERE);
     Error (kstring m, Tree *a);
     Error (kstring m, Tree *a, Tree *b);
     Error (kstring m, Tree *a, Tree *b, Tree *c);
@@ -79,7 +77,7 @@ struct Errors
 // ----------------------------------------------------------------------------
 {
     Errors();
-    Errors(kstring m, ulong pos = Error::UNKNOWN_POSITION);
+    Errors(kstring m, TreePosition pos = Tree::NOWHERE);
     Errors(kstring m, Tree *a);
     Errors(kstring m, Tree *a, Tree *b);
     Errors(kstring m, Tree *a, Tree *b, Tree *c);
@@ -101,7 +99,7 @@ struct Errors
 
 
 // Helper to quickly report errors
-Error &Ooops (kstring m, ulong pos = Error::UNKNOWN_POSITION);
+Error &Ooops (kstring m, TreePosition pos = Tree::NOWHERE);
 Error &Ooops (kstring m, Tree *a);
 Error &Ooops (kstring m, Tree *a, Tree *b);
 Error &Ooops (kstring m, Tree *a, Tree *b, Tree *c);

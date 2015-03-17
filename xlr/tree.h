@@ -112,7 +112,7 @@ struct Tree
 // ----------------------------------------------------------------------------
 {
     enum { KINDBITS = 3, KINDMASK=7 };
-    enum { NOWHERE = ~0UL };
+    enum { UNKNOWN_POSITION = ~0UL, COMMAND_LINE=~1UL, BUILTIN=~2UL };
     typedef Tree        self_t;
     typedef Tree *      value_t;
 
@@ -174,6 +174,7 @@ public:
     ulong               tag;                            // Position + kind
     Atomic<Info *>      info;                           // Information for tree
 
+    static TreePosition NOWHERE;
     GARBAGE_COLLECT(Tree);
 
 private:

@@ -50,7 +50,7 @@ Error::Error(kstring m, Tree *a)
 // ----------------------------------------------------------------------------
 //   Error with a tree argument
 // ----------------------------------------------------------------------------
-    : message(m), position(UNKNOWN_POSITION), indent(0)
+    : message(m), position(Tree::NOWHERE), indent(0)
 {
     Arg(a);
 }
@@ -60,7 +60,7 @@ Error::Error(kstring m, Tree *a, Tree *b)
 // ----------------------------------------------------------------------------
 //   Error with two tree arguments
 // ----------------------------------------------------------------------------
-    : message(m), position(UNKNOWN_POSITION), indent(0)
+    : message(m), position(Tree::NOWHERE), indent(0)
 {
     Arg(a); Arg(b);
 }
@@ -70,7 +70,7 @@ Error::Error(kstring m, Tree *a, Tree *b, Tree *c)
 // ----------------------------------------------------------------------------
 //   Error with three tree arguments
 // ----------------------------------------------------------------------------
-    : message(m), position(UNKNOWN_POSITION), indent(0)
+    : message(m), position(Tree::NOWHERE), indent(0)
 {
     Arg(a); Arg(b); Arg(c);
 }
@@ -111,7 +111,7 @@ Error &Error::Arg(Tree *arg)
 //   Add a tree argument, using its position if applicable
 // ----------------------------------------------------------------------------
 {
-    if (arg && position == UNKNOWN_POSITION)
+    if (arg && (long) position < 0)
         position = arg->Position();
     arguments.push_back(arg);
     return *this;
@@ -134,8 +134,9 @@ text Error::Position()
 {
     switch (position)
     {
-    case UNKNOWN_POSITION:      return "<Unknown position>";
-    case COMMAND_LINE:          return "<Command line>";
+    case Tree::UNKNOWN_POSITION:        return "<Unknown position>";
+    case Tree::COMMAND_LINE:            return "<Command line>";
+    case Tree::BUILTIN:                 return "<Builtin>";
     }
 
     text  file, source;
