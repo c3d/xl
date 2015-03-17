@@ -188,6 +188,7 @@ Errors::Errors()
     bool context = *m == ' ' && m++;            \
     Log(e, context);
 
+
 Errors::Errors (kstring m, ulong pos)
 // ----------------------------------------------------------------------------
 //   Save errors from the top-level error handler

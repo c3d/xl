@@ -1048,8 +1048,6 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
 //   Calllback function to check if the candidate matches
 // ----------------------------------------------------------------------------
 {
-    Errors errors(" Candidate $1 does not match", decl);
-
     static uint depth = 0;
     Save<uint> saveDepth(depth, depth+1);
     IFTRACE(eval)
@@ -1380,10 +1378,7 @@ Tree *EvaluateClosure(Context *context, Tree *what)
     // Create scope for declarations, and evaluate in this context
     Tree_p result = what;
     if (context->ProcessDeclarations(what))
-    {
-        Errors errors(" Cannot evaluate $1", what);
         result = Instructions(context, what);
-    }
 
     // This is a safe point for checking collection status
     GarbageCollector::SafePoint();
