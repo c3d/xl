@@ -102,14 +102,14 @@ struct Opcode : Info
 //    Can't use C++ static objects here, as they may be initialized later
 //    than the objects we register.
 {
-    typedef std::vector<Opcode *> List;
+    typedef std::vector<Opcode *> Opcodes;
 
 public:
     Opcode(kstring name) : name(name)
     {
-        if (!list)
-            list = new List;
-        list->push_back(this);
+        if (!opcodes)
+            opcodes = new Opcodes;
+        opcodes->push_back(this);
     }
     virtual void                Delete() { /* Not owned by the tree */ }
     virtual void                Register(Context *);
@@ -125,7 +125,7 @@ public:
 public:
     static void                 Enter(Context *context);
     static Opcode *             Find(text name);
-    static List *               list;
+    static Opcodes *            opcodes;
 };
 
 

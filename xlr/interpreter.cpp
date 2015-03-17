@@ -31,9 +31,6 @@
 
 XL_BEGIN
 
-typedef std::map<Tree_p, Tree_p> EvalCache;
-
-
 
 // ============================================================================
 //
@@ -104,6 +101,562 @@ retry:
 
 // ============================================================================
 //
+//    Code and Data - Replaying the evaluation of a given expression
+//
+// ============================================================================
+
+struct Op;
+typedef std::vector<Op *>    Ops;
+
+
+struct Code : Info
+// ----------------------------------------------------------------------------
+//    Sequence of ops to evaluate an expression
+// ----------------------------------------------------------------------------
+{
+    Code(Scope *scope): scope(scope), fail(NULL) {}
+    ~Code();
+
+    Tree *              Run(Context *context, Tree *source);
+    void                Add(Op *op)     { ops.push_back(op); }
+
+public:
+    Scope_p             scope;
+    Ops                 ops;
+    Code *              fail;
+};
+
+
+struct Data
+// ----------------------------------------------------------------------------
+//    Data storage for evaluating an expression
+// ----------------------------------------------------------------------------
+{
+    Data(Context *ctx) : context(ctx), locals(NULL) {}
+
+    void Reset(Scope *scope, Tree *src)
+    {
+        locals = new Context(scope);
+        locals->CreateScope();
+
+        stack.clear();
+        stack.push_back(src);
+    }
+
+    void Push(Tree *t)
+    {
+        stack.push_back(t);
+    }
+    
+    Tree *Pop()
+    {
+        XL_ASSERT(stack.size());
+        Tree *result = stack.back();
+        stack.pop_back();
+        return result;
+    }
+
+    void Bind(Tree *t)
+    {
+        vars.push_back(t);
+    }
+    
+    void MustEvaluate(uint index, bool updateContext)
+    {
+        XL_ASSERT(index < evals.size());
+        Tree *test = evals[index];
+        if (!test)
+        {
+            test = stack.back();
+            test = EvaluateClosure(context, test);
+            evals[index] = test;
+        }
+        if (updateContext)
+            if (Tree *inside = isClosure(test, &context))
+                test = inside;
+        stack.back() = test;
+    }
+
+public:
+    Context_p           context;
+    Context_p           locals;
+    TreeList            stack;
+    TreeList            vars;
+    TreeList            evals;
+};
+
+
+
+// ============================================================================
+//
+//    Op - Evaluation of a single operation
+//
+// ============================================================================
+
+struct Op
+// ----------------------------------------------------------------------------
+//    Evaluate a single instruction in a 'Code' instance
+// ----------------------------------------------------------------------------
+{
+    Op() {}
+    virtual ~Op() {}
+    virtual bool Run(Data &data) = 0;
+};
+
+
+
+// ============================================================================
+//
+//   Evaluating a code sequence and variants
+//
+// ============================================================================
+
+Code::~Code()
+// ----------------------------------------------------------------------------
+//    Delete all instructions
+// ----------------------------------------------------------------------------
+{
+    for (Ops::iterator o = ops.begin(); o != ops.end(); o++)
+        delete *o;
+}
+
+
+Tree *Code::Run(Context *ctx, Tree *src)
+// ----------------------------------------------------------------------------
+//     Run the recorded code in the given context on the given tree
+// ----------------------------------------------------------------------------
+{
+    Data data(ctx);
+
+    for (Code *code = this; code; code = code->fail)
+    {
+        bool ok = true;
+        data.Reset(code->scope, src);
+        for (Ops::iterator o=code->ops.begin(); ok && o!=code->ops.end(); o++)
+            ok = (*o)->Run(data);
+        if (ok)
+            return data.Pop();
+    }
+
+    return NULL;
+}
+
+
+template<class T>
+struct MatchOp : Op
+// ----------------------------------------------------------------------------
+//   Check if the current top of stack matches the integer/real/text value
+// ----------------------------------------------------------------------------
+{
+    MatchOp(T *ref): ref(ref) {}
+    GCPtr<T>    ref;
+
+    bool Run(Data &data)
+    {
+        Tree *test = data.Pop();
+        if (T *tval = test->As<T>())
+            if (tval->value == ref->value)
+                return true;
+        return false;
+    }
+};
+
+
+struct NameMatchOp : Op
+// ----------------------------------------------------------------------------
+//   Check if the current top of stack matches the name
+// ----------------------------------------------------------------------------
+{
+    NameMatchOp(Name *ref): ref(ref) {}
+    Name_p ref;
+
+    bool Run(Data &data)
+    {
+        Tree *test = data.Pop();
+        if(Tree *bound = data.locals->Bound(ref))
+            if (Tree::Equal(bound, test))
+                return true;
+        return false;
+    }
+};
+
+
+struct BindOp : Op
+// ----------------------------------------------------------------------------
+//   Bind the top of stack to the given name
+// ----------------------------------------------------------------------------
+{
+    BindOp(Name *name) : name(name) {}
+    Name_p name;
+
+    bool Run(Data &data)
+    {
+        Tree *test = data.Pop();
+        data.locals->Define(name, test);
+        data.Bind(test);
+        return true;
+    }
+};
+
+
+struct BindClosureOp : Op
+// ----------------------------------------------------------------------------
+//    Bind the top of stack to given name with a closure
+// ----------------------------------------------------------------------------
+{
+    BindClosureOp(Name *name) : name(name) {}
+    Name_p name;
+
+    bool Run(Data &data)
+    {
+        Tree * test = data.Pop();
+        Tree * closed = makeClosure(data.context, test);
+        data.locals->Define(name, closed);
+        data.Bind(closed);
+        return true;
+    }
+};
+
+
+struct BlockChildOp : Op
+// ----------------------------------------------------------------------------
+//    Replace the top of the stack with a block child
+// ----------------------------------------------------------------------------
+{
+    BlockChildOp(Block *block) : open(block->opening), close(block->closing) {}
+    text open, close;
+
+    bool Run(Data &data)
+    {
+        Tree *test = data.Pop();
+        if (Block *tblk = test->AsBlock())
+            if (tblk->opening == open && tblk->closing == close)
+                test = tblk->child;
+        data.Push(test);
+        return true;
+    }
+};
+
+
+struct PrefixMatchOp : Op
+// ----------------------------------------------------------------------------
+//   Check if the top of stack is a prefix with given name
+// ----------------------------------------------------------------------------
+{
+    PrefixMatchOp(text name): name(name) {}
+    text name;
+
+    bool Run(Data &data)
+    {
+        Tree *test = data.Pop();
+        if (Prefix *pfx = test->AsPrefix())
+        {
+            if (Name *tname = pfx->left->AsName())
+            {
+                if (tname->value == name)
+                {
+                    data.Push(pfx->right);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+};
+
+
+struct PrefixLeftRightMatchOp : Op
+// ----------------------------------------------------------------------------
+//   Validates the left and right of a prefix 
+// ----------------------------------------------------------------------------
+{
+    bool Run(Data &data)
+    {
+        Tree *test = data.Pop();
+        if (Prefix *pfx = test->AsPrefix())
+        {
+            data.Push(pfx->right);
+            data.Push(pfx->left);
+            return true;
+        }
+        return false;
+    }
+};
+    
+
+struct PostfixMatchOp : Op
+// ----------------------------------------------------------------------------
+//   Check if the top of stack is a postfix with given name
+// ----------------------------------------------------------------------------
+{
+    PostfixMatchOp(text name): name(name) {}
+    text name;
+
+    bool Run(Data &data)
+    {
+        Tree *test = data.Pop();
+        if (Postfix *pfx = test->AsPostfix())
+        {
+            if (Name *tname = pfx->right->AsName())
+            {
+                if (tname->value == name)
+                {
+                    data.Push(pfx->left);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+};
+
+
+struct PostfixRightLeftMatchOp : Op
+// ----------------------------------------------------------------------------
+//   Validates the left and right of a prefix 
+// ----------------------------------------------------------------------------
+{
+    bool Run(Data &data)
+    {
+        Tree *test = data.Pop();
+        if (Postfix *pfx = test->AsPostfix())
+        {
+            data.Push(pfx->left);
+            data.Push(pfx->right);
+            return true;
+        }
+        return false;
+    }
+};
+
+
+struct TypedBindingOp : Op
+// ----------------------------------------------------------------------------
+//    Type check the two top elements of the stack and bind to name
+// ----------------------------------------------------------------------------
+{
+    TypedBindingOp(Name *name): name(name) {}
+    Name_p name;
+
+    bool Run(Data &data)
+    {
+        Tree *test = data.Pop();
+        Tree *type = data.Pop();
+        Tree *checked = TypeCheck(data.context, type, test);
+        if (checked)
+        {
+            data.locals->Define(name, checked);
+            data.Bind(checked);
+            return true;
+        }
+        return false;
+    }
+};
+    
+
+struct TypeCheckOp : Op
+// ----------------------------------------------------------------------------
+//    Perform a type check between the two top elements of the stack
+// ----------------------------------------------------------------------------
+{
+    bool Run(Data &data)
+    {
+        Tree *test = data.Pop();
+        Tree *type = data.Pop();
+        Tree *checked = TypeCheck(data.context, type, test);
+        if (checked)
+            return true;
+        return false;
+    }
+};
+
+
+struct WhenClauseOp : Op
+// ----------------------------------------------------------------------------
+//   Check the given when clause
+// ----------------------------------------------------------------------------
+{
+    bool Run(Data &data)
+    {
+        Tree *test = data.Pop();
+        if (test == xl_true)
+            return true;
+        if (test != xl_false)
+            Ooops("Invalid guard clause, $1 is not a boolean", test);
+        return false;
+    }
+};
+
+
+struct InfixMatchOp : Op
+// ----------------------------------------------------------------------------
+//   Match a given infix
+// ----------------------------------------------------------------------------
+{
+    InfixMatchOp(uint index, text name) : index(index), name(name) {}
+    uint index;
+    text name;
+    
+
+    bool Run(Data &data)
+    {
+        Tree *test = data.Pop();
+        Infix *ifx = test->AsInfix();
+        if (!ifx || ifx->name != name)
+        {
+            data.Push(test);
+            data.MustEvaluate(index, true);
+            test = data.Pop();
+            ifx = test->AsInfix();
+        }
+        if (ifx)
+        {
+            data.Push(ifx->right);
+            data.Push(ifx->left);
+        }
+        return false;
+    }
+};
+
+
+struct EvaluateOp : Op
+// ----------------------------------------------------------------------------
+//   Evaluate a tree
+// ----------------------------------------------------------------------------
+{
+    EvaluateOp(uint index): index(index) {}
+    uint index;
+
+    bool Run(Data &data)
+    {
+        XL_ASSERT(index < data.evals.size());
+        Tree *test = data.Pop();
+        Tree *result = data.evals[index];
+        if (!result)
+        {
+            result = Evaluate(data.context, test);
+            data.evals[index] = result;
+        }
+        data.Push(result);
+        return true;
+    }
+};
+
+
+struct EvaluateUpdateOp : Op
+// ----------------------------------------------------------------------------
+//   Evaluate a tree
+// ----------------------------------------------------------------------------
+{
+    EvaluateUpdateOp(uint index): index(index) {}
+    uint index;
+
+    bool Run(Data &data)
+    {
+        XL_ASSERT(index < data.evals.size());
+        Tree *test = data.Pop();
+        Tree *result = data.evals[index];
+        if (!result)
+        {
+            result = Evaluate(data.context, test);
+            data.evals[index] = result;
+        }
+        if (Tree *inside = isClosure(result, &data.context))
+            result = inside;
+        data.Push(result);
+        return true;
+    }
+};
+
+
+struct EvaluateTreeOp : Op
+// ----------------------------------------------------------------------------
+//   Evaluate a specific tree in the context
+// ----------------------------------------------------------------------------
+{
+    EvaluateTreeOp(uint index, Tree *tree, bool locals)
+        : tree(tree), index(index), locals(locals) {}
+    Tree_p tree;
+    uint   index;
+    bool   locals;
+
+    bool Run(Data &data)
+    {
+        XL_ASSERT(index < data.evals.size());
+        Tree *result = data.evals[index];
+        if (!result)
+        {
+            result = Evaluate(locals ? data.locals : data.context, tree);
+            data.evals[index] = result;
+        }
+        if (Tree *inside = isClosure(result, NULL))
+            result = inside;
+        data.Push(result);
+        return true;
+        
+    }
+};
+
+
+struct EvaluateOpcodeOp : Op
+// ----------------------------------------------------------------------------
+//    Evaluate an opcode
+// ----------------------------------------------------------------------------
+{
+    EvaluateOpcodeOp(Opcode *opcode, Tree *self): opcode(opcode), self(self) {}
+    Opcode *opcode;
+    Tree_p  self;
+
+    bool Run(Data &data)
+    {
+        Tree *result = opcode->Evaluate(data.context, self, data.vars);
+        data.Push(result);
+        return true;
+    }
+};
+
+
+struct BodyOp : Op
+// ----------------------------------------------------------------------------
+//    Evaluate a body
+// ----------------------------------------------------------------------------
+{
+    BodyOp(Tree *body): body(body) {}
+    Tree_p  body;
+
+    bool Run(Data &data)
+    {
+        Tree *result = makeClosure(data.locals, body);
+        data.Push(result);
+        return true;
+    }
+};
+
+
+
+
+// ============================================================================
+//
+//   Evaluation cache - Recording what has been evaluated and how
+//
+// ============================================================================
+
+struct EvalCache: std::map<Tree_p, uint>
+// ----------------------------------------------------------------------------
+//    Recording evaluations and other operations
+// ----------------------------------------------------------------------------
+{
+    EvalCache(): code(NULL) {}
+
+public:
+    Code *              code;
+    TreeList            computed;
+};
+
+
+
+// ============================================================================
+//
 //    Primitive cache for 'opcode' and 'C' bindings
 //
 // ============================================================================
@@ -156,11 +709,9 @@ struct Bindings
     typedef bool value_type;
 
     Bindings(Context *context, Context *locals,
-             Tree *test, EvalCache &cache,
-             Opcode *opcode, TreeList &args)
+             Tree *test, EvalCache &cache, TreeList &args)
         : context(context), locals(locals),
-          test(test), cache(cache),
-          opcode(opcode), args(args), resultType(NULL) {}
+          test(test), cache(cache), resultType(NULL), args(args) {}
 
     // Tree::Do interface
     bool  DoInteger(Integer *what);
@@ -173,11 +724,11 @@ struct Bindings
     bool  DoBlock(Block *what);
 
     // Evaluation and binding of values
+    uint  EvaluationIndex(Tree *expr);
     void  MustEvaluate(bool updateContext = false);
     Tree *MustEvaluate(Context *context, Tree *what);
     void  Bind(Name *name, Tree *value);
     void  BindClosure(Name *name, Tree *value);
-
 
 private:
     Context_p  context;
@@ -186,10 +737,16 @@ private:
     EvalCache  &cache;
 
 public:
-    Opcode *    opcode;
-    TreeList &  args;
     Tree_p      resultType;
+    TreeList   &args;
 };
+
+
+#define ADD_OP(X)                                                       \
+/* ------------------------------------------------------------ */      \
+/*  Add an operation to the current code                        */      \
+/* ------------------------------------------------------------ */      \
+    do { if (cache.code) cache.code->Add(new X); } while (0)
 
 
 inline bool Bindings::DoInteger(Integer *what)
@@ -198,6 +755,7 @@ inline bool Bindings::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------
 {
     MustEvaluate();
+    ADD_OP(MatchOp<Integer>(what));
     if (Integer *ival = test->AsInteger())
         if (ival->value == what->value)
             return true;
@@ -212,6 +770,7 @@ inline bool Bindings::DoReal(Real *what)
 // ----------------------------------------------------------------------------
 {
     MustEvaluate();
+    ADD_OP(MatchOp<Real>(what));
     if (Real *rval = test->AsReal())
         if (rval->value == what->value)
             return true;
@@ -225,8 +784,8 @@ inline bool Bindings::DoText(Text *what)
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
 {
-    Save<Context_p> saveContext(context, context);
     MustEvaluate();
+    ADD_OP(MatchOp<Text>(what));
     if (Text *tval = test->AsText())
         if (tval->value == what->value)         // Do delimiters matter?
             return true;
@@ -245,13 +804,19 @@ inline bool Bindings::DoName(Name *what)
     // The test value may have been evaluated
     EvalCache::iterator found = cache.find(test);
     if (found != cache.end())
-        test = (*found).second;
+    {
+        uint index = (*found).second;
+        XL_ASSERT(index <= cache.computed.size());
+        if (Tree *evaluated = cache.computed[index-1])
+            test = evaluated;
+    }
 
     // If there is already a binding for that name, value must match
     // This covers both a pattern with 'pi' in it and things like 'X+X'
     if (Tree *bound = locals->Bound(what))
     {
         MustEvaluate(true);
+        ADD_OP(NameMatchOp(what));
         bool result = Tree::Equal(bound, test);
         IFTRACE(eval)
             std::cerr << "  ARGCHECK: "
@@ -267,6 +832,7 @@ inline bool Bindings::DoName(Name *what)
         std::cerr << "  CLOSURE " << ContextStack(context->CurrentScope())
                   << what << "=" << test << "\n";
     BindClosure(what, test);
+    ADD_OP(BindClosureOp(what));
     return true;
 }
 
@@ -276,11 +842,12 @@ bool Bindings::DoBlock(Block *what)
 //   The pattern contains a block: look inside
 // ----------------------------------------------------------------------------
 {
+    ADD_OP(BlockChildOp(what));
     if (Block *testBlock = test->AsBlock())
         if (testBlock->opening == what->opening &&
             testBlock->closing == what->closing)
             test = testBlock->child;
-    
+
     return what->child->Do(this);
 }
 
@@ -301,18 +868,20 @@ bool Bindings::DoPrefix(Prefix *what)
             {
                 if (name->value == testName->value)
                 {
+                    ADD_OP(PrefixMatchOp(name->value));
                     test = pfx->right;
                     return what->right->Do(this);
                 }
                 else
                 {
                     Ooops("Prefix name $1 does not match $2", name, testName);
-                    return false;                    
+                    return false;
                 }
             }
         }
 
         // For other cases, we must go deep inside each prefix to check
+        ADD_OP(PrefixLeftRightMatchOp());
         test = pfx->left;
         if (!what->left->Do(this))
             return false;
@@ -341,6 +910,7 @@ bool Bindings::DoPostfix(Postfix *what)
         {
             if (Name *testName = pfx->right->AsName())
             {
+                ADD_OP(PostfixMatchOp(name->value));
                 if (name->value == testName->value)
                 {
                     test = pfx->left;
@@ -349,12 +919,13 @@ bool Bindings::DoPostfix(Postfix *what)
                 else
                 {
                     Ooops("Postfix name $1 does not match $2", name, testName);
-                    return false;                    
+                    return false;
                 }
             }
         }
 
         // For other cases, we must go deep inside each prefix to check
+        ADD_OP(PostfixRightLeftMatchOp());
         test = pfx->right;
         if (!what->right->Do(this))
             return false;
@@ -398,6 +969,7 @@ bool Bindings::DoInfix(Infix *what)
         }
         if (checked)
         {
+            ADD_OP(TypedBindingOp(name));
             Bind(name, checked);
             return true;
         }
@@ -416,6 +988,7 @@ bool Bindings::DoInfix(Infix *what)
             Ooops("Previously declared type was $1", resultType);
         }
         resultType = MustEvaluate(context, what->right);
+        ADD_OP(TypeCheckOp);
         return what->left->Do(this);
     }
 
@@ -428,6 +1001,7 @@ bool Bindings::DoInfix(Infix *what)
 
         // Here, we need to evaluate in the local context, not eval one
         Tree *check = MustEvaluate(locals, what->right);
+        ADD_OP(WhenClauseOp);
         if (check == xl_true)
             return true;
         else if (check != xl_false)
@@ -438,6 +1012,8 @@ bool Bindings::DoInfix(Infix *what)
     }
 
     // In all other cases, we need an infix with matching name
+    uint index = EvaluationIndex(test);
+    ADD_OP(InfixMatchOp(index, what->name));
     Infix *ifx = test->AsInfix();
     if (!ifx)
     {
@@ -453,7 +1029,7 @@ bool Bindings::DoInfix(Infix *what)
                 .Arg(ifx->name).Arg(what->name);
             return false;
         }
-
+        
         test = ifx->left;
         if (!what->left->Do(this))
             return false;
@@ -468,18 +1044,41 @@ bool Bindings::DoInfix(Infix *what)
 }
 
 
+uint Bindings::EvaluationIndex(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Return or allocate the evaluation index for the tree
+// ----------------------------------------------------------------------------
+{
+    uint idx = cache[tree];
+    if (idx)
+        return idx-1;
+
+    cache.computed.push_back(NULL);
+    idx = cache.computed.size();
+    cache[tree] = idx;
+    return idx-1;
+}
+
+
 void Bindings::MustEvaluate(bool updateContext)
 // ----------------------------------------------------------------------------
 //   Evaluate 'test', ensuring that each bound arg is evaluated at most once
 // ----------------------------------------------------------------------------
 {
-    Tree_p &evaluated = cache[test];
+    uint idx = EvaluationIndex(test);
+    if (updateContext)
+        ADD_OP(EvaluateUpdateOp(idx));
+    else
+        ADD_OP(EvaluateOp(idx));
+        
+    Tree *evaluated = cache.computed[idx];
     if (!evaluated)
     {
         evaluated = EvaluateClosure(context, test);
         IFTRACE(eval)
             std::cerr << "  TEST(" << test << ") = "
                       << "NEW(" << evaluated << ")\n";
+        cache.computed[idx] = evaluated;
     }
     else
     {
@@ -487,11 +1086,12 @@ void Bindings::MustEvaluate(bool updateContext)
             std::cerr << "  TEST(" << test << ") = "
                       << "OLD(" << evaluated << ")\n";
     }
+    
     test = evaluated;
     if (updateContext)
-        if (Tree *inside = isClosure(test, updateContext ? &context : NULL))
+        if (Tree *inside = isClosure(test, &context))
             test = inside;
-            
+
 }
 
 
@@ -500,10 +1100,13 @@ Tree *Bindings::MustEvaluate(Context *context, Tree *tval)
 //   Ensure that each bound arg is evaluated at most once
 // ----------------------------------------------------------------------------
 {
-    Tree_p &evaluated = cache[tval];
+    uint idx = EvaluationIndex(tval);
+    ADD_OP(EvaluateTreeOp(idx, tval, context == locals));
+    Tree *evaluated = cache.computed[idx];
     if (!evaluated)
     {
         evaluated = EvaluateClosure(context, tval);
+        cache.computed[idx] = evaluated;
         IFTRACE(eval)
             std::cerr << "  NEED(" << tval << ") = "
                       << "NEW(" << evaluated << ")\n";
@@ -527,8 +1130,7 @@ void Bindings::Bind(Name *name, Tree *value)
 {
     IFTRACE(eval)
         std::cerr << "  BIND " << name << "=" << ShortTreeForm(value) <<"\n";
-    if (opcode)
-        args.push_back(value);
+    args.push_back(value);
     locals->Define(name, value);
 }
 
@@ -580,7 +1182,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     Context_p context = new Context(evalScope);
     Context_p locals  = NULL;
     Tree *result = decl->right;
-    
+
     // Check if the decl is an opcode or C binding
     Opcode *opcode = opcodeInfo(decl);
 
@@ -611,7 +1213,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
         locals->CreateScope();
 
         // Check bindings of arguments to declaration, exit if fails
-        Bindings  bindings(context, locals, self, *cache, opcode, args);
+        Bindings  bindings(context, locals, self, *cache, args);
         if (!decl->left->Do(bindings))
         {
             IFTRACE(eval)
@@ -792,7 +1394,7 @@ static Tree *Instructions(Context_p context, Tree_p what)
             {
                 // We need to evaluate argument in current context
                 arg = Instructions(context, arg);
-                
+
                 // We built a new context if left was a block
                 if (Tree *inside = isClosure(newCallee, &context))
                 {
@@ -973,7 +1575,7 @@ struct Expansion
         if (left != what->left || right != what->right)
             return new Postfix(left, right, what->Position());
         return what;
-        
+
     }
     Tree *  DoInfix(Infix *what)
     {
@@ -985,7 +1587,7 @@ struct Expansion
             return new Infix(what->name, left, right, what->Position());
         return what;
     }
-    
+
     Tree *  DoBlock(Block *what)
     {
         Tree *chld = what->child->Do(this);
@@ -1011,7 +1613,7 @@ static Tree *formTypeCheck(Context *context, Tree *shape, Tree *value)
     Context_p locals = new Context(context);
     EvalCache cache;
     TreeList  args;
-    Bindings  bindings(context, locals, value, cache, NULL, args);
+    Bindings  bindings(context, locals, value, cache, args);
     if (!shape->Do(bindings))
     {
         IFTRACE(eval)
@@ -1057,7 +1659,7 @@ Tree *TypeCheck(Context *scope, Tree *type, Tree *value)
             if (Name *ptypename = ptype->left->AsName())
                 if (ptypename->value == "type")
                     return formTypeCheck(scope, ptype->right, value);
-        
+
         IFTRACE(eval)
             std::cerr << "TYPECHECK: no code for " << type
                       << " opcode is " << type->GetInfo<Opcode>()
@@ -1083,3 +1685,4 @@ Tree *TypeCheck(Context *scope, Tree *type, Tree *value)
 #include "interpreter.tbl"
 
 XL_END
+    

@@ -152,8 +152,8 @@ public:
 
 public:
     Context_p   context;        // Context in which we lookup things
-    tree_map    types;          // Map an expression to its type
-    tree_map    unifications;   // Map a type to its reference type
+    TreeMap     types;          // Map an expression to its type
+    TreeMap     unifications;   // Map a type to its reference type
     rcall_map   rcalls;         // Rewrites to call for a given tree
     Tree_p      left, right;    // Current left and right of unification
     bool        prototyping;    // Prototyping a function declaration

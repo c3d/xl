@@ -108,8 +108,9 @@ OPTION(pedantic, "Set the maximum warning level",
        warning_level = 5)
 
 // Optimize level options
-// -O0 means interpreted, no LLVM compilation
-// -O1 means old-style compilation, not fully optimized
+// -O0 means interpreted
+// -O1 means interpreted with bytecode-style acceleration
+// -O2 means simple compilation of bytecode
 // -O3 means new-style full compilation with type inference
 OPTVAR(optimize_level, uint, 1)
 OPTION(O, "Set the optimization level, from 0 to 3",
@@ -117,7 +118,7 @@ OPTION(O, "Set the optimization level, from 0 to 3",
 OPTVAR(verbose,bool,false)
 OPTION(verbose, "Select more verbose error messages.", verbose = true)
 OPTION(v, "Short form for -verbose.", verbose = true)
-OPTION(i, "Select interpreted mode", optimize_level = 0)
+OPTION(i, "Select interactive mode", optimize_level = 0)
 
 // Case sensitivity
 OPTVAR(case_sensitive, bool, true)

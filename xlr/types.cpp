@@ -605,7 +605,7 @@ Tree *Types::Base(Tree *type)
     Tree *chain = type;
 
     // If we had some unification, find the reference type
-    tree_map::iterator found = unifications.find(type);
+    TreeMap::iterator found = unifications.find(type);
     while (found != unifications.end())
     {
         type = (*found).second;
@@ -1374,8 +1374,8 @@ void debugt(XL::Types *ti)
     using namespace XL;
     uint i = 0;
 
-    tree_map &map = ti->types;
-    for (tree_map::iterator t = map.begin(); t != map.end(); t++)
+    TreeMap &map = ti->types;
+    for (TreeMap::iterator t = map.begin(); t != map.end(); t++)
     {
         Tree *value = (*t).first;
         Tree *type = (*t).second;
@@ -1405,8 +1405,8 @@ void debugu(XL::Types *ti)
     using namespace XL;
     uint i = 0;
 
-    tree_map &map = ti->unifications;
-    for (tree_map::iterator t = map.begin(); t != map.end(); t++)
+    TreeMap &map = ti->unifications;
+    for (TreeMap::iterator t = map.begin(); t != map.end(); t++)
     {
         Tree *value = (*t).first;
         Tree *type = (*t).second;

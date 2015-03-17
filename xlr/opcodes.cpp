@@ -55,7 +55,7 @@
 XL_BEGIN
 
 // List of registered opcodes
-Opcode::List *Opcode::list = NULL;
+Opcode::Opcodes *Opcode::opcodes = NULL;
 
 
 void Opcode::Enter(Context *context)
@@ -63,9 +63,9 @@ void Opcode::Enter(Context *context)
 //   Enter all the opcodes declared using the macros
 // ----------------------------------------------------------------------------
 {
-    for (List::iterator l = list->begin(); l != list->end(); l++)
+    for (Opcodes::iterator o = opcodes->begin(); o != opcodes->end(); o++)
     {
-        Opcode *opcode = *l;
+        Opcode *opcode = *o;
         opcode->Register(context);
     }
 }
@@ -76,9 +76,9 @@ Opcode * Opcode::Find(text name)
 //   Find an opcode that matches the name if there is  one
 // ----------------------------------------------------------------------------
 {
-    for (List::iterator l = list->begin(); l != list->end(); l++)
+    for (Opcodes::iterator o = opcodes->begin(); o != opcodes->end(); o++)
     {
-        Opcode *opcode = *l;
+        Opcode *opcode = *o;
         if (opcode->name == name)
             return opcode;
     }
@@ -127,12 +127,11 @@ void NameOpcode::Register(Context *context)
     IFTRACE(opcodes)
         std::cerr << "Opcode " << this->name << " is a name\n";
     
-    Rewrite *rw = context->Define(toDefine, toDefine);
-    Infix *decl = RewriteDeclaration(rw);
+    context->Define(toDefine, toDefine);
     toDefine->SetInfo<Opcode> (this);
 
 #ifndef INTERPRETER_ONLY
-    if (MAIN->options.optimize_level > 0)
+    if (MAIN->options.optimize_level > 1)
         MAIN->compiler->EnterGlobal(toDefine, &toDefine);
 #endif
 }

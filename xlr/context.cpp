@@ -194,7 +194,7 @@ Tree *Context::Evaluate(Tree *what)
 #else // !INTERPRETER_ONLY
     uint optLevel = MAIN->options.optimize_level;
     // Select interpreter or compiler at run-time
-    if (optLevel)
+    if (optLevel > 1)
     {
         if (eval_fn code = Compile(what))
             result = code(this->CurrentScope(), what);
@@ -399,7 +399,7 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
 
     // In interpreted mode, just skip any C declaration
 #ifndef INTERPRETER_ONLY
-    if (MAIN->options.optimize_level == 0)
+    if (MAIN->options.optimize_level <= 1)
 #endif
         if (Prefix *cdecl = rewrite->right->AsPrefix())
             if (Name *cname = cdecl->left->AsName())
@@ -775,7 +775,7 @@ bool Context::IsEmpty()
 }
 
 
-static ulong listNames(Rewrite *where, text begin, rewrite_list &list, bool pfx)
+static ulong listNames(Rewrite *where, text begin, RewriteList &list, bool pfx)
 // ----------------------------------------------------------------------------
 //   List names in the given tree
 // ----------------------------------------------------------------------------
@@ -808,7 +808,7 @@ static ulong listNames(Rewrite *where, text begin, rewrite_list &list, bool pfx)
 }
 
 
-ulong Context::ListNames(text begin, rewrite_list &list,
+ulong Context::ListNames(text begin, RewriteList &list,
                          bool recurse, bool includePrefixes)
 // ----------------------------------------------------------------------------
 //    List names in a context

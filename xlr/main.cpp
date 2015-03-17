@@ -158,7 +158,7 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
 
     // Once all options have been read, enter symbols and setup compiler
 #ifndef INTERPRETER_ONLY
-    if (options.optimize_level > 0)
+    if (options.optimize_level > 1)
     {
         compiler = new Compiler(compilerName.c_str(), inArgc, inArgv);
         compiler->Setup(options);

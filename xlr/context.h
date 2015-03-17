@@ -187,8 +187,8 @@ typedef Infix                           RewriteChildren;
 typedef GCPtr<RewriteChildren>          RewriteChildren_p;
 
 typedef GCPtr<Context>                  Context_p;
-typedef std::vector<Infix_p>            rewrite_list;
-typedef std::map<Tree_p, Tree_p>        tree_map;
+typedef std::vector<Infix_p>            RewriteList;
+typedef std::map<Tree_p, Tree_p>        TreeMap;
 typedef Tree *                          (*eval_fn) (Scope *, Tree *);
 typedef std::map<Tree_p, eval_fn>       code_map;
 
@@ -280,7 +280,7 @@ public:
     void                HasOneRewriteFor(kind k);
 
     // List rewrites of a given type
-    ulong               ListNames(text begin,rewrite_list &list,
+    ulong               ListNames(text begin, RewriteList &list,
                                   bool recurses = true,
                                   bool includePrefixes = false);
 
