@@ -836,56 +836,61 @@ ulong Context::ListNames(text begin, RewriteList &list,
 // 
 // ============================================================================
 
+static inline ulong HashText(const text &t)
+// ----------------------------------------------------------------------------
+//   Compute the has for some text
+// ----------------------------------------------------------------------------
+{
+    ulong h = 0;
+    uint  l = t.length();
+    kstring ptr = t.data();
+    if (l > 8)
+        l = 8;
+    for (uint i = 0; i < l; i++)
+        h = (h * 0x301) ^ *ptr++;
+    return h;
+}
+    
+
 ulong Context::Hash(Tree *what)
 // ----------------------------------------------------------------------------
 //   Compute the hash code in the rewrite table
 // ----------------------------------------------------------------------------
-// In 'inDecl', we eliminate guards (X when Cond) and types (X as Type)
 {
-    kind  k = what->Kind();
-    ulong h = 0;
-    text  t;
+    kind        k = what->Kind();
+    ulong       h = 0xC0DED + 0x29912837*k;
 
     switch(k)
     {
     case INTEGER:
-        h = ((Integer *) what)->value;
+        h += ((Integer *) what)->value;
         break;
     case REAL:
         {
-	    const size_t s = (sizeof(ulong) < sizeof(double))
-                ? sizeof(ulong)
-                : sizeof(double);
-            memcpy(&h, &((Real *) what)->value, s);
+            XL_CASSERT(sizeof(Real::value_t) >= sizeof (ulong));
+            h += *((ulong *) &(((Real *) what)->value));
         }
         break;
     case TEXT:
-        t = ((Text *) what)->value;
+        h += HashText(((Text *) what)->value);
         break;
     case NAME:
-        t = ((Name *) what)->value;
+        h += HashText(((Name *) what)->value);
         break;
     case BLOCK:
-        t = ((Block *) what)->opening + ((Block *) what)->closing;
+        h += HashText(((Block *) what)->opening);
         break;
     case INFIX:
-        t = ((Infix *) what)->name;
+        h += HashText(((Infix *) what)->name);
         break;
     case PREFIX:
         if (Name *name = ((Prefix *) what)->left->AsName())
-            t = name->value;
+            h += HashText(name->value);
         break;
     case POSTFIX:
         if (Name *name = ((Postfix *) what)->right->AsName())
-            t = name->value;
+            h += HashText(name->value);
         break;
-    }
-
-    h += 0xC0DED + 0x29912837*k;
-    if (t.length())
-    {
-        for (text::iterator p = t.begin(); p != t.end(); p++)
-            h = (h * 0x301) ^ *p;
     }
 
     return h;

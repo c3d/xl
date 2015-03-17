@@ -570,17 +570,7 @@ struct BodyOp : Op
 //
 // ============================================================================
 
-struct EvalCache: std::map<Tree_p, uint>
-// ----------------------------------------------------------------------------
-//    Recording evaluations and other operations
-// ----------------------------------------------------------------------------
-{
-    EvalCache(Code *code = NULL): code(code) {}
-
-public:
-    Code *              code;
-    TreeList            computed;
-};
+typedef std::map<Tree_p, Tree_p> EvalCache;
 
 
 
@@ -653,7 +643,6 @@ struct Bindings
     bool  DoBlock(Block *what);
 
     // Evaluation and binding of values
-    uint  EvaluationIndex(Tree *expr);
     void  MustEvaluate(bool updateContext = false);
     Tree *MustEvaluate(Context *context, Tree *what);
     void  Bind(Name *name, Tree *value);
@@ -671,15 +660,10 @@ public:
 };
 
 
-#define ADD_OP(X)                                                       \
+#define ADD_OP(X) false                                                 \
 /* ------------------------------------------------------------ */      \
 /*  Add an operation to the current code                        */      \
-/* ------------------------------------------------------------ */      \
-    do                                                                  \
-    {                                                                   \
-        if (cache.code)                                                 \
-            cache.code->Add(new X);                                     \
-    } while (0)
+/* ------------------------------------------------------------ */
 
 
 inline bool Bindings::DoInteger(Integer *what)
@@ -737,12 +721,7 @@ inline bool Bindings::DoName(Name *what)
     // The test value may have been evaluated
     EvalCache::iterator found = cache.find(test);
     if (found != cache.end())
-    {
-        uint index = (*found).second;
-        XL_ASSERT(index <= cache.computed.size());
-        if (Tree *evaluated = cache.computed[index-1])
-            test = evaluated;
-    }
+        test = (*found).second;
 
     // If there is already a binding for that name, value must match
     // This covers both a pattern with 'pi' in it and things like 'X+X'
@@ -945,7 +924,6 @@ bool Bindings::DoInfix(Infix *what)
     }
 
     // In all other cases, we need an infix with matching name
-    uint index = EvaluationIndex(test);
     ADD_OP(InfixMatchOp(index, what->name));
     Infix *ifx = test->AsInfix();
     if (!ifx)
@@ -977,41 +955,19 @@ bool Bindings::DoInfix(Infix *what)
 }
 
 
-uint Bindings::EvaluationIndex(Tree *tree)
-// ----------------------------------------------------------------------------
-//   Return or allocate the evaluation index for the tree
-// ----------------------------------------------------------------------------
-{
-    uint idx = cache[tree];
-    if (idx)
-        return idx-1;
-
-    cache.computed.push_back(NULL);
-    idx = cache.computed.size();
-    cache[tree] = idx;
-    return idx-1;
-}
-
-
 void Bindings::MustEvaluate(bool updateContext)
 // ----------------------------------------------------------------------------
 //   Evaluate 'test', ensuring that each bound arg is evaluated at most once
 // ----------------------------------------------------------------------------
 {
-    uint idx = EvaluationIndex(test);
-    if (updateContext)
-        ADD_OP(EvaluateUpdateOp(idx));
-    else
-        ADD_OP(EvaluateOp(idx));
-        
-    Tree *evaluated = cache.computed[idx];
+    Tree *evaluated = cache[test];
     if (!evaluated)
     {
         evaluated = EvaluateClosure(context, test);
+        cache[test] = evaluated;
         IFTRACE(eval)
             std::cerr << "  TEST(" << test << ") = "
                       << "NEW(" << evaluated << ")\n";
-        cache.computed[idx] = evaluated;
     }
     else
     {
@@ -1033,13 +989,11 @@ Tree *Bindings::MustEvaluate(Context *context, Tree *tval)
 //   Ensure that each bound arg is evaluated at most once
 // ----------------------------------------------------------------------------
 {
-    uint idx = EvaluationIndex(tval);
-    ADD_OP(EvaluateTreeOp(idx, tval, context == locals));
-    Tree *evaluated = cache.computed[idx];
+    Tree *evaluated = cache[tval];
     if (!evaluated)
     {
         evaluated = EvaluateClosure(context, tval);
-        cache.computed[idx] = evaluated;
+        cache[tval] = evaluated;
         IFTRACE(eval)
             std::cerr << "  NEED(" << tval << ") = "
                       << "NEW(" << evaluated << ")\n";
@@ -1224,8 +1178,7 @@ static Tree *Instructions(Context_p context, Tree_p what)
     while (what)
     {
         // First attempt to look things up
-        Code *code = what->GetInfo<Code>();
-        EvalCache cache(code);
+        EvalCache cache;
         if (Tree *eval = context->Lookup(what, evalLookup, &cache))
         {
             if (eval == xl_error)
