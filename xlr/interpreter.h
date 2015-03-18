@@ -100,9 +100,11 @@ struct Data
     void                Push(Tree *t);
     Tree *              Pop();
     uint                Bind(Tree *t);
+    Tree *              Self();
     void                MustEvaluate(uint index, bool updateContext);
 
 public:
+    Tree_p              self;    // The tree being evaluated
     Context_p           context; // Evaluation context
     Context_p           locals;  // Local declarations
     TreeList            stack;   // Evaluation stack

@@ -144,7 +144,7 @@ struct NameOpcode : Opcode
     }
     
     virtual void                Register(Context *);
-    virtual bool                Run(Data &data) { return true; }
+    virtual bool                Run(Data &data) { data.Self(); return true; }
     Name_p &                    toDefine;
 };
 
@@ -325,7 +325,7 @@ XL_END
 /* ------------------------------------------------------------ */      \
     Context *context = data.context;                                    \
     (void) context;  /* Get rid of warnings */                          \
-    Tree *self = data.Pop();                                            \
+    Tree *self = data.self;
 
 
 #define RESULT(Code)                                                    \
@@ -455,14 +455,15 @@ XL_END
         Allocator<type>::CreateSingleton();
 
 
-#define ARG(Name, Type, Index)                                          \
+#define ARG(Name, Type)                                                 \
 /* ------------------------------------------------------------ */      \
 /*  Extract an argument from the argument list                  */      \
 /* ------------------------------------------------------------ */      \
-    Type##_r *Name##Ptr = data.vars[Index]->As<Type##_r>();             \
+    Tree * Name##Tree = data.Pop();                                     \
+    Type##_r *Name##Ptr = Name##Tree->As<Type##_r>();                   \
     if (!Name##Ptr)                                                     \
     {                                                                   \
-        Ooops("Argument $1 to $2 is not a " #Type, data.vars[Index])    \
+        Ooops("Argument $1 to $2 is not a " #Type, Name##Tree)          \
             .Arg(__FUNCTION__);                                         \
         return false;                                                   \
     }                                                                   \
@@ -474,7 +475,7 @@ XL_END
 /*  Check if the argument count matches what is expected        */      \
 /* ------------------------------------------------------------ */      \
     INIT_CONTEXT_AND_SELF;                                              \
-    if (data.vars.size() != N)                                          \
+    if (data.stack.size() < N)                                          \
     {                                                                   \
         Ooops("Invalid opcode argument count in $1", self);             \
         return false;                                                   \
@@ -492,7 +493,7 @@ XL_END
         virtual bool Run(Data &data)                                    \
         {                                                               \
             ARGCOUNT(1);                                                \
-            ARG(left, LeftTy, 0);                                       \
+            ARG(left, LeftTy);                                          \
             RESULT(Code);                                               \
         }                                                               \
     };                                                                  \
@@ -510,8 +511,8 @@ XL_END
         virtual bool Run(Data &data)                                    \
         {                                                               \
             ARGCOUNT(2);                                                \
-            ARG(left,  LeftTy,  0);                                     \
-            ARG(right, RightTy, 1);                                     \
+            ARG(right, RightTy);                                        \
+            ARG(left,  LeftTy);                                         \
             RESULT(Code);                                               \
         }                                                               \
     };                                                                  \
@@ -531,8 +532,8 @@ XL_END
         virtual bool Run(Data &data)                                    \
         {                                                               \
             ARGCOUNT(2);                                                \
-            ARG(left,  LeftTy,  0);                                     \
-            ARG(right, RightTy, 1);                                     \
+            ARG(right, RightTy);                                        \
+            ARG(left,  LeftTy);                                         \
             Code;                                                       \
         }                                                               \
     };                                                                  \
@@ -556,7 +557,7 @@ XL_END
         virtual bool Run(Data &data)                                    \
         {                                                               \
             ARGCOUNT(1);                                                \
-            ARG(arg, RightTy,  0);                                      \
+            ARG(arg, RightTy);                                          \
             Code;                                                       \
         }                                                               \
     };                                                                  \
@@ -578,7 +579,7 @@ XL_END
         virtual bool Run(Data &data)                                    \
         {                                                               \
             ARGCOUNT(1);                                                \
-            ARG(arg, LeftTy,  args[0]);                                 \
+            ARG(arg, LeftTy);                                            \
             Code;                                                       \
         }                                                               \
     };                                                                  \
@@ -599,14 +600,15 @@ XL_END
         virtual bool Run(Data &data)                                    \
         {                                                               \
             INIT_CONTEXT_AND_SELF;                                      \
-            FunctionArguments _XLparms(data.vars);                      \
+            FunctionArguments _XLparms(data.stack);                     \
             Parms;                                                      \
-            if (_XLparms.index != data.vars.size())                     \
+            if (_XLparms.index != data.stack.size())                    \
             {                                                           \
                 Ooops("Invalid argument count for "                     \
                       #FName " in $1", self);                           \
                 return false;                                           \
             }                                                           \
+            data.stack.clear();                                         \
                                                                         \
             Code;                                                       \
         }                                                               \

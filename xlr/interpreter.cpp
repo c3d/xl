@@ -62,7 +62,7 @@ bool Code::Run(Data &data)
 //    Evaluate the code on the given data
 // ----------------------------------------------------------------------------
 {
-    Data inner(data.context);
+    Data inner(data.locals);
 
     bool ok = true;
     Tree *self = data.Pop();
@@ -98,6 +98,7 @@ void Data::Init(Scope *scope, Tree *src)
     
     stack.clear();
     stack.push_back(src);
+    self = src;
 }
 
 
@@ -130,6 +131,16 @@ uint Data::Bind(Tree *t)
     uint index = vars.size();
     vars.push_back(t);
     return index;
+}
+
+
+Tree *Data::Self()
+// ----------------------------------------------------------------------------
+//   Put self on top of stack and return it
+// ----------------------------------------------------------------------------
+{
+    stack.push_back(self);
+    return self;
 }
 
 
@@ -545,6 +556,55 @@ struct EvaluateTreeOp : Op
 };
 
 
+struct ConstOp : Op
+// ----------------------------------------------------------------------------
+//    Push a constant on the stack
+// ----------------------------------------------------------------------------
+{
+    ConstOp(Tree *tree): tree(tree) {}
+    Tree_p tree;
+
+    bool Run(Data &data)
+    {
+        data.Push(tree);
+        return true;
+    }
+};
+
+
+struct VariableOp : Op
+// ----------------------------------------------------------------------------
+//    Push a variable on the stack
+// ----------------------------------------------------------------------------
+{
+    VariableOp(Infix *decl): decl(decl) {}
+    Infix_p decl;
+
+    bool Run(Data &data)
+    {
+        data.Push(decl->right);
+        return true;
+    }
+};
+
+
+struct StoreOp : Op
+// ----------------------------------------------------------------------------
+//    Store top of stack in a variable
+// ----------------------------------------------------------------------------
+{
+    StoreOp(Infix *decl): decl(decl) {}
+    Infix_p decl;
+
+    bool Run(Data &data)
+    {
+        Tree *value = data.Pop();
+        decl->right = value;
+        return true;
+    }
+};
+
+
 struct BodyOp : Op
 // ----------------------------------------------------------------------------
 //    Evaluate a body
@@ -558,6 +618,18 @@ struct BodyOp : Op
         Tree *result = MakeClosure(data.locals, body);
         data.Push(result);
         return true;
+    }
+};
+
+
+struct DebugOp : Op
+{
+    DebugOp(text t): message(t) {}
+    text message;
+    bool Run(Data &data)
+    {
+        std::cerr << message << data.stack << "\n";
+        return true;           
     }
 };
 
@@ -1126,6 +1198,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     {
         // Cached callback
         data.Init(declScope, result);
+        data.stack = data.vars;
         if (opcode->Run(data))
             result = data.Pop();
         else
@@ -1377,12 +1450,14 @@ Tree *EvaluateClosure(Context *context, Tree *what)
 {
     // Create scope for declarations, and evaluate in this context
     Tree_p result = what;
-    if (context->ProcessDeclarations(what))
+    Errors *errors = MAIN->errors;
+    uint errCount = errors->Count();
+    if (context->ProcessDeclarations(what) && errCount == errors->Count())
         result = Instructions(context, what);
 
     // This is a safe point for checking collection status
     GarbageCollector::SafePoint();
-
+    
     return result;
 }
 
