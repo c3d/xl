@@ -169,7 +169,8 @@ TYPE(real64,real,
 // 
 // ============================================================================
 
-INFIX(Assign, tree, tree, ":=", value,  RESULT(context->Assign(&left, &right)));
+INFIX_CTX(Assign, tree, tree, ":=", value,
+          RESULT(context->Assign(&left, &right)));
 
 INFIX(TextEQ, boolean, text, "=",  text, R_BOOL(LEFT == RIGHT));
 INFIX(TextNE, boolean, text, "<>", text, R_BOOL(LEFT != RIGHT));
@@ -178,6 +179,6 @@ INFIX(TextGT, boolean, text, ">",  text, R_BOOL(LEFT >  RIGHT));
 INFIX(TextLE, boolean, text, "<=", text, R_BOOL(LEFT <= RIGHT));
 INFIX(TextGE, boolean, text, ">=", text, R_BOOL(LEFT >= RIGHT));
 
-FUNCTION(quote, tree, PARM(form,tree), RESULT(xl_parse_tree(context, formPtr)));
-FUNCTION(parse, tree, PARM(form,text), RESULT(xl_parse_text(form)));
-FUNCTION(exit,  tree, PARM(code,integer), exit(code); R_INT(0))
+PREFIX_CTX(quote, tree, "quote", tree,  RESULT(xl_parse_tree(context,leftPtr)));
+PREFIX_FN(parse, tree, text,            RESULT(xl_parse_text(left)));
+PREFIX_FN(exit,  tree, integer,         exit(left); R_INT(0))

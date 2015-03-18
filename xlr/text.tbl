@@ -29,8 +29,8 @@ TYPE(text_or_number, text,
                                             this->Position());
     );
 
-FUNCTION(length, integer, PARM(t,text),
-         R_INT (t.value.size()));
+PREFIX_FN(length, integer, text,
+          R_INT (LEFT.size()));
 
 INFIX(ConcatTN, text,   text,           "&",    text_or_number,
       R_TEXT(LEFT + RIGHT));
@@ -43,14 +43,14 @@ INFIX(RepeatTR, text,   text,           "*",    integer,
 
 INFIX(Contains, boolean, text,          "contains", text,
       R_BOOL(LEFT.find(RIGHT) != text::npos));
+
 FUNCTION(text_index, integer,
-         PARM(source, text)
+         PARM(left,   text)
          PARM(what,   text)
          PARM(offset, integer),
-         R_INT(source.value.find(what, offset)));
-
+         R_INT(LEFT.find(what, offset)));
 FUNCTION(text_replace, text,
-         PARM(source, text)
+         PARM(left,   text)
          PARM(from,   text)
          PARM(to,     text),
-         R_TEXT(xl_text_replace(source, from, to)));
+         R_TEXT(xl_text_replace(LEFT, from, to)));

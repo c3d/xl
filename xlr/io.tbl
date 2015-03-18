@@ -18,19 +18,19 @@
 //  (C) 2015 Taodyne SAS
 // ****************************************************************************
 
-OVERLOAD(WriteText, "write", boolean,           PARM(x, text),
-         R_BOOL(std::cout << x.value));
-OVERLOAD(WriteInteger, "write", boolean,        PARM(x, integer),
-         R_BOOL(std::cout << x.value));
-OVERLOAD(WriteReal, "write", boolean,           PARM(x, real),
-         R_BOOL(std::cout << x.value));
-OVERLOAD(WriteCharacter, "write", boolean,      PARM(x, character),
-         R_BOOL(std::cout << x.value));
-OVERLOAD(WriteTree, "write", boolean,           PARM(x, value),
-         Tree *value = xPtr;
-         if (Tree *eval = IsClosure(value, NULL))
-             value = eval;
-         R_BOOL(std::cout << value));
-OVERLOAD(WriteNewLine, "writeln", boolean,      ,
-         R_BOOL(std::cout << "\n"));
+PREFIX(WriteText,       boolean, "write", text,
+       R_BOOL(std::cout << left.value));
+PREFIX(WriteInteger,    boolean, "write", integer,
+       R_BOOL(std::cout << left.value));
+PREFIX(WriteReal,       boolean, "write", real,
+       R_BOOL(std::cout << left.value));
+PREFIX(WriteCharacter,  boolean, "write", character,
+       R_BOOL(std::cout << left.value));
+PREFIX(WriteTree,       boolean, "write", value,
+       Tree *value = leftPtr;
+       if (Tree *eval = IsClosure(value, NULL))
+           value = eval;
+       R_BOOL(std::cout << value));
+NAME_FN(WriteNewLine,   boolean, "writeln",
+       R_BOOL(std::cout << "\n"));
 

@@ -18,18 +18,18 @@
 //  (C) 2015 Taodyne SAS
 // ****************************************************************************
 
-INFIX(IntMod,  integer, integer, "mod", integer, R_INT (xl_mod(LEFT, RIGHT0)));
-INFIX(IntRem,  integer, integer, "rem", integer, R_INT (LEFT % RIGHT0));
-INFIX(RealMod, real,    real,    "mod", real,    R_REAL(xl_modf(LEFT, RIGHT0)));
-INFIX(RealRem, real,    real,    "rem", real,    R_REAL(fmod(LEFT, RIGHT0)));
-INFIX(IntPow,  integer, integer, "^",   integer, R_INT (xl_pow(LEFT, RIGHT)));
-INFIX(RealPowI,real,    real,    "^",   integer, R_INT (xl_powf(LEFT, RIGHT)));
-INFIX(RealPow, real,    real,    "^",   real,    R_REAL(pow(LEFT, RIGHT)));
+INFIX(IntMod,  integer, integer, "mod", integer,R_INT (xl_mod(LEFT, RIGHT0)));
+INFIX(IntRem,  integer, integer, "rem", integer,R_INT (LEFT % RIGHT0));
+INFIX(RealMod, real,    real,    "mod", real,   R_REAL(xl_modf(LEFT, RIGHT0)));
+INFIX(RealRem, real,    real,    "rem", real,   R_REAL(fmod(LEFT, RIGHT0)));
+INFIX(IntPow,  integer, integer, "^",   integer,R_INT (xl_pow(LEFT, RIGHT)));
+INFIX(RealPowI,real,    real,    "^",   integer,R_INT (xl_powf(LEFT, RIGHT)));
+INFIX(RealPow, real,    real,    "^",   real,   R_REAL(pow(LEFT, RIGHT)));
 
-OVERLOAD(AbsI, "abs", integer, PARM(x, integer), R_INT(x < 0 ? -x : x));
-OVERLOAD(AbsR, "abs", real,    PARM(x, real),    R_REAL(fabs(x)));
+PREFIX(AbsI,   integer, "abs", integer,         R_INT(LEFT < 0 ? -LEFT : LEFT));
+PREFIX(AbsR,   real,    "abs", real,            R_REAL(fabs(LEFT)));
 
-#define REALFN(fn)  FUNCTION(fn, real, PARM(x, real), R_REAL(fn(x)))
+#define REALFN(fn)  PREFIX(fn, real, #fn, real, R_REAL(fn(LEFT)))
 REALFN(sqrt);
 REALFN(sin);
 REALFN(cos);

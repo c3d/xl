@@ -62,6 +62,9 @@ struct Error
     text                Position();
     text                Message();
 
+    // Converting to a prefix form for error evaluation
+                        operator Tree *();
+    
 
 public:
     text                message;

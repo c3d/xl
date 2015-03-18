@@ -20,15 +20,17 @@
 //  (C) 2010-2015 Taodyne SAS
 // ****************************************************************************
 
-#include <sstream>
-#include <iostream>
-#include <stdio.h>
-#include "errors.h"
 #include "options.h"
 #include "scanner.h" // for Positions
 #include "context.h" // For error display
 #include "tree.h"
 #include "main.h"
+#include "basics.h"
+
+#include <sstream>
+#include <iostream>
+#include <stdio.h>
+#include "errors.h"
 
 XL_BEGIN
 
@@ -164,6 +166,15 @@ text Error::Message()
                            FormatTreeForError(arguments[i]));
     }
     return result;
+}
+
+
+Error::operator Tree *()
+// ----------------------------------------------------------------------------
+//    Return the error converted as a prefix form
+// ----------------------------------------------------------------------------
+{
+    return new Prefix(xl_error, new Text(Message(), position), position);
 }
 
 
