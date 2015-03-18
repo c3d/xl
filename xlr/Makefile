@@ -48,6 +48,7 @@ SOURCES     =					\
 	context.cpp				\
 	runtime.cpp				\
 	interpreter.cpp				\
+	bytecode.cpp				\
 	opcodes.cpp				\
 	cdecls.cpp				\
 	serializer.cpp				\
