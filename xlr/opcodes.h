@@ -95,6 +95,8 @@ typedef Infix   Infix_r;
 //
 // ============================================================================
 
+typedef Tree *(*opcode_fn)();
+
 struct Opcode : Info
 // ----------------------------------------------------------------------------
 //    An opcode, registered at initialization time
@@ -113,11 +115,22 @@ struct Opcode : Info
         ARITY_TWO,              // Two input parameters
         ARITY_CONTEXT_ONE,      // Context and one input parameter
         ARITY_CONTEXT_TWO,      // Context and two input parameters
-        ARITY_FUNCTION          // Argument list
+        ARITY_FUNCTION,         // Argument list
+        ARITY_SELF              // Pass self as argument
     };
 
+    // Implementation for various arities
+    typedef Tree *(*arity_none_fn)();
+    typedef Tree *(*arity_one_fn)(Tree *);
+    typedef Tree *(*arity_two_fn)(Tree *, Tree *);
+    typedef Tree *(*arity_ctxone_fn)(Context *, Tree *);
+    typedef Tree *(*arity_ctxtwo_fn)(Context *, Tree *, Tree *);
+    typedef Tree *(*arity_function_fn)(TreeList &args);
+    typedef Tree *(*arity_self_fn)();
+
 public:
-    Opcode(kstring name, Arity arity) : name(name), arity(arity)
+    Opcode(kstring name, arity_none_fn fn, Arity arity)
+        : arity_none(fn), name(name), arity(arity)
     {
         if (!opcodes)
             opcodes = new Opcodes;
@@ -127,17 +140,52 @@ public:
     virtual void                Register(Context *);
     virtual Tree *              Shape() { return NULL; }
 
-    // Implementation for various arities
-#define R0                      { return NULL; }
-    virtual Tree *              Run() R0
-    virtual Tree *              Run(Tree *) R0
-    virtual Tree *              Run(Tree *, Tree *) R0
-    virtual Tree *              Run(Context *, Tree *arg) R0
-    virtual Tree *              Run(Context *, Tree *left, Tree *right) R0
-    virtual Tree *              Run(TreeList &args) R0
-#undef R0
+    
+    Tree *Run(Context *context, Tree *self, TreeList &args)
+    {
+        uint size = args.size();
+        switch(arity)
+        {
+        case Opcode::ARITY_NONE:
+            if (size == 0)
+                return arity_none();
+            break;
+        case Opcode::ARITY_ONE:
+            if (size == 1)
+                return arity_one(args[0]);
+            break;
+        case Opcode::ARITY_TWO:
+            if (size == 2)
+                return arity_two(args[0], args[1]);
+            break;
+        case Opcode::ARITY_CONTEXT_ONE:
+            if (size == 1)
+                return arity_ctxone(context, args[0]);
+            break;
+        case Opcode::ARITY_CONTEXT_TWO:
+            if (size == 2)
+                return arity_ctxtwo(context, args[0], args[1]);
+            break;
+        case Opcode::ARITY_FUNCTION:
+            return arity_function(args);
+
+        case Opcode::ARITY_SELF:
+            return self;
+        }
+        return NULL;
+    }
         
 public:
+    union
+    {
+        arity_none_fn           arity_none;
+        arity_one_fn            arity_one;
+        arity_two_fn            arity_two;
+        arity_ctxone_fn         arity_ctxone;
+        arity_ctxtwo_fn         arity_ctxtwo;
+        arity_function_fn       arity_function;
+        arity_self_fn           arity_self;
+    };
     kstring                     name;
     Arity                       arity;
 
@@ -154,18 +202,17 @@ struct NameOpcode : Opcode
 // ----------------------------------------------------------------------------
 {
     NameOpcode(kstring name, Name_p &toDefine)
-        : Opcode(name, ARITY_NONE), toDefine(toDefine)
+        : Opcode(name, NULL, ARITY_SELF), toDefine(toDefine)
     {
         toDefine = new Name(name);
     }
-    NameOpcode(kstring name, Name_p &toDefine, kstring symbol)
-        : Opcode(name, ARITY_NONE), toDefine(toDefine)
+    NameOpcode(kstring name, arity_none_fn fn, Name_p &toDefine, kstring symbol)
+        : Opcode(name, fn, ARITY_NONE), toDefine(toDefine)
     {
         toDefine = new Name(symbol);
     }
     
     virtual void                Register(Context *);
-    virtual Tree *              Run()   { return toDefine; }
     Name_p &                    toDefine;
 };
 
@@ -191,10 +238,10 @@ struct InfixOpcode : Opcode
 //   We need to keep references to the original type names, as they
 //   may not be initialized at construction time yet
 {
-    InfixOpcode(kstring name,
+    InfixOpcode(kstring name, arity_two_fn fn,
                 kstring infix, Name_p &leftTy, Name_p &rightTy, Name_p &resTy,
                 Opcode::Arity arity = ARITY_TWO)
-        : Opcode(name, arity),
+        : Opcode(name, (arity_none_fn) fn, arity),
           infix(infix), leftTy(leftTy), rightTy(rightTy), resTy(resTy) {}
 
     virtual Tree *Shape()
@@ -222,10 +269,10 @@ struct PrefixOpcode : Opcode
 //   An unary prefix opcode, regisered at initialization time
 // ----------------------------------------------------------------------------
 {
-    PrefixOpcode(kstring name,
+    PrefixOpcode(kstring name, arity_one_fn fn,
                  kstring prefix, Name_p &argTy, Name_p &resTy,
                  Arity arity = ARITY_ONE)
-        : Opcode(name, arity),
+        : Opcode(name, (arity_none_fn) fn, arity),
           prefix(prefix), argTy(argTy), resTy(resTy) {}
 
     virtual Tree *Shape()
@@ -249,9 +296,9 @@ struct PostfixOpcode : Opcode
 //   An unary postfix opcode, regisered at initialization time
 // ----------------------------------------------------------------------------
 {
-    PostfixOpcode(kstring name,
+    PostfixOpcode(kstring name, arity_one_fn fn,
                  kstring postfix, Name_p &argTy, Name_p &resTy)
-        : Opcode(name, ARITY_ONE),
+        : Opcode(name, (arity_none_fn) fn, ARITY_ONE),
           postfix(postfix), argTy(argTy), resTy(resTy) {}
 
     virtual Tree *Shape()
@@ -276,8 +323,9 @@ struct FunctionOpcode : Opcode
 // ----------------------------------------------------------------------------
 //   This is intended to be used with the PARM macro below
 {
-    FunctionOpcode(kstring name)
-        : Opcode(name, ARITY_FUNCTION), result(NULL), ptr(&result) {}
+    FunctionOpcode(kstring name, arity_function_fn fn)
+        : Opcode(name, (arity_none_fn) fn, ARITY_FUNCTION),
+          result(NULL), ptr(&result) {}
     virtual Tree *Shape() = 0;
 
     template<class TreeType>
@@ -484,7 +532,7 @@ XL_END
     if (!Name##Ptr)                                                     \
     {                                                                   \
         Ooops("Argument $1 to $2 is not a " #Type, (Value))             \
-            .Arg(this->name);                                           \
+            .Arg(#Name);                                                \
         return NULL;                                                    \
     }                                                                   \
     Type##_r &Name = *Name##Ptr; (void) Name;
@@ -494,104 +542,80 @@ XL_END
 /* ------------------------------------------------------------ */      \
 /*  Create a unary opcode (for 'opcode X' declarations)         */      \
 /* ------------------------------------------------------------ */      \
-    struct Opcode_U_##Name : Opcode                                     \
+    static Tree *Opcode_U_##Name (Tree *input)                          \
     {                                                                   \
-        Opcode_U_##Name(kstring name): Opcode(name, ARITY_ONE) {}       \
-                                                                        \
-        virtual Tree *Run(Tree *input)                                  \
-        {                                                               \
-            ARG(left, LeftTy, input);                                   \
-            RESULT(Code);                                               \
-        }                                                               \
-    };                                                                  \
-   static Opcode_U_##Name init_opcode_U_##Name(#Name);
+        ARG(left, LeftTy, input);                                       \
+        RESULT(Code);                                                   \
+    }                                                                   \
+    static Opcode                                                       \
+    init_opcode_U_##Name(#Name, opcode_fn(Opcode_U_##Name),             \
+                         Opcode::ARITY_ONE);
 
 
 #define BINARY(Name, ResTy, LeftTy, RightTy, Code)                      \
 /* ------------------------------------------------------------ */      \
 /*  Create a binary opcode (for 'opcode X' declarations)        */      \
 /* ------------------------------------------------------------ */      \
-    struct Opcode_B_##Name : Opcode                                     \
+    static Tree * Opcode_B_##Name(Tree *arg1, Tree *arg2)               \
     {                                                                   \
-        Opcode_B_##Name(kstring name): Opcode(name, ARITY_TWO) {}       \
-                                                                        \
-        virtual Tree *Run(Tree *arg1, Tree *arg2)                       \
-        {                                                               \
-            ARG(left,  LeftTy, arg1);                                   \
-            ARG(right, RightTy, arg2);                                  \
-            RESULT(Code);                                               \
-        }                                                               \
-    };                                                                  \
-    static Opcode_B_##Name init_opcode_B_##Name(#Name);
+        ARG(left,  LeftTy, arg1);                                       \
+        ARG(right, RightTy, arg2);                                      \
+        RESULT(Code);                                                   \
+    }                                                                   \
+    static Opcode                                                       \
+    init_opcode_B_##Name(#Name, opcode_fn(Opcode_B_##Name),             \
+                         Opcode::ARITY_TWO);
 
 
 #define INFIX(Name, ResTy, LeftTy, Symbol, RightTy, Code)               \
 /* ------------------------------------------------------------ */      \
 /*  Create an infix opcode, also generates infix declaration    */      \
 /* ------------------------------------------------------------ */      \
-    struct Opcode_I_##Name : InfixOpcode                                \
+    static Tree * Opcode_I_##Name(Tree *arg1, Tree *arg2)               \
     {                                                                   \
-        Opcode_I_##Name(kstring name,                                   \
-                        kstring i, Name_p &l, Name_p &r, Name_p &res)   \
-            : InfixOpcode(name, i, l, r, res, ARITY_TWO) {}             \
+        ARG(left,  LeftTy, arg1);                                       \
+        ARG(right, RightTy, arg2);                                      \
+        Code;                                                           \
+    }                                                                   \
                                                                         \
-        virtual Tree *Run(Tree *arg1, Tree *arg2)                       \
-        {                                                               \
-            ARG(left,  LeftTy, arg1);                                   \
-            ARG(right, RightTy, arg2);                                  \
-            Code;                                                       \
-        }                                                               \
-    };                                                                  \
-                                                                        \
-    static Opcode_I_##Name                                              \
-    init_opcode_I_##Name (#Name, Symbol,                                \
-                          LeftTy##_type, RightTy##_type,                \
-                          ResTy##_type);
+    static InfixOpcode                                                  \
+    init_opcode_I_##Name (#Name, Opcode_I_##Name, Symbol,               \
+                          LeftTy##_type, RightTy##_type, ResTy##_type);
 
 
 #define INFIX_CTX(Name, ResTy, LeftTy, Symbol, RightTy, Code)           \
 /* ------------------------------------------------------------ */      \
 /*  Create an infix opcode, also generates infix declaration    */      \
 /* ------------------------------------------------------------ */      \
-    struct Opcode_I_##Name : InfixOpcode                                \
+    static Tree * Opcode_I_##Name(Context *context,                     \
+                                  Tree *arg1, Tree *arg2)               \
     {                                                                   \
-        Opcode_I_##Name(kstring name,                                   \
-                        kstring i, Name_p &l, Name_p &r, Name_p &res)   \
-            : InfixOpcode(name, i, l, r, res, ARITY_CONTEXT_TWO) {}     \
+        ARG(left,  LeftTy, arg1);                                       \
+        ARG(right, RightTy, arg2);                                      \
+        Code;                                                           \
+    }                                                                   \
                                                                         \
-        virtual Tree *Run(Context *context, Tree *arg1, Tree *arg2)     \
-        {                                                               \
-            ARG(left,  LeftTy, arg1);                                   \
-            ARG(right, RightTy, arg2);                                  \
-            Code;                                                       \
-        }                                                               \
-    };                                                                  \
-                                                                        \
-    static Opcode_I_##Name                                              \
-    init_opcode_I_##Name (#Name, Symbol,                                \
-                          LeftTy##_type, RightTy##_type,                \
-                          ResTy##_type);
+    static InfixOpcode                                                  \
+    init_opcode_I_##Name (#Name, Opcode::arity_two_fn(Opcode_I_##Name), \
+                          Symbol,                                       \
+                          LeftTy##_type, RightTy##_type, ResTy##_type,  \
+                          Opcode::ARITY_CONTEXT_TWO);
 
 
 #define PREFIX(Name, ResTy, Symbol, RightTy, Code)                      \
 /* ------------------------------------------------------------ */      \
 /*  Create a prefix opcode, also generates prefix declaration   */      \
 /* ------------------------------------------------------------ */      \
-    struct Opcode_P_##Name : PrefixOpcode                               \
+    static Tree *Opcode_P_##Name(Tree *input)                           \
     {                                                                   \
-        Opcode_P_##Name(kstring name,                                   \
-                        kstring prefix, Name_p &r, Name_p &res)         \
-            : PrefixOpcode(name, prefix, r, res, ARITY_ONE) {}          \
+        ARG(left, RightTy, input);                                      \
+        Code;                                                           \
+    }                                                                   \
                                                                         \
-        virtual Tree *Run(Tree *input)                                  \
-        {                                                               \
-            ARG(left, RightTy, input);                                  \
-            Code;                                                       \
-        }                                                               \
-    };                                                                  \
-                                                                        \
-    static Opcode_P_##Name                                              \
-    init_opcode_P_##Name (#Name, Symbol, RightTy##_type, ResTy##_type);
+    static PrefixOpcode                                                 \
+    init_opcode_P_##Name (#Name, Opcode_P_##Name,                       \
+                          Symbol, RightTy##_type, ResTy##_type,         \
+                          Opcode::ARITY_ONE);
 
 
 #define PREFIX_FN(Name, ResTy, RightTy, Code)                           \
@@ -605,70 +629,59 @@ XL_END
 /* ------------------------------------------------------------ */      \
 /*  Create a prefixopcode, also generates prefix declaration    */      \
 /* ------------------------------------------------------------ */      \
-    struct Opcode_P_##Name : PrefixOpcode                               \
+    static Tree *Opcode_P_##Name(Context *context, Tree *input)         \
     {                                                                   \
-        Opcode_P_##Name(kstring name,                                   \
-                        kstring prefix, Name_p &r, Name_p &res)         \
-            : PrefixOpcode(name, prefix, r, res, ARITY_CONTEXT_ONE) {}  \
+        ARG(left, RightTy, input);                                      \
+        Code;                                                           \
+    }                                                                   \
                                                                         \
-        virtual Tree *Run(Context *context, Tree *input)                \
-        {                                                               \
-            ARG(left, RightTy, input);                                  \
-            Code;                                                       \
-        }                                                               \
-    };                                                                  \
-                                                                        \
-    static Opcode_P_##Name                                              \
-    init_opcode_P_##Name (#Name, Symbol, RightTy##_type, ResTy##_type);
+    static PrefixOpcode                                                 \
+    init_opcode_P_##Name (#Name, Opcode::arity_one_fn(Opcode_P_##Name), \
+                          Symbol, RightTy##_type, ResTy##_type,         \
+                          Opcode::ARITY_CONTEXT_ONE);
 
 
 #define POSTFIX(Name, ResTy, LeftTy, Symbol, Code)                      \
 /* ------------------------------------------------------------ */      \
 /*  Create a prefixopcode, also generates prefix declaration    */      \
 /* ------------------------------------------------------------ */      \
-    struct Opcode_P_##Name : PostfixOpcode                              \
+    static Tree *Opcode_P_##Name(Tree *input)                           \
     {                                                                   \
-        Opcode_P_##Name(kstring name,                                   \
-                        kstring postfix, Name_p &l, Name_p &res)        \
-            : PostfixOpcode(name, prefix, l, res) {}                    \
+        ARG(left, LeftTy, input);                                       \
+        Code;                                                           \
+    }                                                                   \
                                                                         \
-        virtual Tree *Run(Tree *input)                                  \
-        {                                                               \
-            ARG(left, LeftTy, input);                                   \
-            Code;                                                       \
-        }                                                               \
-    };                                                                  \
-                                                                        \
-    static Opcode_P_##Name                                              \
-    init_opcode_P_##Name (#Name, Symbol, LeftTy##_type, ResTy##_type);
+    static PostfixOpcode                                                \
+    init_opcode_P_##Name (#Name, Opcode_P_##Name,                       \
+                          Symbol, LeftTy##_type, ResTy##_type);
 
 
 #define OVERLOAD(FName, Symbol, ResTy, Parms, Code)                     \
 /* ------------------------------------------------------------ */      \
 /*  Create a function opcode, also generates prefix declaration */      \
 /* ------------------------------------------------------------ */      \
-    struct Opcode_F_##FName : FunctionOpcode                            \
+                                                                        \
+    static Tree *Opcode_F_##FName(TreeList &args)                       \
     {                                                                   \
-        Opcode_F_##FName(kstring name)                                  \
-            : FunctionOpcode(name) {}                                   \
-                                                                        \
-        virtual Tree *Run(TreeList &args)                               \
+        FunctionArguments _XLparms(args);                               \
+        Parms;                                                          \
+        if (_XLparms.index != args.size())                              \
         {                                                               \
-            FunctionArguments _XLparms(args);                           \
-            Parms;                                                      \
-            if (_XLparms.index != args.size())                          \
-            {                                                           \
-                return Ooops("Invalid argument count for "              \
-                             #FName " after $1", args[0]);              \
-            }                                                           \
-                                                                        \
-            Code;                                                       \
+            return Ooops("Invalid argument count for " #FName           \
+                         " after $1", args[0]);                         \
         }                                                               \
+        Code;                                                           \
+    }                                                                   \
+                                                                        \
+    struct Opcode_FC_##FName : FunctionOpcode                           \
+    {                                                                   \
+        Opcode_FC_##FName()                                             \
+            : FunctionOpcode(#FName, Opcode_F_##FName) {}               \
                                                                         \
         virtual Tree *Shape()                                           \
         {                                                               \
             Tree *self = xl_nil;                                        \
-            Opcode_F_##FName &_XLparms = *this; (void) _XLparms;        \
+            Opcode_FC_##FName &_XLparms = *this; (void) _XLparms;       \
             Parms;                                                      \
             if (result)                                                 \
                 result = new Prefix(new Name(Symbol), result);          \
@@ -679,7 +692,7 @@ XL_END
         }                                                               \
     };                                                                  \
                                                                         \
-    static Opcode_F_##FName init_opcode_F_##FName (#FName);
+    static Opcode_FC_##FName init_opcode_FC_##FName;
 
 
 #define FUNCTION(Name, ResTy, Parms, Code)                              \
@@ -711,20 +724,14 @@ XL_END
 /* ------------------------------------------------------------ */      \
 /*  Create a function with zero argument                        */      \
 /* ------------------------------------------------------------ */      \
-    struct Opcode_N_##Name : NameOpcode                                 \
+    static Tree *Opcode_N_##Name()                                      \
     {                                                                   \
-        Opcode_N_##Name(kstring name, Name_p &toDefine)                 \
-            : NameOpcode(name, toDefine, Symbol) {}                     \
-                                                                        \
-        virtual Tree *Run()                                             \
-        {                                                               \
-            Code;                                                       \
-        }                                                               \
-    };                                                                  \
-                                                                        \
+        Code;                                                           \
+    }                                                                   \
     Name_p xl_##Name;                                                   \
-    static Opcode_N_##Name                                              \
-init_opcode_N_##Name (#Name, xl_##Name);
+    static NameOpcode                                                   \
+    init_opcode_N_##Name (#Name, Opcode_N_##Name,                       \
+                          xl_##Name, Symbol);
 
 
 #define TYPE(symbol, BaseType, Conversion)                              \

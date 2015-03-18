@@ -515,7 +515,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     // Create the scope for evaluation
     Context_p context = new Context(evalScope);
     Context_p locals  = NULL;
-    Tree *result = decl->right;
+    Tree *result = NULL;
 
     // Check if the decl is an opcode or C binding
     Opcode *opcode = opcodeInfo(decl);
@@ -574,36 +574,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     if (opcode)
     {
         // Cached callback
-        uint size = args.size();
-        result = NULL;
-        
-        switch(opcode->arity)
-        {
-        case Opcode::ARITY_NONE:
-            if (size == 0)
-                result = opcode->Run();
-            break;
-        case Opcode::ARITY_ONE:
-            if (size == 1)
-                result = opcode->Run(args[0]);
-            break;
-        case Opcode::ARITY_TWO:
-            if (size == 2)
-                result = opcode->Run(args[0], args[1]);
-            break;
-        case Opcode::ARITY_CONTEXT_ONE:
-            if (size == 1)
-                result = opcode->Run(context, args[0]);
-            break;
-        case Opcode::ARITY_CONTEXT_TWO:
-            if (size == 2)
-                result = opcode->Run(context, args[0], args[1]);
-            break;
-        case Opcode::ARITY_FUNCTION:
-            result = opcode->Run(args);
-            break;
-        }
-        
+        result = opcode->Run(context, decl->right, args);
         IFTRACE(eval)
             std::cerr << "EVAL" << depth << "(" << self
                       << ") OPCODE " << opcode->name
@@ -613,6 +584,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     }
 
     // Normal case: evaluate body of the declaration in the new context
+    result = decl->right;
     if (resultType != tree_type)
         result = new Infix("as", result, resultType, self->Position());
 
