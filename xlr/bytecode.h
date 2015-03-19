@@ -43,6 +43,16 @@ struct CodeBuilder;             // Code generator
 // 
 // ============================================================================
 
+Tree *EvaluateWithBytecode(Context *context, Tree *input);
+
+
+
+// ============================================================================
+// 
+//    Code representation
+// 
+// ============================================================================
+
 struct Op
 // ----------------------------------------------------------------------------
 //   An individual operation
@@ -239,7 +249,7 @@ struct CodeBuilder
     ~CodeBuilder();
 
 public:
-    Op *        Compile(Context *context, Tree *tree, uint nArgs = 0,
+    Code *      Compile(Context *context, Tree *tree, uint nArgs = 0,
                         uint nLocs = 0, uint nEvals = 0, uint nParms = 0);
     bool        Instructions(Context *context, Tree *tree);
 

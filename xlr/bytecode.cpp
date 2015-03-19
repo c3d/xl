@@ -28,6 +28,35 @@
 XL_BEGIN
 
 // ============================================================================
+// 
+//    Main entry point
+// 
+// ============================================================================
+
+Tree *EvaluateWithBytecode(Context *context, Tree *what)
+// ----------------------------------------------------------------------------
+//   Compile bytecode and then evaluate it
+// ----------------------------------------------------------------------------
+{
+    CodeBuilder  builder;
+    Code        *code = builder.Compile(context, what);
+
+    Tree_p result = what;
+    if (code)
+    {
+        TreeList noargs;
+        Data     data(context, what, noargs);
+
+        data.result = what;
+        code->Run(data);
+        result = data.result;
+    }
+    return result;
+}
+
+
+
+// ============================================================================
 //
 //   Evaluating a code sequence
 //
@@ -596,8 +625,8 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     else if (Opcode *opcode = OpcodeInfo(decl))
     {
         // Cached callback - Make a copy
-        XL_ASSERT(opcode->arity <= Op::SELF);
-        XL_ASSERT(!opcode->next);
+        XL_ASSERT(opcode->arity <= Op::ARITY_SELF);
+        XL_ASSERT(!opcode->Op::next);
         code->Add(new Op(*opcode));
         IFTRACE(compile)
             std::cerr << "COMPILE" << depth << ":" << cindex
@@ -610,7 +639,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
         uint nVars  = code->variables.size();
         uint nEvals = code->evals.size();
         uint nParms = code->parms.size();
-        Op *body = code->Compile(locals, decl->right, nVars, nEvals, nParms);
+        Code *body = code->Compile(locals, decl->right, nVars, nEvals, nParms);
         code->Add(new CallOp(body));
     }
 
@@ -636,8 +665,8 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
 }
 
 
-Op *CodeBuilder::Compile(Context *context, Tree *what,
-                         uint nArgs, uint nVars, uint nEvals, uint nParms)
+Code *CodeBuilder::Compile(Context *context, Tree *what,
+                           uint nArgs, uint nVars, uint nEvals, uint nParms)
 // ----------------------------------------------------------------------------
 //    Compile the tree
 // ----------------------------------------------------------------------------
@@ -1326,7 +1355,7 @@ uint CodeBuilder::Bind(Name *name, Tree *value, bool closure)
 //   Enter a new binding in the current context, remember left and right
 // ----------------------------------------------------------------------------
 {
-    XL_ASSERT(parms.find(names) == parms.end() && "Binding name twice");
+    XL_ASSERT(parms.find(name) == parms.end() && "Binding name twice");
 
     // Define the name in the locals
     locals->Define(name, value);
@@ -1377,3 +1406,21 @@ uint CodeBuilder::Reference(Tree *name, Infix *decl)
 }
 
 XL_END
+
+
+extern "C" void debugo(XL::Op *op)
+// ----------------------------------------------------------------------------
+//   Show an opcode alone
+// ----------------------------------------------------------------------------
+{
+    std::cout << op << "\n";;
+}
+
+
+extern "C" void debugop(XL::Op *op)
+// ----------------------------------------------------------------------------
+//   Show an opcode and all children
+// ----------------------------------------------------------------------------
+{
+    std::cout << *op << "\n";
+}

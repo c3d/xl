@@ -51,6 +51,7 @@
 #include "save.h"
 #include "cdecls.h"
 #include "interpreter.h"
+#include "bytecode.h"
 
 #ifndef INTERPRETER_ONLY
 #include "compiler.h"
@@ -188,24 +189,30 @@ Tree *Context::Evaluate(Tree *what)
     Tree *result = what;
     assert (!GarbageCollector::Running());
 
-#ifdef INTERPRETER_ONLY
-    // Interpreter-only mode
-    result = XL::Evaluate(this, what);
-#else // !INTERPRETER_ONLY
     uint optLevel = MAIN->options.optimize_level;
-    // Select interpreter or compiler at run-time
-    if (optLevel > 1)
+    switch(optLevel)
     {
+
+#ifndef INTERPRETER_ONLY
+    case 3:
         if (eval_fn code = Compile(what))
             result = code(this->CurrentScope(), what);
-    }
-    else
-    {
-        result = XL::Evaluate(this, what);
-    }
+        break;
+    case 2:
+        // Compilation of bytecode not implemented yet, fall through for now
+        
 #endif // INTERPRETER_ONLY
 
-
+    default:
+        // Compile at O1 for all cases, O2 and O3 in interpreter-only mode
+        result = XL::EvaluateWithBytecode(this, what);
+        break;
+    case 0:
+        // Interpreter-only mode
+        result = XL::Evaluate(this, what);
+        break;
+    }
+    
     return result;
 }
 

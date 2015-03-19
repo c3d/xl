@@ -502,7 +502,7 @@ template <class I> inline void Tree::SetInfo(I *i)
 {
     // The info can only be owned by a single tree, should not be linked
     XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, NULL, this));
-    XL_ASSERT(!i->next);
+    XL_ASSERT(!i->Info::next);
     
     Info *asInfo = i;           // For proper deduction if I is a derived class
     LinkedListInsert(info, asInfo);
