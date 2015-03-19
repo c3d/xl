@@ -49,7 +49,7 @@ typedef std::map<Tree_p, Tree_p> EvalCache;
 //
 // ============================================================================
 
-static inline Opcode *setInfo(Infix *decl, Opcode *opcode)
+Opcode *SetInfo(Infix *decl, Opcode *opcode)
 // ----------------------------------------------------------------------------
 //    Create a new info for the given callback
 // ----------------------------------------------------------------------------
@@ -59,7 +59,7 @@ static inline Opcode *setInfo(Infix *decl, Opcode *opcode)
 }
 
 
-static inline Opcode *opcodeInfo(Infix *decl)
+Opcode *OpcodeInfo(Infix *decl)
 // ----------------------------------------------------------------------------
 //    Check if we have an opcode in the definition
 // ----------------------------------------------------------------------------
@@ -76,7 +76,7 @@ static inline Opcode *opcodeInfo(Infix *decl)
             if (name->value == "opcode")
                 if (Name *opcodeName = prefix->right->AsName())
                     if (Opcode *opcode = Opcode::Find(opcodeName->value))
-                        return setInfo(decl, opcode);
+                        return SetInfo(decl, opcode);
 
     return NULL;
 }
@@ -318,8 +318,6 @@ bool Bindings::DoInfix(Infix *what)
         Name *name = what->left->AsName();
         if (!name)
         {
-            // I don't think this is possible if entered normally
-            // This is coding defensively, most likely dead code
             Ooops("Invalid declaration, $1 is not a name", what->left);
             return false;
         }
@@ -518,12 +516,12 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     Tree *result = NULL;
 
     // Check if the decl is an opcode or C binding
-    Opcode *opcode = opcodeInfo(decl);
+    Opcode *opcode = OpcodeInfo(decl);
 
     // If we lookup a name or a number, just return it
     Tree *defined = RewriteDefined(decl->left);
-    TreeList args;
     Tree *resultType = tree_type;
+    TreeList args;
     if (defined->IsLeaf())
     {
         // Must match literally, or we don't have a candidate

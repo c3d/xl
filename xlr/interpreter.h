@@ -40,12 +40,17 @@ Tree *TypeCheck(Context *scope, Tree *type, Tree *value);
 
 // ============================================================================
 // 
-//    Closure management
+//    Closure and opcode management
 // 
 // ============================================================================
 
 Tree *IsClosure(Tree *value, Context_p *context);
 Tree *MakeClosure(Context *context, Tree *value);
+
+struct Opcode;
+Opcode *SetInfo(Infix *decl, Opcode *opcode);
+Opcode *OpcodeInfo(Infix *decl);
+
 
 
 

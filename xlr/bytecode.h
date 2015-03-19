@@ -24,8 +24,18 @@
 #include "context.h"
 
 #include <vector>
+#include <map>
+#include <iostream>
 
 XL_BEGIN
+
+
+struct Op;                      // An individual operation
+struct Code;                    // A sequence of operations
+struct Data;                    // Data on which the code operates
+struct CodeBuilder;             // Code generator
+
+
 
 // ============================================================================
 // 
@@ -46,7 +56,10 @@ struct Op
         ARITY_CONTEXT_ONE,      // Context and one input parameter
         ARITY_CONTEXT_TWO,      // Context and two input parameters
         ARITY_FUNCTION,         // Argument list
-        ARITY_SELF              // Pass self as argument
+        ARITY_SELF,             // Pass self as argument
+        ARITY_OP,               // Pass op as argument
+        ARITY_DATA,             // Pass data context
+        ARITY_OPDATA            // Pass data and op
     };
 
     // Implementation for various arities
@@ -57,6 +70,9 @@ struct Op
     typedef Tree *(*arity_ctxtwo_fn)(Context *, Tree *, Tree *);
     typedef Tree *(*arity_function_fn)(TreeList &args);
     typedef Tree *(*arity_self_fn)();
+    typedef Tree *(*arity_op_fn)(Op *);
+    typedef Tree *(*arity_data_fn)(Data &);
+    typedef Op   *(*arity_opdata_fn)(Op *, Data &);
 
 public:
     Op(kstring name, arity_none_fn fn, Arity arity)
@@ -73,43 +89,28 @@ public:
         : arity_ctxtwo(fn), name(name), arity(ARITY_CONTEXT_TWO) {}
     Op(kstring name, arity_function_fn fn)
         : arity_function(fn), name(name), arity(ARITY_FUNCTION) {}
+    Op(kstring name, arity_op_fn fn)
+        : arity_op(fn), name(name), arity(ARITY_OP) {}
+    Op(kstring name, arity_data_fn fn)
+        : arity_data(fn), name(name), arity(ARITY_DATA) {}
+    Op(kstring name, arity_opdata_fn fn)
+        : arity_opdata(fn), name(name), arity(ARITY_OPDATA) {}
     Op(kstring name)
         : arity_none(NULL), name(name), arity(ARITY_SELF) {}
+    Op(const Op &o)
+        : arity_none(o.arity_none), name(o.name), next(NULL), arity(o.arity) {}
 
-    Tree *Run(Context *context, Tree *self, TreeList &args)
-    {
-        uint size = args.size();
-        switch(arity)
-        {
-        case ARITY_NONE:
-            if (size == 0)
-                return arity_none();
-            break;
-        case ARITY_ONE:
-            if (size == 1)
-                return arity_one(args[0]);
-            break;
-        case ARITY_TWO:
-            if (size == 2)
-                return arity_two(args[0], args[1]);
-            break;
-        case ARITY_CONTEXT_ONE:
-            if (size == 1)
-                return arity_ctxone(context, args[0]);
-            break;
-        case ARITY_CONTEXT_TWO:
-            if (size == 2)
-                return arity_ctxtwo(context, args[0], args[1]);
-            break;
-        case ARITY_FUNCTION:
-            return arity_function(args);
+    virtual             ~Op()                   {}
+    virtual Op *        Fail()                  { return NULL; }
+    virtual void        Dump(std::ostream &out) { out << name << "\n"; }
 
-        case ARITY_SELF:
-            return self;
-        }
-        return NULL;
-    }
+    Op *                Run(Data &data);
+    Tree *              Run(Context *context, Tree *self, TreeList &args);
+    static void         Delete(Op *);
 
+    
+public:
+    // Thte 
     union
     {
         arity_none_fn           arity_none;
@@ -119,24 +120,303 @@ public:
         arity_ctxtwo_fn         arity_ctxtwo;
         arity_function_fn       arity_function;
         arity_self_fn           arity_self;
+        arity_op_fn             arity_op;
+        arity_data_fn           arity_data;
+        arity_opdata_fn         arity_opdata;
     };
     kstring                     name;
+    Op *                        next;
     Arity                       arity;
 };
-typedef std::vector<Op *> Ops;
 
 
-struct Code
+inline std::ostream &operator<<(std::ostream &out, Op *op)
 // ----------------------------------------------------------------------------
-//    The bytecode to rapidly evaluate a tree
+//   Dump one specific opcode
 // ----------------------------------------------------------------------------
 {
-    Code() {}
-        
-    uint        parms;          // Parameters
-    uint        locals;         // Local variables
-    uint        upvalues;       // 
+    op->Dump(out);
+    return out;
+}
+
+
+inline std::ostream &operator<<(std::ostream &out, Op &ops)
+// ----------------------------------------------------------------------------
+//   Dump all the opcodes in a sequence
+// ----------------------------------------------------------------------------
+{
+    Op *op = &ops;
+    while (op)
+    {
+        op->Dump(out);
+        op = op->next;
+    }
+    return out;
+}
+
+
+struct Code : Info, Op
+// ----------------------------------------------------------------------------
+//    A sequence of operations
+// ----------------------------------------------------------------------------
+{
+    Code();
+    Code(Op *ops);
+    ~Code();
+    void                SetOps(Op **ops);
+    static Op *         runCode(Op *op, Data &data);
+    virtual void        Dump(std::ostream &out);
+    Op *                ops;
 };
+
+
+struct Data
+// ----------------------------------------------------------------------------
+//    The data on which a given code operates
+// ----------------------------------------------------------------------------
+{
+    Data(Context *context, Tree *self, TreeList &args)
+        : context(context), self(self), args(&args[0]),
+          result(NULL), left(NULL),
+          values(NULL), vars(NULL), parms(NULL),
+          nArgs(args.size()), nValues(0), nVars(0), nParms(0) {}
+    Data(Context *context, Tree *self, Tree_p *args, uint nArgs)
+        : context(context), self(self), args(args),
+          result(NULL), left(NULL),
+          values(NULL), vars(NULL), parms(NULL),
+          nArgs(nArgs), nValues(0), nVars(0), nParms(0) {}
+    ~Data()             { delete[] values; }
+
+    void Allocate(uint nvars, uint nevals, uint nparms)
+    {
+        XL_ASSERT(!values);
+
+        this->values = new Tree_p[nvars + nevals + nparms];
+        this->vars = values + nevals;
+        this->parms = vars + nvars;
+        
+        this->nValues = nevals;
+        this->nVars   = nvars;
+        this->nParms  = nparms;
+    }
+
+    Tree *Arg(uint id)          { XL_ASSERT(id<nArgs);   return args[id];     }
+    Tree *Arg(uint id, Tree *v) { XL_ASSERT(id<nArgs);   return args[id]  =v; }
+    Tree *Value(uint id)        { XL_ASSERT(id<nValues); return values[id];   }
+    Tree *Value(uint id,Tree *v){ XL_ASSERT(id<nValues); return values[id]=v; }
+    Tree *Var(uint id)          { XL_ASSERT(id<nVars);   return vars[id];   }
+    Tree *Var(uint id,Tree *v)  { XL_ASSERT(id<nVars);   return vars[id]=v; }
+    Tree *Parm(uint id)         { XL_ASSERT(id<nParms);  return parms[id];    }
+    Tree *Parm(uint id,Tree *v) { XL_ASSERT(id<nParms);  return parms[id] =v; }
+
+public:
+    // Input to evaluation
+    Context_p   context;        // Context of evaluation
+    Tree_p      self;           // What we are evaluating
+    Tree_p *    args;           // Input arguments
+
+    // Generated during evaluation
+    Tree_p      result;         // Result of expression
+    Tree_p      left;           // Left operand for two-operand operations
+    Tree_p *    values;         // Values (evals, locals, parms)
+    Tree_p *    vars;           // Pointer to local values
+    Tree_p *    parms;          // Pointer to local values
+
+    // Size of the different frames
+    uint        nArgs;
+    uint        nValues;
+    uint        nVars;
+    uint        nParms;
+};
+
+
+struct CodeBuilder
+// ----------------------------------------------------------------------------
+//    Build the bytecode to rapidly evaluate a tree
+// ----------------------------------------------------------------------------
+{
+    CodeBuilder();
+    ~CodeBuilder();
+
+public:
+    Op *        Compile(Context *context, Tree *tree, uint nArgs = 0,
+                        uint nLocs = 0, uint nEvals = 0, uint nParms = 0);
+    bool        Instructions(Context *context, Tree *tree);
+
+public:
+    // Tree::Do interface
+    typedef bool value_type;
+
+    bool        DoInteger(Integer *what);
+    bool        DoReal(Real *what);
+    bool        DoText(Text *what);
+    bool        DoName(Name *what);
+    bool        DoPrefix(Prefix *what);
+    bool        DoPostfix(Postfix *what);
+    bool        DoInfix(Infix *what);
+    bool        DoBlock(Block *what);
+
+    // Evaluation and binding of values
+    uint        EvaluationID(Tree *);
+    uint        Evaluate(Context *, Tree *,bool saveLeft=false);
+    uint        EvaluationTemporary(Tree *);
+    void        Enclose(Context *context, Scope *old, Tree *what);
+    uint        Bind(Name *name, Tree *value, bool closure);
+    uint        Reference(Tree *tree, Infix *decl);
+
+    // Adding an opcode
+    void        Add(Op *op);
+
+    // Success at end of declaration
+    void        Success();
+
+
+public:
+    typedef std::map<Tree *, uint> TreeIndices;
+
+    Op *        ops;            // List of operations to evaluate that tree
+    Op **       lastOp;         // Last operation being written to
+    TreeIndices parms;          // Function's parameters
+    TreeIndices variables;      // Local variables
+    TreeIndices evals;          // Evaluation of arguments
+
+    uint        candidates;     // Number of candidates found
+    Tree_p      test;           // Current form to test
+    Tree_p      resultType;     // Result type declared in rewrite
+    Context_p   context;        // Evaluation context
+    Context_p   locals;         // Local parameter declarations
+    Op *        failOp;         // Exit instruction if evaluation fails
+    Op *        successOp;      // Exit instruction in case of success
+};
+
+
+
+// ============================================================================
+// 
+//    Evaluation of opcodes
+// 
+// ============================================================================
+
+inline Tree *Op::Run(Context *context, Tree *self, TreeList &args)
+// ----------------------------------------------------------------------------
+//   Run a single opcode
+// ----------------------------------------------------------------------------
+{
+    uint size = args.size();
+    switch(arity)
+    {
+    case ARITY_NONE:
+        if (size == 0)
+            return arity_none();
+        break;
+    case ARITY_ONE:
+        if (size == 1)
+            return arity_one(args[0]);
+        break;
+    case ARITY_TWO:
+        if (size == 2)
+            return arity_two(args[0], args[1]);
+        break;
+    case ARITY_CONTEXT_ONE:
+        if (size == 1)
+            return arity_ctxone(context, args[0]);
+        break;
+    case ARITY_CONTEXT_TWO:
+        if (size == 2)
+            return arity_ctxtwo(context, args[0], args[1]);
+        break;
+    case ARITY_FUNCTION:
+        return arity_function(args);
+
+    case ARITY_SELF:
+        return self;
+
+    case ARITY_OP:
+        return arity_op(this);
+
+    case ARITY_DATA:
+    {
+        Data data(context, self, args);
+        return arity_data(data);
+    }
+    case ARITY_OPDATA:
+    {
+        Data data(context, self, args);
+        Op *next = arity_opdata(this, data);
+        while (next)
+            next = next->Run(data);
+        return data.result;
+    }
+    }
+    return NULL;
+}
+
+
+inline Op *Op::Run(Data &data)
+// ----------------------------------------------------------------------------
+//   Evaluate the instruction in a code sequence
+// ----------------------------------------------------------------------------
+{
+    Tree *result = data.result;
+    switch(arity)
+    {
+    case ARITY_NONE:
+        result = arity_none();
+        break;
+    case ARITY_ONE:
+        result = arity_one(result);
+        break;
+    case ARITY_TWO:
+        result = arity_two(data.left, result);
+        break;
+    case ARITY_CONTEXT_ONE:
+        result = arity_ctxone(data.context, result);
+        break;
+    case ARITY_CONTEXT_TWO:
+        result = arity_ctxtwo(data.context, data.left, result);
+        break;
+    case ARITY_FUNCTION:
+    {
+        TreeList parms(data.parms, data.parms + data.nParms);
+        result = arity_function(parms);
+        break;
+    }
+    case ARITY_SELF:
+        result = data.self;
+        break;
+    case ARITY_OP:
+        result = arity_op(this);
+        break;
+    case ARITY_DATA:
+        result = arity_data(data);
+        break;
+    case ARITY_OPDATA:
+        return arity_opdata(this, data);
+    }
+
+    // If the evaluation did not work, go to the fail opcode
+    if (!result)
+        return Fail();
+
+    data.result = result;
+    return next;
+}
+
+
+inline void Op::Delete(Op *op)
+// ----------------------------------------------------------------------------
+//    Delete a sequence of ops
+// ----------------------------------------------------------------------------
+{
+    while (op)
+    {
+        Op *next = op->next;
+        delete op;
+        op = next;
+    }
+}
+
+
 
 XL_END
 
