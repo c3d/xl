@@ -48,7 +48,9 @@ Tree *EvaluateWithBytecode(Context *context, Tree *what)
         Data     data(context, what, noargs);
 
         data.result = what;
-        code->Run(data);
+        Op *op = code->Run(data);
+        while(op)
+            op = op->Run(data);
         result = data.result;
     }
     return result;
@@ -696,7 +698,9 @@ Code *CodeBuilder::Compile(Context *context, Tree *what,
         Add(new ScopeOp(context, what, nArgs, nVars, nEvals, nParms));
 
     // Evaluate the input code
-    bool result = Instructions(context, what);
+    bool result = true;
+    if (context->ProcessDeclarations(what))
+        result = Instructions(context, what);
 
     // The generated code takes over the instructions in all cases
     code->SetOps(&ops);
@@ -717,14 +721,6 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
 //    Compile an instruction or a sequence of instructions
 // ----------------------------------------------------------------------------
 {
-    // Check if we have instructions or only a declaration
-    if (!context->ProcessDeclarations(what))
-    {
-        // Only a declaration - return self
-        Add(new SelfOp);
-        return true;
-    }
-
     Scope_p   originalScope = ctx->CurrentScope();
     Context_p context = ctx;
     while (what)
