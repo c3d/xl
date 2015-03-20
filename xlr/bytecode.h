@@ -112,7 +112,7 @@ public:
 
     virtual             ~Op()                   {}
     virtual Op *        Fail()                  { return NULL; }
-    virtual void        Dump(std::ostream &out) { out << name << "\n"; }
+    virtual void        Dump(std::ostream &out) { out << name; }
 
     Op *                Run(Data &data);
     Tree *              Run(Context *context, Tree *self, TreeList &args);
@@ -148,7 +148,7 @@ inline std::ostream &operator<<(std::ostream &out, Op *op)
     if (op)
         op->Dump(out);
     else
-        out << "NULL\n";
+        out << "NULL";
     return out;
 }
 
@@ -159,11 +159,12 @@ inline std::ostream &operator<<(std::ostream &out, Op &ops)
 // ----------------------------------------------------------------------------
 {
     Op *op = &ops;
-    uint count = 0;
-    while (op && count++ < 120)
+    while (op)
     {
         op->Dump(out);
         op = op->success;
+        if (op)
+            out << "\n";
     }
     return out;
 }

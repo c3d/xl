@@ -128,8 +128,7 @@ Op *Code::runCodeWithScope(Op *codeOp, Data &data)
 {
     Code *code = (Code *) codeOp;
     Data newData(code->context, code->self, data.parms, code->nArgs);
-    if (code->nVars || code->nEvals || code->nParms)
-        newData.Allocate(code->nVars, code->nEvals, code->nParms);
+    newData.Allocate(code->nVars, code->nEvals, code->nParms);
 
     // Execute the following instructions in the newly created data
     Op *op = code->ops;
@@ -148,7 +147,7 @@ void Code::Dump(std::ostream &out)
     out << name << "\tbegin\t" << (void *) this << "\t"
         << "A" << nArgs << " V" << nVars
         << " E" << nEvals << " P" << nParms << "\n"
-        << *ops
+        << *ops << "\n"
         << name << "\tend\t" << (void *) this << "\n";
 }
 
@@ -175,7 +174,7 @@ struct LabelOp : Op
     }
     virtual void Dump(std::ostream &out)
     {
-        out << name << "#" << id << "\n";
+        out << name << "#" << id;
     }
 };
 uint LabelOp::currentId = 0;
@@ -189,7 +188,7 @@ struct ConstOp : Op
     ConstOp(Tree *value): Op("const", returnConst), value(value) {}
     Tree *      value;
     static Tree *returnConst(Op *op)     { return ((ConstOp *) op)->value; }
-    virtual void Dump(std::ostream &out) { out << name << "\t"<<value<<"\n"; }
+    virtual void Dump(std::ostream &out) { out << name << "\t" << value; }
 };
 
 
@@ -262,9 +261,9 @@ struct EvalOp : Op
 
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\tbegin\t" << id << "\t" << fail
+        out << name << "\tbegin\t" << id << "\t" << fail << "\n"
             << *ops
-            << name << "\tend\t" << id << "\n";
+            << name << "\tend\t" << id;
     }
 };
 
@@ -318,7 +317,7 @@ struct ArgOp : Op
         return ld->success;
     }
 
-    virtual void Dump(std::ostream &out) { out<<name<<"\t"<<argId<<"\n"; }
+    virtual void Dump(std::ostream &out) { out << name << "\t" << argId; }
 };
 
 
@@ -341,7 +340,7 @@ struct VarOp : Op
     
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\t" << varId << "\t" << decl->left << "\n";
+        out << name << "\t" << varId << "\t" << decl->left;
     }
 };
 
@@ -364,7 +363,7 @@ struct LoadOp : Op
     
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\t" <<varId << "\n";
+        out << name << "\t" << varId;
     }
 };
 
@@ -385,7 +384,7 @@ struct ParmOp : Op
     
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\t" << parmId << "\n";
+        out << name << "\t" << parmId;
     }
 };
 
@@ -409,7 +408,7 @@ struct TypeCheckOp : Op
     }
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\t" << fail << "\n";
+        out << name << "\t" << fail;
     }
 };
 
@@ -433,7 +432,7 @@ struct ClosureOp : Op
     }
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\t" << (void *) scope << "\n";
+        out << name << "\t" << (void *) scope;
     }
 };
 
@@ -471,7 +470,7 @@ struct CallOp : Op
 
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\t" << (void *) ops << "\n";
+        out << name << "\t" << (void *) ops;
     }
 
 };
@@ -512,6 +511,7 @@ void CodeBuilder::Add(Op *op)
 {
     *lastOp = op;
     lastOp = &op->success;
+    XL_ASSERT(!op->success && "Adding an instruction that has kids");
 }
 
 
@@ -551,8 +551,9 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     Context_p    locals  = NULL;
 
     // Create the exit point for failed evaluation
+    Op *         oldFailOp = code->failOp;
     Op *         failOp = new LabelOp("fail");
-    Save<Op *>   saveFailOp(code->failOp, failOp);
+    code->failOp = failOp;
 
     // We start with new parameters for each candidate
     CodeBuilder::TreeIndices empty;
@@ -571,6 +572,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
                 std::cerr << "COMPILE" << depth << ":" << cindex
                           << "(" << self << ") from constant "
                           << decl->left << " MISMATCH\n";
+            code->failOp = oldFailOp;
             delete failOp;
             return NULL;
         }
@@ -601,6 +603,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
             Op *added = *lastOp;
             *lastOp = NULL;
             Op::Delete(added);
+            code->failOp = oldFailOp;
             delete failOp;
             return NULL;
         }
@@ -664,7 +667,9 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     // Keep looking for other declarations
     IFTRACE(compile)
         std::cerr << "COMPILE" << depth << ":" << cindex
-                  << "(" << self << ") SUCCCESS\n";
+                  << "(" << self << ") SUCCCESS "
+                  << code->successOp << " FAIL " << code->failOp << "\n";
+        ;
     return NULL;
 }
 
@@ -687,6 +692,7 @@ Code *CodeBuilder::Compile(Context *context, Tree *what, uint nArgs)
     Save<Op *>  saveOps(ops, NULL);
     Save<Op **> saveLastOp(lastOp, &ops);
     Save<Op *>  saveSuccessOp(successOp, NULL);
+    Save<Op *>  saveFailOp(failOp, NULL);
 
     // We start with a clean slate for this code
     TreeIndices empty;
@@ -742,9 +748,9 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
         if (candidates)
         {
             // We found candidates. Join the failOp to the successOp
+            XL_ASSERT(!*lastOp && "Built code that is not NULL-terminated");
             if (failOp)
                 failOp->success = successOp;
-            XL_ASSERT(!*lastOp && "Built code that is not NULL-terminated");
             *lastOp = successOp;
             lastOp = &successOp->success;
             return true;
@@ -994,21 +1000,21 @@ struct MatchOp : Op
 
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\t" << ref << "\n";
+        out << name << "\t" << ref;
     }
 };
 
 template<> void MatchOp<Integer>::Dump(std::ostream &out)
 {
-    out << name << "\tinteger\t" << ref << "\n";
+    out << name << "\tinteger\t" << ref;
 }
 template<> void MatchOp<Real>::Dump(std::ostream &out)
 {
-    out << name << "\treal\t" << ref << "\n";
+    out << name << "\treal\t" << ref;
 }
 template<> void MatchOp<Text>::Dump(std::ostream &out)
 {
-    out << name << "\ttext\t" << ref << "\n";
+    out << name << "\ttext\t" << ref;
 }
 
 
@@ -1057,8 +1063,7 @@ struct WhenClauseOp : Op
 
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\t";
-        fail->Dump(out);
+        out << name << "\t" << fail;
     }
 };
 
@@ -1092,8 +1097,7 @@ struct InfixMatchOp : Op
 
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\t" << symbol << "\t";
-        fail->Dump(out);
+        out << name << "\t" << symbol << "\t" << fail;
     }
 };
 
@@ -1437,7 +1441,7 @@ extern "C" void debugo(XL::Op *op)
 //   Show an opcode alone
 // ----------------------------------------------------------------------------
 {
-    std::cout << op << "\n";;
+    std::cerr << op << "\n";;
 }
 
 
@@ -1446,5 +1450,5 @@ extern "C" void debugop(XL::Op *op)
 //   Show an opcode and all children
 // ----------------------------------------------------------------------------
 {
-    std::cout << *op << "\n";
+    std::cerr << *op << "\n";
 }
