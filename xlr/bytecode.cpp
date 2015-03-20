@@ -117,9 +117,9 @@ void Code::Dump(std::ostream &out)
 //   Dump all the instructions
 // ----------------------------------------------------------------------------
 {
-    out << name << "\t" << (void *) this << "\tbegin\n"
+    out << name << "\tbegin\t" << (void *) this << "\n"
         << *ops
-        << name << "\t" << (void *) this << "\tend\n";
+        << name << "\tend\t" << (void *) this << "\n";
 }
 
 
@@ -1308,9 +1308,18 @@ bool CodeBuilder::DoInfix(Infix *what)
 
         // Check if this is a builtin type vs. a constant
         if (test->IsConstant())
+        {
             if (Name *typeName = what->right->AsName())
+            {
                 if (Tree *bound = context->Bound(typeName))
-                    return TypeCheck(context, bound, test) != NULL;
+                {
+                    if (!TypeCheck(context, bound, test))
+                        return false;
+                    Evaluate(context, test);
+                    return true;
+                }
+            }
+        }
 
         // Typed name: evaluate type and check match
         Evaluate(context, test);
