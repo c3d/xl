@@ -108,7 +108,7 @@ Op *Code::runCode(Op *codeOp, Data &data)
     Op *op = code->ops;
     while (op)
         op = op->Run(data);
-    return codeOp->next;
+    return codeOp->success;
 }
 
 
@@ -141,9 +141,12 @@ struct LabelOp : Op
     static Op *label(Op *op, Data &data)
     {
         // Do nothing
-        return op->next;
+        return op->success;
     }
-    virtual void Dump(std::ostream &out) { out << name << "\t" << id << "\n"; }
+    virtual void Dump(std::ostream &out)
+    {
+        out << name << "#" << id << "\n";
+    }
 };
 uint LabelOp::currentId = 0;
 
@@ -176,7 +179,7 @@ struct EvalOp : Op
 // ----------------------------------------------------------------------------
 {
     EvalOp(uint id, Op *ops, Op *fail, bool saveLeft = false)
-        : Op("eval", saveLeft ? evalSaveLeft : eval),
+        : Op(saveLeft ? "eval_l" : "eval", saveLeft ? evalSaveLeft : eval),
           id(id), ops(ops), fail(fail) {}
     ~EvalOp() { Delete(ops); }
 
@@ -192,7 +195,7 @@ struct EvalOp : Op
         if (result)
         {
             data.result = result;
-            return ev->next;
+            return ev->success;
         }
 
         // Complete evaluation of the bytecode we were given
@@ -206,7 +209,7 @@ struct EvalOp : Op
             result = data.Value(id, data.result);
 
             // Return the next operation to execute
-            return ev->next;
+            return ev->success;
         }
 
         // Otherwise, go to the fail bytecode
@@ -229,7 +232,7 @@ struct EvalOp : Op
 
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\tbegin\t" << id << "\t" << fail << "\n"
+        out << name << "\tbegin\t" << id << "\t" << fail
             << *ops
             << name << "\tend\t" << id << "\n";
     }
@@ -247,7 +250,7 @@ struct ValueOp : Op
     {
         ValueOp *vop = (ValueOp *) op;
         data.result = data.Value(vop->id);
-        return vop->next;
+        return vop->success;
     }
 };
 
@@ -282,7 +285,7 @@ struct ArgOp : Op
             if (infix->name == "->")
                 result = infix->right;
         data.result = result;
-        return ld->next;
+        return ld->success;
     }
 
     virtual void Dump(std::ostream &out) { out<<name<<"\t"<<argId<<"\n"; }
@@ -303,7 +306,7 @@ struct VarOp : Op
         VarOp *vop = (VarOp *) op;
         data.Var(vop->varId, vop->decl);
         data.result = vop->decl->right;
-        return vop->next;
+        return vop->success;
     }
     
     virtual void Dump(std::ostream &out)
@@ -326,7 +329,7 @@ struct LoadOp : Op
         Infix *decl = (Infix *) data.Var(ld->varId);
         XL_ASSERT(decl && decl->Kind() == INFIX);
         data.result = decl->right;
-        return ld->next;
+        return ld->success;
     }
     
     virtual void Dump(std::ostream &out)
@@ -347,7 +350,7 @@ struct ParmOp : Op
     {
         ParmOp *st = (ParmOp *) op;
         data.Parm(st->parmId, data.result);
-        return st->next;
+        return st->success;
     }
     
     virtual void Dump(std::ostream &out)
@@ -396,7 +399,7 @@ struct ClosureOp : Op
             Context *context = new Context(cls->scope);
             data.result = MakeClosure(context, data.result);
         }
-        return cls->next;
+        return cls->success;
     }
     virtual void Dump(std::ostream &out)
     {
@@ -444,7 +447,7 @@ struct ScopeOp : Op
             newData.Allocate(sc->nVars, sc->nEvals, sc->nParms);
 
         // Execute the following instructions in the newly created data
-        Op *op = sc->next;
+        Op *op = sc->success;
         while (op)
             op = op->Run(newData);
 
@@ -478,7 +481,7 @@ struct CallOp : Op
         op = call->ops;
         while (op)
             op = op->Run(data);
-        return call->next;
+        return call->success;
     }
 
     virtual void Dump(std::ostream &out)
@@ -500,7 +503,11 @@ CodeBuilder::CodeBuilder()
 // ----------------------------------------------------------------------------
 //   Create a code builder
 // ----------------------------------------------------------------------------
-    : ops(NULL), lastOp(&ops)
+    : ops(NULL), lastOp(&ops),
+      parms(), variables(), evals(),
+      candidates(0), test(NULL), resultType(NULL),
+      context(NULL), locals(NULL),
+      failOp(NULL), successOp(NULL)
 {}
 
 
@@ -519,7 +526,7 @@ void CodeBuilder::Add(Op *op)
 // ----------------------------------------------------------------------------
 {
     *lastOp = op;
-    lastOp = &op->next;
+    lastOp = &op->success;
 }
 
 
@@ -530,7 +537,8 @@ void CodeBuilder::Success()
 {
     // End current stream to the success exit, restart code gen at failure exit
     *lastOp = successOp;
-    lastOp = &failOp->next;
+    XL_ASSERT(failOp && "Success without a failure exit");
+    lastOp = &failOp->success;
 }
 
 
@@ -547,24 +555,26 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
 //    Lookup a given declaration and generate code for it
 // ----------------------------------------------------------------------------
 {
-    static uint depth = 0;
-    Save<uint> saveDepth(depth, depth+1);
+    static uint  depth = 0;
+    Save<uint>   saveDepth(depth, depth+1);
 
     CodeBuilder *code = (CodeBuilder *) cb;
     uint         cindex = code->candidates++;
 
     // Create the scope for evaluation
-    Context_p   context = new Context(evalScope);
-    Context_p   locals  = NULL;
+    Context_p    context = new Context(evalScope);
+    Context_p    locals  = NULL;
 
     // Create the exit point for failed evaluation
-    Op *        failOp = new LabelOp("fail");
-    Save<Op *>  saveFailOp(code->failOp, failOp);
+    Op *         failOp = new LabelOp("fail");
+    Save<Op *>   saveFailOp(code->failOp, failOp);
 
     // If we lookup a name or a number, just return it
     Tree *defined = RewriteDefined(decl->left);
     Tree *resultType = tree_type;
-    if (defined->IsLeaf())
+    bool isLeaf = defined->IsLeaf();
+    bool needClosure = false;
+    if (isLeaf)
     {
         if (!Tree::Equal(defined, self))
         {
@@ -576,9 +586,6 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
             return NULL;
         }
         locals = context;
-
-        // Assign an ID for names
-        code->Reference(defined, decl);
     }
     else
     {
@@ -611,29 +618,36 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
         if (code->resultType)
             resultType = code->resultType;
 
+        needClosure = true;
     }
 
-    // Check if the right is "self"
+    // Check if we have builtins (opcode or C bindings)
     if (decl->right == xl_self)
     {
+        // If the right is "self", just return the input
         IFTRACE(compile)
             std::cerr << "COMPILE" << depth << ":" << cindex
                       << "(" << self << ") from " << decl->left
                       << " SELF\n";
         code->Add(new SelfOp);
+        needClosure = false;
     }
-
-    // Check if we have builtins (opcode or C bindings)
     else if (Opcode *opcode = OpcodeInfo(decl))
     {
         // Cached callback - Make a copy
         XL_ASSERT(opcode->arity <= Op::ARITY_SELF);
-        XL_ASSERT(!opcode->Op::next);
+        XL_ASSERT(!opcode->success);
         code->Add(new Op(*opcode));
         IFTRACE(compile)
             std::cerr << "COMPILE" << depth << ":" << cindex
                       << "(" << self << ") OPCODE " << opcode->name
                       << "\n";
+        needClosure = false;
+    }
+    else if (isLeaf)
+    {
+        // Assign an ID for names
+        code->Reference(defined, decl);
     }
     else
     {
@@ -654,7 +668,8 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     }
 
     // Enclose the result if necessary
-    code->Add(new ClosureOp(locals->CurrentScope()));
+    if (needClosure)
+        code->Add(new ClosureOp(locals->CurrentScope()));
 
     // Successful evaluation
     code->Success();
@@ -689,7 +704,6 @@ Code *CodeBuilder::Compile(Context *context, Tree *what,
 
     // We start with a clean slate for this code
     TreeIndices empty;
-    Save<TreeIndices>   saveParms(parms,     empty);
     Save<TreeIndices>   saveVars (variables, empty);
     Save<TreeIndices>   saveEvals(evals,     empty);
 
@@ -721,18 +735,22 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
 //    Compile an instruction or a sequence of instructions
 // ----------------------------------------------------------------------------
 {
-    Scope_p   originalScope = ctx->CurrentScope();
-    Context_p context = ctx;
+    Scope_p     originalScope = ctx->CurrentScope();
+    Context_p   context = ctx;
+    TreeIndices empty;
     while (what)
     {
+        // We start with new parameters for each candidate
+        Save<TreeIndices>   saveParms(parms,     empty);
+
         // Create new success exit for this expression
         Op *success = new LabelOp("success");
         if (successOp)
-            successOp->next = success;
+            successOp->success = success;
         if (failOp)
-            failOp->next = success;
+            failOp->success = success;
         successOp = success;
-        failOp = NULL;
+        Save<Op *> clearFailOp(failOp, NULL);
 
         // Lookup candidates (and count them)
         candidates = 0;
@@ -742,8 +760,10 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
         {
             // We found candidates. Join the failOp to the successOp
             if (failOp)
-                failOp->next = successOp;
-            lastOp = &successOp->next;
+                failOp->success = successOp;
+            XL_ASSERT(!*lastOp && "Built code that is not NULL-terminated");
+            *lastOp = successOp;
+            lastOp = &successOp->success;
             return true;
         }
 
@@ -939,10 +959,10 @@ uint CodeBuilder::Evaluate(Context *context, Tree *self, bool saveLeft)
     uint id = EvaluationID(self);
 
     // Compile the code for the input
-    Op *ops = Compile(context, self);
+    Code *code = Compile(context, self);
 
     // Add an evaluation opcode
-    Add(new EvalOp(id, ops, failOp, saveLeft));
+    Add(new EvalOp(id, code, failOp, saveLeft));
 
     // Return the allocated ID
     return id;
@@ -985,7 +1005,7 @@ struct MatchOp : Op
         Tree *test = data.result;
         if (T *tval = test->As<T>())
             if (tval->value == mo->ref->value)
-                return mo->next;
+                return mo->success;
         return mo->fail;
     }
 
@@ -1024,14 +1044,13 @@ struct NameMatchOp : Op
         Tree *test = data.result;
         Tree *ref  = data.left;
         if (Tree::Equal(ref, test))
-            return nmo->next;
+            return nmo->success;
         return nmo->fail;
     }
 
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\t";
-        fail->Dump(out);
+        out << name << "\t" << fail;
     }
 };
 
@@ -1050,7 +1069,7 @@ struct WhenClauseOp : Op
         if (data.result != xl_true)
             return wc->fail;
         data.result = data.left;
-        return wc->next;
+        return wc->success;
     }
 
     virtual void Dump(std::ostream &out)
@@ -1082,7 +1101,7 @@ struct InfixMatchOp : Op
             {
                 data.Value(im->lid, ifx->left);
                 data.Value(im->rid, ifx->right);
-                return im->next;
+                return im->success;
             }
         }
         return im->fail;
@@ -1154,11 +1173,19 @@ inline bool CodeBuilder::DoName(Name *what)
     // This covers both a pattern with 'pi' in it and things like 'X+X'
     if (Tree *bound = locals->Bound(what))
     {
-        Evaluate(locals, test);
-        Add(new EnterOp);
-        Evaluate(locals, bound, true);
-        Add(new NameMatchOp(failOp));
-        return true;
+        if (bound->GetInfo<Opcode>())
+        {
+            // If this is some built-in name, we can do a static test
+            return Tree::Equal(bound, test);
+        }
+        else
+        {
+            Evaluate(locals, test);
+            Add(new EnterOp);
+            Evaluate(locals, bound, true);
+            Add(new NameMatchOp(failOp));
+            return true;
+        }
     }
 
     Bind(what, test, true);
@@ -1279,6 +1306,12 @@ bool CodeBuilder::DoInfix(Infix *what)
             return false;
         }
 
+        // Check if this is a builtin type vs. a constant
+        if (test->IsConstant())
+            if (Name *typeName = what->right->AsName())
+                if (Tree *bound = context->Bound(typeName))
+                    return TypeCheck(context, bound, test) != NULL;
+
         // Typed name: evaluate type and check match
         Evaluate(context, test);
         Add(new EnterOp);
@@ -1318,6 +1351,8 @@ bool CodeBuilder::DoInfix(Infix *what)
     Infix_p ifx = test->AsInfix();
     if (!ifx || ifx->name != what->name)
     {
+        if (test->IsConstant())
+            return false;
         TreePosition pos = test->Position();
         Name *l = new Name("left", pos);
         Name *r = new Name("right", pos);

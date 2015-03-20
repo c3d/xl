@@ -86,29 +86,29 @@ struct Op
 
 public:
     Op(kstring name, arity_none_fn fn, Arity arity)
-        : arity_none(fn), name(name), arity(arity) {}
+        : arity_none(fn), name(name), success(), arity(arity) {}
     Op(kstring name, arity_none_fn fn)
-        : arity_none(fn), name(name), arity(ARITY_NONE) {}
+        : arity_none(fn), name(name), success(), arity(ARITY_NONE) {}
     Op(kstring name, arity_one_fn fn)
-        : arity_one(fn), name(name), arity(ARITY_ONE) {}
+        : arity_one(fn), name(name), success(), arity(ARITY_ONE) {}
     Op(kstring name, arity_two_fn fn)
-        : arity_two(fn), name(name), arity(ARITY_TWO) {}
+        : arity_two(fn), name(name), success(), arity(ARITY_TWO) {}
     Op(kstring name, arity_ctxone_fn fn)
-        : arity_ctxone(fn), name(name), arity(ARITY_CONTEXT_ONE) {}
+        : arity_ctxone(fn), name(name), success(), arity(ARITY_CONTEXT_ONE) {}
     Op(kstring name, arity_ctxtwo_fn fn)
-        : arity_ctxtwo(fn), name(name), arity(ARITY_CONTEXT_TWO) {}
+        : arity_ctxtwo(fn), name(name), success(), arity(ARITY_CONTEXT_TWO) {}
     Op(kstring name, arity_function_fn fn)
-        : arity_function(fn), name(name), arity(ARITY_FUNCTION) {}
+        : arity_function(fn), name(name), success(), arity(ARITY_FUNCTION) {}
     Op(kstring name, arity_op_fn fn)
-        : arity_op(fn), name(name), arity(ARITY_OP) {}
+        : arity_op(fn), name(name), success(), arity(ARITY_OP) {}
     Op(kstring name, arity_data_fn fn)
-        : arity_data(fn), name(name), arity(ARITY_DATA) {}
+        : arity_data(fn), name(name), success(), arity(ARITY_DATA) {}
     Op(kstring name, arity_opdata_fn fn)
-        : arity_opdata(fn), name(name), arity(ARITY_OPDATA) {}
+        : arity_opdata(fn), name(name), success(), arity(ARITY_OPDATA) {}
     Op(kstring name)
-        : arity_none(NULL), name(name), arity(ARITY_SELF) {}
+        : arity_none(NULL), name(name), success(), arity(ARITY_SELF) {}
     Op(const Op &o)
-        : arity_none(o.arity_none), name(o.name), next(NULL), arity(o.arity) {}
+        : arity_none(o.arity_none), name(o.name), success(), arity(o.arity) {}
 
     virtual             ~Op()                   {}
     virtual Op *        Fail()                  { return NULL; }
@@ -135,7 +135,7 @@ public:
         arity_opdata_fn         arity_opdata;
     };
     kstring                     name;
-    Op *                        next;
+    Op *                        success;
     Arity                       arity;
 };
 
@@ -145,7 +145,10 @@ inline std::ostream &operator<<(std::ostream &out, Op *op)
 //   Dump one specific opcode
 // ----------------------------------------------------------------------------
 {
-    op->Dump(out);
+    if (op)
+        op->Dump(out);
+    else
+        out << "NULL\n";
     return out;
 }
 
@@ -156,10 +159,11 @@ inline std::ostream &operator<<(std::ostream &out, Op &ops)
 // ----------------------------------------------------------------------------
 {
     Op *op = &ops;
-    while (op)
+    uint count = 0;
+    while (op && count++ < 120)
     {
         op->Dump(out);
-        op = op->next;
+        op = op->success;
     }
     return out;
 }
@@ -409,7 +413,7 @@ inline Op *Op::Run(Data &data)
         return Fail();
 
     data.result = result;
-    return next;
+    return success;
 }
 
 
@@ -420,7 +424,7 @@ inline void Op::Delete(Op *op)
 {
     while (op)
     {
-        Op *next = op->next;
+        Op *next = op->success;
         delete op;
         op = next;
     }
