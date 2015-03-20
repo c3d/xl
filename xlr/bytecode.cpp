@@ -64,19 +64,23 @@ Tree *EvaluateWithBytecode(Context *context, Tree *what)
 //
 // ============================================================================
 
-Code::Code()
+Code::Code(Context *context, Tree *self, uint nArgs)
 // ----------------------------------------------------------------------------
 //    Create a new code from the given ops
 // ----------------------------------------------------------------------------
-    : Op("code", runCode), ops(NULL)
+    : Op("code", runCode), context(context), self(self),
+      ops(NULL),
+      nArgs(nArgs), nVars(0), nEvals(0), nParms(0)
 {}
 
 
-Code::Code(Op *ops)
+Code::Code(Context *context, Tree *self, Op *ops, uint nArgs)
 // ----------------------------------------------------------------------------
 //    Create a new code from the given ops
 // ----------------------------------------------------------------------------
-    : Op("code", runCode), ops(ops)
+    : Op("code", runCode), context(context), self(self),
+      ops(ops),
+      nArgs(nArgs), nVars(0), nEvals(0), nParms(0)
 {}
 
 
@@ -105,9 +109,33 @@ Op *Code::runCode(Op *codeOp, Data &data)
 // ----------------------------------------------------------------------------
 {
     Code *code = (Code *) codeOp;
+
+    // Running in-place in the same context
+    Save<Context_p> setContext(data.context, code->context);
+    Save<Tree_p>    setSelf(data.self, code->self);
     Op *op = code->ops;
     while (op)
         op = op->Run(data);
+
+    return codeOp->success;
+}
+
+
+Op *Code::runCodeWithScope(Op *codeOp, Data &data)
+// ----------------------------------------------------------------------------
+//   Run all instructions in the sequence
+// ----------------------------------------------------------------------------
+{
+    Code *code = (Code *) codeOp;
+    Data newData(code->context, code->self, data.parms, code->nArgs);
+    if (code->nVars || code->nEvals || code->nParms)
+        newData.Allocate(code->nVars, code->nEvals, code->nParms);
+
+    // Execute the following instructions in the newly created data
+    Op *op = code->ops;
+    while (op)
+        op = op->Run(newData);
+
     return codeOp->success;
 }
 
@@ -117,7 +145,9 @@ void Code::Dump(std::ostream &out)
 //   Dump all the instructions
 // ----------------------------------------------------------------------------
 {
-    out << name << "\tbegin\t" << (void *) this << "\n"
+    out << name << "\tbegin\t" << (void *) this << "\t"
+        << "A" << nArgs << " V" << nVars
+        << " E" << nEvals << " P" << nParms << "\n"
         << *ops
         << name << "\tend\t" << (void *) this << "\n";
 }
@@ -423,51 +453,6 @@ struct DiscloseOp : Op
 };
 
 
-struct ScopeOp : Op
-// ----------------------------------------------------------------------------
-//    Evaluate a body in a new data environment
-// ----------------------------------------------------------------------------
-{
-    ScopeOp(Context *locals, Tree *self,
-            uint nArgs, uint nVars, uint nEvals, uint nParms)
-        : Op("scope", scope), locals(locals), self(self),
-          nArgs(nArgs), nVars(nVars), nEvals(nEvals), nParms(nParms) {}
-    Context_p   locals;
-    Tree_p      self;
-    uint        nArgs;
-    uint        nVars;
-    uint        nEvals;
-    uint        nParms;
-
-    static Op *scope(Op *scopeOp, Data &data)
-    {
-        ScopeOp *sc = (ScopeOp *) scopeOp;
-        Data newData(sc->locals, sc->self, data.parms, sc->nArgs);
-        if (sc->nVars || sc->nEvals || sc->nParms)
-            newData.Allocate(sc->nVars, sc->nEvals, sc->nParms);
-
-        // Execute the following instructions in the newly created data
-        Op *op = sc->success;
-        while (op)
-            op = op->Run(newData);
-
-        return NULL;
-    }
-
-    virtual void Dump(std::ostream &out)
-    {
-        out << name << "\t"
-            << (void *) locals << "\t" << (void *) this
-            << "\n\t" << ShortTreeForm(self, 20)
-            << "\n\tA" << nArgs
-            << " L" << nVars
-            << " E" << nEvals
-            << " P" << nParms
-            <<"\n";
-    }
-};
-
-
 struct CallOp : Op
 // ----------------------------------------------------------------------------
 //    Call a body - Parms are supposed to have been written first
@@ -569,6 +554,10 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     Op *         failOp = new LabelOp("fail");
     Save<Op *>   saveFailOp(code->failOp, failOp);
 
+    // We start with new parameters for each candidate
+    CodeBuilder::TreeIndices empty;
+    Save<CodeBuilder::TreeIndices> saveParms(code->parms, empty);
+
     // If we lookup a name or a number, just return it
     Tree *defined = RewriteDefined(decl->left);
     Tree *resultType = tree_type;
@@ -652,10 +641,8 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     else
     {
         // Normal case: evaluate body of the declaration in the new context
-        uint nVars  = code->variables.size();
-        uint nEvals = code->evals.size();
         uint nParms = code->parms.size();
-        Code *body = code->Compile(locals, decl->right, nVars, nEvals, nParms);
+        Code *body = code->Compile(locals, decl->right, nParms);
         code->Add(new CallOp(body));
     }
 
@@ -682,8 +669,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
 }
 
 
-Code *CodeBuilder::Compile(Context *context, Tree *what,
-                           uint nArgs, uint nVars, uint nEvals, uint nParms)
+Code *CodeBuilder::Compile(Context *context, Tree *what, uint nArgs)
 // ----------------------------------------------------------------------------
 //    Compile the tree
 // ----------------------------------------------------------------------------
@@ -694,7 +680,7 @@ Code *CodeBuilder::Compile(Context *context, Tree *what,
         return code;
 
     // Does not exist yet, set it up
-    code = new Code;
+    code = new Code(context, what, nArgs);
     what->SetInfo<Code>(code);
 
     // Save the place where we insert instructions
@@ -707,10 +693,6 @@ Code *CodeBuilder::Compile(Context *context, Tree *what,
     Save<TreeIndices>   saveVars (variables, empty);
     Save<TreeIndices>   saveEvals(evals,     empty);
 
-    // Check if we need to create a frame
-    if (nArgs || nVars || nEvals || nParms)
-        Add(new ScopeOp(context, what, nArgs, nVars, nEvals, nParms));
-
     // Evaluate the input code
     bool result = true;
     if (context->ProcessDeclarations(what))
@@ -721,6 +703,11 @@ Code *CodeBuilder::Compile(Context *context, Tree *what,
     if (result)
     {
         // Successful compilation - Return the code we created
+        code->nVars  = variables.size();
+        code->nEvals = evals.size();
+        code->nParms = parms.size();
+        if (code->nVars || code->nEvals || code->nParms)
+            code->arity_opdata = code->runCodeWithScope;
         return code;
     }
 
@@ -737,12 +724,8 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
 {
     Scope_p     originalScope = ctx->CurrentScope();
     Context_p   context = ctx;
-    TreeIndices empty;
     while (what)
     {
-        // We start with new parameters for each candidate
-        Save<TreeIndices>   saveParms(parms,     empty);
-
         // Create new success exit for this expression
         Op *success = new LabelOp("success");
         if (successOp)
@@ -975,7 +958,7 @@ uint CodeBuilder::EvaluationTemporary(Tree *self)
 // ----------------------------------------------------------------------------
 {
     uint id = EvaluationID(self);
-    Code *code = new Code(new ValueOp(id));
+    Code *code = new Code(context, self, new ValueOp(id));
     self->SetInfo<Code>(code);
     return id;
 }
@@ -1180,6 +1163,7 @@ inline bool CodeBuilder::DoName(Name *what)
         }
         else
         {
+            // Do a dynamic test to check if the name value is the same
             Evaluate(locals, test);
             Add(new EnterOp);
             Evaluate(locals, bound, true);

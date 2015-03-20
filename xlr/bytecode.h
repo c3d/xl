@@ -174,13 +174,20 @@ struct Code : Info, Op
 //    A sequence of operations
 // ----------------------------------------------------------------------------
 {
-    Code();
-    Code(Op *ops);
+    Code(Context *, Tree *self, uint nArgs);
+    Code(Context *, Tree *self, Op *instr, uint nArgs = 0);
     ~Code();
+    
     void                SetOps(Op **ops);
     static Op *         runCode(Op *op, Data &data);
+    static Op *         runCodeWithScope(Op *op, Data &data);
     virtual void        Dump(std::ostream &out);
+
+public:
+    Context_p           context;
+    Tree_p              self;
     Op *                ops;
+    uint                nArgs, nVars, nEvals, nParms;
 };
 
 
@@ -253,8 +260,7 @@ struct CodeBuilder
     ~CodeBuilder();
 
 public:
-    Code *      Compile(Context *context, Tree *tree, uint nArgs = 0,
-                        uint nLocs = 0, uint nEvals = 0, uint nParms = 0);
+    Code *      Compile(Context *context, Tree *tree, uint nArgs = 0);
     bool        Instructions(Context *context, Tree *tree);
 
 public:
