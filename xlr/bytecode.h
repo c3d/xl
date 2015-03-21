@@ -297,10 +297,11 @@ public:
 
     Op *        ops;            // List of operations to evaluate that tree
     Op **       lastOp;         // Last operation being written to
-    TreeIndices parms;          // Function's parameters
     TreeIndices variables;      // Local variables
     TreeIndices evals;          // Evaluation of arguments
-
+    TreeIndices parms;          // Function's parameters
+    uint        nEvals;         // Max number of evals on all candidates
+    uint        nParms;         // Max number of parms on all candidates
     uint        candidates;     // Number of candidates found
     Tree_p      test;           // Current form to test
     Tree_p      resultType;     // Result type declared in rewrite

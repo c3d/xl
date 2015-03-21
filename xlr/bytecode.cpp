@@ -488,7 +488,8 @@ CodeBuilder::CodeBuilder()
 //   Create a code builder
 // ----------------------------------------------------------------------------
     : ops(NULL), lastOp(&ops),
-      parms(), variables(), evals(),
+      variables(), evals(), parms(),
+      nEvals(0), nParms(0),
       candidates(0), test(NULL), resultType(NULL),
       context(NULL), locals(NULL),
       failOp(NULL), successOp(NULL)
@@ -664,12 +665,16 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     // Successful evaluation
     code->Success();
 
+    // Record the maximum parameter size
+    uint np = code->parms.size();
+    if (code->nParms < np)
+        code->nParms = np;
+
     // Keep looking for other declarations
     IFTRACE(compile)
         std::cerr << "COMPILE" << depth << ":" << cindex
                   << "(" << self << ") SUCCCESS "
                   << code->successOp << " FAIL " << code->failOp << "\n";
-        ;
     return NULL;
 }
 
@@ -693,11 +698,12 @@ Code *CodeBuilder::Compile(Context *context, Tree *what, uint nArgs)
     Save<Op **> saveLastOp(lastOp, &ops);
     Save<Op *>  saveSuccessOp(successOp, NULL);
     Save<Op *>  saveFailOp(failOp, NULL);
+    Save<uint>  saveNEvals(nEvals, 0);
+    Save<uint>  saveNParms(nParms, 0);
 
     // We start with a clean slate for this code
     TreeIndices empty;
     Save<TreeIndices>   saveVars (variables, empty);
-    Save<TreeIndices>   saveEvals(evals,     empty);
 
     // Evaluate the input code
     bool result = true;
@@ -710,8 +716,8 @@ Code *CodeBuilder::Compile(Context *context, Tree *what, uint nArgs)
     {
         // Successful compilation - Return the code we created
         code->nVars  = variables.size();
-        code->nEvals = evals.size();
-        code->nParms = parms.size();
+        code->nEvals = nEvals;
+        code->nParms = nParms;
         if (code->nVars || code->nEvals || code->nParms)
             code->arity_opdata = code->runCodeWithScope;
         return code;
@@ -730,8 +736,12 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
 {
     Scope_p     originalScope = ctx->CurrentScope();
     Context_p   context = ctx;
+    TreeIndices empty;
+
     while (what)
     {
+        Save<TreeIndices>   saveEvals(evals, empty);
+
         // Create new success exit for this expression
         Op *success = new LabelOp("success");
         if (successOp)
@@ -753,6 +763,11 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
                 failOp->success = successOp;
             *lastOp = successOp;
             lastOp = &successOp->success;
+
+            uint ne = evals.size();
+            if (nEvals < ne)
+                nEvals = ne;
+
             return true;
         }
 
