@@ -609,7 +609,10 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     uint         cindex = code->candidates++;
 
     IFTRACE(compile)
-        std::cerr << "ENTRY DUMP " << code->instrs << "\n";
+        std::cerr << "COMPILE" << depth << ":" << cindex
+                  << "(" << self << ") from "
+                  << decl->left << "\n"
+                  << "ENTRY DUMP\n" << code->instrs << "\n";
 
     // Create the scope for evaluation
     Context_p    context = new Context(evalScope);
@@ -744,7 +747,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
                   << code->successOp << " FAIL " << code->failOp << "\n";
 
     IFTRACE(compile)
-        std::cerr << "EXIT DUMP " << code->instrs << "\n";
+        std::cerr << "EXIT DUMP\n" << code->instrs << "\n";
     return NULL;
 }
 
@@ -1280,17 +1283,18 @@ inline bool CodeBuilder::DoName(Name *what)
         if (bound->GetInfo<Opcode>())
         {
             // If this is some built-in name, we can do a static test
-            return Tree::Equal(bound, test);
+            if (Tree::Equal(bound, test))
+                return true;
+            if (test->IsConstant())
+                return false;
         }
-        else
-        {
-            // Do a dynamic test to check if the name value is the same
-            Evaluate(locals, test);
-            Add(new EnterOp);
-            Evaluate(locals, bound, true);
-            Add(new NameMatchOp(failOp));
-            return true;
-        }
+
+        // Do a dynamic test to check if the name value is the same
+        Evaluate(locals, test);
+        Add(new EnterOp);
+        Evaluate(locals, bound, true);
+        Add(new NameMatchOp(failOp));
+        return true;
     }
 
     Bind(what, test, true);
@@ -1571,10 +1575,10 @@ extern "C" void debugop(XL::Op *op)
 }
 
 
-extern "C" void debugol(XL::Ops &ops)
+extern "C" void debugob(XL::CodeBuilder *cb)
 // ----------------------------------------------------------------------------
 //   Show an opcode and all children as a listing
 // ----------------------------------------------------------------------------
 {
-    std::cerr << ops << "\n";
+    std::cerr << cb->instrs << "\n";
 }
