@@ -574,18 +574,26 @@ void CodeBuilder::Success()
 // ----------------------------------------------------------------------------
 {
     XL_ASSERT(successOp && failOp);
-    XL_ASSERT(count(instrs.begin(), instrs.end(), successOp) == 0);
     XL_ASSERT(count(instrs.begin(), instrs.end(), failOp) == 0);
 
-    instrs.push_back(successOp);
-    instrs.push_back(failOp);
+    IFTRACE(compile)
+        std::cerr << "SUCCESS:\t" << successOp << "\n"
+                  << "FAIL:\t"    << failOp << "\n";
 
     // End current stream to the success exit, restart code gen at failure exit
     *lastOp = successOp;
     XL_ASSERT(failOp && "Success without a failure exit");
+
     lastOp = &failOp->success;
+    instrs.push_back(failOp);
+    failOp = NULL;
+    
     while (*lastOp)
+    {
+        IFTRACE(compile)
+            std::cerr << "LASTOP SKIP:\t" << *lastOp << "\n";
         lastOp = &(*lastOp)->success;
+    }
 }
 
 
@@ -1514,8 +1522,8 @@ uint CodeBuilder::Bind(Name *name, Tree *value, bool closure)
     parms[name] = parmId;
 
     // Evaluate the value and store it in the parameter
-    Evaluate(context, value);
-    if (closure)
+    uint id = Evaluate(context, value);
+    if (closure && (int) id >= 0)
         Add(new ClosureOp(context->CurrentScope()));
     Add(new ParmOp(parmId));
 
