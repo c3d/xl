@@ -24,6 +24,7 @@
 #include "errors.h"
 #include "basics.h"
 
+#include <algorithm>
 
 XL_BEGIN
 
@@ -38,9 +39,7 @@ Tree *EvaluateWithBytecode(Context *context, Tree *what)
 //   Compile bytecode and then evaluate it
 // ----------------------------------------------------------------------------
 {
-    CodeBuilder  builder;
-    Code        *code = builder.Compile(context, what);
-
+    Code *code = CompileToBytecode(context, what);
     Tree_p result = what;
     if (code)
     {
@@ -57,6 +56,28 @@ Tree *EvaluateWithBytecode(Context *context, Tree *what)
 }
 
 
+Code *CompileToBytecode(Context *context, Tree *what)
+// ----------------------------------------------------------------------------
+//    Compile a tree to bytecode
+// ----------------------------------------------------------------------------
+{
+    CodeBuilder  builder;
+    Code *code = builder.Compile(context, what);
+    return code;
+}
+
+
+Code *CompileToBytecode(Context *context, Tree *what, TreeIndices &parms)
+// ----------------------------------------------------------------------------
+//    Compile a tree to bytecode
+// ----------------------------------------------------------------------------
+{
+    CodeBuilder  builder;
+    Code *code = builder.Compile(context, what, parms);
+    return code;
+}
+
+
 
 // ============================================================================
 //
@@ -70,7 +91,8 @@ Code::Code(Context *context, Tree *self, uint nArgs)
 // ----------------------------------------------------------------------------
     : Op("code", runCode), context(context), self(self),
       ops(NULL),
-      nArgs(nArgs), nVars(0), nEvals(0), nParms(0)
+      nArgs(nArgs), nVars(0), nEvals(0), nParms(0),
+      instrs()
 {}
 
 
@@ -80,7 +102,8 @@ Code::Code(Context *context, Tree *self, Op *ops, uint nArgs)
 // ----------------------------------------------------------------------------
     : Op("code", runCode), context(context), self(self),
       ops(ops),
-      nArgs(nArgs), nVars(0), nEvals(0), nParms(0)
+      nArgs(nArgs), nVars(0), nEvals(0), nParms(0),
+      instrs()
 {}
 
 
@@ -89,17 +112,21 @@ Code::~Code()
 //    Delete the ops we own
 // ----------------------------------------------------------------------------
 {
-    Op::Delete(ops);
+    for (Ops::iterator o = instrs.begin(); o != instrs.end(); o++)
+        delete *o;
+    instrs.clear();
 }
 
 
-void Code::SetOps(Op **newOps)
+void Code::SetOps(Op **newOps, Ops *instrsToTakeOver)
 // ----------------------------------------------------------------------------
 //    Take over the given code
 // ----------------------------------------------------------------------------
 {
     ops = *newOps;
     *newOps = NULL;
+    instrs = *instrsToTakeOver;
+    instrsToTakeOver->clear();
 }
 
 
@@ -144,11 +171,36 @@ void Code::Dump(std::ostream &out)
 //   Dump all the instructions
 // ----------------------------------------------------------------------------
 {
-    out << name << "\tbegin\t" << (void *) this << "\t"
-        << "A" << nArgs << " V" << nVars
-        << " E" << nEvals << " P" << nParms << "\n"
-        << *ops << "\n"
-        << name << "\tend\t" << (void *) this << "\n";
+    out << name << "\t" << (void *) this << "\t" << self << "\n";
+    out << "\talloc"
+        << " A" << nArgs << " V" << nVars
+        << " E" << nEvals << " P" << nParms << "\n";
+    Dump(out, instrs);
+}
+
+
+void Code::Dump(std::ostream &out, Ops &instrs)
+// ----------------------------------------------------------------------------
+//   Dump an instruction list
+// ----------------------------------------------------------------------------
+{
+    uint max = instrs.size();
+    for (uint i = 0; i < max; i++)
+    {
+        out << i << "\t" << instrs[i] << "\n";
+        if (i + 1 < max)
+        {
+            Op *next = instrs[i]->success;
+            if (next != instrs[i+1])
+            {
+                if (!next)
+                    out << "\treturn\n";
+                for (uint o = 0; o < max; o++)
+                    if (instrs[o] == next)
+                        out << "\tgoto\t" << o << "\n";
+            }
+        }
+    }
 }
 
 
@@ -210,8 +262,6 @@ struct EvalOp : Op
     EvalOp(uint id, Op *ops, Op *fail, bool saveLeft = false)
         : Op(saveLeft ? "eval_l" : "eval", saveLeft ? evalSaveLeft : eval),
           id(id), ops(ops), fail(fail) {}
-    ~EvalOp() { Delete(ops); }
-
     uint id;
     Op * ops;
     Op * fail;
@@ -261,9 +311,7 @@ struct EvalOp : Op
 
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\tbegin\t" << id << "\t" << fail << "\n"
-            << *ops
-            << name << "\tend\t" << id;
+        out << name << "\t" << id << "\t" << (void *) ops << "\t" << fail;
     }
 };
 
@@ -501,7 +549,9 @@ CodeBuilder::~CodeBuilder()
 //    Delete all instructions if the list was not transferred
 // ----------------------------------------------------------------------------
 {
-    Op::Delete(ops);
+    for (Ops::iterator o = instrs.begin(); o != instrs.end(); o++)
+        delete *o;
+    instrs.clear();
 }
 
 
@@ -510,6 +560,8 @@ void CodeBuilder::Add(Op *op)
 //    Add an instruction in the generated code
 // ----------------------------------------------------------------------------
 {
+    XL_ASSERT(count(instrs.begin(), instrs.end(), op) == 0);
+    instrs.push_back(op);
     *lastOp = op;
     lastOp = &op->success;
     XL_ASSERT(!op->success && "Adding an instruction that has kids");
@@ -521,10 +573,19 @@ void CodeBuilder::Success()
 //    Success at the end of a declaration
 // ----------------------------------------------------------------------------
 {
+    XL_ASSERT(successOp && failOp);
+    XL_ASSERT(count(instrs.begin(), instrs.end(), successOp) == 0);
+    XL_ASSERT(count(instrs.begin(), instrs.end(), failOp) == 0);
+
+    instrs.push_back(successOp);
+    instrs.push_back(failOp);
+
     // End current stream to the success exit, restart code gen at failure exit
     *lastOp = successOp;
     XL_ASSERT(failOp && "Success without a failure exit");
     lastOp = &failOp->success;
+    while (*lastOp)
+        lastOp = &(*lastOp)->success;
 }
 
 
@@ -547,6 +608,9 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     CodeBuilder *code = (CodeBuilder *) cb;
     uint         cindex = code->candidates++;
 
+    IFTRACE(compile)
+        std::cerr << "ENTRY DUMP " << code->instrs << "\n";
+
     // Create the scope for evaluation
     Context_p    context = new Context(evalScope);
     Context_p    locals  = NULL;
@@ -557,8 +621,8 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     code->failOp = failOp;
 
     // We start with new parameters for each candidate
-    CodeBuilder::TreeIndices empty;
-    Save<CodeBuilder::TreeIndices> saveParms(code->parms, empty);
+    TreeIndices empty;
+    Save<TreeIndices> saveParms(code->parms, empty);
 
     // If we lookup a name or a number, just return it
     Tree *defined = RewriteDefined(decl->left);
@@ -587,6 +651,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
 
         // Remember the old end in case we did not generate code
         Op **lastOp = code->lastOp;
+        uint lastInstrSize = code->instrs.size();
 
         // Check bindings of arguments to declaration, exit if fails
         Save<Tree_p>    saveSelf(code->test, self);
@@ -601,10 +666,13 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
                           << " MISMATCH\n";
 
             // Remove the instructions that were added and the failed exit
-            Op *added = *lastOp;
             *lastOp = NULL;
-            Op::Delete(added);
+            uint lastNow = code->instrs.size();
+            for (uint i = lastInstrSize; i < lastNow; i++)
+                delete code->instrs[i];
+            code->instrs.resize(lastInstrSize);
             code->failOp = oldFailOp;
+            code->lastOp = lastOp;
             delete failOp;
             return NULL;
         }
@@ -645,8 +713,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     else
     {
         // Normal case: evaluate body of the declaration in the new context
-        uint nParms = code->parms.size();
-        Code *body = code->Compile(locals, decl->right, nParms);
+        Code *body = CompileToBytecode(locals, decl->right, code->parms);
         code->Add(new CallOp(body));
     }
 
@@ -675,11 +742,24 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
         std::cerr << "COMPILE" << depth << ":" << cindex
                   << "(" << self << ") SUCCCESS "
                   << code->successOp << " FAIL " << code->failOp << "\n";
+
+    IFTRACE(compile)
+        std::cerr << "EXIT DUMP " << code->instrs << "\n";
     return NULL;
 }
 
 
-Code *CodeBuilder::Compile(Context *context, Tree *what, uint nArgs)
+Code *CodeBuilder::Compile(Context *context, Tree *what)
+// ----------------------------------------------------------------------------
+//    Compile a top-level declaration (no parameters)
+// ----------------------------------------------------------------------------
+{
+    TreeIndices noparms;
+    return Compile(context, what, parms);
+}
+
+
+Code *CodeBuilder::Compile(Context *context, Tree *what, TreeIndices &callArgs)
 // ----------------------------------------------------------------------------
 //    Compile the tree
 // ----------------------------------------------------------------------------
@@ -690,20 +770,10 @@ Code *CodeBuilder::Compile(Context *context, Tree *what, uint nArgs)
         return code;
 
     // Does not exist yet, set it up
+    uint nArgs = parms.size();
+    Save<TreeIndices> saveArgs(args, callArgs);
     code = new Code(context, what, nArgs);
     what->SetInfo<Code>(code);
-
-    // Save the place where we insert instructions
-    Save<Op *>  saveOps(ops, NULL);
-    Save<Op **> saveLastOp(lastOp, &ops);
-    Save<Op *>  saveSuccessOp(successOp, NULL);
-    Save<Op *>  saveFailOp(failOp, NULL);
-    Save<uint>  saveNEvals(nEvals, 0);
-    Save<uint>  saveNParms(nParms, 0);
-
-    // We start with a clean slate for this code
-    TreeIndices empty;
-    Save<TreeIndices>   saveVars (variables, empty);
 
     // Evaluate the input code
     bool result = true;
@@ -711,7 +781,7 @@ Code *CodeBuilder::Compile(Context *context, Tree *what, uint nArgs)
         result = Instructions(context, what);
 
     // The generated code takes over the instructions in all cases
-    code->SetOps(&ops);
+    code->SetOps(&ops, &instrs);
     if (result)
     {
         // Successful compilation - Return the code we created
@@ -726,6 +796,30 @@ Code *CodeBuilder::Compile(Context *context, Tree *what, uint nArgs)
     // We failed, delete the result and return
     delete code;
     return NULL;
+}
+
+
+Op *CodeBuilder::CompileInternal(Context *context, Tree *what)
+// ----------------------------------------------------------------------------
+//   Compile an internal code sequence
+// ----------------------------------------------------------------------------
+{
+    // Save the place where we insert instructions
+    Save<Op *>  saveOps(ops, NULL);
+    Save<Op **> saveLastOp(lastOp, &ops);
+    Save<Op *>  saveSuccessOp(successOp, NULL);
+    Save<Op *>  saveFailOp(failOp, NULL);
+    Save<uint>  saveNEvals(nEvals, 0);
+    Save<uint>  saveNParms(nParms, 0);
+
+    // We start with a clean slate for this code
+    TreeIndices empty;
+    Save<TreeIndices>   saveVars (variables, empty);
+
+    if (context->ProcessDeclarations(what))
+        Instructions(context, what);
+    Op *result = ops;
+    return result;
 }
 
 
@@ -752,7 +846,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
         Save<Op *> clearFailOp(failOp, NULL);
 
         // Lookup candidates (and count them)
-        candidates = 0;
+        Save<uint> saveCandidates(candidates, 0);
         context->Lookup(what, compileLookup, this);
 
         if (candidates)
@@ -960,14 +1054,21 @@ uint CodeBuilder::Evaluate(Context *context, Tree *self, bool saveLeft)
 //   Evaluate the tree, and return its ID in the evals array
 // ----------------------------------------------------------------------------
 {
+    // For constants, we can simply evaluate in line
+    if (self->IsConstant())
+    {
+        Instructions(context, self);
+        return ~0U;
+    }
+
     uint id = EvaluationID(self);
-
+    
     // Compile the code for the input
-    Code *code = Compile(context, self);
-
+    Op *op = CompileInternal(context, self);
+    
     // Add an evaluation opcode
-    Add(new EvalOp(id, code, failOp, saveLeft));
-
+    Add(new EvalOp(id, op, failOp, saveLeft));
+    
     // Return the allocated ID
     return id;
 }
@@ -1089,7 +1190,8 @@ struct InfixMatchOp : Op
 // ----------------------------------------------------------------------------
 {
     InfixMatchOp(text symbol, Op *fail, uint lid, uint rid)
-        : Op("infix", infix), symbol(symbol), fail(fail), lid(lid), rid(rid) {}
+        : Op("infix", infix), symbol(symbol), fail(fail),
+          lid(lid), rid(rid) {}
     text        symbol;
     Op *        fail;
     uint        lid;
@@ -1423,8 +1525,8 @@ uint CodeBuilder::Reference(Tree *name, Infix *decl)
 // ----------------------------------------------------------------------------
 {
     // Check if that's one of the input parameters. If so, emit an 'Arg'
-    TreeIndices::iterator found = parms.find(name);
-    if (found != parms.end())
+    TreeIndices::iterator found = args.find(name);
+    if (found != args.end())
     {
         uint localId = (*found).second;
         Add(new ArgOp(localId));
@@ -1466,4 +1568,13 @@ extern "C" void debugop(XL::Op *op)
 // ----------------------------------------------------------------------------
 {
     std::cerr << *op << "\n";
+}
+
+
+extern "C" void debugol(XL::Ops &ops)
+// ----------------------------------------------------------------------------
+//   Show an opcode and all children as a listing
+// ----------------------------------------------------------------------------
+{
+    std::cerr << ops << "\n";
 }

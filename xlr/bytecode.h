@@ -34,6 +34,8 @@ struct Op;                      // An individual operation
 struct Code;                    // A sequence of operations
 struct Data;                    // Data on which the code operates
 struct CodeBuilder;             // Code generator
+typedef std::vector<Op *> Ops;  // Sequence of operations
+typedef std::map<Tree *, uint> TreeIndices;
 
 
 
@@ -44,6 +46,8 @@ struct CodeBuilder;             // Code generator
 // ============================================================================
 
 Tree *EvaluateWithBytecode(Context *context, Tree *input);
+Code *CompileToBytecode(Context *context, Tree *input);
+Code *CompileToBytecode(Context *context, Tree *input, TreeIndices &parms);
 
 
 
@@ -116,11 +120,10 @@ public:
 
     Op *                Run(Data &data);
     Tree *              Run(Context *context, Tree *self, TreeList &args);
-    static void         Delete(Op *);
 
     
 public:
-    // Thte 
+    // The variou functions signatures we may use during evaluation
     union
     {
         arity_none_fn           arity_none;
@@ -140,36 +143,6 @@ public:
 };
 
 
-inline std::ostream &operator<<(std::ostream &out, Op *op)
-// ----------------------------------------------------------------------------
-//   Dump one specific opcode
-// ----------------------------------------------------------------------------
-{
-    if (op)
-        op->Dump(out);
-    else
-        out << "NULL";
-    return out;
-}
-
-
-inline std::ostream &operator<<(std::ostream &out, Op &ops)
-// ----------------------------------------------------------------------------
-//   Dump all the opcodes in a sequence
-// ----------------------------------------------------------------------------
-{
-    Op *op = &ops;
-    while (op)
-    {
-        op->Dump(out);
-        op = op->success;
-        if (op)
-            out << "\n";
-    }
-    return out;
-}
-
-
 struct Code : Info, Op
 // ----------------------------------------------------------------------------
 //    A sequence of operations
@@ -179,16 +152,18 @@ struct Code : Info, Op
     Code(Context *, Tree *self, Op *instr, uint nArgs = 0);
     ~Code();
     
-    void                SetOps(Op **ops);
+    void                SetOps(Op **ops, Ops *instr);
     static Op *         runCode(Op *op, Data &data);
     static Op *         runCodeWithScope(Op *op, Data &data);
     virtual void        Dump(std::ostream &out);
+    static void         Dump(std::ostream &out, Ops &instrs);
 
 public:
     Context_p           context;
     Tree_p              self;
     Op *                ops;
     uint                nArgs, nVars, nEvals, nParms;
+    Ops                 instrs;
 };
 
 
@@ -261,7 +236,9 @@ struct CodeBuilder
     ~CodeBuilder();
 
 public:
-    Code *      Compile(Context *context, Tree *tree, uint nArgs = 0);
+    Code *      Compile(Context *context, Tree *tree);
+    Code *      Compile(Context *context, Tree *tree, TreeIndices &parms);
+    Op *        CompileInternal(Context *context, Tree *what);
     bool        Instructions(Context *context, Tree *tree);
 
 public:
@@ -293,10 +270,9 @@ public:
 
 
 public:
-    typedef std::map<Tree *, uint> TreeIndices;
-
     Op *        ops;            // List of operations to evaluate that tree
     Op **       lastOp;         // Last operation being written to
+    TreeIndices args;           // Input arguments
     TreeIndices variables;      // Local variables
     TreeIndices evals;          // Evaluation of arguments
     TreeIndices parms;          // Function's parameters
@@ -309,6 +285,7 @@ public:
     Context_p   locals;         // Local parameter declarations
     Op *        failOp;         // Exit instruction if evaluation fails
     Op *        successOp;      // Exit instruction in case of success
+    Ops         instrs;         // All instructions
 };
 
 
@@ -425,20 +402,51 @@ inline Op *Op::Run(Data &data)
 }
 
 
-inline void Op::Delete(Op *op)
+
+// ============================================================================
+// 
+//    Streaming operators
+// 
+// ============================================================================
+
+inline std::ostream &operator<<(std::ostream &out, Op *op)
 // ----------------------------------------------------------------------------
-//    Delete a sequence of ops
+//   Dump one specific opcode
 // ----------------------------------------------------------------------------
 {
-    while (op)
-    {
-        Op *next = op->success;
-        delete op;
-        op = next;
-    }
+    if (op)
+        op->Dump(out);
+    else
+        out << "NULL";
+    return out;
 }
 
 
+inline std::ostream &operator<<(std::ostream &out, Op &ops)
+// ----------------------------------------------------------------------------
+//   Dump all the opcodes in a sequence
+// ----------------------------------------------------------------------------
+{
+    Op *op = &ops;
+    while (op)
+    {
+        op->Dump(out);
+        op = op->success;
+        if (op)
+            out << "\n";
+    }
+    return out;
+}
+
+
+inline std::ostream &operator<<(std::ostream &out, Ops &instrs)
+// ----------------------------------------------------------------------------
+//   Dump all the opcodes in a sequence
+// ----------------------------------------------------------------------------
+{
+    Code::Dump(out, instrs);
+    return out;
+}
 
 XL_END
 
