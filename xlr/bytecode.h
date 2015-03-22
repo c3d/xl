@@ -157,6 +157,7 @@ struct Code : Info, Op
     static Op *         runCodeWithScope(Op *op, Data &data);
     virtual void        Dump(std::ostream &out);
     static void         Dump(std::ostream &out, Ops &instrs);
+    static text         Ref(Op *op, text sep, text set, text null);
 
 public:
     Context_p           context;

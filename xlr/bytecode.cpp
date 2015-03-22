@@ -25,6 +25,7 @@
 #include "basics.h"
 
 #include <algorithm>
+#include <sstream>
 
 XL_BEGIN
 
@@ -179,42 +180,52 @@ void Code::Dump(std::ostream &out)
 }
 
 
+static Ops *currentDump = NULL;
+
 void Code::Dump(std::ostream &out, Ops &instrs)
 // ----------------------------------------------------------------------------
 //   Dump an instruction list
 // ----------------------------------------------------------------------------
 {
+    Save<Ops *> saveCurrentDump(currentDump, &instrs);
+
     uint max = instrs.size();
     for (uint i = 0; i < max; i++)
     {
+        Op *fail = instrs[i]->Fail();
         out << i << "\t" << instrs[i];
-        if (Op *fail = instrs[i]->Fail())
-        {
-            bool found = false;
-            for (uint o = 0; o < max; o++)
-                if (instrs[o] == fail)
-                    found = (out << "\tfail#" << o);
-            if (!found)
-                out << "\tfail\t" << (void *) fail;
-        }
-        out << "\n";
+        if (fail)
+            out << Ref(fail, "\t", "fail", "nofail");
         if (i + 1 < max)
         {
             Op *next = instrs[i]->success;
             if (next != instrs[i+1])
-            {
-                bool found = false;
-                if (!next)
-                    found = (out << "\treturn\n");
-                for (uint o = 0; o < max; o++)
-                    if (instrs[o] == next)
-                        found = (out << "\tgoto\t#" << o << "\n");
-                if (!found)
-                    out << "\tgoto\t" << (void *) next << "\n";
-            }
+                out << Ref(next, "\n\t", "goto", "return");
         }
+        out << "\n";
     }
 }
+
+
+text Code::Ref(Op *op, text sep, text set, text null)
+// ----------------------------------------------------------------------------
+//   Return the reference for an op in the current list
+// ----------------------------------------------------------------------------
+{
+    std::ostringstream out;
+
+    bool found = false;
+    uint max = currentDump ? currentDump->size() : 0;
+
+    if (op == NULL)
+        found = (out << sep << null);
+    for (uint o = 0; o < max; o++)
+        if ((*currentDump)[o] == op)
+            found = (out << sep << set << "\t#" << o);
+    if (!found)
+        out << sep << set << "\t" << (void *) op;
+    return out.str();
+}    
 
 
 
@@ -335,7 +346,7 @@ struct EvalOp : FailOp
 
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\t" << id << "\t" << (void *) ops;
+        out << name << "\t" << id << Code::Ref(ops, "\t", "code", "null");
     }
 };
 
@@ -533,7 +544,7 @@ struct CallOp : Op
 
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\t" << (void *) ops;
+        out << name << Code::Ref(ops, "\t", "code", "null");
     }
 };
 
