@@ -244,16 +244,18 @@ public:
 
 public:
     // Tree::Do interface
-    typedef bool value_type;
+    enum strength { NEVER, SOMETIMES, ALWAYS };
+    typedef strength value_type;
 
-    bool        DoInteger(Integer *what);
-    bool        DoReal(Real *what);
-    bool        DoText(Text *what);
-    bool        DoName(Name *what);
-    bool        DoPrefix(Prefix *what);
-    bool        DoPostfix(Postfix *what);
-    bool        DoInfix(Infix *what);
-    bool        DoBlock(Block *what);
+    strength    DoInteger(Integer *what);
+    strength    DoReal(Real *what);
+    strength    DoText(Text *what);
+    strength    DoName(Name *what);
+    strength    DoPrefix(Prefix *what);
+    strength    DoPostfix(Postfix *what);
+    strength    DoInfix(Infix *what);
+    strength    DoBlock(Block *what);
+    strength    DoLeftRight(Tree *wl, Tree *wr, Tree *l, Tree *r);
 
     // Evaluation and binding of values
     uint        EvaluationID(Tree *);

@@ -733,6 +733,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     Tree *resultType = tree_type;
     bool isLeaf = defined->IsLeaf();
     bool needClosure = false;
+    CodeBuilder::strength strength = CodeBuilder::ALWAYS;
     if (isLeaf)
     {
         if (!Tree::Equal(defined, self))
@@ -762,7 +763,9 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
         Save<Context_p> saveContext(code->context, context);
         Save<Context_p> saveLocals(code->locals, locals);
         Save<Tree_p>    saveResultType(code->resultType, NULL);
-        if (!decl->left->Do(code))
+
+        strength = decl->left->Do(code);
+        if (strength == CodeBuilder::NEVER)
         {
             IFTRACE(compile)
                 std::cerr << "COMPILE" << depth << ":" << cindex
@@ -846,6 +849,8 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
         std::cerr << "COMPILE" << depth << ":" << cindex
                   << "(" << self << ") SUCCCESS\n";
 
+    if (strength == CodeBuilder::ALWAYS)
+        return decl;
     return NULL;
 }
 
@@ -1317,49 +1322,46 @@ struct InfixMatchOp : FailOp
 //
 // ============================================================================
 
-inline bool CodeBuilder::DoInteger(Integer *what)
+CodeBuilder::strength CodeBuilder::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains an integer: check we have the same
 // ----------------------------------------------------------------------------
 {
-    Evaluate(context, test);
     if (Integer *ival = test->AsInteger())
-        if (ival->value != what->value)
-            return false;
+        return ival->value == what->value ? ALWAYS : NEVER;
+    Evaluate(context, test);
     Add(new MatchOp<Integer>(what, failOp));
-    return true;
+    return SOMETIMES;
 }
 
 
-inline bool CodeBuilder::DoReal(Real *what)
+CodeBuilder::strength CodeBuilder::DoReal(Real *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
 {
-    Evaluate(context, test);
     if (Real *rval = test->AsReal())
-        if (rval->value != what->value)
-            return false;
+        return rval->value != what->value ? ALWAYS : NEVER;
+    Evaluate(context, test);
     Add(new MatchOp<Real>(what, failOp));
-    return true;
+    return SOMETIMES;
 }
 
 
-inline bool CodeBuilder::DoText(Text *what)
+CodeBuilder::strength CodeBuilder::DoText(Text *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
 {
-    Evaluate(context, test);
     if (Text *tval = test->AsText())
-        if (tval->value != what->value)
-            return false;
+        return tval->value != what->value ? ALWAYS : NEVER;
+    Evaluate(context, test);
     Add(new MatchOp<Text>(what, failOp));
-    return true;
+    return SOMETIMES;
 }
 
 
-inline bool CodeBuilder::DoName(Name *what)
+CodeBuilder::strength CodeBuilder::DoName(Name *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains a name: bind it as a closure, no evaluation
 // ----------------------------------------------------------------------------
@@ -1372,9 +1374,9 @@ inline bool CodeBuilder::DoName(Name *what)
         {
             // If this is some built-in name, we can do a static test
             if (Tree::Equal(bound, test))
-                return true;
+                return ALWAYS;
             if (test->IsConstant())
-                return false;
+                return NEVER;
         }
 
         // Do a dynamic test to check if the name value is the same
@@ -1382,15 +1384,15 @@ inline bool CodeBuilder::DoName(Name *what)
         Add(new EnterOp);
         Evaluate(locals, bound, true);
         Add(new NameMatchOp(failOp));
-        return true;
+        return SOMETIMES;
     }
 
     Bind(what, test, true);
-    return true;
+    return ALWAYS;
 }
 
 
-bool CodeBuilder::DoBlock(Block *what)
+CodeBuilder::strength CodeBuilder::DoBlock(Block *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains a block: look inside
 // ----------------------------------------------------------------------------
@@ -1404,7 +1406,8 @@ bool CodeBuilder::DoBlock(Block *what)
 }
 
 
-bool CodeBuilder::DoPrefix(Prefix *what)
+
+CodeBuilder::strength CodeBuilder::DoPrefix(Prefix *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains prefix: check that the left part matches
 // ----------------------------------------------------------------------------
@@ -1425,27 +1428,22 @@ bool CodeBuilder::DoPrefix(Prefix *what)
                 else
                 {
                     Ooops("Prefix name $1 does not match $2", name, testName);
-                    return false;
+                    return NEVER;
                 }
             }
         }
 
         // For other cases, we must go deep inside each prefix to check
-        test = pfx->left;
-        if (!what->left->Do(this))
-            return false;
-        test = pfx->right;
-        if (what->right->Do(this))
-            return true;
+        return DoLeftRight(what->left, what->right, pfx->left, pfx->right);
     }
 
     // All other cases are a mismatch
     Ooops("Prefix $1 does not match $2", what, test);
-    return false;
+    return NEVER;
 }
 
 
-bool CodeBuilder::DoPostfix(Postfix *what)
+CodeBuilder::strength CodeBuilder::DoPostfix(Postfix *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains posfix: check that the right part matches
 // ----------------------------------------------------------------------------
@@ -1466,27 +1464,22 @@ bool CodeBuilder::DoPostfix(Postfix *what)
                 else
                 {
                     Ooops("Postfix name $1 does not match $2", name, testName);
-                    return false;
+                    return NEVER;
                 }
             }
         }
 
         // For other cases, we must go deep inside each prefix to check
-        test = pfx->right;
-        if (!what->right->Do(this))
-            return false;
-        test = pfx->left;
-        if (what->left->Do(this))
-            return true;
+        return DoLeftRight(what->right, what->left, pfx->right, pfx->left);
     }
 
     // All other cases are a mismatch
     Ooops("Postfix $1 does not match $2", what, test);
-    return false;
+    return NEVER;
 }
 
 
-bool CodeBuilder::DoInfix(Infix *what)
+CodeBuilder::strength CodeBuilder::DoInfix(Infix *what)
 // ----------------------------------------------------------------------------
 //   The complicated case: various declarations
 // ----------------------------------------------------------------------------
@@ -1500,7 +1493,7 @@ bool CodeBuilder::DoInfix(Infix *what)
         if (!name)
         {
             Ooops("Invalid declaration, $1 is not a name", what->left);
-            return false;
+            return NEVER;
         }
 
         // Check if this is a builtin type vs. a constant
@@ -1511,9 +1504,9 @@ bool CodeBuilder::DoInfix(Infix *what)
                 if (Tree *bound = context->Bound(typeName))
                 {
                     if (!TypeCheck(context, bound, test))
-                        return false;
+                        return NEVER;
                     Evaluate(context, test);
-                    return true;
+                    return ALWAYS;
                 }
             }
         }
@@ -1524,7 +1517,7 @@ bool CodeBuilder::DoInfix(Infix *what)
         Evaluate(context, what->right);
         Add(new TypeCheckOp(failOp));
         Bind(name, test, false);
-        return true;
+        return SOMETIMES;
     }
 
     // Check if we have typed declarations, e.g. X+Y as integer
@@ -1543,14 +1536,14 @@ bool CodeBuilder::DoInfix(Infix *what)
     if (what->name == "when")
     {
         // It must pass the rest (need to bind values first)
-        if (!what->left->Do(this))
-            return false;
+        if (what->left->Do(this) == NEVER)
+            return NEVER;
 
         // Here, we need to evaluate in the local context, not eval one
         Add(new EnterOp);
         Evaluate(locals, what->right, true);
         Add(new WhenClauseOp(failOp));
-        return true;
+        return SOMETIMES;
     }
 
     // In all other cases, we need an infix with matching name
@@ -1558,7 +1551,7 @@ bool CodeBuilder::DoInfix(Infix *what)
     if (!ifx || ifx->name != what->name)
     {
         if (test->IsConstant())
-            return false;
+            return NEVER;
         TreePosition pos = test->Position();
         Name *l = new Name("left", pos);
         Name *r = new Name("right", pos);
@@ -1572,18 +1565,29 @@ bool CodeBuilder::DoInfix(Infix *what)
     }
 
     if (ifx && ifx->name == what->name)
-    {
-        test = ifx->left;
-        if (!what->left->Do(this))
-            return false;
-        test = ifx->right;
-        if (what->right->Do(this))
-            return true;
-    }
+        return DoLeftRight(what->left, what->right, ifx->left, ifx->right);
 
     // Mismatch
     Ooops("Infix $1 does not match $2", what, test);
-    return false;
+    return NEVER;
+}
+
+
+CodeBuilder::strength CodeBuilder::DoLeftRight(Tree *wl, Tree *wr,
+                                               Tree *l, Tree *r)
+// ----------------------------------------------------------------------------
+//    Combine left and right to get best result
+// ----------------------------------------------------------------------------
+{
+    test = l;
+    strength onLeft = wl->Do(this);
+    if (onLeft == NEVER)
+        return NEVER;
+    test = r;
+    strength onRight = wr->Do(this);
+    if (onRight < onLeft)
+        return onRight;
+    return onLeft;
 }
 
 
