@@ -30,9 +30,9 @@
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //    Main entry point
-// 
+//
 // ============================================================================
 
 Tree *EvaluateWithBytecode(Context *context, Tree *what)
@@ -225,7 +225,7 @@ text Code::Ref(Op *op, text sep, text set, text null)
     if (!found)
         out << sep << set << "\t" << (void *) op;
     return out.str();
-}    
+}
 
 
 
@@ -420,7 +420,7 @@ struct VarOp : Op
         data.result = vop->decl->right;
         return vop->success;
     }
-    
+
     virtual void Dump(std::ostream &out)
     {
         out << name << "\t" << varId << "\t" << decl->left;
@@ -443,7 +443,7 @@ struct LoadOp : Op
         data.result = decl->right;
         return ld->success;
     }
-    
+
     virtual void Dump(std::ostream &out)
     {
         out << name << "\t" << varId;
@@ -464,7 +464,7 @@ struct ParmOp : Op
         data.Parm(st->parmId, data.result);
         return st->success;
     }
-    
+
     virtual void Dump(std::ostream &out)
     {
         out << name << "\t" << parmId;
@@ -628,13 +628,8 @@ void CodeBuilder::Success()
     lastOp = &failOp->success;
     instrs.push_back(failOp);
     failOp = NULL;
-    
-    while (*lastOp)
-    {
-        IFTRACE(compile)
-            std::cerr << "LASTOP SKIP:\t" << *lastOp << "\n";
-        lastOp = &(*lastOp)->success;
-    }
+
+    XL_ASSERT(!*lastOp);
 }
 
 
@@ -718,8 +713,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     IFTRACE(compile)
         std::cerr << "COMPILE" << depth << ":" << cindex
                   << "(" << self << ") from "
-                  << decl->left << "\n"
-                  << "ENTRY DUMP\n" << code->instrs << "\n";
+                  << decl->left << "\n";
 
     // Create the scope for evaluation
     Context_p    context = new Context(evalScope);
@@ -850,11 +844,8 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     // Keep looking for other declarations
     IFTRACE(compile)
         std::cerr << "COMPILE" << depth << ":" << cindex
-                  << "(" << self << ") SUCCCESS "
-                  << code->successOp << " FAIL " << code->failOp << "\n";
+                  << "(" << self << ") SUCCCESS\n";
 
-    IFTRACE(compile)
-        std::cerr << "EXIT DUMP\n" << code->instrs << "\n";
     return NULL;
 }
 
@@ -894,7 +885,11 @@ Code *CodeBuilder::Compile(Context *context, Tree *what, TreeIndices &callArgs)
     code->SetOps(&ops, &instrs);
     if (result)
     {
-        // Successful compilation - Return the code we created
+        IFTRACE(ucode)
+            std::cerr << "CODE " << what << "\n"
+                      << code->instrs << "\n";
+        
+    // Successful compilation - Return the code we created
         code->nVars  = variables.size();
         code->nEvals = nEvals;
         code->nParms = nParms;
@@ -917,14 +912,8 @@ Op *CodeBuilder::CompileInternal(Context *context, Tree *what)
     // Save the place where we insert instructions
     Save<Op *>  saveOps(ops, NULL);
     Save<Op **> saveLastOp(lastOp, &ops);
-    Save<Op *>  saveSuccessOp(successOp, NULL);
-    Save<Op *>  saveFailOp(failOp, NULL);
     Save<uint>  saveNEvals(nEvals, 0);
     Save<uint>  saveNParms(nParms, 0);
-
-    // We start with a clean slate for this code
-    TreeIndices empty;
-    Save<TreeIndices>   saveVars (variables, empty);
 
     if (context->ProcessDeclarations(what))
         Instructions(context, what);
@@ -938,6 +927,8 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
 //    Compile an instruction or a sequence of instructions
 // ----------------------------------------------------------------------------
 {
+    Save<Op *>  saveSuccessOp(successOp, NULL);
+    Save<Op *>  saveFailOp(failOp, NULL);
     Scope_p     originalScope = ctx->CurrentScope();
     Context_p   context = ctx;
     TreeIndices empty;
@@ -962,9 +953,9 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             {
                 XL_ASSERT(lastOp == &failOp->success);
                 Add(new FormErrorOp(what));
-                *lastOp = successOp;
+                *lastOp = success;
             }
-            lastOp = &successOp->success;
+            lastOp = &success->success;
             instrs.push_back(success);
 
             uint ne = evals.size();
@@ -976,7 +967,8 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
 
         // In that case, the 'success' label was not used
         delete success;
-        
+        successOp = NULL;
+
         // Forms that we recognize directly and deal with here
         kind whatK = what->Kind();
         switch (whatK)
@@ -1174,13 +1166,13 @@ uint CodeBuilder::Evaluate(Context *context, Tree *self, bool saveLeft)
     }
 
     uint id = EvaluationID(self);
-    
+
     // Compile the code for the input
     Op *op = CompileInternal(context, self);
-    
+
     // Add an evaluation opcode
     Add(new EvalOp(id, op, failOp, saveLeft));
-    
+
     // Return the allocated ID
     return id;
 }
