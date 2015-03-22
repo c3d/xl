@@ -187,17 +187,30 @@ void Code::Dump(std::ostream &out, Ops &instrs)
     uint max = instrs.size();
     for (uint i = 0; i < max; i++)
     {
-        out << i << "\t" << instrs[i] << "\n";
+        out << i << "\t" << instrs[i];
+        if (Op *fail = instrs[i]->Fail())
+        {
+            bool found = false;
+            for (uint o = 0; o < max; o++)
+                if (instrs[o] == fail)
+                    found = (out << "\tfail#" << o);
+            if (!found)
+                out << "\tfail\t" << (void *) fail;
+        }
+        out << "\n";
         if (i + 1 < max)
         {
             Op *next = instrs[i]->success;
             if (next != instrs[i+1])
             {
+                bool found = false;
                 if (!next)
-                    out << "\treturn\n";
+                    found = (out << "\treturn\n");
                 for (uint o = 0; o < max; o++)
                     if (instrs[o] == next)
-                        out << "\tgoto\t" << o << "\n";
+                        found = (out << "\tgoto\t#" << o << "\n");
+                if (!found)
+                    out << "\tgoto\t" << (void *) next << "\n";
             }
         }
     }
@@ -211,14 +224,25 @@ void Code::Dump(std::ostream &out, Ops &instrs)
 //
 // ============================================================================
 
+struct FailOp : Op
+// ----------------------------------------------------------------------------
+//   Any op that has a fail exit
+// ----------------------------------------------------------------------------
+{
+    FailOp(kstring n, arity_none_fn fn, Op *fx): Op(n, fn), fail(fx) {}
+    FailOp(kstring n, arity_data_fn fn, Op *fx): Op(n, fn), fail(fx) {}
+    FailOp(kstring n, arity_opdata_fn fn, Op *fx): Op(n, fn), fail(fx) {}
+    Op *fail;
+    virtual Op *Fail()  { return fail; }
+};
+
+
 struct LabelOp : Op
 // ----------------------------------------------------------------------------
 //    The target of a jump
 // ----------------------------------------------------------------------------
 {
-    LabelOp(kstring name = "label"): Op(name, label), id(currentId++) {}
-    uint id;
-    static uint currentId;
+    LabelOp(kstring name = "label"): Op(name, label) {}
     static Op *label(Op *op, Data &data)
     {
         // Do nothing
@@ -226,10 +250,9 @@ struct LabelOp : Op
     }
     virtual void Dump(std::ostream &out)
     {
-        out << name << "#" << id;
+        out << name << "\t" << (void *) this;
     }
 };
-uint LabelOp::currentId = 0;
 
 
 struct ConstOp : Op
@@ -240,7 +263,12 @@ struct ConstOp : Op
     ConstOp(Tree *value): Op("const", returnConst), value(value) {}
     Tree *      value;
     static Tree *returnConst(Op *op)     { return ((ConstOp *) op)->value; }
-    virtual void Dump(std::ostream &out) { out << name << "\t" << value; }
+    virtual void Dump(std::ostream &out)
+    {
+        kstring kinds[] = { "integer", "real", "text", "name",
+                            "block", "prefix", "postfix", "infix" };
+        out << name << "\t" << kinds[value->Kind()] << "\t" << value;
+    }
 };
 
 
@@ -254,17 +282,18 @@ struct SelfOp : Op
 };
 
 
-struct EvalOp : Op
+struct EvalOp : FailOp
 // ----------------------------------------------------------------------------
 //    Evaluate the given tree
 // ----------------------------------------------------------------------------
 {
     EvalOp(uint id, Op *ops, Op *fail, bool saveLeft = false)
-        : Op(saveLeft ? "eval_l" : "eval", saveLeft ? evalSaveLeft : eval),
-          id(id), ops(ops), fail(fail) {}
-    uint id;
+        : FailOp(saveLeft ? "eval_l"     : "eval",
+                 saveLeft ? evalSaveLeft : eval,
+                 fail),
+          ops(ops), id(id) {}
     Op * ops;
-    Op * fail;
+    uint id;
 
     static Op *eval(Op *evalOp, Data &data)
     {
@@ -304,14 +333,9 @@ struct EvalOp : Op
         return eval(op, data);
     }
 
-    virtual Op *Fail()
-    {
-        return fail;
-    }
-
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\t" << id << "\t" << (void *) ops << "\t" << fail;
+        out << name << "\t" << id << "\t" << (void *) ops;
     }
 };
 
@@ -437,26 +461,17 @@ struct ParmOp : Op
 };
 
 
-struct TypeCheckOp : Op
+struct TypeCheckOp : FailOp
 // ----------------------------------------------------------------------------
 //   Check if a type matches the given type
 // ----------------------------------------------------------------------------
 {
     TypeCheckOp(Op *fail)
-        : Op("typecheck", typecheck), fail(fail) {}
-    Op *fail;
+        : FailOp("typecheck", typecheck, fail) {}
     static Tree *typecheck(Data &data)
     {
         Tree *cast = TypeCheck(data.context, data.result, data.left);
         return cast;
-    }
-    virtual Op *Fail()
-    {
-        return fail;
-    }
-    virtual void Dump(std::ostream &out)
-    {
-        out << name << "\t" << fail;
     }
 };
 
@@ -520,7 +535,22 @@ struct CallOp : Op
     {
         out << name << "\t" << (void *) ops;
     }
+};
 
+
+struct FormErrorOp : Op
+// ----------------------------------------------------------------------------
+//   When we fail with all candidates, report an error
+// ----------------------------------------------------------------------------
+{
+    FormErrorOp(Tree *self): Op("error", error), self(self) {}
+    Tree_p self;
+    static Op *error(Op *op, Data &data)
+    {
+        FormErrorOp *fe = (FormErrorOp *) op;
+        Ooops("No form matches $1", fe->self);
+        return fe->success;
+    }
 };
 
 
@@ -603,6 +633,64 @@ void CodeBuilder::Success()
 //    Compilation of the tree
 //
 // ============================================================================
+//
+//  The 'Instructions' function evaluates candidates in the symbol table.
+//  Each specific declaration causes an invokation of compileLookup.
+//
+//  Consider the following code:
+//
+//      foo X:integer, Y:integer -> foo1
+//      foo A:integer, B         -> foo2
+//      foo U, V
+//      write "Toto"
+//
+//  The generated code will look like this, where EnterOp separates inputs:
+//      ;; Evaluate foo1 candidate
+//
+//      ;; Match U against X:integer
+//      Evaluate U              or goto fail1.1         (EvalOp)
+//                                                      (EnterOp)
+//      Evaluate integer        or goto fail1.1         (EvalOp - SaveLeft)
+//      TypeCheck U : integer   or goto fail1.1         (TypeCheckOp)
+//      Bind U to X                                     (ParmOp 0)
+//
+//      ;; Match V against Y:integer
+//      Evaluate V              or goto fail1.1         (EvalOp)
+//                                                      (EnterOp)
+//      Evaluate integer        or goto fail1.1         (EvalOp - SaveLeft)
+//      TypeCheck V : integer   or goto fail1.1         (TypeCheckOp)
+//      Bind V to Y                                     (ParmOp 1)
+//
+//      ;; Call foo1
+//      Call foo1                                       (CallOp)
+//
+//      ;; Done, successful evaluation, goto is in 'success' field
+//      goto success1
+//
+//    fail1.1:                                          (LabelOp)
+//      Evaluate U              or goto fail1.2         (EvalOp)
+//                                                      (EnterOp)
+//      Evaluate integer        or goto fail1.2         (EvalOp)
+//      ...
+//      Call foo2                                       (CallOp)
+//      goto success1
+//
+//    fail1.2:                                          (LabelOp)
+//      FormError                                       (FormErrorOp)
+//
+//    success1:                                         (LabelOp)
+//      ;; Same thing for write "Toto"
+//
+//  The 'goto' in the above are implicit, marked by 'success' or 'fail' in Op.
+//  In general, the evaluation context has a two-deep stack, containing
+//  'result' as the last result, and 'left' as the next element.
+//  The 'EnterOp' operation pushes result into left.
+//  The 'EvalOp' has two variants, one of which preserves left.
+//  One-operand operations, e.g. 'sin', read 'result' and write into it.
+//  Two-operand operations, e.g. TypeCheck, use 'left' and 'result'.
+//  Argument passing for user-defined functions uses 'parms', an array
+//  in the Data structure.
+//
 
 static Tree *compileLookup(Scope *evalScope, Scope *declScope,
                            Tree *self, Infix *decl, void *cb)
@@ -849,12 +937,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
 
         // Create new success exit for this expression
         Op *success = new LabelOp("success");
-        if (successOp)
-            successOp->success = success;
-        if (failOp)
-            failOp->success = success;
         successOp = success;
-        Save<Op *> clearFailOp(failOp, NULL);
 
         // Lookup candidates (and count them)
         Save<uint> saveCandidates(candidates, 0);
@@ -865,9 +948,13 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             // We found candidates. Join the failOp to the successOp
             XL_ASSERT(!*lastOp && "Built code that is not NULL-terminated");
             if (failOp)
-                failOp->success = successOp;
-            *lastOp = successOp;
+            {
+                XL_ASSERT(lastOp == &failOp->success);
+                Add(new FormErrorOp(what));
+                *lastOp = successOp;
+            }
             lastOp = &successOp->success;
+            instrs.push_back(success);
 
             uint ne = evals.size();
             if (nEvals < ne)
@@ -876,6 +963,9 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             return true;
         }
 
+        // In that case, the 'success' label was not used
+        delete success;
+        
         // Forms that we recognize directly and deal with here
         kind whatK = what->Kind();
         switch (whatK)
@@ -1145,14 +1235,13 @@ template<> void MatchOp<Text>::Dump(std::ostream &out)
 }
 
 
-struct NameMatchOp : Op
+struct NameMatchOp : FailOp
 // ----------------------------------------------------------------------------
 //   Check if the current top of stack matches the name
 // ----------------------------------------------------------------------------
 {
     NameMatchOp(Op *fail)
-        : Op("name_match", match), fail(fail) {}
-    Op *        fail;
+        : FailOp("name_match", match, fail) {}
 
     static Op *match(Op *op, Data &data)
     {
@@ -1163,21 +1252,15 @@ struct NameMatchOp : Op
             return nmo->success;
         return nmo->fail;
     }
-
-    virtual void Dump(std::ostream &out)
-    {
-        out << name << "\t" << fail;
-    }
 };
 
 
-struct WhenClauseOp : Op
+struct WhenClauseOp : FailOp
 // ----------------------------------------------------------------------------
 //   Check if the condition in a when clause is verified
 // ----------------------------------------------------------------------------
 {
-    WhenClauseOp(Op *fail): Op("when", when), fail(fail) {}
-    Op *fail;
+    WhenClauseOp(Op *fail): FailOp("when", when, fail) {}
 
     static Op *when(Op *op, Data &data)
     {
@@ -1187,24 +1270,18 @@ struct WhenClauseOp : Op
         data.result = data.left;
         return wc->success;
     }
-
-    virtual void Dump(std::ostream &out)
-    {
-        out << name << "\t" << fail;
-    }
 };
 
 
-struct InfixMatchOp : Op
+struct InfixMatchOp : FailOp
 // ----------------------------------------------------------------------------
 //   Check if the result is an infix
 // ----------------------------------------------------------------------------
 {
     InfixMatchOp(text symbol, Op *fail, uint lid, uint rid)
-        : Op("infix", infix), symbol(symbol), fail(fail),
+        : FailOp("infix", infix, fail), symbol(symbol),
           lid(lid), rid(rid) {}
     text        symbol;
-    Op *        fail;
     uint        lid;
     uint        rid;
 
@@ -1225,7 +1302,7 @@ struct InfixMatchOp : Op
 
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\t" << symbol << "\t" << fail;
+        out << name << "\t" << symbol;
     }
 };
 
