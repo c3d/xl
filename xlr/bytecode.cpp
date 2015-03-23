@@ -882,7 +882,7 @@ Code *CodeBuilder::Compile(Context *context, Tree *what, TreeIndices &callArgs)
         return code;
 
     // Does not exist yet, set it up
-    uint nArgs = parms.size();
+    uint nArgs = callArgs.size();
     Save<TreeIndices> saveArgs(args, callArgs);
     code = new Code(context, what, nArgs);
     what->SetInfo<Code>(code);
@@ -1164,7 +1164,7 @@ uint CodeBuilder::EvaluationID(Tree *self)
 }
 
 
-uint CodeBuilder::Evaluate(Context *context, Tree *self, bool saveLeft)
+uint CodeBuilder::Evaluate(Context *ctx, Tree *self, bool saveLeft)
 // ----------------------------------------------------------------------------
 //   Evaluate the tree, and return its ID in the evals array
 // ----------------------------------------------------------------------------
@@ -1172,14 +1172,40 @@ uint CodeBuilder::Evaluate(Context *context, Tree *self, bool saveLeft)
     // For constants, we can simply evaluate in line
     if (self->IsConstant())
     {
-        Instructions(context, self);
+        Instructions(ctx, self);
         return ~0U;
+    }
+
+    if (Name *name = self->AsName())
+    {
+        // Check if that's one of the input parameters. If so, emit an 'Arg'
+        Rewrite_p rw;
+        Scope_p   scope;
+        Context * inner = ctx;
+        if (context)
+            inner = context;
+        if (Tree *arg = inner->Bound(name, true, &rw, &scope))
+        {
+            TreeIndices::iterator found = args.find(rw->left);
+            if (found != args.end())
+            {
+                uint localId = (*found).second;
+                Add(new ArgOp(localId));
+                return ~localId;
+            }
+
+            if (Opcode *op = arg->GetInfo<Opcode>())
+            {
+                Add(new Op(*op));
+                return ~0;
+            }
+        }
     }
 
     uint id = EvaluationID(self);
 
     // Compile the code for the input
-    Op *op = CompileInternal(context, self);
+    Op *op = CompileInternal(ctx, self);
 
     // Add an evaluation opcode
     Add(new EvalOp(id, op, failOp, saveLeft));
@@ -1554,6 +1580,7 @@ CodeBuilder::strength CodeBuilder::DoInfix(Infix *what)
 
     // In all other cases, we need an infix with matching name
     Infix_p ifx = test->AsInfix();
+    strength str = ALWAYS;
     if (!ifx || ifx->name != what->name)
     {
         if (test->IsConstant())
@@ -1568,10 +1595,16 @@ CodeBuilder::strength CodeBuilder::DoInfix(Infix *what)
         // Try to get an infix by evaluating what we have
         Evaluate(context, test);
         Add(new InfixMatchOp(what->name, failOp, lid, rid));
+        str = SOMETIMES;
     }
 
     if (ifx && ifx->name == what->name)
-        return DoLeftRight(what->left, what->right, ifx->left, ifx->right);
+    {
+        strength st2 = DoLeftRight(what->left,what->right,ifx->left,ifx->right);
+        if (st2 < str)
+            return st2;
+        return str;
+    }
 
     // Mismatch
     Ooops("Infix $1 does not match $2", what, test);
