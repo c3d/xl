@@ -172,17 +172,19 @@ void Code::Dump(std::ostream &out)
 //   Dump all the instructions
 // ----------------------------------------------------------------------------
 {
-    out << name << "\t" << (void *) this << "\t" << self << "\n";
+    out << name << "\t" << (void *) (Op *) this
+        << "\tentry\t" << (void *) ops
+        << "\t" << self << "\n";
     out << "\talloc"
         << " A" << nArgs << " V" << nVars
         << " E" << nEvals << " P" << nParms << "\n";
-    Dump(out, instrs);
+    Dump(out, ops, instrs);
 }
 
 
 static Ops *currentDump = NULL;
 
-void Code::Dump(std::ostream &out, Ops &instrs)
+void Code::Dump(std::ostream &out, Op *ops, Ops &instrs)
 // ----------------------------------------------------------------------------
 //   Dump an instruction list
 // ----------------------------------------------------------------------------
@@ -192,8 +194,12 @@ void Code::Dump(std::ostream &out, Ops &instrs)
     uint max = instrs.size();
     for (uint i = 0; i < max; i++)
     {
-        Op *fail = instrs[i]->Fail();
-        out << i << "\t" << instrs[i];
+        Op *op = instrs[i];
+        Op *fail = op->Fail();
+        if (op == ops)
+            out << i << "=>\t" << op;
+        else
+            out << i << "\t" << op;
         if (fail)
             out << Ref(fail, "\t", "fail", "nofail");
         if (i + 1 < max)
@@ -892,9 +898,9 @@ Code *CodeBuilder::Compile(Context *context, Tree *what, TreeIndices &callArgs)
     {
         IFTRACE(ucode)
             std::cerr << "CODE " << what << "\n"
-                      << code->instrs << "\n";
+                      << code << "\n";
         
-    // Successful compilation - Return the code we created
+        // Successful compilation - Return the code we created
         code->nVars  = variables.size();
         code->nEvals = nEvals;
         code->nParms = nParms;

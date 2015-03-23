@@ -143,7 +143,7 @@ public:
 };
 
 
-struct Code : Info, Op
+struct Code : Op, Info
 // ----------------------------------------------------------------------------
 //    A sequence of operations
 // ----------------------------------------------------------------------------
@@ -156,7 +156,7 @@ struct Code : Info, Op
     static Op *         runCode(Op *op, Data &data);
     static Op *         runCodeWithScope(Op *op, Data &data);
     virtual void        Dump(std::ostream &out);
-    static void         Dump(std::ostream &out, Ops &instrs);
+    static void         Dump(std::ostream &out, Op *ops, Ops &instrs);
     static text         Ref(Op *op, text sep, text set, text null);
 
 public:
@@ -447,7 +447,7 @@ inline std::ostream &operator<<(std::ostream &out, Ops &instrs)
 //   Dump all the opcodes in a sequence
 // ----------------------------------------------------------------------------
 {
-    Code::Dump(out, instrs);
+    Code::Dump(out, NULL, instrs);
     return out;
 }
 
