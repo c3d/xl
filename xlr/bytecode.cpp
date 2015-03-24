@@ -391,6 +391,21 @@ struct EnterOp : Op
 };
 
 
+struct EnterParmsOp : Op
+// ----------------------------------------------------------------------------
+//    Enter two parms for use in ops that take two input arguments
+// ----------------------------------------------------------------------------
+{
+    EnterParmsOp(): Op("enterparms", enterparms) {}
+    static Tree *enterparms(Data &data)
+    {
+        data.left = data.Parm(0);
+        data.result = data.Parm(1);
+        return data.result;
+    }
+};
+
+
 struct ArgOp : Op
 // ----------------------------------------------------------------------------
 //    Reload an argument value
@@ -811,6 +826,9 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
         // Cached callback - Make a copy
         XL_ASSERT(opcode->arity <= Op::ARITY_SELF);
         XL_ASSERT(!opcode->success);
+        if (opcode->arity == Op::ARITY_TWO ||
+            opcode->arity == Op::ARITY_CONTEXT_TWO)
+            code->Add(new EnterParmsOp);
         if (opcode->arity < Op::ARITY_SELF)
             code->Add(new Op(*opcode));
         else
@@ -918,6 +936,11 @@ Op *CodeBuilder::CompileInternal(Context *context, Tree *what)
 //   Compile an internal code sequence
 // ----------------------------------------------------------------------------
 {
+    // Check if we already have translated expression in this builder
+    Op *result = subexprs[what];
+    if (result)
+        return result;
+        
     // Save the place where we insert instructions
     Save<Op *>  saveOps(ops, NULL);
     Save<Op **> saveLastOp(lastOp, &ops);
@@ -926,7 +949,8 @@ Op *CodeBuilder::CompileInternal(Context *context, Tree *what)
 
     if (context->ProcessDeclarations(what))
         Instructions(context, what);
-    Op *result = ops;
+    result = ops;
+    subexprs[what] = result;
     return result;
 }
 
@@ -1536,7 +1560,7 @@ CodeBuilder::strength CodeBuilder::DoInfix(Infix *what)
                 {
                     if (!TypeCheck(context, bound, test))
                         return NEVER;
-                    Evaluate(context, test);
+                    Bind(name, test, false);
                     return ALWAYS;
                 }
             }

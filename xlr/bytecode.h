@@ -36,6 +36,7 @@ struct Data;                    // Data on which the code operates
 struct CodeBuilder;             // Code generator
 typedef std::vector<Op *> Ops;  // Sequence of operations
 typedef std::map<Tree *, uint> TreeIndices;
+typedef std::map<Tree *, Op *> TreeOps;
 
 
 
@@ -289,6 +290,7 @@ public:
     Op *        failOp;         // Exit instruction if evaluation fails
     Op *        successOp;      // Exit instruction in case of success
     Ops         instrs;         // All instructions
+    TreeOps     subexprs;       // Code generated for sub-expressions
 };
 
 
