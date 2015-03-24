@@ -163,6 +163,10 @@ Op *Code::runCodeWithScope(Op *codeOp, Data &data)
     while (op)
         op = op->Run(newData);
 
+    // Copy result and left to the old data
+    data.result = newData.result;
+    data.left = newData.left;
+
     return codeOp->success;
 }
 
@@ -738,7 +742,6 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     Tree *defined = RewriteDefined(decl->left);
     Tree *resultType = tree_type;
     bool isLeaf = defined->IsLeaf();
-    bool needClosure = false;
     CodeBuilder::strength strength = CodeBuilder::ALWAYS;
     if (isLeaf)
     {
@@ -791,8 +794,6 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
         }
         if (code->resultType)
             resultType = code->resultType;
-
-        needClosure = true;
     }
 
     // Check if we have builtins (opcode or C bindings)
@@ -804,7 +805,6 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
                       << "(" << self << ") from " << decl->left
                       << " SELF\n";
         code->Add(new SelfOp);
-        needClosure = false;
     }
     else if (Opcode *opcode = OpcodeInfo(decl))
     {
@@ -819,7 +819,6 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
             std::cerr << "COMPILE" << depth << ":" << cindex
                       << "(" << self << ") OPCODE " << opcode->name
                       << "\n";
-        needClosure = false;
     }
     else if (isLeaf)
     {
@@ -840,10 +839,6 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
         code->Evaluate(context, resultType, true);
         code->Add(new TypeCheckOp(code->failOp));
     }
-
-    // Enclose the result if necessary
-    if (needClosure)
-        code->Add(new ClosureOp(locals->CurrentScope()));
 
     // Successful evaluation
     code->Success();
