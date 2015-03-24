@@ -56,6 +56,10 @@ if [ "$1" == "-i" ]; then
     RUNTIME="O0"
     shift;
 fi
+if [ "$1" == "-O1" ]; then
+    RUNTIME="O1"
+    shift;
+fi
 if [ "$1" == "-dir" -o "$1" == "-d" ]; then
     SUBDIRS="$2"; shift; shift;
 fi
