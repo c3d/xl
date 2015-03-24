@@ -52,9 +52,9 @@
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //    Forward types declared here
-// 
+//
 // ============================================================================
 //
 //  Each XL type defined in opcodes or in .tbl file is represented as:
@@ -142,7 +142,8 @@ struct NameOpcode : Opcode
     {
         toDefine = new Name(symbol);
     }
-    
+
+    virtual Tree *              Shape() { return toDefine; }
     virtual void                Register(Context *);
     Name_p &                    toDefine;
 };
@@ -316,9 +317,9 @@ XL_END
 
 
 // ============================================================================
-// 
+//
 //    Macros to make it easier to write computation built-ins
-// 
+//
 // ============================================================================
 
 #define RESULT(Code)                                                    \
@@ -425,7 +426,7 @@ XL_END
     {                                                                   \
         return symbol##_type;                                           \
     }
-    
+
 
 #undef OPCODES_TBL
 #undef TBL_HEADER

@@ -115,9 +115,9 @@ void Opcode::Register(Context *context)
 
 
 // ============================================================================
-// 
+//
 //    Name opcodes
-// 
+//
 // ============================================================================
 
 void NameOpcode::Register(Context *context)
@@ -127,7 +127,7 @@ void NameOpcode::Register(Context *context)
 {
     IFTRACE(opcodes)
         std::cerr << "Opcode " << this->name << " is a name\n";
-    
+
     context->Define(toDefine, toDefine);
     toDefine->SetInfo<Opcode> (this);
 
