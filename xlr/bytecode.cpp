@@ -960,12 +960,10 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
         {
             // We found candidates. Join the failOp to the successOp
             XL_ASSERT(!*lastOp && "Built code that is not NULL-terminated");
-            if (failOp)
-            {
-                XL_ASSERT(lastOp == &failOp->success);
-                Add(new FormErrorOp(what));
-                *lastOp = success;
-            }
+
+            Add(new FormErrorOp(what));
+            *lastOp = success;
+
             lastOp = &success->success;
             instrs.push_back(success);
 
