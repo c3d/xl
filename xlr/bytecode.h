@@ -37,6 +37,7 @@ struct CodeBuilder;             // Code generator
 typedef std::vector<Op *> Ops;  // Sequence of operations
 typedef std::map<Tree *, uint> TreeIndices;
 typedef std::map<Tree *, Op *> TreeOps;
+typedef std::vector<uint>      ParmOrder;
 
 
 
@@ -291,6 +292,7 @@ public:
     Op *        successOp;      // Exit instruction in case of success
     Ops         instrs;         // All instructions
     TreeOps     subexprs;       // Code generated for sub-expressions
+    ParmOrder   parmOrder;      // Order of parameters
 };
 
 

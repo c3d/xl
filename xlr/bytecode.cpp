@@ -335,7 +335,7 @@ struct EvalOp : FailOp
         // Save the result if evaluation was successful
         if (data.result)
         {
-            result = data.Value(id, data.result);
+            data.Value(id, data.result);
 
             // Return the next operation to execute
             return ev->success;
@@ -375,7 +375,7 @@ struct EvalClearOp : Op
             data.Value(v, NULL);
         return ec->success;
     }
-    
+
     virtual void Dump(std::ostream &out)
     {
         out << name << "\t" << lo << ".." << hi;
@@ -396,6 +396,30 @@ struct ValueOp : Op
         data.result = data.Value(vop->id);
         return vop->success;
     }
+    virtual void Dump(std::ostream &out)
+    {
+        out << name << "\t" << id;
+    }
+};
+
+
+struct StoreOp : Op
+// ----------------------------------------------------------------------------
+//    Store a value in "permanent" storage
+// ----------------------------------------------------------------------------
+{
+    StoreOp(uint id): Op("store", store), id(id) {}
+    uint id;
+    static Op *store(Op *op, Data &data)
+    {
+        StoreOp *sop = (StoreOp *) op;
+        data.Value(sop->id, data.result);
+        return sop->success;
+    }
+    virtual void Dump(std::ostream &out)
+    {
+        out << name << "\t" << id;
+    }
 };
 
 
@@ -413,17 +437,24 @@ struct EnterOp : Op
 };
 
 
-struct EnterParmsOp : Op
+struct BinaryOp : Op
 // ----------------------------------------------------------------------------
-//    Enter two parms for use in ops that take two input arguments
+//    Enter two arguments for use in ops that take two input arguments
 // ----------------------------------------------------------------------------
 {
-    EnterParmsOp(): Op("enterparms", enterparms) {}
-    static Tree *enterparms(Data &data)
+    BinaryOp(uint left, uint right)
+        : Op("binary", binary), left(left), right(right) {}
+    uint left, right;
+    static Op *binary(Op *op, Data &data)
     {
-        data.left = data.Parm(0);
-        data.result = data.Parm(1);
-        return data.result;
+        BinaryOp *bop = (BinaryOp *) op;
+        data.left = data.Value(bop->left);
+        data.result = data.Value(bop->right);
+        return bop->success;
+    }
+    virtual void Dump(std::ostream &out)
+    {
+        out << name << "\t" << left << ", " << right;
     }
 };
 
@@ -503,18 +534,19 @@ struct ParmOp : Op
 //    Save an output parameter
 // ----------------------------------------------------------------------------
 {
-    ParmOp(uint parmId): Op("parm", store), parmId(parmId) {}
-    uint parmId;
+    ParmOp(uint parmId, uint valId)
+        : Op("parm", store), parmId(parmId), valId(valId) {}
+    uint parmId, valId;
     static Op *store(Op *op, Data &data)
     {
         ParmOp *st = (ParmOp *) op;
-        data.Parm(st->parmId, data.result);
+        data.Parm(st->parmId, data.Value(st->valId));
         return st->success;
     }
 
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\t" << parmId;
+        out << name << "\t" << parmId << "=" << valId;
     }
 };
 
@@ -772,8 +804,10 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     code->failOp = failOp;
 
     // We start with new parameters for each candidate
-    TreeIndices empty;
-    Save<TreeIndices> saveParms(code->parms, empty);
+    TreeIndices         empty;
+    Save<TreeIndices>   saveParms(code->parms, empty);
+    ParmOrder           noParmOrder;
+    Save<ParmOrder>     saveParmOrder(code->parmOrder, noParmOrder);
 
     // If we lookup a name or a number, just return it
     Tree *defined = RewriteDefined(decl->left);
@@ -850,7 +884,11 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
         XL_ASSERT(!opcode->success);
         if (opcode->arity == Op::ARITY_TWO ||
             opcode->arity == Op::ARITY_CONTEXT_TWO)
-            code->Add(new EnterParmsOp);
+        {
+            uint lfID = code->parmOrder[0];
+            uint rtID = code->parmOrder[1];
+            code->Add(new BinaryOp(lfID, rtID));
+        }
         if (opcode->arity < Op::ARITY_SELF)
             code->Add(new Op(*opcode));
         else
@@ -869,6 +907,8 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     {
         // Normal case: evaluate body of the declaration in the new context
         Code *body = CompileToBytecode(locals, decl->right, code->parms);
+        for (uint p = 0; p < code->parmOrder.size(); p++)
+            code->Add(new ParmOp(p, code->parmOrder[p]));
         code->Add(new CallOp(body));
     }
 
@@ -944,7 +984,7 @@ Code *CodeBuilder::Compile(Context *context, Tree *what, TreeIndices &callArgs)
         IFTRACE(ucode)
             std::cerr << "CODE " << what << "\n"
                       << code << "\n";
-        
+
         return code;
     }
 
@@ -963,7 +1003,7 @@ Op *CodeBuilder::CompileInternal(Context *context, Tree *what)
     Op *result = subexprs[what];
     if (result)
         return result;
-        
+
     // Save the place where we insert instructions
     Save<Op *>          saveOps(ops, NULL);
     Save<Op **>         saveLastOp(lastOp, &ops);
@@ -1221,14 +1261,17 @@ uint CodeBuilder::Evaluate(Context *ctx, Tree *self, bool saveLeft)
 //   Evaluate the tree, and return its ID in the evals array
 // ----------------------------------------------------------------------------
 {
+    uint id = EvaluationID(self);
+    bool computed = false;
+
     // For constants, we can simply evaluate in line
     if (self->IsConstant())
     {
         Instructions(ctx, self);
-        return ~0U;
+        computed = true;
     }
 
-    if (Name *name = self->AsName())
+    else if (Name *name = self->AsName())
     {
         // Check if that's one of the input parameters. If so, emit an 'Arg'
         Rewrite_p rw;
@@ -1243,28 +1286,34 @@ uint CodeBuilder::Evaluate(Context *ctx, Tree *self, bool saveLeft)
             {
                 uint localId = (*found).second;
                 Add(new ArgOp(localId));
-                return ~localId;
+                computed = true;
             }
 
-            if (Opcode *op = arg->GetInfo<Opcode>())
+            else if (Opcode *op = arg->GetInfo<Opcode>())
             {
                 if (op->arity < Op::ARITY_SELF)
                     Add(new Op(*op));
                 else
                     Add(new ConstOp(arg));
-                return ~0;
+                computed = true;
             }
         }
     }
 
-    uint id = EvaluationID(self);
-
-    // Compile the code for the input
-    Op *op = CompileInternal(ctx, self);
-
-    // Add an evaluation opcode
-    Add(new EvalOp(id, op, failOp, saveLeft));
-
+    if (computed)
+    {
+        // Store the value we just computed
+        Add(new StoreOp(id));
+    }
+    else
+    {
+        // Compile the code for the input
+        Op *op = CompileInternal(ctx, self);
+        
+        // Add an evaluation opcode
+        Add(new EvalOp(id, op, failOp, saveLeft));
+    }
+    
     // Return the allocated ID
     return id;
 }
@@ -1702,7 +1751,9 @@ uint CodeBuilder::Bind(Name *name, Tree *value, bool closure)
     uint id = Evaluate(context, value);
     if (closure && (int) id >= 0)
         Add(new ClosureOp(context->CurrentScope()));
-    Add(new ParmOp(parmId));
+
+    // Save the value used for binding
+    parmOrder.push_back(id);
 
     return parmId;
 }
