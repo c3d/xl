@@ -811,7 +811,10 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
         // Cached callback - Make a copy
         XL_ASSERT(opcode->arity <= Op::ARITY_SELF);
         XL_ASSERT(!opcode->success);
-        code->Add(new Op(*opcode));
+        if (opcode->arity < Op::ARITY_SELF)
+            code->Add(new Op(*opcode));
+        else
+            code->Add(new ConstOp(defined));
         IFTRACE(compile)
             std::cerr << "COMPILE" << depth << ":" << cindex
                       << "(" << self << ") OPCODE " << opcode->name
@@ -1194,7 +1197,10 @@ uint CodeBuilder::Evaluate(Context *ctx, Tree *self, bool saveLeft)
 
             if (Opcode *op = arg->GetInfo<Opcode>())
             {
-                Add(new Op(*op));
+                if (op->arity < Op::ARITY_SELF)
+                    Add(new Op(*op));
+                else
+                    Add(new ConstOp(arg));
                 return ~0;
             }
         }
