@@ -361,6 +361,28 @@ struct EvalOp : FailOp
 };
 
 
+struct EvalClearOp : Op
+// ----------------------------------------------------------------------------
+//    Clear a range of eval entries after a complete evaluation
+// ----------------------------------------------------------------------------
+{
+    EvalClearOp(uint lo, uint hi): Op("eclear", eclear), lo(lo), hi(hi) {}
+    uint lo, hi;
+    static Op *eclear(Op *op, Data &data)
+    {
+        EvalClearOp *ec = (EvalClearOp *) op;
+        for (uint v = ec->lo; v < ec->hi; v++)
+            data.Value(v, NULL);
+        return ec->success;
+    }
+    
+    virtual void Dump(std::ostream &out)
+    {
+        out << name << "\t" << lo << ".." << hi;
+    }
+};
+
+
 struct ValueOp : Op
 // ----------------------------------------------------------------------------
 //    Return a tree that we know was already evaluated
@@ -912,16 +934,17 @@ Code *CodeBuilder::Compile(Context *context, Tree *what, TreeIndices &callArgs)
     code->SetOps(&ops, &instrs);
     if (result)
     {
-        IFTRACE(ucode)
-            std::cerr << "CODE " << what << "\n"
-                      << code << "\n";
-        
         // Successful compilation - Return the code we created
         code->nVars  = variables.size();
         code->nEvals = nEvals;
         code->nParms = nParms;
         if (code->nVars || code->nEvals || code->nParms)
             code->arity_opdata = code->runCodeWithScope;
+
+        IFTRACE(ucode)
+            std::cerr << "CODE " << what << "\n"
+                      << code << "\n";
+        
         return code;
     }
 
@@ -942,15 +965,21 @@ Op *CodeBuilder::CompileInternal(Context *context, Tree *what)
         return result;
         
     // Save the place where we insert instructions
-    Save<Op *>  saveOps(ops, NULL);
-    Save<Op **> saveLastOp(lastOp, &ops);
-    Save<uint>  saveNEvals(nEvals, 0);
-    Save<uint>  saveNParms(nParms, 0);
+    Save<Op *>          saveOps(ops, NULL);
+    Save<Op **>         saveLastOp(lastOp, &ops);
+    TreeIndices         empty;
+    Save<TreeIndices>   saveParms(parms, empty);
 
     if (context->ProcessDeclarations(what))
         Instructions(context, what);
     result = ops;
     subexprs[what] = result;
+
+    // Evals and parms are the max number for all subexpressions
+    uint np = parms.size();
+    if (nParms < np)
+        nParms = np;
+
     return result;
 }
 
@@ -968,7 +997,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
 
     while (what)
     {
-        Save<TreeIndices>   saveEvals(evals, empty);
+        Save<TreeIndices>   saveEvals(evals, evals);
 
         // Create new success exit for this expression
         Op *success = new LabelOp("success");
@@ -992,6 +1021,9 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             uint ne = evals.size();
             if (nEvals < ne)
                 nEvals = ne;
+            uint neOld = saveEvals.saved.size();
+            if (ne > neOld)
+                Add(new EvalClearOp(neOld, ne));
 
             return true;
         }
