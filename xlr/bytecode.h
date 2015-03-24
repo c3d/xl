@@ -304,27 +304,26 @@ inline Tree *Op::Run(Context *context, Tree *self, TreeList &args)
 //   Run a single opcode
 // ----------------------------------------------------------------------------
 {
-    uint size = args.size();
     switch(arity)
     {
     case ARITY_NONE:
-        if (size == 0)
+        if (args.size() == 0)
             return arity_none();
         break;
     case ARITY_ONE:
-        if (size == 1)
+        if (args.size() == 1)
             return arity_one(args[0]);
         break;
     case ARITY_TWO:
-        if (size == 2)
+        if (args.size() == 2)
             return arity_two(args[0], args[1]);
         break;
     case ARITY_CONTEXT_ONE:
-        if (size == 1)
+        if (args.size() == 1)
             return arity_ctxone(context, args[0]);
         break;
     case ARITY_CONTEXT_TWO:
-        if (size == 2)
+        if (args.size() == 2)
             return arity_ctxtwo(context, args[0], args[1]);
         break;
     case ARITY_FUNCTION:
