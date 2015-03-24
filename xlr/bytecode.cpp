@@ -1291,14 +1291,13 @@ uint CodeBuilder::EvaluationTemporary(Tree *self)
 // ============================================================================
 
 template<class T>
-struct MatchOp : Op
+struct MatchOp : FailOp
 // ----------------------------------------------------------------------------
 //   Check if the current result matches the integer/real/text value
 // ----------------------------------------------------------------------------
 {
-    MatchOp(T *ref, Op *fail): Op("match", match), ref(ref), fail(fail) {}
+    MatchOp(T *ref, Op *fail): FailOp("match", match, fail), ref(ref) {}
     GCPtr<T>    ref;
-    Op *        fail;
 
     static Op *match(Op *op, Data &data)
     {
