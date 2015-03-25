@@ -305,7 +305,7 @@ struct SelfOp : Op
 
 struct EvalOp : FailOp
 // ----------------------------------------------------------------------------
-//    Evaluate the given tree
+//    Evaluate the given tree once and only once
 // ----------------------------------------------------------------------------
 {
     EvalOp(uint id, Op *ops, Op *fail, bool saveLeft = false)
@@ -967,7 +967,9 @@ Code *CodeBuilder::Compile(Context *context, Tree *what, TreeIndices &callArgs)
 
     // Evaluate the input code
     bool result = true;
-    if (context->ProcessDeclarations(what))
+    Errors *errors = MAIN->errors;
+    uint errCount = errors->Count();
+    if (context->ProcessDeclarations(what) && errCount == errors->Count())
         result = Instructions(context, what);
 
     // The generated code takes over the instructions in all cases
@@ -1010,7 +1012,9 @@ Op *CodeBuilder::CompileInternal(Context *context, Tree *what)
     TreeIndices         empty;
     Save<TreeIndices>   saveParms(parms, empty);
 
-    if (context->ProcessDeclarations(what))
+    Errors *errors = MAIN->errors;
+    uint errCount = errors->Count();
+    if (context->ProcessDeclarations(what) && errCount == errors->Count())
         Instructions(context, what);
     result = ops;
     subexprs[what] = result;
@@ -1224,9 +1228,9 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
                 continue;
             }
 
-            // All other cases: failure
-            Ooops("No infix matches $1", what);
-            return false;
+            // All other cases: return the input as is
+            Add(new ConstOp(what));
+            return true;
         }
         }
     }
