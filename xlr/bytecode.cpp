@@ -989,7 +989,7 @@ Code *CodeBuilder::Compile(Context *context, Tree *what, TreeIndices &callArgs)
     }
 
     // We failed, delete the result and return
-    delete code;
+    what->Purge<Code>();
     return NULL;
 }
 
@@ -1155,14 +1155,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             }
 
             // Other cases: evaluate the callee, and if it changed, retry
-            if (!newCallee)
-            {
-                Context_p newContext = new Context(context);
-                Evaluate(newContext, callee);
-                Add(new EnterOp);
-            }
-
-            if (newCallee != callee)
+            if (newCallee && newCallee != callee)
             {
                 // We need to evaluate argument in current context
                 if (Instructions(context, arg))
