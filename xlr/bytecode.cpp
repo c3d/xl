@@ -1114,21 +1114,30 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             // If we have a name on the left, lookup name and start again
             Prefix *pfx = (Prefix *) (Tree *) what;
             Tree   *callee = pfx->left;
+            Tree   *originalCallee = callee;
+
 
             // Check if we had something like '(X->X+1) 31' as closure
-            Context_p calleeContext = NULL;
-            if (Tree *inside = IsClosure(callee, &calleeContext))
+            if (Tree *inside = IsClosure(callee, &context))
                 callee = inside;
 
             if (Name *name = callee->AsName())
+            {
                 // A few cases where we don't interpret the result
                 if (name->value == "type"   ||
                     name->value == "extern" ||
                     name->value == "data")
                     return true;
 
+                Scope_p scope;
+                if (Tree *bound = context->Bound(name, true, NULL, &scope))
+                {
+                    context = new Context(scope);
+                    callee = bound;
+                }
+            }
+
             // This variable records if we evaluated the callee
-            Tree *newCallee = NULL;
             Tree *arg = pfx->right;
 
             // Eliminate blocks on the callee side
@@ -1163,25 +1172,25 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             }
 
             // Other cases: evaluate the callee, and if it changed, retry
-            if (newCallee && newCallee != callee)
+            if (callee != originalCallee)
             {
                 // We need to evaluate argument in current context
                 if (Instructions(context, arg))
                 {
                     // We built a new context if left was a block
                     TreePosition pos = pfx->Position();
-                    if (Tree *inside = IsClosure(newCallee, &context))
+                    if (Tree *inside = IsClosure(callee, &context))
                     {
                         what = arg;
                         // Check if we have a single definition on the left
                         if (Infix *ifx = inside->AsInfix())
                             if (ifx->name == "->")
-                                what = new Prefix(newCallee, arg, pos);
+                                what = new Prefix(callee, arg, pos);
                     }
                     else
                     {
                         // Other more regular cases
-                        what = new Prefix(newCallee, arg, pos);
+                        what = new Prefix(callee, arg, pos);
                     }
                     continue;
                 }
