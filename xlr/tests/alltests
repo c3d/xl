@@ -112,6 +112,7 @@ do
     BASE=${TESTNAME/\.xl}                           # Basename
     DIR="$(dirname $TEST)"                          # Directory
     REF=$BASE.ref                                   # Reference file
+    REFR=$BASE-$RUNTIME.ref                         # Reference file
     LOG=$BASE.log                                   # Log file
     CMD=                                            # Command to execute
     EXIT=0                                          # Expected exit code
@@ -166,18 +167,29 @@ do
             sed 's@'library/runtime/$RUNTIME'@library/runtime/default@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
             if diff $REF $LOG > /dev/null 2>&1; then
                 THIS=ok
+            elif diff $REFR $LOG > /dev/null 2>&1; then
+                THIS=ok
             elif [ ! -z "$UPDATE" ]; then
                 echo -n "Updating reference... "
-                mv -f $REF $REF.old || true
-                cp $LOG $REF
-            elif [ -f $REF ]; then
+                if [ "$RUNTIME" == "default" ]; then
+                    mv -f $REF $REF.old || true
+                    cp $LOG $REF
+                else
+                    mv -f $REFR $REFR.old || true
+                    cp $LOG $REFR
+                fi
+            elif [ -f $REFR -o -f $REF ]; then
                 THIS_FAILED="Output mismatch"
                 if [ $RC -eq 0 ]; then
                     POSITIVE_MISMATCHES=$(($POSITIVE_MISMATCHES+1))
                 else
                     NEGATIVE_MISMATCHES=$(($NEGATIVE_MISMATCHES+1))
                 fi
-                diff $REF $LOG > $LOG.diff
+                if [ -f $REFR ]; then
+                    diff $REFR $LOG > $LOG.diff
+                else
+                    diff $REF $LOG > $LOG.diff
+                fi
                 mv $LOG.diff $LOG
                 rm -f $BASE$EXT
             else
