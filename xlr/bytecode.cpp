@@ -1131,6 +1131,10 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             Tree *newCallee = NULL;
             Tree *arg = pfx->right;
 
+            // Eliminate blocks on the callee side
+            while (Block *blk = callee->AsBlock())
+                callee = blk->child;
+
             // If we have an infix on the left, check if it's a single rewrite
             if (Infix *lifx = callee->AsInfix())
             {
