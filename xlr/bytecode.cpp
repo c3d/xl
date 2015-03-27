@@ -131,6 +131,21 @@ void Code::SetOps(Op **newOps, Ops *instrsToTakeOver)
 }
 
 
+Tree * Code::RunAll()
+// ----------------------------------------------------------------------------
+//    Run the code (without arguments)
+// ----------------------------------------------------------------------------
+{
+    Data data(context, self, &self, 1);
+    if (nVars || nEvals || nParms)
+        data.Allocate(nVars, nEvals, nParms);
+    Op *op = ops;
+    while (op)
+        op = op->Run(data);
+    return data.result;
+}
+
+
 Op *Code::runCode(Op *codeOp, Data &data)
 // ----------------------------------------------------------------------------
 //   Run all instructions in the sequence
@@ -628,6 +643,79 @@ struct CallOp : Op
 };
 
 
+struct IndexOp : FailOp
+// ----------------------------------------------------------------------------
+//    Index operation, i.e. unknown prefix
+// ----------------------------------------------------------------------------
+{
+    IndexOp(Tree *self, Op *fail): FailOp("index", index, fail), self(self) {}
+    Tree_p self;
+    
+    static Op *index(Op *op, Data &data)
+    {
+        IndexOp *iop = (IndexOp *) op;
+        Tree *callee = data.left;
+        Tree *arg = data.result;
+        Context_p context = data.context;
+
+        // If the declaration was compiled, evaluate the code
+        if (Code *code = callee->GetInfo<Code>())
+            callee = code->RunAll();
+
+        // Check if we have a closure
+        if (Tree *inside = IsClosure(callee, &context))
+            callee = inside;
+
+        // Eliminate blocks on the callee side
+        while (Block *blk = callee->AsBlock())
+            callee = blk->child;
+        
+        // If we have an infix on the left, check if it's a single rewrite
+        if (Infix *lifx = callee->AsInfix())
+        {
+            // Check if we have a function definition
+            if (lifx->name == "->")
+            {
+                // If we have a single name on the left, like (X->X+1)
+                // interpret that as a lambda function
+                Tree *result = NULL;
+                if (Name *lfname = lifx->left->AsName())
+                {
+                    // Case like '(X->X+1) Arg':
+                    // Bind arg in new context and evaluate body
+                    context = new Context(context);
+                    context->Define(lfname, arg);
+                    result = context->Evaluate(lifx->right);
+                }
+                else
+                {
+                    // Otherwise, enter declaration and retry, e.g.
+                    // '(X,Y->X+Y) (2,3)' should evaluate as 5
+                    context = new Context(context);
+                    context->Define(lifx->left, lifx->right);
+                    result = context->Evaluate(arg);
+                }
+
+                data.result = result;
+                return iop->success;
+            }
+        }
+
+        // Try to lookup in the callee's context
+        if (Tree *found = context->Bound(arg))
+        {
+            data.result = found;
+            return iop->success;
+        }
+
+        // Other cases: go to 'fail' exit
+        if (!iop->fail)
+            Ooops("No prefix matches $1", iop->self);
+        return iop->fail;
+    }
+};
+
+
 struct FormErrorOp : Op
 // ----------------------------------------------------------------------------
 //   When we fail with all candidates, report an error
@@ -709,6 +797,19 @@ void CodeBuilder::Success()
     failOp = NULL;
 
     XL_ASSERT(!*lastOp);
+}
+
+
+void CodeBuilder::InstructionsSuccess(uint neOld)
+// ----------------------------------------------------------------------------
+//    At end of an instruction, mark success by recording number of evals
+// ----------------------------------------------------------------------------
+{
+    uint ne = evals.size();
+    if (nEvals < ne)
+        nEvals = ne;
+    if (ne > neOld)
+        Add(new EvalClearOp(neOld, ne));
 }
 
 
@@ -898,6 +999,8 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     else if (isLeaf)
     {
         // Assign an ID for names
+        Save<Context_p> saveContext(code->context, context);
+        Save<Context_p> saveLocals(code->locals, locals);
         code->Reference(defined, decl);
     }
     else
@@ -1058,13 +1161,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             lastOp = &success->success;
             instrs.push_back(success);
 
-            uint ne = evals.size();
-            if (nEvals < ne)
-                nEvals = ne;
-            uint neOld = saveEvals.saved.size();
-            if (ne > neOld)
-                Add(new EvalClearOp(neOld, ne));
-
+            InstructionsSuccess(saveEvals.saved.size());
             return true;
         }
 
@@ -1082,6 +1179,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
         case NAME:
             // If not looked up, return the original
             Add(new ConstOp(what));
+            InstructionsSuccess(saveEvals.saved.size());
             return true;
 
         case BLOCK:
@@ -1090,11 +1188,15 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             context->CreateScope();
             what = ((Block *) (Tree *) what)->child;
             bool hasInstructions = context->ProcessDeclarations(what);
-            if (context->IsEmpty())
+            bool hasDecls = !context->IsEmpty();
+            if (!hasDecls)
                 context->PopScope();
             if (hasInstructions)
                 continue;
+            if (hasDecls)
+                what = MakeClosure(context, what);
             Add(new ConstOp(what));
+            InstructionsSuccess(saveEvals.saved.size());
             return true;
         }
 
@@ -1110,12 +1212,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             // If we have a name on the left, lookup name and start again
             Prefix *pfx = (Prefix *) (Tree *) what;
             Tree   *callee = pfx->left;
-            Tree   *originalCallee = callee;
-
-
-            // Check if we had something like '(X->X+1) 31' as closure
-            if (Tree *inside = IsClosure(callee, &context))
-                callee = inside;
+            Tree   *arg = pfx->right;
 
             if (Name *name = callee->AsName())
             {
@@ -1123,78 +1220,20 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
                 if (name->value == "type"   ||
                     name->value == "extern" ||
                     name->value == "data")
+                {
+                    InstructionsSuccess(saveEvals.saved.size());
                     return true;
-
-                Scope_p scope;
-                if (Tree *bound = context->Bound(name, true, NULL, &scope))
-                {
-                    context = new Context(scope);
-                    callee = bound;
                 }
             }
 
-            // This variable records if we evaluated the callee
-            Tree *arg = pfx->right;
+            // Evaluate callee
+            Evaluate(context, callee);
+            Evaluate(context, arg, true);
 
-            // Eliminate blocks on the callee side
-            while (Block *blk = callee->AsBlock())
-                callee = blk->child;
-
-            // If we have an infix on the left, check if it's a single rewrite
-            if (Infix *lifx = callee->AsInfix())
-            {
-                // Check if we have a function definition
-                if (lifx->name == "->")
-                {
-                    // If we have a single name on the left, like (X->X+1)
-                    // interpret that as a lambda function
-                    if (Name *lfname = lifx->left->AsName())
-                    {
-                        // Case like '(X->X+1) Arg':
-                        // Bind arg in new context and evaluate body
-                        context = new Context(context);
-                        context->Define(lfname, arg);
-                        what = lifx->right;
-                        continue;
-                    }
-
-                    // Otherwise, enter declaration and retry, e.g.
-                    // '(X,Y->X+Y) (2,3)' should evaluate as 5
-                    context = new Context(context);
-                    context->Define(lifx->left, lifx->right);
-                    what = arg;
-                    continue;
-                }
-            }
-
-            // Other cases: evaluate the callee, and if it changed, retry
-            if (callee != originalCallee)
-            {
-                // We need to evaluate argument in current context
-                if (Instructions(context, arg))
-                {
-                    // We built a new context if left was a block
-                    TreePosition pos = pfx->Position();
-                    if (Tree *inside = IsClosure(callee, &context))
-                    {
-                        what = arg;
-                        // Check if we have a single definition on the left
-                        if (Infix *ifx = inside->AsInfix())
-                            if (ifx->name == "->")
-                                what = new Prefix(callee, arg, pos);
-                    }
-                    else
-                    {
-                        // Other more regular cases
-                        what = new Prefix(callee, arg, pos);
-                    }
-                    continue;
-                }
-            }
-
-            // If we get there, we didn't find anything interesting to do
-            Ooops("No prefix matches $1", what);
-            return false;
+            // Lookup the argument in the callee's context
+            Add (new IndexOp(pfx, failOp));
+            InstructionsSuccess(saveEvals.saved.size());
+            return true;
         }
 
         case POSTFIX:
@@ -1224,6 +1263,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             if (name == "->")
             {
                 // Declarations evaluate last non-declaration result, or self
+                InstructionsSuccess(saveEvals.saved.size());
                 return true;
             }
 
@@ -1239,6 +1279,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
 
             // All other cases: return the input as is
             Add(new ConstOp(what));
+            InstructionsSuccess(saveEvals.saved.size());
             return true;
         }
         }
@@ -1789,6 +1830,7 @@ uint CodeBuilder::Reference(Tree *name, Infix *decl)
     {
         variables[name] = varId;
         Add(new VarOp(varId, decl));
+        CompileToBytecode(context, decl->right);
     }
     else
     {

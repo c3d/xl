@@ -1,2 +1,3 @@
-3
+integer
 01.Evaluation/03-primitives.xl:2: No prefix matches 'opcode Nonexistent'
+01.Evaluation/03-primitives.xl:4: No form matches 'foo 3'

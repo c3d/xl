@@ -155,6 +155,7 @@ struct Code : Op, Info
     ~Code();
     
     void                SetOps(Op **ops, Ops *instr);
+    Tree *              RunAll();
     static Op *         runCode(Op *op, Data &data);
     static Op *         runCodeWithScope(Op *op, Data &data);
     virtual void        Dump(std::ostream &out);
@@ -272,6 +273,7 @@ public:
 
     // Success at end of declaration
     void        Success();
+    void        InstructionsSuccess(uint oldNumEvals);
 
 
 public:

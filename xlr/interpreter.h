@@ -53,7 +53,6 @@ Opcode *OpcodeInfo(Infix *decl);
 
 
 
-
 // ============================================================================
 //
 //    Closure management (keeping scoping information with values)
