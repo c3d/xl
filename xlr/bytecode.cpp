@@ -1196,6 +1196,8 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             if (hasDecls)
                 what = MakeClosure(context, what);
             Add(new ConstOp(what));
+            if (hasDecls)
+                context->PopScope();
             InstructionsSuccess(saveEvals.saved.size());
             return true;
         }
