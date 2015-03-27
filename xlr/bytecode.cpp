@@ -309,7 +309,7 @@ struct EvalOp : FailOp
 // ----------------------------------------------------------------------------
 {
     EvalOp(uint id, Op *ops, Op *fail, bool saveLeft = false)
-        : FailOp(saveLeft ? "eval_l"     : "eval",
+        : FailOp(saveLeft ? "eval2nd"    : "eval",
                  saveLeft ? evalSaveLeft : eval,
                  fail),
           ops(ops), id(id) {}
@@ -348,10 +348,10 @@ struct EvalOp : FailOp
     static Op *evalSaveLeft(Op *op, Data &data)
     {
         // Save the 'left' in data because we want to reuse it
-        Save<Tree_p> saveLeft(data.left, data.left);
-
-        // Evaluate normally
-        return eval(op, data);
+        Tree_p left = data.result;
+        Op *nextOp = eval(op, data);
+        data.left = left;
+        return nextOp;
     }
 
     virtual void Dump(std::ostream &out)
@@ -729,19 +729,17 @@ void CodeBuilder::Success()
 //      foo U, V
 //      write "Toto"
 //
-//  The generated code will look like this, where EnterOp separates inputs:
+//  The generated code will look like this
 //      ;; Evaluate foo1 candidate
 //
 //      ;; Match U against X:integer
 //      Evaluate U              or goto fail1.1         (EvalOp)
-//                                                      (EnterOp)
 //      Evaluate integer        or goto fail1.1         (EvalOp - SaveLeft)
 //      TypeCheck U : integer   or goto fail1.1         (TypeCheckOp)
 //      Bind U to X                                     (ParmOp 0)
 //
 //      ;; Match V against Y:integer
 //      Evaluate V              or goto fail1.1         (EvalOp)
-//                                                      (EnterOp)
 //      Evaluate integer        or goto fail1.1         (EvalOp - SaveLeft)
 //      TypeCheck V : integer   or goto fail1.1         (TypeCheckOp)
 //      Bind V to Y                                     (ParmOp 1)
@@ -754,7 +752,6 @@ void CodeBuilder::Success()
 //
 //    fail1.1:                                          (LabelOp)
 //      Evaluate U              or goto fail1.2         (EvalOp)
-//                                                      (EnterOp)
 //      Evaluate integer        or goto fail1.2         (EvalOp)
 //      ...
 //      Call foo2                                       (CallOp)
@@ -769,8 +766,8 @@ void CodeBuilder::Success()
 //  The 'goto' in the above are implicit, marked by 'success' or 'fail' in Op.
 //  In general, the evaluation context has a two-deep stack, containing
 //  'result' as the last result, and 'left' as the next element.
-//  The 'EnterOp' operation pushes result into left.
-//  The 'EvalOp' has two variants, one of which preserves left.
+//  The 'EvalOp' has two variants, one of which saves the current result
+//  in the 'data.left' field (for two-argument functions)
 //  One-operand operations, e.g. 'sin', read 'result' and write into it.
 //  Two-operand operations, e.g. TypeCheck, use 'left' and 'result'.
 //  Argument passing for user-defined functions uses 'parms', an array
@@ -915,7 +912,6 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     // Check if there is a result type, if so add a type check
     if (resultType != tree_type)
     {
-        code->Add(new EnterOp);       // Save value in 'left'
         code->Evaluate(context, resultType, true);
         code->Add(new TypeCheckOp(code->failOp));
     }
@@ -1277,6 +1273,8 @@ uint CodeBuilder::Evaluate(Context *ctx, Tree *self, bool saveLeft)
     // For constants, we can simply evaluate in line
     if (self->IsConstant())
     {
+        if (saveLeft)
+            Add(new EnterOp);
         Instructions(ctx, self);
         computed = true;
     }
@@ -1295,12 +1293,16 @@ uint CodeBuilder::Evaluate(Context *ctx, Tree *self, bool saveLeft)
             if (found != args.end())
             {
                 uint localId = (*found).second;
+                if (saveLeft)
+                    Add(new EnterOp);
                 Add(new ArgOp(localId));
                 computed = true;
             }
 
             else if (Opcode *op = arg->GetInfo<Opcode>())
             {
+                if (saveLeft)
+                    Add(new EnterOp);
                 if (op->arity < Op::ARITY_SELF)
                     Add(new Op(*op));
                 else
@@ -1526,7 +1528,6 @@ CodeBuilder::strength CodeBuilder::DoName(Name *what)
 
         // Do a dynamic test to check if the name value is the same
         Evaluate(locals, test);
-        Add(new EnterOp);
         Evaluate(locals, bound, true);
         Add(new NameMatchOp(failOp));
         return SOMETIMES;
@@ -1658,8 +1659,7 @@ CodeBuilder::strength CodeBuilder::DoInfix(Infix *what)
 
         // Typed name: evaluate type and check match
         Evaluate(context, test);
-        Add(new EnterOp);
-        Evaluate(context, what->right);
+        Evaluate(context, what->right, true);
         Add(new TypeCheckOp(failOp));
         Bind(name, test, false);
         return SOMETIMES;
@@ -1685,7 +1685,6 @@ CodeBuilder::strength CodeBuilder::DoInfix(Infix *what)
             return NEVER;
 
         // Here, we need to evaluate in the local context, not eval one
-        Add(new EnterOp);
         Evaluate(locals, what->right, true);
         Add(new WhenClauseOp(failOp));
         return SOMETIMES;
