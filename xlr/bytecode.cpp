@@ -105,7 +105,10 @@ Code::Code(Context *context, Tree *self, Op *ops, uint nArgs)
       ops(ops),
       nArgs(nArgs), nVars(0), nEvals(0), nParms(0),
       instrs()
-{}
+{
+    for (Op *op = ops; op; op = op->success)
+        instrs.push_back(op);
+}
 
 
 Code::~Code()
@@ -485,11 +488,12 @@ struct ArgOp : Op
     static Op *load(Op *op, Data &data)
     {
         ArgOp *ld = (ArgOp *) op;
-        Tree *result = data.Arg(ld->argId);
-        if (Infix *infix = result->AsInfix())
+        data.result = data.Arg(ld->argId);
+        if (Op *op = data.result->GetInfo<Code>())
+            do { op = op->Run(data); } while (op);
+        if (Infix *infix = data.result->AsInfix())
             if (infix->name == "->")
-                result = infix->right;
-        data.result = result;
+                data.result = infix->right;
         return ld->success;
     }
 
@@ -534,6 +538,8 @@ struct LoadOp : Op
         Infix *decl = (Infix *) data.Var(ld->varId);
         XL_ASSERT(decl && decl->Kind() == INFIX);
         data.result = decl->right;
+        if (Op *op = data.result->GetInfo<Code>())
+            do { op = op->Run(data); } while (op);
         return ld->success;
     }
 
@@ -1015,7 +1021,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     // Check if there is a result type, if so add a type check
     if (resultType != tree_type)
     {
-        code->Evaluate(context, resultType, true);
+        code->Evaluate(context, resultType, CodeBuilder::SAVE_LEFT);
         code->Add(new TypeCheckOp(code->failOp));
     }
 
@@ -1230,7 +1236,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
 
             // Evaluate callee
             Evaluate(context, callee);
-            Evaluate(context, arg, true);
+            Evaluate(context, arg, SAVE_LEFT);
 
             // Lookup the argument in the callee's context
             Add (new IndexOp(pfx, failOp));
@@ -1305,13 +1311,14 @@ uint CodeBuilder::EvaluationID(Tree *self)
 }
 
 
-uint CodeBuilder::Evaluate(Context *ctx, Tree *self, bool saveLeft)
+uint CodeBuilder::Evaluate(Context *ctx, Tree *self, EvalFlags flags)
 // ----------------------------------------------------------------------------
 //   Evaluate the tree, and return its ID in the evals array
 // ----------------------------------------------------------------------------
 {
     uint id = EvaluationID(self);
     bool computed = false;
+    bool saveLeft = flags & SAVE_LEFT;
 
     // For constants, we can simply evaluate in line
     if (self->IsConstant())
@@ -1362,11 +1369,15 @@ uint CodeBuilder::Evaluate(Context *ctx, Tree *self, bool saveLeft)
     }
     else
     {
-        // Compile the code for the input
-        Op *op = CompileInternal(ctx, self);
-        
-        // Add an evaluation opcode
-        Add(new EvalOp(id, op, failOp, saveLeft));
+        bool defer = flags & DEFER;
+        if (true ||  !defer)
+        {
+            // Compile the code for the input
+            Op *op = CompileInternal(ctx, self);
+            
+            // Add an evaluation opcode
+            Add(new EvalOp(id, op, failOp, saveLeft));
+        }
     }
     
     // Return the allocated ID
@@ -1500,7 +1511,7 @@ struct InfixMatchOp : FailOp
 
     virtual void Dump(std::ostream &out)
     {
-        out << name << "\t" << symbol;
+        out << name << "\t" << lid << " " << symbol << " " << rid;
     }
 };
 
@@ -1571,12 +1582,13 @@ CodeBuilder::strength CodeBuilder::DoName(Name *what)
 
         // Do a dynamic test to check if the name value is the same
         Evaluate(locals, test);
-        Evaluate(locals, bound, true);
+        Evaluate(locals, bound, SAVE_LEFT);
         Add(new NameMatchOp(failOp));
         return SOMETIMES;
     }
 
-    Bind(what, test, true);
+    Evaluate(context, test, DEFER);
+    Bind(what, test);
     return ALWAYS;
 }
 
@@ -1685,26 +1697,38 @@ CodeBuilder::strength CodeBuilder::DoInfix(Infix *what)
             return NEVER;
         }
 
-        // Check if this is a builtin type vs. a constant
-        if (test->IsConstant())
+        // Typed name: evaluate type and check match
+        Tree *namedType = NULL;
+        if (Name *typeName = what->right->AsName())
+            if (Tree *found = context->Bound(typeName))
+                namedType = found;
+
+        if (namedType)
         {
-            if (Name *typeName = what->right->AsName())
+            if (namedType == tree_type)
             {
-                if (Tree *bound = context->Bound(typeName))
-                {
-                    if (!TypeCheck(context, bound, test))
-                        return NEVER;
-                    Bind(name, test, false);
-                    return ALWAYS;
-                }
+                Evaluate(context, test, DEFER);
+                Bind(name, test);
+                return ALWAYS;
             }
+            if (Tree *cast = TypeCheck(context, namedType, test))
+            {
+                test = cast;
+                Evaluate(context, test);
+                Bind(name, test);
+                return ALWAYS;
+            }
+
+            // Check if this is a builtin type vs. a constant
+            if (test->IsConstant())
+                return NEVER;
         }
 
-        // Typed name: evaluate type and check match
+        // In all other cases, we need do perform dynamic evaluation to check
         Evaluate(context, test);
-        Evaluate(context, what->right, true);
+        Evaluate(context, what->right, SAVE_LEFT);
         Add(new TypeCheckOp(failOp));
-        Bind(name, test, false);
+        Bind(name, test);
         return SOMETIMES;
     }
 
@@ -1728,7 +1752,7 @@ CodeBuilder::strength CodeBuilder::DoInfix(Infix *what)
             return NEVER;
 
         // Here, we need to evaluate in the local context, not eval one
-        Evaluate(locals, what->right, true);
+        Evaluate(locals, what->right, SAVE_LEFT);
         Add(new WhenClauseOp(failOp));
         return SOMETIMES;
     }
@@ -1785,12 +1809,15 @@ CodeBuilder::strength CodeBuilder::DoLeftRight(Tree *wl, Tree *wr,
 }
 
 
-uint CodeBuilder::Bind(Name *name, Tree *value, bool closure)
+uint CodeBuilder::Bind(Name *name, Tree *value)
 // ----------------------------------------------------------------------------
-//   Enter a new binding in the current context, remember left and right
+//   Enter a new binding in the current context
 // ----------------------------------------------------------------------------
 {
     XL_ASSERT(parms.find(name) == parms.end() && "Binding name twice");
+
+    // Add closure if the context is not the one we are evaluating in
+    Add(new ClosureOp(context->CurrentScope()));
 
     // Define the name in the locals
     locals->Define(name, value);
@@ -1799,12 +1826,8 @@ uint CodeBuilder::Bind(Name *name, Tree *value, bool closure)
     uint parmId = parms.size();
     parms[name] = parmId;
 
-    // Evaluate the value and store it in the parameter
-    uint id = Evaluate(context, value);
-    if (closure && (int) id >= 0)
-        Add(new ClosureOp(context->CurrentScope()));
-
-    // Save the value used for binding
+    // Record parameter order for calls
+    uint id = EvaluationID(value);
     parmOrder.push_back(id);
 
     return parmId;

@@ -261,11 +261,12 @@ public:
     strength    DoLeftRight(Tree *wl, Tree *wr, Tree *l, Tree *r);
 
     // Evaluation and binding of values
+    enum        EvalFlags { NONE = 0, SAVE_LEFT = 1<<0, DEFER = 1<<1 };
     uint        EvaluationID(Tree *);
-    uint        Evaluate(Context *, Tree *,bool saveLeft=false);
+    uint        Evaluate(Context *, Tree *, EvalFlags flags = NONE);
     uint        EvaluationTemporary(Tree *);
     void        Enclose(Context *context, Scope *old, Tree *what);
-    uint        Bind(Name *name, Tree *value, bool closure);
+    uint        Bind(Name *name, Tree *value);
     uint        Reference(Tree *tree, Infix *decl);
 
     // Adding an opcode
