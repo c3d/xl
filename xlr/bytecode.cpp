@@ -1530,6 +1530,8 @@ CodeBuilder::strength CodeBuilder::DoInteger(Integer *what)
 {
     if (Integer *ival = test->AsInteger())
         return ival->value == what->value ? ALWAYS : NEVER;
+    if (test->IsConstant())
+        return NEVER;
     Evaluate(context, test);
     Add(new MatchOp<Integer>(what, failOp));
     return SOMETIMES;
@@ -1543,6 +1545,10 @@ CodeBuilder::strength CodeBuilder::DoReal(Real *what)
 {
     if (Real *rval = test->AsReal())
         return rval->value != what->value ? ALWAYS : NEVER;
+    if (Integer *rval = test->AsInteger())
+        return rval->value != what->value ? ALWAYS : NEVER;
+    if (test->IsConstant())
+        return NEVER;
     Evaluate(context, test);
     Add(new MatchOp<Real>(what, failOp));
     return SOMETIMES;
@@ -1556,6 +1562,8 @@ CodeBuilder::strength CodeBuilder::DoText(Text *what)
 {
     if (Text *tval = test->AsText())
         return tval->value != what->value ? ALWAYS : NEVER;
+    if (test->IsConstant())
+        return NEVER;
     Evaluate(context, test);
     Add(new MatchOp<Text>(what, failOp));
     return SOMETIMES;
