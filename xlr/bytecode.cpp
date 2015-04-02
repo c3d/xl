@@ -40,42 +40,37 @@ Tree *EvaluateWithBytecode(Context *context, Tree *what)
 //   Compile bytecode and then evaluate it
 // ----------------------------------------------------------------------------
 {
-    Code *code = CompileToBytecode(context, what);
-    Tree_p result = what;
-    if (code)
-    {
-        TreeList noargs;
-        Data     data(context, what, noargs);
+    TreeIDs  noParms;
+    TreeList captured;
 
-        data.result = what;
-        Op *op = code->Run(data);
+    Function *function = CompileToBytecode(context, what, noParms, captured);
+    Tree_p result = what;
+    if (function)
+    {
+        XL_ASSERT(function->Inputs() == 0);
+        uint size = captured.size();
+        Scope *scope = context->CurrentScope();
+        captured.push_back(what);
+        captured.push_back(scope);
+        Data data = &captured[size];
+        Op *op = function;
         while(op)
             op = op->Run(data);
-        result = data.result;
+        result = DataResult(data);
     }
     return result;
 }
 
 
-Code *CompileToBytecode(Context *context, Tree *what)
+Function *CompileToBytecode(Context *context, Tree *what,
+                            TreeIDs &parms, TreeList &captured)
 // ----------------------------------------------------------------------------
 //    Compile a tree to bytecode
 // ----------------------------------------------------------------------------
 {
-    CodeBuilder  builder;
-    Code *code = builder.Compile(context, what);
-    return code;
-}
-
-
-Code *CompileToBytecode(Context *context, Tree *what, TreeIndices &parms)
-// ----------------------------------------------------------------------------
-//    Compile a tree to bytecode
-// ----------------------------------------------------------------------------
-{
-    CodeBuilder  builder;
-    Code *code = builder.Compile(context, what, parms);
-    return code;
+    CodeBuilder  builder(captured);
+    Function *function = builder.Compile(context, what, parms);
+    return function;
 }
 
 
@@ -86,25 +81,19 @@ Code *CompileToBytecode(Context *context, Tree *what, TreeIndices &parms)
 //
 // ============================================================================
 
-Code::Code(Context *context, Tree *self, uint nArgs)
+Code::Code(Context *context, Tree *self)
 // ----------------------------------------------------------------------------
 //    Create a new code from the given ops
 // ----------------------------------------------------------------------------
-    : Op("code", runCode), context(context), self(self),
-      ops(NULL),
-      nArgs(nArgs), nVars(0), nEvals(0), nParms(0),
-      instrs()
+    : context(context), self(self), ops(NULL), instrs()
 {}
 
 
-Code::Code(Context *context, Tree *self, Op *ops, uint nArgs)
+Code::Code(Context *context, Tree *self, Op *ops)
 // ----------------------------------------------------------------------------
 //    Create a new code from the given ops
 // ----------------------------------------------------------------------------
-    : Op("code", runCode), context(context), self(self),
-      ops(ops),
-      nArgs(nArgs), nVars(0), nEvals(0), nParms(0),
-      instrs()
+    : context(context), self(self), ops(ops), instrs()
 {
     for (Op *op = ops; op; op = op->success)
         instrs.push_back(op);
@@ -129,63 +118,28 @@ void Code::SetOps(Op **newOps, Ops *instrsToTakeOver)
 {
     ops = *newOps;
     *newOps = NULL;
-    instrs = *instrsToTakeOver;
-    instrsToTakeOver->clear();
+    XL_ASSERT(instrs.size() == 0);
+    std::swap(instrs, *instrsToTakeOver);
 }
 
 
-Tree * Code::RunAll()
+Op *Code::Run(Data data)
 // ----------------------------------------------------------------------------
-//    Run the code (without arguments)
+//   Run all instructions in the sequence
 // ----------------------------------------------------------------------------
 {
-    Data data(context, self, &self, 1);
-    if (nVars || nEvals || nParms)
-        data.Allocate(nVars, nEvals, nParms);
+    // Running in-place in the same context
+    Scope *scope = context->CurrentScope();
+    data[0] = self;
+    data[1] = scope;
+
+    // Run all instructions we have in that code
     Op *op = ops;
     while (op)
         op = op->Run(data);
-    return data.result;
-}
 
-
-Op *Code::runCode(Op *codeOp, Data &data)
-// ----------------------------------------------------------------------------
-//   Run all instructions in the sequence
-// ----------------------------------------------------------------------------
-{
-    Code *code = (Code *) codeOp;
-
-    // Running in-place in the same context
-    Save<Context_p> setContext(data.context, code->context);
-    Save<Tree_p>    setSelf(data.self, code->self);
-    Op *op = code->ops;
-    while (op)
-        op = op->Run(data);
-
-    return codeOp->success;
-}
-
-
-Op *Code::runCodeWithScope(Op *codeOp, Data &data)
-// ----------------------------------------------------------------------------
-//   Run all instructions in the sequence
-// ----------------------------------------------------------------------------
-{
-    Code *code = (Code *) codeOp;
-    Data newData(code->context, code->self, data.parms, code->nArgs);
-    newData.Allocate(code->nVars, code->nEvals, code->nParms);
-
-    // Execute the following instructions in the newly created data
-    Op *op = code->ops;
-    while (op)
-        op = op->Run(newData);
-
-    // Copy result and left to the old data
-    data.result = newData.result;
-    data.left = newData.left;
-
-    return codeOp->success;
+    // We were successful
+    return success;
 }
 
 
@@ -194,12 +148,11 @@ void Code::Dump(std::ostream &out)
 //   Dump all the instructions
 // ----------------------------------------------------------------------------
 {
-    out << name << "\t" << (void *) (Op *) this
+    out << OpID() << "\t" << (void *) (Op *) this
         << "\tentry\t" << (void *) ops
         << "\t" << self << "\n";
     out << "\talloc"
-        << " A" << nArgs << " V" << nVars
-        << " E" << nEvals << " P" << nParms << "\n";
+        << "\tI" << Inputs() << " L" << Locals() << "\n";
     Dump(out, ops, instrs);
 }
 
@@ -256,6 +209,106 @@ text Code::Ref(Op *op, text sep, text set, text null)
 }
 
 
+Function::Function(Context *context, Tree *self, uint nInputs, uint nLocals)
+// ----------------------------------------------------------------------------
+//   Create a function
+// ----------------------------------------------------------------------------
+    : Code(context, self), nInputs(nInputs), nLocals(nLocals)
+{}
+
+
+Function::Function(Function *original, Data data, ParmOrder &capture)
+// ----------------------------------------------------------------------------
+//    Copy constructor used for closures
+// ----------------------------------------------------------------------------
+    : Code(original->context, original->self),
+      nInputs(original->nInputs), nLocals(original->nLocals),
+      captured()
+{
+    // We have no instrs, so we don't "own" the instructions
+    ops = original->ops;
+
+    // Copy data in the closure from current data
+    uint max = capture.size();
+    captured.reserve(max);
+    for (uint p = 0; p < max; p++)
+    {
+        int id = capture[p];
+        Tree *arg = data[id];
+        captured.push_back(arg);
+    }
+}
+
+
+Function::~Function()
+// ----------------------------------------------------------------------------
+//    Destructor for functions
+// ----------------------------------------------------------------------------
+{}
+
+
+Op *Function::Run(Data data)
+// ----------------------------------------------------------------------------
+//   Create a new scope and run all instructions in the sequence
+// ----------------------------------------------------------------------------
+{
+    Scope *scope     = context->CurrentScope();
+    uint   frameSize = FrameSize();
+    uint   offset    = OffsetSize();
+    Data   frame     = new Tree_p[frameSize];
+    Data   newData   = frame + offset;
+
+    // Initialize self and scope
+    newData[0] = self;
+    newData[1] = scope;
+
+    // Copy input arguments
+    uint inputs   = Inputs();
+    Data oarg = &newData[-1];
+    Data iarg = &data[-1];
+    for (uint a = 0; a < inputs; a++)
+        *oarg-- = *iarg--;
+
+    // Copy closure data if any
+    uint closures = Closures();
+    if (closures)
+    {
+        Data carg = ClosureData();
+        for (uint c = 0; c < closures; c++)
+            *oarg-- = *carg++;
+    }
+
+    // Execute the following instructions in the newly created data context
+    Op *op = ops;
+    while (op)
+        op = op->Run(newData);
+
+    // Copy result and current context to the old data
+    Tree *result = DataResult(newData);
+    DataResult(data, result);
+
+    // Destroy the frame, we no longer need it
+    delete[] frame;
+
+    // Evaluate next instruction
+    return success;
+}
+
+
+void Function::Dump(std::ostream &out)
+// ----------------------------------------------------------------------------
+//   Dump all the instructions
+// ----------------------------------------------------------------------------
+{
+    out << OpID() << "\t" << (void *) (Op *) this
+        << "\tentry\t" << (void *) ops
+        << "\t" << self << "\n";
+    out << "\talloc"
+        << "\tI" << Inputs() << " L" << Locals() << " C" << Closures() << "\n";
+    Code::Dump(out, ops, instrs);
+}
+
+
 
 // ============================================================================
 //
@@ -268,11 +321,10 @@ struct FailOp : Op
 //   Any op that has a fail exit
 // ----------------------------------------------------------------------------
 {
-    FailOp(kstring n, arity_none_fn fn, Op *fx): Op(n, fn), fail(fx) {}
-    FailOp(kstring n, arity_data_fn fn, Op *fx): Op(n, fn), fail(fx) {}
-    FailOp(kstring n, arity_opdata_fn fn, Op *fx): Op(n, fn), fail(fx) {}
+    FailOp(Op *fx): Op(), fail(fx) {}
     Op *fail;
-    virtual Op *Fail()  { return fail; }
+    virtual Op *        Fail()  { return fail; }
+    virtual kstring     OpID()  { return "fail"; }
 };
 
 
@@ -281,16 +333,13 @@ struct LabelOp : Op
 //    The target of a jump
 // ----------------------------------------------------------------------------
 {
-    LabelOp(kstring name = "label"): Op(name, label) {}
-    static Op *label(Op *op, Data &data)
+    LabelOp(kstring name): name(name) {}
+    virtual kstring     OpID()  { return name; }
+    virtual void        Dump(std::ostream &out)
     {
-        // Do nothing
-        return op->success;
+        out << OpID() << "\t" << (void *) this;
     }
-    virtual void Dump(std::ostream &out)
-    {
-        out << name << "\t" << (void *) this;
-    }
+    kstring name;
 };
 
 
@@ -299,14 +348,20 @@ struct ConstOp : Op
 //   Evaluates a constant
 // ----------------------------------------------------------------------------
 {
-    ConstOp(Tree *value): Op("const", returnConst), value(value) {}
-    Tree *      value;
-    static Tree *returnConst(Op *op)     { return ((ConstOp *) op)->value; }
-    virtual void Dump(std::ostream &out)
+    ConstOp(Tree *value): value(value) {}
+    Tree_p value;
+
+    virtual Op *        Run(Data data)
+    {
+        DataResult(data, value);
+        return success;
+    }
+    virtual kstring     OpID()  { return "const"; }
+    virtual void        Dump(std::ostream &out)
     {
         kstring kinds[] = { "integer", "real", "text", "name",
                             "block", "prefix", "postfix", "infix" };
-        out << name << "\t" << kinds[value->Kind()] << "\t" << value;
+        out << OpID() << "\t" << kinds[value->Kind()] << "\t" << value;
     }
 };
 
@@ -316,8 +371,7 @@ struct SelfOp : Op
 //   Evaluate self
 // ----------------------------------------------------------------------------
 {
-    SelfOp(): Op("self", returnSelf) {}
-    static Tree *returnSelf(Data &data) { return data.self; }
+    virtual kstring     OpID()  { return "self"; }
 };
 
 
@@ -326,77 +380,63 @@ struct EvalOp : FailOp
 //    Evaluate the given tree once and only once
 // ----------------------------------------------------------------------------
 {
-    EvalOp(uint id, Op *ops, Op *fail, bool saveLeft = false)
-        : FailOp(saveLeft ? "eval2nd"    : "eval",
-                 saveLeft ? evalSaveLeft : eval,
-                 fail),
-          ops(ops), id(id) {}
-    Op * ops;
-    uint id;
+    EvalOp(int id, Op *ops, Op *fail)
+        : FailOp(fail), ops(ops), id(id) {}
+    Op *ops;
+    int id;
 
-    static Op *eval(Op *evalOp, Data &data)
+    virtual Op *        Run(Data data)
     {
-        EvalOp *ev = (EvalOp *) evalOp;
-        uint id = ev->id;
-        Tree *result = data.Value(id);
+        Tree *result = data[id];
         if (result)
         {
-            data.result = result;
-            return ev->success;
+            DataResult(data, result);
+            return success;
         }
 
         // Complete evaluation of the bytecode we were given
-        Op *op = ev->ops;
+        Op *op = ops;
         while (op)
             op = op->Run(data);
 
         // Save the result if evaluation was successful
-        if (data.result)
+        if (Tree *result = DataResult(data))
         {
-            data.Value(id, data.result);
-
-            // Return the next operation to execute
-            return ev->success;
+            data[id] = result;
+            return success;
         }
 
         // Otherwise, go to the fail bytecode
-        return ev->fail;
+        return fail;
     }
 
-    static Op *evalSaveLeft(Op *op, Data &data)
+    virtual kstring     OpID()          { return "eval"; }
+    virtual void        Dump(std::ostream &out)
     {
-        // Save the 'left' in data because we want to reuse it
-        Tree_p left = data.result;
-        Op *nextOp = eval(op, data);
-        data.left = left;
-        return nextOp;
-    }
-
-    virtual void Dump(std::ostream &out)
-    {
-        out << name << "\t" << id << Code::Ref(ops, "\t", "code", "null");
+        out << OpID() << "\t" << id << Code::Ref(ops, "\t", "code", "null");
     }
 };
 
 
-struct EvalClearOp : Op
+struct ClearOp : Op
 // ----------------------------------------------------------------------------
 //    Clear a range of eval entries after a complete evaluation
 // ----------------------------------------------------------------------------
 {
-    EvalClearOp(uint lo, uint hi): Op("eclear", eclear), lo(lo), hi(hi) {}
-    uint lo, hi;
-    static Op *eclear(Op *op, Data &data)
+    ClearOp(int lo, int hi): lo(lo), hi(hi) {}
+    int lo, hi;
+
+    virtual Op *        Run(Data data)
     {
-        EvalClearOp *ec = (EvalClearOp *) op;
-        for (uint v = ec->lo; v < ec->hi; v++)
-            data.Value(v, NULL);
-        return ec->success;
+        for (int v = lo; v < hi; v++)
+            data[v] = NULL;
+        return success;
     }
 
-    virtual void Dump(std::ostream &out)
+    virtual kstring     OpID()  { return "clear"; }
+    virtual void        Dump(std::ostream &out)
     {
-        out << name << "\t" << lo << ".." << hi;
+        out << OpID() << "\t" << lo << ".." << hi;
     }
 };
 
@@ -406,168 +446,83 @@ struct ValueOp : Op
 //    Return a tree that we know was already evaluated
 // ----------------------------------------------------------------------------
 {
-    ValueOp(uint id): Op("value", value), id(id) {}
-    uint id;
-    static Op *value(Op *op, Data &data)
+    ValueOp(int id): id(id) {}
+    int id;
+    virtual Op *        Run(Data data)
     {
-        ValueOp *vop = (ValueOp *) op;
-        data.result = data.Value(vop->id);
-        return vop->success;
+        DataResult(data, data[id]);
+        return success;
     }
-    virtual void Dump(std::ostream &out)
+    virtual kstring     OpID()  { return "value"; }
+    virtual void        Dump(std::ostream &out)
     {
-        out << name << "\t" << id;
+        out << OpID() << "\t" << id;
     }
 };
 
 
 struct StoreOp : Op
 // ----------------------------------------------------------------------------
-//    Store a value in "permanent" storage
+//    Store result in some other ID
 // ----------------------------------------------------------------------------
 {
-    StoreOp(uint id): Op("store", store), id(id) {}
-    uint id;
-    static Op *store(Op *op, Data &data)
+    StoreOp(int id): id(id) {}
+    int id;
+    virtual Op *        Run(Data data)
     {
-        StoreOp *sop = (StoreOp *) op;
-        data.Value(sop->id, data.result);
-        return sop->success;
+        data[id] = DataResult(data);
+        return success;
     }
-    virtual void Dump(std::ostream &out)
+    virtual kstring     OpID()  { return "store"; }
+    virtual void        Dump(std::ostream &out)
     {
-        out << name << "\t" << id;
+        out << OpID() << "\t" << id;
     }
 };
 
 
-struct EnterOp : Op
+struct CallOp : Op
 // ----------------------------------------------------------------------------
-//   The 'Enter' key on RPN calculators, pushes result to left
-// ----------------------------------------------------------------------------
-{
-    EnterOp(): Op("enter", enter) {}
-    static Tree *enter(Data &data)
-    {
-        data.left = data.result;
-        return data.result;
-    }
-};
-
-
-struct BinaryOp : Op
-// ----------------------------------------------------------------------------
-//    Enter two arguments for use in ops that take two input arguments
+//    Call a subroutine using the given inputs
 // ----------------------------------------------------------------------------
 {
-    BinaryOp(uint left, uint right)
-        : Op("binary", binary), left(left), right(right) {}
-    uint left, right;
-    static Op *binary(Op *op, Data &data)
-    {
-        BinaryOp *bop = (BinaryOp *) op;
-        data.left = data.Value(bop->left);
-        data.result = data.Value(bop->right);
-        return bop->success;
-    }
-    virtual void Dump(std::ostream &out)
-    {
-        out << name << "\t" << left << ", " << right;
-    }
-};
+    CallOp(Code *target, uint outId, ParmOrder &parms)
+        : target(target), outId(outId), parms(parms) {}
+    Code  *     target;
+    int         outId;
+    ParmOrder   parms;
 
-
-struct ArgOp : Op
-// ----------------------------------------------------------------------------
-//    Reload an argument value
-// ----------------------------------------------------------------------------
-{
-    ArgOp(uint argId): Op("arg", load), argId(argId) {}
-    uint    argId;
-
-    static Op *load(Op *op, Data &data)
+    virtual Op *Run(Data data)
     {
-        ArgOp *ld = (ArgOp *) op;
-        data.result = data.Arg(ld->argId);
-        if (Op *op = data.result->GetInfo<Code>())
-            do { op = op->Run(data); } while (op);
-        if (Infix *infix = data.result->AsInfix())
-            if (infix->name == "->")
-                data.result = infix->right;
-        return ld->success;
+        uint sz = parms.size();
+        Data out = data + outId;
+
+        // Copy result and scope
+        DataResult(out, DataResult(data));
+        DataScope (out, DataScope (data));
+
+        // Copy all parameters
+        for (int p = 0; p < sz; p++)
+        {
+            int parmId = parms[p];
+            out[~p] = data[parmId];
+        }
+        Op *remaining = target->Run(out);
+        XL_ASSERT(!remaining);
+        if (remaining)
+            return remaining;
+        DataResult(data, out[0]);
+        return success;
     }
 
-    virtual void Dump(std::ostream &out) { out << name << "\t" << argId; }
-};
-
-
-struct VarOp : Op
-// ----------------------------------------------------------------------------
-//    First reference to a variable stores the declaration in locals
-// ----------------------------------------------------------------------------
-{
-    VarOp(uint varId, Infix *decl)
-        : Op("var", varInit), varId(varId), decl(decl) {}
-    uint        varId;
-    Infix_p     decl;
-    static Op *varInit(Op *op, Data &data)
+    virtual kstring     OpID()  { return "call"; }
+    virtual void        Dump(std::ostream &out)
     {
-        VarOp *vop = (VarOp *) op;
-        data.Var(vop->varId, vop->decl);
-        data.result = vop->decl->right;
-        return vop->success;
-    }
-
-    virtual void Dump(std::ostream &out)
-    {
-        out << name << "\t" << varId << "\t" << decl->left;
-    }
-};
-
-
-struct LoadOp : Op
-// ----------------------------------------------------------------------------
-//    Reference a variable from the locals
-// ----------------------------------------------------------------------------
-{
-    LoadOp(uint varId): Op("load", load), varId(varId) {}
-    uint        varId;
-    static Op *load(Op *op, Data &data)
-    {
-        LoadOp *ld = (LoadOp *) op;
-        Infix *decl = (Infix *) data.Var(ld->varId);
-        XL_ASSERT(decl && decl->Kind() == INFIX);
-        data.result = decl->right;
-        if (Op *op = data.result->GetInfo<Code>())
-            do { op = op->Run(data); } while (op);
-        return ld->success;
-    }
-
-    virtual void Dump(std::ostream &out)
-    {
-        out << name << "\t" << varId;
-    }
-};
-
-
-struct ParmOp : Op
-// ----------------------------------------------------------------------------
-//    Save an output parameter
-// ----------------------------------------------------------------------------
-{
-    ParmOp(uint parmId, uint valId)
-        : Op("parm", store), parmId(parmId), valId(valId) {}
-    uint parmId, valId;
-    static Op *store(Op *op, Data &data)
-    {
-        ParmOp *st = (ParmOp *) op;
-        data.Parm(st->parmId, data.Value(st->valId));
-        return st->success;
-    }
-
-    virtual void Dump(std::ostream &out)
-    {
-        out << name << "\t" << parmId << "=" << valId;
+        out << OpID() << "\t" << Code::Ref(target, "\t", "code", "null")
+            << "\t(";
+        for (uint a = 0; a < parms.size(); a++)
+            out << (a ? "," : "") << parms[a];
+        out << ") @ " << outId;
     }
 };
 
@@ -577,74 +532,61 @@ struct TypeCheckOp : FailOp
 //   Check if a type matches the given type
 // ----------------------------------------------------------------------------
 {
-    TypeCheckOp(Op *fail)
-        : FailOp("typecheck", typecheck, fail) {}
-    static Tree *typecheck(Data &data)
+    TypeCheckOp(int value, int type, Op *fail)
+        : FailOp(fail), value(value), type(type) {}
+    int value;
+    int type;
+
+    virtual Op *        Run(Data data)
     {
-        Tree *cast = TypeCheck(data.context, data.result, data.left);
-        return cast;
+        Context_p context = new Context(DataScope(data));
+        Tree *cast = TypeCheck(context, data[type], data[value]);
+        if (!cast)
+            return fail;
+        DataResult(data, cast);
+        return success;
+    }
+
+    virtual kstring     OpID()  { return "typechk"; }
+    virtual void        Dump(std::ostream &out)
+    {
+        out << OpID() << "\t" << value << ":" << type;
     }
 };
 
 
 struct ClosureOp : Op
 // ----------------------------------------------------------------------------
-//    Create a closure
+//    Create a closure from a function
 // ----------------------------------------------------------------------------
 {
-    ClosureOp(Scope *scope): Op("closure", closure), scope(scope) {}
-    Scope_p scope;
-    static Op *closure(Op *op, Data &data)
+    ClosureOp(Function *fn, ParmOrder &captured): fn(fn), captured(captured) {}
+    Function *fn;
+    ParmOrder captured;
+
+    virtual Op *        Run(Data data)
     {
-        ClosureOp *cls = (ClosureOp *) op;
-        if (cls->scope != data.context->CurrentScope())
-        {
-            Context *context = new Context(cls->scope);
-            data.result = MakeClosure(context, data.result);
-        }
-        return cls->success;
+        // Create a [closure] block
+        Tree *result = DataResult(data);
+        result = new Block(result, "[_", "_]", result->Position());
+
+        // Create the closure itself
+        Function *closure = new Function(fn, data, captured);
+
+        // Attach closure to result
+        result->SetInfo<Function>(closure);
+        DataResult(data, result);
+
+        return success;
     }
-    virtual void Dump(std::ostream &out)
+    virtual kstring     OpID()  { return "closure"; }
+    virtual void        Dump(std::ostream &out)
     {
-        out << name << "\t" << (void *) scope;
-    }
-};
-
-
-struct DiscloseOp : Op
-// ----------------------------------------------------------------------------
-//    If the value is a closure, update the data context
-// ----------------------------------------------------------------------------
-{
-    DiscloseOp(): Op("disclose", disclose) {}
-    static Tree *disclose(Data &data)
-    {
-        if (Tree *inside = IsClosure(data.result, &data.context))
-            data.result = inside;
-        return data.result;
-    }
-};
-
-
-struct CallOp : Op
-// ----------------------------------------------------------------------------
-//    Call a body - Parms are supposed to have been written first
-// ----------------------------------------------------------------------------
-{
-    CallOp(Op *ops): Op("call", call), ops(ops) {}
-    Op *ops;
-    static Op  *call(Op *op, Data &data)
-    {
-        CallOp *call = (CallOp *) op;
-        op = call->ops;
-        while (op)
-            op = op->Run(data);
-        return call->success;
-    }
-
-    virtual void Dump(std::ostream &out)
-    {
-        out << name << Code::Ref(ops, "\t", "code", "null");
+        out << OpID() << "\t(";
+        uint max = captured.size();
+        for (uint p = 0; p < max; p++)
+            out << (p > 0 ? "," : "") << captured[p];
+        out << ")";
     }
 };
 
@@ -654,28 +596,61 @@ struct IndexOp : FailOp
 //    Index operation, i.e. unknown prefix
 // ----------------------------------------------------------------------------
 {
-    IndexOp(Tree *self, Op *fail): FailOp("index", index, fail), self(self) {}
-    Tree_p self;
-    
-    static Op *index(Op *op, Data &data)
+    IndexOp(int left, int right, Op *fail)
+        : FailOp(fail), left(left), right(right) {}
+    int left, right;
+
+    virtual Op *        Run(Data data)
     {
-        IndexOp *iop = (IndexOp *) op;
-        Tree *callee = data.left;
-        Tree *arg = data.result;
-        Context_p context = data.context;
+        Tree *callee = data[left];
+        Tree *arg = data[right];
+        Scope_p scope = DataScope(data);
 
         // If the declaration was compiled, evaluate the code
         if (Code *code = callee->GetInfo<Code>())
-            callee = code->RunAll();
+        {
+            uint inputs = code->Inputs();
+            if (inputs == 0)
+            {
+                // If no arguments, evaluate as new callee
+                Tree_p args[2] = { data[0], data[1] };
+                Op *remaining = code->Run(args);
+                XL_ASSERT(!remaining);
+                if (remaining)
+                    return remaining;
+                callee = DataResult(args);
+            }
+            else if (inputs == 1)
+            {
+                // Looks like a prefix, use it as an argument
+                Tree_p args[3] = { arg, data[0], data[1] };
+                Op *remaining = code->Run(&args[1]);
+                XL_ASSERT(!remaining);
+                if (remaining)
+                    return remaining;
+                return success;
+            }
+            else
+            {
+                Ooops ("Invalid prefix code for $1, had $2 arguments", callee)
+                    .Arg(inputs);
+                return fail;
+            }
+        }
 
         // Check if we have a closure
+        Context_p context = new Context(scope);
         if (Tree *inside = IsClosure(callee, &context))
+        {
+            scope = context->CurrentScope();
             callee = inside;
+            DataScope(data, scope);
+        }
 
         // Eliminate blocks on the callee side
         while (Block *blk = callee->AsBlock())
             callee = blk->child;
-        
+
         // If we have an infix on the left, check if it's a single rewrite
         if (Infix *lifx = callee->AsInfix())
         {
@@ -702,22 +677,20 @@ struct IndexOp : FailOp
                     result = context->Evaluate(arg);
                 }
 
-                data.result = result;
-                return iop->success;
+                DataResult(data, result);
+                return success;
             }
         }
 
         // Try to lookup in the callee's context
         if (Tree *found = context->Bound(arg))
         {
-            data.result = found;
-            return iop->success;
+            DataResult(data, found);
+            return success;
         }
 
         // Other cases: go to 'fail' exit
-        if (!iop->fail)
-            Ooops("No prefix matches $1", iop->self);
-        return iop->fail;
+        return fail;
     }
 };
 
@@ -727,14 +700,14 @@ struct FormErrorOp : Op
 //   When we fail with all candidates, report an error
 // ----------------------------------------------------------------------------
 {
-    FormErrorOp(Tree *self): Op("error", error), self(self) {}
+    FormErrorOp(Tree *self): self(self) {}
     Tree_p self;
-    static Op *error(Op *op, Data &data)
+    virtual Op *        Run(Data data)
     {
-        FormErrorOp *fe = (FormErrorOp *) op;
-        Ooops("No form matches $1", fe->self);
-        return fe->success;
+        Ooops("No form matches $1", self);
+        return success;
     }
+    virtual kstring     OpID()  { return "error"; };
 };
 
 
@@ -745,16 +718,17 @@ struct FormErrorOp : Op
 //
 // ============================================================================
 
-CodeBuilder::CodeBuilder()
+CodeBuilder::CodeBuilder(TreeList &captured)
 // ----------------------------------------------------------------------------
 //   Create a code builder
 // ----------------------------------------------------------------------------
     : ops(NULL), lastOp(&ops),
-      variables(), evals(), parms(),
-      nEvals(0), nParms(0),
-      candidates(0), test(NULL), resultType(NULL),
-      context(NULL), locals(NULL),
-      failOp(NULL), successOp(NULL)
+      inputs(), values(), captured(captured),
+      nEvals(0), nParms(0), candidates(0),
+      test(NULL), resultType(NULL),
+      context(NULL), parmsCtx(NULL),
+      failOp(NULL), successOp(NULL),
+      instrs(), subexprs(), parms()
 {}
 
 
@@ -811,11 +785,11 @@ void CodeBuilder::InstructionsSuccess(uint neOld)
 //    At end of an instruction, mark success by recording number of evals
 // ----------------------------------------------------------------------------
 {
-    uint ne = evals.size();
+    uint ne = values.size();
     if (nEvals < ne)
         nEvals = ne;
     if (ne > neOld)
-        Add(new EvalClearOp(neOld, ne));
+        Add(new ClearOp(neOld, ne));
 }
 
 
@@ -841,18 +815,16 @@ void CodeBuilder::InstructionsSuccess(uint neOld)
 //
 //      ;; Match U against X:integer
 //      Evaluate U              or goto fail1.1         (EvalOp)
-//      Evaluate integer        or goto fail1.1         (EvalOp - SaveLeft)
+//      Evaluate integer        or goto fail1.1         (EvalOp)
 //      TypeCheck U : integer   or goto fail1.1         (TypeCheckOp)
-//      Bind U to X                                     (ParmOp 0)
 //
 //      ;; Match V against Y:integer
 //      Evaluate V              or goto fail1.1         (EvalOp)
 //      Evaluate integer        or goto fail1.1         (EvalOp - SaveLeft)
 //      TypeCheck V : integer   or goto fail1.1         (TypeCheckOp)
-//      Bind V to Y                                     (ParmOp 1)
 //
 //      ;; Call foo1
-//      Call foo1                                       (CallOp)
+//      Call foo1 (id(U), id(V)) @ parmSize             (CallOp)
 //
 //      ;; Done, successful evaluation, goto is in 'success' field
 //      goto success1
@@ -890,8 +862,8 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     static uint  depth = 0;
     Save<uint>   saveDepth(depth, depth+1);
 
-    CodeBuilder *code = (CodeBuilder *) cb;
-    uint         cindex = code->candidates++;
+    CodeBuilder *builder = (CodeBuilder *) cb;
+    uint         cindex = builder->candidates++;
 
     IFTRACE(compile)
         std::cerr << "COMPILE" << depth << ":" << cindex
@@ -900,18 +872,16 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
 
     // Create the scope for evaluation
     Context_p    context = new Context(evalScope);
-    Context_p    locals  = NULL;
+    Context_p    parmsCtx  = NULL;
 
     // Create the exit point for failed evaluation
-    Op *         oldFailOp = code->failOp;
+    Op *         oldFailOp = builder->failOp;
     Op *         failOp = new LabelOp("fail");
-    code->failOp = failOp;
+    builder->failOp = failOp;
 
     // We start with new parameters for each candidate
-    TreeIndices         empty;
-    Save<TreeIndices>   saveParms(code->parms, empty);
-    ParmOrder           noParmOrder;
-    Save<ParmOrder>     saveParmOrder(code->parmOrder, noParmOrder);
+    ParmOrder           noParms;
+    Save<ParmOrder>     saveParmOrder(builder->parms, noParms);
 
     // If we lookup a name or a number, just return it
     Tree *defined = RewriteDefined(decl->left);
@@ -920,35 +890,35 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     CodeBuilder::strength strength = CodeBuilder::ALWAYS;
     if (isLeaf)
     {
-        if (!Tree::Equal(defined, self))
+        if (defined != xl_self && !Tree::Equal(defined, self))
         {
             IFTRACE(compile)
                 std::cerr << "COMPILE" << depth << ":" << cindex
                           << "(" << self << ") from constant "
                           << decl->left << " MISMATCH\n";
-            code->failOp = oldFailOp;
+            builder->failOp = oldFailOp;
             delete failOp;
             return NULL;
         }
-        locals = context;
+        parmsCtx = context;
     }
     else
     {
         // Create the scope for binding the parameters
-        locals = new Context(declScope);
-        locals->CreateScope();
+        parmsCtx = new Context(declScope);
+        parmsCtx->CreateScope();
 
         // Remember the old end in case we did not generate code
-        Op **lastOp = code->lastOp;
-        uint lastInstrSize = code->instrs.size();
+        Op **lastOp = builder->lastOp;
+        uint lastInstrSize = builder->instrs.size();
 
         // Check bindings of arguments to declaration, exit if fails
-        Save<Tree_p>    saveSelf(code->test, self);
-        Save<Context_p> saveContext(code->context, context);
-        Save<Context_p> saveLocals(code->locals, locals);
-        Save<Tree_p>    saveResultType(code->resultType, NULL);
+        Save<Tree_p>    saveSelf(builder->test, self);
+        Save<Context_p> saveContext(builder->context, context);
+        Save<Context_p> saveParmsCtx(builder->parmsCtx, parmsCtx);
+        Save<Tree_p>    saveResultType(builder->resultType, NULL);
 
-        strength = decl->left->Do(code);
+        strength = decl->left->Do(builder);
         if (strength == CodeBuilder::NEVER)
         {
             IFTRACE(compile)
@@ -958,20 +928,21 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
 
             // Remove the instructions that were added and the failed exit
             *lastOp = NULL;
-            uint lastNow = code->instrs.size();
+            uint lastNow = builder->instrs.size();
             for (uint i = lastInstrSize; i < lastNow; i++)
-                delete code->instrs[i];
-            code->instrs.resize(lastInstrSize);
-            code->failOp = oldFailOp;
-            code->lastOp = lastOp;
+                delete builder->instrs[i];
+            builder->instrs.resize(lastInstrSize);
+            builder->failOp = oldFailOp;
+            builder->lastOp = lastOp;
             delete failOp;
             return NULL;
         }
-        if (code->resultType)
-            resultType = code->resultType;
+        if (builder->resultType)
+            resultType = builder->resultType;
     }
 
     // Check if we have builtins (opcode or C bindings)
+    int valueID = 0;
     if (decl->right == xl_self)
     {
         // If the right is "self", just return the input
@@ -979,59 +950,46 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
             std::cerr << "COMPILE" << depth << ":" << cindex
                       << "(" << self << ") from " << decl->left
                       << " SELF\n";
-        code->Add(new SelfOp);
+        builder->Add(new SelfOp);
     }
     else if (Opcode *opcode = OpcodeInfo(decl))
     {
         // Cached callback - Make a copy
-        XL_ASSERT(opcode->arity <= Op::ARITY_SELF);
         XL_ASSERT(!opcode->success);
-        if (opcode->arity == Op::ARITY_TWO ||
-            opcode->arity == Op::ARITY_CONTEXT_TWO)
-        {
-            uint lfID = code->parmOrder[0];
-            uint rtID = code->parmOrder[1];
-            code->Add(new BinaryOp(lfID, rtID));
-        }
-        if (opcode->arity < Op::ARITY_SELF)
-            code->Add(new Op(*opcode));
-        else
-            code->Add(new ConstOp(defined));
+        Opcode *clone = opcode->Clone();
+        clone->SetParms(builder->parms);
+        builder->Add(clone);
         IFTRACE(compile)
             std::cerr << "COMPILE" << depth << ":" << cindex
-                      << "(" << self << ") OPCODE " << opcode->name
+                      << "(" << self << ") OPCODE " << opcode
                       << "\n";
     }
     else if (isLeaf)
     {
         // Assign an ID for names
-        Save<Context_p> saveContext(code->context, context);
-        Save<Context_p> saveLocals(code->locals, locals);
-        code->Reference(defined, decl);
+        Save<Context_p> saveContext(builder->context, context);
+        Save<Context_p> saveParmsCtx(builder->parmsCtx, parmsCtx);
+        valueID = builder->Evaluate(context, defined);
     }
     else
     {
         // Normal case: evaluate body of the declaration in the new context
-        Code *body = CompileToBytecode(locals, decl->right, code->parms);
-        for (uint p = 0; p < code->parmOrder.size(); p++)
-            code->Add(new ParmOp(p, code->parmOrder[p]));
-        code->Add(new CallOp(body));
+        CallOp *call = builder->Call(parmsCtx, decl->right,
+                                     builder->inputs, builder->parms);
+        builder->Add(call);
     }
 
     // Check if there is a result type, if so add a type check
     if (resultType != tree_type)
     {
-        code->Evaluate(context, resultType, CodeBuilder::SAVE_LEFT);
-        code->Add(new TypeCheckOp(code->failOp));
+        if (!valueID)
+            valueID = builder->ValueID(decl->right);
+        int typeID = builder->Evaluate(context, resultType);
+        builder->Add(new TypeCheckOp(valueID, typeID, builder->failOp));
     }
 
     // Successful evaluation
-    code->Success();
-
-    // Record the maximum parameter size
-    uint np = code->parms.size();
-    if (code->nParms < np)
-        code->nParms = np;
+    builder->Success();
 
     // Keep looking for other declarations
     IFTRACE(compile)
@@ -1044,31 +1002,24 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
 }
 
 
-Code *CodeBuilder::Compile(Context *context, Tree *what)
-// ----------------------------------------------------------------------------
-//    Compile a top-level declaration (no parameters)
-// ----------------------------------------------------------------------------
-{
-    TreeIndices noparms;
-    return Compile(context, what, parms);
-}
-
-
-Code *CodeBuilder::Compile(Context *context, Tree *what, TreeIndices &callArgs)
+Function *CodeBuilder::Compile(Context *context, Tree *what, TreeIDs &callArgs)
 // ----------------------------------------------------------------------------
 //    Compile the tree
 // ----------------------------------------------------------------------------
 {
     // Check if we already compiled this particular tree (possibly recursive)
-    Code *code = what->GetInfo<Code>();
-    if (code)
-        return code;
+    Function *function = what->GetInfo<Function>();
+    if (function)
+    {
+        captured = function->captured;
+        return function;
+    }
 
     // Does not exist yet, set it up
     uint nArgs = callArgs.size();
-    Save<TreeIndices> saveArgs(args, callArgs);
-    code = new Code(context, what, nArgs);
-    what->SetInfo<Code>(code);
+    Save<TreeIDs> saveInputs(inputs, callArgs);
+    function = new Function(context, what, nArgs, 0);
+    what->SetInfo<Code>(function);
 
     // Evaluate the input code
     bool result = true;
@@ -1078,21 +1029,19 @@ Code *CodeBuilder::Compile(Context *context, Tree *what, TreeIndices &callArgs)
         result = Instructions(context, what);
 
     // The generated code takes over the instructions in all cases
-    code->SetOps(&ops, &instrs);
+    function->SetOps(&ops, &instrs);
     if (result)
     {
         // Successful compilation - Return the code we created
-        code->nVars  = variables.size();
-        code->nEvals = nEvals;
-        code->nParms = nParms;
-        if (code->nVars || code->nEvals || code->nParms)
-            code->arity_opdata = code->runCodeWithScope;
+        function->nInputs = nArgs + captured.size();
+        function->nLocals = values.size() + nEvals + nParms;
+        function->captured = captured;
 
         IFTRACE(ucode)
             std::cerr << "CODE " << what << "\n"
-                      << code << "\n";
+                      << function << "\n";
 
-        return code;
+        return function;
     }
 
     // We failed, delete the result and return
@@ -1112,10 +1061,10 @@ Op *CodeBuilder::CompileInternal(Context *context, Tree *what)
         return result;
 
     // Save the place where we insert instructions
-    Save<Op *>          saveOps(ops, NULL);
-    Save<Op **>         saveLastOp(lastOp, &ops);
-    TreeIndices         empty;
-    Save<TreeIndices>   saveParms(parms, empty);
+    Save<Op *>      saveOps(ops, NULL);
+    Save<Op **>     saveLastOp(lastOp, &ops);
+    ParmOrder       noParms;
+    Save<ParmOrder> saveParms(parms, noParms);
 
     Errors *errors = MAIN->errors;
     uint errCount = errors->Count();
@@ -1125,7 +1074,7 @@ Op *CodeBuilder::CompileInternal(Context *context, Tree *what)
     subexprs[what] = result;
 
     // Evals and parms are the max number for all subexpressions
-    uint np = parms.size();
+    uint np = parms.size() + 2;
     if (nParms < np)
         nParms = np;
 
@@ -1138,15 +1087,15 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
 //    Compile an instruction or a sequence of instructions
 // ----------------------------------------------------------------------------
 {
-    Save<Op *>  saveSuccessOp(successOp, NULL);
-    Save<Op *>  saveFailOp(failOp, NULL);
-    Scope_p     originalScope = ctx->CurrentScope();
-    Context_p   context = ctx;
-    TreeIndices empty;
+    Save<Op *> saveSuccessOp(successOp, NULL);
+    Save<Op *> saveFailOp(failOp, NULL);
+    Scope_p    originalScope = ctx->CurrentScope();
+    Context_p  context       = ctx;
+    TreeIDs    empty;
 
     while (what)
     {
-        Save<TreeIndices>   saveEvals(evals, evals);
+        Save<TreeIDs> saveEvals(values, values);
 
         // Create new success exit for this expression
         Op *success = new LabelOp("success");
@@ -1235,11 +1184,11 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             }
 
             // Evaluate callee
-            Evaluate(context, callee);
-            Evaluate(context, arg, SAVE_LEFT);
+            int calleeID = Evaluate(context, callee);
+            int argID = Evaluate(context, arg);
 
             // Lookup the argument in the callee's context
-            Add (new IndexOp(pfx, failOp));
+            Add (new IndexOp(calleeID, argID, failOp));
             InstructionsSuccess(saveEvals.saved.size());
             return true;
         }
@@ -1280,7 +1229,6 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             {
                 if (!Instructions(context, infix->left))
                     return false;
-                Add(new DiscloseOp);
                 what = infix->right;
                 continue;
             }
@@ -1296,106 +1244,159 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
 }
 
 
-uint CodeBuilder::EvaluationID(Tree *self)
+int CodeBuilder::ValueID(Tree *self)
 // ----------------------------------------------------------------------------
 //    Return the evaluation ID for a given expression
 // ----------------------------------------------------------------------------
 {
-    uint id = evals.size();
-    TreeIndices::iterator found = evals.find(self);
-    if (found == evals.end())
-        evals[self] = id;
+    int id;
+    TreeIDs::iterator found = values.find(self);
+    if (found == values.end())
+    {
+        id = values.size() + 2;
+        values[self] = id;
+    }
     else
+    {
         id = (*found).second;
+    }
     return id;
 }
 
 
-uint CodeBuilder::Evaluate(Context *ctx, Tree *self, EvalFlags flags)
+int CodeBuilder::Evaluate(Context *ctx, Tree *self, bool argOnly)
 // ----------------------------------------------------------------------------
 //   Evaluate the tree, and return its ID in the evals array
 // ----------------------------------------------------------------------------
 {
-    uint id = EvaluationID(self);
-    bool computed = false;
-    bool saveLeft = flags & SAVE_LEFT;
+    int id = 0;
 
-    // For constants, we can simply evaluate in line
+    // For constants, we can simply store it whenever we need it
     if (self->IsConstant())
     {
-        if (saveLeft)
-            Add(new EnterOp);
         Instructions(ctx, self);
-        computed = true;
-    }
-
-    else if (Name *name = self->AsName())
-    {
-        // Check if that's one of the input parameters. If so, emit an 'Arg'
-        Rewrite_p rw;
-        Scope_p   scope;
-        Context * inner = ctx;
-        if (context)
-            inner = context;
-        if (Tree *arg = inner->Bound(name, true, &rw, &scope))
-        {
-            TreeIndices::iterator found = args.find(rw->left);
-            if (found != args.end())
-            {
-                uint localId = (*found).second;
-                if (saveLeft)
-                    Add(new EnterOp);
-                Add(new ArgOp(localId));
-                computed = true;
-            }
-
-            else if (Opcode *op = arg->GetInfo<Opcode>())
-            {
-                if (saveLeft)
-                    Add(new EnterOp);
-                if (op->arity < Op::ARITY_SELF)
-                    Add(new Op(*op));
-                else
-                    Add(new ConstOp(arg));
-                computed = true;
-            }
-        }
-    }
-
-    if (computed)
-    {
-        // Store the value we just computed
+        id = ValueID(self);
         Add(new StoreOp(id));
+        return id;
     }
-    else
+
+    // For names, look them up to check if we have them somewhere
+    if (Name *name = self->AsName())
     {
-        bool defer = flags & DEFER;
-        if (true ||  !defer)
+        bool evaluate = false;
+        Rewrite_p rw;
+
+        // Check if that's one of the input parameters. If so, just ref it
+        if (parmsCtx->Bound(name, false, &rw, NULL))
         {
-            // Compile the code for the input
-            Op *op = CompileInternal(ctx, self);
-            
-            // Add an evaluation opcode
-            Add(new EvalOp(id, op, failOp, saveLeft));
+            TreeIDs::iterator found = inputs.find(rw);
+            XL_ASSERT(found != inputs.end() && "Parameter not bound?");
+            id = (*found).second;
+
+            // Check if value was not evaluated by caller, if so evaluate now
+            Tree *type = RewriteType(rw->left);
+            if (!type || type == tree_type)
+                evaluate = true;
         }
+
+        // Check if this is a local variable
+        else if (Tree *value = context->Bound(name, false, &rw, NULL))
+        {
+            id = ValueID(rw);
+            while (Block *block = value->AsBlock())
+                value = block->child;
+            evaluate = !value->IsConstant();
+            if (!evaluate)
+            {
+                Add(new ConstOp(value));
+                Add(new StoreOp(id));
+            }
+        }
+
+        // Evaluate code associated to name if we need to
+        if (evaluate)
+        {
+            Tree *value = rw->right;
+            id = ValueID(value);
+
+            if (Opcode *opcode = value->GetInfo<Opcode>())
+            {
+                Op *code = opcode->Clone();
+                Add(new EvalOp(id, code, failOp));
+            }
+            else if (Code *code = value->GetInfo<Code>())
+            {
+                Add(new EvalOp(id, code, failOp));
+            }
+            else
+            {
+                // No code yet: generate it
+                ParmOrder noParms;
+                TreeIDs   noParmIDs;
+                CallOp *call = Call(context, value, noParmIDs, noParms);
+                instrs.push_back(call);
+                Add(new EvalOp(id, call, failOp));
+            }
+        }
+
+        return id;
     }
-    
+
+    // Other cases: generate code for the value, and evaluate it
+    id = ValueID(self);
+    if (!argOnly)
+    {
+        Op *ops = CompileInternal(ctx, self);
+        Add(new EvalOp(id, ops, failOp));
+    }
+
     // Return the allocated ID
     return id;
 }
 
 
-uint CodeBuilder::EvaluationTemporary(Tree *self)
+int CodeBuilder::EvaluationTemporary(Tree *self)
 // ----------------------------------------------------------------------------
 //    Create an evaluation temporary
 // ----------------------------------------------------------------------------
 {
-    uint id = EvaluationID(self);
+    uint id = ValueID(self);
     Code *code = new Code(context, self, new ValueOp(id));
     self->SetInfo<Code>(code);
     return id;
 }
 
+
+CallOp *CodeBuilder::Call(Context *context, Tree *value,
+                          TreeIDs &parmIDs, ParmOrder &parms)
+// ----------------------------------------------------------------------------
+//   Generate the code sequence for a call
+// ----------------------------------------------------------------------------
+{
+    TreeList captured;
+    Function *fn = CompileToBytecode(context, value, parmIDs, captured);
+
+    // Check if we captured values from the surrounding contexts
+    if (uint csize = captured.size())
+    {
+        for (uint c = 0; c < csize; c++)
+        {
+            Tree *cap = captured[c];
+            int id = ValueID(cap);
+            parms.insert(parms.begin(), id);
+        }
+    }
+
+    // Record the maximum parameter size
+    uint np = parms.size() + 2;
+    if (nParms < np)
+        nParms = np;
+
+    // Output slot where we will pass paramters and generate call
+    int outID = values.size() + np;
+    CallOp *call = new CallOp(fn, outID, parms);
+    return call;
+}
 
 
 
@@ -1411,37 +1412,28 @@ struct MatchOp : FailOp
 //   Check if the current result matches the integer/real/text value
 // ----------------------------------------------------------------------------
 {
-    MatchOp(T *ref, Op *fail): FailOp("match", match, fail), ref(ref) {}
-    GCPtr<T>    ref;
+    MatchOp(typename T::value_t ref, Op *fail): FailOp(fail), ref(ref) {}
+    typename T::value_t ref;
 
-    static Op *match(Op *op, Data &data)
+    virtual Op *        Run(Data data)
     {
-        MatchOp *mo = (MatchOp *) op;
-        Tree *test = data.result;
+        Tree *test = DataResult(data);
         if (T *tval = test->As<T>())
-            if (tval->value == mo->ref->value)
-                return mo->success;
-        return mo->fail;
+            if (tval->value == ref)
+                return success;
+        return fail;
     }
 
-    virtual void Dump(std::ostream &out)
+    virtual kstring     OpID()  { return "match"; }
+    virtual void        Dump(std::ostream &out)
     {
-        out << name << "\t" << ref;
+        out << OpID() << "\t" << ref;
     }
 };
 
-template<> void MatchOp<Integer>::Dump(std::ostream &out)
-{
-    out << name << "\tinteger\t" << ref;
-}
-template<> void MatchOp<Real>::Dump(std::ostream &out)
-{
-    out << name << "\treal\t" << ref;
-}
-template<> void MatchOp<Text>::Dump(std::ostream &out)
-{
-    out << name << "\ttext\t" << ref;
-}
+template<> kstring MatchOp<Integer>::OpID()     { return "match\tinteger"; }
+template<> kstring MatchOp<Real>   ::OpID()     { return "match\treal"; }
+template<> kstring MatchOp<Text>   ::OpID()     { return "match\ttext"; }
 
 
 struct NameMatchOp : FailOp
@@ -1449,17 +1441,23 @@ struct NameMatchOp : FailOp
 //   Check if the current top of stack matches the name
 // ----------------------------------------------------------------------------
 {
-    NameMatchOp(Op *fail)
-        : FailOp("name_match", match, fail) {}
+    NameMatchOp(int testID, int nameID, Op *fail)
+        : FailOp(fail), testID(testID), nameID(nameID) {}
+    int testID;
+    int nameID;
 
-    static Op *match(Op *op, Data &data)
+    virtual Op *        Run(Data data)
     {
-        NameMatchOp *nmo = (NameMatchOp *) op;
-        Tree *test = data.result;
-        Tree *ref  = data.left;
+        Tree *test = data[testID];
+        Tree *ref  = data[nameID];
         if (Tree::Equal(ref, test))
-            return nmo->success;
-        return nmo->fail;
+            return success;
+        return fail;
+    }
+    virtual kstring     OpID()  { return "match\tname"; }
+    virtual void        Dump(std::ostream &out)
+    {
+        out << OpID() << "\t" << testID << "," << nameID;
     }
 };
 
@@ -1469,15 +1467,19 @@ struct WhenClauseOp : FailOp
 //   Check if the condition in a when clause is verified
 // ----------------------------------------------------------------------------
 {
-    WhenClauseOp(Op *fail): FailOp("when", when, fail) {}
+    WhenClauseOp(int whenID, Op *fail): FailOp(fail), whenID(whenID) {}
+    int whenID;
 
-    static Op *when(Op *op, Data &data)
+    virtual Op *        Run(Data data)
     {
-        WhenClauseOp *wc = (WhenClauseOp *) op;
-        if (data.result != xl_true)
-            return wc->fail;
-        data.result = data.left;
-        return wc->success;
+        if (data[whenID] != xl_true)
+            return fail;
+        return success;
+    }
+    virtual kstring     OpID()  { return "when"; };
+    virtual void        Dump(std::ostream &out)
+    {
+        out << OpID() << "\t" << whenID;
     }
 };
 
@@ -1488,30 +1490,31 @@ struct InfixMatchOp : FailOp
 // ----------------------------------------------------------------------------
 {
     InfixMatchOp(text symbol, Op *fail, uint lid, uint rid)
-        : FailOp("infix", infix, fail), symbol(symbol),
+        : FailOp(fail), symbol(symbol),
           lid(lid), rid(rid) {}
     text        symbol;
     uint        lid;
     uint        rid;
 
-    static Op *infix(Op *op, Data &data)
+    virtual Op *        Run(Data data)
     {
-        InfixMatchOp *im = (InfixMatchOp *) op;
-        if (Infix *ifx = data.result->AsInfix())
+        Tree *test = DataResult(data);
+        if (Infix *ifx = test->AsInfix())
         {
-            if (ifx->name == im->symbol)
+            if (ifx->name == symbol)
             {
-                data.Value(im->lid, ifx->left);
-                data.Value(im->rid, ifx->right);
-                return im->success;
+                data[lid] = ifx->left;
+                data[rid] = ifx->right;
+                return success;
             }
         }
-        return im->fail;
+        return fail;
     }
 
-    virtual void Dump(std::ostream &out)
+    virtual kstring     OpID()  { return "infix"; }
+    virtual void        Dump(std::ostream &out)
     {
-        out << name << "\t" << lid << " " << symbol << " " << rid;
+        out << OpID() << "\t" << lid << " " << symbol << " " << rid;
     }
 };
 
@@ -1533,7 +1536,7 @@ CodeBuilder::strength CodeBuilder::DoInteger(Integer *what)
     if (test->IsConstant())
         return NEVER;
     Evaluate(context, test);
-    Add(new MatchOp<Integer>(what, failOp));
+    Add(new MatchOp<Integer>(what->value, failOp));
     return SOMETIMES;
 }
 
@@ -1550,7 +1553,7 @@ CodeBuilder::strength CodeBuilder::DoReal(Real *what)
     if (test->IsConstant())
         return NEVER;
     Evaluate(context, test);
-    Add(new MatchOp<Real>(what, failOp));
+    Add(new MatchOp<Real>(what->value, failOp));
     return SOMETIMES;
 }
 
@@ -1565,7 +1568,7 @@ CodeBuilder::strength CodeBuilder::DoText(Text *what)
     if (test->IsConstant())
         return NEVER;
     Evaluate(context, test);
-    Add(new MatchOp<Text>(what, failOp));
+    Add(new MatchOp<Text>(what->value, failOp));
     return SOMETIMES;
 }
 
@@ -1577,7 +1580,7 @@ CodeBuilder::strength CodeBuilder::DoName(Name *what)
 {
     // If there is already a binding for that name, value must match
     // This covers both a pattern with 'pi' in it and things like 'X+X'
-    if (Tree *bound = locals->Bound(what))
+    if (Tree *bound = parmsCtx->Bound(what))
     {
         if (bound->GetInfo<Opcode>())
         {
@@ -1589,13 +1592,13 @@ CodeBuilder::strength CodeBuilder::DoName(Name *what)
         }
 
         // Do a dynamic test to check if the name value is the same
-        Evaluate(locals, test);
-        Evaluate(locals, bound, SAVE_LEFT);
-        Add(new NameMatchOp(failOp));
+        int testID = Evaluate(parmsCtx, test);
+        int nameID = Evaluate(parmsCtx, bound);
+        Add(new NameMatchOp(testID, nameID, failOp));
         return SOMETIMES;
     }
 
-    Evaluate(context, test, DEFER);
+    Evaluate(context, test, true);
     Bind(what, test);
     return ALWAYS;
 }
@@ -1707,7 +1710,8 @@ CodeBuilder::strength CodeBuilder::DoInfix(Infix *what)
 
         // Typed name: evaluate type and check match
         Tree *namedType = NULL;
-        if (Name *typeName = what->right->AsName())
+        Tree *type = what->right;
+        if (Name *typeName = type->AsName())
             if (Tree *found = context->Bound(typeName))
                 namedType = found;
 
@@ -1715,7 +1719,7 @@ CodeBuilder::strength CodeBuilder::DoInfix(Infix *what)
         {
             if (namedType == tree_type)
             {
-                Evaluate(context, test, DEFER);
+                Evaluate(context, test, true);
                 Bind(name, test);
                 return ALWAYS;
             }
@@ -1723,7 +1727,7 @@ CodeBuilder::strength CodeBuilder::DoInfix(Infix *what)
             {
                 test = cast;
                 Evaluate(context, test);
-                Bind(name, test);
+                Bind(name, test, namedType);
                 return ALWAYS;
             }
 
@@ -1733,10 +1737,10 @@ CodeBuilder::strength CodeBuilder::DoInfix(Infix *what)
         }
 
         // In all other cases, we need do perform dynamic evaluation to check
-        Evaluate(context, test);
-        Evaluate(context, what->right, SAVE_LEFT);
-        Add(new TypeCheckOp(failOp));
-        Bind(name, test);
+        int testID = Evaluate(context, test);
+        int typeID = Evaluate(context, type);
+        Add(new TypeCheckOp(testID, typeID, failOp));
+        Bind(name, test, type);
         return SOMETIMES;
     }
 
@@ -1760,8 +1764,8 @@ CodeBuilder::strength CodeBuilder::DoInfix(Infix *what)
             return NEVER;
 
         // Here, we need to evaluate in the local context, not eval one
-        Evaluate(locals, what->right, SAVE_LEFT);
-        Add(new WhenClauseOp(failOp));
+        int whenID = Evaluate(parmsCtx, what->right);
+        Add(new WhenClauseOp(whenID, failOp));
         return SOMETIMES;
     }
 
@@ -1817,61 +1821,29 @@ CodeBuilder::strength CodeBuilder::DoLeftRight(Tree *wl, Tree *wr,
 }
 
 
-uint CodeBuilder::Bind(Name *name, Tree *value)
+int CodeBuilder::Bind(Name *name, Tree *value, Tree *type)
 // ----------------------------------------------------------------------------
 //   Enter a new binding in the current context
 // ----------------------------------------------------------------------------
 {
-    XL_ASSERT(parms.find(name) == parms.end() && "Binding name twice");
+    XL_ASSERT(inputs.find(name) == inputs.end() && "Binding name twice");
 
-    // Add closure if the context is not the one we are evaluating in
-    Add(new ClosureOp(context->CurrentScope()));
+    Tree *defined = name;
+    if (type)
+        defined = new Infix(":", defined, type, name->Position());
 
-    // Define the name in the locals
-    locals->Define(name, value);
+    // Define the name in the parameters
+    Rewrite *rw = parmsCtx->Define(defined, value);
 
-    // Generate the parameter ID for the given parameter
-    uint parmId = parms.size();
-    parms[name] = parmId;
+    // Generate the (negative) parameter ID for the given parameter
+    int parmId = ~inputs.size();
+    inputs[rw] = parmId;
 
     // Record parameter order for calls
-    uint id = EvaluationID(value);
-    parmOrder.push_back(id);
+    uint id = ValueID(value);
+    parms.push_back(id);
 
     return parmId;
-}
-
-
-uint CodeBuilder::Reference(Tree *name, Infix *decl)
-// ----------------------------------------------------------------------------
-//   Make a reference to a local or outer variable
-// ----------------------------------------------------------------------------
-{
-    // Check if that's one of the input parameters. If so, emit an 'Arg'
-    TreeIndices::iterator found = args.find(name);
-    if (found != args.end())
-    {
-        uint localId = (*found).second;
-        Add(new ArgOp(localId));
-        return ~localId;
-    }
-
-    // Otherwise, allocate a variable with the decl
-    uint varId = variables.size();
-    found = variables.find(name);
-    if (found == variables.end())
-    {
-        variables[name] = varId;
-        Add(new VarOp(varId, decl));
-        CompileToBytecode(context, decl->right);
-    }
-    else
-    {
-        varId = (*found).second;
-        Add(new LoadOp(varId));
-    }
-
-    return varId;
 }
 
 XL_END

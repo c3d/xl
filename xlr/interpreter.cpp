@@ -572,10 +572,15 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     if (opcode)
     {
         // Cached callback
-        result = opcode->Run(context, decl->right, args);
+        uint offset = args.size();
+        args.push_back(decl->right);
+        args.push_back(context->CurrentScope());
+        Data data = &args[offset];
+        opcode->Run(data);
+        result = DataResult(data);
         IFTRACE(eval)
             std::cerr << "EVAL" << depth << "(" << self
-                      << ") OPCODE " << opcode->name
+                      << ") OPCODE " << opcode->OpID()
                       << "(" << args << ") = "
                       << result << "\n";
         return result;

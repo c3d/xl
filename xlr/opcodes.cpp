@@ -79,7 +79,7 @@ Opcode * Opcode::Find(text name)
     for (Opcodes::iterator o = opcodes->begin(); o != opcodes->end(); o++)
     {
         Opcode *opcode = *o;
-        if (opcode->name == name)
+        if (opcode->OpID() == name)
             return opcode;
     }
     return NULL;
@@ -94,21 +94,21 @@ void Opcode::Register(Context *context)
     if (Tree *shape = this->Shape())
     {
         IFTRACE(opcodes)
-            std::cerr << "Opcode " << this->name
+            std::cerr << "Opcode " << this->OpID()
                       << " for " << shape << "\n";
 
         Save<TreePosition> savePos(Tree::NOWHERE, Tree::BUILTIN);
         static Name_p opcodeName = new Name("opcode");
         Infix *decl = new Infix("->", shape,
                                 new Prefix(opcodeName,
-                                           new Name(this->name)));
+                                           new Name(this->OpID())));
         context->Enter(decl);
         decl->right->SetInfo<Opcode> (this);
     }
     else
     {
         IFTRACE(opcodes)
-            std::cerr << "Opcode " << this->name << "\n";
+            std::cerr << "Opcode " << this->OpID() << "\n";
     }
 }
 
@@ -126,7 +126,7 @@ void NameOpcode::Register(Context *context)
 // ----------------------------------------------------------------------------
 {
     IFTRACE(opcodes)
-        std::cerr << "Opcode " << this->name << " is a name\n";
+        std::cerr << "Opcode " << this->OpID() << " is a name\n";
 
     context->Define(toDefine, toDefine);
     toDefine->SetInfo<Opcode> (this);

@@ -34,6 +34,8 @@ MODULES_HEADERS=$(MODULES:%=%-module.h)
 
 # List of source files to process
 SOURCES     =					\
+	bytecode.cpp				\
+	interpreter.cpp				\
 	main.cpp				\
 	tree.cpp				\
 	action.cpp				\
@@ -47,8 +49,6 @@ SOURCES     =					\
 	renderer.cpp				\
 	context.cpp				\
 	runtime.cpp				\
-	interpreter.cpp				\
-	bytecode.cpp				\
 	opcodes.cpp				\
 	cdecls.cpp				\
 	serializer.cpp				\
