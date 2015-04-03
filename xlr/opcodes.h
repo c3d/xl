@@ -519,7 +519,7 @@ XL_END
 /* ------------------------------------------------------------ */      \
     struct Opcode_U_##UName : PrefixOpcode                              \
     {                                                                   \
-        Opcode_U_##UName(int argID = 0)                                 \
+        Opcode_U_##UName(int argID = -1)                                \
             : PrefixOpcode(#UName, LeftTy##_type, ResTy##_type),        \
               argID(argID) {}                                           \
         virtual Op *Run(Data data)                                      \
@@ -555,7 +555,7 @@ XL_END
 /* ------------------------------------------------------------ */      \
     struct Opcode_B_##BName : InfixOpcode                               \
     {                                                                   \
-        Opcode_B_##BName(int leftID = -1, int rightID = -2)             \
+        Opcode_B_##BName(int leftID = -2, int rightID = -1)             \
             : InfixOpcode(#BName,                                       \
                           LeftTy##_type, RightTy##_type, ResTy##_type), \
               leftID(leftID), rightID(rightID) {}                       \
@@ -593,7 +593,7 @@ XL_END
 /* ------------------------------------------------------------ */      \
     struct Opcode_I_##IName : InfixOpcode                               \
     {                                                                   \
-        Opcode_I_##IName(int leftID = -1, int rightID = -2)             \
+        Opcode_I_##IName(int leftID = -2, int rightID = -1)             \
             : InfixOpcode(Symbol,                                       \
                           LeftTy##_type, RightTy##_type, ResTy##_type), \
               leftID(leftID), rightID(rightID) {}                       \
@@ -641,7 +641,7 @@ XL_END
 /* ------------------------------------------------------------ */      \
     struct Opcode_P_##PName : PrefixOpcode                              \
     {                                                                   \
-        Opcode_P_##PName(int argID = 0)                                 \
+        Opcode_P_##PName(int argID = -1)                                \
             : PrefixOpcode(Symbol, RightTy##_type, ResTy##_type),       \
               argID(argID) {}                                           \
         virtual Op *Run(Data data)                                      \
@@ -693,7 +693,7 @@ XL_END
 /* ------------------------------------------------------------ */      \
     struct Opcode_p_##PName : PrefixOpcode                              \
     {                                                                   \
-        Opcode_p_##PName(int argID = 0)                                 \
+        Opcode_p_##PName(int argID = -1)                                \
             : PostfixOpcode(Symbol, LeftTy##_type, ResTy##_type),       \
               argID(argID) {}                                           \
         virtual Op *Run(Data data)                                      \
