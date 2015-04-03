@@ -63,13 +63,13 @@ Tree *EvaluateWithBytecode(Context *context, Tree *what)
 
 
 Function *CompileToBytecode(Context *context, Tree *what,
-                            TreeIDs &parms, TreeList &captured)
+                            TreeIDs &parms, TreeList &captured, Tree *type)
 // ----------------------------------------------------------------------------
 //    Compile a tree to bytecode
 // ----------------------------------------------------------------------------
 {
     CodeBuilder  builder(captured);
-    Function *function = builder.Compile(context, what, parms);
+    Function *function = builder.Compile(context, what, parms, type);
     return function;
 }
 
@@ -776,6 +776,43 @@ void CodeBuilder::AddEval(int id, Op *op)
 }
 
 
+void CodeBuilder::AddTypeCheck(Context *context, Tree *what, Tree *type)
+// ----------------------------------------------------------------------------
+//   Add type check if necessary
+// ----------------------------------------------------------------------------
+{
+    if (type)
+        if (Name *name = type->AsName())
+            if (Tree *original = context->Bound(name))
+                type = original;
+    if (resultType)
+        if (Name *name = resultType->AsName())
+            if (Tree *original = context->Bound(name))
+                resultType = original;
+
+    // Unify form for 'catch-all' type
+    if (!type)
+        type = tree_type;
+    if (!resultType)
+        resultType = tree_type;
+
+    // Check if we have some static match
+    if (what->IsConstant())
+        if (TypeCheck(context, type, what))
+            return;
+
+    // Check if types match statically
+    if (type == resultType)
+        return;
+
+    // Otherwise, we need to generate a dynamic match
+    int valueID = ValueID(what);
+    Add(new StoreOp(valueID));
+    int typeID = Evaluate(context, type);
+    Add(new TypeCheckOp(valueID, typeID, failOp));
+}
+
+
 void CodeBuilder::Success()
 // ----------------------------------------------------------------------------
 //    Success at the end of a declaration
@@ -898,12 +935,12 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     Save<Tree_p>    saveSelf(builder->test, self);
     Save<Context_p> saveContext(builder->context, context);
     Save<Context_p> saveParmsCtx(builder->parmsCtx, parmsCtx);
-    Save<Tree_p>    saveResultType(builder->resultType, NULL);
 
     // Create the exit point for failed evaluation
     Op *         oldFailOp = builder->failOp;
     Op *         failOp = new LabelOp("fail");
     builder->failOp = failOp;
+    builder->resultType = NULL;
 
     // We start with new parameters for each candidate
     ParmOrder           noParms;
@@ -911,7 +948,6 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
 
     // If we lookup a name or a number, just return it
     Tree *defined = RewriteDefined(decl->left);
-    Tree *resultType = tree_type;
     bool isLeaf = defined->IsLeaf();
     CodeBuilder::strength strength = CodeBuilder::ALWAYS;
     if (isLeaf)
@@ -959,8 +995,8 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
             delete failOp;
             return NULL;
         }
-        if (builder->resultType)
-            resultType = builder->resultType;
+        if (builder->resultType == tree_type)
+            builder->resultType = NULL;
     }
 
     // Check if we have builtins (opcode or C bindings)
@@ -995,20 +1031,9 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     {
         // Normal case: evaluate body of the declaration in the new context
         CallOp *call = builder->Call(parmsCtx, decl->right,
-                                     builder->inputs, builder->parms);
+                                     builder->inputs, builder->parms,
+                                     builder->resultType);
         builder->Add(call);
-    }
-
-    // Check if there is a result type, if so add a type check
-    if (resultType != tree_type)
-    {
-        if (!valueID)
-        {
-            valueID = builder->ValueID(decl->right);
-            builder->Add(new StoreOp(valueID));
-        }
-        int typeID = builder->Evaluate(context, resultType);
-        builder->Add(new TypeCheckOp(valueID, typeID, builder->failOp));
     }
 
     // Successful evaluation
@@ -1025,7 +1050,8 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
 }
 
 
-Function *CodeBuilder::Compile(Context *context, Tree *what, TreeIDs &callArgs)
+Function *CodeBuilder::Compile(Context *context, Tree *what,
+                               TreeIDs &callArgs, Tree *type)
 // ----------------------------------------------------------------------------
 //    Compile the tree
 // ----------------------------------------------------------------------------
@@ -1050,6 +1076,10 @@ Function *CodeBuilder::Compile(Context *context, Tree *what, TreeIDs &callArgs)
     uint errCount = errors->Count();
     if (context->ProcessDeclarations(what) && errCount == errors->Count())
         result = Instructions(context, what);
+
+    // Check if there is a result type, if so add a type check
+    if (type)
+        AddTypeCheck(context, what, type);
 
     // The generated code takes over the instructions in all cases
     function->SetOps(&ops, &instrs);
@@ -1422,13 +1452,14 @@ int CodeBuilder::EvaluationTemporary(Tree *self)
 
 
 CallOp *CodeBuilder::Call(Context *context, Tree *value,
-                          TreeIDs &parmIDs, ParmOrder &parms)
+                          TreeIDs &parmIDs, ParmOrder &parms,
+                          Tree *type)
 // ----------------------------------------------------------------------------
 //   Generate the code sequence for a call
 // ----------------------------------------------------------------------------
 {
     TreeList captured;
-    Function *fn = CompileToBytecode(context, value, parmIDs, captured);
+    Function *fn = CompileToBytecode(context, value, parmIDs, captured, type);
 
     // Check if we captured values from the surrounding contexts
     if (uint csize = captured.size())
@@ -1791,9 +1822,8 @@ CodeBuilder::strength CodeBuilder::DoInfix(Infix *what)
         }
 
         // In all other cases, we need do perform dynamic evaluation to check
-        int testID = Evaluate(context, test);
-        int typeID = Evaluate(context, type);
-        Add(new TypeCheckOp(testID, typeID, failOp));
+        Evaluate(context, test);
+        AddTypeCheck(context, test, type);
         Bind(name, test, type);
         return SOMETIMES;
     }

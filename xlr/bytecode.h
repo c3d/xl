@@ -62,7 +62,8 @@ typedef Tree_p *               Data;
 
 Tree *          EvaluateWithBytecode(Context *context, Tree *input);
 Function *      CompileToBytecode(Context *context, Tree *input,
-                                  TreeIDs &parms, TreeList &captured);
+                                  TreeIDs &parms, TreeList &captured,
+                                  Tree *type = NULL);
 
 
 
@@ -163,7 +164,7 @@ struct CodeBuilder
     ~CodeBuilder();
 
 public:
-    Function *  Compile(Context *context, Tree *tree, TreeIDs &parms);
+    Function *  Compile(Context *context,Tree *tree,TreeIDs &parms,Tree *type);
     Op *        CompileInternal(Context *context, Tree *what);
     bool        Instructions(Context *context, Tree *tree);
 
@@ -190,11 +191,12 @@ public:
     void        Enclose(Context *context, Scope *old, Tree *what);
     int         Bind(Name *name, Tree *value, Tree *type=NULL);
     CallOp *    Call(Context *context, Tree *value,
-                     TreeIDs &inputs, ParmOrder &parms);
+                     TreeIDs &inputs, ParmOrder &parms, Tree *type=NULL);
 
     // Adding an opcode
     void        Add(Op *op);
     void        AddEval(int id, Op *op);
+    void        AddTypeCheck(Context *, Tree *value, Tree *type);
 
     // Success at end of declaration
     void        Success();
