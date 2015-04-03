@@ -76,7 +76,7 @@ Opcode *OpcodeInfo(Infix *decl)
             if (name->value == "opcode")
                 if (Name *opcodeName = prefix->right->AsName())
                     if (Opcode *opcode = Opcode::Find(opcodeName->value))
-                        return SetInfo(decl, opcode);
+                        return SetInfo(decl, opcode->Clone());
 
     return NULL;
 }
