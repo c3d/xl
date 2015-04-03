@@ -573,6 +573,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     {
         // Cached callback
         uint offset = args.size();
+        std::reverse(args.begin(), args.end());
         args.push_back(decl->right);
         args.push_back(context->CurrentScope());
         Data data = &args[offset];

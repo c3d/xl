@@ -335,7 +335,7 @@ struct FunctionArguments
     template <class TreeType>
     TreeType *Parameter(kstring name)
     {
-        if (index >= size)
+        if (-index >= size)
         {
             Ooops("Not enough arguments for parameter $1").Arg(name);
             return NULL;
@@ -555,7 +555,7 @@ XL_END
 /* ------------------------------------------------------------ */      \
     struct Opcode_B_##BName : InfixOpcode                               \
     {                                                                   \
-        Opcode_B_##BName(int leftID = -2, int rightID = -1)             \
+        Opcode_B_##BName(int leftID = -1, int rightID = -2)             \
             : InfixOpcode(#BName,                                       \
                           LeftTy##_type, RightTy##_type, ResTy##_type), \
               leftID(leftID), rightID(rightID) {}                       \
@@ -593,7 +593,7 @@ XL_END
 /* ------------------------------------------------------------ */      \
     struct Opcode_I_##IName : InfixOpcode                               \
     {                                                                   \
-        Opcode_I_##IName(int leftID = -2, int rightID = -1)             \
+        Opcode_I_##IName(int leftID = -1, int rightID = -2)             \
             : InfixOpcode(Symbol,                                       \
                           LeftTy##_type, RightTy##_type, ResTy##_type), \
               leftID(leftID), rightID(rightID) {}                       \
