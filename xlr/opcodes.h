@@ -834,7 +834,7 @@ XL_END
     };                                                                  \
                                                                         \
     Name_p sym##_type;                                                  \
-    static sym##TypeCheckOpcode init_opcode_T_##sym(symbol##_type);
+    static sym##TypeCheckOpcode init_opcode_T_##sym(sym##_type);
 
 #endif // TBL_HEADER
 
