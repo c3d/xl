@@ -87,6 +87,7 @@ public:
     virtual Op *        Fail()                  { return NULL; }
     virtual void        Dump(std::ostream &out) { out << OpID(); }
     virtual kstring     OpID()                  { return "op"; }
+    virtual bool        Quick()                 { return false; }
 
 public:
     Op *                success;
@@ -183,6 +184,7 @@ public:
 
     // Evaluation and binding of values
     int         ValueID(Tree *);
+    int         CaptureID(Tree *);
     int         Evaluate(Context *, Tree *, bool argOnly = false);
     int         EvaluationTemporary(Tree *);
     void        Enclose(Context *context, Scope *old, Tree *what);
@@ -192,6 +194,7 @@ public:
 
     // Adding an opcode
     void        Add(Op *op);
+    void        AddEval(int id, Op *op);
 
     // Success at end of declaration
     void        Success();

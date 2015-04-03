@@ -166,6 +166,7 @@ struct NameOpcode : Opcode
     virtual Tree *              Shape() { return toDefine; }
     virtual void                Register(Context *);
     virtual Opcode *            Clone() { return new NameOpcode(*this); }
+    virtual bool                Quick() { return true; }
     virtual kstring             OpID()  { return toDefine->value.c_str(); }
     virtual void                Dump(std::ostream &out)
     {
