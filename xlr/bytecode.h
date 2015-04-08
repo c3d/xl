@@ -164,7 +164,7 @@ struct CodeBuilder
 
 public:
     Function *  Compile(Context *context,Tree *tree,TreeIDs &parms,Tree *type);
-    Op *        CompileInternal(Context *context, Tree *what);
+    Op *        CompileInternal(Context *context, Tree *what, bool defer);
     bool        Instructions(Context *context, Tree *tree);
 
 public:
@@ -185,12 +185,17 @@ public:
     // Evaluation and binding of values
     int         ValueID(Tree *);
     int         CaptureID(Tree *);
-    int         Evaluate(Context *, Tree *, bool argOnly = false);
+    int         Evaluate(Context *, Tree *, bool deferEval = false);
     int         EvaluationTemporary(Tree *);
     void        Enclose(Context *context, Scope *old, Tree *what);
     int         Bind(Name *name, Tree *value, Tree *type=NULL);
     CallOp *    Call(Context *context, Tree *value,
                      TreeIDs &inputs, ParmOrder &parms, Tree *type=NULL);
+
+    // Contexts management
+    bool        IsLocalScope(Scope *scope);
+    bool        IsParameterScope(Scope *scope);
+    bool        IsGlobalScope(Scope *scope);
 
     // Adding an opcode
     void        Add(Op *op);
@@ -220,6 +225,7 @@ public:
     Ops         instrs;         // All instructions
     TreeOps     subexprs;       // Code generated for sub-expressions
     ParmOrder   parms;          // Indices for parameters
+    bool        defer;          // Deferred evaluation
 };
 
 

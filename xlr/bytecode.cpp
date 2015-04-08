@@ -889,15 +889,6 @@ void CodeBuilder::InstructionsSuccess(uint neOld)
 //      ;; Same thing for write "Toto"
 //
 //  The 'goto' in the above are implicit, marked by 'success' or 'fail' in Op.
-//  In general, the evaluation context has a two-deep stack, containing
-//  'result' as the last result, and 'left' as the next element.
-//  The 'EvalOp' has two variants, one of which saves the current result
-//  in the 'data.left' field (for two-argument functions)
-//  One-operand operations, e.g. 'sin', read 'result' and write into it.
-//  Two-operand operations, e.g. TypeCheck, use 'left' and 'result'.
-//  Argument passing for user-defined functions uses 'parms', an array
-//  in the Data structure.
-//
 
 static Tree *compileLookup(Scope *evalScope, Scope *declScope,
                            Tree *self, Infix *decl, void *cb)
@@ -1039,7 +1030,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
 }
 
 
-Function *CodeBuilder::Compile(Context *context, Tree *what,
+Function *CodeBuilder::Compile(Context *ctx, Tree *what,
                                TreeIDs &callArgs, Tree *type)
 // ----------------------------------------------------------------------------
 //    Compile the tree
@@ -1056,19 +1047,19 @@ Function *CodeBuilder::Compile(Context *context, Tree *what,
     // Does not exist yet, set it up
     uint nArgs = callArgs.size();
     Save<TreeIDs> saveInputs(inputs, callArgs);
-    function = new Function(context, what, nArgs, 0);
+    function = new Function(ctx, what, nArgs, 0);
     what->SetInfo<Code>(function);
 
     // Evaluate the input code
     bool result = true;
     Errors *errors = MAIN->errors;
     uint errCount = errors->Count();
-    if (context->ProcessDeclarations(what) && errCount == errors->Count())
-        result = Instructions(context, what);
+    if (ctx->ProcessDeclarations(what) && errCount == errors->Count())
+        result = Instructions(ctx, what);
 
     // Check if there is a result type, if so add a type check
     if (type)
-        AddTypeCheck(context, what, type);
+        AddTypeCheck(ctx, what, type);
 
     // The generated code takes over the instructions in all cases
     function->SetOps(&ops, &instrs);
@@ -1092,7 +1083,7 @@ Function *CodeBuilder::Compile(Context *context, Tree *what,
 }
 
 
-Op *CodeBuilder::CompileInternal(Context *context, Tree *what)
+Op *CodeBuilder::CompileInternal(Context *ctx, Tree *what, bool deferEval)
 // ----------------------------------------------------------------------------
 //   Compile an internal code sequence
 // ----------------------------------------------------------------------------
@@ -1107,11 +1098,12 @@ Op *CodeBuilder::CompileInternal(Context *context, Tree *what)
     Save<Op **>     saveLastOp(lastOp, &ops);
     ParmOrder       noParms;
     Save<ParmOrder> saveParms(parms, noParms);
+    Save<bool>      saveDefer(defer, deferEval);
 
     Errors *errors = MAIN->errors;
     uint errCount = errors->Count();
-    if (context->ProcessDeclarations(what) && errCount == errors->Count())
-        Instructions(context, what);
+    if (ctx->ProcessDeclarations(what) && errCount == errors->Count())
+        Instructions(ctx, what);
     result = ops;
     subexprs[what] = result;
 
@@ -1132,7 +1124,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
     Save<Op *> saveSuccessOp(successOp, NULL);
     Save<Op *> saveFailOp(failOp, NULL);
     Scope_p    originalScope = ctx->CurrentScope();
-    Context_p  context       = ctx;
+    Context_p  gcContext     = ctx;
     TreeIDs    empty;
 
     while (what)
@@ -1145,7 +1137,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
 
         // Lookup candidates (and count them)
         Save<uint> saveCandidates(candidates, 0);
-        context->Lookup(what, compileLookup, this);
+        ctx->Lookup(what, compileLookup, this);
 
         if (candidates)
         {
@@ -1182,19 +1174,19 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
         case BLOCK:
         {
             // Evaluate child in a new context
-            context->CreateScope();
+            ctx->CreateScope();
             what = ((Block *) (Tree *) what)->child;
-            bool hasInstructions = context->ProcessDeclarations(what);
-            bool hasDecls = !context->IsEmpty();
+            bool hasInstructions = ctx->ProcessDeclarations(what);
+            bool hasDecls = !ctx->IsEmpty();
             if (!hasDecls)
-                context->PopScope();
+                ctx->PopScope();
             if (hasInstructions)
                 continue;
             if (hasDecls)
-                what = MakeClosure(context, what);
+                what = MakeClosure(ctx, what);
             Add(new ConstOp(what));
             if (hasDecls)
-                context->PopScope();
+                ctx->PopScope();
             InstructionsSuccess(saveEvals.saved.size());
             return true;
         }
@@ -1202,8 +1194,9 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
         case PREFIX:
         {
             // If we have a prefix on the left, check if it's a closure
-            if (Tree *closed = IsClosure(what, &context))
+            if (Tree *closed = IsClosure(what, &gcContext))
             {
+                ctx = gcContext;
                 what = closed;
                 continue;
             }
@@ -1226,8 +1219,8 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             }
 
             // Evaluate callee
-            int calleeID = Evaluate(context, callee);
-            int argID = Evaluate(context, arg);
+            int calleeID = Evaluate(ctx, callee);
+            int argID = Evaluate(ctx, arg);
 
             // Lookup the argument in the callee's context
             Add (new IndexOp(calleeID, argID, failOp));
@@ -1251,8 +1244,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             if (name == ";" || name == "\n")
             {
                 // Sequences: evaluate left, then right
-                Context *leftContext = context;
-                if (!Instructions(leftContext, infix->left))
+                if (!Instructions(ctx, infix->left))
                     return false;
                 what = infix->right;
                 continue;
@@ -1269,7 +1261,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             // Check scoped reference
             if (name == ".")
             {
-                if (!Instructions(context, infix->left))
+                if (!Instructions(ctx, infix->left))
                     return false;
                 what = infix->right;
                 continue;
@@ -1326,7 +1318,7 @@ int CodeBuilder::CaptureID(Tree *self)
 }
 
 
-int CodeBuilder::Evaluate(Context *ctx, Tree *self, bool argOnly)
+int CodeBuilder::Evaluate(Context *ctx, Tree *self, bool deferEval)
 // ----------------------------------------------------------------------------
 //   Evaluate the tree, and return its ID in the evals array
 // ----------------------------------------------------------------------------
@@ -1368,7 +1360,7 @@ int CodeBuilder::Evaluate(Context *ctx, Tree *self, bool argOnly)
             else if (scope == context->CurrentScope())
             {
                 id = ValueID(rw);
-                Op *code = CompileInternal(context, value);
+                Op *code = CompileInternal(context, value, false);
                 AddEval(id, code);
             }
 
@@ -1417,11 +1409,8 @@ int CodeBuilder::Evaluate(Context *ctx, Tree *self, bool argOnly)
 
     // Other cases: generate code for the value, and evaluate it
     id = ValueID(self);
-    if (!argOnly)
-    {
-        Op *ops = CompileInternal(ctx, self);
-        AddEval(id, ops);
-    }
+    Op *ops = CompileInternal(ctx, self, deferEval);
+    AddEval(id, ops);
 
     // Return the allocated ID
     return id;
