@@ -88,7 +88,6 @@ public:
     virtual Op *        Fail()                  { return NULL; }
     virtual void        Dump(std::ostream &out) { out << OpID(); }
     virtual kstring     OpID()                  { return "op"; }
-    virtual bool        Quick()                 { return false; }
 
 public:
     Op *                success;

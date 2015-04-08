@@ -356,7 +356,6 @@ struct ConstOp : Op
         DataResult(data, value);
         return success;
     }
-    virtual bool        Quick() { return success == NULL; }
     virtual kstring     OpID()  { return "const"; }
     virtual void        Dump(std::ostream &out)
     {
@@ -373,7 +372,6 @@ struct SelfOp : Op
 // ----------------------------------------------------------------------------
 {
     virtual kstring     OpID()  { return "self"; }
-    virtual bool        Quick() { return success == NULL; }
 };
 
 
@@ -455,7 +453,6 @@ struct ValueOp : Op
         DataResult(data, data[id]);
         return success;
     }
-    virtual bool        Quick() { return success == NULL; }
     virtual kstring     OpID()  { return "value"; }
     virtual void        Dump(std::ostream &out)
     {
@@ -764,15 +761,7 @@ void CodeBuilder::AddEval(int id, Op *op)
 //    Add an evaluation in the generated code, simplify if 'Quick'
 // ----------------------------------------------------------------------------
 {
-    if (op->Quick())
-    {
-        Add(op);
-        Add(new StoreOp(id));
-    }
-    else
-    {
-        Add(new EvalOp(id, op, failOp));
-    }
+    Add(new EvalOp(id, op, failOp));
 }
 
 
