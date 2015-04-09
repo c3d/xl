@@ -470,7 +470,7 @@ struct ClearOp : Op
 
     virtual Op *        Run(Data data)
     {
-        for (int v = lo; v < hi; v++)
+        for (int v = lo; v <= hi; v++)
             data[v] = NULL;
         return success;
     }
