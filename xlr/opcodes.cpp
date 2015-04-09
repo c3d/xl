@@ -71,7 +71,7 @@ void Opcode::Enter(Context *context)
 }
 
 
-Opcode * Opcode::Find(text name)
+Opcode * Opcode::Find(Tree *self, text name)
 // ----------------------------------------------------------------------------
 //   Find an opcode that matches the name if there is  one
 // ----------------------------------------------------------------------------
@@ -82,6 +82,7 @@ Opcode * Opcode::Find(text name)
         if (opcode->OpID() == name)
             return opcode;
     }
+    Ooops("Invalid opcode name in $1", self);
     return NULL;
 }
 

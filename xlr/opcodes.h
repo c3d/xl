@@ -141,7 +141,7 @@ public:
 
 public:
     static void                 Enter(Context *context);
-    static Opcode *             Find(text name);
+    static Opcode *             Find(Tree *self, text name);
     static Opcodes *            opcodes;
 };
 

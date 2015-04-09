@@ -74,8 +74,8 @@ Opcode *OpcodeInfo(Infix *decl)
     if (Prefix *prefix = right->AsPrefix())
         if (Name *name = prefix->left->AsName())
             if (name->value == "opcode")
-                if (Name *opcodeName = prefix->right->AsName())
-                    if (Opcode *opcode = Opcode::Find(opcodeName->value))
+                if (Name *opName = prefix->right->AsName())
+                    if (Opcode *opcode = Opcode::Find(prefix, opName->value))
                         return SetInfo(decl, opcode->Clone());
 
     return NULL;
@@ -516,7 +516,11 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     Tree *result = NULL;
 
     // Check if the decl is an opcode or C binding
+    Errors *errors = MAIN->errors;
+    uint errCount = errors->Count();
     Opcode *opcode = OpcodeInfo(decl);
+    if (errors->Count() != errCount)
+        return NULL;
 
     // If we lookup a name or a number, just return it
     Tree *defined = RewriteDefined(decl->left);
