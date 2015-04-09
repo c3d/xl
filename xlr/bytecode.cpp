@@ -418,6 +418,48 @@ struct EvalOp : FailOp
 };
 
 
+struct ArgEvalOp : FailOp
+// ----------------------------------------------------------------------------
+//    Evaluate the given tree once and only once
+// ----------------------------------------------------------------------------
+{
+    ArgEvalOp(Context *context, int argId, int id, Op *fail)
+        : FailOp(fail), context(context), argId(argId), id(id) {}
+    Context_p context;
+    int       argId, id;
+
+    virtual Op *        Run(Data data)
+    {
+        Tree *result = data[id];
+        if (result)
+        {
+            DataResult(data, result);
+            return success;
+        }
+
+        // Evaluate in place
+        Context *ctx = context;
+        Tree *self = data[argId];
+        result = EvaluateWithBytecode(ctx, self);
+        if (result)
+        {
+            data[id] = result;
+            return success;
+        }
+
+        // Otherwise, go to the fail bytecode
+        return fail;
+    }
+
+    virtual kstring     OpID()          { return "arg"; }
+    virtual void        Dump(std::ostream &out)
+    {
+        out << OpID() << "\t" << id << "=" << argId
+            << " @" << (void *) context->CurrentScope();
+    }
+};
+
+
 struct ClearOp : Op
 // ----------------------------------------------------------------------------
 //    Clear a range of eval entries after a complete evaluation
@@ -1384,8 +1426,13 @@ int CodeBuilder::Evaluate(Context *ctx, Tree *self, bool deferEval)
                 
                 // Don't evaluate if already evaluated during argument passing
                 Tree *type = RewriteType(rw->left);
-                if (type && type != tree_type)
-                    evaluate = false;
+                evaluate = false;
+                if (!type || type == tree_type)
+                {
+                    Tree *defined = RewriteDefined(rw->left);
+                    int vid = ValueID(defined);
+                    Add(new ArgEvalOp(ctx, id, vid, failOp));
+                }
                 break;
             }
 
@@ -1692,7 +1739,7 @@ CodeBuilder::strength CodeBuilder::DoName(Name *what)
         }
 
         // Do a dynamic test to check if the name value is the same
-        int testID = Evaluate(argsCtx, test);
+        int testID = Evaluate(context, test);
         int nameID = Evaluate(argsCtx, bound);
         Add(new NameMatchOp(testID, nameID, failOp));
         return SOMETIMES;
