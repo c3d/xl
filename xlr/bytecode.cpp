@@ -726,7 +726,7 @@ CodeBuilder::CodeBuilder(TreeList &captured)
       inputs(), values(), captured(captured),
       nEvals(0), nParms(0), candidates(0),
       test(NULL), resultType(NULL),
-      context(NULL), parmsCtx(NULL),
+      context(NULL), parmsCtx(NULL), argsCtx(NULL),
       failOp(NULL), successOp(NULL),
       instrs(), subexprs(), parms()
 {}
@@ -740,6 +740,32 @@ CodeBuilder::~CodeBuilder()
     for (Ops::iterator o = instrs.begin(); o != instrs.end(); o++)
         delete *o;
     instrs.clear();
+}
+
+
+CodeBuilder::depth CodeBuilder::ScopeDepth(Scope *scope)
+// ----------------------------------------------------------------------------
+//   Return true if the given scope is local to the current function
+// ----------------------------------------------------------------------------
+{
+    Scope *parmsScope = parmsCtx->CurrentScope();
+    Scope *globalScope = MAIN->context->CurrentScope();
+    uint count = 0;
+
+    // Loop on scope, looking for either current parm scope or global scope
+    while (scope)
+    {
+        if (scope == parmsScope)
+            return count ? LOCAL : PARAMETER;
+        if (scope == globalScope)
+            return count ? ENCLOSING : GLOBAL;
+        scope = ScopeParent(scope);
+        count++;
+    }
+
+    // If we reached the end without seeing the current global scope,
+    // this means this is a global scope (probably some other file)
+    return GLOBAL;
 }
 
 
@@ -909,12 +935,12 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
 
     // Create the scope for evaluation
     Context_p    context = new Context(evalScope);
-    Context_p    parmsCtx  = NULL;
+    Context_p    argsCtx = NULL;
 
     // Save current state of the builder
     Save<Tree_p>    saveSelf(builder->test, self);
     Save<Context_p> saveContext(builder->context, context);
-    Save<Context_p> saveParmsCtx(builder->parmsCtx, parmsCtx);
+    Save<Context_p> saveArgsCtx(builder->argsCtx, argsCtx);
 
     // Create the exit point for failed evaluation
     Op *         oldFailOp = builder->failOp;
@@ -942,14 +968,14 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
             delete failOp;
             return NULL;
         }
-        parmsCtx = context;
+        argsCtx = context;
     }
     else
     {
         // Create the scope for binding the parameters
-        parmsCtx = new Context(declScope);
-        parmsCtx->CreateScope();
-        builder->parmsCtx = parmsCtx;
+        argsCtx = new Context(declScope);
+        argsCtx->CreateScope();
+        builder->argsCtx = argsCtx;
 
         // Remember the old end in case we did not generate code
         Op **lastOp = builder->lastOp;
@@ -1010,9 +1036,9 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     else
     {
         // Normal case: evaluate body of the declaration in the new context
-        CallOp *call = builder->Call(parmsCtx, decl->right,
-                                     builder->inputs, builder->parms,
-                                     builder->resultType);
+        CallOp *call = builder->Call(argsCtx, decl->right,
+                                     builder->resultType,
+                                     builder->outputs, builder->parms);
         builder->Add(call);
     }
 
@@ -1045,8 +1071,11 @@ Function *CodeBuilder::Compile(Context *ctx, Tree *what,
     }
 
     // Does not exist yet, set it up
+    Save<Context_p> saveParmsCtx(parmsCtx, ctx);
     uint nArgs = callArgs.size();
     Save<TreeIDs> saveInputs(inputs, callArgs);
+    TreeIDs empty;
+    Save<TreeIDs> saveOutputs(outputs, empty);
     function = new Function(ctx, what, nArgs, 0);
     what->SetInfo<Code>(function);
 
@@ -1308,7 +1337,7 @@ int CodeBuilder::CaptureID(Tree *self)
     if (found == inputs.end())
     {
         id = ~inputs.size();
-        inputs[self] = id;
+        outputs[self] = id;
     }
     else
     {
@@ -1344,7 +1373,10 @@ int CodeBuilder::Evaluate(Context *ctx, Tree *self, bool deferEval)
         if (Tree *value = ctx->Bound(name, true, &rw, &scope))
         {
             // Check if this is one of the input parameters
-            if (scope == parmsCtx->CurrentScope())
+            depth d = ScopeDepth(scope);
+            switch (d)
+            {
+            case PARAMETER:
             {
                 TreeIDs::iterator found = inputs.find(rw);
                 XL_ASSERT(found != inputs.end() && "Parameter not bound?");
@@ -1354,32 +1386,39 @@ int CodeBuilder::Evaluate(Context *ctx, Tree *self, bool deferEval)
                 Tree *type = RewriteType(rw->left);
                 if (type && type != tree_type)
                     evaluate = false;
+                break;
             }
 
             // Check if this is a local variable or function
-            else if (scope == context->CurrentScope())
+            case LOCAL:
             {
                 id = ValueID(rw);
                 Op *code = CompileInternal(context, value, false);
                 AddEval(id, code);
+                break;
             }
 
             // Global entities can be evaluated directly in place
-            else if (!ScopeParent(scope))
+            case GLOBAL:
             {
                 id = ValueID(value);
+                break;
             }
 
             // All other values are 'captured' from surrounding context
-            else
+            case ENCLOSING:
             {
                 Tree *defined = RewriteDefined(rw->left);
                 id = CaptureID(defined);
                 if (count(captured.begin(), captured.end(), defined) == 0)
                     captured.push_back(defined);
                 evaluate = false;
+                break;
             }
+            } // switch
 
+            std::cerr << "Found " << name << " = " << value
+                      << " id " << id << " level " << d << "\n";
             // Evaluate code associated to name if we need to
             if (evaluate)
             {
@@ -1397,7 +1436,8 @@ int CodeBuilder::Evaluate(Context *ctx, Tree *self, bool deferEval)
                     // No code yet: generate it
                     ParmOrder noParms;
                     TreeIDs   noParmIDs;
-                    CallOp *call = Call(context, value, noParmIDs, noParms);
+                    Tree *type = RewriteType(rw->left);
+                    CallOp *call = Call(ctx, value, type, noParmIDs, noParms);
                     instrs.push_back(call);
                     AddEval(id, call);
                 }
@@ -1429,15 +1469,14 @@ int CodeBuilder::EvaluationTemporary(Tree *self)
 }
 
 
-CallOp *CodeBuilder::Call(Context *context, Tree *value,
-                          TreeIDs &parmIDs, ParmOrder &parms,
-                          Tree *type)
+CallOp *CodeBuilder::Call(Context *ctx, Tree *value, Tree *type,
+                          TreeIDs &parmIDs, ParmOrder &parms)
 // ----------------------------------------------------------------------------
 //   Generate the code sequence for a call
 // ----------------------------------------------------------------------------
 {
     TreeList captured;
-    Function *fn = CompileToBytecode(context, value, parmIDs, captured, type);
+    Function *fn = CompileToBytecode(ctx, value, parmIDs, captured, type);
 
     // Check if we captured values from the surrounding contexts
     if (uint csize = captured.size())
@@ -1643,7 +1682,7 @@ CodeBuilder::strength CodeBuilder::DoName(Name *what)
 {
     // If there is already a binding for that name, value must match
     // This covers both a pattern with 'pi' in it and things like 'X+X'
-    if (Tree *bound = parmsCtx->Bound(what))
+    if (Tree *bound = argsCtx->Bound(what))
     {
         if (bound->GetInfo<Opcode>())
         {
@@ -1655,8 +1694,8 @@ CodeBuilder::strength CodeBuilder::DoName(Name *what)
         }
 
         // Do a dynamic test to check if the name value is the same
-        int testID = Evaluate(parmsCtx, test);
-        int nameID = Evaluate(parmsCtx, bound);
+        int testID = Evaluate(argsCtx, test);
+        int nameID = Evaluate(argsCtx, bound);
         Add(new NameMatchOp(testID, nameID, failOp));
         return SOMETIMES;
     }
@@ -1826,7 +1865,7 @@ CodeBuilder::strength CodeBuilder::DoInfix(Infix *what)
             return NEVER;
 
         // Here, we need to evaluate in the local context, not eval one
-        int whenID = Evaluate(parmsCtx, what->right);
+        int whenID = Evaluate(argsCtx, what->right);
         Add(new WhenClauseOp(whenID, failOp));
         return SOMETIMES;
     }
@@ -1895,11 +1934,13 @@ int CodeBuilder::Bind(Name *name, Tree *value, Tree *type)
         defined = new Infix(":", defined, type, name->Position());
 
     // Define the name in the parameters
-    Rewrite *rw = parmsCtx->Define(defined, value);
+    Rewrite *rw = argsCtx->Define(defined, value);
 
     // Generate the (negative) parameter ID for the given parameter
-    int parmId = ~inputs.size();
-    inputs[rw] = parmId;
+    int parmId = ~outputs.size();
+    outputs[rw->left] = parmId;
+    std::cerr << "Bind " << name << " decl=" << rw->left
+              << " id " << parmId << "\n";
 
     // Record parameter order for calls
     uint id = ValueID(value);
@@ -1935,4 +1976,14 @@ extern "C" void debugob(XL::CodeBuilder *cb)
 // ----------------------------------------------------------------------------
 {
     std::cerr << cb->instrs << "\n";
+}
+
+
+extern "C" void debugti(XL::TreeIDs &tids)
+// ----------------------------------------------------------------------------
+//   Show the contents of a tree IDs map
+// ----------------------------------------------------------------------------
+{
+    for (XL::TreeIDs::iterator i = tids.begin(); i != tids.end(); i++)
+        std::cerr << (*i).first << " @index " << (*i).second << "\n";
 }

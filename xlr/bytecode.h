@@ -189,13 +189,12 @@ public:
     int         EvaluationTemporary(Tree *);
     void        Enclose(Context *context, Scope *old, Tree *what);
     int         Bind(Name *name, Tree *value, Tree *type=NULL);
-    CallOp *    Call(Context *context, Tree *value,
-                     TreeIDs &inputs, ParmOrder &parms, Tree *type=NULL);
+    CallOp *    Call(Context *context, Tree *value, Tree *type,
+                     TreeIDs &inputs, ParmOrder &parms);
 
     // Contexts management
-    bool        IsLocalScope(Scope *scope);
-    bool        IsParameterScope(Scope *scope);
-    bool        IsGlobalScope(Scope *scope);
+    enum depth  { LOCAL, PARAMETER, ENCLOSING, GLOBAL };
+    depth       ScopeDepth(Scope *scope);
 
     // Adding an opcode
     void        Add(Op *op);
@@ -211,6 +210,7 @@ public:
     Op *        ops;            // List of operations to evaluate that tree
     Op **       lastOp;         // Last operation being written to
     TreeIDs     inputs;         // Input arguments
+    TreeIDs     outputs;        // Output arguments
     TreeIDs     values;         // Local variables and evaluation temporaries
     TreeList   &captured;       // Captured values from enclosing contexts
     uint        nEvals;         // Max number of evals on all candidates
@@ -219,7 +219,8 @@ public:
     Tree_p      test;           // Current form to test
     Tree_p      resultType;     // Result type declared in rewrite
     Context_p   context;        // Evaluation context
-    Context_p   parmsCtx;       // Function parameter declarations
+    Context_p   parmsCtx;       // Parameter declarations for current function
+    Context_p   argsCtx;        // Argument declarations for called functions
     Op *        failOp;         // Exit instruction if evaluation fails
     Op *        successOp;      // Exit instruction in case of success
     Ops         instrs;         // All instructions
