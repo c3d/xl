@@ -597,42 +597,6 @@ struct TypeCheckOp : FailOp
 };
 
 
-struct ClosureOp : Op
-// ----------------------------------------------------------------------------
-//    Create a closure from a function
-// ----------------------------------------------------------------------------
-{
-    ClosureOp(Function *fn, ParmOrder &captured): fn(fn), captured(captured) {}
-    Function *fn;
-    ParmOrder captured;
-
-    virtual Op *        Run(Data data)
-    {
-        // Create a [closure] block
-        Tree *result = DataResult(data);
-        result = new Block(result, "[_", "_]", result->Position());
-
-        // Create the closure itself
-        Function *closure = new Function(fn, data, captured);
-
-        // Attach closure to result
-        result->SetInfo<Function>(closure);
-        DataResult(data, result);
-
-        return success;
-    }
-    virtual kstring     OpID()  { return "closure"; }
-    virtual void        Dump(std::ostream &out)
-    {
-        out << OpID() << "\t(";
-        uint max = captured.size();
-        for (uint p = 0; p < max; p++)
-            out << (p > 0 ? "," : "") << captured[p];
-        out << ")";
-    }
-};
-
-
 struct IndexOp : FailOp
 // ----------------------------------------------------------------------------
 //    Index operation, i.e. unknown prefix
