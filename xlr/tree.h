@@ -388,7 +388,7 @@ inline T * Tree::As(Context *)
 // ----------------------------------------------------------------------------
 //   By default, we only check the kind, see opcode.h for specializations
 {
-    if (this && Kind() == T::KIND)
+    if ((void *) this && Kind() == T::KIND)
         return (T *) this;
     return NULL;
 }
