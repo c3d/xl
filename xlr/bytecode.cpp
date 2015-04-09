@@ -35,7 +35,7 @@ XL_BEGIN
 //
 // ============================================================================
 
-Tree *EvaluateWithBytecode(Context *context, Tree *what)
+Tree *EvaluateWithBytecode(Context *ctx, Tree *what)
 // ----------------------------------------------------------------------------
 //   Compile bytecode and then evaluate it
 // ----------------------------------------------------------------------------
@@ -43,13 +43,13 @@ Tree *EvaluateWithBytecode(Context *context, Tree *what)
     TreeIDs  noParms;
     TreeList captured;
 
-    Function *function = CompileToBytecode(context, what, noParms, captured);
+    Function *function = CompileToBytecode(ctx, what, NULL, noParms, captured);
     Tree_p result = what;
     if (function)
     {
         XL_ASSERT(function->Inputs() == 0);
         uint size = captured.size();
-        Scope *scope = context->CurrentScope();
+        Scope *scope = ctx->CurrentScope();
         captured.push_back(what);
         captured.push_back(scope);
         Data data = &captured[size];
@@ -62,14 +62,14 @@ Tree *EvaluateWithBytecode(Context *context, Tree *what)
 }
 
 
-Function *CompileToBytecode(Context *context, Tree *what,
-                            TreeIDs &parms, TreeList &captured, Tree *type)
+Function *CompileToBytecode(Context *ctx, Tree *what, Tree *type,
+                            TreeIDs &parms, TreeList &captured)
 // ----------------------------------------------------------------------------
 //    Compile a tree to bytecode
 // ----------------------------------------------------------------------------
 {
     CodeBuilder  builder(captured);
-    Function *function = builder.Compile(context, what, parms, type);
+    Function *function = builder.Compile(ctx, what, parms, type);
     return function;
 }
 
@@ -81,11 +81,11 @@ Function *CompileToBytecode(Context *context, Tree *what,
 //
 // ============================================================================
 
-Code::Code(Context *context, Tree *self)
+Code::Code(Context *ctx, Tree *self)
 // ----------------------------------------------------------------------------
 //    Create a new code from the given ops
 // ----------------------------------------------------------------------------
-    : context(context), self(self), ops(NULL), instrs()
+    : context(ctx), self(self), ops(NULL), instrs()
 {}
 
 
@@ -1474,7 +1474,7 @@ CallOp *CodeBuilder::Call(Context *ctx, Tree *value, Tree *type,
 // ----------------------------------------------------------------------------
 {
     TreeList captured;
-    Function *fn = CompileToBytecode(ctx, value, parmIDs, captured, type);
+    Function *fn = CompileToBytecode(ctx, value, type, parmIDs, captured);
 
     // Check if we captured values from the surrounding contexts
     if (uint csize = captured.size())

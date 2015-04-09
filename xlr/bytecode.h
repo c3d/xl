@@ -61,9 +61,8 @@ typedef Tree_p *               Data;
 // ============================================================================
 
 Tree *          EvaluateWithBytecode(Context *context, Tree *input);
-Function *      CompileToBytecode(Context *context, Tree *input,
-                                  TreeIDs &parms, TreeList &captured,
-                                  Tree *type = NULL);
+Function *      CompileToBytecode(Context *context, Tree *input, Tree *type,
+                                  TreeIDs &parms, TreeList &captured);
 
 
 
