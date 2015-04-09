@@ -1448,7 +1448,7 @@ int CodeBuilder::Evaluate(Context *ctx, Tree *self, bool deferEval)
             // Global entities can be evaluated directly in place
             case GLOBAL:
             {
-                id = ValueID(value);
+                id = ValueID(name);
                 break;
             }
 
