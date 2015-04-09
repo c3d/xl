@@ -4,8 +4,8 @@
 //
 //   File Description:
 //
-//
-//
+//     Implementation of a bytecode to evaluate XL programs quickly
+//     without the need to generate machine code directly
 //
 //
 //
@@ -950,7 +950,9 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
 
     // We start with new parameters for each candidate
     ParmOrder           noParms;
+    TreeIDs             empty;
     Save<ParmOrder>     saveParmOrder(builder->parms, noParms);
+    Save<TreeIDs>       saveOutputs(builder->outputs, empty);
 
     // If we lookup a name or a number, just return it
     Tree *defined = RewriteDefined(decl->left);
@@ -1074,8 +1076,6 @@ Function *CodeBuilder::Compile(Context *ctx, Tree *what,
     Save<Context_p> saveParmsCtx(parmsCtx, ctx);
     uint nArgs = callArgs.size();
     Save<TreeIDs> saveInputs(inputs, callArgs);
-    TreeIDs empty;
-    Save<TreeIDs> saveOutputs(outputs, empty);
     function = new Function(ctx, what, nArgs, 0);
     what->SetInfo<Code>(function);
 
@@ -1417,8 +1417,6 @@ int CodeBuilder::Evaluate(Context *ctx, Tree *self, bool deferEval)
             }
             } // switch
 
-            std::cerr << "Found " << name << " = " << value
-                      << " id " << id << " level " << d << "\n";
             // Evaluate code associated to name if we need to
             if (evaluate)
             {
@@ -1939,8 +1937,6 @@ int CodeBuilder::Bind(Name *name, Tree *value, Tree *type)
     // Generate the (negative) parameter ID for the given parameter
     int parmId = ~outputs.size();
     outputs[rw->left] = parmId;
-    std::cerr << "Bind " << name << " decl=" << rw->left
-              << " id " << parmId << "\n";
 
     // Record parameter order for calls
     uint id = ValueID(value);

@@ -6,8 +6,8 @@
 // 
 //   File Description:
 // 
-//     Representation of a bytecode for XLR
-// 
+//     Implementation of a bytecode to evaluate XL programs quickly
+//     without the need to generate machine code directly
 // 
 // 
 // 
