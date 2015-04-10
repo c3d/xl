@@ -438,11 +438,14 @@ struct ArgEvalOp : FailOp
         }
 
         // Evaluate in place
-        Context *ctx = context;
         Tree *self = data[argId];
+        if (Tree *inside = IsClosure(self, &context))
+            self = inside;
+        Context *ctx = context;
         result = EvaluateWithBytecode(ctx, self);
         if (result)
         {
+            result = MakeClosure(ctx, result);
             data[id] = result;
             return success;
         }
@@ -479,6 +482,30 @@ struct ClearOp : Op
     virtual void        Dump(std::ostream &out)
     {
         out << OpID() << "\t" << lo << ".." << hi;
+    }
+};
+
+
+struct ClosureOp : Op
+// ----------------------------------------------------------------------------
+//    Create a closure with the result
+// ----------------------------------------------------------------------------
+{
+    ClosureOp(Context *ctx): context(ctx) {}
+    Context_p context;
+    
+    virtual Op *        Run(Data data)
+    {
+        Tree *result = DataResult(data);
+        result = MakeClosure(context, result);
+        DataResult(data, result);
+        return success;
+    }
+        
+    virtual kstring     OpID()  { return "closure"; }
+    virtual void        Dump(std::ostream &out)
+    {
+        out << OpID();
     }
 };
 
@@ -868,6 +895,8 @@ void CodeBuilder::InstructionsSuccess(uint neOld)
         nEvals = ne;
     if (ne > neOld)
         Add(new ClearOp(neOld+2, ne+2));
+    if (defer)
+        Add(new ClosureOp(context));
 }
 
 
@@ -1610,12 +1639,23 @@ struct InfixMatchOp : FailOp
     virtual Op *        Run(Data data)
     {
         Tree *test = DataResult(data);
+        Context_p ctx = NULL;
+        if (Tree *inside = IsClosure(test, &ctx))
+            test = inside;
         if (Infix *ifx = test->AsInfix())
         {
             if (ifx->name == symbol)
             {
-                data[lid] = ifx->left;
-                data[rid] = ifx->right;
+                if (ctx)
+                {
+                    data[lid] = MakeClosure(ctx, ifx->left);
+                    data[rid] = MakeClosure(ctx, ifx->right);
+                }
+                else
+                {        
+                    data[lid] = ifx->left;
+                    data[rid] = ifx->right;
+                }
                 return success;
             }
         }

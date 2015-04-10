@@ -112,6 +112,11 @@ retry:
                         goto retry;
                     }
                 }
+                if (value != bound)
+                {
+                    value = bound;
+                    goto retry;
+                }
             }
         }
 
